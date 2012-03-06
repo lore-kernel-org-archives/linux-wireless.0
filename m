@@ -1,555 +1,961 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:45708 "EHLO
-	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030462Ab2CBU1C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:27:02 -0500
-Received: from zeta.dmz-eu.st.com (zeta.dmz-eu.st.com [164.129.230.9])
-	by beta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 0993F1B3
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:59 +0000 (GMT)
-Received: from relay2.stm.gmessaging.net (unknown [10.230.100.18])
-	by zeta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 7CCD12A01
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:59 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay2.stm.gmessaging.net (Postfix) with ESMTPS id 9A3D0A8065
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:51 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 14/21] cw1200: scan.*, mac80211 hw_scan callback.
-Date: Fri, 2 Mar 2012 21:26:36 +0100
-Message-ID: <1330720003-15866-15-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212738_749287_BE794DF7)
-In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
- <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:23627 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031446Ab2CFWn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:28 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 01/33] iwlwifi: move ucode loading to op_mode
+Date: Tue,  6 Mar 2012 13:30:36 -0800
+Message-Id: <1331069468-11074-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234333_829076_BC847141)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code implements mac80211 hw_scan callback.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+uCode loading belongs to the op_mode, as it
+is dependent on various things there and the
+commands sent during it are specific to it.
+Move the prototypes to iwl-agn.h to indicate
+this. To make this possible, also move all
+the calibration handling (which is op_mode
+dependent after all).
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/cw1200/scan.c |  446 ++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/scan.h |   54 +++++
- 2 files changed, 500 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/cw1200/scan.c
- create mode 100644 drivers/net/wireless/cw1200/scan.h
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c  |   26 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c        |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h        |   10 ++
+ drivers/net/wireless/iwlwifi/iwl-dev.h        |    2 +
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c   |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h     |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-testmode.c   |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans.h      |   19 ---
+ drivers/net/wireless/iwlwifi/iwl-ucode.c      |  205 ++++++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-wifi.h       |    8 -
+ 13 files changed, 150 insertions(+), 160 deletions(-)
 
-diff --git a/drivers/net/wireless/cw1200/scan.c b/drivers/net/wireless/cw1200/scan.c
-new file mode 100644
-index 0000000..b12af9d
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/scan.c
-@@ -0,0 +1,446 @@
-+/*
-+ * Scan implementation for ST-Ericsson CW1200 mac80211 drivers
-+ *
-+ * Copyright (c) 2010-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/sched.h>
-+#include "cw1200.h"
-+#include "scan.h"
-+#include "sta.h"
-+#include "pm.h"
-+
-+static void cw1200_scan_restart_delayed(struct cw1200_common *priv);
-+
-+static int cw1200_scan_start(struct cw1200_common *priv, struct wsm_scan *scan)
-+{
-+	int ret, i;
-+	int tmo = 2000;
-+
-+	for (i = 0; i < scan->numOfChannels; ++i)
-+		tmo += scan->ch[i].maxChannelTime + 10;
-+
-+	atomic_set(&priv->scan.in_progress, 1);
-+	cw1200_pm_stay_awake(&priv->pm_state, tmo * HZ / 1000);
-+	queue_delayed_work(priv->workqueue, &priv->scan.timeout,
-+		tmo * HZ / 1000);
-+	ret = wsm_scan(priv, scan);
-+	if (unlikely(ret)) {
-+		atomic_set(&priv->scan.in_progress, 0);
-+		cancel_delayed_work_sync(&priv->scan.timeout);
-+		cw1200_scan_restart_delayed(priv);
-+	}
-+	return ret;
-+}
-+
-+int cw1200_hw_scan(struct ieee80211_hw *hw,
-+		   struct ieee80211_vif *vif,
-+		   struct cfg80211_scan_request *req)
-+{
-+	struct cw1200_common *priv = hw->priv;
-+	struct wsm_template_frame frame = {
-+		.frame_type = WSM_FRAME_TYPE_PROBE_REQUEST,
-+	};
-+	int i;
-+
-+	if (!priv->vif)
-+		return -EINVAL;
-+
-+	/* Scan when P2P_GO corrupt firmware MiniAP mode */
-+	if (priv->join_status == CW1200_JOIN_STATUS_AP)
-+		return -EOPNOTSUPP;
-+
-+	if (req->n_ssids == 1 && !req->ssids[0].ssid_len)
-+		req->n_ssids = 0;
-+
-+	wiphy_dbg(hw->wiphy, "[SCAN] Scan request for %d SSIDs.\n",
-+		req->n_ssids);
-+
-+	if (req->n_ssids > WSM_SCAN_MAX_NUM_OF_SSIDS)
-+		return -EINVAL;
-+
-+	frame.skb = ieee80211_probereq_get(hw, priv->vif, NULL, 0,
-+		req->ie, req->ie_len);
-+	if (!frame.skb)
-+		return -ENOMEM;
-+
-+	/* will be unlocked in cw1200_scan_work() */
-+	down(&priv->scan.lock);
-+	mutex_lock(&priv->conf_mutex);
-+	if (frame.skb) {
-+		int ret = wsm_set_template_frame(priv, &frame);
-+		if (0 == ret) {
-+			/*
-+			* set empty probe response template in order
-+			* to receive probe requests from firmware
-+			*/
-+			frame.frame_type = WSM_FRAME_TYPE_PROBE_RESPONSE;
-+			frame.disable = true;
-+			ret = wsm_set_template_frame(priv, &frame);
-+		}
-+		if (ret) {
-+			mutex_unlock(&priv->conf_mutex);
-+			up(&priv->scan.lock);
-+			dev_kfree_skb(frame.skb);
-+			return ret;
-+		}
-+	}
-+
-+	wsm_lock_tx(priv);
-+
-+	BUG_ON(priv->scan.req);
-+	priv->scan.req = req;
-+	priv->scan.n_ssids = 0;
-+	priv->scan.status = 0;
-+	priv->scan.begin = &req->channels[0];
-+	priv->scan.curr = priv->scan.begin;
-+	priv->scan.end = &req->channels[req->n_channels];
-+	priv->scan.output_power = priv->output_power;
-+
-+	for (i = 0; i < req->n_ssids; ++i) {
-+		struct wsm_ssid *dst =
-+			&priv->scan.ssids[priv->scan.n_ssids];
-+		BUG_ON(req->ssids[i].ssid_len > sizeof(dst->ssid));
-+		memcpy(&dst->ssid[0], req->ssids[i].ssid,
-+			sizeof(dst->ssid));
-+		dst->length = req->ssids[i].ssid_len;
-+		++priv->scan.n_ssids;
-+	}
-+
-+	mutex_unlock(&priv->conf_mutex);
-+
-+	if (frame.skb)
-+		dev_kfree_skb(frame.skb);
-+	queue_work(priv->workqueue, &priv->scan.work);
-+	return 0;
-+}
-+
-+void cw1200_scan_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv = container_of(work, struct cw1200_common,
-+							scan.work);
-+	struct ieee80211_channel **it;
-+	struct wsm_scan scan = {
-+		.scanType = WSM_SCAN_TYPE_FOREGROUND,
-+		.scanFlags = WSM_SCAN_FLAG_SPLIT_METHOD,
-+	};
-+	bool first_run = priv->scan.begin == priv->scan.curr &&
-+			priv->scan.begin != priv->scan.end;
-+	int i;
-+
-+	if (first_run) {
-+		/* Firmware gets crazy if scan request is sent
-+		 * when STA is joined but not yet associated.
-+		 * Force unjoin in this case. */
-+		if (cancel_delayed_work_sync(&priv->join_timeout) > 0)
-+			cw1200_join_timeout(&priv->join_timeout.work);
-+	}
-+
-+	mutex_lock(&priv->conf_mutex);
-+
-+	if (first_run) {
-+		if (priv->join_status == CW1200_JOIN_STATUS_STA &&
-+				!(priv->powersave_mode.pmMode & WSM_PSM_PS)) {
-+			struct wsm_set_pm pm = priv->powersave_mode;
-+			pm.pmMode = WSM_PSM_PS;
-+			cw1200_set_pm(priv, &pm);
-+		} else if (priv->join_status == CW1200_JOIN_STATUS_MONITOR) {
-+			/* FW bug: driver has to restart p2p-dev mode
-+			 * after scan */
-+			cw1200_disable_listening(priv);
-+		}
-+	}
-+
-+	if (!priv->scan.req || (priv->scan.curr == priv->scan.end)) {
-+		if (priv->scan.output_power != priv->output_power)
-+			WARN_ON(wsm_set_output_power(priv,
-+						priv->output_power * 10));
-+		if (priv->join_status == CW1200_JOIN_STATUS_STA &&
-+				!(priv->powersave_mode.pmMode & WSM_PSM_PS))
-+			cw1200_set_pm(priv, &priv->powersave_mode);
-+
-+		if (priv->scan.status < 0)
-+			wiphy_dbg(priv->hw->wiphy,
-+					"[SCAN] Scan failed (%d).\n",
-+					priv->scan.status);
-+		else if (priv->scan.req)
-+			wiphy_dbg(priv->hw->wiphy,
-+					"[SCAN] Scan completed.\n");
-+		else
-+			wiphy_dbg(priv->hw->wiphy,
-+					"[SCAN] Scan canceled.\n");
-+
-+		priv->scan.req = NULL;
-+		cw1200_scan_restart_delayed(priv);
-+		wsm_unlock_tx(priv);
-+		mutex_unlock(&priv->conf_mutex);
-+		ieee80211_scan_completed(priv->hw, priv->scan.status ? 1 : 0);
-+		up(&priv->scan.lock);
-+		return;
-+	} else {
-+		struct ieee80211_channel *first = *priv->scan.curr;
-+		for (it = priv->scan.curr + 1, i = 1;
-+		     it != priv->scan.end && i < WSM_SCAN_MAX_NUM_OF_CHANNELS;
-+		     ++it, ++i) {
-+			if ((*it)->band != first->band)
-+				break;
-+			if (((*it)->flags ^ first->flags) &
-+					IEEE80211_CHAN_PASSIVE_SCAN)
-+				break;
-+			if (!(first->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
-+			    (*it)->max_power != first->max_power)
-+				break;
-+		}
-+		scan.band = first->band;
-+
-+		if (priv->scan.req->no_cck)
-+			scan.maxTransmitRate = WSM_TRANSMIT_RATE_6;
-+		else
-+			scan.maxTransmitRate = WSM_TRANSMIT_RATE_1;
-+		/* TODO: Is it optimal? */
-+		scan.numOfProbeRequests =
-+			(first->flags & IEEE80211_CHAN_PASSIVE_SCAN) ? 0 : 2;
-+		scan.numOfSSIDs = priv->scan.n_ssids;
-+		scan.ssids = &priv->scan.ssids[0];
-+		scan.numOfChannels = it - priv->scan.curr;
-+		/* TODO: Is it optimal? */
-+		scan.probeDelay = 100;
-+		/* It is not stated in WSM specification, however
-+		 * FW team says that driver may not use FG scan
-+		 * when joined. */
-+		if (priv->join_status == CW1200_JOIN_STATUS_STA) {
-+			scan.scanType = WSM_SCAN_TYPE_BACKGROUND;
-+			scan.scanFlags = WSM_SCAN_FLAG_FORCE_BACKGROUND;
-+		}
-+		scan.ch = kzalloc(
-+			sizeof(struct wsm_scan_ch[it - priv->scan.curr]),
-+			GFP_KERNEL);
-+		if (!scan.ch) {
-+			priv->scan.status = -ENOMEM;
-+			goto fail;
-+		}
-+		for (i = 0; i < scan.numOfChannels; ++i) {
-+			scan.ch[i].number = priv->scan.curr[i]->hw_value;
-+			scan.ch[i].minChannelTime = 50;
-+			scan.ch[i].maxChannelTime = 110;
-+		}
-+		if (!(first->flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
-+		    priv->scan.output_power != first->max_power) {
-+			priv->scan.output_power = first->max_power;
-+			WARN_ON(wsm_set_output_power(priv,
-+						priv->scan.output_power * 10));
-+		}
-+		priv->scan.status = cw1200_scan_start(priv, &scan);
-+		kfree(scan.ch);
-+		if (priv->scan.status)
-+			goto fail;
-+		priv->scan.curr = it;
-+	}
-+	mutex_unlock(&priv->conf_mutex);
-+	return;
-+
-+fail:
-+	priv->scan.curr = priv->scan.end;
-+	mutex_unlock(&priv->conf_mutex);
-+	queue_work(priv->workqueue, &priv->scan.work);
-+	return;
-+}
-+
-+static void cw1200_scan_restart_delayed(struct cw1200_common *priv)
-+{
-+	if (priv->delayed_link_loss) {
-+		int tmo = priv->cqm_beacon_loss_count;
-+
-+		if (priv->scan.direct_probe)
-+			tmo = 0;
-+
-+		priv->delayed_link_loss = 0;
-+		/* Restart beacon loss timer and requeue
-+		   BSS loss work. */
-+		wiphy_dbg(priv->hw->wiphy,
-+				"[CQM] Requeue BSS loss in %d "
-+				"beacons.\n", tmo);
-+		spin_lock(&priv->bss_loss_lock);
-+		priv->bss_loss_status = CW1200_BSS_LOSS_NONE;
-+		spin_unlock(&priv->bss_loss_lock);
-+		cancel_delayed_work_sync(&priv->bss_loss_work);
-+		queue_delayed_work(priv->workqueue,
-+				&priv->bss_loss_work,
-+				tmo * HZ / 10);
-+	}
-+
-+	/* FW bug: driver has to restart p2p-dev mode after scan. */
-+	if (priv->join_status == CW1200_JOIN_STATUS_MONITOR) {
-+		cw1200_enable_listening(priv);
-+		cw1200_update_filtering(priv);
-+	}
-+
-+	if (priv->delayed_unjoin) {
-+		priv->delayed_unjoin = false;
-+		if (queue_work(priv->workqueue, &priv->unjoin_work) <= 0)
-+			wsm_unlock_tx(priv);
-+	}
-+}
-+
-+static void cw1200_scan_complete(struct cw1200_common *priv)
-+{
-+	if (priv->scan.direct_probe) {
-+		wiphy_dbg(priv->hw->wiphy, "[SCAN] Direct probe complete.\n");
-+		cw1200_scan_restart_delayed(priv);
-+		priv->scan.direct_probe = 0;
-+		up(&priv->scan.lock);
-+		wsm_unlock_tx(priv);
-+	} else {
-+		cw1200_scan_work(&priv->scan.work);
-+	}
-+}
-+
-+void cw1200_scan_complete_cb(struct cw1200_common *priv,
-+				struct wsm_scan_complete *arg)
-+{
-+	if (unlikely(priv->mode == NL80211_IFTYPE_UNSPECIFIED))
-+		/* STA is stopped. */
-+		return;
-+
-+	if (cancel_delayed_work_sync(&priv->scan.timeout) > 0) {
-+		priv->scan.status = 1;
-+		queue_delayed_work(priv->workqueue,
-+				&priv->scan.timeout, 0);
-+	}
-+}
-+
-+void cw1200_scan_timeout(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, scan.timeout.work);
-+	if (likely(atomic_xchg(&priv->scan.in_progress, 0))) {
-+		if (priv->scan.status > 0)
-+			priv->scan.status = 0;
-+		else if (!priv->scan.status) {
-+			wiphy_warn(priv->hw->wiphy,
-+				"Timeout waiting for scan "
-+				"complete notification.\n");
-+			priv->scan.status = -ETIMEDOUT;
-+			priv->scan.curr = priv->scan.end;
-+			WARN_ON(wsm_stop_scan(priv));
-+		}
-+		cw1200_scan_complete(priv);
-+	}
-+}
-+
-+void cw1200_probe_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, scan.probe_work.work);
-+	u8 queueId = cw1200_queue_get_queue_id(priv->pending_frame_id);
-+	struct cw1200_queue *queue = &priv->tx_queue[queueId];
-+	const struct cw1200_txpriv *txpriv;
-+	struct wsm_tx *wsm;
-+	struct wsm_template_frame frame = {
-+		.frame_type = WSM_FRAME_TYPE_PROBE_REQUEST,
-+	};
-+	struct wsm_ssid ssids[1] = {{
-+		.length = 0,
-+	} };
-+	struct wsm_scan_ch ch[1] = {{
-+		.minChannelTime = 0,
-+		.maxChannelTime = 10,
-+	} };
-+	struct wsm_scan scan = {
-+		.scanType = WSM_SCAN_TYPE_FOREGROUND,
-+		.numOfProbeRequests = 1,
-+		.probeDelay = 0,
-+		.numOfChannels = 1,
-+		.ssids = ssids,
-+		.ch = ch,
-+	};
-+	u8 *ies;
-+	size_t ies_len;
-+	int ret;
-+
-+	wiphy_dbg(priv->hw->wiphy, "[SCAN] Direct probe work.\n");
-+
-+	BUG_ON(queueId >= 4);
-+	BUG_ON(!priv->channel);
-+
-+	mutex_lock(&priv->conf_mutex);
-+	if (unlikely(down_trylock(&priv->scan.lock))) {
-+		/* Scan is already in progress. Requeue self. */
-+		schedule();
-+		queue_delayed_work(priv->workqueue,
-+					&priv->scan.probe_work, HZ / 10);
-+		mutex_unlock(&priv->conf_mutex);
-+		return;
-+	}
-+
-+	if (cw1200_queue_get_skb(queue,	priv->pending_frame_id,
-+			&frame.skb, &txpriv)) {
-+		up(&priv->scan.lock);
-+		mutex_unlock(&priv->conf_mutex);
-+		wsm_unlock_tx(priv);
-+		return;
-+	}
-+	wsm = (struct wsm_tx *)frame.skb->data;
-+	scan.maxTransmitRate = wsm->maxTxRate;
-+	scan.band = (priv->channel->band == IEEE80211_BAND_5GHZ) ?
-+		WSM_PHY_BAND_5G : WSM_PHY_BAND_2_4G;
-+	if (priv->join_status == CW1200_JOIN_STATUS_STA) {
-+		scan.scanType = WSM_SCAN_TYPE_BACKGROUND;
-+		scan.scanFlags = WSM_SCAN_FLAG_FORCE_BACKGROUND;
-+	}
-+	ch[0].number = priv->channel->hw_value;
-+
-+	skb_pull(frame.skb, txpriv->offset);
-+
-+	ies = &frame.skb->data[sizeof(struct ieee80211_hdr_3addr)];
-+	ies_len = frame.skb->len - sizeof(struct ieee80211_hdr_3addr);
-+
-+	if (ies_len) {
-+		u8 *ssidie =
-+			(u8 *)cfg80211_find_ie(WLAN_EID_SSID, ies, ies_len);
-+		if (ssidie && ssidie[1] && ssidie[1] <= sizeof(ssids[0].ssid)) {
-+			u8 *nextie = &ssidie[2 + ssidie[1]];
-+			/* Remove SSID from the IE list. It has to be provided
-+			 * as a separate argument in cw1200_scan_start call */
-+
-+			/* Store SSID localy */
-+			ssids[0].length = ssidie[1];
-+			memcpy(ssids[0].ssid, &ssidie[2], ssids[0].length);
-+			scan.numOfSSIDs = 1;
-+
-+			/* Remove SSID from IE list */
-+			ssidie[1] = 0;
-+			memmove(&ssidie[2], nextie, &ies[ies_len] - nextie);
-+			skb_trim(frame.skb, frame.skb->len - ssids[0].length);
-+		}
-+	}
-+
-+	/* FW bug: driver has to restart p2p-dev mode after scan */
-+	if (priv->join_status == CW1200_JOIN_STATUS_MONITOR)
-+		cw1200_disable_listening(priv);
-+	ret = WARN_ON(wsm_set_template_frame(priv, &frame));
-+	priv->scan.direct_probe = 1;
-+	if (!ret) {
-+		wsm_flush_tx(priv);
-+		ret = WARN_ON(cw1200_scan_start(priv, &scan));
-+	}
-+	mutex_unlock(&priv->conf_mutex);
-+
-+	skb_push(frame.skb, txpriv->offset);
-+	if (!ret)
-+		IEEE80211_SKB_CB(frame.skb)->flags |= IEEE80211_TX_STAT_ACK;
-+	BUG_ON(cw1200_queue_remove(queue, priv->pending_frame_id));
-+
-+	if (ret) {
-+		priv->scan.direct_probe = 0;
-+		up(&priv->scan.lock);
-+		wsm_unlock_tx(priv);
-+	}
-+
-+	return;
-+}
-diff --git a/drivers/net/wireless/cw1200/scan.h b/drivers/net/wireless/cw1200/scan.h
-new file mode 100644
-index 0000000..abffd1d
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/scan.h
-@@ -0,0 +1,54 @@
-+/*
-+ * Scan interface for ST-Ericsson CW1200 mac80211 drivers
-+ *
-+ * Copyright (c) 2010-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef SCAN_H_INCLUDED
-+#define SCAN_H_INCLUDED
-+
-+#include <linux/semaphore.h>
-+#include "wsm.h"
-+
-+/* external */ struct sk_buff;
-+/* external */ struct cfg80211_scan_request;
-+/* external */ struct ieee80211_channel;
-+/* external */ struct ieee80211_hw;
-+/* external */ struct work_struct;
-+
-+struct cw1200_scan {
-+	struct semaphore lock;
-+	struct work_struct work;
-+	struct delayed_work timeout;
-+	struct cfg80211_scan_request *req;
-+	struct ieee80211_channel **begin;
-+	struct ieee80211_channel **curr;
-+	struct ieee80211_channel **end;
-+	struct wsm_ssid ssids[WSM_SCAN_MAX_NUM_OF_SSIDS];
-+	int output_power;
-+	int n_ssids;
-+	int status;
-+	atomic_t in_progress;
-+	/* Direct probe requests workaround */
-+	struct delayed_work probe_work;
-+	int direct_probe;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
+index 84fc5ce..29f9459 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
+@@ -75,6 +75,14 @@
+  * INIT calibrations framework
+  *****************************************************************************/
+ 
++/* Opaque calibration results */
++struct iwl_calib_result {
++	struct list_head list;
++	size_t cmd_len;
++	struct iwl_calib_hdr hdr;
++	/* data follows */
 +};
 +
-+int cw1200_hw_scan(struct ieee80211_hw *hw,
-+			struct ieee80211_vif *vif,
-+			struct cfg80211_scan_request *req);
-+void cw1200_scan_work(struct work_struct *work);
-+void cw1200_scan_timeout(struct work_struct *work);
-+void cw1200_scan_complete_cb(struct cw1200_common *priv,
-+				struct wsm_scan_complete *arg);
+ struct statistics_general_data {
+ 	u32 beacon_silence_rssi_a;
+ 	u32 beacon_silence_rssi_b;
+@@ -84,7 +92,7 @@ struct statistics_general_data {
+ 	u32 beacon_energy_c;
+ };
+ 
+-int iwl_send_calib_results(struct iwl_trans *trans)
++int iwl_send_calib_results(struct iwl_priv *priv)
+ {
+ 	struct iwl_host_cmd hcmd = {
+ 		.id = REPLY_PHY_CALIBRATION_CMD,
+@@ -92,15 +100,15 @@ int iwl_send_calib_results(struct iwl_trans *trans)
+ 	};
+ 	struct iwl_calib_result *res;
+ 
+-	list_for_each_entry(res, &trans->calib_results, list) {
++	list_for_each_entry(res, &priv->calib_results, list) {
+ 		int ret;
+ 
+ 		hcmd.len[0] = res->cmd_len;
+ 		hcmd.data[0] = &res->hdr;
+ 		hcmd.dataflags[0] = IWL_HCMD_DFL_NOCOPY;
+-		ret = iwl_trans_send_cmd(trans, &hcmd);
++		ret = iwl_trans_send_cmd(trans(priv), &hcmd);
+ 		if (ret) {
+-			IWL_ERR(trans, "Error %d on calib cmd %d\n",
++			IWL_ERR(priv, "Error %d on calib cmd %d\n",
+ 				ret, res->hdr.op_code);
+ 			return ret;
+ 		}
+@@ -109,7 +117,7 @@ int iwl_send_calib_results(struct iwl_trans *trans)
+ 	return 0;
+ }
+ 
+-int iwl_calib_set(struct iwl_trans *trans,
++int iwl_calib_set(struct iwl_priv *priv,
+ 		  const struct iwl_calib_hdr *cmd, int len)
+ {
+ 	struct iwl_calib_result *res, *tmp;
+@@ -121,7 +129,7 @@ int iwl_calib_set(struct iwl_trans *trans,
+ 	memcpy(&res->hdr, cmd, len);
+ 	res->cmd_len = len;
+ 
+-	list_for_each_entry(tmp, &trans->calib_results, list) {
++	list_for_each_entry(tmp, &priv->calib_results, list) {
+ 		if (tmp->hdr.op_code == res->hdr.op_code) {
+ 			list_replace(&tmp->list, &res->list);
+ 			kfree(tmp);
+@@ -130,16 +138,16 @@ int iwl_calib_set(struct iwl_trans *trans,
+ 	}
+ 
+ 	/* wasn't in list already */
+-	list_add_tail(&res->list, &trans->calib_results);
++	list_add_tail(&res->list, &priv->calib_results);
+ 
+ 	return 0;
+ }
+ 
+-void iwl_calib_free_results(struct iwl_trans *trans)
++void iwl_calib_free_results(struct iwl_priv *priv)
+ {
+ 	struct iwl_calib_result *res, *tmp;
+ 
+-	list_for_each_entry_safe(res, tmp, &trans->calib_results, list) {
++	list_for_each_entry_safe(res, tmp, &priv->calib_results, list) {
+ 		list_del(&res->list);
+ 		kfree(res);
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index e96af51..45b060a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1195,7 +1195,7 @@ int iwlagn_suspend(struct iwl_priv *priv,
+ 
+ 	priv->wowlan = true;
+ 
+-	ret = iwl_load_ucode_wait_alive(trans(priv), IWL_UCODE_WOWLAN);
++	ret = iwl_load_ucode_wait_alive(priv, IWL_UCODE_WOWLAN);
+ 	if (ret)
+ 		goto out;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index 8e025e0..d16e73d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -1177,7 +1177,7 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
+ 				pkt->hdr.cmd);
+ 			w->triggered = true;
+ 			if (w->fn)
+-				w->fn(trans(priv), pkt, w->fn_data);
++				w->fn(priv, pkt, w->fn_data);
+ 		}
+ 		spin_unlock(&priv->shrd->notif_wait_lock);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8bb3f17..f53308f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -671,14 +671,14 @@ int iwl_alive_start(struct iwl_priv *priv)
+ 		priv->bt_valid = IWLAGN_BT_VALID_ENABLE_FLAGS;
+ 		priv->cur_rssi_ctx = NULL;
+ 
+-		iwl_send_prio_tbl(trans(priv));
++		iwl_send_prio_tbl(priv);
+ 
+ 		/* FIXME: w/a to force change uCode BT state machine */
+-		ret = iwl_send_bt_env(trans(priv), IWL_BT_COEX_ENV_OPEN,
++		ret = iwl_send_bt_env(priv, IWL_BT_COEX_ENV_OPEN,
+ 					 BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
+ 		if (ret)
+ 			return ret;
+-		ret = iwl_send_bt_env(trans(priv), IWL_BT_COEX_ENV_CLOSE,
++		ret = iwl_send_bt_env(priv, IWL_BT_COEX_ENV_CLOSE,
+ 					 BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
+ 		if (ret)
+ 			return ret;
+@@ -1040,7 +1040,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 
+ 	mutex_init(&priv->shrd->mutex);
+ 
+-	INIT_LIST_HEAD(&trans(priv)->calib_results);
++	INIT_LIST_HEAD(&priv->calib_results);
+ 
+ 	priv->ieee_channels = NULL;
+ 	priv->ieee_rates = NULL;
+@@ -1105,6 +1105,7 @@ static void iwl_uninit_drv(struct iwl_priv *priv)
+ 	kfree(priv->scan_cmd);
+ 	kfree(priv->beacon_cmd);
+ 	kfree(rcu_dereference_raw(priv->noa_data));
++	iwl_calib_free_results(priv);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	kfree(priv->wowlan_sram);
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 70100f9..2a90d77 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -113,6 +113,16 @@ int iwlagn_rx_calib_result(struct iwl_priv *priv,
+ 			    struct iwl_rx_cmd_buffer *rxb,
+ 			    struct iwl_device_cmd *cmd);
+ void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
++int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
++void iwl_send_prio_tbl(struct iwl_priv *priv);
++int iwl_init_alive_start(struct iwl_priv *priv);
++int iwl_run_init_ucode(struct iwl_priv *priv);
++int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
++			      enum iwl_ucode_type ucode_type);
++int iwl_send_calib_results(struct iwl_priv *priv);
++int iwl_calib_set(struct iwl_priv *priv,
++		  const struct iwl_calib_hdr *cmd, int len);
++void iwl_calib_free_results(struct iwl_priv *priv);
+ 
+ /* lib */
+ int iwlagn_send_tx_power(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 5957209..7199748 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -724,6 +724,8 @@ struct iwl_priv {
+ 	struct ieee80211_rate *ieee_rates;
+ 	struct kmem_cache *tx_cmd_pool;
+ 
++	struct list_head calib_results;
 +
-+/* ******************************************************************** */
-+/* Raw probe requests TX workaround					*/
-+void cw1200_probe_work(struct work_struct *work);
-+
-+#endif
+ 	struct workqueue_struct *workqueue;
+ 
+ 	enum ieee80211_band band;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 7f93715..37330ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -278,13 +278,13 @@ static int __iwl_up(struct iwl_priv *priv)
+ 		}
+ 	}
+ 
+-	ret = iwl_run_init_ucode(trans(priv));
++	ret = iwl_run_init_ucode(priv);
+ 	if (ret) {
+ 		IWL_ERR(priv, "Failed to run INIT ucode: %d\n", ret);
+ 		goto error;
+ 	}
+ 
+-	ret = iwl_load_ucode_wait_alive(trans(priv), IWL_UCODE_REGULAR);
++	ret = iwl_load_ucode_wait_alive(priv, IWL_UCODE_REGULAR);
+ 	if (ret) {
+ 		IWL_ERR(priv, "Failed to start RT ucode: %d\n", ret);
+ 		goto error;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index ef80e03..dc55446 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -233,7 +233,7 @@ enum iwl_ucode_type {
+ struct iwl_notification_wait {
+ 	struct list_head list;
+ 
+-	void (*fn)(struct iwl_trans *trans, struct iwl_rx_packet *pkt,
++	void (*fn)(struct iwl_priv *priv, struct iwl_rx_packet *pkt,
+ 		   void *data);
+ 	void *fn_data;
+ 
+@@ -472,12 +472,12 @@ bool iwl_check_for_ct_kill(struct iwl_priv *priv);
+ void iwl_abort_notification_waits(struct iwl_shared *shrd);
+ void __acquires(wait_entry)
+ iwl_init_notification_wait(struct iwl_shared *shrd,
+-			      struct iwl_notification_wait *wait_entry,
+-			      u8 cmd,
+-			      void (*fn)(struct iwl_trans *trans,
+-					 struct iwl_rx_packet *pkt,
+-					 void *data),
+-			      void *fn_data);
++			   struct iwl_notification_wait *wait_entry,
++			   u8 cmd,
++			   void (*fn)(struct iwl_priv *priv,
++				      struct iwl_rx_packet *pkt,
++				      void *data),
++			   void *fn_data);
+ int __must_check __releases(wait_entry)
+ iwl_wait_notification(struct iwl_shared *shrd,
+ 			 struct iwl_notification_wait *wait_entry,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index b24b166..ec803ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -422,7 +422,7 @@ static int iwl_testmode_cfg_init_calib(struct iwl_priv *priv)
+ 	iwl_init_notification_wait(priv->shrd, &calib_wait,
+ 				      CALIBRATION_COMPLETE_NOTIFICATION,
+ 				      NULL, NULL);
+-	ret = iwl_init_alive_start(trans(priv));
++	ret = iwl_init_alive_start(priv);
+ 	if (ret) {
+ 		IWL_ERR(priv, "Fail init calibration: %d\n", ret);
+ 		goto cfg_init_calib_error;
+@@ -484,7 +484,7 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
+ 		break;
+ 
+ 	case IWL_TM_CMD_APP2DEV_LOAD_INIT_FW:
+-		status = iwl_load_ucode_wait_alive(trans, IWL_UCODE_INIT);
++		status = iwl_load_ucode_wait_alive(priv, IWL_UCODE_INIT);
+ 		if (status)
+ 			IWL_ERR(priv, "Error loading init ucode: %d\n", status);
+ 		break;
+@@ -495,7 +495,7 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
+ 		break;
+ 
+ 	case IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW:
+-		status = iwl_load_ucode_wait_alive(trans, IWL_UCODE_REGULAR);
++		status = iwl_load_ucode_wait_alive(priv, IWL_UCODE_REGULAR);
+ 		if (status) {
+ 			IWL_ERR(priv,
+ 				"Error loading runtime ucode: %d\n", status);
+@@ -510,7 +510,7 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
+ 	case IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW:
+ 		iwl_scan_cancel_timeout(priv, 200);
+ 		iwl_trans_stop_device(trans);
+-		status = iwl_load_ucode_wait_alive(trans, IWL_UCODE_WOWLAN);
++		status = iwl_load_ucode_wait_alive(priv, IWL_UCODE_WOWLAN);
+ 		if (status) {
+ 			IWL_ERR(priv,
+ 				"Error loading WOWLAN ucode: %d\n", status);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 3ae2fd7..f49aa18 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1632,7 +1632,6 @@ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	iwl_calib_free_results(trans);
+ 	iwl_trans_pcie_tx_free(trans);
+ #ifndef CONFIG_IWLWIFI_IDI
+ 	iwl_trans_pcie_rx_free(trans);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index b09192a..6fa0c86 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -315,14 +315,6 @@ struct iwl_trans_ops {
+ 	u32 (*read32)(struct iwl_trans *trans, u32 ofs);
+ };
+ 
+-/* Opaque calibration results */
+-struct iwl_calib_result {
+-	struct list_head list;
+-	size_t cmd_len;
+-	struct iwl_calib_hdr hdr;
+-	/* data follows */
+-};
+-
+ /**
+  * enum iwl_trans_state - state of the transport layer
+  *
+@@ -349,7 +341,6 @@ enum iwl_trans_state {
+  * @ucode_write_complete: indicates that the ucode has been copied.
+  * @nvm_device_type: indicates OTP or eeprom
+  * @pm_support: set to true in start_hw if link pm is supported
+- * @calib_results: list head for init calibration results
+  */
+ struct iwl_trans {
+ 	const struct iwl_trans_ops *ops;
+@@ -369,8 +360,6 @@ struct iwl_trans {
+ 	int    nvm_device_type;
+ 	bool pm_support;
+ 
+-	struct list_head calib_results;
+-
+ 	/* pointer to trans specific struct */
+ 	/*Ensure that this pointer will always be aligned to sizeof pointer */
+ 	char trans_specific[0] __aligned(sizeof(void *));
+@@ -574,14 +563,6 @@ static inline u32 iwl_trans_read32(struct iwl_trans *trans, u32 ofs)
+ }
+ 
+ /*****************************************************
+-* Utils functions
+-******************************************************/
+-int iwl_send_calib_results(struct iwl_trans *trans);
+-int iwl_calib_set(struct iwl_trans *trans,
+-		  const struct iwl_calib_hdr *cmd, int len);
+-void iwl_calib_free_results(struct iwl_trans *trans);
+-
+-/*****************************************************
+ * Transport layers implementations + their allocation function
+ ******************************************************/
+ struct pci_dev;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index 64a9c5c..340575a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -80,16 +80,16 @@ static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
+  *
+  ******************************************************************************/
+ 
+-static inline struct fw_img *iwl_get_ucode_image(struct iwl_nic *nic,
+-					enum iwl_ucode_type ucode_type)
++static inline struct fw_img *iwl_get_ucode_image(struct iwl_priv *priv,
++						 enum iwl_ucode_type ucode_type)
+ {
+ 	switch (ucode_type) {
+ 	case IWL_UCODE_INIT:
+-		return &nic->fw.ucode_init;
++		return &nic(priv)->fw.ucode_init;
+ 	case IWL_UCODE_WOWLAN:
+-		return &nic->fw.ucode_wowlan;
++		return &nic(priv)->fw.ucode_wowlan;
+ 	case IWL_UCODE_REGULAR:
+-		return &nic->fw.ucode_rt;
++		return &nic(priv)->fw.ucode_rt;
+ 	case IWL_UCODE_NONE:
+ 		break;
+ 	}
+@@ -99,23 +99,23 @@ static inline struct fw_img *iwl_get_ucode_image(struct iwl_nic *nic,
+ /*
+  *  Calibration
+  */
+-static int iwl_set_Xtal_calib(struct iwl_trans *trans)
++static int iwl_set_Xtal_calib(struct iwl_priv *priv)
+ {
+ 	struct iwl_calib_xtal_freq_cmd cmd;
+ 	__le16 *xtal_calib =
+-		(__le16 *)iwl_eeprom_query_addr(trans->shrd, EEPROM_XTAL);
++		(__le16 *)iwl_eeprom_query_addr(priv->shrd, EEPROM_XTAL);
+ 
+ 	iwl_set_calib_hdr(&cmd.hdr, IWL_PHY_CALIBRATE_CRYSTAL_FRQ_CMD);
+ 	cmd.cap_pin1 = le16_to_cpu(xtal_calib[0]);
+ 	cmd.cap_pin2 = le16_to_cpu(xtal_calib[1]);
+-	return iwl_calib_set(trans, (void *)&cmd, sizeof(cmd));
++	return iwl_calib_set(priv, (void *)&cmd, sizeof(cmd));
+ }
+ 
+-static int iwl_set_temperature_offset_calib(struct iwl_trans *trans)
++static int iwl_set_temperature_offset_calib(struct iwl_priv *priv)
+ {
+ 	struct iwl_calib_temperature_offset_cmd cmd;
+ 	__le16 *offset_calib =
+-		(__le16 *)iwl_eeprom_query_addr(trans->shrd,
++		(__le16 *)iwl_eeprom_query_addr(priv->shrd,
+ 						EEPROM_RAW_TEMPERATURE);
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+@@ -124,48 +124,48 @@ static int iwl_set_temperature_offset_calib(struct iwl_trans *trans)
+ 	if (!(cmd.radio_sensor_offset))
+ 		cmd.radio_sensor_offset = DEFAULT_RADIO_SENSOR_OFFSET;
+ 
+-	IWL_DEBUG_CALIB(trans, "Radio sensor offset: %d\n",
++	IWL_DEBUG_CALIB(priv, "Radio sensor offset: %d\n",
+ 			le16_to_cpu(cmd.radio_sensor_offset));
+-	return iwl_calib_set(trans, (void *)&cmd, sizeof(cmd));
++	return iwl_calib_set(priv, (void *)&cmd, sizeof(cmd));
+ }
+ 
+-static int iwl_set_temperature_offset_calib_v2(struct iwl_trans *trans)
++static int iwl_set_temperature_offset_calib_v2(struct iwl_priv *priv)
+ {
+ 	struct iwl_calib_temperature_offset_v2_cmd cmd;
+-	__le16 *offset_calib_high = (__le16 *)iwl_eeprom_query_addr(trans->shrd,
++	__le16 *offset_calib_high = (__le16 *)iwl_eeprom_query_addr(priv->shrd,
+ 				     EEPROM_KELVIN_TEMPERATURE);
+ 	__le16 *offset_calib_low =
+-		(__le16 *)iwl_eeprom_query_addr(trans->shrd,
++		(__le16 *)iwl_eeprom_query_addr(priv->shrd,
+ 						EEPROM_RAW_TEMPERATURE);
+ 	struct iwl_eeprom_calib_hdr *hdr;
+ 
+ 	memset(&cmd, 0, sizeof(cmd));
+ 	iwl_set_calib_hdr(&cmd.hdr, IWL_PHY_CALIBRATE_TEMP_OFFSET_CMD);
+-	hdr = (struct iwl_eeprom_calib_hdr *)iwl_eeprom_query_addr(trans->shrd,
++	hdr = (struct iwl_eeprom_calib_hdr *)iwl_eeprom_query_addr(priv->shrd,
+ 							EEPROM_CALIB_ALL);
+ 	memcpy(&cmd.radio_sensor_offset_high, offset_calib_high,
+ 		sizeof(*offset_calib_high));
+ 	memcpy(&cmd.radio_sensor_offset_low, offset_calib_low,
+ 		sizeof(*offset_calib_low));
+ 	if (!(cmd.radio_sensor_offset_low)) {
+-		IWL_DEBUG_CALIB(trans, "no info in EEPROM, use default\n");
++		IWL_DEBUG_CALIB(priv, "no info in EEPROM, use default\n");
+ 		cmd.radio_sensor_offset_low = DEFAULT_RADIO_SENSOR_OFFSET;
+ 		cmd.radio_sensor_offset_high = DEFAULT_RADIO_SENSOR_OFFSET;
+ 	}
+ 	memcpy(&cmd.burntVoltageRef, &hdr->voltage,
+ 		sizeof(hdr->voltage));
+ 
+-	IWL_DEBUG_CALIB(trans, "Radio sensor offset high: %d\n",
++	IWL_DEBUG_CALIB(priv, "Radio sensor offset high: %d\n",
+ 			le16_to_cpu(cmd.radio_sensor_offset_high));
+-	IWL_DEBUG_CALIB(trans, "Radio sensor offset low: %d\n",
++	IWL_DEBUG_CALIB(priv, "Radio sensor offset low: %d\n",
+ 			le16_to_cpu(cmd.radio_sensor_offset_low));
+-	IWL_DEBUG_CALIB(trans, "Voltage Ref: %d\n",
++	IWL_DEBUG_CALIB(priv, "Voltage Ref: %d\n",
+ 			le16_to_cpu(cmd.burntVoltageRef));
+ 
+-	return iwl_calib_set(trans, (void *)&cmd, sizeof(cmd));
++	return iwl_calib_set(priv, (void *)&cmd, sizeof(cmd));
+ }
+ 
+-static int iwl_send_calib_cfg(struct iwl_trans *trans)
++static int iwl_send_calib_cfg(struct iwl_priv *priv)
+ {
+ 	struct iwl_calib_cfg_cmd calib_cfg_cmd;
+ 	struct iwl_host_cmd cmd = {
+@@ -181,7 +181,7 @@ static int iwl_send_calib_cfg(struct iwl_trans *trans)
+ 	calib_cfg_cmd.ucd_calib_cfg.flags =
+ 		IWL_CALIB_CFG_FLAG_SEND_COMPLETE_NTFY_MSK;
+ 
+-	return iwl_trans_send_cmd(trans, &cmd);
++	return iwl_trans_send_cmd(trans(priv), &cmd);
+ }
+ 
+ int iwlagn_rx_calib_result(struct iwl_priv *priv,
+@@ -195,33 +195,33 @@ int iwlagn_rx_calib_result(struct iwl_priv *priv,
+ 	/* reduce the size of the length field itself */
+ 	len -= 4;
+ 
+-	if (iwl_calib_set(trans(priv), hdr, len))
++	if (iwl_calib_set(priv, hdr, len))
+ 		IWL_ERR(priv, "Failed to record calibration data %d\n",
+ 			hdr->op_code);
+ 
+ 	return 0;
+ }
+ 
+-int iwl_init_alive_start(struct iwl_trans *trans)
++int iwl_init_alive_start(struct iwl_priv *priv)
+ {
+ 	int ret;
+ 
+-	if (cfg(trans)->bt_params &&
+-	    cfg(trans)->bt_params->advanced_bt_coexist) {
++	if (cfg(priv)->bt_params &&
++	    cfg(priv)->bt_params->advanced_bt_coexist) {
+ 		/*
+ 		 * Tell uCode we are ready to perform calibration
+ 		 * need to perform this before any calibration
+ 		 * no need to close the envlope since we are going
+ 		 * to load the runtime uCode later.
+ 		 */
+-		ret = iwl_send_bt_env(trans, IWL_BT_COEX_ENV_OPEN,
++		ret = iwl_send_bt_env(priv, IWL_BT_COEX_ENV_OPEN,
+ 			BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
+ 		if (ret)
+ 			return ret;
+ 
+ 	}
+ 
+-	ret = iwl_send_calib_cfg(trans);
++	ret = iwl_send_calib_cfg(priv);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -229,21 +229,21 @@ int iwl_init_alive_start(struct iwl_trans *trans)
+ 	 * temperature offset calibration is only needed for runtime ucode,
+ 	 * so prepare the value now.
+ 	 */
+-	if (cfg(trans)->need_temp_offset_calib) {
+-		if (cfg(trans)->temp_offset_v2)
+-			return iwl_set_temperature_offset_calib_v2(trans);
++	if (cfg(priv)->need_temp_offset_calib) {
++		if (cfg(priv)->temp_offset_v2)
++			return iwl_set_temperature_offset_calib_v2(priv);
+ 		else
+-			return iwl_set_temperature_offset_calib(trans);
++			return iwl_set_temperature_offset_calib(priv);
+ 	}
+ 
+ 	return 0;
+ }
+ 
+-static int iwl_send_wimax_coex(struct iwl_trans *trans)
++static int iwl_send_wimax_coex(struct iwl_priv *priv)
+ {
+ 	struct iwl_wimax_coex_cmd coex_cmd;
+ 
+-	if (cfg(trans)->base_params->support_wimax_coexist) {
++	if (cfg(priv)->base_params->support_wimax_coexist) {
+ 		/* UnMask wake up src at associated sleep */
+ 		coex_cmd.flags = COEX_FLAGS_ASSOC_WA_UNMASK_MSK;
+ 
+@@ -262,7 +262,7 @@ static int iwl_send_wimax_coex(struct iwl_trans *trans)
+ 		/* coexistence is disabled */
+ 		memset(&coex_cmd, 0, sizeof(coex_cmd));
+ 	}
+-	return iwl_trans_send_cmd_pdu(trans,
++	return iwl_trans_send_cmd_pdu(trans(priv),
+ 				COEX_PRIORITY_TABLE_CMD, CMD_SYNC,
+ 				sizeof(coex_cmd), &coex_cmd);
+ }
+@@ -289,37 +289,36 @@ static const u8 iwl_bt_prio_tbl[BT_COEX_PRIO_TBL_EVT_MAX] = {
+ 	0, 0, 0, 0, 0, 0, 0
+ };
+ 
+-void iwl_send_prio_tbl(struct iwl_trans *trans)
++void iwl_send_prio_tbl(struct iwl_priv *priv)
+ {
+ 	struct iwl_bt_coex_prio_table_cmd prio_tbl_cmd;
+ 
+ 	memcpy(prio_tbl_cmd.prio_tbl, iwl_bt_prio_tbl,
+ 		sizeof(iwl_bt_prio_tbl));
+-	if (iwl_trans_send_cmd_pdu(trans,
++	if (iwl_trans_send_cmd_pdu(trans(priv),
+ 				REPLY_BT_COEX_PRIO_TABLE, CMD_SYNC,
+ 				sizeof(prio_tbl_cmd), &prio_tbl_cmd))
+-		IWL_ERR(trans, "failed to send BT prio tbl command\n");
++		IWL_ERR(priv, "failed to send BT prio tbl command\n");
+ }
+ 
+-int iwl_send_bt_env(struct iwl_trans *trans, u8 action, u8 type)
++int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type)
+ {
+ 	struct iwl_bt_coex_prot_env_cmd env_cmd;
+ 	int ret;
+ 
+ 	env_cmd.action = action;
+ 	env_cmd.type = type;
+-	ret = iwl_trans_send_cmd_pdu(trans,
++	ret = iwl_trans_send_cmd_pdu(trans(priv),
+ 			       REPLY_BT_COEX_PROT_ENV, CMD_SYNC,
+ 			       sizeof(env_cmd), &env_cmd);
+ 	if (ret)
+-		IWL_ERR(trans, "failed to send BT env command\n");
++		IWL_ERR(priv, "failed to send BT env command\n");
+ 	return ret;
+ }
+ 
+ 
+-static int iwl_alive_notify(struct iwl_trans *trans)
++static int iwl_alive_notify(struct iwl_priv *priv)
+ {
+-	struct iwl_priv *priv = priv(trans);
+ 	struct iwl_rxon_context *ctx;
+ 	int ret;
+ 
+@@ -332,21 +331,21 @@ static int iwl_alive_notify(struct iwl_trans *trans)
+ 	if (!priv->tx_cmd_pool)
+ 		return -ENOMEM;
+ 
+-	iwl_trans_fw_alive(trans);
++	iwl_trans_fw_alive(trans(priv));
+ 	for_each_context(priv, ctx)
+ 		ctx->last_tx_rejected = false;
+ 
+-	ret = iwl_send_wimax_coex(trans);
++	ret = iwl_send_wimax_coex(priv);
+ 	if (ret)
+ 		return ret;
+ 
+ 	if (!cfg(priv)->no_xtal_calib) {
+-		ret = iwl_set_Xtal_calib(trans);
++		ret = iwl_set_Xtal_calib(priv);
+ 		if (ret)
+ 			return ret;
+ 	}
+ 
+-	return iwl_send_calib_results(trans);
++	return iwl_send_calib_results(priv);
+ }
+ 
+ 
+@@ -355,24 +354,23 @@ static int iwl_alive_notify(struct iwl_trans *trans)
+  *   using sample data 100 bytes apart.  If these sample points are good,
+  *   it's a pretty good bet that everything between them is good, too.
+  */
+-static int iwl_verify_inst_sparse(struct iwl_nic *nic,
+-				      struct fw_desc *fw_desc)
++static int iwl_verify_inst_sparse(struct iwl_priv *priv,
++				  struct fw_desc *fw_desc)
+ {
+-	struct iwl_trans *trans = trans(nic);
+ 	__le32 *image = (__le32 *)fw_desc->v_addr;
+ 	u32 len = fw_desc->len;
+ 	u32 val;
+ 	u32 i;
+ 
+-	IWL_DEBUG_FW(nic, "ucode inst image size is %u\n", len);
++	IWL_DEBUG_FW(priv, "ucode inst image size is %u\n", len);
+ 
+ 	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
+ 		/* read data comes through single port, auto-incr addr */
+ 		/* NOTE: Use the debugless read so we don't flood kernel log
+ 		 * if IWL_DL_IO is set */
+-		iwl_write_direct32(trans, HBUS_TARG_MEM_RADDR,
++		iwl_write_direct32(trans(priv), HBUS_TARG_MEM_RADDR,
+ 			i + IWLAGN_RTC_INST_LOWER_BOUND);
+-		val = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
++		val = iwl_read32(trans(priv), HBUS_TARG_MEM_RDAT);
+ 		if (val != le32_to_cpu(*image))
+ 			return -EIO;
+ 	}
+@@ -380,28 +378,27 @@ static int iwl_verify_inst_sparse(struct iwl_nic *nic,
+ 	return 0;
+ }
+ 
+-static void iwl_print_mismatch_inst(struct iwl_nic *nic,
++static void iwl_print_mismatch_inst(struct iwl_priv *priv,
+ 				    struct fw_desc *fw_desc)
+ {
+-	struct iwl_trans *trans = trans(nic);
+ 	__le32 *image = (__le32 *)fw_desc->v_addr;
+ 	u32 len = fw_desc->len;
+ 	u32 val;
+ 	u32 offs;
+ 	int errors = 0;
+ 
+-	IWL_DEBUG_FW(nic, "ucode inst image size is %u\n", len);
++	IWL_DEBUG_FW(priv, "ucode inst image size is %u\n", len);
+ 
+-	iwl_write_direct32(trans, HBUS_TARG_MEM_RADDR,
++	iwl_write_direct32(trans(priv), HBUS_TARG_MEM_RADDR,
+ 			   IWLAGN_RTC_INST_LOWER_BOUND);
+ 
+ 	for (offs = 0;
+ 	     offs < len && errors < 20;
+ 	     offs += sizeof(u32), image++) {
+ 		/* read data comes through single port, auto-incr addr */
+-		val = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
++		val = iwl_read32(trans(priv), HBUS_TARG_MEM_RDAT);
+ 		if (val != le32_to_cpu(*image)) {
+-			IWL_ERR(nic, "uCode INST section at "
++			IWL_ERR(priv, "uCode INST section at "
+ 				"offset 0x%x, is 0x%x, s/b 0x%x\n",
+ 				offs, val, le32_to_cpu(*image));
+ 			errors++;
+@@ -413,24 +410,24 @@ static void iwl_print_mismatch_inst(struct iwl_nic *nic,
+  * iwl_verify_ucode - determine which instruction image is in SRAM,
+  *    and verify its contents
+  */
+-static int iwl_verify_ucode(struct iwl_nic *nic,
++static int iwl_verify_ucode(struct iwl_priv *priv,
+ 			    enum iwl_ucode_type ucode_type)
+ {
+-	struct fw_img *img = iwl_get_ucode_image(nic, ucode_type);
++	struct fw_img *img = iwl_get_ucode_image(priv, ucode_type);
+ 
+ 	if (!img) {
+-		IWL_ERR(nic, "Invalid ucode requested (%d)\n", ucode_type);
++		IWL_ERR(priv, "Invalid ucode requested (%d)\n", ucode_type);
+ 		return -EINVAL;
+ 	}
+ 
+-	if (!iwl_verify_inst_sparse(nic, &img->code)) {
+-		IWL_DEBUG_FW(nic, "uCode is good in inst SRAM\n");
++	if (!iwl_verify_inst_sparse(priv, &img->code)) {
++		IWL_DEBUG_FW(priv, "uCode is good in inst SRAM\n");
+ 		return 0;
+ 	}
+ 
+-	IWL_ERR(nic, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
++	IWL_ERR(priv, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
+ 
+-	iwl_print_mismatch_inst(nic, &img->code);
++	iwl_print_mismatch_inst(priv, &img->code);
+ 	return -EIO;
+ }
+ 
+@@ -439,7 +436,7 @@ struct iwl_alive_data {
+ 	u8 subtype;
+ };
+ 
+-static void iwl_alive_fn(struct iwl_trans *trans,
++static void iwl_alive_fn(struct iwl_priv *priv,
+ 			    struct iwl_rx_packet *pkt,
+ 			    void *data)
+ {
+@@ -448,14 +445,14 @@ static void iwl_alive_fn(struct iwl_trans *trans,
+ 
+ 	palive = &pkt->u.alive_frame;
+ 
+-	IWL_DEBUG_FW(trans, "Alive ucode status 0x%08X revision "
++	IWL_DEBUG_FW(priv, "Alive ucode status 0x%08X revision "
+ 		       "0x%01X 0x%01X\n",
+ 		       palive->is_valid, palive->ver_type,
+ 		       palive->ver_subtype);
+ 
+-	trans->shrd->device_pointers.error_event_table =
++	priv->shrd->device_pointers.error_event_table =
+ 		le32_to_cpu(palive->error_event_table_ptr);
+-	trans->shrd->device_pointers.log_event_table =
++	priv->shrd->device_pointers.log_event_table =
+ 		le32_to_cpu(palive->log_event_table_ptr);
+ 
+ 	alive_data->subtype = palive->ver_subtype;
+@@ -464,12 +461,12 @@ static void iwl_alive_fn(struct iwl_trans *trans,
+ 
+ /* notification wait support */
+ void iwl_init_notification_wait(struct iwl_shared *shrd,
+-				   struct iwl_notification_wait *wait_entry,
+-				   u8 cmd,
+-				   void (*fn)(struct iwl_trans *trans,
+-					      struct iwl_rx_packet *pkt,
+-					      void *data),
+-				   void *fn_data)
++				struct iwl_notification_wait *wait_entry,
++				u8 cmd,
++				void (*fn)(struct iwl_priv *priv,
++					   struct iwl_rx_packet *pkt,
++					   void *data),
++				void *fn_data)
+ {
+ 	wait_entry->fn = fn;
+ 	wait_entry->fn_data = fn_data;
+@@ -529,7 +526,7 @@ void iwl_abort_notification_waits(struct iwl_shared *shrd)
+ #define UCODE_ALIVE_TIMEOUT	HZ
+ #define UCODE_CALIB_TIMEOUT	(2*HZ)
+ 
+-int iwl_load_ucode_wait_alive(struct iwl_trans *trans,
++int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
+ 				 enum iwl_ucode_type ucode_type)
+ {
+ 	struct iwl_notification_wait alive_wait;
+@@ -538,20 +535,20 @@ int iwl_load_ucode_wait_alive(struct iwl_trans *trans,
+ 	int ret;
+ 	enum iwl_ucode_type old_type;
+ 
+-	iwl_init_notification_wait(trans->shrd, &alive_wait, REPLY_ALIVE,
++	iwl_init_notification_wait(priv->shrd, &alive_wait, REPLY_ALIVE,
+ 				      iwl_alive_fn, &alive_data);
+ 
+-	old_type = trans->shrd->ucode_type;
+-	trans->shrd->ucode_type = ucode_type;
+-	fw = iwl_get_ucode_image(nic(trans), ucode_type);
++	old_type = priv->shrd->ucode_type;
++	priv->shrd->ucode_type = ucode_type;
++	fw = iwl_get_ucode_image(priv, ucode_type);
+ 
+ 	if (!fw)
+ 		return -EINVAL;
+ 
+-	ret = iwl_trans_start_fw(trans, fw);
++	ret = iwl_trans_start_fw(trans(priv), fw);
+ 	if (ret) {
+-		trans->shrd->ucode_type = old_type;
+-		iwl_remove_notification(trans->shrd, &alive_wait);
++		priv->shrd->ucode_type = old_type;
++		iwl_remove_notification(priv->shrd, &alive_wait);
+ 		return ret;
+ 	}
+ 
+@@ -559,16 +556,16 @@ int iwl_load_ucode_wait_alive(struct iwl_trans *trans,
+ 	 * Some things may run in the background now, but we
+ 	 * just wait for the ALIVE notification here.
+ 	 */
+-	ret = iwl_wait_notification(trans->shrd, &alive_wait,
++	ret = iwl_wait_notification(priv->shrd, &alive_wait,
+ 					UCODE_ALIVE_TIMEOUT);
+ 	if (ret) {
+-		trans->shrd->ucode_type = old_type;
++		priv->shrd->ucode_type = old_type;
+ 		return ret;
+ 	}
+ 
+ 	if (!alive_data.valid) {
+-		IWL_ERR(trans, "Loaded ucode is not valid!\n");
+-		trans->shrd->ucode_type = old_type;
++		IWL_ERR(priv, "Loaded ucode is not valid!\n");
++		priv->shrd->ucode_type = old_type;
+ 		return -EIO;
+ 	}
+ 
+@@ -578,9 +575,9 @@ int iwl_load_ucode_wait_alive(struct iwl_trans *trans,
+ 	 * skip it for WoWLAN.
+ 	 */
+ 	if (ucode_type != IWL_UCODE_WOWLAN) {
+-		ret = iwl_verify_ucode(nic(trans), ucode_type);
++		ret = iwl_verify_ucode(priv, ucode_type);
+ 		if (ret) {
+-			trans->shrd->ucode_type = old_type;
++			priv->shrd->ucode_type = old_type;
+ 			return ret;
+ 		}
+ 
+@@ -588,41 +585,41 @@ int iwl_load_ucode_wait_alive(struct iwl_trans *trans,
+ 		msleep(5);
+ 	}
+ 
+-	ret = iwl_alive_notify(trans);
++	ret = iwl_alive_notify(priv);
+ 	if (ret) {
+-		IWL_WARN(trans,
++		IWL_WARN(priv,
+ 			"Could not complete ALIVE transition: %d\n", ret);
+-		trans->shrd->ucode_type = old_type;
++		priv->shrd->ucode_type = old_type;
+ 		return ret;
+ 	}
+ 
+ 	return 0;
+ }
+ 
+-int iwl_run_init_ucode(struct iwl_trans *trans)
++int iwl_run_init_ucode(struct iwl_priv *priv)
+ {
+ 	struct iwl_notification_wait calib_wait;
+ 	int ret;
+ 
+-	lockdep_assert_held(&trans->shrd->mutex);
++	lockdep_assert_held(&priv->shrd->mutex);
+ 
+ 	/* No init ucode required? Curious, but maybe ok */
+-	if (!nic(trans)->fw.ucode_init.code.len)
++	if (!nic(priv)->fw.ucode_init.code.len)
+ 		return 0;
+ 
+-	if (trans->shrd->ucode_type != IWL_UCODE_NONE)
++	if (priv->shrd->ucode_type != IWL_UCODE_NONE)
+ 		return 0;
+ 
+-	iwl_init_notification_wait(trans->shrd, &calib_wait,
++	iwl_init_notification_wait(priv->shrd, &calib_wait,
+ 				      CALIBRATION_COMPLETE_NOTIFICATION,
+ 				      NULL, NULL);
+ 
+ 	/* Will also start the device */
+-	ret = iwl_load_ucode_wait_alive(trans, IWL_UCODE_INIT);
++	ret = iwl_load_ucode_wait_alive(priv, IWL_UCODE_INIT);
+ 	if (ret)
+ 		goto error;
+ 
+-	ret = iwl_init_alive_start(trans);
++	ret = iwl_init_alive_start(priv);
+ 	if (ret)
+ 		goto error;
+ 
+@@ -630,15 +627,15 @@ int iwl_run_init_ucode(struct iwl_trans *trans)
+ 	 * Some things may run in the background now, but we
+ 	 * just wait for the calibration complete notification.
+ 	 */
+-	ret = iwl_wait_notification(trans->shrd, &calib_wait,
++	ret = iwl_wait_notification(priv->shrd, &calib_wait,
+ 					UCODE_CALIB_TIMEOUT);
+ 
+ 	goto out;
+ 
+  error:
+-	iwl_remove_notification(trans->shrd, &calib_wait);
++	iwl_remove_notification(priv->shrd, &calib_wait);
+  out:
+ 	/* Whatever happened, stop the device */
+-	iwl_trans_stop_device(trans);
++	iwl_trans_stop_device(trans(priv));
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-wifi.h b/drivers/net/wireless/iwlwifi/iwl-wifi.h
+index d157931..753e338 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-wifi.h
++++ b/drivers/net/wireless/iwlwifi/iwl-wifi.h
+@@ -95,12 +95,4 @@ struct iwl_nic {
+ 
+ 	struct completion request_firmware_complete;
+ };
+-
+-
+-int iwl_send_bt_env(struct iwl_trans *trans, u8 action, u8 type);
+-void iwl_send_prio_tbl(struct iwl_trans *trans);
+-int iwl_init_alive_start(struct iwl_trans *trans);
+-int iwl_run_init_ucode(struct iwl_trans *trans);
+-int iwl_load_ucode_wait_alive(struct iwl_trans *trans,
+-				 enum iwl_ucode_type ucode_type);
+ #endif  /* __iwl_wifi_h__ */
 -- 
-1.7.9
+1.7.0.4
 
