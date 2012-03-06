@@ -1,95 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:52235 "EHLO mout2.freenet.de"
+Received: from mga09.intel.com ([134.134.136.24]:20496 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753685Ab2CJOQ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 09:16:56 -0500
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout2.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1S6N6M-00065z-8u
-	for linux-wireless@vger.kernel.org; Sat, 10 Mar 2012 15:16:54 +0100
-Received: from localhost ([::1]:46471 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1S6N6M-0004cj-8J
-	for linux-wireless@vger.kernel.org; Sat, 10 Mar 2012 15:16:54 +0100
-Received: from [195.4.92.12] (port=55612 helo=2.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1S6N3m-0003D6-8o
-	for linux-wireless@vger.kernel.org; Sat, 10 Mar 2012 15:14:14 +0100
-Received: from [2002:4fde:d9d:2:5054:ff:feb8:40bd] (port=51069 helo=mail.maya.org)
-	by 2.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1S6N3l-0004LY-T6
-	for linux-wireless@vger.kernel.org; Sat, 10 Mar 2012 15:14:14 +0100
-Message-ID: <4F5B61A7.6010904@01019freenet.de> (sfid-20120310_151659_575717_ED9AEC4A)
-Date: Sat, 10 Mar 2012 15:13:59 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: Oskar Stenman <oskar@cetex.se>
-CC: "Justin P. Mattock" <justinmattock@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath9k timeouts with the current Mainline
-References: <4F12F5DD.3030904@gmail.com> <4F5B27DB.8090508@cetex.se>
-In-Reply-To: <4F5B27DB.8090508@cetex.se>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1031476Ab2CFWnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:32 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 11/33] iwlwifi: remove shadow_reg_enable from hw_params
+Date: Tue,  6 Mar 2012 13:30:46 -0800
+Message-Id: <1331069468-11074-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234438_094124_662AB129)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oskar Stenman wrote:
-> I'm having a similar or the same problem, it's been nagging me for at
-> least 1.5years.
-> 
-> If I'm able to connect I get frequent dropouts from any wireless network
-> I'm connected to. It gets sluggish and after a little while disconnects,
-> and once it has disconnected it just keeps reconnecting and failing.
-> sometimes a reboot helps, but most of the time it wont help anymore than
-> a couple of seconds to a minute. It's also impossible to connect to my
-> wireless hotspot on my Xperia Mini Pro and it seems ad-hoc networks are
-> also impossible.
-> 
-> I'm running ubuntu 11.10 with latest patches applied as of today. Since
-> i've not seen anything being solved during this time i doubt anyone has
-> been trying to, or has been able to solve the problem recently.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm running exactly the same chip (according lspci) without any problem.
-But I'm using slightly different environment:
+There's no need to copy shadow_reg_enable into
+hw_params since it is a pure hardware parameter
+that will never change, we can access it from
+the config directly.
 
-1. 64 bit
-2. kernel 3.1 (some time ago, I run 3.0, too, but cannot remember
-   having any problems related ar9285).
-3. no network manager - just plain wpa_supplicant.
-4. wpa_supplicant 0.7.3
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    2 --
+ drivers/net/wireless/iwlwifi/iwl-power.c         |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    2 +-
+ 6 files changed, 5 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 863c27e..f816371 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1127,8 +1127,6 @@ static void iwl_set_hw_params(struct iwl_priv *priv)
+ 
+ 	hw_params(priv).num_ampdu_queues =
+ 		cfg(priv)->base_params->num_of_ampdu_queues;
+-	hw_params(priv).shadow_reg_enable =
+-		cfg(priv)->base_params->shadow_reg_enable;
+ 	hw_params(priv).wd_timeout = cfg(priv)->base_params->wd_timeout;
+ 
+ 	/* Device-specific setup */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index d76ff23..f79ff16 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -215,7 +215,7 @@ static void iwl_static_sleep_cmd(struct iwl_priv *priv,
+ 	else
+ 		cmd->flags &= ~IWL_POWER_SLEEP_OVER_DTIM_MSK;
+ 
+-	if (hw_params(priv).shadow_reg_enable)
++	if (cfg(priv)->base_params->shadow_reg_enable)
+ 		cmd->flags |= IWL_POWER_SHADOW_REG_ENA;
+ 	else
+ 		cmd->flags &= ~IWL_POWER_SHADOW_REG_ENA;
+@@ -301,7 +301,7 @@ static void iwl_power_fill_sleep_cmd(struct iwl_priv *priv,
+ 	if (priv->power_data.bus_pm)
+ 		cmd->flags |= IWL_POWER_PCI_PM_MSK;
+ 
+-	if (hw_params(priv).shadow_reg_enable)
++	if (cfg(priv)->base_params->shadow_reg_enable)
+ 		cmd->flags |= IWL_POWER_SHADOW_REG_ENA;
+ 	else
+ 		cmd->flags &= ~IWL_POWER_SHADOW_REG_ENA;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 30b942f..a5ab58c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -185,7 +185,6 @@ struct iwl_hw_params {
+ 	u8  valid_tx_ant;
+ 	u8  valid_rx_ant;
+ 	u8  ht40_channel;
+-	bool shadow_reg_enable;
+ 	u16 sku;
+ 	u32 rx_page_order;
+ 	u32 ct_kill_threshold;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index e8d3129..911a9f1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -141,7 +141,7 @@ void iwl_rx_queue_update_write_ptr(struct iwl_trans *trans,
+ 	if (q->need_update == 0)
+ 		goto exit_unlock;
+ 
+-	if (hw_params(trans).shadow_reg_enable) {
++	if (cfg(trans)->base_params->shadow_reg_enable) {
+ 		/* shadow register enabled */
+ 		/* Device expects a multiple of 8 */
+ 		q->write_actual = (q->write & ~0x7);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index ca4ceea..2573f71 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -136,7 +136,7 @@ void iwl_txq_update_write_ptr(struct iwl_trans *trans, struct iwl_tx_queue *txq)
+ 	if (txq->need_update == 0)
+ 		return;
+ 
+-	if (hw_params(trans).shadow_reg_enable) {
++	if (cfg(trans)->base_params->shadow_reg_enable) {
+ 		/* shadow register enabled */
+ 		iwl_write32(trans, HBUS_TARG_WRPTR,
+ 			    txq->q.write_ptr | (txq_id << 8));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 4a2d4b5..44050fa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -828,7 +828,7 @@ static int iwl_nic_init(struct iwl_trans *trans)
+ 	if (iwl_tx_init(trans))
+ 		return -ENOMEM;
+ 
+-	if (hw_params(trans).shadow_reg_enable) {
++	if (cfg(trans)->base_params->shadow_reg_enable) {
+ 		/* enable shadow regs in HW */
+ 		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL,
+ 			0x800FFFFF);
+-- 
+1.7.0.4
 
-If you like to, you could just check, if the problem is network manager
-related. Try to stop it and run wpa_supplicant manually as root like
-this (ensure, that no other wpa_supplicant process is running at the
-same time):
-
-wpa_supplicant -t -c /etc/wpa_supplicant/wpa_supplicant.conf -Dnl80211
--i wlan0
-
--c is the config file. -i is the device name.
-
-sample config file for WPA2 PSK would be:
-
-network={
-        ssid="your network name"
-        # scan_ssid=1
-        key_mgmt=WPA-PSK
-        psk="your psk"
-        proto=WPA2
-}
-
-If you see a line like this:
-WPA: Key negotiation completed with xx:xx:xx:xx:xx:xx [PTK=CCMP GTK=CCMP]
-you can go to another terminal and start dhclient or dhcpcd like this:
-
-dhcpcd wlan0 (or whatever your device name is)
-
-
-If this is all running fine, you most probably face a network manager
-problem.
-
-
-Hope that helps,
-regards,
-Andreas
