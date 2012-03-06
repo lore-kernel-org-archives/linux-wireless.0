@@ -1,121 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:51167 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754653Ab2CAGId (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:59607 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031163Ab2CFUy5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 01:08:33 -0500
-Received: by mail-lpp01m010-f41.google.com with SMTP id z14so359146lag.28
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 22:08:32 -0800 (PST)
-Message-ID: <1330582108.18637.119.camel@cumari> (sfid-20120301_070857_486651_8DCC272B)
-Subject: Re: Help building compat-wireless
-From: Luciano Coelho <coelho@ti.com>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: Gary Thomas <gary@mlbassoc.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 01 Mar 2012 08:08:28 +0200
-In-Reply-To: <CAG6hwVPFwX6+Kaq=YvTVMMn-D6-wgoCV-D2oKgbHpszM55y98w@mail.gmail.com>
-References: <4F4E47BC.8000306@mlbassoc.com> <4F4E731B.7080704@mlbassoc.com>
-	 <4F4E801A.1090701@mlbassoc.com>
-	 <CAG6hwVOgFuQ8XSGvYjM7aSiWe2O2T_UdVVWz+pyEHROEfqNE-g@mail.gmail.com>
-	 <4F4E8802.8090903@mlbassoc.com>
-	 <CAG6hwVPFwX6+Kaq=YvTVMMn-D6-wgoCV-D2oKgbHpszM55y98w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 6 Mar 2012 15:54:57 -0500
+Date: Tue, 6 Mar 2012 21:54:53 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Sven Joachim <svenjoac@gmx.de>
+cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
+In-Reply-To: <alpine.LFD.2.02.1203062101040.2742@ionos>
+Message-ID: <alpine.LFD.2.02.1203062153290.2742@ionos> (sfid-20120306_215544_363607_2D698BE1)
+References: <20120228010511.GA8453@kroah.com> <20120228010434.412979550@linuxfoundation.org> <87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de> <CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com> <alpine.LFD.2.02.1203060927190.2742@ionos>
+ <alpine.LFD.2.02.1203060957140.2742@ionos> <alpine.LFD.2.02.1203062019340.2742@ionos> <8762eh1p7d.fsf@turtle.gmx.de> <alpine.LFD.2.02.1203062101040.2742@ionos>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-29 at 16:08 -0800, Thomas Pedersen wrote: 
-> On Wed, Feb 29, 2012 at 12:18 PM, Gary Thomas <gary@mlbassoc.com> wrote:
-> > On 2012-02-29 12:59, Thomas Pedersen wrote:
-> >>
-> >> Hi Gary,
-> >>
-> >> On Wed, Feb 29, 2012 at 11:44 AM, Gary Thomas<gary@mlbassoc.com>  wrote:
-> >>>
-> >>> On 2012-02-29 11:48, Gary Thomas wrote:
-> >>>>
-> >>>>
-> >>>> On 2012-02-29 08:43, Gary Thomas wrote:
-> >>>>>
-> >>>>>
-> >>>>> I'm struggling a bit to build compat-wireless in a cross-build
-> >>>>> environment.
-> >>>>> I normally don't build kernels in-tree, rather I use a build tree, e.g.
-> >>>>> % cd<linux-source>
-> >>>>> % mkdir /tmp/kernel_build
-> >>>>> % make O=/tmp/kernel_build<some_config>
-> >>>>> % make O=/tmp/kernel_build uImage
-> >>>>>
-> >>>>> I can't see how to use this setup with the compat-wireless package.
-> >>>>> I tried [all the combinations I could think of] something like this:
-> >>>>> % cd<compat-wireless>
-> >>>>> % make KLIB=<linux-source>  KLIB_BUILD=/tmp/kernel_build
-> >>>>> However, this seems to not work as all I get are errors like this:
-> >>>>> /local/compat-wireless-2012-02-28/config.mk:242: "WARNING:
-> >>>>> CONFIG_CFG80211_WEXT will be deactivated or not working because kernel
-> >>>>> was
-> >>>>> compiled with CONFIG_WIRELESS_EXT=n. Tools
-> >>>>> using wext interface like iwconfig will not work. To activate it build
-> >>>>> your kernel e.g. with CONFIG_LIBIPW=m."
-> >>>>>
-> >>>>> Does this process work in my workflow? What do I need to do to
-> >>>>> get it going?
-> >>>>
-> >>>>
-> >>>>
-> >>>> I managed to get past this, using this
-> >>>> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build
-> >>>> but to get it to actually build anything, I had to append the
-> >>>> 'modules' target, e.g.
-> >>>> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build modules
-> >>>>
-> >>>> Next problems:
-> >>>> * How do I select sub-options? I only want WL12xx support with SDIO, but
-> >>>> that requires some sub-options to be set that don't appear to happen.
-> >>>> I get the main wl12xx module, but not wl12xx_sdio or
-> >>>> wl12xx_platform_data
-> >>>> * There are a number of files which don't build against my 2.6.37
-> >>>> kernel,
-> >>>> but none of these are important to me (they are in the bluetooth driver
-> >>>> which I don't need, but nonetheless it gets built)
-> >>>> * The make/install is terribly broken for cross-builds.
-> >>>>
-> >>>> I hacked my way past these problems and finally got some modules which
-> >>>> I can try. Sadly, they don't work at all:
-> >>>> # modprobe wl12xx_sdio
-> >>>> wl12xx: loaded
-> >>>> # ifconfig wlan0 up
-> >>>> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
-> >>>> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
-> >>>> ...
-> >>>
-> >>>
-> >>>
-> >>> Sadly, this one was my fault - one of my build hacks got in the way :-(
-> >>>
-> >>> Now, I'm getting this error:
-> >>>  wl12xx: ERROR could not get firmware ti-connectivity/wl127x-fw-4-sr.bin:
-> >>> -2
-> >>> But this file is not available at the Linux firmware tree
-> >>>
-> >>> (git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git)
-> >>>
-> >>> Where can I find it?
-> >>>
-> >>
-> >> Try here:  git://github.com/TI-OpenLink/firmwares.git
-> >
-> >
-> > Thanks.  Do you know if these will be moving to kernel.org anytime soon?
-> > My build recipes expect that to be the official home for firmware.
-> >
+On Tue, 6 Mar 2012, Thomas Gleixner wrote:
+> On Tue, 6 Mar 2012, Sven Joachim wrote:
+> > Am 06.03.2012 um 20:31 schrieb Thomas Gleixner:
+> > 
+> > > Stephan, Sven: Can you please provide the output of /proc/interrupts ?
+> > 
+> > Here is mine, from a freshly booted 3.3-rc6 kernel.
+> > 
+> > Cheers,
+> >        Sven
+> > 
+> >            CPU0       
+> >   0:      25050    XT-PIC-XT-PIC    timer
+> >   1:        101    XT-PIC-XT-PIC    i8042
+> >   2:          0    XT-PIC-XT-PIC    cascade
+> >   3:          1    XT-PIC-XT-PIC  
+> >   4:          1    XT-PIC-XT-PIC  
+> >   5:          0    XT-PIC-XT-PIC    ehci_hcd:usb1, uhci_hcd:usb2
+> >   6:          1    XT-PIC-XT-PIC    i915, uhci_hcd:usb5, yenta
+> >   7:          1    XT-PIC-XT-PIC  
+> >   8:          0    XT-PIC-XT-PIC    rtc0
+> >   9:        634    XT-PIC-XT-PIC    acpi
+> >  10:        341    XT-PIC-XT-PIC    uhci_hcd:usb4, snd_hda_intel, b43
 > 
-> I believe Luciano submitted these a few weeks back, so all in good time :)
+> Ah, XT-PIC uses handle_level_irq(). /me bangs head against desk.
 
-Yes, I sent a pull request for this to be included in
-linux-firmware.git, but Ben hasn't pulled it yet.  Hopefully soon. :)
-
--- 
-Cheers,
-Luca.
-
+Ha, nosmp on the command line lets me reproduce as well and the patch
+fixes it. Duh, stupid me.
+ 
+Thanks,
+ 
+ 	tglx
