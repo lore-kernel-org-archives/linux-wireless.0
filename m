@@ -1,44 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61453 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758750Ab2CHWOO (ORCPT
+Received: from mx1.watchguard.com ([206.191.171.101]:46966 "EHLO
+	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932294Ab2CFAkZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 17:14:14 -0500
-Received: by iagz16 with SMTP id z16so1279465iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 14:14:14 -0800 (PST)
+	Mon, 5 Mar 2012 19:40:25 -0500
+From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: WARNING: driver-ops.h:10 -- how do I fix this?
+Date: Tue, 6 Mar 2012 00:40:25 +0000
+Message-ID: <461155E6-5B2C-48C3-AD1C-4D07B6EECE4B@watchguard.com> (sfid-20120306_014028_944755_47BCD942)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <4F592BE0.70706@gmail.com>
-References: <4F59274D.7060708@gmail.com> <CAB=NE6Wiwo2Cj8-UMqGQik7Hv=LMZ=+9ifa8Qia8OPuXFgEyKw@mail.gmail.com>
- <4F592BE0.70706@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 8 Mar 2012 14:13:54 -0800
-Message-ID: <CAB=NE6Wge7iQt+QsgM2xVfTxcErNGVh4OqJ5MMC_eZZGhTCcng@mail.gmail.com> (sfid-20120308_231421_411700_478C7BBC)
-Subject: Re: Google Summer of Code 2012 - Application for the Linux Foundation submitted
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	Driver Backport <lf_driver_backport@lists.linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 8, 2012 at 2:00 PM, Till Kamppeter <till.kamppeter@gmail.com> wrote:
-> On 03/08/2012 10:45 PM, Luis R. Rodriguez wrote:
->>
->>
->> So one idea I had was working on open firmware for ath9k_htc. We don't
->> have the resources to open that up but can likely provide under NDA
->> source code to let it get cleaned up for public release. If this is
->> reasonable I'll throw it on.
->>
->
-> OK, please do it.
 
-OK I'll add some other thing for backports. I'll try to see if some is
-up for backporting a video driver and integrating it with compat.
+on compat-wireless-2012-02-06 as well as compat-wireless-3.3-rc1-2, I see this:
 
-  Luis
+WARNING: at ath9k/net/mac80211/driver-ops.h:10 ieee80211_bss_info_change_notify+0x150/0x18c [mac80211]()
+
+any time I change from one band to another.  How do I fix this?
+
+--
+-bp
+
+
