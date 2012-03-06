@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:8297 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752319Ab2CBTWr (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.23]:57106 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759151Ab2CFXis convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 14:22:47 -0500
-Date: Fri, 02 Mar 2012 13:22:46 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] rtlwifi: Remove extraneous value return
-Message-ID: <4f511e06.+x7NykIn4d9VxOtA%Larry.Finger@lwfinger.net> (sfid-20120302_202250_419588_DE24B18F)
+	Tue, 6 Mar 2012 18:38:48 -0500
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
+Date: Wed, 7 Mar 2012 00:38:32 +0100
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Sven Joachim <svenjoac@gmx.de>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+References: <20120228010511.GA8453@kroah.com> <alpine.LFD.2.02.1203062243130.2742@ionos> <CA+55aFwTYRO-qOPvSPkEf_5=10EOTBQa+DpRHFf_=iwXOFi4xw@mail.gmail.com>
+In-Reply-To: <CA+55aFwTYRO-qOPvSPkEf_5=10EOTBQa+DpRHFf_=iwXOFi4xw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201203070038.34767.s.L-H@gmx.de> (sfid-20120307_003853_017986_573A4659)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In usb.c, routine _rtl_usb_init_sw() always returns 0, and rtl_usb_probe()
-never checks the returned value. Thus we can change _rtl_usb_init_sw() to
-a void routine. In addition, remove the underscore at the beginning of the
-name of the routine.
+Hi
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Wednesday 07 March 2012, Linus Torvalds wrote:
+> On Tue, Mar 6, 2012 at 2:18 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> > Subject: genirq: Clear action->thread_mask if IRQ_ONESHOT is not set
+> 
+> Ok, can we get this fixed version tested too by people who saw the problem?
+> 
+> Just to make sure..
+[…]
 
-John,
+This variant is also working fine on PIII/ coppermine and bcm4306/3.
 
-This patch also needs no priority.
+Tested-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
 
-Larry
----
-
- usb.c |    5 ++---                                                                                                                                          
- 1 file changed, 2 insertions(+), 3 deletions(-)                                                                                                             ---
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/usb.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-@@ -362,7 +362,7 @@ static int _rtl_usb_init(struct ieee8021
- 	return err;
- }
- 
--static int _rtl_usb_init_sw(struct ieee80211_hw *hw)
-+static void rtl_usb_init_sw(struct ieee80211_hw *hw)
- {
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -397,7 +397,6 @@ static int _rtl_usb_init_sw(struct ieee8
- 	/* HIMR_EX - turn all on */
- 	rtlusb->irq_mask[1] = 0xFFFFFFFF;
- 	rtlusb->disableHWSM =  true;
--	return 0;
- }
- 
- #define __RADIO_TAP_SIZE_RSV	32
-@@ -983,7 +982,7 @@ int __devinit rtl_usb_probe(struct usb_i
- 	err = _rtl_usb_init(hw);
- 	if (err)
- 		goto error_out;
--	err = _rtl_usb_init_sw(hw);
-+	rtl_usb_init_sw(hw);
- 	/* Init mac80211 sw */
- 	err = rtl_init_core(hw);
- 	if (err) {
+Regards
+	Stefan Lippers-Hollmann
