@@ -1,55 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43433 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964Ab2CSNui (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 09:50:38 -0400
-Subject: Re: [RFC] mac80211: fix possible tid_rx->reorder_timer use after
- free
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20120319134016.GC6169@redhat.com>
-References: <1332161442-7315-1-git-send-email-sgruszka@redhat.com>
-	 <1332162188.3359.33.camel@jlt3.sipsolutions.net>
-	 <20120319134016.GC6169@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Mar 2012 14:50:36 +0100
-Message-ID: <1332165036.3359.37.camel@jlt3.sipsolutions.net> (sfid-20120319_145041_994910_C747BE33)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:20496 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031499Ab2CFWni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:38 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 26/33] iwlwifi: move irq to PCIe
+Date: Tue,  6 Mar 2012 13:31:01 -0800
+Message-Id: <1331069468-11074-27-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234358_553588_509312EE)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 14:40 +0100, Stanislaw Gruszka wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > > +static void ieee80211_free_tid_rx(struct tid_ampdu_rx *tid_rx)
-> > >  {
-> > > -	struct tid_ampdu_rx *tid_rx =
-> > > -		container_of(h, struct tid_ampdu_rx, rcu_head);
-> > >  	int i;
-> > >  
-> > >  	for (i = 0; i < tid_rx->buf_size; i++)
-> > > @@ -90,10 +88,12 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-> > >  		ieee80211_send_delba(sta->sdata, sta->sta.addr,
-> > >  				     tid, WLAN_BACK_RECIPIENT, reason);
-> > >  
-> > > +	synchronize_rcu();
-> > > +
-> > >  	del_timer_sync(&tid_rx->session_timer);
-> > >  	del_timer_sync(&tid_rx->reorder_timer);
-> > >  
-> > > -	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
-> > > +	ieee80211_free_tid_rx(tid_rx);
-> > 
-> > Hmmm. That synchronize_rcu() could become rather expensive. I've been
-> > trying to reduce our use of synchronize_rcu() now.
-> 
-> Expensive in what sense? Since we are in process context we are allowed
-> to sleep, and some other processes will run while we sleep.
+Even if the variable might also be used by other
+transports, there's no need for anything outside
+of the transport itself to access it, so move it
+into the private area.
 
-It takes a long time, and we have to wait for it. So for example, it
-could delay roaming by another 100ms or however long it takes (yes, it
-can take a very long time, we've seen up to 200ms I think)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   12 ++++++------
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |    2 --
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 93f49ac..d13b8d1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -231,6 +231,7 @@ struct iwl_tx_queue {
+  * @rxq: all the RX queue data
+  * @rx_replenish: work that will be called when buffers need to be allocated
+  * @trans: pointer to the generic transport area
++ * @irq - the irq number for the device
+  * @irq_requested: true when the irq has been requested
+  * @scd_base_addr: scheduler sram base address in SRAM
+  * @scd_bc_tbls: pointer to the byte count table of the scheduler
+@@ -262,6 +263,7 @@ struct iwl_trans_pcie {
+ 	struct tasklet_struct irq_tasklet;
+ 	struct isr_statistics isr_stats;
+ 
++	unsigned int irq;
+ 	spinlock_t irq_lock;
+ 	u32 inta_mask;
+ 	u32 scd_base_addr;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 83143d8..d68dd65 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1303,7 +1303,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 
+ 	/* wait to make sure we flush pending tasklet*/
+-	synchronize_irq(trans->irq);
++	synchronize_irq(trans_pcie->irq);
+ 	tasklet_kill(&trans_pcie->irq_tasklet);
+ 
+ 	cancel_work_sync(&trans_pcie->rx_replenish);
+@@ -1522,11 +1522,11 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+ 
+ 		iwl_alloc_isr_ict(trans);
+ 
+-		err = request_irq(trans->irq, iwl_isr_ict, IRQF_SHARED,
++		err = request_irq(trans_pcie->irq, iwl_isr_ict, IRQF_SHARED,
+ 			DRV_NAME, trans);
+ 		if (err) {
+ 			IWL_ERR(trans, "Error allocating IRQ %d\n",
+-				trans->irq);
++				trans_pcie->irq);
+ 			goto error;
+ 		}
+ 
+@@ -1549,7 +1549,7 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+ 	return err;
+ 
+ err_free_irq:
+-	free_irq(trans->irq, trans);
++	free_irq(trans_pcie->irq, trans);
+ error:
+ 	iwl_free_isr_ict(trans);
+ 	tasklet_kill(&trans_pcie->irq_tasklet);
+@@ -1638,7 +1638,7 @@ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	iwl_trans_pcie_rx_free(trans);
+ #endif
+ 	if (trans_pcie->irq_requested == true) {
+-		free_irq(trans->irq, trans);
++		free_irq(trans_pcie->irq, trans);
+ 		iwl_free_isr_ict(trans);
+ 	}
+ 
+@@ -2329,7 +2329,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
+ 			"pci_enable_msi failed(0X%x)", err);
+ 
+ 	trans->dev = &pdev->dev;
+-	trans->irq = pdev->irq;
++	trans_pcie->irq = pdev->irq;
+ 	trans_pcie->pci_dev = pdev;
+ 	trans->hw_rev = iwl_read32(trans, CSR_HW_REV);
+ 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index dcad694..a4a9efc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -334,7 +334,6 @@ enum iwl_trans_state {
+  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
+  * @reg_lock - protect hw register access
+  * @dev - pointer to struct device * that represents the device
+- * @irq - the irq number for the device
+  * @hw_id: a u32 with the ID of the device / subdevice.
+  *	Set during transport allocation.
+  * @hw_id_str: a string with info about HW ID. Set during transport allocation.
+@@ -349,7 +348,6 @@ struct iwl_trans {
+ 	spinlock_t reg_lock;
+ 
+ 	struct device *dev;
+-	unsigned int irq;
+ 	u32 hw_rev;
+ 	u32 hw_id;
+ 	char hw_id_str[52];
+-- 
+1.7.0.4
 
