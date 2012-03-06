@@ -1,51 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:59584 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752784Ab2CSUgV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 16:36:21 -0400
-Received: by iagz16 with SMTP id z16so9921329iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 13:36:21 -0700 (PDT)
-Message-ID: <4F6798C2.1000203@lwfinger.net> (sfid-20120319_213625_545526_621EB297)
-Date: Mon, 19 Mar 2012 15:36:18 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Preallocate USB read buffers and eliminate kalloc
- in read routine
-References: <4f669d14.5MVnZ/K9sIFwYerB%Larry.Finger@lwfinger.net> <1332125197.23125.41.camel@joe2Laptop>
-In-Reply-To: <1332125197.23125.41.camel@joe2Laptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:58272 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031496Ab2CFWnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:41 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 31/33] iwlwifi: don't include iwl-prph.h everywhere
+Date: Tue,  6 Mar 2012 13:31:06 -0800
+Message-Id: <1331069468-11074-32-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234351_750128_593184A1)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/18/2012 09:46 PM, Joe Perches wrote:
-> On Sun, 2012-03-18 at 21:42 -0500, Larry Finger wrote:
->> The current version of rtlwifi for USB operations uses kmalloc to
->> acquire a 32-bit buffer for reading.
->
-> trivia:
->
->> +++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-> []
->> @@ -955,6 +947,13 @@ int __devinit rtl_usb_probe(struct usb_i
->>   		return -ENOMEM;
->>   	}
->>   	rtlpriv = hw->priv;
->> +	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
->> +				    GFP_KERNEL);
->> +	if (!rtlpriv->usb_data) {
->> +		RT_ASSERT(false, "USB data buffer allocation failed\n");
->
-> The RT_ASSERT isn't really necessary as kzalloc already
-> does a dump_stack on allocation failure.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I thought it only dumped the stack when some form of kernel debugging was enabled.
+It's only needed in a few places.
 
-Larry
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 --
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-testmode.c |    1 +
+ 5 files changed, 4 insertions(+), 2 deletions(-)
 
->
->
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 900d430..798e24e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -43,6 +43,7 @@
+ #include "iwl-agn-hw.h"
+ #include "iwl-shared.h"
+ #include "iwl-cfg.h"
++#include "iwl-prph.h"
+ 
+ /* Highest firmware API version supported */
+ #define IWL1000_UCODE_API_MAX 6
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 0b85ca0..0e97cfd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -45,6 +45,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-shared.h"
+ #include "iwl-cfg.h"
++#include "iwl-prph.h"
+ 
+ /* Highest firmware API version supported */
+ #define IWL5000_UCODE_API_MAX 5
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index a301daf..d1e722b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -37,11 +37,9 @@
+ #include <linux/leds.h>
+ #include <linux/slab.h>
+ #include <linux/mutex.h>
+-#include <net/ieee80211_radiotap.h>
+ 
+ #include "iwl-eeprom.h"
+ #include "iwl-csr.h"
+-#include "iwl-prph.h"
+ #include "iwl-debug.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-led.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index f965ee3..e2d8084 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -75,6 +75,7 @@
+ #include "iwl-agn.h"
+ #include "iwl-eeprom.h"
+ #include "iwl-io.h"
++#include "iwl-prph.h"
+ 
+ /************************** EEPROM BANDS ****************************
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index 63868df..5b06916 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -78,6 +78,7 @@
+ #include "iwl-testmode.h"
+ #include "iwl-trans.h"
+ #include "iwl-fh.h"
++#include "iwl-prph.h"
+ 
+ 
+ /* Periphery registers absolute lower bound. This is used in order to
+-- 
+1.7.0.4
 
