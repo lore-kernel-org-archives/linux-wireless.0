@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:55991 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255Ab2CLLW7 convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34424 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758166Ab2CFBwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 07:22:59 -0400
-Subject: [PATCH 1/4] ath6kl: fix regression in ath6kl_upload_board_file()
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Mon, 12 Mar 2012 13:22:54 +0200
-Message-ID: <20120312112254.23253.79934.stgit@x201> (sfid-20120312_122303_247980_D8732FCD)
-In-Reply-To: <20120312112131.23253.74137.stgit@x201>
-References: <20120312112131.23253.74137.stgit@x201>
+	Mon, 5 Mar 2012 20:52:51 -0500
+Received: by iagz16 with SMTP id z16so6347811iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 17:52:50 -0800 (PST)
+Message-ID: <4F556DF0.3070806@lwfinger.net> (sfid-20120306_025254_874259_DA918F40)
+Date: Mon, 05 Mar 2012 19:52:48 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: John Williams <john@pond-weed.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8192cu driver ignores eeprom channel plan
+References: <20120305213956.7c383096@buffy.scoobygang>
+In-Reply-To: <20120305213956.7c383096@buffy.scoobygang>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My patch 24fc32b3 ("ath6kl: add ath6kl_bmi_write_hi32()") caused a regression
-in ath6kl_upload_board_file() and the board_address variable was not
-properly initialised in some cases:
+On 03/05/2012 03:39 PM, John Williams wrote:
+> Larry,
+>
+> The various rtl8192xx drivers read the manufacturer-set channel plan
+> into efuse.eeprom_channelplan, but ignore this and use
+> efuse.channel_plan (which is never initialized) when deciding which
+> channels to allow. The patch below allowed my device, purchased in
+> Europe, to see channels 12 and 13 when configured with "iw reg set EC"
+>
+> It needs more work in order to accept being configured for arbitrary countries: would you like me to work on a more comprehensive patch?
 
-ath6kl/init.c:1068:6: warning: ‘board_address’ may be used uninitialized
-in this function
+Please - I have plenty to do. I had never had any problems with the allowed 
+channels, as I use CRDA and it sets my domain to US, which is as restrictive as any.
 
-Most likely this broke ar6004 support but I can't test that right now.
+I just tested, and the RTL8192CE that I have installed at the moment has 0xA 
+(COUNTRY_CODE_WORLD_WIDE_13) in the eeprom, which happens to be what is set in 
+rtlpriv->efuse.channel_plan in rtl8192ce. That is not surprising as the card 
+came from Realtek and I would expect something appropriate for China.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 231675d..03cae14 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1078,8 +1078,9 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 	 * writing board data.
- 	 */
- 	if (ar->hw.board_addr != 0) {
-+		board_address = ar->hw.board_addr;
- 		ath6kl_bmi_write_hi32(ar, hi_board_data,
--				      ar->hw.board_addr);
-+				      board_address);
- 	} else {
- 		ath6kl_bmi_read_hi32(ar, hi_board_data, &board_address);
- 	}
-
+Larry
