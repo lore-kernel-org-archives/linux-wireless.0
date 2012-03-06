@@ -1,89 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:57689 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933059Ab2CZS5G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 14:57:06 -0400
-Date: Mon, 26 Mar 2012 14:56:42 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Julian Calaby <julian.calaby@gmail.com>, <zajec5@gmail.com>,
-	<linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcma: fix build error on MIPS; implicit
- pcibios_enable_device
-Message-ID: <20120326185641.GA22375@windriver.com> (sfid-20120326_205720_613971_2675F6A8)
-References: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com>
- <CAGRGNgVBwKppzMa7HZeWm+ZW1a7u0JKwxxFS2xCRv=bpxXnk+Q@mail.gmail.com>
- <20120326012038.GA7722@windriver.com>
- <CAGRGNgVm_cNAdXZcSjj1oUz98vAVNEsdpZZ9L6=cc_sX_AZ8Rg@mail.gmail.com>
- <4F70543F.2010007@hauke-m.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:1945 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030660Ab2CFN1x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 08:27:53 -0500
+Message-ID: <4F5610C2.3030101@broadcom.com> (sfid-20120306_142802_259067_FD44F0B5)
+Date: Tue, 6 Mar 2012 14:27:30 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F70543F.2010007@hauke-m.de>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"m@bues.ch" <m@bues.ch>,
+	"ralf@linux-mips.org" <ralf@linux-mips.org>
+Subject: Re: [PATCH v2 07/11] bcma: add support for sprom not found on
+ the device
+References: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
+ <1330386974-4056-8-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1330386974-4056-8-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following is seen during allmodconfig builds for MIPS:
+On 02/28/2012 12:56 AM, Hauke Mehrtens wrote:
+>   	if (!bus->drv_cc.core)
+>   		return -EOPNOTSUPP;
+>
+> -	if (!(bus->drv_cc.capabilities&  BCMA_CC_CAP_SPROM))
+> -		return -ENOENT;
+> -
+> -	if (bus->drv_cc.core->id.rev>= 32) {
+> -		sromctrl = bcma_read32(bus->drv_cc.core, BCMA_CC_SROM_CONTROL);
+> -		if (!(sromctrl&  BCMA_CC_SROM_CONTROL_PRESENT))
+> -			return -ENOENT;
+> +	if (!bcma_is_sprom_available(bus)) {
+> +		/*
+> +		 * Maybe there is no SPROM on the device?
+> +		 * Now we ask the arch code if there is some sprom
+> +		 * available for this device in some other storage.
+> +		 */
+> +		err = bcma_fill_sprom_with_fallback(bus,&bus->sprom);
+> +		if (err) {
+> +			pr_warn("Using fallback SPROM failed (err %d)\n", err);
 
-drivers/bcma/driver_pci_host.c:518:2: error: implicit declaration
-of function 'pcibios_enable_device' [-Werror=implicit-function-declaration]
-cc1: some warnings being treated as errors
-make[3]: *** [drivers/bcma/driver_pci_host.o] Error 1
+Hi Hauke,
 
-Most likey introduced by commit 49dc9577155576b10ff79f0c1486c816b01f58bf
+I just noticed in this patch that the code continues when sprom fallback 
+fails. Does that make sense? I have corrected it in my OTP patch. So if 
+you agree or disagree you can comment on that patch.
 
-   "bcma: add PCIe host controller"
+> +		} else {
+> +			pr_debug("Using SPROM revision %d provided by"
+> +				 " platform.\n", bus->sprom.revision);
+> +			return 0;
+> +		}
+>   	}
+>
+>   	sprom = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
 
-Add the header instead of implicitly assuming it will be present.
-Sounds like a good idea, but that alone doesn't fix anything.
+Gr. AvS
 
-The real problem is that the Kconfig has settings related to whether
-PCI is possible, i.e.
-
- config BCMA_HOST_PCI_POSSIBLE
-       bool
-       depends on BCMA && PCI = y
-       default y
-
- config BCMA_HOST_PCI
-       bool "Support for BCMA on PCI-host bus"
-       depends on BCMA_HOST_PCI_POSSIBLE
-
-...but what is missing is that BCMA_DRIVER_PCI_HOSTMODE doesn't
-have any dependencies on the above.  Add one.
-
-CC: Hauke Mehrtens <hauke@hauke-m.de>
-CC: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
-
-[ v2: depend on BCMA_HOST_PCI_POSSIBLE, not BCMA_HOST_PCI ]
-
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index c1172da..6a0082d 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -29,7 +29,7 @@ config BCMA_HOST_PCI
- 
- config BCMA_DRIVER_PCI_HOSTMODE
- 	bool "Driver for PCI core working in hostmode"
--	depends on BCMA && MIPS
-+	depends on BCMA && MIPS && BCMA_HOST_PCI_POSSIBLE
- 	help
- 	  PCI core hostmode operation (external PCI bus).
- 
-diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-index 4e20bcf..d2097a1 100644
---- a/drivers/bcma/driver_pci_host.c
-+++ b/drivers/bcma/driver_pci_host.c
-@@ -10,6 +10,7 @@
-  */
- 
- #include "bcma_private.h"
-+#include <linux/pci.h>
- #include <linux/export.h>
- #include <linux/bcma/bcma.h>
- #include <asm/paccess.h>
--- 
-1.7.9.1
