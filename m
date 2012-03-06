@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:56296 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754324Ab2CSDiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 23:38:08 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, e1000-devel@lists.sourceforge.net
-Subject: [PATCH 0/4] driver: net: Use ETH_ALEN 
-Date: Sun, 18 Mar 2012 20:37:55 -0700
-Message-Id: <cover.1332128181.git.joe@perches.com> (sfid-20120319_043936_012645_2F61B945)
+Received: from mail-we0-f174.google.com ([74.125.82.174]:33003 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755568Ab2CFVlT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 16:41:19 -0500
+MIME-Version: 1.0
+In-Reply-To: <alpine.LFD.2.02.1203062210340.2742@ionos>
+References: <20120228010511.GA8453@kroah.com> <20120228010434.412979550@linuxfoundation.org>
+ <87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de>
+ <CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com>
+ <alpine.LFD.2.02.1203060927190.2742@ionos> <alpine.LFD.2.02.1203060957140.2742@ionos>
+ <alpine.LFD.2.02.1203062019340.2742@ionos> <8762eh1p7d.fsf@turtle.gmx.de>
+ <alpine.LFD.2.02.1203062101040.2742@ionos> <87r4x5zbe5.fsf@turtle.gmx.de> <alpine.LFD.2.02.1203062210340.2742@ionos>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 6 Mar 2012 13:40:57 -0800
+Message-ID: <CA+55aFyyRQtj2A2Dzb26QbNpTeG7a3Y+2ExRdgp3=o-MAYFyhQ@mail.gmail.com> (sfid-20120306_224123_723471_2F45C735)
+Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Sven Joachim <svenjoac@gmx.de>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just some neatening
+On Tue, Mar 6, 2012 at 1:11 PM, Thomas Gleixner <tglx@linutronix.de> wrote:
+>
+> Can you pick it up directly or want me to send it via tip ?
 
-Joe Perches (4):
-  if_vlan: Remove VLAN_ETH_ALEN define and the 1 use of it
-  atlx: Use ETH_ALEN
-  igbvf: Use ETH_ALEN
-  rtlwifi: Remove unused ETH_ADDR_LEN defines
+I can certainly pick it up directly, but I want the sane version, not
+the "random monkeys typing" version. Please.
 
- drivers/net/ethernet/atheros/atlx/atl2.c     |   13 +++++--------
- drivers/net/ethernet/atheros/atlx/atl2.h     |    5 ++---
- drivers/net/ethernet/atheros/atlx/atlx.h     |    1 -
- drivers/net/ethernet/intel/igbvf/defines.h   |    4 ----
- drivers/net/ethernet/intel/igbvf/vf.c        |    7 ++-----
- drivers/net/wireless/rtlwifi/rtl8192ce/reg.h |    1 -
- drivers/net/wireless/rtlwifi/rtl8192de/reg.h |    1 -
- include/linux/if_vlan.h                      |    7 +++----
- 8 files changed, 12 insertions(+), 27 deletions(-)
-
--- 
-1.7.8.111.gad25c.dirty
-
+                   Linus
