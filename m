@@ -1,108 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:53593 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1030933Ab2CFUK6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 15:10:58 -0500
-From: Sven Joachim <svenjoac@gmx.de>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
-References: <20120228010511.GA8453@kroah.com>
-	<20120228010434.412979550@linuxfoundation.org>
-	<87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de>
-	<alpine.LFD.2.02.1203062043500.2742@ionos>
-Date: Tue, 06 Mar 2012 21:10:54 +0100
-In-Reply-To: <alpine.LFD.2.02.1203062043500.2742@ionos> (Thomas Gleixner's
-	message of "Tue, 6 Mar 2012 20:45:21 +0100 (CET)")
-Message-ID: <87wr6xze0h.fsf@turtle.gmx.de> (sfid-20120306_211103_479581_42C6807F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:64658 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031480Ab2CFWng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:36 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 20/33] iwlwifi: put use_rts_for_aggregation into hw_params
+Date: Tue,  6 Mar 2012 13:30:55 -0800
+Message-Id: <1331069468-11074-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234341_464274_1D8CE89F)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 06.03.2012 um 20:45 schrieb Thomas Gleixner:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Mon, 5 Mar 2012, Stefan Lippers-Hollmann wrote:
->> On Monday 05 March 2012, Sven Joachim wrote:
->> > On 2012-02-28 02:05 +0100, Greg KH wrote:
->> > 
->> > > 3.2-stable review patch.  If anyone has any objections, please let me know.
->> > 
->> > Alas, the commit below broke the WiFi on my laptop, where
->> > "iwlist wlan0 scan" now just reports: " wlan0     No scan results".
->> > 
->> > This is not specific to 3.2, the same problem exists in 3.0.23 and
->> > 3.3-rc6 while previous releases worked.
->> 
->> I can confirm this regression on an old PIII based notebook with a 
->> 32 bit BCM4306/3 PCMCIA card:
->> 
->> 02:00.0 Network controller [0280]: Broadcom Corporation BCM4306 802.11b/g Wireless LAN Controller [14e4:4320] (rev 03)
->>         Subsystem: Linksys WPC54G v1 / WPC54GS v1 802.11g Wireless-G Notebook Adapter [1737:4320]
->>         Flags: bus master, fast devsel, latency 64, IRQ 10
->>         Memory at 20000000 (32-bit, non-prefetchable) [size=8K]
->>         Capabilities: [40] Power Management version 2
->>         Kernel driver in use: b43-pci-bridge
->> 
->> I can observe these differences in the dmesg output (3.2.9 + current 
->> stable queue-3.2):
->> 
->> The kernel configuration is identical in both cases, the only 
->> difference is "genirq: Unmask oneshot irqs when thread was not woken"
->> being applied or not.
->> 
->> --- working	<-- 3.2.9 + current stable queue-3.2, with "genirq: Unmask oneshot irqs when thread was not woken" reverted
->> +++ broken	<-- 3.2.9 + current stable queue-3.2
->> @@ -125,6 +125,7 @@ Initializing cgroup subsys freezer
->>  Initializing cgroup subsys net_cls
->>  Initializing cgroup subsys blkio
->>  Initializing cgroup subsys perf_event
->> +CPU serial number disabled.
->
-> I can't see why reverting that genirq patch would cause this.
->
->>  mce: CPU supports 5 MCE banks
->>  SMP alternatives: switching to UP code
->>  Freeing SMP alternatives: 8k freed
->> @@ -137,9 +138,16 @@ SMP disabled
->>  Performance Events: 
->>  no APIC, boot with the "lapic" boot parameter to force-enable it.
->>  no hardware sampling interrupt available.
->> -Broken PMU hardware detected, using software events only.
->> +p6 PMU driver.
->> +... version:                0
->> +... bit width:              32
->> +... generic registers:      2
->> +... value mask:             00000000ffffffff
->> +... max period:             000000007fffffff
->> +... fixed-purpose events:   0
->> +... event mask:             0000000000000003
->
-> Ditto.
->
->>  Brought up 1 CPUs
->>  Total of 1 processors activated (1989.75 BogoMIPS).
->>  devtmpfs: initialized
->>  PM: Registering ACPI NVS region at eeff000 (4096 bytes)
->>  print_constraints: dummy: 
->> @@ -174,12 +182,12 @@ pci 0000:00:00.0: reg 10: [mem 0xec00000
->>  type 1 class 0x000604
->>  pci 0000:00:01.0: supports D1
->>  type 2 class 0x000607
->> -pci 0000:00:04.0: reg 10: [mem 0x10000000-0x10000fff]
->> +pci 0000:00:04.0: reg 10: [mem 0x00000000-0x00000fff]
->
-> Even more. 
+The hardware config ht_params shouldn't be modified,
+so copy the use_rts_for_aggregation parameter into
+hw_params and use/modify it there.
 
-FWIW, I don't see any such differences on my system (with 3.3-rc6).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-shared.h   |    2 ++
+ 6 files changed, 13 insertions(+), 9 deletions(-)
 
-> There is something extremly fishy.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 2c5e7ec..e191d39 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -436,8 +436,7 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	 * force CTS-to-self frames protection if RTS-CTS is not preferred
+ 	 * one aggregation protection method
+ 	 */
+-	if (!(cfg(priv)->ht_params &&
+-	      cfg(priv)->ht_params->use_rts_for_aggregation))
++	if (!hw_params(priv).use_rts_for_aggregation)
+ 		ctx->staging.flags |= RXON_FLG_SELF_CTS_EN;
+ 
+ 	if ((ctx->vif && ctx->vif->bss_conf.use_short_slot) ||
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index ab2221d..5734dbf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -594,8 +594,7 @@ int iwlagn_tx_agg_oper(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	sta_priv->max_agg_bufsize =
+ 		min(sta_priv->max_agg_bufsize, buf_size);
+ 
+-	if (cfg(priv)->ht_params &&
+-	    cfg(priv)->ht_params->use_rts_for_aggregation) {
++	if (hw_params(priv).use_rts_for_aggregation) {
+ 		/*
+ 		 * switch to RTS/CTS if it is the prefer protection
+ 		 * method for HT traffic
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ac23aa3..ce62a2f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1119,6 +1119,10 @@ static void iwl_uninit_drv(struct iwl_priv *priv)
+ 
+ static void iwl_set_hw_params(struct iwl_priv *priv)
+ {
++	if (cfg(priv)->ht_params)
++		hw_params(priv).use_rts_for_aggregation =
++			cfg(priv)->ht_params->use_rts_for_aggregation;
++
+ 	if (iwlagn_mod_params.amsdu_size_8K)
+ 		hw_params(priv).rx_page_order =
+ 			get_order(IWL_RX_BUF_SIZE_8K);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index b729128..5e1b078 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -2431,7 +2431,7 @@ static ssize_t iwl_dbgfs_protection_mode_read(struct file *file,
+ 	if (cfg(priv)->ht_params)
+ 		pos += scnprintf(buf + pos, bufsz - pos,
+ 			 "use %s for aggregation\n",
+-			 (cfg(priv)->ht_params->use_rts_for_aggregation) ?
++			 (hw_params(priv).use_rts_for_aggregation) ?
+ 				"rts/cts" : "cts-to-self");
+ 	else
+ 		pos += scnprintf(buf + pos, bufsz - pos, "N/A");
+@@ -2458,9 +2458,9 @@ static ssize_t iwl_dbgfs_protection_mode_write(struct file *file,
+ 	if (sscanf(buf, "%d", &rts) != 1)
+ 		return -EINVAL;
+ 	if (rts)
+-		cfg(priv)->ht_params->use_rts_for_aggregation = true;
++		hw_params(priv).use_rts_for_aggregation = true;
+ 	else
+-		cfg(priv)->ht_params->use_rts_for_aggregation = false;
++		hw_params(priv).use_rts_for_aggregation = false;
+ 	return count;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 3086176..d2c1d71 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -660,8 +660,8 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
+ 			IWL_DEBUG_HT(priv, "priv->agg_tids_count = %u\n",
+ 				     priv->agg_tids_count);
+ 		}
+-		if (!priv->agg_tids_count && cfg(priv)->ht_params &&
+-		    cfg(priv)->ht_params->use_rts_for_aggregation) {
++		if (!priv->agg_tids_count &&
++		    hw_params(priv).use_rts_for_aggregation) {
+ 			/*
+ 			 * switch off RTS/CTS if it was previously enabled
+ 			 */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 5fac263..ecb46dc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -173,6 +173,7 @@ struct iwl_mod_params {
+  *	relevant for 1000, 6000 and up
+  * @wd_timeout: TX queues watchdog timeout
+  * @struct iwl_sensitivity_ranges: range of sensitivity values
++ * @use_rts_for_aggregation: use rts/cts protection for HT traffic
+  */
+ struct iwl_hw_params {
+ 	u8  num_ampdu_queues;
+@@ -181,6 +182,7 @@ struct iwl_hw_params {
+ 	u8  valid_tx_ant;
+ 	u8  valid_rx_ant;
+ 	u8  ht40_channel;
++	bool use_rts_for_aggregation;
+ 	u16 sku;
+ 	u32 rx_page_order;
+ 	u32 ct_kill_threshold;
+-- 
+1.7.0.4
 
-Cheers,
-       Sven
