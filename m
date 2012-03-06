@@ -1,95 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:43694 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632Ab2CFPu2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 10:50:28 -0500
-Received: by vcqp1 with SMTP id p1so4503995vcq.19
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 07:50:27 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <7596c51dab245e8f5cb1e3010943e28b@posedge.com>
-References: <7596c51dab245e8f5cb1e3010943e28b@posedge.com>
-Date: Tue, 6 Mar 2012 21:20:27 +0530
-Message-ID: <CAD2nsn3yp9KetFQHpeLq2R1S_brY=3u+wznCdeGh6i8qwvYCvw@mail.gmail.com> (sfid-20120306_165031_567013_E208BD5B)
-Subject: Re: requesting information on null frame send during scan in mac80211
- - linux 3_1_4 code base
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: vivekanandah@posedge.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:58272 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031495Ab2CFWnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:37 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 24/33] iwlwifi: move ucode_owner to priv
+Date: Tue,  6 Mar 2012 13:30:59 -0800
+Message-Id: <1331069468-11074-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234356_849659_CBFC4EC9)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 3, 2012 at 12:09 AM,  <vivekanandah@posedge.com> wrote:
-> hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-hi vivekanandah,
+The transport doesn't really need to know as
+we can enforce it in the command wrapper.
+Move the ucode_owner variable into priv and
+do all enforcing there.
 
->
-> i am new to the linux system and i am hoping that this is the right list to
-> mail for my query.
->
-> I am presently working on linux kernel 3.1.4 and i was looking into the
-> mac80211 code and the scan implementation on the same.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-dev.h           |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-testmode.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    6 ------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    1 -
+ 8 files changed, 14 insertions(+), 13 deletions(-)
 
-the present wireless-testing scan state machine is simplified by the
-johannes's patch
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/80287
-and easy to understand
-
->
-> when the scan process is started, the station is supposed to send a null
-> frame with PM bit set, so that AP can buffer frames to the station.
->
-> However, it is seen in code that when scan is initiated (software scan),
-> the ieee80211_offchannel_enable_all_ps(local, false); function is called,
-> since the flag is set to false, the NULL frame will not be sent out. also,
-> when the scan state changes to leaving operating channel, the vifs interface
-> is blocked. even here, i see that the flag setting is false for offchannel
-> Power save and the null frame is not sent out.
-
-the current wireless-testing tree does this. please look at
-ieee80211_start_sw_scan
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-
->
-> the comment however just prior to the vifs stop function call indicates that
-> offchannel settings are already completed at the start of scan process. the
-> code snippet is shown below:
->
-> /*PS will already be in off-channel mode, we do that once at the beginning
-> of scanning.*/
-> ieee80211_offchannel_stop_vifs(local, false);
->
-> i just would like to know why the flag is FALSE in both cases, so we never
-> send out a null frame to the AP at the start. is this a bug or there is some
-> deficiency in my current understanding?
-
-based on my limited understanding of the previous code, my guess we
-have in ieee80211_work in work.c and this should send a null func
-frame. (both started and tmp_channel will be false and NULL
-
-if (on_oper_chan != on_oper_chan2) {
-				if (on_oper_chan2) {
-					/* going off oper channel, PS too */
-----> 					ieee80211_offchannel_stop_vifs(local,
-								       true);
-					ieee80211_hw_config(local, 0);
-				} else {
-					/* going on channel, but leave PS
-
-its best to look at the current wireless-testing tree code, its more simpler.
-
-
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 90f1f8a..dec2693 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1306,6 +1306,12 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	if (cmd->flags & CMD_SYNC)
+ 		lockdep_assert_held(&priv->mutex);
+ 
++	if (priv->ucode_owner == IWL_OWNERSHIP_TM &&
++	    !(cmd->flags & CMD_ON_DEMAND)) {
++		IWL_DEBUG_HC(priv, "tm own the uCode, no regular hcmd send\n");
++		return -EIO;
++	}
++
+ 	return iwl_trans_send_cmd(trans(priv), cmd);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index f17142b..08de306 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -1165,7 +1165,7 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
+ 	iwl_notification_wait_notify(&priv->notif_wait, pkt);
+ 
+ 	if (priv->pre_rx_handler &&
+-	    priv->shrd->ucode_owner == IWL_OWNERSHIP_TM)
++	    priv->ucode_owner == IWL_OWNERSHIP_TM)
+ 		priv->pre_rx_handler(priv, rxb);
+ 	else {
+ 		/* Based on type of command response or notification,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ce62a2f..afded29 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1053,6 +1053,8 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
+ 	priv->agg_tids_count = 0;
+ 
++	priv->ucode_owner = IWL_OWNERSHIP_DRIVER;
++
+ 	/* initialize force reset */
+ 	priv->force_reset[IWL_RF_RESET].reset_duration =
+ 		IWL_DELAY_NEXT_FORCE_RF_RESET;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index c57e605..a301daf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -748,6 +748,10 @@ struct iwl_priv {
+ 	struct iwl_spectrum_notification measure_report;
+ 	u8 measurement_status;
+ 
++#define IWL_OWNERSHIP_DRIVER	0
++#define IWL_OWNERSHIP_TM	1
++	u8 ucode_owner;
++
+ 	/* ucode beacon time */
+ 	u32 ucode_beacon_time;
+ 	int missed_beacon_threshold;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 1ec5a22..ca090d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -354,7 +354,6 @@ struct iwl_cfg {
+ /**
+  * struct iwl_shared - shared fields for all the layers of the driver
+  *
+- * @ucode_owner: IWL_OWNERSHIP_*
+  * @cmd_queue: command queue number
+  * @status: STATUS_*
+  * @wowlan: are we running wowlan uCode
+@@ -372,9 +371,6 @@ struct iwl_cfg {
+  * @device_pointers: pointers to ucode event tables
+  */
+ struct iwl_shared {
+-#define IWL_OWNERSHIP_DRIVER	0
+-#define IWL_OWNERSHIP_TM	1
+-	u8 ucode_owner;
+ 	u8 cmd_queue;
+ 	unsigned long status;
+ 	u8 valid_contexts;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index cc049d2..63868df 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -770,7 +770,7 @@ static int iwl_testmode_ownership(struct ieee80211_hw *hw, struct nlattr **tb)
+ 
+ 	owner = nla_get_u8(tb[IWL_TM_ATTR_UCODE_OWNER]);
+ 	if ((owner == IWL_OWNERSHIP_DRIVER) || (owner == IWL_OWNERSHIP_TM))
+-		priv->shrd->ucode_owner = owner;
++		priv->ucode_owner = owner;
+ 	else {
+ 		IWL_ERR(priv, "Invalid owner\n");
+ 		return -EINVAL;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 9af5c8f..8d13362 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -686,12 +686,6 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 		return -EIO;
+ 	}
+ 
+-	if ((trans->shrd->ucode_owner == IWL_OWNERSHIP_TM) &&
+-	    !(cmd->flags & CMD_ON_DEMAND)) {
+-		IWL_DEBUG_HC(trans, "tm own the uCode, no regular hcmd send\n");
+-		return -EIO;
+-	}
+-
+ 	copy_size = sizeof(out_cmd->hdr);
+ 	cmd_size = sizeof(out_cmd->hdr);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 6da9972..7a2e65f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1029,7 +1029,6 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	bool hw_rfkill;
+ 
+-	trans->shrd->ucode_owner = IWL_OWNERSHIP_DRIVER;
+ 	trans_pcie->ac_to_queue[IWL_RXON_CTX_BSS] = iwlagn_bss_ac_to_queue;
+ 	trans_pcie->ac_to_queue[IWL_RXON_CTX_PAN] = iwlagn_pan_ac_to_queue;
+ 
 -- 
-thanks,
-shafi
+1.7.0.4
+
