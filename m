@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42042 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932134Ab2CSKJe (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:47524 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754592Ab2CFXrj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 06:09:34 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Tue, 6 Mar 2012 18:47:39 -0500
+Received: by iagz16 with SMTP id z16so7761299iag.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 15:47:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20327.1467.708015.943566@gargle.gargle.HOWL> (sfid-20120319_110941_886740_0F152CBF)
-Date: Mon, 19 Mar 2012 15:38:59 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Adrian Chadd <adrian@freebsd.org>,
-	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 20/40 coexist
-In-Reply-To: <1332145593.3359.6.camel@jlt3.sipsolutions.net>
-References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
-	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
-	<1331902885.6753.10.camel@jlt3.sipsolutions.net>
-	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
-	<1332065984.3609.5.camel@jlt3.sipsolutions.net>
-	<CAJ-VmomNGku0CNfX+feeeUET4mXEFDj976sSfg-GG-KUSGCWvw@mail.gmail.com>
-	<20326.44233.811876.892785@gargle.gargle.HOWL>
-	<1332145593.3359.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1331076222.28277.2.camel@dfry-linux1>
+References: <1331076222.28277.2.camel@dfry-linux1>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 6 Mar 2012 15:47:17 -0800
+Message-ID: <CAB=NE6WQ8_LK=4A=qQw3_-a6ebverkKJq-AwtyzegOUU2iXuWA@mail.gmail.com> (sfid-20120307_004743_072825_353576FF)
+Subject: Re: [PATCH] compat-wireless: Handle name change from iwlagn to
+ iwlwifi in 3.2
+To: Don Fry <donald.h.fry@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> > As far as ath9k/ath9k_htc is concerned, I think we have to reset/reconfigure the HW
-> > when a channel switch happens, since we reprogram various MAC/PHY registers based on
-> > the HT bandwidth. Both ath9k and ath9k_htc update their rate control modules
-> > correctly - ath9k via the rate_update() callback and ath9k_htc using BSS_CHANGED_HT
-> > in bss_info_changed().
-> 
-> I'm not sure ath9k_htc is behaving correctly. Ok I should say that
-> differently -- it's probably behaving "correctly" wrt. whatever mac80211
-> did before, but we're changing the way mac80211 behaves and I believe
-> that to be (more) correct, see my other email.
+On Tue, Mar 6, 2012 at 3:23 PM, Don Fry <donald.h.fry@intel.com> wrote:
+> From: Don Fry <donald.h.fry@intel.com>
+>
+> With linux-3.2 the iwlagn driver is renamed iwlwifi.  For some kernels
+> (like 3.1.5) this causes the non-compat iwlagn.ko to try and run against
+> the compat mac80211 resulting in an oops.  This change prevents the
+> non-compat iwlagn.ko from being loaded.
+>
+> Signed-off-by: Don Fry <donald.h.fry@intel.com>
 
-Well, we do a bunch of HW configuration based on the channel bandwidth, like
-TX power, program MAC/PHY registers, various calibration routines at the baseband level.
-So when the bandwidth changes, doing a full HW reset is required, I think.
+Applied and pushed, thanks!
 
-Sujith
+  Luis
