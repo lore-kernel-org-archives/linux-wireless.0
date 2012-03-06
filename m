@@ -1,52 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:34465 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757313Ab2CSAbN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 20:31:13 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	ath9k-devel@lists.ath9k.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 0/3] ath: printk cleanups and code reduction
-Date: Sun, 18 Mar 2012 17:30:51 -0700
-Message-Id: <cover.1332116921.git.joe@perches.com> (sfid-20120319_013142_910666_226DE58F)
+Received: from he.sipsolutions.net ([78.46.109.217]:57468 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758636Ab2CFI3T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 03:29:19 -0500
+Subject: Re: [PATCHv6 2/2] mac80211: Modify tsf via debugfs in mesh
+ interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1330996838-18960-2-git-send-email-javier@cozybit.com> (sfid-20120306_022119_126257_D7F5EBF0)
+References: <1330996838-18960-1-git-send-email-javier@cozybit.com>
+	 <1330996838-18960-2-git-send-email-javier@cozybit.com>
+	 (sfid-20120306_022119_126257_D7F5EBF0)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Mar 2012 09:29:16 +0100
+Message-ID: <1331022556.3447.1.camel@jlt3.sipsolutions.net> (sfid-20120306_092922_865038_0B575D79)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches (3):
-  ath: Add and use pr_fmt, convert printks to pr_<level>
-  ath5k: Introduce _ath5k_printk to reduce code/text
-  ath6kl: Add __printf verification to ath6kl_printk
+On Mon, 2012-03-05 at 17:20 -0800, Javier Cardona wrote:
+> Signed-off-by: Javier Cardona <javier@cozybit.com>
 
- drivers/net/wireless/ath/ath5k/ani.c          |   44 +++++++++++--------------
- drivers/net/wireless/ath/ath5k/ath5k.h        |   29 +++++++++-------
- drivers/net/wireless/ath/ath5k/attach.c       |    2 +
- drivers/net/wireless/ath/ath5k/base.c         |   22 ++++++++++++
- drivers/net/wireless/ath/ath5k/debug.c        |   17 ++++++----
- drivers/net/wireless/ath/ath5k/desc.c         |    2 +
- drivers/net/wireless/ath/ath5k/dma.c          |    2 +
- drivers/net/wireless/ath/ath5k/eeprom.c       |    2 +
- drivers/net/wireless/ath/ath5k/initvals.c     |    5 ++-
- drivers/net/wireless/ath/ath5k/led.c          |    2 +
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    2 +
- drivers/net/wireless/ath/ath5k/pci.c          |    4 ++-
- drivers/net/wireless/ath/ath5k/phy.c          |    2 +
- drivers/net/wireless/ath/ath5k/qcu.c          |    2 +
- drivers/net/wireless/ath/ath5k/reset.c        |    2 +
- drivers/net/wireless/ath/ath5k/sysfs.c        |    2 +
- drivers/net/wireless/ath/ath6kl/cfg80211.c    |    2 +
- drivers/net/wireless/ath/ath6kl/common.h      |    3 +-
- drivers/net/wireless/ath/ath6kl/init.c        |    2 +
- drivers/net/wireless/ath/ath6kl/main.c        |    2 +
- drivers/net/wireless/ath/ath6kl/txrx.c        |    2 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 ++--
- drivers/net/wireless/ath/ath9k/htc_hst.c      |    7 ++--
- drivers/net/wireless/ath/ath9k/init.c         |   13 +++----
- drivers/net/wireless/ath/ath9k/pci.c          |    9 +++--
- drivers/net/wireless/ath/main.c               |    4 ++-
- drivers/net/wireless/ath/regd.c               |    4 ++-
- 27 files changed, 128 insertions(+), 69 deletions(-)
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
--- 
-1.7.8.111.gad25c.dirty
+> ---
+>  drivers/net/wireless/mac80211_hwsim.c |   18 ++++++++++++++++++
+>  net/mac80211/debugfs_netdev.c         |    7 ++++++-
+>  2 files changed, 24 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> index f4bcd03..99909bd 100644
+> --- a/drivers/net/wireless/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -379,6 +379,22 @@ static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
+>  	return cpu_to_le64(now + data->tsf_offset);
+>  }
+>  
+> +static u64 mac80211_hwsim_get_tsf(struct ieee80211_hw *hw,
+> +		struct ieee80211_vif *vif)
+> +{
+> +	struct mac80211_hwsim_data *data = hw->priv;
+> +	return le64_to_cpu(__mac80211_hwsim_get_tsf(data));
+> +}
+> +
+> +static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
+> +		struct ieee80211_vif *vif, u64 tsf)
+> +{
+> +	struct mac80211_hwsim_data *data = hw->priv;
+> +	struct timeval tv = ktime_to_timeval(ktime_get_real());
+> +	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
+> +	data->tsf_offset = tsf - now;
+> +}
+> +
+>  static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+>  				      struct sk_buff *tx_skb)
+>  {
+> @@ -1224,6 +1240,8 @@ static struct ieee80211_ops mac80211_hwsim_ops =
+>  	.sw_scan_start = mac80211_hwsim_sw_scan,
+>  	.sw_scan_complete = mac80211_hwsim_sw_scan_complete,
+>  	.flush = mac80211_hwsim_flush,
+> +	.get_tsf = mac80211_hwsim_get_tsf,
+> +	.set_tsf = mac80211_hwsim_set_tsf,
+>  };
+>  
+> 
+> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+> index 510ed1d..416b906 100644
+> --- a/net/mac80211/debugfs_netdev.c
+> +++ b/net/mac80211/debugfs_netdev.c
+> @@ -537,11 +537,15 @@ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
+>  
+>  #ifdef CONFIG_MAC80211_MESH
+>  
+> +static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	DEBUGFS_ADD_MODE(tsf, 0600);
+> +}
+> +
+>  static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
+>  {
+>  	struct dentry *dir = debugfs_create_dir("mesh_stats",
+>  						sdata->debugfs.dir);
+> -
+>  #define MESHSTATS_ADD(name)\
+>  	debugfs_create_file(#name, 0400, dir, sdata, &name##_ops);
+>  
+> @@ -593,6 +597,7 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+>  	switch (sdata->vif.type) {
+>  	case NL80211_IFTYPE_MESH_POINT:
+>  #ifdef CONFIG_MAC80211_MESH
+> +		add_mesh_files(sdata);
+>  		add_mesh_stats(sdata);
+>  		add_mesh_config(sdata);
+>  #endif
+
 
