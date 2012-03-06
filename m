@@ -1,57 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8420 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755497Ab2CGLzv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57476 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758697Ab2CFIaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 06:55:51 -0500
-Message-ID: <4F574CC1.5060901@qca.qualcomm.com> (sfid-20120307_125555_261359_D83DCF12)
-Date: Wed, 7 Mar 2012 17:25:45 +0530
-From: bkamatch <bkamatch@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] cfg80211: Add background scan period attribute.
-References: <1330583965-8415-1-git-send-email-bkamatch@qca.qualcomm.com>	 (sfid-20120301_073937_156683_BFB54260) <1330611829.3623.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1330611829.3623.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Tue, 6 Mar 2012 03:30:08 -0500
+Subject: Re: [PATCH v4 2/2] mac80211: fix mesh airtime link metric
+ estimating
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	linville@tuxdriver.com
+In-Reply-To: <1330990308-15077-2-git-send-email-thomas@cozybit.com> (sfid-20120306_003229_021779_E2F4D414)
+References: <1330990308-15077-1-git-send-email-thomas@cozybit.com>
+	 <1330990308-15077-2-git-send-email-thomas@cozybit.com>
+	 (sfid-20120306_003229_021779_E2F4D414)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Mar 2012 09:30:06 +0100
+Message-ID: <1331022606.3447.3.camel@jlt3.sipsolutions.net> (sfid-20120306_093013_575617_A0A9D260)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/01/2012 07:53 PM, Johannes Berg wrote:
-> On Thu, 2012-03-01 at 12:09 +0530, Bala Shanmugam wrote:
->> Receive background scan period as part of connect
->> command and pass the same to driver.
->>
->> Signed-off-by: Bala Shanmugam<bkamatch@qca.qualcomm.com>
->> ---
->>   include/linux/nl80211.h |    9 +++++++++
->>   include/net/cfg80211.h  |    3 +++
->>   net/wireless/nl80211.c  |    7 +++++++
->>   net/wireless/wext-sme.c |    3 +++
->>   4 files changed, 22 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
->> index be35a68..e81d327 100644
->> --- a/include/linux/nl80211.h
->> +++ b/include/linux/nl80211.h
->> @@ -369,6 +369,10 @@
->>    *	%NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
->>    *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE and
->>    *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT.
->> + *	Background scan period can optionally be
->> + *	specified in %NL80211_ATTR_BG_SCAN_PERIOD,
->> + *	if not specified default background scan configuration
->> + *	in driver is used and if period value is 0, bg scan will be disabled.
-> Maybe this should also indicate that the value is ignored unless the
-> device advertises roaming support with NL80211_ATTR_ROAM_SUPPORT?
->
-> I'm not sure I like the whole default value thing since it's kinda
-> magic, but I guess I can live with it.
->
-> johannes
->
+On Mon, 2012-03-05 at 15:31 -0800, Thomas Pedersen wrote:
+> Airtime link metric estimation was broken in HT mesh, use
+> cfg80211_calculate_bitrate to get the right rate value.
+> 
+> Also factor out tx rate copying from sta_set_sinfo().
+> 
+> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 
-Thats true.  Thanks for pointing it.
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-Regards,
-Bala.
+> 
+> ---
+> v2:
+> factor out rate copying (Johannes)
+> 
+> v3:
+> just factor out tx rate copying (Johannes)
+> 
+> v4:
+> pass by reference and add "_tx" (Johannes)
+> 
+>  net/mac80211/cfg.c       |   23 +++++++++++++++--------
+>  net/mac80211/mesh_hwmp.c |    6 ++++--
+>  net/mac80211/sta_info.h  |    3 +++
+>  3 files changed, 22 insertions(+), 10 deletions(-)
+> 
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 6a77d4c..f6aacd8 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -336,6 +336,20 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
+>  		rate->mcs = idx;
+>  }
+>  
+> +void sta_set_rate_info_tx(struct sta_info *sta,
+> +			  const struct ieee80211_tx_rate *rate,
+> +			  struct rate_info *rinfo)
+> +{
+> +	rinfo->flags = 0;
+> +	if (rate->flags & IEEE80211_TX_RC_MCS)
+> +		rinfo->flags |= RATE_INFO_FLAGS_MCS;
+> +	if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+> +		rinfo->flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+> +	if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
+> +		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
+> +	rate_idx_to_bitrate(rinfo, sta, rate->idx);
+> +}
+> +
+>  static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+>  {
+>  	struct ieee80211_sub_if_data *sdata = sta->sdata;
+> @@ -378,14 +392,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+>  		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+>  	}
+>  
+> -	sinfo->txrate.flags = 0;
+> -	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
+> -		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
+> -	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+> -		sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+> -	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
+> -		sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+> -	rate_idx_to_bitrate(&sinfo->txrate, sta, sta->last_tx_rate.idx);
+> +	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &sinfo->txrate);
+>  
+>  	sinfo->rxrate.flags = 0;
+>  	if (sta->last_rx_rate_flag & RX_FLAG_HT)
+> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+> index 31bc762..13a4cb8 100644
+> --- a/net/mac80211/mesh_hwmp.c
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -323,6 +323,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+>  				   struct sta_info *sta)
+>  {
+>  	struct ieee80211_supported_band *sband;
+> +	struct rate_info rinfo;
+>  	/* This should be adjusted for each device */
+>  	int device_constant = 1 << ARITH_SHIFT;
+>  	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
+> @@ -336,7 +337,9 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+>  	if (sta->fail_avg >= 100)
+>  		return MAX_METRIC;
+>  
+> -	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
+> +	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
+> +	rate = cfg80211_calculate_bitrate(&rinfo);
+> +	if (WARN_ON(!rate))
+>  		return MAX_METRIC;
+>  
+>  	err = (sta->fail_avg << ARITH_SHIFT) / 100;
+> @@ -344,7 +347,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+>  	/* bitrate is in units of 100 Kbps, while we need rate in units of
+>  	 * 1Mbps. This will be corrected on tx_time computation.
+>  	 */
+> -	rate = sband->bitrates[sta->last_tx_rate.idx].bitrate;
+>  	tx_time = (device_constant + 10 * test_frame_len / rate);
+>  	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
+>  	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
+> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+> index 23a97c9..92715c6 100644
+> --- a/net/mac80211/sta_info.h
+> +++ b/net/mac80211/sta_info.h
+> @@ -528,6 +528,9 @@ void sta_info_init(struct ieee80211_local *local);
+>  void sta_info_stop(struct ieee80211_local *local);
+>  int sta_info_flush(struct ieee80211_local *local,
+>  		   struct ieee80211_sub_if_data *sdata);
+> +void sta_set_rate_info_tx(struct sta_info *sta,
+> +			  const struct ieee80211_tx_rate *rate,
+> +			  struct rate_info *rinfo);
+>  void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
+>  			  unsigned long exp_time);
+>  
+
+
