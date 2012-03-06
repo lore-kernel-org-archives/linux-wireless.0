@@ -1,94 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:49133 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975Ab2CAA3v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 19:29:51 -0500
-Received: by mail-pz0-f52.google.com with SMTP id o14so50664dad.11
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 16:29:50 -0800 (PST)
-MIME-Version: 1.0
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] mac80211: Modify tsf via debugfs in mesh interfaces
-Date: Wed, 29 Feb 2012 16:29:36 -0800
-Message-Id: <1330561776-8135-2-git-send-email-javier@cozybit.com> (sfid-20120301_012954_675930_F6C4EF04)
-In-Reply-To: <1330561776-8135-1-git-send-email-javier@cozybit.com>
-References: <1330561776-8135-1-git-send-email-javier@cozybit.com>
+Received: from mga09.intel.com ([134.134.136.24]:23627 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031267Ab2CFWna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:30 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 05/33] iwlwifi: move RF/CT kill check to command wrapper
+Date: Tue,  6 Mar 2012 13:30:40 -0800
+Message-Id: <1331069468-11074-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234434_337259_ADADFA12)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/mac80211_hwsim.c |   16 ++++++++++++++++
- net/mac80211/debugfs_netdev.c         |    7 ++++++-
- 2 files changed, 22 insertions(+), 1 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index b926a89..72a209f 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -375,6 +375,20 @@ static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
- 			data->tsf_offset);
+Currently, we cannot send any commands when the
+uCode is in RF or CT kill, but that will not be
+true for all new uCode versions, so we need to
+move the check into the uCode specific code.
+
+Also remove the duplicate rfkill check.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   19 ++++---------------
+ 2 files changed, 10 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 4c777df..11f2411 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1292,6 +1292,12 @@ int iwlagn_suspend(struct iwl_priv *priv,
+ 
+ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ {
++	if (iwl_is_rfkill(priv->shrd) || iwl_is_ctkill(priv->shrd)) {
++		IWL_WARN(priv, "Not sending command - %s KILL\n",
++			 iwl_is_rfkill(priv->shrd) ? "RF" : "CT");
++		return -EIO;
++	}
++
+ 	return iwl_trans_send_cmd(trans(priv), cmd);
  }
  
-+static u64 mac80211_hwsim_get_tsf(struct ieee80211_hw *hw,
-+		struct ieee80211_vif *vif)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	return le64_to_cpu(__mac80211_hwsim_get_tsf(data));
-+}
-+
-+static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
-+		struct ieee80211_vif *vif, u64 tsf)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	data->tsf_offset = tsf - jiffies_to_msecs(jiffies)*1000/1024;
-+}
-+
- static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 				      struct sk_buff *tx_skb)
- {
-@@ -1217,6 +1231,8 @@ static struct ieee80211_ops mac80211_hwsim_ops =
- 	.sw_scan_start = mac80211_hwsim_sw_scan,
- 	.sw_scan_complete = mac80211_hwsim_sw_scan_complete,
- 	.flush = mac80211_hwsim_flush,
-+	.get_tsf = mac80211_hwsim_get_tsf,
-+	.set_tsf = mac80211_hwsim_set_tsf,
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 0164154..c85975e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -721,12 +721,6 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	if (WARN_ON(copy_size > TFD_MAX_PAYLOAD_SIZE))
+ 		return -EINVAL;
  
- 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 510ed1d..416b906 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -537,11 +537,15 @@ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
- 
- #ifdef CONFIG_MAC80211_MESH
- 
-+static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
-+{
-+	DEBUGFS_ADD_MODE(tsf, 0600);
-+}
-+
- static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
- {
- 	struct dentry *dir = debugfs_create_dir("mesh_stats",
- 						sdata->debugfs.dir);
+-	if (iwl_is_rfkill(trans->shrd) || iwl_is_ctkill(trans->shrd)) {
+-		IWL_WARN(trans, "Not sending command - %s KILL\n",
+-			 iwl_is_rfkill(trans->shrd) ? "RF" : "CT");
+-		return -EIO;
+-	}
 -
- #define MESHSTATS_ADD(name)\
- 	debugfs_create_file(#name, 0400, dir, sdata, &name##_ops);
+ 	spin_lock_bh(&txq->lock);
  
-@@ -593,6 +597,7 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_MESH_POINT:
- #ifdef CONFIG_MAC80211_MESH
-+		add_mesh_files(sdata);
- 		add_mesh_stats(sdata);
- 		add_mesh_config(sdata);
- #endif
+ 	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
+@@ -965,7 +959,7 @@ static int iwl_send_cmd_async(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 
+ 	ret = iwl_enqueue_hcmd(trans, cmd);
+ 	if (ret < 0) {
+-		IWL_DEBUG_QUIET_RFKILL(trans,
++		IWL_ERR(trans,
+ 			"Error sending %s: enqueue_hcmd failed: %d\n",
+ 			  get_cmd_string(cmd->id), ret);
+ 		return ret;
+@@ -984,11 +978,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
+-	if (test_bit(STATUS_RF_KILL_HW, &trans->shrd->status)) {
+-		IWL_ERR(trans, "Command %s aborted: RF KILL Switch\n",
+-			       get_cmd_string(cmd->id));
+-		return -ECANCELED;
+-	}
+ 	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
+ 		IWL_ERR(trans, "Command %s failed: FW Error\n",
+ 			       get_cmd_string(cmd->id));
+@@ -1002,7 +991,7 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	if (cmd_idx < 0) {
+ 		ret = cmd_idx;
+ 		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
+-		IWL_DEBUG_QUIET_RFKILL(trans,
++		IWL_ERR(trans,
+ 			"Error sending %s: enqueue_hcmd failed: %d\n",
+ 			  get_cmd_string(cmd->id), ret);
+ 		return ret;
+@@ -1017,12 +1006,12 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 				&trans_pcie->txq[trans->shrd->cmd_queue];
+ 			struct iwl_queue *q = &txq->q;
+ 
+-			IWL_DEBUG_QUIET_RFKILL(trans,
++			IWL_ERR(trans,
+ 				"Error sending %s: time out after %dms.\n",
+ 				get_cmd_string(cmd->id),
+ 				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
+ 
+-			IWL_DEBUG_QUIET_RFKILL(trans,
++			IWL_ERR(trans,
+ 				"Current CMD queue read_ptr %d write_ptr %d\n",
+ 				q->read_ptr, q->write_ptr);
+ 
 -- 
-1.7.6
+1.7.0.4
 
