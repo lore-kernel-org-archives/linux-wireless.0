@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37376 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920Ab2CGOCO (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:57123 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758459Ab2CFJwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 09:02:14 -0500
-Date: Wed, 7 Mar 2012 08:56:20 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	dan.carpenter@oracle.com
-Subject: Re: [PATCH v4] {nl,cfg,mac}80211: Implement RSSI threshold for mesh
- peering
-Message-ID: <20120307135619.GA12245@tuxdriver.com> (sfid-20120307_150217_286173_F2AE9D64)
-References: <1331061810-4100-1-git-send-email-ashok@cozybit.com>
- <20120306193350.GA3353@tuxdriver.com>
+	Tue, 6 Mar 2012 04:52:23 -0500
+Date: Tue, 6 Mar 2012 10:52:19 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Sven Joachim <svenjoac@gmx.de>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
+In-Reply-To: <alpine.LFD.2.02.1203060927190.2742@ionos>
+Message-ID: <alpine.LFD.2.02.1203060957140.2742@ionos> (sfid-20120306_105252_111615_8915B1FF)
+References: <20120228010511.GA8453@kroah.com> <20120228010434.412979550@linuxfoundation.org> <87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de> <CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com>
+ <alpine.LFD.2.02.1203060927190.2742@ionos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120306193350.GA3353@tuxdriver.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 06, 2012 at 02:33:50PM -0500, John W. Linville wrote:
-> On Tue, Mar 06, 2012 at 11:23:30AM -0800, Ashok Nagarajan wrote:
-> > Mesh peer links are established only if average rssi of the peer
-> > candidate satisfies the threshold. This is not in 802.11s specification
-> > but was requested by David Fulgham, an open80211s user. This is a way to avoid
-> > marginal peer links with stations that are barely within range.
-> > 
-> > This patch adds a new mesh configuration parameter, mesh_rssi_threshold. This
-> > feature is supported only for hardwares that report signal in dBm.
-> > 
-> > Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-> > Signed-off-by: Javier Cardona <javier@cozybit.com>
-> > ---
-> > v3:
-> > use s32 instead of int32_t (Kalle Valo)
-> > Feature to be supported for devices reporting signal in dBm (Johannes)
-> > 
-> > v4:
-> > Fix potential null pointer deferencing (Dan Carpenter)
+On Tue, 6 Mar 2012, Thomas Gleixner wrote:
+
+> On Mon, 5 Mar 2012, Linus Torvalds wrote:
 > 
-> I already merged v3 yesterday -- can you rework this as a fix instead?
+> > Thomas, should we just plan on reverting that commit from mainline? It
+> > clearly causes regressions.
+> 
+> Give me a day or two to figure out why it breaks stuff. I have no idea
+> why it should wreckage anything.
 
-Mail server problems, this was delayed.  I see that you already sent a new one.
+Hmm. This is interesting. The b43 driver has a primary handler which
+can return IRQ_NONE. So up to that change the interrupt line was kept
+disabled when that happened. Possibly the driver relies on that
+behaviour. Digging for a machine with a b43.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
