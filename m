@@ -1,115 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23627 "EHLO mga09.intel.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2793 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031505Ab2CFWnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:40 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 30/33] iwlwifi: remove PA type configuration
-Date: Tue,  6 Mar 2012 13:31:05 -0800
-Message-Id: <1331069468-11074-31-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234346_840519_012DF04F)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1030462Ab2CFNmk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 08:42:40 -0500
+Message-ID: <4F561443.1040506@broadcom.com> (sfid-20120306_144244_993761_B1F6357D)
+Date: Tue, 6 Mar 2012 14:42:27 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev-list <b43-dev@lists.infradead.org>
+Subject: Re: [RFC] bcma: replace ssb_sprom structure with bcma_sprom
+ structure
+References: <1331036818-9240-1-git-send-email-arend@broadcom.com>
+ <CACna6rx5_wds1gMA+9Yg4hMS1NCankwEqN3ixMUaktLAhw9ERw@mail.gmail.com>
+In-Reply-To: <CACna6rx5_wds1gMA+9Yg4hMS1NCankwEqN3ixMUaktLAhw9ERw@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/06/2012 02:27 PM, Rafał Miłecki wrote:
+> 2012/3/6 Arend van Spriel<arend@broadcom.com>:
+>> BCMA shared a structure with SSB in which sprom data was stored. This
+>> could have been appropriate but with upcoming srom revisions that are
+>> of no interest to SSB it is better to have own definitions with BCMA.
+>>
+>> This patch adds support for srom revisions 8 and 9.
+>
+> Does b43 even compile with that?
+>
 
-No need to have a special config variable
-for the PA type, we can just use the
-additional NIC config function to config
-the hardware correctly.
+Nope. It does not. That is why I was asking b43 developers for feedback 
+in this RFC. By moving to another structure there is more work involved 
+that needs good b43 knowledge (which I am lacking). What I can do is 
+provide a function that maps bcma_sprom structure members to ssb_sprom 
+structure members to make the transition easier.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-6000.c   |   17 +++++++++--------
- drivers/net/wireless/iwlwifi/iwl-shared.h |   12 ------------
- 2 files changed, 9 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 1e29a51..6f7d5f0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -96,20 +96,21 @@ static void iwl6150_additional_nic_config(struct iwl_priv *priv)
- 		    CSR_GP_DRIVER_REG_BIT_6050_1x2);
- }
- 
-+static void iwl6000i_additional_nic_config(struct iwl_priv *priv)
-+{
-+	/* 2x2 IPA phy type */
-+	iwl_write32(trans(priv), CSR_GP_DRIVER_REG,
-+		     CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA);
-+}
-+
- /* NIC configuration for 6000 series */
- static void iwl6000_nic_config(struct iwl_priv *priv)
- {
- 	iwl_rf_config(priv);
- 
--	/* no locking required for register write */
--	if (cfg(priv)->pa_type == IWL_PA_INTERNAL) {
--		/* 2x2 IPA phy type */
--		iwl_write32(trans(priv), CSR_GP_DRIVER_REG,
--			     CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA);
--	}
- 	/* do additional nic configuration if needed */
- 	if (cfg(priv)->additional_nic_config)
--			cfg(priv)->additional_nic_config(priv);
-+		cfg(priv)->additional_nic_config(priv);
- }
- 
- static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
-@@ -471,8 +472,8 @@ const struct iwl_cfg iwl130_bg_cfg = {
- 	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,		\
- 	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,	\
- 	.lib = &iwl6000_lib,					\
-+	.additional_nic_config = iwl6000i_additional_nic_config,\
- 	.base_params = &iwl6000_base_params,			\
--	.pa_type = IWL_PA_INTERNAL,				\
- 	.led_mode = IWL_LED_BLINK
- 
- const struct iwl_cfg iwl6000i_2agn_cfg = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 55f9f07..2ab7462 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -209,16 +209,6 @@ enum iwl_ucode_type {
- 	IWL_UCODE_WOWLAN,
- };
- 
--/**
-- * enum iwl_pa_type - Power Amplifier type
-- * @IWL_PA_SYSTEM:  based on uCode configuration
-- * @IWL_PA_INTERNAL: use Internal only
-- */
--enum iwl_pa_type {
--	IWL_PA_SYSTEM = 0,
--	IWL_PA_INTERNAL = 1,
--};
--
- /*
-  * LED mode
-  *    IWL_LED_DEFAULT:  use device default
-@@ -299,7 +289,6 @@ struct iwl_base_params {
-  * @base_params: pointer to basic parameters
-  * @ht_params: point to ht patameters
-  * @bt_params: pointer to bt parameters
-- * @pa_type: used by 6000 series only to identify the type of Power Amplifier
-  * @need_temp_offset_calib: need to perform temperature offset calibration
-  * @no_xtal_calib: some devices do not need crystal calibration data,
-  *	don't send it to those
-@@ -339,7 +328,6 @@ struct iwl_cfg {
- 	/* params likely to change within a device family */
- 	const struct iwl_ht_params *ht_params;
- 	const struct iwl_bt_params *bt_params;
--	enum iwl_pa_type pa_type;	  /* if used set to IWL_PA_SYSTEM */
- 	const bool need_temp_offset_calib; /* if used set to true */
- 	const bool no_xtal_calib;
- 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
--- 
-1.7.0.4
+Gr. AvS
 
