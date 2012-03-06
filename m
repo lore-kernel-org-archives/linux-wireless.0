@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3383 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753222Ab2CMSdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 14:33:08 -0400
-Message-ID: <4F5F92D8.2030101@broadcom.com> (sfid-20120313_193313_850204_8E5EA71B)
-Date: Tue, 13 Mar 2012 11:32:56 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27750 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750800Ab2CFFG2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 00:06:28 -0500
+Message-ID: <4F559B4D.5030006@qca.qualcomm.com> (sfid-20120306_060632_663145_A5F3CE29)
+Date: Tue, 6 Mar 2012 10:36:21 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "John Linville" <linville@tuxdriver.com>,
-	"Arend Van Spriel" <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] brmc80211: dont use jiffies for BSS TSF
-References: <20120313125702.703540202@sipsolutions.net>
- <20120313125919.370791280@sipsolutions.net>
-In-Reply-To: <20120313125919.370791280@sipsolutions.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<senthilb@qca.qualcomm.com>, <vthiagar@qca.qualcomm.com>,
+	<rodrigue@qca.qualcomm.com>,
+	Rajkumar_contact <rmanohar@qca.qualcomm.com>,
+	"Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
+Subject: Re: [RFC 1/2] ath9k: use ieee80211_free_txskb
+References: <d053a9a1ec34c2e1b15cf50b272ba7863fb17088.1330360738.git.chunkeey@googlemail.com> <4F4F7DC2.8030204@qca.qualcomm.com> <4F54D53D.80300@qca.qualcomm.com> <201203051943.15875.chunkeey@googlemail.com>
+In-Reply-To: <201203051943.15875.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/13/2012 05:57 AM, Johannes Berg wrote:
-> From: Johannes Berg<johannes.berg@intel.com>
+>> would you like me to test this patch,
+> ? Sure, I would like someone with a AR9300+ to test the patch.
+> Currently, I'm stuck with a puny AR9287 [in a router].
+> So, I can't run tests all day :(.
 >
-> The cfg80211_inform_bss() timestamp argument is
-> intended to be the TSF, not any form of host
-> timestamp.
+>> i can just ran a bidirectional traffic test parallel y enabling
+>> PAPRD,with this proposed patch.
+> Actually, the changes are all within ath9k's tx error paths. So,
+> I'm afraid just continuous traffic testing won't do, unless of course
+> you can churn out all sorts of tx (dma) errors at the same time.
+
+yes, i can just a start stress test that can run few days in a noisy 
+channel, with the AR9300 card.
+
 >
-> Signed-off-by: Johannes Berg<johannes.berg@intel.com>
+> Regards,
+> 	Chr
 
-Thanks Johannes.
 
-Acked-by: Franky Lin <frankyl@broadcom.com>
-
+-- 
+thanks,
+shafi
