@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58948 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:23627 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752290Ab2CIIWd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 03:22:33 -0500
-Date: Fri, 9 Mar 2012 09:22:16 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 3.3 v2] rt2x00: fix random stalls
-Message-ID: <20120309082216.GA2339@redhat.com> (sfid-20120309_092236_584600_4D716D27)
-References: <20120307183103.GB15839@redhat.com>
- <4F59275B.2010309@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F59275B.2010309@gmail.com>
+	id S1031487Ab2CFWnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:37 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 22/33] iwlwifi: fix notification wait bug
+Date: Tue,  6 Mar 2012 13:30:57 -0800
+Message-Id: <1331069468-11074-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234410_159064_214164A7)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gertjan
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Thu, Mar 08, 2012 at 10:40:43PM +0100, Gertjan van Wingerde wrote:
-> > @@ -152,13 +152,20 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-> >  	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, false)))
-> >  		goto exit_fail;
-> >  
-> > +	/*
-> > +	 * Pausing queue has to be serialized with rt2x00lib_txdone() .
-> > +	 */
-> > +	spin_lock(&queue->tx_lock);
-> >  	if (rt2x00queue_threshold(queue))
-> >  		rt2x00queue_pause_queue(queue);
-> > +	spin_unlock(&queue->tx_lock);
-> >  
-> >  	return;
-> >  
-> >   exit_fail:
-> > +	spin_lock(&queue->tx_lock);
-> >  	rt2x00queue_pause_queue(queue);
-> > +	spin_unlock(&queue->tx_lock);
-> >   exit_free_skb:
-> >  	ieee80211_free_txskb(hw, skb);
-> >  }
-> 
-> I'm sorry, but I'm still not convinced that we can use spin_lock_bh in
-> one place of the code and then spin_lock in another place of the code,
-> using the *same* spinlock.
-> I always use the cheat sheet shown in:
-> http://www.kernel.org/pub/linux/kernel/people/rusty/kernel-locking/c214.html
-> 
-> which to me shows that by definition we should be using spin_lock_bh in
-> all cases now, the new ones and the existing cases where we lock tx_lock.
+In "iwlwifi: consolidate the start_device flow"
+Emmanuel added the return if the fw isn't there
+but forgot to take into account that the struct
+for notification wait needs to be added only
+after the check -- fix that.
 
-We have bh disabled here since ieee80211_xmit is always called with bh
-disabled (early on dev_queue_xmit() or in ieee80211_tx_skb_tid()). I can
-add comment about that.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-ucode.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Additionally I ran patch with CONFIG_LOCKDEP which is capable to detect
-locking context errors and no warning was printed.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index c1c5e1f..686d456 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -533,9 +533,6 @@ int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
+ 	int ret;
+ 	enum iwl_ucode_type old_type;
+ 
+-	iwl_init_notification_wait(priv->shrd, &alive_wait, REPLY_ALIVE,
+-				      iwl_alive_fn, &alive_data);
+-
+ 	old_type = priv->shrd->ucode_type;
+ 	priv->shrd->ucode_type = ucode_type;
+ 	fw = iwl_get_ucode_image(priv, ucode_type);
+@@ -543,6 +540,9 @@ int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
+ 	if (!fw)
+ 		return -EINVAL;
+ 
++	iwl_init_notification_wait(priv->shrd, &alive_wait, REPLY_ALIVE,
++				      iwl_alive_fn, &alive_data);
++
+ 	ret = iwl_trans_start_fw(trans(priv), fw);
+ 	if (ret) {
+ 		priv->shrd->ucode_type = old_type;
+-- 
+1.7.0.4
 
-Thanks
-Stanislaw
