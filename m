@@ -1,73 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34498 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757058Ab2CZKFk (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:65457 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757930Ab2CFBUr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 06:05:40 -0400
-Message-ID: <1332756333.7081.18.camel@jlt3.sipsolutions.net> (sfid-20120326_120548_172970_798D31A9)
-Subject: Re: 3.4-merge: iwlwifi needs more than 1 minute to connect
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Oliver Hartkopp <socketcan@hartkopp.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	David Spinadel <david.spinadel@intel.com>,
-	linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>
-Date: Mon, 26 Mar 2012 12:05:33 +0200
-In-Reply-To: <4F6CD1BC.4040703@hartkopp.net>
-References: <20120316180428.GD2563@tuxdriver.com>
-	 <4F6CD1BC.4040703@hartkopp.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 5 Mar 2012 20:20:47 -0500
+Received: by mail-pz0-f52.google.com with SMTP id p12so5870925dad.11
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 17:20:46 -0800 (PST)
+MIME-Version: 1.0
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCHv6 2/2] mac80211: Modify tsf via debugfs in mesh interfaces
+Date: Mon,  5 Mar 2012 17:20:38 -0800
+Message-Id: <1330996838-18960-2-git-send-email-javier@cozybit.com> (sfid-20120306_022051_973726_288B6AA1)
+In-Reply-To: <1330996838-18960-1-git-send-email-javier@cozybit.com>
+References: <1330996838-18960-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Oliver,
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |   18 ++++++++++++++++++
+ net/mac80211/debugfs_netdev.c         |    7 ++++++-
+ 2 files changed, 24 insertions(+), 1 deletions(-)
 
-> i'm using the *very* latest 3.4-merge tree from Linus and my Wifi now needs
-> more than one minute to connect to my access point.
-
-> [   16.288562] wlan0: authenticate with bc:05:43:94:1a:da
-> [   16.299644] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
-> [   16.302060] wlan0: authenticated
-> [   16.302492] wlan0: waiting for beacon from bc:05:43:94:1a:da
-> [   16.432398] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
-
-This is an odd message. I need to figure out how that can even happen.
-
-What's the beacon interval on your AP? It seems more likely that this is
-a problem with RX though.
-
-> [   29.434897] wlan0: authenticate with bc:05:43:94:1a:da
-> [   29.445634] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
-> [   29.448168] wlan0: authenticated
-> [   29.448229] wlan0: waiting for beacon from bc:05:43:94:1a:da
-> [   29.473633] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
-
-So this repeats, I suspect the 15 second retry timer is in
-wpa_supplicant.
-
-> [   55.773770] wlan0: authenticate with bc:05:43:94:1a:da
-> [   55.784316] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
-> [   55.786758] wlan0: authenticated
-> [   55.787407] wlan0: associate with bc:05:43:94:1a:da (try 1/3)
-> [   55.791114] wlan0: RX AssocResp from bc:05:43:94:1a:da (capab=0x431 status=0 aid=4)
-> [   55.791121] wlan0: associated
-
-So when it succeeds it basically doesn't do the beacon wait thing. I
-guess that is the problem then.
-
-
-Do you think you could collect some tracing info?
-
-trace-cmd record -e mac80211 -e iwlwifi
-
-would be useful.
-
-
-
-> [   73.059911] netlink: 12 bytes leftover after parsing attributes.
-
-This is interesting, I wonder where that came from, but I don't think
-it's related.
-
-johannes
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index f4bcd03..99909bd 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -379,6 +379,22 @@ static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
+ 	return cpu_to_le64(now + data->tsf_offset);
+ }
+ 
++static u64 mac80211_hwsim_get_tsf(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	return le64_to_cpu(__mac80211_hwsim_get_tsf(data));
++}
++
++static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif, u64 tsf)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	struct timeval tv = ktime_to_timeval(ktime_get_real());
++	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
++	data->tsf_offset = tsf - now;
++}
++
+ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+ 				      struct sk_buff *tx_skb)
+ {
+@@ -1224,6 +1240,8 @@ static struct ieee80211_ops mac80211_hwsim_ops =
+ 	.sw_scan_start = mac80211_hwsim_sw_scan,
+ 	.sw_scan_complete = mac80211_hwsim_sw_scan_complete,
+ 	.flush = mac80211_hwsim_flush,
++	.get_tsf = mac80211_hwsim_get_tsf,
++	.set_tsf = mac80211_hwsim_set_tsf,
+ };
+ 
+ 
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 510ed1d..416b906 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -537,11 +537,15 @@ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
+ 
+ #ifdef CONFIG_MAC80211_MESH
+ 
++static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_ADD_MODE(tsf, 0600);
++}
++
+ static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct dentry *dir = debugfs_create_dir("mesh_stats",
+ 						sdata->debugfs.dir);
+-
+ #define MESHSTATS_ADD(name)\
+ 	debugfs_create_file(#name, 0400, dir, sdata, &name##_ops);
+ 
+@@ -593,6 +597,7 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MESH_POINT:
+ #ifdef CONFIG_MAC80211_MESH
++		add_mesh_files(sdata);
+ 		add_mesh_stats(sdata);
+ 		add_mesh_config(sdata);
+ #endif
+-- 
+1.7.6
 
