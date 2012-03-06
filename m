@@ -1,117 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57974 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030464Ab2CORji (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52503 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753397Ab2CFP5h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 13:39:38 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [RFC 2/2] mac80211:  Support getting sta_info stats via ethtool.
-Date: Thu, 15 Mar 2012 10:39:19 -0700
-Message-Id: <1331833159-12694-2-git-send-email-greearb@candelatech.com> (sfid-20120315_183942_222982_FD61EFBD)
-In-Reply-To: <1331833159-12694-1-git-send-email-greearb@candelatech.com>
-References: <1331833159-12694-1-git-send-email-greearb@candelatech.com>
+	Tue, 6 Mar 2012 10:57:37 -0500
+Message-ID: <4F5633E5.7040507@qca.qualcomm.com> (sfid-20120306_165744_407303_920066B0)
+Date: Tue, 6 Mar 2012 17:57:25 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Fix kernel panic while receiving fwlog during
+ boot
+References: <1331024980-1632-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1331024980-1632-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 03/06/2012 11:09 AM, Vasanthakumar Thiagarajan wrote:
+> "ath6kl: Defer wiphy and netdev registration till the end of ath6kl_core_init()"
+> causes kernel panic by accessing the unallocated debug resources during
+> boot time. To fix this, split the debug initialization funtion into two,
+> one initializes the debug resource and the other takes care of debugfs
+> initialization. When this issue shows up the kernel crash dump would
+> look like
+> 
+>  ath6kl_debug_fwlog_event+0x9c/0x10a
+>  [<c10666c9>] register_lock_class+0x57/0x288
+>  [<c1065cd3>] ? trace_hardirqs_on+0xb/0xd
+>  [<f801f4c9>] ? ath6kl_debug_fwlog_event+0x9c/0x10a
+>  [<c1066a8a>] __lock_acquire+0x96/0xbe5
+>  [<c106007b>] ? alarmtimer_suspend+0x80/0x127
+>  [<c10258da>] ? vprintk+0x394/0x3b1
+>  [<f801f4c9>] ? ath6kl_debug_fwlog_event+0x9c/0x10a
+>  [<c10676b3>] lock_acquire+0xda/0xf9
+>  [<f801f4c9>] ? ath6kl_debug_fwlog_event+0x9c/0x10a
+>  [<c1532ce3>] _raw_spin_lock+0x28/0x58
+>  [<f801f4c9>] ? ath6kl_debug_fwlog_event+0x9c/0x10a
+>  [<f801f4c9>] ath6kl_debug_fwlog_event+0x9c/0x10a
+>  [<f80310a4>] ath6kl_wmi_control_rx+0x69d/0xb50 [ath6kl_core]
+>  [<f802d2e1>] ? ath6kl_rx+0x3c/0x839 [ath6kl_core]
+>  [<f802d35d>] ath6kl_rx+0xb8/0x839 [ath6kl_core]
+>  [<c104b81e>] ? local_clock+0x2d/0x4e
+>  [<c102a0af>] ? _local_bh_enable_ip+0x94/0x98
+>  [<f802bfc0>] ? ath6kl_alloc_amsdu_rxbuf+0xb7/0xb7
+>  [<f8023b28>] ath6kl_htc_rxmsg_pending_handler+0x891/0x988 [ath6kl_core]
+>  [<f802bf00>] ? ath6kl_refill_amsdu_rxbufs+0x89/0x92
+>  [<f802d2a5>] ? aggr_timeout+0xed/0xed [ath6kl_core]
+>  [<f802bfc0>] ? ath6kl_alloc_amsdu_rxbuf+0xb7/0xb7
+>  [<f802c420>] ? ath6kl_tx_complete+0x376/0x376 [ath6kl_core]
+>  [<f8020e92>] ath6kl_hif_intr_bh_handler+0xf7/0x33e
+>  [<c138ab00>] ? mmc_host_disable+0x15/0x3a
+>  [<f8123b5c>] ath6kl_sdio_irq_handler+0x3c/0x90 [ath6kl_sdio]
+>  [<c1392f56>] sdio_irq_thread+0xb6/0x29c
+>  [<c1392ea0>] ? sdio_claim_irq+0x1cb/0x1cb
+>  [<c103d4c0>] kthread+0x67/0x6c
+>  [<c103d459>] ? __init_kthread_worker+0x42/0x42
+>  [<c153903a>] kernel_thread_helper+0x6/0xd
+>  BUG: unable to handle kernel NULL pointer dereference at
+> EIP: [<f801f4d4>] ath6kl_debug_fwlog_event+0xa7/0x10a
+> 
+> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-This lets ethtool print out stats related to station
-interfaces.  Does not yet get stats from the underlying
-driver.
+Thanks, applied with these changes:
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 cf5b08a... 2acd0ea... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |   69 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 69 insertions(+), 0 deletions(-)
+    kvalo: rename new function to ath6kl_debug_init_fs() and add a comment
+    why it's needed
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index cf5b08a..2acd0ea 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -112,6 +112,72 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
-+	"rx_packets", "rx_bytes", "wep_weak_iv_count",
-+	"rx_duplicates", "rx_fragments", "rx_dropped",
-+	"tx_packets", "tx_bytes", "tx_fragments",
-+	"tx_filtered", "tx_retry_failed", "tx_retries",
-+	"beacon_loss"
-+};
-+#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
-+
-+static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       int sset)
-+{
-+	switch (sset) {
-+	case ETH_SS_STATS:
-+		return STA_STATS_LEN;
-+	default:
-+		return -EOPNOTSUPP;
-+	}
-+}
-+
-+static void ieee80211_get_et_stats(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   struct ethtool_stats *stats,
-+				   u64 *data)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+
-+	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-+
-+	mutex_lock(&sdata->local->sta_mtx);
-+	list_for_each_entry(sta, &sdata->local->sta_list, list) {
-+		int i = 0;
-+		data[i++] += sta->rx_packets;
-+		data[i++] += sta->rx_bytes;
-+		data[i++] += sta->wep_weak_iv_count;
-+		data[i++] += sta->num_duplicates;
-+		data[i++] += sta->rx_fragments;
-+		data[i++] += sta->rx_dropped;
-+
-+		data[i++] += sta->tx_packets;
-+		data[i++] += sta->tx_bytes;
-+		data[i++] += sta->tx_fragments;
-+		data[i++] += sta->tx_filtered_count;
-+		data[i++] += sta->tx_retry_failed;
-+		data[i++] += sta->tx_retry_count;
-+		data[i++] += sta->beacon_loss_count;
-+		BUG_ON(i != STA_STATS_LEN);
-+	}
-+	mutex_unlock(&sdata->local->sta_mtx);
-+}
-+
-+static void ieee80211_get_et_strings(struct wiphy *wiphy,
-+				     struct net_device *dev,
-+				     u32 sset, u8 *data)
-+{
-+	switch (sset) {
-+	case ETH_SS_STATS:
-+		memcpy(data, *ieee80211_gstrings_sta_stats,
-+		       sizeof(ieee80211_gstrings_sta_stats));
-+		break;
-+	}
-+}
-+
-+
- static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
- 			     struct key_params *params)
-@@ -2768,4 +2834,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.probe_client = ieee80211_probe_client,
- 	.get_channel = ieee80211_wiphy_get_channel,
- 	.set_noack_map = ieee80211_set_noack_map,
-+	.get_et_sset_count = ieee80211_get_et_sset_count,
-+	.get_et_stats = ieee80211_get_et_stats,
-+	.get_et_strings = ieee80211_get_et_strings,
- };
--- 
-1.7.3.4
-
+Kalle
