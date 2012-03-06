@@ -1,57 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:34246 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412Ab2CHKY7 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:48923 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965097Ab2CFN12 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 05:24:59 -0500
-Received: by wejx9 with SMTP id x9so201300wej.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 02:24:58 -0800 (PST)
+	Tue, 6 Mar 2012 08:27:28 -0500
+Received: by wgbdr13 with SMTP id dr13so4525089wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 05:27:27 -0800 (PST)
 MIME-Version: 1.0
-From: Claudio Rossi <rossi.claudio.82@gmail.com>
-Date: Thu, 8 Mar 2012 11:24:38 +0100
-Message-ID: <CAO1ZyKkpZy38vNc8iCOODnuVeJJPPb-DOH=+HFPvgGGjj+hDMA@mail.gmail.com> (sfid-20120308_112502_646685_B4043703)
-Subject: Accessing PROTOCOL TYPE FILES from rx.c in mac80211
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1331036818-9240-1-git-send-email-arend@broadcom.com>
+References: <1331036818-9240-1-git-send-email-arend@broadcom.com>
+Date: Tue, 6 Mar 2012 14:27:27 +0100
+Message-ID: <CACna6rx5_wds1gMA+9Yg4hMS1NCankwEqN3ixMUaktLAhw9ERw@mail.gmail.com> (sfid-20120306_142732_759166_8A54A913)
+Subject: Re: [RFC] bcma: replace ssb_sprom structure with bcma_sprom structure
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	b43-dev-list <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
- I would like to inspect the protocol type field from mac802.11, and
-specifically in rx.c in the function
+2012/3/6 Arend van Spriel <arend@broadcom.com>:
+> BCMA shared a structure with SSB in which sprom data was stored. This
+> could have been appropriate but with upcoming srom revisions that are
+> of no interest to SSB it is better to have own definitions with BCMA.
+>
+> This patch adds support for srom revisions 8 and 9.
 
-static ieee80211_rx_result debug_noinline
-ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
-
-I was trying to do:
-
-struct iphdr * network_header;
-skb_set_network_header(skb,ieee80211_get_hdrlen_from_skb(skb));
-network_header = (struct iphdr *)skb_network_header(skb);
-
- if (network_header->protocol==IPPROTO_TCP){
-...
-}
-but it does not seams to work....
-
-In status.c everything works fine when I do:
-
-struct iphdr * network_header;
-
-network_header = (struct iphdr *)skb_network_header(skb);
-
- if (network_header->protocol==IPPROTO_TCP){
-...
-}
-
-the problem is how to correctly set the network header pointer in the
-skb in rx.c
-can somebody give me an hint?
-
-
-Thank you
+Does b43 even compile with that?
 
 -- 
-Claudio Rossi
--------------------
-Office @ PoliTO: +39 011 5644194
+Rafał
