@@ -1,117 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52824 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757524Ab2C1JHE (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:43708 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753191Ab2CFRUe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 05:07:04 -0400
-Message-Id: <20120328090433.095113620@sipsolutions.net> (sfid-20120328_110709_116799_97D436D1)
-Date: Wed, 28 Mar 2012 11:04:29 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 7/7] mac80211: use IEEE80211_NUM_ACS
-References: <20120328090422.367469100@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 6 Mar 2012 12:20:34 -0500
+MIME-Version: 1.0
+In-Reply-To: <1331028575.3447.5.camel@jlt3.sipsolutions.net>
+References: <CDCF1538AB98AA4FBCA89C8D5750845F1A473A21@MALMO.technikum.fh-joanneum.local>
+ <1331027728-18496-1-git-send-email-cavallar@lri.fr> <1331028575.3447.5.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 6 Mar 2012 09:20:13 -0800
+Message-ID: <CAB=NE6WkEjuRFrT64z8+rHqtAB6JSztxkXStCphcj77oMbfzcg@mail.gmail.com> (sfid-20120306_182040_705908_E912814C)
+Subject: Re: [PATCH] compat: Fix module_init return type from void to int.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Maximilian.Gmeiner.sam04@fh-joanneum.at,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Mar 6, 2012 at 2:09 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2012-03-06 at 10:55 +0100, Nicolas Cavallari wrote:
+>> Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-When comparing hw->queues to determine if the
-device is QoS capable, use IEEE80211_NUM_ACS
-instead of just 4.
+Applied and pushed, thanks!
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c  |    2 +-
- net/mac80211/iface.c |    2 +-
- net/mac80211/mlme.c  |    7 ++++---
- net/mac80211/tx.c    |    2 +-
- net/mac80211/wme.c   |    4 ++--
- 5 files changed, 9 insertions(+), 8 deletions(-)
-
---- a/net/mac80211/ibss.c	2012-03-23 17:46:30.000000000 +0100
-+++ b/net/mac80211/ibss.c	2012-03-23 17:47:04.000000000 +0100
-@@ -167,7 +167,7 @@ static void __ieee80211_sta_join_ibss(st
- 						 chan, channel_type);
- 	}
- 
--	if (local->hw.queues >= 4) {
-+	if (local->hw.queues >= IEEE80211_NUM_ACS) {
- 		pos = skb_put(skb, 9);
- 		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
- 		*pos++ = 7; /* len */
---- a/net/mac80211/iface.c	2012-03-23 17:46:30.000000000 +0100
-+++ b/net/mac80211/iface.c	2012-03-23 17:47:04.000000000 +0100
-@@ -676,7 +676,7 @@ static u16 ieee80211_monitor_select_queu
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_radiotap_header *rtap = (void *)skb->data;
- 
--	if (local->hw.queues < 4)
-+	if (local->hw.queues < IEEE80211_NUM_ACS)
- 		return 0;
- 
- 	if (skb->len < 4 ||
---- a/net/mac80211/mlme.c	2012-03-23 17:46:30.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-23 17:47:04.000000000 +0100
-@@ -1125,7 +1125,7 @@ static void ieee80211_sta_wmm_params(str
- 	if (!local->ops->conf_tx)
- 		return;
- 
--	if (local->hw.queues < 4)
-+	if (local->hw.queues < IEEE80211_NUM_ACS)
- 		return;
- 
- 	if (!wmm_param)
-@@ -3299,7 +3299,7 @@ int ieee80211_mgd_assoc(struct ieee80211
- 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
- 	sband = local->hw.wiphy->bands[req->bss->channel->band];
- 	if (!sband->ht_cap.ht_supported ||
--	    local->hw.queues < 4 || !bss->wmm_used)
-+	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used)
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
- 
- 	memcpy(&ifmgd->ht_capa, &req->ht_capa, sizeof(ifmgd->ht_capa));
-@@ -3322,7 +3322,8 @@ int ieee80211_mgd_assoc(struct ieee80211
- 		ifmgd->ap_smps = ifmgd->req_smps;
- 
- 	assoc_data->capability = req->bss->capability;
--	assoc_data->wmm = bss->wmm_used && (local->hw.queues >= 4);
-+	assoc_data->wmm = bss->wmm_used &&
-+			  (local->hw.queues >= IEEE80211_NUM_ACS);
- 	assoc_data->supp_rates = bss->supp_rates;
- 	assoc_data->supp_rates_len = bss->supp_rates_len;
- 
---- a/net/mac80211/tx.c	2012-03-23 17:46:30.000000000 +0100
-+++ b/net/mac80211/tx.c	2012-03-23 17:47:04.000000000 +0100
-@@ -1929,7 +1929,7 @@ netdev_tx_t ieee80211_subif_start_xmit(s
- 		wme_sta = true;
- 
- 	/* receiver and we are QoS enabled, use a QoS type frame */
--	if (wme_sta && local->hw.queues >= 4) {
-+	if (wme_sta && local->hw.queues >= IEEE80211_NUM_ACS) {
- 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
- 		hdrlen += 2;
- 	}
---- a/net/mac80211/wme.c	2012-03-23 17:46:30.000000000 +0100
-+++ b/net/mac80211/wme.c	2012-03-23 17:47:04.000000000 +0100
-@@ -79,7 +79,7 @@ u16 ieee80211_select_queue_80211(struct
- {
- 	u8 *p;
- 
--	if (local->hw.queues < 4)
-+	if (local->hw.queues < IEEE80211_NUM_ACS)
- 		return 0;
- 
- 	if (!ieee80211_is_data(hdr->frame_control)) {
-@@ -106,7 +106,7 @@ u16 ieee80211_select_queue(struct ieee80
- 	const u8 *ra = NULL;
- 	bool qos = false;
- 
--	if (local->hw.queues < 4 || skb->len < 6) {
-+	if (local->hw.queues < IEEE80211_NUM_ACS || skb->len < 6) {
- 		skb->priority = 0; /* required for correct WPA/11i MIC */
- 		return 0;
- 	}
-
-
+  Luis
