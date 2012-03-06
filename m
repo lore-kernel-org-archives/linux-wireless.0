@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43708 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753191Ab2CFRUe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 12:20:34 -0500
-MIME-Version: 1.0
-In-Reply-To: <1331028575.3447.5.camel@jlt3.sipsolutions.net>
-References: <CDCF1538AB98AA4FBCA89C8D5750845F1A473A21@MALMO.technikum.fh-joanneum.local>
- <1331027728-18496-1-git-send-email-cavallar@lri.fr> <1331028575.3447.5.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 6 Mar 2012 09:20:13 -0800
-Message-ID: <CAB=NE6WkEjuRFrT64z8+rHqtAB6JSztxkXStCphcj77oMbfzcg@mail.gmail.com> (sfid-20120306_182040_705908_E912814C)
-Subject: Re: [PATCH] compat: Fix module_init return type from void to int.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>,
-	Maximilian.Gmeiner.sam04@fh-joanneum.at,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:64658 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031480Ab2CFWne (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:34 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 10/33] iwlwifi: remove AMT check from transport
+Date: Tue,  6 Mar 2012 13:30:45 -0800
+Message-Id: <1331069468-11074-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234340_890321_FCAC9219)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 2:09 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2012-03-06 at 10:55 +0100, Nicolas Cavallari wrote:
->> Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Applied and pushed, thanks!
+As iwl_prepare_card_hw() is idempotent (and
+many cards support AMT anyway) there's no
+point in calling iwl_prepare_card_hw() only
+for AMT capable devices -- call it always
+and simplify the code that way.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 4a05216..4a2d4b5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1033,8 +1033,8 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 	trans_pcie->mcast_queue[IWL_RXON_CTX_BSS] = 0;
+ 	trans_pcie->mcast_queue[IWL_RXON_CTX_PAN] = IWL_IPAN_MCAST_QUEUE;
+ 
+-	if ((hw_params(trans).sku & EEPROM_SKU_CAP_AMT_ENABLE) &&
+-	     iwl_prepare_card_hw(trans)) {
++	/* This may fail if AMT took ownership of the device */
++	if (iwl_prepare_card_hw(trans)) {
+ 		IWL_WARN(trans, "Exit HW not ready\n");
+ 		return -EIO;
+ 	}
+-- 
+1.7.0.4
+
