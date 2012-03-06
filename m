@@ -1,123 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:63924 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713Ab2CaSbo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2012 14:31:44 -0400
-Received: by dake40 with SMTP id e40so816411dak.11
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 11:31:43 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>,
-	Pavel Zubarev <pavel.zubarev@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org, ashok@cozybit.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] mac80211_hwsim: Fill timestamp beacon at the time it is transmitted
-Date: Sat, 31 Mar 2012 11:31:30 -0700
-Message-Id: <1333218693-30093-2-git-send-email-javier@cozybit.com> (sfid-20120331_203146_999361_523571F8)
-In-Reply-To: <1333218693-30093-1-git-send-email-javier@cozybit.com>
-References: <1333218693-30093-1-git-send-email-javier@cozybit.com>
+Received: from mga09.intel.com ([134.134.136.24]:64658 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031501Ab2CFWnj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:39 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 28/33] iwlwifi: virtualize nic_config
+Date: Tue,  6 Mar 2012 13:31:03 -0800
+Message-Id: <1331069468-11074-29-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234401_781444_19B39CA5)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Generate more acurate tsf values in hwsim by setting the tsf value on
-trasmitted beacons immediately before they are moved to the rx path.
-Also, adjust the beacon timestamp to be the time at which the first byte
-of the timestamp is transmitted.
+From: Johannes Berg <johannes.berg@intel.com>
 
-With these changes the observed tsf offset between two hwsim/mesh peers
-is 0 (unless the offset is modified via debugfs)
+The nic_config sets uCode dependent register
+bits, so it must be virtual in the op_mode.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |   26 +++++++++++++-------------
- 1 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c        |    8 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c       |    5 -----
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h    |    9 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-shared.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 +-
+ 5 files changed, 18 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index b7ce6a6..9ef0de6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -632,6 +632,7 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_rx_status rx_status;
-+	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
- 
- 	if (data->idle) {
- 		wiphy_debug(hw->wiphy, "Trying to TX when idle - reject\n");
-@@ -666,6 +667,7 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	spin_lock(&hwsim_radio_lock);
- 	list_for_each_entry(data2, &hwsim_radios, list) {
- 		struct sk_buff *nskb;
-+		struct ieee80211_mgmt *mgmt;
- 
- 		if (data == data2)
- 			continue;
-@@ -683,8 +685,17 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 
- 		if (mac80211_hwsim_addr_match(data2, hdr->addr1))
- 			ack = true;
-+
-+		/* set bcn timestamp relative to receiver mactime */
- 		rx_status.mactime =
--			le64_to_cpu(__mac80211_hwsim_get_tsf(data2));
-+				le64_to_cpu(__mac80211_hwsim_get_tsf(data2));
-+		mgmt = (struct ieee80211_mgmt *) nskb->data;
-+		if (ieee80211_is_beacon(mgmt->frame_control) ||
-+		    ieee80211_is_probe_resp(mgmt->frame_control))
-+			mgmt->u.beacon.timestamp = cpu_to_le64(
-+				rx_status.mactime +
-+				24 * 8 * 10 / txrate->bitrate);
-+
- 		memcpy(IEEE80211_SKB_RXCB(nskb), &rx_status, sizeof(rx_status));
- 		ieee80211_rx_irqsafe(data2->hw, nskb);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index afded29..98f32e5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1422,6 +1422,13 @@ static void iwl_cmd_queue_full(struct iwl_op_mode *op_mode)
  	}
-@@ -698,12 +709,6 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	bool ack;
- 	struct ieee80211_tx_info *txi;
- 	u32 _pid;
--	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
--	struct mac80211_hwsim_data *data = hw->priv;
+ }
+ 
++static void iwl_nic_config(struct iwl_op_mode *op_mode)
++{
++	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
++
++	cfg(priv)->lib->nic_config(priv);
++}
++
+ const struct iwl_op_mode_ops iwl_dvm_ops = {
+ 	.start = iwl_op_mode_dvm_start,
+ 	.stop = iwl_op_mode_dvm_stop,
+@@ -1432,6 +1439,7 @@ const struct iwl_op_mode_ops iwl_dvm_ops = {
+ 	.free_skb = iwl_free_skb,
+ 	.nic_error = iwl_nic_error,
+ 	.cmd_queue_full = iwl_cmd_queue_full,
++	.nic_config = iwl_nic_config,
+ };
+ 
+ /*****************************************************************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index c60c4a8..6648c1b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1479,11 +1479,6 @@ void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
+ 	wiphy_rfkill_set_hw_state(priv->hw->wiphy, state);
+ }
+ 
+-void iwl_nic_config(struct iwl_priv *priv)
+-{
+-	cfg(priv)->lib->nic_config(priv);
+-}
 -
--	if (ieee80211_is_beacon(mgmt->frame_control) ||
--	    ieee80211_is_probe_resp(mgmt->frame_control))
--		mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
- 
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
-@@ -800,11 +805,9 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 				     struct ieee80211_vif *vif)
+ void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
  {
- 	struct ieee80211_hw *hw = arg;
--	struct mac80211_hwsim_data *data = hw->priv;
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
- 	u32 _pid;
--	struct ieee80211_mgmt *mgmt;
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index a4a4907..6ea4163 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -123,6 +123,8 @@ struct iwl_fw;
+  *	Must be atomic
+  * @nic_error: error notification. Must be atomic
+  * @cmd_queue_full: Called when the command queue gets full. Must be atomic.
++ * @nic_config: configure NIC, called before firmware is started.
++ *	May sleep
+  */
+ struct iwl_op_mode_ops {
+ 	struct iwl_op_mode *(*start)(struct iwl_trans *trans,
+@@ -136,6 +138,7 @@ struct iwl_op_mode_ops {
+ 	void (*free_skb)(struct iwl_op_mode *op_mode, struct sk_buff *skb);
+ 	void (*nic_error)(struct iwl_op_mode *op_mode);
+ 	void (*cmd_queue_full)(struct iwl_op_mode *op_mode);
++	void (*nic_config)(struct iwl_op_mode *op_mode);
+ };
  
- 	hwsim_check_magic(vif);
+ /**
+@@ -199,6 +202,12 @@ static inline void iwl_op_mode_cmd_queue_full(struct iwl_op_mode *op_mode)
+ 	op_mode->ops->cmd_queue_full(op_mode);
+ }
  
-@@ -818,9 +821,6 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 		return;
- 	info = IEEE80211_SKB_CB(skb);
++static inline void iwl_op_mode_nic_config(struct iwl_op_mode *op_mode)
++{
++	might_sleep();
++	op_mode->ops->nic_config(op_mode);
++}
++
+ /*****************************************************
+ * Op mode layers implementations
+ ******************************************************/
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 4fc8967..a6c2539 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -416,7 +416,6 @@ enum iwl_rxon_context_id {
+ };
  
--	mgmt = (struct ieee80211_mgmt *) skb->data;
--	mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
--
- 	mac80211_hwsim_monitor_rx(hw, skb);
+ int iwlagn_hw_valid_rtc_data_addr(u32 addr);
+-void iwl_nic_config(struct iwl_priv *priv);
+ const char *get_cmd_string(u8 cmd);
  
- 	/* wmediumd mode check */
-@@ -1444,7 +1444,7 @@ DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_group,
- 			hwsim_fops_group_read, hwsim_fops_group_write,
- 			"%llx\n");
+ #define IWL_CMD(x) case x: return #x
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index d68dd65..836e067 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -823,7 +823,7 @@ static int iwl_nic_init(struct iwl_trans *trans)
  
--struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(
-+static struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(
- 			     struct mac_address *addr)
- {
- 	struct mac80211_hwsim_data *data;
+ 	iwl_set_pwr_vmain(trans);
+ 
+-	iwl_nic_config(priv(trans));
++	iwl_op_mode_nic_config(trans->op_mode);
+ 
+ #ifndef CONFIG_IWLWIFI_IDI
+ 	/* Allocate the RX queue, or reset if it is already allocated */
 -- 
-1.7.5.4
+1.7.0.4
 
