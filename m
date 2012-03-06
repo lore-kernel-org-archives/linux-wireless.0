@@ -1,70 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:47949 "EHLO mail.neratec.com"
+Received: from mga09.intel.com ([134.134.136.24]:58272 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755290Ab2CWPe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 11:34:26 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
-	rodrigue@qca.qualcomm.com,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [RFCv2 2/3] ath9k: add DFS pattern detector instance to ath_softc
-Date: Fri, 23 Mar 2012 16:34:01 +0100
-Message-Id: <1332516842-27522-3-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120323_163430_470020_99DFF06F)
-In-Reply-To: <1332516842-27522-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1332516842-27522-1-git-send-email-zefir.kurtisi@neratec.com>
+	id S1031491Ab2CFWng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:36 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 19/33] iwlwifi: use watchdog timeout from hw_params
+Date: Tue,  6 Mar 2012 13:30:54 -0800
+Message-Id: <1331069468-11074-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234353_323766_8732C2C4)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+This is the version that can be modified, the
+config params should be read-only.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 ++
- drivers/net/wireless/ath/ath9k/init.c  |    4 ++++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c    |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8c84049..f2ade45 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -26,6 +26,7 @@
- #include "debug.h"
- #include "common.h"
- #include "mci.h"
-+#include "dfs.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 95ffa01..71c5621 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1340,7 +1340,7 @@ void iwl_bg_watchdog(unsigned long data)
+ 	if (iwl_is_rfkill(priv->shrd))
+ 		return;
  
- /*
-  * Header for the ath9k.ko driver core *only* -- hw code nor any other driver
-@@ -680,6 +681,7 @@ struct ath_softc {
+-	timeout = cfg(priv)->base_params->wd_timeout;
++	timeout = hw_params(priv).wd_timeout;
+ 	if (timeout == 0)
+ 		return;
  
- 	struct ath_ant_comb ant_comb;
- 	u8 ant_tx, ant_rx;
-+	struct dfs_pattern_detector *dfs_detector;
- };
+@@ -1366,7 +1366,7 @@ void iwl_bg_watchdog(unsigned long data)
  
- void ath9k_tasklet(unsigned long data);
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 60159f4..bee25f4 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -519,6 +519,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	atomic_set(&ah->intr_ref_cnt, -1);
- 	sc->sc_ah = ah;
+ void iwl_setup_watchdog(struct iwl_priv *priv)
+ {
+-	unsigned int timeout = cfg(priv)->base_params->wd_timeout;
++	unsigned int timeout = hw_params(priv).wd_timeout;
  
-+	sc->dfs_detector = dfs_pattern_detector_init(NL80211_DFS_UNSET);
-+
- 	if (!pdata) {
- 		ah->ah_flags |= AH_USE_EEPROM;
- 		sc->sc_ah->led_pin = -1;
-@@ -821,6 +823,8 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
- 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+ 	if (!iwlagn_mod_params.wd_disable) {
+ 		/* use system default */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 04eb8d3..b729128 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -2368,7 +2368,7 @@ static ssize_t iwl_dbgfs_wd_timeout_write(struct file *file,
+ 	if (timeout < 0 || timeout > IWL_MAX_WD_TIMEOUT)
+ 		timeout = IWL_DEF_WD_TIMEOUT;
  
- 	ath9k_hw_deinit(sc->sc_ah);
-+	if (sc->dfs_detector != NULL)
-+		sc->dfs_detector->exit(sc->dfs_detector);
- 
- 	kfree(sc->sc_ah);
- 	sc->sc_ah = NULL;
+-	cfg(priv)->base_params->wd_timeout = timeout;
++	hw_params(priv).wd_timeout = timeout;
+ 	iwl_setup_watchdog(priv);
+ 	return count;
+ }
 -- 
-1.7.4.1
+1.7.0.4
 
