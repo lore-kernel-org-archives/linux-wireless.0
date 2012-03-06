@@ -1,49 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52489 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752039Ab2COOPh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 10:15:37 -0400
-Subject: [PATCH] mac80211: report only dBm station signal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cristian Morales Vega <cristian@samknows.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <1331820417.3432.16.camel@jlt3.sipsolutions.net> (sfid-20120315_150702_997199_9C292885)
-References: <CAGUfO+wJd8wdcwzaigV=DYzhCNt8cNtWc4P=MoXJLd9ozHyPjg@mail.gmail.com>
-	 (sfid-20120315_145933_601091_9647B8FA)  <1331820417.3432.16.camel@jlt3.sipsolutions.net>
-	 (sfid-20120315_150702_997199_9C292885)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Mar 2012 15:15:35 +0100
-Message-ID: <1331820935.3432.18.camel@jlt3.sipsolutions.net> (sfid-20120315_151540_937993_65922EE3)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46085 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031456Ab2CFXH6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 18:07:58 -0500
+Message-ID: <4F5698BD.9080302@hauke-m.de> (sfid-20120307_000801_874497_2CA6E693)
+Date: Wed, 07 Mar 2012 00:07:41 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Rafal Milecki <zajec5@gmail.com>
+Subject: Re: [PATCH v2 1/2] bcma: return error in bcma_sprom_get() when fallback
+ fails
+References: <1331045448-12883-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1331045448-12883-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The station signal can currently only be reported
-in dBm, so don't report it at all if we only have
-unspecified units from the device.
-
-Cc: stable@kernel.org
-Reported-by: Cristian Morales Vega <cristian@samknows.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
---- a/net/mac80211/cfg.c	2012-03-10 09:17:06.000000000 +0100
-+++ b/net/mac80211/cfg.c	2012-03-15 15:14:01.000000000 +0100
-@@ -385,8 +385,7 @@ static void sta_set_sinfo(struct sta_inf
- 	sinfo->rx_dropped_misc = sta->rx_dropped;
- 	sinfo->beacon_loss_count = sta->beacon_loss_count;
- 
--	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
--	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
-+	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
- 		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
- 		sinfo->signal = (s8)sta->last_signal;
- 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
-
+On 03/06/2012 03:50 PM, Arend van Spriel wrote:
+> When not SPROM is available a fallback mechanism is used. However,
+> when that fails the code currently continues. This patch assures
+> that the bcma_sprom_get() function aborts when that happens.
+> 
+> Cc: Rafal Milecki <zajec5@gmail.com>
+> Cc: Hauke Mehrtens <hauke@hauke-m.de>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/bcma/sprom.c |   27 +++++++++++++++++----------
+>  1 files changed, 17 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+> index 916ae25..fba8066 100644
+> --- a/drivers/bcma/sprom.c
+> +++ b/drivers/bcma/sprom.c
+> @@ -49,10 +49,23 @@ int bcma_arch_register_fallback_sprom(int (*sprom_callback)(struct bcma_bus *bus
+>  static int bcma_fill_sprom_with_fallback(struct bcma_bus *bus,
+>  					 struct ssb_sprom *out)
+>  {
+> -	if (!get_fallback_sprom)
+> -		return -ENOENT;
+> +	int err;
+>  
+> -	return get_fallback_sprom(bus, out);
+> +	if (!get_fallback_sprom) {
+> +		err = -ENOENT;
+> +		goto fail;
+> +	}
+> +
+> +	err = get_fallback_sprom(bus, out);
+> +	if (err)
+> +		goto fail;
+> +
+> +	pr_debug("Using SPROM revision %d provided by"
+> +		 " platform.\n", bus->sprom.revision);
+> +	return 0;
+> +fail:
+> +	pr_warn("Using fallback SPROM failed (err %d)\n", err);
+> +	return err;
+>  }
+>  
+>  /**************************************************
+> @@ -317,13 +330,7 @@ int bcma_sprom_get(struct bcma_bus *bus)
+>  		 * available for this device in some other storage.
+>  		 */
+>  		err = bcma_fill_sprom_with_fallback(bus, &bus->sprom);
+> -		if (err) {
+> -			pr_warn("Using fallback SPROM failed (err %d)\n", err);
+> -		} else {
+> -			pr_debug("Using SPROM revision %d provided by"
+> -				 " platform.\n", bus->sprom.revision);
+> -			return 0;
+> -		}
+> +		return err;
+>  	}
+>  
+>  	sprom = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
 
