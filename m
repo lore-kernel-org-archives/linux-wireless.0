@@ -1,48 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51663 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760582Ab2CPMkp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 08:40:45 -0400
-Subject: Re: [PATCH] mac80211: fix the endianness problem of HWMP sequence
- number in RANN propagation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-In-Reply-To: <1331923430-23861-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120316_110631_993892_BC6C19C7)
-References: <1331923430-23861-1-git-send-email-yeohchunyeow@gmail.com>
-	 (sfid-20120316_110631_993892_BC6C19C7)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Mar 2012 13:40:42 +0100
-Message-ID: <1331901642.6753.1.camel@jlt3.sipsolutions.net> (sfid-20120316_134048_968595_12A4A6A6)
+Received: from bues.ch ([80.190.117.144]:51707 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755840Ab2CFV7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 16:59:55 -0500
+Date: Tue, 6 Mar 2012 22:59:42 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>, b43-dev@lists.infradead.org,
+	larry.finger@lwfinger.net, florian@openwrt.org
+Subject: Re: [RFT][PATCH] b43: fix logic in GPIO configuration
+Message-ID: <20120306225942.6a115221@milhouse> (sfid-20120306_225959_326179_D419482A)
+In-Reply-To: <1331071898-3651-1-git-send-email-zajec5@gmail.com>
+References: <1331071898-3651-1-git-send-email-zajec5@gmail.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/mR5=gJtrz92IRRDpVKqTzVK"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-03-17 at 02:43 +0800, Chun-Yeow Yeoh wrote:
-> The HWMP sequence number of received RANN element is compared to decide whether to be
-> propagated. The sequence number is required to covert from 32bit little endian data into
-> CPUs endianness for comparison.
-> 
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+--Sig_/mR5=gJtrz92IRRDpVKqTzVK
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+On Tue,  6 Mar 2012 23:11:38 +0100
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+
+> By using reverted mask we were taking over pins we were not supporsed to
+> touch. After fixing this workaround for BCM5354 should not be needed
+> anymore.
+>=20
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>
 > ---
->  net/mac80211/mesh_hwmp.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> index 1c6f3d0..2ccb3c9 100644
-> --- a/net/mac80211/mesh_hwmp.c
-> +++ b/net/mac80211/mesh_hwmp.c
-> @@ -748,7 +748,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
->  	flags = rann->rann_flags;
->  	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
->  	orig_addr = rann->rann_addr;
-> -	orig_sn = rann->rann_seq;
-> +	orig_sn = le32_to_cpu(rann->rann_seq);
+>  drivers/net/wireless/b43/main.c |    6 ++----
+>  1 files changed, 2 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/m=
+ain.c
+> index 1d633f3..8a89885 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -2706,8 +2706,6 @@ static int b43_gpio_init(struct b43_wldev *dev)
+>  		mask |=3D 0x0060;
+>  		set |=3D 0x0060;
+>  	}
+> -	if (dev->dev->chip_id =3D=3D 0x5354)
+> -		set &=3D 0xff02;
+>  	if (0 /* FIXME: conditional unknown */ ) {
+>  		b43_write16(dev, B43_MMIO_GPIO_MASK,
+>  			    b43_read16(dev, B43_MMIO_GPIO_MASK)
+> @@ -2730,7 +2728,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
+>  	case B43_BUS_BCMA:
+>  		bcma_cc_write32(&dev->dev->bdev->bus->drv_cc, BCMA_CC_GPIOCTL,
+>  				(bcma_cc_read32(&dev->dev->bdev->bus->drv_cc,
+> -					BCMA_CC_GPIOCTL) & mask) | set);
+> +					BCMA_CC_GPIOCTL) & ~mask) | set);
+>  		break;
+>  #endif
+>  #ifdef CONFIG_B43_SSB
+> @@ -2739,7 +2737,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
+>  		if (gpiodev)
+>  			ssb_write32(gpiodev, B43_GPIO_CONTROL,
+>  				    (ssb_read32(gpiodev, B43_GPIO_CONTROL)
+> -				    & mask) | set);
+> +				    & ~mask) | set);
+>  		break;
+>  #endif
+>  	}
 
-You should mark struct ieee80211_rann_ie to contain __le32, so that
-sparse will warn about things like this.
+This patch makes sense. Can you also check b43legacy? I guess it has the sa=
+me problem.
 
-johannes
+And while we're at it, you could also remove these two lines:
 
+2737         if (dev->dev->core_rev >=3D 2)
+2738                 mask |=3D 0x0010; /* FIXME: This is redundant. */
+
+because core_rev is always >=3D 2 in b43 and as the FIXME says the bit is a=
+lready set.
+
+
+Also, take a look at b43_gpio_cleanup() (in b43 and b43legacy).
+It always forces all bits to zero. This clearly is wrong, too. It is suppos=
+ed to
+revert the changes done in the b43 GPIO setup. It seems too complicated to
+fixup the code to actually do this, though. I think we should simply get ri=
+d of
+b43_gpio_cleanup() completely and simply leave the GPIOs as-is. No kittens
+will be hurt by doing so; so it's ok.
+
+--=20
+Greetings, Michael.
+
+PGP encryption is encouraged / 908D8B0E
+
+--Sig_/mR5=gJtrz92IRRDpVKqTzVK
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPVojOAAoJEPUyvh2QjYsODycP/Ap+sRN+KlBcUKB/tsAGbCdZ
+NLOidjbjw141BeXaE1qbpiyb5HUPyHol3NKxjSlvesC32umLsW92gwyOaBmcWCkf
+UYELECBxSlQaCP7RgHqZTesw2tp+LnMfJniZ6pF08ILSMr1N07/ZQSEzDPDuT+io
+jyzjipFYitNlY1fW/XTpGkLHkKOiwzjYg/5s4bqylbBvAAi+gSyiFhbWZxwJUeNl
+uqMogt2UjADlcTX4mZWgWsWmdy823savOtjKut1p0iS+4lVKWiqU6gxW4hCK1Mzg
+njxF0ubAqO1u4pPS9rz7nGCdrQ03zTtprRdruwTORRNldoyMz+l+SNgEjfAwclfR
+rF/AYFB3lHowIgpFrOfIkLSFAish+DWmVxkx06+qN6Q1Szf1eHLmNb7JccqTTOHu
+uQsASDgrvq1aoVm7PCHw0XslbFaEcc/Q+qkT8i9Eo6ZwrcC9m0uKCG4GRx2aJOIV
+nt5BGtbeTMtLlQoM8H3V5qH2Pu8bfxMR5YgFvnJIk842lydwBiiRzNWpxzrJVrue
+rcZtMHyR0C82s4eBYhtEIlwR8jwmRRwNRLd5K5W7iP1XzpnnoUcSZcyhB3INrDKB
+pim17THpVT1fAenyoLQVoMRUhpHuDfEOjcWR9vmUU/RM4fbJGknJuQ2CK3sTI+UW
+hNncUOg2joEodaaESxwB
+=LTXS
+-----END PGP SIGNATURE-----
+
+--Sig_/mR5=gJtrz92IRRDpVKqTzVK--
