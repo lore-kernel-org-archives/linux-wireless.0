@@ -1,88 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog119.obsmtp.com ([207.126.144.147]:40635 "EHLO
-	eu1sys200aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030492Ab2CBU0w (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:38370 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1031103Ab2CFVHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:26:52 -0500
-Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 0A606C8
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:18:21 +0000 (GMT)
-Received: from relay1.stm.gmessaging.net (unknown [10.230.100.17])
-	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 6A59BA71
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:46 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay1.stm.gmessaging.net (Postfix) with ESMTPS id BBAFA24C2C0
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:35 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 03/21] cw1200: sbus.h, common device interface abstraction.
-Date: Fri, 2 Mar 2012 21:26:25 +0100
-Message-ID: <1330720003-15866-4-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212700_365690_338195D0)
-In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
- <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+	Tue, 6 Mar 2012 16:07:33 -0500
+From: Sven Joachim <svenjoac@gmx.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
+References: <20120228010511.GA8453@kroah.com>
+	<20120228010434.412979550@linuxfoundation.org>
+	<87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de>
+	<CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com>
+	<alpine.LFD.2.02.1203060927190.2742@ionos>
+	<alpine.LFD.2.02.1203060957140.2742@ionos>
+	<alpine.LFD.2.02.1203062019340.2742@ionos>
+	<8762eh1p7d.fsf@turtle.gmx.de>
+	<alpine.LFD.2.02.1203062101040.2742@ionos>
+Date: Tue, 06 Mar 2012 22:07:30 +0100
+In-Reply-To: <alpine.LFD.2.02.1203062101040.2742@ionos> (Thomas Gleixner's
+	message of "Tue, 6 Mar 2012 21:26:07 +0100 (CET)")
+Message-ID: <87r4x5zbe5.fsf@turtle.gmx.de> (sfid-20120306_220753_601592_4C483E85)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch contains definition of hardware abstraction layer between
-cw1200 core driver and physical device interface. A bunch of wrappers
-can be build using this interface: sdio, spi, c2c etc.
+Am 06.03.2012 um 21:26 schrieb Thomas Gleixner:
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
----
- drivers/net/wireless/cw1200/sbus.h |   39 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 39 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/cw1200/sbus.h
+> On Tue, 6 Mar 2012, Sven Joachim wrote:
+>> Am 06.03.2012 um 20:31 schrieb Thomas Gleixner:
+>> 
+>> > Stephan, Sven: Can you please provide the output of /proc/interrupts ?
+>> 
+>> Here is mine, from a freshly booted 3.3-rc6 kernel.
+>> 
+>> Cheers,
+>>        Sven
+>> 
+>>            CPU0       
+>>   0:      25050    XT-PIC-XT-PIC    timer
+>>   1:        101    XT-PIC-XT-PIC    i8042
+>>   2:          0    XT-PIC-XT-PIC    cascade
+>>   3:          1    XT-PIC-XT-PIC  
+>>   4:          1    XT-PIC-XT-PIC  
+>>   5:          0    XT-PIC-XT-PIC    ehci_hcd:usb1, uhci_hcd:usb2
+>>   6:          1    XT-PIC-XT-PIC    i915, uhci_hcd:usb5, yenta
+>>   7:          1    XT-PIC-XT-PIC  
+>>   8:          0    XT-PIC-XT-PIC    rtc0
+>>   9:        634    XT-PIC-XT-PIC    acpi
+>>  10:        341    XT-PIC-XT-PIC    uhci_hcd:usb4, snd_hda_intel, b43
+>
+> Ah, XT-PIC uses handle_level_irq(). /me bangs head against desk.
+>
+> Does the patch below fix the problem for you ?
 
-diff --git a/drivers/net/wireless/cw1200/sbus.h b/drivers/net/wireless/cw1200/sbus.h
-new file mode 100644
-index 0000000..49bd06d
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/sbus.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Common sbus abstraction layer interface for cw1200 wireless driver
-+ *
-+ * Copyright (c) 2010-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef CW1200_SBUS_H
-+#define CW1200_SBUS_H
-+
-+/*
-+ * sbus priv forward definition.
-+ * Implemented and instantiated in particular modules.
-+ */
-+struct sbus_priv;
-+
-+typedef void (*sbus_irq_handler)(void *priv);
-+
-+struct sbus_ops {
-+	int (*sbus_memcpy_fromio)(struct sbus_priv *self, unsigned int addr,
-+					void *dst, int count);
-+	int (*sbus_memcpy_toio)(struct sbus_priv *self, unsigned int addr,
-+					const void *src, int count);
-+	void (*lock)(struct sbus_priv *self);
-+	void (*unlock)(struct sbus_priv *self);
-+	int (*irq_subscribe)(struct sbus_priv *self, sbus_irq_handler handler,
-+				void *priv);
-+	int (*irq_unsubscribe)(struct sbus_priv *self);
-+	int (*reset)(struct sbus_priv *self);
-+	size_t (*align_size)(struct sbus_priv *self, size_t size);
-+	int (*power_mgmt)(struct sbus_priv *self, bool suspend);
-+	int (*set_block_size)(struct sbus_priv *self, size_t size);
-+};
-+
-+#endif /* CW1200_SBUS_H */
--- 
-1.7.9
+Yep, it does.  Thanks!
 
+> ----------------->
+> Subject: genirq: Clear action->thread_mask if IRQ_ONESHOT is not set
+>
+> commit ac5637611(genirq: Unmask oneshot irqs when thread was not
+> woken) fails to unmask when a !IRQ_ONESHOT threaded handler is handled
+> by handle_level_irq. This happens because thread_mask is or'ed
+> unconditionally in irq_wake_thread(), but for !IRQ_ONESHOT interrupts
+> never cleared. So the check for !desc->thread_active fails and keeps
+> the interrupt disabled.
+>
+> Keep the thread_mask zero for !IRQ_ONESHOT interrupts.
+>
+> Reported-by: Sven Joachim <svenjoac@gmx.de>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
+>
+> Index: linux-2.6/kernel/irq/manage.c
+> ===================================================================
+> --- linux-2.6.orig/kernel/irq/manage.c
+> +++ linux-2.6/kernel/irq/manage.c
+> @@ -996,11 +996,13 @@ __setup_irq(unsigned int irq, struct irq
+>  	 * Setup the thread mask for this irqaction. Unlikely to have
+>  	 * 32 resp 64 irqs sharing one line, but who knows.
+>  	 */
+> -	if (new->flags & IRQF_ONESHOT && thread_mask == ~0UL) {
+> -		ret = -EBUSY;
+> -		goto out_mask;
+> +	if (new->flags & IRQF_ONESHOT) {
+> +		if (thread_mask == ~0UL) {
+> +			ret = -EBUSY;
+> +			goto out_mask;
+> +		}
+> +		new->thread_mask = new->flags & IRQF_ONESHOT;
+>  	}
+> -	new->thread_mask = 1 << ffz(thread_mask);
+>  
+>  	if (!shared) {
+>  		init_waitqueue_head(&desc->wait_for_threads);
