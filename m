@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754897Ab2CDUm5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:42:57 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 002/101] iwlwifi: remove an unused argument
-Date: Sun,  4 Mar 2012 11:28:16 -0800
-Message-Id: <1330889395-533-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214327_849896_549B403E)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mailout-de.gmx.net ([213.165.64.22]:58073 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S965259Ab2CFTxQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 14:53:16 -0500
+From: Sven Joachim <svenjoac@gmx.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
+References: <20120228010511.GA8453@kroah.com>
+	<20120228010434.412979550@linuxfoundation.org>
+	<87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de>
+	<CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com>
+	<alpine.LFD.2.02.1203060927190.2742@ionos>
+	<alpine.LFD.2.02.1203060957140.2742@ionos>
+	<alpine.LFD.2.02.1203062019340.2742@ionos>
+Date: Tue, 06 Mar 2012 20:53:10 +0100
+In-Reply-To: <alpine.LFD.2.02.1203062019340.2742@ionos> (Thomas Gleixner's
+	message of "Tue, 6 Mar 2012 20:31:46 +0100 (CET)")
+Message-ID: <8762eh1p7d.fsf@turtle.gmx.de> (sfid-20120306_205335_591235_808C777F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Am 06.03.2012 um 20:31 schrieb Thomas Gleixner:
 
-The station ID argument to the function
-iwlagn_tx_cmd_build_hwcrypto isn't used
-so remove it.
+> Stephan, Sven: Can you please provide the output of /proc/interrupts ?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+Here is mine, from a freshly booted 3.3-rc6 kernel.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 5f78567..81a3b0e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -208,10 +208,9 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
- }
- 
- static void iwlagn_tx_cmd_build_hwcrypto(struct iwl_priv *priv,
--				      struct ieee80211_tx_info *info,
--				      struct iwl_tx_cmd *tx_cmd,
--				      struct sk_buff *skb_frag,
--				      int sta_id)
-+					 struct ieee80211_tx_info *info,
-+					 struct iwl_tx_cmd *tx_cmd,
-+					 struct sk_buff *skb_frag)
- {
- 	struct ieee80211_key_conf *keyconf = info->control.hw_key;
- 
-@@ -358,7 +357,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	tx_cmd->len = cpu_to_le16(len);
- 
- 	if (info->control.hw_key)
--		iwlagn_tx_cmd_build_hwcrypto(priv, info, tx_cmd, skb, sta_id);
-+		iwlagn_tx_cmd_build_hwcrypto(priv, info, tx_cmd, skb);
- 
- 	/* TODO need this for burst mode later on */
- 	iwlagn_tx_cmd_build_basic(priv, skb, tx_cmd, info, hdr, sta_id);
--- 
-1.7.0.4
+Cheers,
+       Sven
+
+           CPU0       
+  0:      25050    XT-PIC-XT-PIC    timer
+  1:        101    XT-PIC-XT-PIC    i8042
+  2:          0    XT-PIC-XT-PIC    cascade
+  3:          1    XT-PIC-XT-PIC  
+  4:          1    XT-PIC-XT-PIC  
+  5:          0    XT-PIC-XT-PIC    ehci_hcd:usb1, uhci_hcd:usb2
+  6:          1    XT-PIC-XT-PIC    i915, uhci_hcd:usb5, yenta
+  7:          1    XT-PIC-XT-PIC  
+  8:          0    XT-PIC-XT-PIC    rtc0
+  9:        634    XT-PIC-XT-PIC    acpi
+ 10:        341    XT-PIC-XT-PIC    uhci_hcd:usb4, snd_hda_intel, b43
+ 11:          0    XT-PIC-XT-PIC    uhci_hcd:usb3
+ 12:        144    XT-PIC-XT-PIC    i8042
+ 14:       4141    XT-PIC-XT-PIC    ata_piix
+ 15:          0    XT-PIC-XT-PIC    ata_piix
+NMI:          0   Non-maskable interrupts
+MCE:          0   Machine check exceptions
+MCP:          1   Machine check polls
+ERR:          0
 
