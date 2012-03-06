@@ -1,41 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50875 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517Ab2CPNWA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 09:22:00 -0400
-Subject: Re: [RFC 1/3] mac80211: do not scan and monitor connection in
- parallel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20120316131322.GA10844@redhat.com>
-References: <1331899378-10543-1-git-send-email-sgruszka@redhat.com>
-	 <1331902378.6753.3.camel@jlt3.sipsolutions.net>
-	 <20120316131322.GA10844@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Mar 2012 14:21:58 +0100
-Message-ID: <1331904118.6753.11.camel@jlt3.sipsolutions.net> (sfid-20120316_142232_936517_F799675F)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:64658 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031507Ab2CFWnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:41 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH RESEND 32/33] iwlwifi: clean up iwl-commands.h
+Date: Tue,  6 Mar 2012 13:31:07 -0800
+Message-Id: <1331069468-11074-33-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234349_168713_EDE3EE25)
+In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-16 at 14:13 +0100, Stanislaw Gruszka wrote:
-> On Fri, Mar 16, 2012 at 01:52:58PM +0100, Johannes Berg wrote:
-> > On Fri, 2012-03-16 at 13:02 +0100, Stanislaw Gruszka wrote:
-> > > Before we send probes in connection monitoring we check if scan is not
-> > > pending. But we do that check without locking. Fix that and also do not
-> > > start scan if connection monitoring is in progress.
-> > 
-> > Wouldn't it be easier to just abort the check instead of deferring the
-> > scan?
-> 
-> It would be easier. However we already defer scan on
-> !list_empty(&local->work_list) case. Also random failures of
-> scan request can not be well seen from user-space perspective.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ah, I didn't mean aborting the scan request, but rather the connection
-monitor check. But yeah, I guess you're right about already deferring.
+Do some cleanups here:
+ * remove an unused prototype
+ * remove some unused constants
+ * clean up includes
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   10 +---------
+ 2 files changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index cb6c230..cf5cc10 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -26,7 +26,7 @@
+  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+  *
+  *****************************************************************************/
+-
++#include <linux/etherdevice.h>
+ #include <net/mac80211.h>
+ 
+ #include "iwl-dev.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 70ba962..9ed73e5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -69,15 +69,9 @@
+ #ifndef __iwl_commands_h__
+ #define __iwl_commands_h__
+ 
+-#include <linux/etherdevice.h>
+ #include <linux/ieee80211.h>
++#include <linux/types.h>
+ 
+-struct iwl_priv;
+-
+-/* Tx rates */
+-#define IWL_CCK_RATES	4
+-#define IWL_OFDM_RATES	8
+-#define IWL_MAX_RATES	(IWL_CCK_RATES + IWL_OFDM_RATES)
+ 
+ enum {
+ 	REPLY_ALIVE = 0x1,
+@@ -3851,8 +3845,6 @@ struct iwlagn_wowlan_kek_kck_material_cmd {
+ 	__le64	replay_ctr;
+ } __packed;
+ 
+-int iwl_agn_check_rxon_cmd(struct iwl_priv *priv);
+-
+ /*
+  * REPLY_WIPAN_PARAMS = 0xb2 (Commands and Notification)
+  */
+-- 
+1.7.0.4
 
