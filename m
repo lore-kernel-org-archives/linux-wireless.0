@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:38106 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756444Ab2CEIsv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 03:48:51 -0500
-Received: by vbbff1 with SMTP id ff1so3204276vbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 00:48:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn1Wu66JUaPQmK4ktjUBeCjMp4xXG2=FDy3G-LnVDwtAVA@mail.gmail.com>
-References: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
-	<CAD2nsn2GLAo=8xhe+-Xm0igSmQ+tr1F+Q6scuFaeaQWMYrQbwg@mail.gmail.com>
-	<CALx5=V9LwpWVG0UGLgyNyJVrSYj826xXwbEcFQVYM5BxAxnEJQ@mail.gmail.com>
-	<CAD2nsn1Wu66JUaPQmK4ktjUBeCjMp4xXG2=FDy3G-LnVDwtAVA@mail.gmail.com>
-Date: Mon, 5 Mar 2012 14:18:50 +0530
-Message-ID: <CAD2nsn2wexoWksvvt-5oixpVEeAEybR5febwA1sf3jnxGh5g0g@mail.gmail.com> (sfid-20120305_094902_281425_0EE52D94)
-Subject: Re: [ath9k-devel] Any recommendation of direct access the GPIO from
- specific address ?
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Matt Chen <machen@suse.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:4468 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759704Ab2CGTGg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:36 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Amit Beka <amit.beka@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 21/35] iwlwifi: fixed testmode notifications length
+Date: Wed,  7 Mar 2012 09:52:30 -0800
+Message-Id: <1331142764-5750-22-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200645_423664_8E0BA9BD)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 5, 2012 at 2:14 PM, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
-> Hi Matt,
->
->> echo 0x404c to which file in /sys/kernel/debug/ath9k ?
->
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# echo 0x404c > regidx
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c45
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c45
->
-> -> toggle the rfkill button, wifi off
->
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c55
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k#
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c55
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c55
->
-> -> toggle the rfkill button, wifi ON
->
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c45
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c45
->
-> please also see the dump of rfkill list, as i am external PCI card, my
-> card is only softblocked.
+From: Amit Beka <amit.beka@intel.com>
 
-please note my chip is AR9462, (AR9300 family)
+The length of iwl_rx_packet doesn't include the
+dword for the length itself, so add it manually.
 
->
-> --
-> thanks,
-> shafi
+Signed-off-by: Amit Beka <amit.beka@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-testmode.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index b8044bc..b06c676 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -185,7 +185,8 @@ static void iwl_testmode_ucode_rx_pkt(struct iwl_priv *priv,
+ 		return;
+ 	}
+ 	NLA_PUT_U32(skb, IWL_TM_ATTR_COMMAND, IWL_TM_CMD_DEV2APP_UCODE_RX_PKT);
+-	NLA_PUT(skb, IWL_TM_ATTR_UCODE_RX_PKT, length, data);
++	/* the length doesn't include len_n_flags field, so add it manually */
++	NLA_PUT(skb, IWL_TM_ATTR_UCODE_RX_PKT, length + sizeof(__le32), data);
+ 	cfg80211_testmode_event(skb, GFP_ATOMIC);
+ 	return;
+ 
 -- 
-thanks,
-shafi
+1.7.0.4
+
