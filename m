@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:64930 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761419Ab2C3Ui0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 16:38:26 -0400
-Received: by iagz16 with SMTP id z16so1443124iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Mar 2012 13:38:26 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:49617 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755830Ab2CGR37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 12:29:59 -0500
+Message-ID: <4F579B14.4020109@openwrt.org> (sfid-20120307_183002_230875_9B85E8FF)
+Date: Wed, 07 Mar 2012 18:29:56 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1333139642.7679.7.camel@jlt3.sipsolutions.net>
-References: <1333105815.3908.11.camel@jlt3.sipsolutions.net>
- <1333105904.3908.13.camel@jlt3.sipsolutions.net> <CAB=NE6XXzwKjFCbV=zi7DaPtpa4aqttB4EMTqaKSzhPMHwJd1A@mail.gmail.com>
- <1333139642.7679.7.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 30 Mar 2012 13:38:06 -0700
-Message-ID: <CAB=NE6W0C3v4vBJrXntDEhDLK-AiAH3oGGrkdM4wNk_XvZdQsg@mail.gmail.com> (sfid-20120330_223833_160335_2B2F7C13)
-Subject: Re: [PATCH 2/2] compat: explicitly export generated variables
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	lf_driver_backport@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+To: =?ISO-8859-1?Q?Kim_Lidstr=F6m?= <dexter@lacto.se>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [ath9k-devel] "Failed to stop Tx DMA" and "Could not stop RX"
+ with AR9485
+References: <4F4E9A36.2080809@lacto.se>
+In-Reply-To: <4F4E9A36.2080809@lacto.se>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 30, 2012 at 1:34 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-03-30 at 13:30 -0700, Luis R. Rodriguez wrote:
->> On Fri, Mar 30, 2012 at 4:11 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > From: Johannes Berg <johannes.berg@intel.com>
->> >
->> > Doing the blanket "export" statement at the beginning
->> > of the generated file confuses the kernel's Makefiles
->> > and causes extreme build slowdowns.
->> >
->> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->> > ---
->>
->> Nice, how did you figure this out BTW!?
->
-> Random monkey approach ;-)
->
-> I noticed it was slow and saw that it was due to some weird shit from
-> the kernel Makefile.lib being executed when it shouldn't be.
->
-> Since I have the compat *result* in git, I could easily see the diff
-> between the old compat.git/compat-wireless.git and the new versions. And
-> then I basically tried to identify the changes that caused this problem,
-> my best guess was that it had to be the Makefile so I gradually changed
-> that back to the previous version until the problem went away ... and
-> then identified which changes were responsible.
+On 2012-02-29 10:35 PM, Kim Lidström wrote:
+> Hello!
+> A while ago I had a situation where my AR9485 would lock up the kernel
+> so bad and two very nice guys(Mohammed Shafi and Adrian.. Uhm.. Sorry I
+> forgot his last name) were very patient in helping me and trying to
+> debug it through patches, etc. Nothing worked.
+> Eventually, though, I noticed that when I removed the atl1c module my
+> wlan started working. "Awesome!" I thought... Until I noticed this other
+> problem.
+> 
+> Once in a while, seemingly at random, the wlan dies with the error
+> messages in the title. And I can't possibly restore it without
+> restarting the computer.
+> 
+> With this message I have attached a log with the error messages.
+> This has been a problem since.. Uhm.. Kernel 3.2.something and I'm
+> currently running 3.2.8.
+> For some reason it happened at least 3-4 times shortly after each other
+> today - so I thought I might ask on here what's happening.
+Please try this patch with powersave enabled, using a recent
+compat-wireless build (3.3 or linux-next based):
+http://nbd.name/ps-fix.patch
 
-Wow, nice find.. so we should be able to make compat-wireless builds
-just as fast too there. There config.mk does the same wide export
-hackery. Looks like the 3.4 stable releases will have huge
-improvements, now to just address 2.6.31 and below for
-compat-wireless:
-
-Trying kernel                  2.6.31-02063113-generic  [FAILED]
-Trying kernel                  2.6.30-02063010-generic  [FAILED]
-Trying kernel                  2.6.29-02062906-generic  [FAILED]
-Trying kernel                  2.6.28-02062810-generic  [FAILED]
-Trying kernel                    2.6.27-020627-generic  [FAILED]
-Trying kernel                    2.6.26-020626-generic  [FAILED]
-Trying kernel                    2.6.25-020625-generic  [FAILED]
-Trying kernel                    2.6.24-020624-generic  [FAILED]
-
-PS. Please Cc: lf_driver_backport@lists.linux-foundation.org on future patches.
-
-  Luis
+- Felix
