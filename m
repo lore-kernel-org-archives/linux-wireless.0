@@ -1,94 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:53091 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030580Ab2COVJG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 17:09:06 -0400
-Received: by lbbgm6 with SMTP id gm6so1695431lbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 14:09:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120313081235.GC15333@redhat.com>
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
- <20120313081235.GC15333@redhat.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 15 Mar 2012 15:08:43 -0600
-Message-ID: <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com> (sfid-20120315_220928_053403_EC66D719)
-Subject: Re: Initializing iwl3945 error
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:4468 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759080Ab2CGTGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:34 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 17/35] iwlwifi: use writeb,writel,readl directly
+Date: Wed,  7 Mar 2012 09:52:26 -0800
+Message-Id: <1331142764-5750-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200724_111214_94E93709)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 13, 2012 at 2:12 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Sun, Mar 11, 2012 at 05:43:26PM +0000, Kamil Grzebien wrote:
->> I've initialisation problem with my iwl3945 network card in Dell XPS
->> M1530 laptop. The issue is known and described in couple of bug
->> reports (eg. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143).
->> There are workarounds but I'd like to solve the problem permanently.
->> Basically when initializing I get:
->>
->> iwl3945 0000:0b:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
->> iwl3945 0000:0b:00.0: setting latency timer to 64
->> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->> ....
->> iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
->> iwl3945 0000:0b:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
->> iwl3945 0000:0b:00.0: EEPROM not found, EEPROM_GP=0xffffffff
-> It's worth to mansion that this problem happen after wakeup from suspend
-> to ram.
->
->> 1. Driver can't initialize card as all ioread32/iowrite32 seems to not
->> do their job. All reads finalize with 0xffffffff.
->>
->> However I can see that:
->> - pci_iomap(pdev, 0, 0) doesn't return error,
->> - pci_resource_start(pdev, 0) seems gives correct address (I can
->> compare it with the one I can see in /proc/iomem).
->>
->> If I access the memory directly, not by mapping, I can write and read
->> pci memory but driver load fails anyway. I don't understand why can't
->> access using mapped memory.
-> How do you access memory directly ?
->
->> 2. If I check BASE_ADDRESS with setpci it doesn't give correct values:
->>
->> # setpci -v -s 0b:00.0 BASE_ADDRESS_0 BASE_ADDRESS_1
->> 0000:0b:00.0 @10 = 00000000
->> 0000:0b:00.0 @14 = 00000000
->>
->> Not sure if it's done by driver itself or it should point correct
->> values even if the driver wasn't fully loaded.
->>
->> Have you got any idea of:
->> - why IO memory isn't accessible? what could cause that?
->> - how APIC could change the load process in this particular case? (if
->> I boot with noapic kernel option it usually works fine)
-> Is this really noapic or maybe noacpi ? ACPI manage PCIe devices.
->
->> This issue is reproducible in 100% on my system when I turn on the
->> machine. It doesn't occur after some work on it. I'd be very happy to
->> get rid of the issue.
->>
->> Could you point some ideas that might be worth checking in driver or
->> kernel please? I've tried couple of ideas but none worked for me.
->
-> Would be good to check if pcie bridge is configured correctly after
-> suspend to ram. But I don't know how to do this, that's why we are
-> on linux-pci mailing list :-)
->
-> Note we have similar bug report, which was actual regression and
-> that problem is already fixed by PCI patch:
-> http://marc.info/?l=linux-kernel&m=132577331232330&w=2
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-The bug report (http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143)
-has a lot of logs, but they're pretty old and I can't tell how
-applicable they are to your situation.
+That change will save us some CPU cycles at run time. Having port-based
+I/O seems to be not possible for PCIe devices.
 
-It would be useful to see a complete dmesg log, /proc/iomem, and
-"lspci -vv" output from your machine after the problem occurs, and
-also the same information when it works (when using the noapic flag).
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   13 ++++++-------
+ 2 files changed, 7 insertions(+), 8 deletions(-)
 
-Bjorn
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index ae08498..5afd06e 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -1,6 +1,6 @@
+ config IWLWIFI
+ 	tristate "Intel Wireless WiFi Next Gen AGN - Wireless-N/Advanced-N/Ultimate-N (iwlwifi) "
+-	depends on PCI && MAC80211
++	depends on PCI && MAC80211 && HAS_IOMEM
+ 	select FW_LOADER
+ 	select NEW_LEDS
+ 	select LEDS_CLASS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 2a781b5..ef7418d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1609,18 +1609,17 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 
+ static void iwl_trans_pcie_write8(struct iwl_trans *trans, u32 ofs, u8 val)
+ {
+-	iowrite8(val, IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
++	writeb(val, IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+ }
+ 
+ static void iwl_trans_pcie_write32(struct iwl_trans *trans, u32 ofs, u32 val)
+ {
+-	iowrite32(val, IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
++	writel(val, IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+ }
+ 
+ static u32 iwl_trans_pcie_read32(struct iwl_trans *trans, u32 ofs)
+ {
+-	u32 val = ioread32(IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+-	return val;
++	return readl(IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+ }
+ 
+ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+@@ -1638,7 +1637,7 @@ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	}
+ 
+ 	pci_disable_msi(trans_pcie->pci_dev);
+-	pci_iounmap(trans_pcie->pci_dev, trans_pcie->hw_base);
++	iounmap(trans_pcie->hw_base);
+ 	pci_release_regions(trans_pcie->pci_dev);
+ 	pci_disable_device(trans_pcie->pci_dev);
+ 
+@@ -2269,9 +2268,9 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
+ 		goto out_pci_disable_device;
+ 	}
+ 
+-	trans_pcie->hw_base = pci_iomap(pdev, 0, 0);
++	trans_pcie->hw_base = pci_ioremap_bar(pdev, 0);
+ 	if (!trans_pcie->hw_base) {
+-		dev_printk(KERN_ERR, &pdev->dev, "pci_iomap failed");
++		dev_printk(KERN_ERR, &pdev->dev, "pci_ioremap_bar failed");
+ 		err = -ENODEV;
+ 		goto out_pci_release_regions;
+ 	}
+-- 
+1.7.0.4
+
