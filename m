@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41750 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029Ab2CEVAm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 16:00:42 -0500
-Subject: Re: [PATCH] cfg80211/mac80211: report signal strength for mgmt
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20120305204251.GH18128@tuxdriver.com>
-References: <1330692035.8542.14.camel@jlt3.sipsolutions.net>
-	 <20120305204251.GH18128@tuxdriver.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:33504 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755953Ab2CGShk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 13:37:40 -0500
+Message-ID: <1331145456.2140.61.camel@joe2Laptop> (sfid-20120307_193743_634493_F72B115C)
+Subject: Re: [PATCH 00/12] ath6kl: checkpatch fixes
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 07 Mar 2012 10:37:36 -0800
+In-Reply-To: <4F57A193.3030406@qca.qualcomm.com>
+References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+	 <1330537026.13689.1.camel@joe2Laptop> <4F4E635A.3060003@qca.qualcomm.com>
+	 <1330539665.13689.9.camel@joe2Laptop> <4F57A193.3030406@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 05 Mar 2012 22:00:39 +0100
-Message-ID: <1330981239.3545.12.camel@jlt3.sipsolutions.net> (sfid-20120305_220045_488299_FE9B2836)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-05 at 15:42 -0500, John W. Linville wrote:
-> On Fri, Mar 02, 2012 at 01:40:35PM +0100, Johannes Berg wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-03-07 at 19:57 +0200, Kalle Valo wrote:
+> On 02/29/2012 08:21 PM, Joe Perches wrote:
+> > On Wed, 2012-02-29 at 19:41 +0200, Kalle Valo wrote:
+> >> On 02/29/2012 07:37 PM, Joe Perches wrote:
+> >>> Why not just make these functions?
+> >> Because of the HI_ITEM() macro I can't pass the item parameter to a
+> >> function:
+> >> #define HI_ITEM(item)  offsetof(struct host_interest, item)
+> > Perhaps something like:
+> > void _ath6kl_bmi_write_hi32(struct ath6kl ar, size_t offset, u32 *val)
+> > {
+> > 	u32 addr;
+> > 	__le32 v;
 > > 
-> > Add the signal strength (in dBm only for now) to
-> > frames that are received via nl80211's various
-> > frame APIs.
-> > 
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > ---
-> >  include/linux/nl80211.h |    6 ++++++
-> >  include/net/cfg80211.h  |    8 +++++---
-> >  net/mac80211/rx.c       |   13 +++++++++++--
-> >  net/wireless/mlme.c     |    7 ++++---
-> >  net/wireless/nl80211.c  |    9 +++++++--
-> >  net/wireless/nl80211.h  |    3 ++-
-> >  6 files changed, 35 insertions(+), 11 deletions(-)
+> > 	addr = ath6kl_get_hi_item_addr(ar, offset);
+> > 	v = cpu_to_le32(*val);
+> > 	ath6kl_bmi_write(ar, addr, (u8 *)&v, sizeof(v));
+> > }
+> > #define ath6kl_bmi_write_hi32(ar, item, val)		\
+> > 	_ath6kl_bmi_write_hi32(ar, HI_ITEM(item), &(val))
 > 
->   CC      drivers/net/wireless/ath/ath6kl/wmi.o
-> drivers/net/wireless/ath/ath6kl/wmi.c: In function ‘ath6kl_wmi_rx_probe_req_event_rx’:
-> drivers/net/wireless/ath/ath6kl/wmi.c:559:3: warning: passing argument 3 of ‘cfg80211_rx_mgmt’ makes integer from pointer without a cast
-> include/net/cfg80211.h:3205:6: note: expected ‘int’ but argument is of type ‘u8 *’
-> drivers/net/wireless/ath/ath6kl/wmi.c:559:3: warning: passing argument 4 of ‘cfg80211_rx_mgmt’ makes pointer from integer without a cast
-> include/net/cfg80211.h:3205:6: note: expected ‘const u8 *’ but argument is of type ‘u16’
-> drivers/net/wireless/ath/ath6kl/wmi.c:559:3: error: too few arguments to function ‘cfg80211_rx_mgmt’
-> include/net/cfg80211.h:3205:6: note: declared here
-> drivers/net/wireless/ath/ath6kl/wmi.c: In function ‘ath6kl_wmi_rx_action_event_rx’:
-> drivers/net/wireless/ath/ath6kl/wmi.c:598:2: warning: passing argument 3 of ‘cfg80211_rx_mgmt’ makes integer from pointer without a cast
-> include/net/cfg80211.h:3205:6: note: expected ‘int’ but argument is of type ‘u8 *’
-> drivers/net/wireless/ath/ath6kl/wmi.c:598:2: warning: passing argument 4 of ‘cfg80211_rx_mgmt’ makes pointer from integer without a cast
-> include/net/cfg80211.h:3205:6: note: expected ‘const u8 *’ but argument is of type ‘u16’
-> drivers/net/wireless/ath/ath6kl/wmi.c:598:2: error: too few arguments to function ‘cfg80211_rx_mgmt’
-> include/net/cfg80211.h:3205:6: note: declared here
-> make[3]: *** [drivers/net/wireless/ath/ath6kl/wmi.o] Error 1
+> I tried this but actually this ends to a header file dependency hell. I
+> don't want to deal with that right now so I have to use the original macros.
 
-Oh crap, I forgot about ath6kl, sorry!
+No worries.
+When your series is stable, maybe I'll play with it.
 
-johannes
 
