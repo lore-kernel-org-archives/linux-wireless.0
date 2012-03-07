@@ -1,194 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11400 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755194Ab2CDUnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:12 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Amit Beka <amit.beka@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 086/101] iwlwifi: add testmode command for rx forwarding
-Date: Sun,  4 Mar 2012 11:29:40 -0800
-Message-Id: <1330889395-533-87-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214442_131904_679DD372)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mx1.watchguard.com ([206.191.171.101]:49694 "EHLO
+	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759903Ab2CGTpe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:45:34 -0500
+From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+Date: Wed, 7 Mar 2012 19:45:32 +0000
+Message-ID: <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com> (sfid-20120307_204537_972509_710BE011)
+References: <4F57B7E6.1050103@candelatech.com>
+In-Reply-To: <4F57B7E6.1050103@candelatech.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Added a testmode command which tells iwl_rx_dispatch
-to send the RX both as a notification to nl80211 and
-with the registered RX handlers.
+Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
 
-This is used for monitoring RX from userspace while preserving
-the regular flows in the driver.
 
-Signed-off-by: Amit Beka <amit.beka@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c   |   20 +++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-testmode.c |   32 ++++++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-testmode.h |   13 +++++++++-
- 3 files changed, 56 insertions(+), 9 deletions(-)
+--
+-bp
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-index e504675..8e7cdfa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-@@ -1152,6 +1152,8 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
-+	void (*pre_rx_handler)(struct iwl_priv *,
-+			       struct iwl_rx_cmd_buffer *);
- 	int err = 0;
- 
- 	/*
-@@ -1161,10 +1163,20 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
- 	 */
- 	iwl_notification_wait_notify(&priv->notif_wait, pkt);
- 
--	if (priv->pre_rx_handler &&
--	    priv->ucode_owner == IWL_OWNERSHIP_TM)
--		priv->pre_rx_handler(priv, rxb);
--	else {
-+	/* RX data may be forwarded to userspace (using pre_rx_handler) in one
-+	 * of two cases: the first, that the user owns the uCode through
-+	 * testmode - in such case the pre_rx_handler is set and no further
-+	 * processing takes place. The other case is when the user want to
-+	 * monitor the rx w/o affecting the regular flow - the pre_rx_handler
-+	 * will be set but the ownership flag != IWL_OWNERSHIP_TM and the flow
-+	 * continues.
-+	 * We need to use ACCESS_ONCE to prevent a case where the handler
-+	 * changes between the check and the call.
-+	 */
-+	pre_rx_handler = ACCESS_ONCE(priv->pre_rx_handler);
-+	if (pre_rx_handler)
-+		pre_rx_handler(priv, rxb);
-+	if (priv->ucode_owner != IWL_OWNERSHIP_TM) {
- 		/* Based on type of command response or notification,
- 		 *   handle those that need handling via function in
- 		 *   rx_handlers table.  See iwl_setup_rx_handlers() */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-index 1d73209..b8044bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-@@ -125,6 +125,8 @@ struct nla_policy iwl_testmode_gnl_msg_policy[IWL_TM_ATTR_MAX] = {
- 	[IWL_TM_ATTR_FW_TYPE] = { .type = NLA_U32, },
- 	[IWL_TM_ATTR_FW_INST_SIZE] = { .type = NLA_U32, },
- 	[IWL_TM_ATTR_FW_DATA_SIZE] = { .type = NLA_U32, },
-+
-+	[IWL_TM_ATTR_ENABLE_NOTIFICATION] = {.type = NLA_FLAG, },
- };
- 
- /*
-@@ -194,7 +196,7 @@ nla_put_failure:
- 
- void iwl_testmode_init(struct iwl_priv *priv)
- {
--	priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
-+	priv->pre_rx_handler = NULL;
- 	priv->testmode_trace.trace_enabled = false;
- 	priv->testmode_mem.read_in_progress = false;
- }
-@@ -770,9 +772,13 @@ static int iwl_testmode_ownership(struct ieee80211_hw *hw, struct nlattr **tb)
- 	}
- 
- 	owner = nla_get_u8(tb[IWL_TM_ATTR_UCODE_OWNER]);
--	if ((owner == IWL_OWNERSHIP_DRIVER) || (owner == IWL_OWNERSHIP_TM))
-+	if (owner == IWL_OWNERSHIP_DRIVER) {
- 		priv->ucode_owner = owner;
--	else {
-+		priv->pre_rx_handler = NULL;
-+	} else if (owner == IWL_OWNERSHIP_TM) {
-+		priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
-+		priv->ucode_owner = owner;
-+	} else {
- 		IWL_ERR(priv, "Invalid owner\n");
- 		return -EINVAL;
- 	}
-@@ -937,6 +943,20 @@ static int iwl_testmode_buffer_dump(struct ieee80211_hw *hw,
- 	return -ENOBUFS;
- }
- 
-+static int iwl_testmode_notifications(struct ieee80211_hw *hw,
-+	struct nlattr **tb)
-+{
-+	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
-+	bool enable;
-+
-+	enable = nla_get_flag(tb[IWL_TM_ATTR_ENABLE_NOTIFICATION]);
-+	if (enable)
-+		priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
-+	else
-+		priv->pre_rx_handler = NULL;
-+	return 0;
-+}
-+
- 
- /* The testmode gnl message handler that takes the gnl message from the
-  * user space and parses it per the policy iwl_testmode_gnl_msg_policy, then
-@@ -1022,6 +1042,12 @@ int iwlagn_mac_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
- 		result = iwl_testmode_indirect_mem(hw, tb);
- 		break;
- 
-+	case IWL_TM_CMD_APP2DEV_NOTIFICATIONS:
-+		IWL_DEBUG_INFO(priv, "testmode notifications cmd "
-+			"to driver\n");
-+		result = iwl_testmode_notifications(hw, tb);
-+		break;
-+
- 	default:
- 		IWL_ERR(priv, "Unknown testmode command\n");
- 		result = -ENOSYS;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
-index 69b2e80..6ba211b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
-@@ -122,6 +122,9 @@
-  *	Fore reading, a READ command is sent from the userspace and the data
-  *	is returned when the user calls a DUMP command.
-  *	For writing, only a WRITE command is used.
-+ * @IWL_TM_CMD_APP2DEV_NOTIFICATIONS:
-+ *	Command to enable/disable notifications (currently RX packets) from the
-+ *	driver to userspace.
-  */
- enum iwl_tm_cmd_t {
- 	IWL_TM_CMD_APP2DEV_UCODE		= 1,
-@@ -152,7 +155,8 @@ enum iwl_tm_cmd_t {
- 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_READ = 26,
- 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_DUMP = 27,
- 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_WRITE = 28,
--	IWL_TM_CMD_MAX				= 29,
-+	IWL_TM_CMD_APP2DEV_NOTIFICATIONS	= 29,
-+	IWL_TM_CMD_MAX				= 30,
- };
- 
- /*
-@@ -256,6 +260,10 @@ enum iwl_tm_cmd_t {
-  *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_UCODE this flag
-  *	indicates that the user wants to receive the response of the command
-  *	in a reply SKB. If it's not present, the response is not returned.
-+ * @IWL_TM_ATTR_ENABLE_NOTIFICATIONS:
-+ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_NOTIFICATIONS, this
-+ *	flag enables (if present) or disables (if not) the forwarding
-+ *	to userspace.
-  */
- enum iwl_tm_attr_t {
- 	IWL_TM_ATTR_NOT_APPLICABLE		= 0,
-@@ -282,7 +290,8 @@ enum iwl_tm_attr_t {
- 	IWL_TM_ATTR_FW_INST_SIZE		= 21,
- 	IWL_TM_ATTR_FW_DATA_SIZE		= 22,
- 	IWL_TM_ATTR_UCODE_CMD_SKB		= 23,
--	IWL_TM_ATTR_MAX				= 24,
-+	IWL_TM_ATTR_ENABLE_NOTIFICATION		= 24,
-+	IWL_TM_ATTR_MAX				= 25,
- };
- 
- /* uCode trace buffer */
--- 
-1.7.0.4
+
+On Mar 7, 2012, at 11:32 AM, Ben Greear wrote:
+
+> This is with a somewhat hacked 3.3.0-rc5+.  Just
+> curious if this is a known problem.
+> 
+> 
+> Seems very reproducible on my system.
+> 
+> 
+> WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:10 ieee80211_bss_info_change_noti)
+> Hardware name: To be filled by O.E.M.
+> Modules linked in: 8021q garp stp llc macvlan wanlink(PO) pktgen lockd arc4 joydev ppdev microcode serio_]
+> Pid: 1855, comm: hostapd Tainted: P         C O 3.3.0-rc5+ #7
+> Call Trace:
+> [<ffffffff81036eda>] warn_slowpath_common+0x80/0x98
+> [<ffffffff81036f07>] warn_slowpath_null+0x15/0x17
+> [<ffffffffa02c0010>] ieee80211_bss_info_change_notify+0x15f/0x18c [mac80211]
+> [<ffffffffa02d472d>] ieee80211_config_beacon+0x58/0x208 [mac80211]
+> [<ffffffff8144773b>] ? __mutex_unlock_slowpath+0x10d/0x11f
+> [<ffffffffa02d4936>] ieee80211_add_beacon+0x35/0xa4 [mac80211]
+> [<ffffffffa01fd715>] nl80211_addset_beacon+0x317/0x34a [cfg80211]
+> [<ffffffff813b5a08>] genl_rcv_msg+0x1f4/0x239
+> [<ffffffff813b5814>] ? genl_rcv+0x28/0x28
+> [<ffffffff813b4836>] netlink_rcv_skb+0x3e/0x8f
+> [<ffffffff813b580d>] genl_rcv+0x21/0x28
+> [<ffffffff813b4611>] netlink_unicast+0xe9/0x152
+> [<ffffffff813b4d6a>] netlink_sendmsg+0x1f8/0x216
+> [<ffffffff81384122>] __sock_sendmsg_nosec+0x5f/0x6a
+> [<ffffffff8138416a>] __sock_sendmsg+0x3d/0x48
+> [<ffffffff81384a0a>] sock_sendmsg+0xa3/0xbc
+> [<ffffffff811d12c2>] ? blk_finish_plug+0x13/0x34
+> [<ffffffff810a8b87>] ? generic_file_aio_write+0xa6/0xb6
+> [<ffffffff81383b68>] ? copy_from_user+0x9/0xb
+> [<ffffffff813846b2>] ? move_addr_to_kernel+0x2b/0x65
+> [<ffffffff8138e909>] ? copy_from_user+0x9/0xb
+> [<ffffffff8138ec56>] ? verify_iovec+0x4f/0xa3
+> [<ffffffff8138516c>] __sys_sendmsg+0x20f/0x29c
+> [<ffffffff8144c242>] ? sub_preempt_count+0x92/0xa6
+> [<ffffffff81052ecf>] ? __srcu_read_unlock+0x3b/0x59
+> [<ffffffff8111d9c0>] ? fsnotify+0x255/0x285
+> [<ffffffff81385356>] sys_sendmsg+0x3d/0x5b
+> [<ffffffff8144dfb9>] system_call_fastpath+0x16/0x1b
+> ---[ end trace 7abcbdd8b95b5194 ]---
+> 
+> -- 
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
