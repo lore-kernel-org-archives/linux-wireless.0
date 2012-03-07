@@ -1,73 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58230 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161435Ab2COU2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 16:28:06 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/26] iwlwifi: use iwlagn_fw_error instead of iwl_nic_error
-Date: Thu, 15 Mar 2012 13:26:54 -0700
-Message-Id: <1331843226-29860-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212839_677798_E9059B17)
-In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:35145 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920Ab2CGQHJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 11:07:09 -0500
+Received: by iagz16 with SMTP id z16so8807150iag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2012 08:07:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAEFj98638JoG8cuU1bjtn-cOLP_L0=Gud1HDROCQ4srQXxO8Dg@mail.gmail.com>
+References: <CAEFj984b_Aihd9hc-dMArPxZPod8eKsxzekLwO74XbTUKGX9LQ@mail.gmail.com>
+	<CAEFj984gKDRtjP9NJYqjvWCZ=HxwW3DQ036guVY6Vbj=yx1H6g@mail.gmail.com>
+	<1331105902.3519.2.camel@jlt3.sipsolutions.net>
+	<CAEFj985EYVeAYef1-G3uVPOxZqwjose9Ge7=MRsbmFWrLNz_RQ@mail.gmail.com>
+	<CAEFj984tNRXvBL4cCdJAq2VL7_AgeFYDB=w1b=aLy89pCM5UdA@mail.gmail.com>
+	<1331130686.3519.14.camel@jlt3.sipsolutions.net>
+	<1331130810.3519.16.camel@jlt3.sipsolutions.net>
+	<CAEFj984W5PEwJ4ruXbwn0PwZV2s+fXkL=PzFX0DZm1gAyiGA3g@mail.gmail.com>
+	<1331131853.3519.17.camel@jlt3.sipsolutions.net>
+	<CAEFj98638JoG8cuU1bjtn-cOLP_L0=Gud1HDROCQ4srQXxO8Dg@mail.gmail.com>
+Date: Thu, 8 Mar 2012 00:07:09 +0800
+Message-ID: <CAEFj984TfHYQZpCBqAAYh6Oic40TCZXXSANpW6r9JwP+JVedMA@mail.gmail.com> (sfid-20120307_170723_131789_356933DF)
+Subject: Re: Hw Accel in Secured Mesh No Longer Work
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Hi, Johannes,
 
-In the process, make iwlagn_fw_error
-a non-static function, as it is used
-by more than one file.
+I miss out the configuration of HT mode in authsae.cfg, After redo the
+test, it works by altering the following in mesh-nl80211.c
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h  |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c |    2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+        set_authenticated_flag(&nlcfg, peer);
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index fa18968..3c49c04 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1562,7 +1562,7 @@ static void iwl_cmd_queue_full(struct iwl_op_mode *op_mode)
- 
- 	if (!iwl_check_for_ct_kill(priv)) {
- 		IWL_ERR(priv, "Restarting adapter queue is full\n");
--		iwl_nic_error(op_mode);
-+		iwlagn_fw_error(priv, false);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 436611c..22fc363 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -132,6 +132,7 @@ int iwl_send_calib_results(struct iwl_priv *priv);
- int iwl_calib_set(struct iwl_priv *priv,
- 		  const struct iwl_calib_hdr *cmd, int len);
- void iwl_calib_free_results(struct iwl_priv *priv);
-+void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand);
- 
- /* lib */
- int iwlagn_send_tx_power(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 46490d3..e59cb5b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -828,7 +828,7 @@ void iwl_print_rx_config_cmd(struct iwl_priv *priv,
- }
- #endif
- 
--static void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
-+void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
- {
- 	unsigned int reload_msec;
- 	unsigned long reload_jiffies;
--- 
-1.7.0.4
+        /* key to encrypt/decrypt unicast data AND mgmt traffic
+to/from this peer */
+            install_key(&nlcfg, peer, CIPHER_CCMP,
+NL80211_KEYTYPE_PAIRWISE, 0, mtk);
 
+Thanks
+
+Hi, Javier
+
+Are you going to make change to this?
+
+Regards,
+Chun-Yeow
+
+On Wed, Mar 7, 2012 at 11:29 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+> Hi, Johannes
+>
+>> Does it work if you turn it around? Are there any problems with doing
+>> so?
+>
+> Nope. Unfortunately, not working.
+>
+> Regards,
+> Chun-Yeow
