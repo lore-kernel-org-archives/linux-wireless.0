@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40547 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753784Ab2CAHjH (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19075 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750699Ab2CGGq2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 02:39:07 -0500
-Subject: Re: [PATCH 1/2] mac80211_hwsim:  Add tsf to beacons and radiotap
- header.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1330561776-8135-1-git-send-email-javier@cozybit.com> (sfid-20120301_013021_099744_8E096896)
-References: <1330561776-8135-1-git-send-email-javier@cozybit.com>
-	 (sfid-20120301_013021_099744_8E096896)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Mar 2012 08:38:59 +0100
-Message-ID: <1330587539.3623.0.camel@jlt3.sipsolutions.net> (sfid-20120301_083911_719033_D107D592)
-Mime-Version: 1.0
+	Wed, 7 Mar 2012 01:46:28 -0500
+Message-ID: <4F57043F.10605@qca.qualcomm.com> (sfid-20120307_074657_441626_00D92C5D)
+Date: Wed, 7 Mar 2012 08:46:23 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2] ath6kl: Add provision to define suspend policy in
+ disconnected state.
+References: <1331026439-7822-1-git-send-email-rmani@qca.qualcomm.com> <4F563776.8090000@qca.qualcomm.com> <4F56F023.1090201@qca.qualcomm.com>
+In-Reply-To: <4F56F023.1090201@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-29 at 16:29 -0800, Javier Cardona wrote:
-> Generate a tsf from jiffies.  Prepare the path for having different tsf
-> offsets on the each phy.  This will be useful for testing mesh
-> synchronization algorithms.
+On 03/07/2012 07:20 AM, Raja Mani wrote:
+> On Tuesday 06 March 2012 09:42 PM, Kalle Valo wrote:
+>
+>>> +		if (ret&&  (!ar->wow_suspend_mode ||
+>>> +		    ar->wow_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
+>>> +				try_deepsleep = true;
+>>
+>> I don't get this part. If the wow_mode parameter is set to 0 or 2 the
+>> functionality is the same, right? So what's the point with 0x2 the
+>> commit log? Deep sleep will be the default in disconnected anyway.
+>> Unless I misunderstood something, of course.
+> 
+> Yes, the functionality is the same for both cases (0 or 2).
+> passing 2 to wow_mode is an explicitly option.
+> The value 0 is the default case.
+> 
+> Should we remove option 2 in wow_mode and keep only
+> option 1 ?
 
-I think you should also add it to probe responses.
+Thanks, now I understand. No need to change anything, I'll just clarify
+in the commit log that option 2 is the default as well.
 
-johannes
-
+Kalle
