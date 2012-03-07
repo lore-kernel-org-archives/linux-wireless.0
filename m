@@ -1,80 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:56319 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429Ab2CTO3e convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 10:29:34 -0400
-Received: by vbbff1 with SMTP id ff1so35910vbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 07:29:33 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:5450 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756724Ab2CGSb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 13:31:27 -0500
+Date: Wed, 7 Mar 2012 19:31:04 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH 3.3 v2] rt2x00: fix random stalls
+Message-ID: <20120307183103.GB15839@redhat.com> (sfid-20120307_193130_855517_C4DB06F2)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6V4NuNc8Xr3qKAaXgs2og-2e6qusek=ZFdvQCq4JtKavQ@mail.gmail.com>
-References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
-	<1332214021-9716-3-git-send-email-mcgrof@frijolero.org>
-	<1332245223.3329.5.camel@jlt3.sipsolutions.net>
-	<CAB=NE6V4NuNc8Xr3qKAaXgs2og-2e6qusek=ZFdvQCq4JtKavQ@mail.gmail.com>
-Date: Tue, 20 Mar 2012 10:29:33 -0400
-Message-ID: <CAJdJm_MD1QQG3hyQmo-RffeObGBSViLAOBZeyRJqoEbh0x2PMA@mail.gmail.com> (sfid-20120320_152952_379172_B7859CD5)
-Subject: Re: [Lf_driver_backport] [PATCH 2/4] compat: backport work_busy()
-From: Anderson Lizardo <anderson.lizardo@openbossa.org>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Andre Guedes <andre.guedes@openbossa.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luiz,
+Is possible that we stop queue and then do not wake up it again,
+especially when packets are transmitted fast. That can be easily
+reproduced with modified tx queue entry_num to some small value e.g. 16.
 
-[I'm subscribed only to lf_driver_backport]
+If mac80211 already hold local->queue_stop_reason_lock, then we can wait
+on that lock in both rt2x00queue_pause_queue() and
+rt2x00queue_unpause_queue(). After drooping ->queue_stop_reason_lock
+is possible that __ieee80211_wake_queue() will be performed before
+__ieee80211_stop_queue(), hence we stop queue and newer wake up it
+again.
 
-On Tue, Mar 20, 2012 at 9:50 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Tue, Mar 20, 2012 at 5:07 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Mon, 2012-03-19 at 20:26 -0700, Luis R. Rodriguez wrote:
->>> From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
->>>
->>> Best we can do is just tell the users of we are WORK_BUSY_PENDING
->>> for older kernels. The ckmake log:
->>
->> [...]
->>
->>> + * Test whether @work is currently pending or running.  There is no
->>> + * synchronization around this function and the test result is
->>> + * unreliable and only useful as advisory hints or for debugging.
->>> + * Especially for reentrant wqs, the pending state might hide the
->>> + * running state.
->>
->> What's this needed for? It seems if it's used only for hints/debugging
->> we should not need the function, or possibly simply return some
->> pointless combination like -1?
->
-> net/bluetooth/hci_core.c:1701:  if (work_busy(&hdev->le_scan))
+Another race condition is possible when between rt2x00queue_threshold()
+check and rt2x00queue_pause_queue() we will process all pending tx
+buffers on different cpu. This might happen if for example intterrupt
+will be triggered on cpu performing rt2x00mac_tx().
 
-Did you consider making this change bluetooth specific (e.g. under
-patches/16-bluetooth.patch with LINUX_VERSION_CODE check) so that
-work_pending() is used on this location for older kernels? Or are
-there other users for work_busy() besides bluetooth?
+To prevent race conditions serialize pause/unpause by queue->tx_lock.
 
-I talked with the author of this code (CC'd) and he said it should be
-safe to make this replacement.
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+v1 -> v2:
+ - use spin_lock_bh
+ - serialize also rt2x00queue_threshold()
 
-Another change I made sometime ago (specifically to bluetooth code)
-for it to build with older kenels (2.6.32 in my case), was to change
-this line in net/bluetooth/hci_core.c:
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +++++-
+ drivers/net/wireless/rt2x00/rt2x00mac.c |    7 +++++++
+ 2 files changed, 12 insertions(+), 1 deletions(-)
 
-queue_work(system_long_wq, &hdev->le_scan);
-
-to:
-
-schedule_work(&hdev->le_scan);
-
-Again, I checked with the original author and we believe it is okay to
-do this (I also lightly tested these changes).
-
-Hope that helps. Best Regards,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 49a51b4..61a5042 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -430,10 +430,14 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	/*
+ 	 * If the data queue was below the threshold before the txdone
+ 	 * handler we must make sure the packet queue in the mac80211 stack
+-	 * is reenabled when the txdone handler has finished.
++	 * is reenabled when the txdone handler has finished. This has to be
++	 * serialized with rt2x00mac_tx(), otherwise we can wake up queue
++	 * before it was stopped.
+ 	 */
++	spin_lock_bh(&entry->queue->tx_lock);
+ 	if (!rt2x00queue_threshold(entry->queue))
+ 		rt2x00queue_unpause_queue(entry->queue);
++	spin_unlock_bh(&entry->queue->tx_lock);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index ede3c58..923702c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -152,13 +152,20 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, false)))
+ 		goto exit_fail;
+ 
++	/*
++	 * Pausing queue has to be serialized with rt2x00lib_txdone() .
++	 */
++	spin_lock(&queue->tx_lock);
+ 	if (rt2x00queue_threshold(queue))
+ 		rt2x00queue_pause_queue(queue);
++	spin_unlock(&queue->tx_lock);
+ 
+ 	return;
+ 
+  exit_fail:
++	spin_lock(&queue->tx_lock);
+ 	rt2x00queue_pause_queue(queue);
++	spin_unlock(&queue->tx_lock);
+  exit_free_skb:
+ 	ieee80211_free_txskb(hw, skb);
+ }
 -- 
-Anderson Lizardo
-Instituto Nokia de Tecnologia - INdT
-Manaus - Brazil
+1.7.1
+
