@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:51718 "HELO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1161299Ab2CPDwf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8420 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497Ab2CGLzv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 23:52:35 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 4/5] mwifiex: support STATION_INFO_SIGNAL_AVG
-Date: Thu, 15 Mar 2012 20:51:50 -0700
-Message-Id: <1331869911-10624-5-git-send-email-bzhao@marvell.com> (sfid-20120316_045239_181190_8A2CB64D)
-In-Reply-To: <1331869911-10624-1-git-send-email-bzhao@marvell.com>
-References: <1331869911-10624-1-git-send-email-bzhao@marvell.com>
+	Wed, 7 Mar 2012 06:55:51 -0500
+Message-ID: <4F574CC1.5060901@qca.qualcomm.com> (sfid-20120307_125555_261359_D83DCF12)
+Date: Wed, 7 Mar 2012 17:25:45 +0530
+From: bkamatch <bkamatch@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] cfg80211: Add background scan period attribute.
+References: <1330583965-8415-1-git-send-email-bkamatch@qca.qualcomm.com>	 (sfid-20120301_073937_156683_BFB54260) <1330611829.3623.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1330611829.3623.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 03/01/2012 07:53 PM, Johannes Berg wrote:
+> On Thu, 2012-03-01 at 12:09 +0530, Bala Shanmugam wrote:
+>> Receive background scan period as part of connect
+>> command and pass the same to driver.
+>>
+>> Signed-off-by: Bala Shanmugam<bkamatch@qca.qualcomm.com>
+>> ---
+>>   include/linux/nl80211.h |    9 +++++++++
+>>   include/net/cfg80211.h  |    3 +++
+>>   net/wireless/nl80211.c  |    7 +++++++
+>>   net/wireless/wext-sme.c |    3 +++
+>>   4 files changed, 22 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+>> index be35a68..e81d327 100644
+>> --- a/include/linux/nl80211.h
+>> +++ b/include/linux/nl80211.h
+>> @@ -369,6 +369,10 @@
+>>    *	%NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
+>>    *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE and
+>>    *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT.
+>> + *	Background scan period can optionally be
+>> + *	specified in %NL80211_ATTR_BG_SCAN_PERIOD,
+>> + *	if not specified default background scan configuration
+>> + *	in driver is used and if period value is 0, bg scan will be disabled.
+> Maybe this should also indicate that the value is ignored unless the
+> device advertises roaming support with NL80211_ATTR_ROAM_SUPPORT?
+>
+> I'm not sure I like the whole default value thing since it's kinda
+> magic, but I guess I can live with it.
+>
+> johannes
+>
 
-This patch adds the support for updating average signal information
-in dump_station().
+Thats true.  Thanks for pointing it.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 9cf8d53..96c1e3b 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -519,9 +519,9 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
- 	struct mwifiex_rate_cfg rate;
- 
- 	sinfo->filled = STATION_INFO_RX_BYTES | STATION_INFO_TX_BYTES |
--		STATION_INFO_RX_PACKETS |
--		STATION_INFO_TX_PACKETS
--		| STATION_INFO_SIGNAL | STATION_INFO_TX_BITRATE;
-+			STATION_INFO_RX_PACKETS | STATION_INFO_TX_PACKETS |
-+			STATION_INFO_TX_BITRATE |
-+			STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
- 
- 	/* Get signal information from the firmware */
- 	if (mwifiex_send_cmd_sync(priv, HostCmd_CMD_RSSI_INFO,
-@@ -555,6 +555,7 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
- 			sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
- 	}
- 
-+	sinfo->signal_avg = priv->bcn_rssi_avg;
- 	sinfo->rx_bytes = priv->stats.rx_bytes;
- 	sinfo->tx_bytes = priv->stats.tx_bytes;
- 	sinfo->rx_packets = priv->stats.rx_packets;
--- 
-1.7.0.2
-
+Regards,
+Bala.
