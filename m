@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1414 "EHLO mms2.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:41390 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754604Ab2C0RIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 13:08:07 -0400
-Message-ID: <4F71F3E5.6030105@broadcom.com> (sfid-20120327_190811_297368_2E704237)
-Date: Tue, 27 Mar 2012 19:07:49 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1754978Ab2CGR1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 12:27:38 -0500
+Message-ID: <4F579A88.6030503@openwrt.org> (sfid-20120307_182743_066065_F676A18B)
+Date: Wed, 07 Mar 2012 18:27:36 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: "Naveen Goswamy" <naveen.goswamy@polymtl.ca>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcmsmac TCP problems and txop exceeded
-References: <1332866581.4f71ee152ce84@www.imp.polymtl.ca>
-In-Reply-To: <1332866581.4f71ee152ce84@www.imp.polymtl.ca>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>,
+	Linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com>
+In-Reply-To: <4F577D9B.7020402@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/2012 06:43 PM, Naveen Goswamy wrote:
-> Hi, this thread should be a continuation of one I started about a month ago and
-> can be found here:
->
-> http://comments.gmane.org/gmane.linux.kernel.wireless.general/86324
->
-> (I lost the header to it and inadvertantly cross posted into another thread, my
-> apologies for that)
->
->
->
-> So here goes:
->
-> I have the BCM4313 [14e4:4727] (rev 01)
->
-> When using wireshark, I see that I am getting many {TCP Retransmission,TCP Dup
-> ACK,TCP RST} with {TCP, HTTP, SSH} when using brcmsmac driver in the 3.2.1
-> kernel.  I've tried 3.3-rc5 kernel with similar results.
->
-> I notice a lot of these popping up in /var/log/messages as well:
->
-> ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 155/256 dur
-> 1746/1504
-> ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
-> 1546/1504
-> ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
-> 1546/1504
->
->
-> any ideas how to solve this?
->
+On 2012-03-07 4:24 PM, Justin P. Mattock wrote:
+> On 03/07/2012 07:19 AM, Mohammed Shafi wrote:
+>> On Wed, Mar 7, 2012 at 7:55 PM, Justin P. Mattock
+>> <justinmattock@gmail.com>  wrote:
+>>> ath9k craps out from time to time(more annoying if anything)
+>>>
+>>> [44309.840830] ath: Failed to stop TX DMA, queues=0x001!
+>>> [44309.858246] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>> [44309.858255] ath: Could not stop RX, we could be confusing the DMA engine
+>>> when we start RX up
+>>> [44309.932801] ath: Failed to stop TX DMA, queues=0x001!
+>>> [44309.950352] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>> [44309.950361] ath: Could not stop RX, we could be confusing the DMA engine
+>>> when we start RX up
+>>> [44310.024301] ath: Failed to stop TX DMA, queues=0x001!
+>>> [44310.041641] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>> [44310.041646] ath: Could not stop RX, we could be confusing the DMA engine
+>>> when we start RX up
+>>> [44310.116316] ath: Failed to stop TX DMA, queues=0x001!
+>>> [44310.133909] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>> [44310.133918] ath: Could not stop RX, we could be confusing the DMA engine
+>>> when we start RX up
+>>> [44310.208021] ath: Failed to stop TX DMA, queues=0x001!
+>>> [44310.225752] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>> [44310.225761] ath: Could not stop RX, we could be confusing the DMA engine
+>>> when we start RX up
+>>> [44310.299922] ath: Failed to stop TX DMA, queues=0x001!
+>>> [44310.317579] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
+>>> [44310.317587] ath: Could not stop RX, we could be confusing the DMA engine
+>>> whe
+>>
+>> this is has become a know issue but less harmful, please try to see if
+>> the workaround of disabling power save helps
+>>
+>> iw dev wlanX set power_save off
+>>
+> 
+> ok! I have set that on the machine.. will see if I get this message in 
+> the upcoming weeks.
+Also, please try this patch with powersave enabled:
+http://nbd.name/ps-fix.patch
 
-These messages are only indicating (possible) violation of the WMM txop
-parameter. So what problem are you looking into here beside the issues
-you observe in wireshark. I mean the problem that made you decide to run 
-wireshark.
-
-Gr. AvS
-
-
-
+- Felix
