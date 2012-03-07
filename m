@@ -1,121 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55217 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031528Ab2COQCL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 12:02:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] cfg80211: allow CFG80211_SIGNAL_TYPE_UNSPEC in station_info
-Date: Thu, 15 Mar 2012 11:58:07 -0400
-Message-Id: <1331827087-21339-1-git-send-email-linville@tuxdriver.com> (sfid-20120315_170217_051587_178152BF)
-In-Reply-To: <1331825203.3432.25.camel@jlt3.sipsolutions.net>
-References: <1331825203.3432.25.camel@jlt3.sipsolutions.net>
+Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759641Ab2CGTGk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:40 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 33/35] iwlwifi: don't delete AP station directly
+Date: Wed,  7 Mar 2012 09:52:42 -0800
+Message-Id: <1331142764-5750-34-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200704_313047_EF661D18)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The station_info struct had demanded dBm signal values, but the
-cfg80211 wireless extensions implementation was also accepting
-"unspecified" (i.e. RSSI) unit values while the nl80211 code was
-completely unaware of them.  Resolve this by formalling allowing the
-"unspecified" units while making nl80211 ignore them.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+With the mac80211 deauth sequence changes, the
+station is deleted before the device is set
+unassociated. This can cause the device to get
+confused as it expects the station to be there
+while the associated bit is set.
+
+To fix this, do not delete the AP station from
+the device when mac80211 asks for deletion,
+instead just mark it as unused and rely on the
+unassociated RXON to drop it from the station
+database in the device.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-The switch statement could be an if, but used it because I copied it
-from elsewhere in the file and because we might (?) want to support a
-different attribute to report the unspecified unit values through
-nl80211?
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |   35 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |   22 ++++++++++++----
+ 3 files changed, 53 insertions(+), 6 deletions(-)
 
- include/net/cfg80211.h |    4 ++--
- net/wireless/nl80211.c |   29 +++++++++++++++++++----------
- 2 files changed, 21 insertions(+), 12 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a067d30..4263a62 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -605,8 +605,8 @@ struct sta_bss_parameters {
-  * @llid: mesh local link id
-  * @plid: mesh peer link id
-  * @plink_state: mesh peer link state
-- * @signal: signal strength of last received packet in dBm
-- * @signal_avg: signal strength average in dBm
-+ * @signal: the signal strength, type depends on the wiphy's signal_type
-+ * @signal_avg: avg signal strength, type depends on the wiphy's signal_type
-  * @txrate: current unicast bitrate from this station
-  * @rxrate: current unicast bitrate to this station
-  * @rx_packets: packets received from this station
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index afeea32..3105c77 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2349,7 +2349,9 @@ nla_put_failure:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 23e9eab..c417560 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -546,6 +546,41 @@ out_err:
+ 	return -EINVAL;
  }
  
- static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
--				int flags, struct net_device *dev,
-+				int flags,
-+				struct cfg80211_registered_device *rdev,
-+				struct net_device *dev,
- 				const u8 *mac_addr, struct station_info *sinfo)
- {
- 	void *hdr;
-@@ -2388,12 +2390,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
- 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
- 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
- 			    sinfo->plink_state);
--	if (sinfo->filled & STATION_INFO_SIGNAL)
--		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
--			   sinfo->signal);
--	if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
--		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
--			   sinfo->signal_avg);
-+	switch (rdev->wiphy.signal_type) {
-+	case CFG80211_SIGNAL_TYPE_MBM:
-+		if (sinfo->filled & STATION_INFO_SIGNAL)
-+			NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
-+				   sinfo->signal);
-+		if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
-+			NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
-+				   sinfo->signal_avg);
-+		break;
-+	default:
-+		break;
++void iwl_deactivate_station(struct iwl_priv *priv, const u8 sta_id,
++			    const u8 *addr)
++{
++	u8 tid;
++
++	if (!iwl_is_ready(priv)) {
++		IWL_DEBUG_INFO(priv,
++			"Unable to remove station %pM, device not ready.\n",
++			addr);
++		return;
 +	}
- 	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
- 		if (!nl80211_put_sta_rate(msg, &sinfo->txrate,
- 					  NL80211_STA_INFO_TX_BITRATE))
-@@ -2486,7 +2494,7 @@ static int nl80211_dump_station(struct sk_buff *skb,
- 		if (nl80211_send_station(skb,
- 				NETLINK_CB(cb->skb).pid,
- 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
--				netdev, mac_addr,
-+				dev, netdev, mac_addr,
- 				&sinfo) < 0)
- 			goto out;
++
++	IWL_DEBUG_ASSOC(priv, "Deactivating STA: %pM (%d)\n", addr, sta_id);
++
++	if (WARN_ON_ONCE(sta_id == IWL_INVALID_STATION))
++		return;
++
++	spin_lock_bh(&priv->sta_lock);
++
++	WARN_ON_ONCE(!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE));
++
++	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++)
++		memset(&priv->tid_data[sta_id][tid], 0,
++			sizeof(priv->tid_data[sta_id][tid]));
++
++	priv->stations[sta_id].used &= ~IWL_STA_DRIVER_ACTIVE;
++
++	priv->num_stations--;
++
++	if (WARN_ON_ONCE(priv->num_stations < 0))
++		priv->num_stations = 0;
++
++	spin_unlock_bh(&priv->sta_lock);
++}
++
+ /**
+  * iwl_clear_ucode_stations - clear ucode station table bits
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 5410dfd..3780a03 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -234,6 +234,8 @@ int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 			   struct ieee80211_sta *sta, u8 *sta_id_r);
+ int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
+ 		       const u8 *addr);
++void iwl_deactivate_station(struct iwl_priv *priv, const u8 sta_id,
++			    const u8 *addr);
+ u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 		    const u8 *addr, bool is_ap, struct ieee80211_sta *sta);
  
-@@ -2531,7 +2539,7 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 54d3709..9212ee3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -724,12 +724,22 @@ static int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
+ 	struct iwl_station_priv *sta_priv = (void *)sta->drv_priv;
+ 	int ret;
  
- 	if (nl80211_send_station(msg, info->snd_pid, info->snd_seq, 0,
--				 dev, mac_addr, &sinfo) < 0) {
-+				 rdev, dev, mac_addr, &sinfo) < 0) {
- 		nlmsg_free(msg);
- 		return -ENOBUFS;
- 	}
-@@ -7482,7 +7490,8 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
- 	if (!msg)
- 		return;
+-	IWL_DEBUG_INFO(priv, "proceeding to remove station %pM\n",
+-			sta->addr);
+-	ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
+-	if (ret)
+-		IWL_DEBUG_QUIET_RFKILL(priv, "Error removing station %pM\n",
+-			sta->addr);
++	IWL_DEBUG_INFO(priv, "proceeding to remove station %pM\n", sta->addr);
++
++	if (vif->type == NL80211_IFTYPE_STATION) {
++		/*
++		 * Station will be removed from device when the RXON
++		 * is set to unassociated -- just deactivate it here
++		 * to avoid re-programming it.
++		 */
++		ret = 0;
++		iwl_deactivate_station(priv, sta_priv->sta_id, sta->addr);
++	} else {
++		ret = iwl_remove_station(priv, sta_priv->sta_id, sta->addr);
++		if (ret)
++			IWL_DEBUG_QUIET_RFKILL(priv,
++				"Error removing station %pM\n", sta->addr);
++	}
+ 	return ret;
+ }
  
--	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
-+	if (nl80211_send_station(msg, 0, 0, 0,
-+				 rdev, dev, mac_addr, sinfo) < 0) {
- 		nlmsg_free(msg);
- 		return;
- 	}
 -- 
-1.7.4.4
+1.7.0.4
 
