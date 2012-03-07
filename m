@@ -1,47 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:42781 "EHLO
-	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753409Ab2CHMOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 07:14:22 -0500
-Received: by lagv3 with SMTP id v3so485403lag.41
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 04:14:19 -0800 (PST)
-Message-ID: <1331208473.18015.58.camel@cumari> (sfid-20120308_131425_780277_48A143CF)
-Subject: Re: Does anybody know what acx stand for?
-From: Luciano Coelho <coelho@ti.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Yingang Fu <yingang.fu@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 08 Mar 2012 14:07:53 +0200
-In-Reply-To: <CAGRGNgVEomseHmomskgAH2HDtPuTZZwvBRANHM0cQWdxhxRa-g@mail.gmail.com>
-References: <CAHPDcRvjNYO0UWdw=+jc9JghdQXJtNcBtXEEPiPvyV+TsJcgnA@mail.gmail.com>
-	 <CAGRGNgVEomseHmomskgAH2HDtPuTZZwvBRANHM0cQWdxhxRa-g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759720Ab2CGTGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:37 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 19/35] iwlwifi: reintroduce iwl_enable_rfkill_int
+Date: Wed,  7 Mar 2012 09:52:28 -0800
+Message-Id: <1331142764-5750-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200644_809707_9220C55D)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-08 at 22:17 +1100, Julian Calaby wrote: 
-> Hi,
-> 
-> On Thu, Mar 8, 2012 at 17:39, Yingang Fu <yingang.fu@gmail.com> wrote:
-> > hi, all
-> >
-> > Does anybody know what acx stand for?  The prefix often used in acx.c
-> 
-> I believe that it's part of a code name for TI wireless chips or some
-> part of them.
-> 
-> IIRC the old TI 802.11bg PCI cards were known as ACX111 cards and the
-> newer wl12xx cards also use these initials to identify part of the
-> communications protocol used to talk to the chips.
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Yes, this is correct.  The naming ACX is legacy from the old drivers
-and, even though nowadays there is hardly if anything in common, the
-name remains.  In practice, the "ACX commands" in the wl12xx driver is
-mostly about firmware configuration, while the "CMD commands" are mostly
-about actions.  This is not so clearcut though.
+If device is disabled by rfkill switch, do not enable all interrupts,
+but only CSR_INT_BIT_RF_KILL to receive rfkill state change. Unblocking
+other interrupts might cause problems, since driver can not be prepared
+for receive them.
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    6 ++----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   13 ++++++++-----
+ 3 files changed, 16 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 4f73a6d..93d89a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -376,6 +376,12 @@ static inline void iwl_enable_interrupts(struct iwl_trans *trans)
+ 	iwl_write32(trans, CSR_INT_MASK, trans_pcie->inta_mask);
+ }
+ 
++static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
++{
++	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
++	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
++}
++
+ /*
+  * we have 8 bits used like this:
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 5b2e47a..3eb7bd1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -1134,10 +1134,8 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 	if (test_bit(STATUS_INT_ENABLED, &trans->shrd->status))
+ 		iwl_enable_interrupts(trans);
+ 	/* Re-enable RF_KILL if it occurred */
+-	else if (handled & CSR_INT_BIT_RF_KILL) {
+-		IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
+-		iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
+-	}
++	else if (handled & CSR_INT_BIT_RF_KILL)
++		iwl_enable_rfkill_int(trans);
+ }
+ 
+ /******************************************************************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 75bb95e..1d35d0e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1051,7 +1051,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 
+ 	if (hw_rfkill) {
+-		iwl_enable_interrupts(trans);
++		iwl_enable_rfkill_int(trans);
+ 		return -ERFKILL;
+ 	}
+ 
+@@ -1562,8 +1562,7 @@ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
+ 	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
+ 
+ 	/* Even if we stop the HW, we still want the RF kill interrupt */
+-	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
+-	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
++	iwl_enable_rfkill_int(trans);
+ }
+ 
+ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+@@ -1656,10 +1655,14 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
+ {
+ 	bool hw_rfkill;
+ 
+-	iwl_enable_interrupts(trans);
+-
+ 	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
+ 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
++
++	if (hw_rfkill)
++		iwl_enable_rfkill_int(trans);
++	else
++		iwl_enable_interrupts(trans);
++
+ 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 
+ 	return 0;
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
