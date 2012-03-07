@@ -1,56 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31844 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932424Ab2CNJK7 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:52885 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202Ab2CGH6z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2012 05:10:59 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 7 Mar 2012 02:58:55 -0500
+Received: by wejx9 with SMTP id x9so3578901wej.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 23:58:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20320.24711.242360.534814@gargle.gargle.HOWL> (sfid-20120314_101102_132784_F28DD46B)
-Date: Wed, 14 Mar 2012 14:40:31 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 2/6] ath9k: Remove unused variables
+In-Reply-To: <CAG9cJm=0hULCgfCp4p6WCdr3kKrZUBMebOiVBVfd0sCoNK=PCA@mail.gmail.com>
+References: <CAG9cJm=0hULCgfCp4p6WCdr3kKrZUBMebOiVBVfd0sCoNK=PCA@mail.gmail.com>
+Date: Wed, 7 Mar 2012 08:58:54 +0100
+Message-ID: <CACna6rwraGgRW=_Htp=NOJNDNZVj9kzR28kYOV2ZBtVq_a7XyQ@mail.gmail.com> (sfid-20120307_085859_110606_AF4716C8)
+Subject: Re: PMU resource config unknown for device 0x4331
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: lina <lina.lastname@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 --
- drivers/net/wireless/ath/ath9k/main.c  |    4 ----
- 2 files changed, 6 deletions(-)
+2012/2/23 lina <lina.lastname@gmail.com>:
+> How to understand
+>
+> PMU resource config unknown for device 0x4331
+>
+> Thanks with best regards,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 3d8e51c..fa5eb30 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -624,8 +624,6 @@ struct ath_softc {
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
- 
--	int chan_idx;
--	int chan_is_ht;
- 	struct survey_info *cur_survey;
- 	struct survey_info survey[ATH9K_NUM_CHANNELS];
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index db38a4e..fe1d796 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -995,12 +995,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 		curchan->center_freq);
- 
- 	ath9k_ps_wakeup(sc);
--
- 	mutex_lock(&sc->mutex);
- 
--	/* setup initial channel */
--	sc->chan_idx = curchan->hw_value;
--
- 	init_channel = ath9k_cmn_get_curchannel(hw, ah);
- 
- 	/* Reset SERDES registers */
+The driver didn't know what to do in case of 0x4331. I think we don't
+need any PMU resoruce configuration for BCM4331, so this warning is
+harmless.
+
 -- 
-1.7.9.4
-
+Rafał
