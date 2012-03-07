@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54360 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754616Ab2CTMbh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 08:31:37 -0400
-Subject: Re: About the .start function in ieee80211_ops.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Matt Chen <machen@suse.com>
-Cc: users@rt2x00.serialmonkey.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CALx5=V-CLY2QE=BuYoYOdBSELmFUxNXQ+Ws5Gh=rCND0SbJL1g@mail.gmail.com>
-References: <CALx5=V_czM-3sqhutbYx27wHnLtQL_PvcSjKHd4RGtopkKqf3A@mail.gmail.com>
-	 <1332224377.3329.1.camel@jlt3.sipsolutions.net>
-	 <CALx5=V-CLY2QE=BuYoYOdBSELmFUxNXQ+Ws5Gh=rCND0SbJL1g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Mar 2012 13:31:29 +0100
-Message-ID: <1332246689.3329.16.camel@jlt3.sipsolutions.net> (sfid-20120320_133140_910172_2A775246)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759641Ab2CGTGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:30 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 08/35] iwlwifi: transport's tx_agg_disable must be atomic
+Date: Wed,  7 Mar 2012 09:52:17 -0800
+Message-Id: <1331142764-5750-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200639_843112_1CA6BCFF)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-03-20 at 20:29 +0800, Matt Chen wrote:
-> Hi Johannes,
-> 
-> 2012/3/20 Johannes Berg <johannes@sipsolutions.net>:
-> > On Tue, 2012-03-20 at 14:02 +0800, Matt Chen wrote:
-> >> Hi all,
-> >> I have a issue recently for rt2800pci, the way to duplicate this is
-> >> 1. Press function key to set rfkill hard blocked, it would cause
-> >> driver to power off.
-> >> 2. reboot
-> >> 3. find when load the driver (rt2800pci), it would stop in "Registered
-> >> led device: rt2800pci-phy0::quality".
-> >>
-> >> Here you would find the rfkill_poll function is not started to work,
-> >> also the rt2x00mac_start() registered in rt2800pci_mac80211_ops
-> >> structure is not yet be executed.
-> >> My question is when or what condition the rt2x00mac_start()  would be
-> >> running, because if it is not yet executed, then it would not be able
-> >> to load the firmware in rt2x00lib_start().
-> >
-> > That's a bug in the driver then -- it should probably start the rfkill
-> > stuff without mac80211's start() command. start() is only called when
-> > the first interface comes up, but that will never happen if it's in
-> > rfkill block.
-> Do you have any idea which part of code would make the first interface
-> comes up ?  :)
-> Would that be in cfg80211 ?
+From: Johannes Berg <johannes.berg@intel.com>
 
-No code? You, as the user, running "ip link set wlan0 up" or
-network-manager doing something similar etc.
+At least as long as it is called from the reclaim
+flow (iwlagn_check_ratid_empty) it must be atomic.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 609949f..ed6ab44 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -306,7 +306,7 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
+  *	ready and a successful ADDBA response has been received.
+  *	May sleep
+  * @tx_agg_disable: de-configure a Tx queue to send AMPDUs
+- *	May sleep
++ *	Must be atomic
+  * @free: release all the ressource for the transport layer itself such as
+  *	irq, tasklet etc... From this point on, the device may not issue
+  *	any interrupt (incl. RFKILL).
+@@ -497,8 +497,6 @@ static inline int iwl_trans_reclaim(struct iwl_trans *trans, int sta_id,
+ static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
+ 					    int sta_id, int tid)
+ {
+-	might_sleep();
+-
+ 	if (trans->state != IWL_TRANS_FW_ALIVE)
+ 		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
+ 
+-- 
+1.7.0.4
 
