@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:50728 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244Ab2CVEvA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37376 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751920Ab2CGOCO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2012 00:51:00 -0400
-Received: by lbbgm6 with SMTP id gm6so1448967lbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2012 21:50:56 -0700 (PDT)
+	Wed, 7 Mar 2012 09:02:14 -0500
+Date: Wed, 7 Mar 2012 08:56:20 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	dan.carpenter@oracle.com
+Subject: Re: [PATCH v4] {nl,cfg,mac}80211: Implement RSSI threshold for mesh
+ peering
+Message-ID: <20120307135619.GA12245@tuxdriver.com> (sfid-20120307_150217_286173_F2AE9D64)
+References: <1331061810-4100-1-git-send-email-ashok@cozybit.com>
+ <20120306193350.GA3353@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <20120322002955.GA9391@aldebaran.gro-tsen.net>
-References: <20120321175800.GA28516@aldebaran.gro-tsen.net>
-	<CAJ-Vmom2fPUuuT8mUa2fWrbBQGuDtd7nh7Tkn3Sa2_TmhjtJaA@mail.gmail.com>
-	<20120321220242.GA26363@aldebaran.gro-tsen.net>
-	<20120322002955.GA9391@aldebaran.gro-tsen.net>
-Date: Wed, 21 Mar 2012 21:50:56 -0700
-Message-ID: <CAJ-Vmom-6XjtfbhOgbkUtAykKr==8sL+9r3HaQWJczumqBPmMw@mail.gmail.com> (sfid-20120322_055106_784106_0D6101C2)
-Subject: Re: ath9k_htc fails with "Target is unresponsive"
-From: Adrian Chadd <adrian@freebsd.org>
-To: David Madore <david+ml@madore.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120306193350.GA3353@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Mar 06, 2012 at 02:33:50PM -0500, John W. Linville wrote:
+> On Tue, Mar 06, 2012 at 11:23:30AM -0800, Ashok Nagarajan wrote:
+> > Mesh peer links are established only if average rssi of the peer
+> > candidate satisfies the threshold. This is not in 802.11s specification
+> > but was requested by David Fulgham, an open80211s user. This is a way to avoid
+> > marginal peer links with stations that are barely within range.
+> > 
+> > This patch adds a new mesh configuration parameter, mesh_rssi_threshold. This
+> > feature is supported only for hardwares that report signal in dBm.
+> > 
+> > Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+> > Signed-off-by: Javier Cardona <javier@cozybit.com>
+> > ---
+> > v3:
+> > use s32 instead of int32_t (Kalle Valo)
+> > Feature to be supported for devices reporting signal in dBm (Johannes)
+> > 
+> > v4:
+> > Fix potential null pointer deferencing (Dan Carpenter)
+> 
+> I already merged v3 yesterday -- can you rework this as a fix instead?
 
-That sounds like the USB code isn't doing a full reset of the hardware.
+Mail server problems, this was delayed.  I see that you already sent a new one.
 
-What about seeing if the SoC or controller has some form of cold USB
-device reset and make sure that's being done at device driver attach
-time?
-
-Thanks,
-
-
-
-Adrian
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
