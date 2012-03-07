@@ -1,62 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51287 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757089Ab2CWIwH (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:42869 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092Ab2CGKRo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 04:52:07 -0400
-Message-ID: <1332492725.3506.5.camel@jlt3.sipsolutions.net> (sfid-20120323_095212_753670_4CB8726B)
-Subject: Re: [RFC 08/12] mac80211: introduce
- IEEE80211_HW_SUPPORTS_MULTI_CHANNEL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 23 Mar 2012 09:52:05 +0100
-In-Reply-To: <8ddd58c3-b1d2-44b3-8fb6-a9368814653b@FIVLA-EXHUB02.eu.tieto.com> (sfid-20120320_154023_532477_CDEA420A)
-References: <8ddd58c3-b1d2-44b3-8fb6-a9368814653b@FIVLA-EXHUB02.eu.tieto.com>
-	 (sfid-20120320_154023_532477_CDEA420A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 7 Mar 2012 05:17:44 -0500
+Received: by vbbff1 with SMTP id ff1so5330376vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2012 02:17:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn0T2ftbpaP6e1SZrDk7aMf-+C6E9Tocwn-Oj1WoNhjEcw@mail.gmail.com>
+References: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
+	<CAD2nsn2GLAo=8xhe+-Xm0igSmQ+tr1F+Q6scuFaeaQWMYrQbwg@mail.gmail.com>
+	<CALx5=V9LwpWVG0UGLgyNyJVrSYj826xXwbEcFQVYM5BxAxnEJQ@mail.gmail.com>
+	<CAD2nsn1Wu66JUaPQmK4ktjUBeCjMp4xXG2=FDy3G-LnVDwtAVA@mail.gmail.com>
+	<CALx5=V98n26O88C2XkGnH8z69EKpRY6rejXxasTwZC=iZFTumA@mail.gmail.com>
+	<CAD2nsn0T2ftbpaP6e1SZrDk7aMf-+C6E9Tocwn-Oj1WoNhjEcw@mail.gmail.com>
+Date: Wed, 7 Mar 2012 15:47:42 +0530
+Message-ID: <CAD2nsn3pwY8ot632Mt4rjUczRyagyjA67YJqfOsi2aKrSNCM=Q@mail.gmail.com> (sfid-20120307_111804_422671_395468AB)
+Subject: Re: [ath9k-devel] Any recommendation of direct access the GPIO from
+ specific address ?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Matt Chen <machen@suse.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 11:36 +0100, Michal Kazior wrote:
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->  include/net/mac80211.h |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index c114b18..f7f0252 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1130,6 +1130,9 @@ enum sta_notify_cmd {
->   * @IEEE80211_HW_MFP_CAPABLE:
->   *	Hardware supports management frame protection (MFP, IEEE 802.11w).
->   *
-> + * @IEEE80211_HW_SUPPORTS_MULTI_CHANNEL
-> + *	Hardware supports concurrent multi-channel operation.
+On Wed, Mar 7, 2012 at 3:11 PM, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+> Hi Matt,
+>
+>> yes, those are working to me now, but see the file "regval", it is
+>> allowed to be written. I tried to echo a value to it, and cat it, it
+>> seems not work right to me. :(
+>>
+>> You may try to echo "0x00000c45" > regval when the regval is
+>> "0x00000c55". Then cat regval again, see if it changed to
+>> "0x00000c45".
+>
+> yes, i will quickly take a look at this. thanks for reporting.
 
-This isn't nearly as fully-featured as we need, I think.
+ i think even though we change the regvalue, hardware will immediately
+updates with GPIO pins status in the register.
 
-There is undoubtedly going to be hardware that doesn't support one
-channel per virtual interface, simply because it can only do maybe two
-or three channels and many more virtual interfaces.
+you can just play with the rx filter register, putting 0 in that
+register should filter all frames.
 
-Now, we already have this advertising though in the interface
-combinations, so this flag isn't necessary.
+at regidx
+0x0000803c
+echo 0 to it
 
-The question is how we structure the API, the two possibilities I was
-thinking of are:
-1) do similar to what you did, have per-interface channel and let the
-   driver sort it out -- however this still requires channel
-   compatibility checks in mac80211 etc.
-2) keep mac80211 doing more work and introduce API like
-   * add channel context
-   * move vif A to channel context X
-   * etc.
+hope it should completely filter all frames coming to your chip
 
-I'm not sure which one's better, and I still have to look at the monitor
-interface implementation to make sure we do it right.
+after some time it will be properly updated (pls see
+ath9k_hw_setrxfilter) via driver
+ath_prepare_reset -> ath_stoprecv  -> ath9k_hw_setrxfilter
 
-johannes
+that can be called by chip reset path, or mac80211 call back
 
+we can play with some register that completely has our control
+
+>
+> --
+> thanks,
+> shafi
+
+
+
+-- 
+thanks,
+shafi
