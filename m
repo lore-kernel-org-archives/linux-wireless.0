@@ -1,125 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754888Ab2CDUm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:42:56 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 001/101] iwlwifi: move iwl_clear_driver_stations to user
-Date: Sun,  4 Mar 2012 11:28:15 -0800
-Message-Id: <1330889395-533-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214327_264161_21754FF8)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56816 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752955Ab2CGHf4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 02:35:56 -0500
+Message-ID: <4F570FD6.3080906@qca.qualcomm.com> (sfid-20120307_083600_655096_BBDA2694)
+Date: Wed, 7 Mar 2012 09:35:50 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v3] ath6kl: Check wow state before sending control and
+ data pkt
+References: <1331100304-15903-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1331100304-15903-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/07/2012 08:05 AM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> Below two scenarios are taken care in this patch which helped
+> to fix the firmware crash during wow suspend/resume.
+> 
+> * TX operation (ctrl tx and data tx) has to be controlled based
+>   on suspend state. i.e, with respect to WOW mode, control packets
+>   are allowed to send from the host until the suspend state goes
+>   ATH6KL_STATE_WOW and the data packets are allowed until WOW
+>   suspend operation starts.
+> 
+> * Similarly, wow resume is NOT allowed if WOW suspend is in progress.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-There's only one place using this function, so
-move it where it's needed.
+Thanks, applied.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h |   35 --------------------------------
- 2 files changed, 35 insertions(+), 35 deletions(-)
+I had a small conflict in ath6kl_cfg80211_suspend(). Please check that I
+didn't break anything.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e0fef9f..a7f3a70 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -738,6 +738,41 @@ int iwl_alive_start(struct iwl_priv *priv)
- 	return iwl_power_update_mode(priv, true);
- }
- 
-+/**
-+ * iwl_clear_driver_stations - clear knowledge of all stations from driver
-+ * @priv: iwl priv struct
-+ *
-+ * This is called during iwl_down() to make sure that in the case
-+ * we're coming there from a hardware restart mac80211 will be
-+ * able to reconfigure stations -- if we're getting there in the
-+ * normal down flow then the stations will already be cleared.
-+ */
-+static void iwl_clear_driver_stations(struct iwl_priv *priv)
-+{
-+	unsigned long flags;
-+	struct iwl_rxon_context *ctx;
-+
-+	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
-+	memset(priv->stations, 0, sizeof(priv->stations));
-+	priv->num_stations = 0;
-+
-+	priv->ucode_key_table = 0;
-+
-+	for_each_context(priv, ctx) {
-+		/*
-+		 * Remove all key information that is not stored as part
-+		 * of station information since mac80211 may not have had
-+		 * a chance to remove all the keys. When device is
-+		 * reconfigured by mac80211 after an error all keys will
-+		 * be reconfigured.
-+		 */
-+		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
-+		ctx->key_mapping_keys = 0;
-+	}
-+
-+	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
-+}
-+
- void iwl_down(struct iwl_priv *priv)
- {
- 	int exit_pending;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index cb484e2..ef0cdf5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -232,41 +232,6 @@ int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
- 			       struct iwl_device_cmd *cmd);
- 
- 
--/**
-- * iwl_clear_driver_stations - clear knowledge of all stations from driver
-- * @priv: iwl priv struct
-- *
-- * This is called during iwl_down() to make sure that in the case
-- * we're coming there from a hardware restart mac80211 will be
-- * able to reconfigure stations -- if we're getting there in the
-- * normal down flow then the stations will already be cleared.
-- */
--static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
--{
--	unsigned long flags;
--	struct iwl_rxon_context *ctx;
--
--	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
--	memset(priv->stations, 0, sizeof(priv->stations));
--	priv->num_stations = 0;
--
--	priv->ucode_key_table = 0;
--
--	for_each_context(priv, ctx) {
--		/*
--		 * Remove all key information that is not stored as part
--		 * of station information since mac80211 may not have had
--		 * a chance to remove all the keys. When device is
--		 * reconfigured by mac80211 after an error all keys will
--		 * be reconfigured.
--		 */
--		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
--		ctx->key_mapping_keys = 0;
--	}
--
--	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
--}
--
- static inline int iwl_sta_id(struct ieee80211_sta *sta)
- {
- 	if (WARN_ON(!sta))
--- 
-1.7.0.4
-
+Kalle
