@@ -1,94 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31659 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030370Ab2COVfB (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41182 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754248Ab2CGSrR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 17:35:01 -0400
-From: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-Subject: [PATCH v2] ath6kl: handle probe response from P2P device in P2P GO mode
-Date: Thu, 15 Mar 2012 14:34:56 -0700
-Message-ID: <1331847296-2086-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> (sfid-20120315_223507_163899_554EE88E)
+	Wed, 7 Mar 2012 13:47:17 -0500
+Date: Wed, 7 Mar 2012 13:40:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Paul Stewart <pstew@chromium.org>, Jouni Malinen <j@w1.fi>,
+	linux-wireless@vger.kernel.org,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Arik Nemtsov <anamtsov@gmail.com>,
+	Eliad Peller <eliad@wizery.com>
+Subject: Re: [RFCv2] mac80211: Don't let regulatory make us deaf
+Message-ID: <20120307184027.GC12245@tuxdriver.com> (sfid-20120307_194721_183164_44981693)
+References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
+ <20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com>
+ <1330254954.4401.9.camel@jlt3.sipsolutions.net>
+ <1330255537.4401.10.camel@jlt3.sipsolutions.net>
+ <1330338898.3483.10.camel@jlt3.sipsolutions.net>
+ <20120227113212.GA4576@w1.fi>
+ <1330342730.3483.34.camel@jlt3.sipsolutions.net>
+ <20120227134610.GA5070@w1.fi>
+ <CAMcMvshUH5faQ7xZTkXgWE=v-WMShBa9dOPZ=nu3hYiGJvoeFA@mail.gmail.com>
+ <1331105774.3519.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1331105774.3519.1.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the device is in P2P GO mode and in listen state, the correct behavior is
-to see two different probe response frames - one from P2P device and the other
-from GO. wpa_supplicant uses the same mechanism to send the frame in both cases
-(ath6kl_mgmt_tx). For GO probe response, ath6kl needs to call
-ath6kl_send_go_probe_resp (this will add only WSC/P2P IEs and the rest of the
-IEs are filled in by the firmware). That was done based on the nw_type ==
-AP_NETWORK which would work if P2P Device role were in a separate netdev. When
-P2P Device and GO use the same netdev, ath6kl needs to use the special GO probe
-response case only if SSID is longer than P2P wildcard SSID.
+On Wed, Mar 07, 2012 at 08:36:14AM +0100, Johannes Berg wrote:
+> On Tue, 2012-03-06 at 21:46 -0800, Paul Stewart wrote:
+> 
+> > >> Of course, if this we actually happen to come across a device that needs
+> > >> this it could set a flag somehwere and mac80211 could re-configure the
+> > >> channel to non-HT on the assoc request, but right now I'd rather not
+> > >> worry about that since we're moving towards multi-channel and have no
+> > >> indication of such devices existing. Agree?
+> > >
+> > > Yeah, that works for me.
+> > 
+> > Discussions seem to have come to an end here, however I'm not sure
+> > what we ended up deciding. :-)  I see mention of HT+TKIP -- not sure
+> > I'm familiar enough with what the issues are there -- as well as
+> > pushing the channel configuration earlier and perhaps changes to the
+> > association process.  Since I may not have a complete handle on all
+> > these adjacent issues, where do we want to go with the current change
+> > (fixes a real-life issue) and how do we want to stage that with
+> > respect to the other issues this seems to have brought to the surface?
+> 
+> This discussion really side-tracked somewhat -- we were discussing a
+> better/different solution. I'm OK with your patch, but since I'll be
+> touching the code again to address the other things we talked about it'd
+> be great if you could test after that again, maybe in a week or two?
 
-Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-Reviewed-by: Jouni Malinen <jouni@qca.qualcomm.com>
+So, should I wait to merge Paul's patch until after the merge window
+(i.e. only merge it for 3.5)?
 
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   23 +++++++++++++++++++----
- drivers/net/wireless/ath/ath6kl/core.h     |    2 ++
- 2 files changed, 21 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 37908e6..37aa5db 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2750,6 +2750,21 @@ static bool ath6kl_mgmt_powersave_ap(struct ath6kl_vif *vif,
- 	return false;
- }
- 
-+/* Check if SSID length is greater than DIRECT- */
-+static bool ath6kl_is_p2p_go_ssid(const u8 *buf, size_t len)
-+{
-+	const struct ieee80211_mgmt *mgmt;
-+	mgmt = (const struct ieee80211_mgmt *) buf;
-+
-+	/* variable[1] contains the SSID tag length */
-+	if (buf + len >= &mgmt->u.probe_resp.variable[1] &&
-+	    (mgmt->u.probe_resp.variable[1] > P2P_WILDCARD_SSID_LEN)) {
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
- static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 			  struct ieee80211_channel *chan, bool offchan,
- 			  enum nl80211_channel_type channel_type,
-@@ -2764,11 +2779,11 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 	bool more_data, queued;
- 
- 	mgmt = (const struct ieee80211_mgmt *) buf;
--	if (buf + len >= mgmt->u.probe_resp.variable &&
--	    vif->nw_type == AP_NETWORK && test_bit(CONNECTED, &vif->flags) &&
--	    ieee80211_is_probe_resp(mgmt->frame_control)) {
-+	if (vif->nw_type == AP_NETWORK && test_bit(CONNECTED, &vif->flags) &&
-+	    ieee80211_is_probe_resp(mgmt->frame_control) &&
-+	    ath6kl_is_p2p_go_ssid(buf, len)) {
- 		/*
--		 * Send Probe Response frame in AP mode using a separate WMI
-+		 * Send Probe Response frame in GO mode using a separate WMI
- 		 * command to allow the target to fill in the generic IEs.
- 		 */
- 		*cookie = 0; /* TX status not supported */
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index f1dd890..17697eb 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -205,6 +205,8 @@ struct ath6kl_fw_ie {
- #define ATH6KL_CONF_ENABLE_TX_BURST		BIT(3)
- #define ATH6KL_CONF_UART_DEBUG			BIT(4)
- 
-+#define P2P_WILDCARD_SSID_LEN			7 /* DIRECT- */
-+
- enum wlan_low_pwr_state {
- 	WLAN_POWER_STATE_ON,
- 	WLAN_POWER_STATE_CUT_PWR,
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
