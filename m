@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20333 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758088Ab2CGTG1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:27 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 01/35] iwlwifi: remove unused arguments from iwlagn_gain_computation
-Date: Wed,  7 Mar 2012 09:52:10 -0800
-Message-Id: <1331142764-5750-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200731_720819_F8FED719)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:42270 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065Ab2CGHiZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 02:38:25 -0500
+Subject: Re: Hw Accel in Secured Mesh No Longer Work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+In-Reply-To: <CAEFj984gKDRtjP9NJYqjvWCZ=HxwW3DQ036guVY6Vbj=yx1H6g@mail.gmail.com> (sfid-20120307_024516_117354_938006F8)
+References: <CAEFj984b_Aihd9hc-dMArPxZPod8eKsxzekLwO74XbTUKGX9LQ@mail.gmail.com>
+	 <CAEFj984gKDRtjP9NJYqjvWCZ=HxwW3DQ036guVY6Vbj=yx1H6g@mail.gmail.com>
+	 (sfid-20120307_024516_117354_938006F8)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Mar 2012 08:38:22 +0100
+Message-ID: <1331105902.3519.2.camel@jlt3.sipsolutions.net> (sfid-20120307_083828_145295_5E2090BA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-03-07 at 09:44 +0800, Yeoh Chun-Yeow wrote:
+> Hi, Johannes
+> 
+> 
+> Hardware acceleration is found to not working for secured mesh
+> (802.11s) anymore after the introduction of this patch.
+> http://www.spinics.net/lists/linux-wireless/msg83644.html
+> 
+> 
+> Key installation is not possible for station not uploaded. Thus, to
+> achieve HT for secured mesh is not possible. Revert to the old key.c
+> solves the problem.
 
-The function has two arguments it never uses,
-remove them.
+Huh? Well that's odd, maybe there's a race condition and you program the
+key before the peer was added to the device?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+What device are you working with?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-index 579679e..84cbe7b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-@@ -879,10 +879,8 @@ static void iwl_find_disconn_antenna(struct iwl_priv *priv, u32* average_sig,
- }
- 
- static void iwlagn_gain_computation(struct iwl_priv *priv,
--		u32 average_noise[NUM_RX_CHAINS],
--		u16 min_average_noise_antenna_i,
--		u32 min_average_noise,
--		u8 default_chain)
-+				    u32 average_noise[NUM_RX_CHAINS],
-+				    u8 default_chain)
- {
- 	int i;
- 	s32 delta_g;
-@@ -1087,7 +1085,6 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
- 			min_average_noise, min_average_noise_antenna_i);
- 
- 	iwlagn_gain_computation(priv, average_noise,
--				min_average_noise_antenna_i, min_average_noise,
- 				find_first_chain(hw_params(priv).valid_rx_ant));
- 
- 	/* Some power changes may have been made during the calibration.
--- 
-1.7.0.4
+johannes
+
 
