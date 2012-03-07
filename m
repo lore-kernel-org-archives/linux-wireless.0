@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7349 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:51937 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965118Ab2CEUiI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:38:08 -0500
+	id S1759724Ab2CGTGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:38 -0500
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 16/33] iwlwifi: reduce IDI code ifdef
-Date: Mon,  5 Mar 2012 11:24:34 -0800
-Message-Id: <1330975491-19680-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213814_471001_8F09EF4A)
-In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 25/35] iwlwifi: log stop / wake queues
+Date: Wed,  7 Mar 2012 09:52:34 -0800
+Message-Id: <1331142764-5750-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200648_563052_05ACFE8A)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The code in the two branches of the #ifdef
-is almost the same so move the common code
-outside the #ifdef.
+There were a few missing occurences when we get PASSIVE_NO_RX
+notification.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-pci.c |   11 +----------
- 1 files changed, 1 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    6 +++++-
+ 2 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index d109b0f..c5e339e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -278,17 +278,9 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 1d67e6c..1cd4831 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -1088,6 +1088,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			    ctx->vif->type == NL80211_IFTYPE_STATION) {
+ 				/* block and stop all queues */
+ 				priv->passive_no_rx = true;
++				IWL_DEBUG_TX_QUEUES(priv, "stop all queues: "
++						    "passive channel");
+ 				ieee80211_stop_queues(priv->hw);
  
- #ifdef CONFIG_IWLWIFI_IDI
- 	iwl_trans = iwl_trans_idi_alloc(shrd, pdev, ent);
--	if (iwl_trans == NULL) {
--		err = -ENOMEM;
--		goto out_free_bus;
--	}
--
--	shrd->trans = iwl_trans;
--	pci_set_drvdata(pdev, iwl_trans);
--
--	err = iwl_drv_start(shrd, iwl_trans, cfg);
- #else
- 	iwl_trans = iwl_trans_pcie_alloc(shrd, pdev, ent);
-+#endif
- 	if (iwl_trans == NULL) {
- 		err = -ENOMEM;
- 		goto out_free_bus;
-@@ -298,7 +290,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	pci_set_drvdata(pdev, iwl_trans);
+ 				IWL_DEBUG_TX_REPLY(priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 7927e3e..6ed2f78 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1450,8 +1450,12 @@ void iwlagn_lift_passive_no_rx(struct iwl_priv *priv)
+ 		return;
  
- 	err = iwl_drv_start(shrd, iwl_trans, cfg);
--#endif
- 	if (err)
- 		goto out_free_trans;
+ 	for (ac = IEEE80211_AC_VO; ac < IEEE80211_NUM_ACS; ac++) {
+-		if (!test_bit(ac, &priv->transport_queue_stop))
++		if (!test_bit(ac, &priv->transport_queue_stop)) {
++			IWL_DEBUG_TX_QUEUES(priv, "Wake queue %d");
+ 			ieee80211_wake_queue(priv->hw, ac);
++		} else {
++			IWL_DEBUG_TX_QUEUES(priv, "Don't wake queue %d");
++		}
+ 	}
  
+ 	priv->passive_no_rx = false;
 -- 
 1.7.0.4
 
