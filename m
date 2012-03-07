@@ -1,53 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15204 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756159Ab2COLCd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 07:02:33 -0400
-Date: Thu, 15 Mar 2012 12:02:20 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tom Gundersen <teg@jklm.no>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
-Message-ID: <20120315110219.GA2335@redhat.com> (sfid-20120315_120236_738002_18B91FAD)
-References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com>
- <20120130184446.GB2493@tuxdriver.com>
- <CA++WF2PnEzS5CAfryaPrJSs3Xb3s0WK1zR7N5o8+ud2HiU5GCw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA++WF2PnEzS5CAfryaPrJSs3Xb3s0WK1zR7N5o8+ud2HiU5GCw@mail.gmail.com>
+	id S1758641Ab2CGTG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:28 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 02/35] iwlwifi: remove unused argument from rs_initialize_lq
+Date: Wed,  7 Mar 2012 09:52:11 -0800
+Message-Id: <1331142764-5750-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200634_070675_2726F86B)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 03, 2012 at 11:58:03PM +0300, Stanislav Yakovlev wrote:
-> Hi John,
-> 
-> On 30 January 2012 21:44, John W. Linville <linville@tuxdriver.com> wrote:
-> > On Mon, Jan 30, 2012 at 02:42:52PM +0100, Tom Gundersen wrote:
-> >
-> >> If we are not able to drop the 2x00 drivers, are anyone still
-> >> interested in working on them to fix the firmware loading?
-> >
-> > Anyone out there looking for a project?  A way to "break-in" to the
-> > public Linux community without the risk of breaking anything too
-> > important? :-)
-> >
-> > If someone wants to be the ipw2x00 maintainer, all they need to do
-> > is start sending some non-broken patches...
-> 
-> I would volunteer taking ipw2x00 driver maintenance if it is ok with everyone.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Stanislav
+The function never uses its conf argument,
+so remove it.
 
-Perhaps you should post a patch that change ipw2x00 entry on MAINTAINERS
-file.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Are you plan to fix issues caused on current firmware loading changes on
-linux ? We have a few bug reports about that:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 9895b80..53f8c51 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2677,7 +2677,6 @@ out:
+  *       which requires station table entry to exist).
+  */
+ static void rs_initialize_lq(struct iwl_priv *priv,
+-			     struct ieee80211_conf *conf,
+ 			     struct ieee80211_sta *sta,
+ 			     struct iwl_lq_sta *lq_sta)
+ {
+@@ -2912,7 +2911,7 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
+ 	lq_sta->dbg_fixed_rate = 0;
+ #endif
+ 
+-	rs_initialize_lq(priv, conf, sta, lq_sta);
++	rs_initialize_lq(priv, sta, lq_sta);
+ }
+ 
+ static void rs_fill_link_cmd(struct iwl_priv *priv,
+-- 
+1.7.0.4
 
-https://bugzilla.redhat.com/show_bug.cgi?id=783708
-https://bugzilla.redhat.com/show_bug.cgi?id=802106
-
-Stanislaw
