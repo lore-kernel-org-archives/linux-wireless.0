@@ -1,106 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:58179 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032435Ab2CPKHA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 06:07:00 -0400
-Received: by bkcik5 with SMTP id ik5so2765423bkc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Mar 2012 03:06:59 -0700 (PDT)
-Message-ID: <4F631087.4040509@openwrt.org> (sfid-20120316_110711_615502_1C777158)
-Date: Fri, 16 Mar 2012 11:05:59 +0100
-From: Florian Fainelli <florian@openwrt.org>
-MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/4] cfg80211:  Add framework to support ethtool stats.
-References: <1331853606-28434-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1331853606-28434-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:51937 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759734Ab2CGTGk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:40 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 30/35] iwlwifi: remove messages from queue wake/stop
+Date: Wed,  7 Mar 2012 09:52:39 -0800
+Message-Id: <1331142764-5750-31-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200708_922625_5F0C3AFB)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Le 03/16/12 00:20, greearb@candelatech.com a écrit :
-> From: Ben Greear<greearb@candelatech.com>
->
-> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> ---
-> :100644 100644 9ed8021... d97c9da... M	include/net/cfg80211.h
-> :100644 100644 9bde4d1... 7eecdf4... M	net/wireless/ethtool.c
->   include/net/cfg80211.h |    7 +++++++
->   net/wireless/ethtool.c |   29 +++++++++++++++++++++++++++++
->   2 files changed, 36 insertions(+), 0 deletions(-)
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 9ed8021..d97c9da 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -1689,6 +1689,13 @@ struct cfg80211_ops {
->   				  u16 noack_map);
->
->   	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
-> +
-> +	int	(*get_et_sset_count)(struct wiphy *wiphy,
-> +				     struct net_device* dev, int sset);
-> +	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device* dev,
-> +				struct ethtool_stats *stats, u64 *data);
-> +	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device* dev,
-> +				  u32 sset, u8 *data);
->   };
->
->   /*
-> diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
-> index 9bde4d1..7eecdf4 100644
-> --- a/net/wireless/ethtool.c
-> +++ b/net/wireless/ethtool.c
-> @@ -68,6 +68,32 @@ static int cfg80211_set_ringparam(struct net_device *dev,
->   	return -ENOTSUPP;
->   }
->
-> +static int cfg80211_get_sset_count(struct net_device *dev, int sset)
-> +{
-> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-> +	if (rdev->ops->get_et_sset_count)
-> +		return rdev->ops->get_et_sset_count(wdev->wiphy, dev, sset);
-> +	return -EOPNOTSUPP;
-> +}
-> +
-> +static void cfg80211_get_stats(struct net_device *dev,
-> +			       struct ethtool_stats *stats, u64 *data)
-> +{
-> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-> +	if (rdev->ops->get_et_stats)
-> +		rdev->ops->get_et_stats(wdev->wiphy, dev, stats, data);
-> +}
-> +
-> +static void cfg80211_get_strings(struct net_device *dev, u32 sset, u8 *data)
-> +{
-> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> +	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-> +	if (rdev->ops->get_et_strings)
-> +		rdev->ops->get_et_strings(wdev->wiphy, dev, sset, data);
-> +}
-> +
->   const struct ethtool_ops cfg80211_ethtool_ops = {
->   	.get_drvinfo = cfg80211_get_drvinfo,
->   	.get_regs_len = cfg80211_get_regs_len,
-> @@ -75,4 +101,7 @@ const struct ethtool_ops cfg80211_ethtool_ops = {
->   	.get_link = ethtool_op_get_link,
->   	.get_ringparam = cfg80211_get_ringparam,
->   	.set_ringparam = cfg80211_set_ringparam,
-> +	.get_strings = cfg80211_get_strings,
-> +	.get_ethtool_stats = cfg80211_get_stats,
-> +	.get_sset_count = cfg80211_get_sset_count,
->   };
+The only reason we ever stop/wake queues at
+the transport level is now that they become
+full (or non-full), so the messages aren't
+useful any more -- remove them.
 
-I do not think this is particularly a good idea to make eththool report 
-wireless interfaces statistics:
-- these are 802.11 interfaces and so they have specific statistics to 
-report which are different from pure ethernet adapters
-- people will start adding more statistics to ethtool because this or 
-that wifi-specific counter is not reported, it is abusing the tool imho.
---
-Florian
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   36 ++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    4 +-
+ 2 files changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 14e5d52..6796559 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -411,7 +411,7 @@ static inline u8 iwl_get_queue_ac(struct iwl_tx_queue *txq)
+ }
+ 
+ static inline void iwl_wake_queue(struct iwl_trans *trans,
+-				  struct iwl_tx_queue *txq, const char *msg)
++				  struct iwl_tx_queue *txq)
+ {
+ 	u8 queue = txq->swq_id;
+ 	u8 ac = queue & 3;
+@@ -422,19 +422,19 @@ static inline void iwl_wake_queue(struct iwl_trans *trans,
+ 	if (test_and_clear_bit(hwq, trans_pcie->queue_stopped)) {
+ 		if (atomic_dec_return(&trans_pcie->queue_stop_count[ac]) <= 0) {
+ 			iwl_op_mode_queue_not_full(trans->op_mode, ac);
+-			IWL_DEBUG_TX_QUEUES(trans, "Wake hwq %d ac %d. %s",
+-					    hwq, ac, msg);
++			IWL_DEBUG_TX_QUEUES(trans, "Wake hwq %d ac %d",
++					    hwq, ac);
+ 		} else {
+-			IWL_DEBUG_TX_QUEUES(trans, "Don't wake hwq %d ac %d"
+-					    " stop count %d. %s",
+-					    hwq, ac, atomic_read(&trans_pcie->
+-					    queue_stop_count[ac]), msg);
++			IWL_DEBUG_TX_QUEUES(trans,
++				"Don't wake hwq %d ac %d stop count %d",
++				hwq, ac,
++				atomic_read(&trans_pcie->queue_stop_count[ac]));
+ 		}
+ 	}
+ }
+ 
+ static inline void iwl_stop_queue(struct iwl_trans *trans,
+-				  struct iwl_tx_queue *txq, const char *msg)
++				  struct iwl_tx_queue *txq)
+ {
+ 	u8 queue = txq->swq_id;
+ 	u8 ac = queue & 3;
+@@ -445,19 +445,19 @@ static inline void iwl_stop_queue(struct iwl_trans *trans,
+ 	if (!test_and_set_bit(hwq, trans_pcie->queue_stopped)) {
+ 		if (atomic_inc_return(&trans_pcie->queue_stop_count[ac]) > 0) {
+ 			iwl_op_mode_queue_full(trans->op_mode, ac);
+-			IWL_DEBUG_TX_QUEUES(trans, "Stop hwq %d ac %d"
+-					    " stop count %d. %s",
+-					    hwq, ac, atomic_read(&trans_pcie->
+-					    queue_stop_count[ac]), msg);
++			IWL_DEBUG_TX_QUEUES(trans,
++				"Stop hwq %d ac %d stop count %d",
++				hwq, ac,
++				atomic_read(&trans_pcie->queue_stop_count[ac]));
+ 		} else {
+-			IWL_DEBUG_TX_QUEUES(trans, "Don't stop hwq %d ac %d"
+-					    " stop count %d. %s",
+-					    hwq, ac, atomic_read(&trans_pcie->
+-					    queue_stop_count[ac]), msg);
++			IWL_DEBUG_TX_QUEUES(trans,
++				"Don't stop hwq %d ac %d stop count %d",
++				hwq, ac,
++				atomic_read(&trans_pcie->queue_stop_count[ac]));
+ 		}
+ 	} else {
+-		IWL_DEBUG_TX_QUEUES(trans, "stop hwq %d, but it is stopped/ %s",
+-				    hwq, msg);
++		IWL_DEBUG_TX_QUEUES(trans, "stop hwq %d, but it is stopped",
++				    hwq);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index f28f4cb..7c80897 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1497,7 +1497,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			txq->need_update = 1;
+ 			iwl_txq_update_write_ptr(trans, txq);
+ 		} else {
+-			iwl_stop_queue(trans, txq, "Queue is full");
++			iwl_stop_queue(trans, txq);
+ 		}
+ 	}
+ 	spin_unlock(&txq->lock);
+@@ -1601,7 +1601,7 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 				tfd_num, ssn);
+ 		freed = iwl_tx_queue_reclaim(trans, txq_id, tfd_num, skbs);
+ 		if (iwl_queue_space(&txq->q) > txq->q.low_mark)
+-			iwl_wake_queue(trans, txq, "Packets reclaimed");
++			iwl_wake_queue(trans, txq);
+ 	}
+ 
+ 	spin_unlock(&txq->lock);
+-- 
+1.7.0.4
+
