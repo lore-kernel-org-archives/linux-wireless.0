@@ -1,33 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48695 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52605 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750811Ab2CDIMS (ORCPT
+	with ESMTP id S1753065Ab2CGHgV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 03:12:18 -0500
-Subject: Re: [PATCH] compat-wireless: Handle name change from iwlagn to
- iwlwifi in 3.2
+	Wed, 7 Mar 2012 02:36:21 -0500
+Subject: Re: [RFCv2] mac80211: Don't let regulatory make us deaf
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Don Fry <donald.h.fry@intel.com>
-Cc: mcgrof@frijolero.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1325866731.9160.3.camel@dfry-linux1> (sfid-20120106_171934_327784_23D8F766)
-References: <1325866731.9160.3.camel@dfry-linux1>
-	 (sfid-20120106_171934_327784_23D8F766)
+To: Paul Stewart <pstew@chromium.org>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Arik Nemtsov <anamtsov@gmail.com>,
+	Eliad Peller <eliad@wizery.com>
+In-Reply-To: <CAMcMvshUH5faQ7xZTkXgWE=v-WMShBa9dOPZ=nu3hYiGJvoeFA@mail.gmail.com> (sfid-20120307_064721_296874_2D6C4AB2)
+References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
+	 <20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com>
+	 <1330254954.4401.9.camel@jlt3.sipsolutions.net>
+	 <1330255537.4401.10.camel@jlt3.sipsolutions.net>
+	 <1330338898.3483.10.camel@jlt3.sipsolutions.net>
+	 <20120227113212.GA4576@w1.fi>
+	 <1330342730.3483.34.camel@jlt3.sipsolutions.net>
+	 <20120227134610.GA5070@w1.fi>
+	 <CAMcMvshUH5faQ7xZTkXgWE=v-WMShBa9dOPZ=nu3hYiGJvoeFA@mail.gmail.com>
+	 (sfid-20120307_064721_296874_2D6C4AB2)
 Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 04 Mar 2012 09:12:12 +0100
-Message-ID: <1330848732.4000.2.camel@jlt3.sipsolutions.net> (sfid-20120304_091221_769254_D5436C44)
+Date: Wed, 07 Mar 2012 08:36:14 +0100
+Message-ID: <1331105774.3519.1.camel@jlt3.sipsolutions.net> (sfid-20120307_083624_242143_FC1A4C62)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-01-06 at 08:18 -0800, Don Fry wrote:
-> From: Don Fry <donald.h.fry@intel.com>
-> 
-> With linux-3.2 the iwlagn driver is renamed iwlwifi.  For some kernels
-> (like 3.1.5) this causes the non-compat iwlagn.ko to try and run against
-> the compat mac80211 resulting in a kernel oops.  This change prevents the
-> non-compat iwlagn.ko from being loaded.
+On Tue, 2012-03-06 at 21:46 -0800, Paul Stewart wrote:
 
-Hey Luis, I don't see this in your tree, did you just miss it?
+> >> Of course, if this we actually happen to come across a device that needs
+> >> this it could set a flag somehwere and mac80211 could re-configure the
+> >> channel to non-HT on the assoc request, but right now I'd rather not
+> >> worry about that since we're moving towards multi-channel and have no
+> >> indication of such devices existing. Agree?
+> >
+> > Yeah, that works for me.
+> 
+> Discussions seem to have come to an end here, however I'm not sure
+> what we ended up deciding. :-)  I see mention of HT+TKIP -- not sure
+> I'm familiar enough with what the issues are there -- as well as
+> pushing the channel configuration earlier and perhaps changes to the
+> association process.  Since I may not have a complete handle on all
+> these adjacent issues, where do we want to go with the current change
+> (fixes a real-life issue) and how do we want to stage that with
+> respect to the other issues this seems to have brought to the surface?
+
+This discussion really side-tracked somewhat -- we were discussing a
+better/different solution. I'm OK with your patch, but since I'll be
+touching the code again to address the other things we talked about it'd
+be great if you could test after that again, maybe in a week or two?
 
 johannes
 
