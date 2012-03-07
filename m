@@ -1,131 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759705Ab2CGTGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:31 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 11/35] iwlwifi: make EEPROM enhanced TX power a bool
-Date: Wed,  7 Mar 2012 09:52:20 -0800
-Message-Id: <1331142764-5750-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200744_260237_CDF07734)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:51869 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756625Ab2CGRhS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 12:37:18 -0500
+Message-ID: <4F579CCA.2060907@gmail.com> (sfid-20120307_183739_600888_C08659E6)
+Date: Wed, 07 Mar 2012 09:37:14 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>,
+	Linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org>
+In-Reply-To: <4F579A88.6030503@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/07/2012 09:27 AM, Felix Fietkau wrote:
+> On 2012-03-07 4:24 PM, Justin P. Mattock wrote:
+>> On 03/07/2012 07:19 AM, Mohammed Shafi wrote:
+>>> On Wed, Mar 7, 2012 at 7:55 PM, Justin P. Mattock
+>>> <justinmattock@gmail.com>   wrote:
+>>>> ath9k craps out from time to time(more annoying if anything)
+>>>>
+>>>> [44309.840830] ath: Failed to stop TX DMA, queues=0x001!
+>>>> [44309.858246] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>>> [44309.858255] ath: Could not stop RX, we could be confusing the DMA engine
+>>>> when we start RX up
+>>>> [44309.932801] ath: Failed to stop TX DMA, queues=0x001!
+>>>> [44309.950352] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>>> [44309.950361] ath: Could not stop RX, we could be confusing the DMA engine
+>>>> when we start RX up
+>>>> [44310.024301] ath: Failed to stop TX DMA, queues=0x001!
+>>>> [44310.041641] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>>> [44310.041646] ath: Could not stop RX, we could be confusing the DMA engine
+>>>> when we start RX up
+>>>> [44310.116316] ath: Failed to stop TX DMA, queues=0x001!
+>>>> [44310.133909] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>>> [44310.133918] ath: Could not stop RX, we could be confusing the DMA engine
+>>>> when we start RX up
+>>>> [44310.208021] ath: Failed to stop TX DMA, queues=0x001!
+>>>> [44310.225752] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>>>> [44310.225761] ath: Could not stop RX, we could be confusing the DMA engine
+>>>> when we start RX up
+>>>> [44310.299922] ath: Failed to stop TX DMA, queues=0x001!
+>>>> [44310.317579] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
+>>>> [44310.317587] ath: Could not stop RX, we could be confusing the DMA engine
+>>>> whe
+>>>
+>>> this is has become a know issue but less harmful, please try to see if
+>>> the workaround of disabling power save helps
+>>>
+>>> iw dev wlanX set power_save off
+>>>
+>>
+>> ok! I have set that on the machine.. will see if I get this message in
+>> the upcoming weeks.
+> Also, please try this patch with powersave enabled:
+> http://nbd.name/ps-fix.patch
+>
+> - Felix
+>
 
-There's no need to carry around the function
-pointer when a boolean indicating that the
-EEPROM stores enhanced TX power information
-is sufficient.
+I will give that a try as well..
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-2000.c   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-6000.c   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.h    |    1 -
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    2 +-
- 5 files changed, 8 insertions(+), 9 deletions(-)
+Thanks!
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 2c03858..6931820 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -147,7 +147,7 @@ static struct iwl_lib_ops iwl2000_lib = {
- 			EEPROM_6000_REG_BAND_24_HT40_CHANNELS,
- 			EEPROM_REGULATORY_BAND_NO_HT40,
- 		},
--		.update_enhanced_txpower = iwl_eeprom_enhanced_txpower,
-+		.enhanced_txpower = true,
- 	},
- 	.temperature = iwlagn_temperature,
- };
-@@ -165,7 +165,7 @@ static struct iwl_lib_ops iwl2030_lib = {
- 			EEPROM_6000_REG_BAND_24_HT40_CHANNELS,
- 			EEPROM_REGULATORY_BAND_NO_HT40,
- 		},
--		.update_enhanced_txpower = iwl_eeprom_enhanced_txpower,
-+		.enhanced_txpower = true,
- 	},
- 	.temperature = iwlagn_temperature,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 510a5c0..9fbab01 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -243,7 +243,7 @@ static struct iwl_lib_ops iwl6000_lib = {
- 			EEPROM_6000_REG_BAND_24_HT40_CHANNELS,
- 			EEPROM_REG_BAND_52_HT40_CHANNELS
- 		},
--		.update_enhanced_txpower = iwl_eeprom_enhanced_txpower,
-+		.enhanced_txpower = true,
- 	},
- 	.temperature = iwlagn_temperature,
- };
-@@ -262,7 +262,7 @@ static struct iwl_lib_ops iwl6030_lib = {
- 			EEPROM_6000_REG_BAND_24_HT40_CHANNELS,
- 			EEPROM_REG_BAND_52_HT40_CHANNELS
- 		},
--		.update_enhanced_txpower = iwl_eeprom_enhanced_txpower,
-+		.enhanced_txpower = true,
- 	},
- 	.temperature = iwlagn_temperature,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index b56498b..6345ab0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -305,7 +305,6 @@ static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u32 flags)
- }
- 
- /* eeprom */
--void iwl_eeprom_enhanced_txpower(struct iwl_priv *priv);
- void iwl_eeprom_get_mac(const struct iwl_shared *shrd, u8 *mac);
- 
- extern int iwl_alive_start(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index e2d8084..23cea42 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -589,7 +589,7 @@ iwl_eeprom_enh_txp_read_element(struct iwl_priv *priv,
- #define TXP_CHECK_AND_PRINT(x) ((txp->flags & IWL_EEPROM_ENH_TXP_FL_##x) \
- 			    ? # x " " : "")
- 
--void iwl_eeprom_enhanced_txpower(struct iwl_priv *priv)
-+static void iwl_eeprom_enhanced_txpower(struct iwl_priv *priv)
- {
- 	struct iwl_shared *shrd = priv->shrd;
- 	struct iwl_eeprom_enhanced_txpwr *txp_array, *txp;
-@@ -1025,8 +1025,8 @@ int iwl_init_channel_map(struct iwl_priv *priv)
- 	 * driver need to process addition information
- 	 * to determine the max channel tx power limits
- 	 */
--	if (cfg(priv)->lib->eeprom_ops.update_enhanced_txpower)
--		cfg(priv)->lib->eeprom_ops.update_enhanced_txpower(priv);
-+	if (cfg(priv)->lib->eeprom_ops.enhanced_txpower)
-+		iwl_eeprom_enhanced_txpower(priv);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 3b17056..e4a7583 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -302,7 +302,7 @@ extern const u8 iwl_eeprom_band_1[14];
- 
- struct iwl_eeprom_ops {
- 	const u32 regulatory_bands[7];
--	void (*update_enhanced_txpower) (struct iwl_priv *priv);
-+	bool enhanced_txpower;
- };
- 
- 
--- 
-1.7.0.4
+Justin P. Mattock
 
