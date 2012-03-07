@@ -1,188 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49254 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759252Ab2CSSwm (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:41706 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab2CGFf3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 14:52:42 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 4/4] ath9k:  Support ethtool getstats api.
-Date: Mon, 19 Mar 2012 11:51:45 -0700
-Message-Id: <1332183105-4447-4-git-send-email-greearb@candelatech.com> (sfid-20120319_195247_588563_E4A1C083)
-In-Reply-To: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
-References: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
+	Wed, 7 Mar 2012 00:35:29 -0500
+Received: by vcqp1 with SMTP id p1so5133594vcq.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 21:35:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4F569512.4000109@gmail.com>
+References: <4F569512.4000109@gmail.com>
+Date: Wed, 7 Mar 2012 11:05:29 +0530
+Message-ID: <CAD2nsn0e6zGbquTf7DG4_hM6rr+q0GgYwpDuX+jQyGOHWHrdSg@mail.gmail.com> (sfid-20120307_063533_203355_B37F86C6)
+Subject: Re: Slow wifi connection AR9287 with ath9k 3.x kernel
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: kuba <kuba.g4@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Wed, Mar 7, 2012 at 4:22 AM, kuba <kuba.g4@gmail.com> wrote:
+> Hello,
 
-This returns many of the values that formerly could
-only be obtained from debugfs.  This should be an
-improvement when trying to access these counters
-programatically.  Currently this support is only
-enabled when DEBUGFS is enabled because otherwise
-these stats are not accumulated.
+hi,
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+>
+> I have submitted bug on Kernel bug tracker and provide info, but it seems
+> that no one there is interested in this topic. I discovered that since
+> 2.6.38 kernel version there is bug in ath9k driver (using AR9287 chipset).
+> I've posted some additional info at this adress:
+> https://bugzilla.kernel.org/show_bug.cgi?id=42352
 
-v3:  No changes from v2
+please provide as much info as possible, in which mode you are
+operating, how noisy is the environment, distance between STA and AP.
+anything specific etc.
+i just tried  compat-wireless-2012-02-04, distance between STA and AP
+at least 5ms, a bit of noisy environment, channel 6 HT40 plus, AES
+ping RTT is good only. i  may be missing something
 
-:100644 100644 4a00806... 7261f88... M	drivers/net/wireless/ath/ath9k/main.c
- drivers/net/wireless/ath/ath9k/main.c |  134 +++++++++++++++++++++++++++++++++
- 1 files changed, 134 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4a00806..7261f88 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2430,6 +2430,134 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
- 	return 0;
- }
- 
-+#ifdef CONFIG_ATH9K_DEBUGFS
-+
-+/* Ethtool support for get-stats */
-+
-+#define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
-+static const char ath9k_gstrings_stats[][ETH_GSTRING_LEN] = {
-+	"tx_pkts_nic",
-+	"tx_bytes_nic",
-+	"rx_pkts_nic",
-+	"rx_bytes_nic",
-+	AMKSTR(d_tx_pkts),
-+	AMKSTR(d_tx_bytes),
-+	AMKSTR(d_tx_mpdus_queued),
-+	AMKSTR(d_tx_mpdus_completed),
-+	AMKSTR(d_tx_mpdu_retries),
-+	AMKSTR(d_tx_aggregates),
-+	AMKSTR(d_tx_ampdus_queued_hw),
-+	AMKSTR(d_tx_ampdus_queued_sw),
-+	AMKSTR(d_tx_ampdus_completed),
-+	AMKSTR(d_tx_ampdu_retries),
-+	AMKSTR(d_tx_ampdu_xretries),
-+	AMKSTR(d_tx_fifo_underrun),
-+	AMKSTR(d_tx_op_exceeded),
-+	AMKSTR(d_tx_timer_expiry),
-+	AMKSTR(d_tx_desc_cfg_err),
-+	AMKSTR(d_tx_data_underrun),
-+	AMKSTR(d_tx_delim_underrun),
-+
-+	"d_rx_decrypt_crc_err",
-+	"d_rx_phy_err",
-+	"d_rx_mic_err",
-+	"d_rx_pre_delim_crc_err",
-+	"d_rx_post_delim_crc_err",
-+	"d_rx_decrypt_busy_err",
-+
-+	"d_rx_phyerr_radar",
-+	"d_rx_phyerr_ofdm_timing",
-+	"d_rx_phyerr_cck_timing",
-+
-+};
-+#define ATH9K_SSTATS_LEN ARRAY_SIZE(ath9k_gstrings_stats)
-+
-+static void ath9k_get_et_strings(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS)
-+		memcpy(data, *ath9k_gstrings_stats,
-+		       sizeof(ath9k_gstrings_stats));
-+}
-+
-+static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif, int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return ATH9K_SSTATS_LEN;
-+	return 0;
-+}
-+
-+#define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
-+#define AWDATA(elem)							\
-+	do {								\
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-+	} while (0)
-+
-+#define AWDATA_RX(elem)						\
-+	do {							\
-+		data[i++] = sc->debug.stats.rxstats.elem;	\
-+	} while (0)
-+
-+static void ath9k_get_et_stats(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct ethtool_stats *stats, u64 *data)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	int i = 0;
-+
-+	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_pkts_all);
-+	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_bytes_all);
-+	AWDATA_RX(rx_pkts_all);
-+	AWDATA_RX(rx_bytes_all);
-+
-+	AWDATA(tx_pkts_all);
-+	AWDATA(tx_bytes_all);
-+	AWDATA(queued);
-+	AWDATA(completed);
-+	AWDATA(xretries);
-+	AWDATA(a_aggr);
-+	AWDATA(a_queued_hw);
-+	AWDATA(a_queued_sw);
-+	AWDATA(a_completed);
-+	AWDATA(a_retries);
-+	AWDATA(a_xretries);
-+	AWDATA(fifo_underrun);
-+	AWDATA(xtxop);
-+	AWDATA(timer_exp);
-+	AWDATA(desc_cfg_err);
-+	AWDATA(data_underrun);
-+	AWDATA(delim_underrun);
-+
-+	AWDATA_RX(decrypt_crc_err);
-+	AWDATA_RX(phy_err);
-+	AWDATA_RX(mic_err);
-+	AWDATA_RX(pre_delim_crc_err);
-+	AWDATA_RX(post_delim_crc_err);
-+	AWDATA_RX(decrypt_busy_err);
-+
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_RADAR]);
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_OFDM_TIMING]);
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_CCK_TIMING]);
-+
-+	BUG_ON(i != ATH9K_SSTATS_LEN);
-+}
-+
-+/* End of ethtool get-stats functions */
-+
-+#endif
-+
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2458,4 +2586,10 @@ struct ieee80211_ops ath9k_ops = {
- 	.get_stats	    = ath9k_get_stats,
- 	.set_antenna	    = ath9k_set_antenna,
- 	.get_antenna	    = ath9k_get_antenna,
-+
-+#ifdef CONFIG_ATH9K_DEBUGFS
-+	.get_et_sset_count  = ath9k_get_et_sset_count,
-+	.get_et_stats  = ath9k_get_et_stats,
-+	.get_et_strings  = ath9k_get_et_strings,
-+#endif
- };
+>
+> The last working version is 2.6.37.6.
+
+if we are very clear about the working one and non-working doing the
+following things will make our work very easier
+lets say 2.6.37.6 is working fine and 2.6.38 is broken for you
+
+we can work with our wireless-testing tree kernel
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+
+then please do git tag
+
+*git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep AR9287
+07422063d43612762d53fac8b6df213c96f4b1f6 ath9k_hw: Fix calibration for
+AR9287 devices
+f7ec8fb4d6f8f3ecb8b11e9e46ece95aa66139cc ath9k_hw: Fix eeprom offset
+for AR9287 devices (PCI/USB)
+
+*even with 3.3-rc5 we got less commits
+
+6321eb0977b011ac61dfca36e7c69b2c4325b104 ath9k_hw: Fix number of GPIO
+pins for AR9287/9300
+a7be039d347743c289b7280d5de82abf7bbdf1d8 ath9k: Fix eifs/usec timeout
+for AR9287 v1.3+
+49c99520f3b15300156830904f9ffcf51cb1160e ath9k_hw: Add dump_eeprom
+support for AR9287
+087b6ff682ff62c49c9a36ddfd24fc781367b1d1 ath9k_hw: fix MAC clock rate
+for AR9287 v1.3+
+1df85ecec36ad5da3f0165760704310d6c03f65f ath9k: Fix AR9287 calibration
+2d05a0c2b4ac614cb5e0eba75d39a37205d129e8 ath9k_hw: Remove unused code
+in AR9287 eeprom
+81544026e4cecb85a8b727d5f64cb3c8a8cb64a3 ath9k_hw: Fix throughput
+drops in HT40 mode for AR9287 chips
+6d64ab7f9240e3201fde3fd16ce4227bd795d2ab ath9k_htc: Fix LED pin for
+AR9287 HTC device
+07422063d43612762d53fac8b6df213c96f4b1f6 ath9k_hw: Fix calibration for
+AR9287 devices
+f7ec8fb4d6f8f3ecb8b11e9e46ece95aa66139cc ath9k_hw: Fix eeprom offset
+for AR9287 devices (PCI/USB)
+
+
+*git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep ath9k_hw
+
+*git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep ath9k
+
+
+
+> I can provide more data if anyone is interested.
+> Cheers,
+> Kuba
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.3.4
-
+thanks,
+shafi
