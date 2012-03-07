@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42904 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038Ab2CLRrO (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59724 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757048Ab2CGR5p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 13:47:14 -0400
-Date: Mon, 12 Mar 2012 13:41:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, gregkh@linuxfoundation.org,
-	stern@rowland.harvard.edu, linux-mips@linux-mips.org,
-	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/7] bcma: scan for extra address space
-Message-ID: <20120312174113.GC2778@tuxdriver.com> (sfid-20120312_184720_339556_0B0EAC97)
-References: <1331496505-18697-1-git-send-email-hauke@hauke-m.de>
- <1331496505-18697-4-git-send-email-hauke@hauke-m.de>
- <CAGRGNgX116dRB03NTL_DFZ4b_PYcdY+Un_cVwt6ZUGR1bwZzHA@mail.gmail.com>
- <4F5D3679.3090900@hauke-m.de>
- <CAGRGNgWsO9s2rW1pKBFWd_-0oTAGs9_RXNGyn_y7ic=0Zer=qQ@mail.gmail.com>
+	Wed, 7 Mar 2012 12:57:45 -0500
+Message-ID: <4F57A193.3030406@qca.qualcomm.com> (sfid-20120307_185749_296335_93FFFBC4)
+Date: Wed, 7 Mar 2012 19:57:39 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGRGNgWsO9s2rW1pKBFWd_-0oTAGs9_RXNGyn_y7ic=0Zer=qQ@mail.gmail.com>
+To: Joe Perches <joe@perches.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/12] ath6kl: checkpatch fixes
+References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>	 <1330537026.13689.1.camel@joe2Laptop> <4F4E635A.3060003@qca.qualcomm.com> <1330539665.13689.9.camel@joe2Laptop>
+In-Reply-To: <1330539665.13689.9.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 12, 2012 at 12:30:54PM +1100, Julian Calaby wrote:
-> Hi Hauke,
+On 02/29/2012 08:21 PM, Joe Perches wrote:
+> On Wed, 2012-02-29 at 19:41 +0200, Kalle Valo wrote:
+>> On 02/29/2012 07:37 PM, Joe Perches wrote:
+>>
+>>> Why not just make these functions?
+>>
+>> Because of the HI_ITEM() macro I can't pass the item parameter to a
+>> function:
+>>
+>> #define HI_ITEM(item)  offsetof(struct host_interest, item)
 > 
-> On Mon, Mar 12, 2012 at 10:34, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-
-> > I will fix this, should I resend the hole series or just this patch?
+> Perhaps something like:
+> void _ath6kl_bmi_write_hi32(struct ath6kl ar, size_t offset, u32 *val)
+> {
+> 	u32 addr;
+> 	__le32 v;
 > 
-> I'm not sure the rest of the series made it to linux-wireless, so
-> maybe you should resend everything.
+> 	addr = ath6kl_get_hi_item_addr(ar, offset);
+> 	v = cpu_to_le32(*val);
+> 	ath6kl_bmi_write(ar, addr, (u8 *)&v, sizeof(v));
+> }
+> 
+> #define ath6kl_bmi_write_hi32(ar, item, val)		\
+> 	_ath6kl_bmi_write_hi32(ar, HI_ITEM(item), &(val))
 
-FWIW, this was the only one I saw...
+I tried this but actually this ends to a header file dependency hell. I
+don't want to deal with that right now so I have to use the original macros.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle
