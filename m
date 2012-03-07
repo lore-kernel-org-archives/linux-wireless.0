@@ -1,85 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:51685 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754919Ab2COSx4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 14:53:56 -0400
-Received: by yenl12 with SMTP id l12so3376588yen.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 11:53:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1331836777.3432.31.camel@jlt3.sipsolutions.net>
-References: <4F6236D0.40505@candelatech.com>
-	<1331836777.3432.31.camel@jlt3.sipsolutions.net>
-Date: Thu, 15 Mar 2012 20:53:55 +0200
-Message-ID: <CAB3XZEeDtJKpSbYB8sMM35rRT7KH5dVuKOWntDBhDp+unRkWGA@mail.gmail.com> (sfid-20120315_195400_146132_B767C0DD)
-Subject: Re: compiler warning in wireless-testing.
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759726Ab2CGTGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 14:06:39 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 27/35] iwlwifi: move setting up fw parameters
+Date: Wed,  7 Mar 2012 09:52:36 -0800
+Message-Id: <1331142764-5750-28-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200651_533669_B27B2770)
+In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 15, 2012 at 8:39 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-03-15 at 11:37 -0700, Ben Greear wrote:
->> Looks like this is the compiler's fault to me..but might be
->> worth explicitly initializing the sta variable just to make
->> it quiet.
->
-> I disagree, doing that will only hide legitimate warnings if somebody
-> changes the code. Initializing for compiler happiness is almost always
-> the worst thing you can do.
->
-what about
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6cb5361..96fc201 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3094,7 +3094,6 @@ static int ieee80211_prep_connection(struct
-ieee80211_sub_if_data *sdata,
-        struct ieee80211_local *local = sdata->local;
-        struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-        struct ieee80211_bss *bss = (void *)cbss->priv;
--       struct sta_info *sta;
-        bool have_sta = false;
-        int err;
+Gather parameters required to configure the
+transport layer before invoking the transport
+configuration API.
 
-@@ -3107,12 +3106,6 @@ static int ieee80211_prep_connection(struct
-ieee80211_sub_if_data *sdata,
-                rcu_read_unlock();
-        }
+Change-Id: I5b39da284af6d9b5432a08911b4e1173a4d7207d
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   45 +++++++++++++++++---------------
+ 1 files changed, 24 insertions(+), 21 deletions(-)
 
--       if (!have_sta) {
--               sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
--               if (!sta)
--                       return -ENOMEM;
--       }
--
-        mutex_lock(&local->mtx);
-        ieee80211_recalc_idle(sdata->local);
-        mutex_unlock(&local->mtx);
-@@ -3123,10 +3116,15 @@ static int ieee80211_prep_connection(struct
-ieee80211_sub_if_data *sdata,
-
-        if (!have_sta) {
-                struct ieee80211_supported_band *sband;
-+               struct sta_info *sta;
-                u32 rates = 0, basic_rates = 0;
-                bool have_higher_than_11mbit;
-                int min_rate = INT_MAX, min_rate_index = -1;
-
-+               sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
-+               if (!sta)
-+                       return -ENOMEM;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 83018ec..3973424 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1206,6 +1206,30 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 	/* TODO: remove fw from shared data later */
+ 	priv->shrd->fw = fw;
+ 
++	/************************
++	 * 2. Setup HW constants
++	 ************************/
++	iwl_set_hw_params(priv);
 +
-                sband = sdata->local->hw.wiphy->bands[cbss->channel->band];
++	ucode_flags = fw->ucode_capa.flags;
++
++#ifndef CONFIG_IWLWIFI_P2P
++	ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
++#endif
++	if (!(hw_params(priv).sku & EEPROM_SKU_CAP_IPAN_ENABLE))
++		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
++
++	/*
++	 * if not PAN, then don't support P2P -- might be a uCode
++	 * packaging bug or due to the eeprom check above
++	 */
++	if (!(ucode_flags & IWL_UCODE_TLV_FLAGS_PAN))
++		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
++
++
++	/*****************************
++	 * Configure transport layer
++	 *****************************/
+ 	/*
+ 	 * Populate the state variables that the transport layer needs
+ 	 * to know about.
+@@ -1286,27 +1310,6 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 		priv->hw->wiphy->n_addresses++;
+ 	}
+ 
+-	/************************
+-	 * 5. Setup HW constants
+-	 ************************/
+-	iwl_set_hw_params(priv);
+-
+-	ucode_flags = fw->ucode_capa.flags;
+-
+-#ifndef CONFIG_IWLWIFI_P2P
+-	ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
+-#endif
+-	if (!(hw_params(priv).sku & EEPROM_SKU_CAP_IPAN_ENABLE))
+-		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
+-
+-	/*
+-	 * if not PAN, then don't support P2P -- might be a uCode
+-	 * packaging bug or due to the eeprom check above
+-	 */
+-	if (!(ucode_flags & IWL_UCODE_TLV_FLAGS_PAN))
+-		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
+-
+-
+ 	/*******************
+ 	 * 6. Setup priv
+ 	 *******************/
+-- 
+1.7.0.4
 
-                ieee80211_get_rates(sband, bss->supp_rates,
-
-
-it also makes the code more clear, imho.
-
-Eliad.
