@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:55284 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756788Ab2C1Nvn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50766 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932265Ab2CGOuz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 09:51:43 -0400
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	PingYang Zhang <pingzhan@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath6kl: Fix scan related issue on suspend-resume
-Date: Wed, 28 Mar 2012 19:21:26 +0530
-Message-ID: <1332942686-6965-2-git-send-email-nataraja@qca.qualcomm.com> (sfid-20120328_155145_886396_B7A73E02)
-In-Reply-To: <1332942686-6965-1-git-send-email-nataraja@qca.qualcomm.com>
-References: <1332942686-6965-1-git-send-email-nataraja@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 7 Mar 2012 09:50:55 -0500
+Subject: Re: Hw Accel in Secured Mesh No Longer Work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+In-Reply-To: <CAEFj984W5PEwJ4ruXbwn0PwZV2s+fXkL=PzFX0DZm1gAyiGA3g@mail.gmail.com> (sfid-20120307_154743_314516_32C26C90)
+References: <CAEFj984b_Aihd9hc-dMArPxZPod8eKsxzekLwO74XbTUKGX9LQ@mail.gmail.com>
+	 <CAEFj984gKDRtjP9NJYqjvWCZ=HxwW3DQ036guVY6Vbj=yx1H6g@mail.gmail.com>
+	 <1331105902.3519.2.camel@jlt3.sipsolutions.net>
+	 <CAEFj985EYVeAYef1-G3uVPOxZqwjose9Ge7=MRsbmFWrLNz_RQ@mail.gmail.com>
+	 <CAEFj984tNRXvBL4cCdJAq2VL7_AgeFYDB=w1b=aLy89pCM5UdA@mail.gmail.com>
+	 <1331130686.3519.14.camel@jlt3.sipsolutions.net>
+	 <1331130810.3519.16.camel@jlt3.sipsolutions.net>
+	 <CAEFj984W5PEwJ4ruXbwn0PwZV2s+fXkL=PzFX0DZm1gAyiGA3g@mail.gmail.com>
+	 (sfid-20120307_154743_314516_32C26C90)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Mar 2012 15:50:53 +0100
+Message-ID: <1331131853.3519.17.camel@jlt3.sipsolutions.net> (sfid-20120307_155058_374701_FE09C43F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a scan request is pending while going to suspend, any new
-scan request after resume will fail. So, cancel all scan requests
-in all the vifs before moving to suspend state.
+On Wed, 2012-03-07 at 22:47 +0800, Yeoh Chun-Yeow wrote:
+> Hi, Johannes
+> 
+> > Does meshd-nl80211 set the station flag NL80211_STA_FLAG_AUTHENTICATED
+> > before the key?
+> 
+> The key is installed before the set the station flag
+> NL80211_STA_FLAG_AUTHENTICATED.
+> 
+> /* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
+> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
+> .....
+> set_authenticated_flag(&nlcfg, peer);
 
-Signed-off-by: PingYang Zhang <pingzhan@qca.qualcomm.com>
-Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Does it work if you turn it around? Are there any problems with doing
+so?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index df95e0d..952a858 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2205,6 +2205,7 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- 			    enum ath6kl_cfg_suspend_mode mode,
- 			    struct cfg80211_wowlan *wow)
- {
-+	struct ath6kl_vif *vif;
- 	enum ath6kl_state prev_state;
- 	int ret;
- 
-@@ -2274,6 +2275,9 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- 		break;
- 	}
- 
-+	list_for_each_entry(vif, &ar->vif_list, list)
-+		ath6kl_cfg80211_scan_complete_event(vif, true);
-+
- 	return 0;
- }
- EXPORT_SYMBOL(ath6kl_cfg80211_suspend);
--- 
-1.7.4.1
+This is solvable in the kernel, but probably harder, and impossible if
+you wanted to use crypto algorithms that mac80211 doesn't support in
+software.
+
+johannes
 
