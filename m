@@ -1,113 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59355 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753483Ab2CTGCL (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:63658 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab2CGFhf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 02:02:11 -0400
-Subject: Re: [PATCH] cfg80211: warn if db.txt is empty with
- CONFIG_CFG80211_INTERNAL_REGDB
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: sfr@canb.auug.org.au, linux-wireless@vger.kernel.org,
-	Youngsin Lee <youngsin@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>,
-	Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>,
-	Vipin Mehta <vipimeht@qca.qualcomm.com>,
-	yahuan@qca.qualcomm.com, jjan@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, henrykim@qualcomm.com,
-	jouni@qca.qualcomm.com, athiruve@qca.qualcomm.com,
-	cjkim@qualcomm.com, philipk@qca.qualcomm.com,
-	sunnykim@qualcomm.com, sskwak@qualcomm.com, kkim@qualcomm.com,
-	mattbyun@qualcomm.com, ryanlee@qualcomm.com, simbap@qualcomm.com,
-	krislee@qualcomm.com, conner@qualcomm.com, hojinkim@qualcomm.com,
-	honglee@qualcomm.com, johnwkim@qualcomm.com
-In-Reply-To: <1332192901-2500-1-git-send-email-mcgrof@frijolero.org> (sfid-20120319_223516_781886_87D088F1)
-References: <1332192901-2500-1-git-send-email-mcgrof@frijolero.org>
-	 (sfid-20120319_223516_781886_87D088F1)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Mar 2012 07:02:03 +0100
-Message-ID: <1332223323.3329.0.camel@jlt3.sipsolutions.net> (sfid-20120320_070237_702983_CFD8B7F3)
-Mime-Version: 1.0
+	Wed, 7 Mar 2012 00:37:35 -0500
+Received: by vcqp1 with SMTP id p1so5134644vcq.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 21:37:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn0e6zGbquTf7DG4_hM6rr+q0GgYwpDuX+jQyGOHWHrdSg@mail.gmail.com>
+References: <4F569512.4000109@gmail.com>
+	<CAD2nsn0e6zGbquTf7DG4_hM6rr+q0GgYwpDuX+jQyGOHWHrdSg@mail.gmail.com>
+Date: Wed, 7 Mar 2012 11:07:34 +0530
+Message-ID: <CAD2nsn1RZVkv3r7JredsLhuSL_+FAObugyryuThhdaA4ihtFnw@mail.gmail.com> (sfid-20120307_063738_359571_22CA41C3)
+Subject: Re: Slow wifi connection AR9287 with ath9k 3.x kernel
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: kuba <kuba.g4@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 14:35 -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-> 
-> It has happened twice now where elaborate troubleshooting has
-> undergone on systems where CONFIG_CFG80211_INTERNAL_REGDB [0]
-> has been set but yet net/wireless/db.txt was not updated.
-> 
-> Despite the documentation on this it seems system integrators could
-> use some more help with this, so throw out a kernel warning at boot time
-> when their database is empty, and if they enabled cfg80211 regulatory
-> debugging (CONFIG_CFG80211_REG_DEBUG), simply fail at build time. If
-> they didn't enable cfg80211 regulatory debugging then we'll just warn
-> at boot time. This does mean that the error-prone system integrator
-> won't likely realize the issue until they boot the machine but -- it
-> does not seem to make sense to enable a build bug unless someone
-> really is debugging.
-> 
-> [0] http://wireless.kernel.org/en/developers/Regulatory/CRDA#CONFIG_CFG80211_INTERNAL_REGDB
-> 
-> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-> Cc: Youngsin Lee <youngsin@qualcomm.com>
-> Cc: Raja Mani <rmani@qca.qualcomm.com>
-> Cc: Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>
-> Cc: Vipin Mehta <vipimeht@qca.qualcomm.com>
-> Cc: yahuan@qca.qualcomm.com
-> Cc: jjan@qca.qualcomm.com
-> Cc: vthiagar@qca.qualcomm.com
-> Cc: henrykim@qualcomm.com
-> Cc: jouni@qca.qualcomm.com
-> Cc: athiruve@qca.qualcomm.com
-> Cc: cjkim@qualcomm.com
-> Cc: philipk@qca.qualcomm.com
-> Cc: sunnykim@qualcomm.com
-> Cc: sskwak@qualcomm.com
-> Cc: kkim@qualcomm.com
-> Cc: mattbyun@qualcomm.com
-> Cc: ryanlee@qualcomm.com
-> Cc: simbap@qualcomm.com
-> Cc: krislee@qualcomm.com
-> Cc: conner@qualcomm.com
-> Cc: hojinkim@qualcomm.com
-> Cc: honglee@qualcomm.com
-> Cc: johnwkim@qualcomm.com
-> Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
-> ---
-> 
-> Stephen, John, not sure what is best to address this since I know we shouldn't
-> be failing to build kernels easily. This will only fail to build if both
-> CONFIG_CFG80211_REG_DEBUG and CONFIG_CFG80211_INTERNAL_REGDB are enabled.
-> We could get rid of the build bug check completely but this just means
-> system integrators will likley fail to fix the issue early. Experience
-> shows this is a common issue so far and a lot of time is going into debugging
-> this. I'd like to avoid this in the future. Let me know what you guys think.
-> 
->  net/wireless/reg.c |   12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index e9a0ac8..85f51b3 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -388,7 +388,18 @@ static void reg_regdb_query(const char *alpha2)
->  
->  	schedule_work(&reg_regdb_work);
->  }
-> +
-> +/* Feel free to add any other sanity checks here */
-> +static void reg_regdb_size_check(void)
-> +{
-> +#ifdef CONFIG_CFG80211_REG_DEBUG
-> +	BUILD_BUG_ON(!reg_regdb_size);
-> +#else
-> +	WARN_ONCE(!reg_regdb_size, "db.txt is empty, you should update it...");
-> +#endif
+On Wed, Mar 7, 2012 at 11:05 AM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> On Wed, Mar 7, 2012 at 4:22 AM, kuba <kuba.g4@gmail.com> wrote:
+>> Hello,
+>
+> hi,
+>
+>>
+>> I have submitted bug on Kernel bug tracker and provide info, but it seems
+>> that no one there is interested in this topic. I discovered that since
+>> 2.6.38 kernel version there is bug in ath9k driver (using AR9287 chipset).
+>> I've posted some additional info at this adress:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=42352
+>
+> please provide as much info as possible, in which mode you are
+> operating, how noisy is the environment, distance between STA and AP.
+> anything specific etc.
+> i just tried  compat-wireless-2012-02-04, distance between STA and AP
+> at least 5ms, a bit of noisy environment, channel 6 HT40 plus, AES
+> ping RTT is good only. i  may be missing something
+>
+>
+>>
+>> The last working version is 2.6.37.6.
+>
+> if we are very clear about the working one and non-working doing the
+> following things will make our work very easier
+> lets say 2.6.37.6 is working fine and 2.6.38 is broken for you
+>
+> we can work with our wireless-testing tree kernel
+> git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>
+> then please do git tag
+>
+> *git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep AR9287
+> 07422063d43612762d53fac8b6df213c96f4b1f6 ath9k_hw: Fix calibration for
+> AR9287 devices
+> f7ec8fb4d6f8f3ecb8b11e9e46ece95aa66139cc ath9k_hw: Fix eeprom offset
+> for AR9287 devices (PCI/USB)
+>
+> *even with 3.3-rc5 we got less commits
+>
+> 6321eb0977b011ac61dfca36e7c69b2c4325b104 ath9k_hw: Fix number of GPIO
+> pins for AR9287/9300
+> a7be039d347743c289b7280d5de82abf7bbdf1d8 ath9k: Fix eifs/usec timeout
+> for AR9287 v1.3+
+> 49c99520f3b15300156830904f9ffcf51cb1160e ath9k_hw: Add dump_eeprom
+> support for AR9287
+> 087b6ff682ff62c49c9a36ddfd24fc781367b1d1 ath9k_hw: fix MAC clock rate
+> for AR9287 v1.3+
+> 1df85ecec36ad5da3f0165760704310d6c03f65f ath9k: Fix AR9287 calibration
+> 2d05a0c2b4ac614cb5e0eba75d39a37205d129e8 ath9k_hw: Remove unused code
+> in AR9287 eeprom
+> 81544026e4cecb85a8b727d5f64cb3c8a8cb64a3 ath9k_hw: Fix throughput
+> drops in HT40 mode for AR9287 chips
+> 6d64ab7f9240e3201fde3fd16ce4227bd795d2ab ath9k_htc: Fix LED pin for
+> AR9287 HTC device
+> 07422063d43612762d53fac8b6df213c96f4b1f6 ath9k_hw: Fix calibration for
+> AR9287 devices
+> f7ec8fb4d6f8f3ecb8b11e9e46ece95aa66139cc ath9k_hw: Fix eeprom offset
+> for AR9287 devices (PCI/USB)
+>
+>
+> *git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep ath9k_hw
+>
+> *git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep ath9k
+>
+>
 
-That ifdef seems a bit pointless? If anything I would have expected it
-the other way around since the BUILD_BUG_ON compiles to nothing?
+please do try with the latest wireless-testing tree if you can get the
+same problem, also please try to check if this issue occurs with some
+other AP too.
 
-johannes
+>
+>> I can provide more data if anyone is interested.
+>> Cheers,
+>> Kuba
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+> --
+> thanks,
+> shafi
 
+
+
+-- 
+thanks,
+shafi
