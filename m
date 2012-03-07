@@ -1,66 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27874 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751673Ab2CNIO5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2012 04:14:57 -0400
-Date: Wed, 14 Mar 2012 09:14:25 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: do not nulify ctx->vif on reset
-Message-ID: <20120314081424.GC2788@redhat.com> (sfid-20120314_091503_253426_04882ABB)
-References: <1331651434-4370-1-git-send-email-sgruszka@redhat.com>
- <1331651730.3329.6.camel@jlt3.sipsolutions.net>
- <20120314062549.GA2788@redhat.com>
- <1331708304.3376.0.camel@jlt3.sipsolutions.net>
- <20120314070748.GB2788@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120314070748.GB2788@redhat.com>
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:49043 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758083Ab2CGUbT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 15:31:19 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Subject: [PATCH] mac80211: update ieee80211_tx_rate_control kerneldoc
+Date: Wed,  7 Mar 2012 21:31:13 +0100
+Message-Id: <1331152273-16114-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20120307_213122_842792_C6F33AA3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 14, 2012 at 08:07:48AM +0100, Stanislaw Gruszka wrote:
-> I'll update and recheck again.
+ * add entry for rate_idx_mcs_mask
+ * fix order of entries to represent the structs' order
 
-On updated tree (head 035364916f75151b4b91ea53968c6beba7545317) devices
-stop working here on any forced reset during TX as well. There are
-messages like below in dmesg:
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+---
+ include/net/mac80211.h |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-wlan3: dropped data frame to not associated station 00:00:00:00:00:00
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index c06974a..f7917f7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3568,6 +3568,8 @@ enum rate_control_changed {
+  * @hw: The hardware the algorithm is invoked for.
+  * @sband: The band this frame is being transmitted on.
+  * @bss_conf: the current BSS configuration
++ * @skb: the skb that will be transmitted, the control information in it needs
++ *	to be filled in
+  * @reported_rate: The rate control algorithm can fill this in to indicate
+  *	which rate should be reported to userspace as the current rate and
+  *	used for rate calculations in the mesh network.
+@@ -3575,12 +3577,11 @@ enum rate_control_changed {
+  *	RTS threshold
+  * @short_preamble: whether mac80211 will request short-preamble transmission
+  *	if the selected rate supports it
+- * @max_rate_idx: user-requested maximum rate (not MCS for now)
++ * @max_rate_idx: user-requested maximum (legacy) rate
+  *	(deprecated; this will be removed once drivers get updated to use
+  *	rate_idx_mask)
+- * @rate_idx_mask: user-requested rate mask (not MCS for now)
+- * @skb: the skb that will be transmitted, the control information in it needs
+- *	to be filled in
++ * @rate_idx_mask: user-requested (legacy) rate mask
++ * @rate_idx_mcs_mask: user-requested MCS rate mask
+  * @bss: whether this frame is sent out in AP or IBSS mode
+  */
+ struct ieee80211_tx_rate_control {
+-- 
+1.7.9.1
 
-And one time crash happened too, in:
-
-(gdb) l *(iwl_remove_dynamic_key+0x1f0)
-0x15e20 is in iwl_remove_dynamic_key (drivers/net/wireless/iwlwifi/iwl-agn-sta.c:1105).
-1100		/*
-1101		 * The device expects GTKs for station interfaces to be
-1102		 * installed as GTKs for the AP station. If we have no
-1103		 * station ID, then use the ap_sta_id in that case.
-1104		 */
-1105		if (vif->type == NL80211_IFTYPE_STATION && vif_priv->ctx)
-1106			return vif_priv->ctx->ap_sta_id;
-1107	
-1108		return IWL_INVALID_STATION;
-1109	}
-
-To reproduce problems, I'm doing "ping -f 192.168.1.1" on one console
-and run script [1] on other console.
-
-Stanislaw
-
-[1]
-
-#!/bin/bash
-
-mount -t debugfs debugfs /sys/kernel/debug
-cd /sys/kernel/debug/ieee80211
-
-while true; do 
-
-sleep 20
-for i in `ls -X ` ; do echo 1 > $i/iwlwifi/debug/force_reset ; done
-
-done
