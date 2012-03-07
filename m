@@ -1,140 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:65457 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757930Ab2CFBUq (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:42173 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378Ab2CGPTi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 20:20:46 -0500
-Received: by dadp12 with SMTP id p12so5870925dad.11
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 17:20:45 -0800 (PST)
+	Wed, 7 Mar 2012 10:19:38 -0500
 MIME-Version: 1.0
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCHv6 1/2] mac80211_hwsim:  Add tsf to beacons, probe responses and radiotap header.
-Date: Mon,  5 Mar 2012 17:20:37 -0800
-Message-Id: <1330996838-18960-1-git-send-email-javier@cozybit.com> (sfid-20120306_022049_513005_3F752312)
+In-Reply-To: <4F576FD5.2050208@gmail.com>
+References: <4F576FD5.2050208@gmail.com>
+Date: Wed, 7 Mar 2012 20:49:36 +0530
+Message-ID: <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> (sfid-20120307_162000_570865_99579170)
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+ AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>,
+	Linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Generate a tsf from internal kernel clock.  Prepare the path for having
-different tsf offsets on each phy.  This will be useful for testing
-mesh synchronization algorithms.
+On Wed, Mar 7, 2012 at 7:55 PM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> ath9k craps out from time to time(more annoying if anything)
+>
+> [44309.840830] ath: Failed to stop TX DMA, queues=0x001!
+> [44309.858246] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+> [44309.858255] ath: Could not stop RX, we could be confusing the DMA engine
+> when we start RX up
+> [44309.932801] ath: Failed to stop TX DMA, queues=0x001!
+> [44309.950352] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+> [44309.950361] ath: Could not stop RX, we could be confusing the DMA engine
+> when we start RX up
+> [44310.024301] ath: Failed to stop TX DMA, queues=0x001!
+> [44310.041641] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+> [44310.041646] ath: Could not stop RX, we could be confusing the DMA engine
+> when we start RX up
+> [44310.116316] ath: Failed to stop TX DMA, queues=0x001!
+> [44310.133909] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+> [44310.133918] ath: Could not stop RX, we could be confusing the DMA engine
+> when we start RX up
+> [44310.208021] ath: Failed to stop TX DMA, queues=0x001!
+> [44310.225752] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+> [44310.225761] ath: Could not stop RX, we could be confusing the DMA engine
+> when we start RX up
+> [44310.299922] ath: Failed to stop TX DMA, queues=0x001!
+> [44310.317579] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+> AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
+> [44310.317587] ath: Could not stop RX, we could be confusing the DMA engine
+> whe
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
-v2: Added timestamp to probe responses, as suggested by Johannes
-    Also implement tx_last_beacon, useful for testing (new patch 1/3)
-v3: Drop poorly implemented tx_last_beacon patch
-    TSF in microsecs, not TUs!    (Johannes)
-    Use high-resolution timer, not jiffies (Johannes)
-v4: Do indeed return usecs, not msecs (Johannes)
-    Fixed botched patch versioning (Johannes)
-v5: Use ieee80211_mgmt instead of ieee80211_hdr_3addr (Johannes)
-    Use ieee80211_is_{beacon, probe_resp}() (Johannes)
-    __le64 rt_tsft (Johannes)
-v6: Use the "right" style of indenting multi line contitions (Johannes)
+this is has become a know issue but less harmful, please try to see if
+the workaround of disabling power save helps
 
- drivers/net/wireless/mac80211_hwsim.c |   27 ++++++++++++++++++++++++++-
- 1 files changed, 26 insertions(+), 1 deletions(-)
+iw dev wlanX set power_save off
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ba16f05..f4bcd03 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -27,6 +27,7 @@
- #include <linux/etherdevice.h>
- #include <linux/debugfs.h>
- #include <linux/module.h>
-+#include <linux/ktime.h>
- #include <net/genetlink.h>
- #include "mac80211_hwsim.h"
- 
-@@ -321,11 +322,15 @@ struct mac80211_hwsim_data {
- 	struct dentry *debugfs_group;
- 
- 	int power_level;
-+
-+	/* difference between this hw's clock and the real clock, in usecs */
-+	u64 tsf_offset;
- };
- 
- 
- struct hwsim_radiotap_hdr {
- 	struct ieee80211_radiotap_header hdr;
-+	__le64 rt_tsft;
- 	u8 rt_flags;
- 	u8 rt_rate;
- 	__le16 rt_channel;
-@@ -367,6 +372,12 @@ static netdev_tx_t hwsim_mon_xmit(struct sk_buff *skb,
- 	return NETDEV_TX_OK;
- }
- 
-+static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
-+{
-+	struct timeval tv = ktime_to_timeval(ktime_get_real());
-+	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
-+	return cpu_to_le64(now + data->tsf_offset);
-+}
- 
- static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 				      struct sk_buff *tx_skb)
-@@ -391,7 +402,9 @@ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 	hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
- 	hdr->hdr.it_present = cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
- 					  (1 << IEEE80211_RADIOTAP_RATE) |
-+					  (1 << IEEE80211_RADIOTAP_TSFT) |
- 					  (1 << IEEE80211_RADIOTAP_CHANNEL));
-+	hdr->rt_tsft = __mac80211_hwsim_get_tsf(data);
- 	hdr->rt_flags = 0;
- 	hdr->rt_rate = txrate->bitrate / 5;
- 	hdr->rt_channel = cpu_to_le16(data->channel->center_freq);
-@@ -610,7 +623,8 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	}
- 
- 	memset(&rx_status, 0, sizeof(rx_status));
--	/* TODO: set mactime */
-+	rx_status.mactime = le64_to_cpu(__mac80211_hwsim_get_tsf(data));
-+	rx_status.flag |= RX_FLAG_MACTIME_MPDU;
- 	rx_status.freq = data->channel->center_freq;
- 	rx_status.band = data->channel->band;
- 	rx_status.rate_idx = info->control.rates[0].idx;
-@@ -667,6 +681,12 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	bool ack;
- 	struct ieee80211_tx_info *txi;
- 	u32 _pid;
-+	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+
-+	if (ieee80211_is_beacon(mgmt->frame_control) ||
-+	    ieee80211_is_probe_resp(mgmt->frame_control))
-+		mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
- 
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
-@@ -763,9 +783,11 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 				     struct ieee80211_vif *vif)
- {
- 	struct ieee80211_hw *hw = arg;
-+	struct mac80211_hwsim_data *data = hw->priv;
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
- 	u32 _pid;
-+	struct ieee80211_mgmt *mgmt;
- 
- 	hwsim_check_magic(vif);
- 
-@@ -779,6 +801,9 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 		return;
- 	info = IEEE80211_SKB_CB(skb);
- 
-+	mgmt = (struct ieee80211_mgmt *) skb->data;
-+	mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
-+
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
- 	/* wmediumd mode check */
+
+
+>
+>
+> part of dmesg here:
+> http://fpaste.org/xew6/
+> I can supply full log if needed..
+>
+> Justin P. Mattock
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.7.6
-
+thanks,
+shafi
