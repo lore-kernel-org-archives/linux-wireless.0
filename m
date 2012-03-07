@@ -1,54 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31533 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755176Ab2CDUnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:10 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 074/101] iwlwifi: transport's tx_agg_disable must be atomic
-Date: Sun,  4 Mar 2012 11:29:28 -0800
-Message-Id: <1330889395-533-75-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214501_694414_27C3E7A6)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:36047 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756597Ab2CGPYQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 10:24:16 -0500
+Message-ID: <4F577D9B.7020402@gmail.com> (sfid-20120307_162434_517807_27035B8A)
+Date: Wed, 07 Mar 2012 07:24:11 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>,
+	Linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com>
+In-Reply-To: <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/07/2012 07:19 AM, Mohammed Shafi wrote:
+> On Wed, Mar 7, 2012 at 7:55 PM, Justin P. Mattock
+> <justinmattock@gmail.com>  wrote:
+>> ath9k craps out from time to time(more annoying if anything)
+>>
+>> [44309.840830] ath: Failed to stop TX DMA, queues=0x001!
+>> [44309.858246] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>> [44309.858255] ath: Could not stop RX, we could be confusing the DMA engine
+>> when we start RX up
+>> [44309.932801] ath: Failed to stop TX DMA, queues=0x001!
+>> [44309.950352] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>> [44309.950361] ath: Could not stop RX, we could be confusing the DMA engine
+>> when we start RX up
+>> [44310.024301] ath: Failed to stop TX DMA, queues=0x001!
+>> [44310.041641] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>> [44310.041646] ath: Could not stop RX, we could be confusing the DMA engine
+>> when we start RX up
+>> [44310.116316] ath: Failed to stop TX DMA, queues=0x001!
+>> [44310.133909] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>> [44310.133918] ath: Could not stop RX, we could be confusing the DMA engine
+>> when we start RX up
+>> [44310.208021] ath: Failed to stop TX DMA, queues=0x001!
+>> [44310.225752] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+>> [44310.225761] ath: Could not stop RX, we could be confusing the DMA engine
+>> when we start RX up
+>> [44310.299922] ath: Failed to stop TX DMA, queues=0x001!
+>> [44310.317579] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
+>> [44310.317587] ath: Could not stop RX, we could be confusing the DMA engine
+>> whe
+>
+> this is has become a know issue but less harmful, please try to see if
+> the workaround of disabling power save helps
+>
+> iw dev wlanX set power_save off
+>
 
-At least as long as it is called from the reclaim
-flow (iwlagn_check_ratid_empty) it must be atomic.
+ok! I have set that on the machine.. will see if I get this message in 
+the upcoming weeks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.h |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+>
+>
+>>
+>>
+>> part of dmesg here:
+>> http://fpaste.org/xew6/
+>> I can supply full log if needed..
+>>
+>> Justin P. Mattock
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 609949f..ed6ab44 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -306,7 +306,7 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
-  *	ready and a successful ADDBA response has been received.
-  *	May sleep
-  * @tx_agg_disable: de-configure a Tx queue to send AMPDUs
-- *	May sleep
-+ *	Must be atomic
-  * @free: release all the ressource for the transport layer itself such as
-  *	irq, tasklet etc... From this point on, the device may not issue
-  *	any interrupt (incl. RFKILL).
-@@ -497,8 +497,6 @@ static inline int iwl_trans_reclaim(struct iwl_trans *trans, int sta_id,
- static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
- 					    int sta_id, int tid)
- {
--	might_sleep();
--
- 	if (trans->state != IWL_TRANS_FW_ALIVE)
- 		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
- 
--- 
-1.7.0.4
-
+Justin P. Mattock
