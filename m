@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36830 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45866 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751641Ab2C0MUS (ORCPT
+	with ESMTP id S1756148Ab2CGOdb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 08:20:18 -0400
-Message-Id: <20120327121921.313750559@sipsolutions.net> (sfid-20120327_142024_785147_A7FB2629)
-Date: Tue, 27 Mar 2012 14:18:37 +0200
+	Wed, 7 Mar 2012 09:33:31 -0500
+Subject: Re: Hw Accel in Secured Mesh No Longer Work
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/5] mac80211: clean up uAPSD TX code
-References: <20120327121835.299635879@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
+In-Reply-To: <1331130686.3519.14.camel@jlt3.sipsolutions.net> (sfid-20120307_153134_073534_E08EB414)
+References: <CAEFj984b_Aihd9hc-dMArPxZPod8eKsxzekLwO74XbTUKGX9LQ@mail.gmail.com>
+	 <CAEFj984gKDRtjP9NJYqjvWCZ=HxwW3DQ036guVY6Vbj=yx1H6g@mail.gmail.com>
+	 <1331105902.3519.2.camel@jlt3.sipsolutions.net>
+	 <CAEFj985EYVeAYef1-G3uVPOxZqwjose9Ge7=MRsbmFWrLNz_RQ@mail.gmail.com>
+	 <CAEFj984tNRXvBL4cCdJAq2VL7_AgeFYDB=w1b=aLy89pCM5UdA@mail.gmail.com>
+	 (sfid-20120307_152224_978018_6FCBF45E)  <1331130686.3519.14.camel@jlt3.sipsolutions.net>
+	 (sfid-20120307_153134_073534_E08EB414)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Mar 2012 15:33:30 +0100
+Message-ID: <1331130810.3519.16.camel@jlt3.sipsolutions.net> (sfid-20120307_153334_963063_A05E6551)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-03-07 at 15:31 +0100, Johannes Berg wrote:
+> Hi,
+> 
+> > > Huh? Well that's odd, maybe there's a race condition and you program the
+> > > key before the peer was added to the device?
+> > 
+> > Not so sure. The adding of key is actually done by the meshd-nl80211
+> > (authsae) daemon running in userspace.
+> > 
+> > https://github.com/cozybit/authsae/blob/master/linux/meshd-nl80211.c
+> > 
+> > /* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
+> > install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
+> 
+> Yeah but that always required a station ... now you have a station but
+> it's not uploaded.
+> 
+> > > What device are you working with?
+> > I am using atheros 11n chipset (ath9k).
+> 
+> Ok.
+> 
+> I think you're probably trying to set a key before the station is set to
+> associated?
 
-Clean up the code formatting and also replace
-the constant 0 by IEEE80211_AC_VO.
+Does meshd-nl80211 set the station flag NL80211_STA_FLAG_AUTHENTICATED
+before the key?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I suppose both should work -- to make HW key working when the station is
+not uploaded yet the key has to be uploaded after the station is
+uploaded ... that'd need to have some hooks in the code.
 
---- a/net/mac80211/tx.c	2012-03-23 11:25:35.000000000 +0100
-+++ b/net/mac80211/tx.c	2012-03-23 14:28:08.000000000 +0100
-@@ -230,9 +230,9 @@ ieee80211_tx_h_dynamic_ps(struct ieee802
- 	 * changed via debugfs, user needs to reassociate manually to have
- 	 * everything in sync.
- 	 */
--	if ((ifmgd->flags & IEEE80211_STA_UAPSD_ENABLED)
--	    && (ifmgd->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
--	    && skb_get_queue_mapping(tx->skb) == 0)
-+	if ((ifmgd->flags & IEEE80211_STA_UAPSD_ENABLED) &&
-+	    (ifmgd->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO) &&
-+	    skb_get_queue_mapping(tx->skb) == IEEE80211_AC_VO)
- 		return TX_CONTINUE;
- 
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-
+johannes
 
