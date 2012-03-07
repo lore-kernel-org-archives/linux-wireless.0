@@ -1,60 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51937 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759710Ab2CGTGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:34 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 18/35] iwlwifi: print DMA stop timeout error only if it happened
-Date: Wed,  7 Mar 2012 09:52:27 -0800
-Message-Id: <1331142764-5750-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200723_487226_22789FDE)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:34908 "EHLO
+	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759211Ab2CGEQI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 23:16:08 -0500
+Message-ID: <4F56E0FB.70109@posedge.com> (sfid-20120307_051612_822922_B870BAAF)
+Date: Wed, 07 Mar 2012 09:45:55 +0530
+From: Vivekananda Holla <vivekanandah@posedge.com>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: requesting information on null frame send during scan in mac80211
+ - linux 3_1_4 code base
+References: <7596c51dab245e8f5cb1e3010943e28b@posedge.com> <CAD2nsn3yp9KetFQHpeLq2R1S_brY=3u+wznCdeGh6i8qwvYCvw@mail.gmail.com>
+In-Reply-To: <CAD2nsn3yp9KetFQHpeLq2R1S_brY=3u+wznCdeGh6i8qwvYCvw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+hi,
 
-iwl_poll_direct_bit() return negative error value on timeout,
-positive values do not indicate an error.
+thanks for the reply. yes, i looked into the latest code and understand 
+the working now. thanks for the input. it really helped
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+thanks and regards
+vivek
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index ef7418d..75bb95e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1219,7 +1219,7 @@ static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans)
-  */
- static int iwl_trans_tx_stop(struct iwl_trans *trans)
- {
--	int ch, txq_id;
-+	int ch, txq_id, ret;
- 	unsigned long flags;
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
-@@ -1232,9 +1232,10 @@ static int iwl_trans_tx_stop(struct iwl_trans *trans)
- 	for (ch = 0; ch < FH_TCSR_CHNL_NUM; ch++) {
- 		iwl_write_direct32(trans,
- 				   FH_TCSR_CHNL_TX_CONFIG_REG(ch), 0x0);
--		if (iwl_poll_direct_bit(trans, FH_TSSR_TX_STATUS_REG,
-+		ret = iwl_poll_direct_bit(trans, FH_TSSR_TX_STATUS_REG,
- 				    FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(ch),
--				    1000))
-+				    1000);
-+		if (ret < 0)
- 			IWL_ERR(trans, "Failing on timeout while stopping"
- 			    " DMA channel %d [0x%08x]", ch,
- 			    iwl_read_direct32(trans,
--- 
-1.7.0.4
+
+
+On 03/06/2012 09:20 PM, Mohammed Shafi wrote:
+> On Sat, Mar 3, 2012 at 12:09 AM,<vivekanandah@posedge.com>  wrote:
+>> hi,
+> hi vivekanandah,
+>
+>> i am new to the linux system and i am hoping that this is the right list to
+>> mail for my query.
+>>
+>> I am presently working on linux kernel 3.1.4 and i was looking into the
+>> mac80211 code and the scan implementation on the same.
+> the present wireless-testing scan state machine is simplified by the
+> johannes's patch
+> http://comments.gmane.org/gmane.linux.kernel.wireless.general/80287
+> and easy to understand
+>
+>> when the scan process is started, the station is supposed to send a null
+>> frame with PM bit set, so that AP can buffer frames to the station.
+>>
+>> However, it is seen in code that when scan is initiated (software scan),
+>> the ieee80211_offchannel_enable_all_ps(local, false); function is called,
+>> since the flag is set to false, the NULL frame will not be sent out. also,
+>> when the scan state changes to leaving operating channel, the vifs interface
+>> is blocked. even here, i see that the flag setting is false for offchannel
+>> Power save and the null frame is not sent out.
+> the current wireless-testing tree does this. please look at
+> ieee80211_start_sw_scan
+> git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>
+>> the comment however just prior to the vifs stop function call indicates that
+>> offchannel settings are already completed at the start of scan process. the
+>> code snippet is shown below:
+>>
+>> /*PS will already be in off-channel mode, we do that once at the beginning
+>> of scanning.*/
+>> ieee80211_offchannel_stop_vifs(local, false);
+>>
+>> i just would like to know why the flag is FALSE in both cases, so we never
+>> send out a null frame to the AP at the start. is this a bug or there is some
+>> deficiency in my current understanding?
+> based on my limited understanding of the previous code, my guess we
+> have in ieee80211_work in work.c and this should send a null func
+> frame. (both started and tmp_channel will be false and NULL
+>
+> if (on_oper_chan != on_oper_chan2) {
+> 				if (on_oper_chan2) {
+> 					/* going off oper channel, PS too */
+> ---->  					ieee80211_offchannel_stop_vifs(local,
+> 								       true);
+> 					ieee80211_hw_config(local, 0);
+> 				} else {
+> 					/* going on channel, but leave PS
+>
+> its best to look at the current wireless-testing tree code, its more simpler.
+>
+>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
 
