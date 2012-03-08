@@ -1,72 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49995 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754975Ab2CDWte convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 17:49:34 -0500
-Received: by iagz16 with SMTP id z16so4782680iag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 14:49:34 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:3029 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751950Ab2CHVBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2012 16:01:18 -0500
+Message-ID: <4F591E14.4010000@broadcom.com> (sfid-20120308_220123_075130_3F20DE2E)
+Date: Thu, 8 Mar 2012 22:01:08 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1330725351-3803-5-git-send-email-arend@broadcom.com>
-References: <1330725351-3803-1-git-send-email-arend@broadcom.com> <1330725351-3803-5-git-send-email-arend@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 5 Mar 2012 09:49:12 +1100
-Message-ID: <CAGRGNgXbkV-OkB5XG8+HqmmxG6f3RfgAkfnb_XxhXYU5+yN6Ug@mail.gmail.com> (sfid-20120304_234937_806805_8506333D)
-Subject: Re: [PATCH 4/7] brcm80211: fmac: initialize host interface drivers
- regardless result
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"Quan, David" <dquan@qca.qualcomm.com>,
+	"Green, Michael" <green@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Problems with regulatory domain support and BCM43224
+References: <20120307194001.GA2506@ubuntu-macmini>
+ <20120308174101.GB28133@ubuntu-macmini>
+ <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
+ <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
+ <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
+ <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com>
+ <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com>
+ <20120308200734.GC28133@ubuntu-macmini>
+In-Reply-To: <20120308200734.GC28133@ubuntu-macmini>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+On 03/08/2012 09:07 PM, Seth Forshee wrote:
+> On Thu, Mar 08, 2012 at 11:51:03AM -0800, Luis R. Rodriguez wrote:
+>> On Thu, Mar 8, 2012 at 11:45 AM, Quan, David<dquan@qca.qualcomm.com>  wrote:
+>>> I think there is to it more than SW.
+>>> Where ever you get this card, is the card tested and regulatory approved for those countries, DFS or not?
+>>
+>> Seth, what driver are you using? I know you are using a BCM43224 card.
+>
+> brcmsmac
+>
+>>> It is possible that this card is only regulatory tested for non DFS channels, but now you enable them for passive.
+>>
+>> That's a good point.
+>>
+>>> This means that yes, you are save and not violate DFS rules because you are in passive mode. However, you are in complete violation if the STA finds an AP on that DFS channel and then connects and transmits as this STA is not allow to transmit on that channel since it is not approved.
+>>
+>> If the driver being used is a supported vendor driver then I'll punt
+>> this to the vendor (Broadcom). If this is the reversed engineered
+>> driver (b43) that Broadcom to this day seems to blindly ignore even
+>> for regulatory, then I'm happy to recommend based on your input to
+>> leave the regulatory domain as-is given that we cannot guarantee what
+>> the vendor meant as they have not done any work on releasing either
+>> documentation or code to help with their regulatory situation.
+>
+> It would be nice if Broadcom could weigh in. Cc-ing Arend.
 
-On Sat, Mar 3, 2012 at 08:55, Arend van Spriel <arend@broadcom.com> wrote:
-> The module init function of brcmfmac calls init functions for SDIO and
-> USB doing driver registration. This patch removes terminating the module
-> init when a driver registration for one host interface fails.
+Hi, Seth
 
-Would it be better to fail the module load if *none* of them succeed -
-there's probably no point in having the module loaded if it's not
-actually hooked up to anything.
+Noticed your email yesterday, but did not get to chime into the 
+conversation. brcmsmac does indeed provide a regulatory hint, which is 
+either from SPROM or hard-coded to "US". Since "X0" is not a known 
+regulatory domain for crda it does not make sense to pass it as a 
+regulatory hint. However, the "full" story is told on linuxwireless.org 
+(see [1]).
 
-You could write the init code like this:
+Gr. AvS
 
-static int __init brcmfmac_init(void)
-{
-       int ret = 0;
-       bool loaded = false;
+[1] http://linuxwireless.org/en/users/Drivers/brcm80211
 
-#ifdef CONFIG_BRCMFMAC_SDIO
-       ret = brcmf_sdio_init();
-       if (!ret)
-               loaded = true;
-
-       // An informative message could go here if it fails
-#endif
-#ifdef CONFIG_BRCMFMAC_USB
-       ret = brcmf_usb_init();
-       if (!ret)
-               loaded = true;
-
-       // An informative message could go here if it fails
-#endif
-
-       if (!loaded)
-               return ret; // or -ENODEV
-
-       return 0;
-}
-
-And you then wouldn't have to change any of the other code.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
