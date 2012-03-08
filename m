@@ -1,71 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:51823 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752604Ab2CFXcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 18:32:36 -0500
-Date: Wed, 7 Mar 2012 00:32:21 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, larry.finger@lwfinger.net,
-	florian@openwrt.org
-Subject: Re: [RFT][PATCH] b43: fix logic in GPIO configuration
-Message-ID: <20120307003221.7664eb4a@milhouse> (sfid-20120307_003239_868541_D5D422ED)
-In-Reply-To: <4F5695CC.3010206@hauke-m.de>
-References: <1331071898-3651-1-git-send-email-zajec5@gmail.com>
-	<4F5695CC.3010206@hauke-m.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/.0Ze0s=_Mfc=J+K_g5NfDBX"; protocol="application/pgp-signature"
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48026 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752089Ab2CHL1A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2012 06:27:00 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com>
+References: <CAHaq0gKf+VE9T15J91rvyxbF8=rNCExTZfE-WcwHjUN1afjnTA@mail.gmail.com>
+	<CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>
+	<4F581AF8.4080001@lwfinger.net>
+	<CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com>
+	<4F585BA9.6020903@amd.com>
+	<2A76B9D36150BE4293842BC2FE8FF165016A31@SCYBEXDAG04.amd.com>
+	<CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com>
+Date: Thu, 8 Mar 2012 19:26:58 +0800
+Message-ID: <CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com> (sfid-20120308_122707_560024_EA961BDD)
+Subject: Re: rt8192cu on USB3
+From: jerome huang <jerome.syno@gmail.com>
+To: "Xu, Andiry" <Andiry.Xu@amd.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/.0Ze0s=_Mfc=J+K_g5NfDBX
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On 8 March 2012 18:32, jerome huang <jerome.syno@gmail.com> wrote:
+> On 8 March 2012 15:23, Xu, Andiry <Andiry.Xu@amd.com> wrote:
+>> I don't know why my email is mangled so I remove all the receivers.
+>> Please reply the mail adding Larry, Sarah and USB list.
+>>
+>>> -----Original Message-----
+>>> From: Andiry Xu [mailto:andiry.xu@amd.com]
+>>> Sent: Thursday, March 08, 2012 3:12 PM
+>>> To: jerome huang
+>>> Cc: Larry Finger; linux-wireless@vger.kernel.org; Sarah Sharp; linux-
+>>> usb@vger.kernel.org
+>>> Subject: Re: rt8192cu on USB3
+>>>
+>>> On 03/08/2012 02:35 PM, jerome huang wrote:
+>>> >
+>>> > I also tried to slow down between each write during firmware upload,
+>>> > and enlarge the ring size in xhci_endpoint_init(),
+>>> > but it seems that the trbs in the ring are not processed and
+>>> > the incoming trb is always queued till ring full.
+>>> >
+>>>
+>>
+>> This is interesting thing. How do you find out the trbs in the ring are
+>> not processed? Do you see handle_tx_event() triggers and urbs are
+>> givenback in the irq handler?
+>>
+>> There is a new version of ring expansion patchset:
+>>
+>> www.spinics.net/lists/linux-usb/msg59391.html
+>>
+>> But I'm not sure if it helps in your case. if the trbs are continuously
+>> queued but without completion, ring expansion will loop until memory is
+>> depleted.
+>>
+>> Thanks,
+>> Andiry
+>>
+>>
+>
+> Hi all,
+> I tried to print more information for firmware upload,
+> and handle_tx_event is triggered and urbs are givenback.
+>
+> This time I found the first "no room on ep ring"
+> is before "Loading firmware file" (line 176)
+> and there is no error during firmware upload,
+> after firmware upload completion,
+> "no room on ep ring" appears continuously (line 264).
+>
+> So the problem is not in firmware upload,
+> but in the other place after firmware upload?
+>
+> Please let me know if you need other debug messages.
+>
+> BR,
+> Jerome
 
-On Tue, 06 Mar 2012 23:55:08 +0100
-Hauke Mehrtens <hauke@hauke-m.de> wrote:
+Hi all,
 
-> This patch did not helped fixing my problem. The ucode still takes over
-> the GPIOs of the buttons with firmware version 666.2. I am getting the
-> following messages:
->=20
-> [   83.620000] b43-phy0: Loading firmware version 666.2 (2011-02-23
-> 01:15:07)
-> [   83.624000] Init value of B43_GPIO_CONTROL: 0x0
+I found a interesting thing.
 
+Here is my original test steps:
+1. plugin 8192 => at this step, modules will be inserted
+2. ifconfig wlan0 up => at this step, firmware will be uploaded
+3. iwlist wlan0 scanning => check if wlan0 works
 
-I think this is caused by b43_gpio_cleanup. Can you try removing that funct=
-ion (or just returning early, for the time being.)
+The original problem occurs at last step,
+there is "always" no ap list result.
 
---=20
-Greetings, Michael.
+And I found a way to make it work "always":
+1. plugin 8192
+2. ifconfig wlan0 up
+3. ifconfig wlan0 down
+4. ifconfig wlan0 up
+5. iwlist wlan0 scanning
+If I up->down->up sequentially, (without scanning after first up),
+and then scanning(step 5),
+it works!
 
-PGP encryption is encouraged / 908D8B0E
+Does this mean the firmware is not transfered or written correctly?
 
---Sig_/.0Ze0s=_Mfc=J+K_g5NfDBX
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPVp6FAAoJEPUyvh2QjYsOgIgP/2QULepEOF8bNmkP8533NdGE
-MvOnQWxBedUPYmgFbuKO186BaweooEUhJuFFql82YX4B60UjfGXQbBNQ/pm8ucbq
-87kjbb/L+K+y0F0BQOcO4fdcnKREdu80JR4BGPdP2ZLMHQwCvizJwXgiM/hO0gE+
-xEVsufwjzf1UNuewfSriCTPeTX6TYTDfn2CfSlIXkLchR5x4lpahpc3qMJ9spRGX
-lumQpTW88c6/GvGSyNgEigByNruw1r4lj/mVpzMwq2DOiR7+UjuauStMyla3yS7W
-TADgcrP3Ye2Tj4HKabZWZGYmbuLAANz7gzN+DNqBXwyjaUyUA1nhdf5RcAW6X3Si
-OEJSBtJbaO19ycP3p00ugL0W7pALl8GX6Z8HAbvqm7YH1ViF9wQw/g7WxsciTxtg
-4Q/RKj+IE7t2ROhbsOcwLB5eTx2enNoC0ASHS6YcuPUfubjjddkvN6s7JQBe+m0t
-81zqzerpZc3iEPYm+cowTD1VsoZ/OA3HDj/YxMZhp78ksT+1AnvYBQ+Y/QaEoqMC
-dRDBGPKBqVjAE2m4dyC6XXm44CyMY7iJDJ7HgdW5DZ929N9lsiLl79e2JuN++IeU
-P8CJ1PWlol6Yvn1S/V0IJdNCC0JORsZSuWOsSEtO1xdgYD7tii8aZwtCCqAy1IHl
-MlIglMEEyvyEu1s4Bns0
-=NrbK
------END PGP SIGNATURE-----
-
---Sig_/.0Ze0s=_Mfc=J+K_g5NfDBX--
+BR,
+Jerome
