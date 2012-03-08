@@ -1,68 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44929 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761777Ab2CPOzK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 10:55:10 -0400
-Message-ID: <4F63543A.2000108@candelatech.com> (sfid-20120316_155519_558028_0F42D668)
-Date: Fri, 16 Mar 2012 07:54:50 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:45183
+	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750993Ab2CHHHD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2012 02:07:03 -0500
+Message-ID: <4F585A7D.8020901@amd.com> (sfid-20120308_080726_711725_E51A5460)
+Date: Thu, 8 Mar 2012 15:06:37 +0800
+From: Andiry Xu <andiry.xu@amd.com>
 MIME-Version: 1.0
-To: Florian Fainelli <florian@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/2] mac80211:  Support getting sta_info stats via ethtool.
-References: <1331833159-12694-1-git-send-email-greearb@candelatech.com> <1331833159-12694-2-git-send-email-greearb@candelatech.com> <1331837531.3432.36.camel@jlt3.sipsolutions.net> <4F623B58.1070106@candelatech.com> <20120316134909.GA2563@tuxdriver.com> <4F634BB2.8050408@openwrt.org>
-In-Reply-To: <4F634BB2.8050408@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: jerome huang <jerome.syno@gmail.com>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	<linux-wireless@vger.kernel.org>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	<linux-usb@vger.kernel.org>
+Subject: Re: rt8192cu on USB3
+References: <CAHaq0gKf+VE9T15J91rvyxbF8=rNCExTZfE-WcwHjUN1afjnTA@mail.gmail.com>	<CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>	<4F581AF8.4080001@lwfinger.net> <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com>
+In-Reply-To: <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/2012 07:18 AM, Florian Fainelli wrote:
-> Hello,
->
-> Le 03/16/12 14:49, John W. Linville a écrit :
->> On Thu, Mar 15, 2012 at 11:56:24AM -0700, Ben Greear wrote:
->>> On 03/15/2012 11:52 AM, Johannes Berg wrote:
->>>> On Thu, 2012-03-15 at 10:39 -0700, greearb@candelatech.com wrote:
->>>>> From: Ben Greear<greearb@candelatech.com>
->>>>>
->>>>> This lets ethtool print out stats related to station
->>>>> interfaces. Does not yet get stats from the underlying
->>>>> driver.
->>>>
->>>> Hmm. What's the advantage of using ethtool over iw, which already has a
->>>> bunch of these numbers?
->>>
->>> Well, ethtool api might be easier for some apps to use,
->>> and perhaps easier for users to read if all they want
->>> are stats.
->>
->> And they can use the same tool for both wired and wireless interfaces
->> -- could be handy.
->
-> iw already provides statistics which are relevant for wireless interfaces. I really don't see the point in also reporting them via ethtool, also it is going to
-> be error prone if someone updates the netlink interface and forgets about the ethtool one.
+FILE QUARANTINED
+----------------
 
-Ethtool provides what it provides.  If it's missing a stat, I or someone else can add it.
-
-And if it's not there, then users can do without or get it elsewhere.
-
-iw does not provide any way to get underlying wifi radio counters, and
-the only other way I've found is to parse various debugfs files that
-are subject to change at a whim.  Ethtool is a step up from that at least.
-
-iw is also not supposed to be screen-scraped, while ethtool stats are a
-fairly easily parsed output so scripts and such could use that.
-
-Thanks,
-Ben
-
-> --
-> Florian
+The original contents of this file have been replaced with
+this message because of its characteristics.
+File name: "Body of Message"
+Virus name: "EngineError"
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
