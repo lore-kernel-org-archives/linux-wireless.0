@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43945 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756789Ab2CLWgu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59855 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756260Ab2CHKI5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 18:36:50 -0400
-Message-ID: <4F5E7A81.8090605@candelatech.com> (sfid-20120312_233654_329992_743B8CF0)
-Date: Mon, 12 Mar 2012 15:36:49 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 8 Mar 2012 05:08:57 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 1/1] ath9k_hw: Fix enabling of MCI and RTT
+Date: Thu, 8 Mar 2012 15:38:45 +0530
+Message-ID: <1331201325-17706-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120308_110902_573042_E1A721B3)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Hacking PCI-ids to allow Atheros NIC into Lenovo laptop.
-References: <4F5E7031.4000401@candelatech.com> <201203122332.16325.chunkeey@googlemail.com>
-In-Reply-To: <201203122332.16325.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/12/2012 03:32 PM, Christian Lamparter wrote:
-> On Monday, March 12, 2012 10:52:49 PM Ben Greear wrote:
->> It seems we bought a Lenovo laptop that has a BIOS lock where it will only
->> support certain wifi NICs based on the pci-id.  It came with an Intel
->> NIC, so at least that ID must work...
->>
->> One way around this might be to over-write the pci-id of an Atheros NIC
->> in it's non-volatile storage to make it look like an Intel, at least until
->> the kernel boots.
->>
->> Then maybe add some sort of ugly code to force the Atheros driver
->> to manage this Intel pci-id (and probably disable the same pci-id in
->> the Intel driver).
->>
->> Has anyone tried doing anything like this?  Any suggestions for a cleaner
->> way to go about this?
-> Been down this road before. First an old X41 Tablet and more recently a HP
-> dv6 laptop.
->
-> I think if you manage to reprogram the cards pciids then you are more than
-> halfway there. Because theoretically, you can get away with adding the fake
-> intel id to ath9k through sysfs:
->
-> echo "8086 dead">  /sys/bus/pci/drivers/ath9k/new_id
-> [for more information, take a look at the new_id sysfs interface]
-> (Of course, you'll have to get rid of the intel driver first)
->
-> That said, in both cases I risked flashing a modded bios. So whitelists are
-> no longer a problem.
->
-> PS: AFAIK [Maybe some QCA dev can verify this]: all AR9300+ have OTP ROMs
-> for the pciids. So you might want to get an older AR9280 for your laptop.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  |   11 +++++++++--
+ drivers/net/wireless/ath/ath9k/reg.h |    1 +
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-We're hoping to use the WPEA-127N.
-
-Thanks for all the info!
-
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index d582cf7..e3598c5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2390,8 +2390,15 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 		if (AR_SREV_9485_OR_LATER(ah))
+ 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
+ 	}
+-	if (AR_SREV_9462(ah))
+-		pCap->hw_caps |= ATH9K_HW_CAP_RTT | ATH9K_HW_CAP_MCI;
++
++	if (AR_SREV_9462(ah)) {
++		ah->ent_mode = REG_READ(ah, AR_ENT_OTP);
++		if (!(ah->ent_mode & AR_ENT_OTP_49GHZ_DISABLE))
++			pCap->hw_caps |= ATH9K_HW_CAP_MCI;
++	}
++
++	if (AR_SREV_9462_20(ah))
++		pCap->hw_caps |= ATH9K_HW_CAP_RTT;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 80b1856..458f81b 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1151,6 +1151,7 @@ enum {
+ #define AR_INTR_PRIO_ASYNC_ENABLE (AR_SREV_9340(ah) ? 0x4094 : 0x40d4)
+ #define AR_ENT_OTP		  0x40d8
+ #define AR_ENT_OTP_CHAIN2_DISABLE               0x00020000
++#define AR_ENT_OTP_49GHZ_DISABLE		0x00100000
+ #define AR_ENT_OTP_MIN_PKT_SIZE_DISABLE		0x00800000
+ 
+ #define AR_CH0_BB_DPLL1		 0x16180
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
