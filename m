@@ -1,38 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:39663 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab2CCPDO (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:56190 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752378Ab2CHR4g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2012 10:03:14 -0500
-Received: by vbbff1 with SMTP id ff1so2305186vbb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Mar 2012 07:03:14 -0800 (PST)
+	Thu, 8 Mar 2012 12:56:36 -0500
+Message-ID: <4F58F2D0.5060805@lwfinger.net> (sfid-20120308_185642_313437_5A5D4AEF)
+Date: Thu, 08 Mar 2012 11:56:32 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4F523162.6070306@openwrt.org>
-References: <1330784226-65563-1-git-send-email-nbd@openwrt.org>
-	<CAD2nsn1epfw=N=Np8Ts+G6yF5JTXZXSE4bOL7_jY9mCZG9Cg4Q@mail.gmail.com>
-	<4F523162.6070306@openwrt.org>
-Date: Sat, 3 Mar 2012 20:33:14 +0530
-Message-ID: <CAD2nsn3=5DrqZ7NJ7g6k4+RYobEFDs25-9eSiBsS1JhPAmc9kA@mail.gmail.com> (sfid-20120303_160318_012386_95838994)
-Subject: Re: [PATCH 1/5] ath9k_hw: use cold instead of warm reset on AR9280
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: jerome huang <jerome.syno@gmail.com>
+CC: "Xu, Andiry" <Andiry.Xu@amd.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: rt8192cu on USB3
+References: <CAHaq0gKf+VE9T15J91rvyxbF8=rNCExTZfE-WcwHjUN1afjnTA@mail.gmail.com> <CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com> <4F581AF8.4080001@lwfinger.net> <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com> <4F585BA9.6020903@amd.com> <2A76B9D36150BE4293842BC2FE8FF165016A31@SCYBEXDAG04.amd.com> <CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com> <CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com>
+In-Reply-To: <CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> What kind of issues do you expect from cold reset in STA mode? OpenWrt
-> has had this patch for a while now, and I didn't notice any issues with it.
-
-fine, would be better if this is done to specifically , like this
-recovers the chip from tx hung like that.
-
+On 03/08/2012 05:26 AM, jerome huang wrote:
 >
-> - Felix
+> I found a interesting thing.
+>
+> Here is my original test steps:
+> 1. plugin 8192 =>  at this step, modules will be inserted
+> 2. ifconfig wlan0 up =>  at this step, firmware will be uploaded
+> 3. iwlist wlan0 scanning =>  check if wlan0 works
+>
+> The original problem occurs at last step,
+> there is "always" no ap list result.
+>
+> And I found a way to make it work "always":
+> 1. plugin 8192
+> 2. ifconfig wlan0 up
+> 3. ifconfig wlan0 down
+> 4. ifconfig wlan0 up
+> 5. iwlist wlan0 scanning
+> If I up->down->up sequentially, (without scanning after first up),
+> and then scanning(step 5),
+> it works!
+>
+> Does this mean the firmware is not transfered or written correctly?
 
+I did a bit of testing with debug level 4. For kernels 3.2 and older, the 
+firmware file is read by the kernel when the driver is loaded using the 
+synchronous method. I confirm that it is not loaded into the device until the 
+interface is brought up. The upload mechanism is supposed to be waiting while 
+the firmware is uploaded, but that may not be happening.
 
+When you did the original 3-step process, was there any delay between steps 2 
+and 3? Does anything change if you wait for 30 sec between steps 2 and 3?
 
--- 
-thanks,
-shafi
+with kernels 3.3 and later, there is a major change in the firmware loading in 
+that an asynchronous method is used. The probe routine run when the driver is 
+loaded places a firmware read request, but does not wait. The interface startup 
+is delayed until the callback routine is entered. This change will not affect 
+when the firmware is loaded into the device.
+
+Larry
