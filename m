@@ -1,68 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:17950 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758425Ab2CAJdG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60156 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754528Ab2CHODV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 04:33:06 -0500
-Date: Thu, 1 Mar 2012 10:22:30 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] mwifiex: endian bug in mwifiex_drv_change_adhoc_chan()
-Message-ID: <20120301072230.GC7152@elgon.mountain> (sfid-20120301_103314_337400_EBD39687)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 8 Mar 2012 09:03:21 -0500
+Message-Id: <20120308140227.275371120@sipsolutions.net> (sfid-20120308_150324_856202_349A82E4)
+Date: Thu, 08 Mar 2012 15:02:07 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/6] mac80211: refactor common auth/assoc setup code
+References: <20120308140202.751490800@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In mwifiex_drv_change_adhoc_chan() we pass channel to
-mwifiex_bss_ioctl_ibss_channel() which sets the high 16 bits.  This
-works on little endian systems but not on big endian ones.  I've changed
-mwifiex_drv_change_adhoc_chan() to use a 16 bit variable.  This matches
-the other functions in the file.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I considered changing mwifiex_change_adhoc_chan() as well but it turns
-out that the function isn't implemented so I just removed the
-definition.
+As associating is possible without first authenticating
+(for FT over DS) association also has to be able to
+switch to the right channel, insert the station entry
+etc. Factor out this common code into a new function
+called ieee80211_prep_connection().
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |  121 +++++++++++++++++++++++++---------------------------
+ 1 file changed, 59 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 52810b1..60a6919 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -909,10 +909,9 @@ int mwifiex_request_scan(struct mwifiex_private *priv,
- 			 struct mwifiex_802_11_ssid *req_ssid);
- int mwifiex_set_user_scan_ioctl(struct mwifiex_private *priv,
- 				struct mwifiex_user_scan_cfg *scan_req);
--int mwifiex_change_adhoc_chan(struct mwifiex_private *priv, int channel);
- int mwifiex_set_radio(struct mwifiex_private *priv, u8 option);
+--- a/net/mac80211/mlme.c	2012-03-08 13:55:22.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-03-08 13:57:09.000000000 +0100
+@@ -3128,6 +3128,60 @@ int ieee80211_max_network_latency(struct
+ 	return 0;
+ }
  
--int mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel);
-+int mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel);
++static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
++				     struct cfg80211_bss *bss, bool assoc)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct sta_info *sta;
++	bool have_sta = false;
++	int err;
++
++	if (WARN_ON(!ifmgd->auth_data && !ifmgd->assoc_data))
++		return -EINVAL;
++
++	if (assoc) {
++		rcu_read_lock();
++		have_sta = sta_info_get(sdata, bss->bssid);
++		rcu_read_unlock();
++	}
++
++	if (!have_sta) {
++		sta = sta_info_alloc(sdata, bss->bssid, GFP_KERNEL);
++		if (!sta)
++			return -ENOMEM;
++	}
++
++	mutex_lock(&local->mtx);
++	ieee80211_recalc_idle(sdata->local);
++	mutex_unlock(&local->mtx);
++
++	/* switch to the right channel */
++	local->oper_channel = bss->channel;
++	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
++
++	if (!have_sta) {
++		/* set BSSID - if STA already there this will be set too */
++		memcpy(ifmgd->bssid, bss->bssid, ETH_ALEN);
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
++
++		if (assoc)
++			sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
++
++		err = sta_info_insert(sta);
++		sta = NULL;
++		if (err) {
++			printk(KERN_DEBUG
++			       "%s: failed to insert STA entry for the AP (error %d)\n",
++			       sdata->name, err);
++			return err;
++		}
++	} else
++		WARN_ON_ONCE(compare_ether_addr(ifmgd->bssid, bss->bssid));
++
++	return 0;
++}
++
+ /* config hooks */
+ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 		       struct cfg80211_auth_request *req)
+@@ -3135,7 +3189,6 @@ int ieee80211_mgd_auth(struct ieee80211_
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_mgd_auth_data *auth_data;
+-	struct sta_info *sta;
+ 	u16 auth_alg;
+ 	int err;
  
- int mwifiex_set_encode(struct mwifiex_private *priv, const u8 *key,
- 		       int key_len, u8 key_index, int disable);
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index b0fbf5d..652d299 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -599,7 +599,7 @@ static int mwifiex_bss_ioctl_ibss_channel(struct mwifiex_private *priv,
-  *          - Start/Join the IBSS
-  */
- int
--mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
-+mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel)
- {
- 	int ret;
- 	struct mwifiex_bss_info bss_info;
-@@ -636,7 +636,7 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
- 	ret = mwifiex_deauthenticate(priv, ssid_bssid.bssid);
+@@ -3201,32 +3254,9 @@ int ieee80211_mgd_auth(struct ieee80211_
+ 	printk(KERN_DEBUG "%s: authenticate with %pM\n",
+ 	       sdata->name, req->bss->bssid);
  
- 	ret = mwifiex_bss_ioctl_ibss_channel(priv, HostCmd_ACT_GEN_SET,
--					     (u16 *) &channel);
-+					     &channel);
+-	mutex_lock(&local->mtx);
+-	ieee80211_recalc_idle(sdata->local);
+-	mutex_unlock(&local->mtx);
+-
+-	/* switch to the right channel */
+-	local->oper_channel = req->bss->channel;
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+-
+-	/* set BSSID */
+-	memcpy(ifmgd->bssid, req->bss->bssid, ETH_ALEN);
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
+-
+-	/* add station entry */
+-	sta = sta_info_alloc(sdata, req->bss->bssid, GFP_KERNEL);
+-	if (!sta) {
+-		err = -ENOMEM;
++	err = ieee80211_prep_connection(sdata, req->bss, false);
++	if (err)
+ 		goto err_clear;
+-	}
+-
+-	err = sta_info_insert(sta);
+-	if (err) {
+-		printk(KERN_DEBUG
+-		       "%s: failed to insert STA entry for the AP %pM (error %d)\n",
+-		       sdata->name, req->bss->bssid, err);
+-		goto err_clear;
+-	}
  
- 	/* Do specific SSID scanning */
- 	if (mwifiex_request_scan(priv, &bss_info.ssid)) {
+ 	err = ieee80211_probe_auth(sdata);
+ 	if (err) {
+@@ -3260,7 +3290,6 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 	struct ieee80211_bss *bss = (void *)req->bss->priv;
+ 	struct ieee80211_mgd_assoc_data *assoc_data;
+ 	struct ieee80211_supported_band *sband;
+-	struct sta_info *sta;
+ 	const u8 *ssidie;
+ 	int i, err;
+ 
+@@ -3385,41 +3414,9 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 
+ 	ifmgd->assoc_data = assoc_data;
+ 
+-	mutex_lock(&local->mtx);
+-	ieee80211_recalc_idle(sdata->local);
+-	mutex_unlock(&local->mtx);
+-
+-	/* switch to the right channel */
+-	local->oper_channel = req->bss->channel;
+-	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+-
+-	rcu_read_lock();
+-	sta = sta_info_get(sdata, req->bss->bssid);
+-	rcu_read_unlock();
+-
+-	if (!sta) {
+-		/* set BSSID */
+-		memcpy(ifmgd->bssid, req->bss->bssid, ETH_ALEN);
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
+-
+-		sta = sta_info_alloc(sdata, req->bss->bssid, GFP_KERNEL);
+-		if (!sta) {
+-			err = -ENOMEM;
+-			goto err_clear;
+-		}
+-
+-		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
+-
+-		err = sta_info_insert(sta);
+-		sta = NULL;
+-		if (err) {
+-			printk(KERN_DEBUG
+-			       "%s: failed to insert STA entry for the AP (error %d)\n",
+-			       sdata->name, err);
+-			goto err_clear;
+-		}
+-	} else
+-		WARN_ON_ONCE(compare_ether_addr(ifmgd->bssid, req->bss->bssid));
++	err = ieee80211_prep_connection(sdata, req->bss, true);
++	if (err)
++		goto err_clear;
+ 
+ 	if (!bss->dtim_period &&
+ 	    sdata->local->hw.flags & IEEE80211_HW_NEED_DTIM_PERIOD) {
+
+
