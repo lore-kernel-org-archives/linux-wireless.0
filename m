@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56759 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758454Ab2CBVrO convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11829 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752342Ab2CHTHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 16:47:14 -0500
-Received: by iagz16 with SMTP id z16so2839680iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 13:47:13 -0800 (PST)
+	Thu, 8 Mar 2012 14:07:44 -0500
+From: "Quan, David" <dquan@qca.qualcomm.com>
+To: "Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"Green, Michael" <green@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: RE: Problems with regulatory domain support and BCM43224
+Date: Thu, 8 Mar 2012 19:07:30 +0000
+Message-ID: <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com> (sfid-20120308_200748_796648_FEA60A93)
+References: <20120307194001.GA2506@ubuntu-macmini>
+ <20120308174101.GB28133@ubuntu-macmini>
+ <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
+In-Reply-To: <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1330724598.9652.4.camel@jlt3.sipsolutions.net>
-References: <1330722280-28879-1-git-send-email-javier@cozybit.com> <1330724598.9652.4.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Fri, 2 Mar 2012 13:46:53 -0800
-Message-ID: <CAPjQAd8+dwYV3QjY-j5TSiV1neY_3ZS+fHQTrbEFYommqev51Q@mail.gmail.com> (sfid-20120302_224722_646886_E418092F)
-Subject: Re: [PATCHv3 1/2] mac80211_hwsim: Add tsf to beacons, probe responses
- and radiotap header.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 2, 2012 at 1:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2012-03-02 at 13:04 -0800, Javier Cardona wrote:
->
->> @@ -667,6 +679,19 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->>       bool ack;
->>       struct ieee80211_tx_info *txi;
->>       u32 _pid;
->> +     struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
->> +     struct mac80211_hwsim_data *data = hw->priv;
->> +     __le64 *tsfpos;
->> +     u16 fc = le16_to_cpu(hdr->frame_control);
->> +     u16 fctypes = fc & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE);
->> +
->> +     if (fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_RESP) ||
->> +         fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) {
->> +             struct ieee80211_hdr_3addr *hdr3 =
->> +                     (struct ieee80211_hdr_3addr *) skb->data;
->> +             tsfpos = (__le64 *) (hdr3 + 1);
->> +             put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
->> +     }
->
-> And here, you can do the same with struct ieee80211_mgmt and don't even
-> need the struct ieee80211_hdr * variable then.
->
-> Also, you should use ieee80211_is_beacon() and ieee80211_is_probe_req().
->
-> Sorry for the incoherent review!
-
-No, thank you for your patience and help.  Working on v5 (how many
-patch revisions can I make before somebody bans me from the list? :)
-
-j
+MSkgRGVwZW5kaW5nIG9uIHdoaWNoIFdXIHNrdSBudW1iZXIgeW91IHNlbGVjdGVkLCBpdCBtYXkg
+YW5kIG1heSBub3Qgc3VwcG9ydCB0aGUgREZTIGNoYW5uZWxzLiBTbyB0aGlzIGlzIG5vdCB0cnVl
+IHRoYXQgd2UgZG8gbm90IHN1cHBvcnQgREZTIGNoYW5uZWxzIGluIFdXIG1vZGUuDQoyKSBUb2Rh
+eSwgSSBkbyBub3QgYmVsaWV2ZSBhdGg5ayBjb2RlIHN1cHBvcnRzIERGUyBkZXRlY3Rpb24uIElm
+IHRoYXQgaXMgd2hhdCB5b3UgbWVhbi4gVGhlcmVmb3JlIFNUQSBtb2RlIHdpbGwgbm90IHN1cHBv
+cnQgREZTIGRldGVjdGlvbi4gSG93ZXZlciwgU1RBIGRvZXMgc3VwcG9ydCBERlMgY2hhbm5lbHMu
+IERGUyBjaGFubmVsIHN1cHBvcnQgdnMgREZTIGRldGVjdGlvbiBzdXBwb3J0IGlzIHR3byBkaWZm
+ZXJlbnQgdGhpbmdzLiBERlMgY2hhbm5lbCBzdXBwb3J0IGFzIGEgc2xhdmUgZGV2aWNlLCBvbmx5
+IGhhcyB0byBkbyBwYXNzaXZlIHNjYW5uaW5nLg0KDQpMZXQgbWUga25vdyBpZiB0aGF0IGFuc3dl
+cnMgeW91ciBxdWVzdGlvbnMuDQpEYXZpZA0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQpGcm9tOiBtY2dyb2ZAZ21haWwuY29tIFttYWlsdG86bWNncm9mQGdtYWlsLmNvbV0gT24gQmVo
+YWxmIE9mIEx1aXMgUi4gUm9kcmlndWV6DQpTZW50OiBUaHVyc2RheSwgTWFyY2ggMDgsIDIwMTIg
+MTA6NTMgQU0NClRvOiBTZXRoIEZvcnNoZWU7IFF1YW4sIERhdmlkOyBHcmVlbiwgTWljaGFlbA0K
+Q2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSm9oYW5uZXMgQmVyZw0KU3ViamVj
+dDogUmU6IFByb2JsZW1zIHdpdGggcmVndWxhdG9yeSBkb21haW4gc3VwcG9ydCBhbmQgQkNNNDMy
+MjQNCg0KRGF2aWQsIE1pY2hhZWwsDQoNCmJlbG93IGlzIGEgdGhyZWFkIG9uIHdvcmxkIHJlZ3Vs
+YXRvcnkgZG9tYWlucyBhbmQgREZTLiBUaGlzIGlzIGEgcHVibGljIHRocmVhZCBzbyByZXBseWlu
+ZyB0byB0aGlzIGlzIHB1YmxpYy4gVGhlIHF1ZXN0aW9uIGlzIHNpbXBsZToNCndoeSBub3QgYWRk
+IERGUyBjaGFubmVscyB0byB0aGUgd29ybGQgcmVndWxhdG9yeSBkb21haW4gcHJvdmlkZWQgdGhh
+dA0KMSkgd2Ugb25seSBwYXNzaXZlIHNjYW4gb24gdGhlbSAyKSBTVEEgZG9lcyBzdXBwb3J0IERG
+UyBzdXBwb3J0LiBJdCBzZWVtcyBsb2dpY2FsIHRvIG1lIG5vdyB0aGF0IHRoaXMgc2hvdWxkIGJl
+IGVuYWJsZWQsIGJ1dCBJIGNhbid0IHJlY2FsbCBpZiBwZXJoYXBzIEkgYW0gZm9yZ2V0dGluZyBz
+b21ldGhpbmcuDQoNClRoZSBiZWFjb24gaGludCBjb2RlIHdlIGhhdmUsIHdoaWNoIGVuYWJsZXMg
+cmFkaWF0aW9uIHVwb24gZmluZGluZyBhIGJlYWNvbiBmcm9tIGFuIEFQIG9uIGEgNSBHSHogY2hh
+bm5lbCBvbmx5IGRvZXMgYmVhY29uIGhpbnRzIGZvciBub24tREZTIGNoYW5uZWxzLCBzbyBhIGRl
+dmljZSB1c2luZyB0aGUgd29ybGQgcmVndWxhdG9yeSBkb21haW4gaXMgZ3VhcmFudGVlZCB0byBu
+b3QgaW5pdGlhdGUgcmFkaWF0aW9uIG9uIHRoZXNlIGNoYW5uZWxzLg0KDQoNClNldGgsIG15IHJl
+c3BvbnNlIHRvIHlvdSBiZWxvdy4NCg0KT24gVGh1LCBNYXIgOCwgMjAxMiBhdCA5OjQxIEFNLCBT
+ZXRoIEZvcnNoZWUgPHNldGguZm9yc2hlZUBjYW5vbmljYWwuY29tPiB3cm90ZToNCj4gQXMgSSB1
+bmRlcnN0YW5kIGl0LCB0aGUgREZTIGNoYW5uZWxzIGFyZW4ndCBpbmNsdWRlZCBpbiB0aGUgd29y
+bGQgDQo+IGRvbWFpbiBiZWNhdXNlIExpbnV4IGRvZXMgbm90IHlldCBmdWxseSBzdXBwb3J0IERG
+Uy4NCg0KQSBTVEEgZGV2aWNlIGNhbiBjb25uZWN0IHRvIGEgREZTIEFQIHdoZW4gdGhlIFNUQSBk
+ZXZpY2UgZG9lcyBoYXZlIHRob3NlIERGUyBjaGFubmVscyBhcyBwYXJ0IG9mIGl0cyB3b3JsZCBy
+ZWd1bGF0b3J5IGRvbWFpbiwgYnV0IHRoZSBTVEEgd2lsbCBwYXNzaXZlbHkgc2NhbiBvbiB0aG9z
+ZSBjaGFubmVscyBnaXZlbiB0aGF0IHNlbmRpbmcgYSBwcm9iZSByZXF1ZXN0IGlzIGFjdGl2ZSBy
+YWRpYXRpb24gYW5kIGFjdGl2ZSByYWRpYXRpb24gcmVxdWlyZXMgYSBiaXQgb2YgY29kZSB3aGlj
+aCBpcyBub3QgeWV0IGNvbXBsZXRlIGFuZCBvbmx5IHVzZWQgYXMgYSBBUC4gWW91IGFyZSByaWdo
+dCB0aG91Z2ggdGhhdCB0aGUgTGludXggcmVndWxhdG9yeSBjb2RlIHRob3VnaCBkb2VzIG5vdCBp
+bmNsdWRlIGFueSBERlMgY2hhbm5lbHMgaW4gdGhlIHdvcmxkIHJlZ3VsYXRvcnkgZG9tYWluLiBU
+aGUgd29ybGQgcmVndWxhdG9yeSBkb21haW4gaXMgdGhlIG1hdGhlbWF0aWNhbCBpbnRlcnNlY3Rp
+b24gb2YgYWxsIHRoZSByZWd1bGF0b3J5IGRvbWFpbnMgaW4gdGhlIHdvcmxkIChzZWUgaW50ZXJz
+ZWN0LmMgb24gQ1JEQSkgYnV0IGEgZmV3IHNldCBvZiBjaGFubmVscyB3ZXJlIGFkZGVkIGFzIHdl
+bGwgd2hpY2ggYXJlIG5vdCBERlMgd2l0aCB0aGUgY29uZGl0aW9uIHRoYXQgd2UgZG8gcGFzc2l2
+ZSBzY2Fucy4NCldlIGRpZCByZW1vdmUgdGhlIERGUyBjaGFubmVscyBjb21wbGV0ZWx5Lg0KDQo+
+IEJ1dCBJIGNhbiB0aGVuIHNwZWNpZnkgYQ0KPiBkb21haW4gdGhhdCdzIGtub3duIHRvIHJlcXVp
+cmUgREZTIG9uIHRoZXNlIGNoYW5uZWxzLCBhbmQgdGhleSBhcmUgDQo+IGVuYWJsZWQuIFRoaXMg
+c2VlbXMgaWxsb2dpY2FsLiBJZiBwYXNzaXZlIHNjYW5uaW5nIGlzIG9rYXkgd2hlbiB3ZSANCj4g
+a25vdyBERlMgaXMgcmVxdWlyZWQsIHdoeSBjYW4ndCBpdCBiZSBlbmFibGVkIGluIHRoZSB3b3Js
+ZCBkb21haW4gd2hlbiANCj4gd2Ugc2ltcGx5IGRvbid0IGtub3cgaWYgaXQncyByZXF1aXJlZD8N
+Cg0KSXRzIGEgZmFpciBwb2ludCBhbmQgZ2l2ZW4gdGhlIHdheSB3ZSBoYW5kbGUgYmVhY29uIGhp
+bnRzIGFuZCBub3QgZW5hYmxpbmcgdGhlbSBmb3IgREZTIGNoYW5uZWxzIGF0IGFsbCwgYW5kIGlm
+IHdlIG9ubHkgcGFzc2l2ZWx5IHNjYW4gZm9yIERGUyBjaGFubmVscyBJIHRoaW5rIHRoaXMgc2hv
+dWxkIGJlIGdvb2QuDQoNCiAgTHVpcw0K
