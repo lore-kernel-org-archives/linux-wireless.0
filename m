@@ -1,67 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:37477 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753128Ab2C0Lv2 convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:59620 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752145Ab2CHVHS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 07:51:28 -0400
-Received: by pbcun15 with SMTP id un15so143426pbc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2012 04:51:27 -0700 (PDT)
+	Thu, 8 Mar 2012 16:07:18 -0500
+Received: by iagz16 with SMTP id z16so1208263iag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 13:07:18 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1332829680-32457-1-git-send-email-machen@suse.com>
-References: <1332829680-32457-1-git-send-email-machen@suse.com>
-Date: Tue, 27 Mar 2012 13:51:27 +0200
-Message-ID: <CAGXE3d9LXZP+DJzU18xc1MYo9xEAD0UX9gZC6NUgCOa12RzsGg@mail.gmail.com> (sfid-20120327_135132_244128_5B9F671D)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2x00dev: move rfkill_polling
- register to proper place
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "Chen, Chien-Chia" <machen@suse.com>
-Cc: IvDoorn@gmail.com, users@rt2x00.serialmonkey.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4F591E14.4010000@broadcom.com>
+References: <20120307194001.GA2506@ubuntu-macmini> <20120308174101.GB28133@ubuntu-macmini>
+ <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
+ <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
+ <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
+ <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com>
+ <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com>
+ <20120308200734.GC28133@ubuntu-macmini> <4F591E14.4010000@broadcom.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 8 Mar 2012 13:06:57 -0800
+Message-ID: <CAB=NE6XnorRDEu976uMkPFNKHQjhRT0Craf3ZjL9dYysPjmQng@mail.gmail.com> (sfid-20120308_220723_987695_2E3A210E)
+Subject: Re: Problems with regulatory domain support and BCM43224
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>,
+	"Quan, David" <dquan@qca.qualcomm.com>,
+	"Green, Michael" <green@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 27, 2012 at 8:28 AM, Chen, Chien-Chia <machen@suse.com> wrote:
-> Move rt2x00rfkill_register(rt2x00dev) to rt2x00lib_probe_dev().
-> It fixes of starting rfkill_poll function at the right time if
-> sets hard rfkill block and reboot. rt2x00mac_rfkill_poll should
-> be starting before bringing up the wireless interface.
+On Thu, Mar 8, 2012 at 1:01 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 03/08/2012 09:07 PM, Seth Forshee wrote:
+>>
+>> On Thu, Mar 08, 2012 at 11:51:03AM -0800, Luis R. Rodriguez wrote:
+>>>
+>>> On Thu, Mar 8, 2012 at 11:45 AM, Quan, David<dquan@qca.qualcomm.com>
+>>> Â wrote:
+>>>>
+>>>> I think there is to it more than SW.
+>>>> Where ever you get this card, is the card tested and regulatory approved
+>>>> for those countries, DFS or not?
+>>>
+>>>
+>>> Seth, what driver are you using? I know you are using a BCM43224 card.
+>>
+>>
+>> brcmsmac
+>>
+>>>> It is possible that this card is only regulatory tested for non DFS
+>>>> channels, but now you enable them for passive.
+>>>
+>>>
+>>> That's a good point.
+>>>
+>>>> This means that yes, you are save and not violate DFS rules because you
+>>>> are in passive mode. However, you are in complete violation if the STA finds
+>>>> an AP on that DFS channel and then connects and transmits as this STA is not
+>>>> allow to transmit on that channel since it is not approved.
+>>>
+>>>
+>>> If the driver being used is a supported vendor driver then I'll punt
+>>> this to the vendor (Broadcom). If this is the reversed engineered
+>>> driver (b43) that Broadcom to this day seems to blindly ignore even
+>>> for regulatory, then I'm happy to recommend based on your input to
+>>> leave the regulatory domain as-is given that we cannot guarantee what
+>>> the vendor meant as they have not done any work on releasing either
+>>> documentation or code to help with their regulatory situation.
+>>
+>>
+>> It would be nice if Broadcom could weigh in. Cc-ing Arend.
+>
+>
+> Hi, Seth
+>
+> Noticed your email yesterday, but did not get to chime into the
+> conversation. brcmsmac does indeed provide a regulatory hint, which is
+> either from SPROM or hard-coded to "US". Since "X0" is not a known
+> regulatory domain for crda it does not make sense to pass it as a regulatory
+> hint. However, the "full" story is told on linuxwireless.org (see [1]).
 
-Looks reasonable to me. However, you should include John Linville in future
-patch submissions (if your intention is to get them merged :D and not only
-reviewed).
+The Linux kernel allows you to define custom regulatory domains, the
+ath module uses these, it defines 13 of them. You can review that code
+for an example of how to use them. So your X0 can still be used, you
+just have to define the data structure.
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-
-> Signed-off-by: Kevin Chou <kevin.chou@mediatek.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +-----
->  1 files changed, 1 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index fc9901e..90cc5e7 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -1062,11 +1062,6 @@ static int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
->
->        set_bit(DEVICE_STATE_INITIALIZED, &rt2x00dev->flags);
->
-> -       /*
-> -        * Register the extra components.
-> -        */
-> -       rt2x00rfkill_register(rt2x00dev);
-> -
->        return 0;
->  }
->
-> @@ -1210,6 +1205,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
->        rt2x00link_register(rt2x00dev);
->        rt2x00leds_register(rt2x00dev);
->        rt2x00debug_register(rt2x00dev);
-> +       rt2x00rfkill_register(rt2x00dev);
->
->        return 0;
->
-> --
-> 1.7.3.4
->
+  Luis
