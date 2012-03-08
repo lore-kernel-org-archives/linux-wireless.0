@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173011pub.verizon.net ([206.46.173.11]:51799 "EHLO
-	vms173011pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754077Ab2CMFNs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 01:13:48 -0400
-Received: from vznit170064 ([unknown] [192.168.1.3]) by vms173011.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0M0T004N92EFT110@vms173011.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Mon, 12 Mar 2012 23:13:28 -0500 (CDT)
-Date: Mon, 12 Mar 2012 23:13:27 -0500 (CDT)
-From: alupu@verizon.net
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Message-id: <150212.391479.1331612008032.JavaMail.root@vznit170064> (sfid-20120313_061352_467414_39C96086)
-Subject: Re: r8712u staging in kernel 3.2.9
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:42781 "EHLO
+	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753409Ab2CHMOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2012 07:14:22 -0500
+Received: by lagv3 with SMTP id v3so485403lag.41
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 04:14:19 -0800 (PST)
+Message-ID: <1331208473.18015.58.camel@cumari> (sfid-20120308_131425_780277_48A143CF)
+Subject: Re: Does anybody know what acx stand for?
+From: Luciano Coelho <coelho@ti.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Yingang Fu <yingang.fu@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 08 Mar 2012 14:07:53 +0200
+In-Reply-To: <CAGRGNgVEomseHmomskgAH2HDtPuTZZwvBRANHM0cQWdxhxRa-g@mail.gmail.com>
+References: <CAHPDcRvjNYO0UWdw=+jc9JghdQXJtNcBtXEEPiPvyV+TsJcgnA@mail.gmail.com>
+	 <CAGRGNgVEomseHmomskgAH2HDtPuTZZwvBRANHM0cQWdxhxRa-g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > On 03/12/12, 8:54 PM Larry Finger wrote:
+On Thu, 2012-03-08 at 22:17 +1100, Julian Calaby wrote: 
+> Hi,
+> 
+> On Thu, Mar 8, 2012 at 17:39, Yingang Fu <yingang.fu@gmail.com> wrote:
+> > hi, all
+> >
+> > Does anybody know what acx stand for?  The prefix often used in acx.c
+> 
+> I believe that it's part of a code name for TI wireless chips or some
+> part of them.
+> 
+> IIRC the old TI 802.11bg PCI cards were known as ACX111 cards and the
+> newer wl12xx cards also use these initials to identify part of the
+> communications protocol used to talk to the chips.
 
-> You need to use YOUR essid and WEP key.
-> Once you enter the 'iwconfig wlan0 essid xxxxxx', that triggers
-> the association step, and it will never be able to see MY AP from your location.
-> After association, then entering the WEP key will start the authentication.
-> Similarly, I think it will not report back the essid unless 
-> that AP has been seen in a scan, but that is hard to test.
-> Please try again using your values.
+Yes, this is correct.  The naming ACX is legacy from the old drivers
+and, even though nowadays there is hardly if anything in common, the
+name remains.  In practice, the "ACX commands" in the wl12xx driver is
+mostly about firmware configuration, while the "CMD commands" are mostly
+about actions.  This is not so clearcut though.
 
-I did try that numerous times. To paraphrase you, I'm not stupid!
-I replaced _your_ values in my report because you decided to out them
-for public consumption anyway and also to be able to compare our
-logs line by line more easily.
+-- 
+Cheers,
+Luca.
 
-Please trust me,
-IT DOES NOT WORK.
-I can plug in my trusted values (validated to work with other computers
-and my AP) in any combination,
- iwconfig wlan0 essid ...
- iwconfig wlan0 key restricted ...
- iwconfig wlan0 essid ... key restricted ...
-
-IT JUST DOES NOT WORK.
-Try to absorb this info like a man.
-
-Regards,
--- Alex
