@@ -1,92 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15403 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932150Ab2CEPAp (ORCPT
+Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:4155 "EHLO
+	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755009Ab2CHVku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 10:00:45 -0500
-Message-ID: <4F54D517.2090001@qca.qualcomm.com> (sfid-20120305_160056_773838_E1B333ED)
-Date: Mon, 5 Mar 2012 20:30:39 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Thu, 8 Mar 2012 16:40:50 -0500
+Message-ID: <4F59275B.2010309@gmail.com> (sfid-20120308_224052_693506_3362D548)
+Date: Thu, 08 Mar 2012 22:40:43 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<senthilb@qca.qualcomm.com>, <vthiagar@qca.qualcomm.com>,
-	<rodrigue@qca.qualcomm.com>,
-	Rajkumar_contact <rmanohar@qca.qualcomm.com>,
-	"Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
-Subject: Re: [RFC 1/2] ath9k: use ieee80211_free_txskb
-References: <d053a9a1ec34c2e1b15cf50b272ba7863fb17088.1330360738.git.chunkeey@googlemail.com> <4F4F0B83.9050203@qca.qualcomm.com> <4F4F60A0.5040006@qca.qualcomm.com> <4F4F7DC2.8030204@qca.qualcomm.com>
-In-Reply-To: <4F4F7DC2.8030204@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 3.3 v2] rt2x00: fix random stalls
+References: <20120307183103.GB15839@redhat.com>
+In-Reply-To: <20120307183103.GB15839@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christian,
+Hi Stanislaw,
 
-ping
+On 03/07/12 19:31, Stanislaw Gruszka wrote:
+> Is possible that we stop queue and then do not wake up it again,
+> especially when packets are transmitted fast. That can be easily
+> reproduced with modified tx queue entry_num to some small value e.g. 16.
+> 
+> If mac80211 already hold local->queue_stop_reason_lock, then we can wait
+> on that lock in both rt2x00queue_pause_queue() and
+> rt2x00queue_unpause_queue(). After drooping ->queue_stop_reason_lock
+> is possible that __ieee80211_wake_queue() will be performed before
+> __ieee80211_stop_queue(), hence we stop queue and newer wake up it
+> again.
+> 
+> Another race condition is possible when between rt2x00queue_threshold()
+> check and rt2x00queue_pause_queue() we will process all pending tx
+> buffers on different cpu. This might happen if for example intterrupt
+> will be triggered on cpu performing rt2x00mac_tx().
+> 
+> To prevent race conditions serialize pause/unpause by queue->tx_lock.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+> v1 -> v2:
+>  - use spin_lock_bh
+>  - serialize also rt2x00queue_threshold()
+> 
+>  drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +++++-
+>  drivers/net/wireless/rt2x00/rt2x00mac.c |    7 +++++++
+>  2 files changed, 12 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index 49a51b4..61a5042 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -430,10 +430,14 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+>  	/*
+>  	 * If the data queue was below the threshold before the txdone
+>  	 * handler we must make sure the packet queue in the mac80211 stack
+> -	 * is reenabled when the txdone handler has finished.
+> +	 * is reenabled when the txdone handler has finished. This has to be
+> +	 * serialized with rt2x00mac_tx(), otherwise we can wake up queue
+> +	 * before it was stopped.
+>  	 */
+> +	spin_lock_bh(&entry->queue->tx_lock);
+>  	if (!rt2x00queue_threshold(entry->queue))
+>  		rt2x00queue_unpause_queue(entry->queue);
+> +	spin_unlock_bh(&entry->queue->tx_lock);
+>  }
+>  EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
+>  
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> index ede3c58..923702c 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> @@ -152,13 +152,20 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, false)))
+>  		goto exit_fail;
+>  
+> +	/*
+> +	 * Pausing queue has to be serialized with rt2x00lib_txdone() .
+> +	 */
+> +	spin_lock(&queue->tx_lock);
+>  	if (rt2x00queue_threshold(queue))
+>  		rt2x00queue_pause_queue(queue);
+> +	spin_unlock(&queue->tx_lock);
+>  
+>  	return;
+>  
+>   exit_fail:
+> +	spin_lock(&queue->tx_lock);
+>  	rt2x00queue_pause_queue(queue);
+> +	spin_unlock(&queue->tx_lock);
+>   exit_free_skb:
+>  	ieee80211_free_txskb(hw, skb);
+>  }
 
-On Thursday 01 March 2012 07:16 PM, Mohammed Shafi Shajakhan wrote:
-> On Thursday 01 March 2012 05:12 PM, Mohammed Shafi Shajakhan wrote:
->> On Thursday 01 March 2012 11:09 AM, Mohammed Shafi Shajakhan wrote:
->>> Hi Christian,
->>>
->>> On Monday 27 February 2012 09:40 PM, Christian Lamparter wrote:
->>>> With the new tx status API: "mac80211: implement wifi TX status"
->>>> All skb originating from mac80211 needs to be given back to mac80211.
->>>>
->>>> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
->>>> ---
->>>> It's high time we change all calls in the tx-path from
->>>> dev_kfree_skb into ieee80211_free_txskb.
->>>>
->>>> The call in ath9k_tx is straightforward, but the one in
->>>> ath_tx_setup_buffer gives me headaches. I'm not sure if
->>>> we even need to check bf->bf_state.bfs_paprd at this
->>>> stage since ath_tx_start_dma sets bf->bf_state.bfs_paprd
->>>> "after" calling ath_tx_setup_buffer?!
->>>
->>> yes, i think its a problem, we cannot exactly say its the skb from
->>> mac80211 (or) its our PAPRD skb. though with the current code(as the
->>> PAPRD) is disabled the skb would be always from mac80211. let us see if
->>> we have some good solution.
->>
->>
->> got some idea, need to make sure this works perfectly, paprd frames are
->> not aggregated, so we can look only at the non-aggregated path.
->>
->> lets ignore aggregated path:
->>
->> *ath_tx_form_aggr
->> *ath_tx_send_ampdu
->>
->>
->> non-aggregated path :
->>
->> *ath_tx_start_dma
->> *ath_send_normal
->>
->> -> 'ath_tx_setup_buffer' called from 'ath_tx_start_dma' can have a
->> 'is_paprd' check based on 'txctl->paprd' which holds which chain we are
->> sending PAPRD frame.
->>
->> -> 'ath_send_normal' called from
->> -ath_tx_start_dma ( then 'bf' should be valid and we would not have
->> called 'ath_tx_setup_buffer'
->> -ath_tx_flush_tid ( which is an aggregation path) ignore it.
->>
->>
->> attached rough patch for ath9k, need to be compiled and tested. i will
->> also analyze if this can be done in a better way or any flaws in it
->>
->
-> compilation fails with previous patch, forgot to declare the field in
-> the declaration, attached patch passes compilation.
->
->
+I'm sorry, but I'm still not convinced that we can use spin_lock_bh in
+one place of the code and then spin_lock in another place of the code,
+using the *same* spinlock.
+I always use the cheat sheet shown in:
+http://www.kernel.org/pub/linux/kernel/people/rusty/kernel-locking/c214.html
 
-would you like me to test this patch, i can just ran a test parallel y 
-enabling PAPRD,with this proposed patch.
+which to me shows that by definition we should be using spin_lock_bh in
+all cases now, the new ones and the existing cases where we lock tx_lock.
 
--- 
-thanks,
-shafi
+---
+Gertjan
