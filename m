@@ -1,82 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:52407 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758448Ab2CFKGq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 05:06:46 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mickflemm@gmail.com
-Subject: [PATCH 2/2] ath5k: do not re-run AGC calibration periodically
-Date: Tue,  6 Mar 2012 11:06:38 +0100
-Message-Id: <1331028398-27417-2-git-send-email-nbd@openwrt.org> (sfid-20120306_110650_623356_6506746F)
-In-Reply-To: <1331028398-27417-1-git-send-email-nbd@openwrt.org>
-References: <1331028398-27417-1-git-send-email-nbd@openwrt.org>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:32841 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753641Ab2CHCfk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Mar 2012 21:35:40 -0500
+Received: by obbuo6 with SMTP id uo6so38251obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2012 18:35:39 -0800 (PST)
+Message-ID: <4F581AF8.4080001@lwfinger.net> (sfid-20120308_033543_964084_12BE301B)
+Date: Wed, 07 Mar 2012 20:35:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: jerome huang <jerome.syno@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rt8192cu on USB3
+References: <CAHaq0gKf+VE9T15J91rvyxbF8=rNCExTZfE-WcwHjUN1afjnTA@mail.gmail.com> <CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>
+In-Reply-To: <CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All other Atheros drivers run the AGC gain calibration and DC offset
-calibration only after reset. Running them periodically has caused stability
-issues on some (primarily AR2315/2413/5413/5414 based) devices, leading to
-messages such as:
+On 03/07/2012 08:16 PM, jerome huang wrote:
+> log:
+> [53614.238023] Compat-wireless backport release: compat-wireless-v3.2-1-s
+> [53614.244729] Backport based on linux-stable.git v3.2
+> [53614.368074] alg: No test for arc4 (arc4-generic)
+> [53614.402781] cfg80211: Calling CRDA to update world regulatory domain
+> [53614.498603] rtl8192cu 3-3:1.0: usb_probe_interface
+> [53614.503552] rtl8192cu 3-3:1.0: usb_probe_interface - got id
+> [53614.509920] rtl8192cu: rtl8192cu: Chip version 0x11
+> [53615.359336] rtl8192cu: MAC address: 08:10:74:f1:a1:0f
+> [53615.364575] rtl8192cu: Board Type 0
+> [53615.400583] rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
+> [53615.408918] usbcore: registered new interface driver rtl8192cu
+> [53652.483311] rtl8192cu: MAC auto ON okay!
+> [53652.887348] rtl8192cu: Tx queue select: 0x05
+> [53652.921326] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+>
+> And I'm sure the function rtl_block_fw_writeN is used for firmware uploading.
+>
+> On 8 March 2012 10:03, jerome huang<jerome.syno@gmail.com>  wrote:
+>> Hi,
+>>
+>> I found a problem just like in the older discussion "Question about
+>> error from xhci-hcd",
+>> there was a xhci error "no room on ep ring" when plugin rtl8192cu on USB3.
+>> (it works on USB2)
+>>
+>> After applying Larry's patch "rtlwifi: rtl8192cu: Change firmware
+>> upload to use block writes",
+>> I still get the same error "no room on ep ring".
+>>
+>> But under the same compat-wireless version,
+>> rt8712 works on USB3.
+>>
+>> Does anyone still encounter this problem after applying this patch?
+>> or do I miss something/patches?
 
-ath5k phy0: gain calibration timeout (2462MHz)
-ath5k phy0: calibration of channel 11 failed
+This problem is in the USB system, not in the wireless driver. Keep me as a Cc, 
+but send mail to Sarah Sharp <sarah.a.sharp@linux.intel.com> and
+linux-usb@vger.kernel.org. They will tell you what debugging is needed.
 
-Related bug reports:
-https://dev.openwrt.org/ticket/10574
-https://bugzilla.redhat.com/show_bug.cgi?id=795141
+The patch was an attempt to minimize the number of writes needed to upload the 
+firmware, but it had no effect; however, it was still a good change.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Acked-by: Nick Kossifidis <mickflemm@gmail.com>
----
- drivers/net/wireless/ath/ath5k/phy.c |   34 +++++++++-------------------------
- 1 files changed, 9 insertions(+), 25 deletions(-)
+I'm confused about one statement you made. There is no rt8712 driver, but there 
+is one named r8712u; however, it controls a completely different device than 
+rtl8192cu. Do you have both devices?
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index e1f8613..3a28454 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1871,31 +1871,15 @@ ath5k_hw_phy_calibrate(struct ath5k_hw *ah,
- 		ret = 0;
- 	}
- 
--	/* On full calibration do an AGC calibration and
--	 * request a PAPD probe for gainf calibration if
--	 * needed */
--	if (ah->ah_cal_mask & AR5K_CALIBRATION_FULL) {
--
--		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_AGCCTL,
--					AR5K_PHY_AGCCTL_CAL);
--
--		ret = ath5k_hw_register_timeout(ah, AR5K_PHY_AGCCTL,
--			AR5K_PHY_AGCCTL_CAL | AR5K_PHY_AGCCTL_NF,
--			0, false);
--		if (ret) {
--			ATH5K_ERR(ah,
--				"gain calibration timeout (%uMHz)\n",
--				channel->center_freq);
--		}
--
--		if ((ah->ah_radio == AR5K_RF5111 ||
--			ah->ah_radio == AR5K_RF5112)
--			&& (channel->hw_value != AR5K_MODE_11B))
--			ath5k_hw_request_rfgain_probe(ah);
--	}
--
--	/* Update noise floor
--	 * XXX: Only do this after AGC calibration */
-+	/* On full calibration request a PAPD probe for
-+	 * gainf calibration if needed */
-+	if ((ah->ah_cal_mask & AR5K_CALIBRATION_FULL) &&
-+	    (ah->ah_radio == AR5K_RF5111 ||
-+	     ah->ah_radio == AR5K_RF5112) &&
-+	    channel->hw_value != AR5K_MODE_11B)
-+		ath5k_hw_request_rfgain_probe(ah);
-+
-+	/* Update noise floor */
- 	if (!(ah->ah_cal_mask & AR5K_CALIBRATION_NF))
- 		ath5k_hw_update_noise_floor(ah);
- 
--- 
-1.7.3.2
-
+Larry
