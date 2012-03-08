@@ -1,97 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33846 "EHLO
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56585 "EHLO
 	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757385Ab2CBSQZ convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1753299Ab2CHURu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 13:16:25 -0500
-Received: by iagz16 with SMTP id z16so2602210iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 10:16:24 -0800 (PST)
+	Thu, 8 Mar 2012 15:17:50 -0500
+Received: by iagz16 with SMTP id z16so1153433iag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 12:17:50 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1330711566.8542.23.camel@jlt3.sipsolutions.net>
-References: <1330645207-13964-1-git-send-email-javier@cozybit.com>
- <1330645207-13964-3-git-send-email-javier@cozybit.com> <1330674633.3367.3.camel@jlt3.sipsolutions.net>
- <CAPjQAd9CfNiLjqQh_ONaF89o7qQpuZrhRnysNP_wDXrAe+tYgA@mail.gmail.com> <1330711566.8542.23.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Fri, 2 Mar 2012 10:16:04 -0800
-Message-ID: <CAPjQAd8x8iq2uSOF5FGLH0HvogUVwNvyiemf2LTrPjrGv8eb-Q@mail.gmail.com> (sfid-20120302_191629_000739_BF6377E1)
-Subject: Re: [PATCHv2 3/3] mac80211_hwsim: Implement ieee80211_ops:tx_last_beacon
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: devel@lists.open80211s.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20120308200734.GC28133@ubuntu-macmini>
+References: <20120307194001.GA2506@ubuntu-macmini> <20120308174101.GB28133@ubuntu-macmini>
+ <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
+ <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
+ <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
+ <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com>
+ <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com> <20120308200734.GC28133@ubuntu-macmini>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Date: Thu, 8 Mar 2012 12:17:30 -0800
+Message-ID: <CAB=NE6W0g8j3SzNnegWeBuyVP_N_30EqtF+yZEjvgsnMgoZgSg@mail.gmail.com> (sfid-20120308_211754_286549_F6C90FEB)
+Subject: Re: Problems with regulatory domain support and BCM43224
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: "Quan, David" <dquan@qca.qualcomm.com>,
+	"Green, Michael" <green@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	vinodn@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 2, 2012 at 10:06 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-03-02 at 09:51 -0800, Javier Cardona wrote:
->> On Thu, Mar 1, 2012 at 11:50 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Thu, 2012-03-01 at 15:40 -0800, Javier Cardona wrote:
->> >> Without this you won't see probe responses in an IBSS/hwsim network,
->> >> which is convenient for testing.
->> >>
->> >> Signed-off-by: Javier Cardona <javier@cozybit.com>
->> >> ---
->> >>  drivers/net/wireless/mac80211_hwsim.c |    9 +++++++++
->> >>  1 files changed, 9 insertions(+), 0 deletions(-)
->> >>
->> >> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
->> >> index deed95f..e4b6ca6 100644
->> >> --- a/drivers/net/wireless/mac80211_hwsim.c
->> >> +++ b/drivers/net/wireless/mac80211_hwsim.c
->> >> @@ -47,6 +47,8 @@ static bool fake_hw_scan;
->> >>  module_param(fake_hw_scan, bool, 0444);
->> >>  MODULE_PARM_DESC(fake_hw_scan, "Install fake (no-op) hw-scan handler");
->> >>
->> >> +static struct ieee80211_hw *txed_last_beacon;
->> >
->> > That's definitely not right.
+On Thu, Mar 8, 2012 at 12:07 PM, Seth Forshee
+<seth.forshee@canonical.com> wrote:
+> On Thu, Mar 08, 2012 at 11:51:03AM -0800, Luis R. Rodriguez wrote:
+>> On Thu, Mar 8, 2012 at 11:45 AM, Quan, David <dquan@qca.qualcomm.com> wrote:
+>> > I think there is to it more than SW.
+>> > Where ever you get this card, is the card tested and regulatory approved for those countries, DFS or not?
 >>
->> I am using that module global to save the last hw that transmitted a
->> beacon.  The pointer is only tested for equality, never dereferenced.
->> And even if a read access happens during a non-atomic write, there are
->> no adverse consquences other than mac80211_hwsim_tx_last_beacon()
->> returning the wrong value.  Would you rather see it protected with a
->> mutex?
+>> Seth, what driver are you using? I know you are using a BCM43224 card.
 >
-> No, no, it's just the logic.
->
->> >> +static int mac80211_hwsim_tx_last_beacon(struct ieee80211_hw *hw)
->> >> +{
->> >> +     return (hw == txed_last_beacon);
->> >> +}
->> >
->> > And this is mostly a fancy way of saying "return 1" -- there's no beacon
->> > backoff protocol in here, so why not just hardcode "return 1"?
+> brcmsmac
+
+Oh this is a driver fully supported by Broadcom :D
+
+>> > It is possible that this card is only regulatory tested for non DFS channels, but now you enable them for passive.
 >>
->> This only returns true if 'hw' is the last hw that transmitted a
->> beacon.  Worked for me, as I was seeing 0's and 1's.
+>> That's a good point.
+>>
+>> > This means that yes, you are save and not violate DFS rules because you are in passive mode. However, you are in complete violation if the STA finds an AP on that DFS channel and then connects and transmits as this STA is not allow to transmit on that channel since it is not approved.
+>>
+>> If the driver being used is a supported vendor driver then I'll punt
+>> this to the vendor (Broadcom). If this is the reversed engineered
+>> driver (b43) that Broadcom to this day seems to blindly ignore even
+>> for regulatory, then I'm happy to recommend based on your input to
+>> leave the regulatory domain as-is given that we cannot guarantee what
+>> the vendor meant as they have not done any work on releasing either
+>> documentation or code to help with their regulatory situation.
 >
-> Yeah, but it's nowhere near how IBSS works. You're doing this across
-> different channels, no matter whether it's even in IBSS mode, and
-> there's no backoff (all of them will TX anyway)
+> It would be nice if Broadcom could weigh in. Cc-ing Arend.
 
-I thought that function was called only in IBSS mode, but still, you
-are right.  There are many things i did not consider.
+Indeed.
 
->> My (maybe flawed) thinking was: I need this function to return true to
->> test my previous patch.  Hardcoding a 1 would do it me, but someone
->> might complain that makes no sense.  So I tried to simulate a behavior
->> that's closer to reality.  In my IBSS/hwsim network I now see one
->> probe response at a time even though there are multiple phy's.
->
-> It's so far from reality that I don't think we should do it :-)
->
->> What would you want me to do with this patch?  I'm not particulary
->> attached to it...
->
-> I don't really care -- do you want to return 1 or just leave this patch
-> out?
+> This is actually a special case. This is an Apple machine, and it's not
+> that there's no regulatory hint in the ROM, it's that the hint is the
+> bogus country code "X0". From reading online, Apple uses this to
+> indicate the regulatory domain is unknown, and it uses the first
+> regulatory hint it sees in a country IE. I can connect to DFS channels
+> using MacOS on the machine, so I'll assume it was approved for DFS
+> channels.
 
-Hmmm, I think I'll leave it out.  If anyone is using hwsim to test
-IBSS they'll probably know how to code this better.
+I'll let Broadcom weigh in.
 
-Thanks for your help!
+> Since Linux (afaict) only uses hits from country IEs for APs it's
+> connected to, much of the time this card ends up using the world domain
+> and is unable to scan DFS channels.
 
-Javier
+Indeed, we only process the IE if we connect to the AP.
+
+  Luis
