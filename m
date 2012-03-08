@@ -1,95 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55973 "EHLO mga09.intel.com"
+Received: from plane.gmane.org ([80.91.229.3]:48613 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754894Ab2CDUm5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:42:57 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 005/101] iwlwifi: build some station commands directly
-Date: Sun,  4 Mar 2012 11:28:19 -0800
-Message-Id: <1330889395-533-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214655_880963_8470EEBC)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753889Ab2CHWZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2012 17:25:40 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1S5lmE-0004KV-Qt
+	for linux-wireless@vger.kernel.org; Thu, 08 Mar 2012 23:25:39 +0100
+Received: from f053208081.adsl.alicedsl.de ([78.53.208.81])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 23:25:38 +0100
+Received: from drahemmaps by f053208081.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 23:25:38 +0100
+To: linux-wireless@vger.kernel.org
+From: Martin Schleier <drahemmaps@gmx.net>
+Subject: Re: Google Summer of Code 2012 - Application for the Linux Foundation submitted
+Date: Thu, 8 Mar 2012 22:25:28 +0000 (UTC)
+Message-ID: <loom.20120308T231306-198@post.gmane.org> (sfid-20120308_232544_066567_1619AB30)
+References: <4F59274D.7060708@gmail.com> <CAB=NE6Wiwo2Cj8-UMqGQik7Hv=LMZ=+9ifa8Qia8OPuXFgEyKw@mail.gmail.com> <4F592BE0.70706@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Till Kamppeter <till.kamppeter@...> writes:
 
-In the powersave related functions we only need
-to set a few parameters for the station command
-and can otherwise leave it blank -- there's no
-need to copy it from the database.
+> 
+> On 03/08/2012 10:45 PM, Luis R. Rodriguez wrote:
+> >
+> > So one idea I had was working on open firmware for ath9k_htc. We don't
+> > have the resources to open that up but can likely provide under NDA
+> > source code to let it get cleaned up for public release. If this is
+> > reasonable I'll throw it on.
+> >
+> 
+> OK, please do it.
+> 
+>     Till
 
-This allows us to not use the sta lock here.
+Wait wait wait... qualcomm/Atheros does not have the resources, so how on earth
+should a student (or students) actually do that?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |   20 +++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |   16 ++++++----------
- 2 files changed, 15 insertions(+), 21 deletions(-)
+Given the TODO over at
+<http://wireless.kernel.org/en/users/Drivers/ath9k_htc#TODO> [Scroll down till
+you get "fixed in the firmware. ]. This would be at least one years of full-time
+work for a small team of trained code-monkey and therefore this "project" is
+highly unrealistic.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index 3eb8fd4..6b9af99 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -1437,16 +1437,14 @@ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
- 
- void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt)
- {
--	unsigned long flags;
--
--	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
--	priv->stations[sta_id].sta.station_flags |= STA_FLG_PWR_SAVE_MSK;
--	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
--	priv->stations[sta_id].sta.sta.modify_mask =
--					STA_MODIFY_SLEEP_TX_COUNT_MSK;
--	priv->stations[sta_id].sta.sleep_tx_count = cpu_to_le16(cnt);
--	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
--	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
-+	struct iwl_addsta_cmd cmd = {
-+		.mode = STA_CONTROL_MODIFY_MSK,
-+		.station_flags = STA_FLG_PWR_SAVE_MSK,
-+		.station_flags_msk = STA_FLG_PWR_SAVE_MSK,
-+		.sta.sta_id = sta_id,
-+		.sta.modify_mask = STA_MODIFY_SLEEP_TX_COUNT_MSK,
-+		.sleep_tx_count = cpu_to_le16(cnt),
-+	};
- 
-+	iwl_send_add_sta(priv, &cmd, CMD_ASYNC);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 03f7705..9fba532 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -1505,17 +1505,13 @@ static int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
- 
- static void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
- {
--	unsigned long flags;
--
--	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
--	priv->stations[sta_id].sta.station_flags &= ~STA_FLG_PWR_SAVE_MSK;
--	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
--	priv->stations[sta_id].sta.sta.modify_mask = 0;
--	priv->stations[sta_id].sta.sleep_tx_count = 0;
--	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
--	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
-+	struct iwl_addsta_cmd cmd = {
-+		.mode = STA_CONTROL_MODIFY_MSK,
-+		.station_flags_msk = STA_FLG_PWR_SAVE_MSK,
-+		.sta.sta_id = sta_id,
-+	};
- 
-+	iwl_send_add_sta(priv, &cmd, CMD_ASYNC);
- }
- 
- static void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
--- 
-1.7.0.4
+Maybe we should stick to something less complicated.
+
+Like extending PID to use MCS rates, or implementing a TPC control algorithm
+[this is stuff, every drivers could use].
+
 
