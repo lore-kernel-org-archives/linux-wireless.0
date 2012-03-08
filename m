@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50661 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161037Ab2COXWM (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54468 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752529Ab2CHMvq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 19:22:12 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3] mac80211:  Add iface name when calling WARN-ON.
-Date: Thu, 15 Mar 2012 16:22:05 -0700
-Message-Id: <1331853725-28483-1-git-send-email-greearb@candelatech.com> (sfid-20120316_002215_105360_53E7E84F)
+	Thu, 8 Mar 2012 07:51:46 -0500
+Message-ID: <4F58AB5A.3050708@qca.qualcomm.com> (sfid-20120308_135149_691379_525F64C4)
+Date: Thu, 8 Mar 2012 18:21:38 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<Mohammed@venema.h4ckr.net>, <ath9k-devel@lists.ath9k.org>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Subject: Re: [ath9k-devel] [RFC 1/1] ath9k_hw: Fix enabling of MCI and RTT
+References: <1331201325-17706-1-git-send-email-mohammed@qca.qualcomm.com> <20312.43226.814441.345911@gargle.gargle.HOWL>
+In-Reply-To: <20312.43226.814441.345911@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi Sujith,
 
-This lets the user know which interface has failed
-the check_sdata_in_driver check.
+On Thursday 08 March 2012 06:10 PM, Sujith Manoharan wrote:
+> Mohammed Shafi Shajakhan wrote:
+>> +
+>> +	if (AR_SREV_9462(ah)) {
+>> +		ah->ent_mode = REG_READ(ah, AR_ENT_OTP);
+>> +		if (!(ah->ent_mode&  AR_ENT_OTP_49GHZ_DISABLE))
+>> +			pCap->hw_caps |= ATH9K_HW_CAP_MCI;
+>> +	}
+>> +
+>> +	if (AR_SREV_9462_20(ah))
+>> +		pCap->hw_caps |= ATH9K_HW_CAP_RTT;
+>
+> ah->ent_mode is already being updated earlier in ath9k_hw_fill_cap_info(),
+> so there is no need to read AR_ENT_OTP again.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 e8960ae... b6ef8e7... M	net/mac80211/driver-ops.h
- net/mac80211/driver-ops.h |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+did notice the check AR9300_20_LATER :). just thought if we change 
+something and 'ent_mode' holds some other value. anyway will just leave 
+the check.
 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index e8960ae..b6ef8e7 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -7,7 +7,9 @@
- 
- static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
- {
--	WARN_ON(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER));
-+	WARN(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER),
-+	     "%s:  Failed check-sdata-in-driver check, flags: 0x%x\n",
-+	     sdata->dev->name, sdata->flags);
- }
- 
- static inline struct ieee80211_sub_if_data *
+>
+> Sujith
+
+
 -- 
-1.7.3.4
-
+thanks,
+shafi
