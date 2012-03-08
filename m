@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62908 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755374Ab2CBKSX (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35019 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756135Ab2CHKQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 05:18:23 -0500
-Date: Fri, 2 Mar 2012 15:48:30 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: Add an attribute to set inactivity timeout
- in AP mode
-Message-ID: <20120302101829.GA7154@vasanth-laptop> (sfid-20120302_111828_068295_BCFADBC0)
-References: <1330615294-13123-1-git-send-email-vthiagar@qca.qualcomm.com>
- <1330678884.8542.11.camel@jlt3.sipsolutions.net>
+	Thu, 8 Mar 2012 05:16:20 -0500
+Received: by wejx9 with SMTP id x9so196061wej.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 02:16:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1330678884.8542.11.camel@jlt3.sipsolutions.net>
+From: Claudio Rossi <rossi.claudio.82@gmail.com>
+Date: Thu, 8 Mar 2012 11:15:59 +0100
+Message-ID: <CAO1ZyK=mqqxVC12JtFU0dg5mvQd6PAiFhARg8sYBjGBh8u3yPQ@mail.gmail.com> (sfid-20120308_111624_124352_41427150)
+Subject: Accessing PROTOCOL TYPE field from rx.c in mac80211
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 02, 2012 at 10:01:24AM +0100, Johannes Berg wrote:
-> Hi Vasanth,
-> 
-> On Thu, 2012-03-01 at 20:51 +0530, Vasanthakumar Thiagarajan wrote:
-> > + * @NL80211_ATTR_INACTIVITY_TIMER_SUPPORT: Indicates if the driver has the
-> > + *	capability to use %NL80211_ATTR_INACTIVITY_TIMEOUT for freeing up
-> > + *	connected stations.
-> 
-> I think now that we have "enum nl80211_feature_flags" you could just add
-> a flag to it.
+Dear all,
+ I would like to inspect the protocol type field from mac802.11, and
+specifically in rx.c in the function
 
-Good point, thanks.
+static ieee80211_rx_result debug_noinline
+ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
 
-> 
-> > + * @NL80211_ATTR_INACTIVITY_TIMEOUT: timeout value in seconds, this can be
-> > + *	used by the drivers which has MLME in firmware and does not have support
-> > + *	to report per station tx/rx activity to free up the staion entry from
-> > + *	the list. This should not be sent from userspace when the driver does
-> > + *	not register it's capability to timeout the stations.
-> 
-> Shouldn't that be the other way around -- it needs to be used when the
-> driver *does* advertise support for it?
-> 
-Ah, right, thanks.
+I was trying to do:
 
-> 
-> > +	WIPHY_FLAG_SUPPORTS_INACTIVITY_TIMER	= BIT(22),
-> 
-> If you use nl80211_feature_flags you also don't need this wiphy to
-> feature translation, the driver can directly set those flags.
+struct iphdr * network_header;
+skb_set_network_header(skb,ieee80211_get_hdrlen_from_skb(skb));
+network_header = (struct iphdr *)skb_network_header(skb);
 
-Right.
+ if (network_header->protocol==IPPROTO_TCP){
+...
+}
+but it does not seams to work....
 
-Vasanth
+In status.c everything works fine when I do:
+
+struct iphdr * network_header;
+
+network_header = (struct iphdr *)skb_network_header(skb);
+
+ if (network_header->protocol==IPPROTO_TCP){
+...
+}
+
+the problem is how to correctly set the network header pointer in the
+skb in rx.c
+can somebody give me an hint?
+
+
+Thank you
+
+-- 
+Claudio Rossi
+-------------------
+Office @ PoliTO: +39 011 5644194
