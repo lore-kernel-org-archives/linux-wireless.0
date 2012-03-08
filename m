@@ -1,70 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32057 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753959Ab2C1NUu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 09:20:50 -0400
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Store scan request info in-advance before sending SCAN request
-Date: Wed, 28 Mar 2012 18:50:35 +0530
-Message-ID: <1332940835-14933-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120328_152104_318900_44867F36)
+Received: from mx1.redhat.com ([209.132.183.28]:1966 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752699Ab2CHNzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2012 08:55:41 -0500
+Date: Thu, 8 Mar 2012 14:55:30 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Don Fry <donald.h.fry@intel.com>
+Subject: Re: [PATCH RESEND 34/35] iwlwifi: correct status bit refactoring
+ errors
+Message-ID: <20120308135529.GA14445@redhat.com> (sfid-20120308_145545_354863_21A18601)
+References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1331142764-5750-35-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1331142764-5750-35-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+On Wed, Mar 07, 2012 at 09:52:43AM -0800, Wey-Yi Guy wrote:
+> From: Don Fry <donald.h.fry@intel.com>
+> 
+> I missed a couple of status bits in my refactoring changes.  This
+> fixes the ones I missed.
+> 
+> Signed-off-by: Don Fry <donald.h.fry@intel.com>
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn-rx.c |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn.c    |    8 ++++----
+>  2 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+> index 3ad4333..cc0227c 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+> @@ -628,7 +628,7 @@ static int iwlagn_rx_card_state_notif(struct iwl_priv *priv,
+>  	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+>  	struct iwl_card_state_notif *card_state_notif = (void *)pkt->data;
+>  	u32 flags = le32_to_cpu(card_state_notif->flags);
+> -	unsigned long status = priv->shrd->status;
+> +	unsigned long status = priv->status;
+>  
+>  	IWL_DEBUG_RF_KILL(priv, "Card state received: HW:%s SW:%s CT:%s\n",
+>  			  (flags & HW_CARD_DISABLED) ? "Kill" : "On",
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index 3793dc4..28422c0 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -819,15 +819,15 @@ void iwl_down(struct iwl_priv *priv)
+>  	iwl_trans_stop_device(trans(priv));
+>  
+>  	/* Clear out all status bits but a few that are stable across reset */
+> -	priv->shrd->status &=
+> -			test_bit(STATUS_RF_KILL_HW, &priv->status) <<
+> +	priv->status &= test_bit(STATUS_RF_KILL_HW, &priv->status) <<
+>  				STATUS_RF_KILL_HW |
+>  			test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+>  				STATUS_GEO_CONFIGURED |
+> -			test_bit(STATUS_FW_ERROR, &priv->shrd->status) <<
+> -				STATUS_FW_ERROR |
+>  			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+>  				STATUS_EXIT_PENDING;
+> +	priv->shrd->status &=
+> +			test_bit(STATUS_FW_ERROR, &priv->shrd->status) <<
+> +				STATUS_FW_ERROR;
 
-In current code, Scan request info is recorded in vif->scan_req
-after sending SCAN request to the firmware in ath6kl_cfg80211_scan().
+So we have now priv->shrd->status & priv->status, how do you prevent to
+confuse them? Also I still do not understand at all what for this ->shrd stuff
+is needed.
 
-In some corner cases, firmware sends SCAN_COMPLETE event immediately
-when it receives SCAN request, which internally executes scan
-complete event handler ath6kl_cfg80211_scan_complete_event() first.
-So, Scan completion handler will a get a chance to executed even
-before storing scan request info in ath6kl_cfg80211_scan().
-
-Scan completion handler never report SCAN_COMPLETE event to
-cfg80211 if scan request info(vif->scan_req) is NULL. This leads
-to scan failure issue ("Device or resource busy error") during
-next SCAN request from the user space. This patch ensures that scan
-request info is stored before sending SCAN request.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index df95e0d..dd07ae5 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -941,6 +941,8 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 	if (test_bit(CONNECTED, &vif->flags))
- 		force_fg_scan = 1;
- 
-+	vif->scan_req = request;
-+
- 	if (test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
- 		     ar->fw_capabilities)) {
- 		/*
-@@ -963,10 +965,10 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 						ATH6KL_FG_SCAN_INTERVAL,
- 						n_channels, channels);
- 	}
--	if (ret)
-+	if (ret) {
- 		ath6kl_err("wmi_startscan_cmd failed\n");
--	else
--		vif->scan_req = request;
-+		vif->scan_req = NULL;
-+	}
- 
- 	kfree(channels);
- 
--- 
-1.7.1
-
+Stanislaw
