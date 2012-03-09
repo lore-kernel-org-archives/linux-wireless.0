@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14885 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754638Ab2CPSjg convert rfc822-to-8bit (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:55942 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757214Ab2CID7K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 14:39:36 -0400
-From: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: mac80211 20/40 coexist
-Date: Fri, 16 Mar 2012 18:39:29 +0000
-Message-ID: <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b> (sfid-20120316_193939_860344_525E3322)
-References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
-	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>,<1331902885.6753.10.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1331902885.6753.10.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 8 Mar 2012 22:59:10 -0500
+Message-ID: <4F59800B.80407@lwfinger.net> (sfid-20120309_045926_217874_4AF53CAF)
+Date: Thu, 08 Mar 2012 21:59:07 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: jerome huang <jerome.syno@gmail.com>
+CC: "Xu, Andiry" <Andiry.Xu@amd.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: rt8192cu on USB3
+References: <CAHaq0gKf+VE9T15J91rvyxbF8=rNCExTZfE-WcwHjUN1afjnTA@mail.gmail.com> <CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com> <4F581AF8.4080001@lwfinger.net> <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com> <4F585BA9.6020903@amd.com> <2A76B9D36150BE4293842BC2FE8FF165016A31@SCYBEXDAG04.amd.com> <CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com> <CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com> <4F58F2D0.5060805@lwfinger.net> <CAHaq0gKSSgYX19BH92Pg+gXifSEmjvubc_nd5brO8QeLCpr1yA@mail.gmail.com>
+In-Reply-To: <CAHaq0gKSSgYX19BH92Pg+gXifSEmjvubc_nd5brO8QeLCpr1yA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi,
-> 
-> [I'll also fold in your other email]
-> 
-> > Not calling hw_config could affect drivers like ath9k_htc where the rate control runs in the firmware.
-> > Those drivers will update the rate control based on CHANGED_HT flag.
-> 
-> Yeah that's actually an interesting point -- but we have it wrong right
-> now I think. Did you see Paul's recent patch? We really shouldn't be
-> reconfiguring the channel if all we want is to stop transmitting 40 MHz,
-> we should just update rate control only. Now for in-device rate control
-> that isn't really possible today since they can't get rate_update(), but
-> that means we should add a separate callback, I think?
+On 03/08/2012 09:28 PM, jerome huang wrote:
+>
+> It still got no any result if I wait for 30 sec (or longer) between
+> (original) step 2 and 3.
+> I double confirmed that it always does not work for steps: plugin ->
+> up ->  scanning
+> and always works for steps: plugin ->  up ->  down ->  up ->  scanning.
+>
+> And sometimes it works for next down->up->scanning, sometimes it doesn't.
+>
+> Is the change of firmware loading in kernel 3.3 made by rtlwifi only,
+> or ring expansion in xhci is also necessary?
 
-Yes. I missed that. I am not sure about the new callback alone is sufficient. We have to issue a WMI command
-to reconfigure the rc in firmware. If so, it needs firmware changes also. May be Sujith is the right person to answer
-about ath9k_htc.
+The only changes are in the rtlwifi drivers. I don't have a USB 3 device, thus I 
+have no idea what might work there. I wrote something incorrect earlier. The new 
+code is not in mainline 3.3, but it is in the wireless-testing git tree. If you 
+want to try this, and don't want to get the whole tree, the new code is in the 
+bleeding-edge compat-wireless package. Otherwise, I could send you the patches.
 
-> > > If we do that, is it still necessary to stop the queues for it? It seems
-> > > like it shouldn't.
-> > 
-> > Actually the queue stop was added to avoid mismatches b/w hw and rate control. But If you dont stop the queues
-> > before the rate control change, the station might send the frames in different ht mode (for example ht40) wrt AP's ht mode (ht20).
-> 
-> Yes, but that's probably OK. It's going to do that anyway since there
-> are still frames in the hardware queues, and those will go out without
-> updated rate information. There can be no guarantee (without having some
-> form of hardware assist) that from the point we receive a 20/40
-> notification we'll send the right bandwidth.
+Larry
 
-Yes. Sounds fine.
 
--Rajkumar
+Larry
+
