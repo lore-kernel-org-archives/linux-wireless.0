@@ -1,252 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:40715 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751855Ab2CDIzy (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:56151 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755217Ab2CJAw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 03:55:54 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm2so1368116wib.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 00:55:53 -0800 (PST)
+	Fri, 9 Mar 2012 19:52:57 -0500
+Message-ID: <4F5A4C83.50009@candelatech.com> (sfid-20120310_015307_343761_4AAD4320)
+Date: Fri, 09 Mar 2012 10:31:31 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 04/11] wl12xx: set authorized AP on sta_state notification
-Date: Sun,  4 Mar 2012 10:55:48 +0200
-Message-Id: <1330851355-24459-5-git-send-email-eliad@wizery.com> (sfid-20120304_095638_258313_FDA8A09F)
-In-Reply-To: <1330851355-24459-1-git-send-email-eliad@wizery.com>
-References: <1330851355-24459-1-git-send-email-eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+References: <4F57B7E6.1050103@candelatech.com>  (sfid-20120307_203301_816701_DF7D4715) <1331189709.3446.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1331189709.3446.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wl12xx currently looks for AP authorization by registering
-a netdev notifier and waiting for the IF_OPER_UP notification,
-which is quite cumbersome.
+On 03/07/2012 10:55 PM, Johannes Berg wrote:
+> On Wed, 2012-03-07 at 11:32 -0800, Ben Greear wrote:
+>> This is with a somewhat hacked 3.3.0-rc5+.  Just
+>> curious if this is a known problem.
+>>
+>>
+>> Seems very reproducible on my system.
+>>
+>>
+>> WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:10 ieee80211_bss_info_change_noti)
+>
+> The warning means you're modifying an interface the driver doesn't (yet)
+> know about.
+>
+> It's odd that you should be running into this on config_beacon() though
+> since that can only execute when the interface is up ... can you print
+> out the interface name in the warning?
 
-Use the newly introduced sta_state callback (waiting
-for assoc -> auth notification) instead, in order to
-simplify it.
+This is still reproducible in 3.3.0-rc6+ from yesterday.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |  117 ++++++---------------------------
- drivers/net/wireless/wl12xx/wl12xx.h |    3 +-
- 2 files changed, 23 insertions(+), 97 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 8569ac3..a330b0c 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -392,15 +392,15 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- static void wl1271_op_stop(struct ieee80211_hw *hw);
- static void wl1271_free_ap_keys(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- 
--static DEFINE_MUTEX(wl_list_mutex);
--static LIST_HEAD(wl_list);
--
--static int wl1271_check_operstate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--				  unsigned char operstate)
-+static int wl12xx_set_authorized(struct wl1271 *wl,
-+				 struct wl12xx_vif *wlvif)
- {
- 	int ret;
- 
--	if (operstate != IF_OPER_UP)
-+	if (WARN_ON(wlvif->bss_type != BSS_TYPE_STA_BSS))
-+		return -EINVAL;
-+
-+	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
- 		return 0;
- 
- 	if (test_and_set_bit(WLVIF_FLAG_STA_STATE_SENT, &wlvif->flags))
-@@ -415,76 +415,6 @@ static int wl1271_check_operstate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	wl1271_info("Association completed.");
- 	return 0;
- }
--static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
--			     void *arg)
--{
--	struct net_device *dev = arg;
--	struct wireless_dev *wdev;
--	struct wiphy *wiphy;
--	struct ieee80211_hw *hw;
--	struct wl1271 *wl;
--	struct wl1271 *wl_temp;
--	struct wl12xx_vif *wlvif;
--	int ret = 0;
--
--	/* Check that this notification is for us. */
--	if (what != NETDEV_CHANGE)
--		return NOTIFY_DONE;
--
--	wdev = dev->ieee80211_ptr;
--	if (wdev == NULL)
--		return NOTIFY_DONE;
--
--	wiphy = wdev->wiphy;
--	if (wiphy == NULL)
--		return NOTIFY_DONE;
--
--	hw = wiphy_priv(wiphy);
--	if (hw == NULL)
--		return NOTIFY_DONE;
--
--	wl_temp = hw->priv;
--	mutex_lock(&wl_list_mutex);
--	list_for_each_entry(wl, &wl_list, list) {
--		if (wl == wl_temp)
--			break;
--	}
--	mutex_unlock(&wl_list_mutex);
--	if (wl != wl_temp)
--		return NOTIFY_DONE;
--
--	mutex_lock(&wl->mutex);
--
--	if (wl->state == WL1271_STATE_OFF)
--		goto out;
--
--	if (dev->operstate != IF_OPER_UP)
--		goto out;
--	/*
--	 * The correct behavior should be just getting the appropriate wlvif
--	 * from the given dev, but currently we don't have a mac80211
--	 * interface for it.
--	 */
--	wl12xx_for_each_wlvif_sta(wl, wlvif) {
--		struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
--
--		if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
--			continue;
--
--		ret = wl1271_ps_elp_wakeup(wl);
--		if (ret < 0)
--			goto out;
--
--		wl1271_check_operstate(wl, wlvif,
--				       ieee80211_get_operstate(vif));
--
--		wl1271_ps_elp_sleep(wl);
--	}
--out:
--	mutex_unlock(&wl->mutex);
--
--	return NOTIFY_OK;
--}
- 
- static int wl1271_reg_notify(struct wiphy *wiphy,
- 			     struct regulatory_request *request)
-@@ -1626,10 +1556,6 @@ static struct sk_buff *wl12xx_alloc_dummy_packet(struct wl1271 *wl)
- }
- 
- 
--static struct notifier_block wl1271_dev_notifier = {
--	.notifier_call = wl1271_dev_notify,
--};
--
- #ifdef CONFIG_PM
- static int wl1271_configure_suspend_sta(struct wl1271 *wl,
- 					struct wl12xx_vif *wlvif)
-@@ -1856,10 +1782,6 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->state = WL1271_STATE_OFF;
- 	mutex_unlock(&wl->mutex);
- 
--	mutex_lock(&wl_list_mutex);
--	list_del(&wl->list);
--	mutex_unlock(&wl_list_mutex);
--
- 	wl1271_flush_deferred_work(wl);
- 	cancel_delayed_work_sync(&wl->scan_complete_work);
- 	cancel_work_sync(&wl->netstack_work);
-@@ -2270,11 +2192,6 @@ out:
- out_unlock:
- 	mutex_unlock(&wl->mutex);
- 
--	mutex_lock(&wl_list_mutex);
--	if (!ret)
--		list_add(&wl->list, &wl_list);
--	mutex_unlock(&wl_list_mutex);
--
- 	return ret;
- }
- 
-@@ -3967,8 +3884,8 @@ sta_not_found:
- 			if (ret < 0)
- 				goto out;
- 
--			wl1271_check_operstate(wl, wlvif,
--					       ieee80211_get_operstate(vif));
-+			if (test_bit(WLVIF_FLAG_STA_AUTHORIZED, &wlvif->flags))
-+				wl12xx_set_authorized(wl, wlvif);
- 		}
- 		/*
- 		 * stop device role if started (we might already be in
-@@ -4321,6 +4238,20 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
- 		return ret;
- 	}
- 
-+	/* Authorize station */
-+	if (is_sta &&
-+	    new_state == IEEE80211_STA_AUTHORIZED) {
-+		set_bit(WLVIF_FLAG_STA_AUTHORIZED, &wlvif->flags);
-+		return wl12xx_set_authorized(wl, wlvif);
-+	}
-+
-+	if (is_sta &&
-+	    old_state == IEEE80211_STA_AUTHORIZED &&
-+	    new_state == IEEE80211_STA_ASSOC) {
-+		clear_bit(WLVIF_FLAG_STA_AUTHORIZED, &wlvif->flags);
-+		return 0;
-+	}
-+
- 	return 0;
- }
- 
-@@ -5144,8 +5075,6 @@ static int wl1271_register_hw(struct wl1271 *wl)
- 
- 	wl1271_debugfs_init(wl);
- 
--	register_netdevice_notifier(&wl1271_dev_notifier);
--
- 	wl1271_notice("loaded");
- 
- out:
-@@ -5157,7 +5086,6 @@ static void wl1271_unregister_hw(struct wl1271 *wl)
- 	if (wl->plt)
- 		wl1271_plt_stop(wl);
- 
--	unregister_netdevice_notifier(&wl1271_dev_notifier);
- 	ieee80211_unregister_hw(wl->hw);
- 	wl->mac80211_registered = false;
- 
-@@ -5278,7 +5206,6 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl = hw->priv;
- 	memset(wl, 0, sizeof(*wl));
- 
--	INIT_LIST_HEAD(&wl->list);
- 	INIT_LIST_HEAD(&wl->wlvif_list);
- 
- 	wl->hw = hw;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 9035241..b26b1be 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -265,6 +265,7 @@ enum wl12xx_flags {
- enum wl12xx_vif_flags {
- 	WLVIF_FLAG_INITIALIZED,
- 	WLVIF_FLAG_STA_ASSOCIATED,
-+	WLVIF_FLAG_STA_AUTHORIZED,
- 	WLVIF_FLAG_IBSS_JOINED,
- 	WLVIF_FLAG_AP_STARTED,
- 	WLVIF_FLAG_IN_PS,
-@@ -452,8 +453,6 @@ struct wl1271 {
- 
- 	bool enable_11a;
- 
--	struct list_head list;
--
- 	/* Most recently reported noise in dBm */
- 	s8 noise;
- 
+I create the VAP with this command:
+
+./local/sbin/iw phy wiphy0 interface add vap0 type __ap
+
+
+vap0:  Failed check-sdata-in-driver check, flags: 0x0
+------------[ cut here ]------------
+WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:13 check_sdata_in_driver+0x35/0x3)
+Hardware name: To be filled by O.E.M.
+Modules linked in: 8021q garp stp llc macvlan wanlink(PO) pktgen lockd joydev ppdev arc4 snd_hda_codec_re]
+Pid: 3081, comm: hostapd Tainted: P        WC O 3.3.0-rc6+ #7
+Call Trace:
+  [<ffffffff81036f45>] warn_slowpath_common+0x80/0x98
+  [<ffffffff81036f72>] warn_slowpath_null+0x15/0x17
+  [<ffffffffa025b503>] check_sdata_in_driver+0x35/0x37 [mac80211]
+  [<ffffffffa025bfcd>] ieee80211_set_txq_params+0x91/0xf4 [mac80211]
+  [<ffffffffa019eaf9>] nl80211_set_wiphy+0x1f2/0x500 [cfg80211]
+  [<ffffffff81447a9e>] ? __mutex_lock_slowpath+0x16/0x18
+  [<ffffffffa00703ff>] ? i915_restore_palette+0x93/0xdd [i915]
+  [<ffffffff813b5c00>] genl_rcv_msg+0x1f4/0x239
+  [<ffffffff813b5a0c>] ? genl_rcv+0x28/0x28
+  [<ffffffff813b4a2e>] netlink_rcv_skb+0x3e/0x8f
+  [<ffffffff813b5a05>] genl_rcv+0x21/0x28
+  [<ffffffff813b4809>] netlink_unicast+0xe9/0x152
+  [<ffffffff813b4f62>] netlink_sendmsg+0x1f8/0x216
+  [<ffffffff81384202>] __sock_sendmsg_nosec+0x5f/0x6a
+  [<ffffffff8138424a>] __sock_sendmsg+0x3d/0x48
+  [<ffffffff81384aea>] sock_sendmsg+0xa3/0xbc
+  [<ffffffff810a81f7>] ? unlock_page+0x25/0x2a
+  [<ffffffff810c2a40>] ? __do_fault+0x373/0x3b6
+  [<ffffffff81383c48>] ? copy_from_user+0x9/0xb
+  [<ffffffff81384792>] ? move_addr_to_kernel+0x2b/0x65
+  [<ffffffff8138e9e9>] ? copy_from_user+0x9/0xb
+  [<ffffffff8138ed36>] ? verify_iovec+0x4f/0xa3
+  [<ffffffff8138524c>] __sys_sendmsg+0x20f/0x29c
+  [<ffffffff81383799>] ? sock_destroy_inode+0x2e/0x32
+  [<ffffffff8110503b>] ? destroy_inode+0x3b/0x54
+  [<ffffffff810dec6f>] ? virt_to_head_page+0x9/0x2c
+  [<ffffffff810e0e73>] ? kmem_cache_free+0x15/0x6e
+  [<ffffffff8144c782>] ? sub_preempt_count+0x92/0xa6
+  [<ffffffff81108894>] ? vfsmount_lock_local_unlock+0x46/0x53
+  [<ffffffff8110934e>] ? mntput_no_expire+0x31/0x104
+  [<ffffffff81109446>] ? mntput+0x25/0x27
+  [<ffffffff81385436>] sys_sendmsg+0x3d/0x5b
+  [<ffffffff8144e4f9>] system_call_fastpath+0x16/0x1b
+---[ end trace 54cbe076448eb2c8 ]---
+
+>
+> johannes
+
+
 -- 
-1.7.6.401.g6a319
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
