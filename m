@@ -1,118 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58350 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757514Ab2CLXrF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 19:47:05 -0400
-Received: by dajr28 with SMTP id r28so5849163daj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 16:47:04 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 1/3] mac80211: Record timing offset (Toffset) for all mesh neighbors
-Date: Mon, 12 Mar 2012 16:46:58 -0700
-Message-Id: <1331596020-29695-1-git-send-email-ashok@cozybit.com> (sfid-20120313_004715_336234_1BB0EA35)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:37285 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751945Ab2CIJqM convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Mar 2012 04:46:12 -0500
+Received: by lahj13 with SMTP id j13so1458897lah.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 01:46:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1331281987.3491.0.camel@jlt3.sipsolutions.net>
+References: <20120307183103.GB15839@redhat.com>
+	<4F59275B.2010309@gmail.com>
+	<20120309082216.GA2339@redhat.com>
+	<1331281987.3491.0.camel@jlt3.sipsolutions.net>
+Date: Fri, 9 Mar 2012 10:46:11 +0100
+Message-ID: <CAL1gcdMXOVXmffAq5J1hhRb3C5aYWTo8JPaKsbsJTY0MaVN8Zw@mail.gmail.com> (sfid-20120309_104617_942780_D38F8C2B)
+Subject: Re: [rt2x00-users] [PATCH 3.3 v2] rt2x00: fix random stalls
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-802.11s standard introduced timing offset calculation by mesh stations. The
-mesh STA shall calculate the timing offset value with respect to the neighbor
-STA with which it maintains synchronization.
-	Toffset = timestamp from beacon/probe response frames -
-		  frame reception time (mactime).
+Hi Stanislaw, Johannes,
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- net/mac80211/mesh.c       |    8 +++++++-
- net/mac80211/mesh.h       |    2 +-
- net/mac80211/mesh_plink.c |    3 ++-
- net/mac80211/sta_info.h   |    2 ++
- 4 files changed, 12 insertions(+), 3 deletions(-)
+On Fri, Mar 9, 2012 at 9:33 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-03-09 at 09:22 +0100, Stanislaw Gruszka wrote:
+>
+>> > > + spin_lock(&queue->tx_lock);
+>> > >   rt2x00queue_pause_queue(queue);
+>> > > + spin_unlock(&queue->tx_lock);
+>> > >   exit_free_skb:
+>> > >   ieee80211_free_txskb(hw, skb);
+>> > >  }
+>> >
+>> > I'm sorry, but I'm still not convinced that we can use spin_lock_bh in
+>> > one place of the code and then spin_lock in another place of the code,
+>> > using the *same* spinlock.
+>> > I always use the cheat sheet shown in:
+>> > http://www.kernel.org/pub/linux/kernel/people/rusty/kernel-locking/c214.html
+>> >
+>> > which to me shows that by definition we should be using spin_lock_bh in
+>> > all cases now, the new ones and the existing cases where we lock tx_lock.
+>>
+>> We have bh disabled here since ieee80211_xmit is always called with bh
+>> disabled (early on dev_queue_xmit() or in ieee80211_tx_skb_tid()). I can
+>> add comment about that.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index e5fbb7c..bbf5807 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -621,6 +621,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	u32 supp_rates = 0;
- 	size_t baselen;
- 	int freq;
-+	s64 t_offset = 0;
- 	enum ieee80211_band band = rx_status->band;
- 
- 	/* ignore ProbeResp to foreign address */
-@@ -649,10 +650,15 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
- 		return;
- 
-+	if (rx_status->flag & RX_FLAG_MACTIME_MPDU)
-+		t_offset = le64_to_cpu(mgmt->u.beacon.timestamp) -
-+			   rx_status->mactime;
-+
- 	if (elems.mesh_id && elems.mesh_config &&
- 	    mesh_matches_local(&elems, sdata)) {
- 		supp_rates = ieee80211_sta_get_rates(local, &elems, band);
--		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems);
-+		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems,
-+					t_offset);
- 	}
- }
- 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 8d53b71..d867cc8 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -258,7 +258,7 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata);
- /* Mesh plinks */
- void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 		struct ieee80211_sub_if_data *sdata,
--		struct ieee802_11_elems *ie);
-+		struct ieee802_11_elems *ie, s64 t_offset);
- bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
- void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
- void mesh_plink_broken(struct sta_info *sta);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4e53c4c..06e5180 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -276,7 +276,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 
- void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 		struct ieee80211_sub_if_data *sdata,
--		struct ieee802_11_elems *elems)
-+		struct ieee802_11_elems *elems, s64 t_offset)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-@@ -304,6 +304,7 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 
- 	sta->last_rx = jiffies;
- 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
-+	sta->t_offset = t_offset;
- 	if (mesh_peer_accepts_plinks(elems) &&
- 			sta->plink_state == NL80211_PLINK_LISTEN &&
- 			sdata->u.mesh.accepting_plinks &&
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index ab05768..764eb65 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -264,6 +264,7 @@ struct sta_ampdu_mlme {
-  * @plink_timeout: timeout of peer link
-  * @plink_timer: peer link watch timer
-  * @plink_timer_was_running: used by suspend/resume to restore timers
-+ * @t_offset: timing offset relative to this host
-  * @debugfs: debug filesystem info
-  * @dead: set to true when sta is unlinked
-  * @uploaded: set to true when sta is uploaded to the driver
-@@ -353,6 +354,7 @@ struct sta_info {
- 	enum nl80211_plink_state plink_state;
- 	u32 plink_timeout;
- 	struct timer_list plink_timer;
-+	s64 t_offset;
- #endif
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
+OK. Thanks for the explanation. Now it is clear to me. However, I
+think it would be
+good to add a comment here, as we are otherwise bound to have the same
+discussion
+again in a couple of months time.
+With that comment added you can add my:
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+
+to the v3 patch submission.
+
+>
+> And in fact if you were to use spin_unlock_bh() in that kind of context
+> it would be a bug :-)
+>
+
+Thanks for your explanation as well, Johannes. Everything is clear to me now :-)
+
+
 -- 
-1.7.5.4
-
+---
+Gertjan
