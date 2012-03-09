@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47873 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112Ab2CVHOM (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:36756 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753633Ab2CIXp0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2012 03:14:12 -0400
-From: santosh nayak <santoshprasadnayak@gmail.com>
-To: linville@tuxdriver.com
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	Santosh Nayak <santoshprasadnayak@gmail.com>
-Subject: [PATCH 3/3] net: orinoco: add error handling for failed kmalloc().
-Date: Thu, 22 Mar 2012 12:42:41 +0530
-Message-Id: <1332400361-11176-1-git-send-email-santoshprasadnayak@gmail.com> (sfid-20120322_081421_375590_A8591ED8)
+	Fri, 9 Mar 2012 18:45:26 -0500
+Received: by ghrr11 with SMTP id r11so1309295ghr.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 15:45:25 -0800 (PST)
+Message-ID: <4F5A9612.8040301@lwfinger.net> (sfid-20120310_004529_507796_1B94A553)
+Date: Fri, 09 Mar 2012 17:45:22 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/5 V2] p54usb: Load firmware from work queue and not
+ from probe routine
+References: <1331267337-19605-1-git-send-email-Larry.Finger@lwfinger.net> <201203092245.14420.chunkeey@googlemail.com>
+In-Reply-To: <201203092245.14420.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Santosh Nayak <santoshprasadnayak@gmail.com>
+On 03/09/2012 03:45 PM, Christian Lamparter wrote:
+> On Friday, March 09, 2012 05:28:57 AM Larry Finger wrote:
+>> Drivers that load firmware from their probe routine have problems with the
+>> latest versions of udev as they get timeouts while waiting for user
+>> space to start. The problem is fixed by loading the firmware and starting
+>> mac80211 from a work queue. By using this method, most of the
+>> original code is preserved.
+>>
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>> ---
+> Well, I thought this over and I think unless we change the Kconfig
+> and make the backend modules [p54pci, p54usb and p54spi]
+> module-only options, we have to go with request_firmware_nowait.
+>
+> You see, if the p54* modules are compiled into the very bzImage:
+> The instant workqueue option wouldn't work because the device
+> might be initialized before the filesystem is. A combo approach
+> [delayed workqueue, when no userspacehelper is available and a
+> direct call to request_firmware (when it is availabe)] would
+> work too, but then we would be reimplementing
+> request_firmware_nowait ...
 
-With flag 'GFP_ATOMIC', probability of allocation failure is more.
-Add error handling after kmalloc() call to avoid null dereference.
+Christian,
 
-Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
----
- drivers/net/wireless/orinoco/main.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+Your point is well taken. I will rewrite this one. John was holding it for 3.5 
+anyway.
 
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
-index dd6c64a..24a768b 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -1336,6 +1336,10 @@ static void qbuf_scan(struct orinoco_private *priv, void *buf,
- 	unsigned long flags;
- 
- 	sd = kmalloc(sizeof(*sd), GFP_ATOMIC);
-+	if (!sd) {
-+		printk(KERN_ERR "%s: failed to alloc memory\n", __func__);
-+		return;
-+	}
- 	sd->buf = buf;
- 	sd->len = len;
- 	sd->type = type;
-@@ -1353,6 +1357,10 @@ static void qabort_scan(struct orinoco_private *priv)
- 	unsigned long flags;
- 
- 	sd = kmalloc(sizeof(*sd), GFP_ATOMIC);
-+	if (!sd) {
-+		printk(KERN_ERR "%s: failed to alloc memory\n", __func__);
-+		return;
-+	}
- 	sd->len = -1; /* Abort */
- 
- 	spin_lock_irqsave(&priv->scan_lock, flags);
--- 
-1.7.4.4
+Do we still want to try for the legacy firmware if the primary is not available?
+
+Larry
 
