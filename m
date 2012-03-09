@@ -1,132 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173013pub.verizon.net ([206.46.173.13]:40577 "EHLO
-	vms173013pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758066Ab2CFCWx (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:63798 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757235Ab2CIE0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 21:22:53 -0500
-Received: from vms170015 ([unknown] [172.18.12.133]) by vms173013.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0M0F002ALYLGGLK3@vms173013.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Mon, 05 Mar 2012 20:22:28 -0600 (CST)
-Date: Mon, 05 Mar 2012 20:22:28 -0600 (CST)
-From: alupu@verizon.net
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Message-id: <31698868.2383065.1331000548495.JavaMail.root@vms170015> (sfid-20120306_032256_894020_5477D86B)
-Subject: Re: r8712u staging in kernel 3.2.9
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+	Thu, 8 Mar 2012 23:26:11 -0500
+Received: by iagz16 with SMTP id z16so1692806iag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 20:26:11 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com
+Subject: [PATCH 1/5 V2] b43legacy: Load firmware from work queue instead of from probe routine
+Date: Thu,  8 Mar 2012 22:25:57 -0600
+Message-Id: <1331267157-19476-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120309_052616_822085_93A864FB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 03/05/12, Larry Finger wrote:
+Recent changes in udev are causing problems for drivers that load firmware
+from the probe routine. As b43legacy has such a structure, it must be changed.
+As this driver loads 3 or 4 firmware files, changing to the asynchronous routine
+request_firmware_nowait() would be complicated. In this implementation, the probe
+routine starts a work queue that calls the firmware loading routines.
 
->> On 03/05/2012 11:07 AM, alupu@verizon.net wrote:
->> System: (B)LFS i686-pc-linux-gnu, 3.2.9
->> Rosewill Wireless Adapter: RNX-N180UBE
->> I compiled (as part of kernel 3.2.9) the r8712u module.
->> Comes up OK but cannot take an essid nor a key.
->> ...
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> There are a couple of bugs in 3.2.6+.
-> I don't think they have been fixed by 3.2.9.
-> Check dmesg for a "Badfw size" message.
-> If you see that, the two attached patches will fix that.
+V2 - Change from delayed to ordinary work queue
 
-Hi Larry,
-Thank you for the patches.
-Unfortunately, no cigar:
+John,
 
-<After kernel re-compile>
-usb 8-1: new high-speed USB device number 2 using ehci_hcd
-r8712u: module is from the staging directory, the quality is unknown,
- you have been warned.
-r8712u: DriverVersion: v7_0.20100831
-r8712u: register rtl8712_netdev_ops to netdev_ops
-r8712u: USB_SPEED_HIGH with 4 endpoints
-r8712u: Boot from EFUSE: Autoload OK
-r8712u: CustomerID = 0x0000
-r8712u: MAC Address from efuse = 00:1a:ef:25:2d:f9
-r8712u: Loading firmware from "rtlwifi/rtl8712u.bin"
-usbcore: registered new interface driver r8712u
-r8712u: r8711_wx_set_enc: IW_ENCODE_RESTRICTED
-usb 8-1: USB disconnect, device number 2
+I think this patch should stay in wireless-testing and ultimately be pushed
+to 3.5.
 
+Larry
+---
 
-NOTE: I haven't seen any "Badfw size" message.
-            I applied the patches, hope against hope.
-            (maybe, as a side effect, it can fix my problem)
-------
-iwconfig
-lo         no wireless extensions.
+ drivers/net/wireless/b43legacy/b43legacy.h |    3 ++
+ drivers/net/wireless/b43legacy/main.c      |   32 ++++++++++++++++-----------
+ 2 files changed, 22 insertions(+), 13 deletions(-)
 
-wlan0 unassociated Nickname:"rtl_wifi"
- Mode:Auto Access Point: Not-Associated Sensitivity:0/0
- Retry:off RTS thr:off Fragment thr:off
- Encryption key:off
- Power Management:off
- Link Quality:0 Signal level:0 Noise level:0
- Rx invalid nwid:0 Rx invalid crypt:0 Rx invalid frag:0
- Tx excessive retries:0 Invalid misc:0 Missed beacon:0
-
-
-
-eth0  no wireless extensions.
-------
-iwconfig wlan0 essid <ESSIS>  key restricted <Encryption Key>
-
-r8712u: r8711_wx_set_enc: IW_ENCODE_RESTRICTED
-
-
-iwconfig wlan0
-wlan0 unassociated Nickname:"rtl_wifi"
- Mode:Auto Access Point: Not-Associated Sensitivity:0/0
- Retry:off RTS thr:off Fragment thr:off
- Encryption key:off
- Power Management:off
- Link Quality:0 Signal level:0 Noise level:0
- Rx invalid nwid:0 Rx invalid crypt:0 Rx invalid frag:0
- Tx excessive retries:0 Invalid misc:0 Missed beacon:0
-NOTE: 'iwconfig wlan0 essid ' and 'iwconfig wlan0 key restricted '
- can be tried separately, with or without double quotes
- (for the particular ESSID or KEY), with the same failed result.
-------
-iwconfig wlan0 Mode managed
-iwconfig wlan0
-wlan0 unassociated Nickname:"rtl_wifi"
- Mode:Managed Access Point: Not-Associated Sensitivity:0/0
- Retry:off RTS thr:off Fragment thr:off
- Encryption key:off
- Power Management:off
- Link Quality:0 Signal level:0 Noise level:0
- Rx invalid nwid:0 Rx invalid crypt:0 Rx invalid frag:0
- Tx excessive retries:0 Invalid misc:0 Missed beacon:0
-------
-Any idea what's happening?
-Thanks,
--- Alex
----------------------------------------------------
-For reference:
-[/linux-3.2.9/drivers/staging/rtl8712]$ ls -og os_intfs.c* usb_intf.c*
--rw-rw-r-- 1 15584 2012-03-05 19:25 os_intfs.c
--rw-rw-r-- 1 15781 2012-02-29 19:32 os_intfs.c-orig
--rw-rw-r-- 1 18798 2012-03-05 19:25 usb_intf.c
--rw-rw-r-- 1 18609 2012-02-29 19:32 usb_intf.c-orig
-------
-[/linux-3.2.9/drivers/staging/rtl8712]$ diff os_intfs.c os_intfs.c.orig
-478a479,483
-> /* The interface is no longer Up: */
-> padapter->bup = false;
-> release_firmware(padapter->fw);
-> /* never exit with a firmware callback pending */
-> wait_for_completion(&padapter->rtl8712_fw_ready);
-------
-[/linux-3.2.9/drivers/staging/rtl8712]$ diff usb_intf.c usb_intf.c.orig
-33d32
-< #include 
-
-625,628d623
-< if (padapter->fw_found)
-< release_firmware(padapter->fw);
-< /* never exit with a firmware callback pending */
-< wait_for_completion(&padapter->rtl8712_fw_ready);
+Index: wireless-testing-new/drivers/net/wireless/b43legacy/b43legacy.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/b43legacy/b43legacy.h
++++ wireless-testing-new/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -581,6 +581,9 @@ struct b43legacy_wl {
+ 	struct mutex mutex;		/* locks wireless core state */
+ 	spinlock_t leds_lock;		/* lock for leds */
+ 
++	/* firmware loading work */
++	struct work_struct firmware_load;
++
+ 	/* We can only have one operating interface (802.11 core)
+ 	 * at a time. General information about this interface follows.
+ 	 */
+Index: wireless-testing-new/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-testing-new/drivers/net/wireless/b43legacy/main.c
+@@ -1557,8 +1557,15 @@ err_format:
+ 	return -EPROTO;
+ }
+ 
+-static int b43legacy_request_firmware(struct b43legacy_wldev *dev)
++static int b43legacy_one_core_attach(struct ssb_device *dev,
++				     struct b43legacy_wl *wl);
++static void b43legacy_one_core_detach(struct ssb_device *dev);
++
++static void b43legacy_request_firmware(struct work_struct *work)
+ {
++	struct b43legacy_wl *wl = container_of(work,
++				  struct b43legacy_wl, firmware_load);
++	struct b43legacy_wldev *dev = wl->current_dev;
+ 	struct b43legacy_firmware *fw = &dev->fw;
+ 	const u8 rev = dev->dev->id.revision;
+ 	const char *filename;
+@@ -1624,8 +1631,14 @@ static int b43legacy_request_firmware(st
+ 		if (err)
+ 			goto err_load;
+ 	}
++	err = ieee80211_register_hw(wl->hw);
++	if (err)
++		goto err_one_core_detach;
++	return;
+ 
+-	return 0;
++err_one_core_detach:
++	b43legacy_one_core_detach(dev->dev);
++	goto error;
+ 
+ err_load:
+ 	b43legacy_print_fw_helptext(dev->wl);
+@@ -1639,7 +1652,7 @@ err_no_initvals:
+ 
+ error:
+ 	b43legacy_release_firmware(dev);
+-	return err;
++	return;
+ }
+ 
+ static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
+@@ -2153,9 +2166,6 @@ static int b43legacy_chip_init(struct b4
+ 	macctl |= B43legacy_MACCTL_INFRA;
+ 	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+ 
+-	err = b43legacy_request_firmware(dev);
+-	if (err)
+-		goto out;
+ 	err = b43legacy_upload_microcode(dev);
+ 	if (err)
+ 		goto out; /* firmware is released later */
+@@ -3860,17 +3870,13 @@ static int b43legacy_probe(struct ssb_de
+ 	if (err)
+ 		goto err_wireless_exit;
+ 
+-	if (first) {
+-		err = ieee80211_register_hw(wl->hw);
+-		if (err)
+-			goto err_one_core_detach;
+-	}
++	/* setup and start work to load firmware */
++	INIT_WORK(&wl->firmware_load, b43legacy_request_firmware);
++	schedule_work(&wl->firmware_load);
+ 
+ out:
+ 	return err;
+ 
+-err_one_core_detach:
+-	b43legacy_one_core_detach(dev);
+ err_wireless_exit:
+ 	if (first)
+ 		b43legacy_wireless_exit(dev, wl);
+@@ -3885,6 +3891,7 @@ static void b43legacy_remove(struct ssb_
+ 	/* We must cancel any work here before unregistering from ieee80211,
+ 	 * as the ieee80211 unreg will destroy the workqueue. */
+ 	cancel_work_sync(&wldev->restart_work);
++	cancel_work_sync(&wl->firmware_load);
+ 
+ 	B43legacy_WARN_ON(!wl);
+ 	if (wl->current_dev == wldev)
