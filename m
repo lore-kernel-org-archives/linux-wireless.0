@@ -1,127 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54587 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755220Ab2CDUnN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:13 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 096/101] iwlwifi: remove messages from queue wake/stop
-Date: Sun,  4 Mar 2012 11:29:50 -0800
-Message-Id: <1330889395-533-97-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214428_568515_C7EEFD6E)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:44424 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756031Ab2CINaI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Mar 2012 08:30:08 -0500
+Received: by pbcun15 with SMTP id un15so2533010pbc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 05:30:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1331299538.3491.4.camel@jlt3.sipsolutions.net>
+References: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
+	<1331299538.3491.4.camel@jlt3.sipsolutions.net>
+Date: Fri, 9 Mar 2012 14:30:08 +0100
+Message-ID: <CAGXE3d_M0w7KVB35aX9Kzd=MLU0qkQ27_r_=s84OHtygukbk_g@mail.gmail.com> (sfid-20120309_143018_310040_CCB17798)
+Subject: Re: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses
+ static SMPS
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Mar 9, 2012 at 2:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-03-09 at 14:13 +0100, Helmut Schaa wrote:
+>> Disable multi stream rates (MCS > 7) when a STA is in static SMPS mode
+>> since it has only one active rx chain. Hence, it doesn't even make
+>> sense to sample multi stream rates.
+>>
+>> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>> ---
+>>
+>> I haven't found a STA that makes use of static SMPS, so this is only compile tested.
+>
+> You can easily make a mac80211 use it with the debugfs file?
 
-The only reason we ever stop/wake queues at
-the transport level is now that they become
-full (or non-full), so the messages aren't
-useful any more -- remove them.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   36 ++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    4 +-
- 2 files changed, 20 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 14e5d52..6796559 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -411,7 +411,7 @@ static inline u8 iwl_get_queue_ac(struct iwl_tx_queue *txq)
- }
- 
- static inline void iwl_wake_queue(struct iwl_trans *trans,
--				  struct iwl_tx_queue *txq, const char *msg)
-+				  struct iwl_tx_queue *txq)
- {
- 	u8 queue = txq->swq_id;
- 	u8 ac = queue & 3;
-@@ -422,19 +422,19 @@ static inline void iwl_wake_queue(struct iwl_trans *trans,
- 	if (test_and_clear_bit(hwq, trans_pcie->queue_stopped)) {
- 		if (atomic_dec_return(&trans_pcie->queue_stop_count[ac]) <= 0) {
- 			iwl_op_mode_queue_not_full(trans->op_mode, ac);
--			IWL_DEBUG_TX_QUEUES(trans, "Wake hwq %d ac %d. %s",
--					    hwq, ac, msg);
-+			IWL_DEBUG_TX_QUEUES(trans, "Wake hwq %d ac %d",
-+					    hwq, ac);
- 		} else {
--			IWL_DEBUG_TX_QUEUES(trans, "Don't wake hwq %d ac %d"
--					    " stop count %d. %s",
--					    hwq, ac, atomic_read(&trans_pcie->
--					    queue_stop_count[ac]), msg);
-+			IWL_DEBUG_TX_QUEUES(trans,
-+				"Don't wake hwq %d ac %d stop count %d",
-+				hwq, ac,
-+				atomic_read(&trans_pcie->queue_stop_count[ac]));
- 		}
- 	}
- }
- 
- static inline void iwl_stop_queue(struct iwl_trans *trans,
--				  struct iwl_tx_queue *txq, const char *msg)
-+				  struct iwl_tx_queue *txq)
- {
- 	u8 queue = txq->swq_id;
- 	u8 ac = queue & 3;
-@@ -445,19 +445,19 @@ static inline void iwl_stop_queue(struct iwl_trans *trans,
- 	if (!test_and_set_bit(hwq, trans_pcie->queue_stopped)) {
- 		if (atomic_inc_return(&trans_pcie->queue_stop_count[ac]) > 0) {
- 			iwl_op_mode_queue_full(trans->op_mode, ac);
--			IWL_DEBUG_TX_QUEUES(trans, "Stop hwq %d ac %d"
--					    " stop count %d. %s",
--					    hwq, ac, atomic_read(&trans_pcie->
--					    queue_stop_count[ac]), msg);
-+			IWL_DEBUG_TX_QUEUES(trans,
-+				"Stop hwq %d ac %d stop count %d",
-+				hwq, ac,
-+				atomic_read(&trans_pcie->queue_stop_count[ac]));
- 		} else {
--			IWL_DEBUG_TX_QUEUES(trans, "Don't stop hwq %d ac %d"
--					    " stop count %d. %s",
--					    hwq, ac, atomic_read(&trans_pcie->
--					    queue_stop_count[ac]), msg);
-+			IWL_DEBUG_TX_QUEUES(trans,
-+				"Don't stop hwq %d ac %d stop count %d",
-+				hwq, ac,
-+				atomic_read(&trans_pcie->queue_stop_count[ac]));
- 		}
- 	} else {
--		IWL_DEBUG_TX_QUEUES(trans, "stop hwq %d, but it is stopped/ %s",
--				    hwq, msg);
-+		IWL_DEBUG_TX_QUEUES(trans, "stop hwq %d, but it is stopped",
-+				    hwq);
- 	}
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index f28f4cb..7c80897 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1497,7 +1497,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 			txq->need_update = 1;
- 			iwl_txq_update_write_ptr(trans, txq);
- 		} else {
--			iwl_stop_queue(trans, txq, "Queue is full");
-+			iwl_stop_queue(trans, txq);
- 		}
- 	}
- 	spin_unlock(&txq->lock);
-@@ -1601,7 +1601,7 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
- 				tfd_num, ssn);
- 		freed = iwl_tx_queue_reclaim(trans, txq_id, tfd_num, skbs);
- 		if (iwl_queue_space(&txq->q) > txq->q.low_mark)
--			iwl_wake_queue(trans, txq, "Packets reclaimed");
-+			iwl_wake_queue(trans, txq);
- 	}
- 
- 	spin_unlock(&txq->lock);
--- 
-1.7.0.4
-
+Thanks for the hint, doing some tests with iwlagn right now ...
