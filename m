@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50913 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758313Ab2CSIYd (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:40855 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753867Ab2CINmW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 04:24:33 -0400
-Subject: Re: mac80211 20/40 coexist
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
-	"Manoharan, Sujith" <c_manoha@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAJ-VmomNGku0CNfX+feeeUET4mXEFDj976sSfg-GG-KUSGCWvw@mail.gmail.com> (sfid-20120318_201943_672959_05F441F9)
-References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
-	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
-	 <1331902885.6753.10.camel@jlt3.sipsolutions.net>
-	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
-	 <1332065984.3609.5.camel@jlt3.sipsolutions.net>
-	 <CAJ-VmomNGku0CNfX+feeeUET4mXEFDj976sSfg-GG-KUSGCWvw@mail.gmail.com>
-	 (sfid-20120318_201943_672959_05F441F9)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Mar 2012 09:24:28 +0100
-Message-ID: <1332145468.3359.3.camel@jlt3.sipsolutions.net> (sfid-20120319_092441_584875_91FFBDCE)
-Mime-Version: 1.0
+	Fri, 9 Mar 2012 08:42:22 -0500
+Received: by dajr28 with SMTP id r28so1492094daj.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 05:42:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
+Date: Fri, 9 Mar 2012 14:42:22 +0100
+Message-ID: <CAGXE3d_58okToGOH146vDsgZ_Jf01iZAxDX0pxwBMGSo0BvZYg@mail.gmail.com> (sfid-20120309_144226_282173_3EB79E62)
+Subject: Re: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses
+ static SMPS
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, nbd@openwrt.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-03-18 at 12:19 -0700, Adrian Chadd wrote:
-> On 18 March 2012 03:19, Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > I'm not sure I can believe this -- surely the firmware has to have a way
-> > of dealing with stations that can't do 40 MHz and stations that can, so
-> > switching between the two doesn't seem like a major proposal? We also
-> > don't currently handle the action frames for that, but it seems like we
-> > should.
-> >
-> > Note, however, that we're now discussing something already done --
-> > Paul's patch already removed the channel type update when all we wanted
-> > was update the RC.
-> 
-> When are stations being notified of a CWM change?
+On Fri, Mar 9, 2012 at 2:13 PM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Disable multi stream rates (MCS > 7) when a STA is in static SMPS mode
+> since it has only one active rx chain. Hence, it doesn't even make
+> sense to sample multi stream rates.
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> ---
+>
+> I haven't found a STA that makes use of static SMPS, so this is only compile tested.
 
+Did some tests now, 2-stream rates are masked out correctly when the STA
+enters static SMPS mode ...
 
-
-> I know FreeBSD handles it with a big stick at the moment - it just
-> does a full interface reset and channel change. I don't necessarily
-> like it, but I haven't yet sat down to look at when and why this is
-> occuring.
-
-I'm not convinced this is the right thing to do -- we kinda do/did the
-same thing but we want to change TX bandwidth for the AP peer, not RX
-(channel) bandwidth.
-
-johannes
-
+>  net/mac80211/rc80211_minstrel_ht.c |    9 +++++++++
+>  1 files changed, 9 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index ff5f7b8..2b42564 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -692,6 +692,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+>        int ack_dur;
+>        int stbc;
+>        int i;
+> +       unsigned int smps;
+>
+>        /* fall back to the old minstrel for legacy stations */
+>        if (!sta->ht_cap.ht_supported)
+> @@ -731,6 +732,9 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+>            oper_chan_type != NL80211_CHAN_HT40PLUS)
+>                sta_cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+>
+> +       smps = (sta_cap & IEEE80211_HT_CAP_SM_PS) >>
+> +               IEEE80211_HT_CAP_SM_PS_SHIFT;
+> +
+>        for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
+>                u16 req = 0;
+>
+> @@ -748,6 +752,11 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+>                if ((sta_cap & req) != req)
+>                        continue;
+>
+> +               /* Mark MCS > 7 as unsupported if STA is in static SMPS mode */
+> +               if (smps == WLAN_HT_CAP_SM_PS_STATIC &&
+> +                   minstrel_mcs_groups[i].streams > 1)
+> +                       continue;
+> +
+>                mi->groups[i].supported =
+>                        mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
+>
+> --
+> 1.7.7
+>
