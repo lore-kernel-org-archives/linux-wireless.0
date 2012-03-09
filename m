@@ -1,153 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48839 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754100Ab2CRV6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 17:58:18 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH v2 2/3] mac80211: reduce code duplication in debugfs code
-Date: Sun, 18 Mar 2012 22:58:05 +0100
-Message-Id: <1332107886-41282-2-git-send-email-nbd@openwrt.org> (sfid-20120318_225823_183819_A0D2C129)
-In-Reply-To: <1332107886-41282-1-git-send-email-nbd@openwrt.org>
-References: <1332107886-41282-1-git-send-email-nbd@openwrt.org>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:65225 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754196Ab2CID3A convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Mar 2012 22:29:00 -0500
+MIME-Version: 1.0
+In-Reply-To: <4F58F2D0.5060805@lwfinger.net>
+References: <CAHaq0gKf+VE9T15J91rvyxbF8=rNCExTZfE-WcwHjUN1afjnTA@mail.gmail.com>
+	<CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>
+	<4F581AF8.4080001@lwfinger.net>
+	<CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com>
+	<4F585BA9.6020903@amd.com>
+	<2A76B9D36150BE4293842BC2FE8FF165016A31@SCYBEXDAG04.amd.com>
+	<CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com>
+	<CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com>
+	<4F58F2D0.5060805@lwfinger.net>
+Date: Fri, 9 Mar 2012 11:28:59 +0800
+Message-ID: <CAHaq0gKSSgYX19BH92Pg+gXifSEmjvubc_nd5brO8QeLCpr1yA@mail.gmail.com> (sfid-20120309_042906_216696_EE6BCAD3)
+Subject: Re: rt8192cu on USB3
+From: jerome huang <jerome.syno@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "Xu, Andiry" <Andiry.Xu@amd.com>,
+	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/debugfs_netdev.c |   71 +++++++---------------------------------
- 1 files changed, 13 insertions(+), 58 deletions(-)
+On 9 March 2012 01:56, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 03/08/2012 05:26 AM, jerome huang wrote:
+>>
+>>
+>> I found a interesting thing.
+>>
+>> Here is my original test steps:
+>> 1. plugin 8192 =>  at this step, modules will be inserted
+>> 2. ifconfig wlan0 up =>  at this step, firmware will be uploaded
+>> 3. iwlist wlan0 scanning =>  check if wlan0 works
+>>
+>> The original problem occurs at last step,
+>> there is "always" no ap list result.
+>>
+>> And I found a way to make it work "always":
+>> 1. plugin 8192
+>> 2. ifconfig wlan0 up
+>> 3. ifconfig wlan0 down
+>> 4. ifconfig wlan0 up
+>> 5. iwlist wlan0 scanning
+>> If I up->down->up sequentially, (without scanning after first up),
+>> and then scanning(step 5),
+>> it works!
+>>
+>> Does this mean the firmware is not transfered or written correctly?
+>
+>
+> I did a bit of testing with debug level 4. For kernels 3.2 and older, the
+> firmware file is read by the kernel when the driver is loaded using the
+> synchronous method. I confirm that it is not loaded into the device until
+> the interface is brought up. The upload mechanism is supposed to be waiting
+> while the firmware is uploaded, but that may not be happening.
+>
+> When you did the original 3-step process, was there any delay between steps
+> 2 and 3? Does anything change if you wait for 30 sec between steps 2 and 3?
+>
+> with kernels 3.3 and later, there is a major change in the firmware loading
+> in that an asynchronous method is used. The probe routine run when the
+> driver is loaded places a firmware read request, but does not wait. The
+> interface startup is delayed until the callback routine is entered. This
+> change will not affect when the firmware is loaded into the device.
+>
+> Larry
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index a32eeda..6ed0455 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -499,26 +499,23 @@ IEEE80211_IF_FILE(dot11MeshForwarding, u.mesh.mshcfg.dot11MeshForwarding, DEC);
- IEEE80211_IF_FILE(rssi_threshold, u.mesh.mshcfg.rssi_threshold, DEC);
- #endif
- 
--
--#define DEBUGFS_ADD(name) \
--	debugfs_create_file(#name, 0400, sdata->debugfs.dir, \
--			    sdata, &name##_ops);
--
- #define DEBUGFS_ADD_MODE(name, mode) \
- 	debugfs_create_file(#name, mode, sdata->debugfs.dir, \
- 			    sdata, &name##_ops);
- 
--static void add_sta_files(struct ieee80211_sub_if_data *sdata)
-+#define DEBUGFS_ADD(name) DEBUGFS_ADD_MODE(name, 0400)
-+
-+static void add_common_files(struct ieee80211_sub_if_data *sdata)
- {
- 	DEBUGFS_ADD(drop_unencrypted);
--	DEBUGFS_ADD(flags);
--	DEBUGFS_ADD(state);
--	DEBUGFS_ADD(channel_type);
- 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
- 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
- 	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
- 	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
-+}
- 
-+static void add_sta_files(struct ieee80211_sub_if_data *sdata)
-+{
- 	DEBUGFS_ADD(bssid);
- 	DEBUGFS_ADD(aid);
- 	DEBUGFS_ADD(last_beacon);
-@@ -531,15 +528,6 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
- 
- static void add_ap_files(struct ieee80211_sub_if_data *sdata)
- {
--	DEBUGFS_ADD(drop_unencrypted);
--	DEBUGFS_ADD(flags);
--	DEBUGFS_ADD(state);
--	DEBUGFS_ADD(channel_type);
--	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
--	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
--	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
--	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
--
- 	DEBUGFS_ADD(num_sta_authorized);
- 	DEBUGFS_ADD(num_sta_ps);
- 	DEBUGFS_ADD(dtim_count);
-@@ -549,48 +537,14 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
- 
- static void add_ibss_files(struct ieee80211_sub_if_data *sdata)
- {
--	DEBUGFS_ADD(channel_type);
--	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
--	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
--	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
--	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
--
- 	DEBUGFS_ADD_MODE(tsf, 0600);
- }
- 
- static void add_wds_files(struct ieee80211_sub_if_data *sdata)
- {
--	DEBUGFS_ADD(drop_unencrypted);
--	DEBUGFS_ADD(flags);
--	DEBUGFS_ADD(state);
--	DEBUGFS_ADD(channel_type);
--	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
--	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
--	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
--	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
--
- 	DEBUGFS_ADD(peer);
- }
- 
--static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
--{
--	DEBUGFS_ADD(drop_unencrypted);
--	DEBUGFS_ADD(flags);
--	DEBUGFS_ADD(state);
--	DEBUGFS_ADD(channel_type);
--	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
--	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
--	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
--	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
--}
--
--static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
--{
--	DEBUGFS_ADD(flags);
--	DEBUGFS_ADD(state);
--	DEBUGFS_ADD(channel_type);
--}
--
- #ifdef CONFIG_MAC80211_MESH
- 
- static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
-@@ -651,6 +605,13 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
- 	if (!sdata->debugfs.dir)
- 		return;
- 
-+	DEBUGFS_ADD(flags);
-+	DEBUGFS_ADD(state);
-+	DEBUGFS_ADD(channel_type);
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		add_common_files(sdata);
-+
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_MESH_POINT:
- #ifdef CONFIG_MAC80211_MESH
-@@ -671,12 +632,6 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
- 	case NL80211_IFTYPE_WDS:
- 		add_wds_files(sdata);
- 		break;
--	case NL80211_IFTYPE_MONITOR:
--		add_monitor_files(sdata);
--		break;
--	case NL80211_IFTYPE_AP_VLAN:
--		add_vlan_files(sdata);
--		break;
- 	default:
- 		break;
- 	}
--- 
-1.7.3.2
+It still got no any result if I wait for 30 sec (or longer) between
+(original) step 2 and 3.
+I double confirmed that it always does not work for steps: plugin ->
+up -> scanning
+and always works for steps: plugin -> up -> down -> up -> scanning.
 
+And sometimes it works for next down->up->scanning, sometimes it doesn't.
+
+Is the change of firmware loading in kernel 3.3 made by rtlwifi only,
+or ring expansion in xhci is also necessary?
+
+BR,
+Jerome
