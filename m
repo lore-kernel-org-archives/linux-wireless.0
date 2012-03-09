@@ -1,105 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:63884 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754497Ab2C0N4X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 09:56:23 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] mac80211: prepare ieee80211_mandatory_rates to per-vif
-Date: Tue, 27 Mar 2012 15:55:56 +0200
-Message-ID: <1332856558-5708-2-git-send-email-michal.kazior@tieto.com> (sfid-20120327_155627_286722_1493CB90)
-In-Reply-To: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com>
-References: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:33061 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295Ab2CINN6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Mar 2012 08:13:58 -0500
+Received: by wgbdr13 with SMTP id dr13so1597845wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 05:13:57 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, nbd@openwrt.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses static SMPS
+Date: Fri,  9 Mar 2012 14:13:45 +0100
+Message-Id: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120309_141418_799868_1058833C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for multi-channel operation.
+Disable multi stream rates (MCS > 7) when a STA is in static SMPS mode
+since it has only one active rx chain. Hence, it doesn't even make
+sense to sample multi stream rates.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- net/mac80211/ibss.c        |    6 +++---
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/iface.c       |    2 +-
- net/mac80211/util.c        |    3 ++-
- 4 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 33fd8d9..50ba1fa 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -332,7 +332,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+I haven't found a STA that makes use of static SMPS, so this is only compile tested.
+
+ net/mac80211/rc80211_minstrel_ht.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index ff5f7b8..2b42564 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -692,6 +692,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	int ack_dur;
+ 	int stbc;
+ 	int i;
++	unsigned int smps;
  
- 	/* make sure mandatory rates are always added */
- 	sta->sta.supp_rates[band] = supp_rates |
--			ieee80211_mandatory_rates(local, band);
-+			ieee80211_mandatory_rates(sdata, band);
+ 	/* fall back to the old minstrel for legacy stations */
+ 	if (!sta->ht_cap.ht_supported)
+@@ -731,6 +732,9 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	    oper_chan_type != NL80211_CHAN_HT40PLUS)
+ 		sta_cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
  
- 	return ieee80211_ibss_finish_sta(sta, auth);
- }
-@@ -417,7 +417,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 				prev_rates = sta->sta.supp_rates[band];
- 				/* make sure mandatory rates are always added */
- 				sta->sta.supp_rates[band] = supp_rates |
--					ieee80211_mandatory_rates(local, band);
-+					ieee80211_mandatory_rates(sdata, band);
++	smps = (sta_cap & IEEE80211_HT_CAP_SM_PS) >>
++		IEEE80211_HT_CAP_SM_PS_SHIFT;
++
+ 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
+ 		u16 req = 0;
  
- 				if (sta->sta.supp_rates[band] != prev_rates) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
-@@ -604,7 +604,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+@@ -748,6 +752,11 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 		if ((sta_cap & req) != req)
+ 			continue;
  
- 	/* make sure mandatory rates are always added */
- 	sta->sta.supp_rates[band] = supp_rates |
--			ieee80211_mandatory_rates(local, band);
-+			ieee80211_mandatory_rates(sdata, band);
++		/* Mark MCS > 7 as unsupported if STA is in static SMPS mode */
++		if (smps == WLAN_HT_CAP_SM_PS_STATIC &&
++		    minstrel_mcs_groups[i].streams > 1)
++			continue;
++
+ 		mi->groups[i].supported =
+ 			mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
  
- 	spin_lock(&ifibss->incomplete_lock);
- 	list_add(&sta->list, &ifibss->incomplete_stations);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d9798a3..de9346e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1406,7 +1406,7 @@ void ieee802_11_parse_elems(u8 *start, size_t len,
- u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc);
--u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
-+u32 ieee80211_mandatory_rates(struct ieee80211_sub_if_data *sdata,
- 			      enum ieee80211_band band);
- 
- void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 401c01f..c7c60ce 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1005,7 +1005,7 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
- 
- 	/* reset some values that shouldn't be kept across type changes */
- 	sdata->vif.bss_conf.basic_rates =
--		ieee80211_mandatory_rates(sdata->local,
-+		ieee80211_mandatory_rates(sdata,
- 			sdata->local->hw.conf.channel->band);
- 	sdata->drop_unencrypted = 0;
- 	if (type == NL80211_IFTYPE_STATION)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 32f7a3b..959b2c4 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -868,9 +868,10 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_set_wmm_default(sdata, true);
- }
- 
--u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
-+u32 ieee80211_mandatory_rates(struct ieee80211_sub_if_data *sdata,
- 			      enum ieee80211_band band)
- {
-+	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rate *bitrates;
- 	u32 mandatory_rates;
 -- 
-1.7.0.4
+1.7.7
 
