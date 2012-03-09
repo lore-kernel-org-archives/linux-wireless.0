@@ -1,101 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58238 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932258Ab2CZLek (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 07:34:40 -0400
-Message-ID: <4F70543F.2010007@hauke-m.de> (sfid-20120326_133443_459183_E67C1EFF)
-Date: Mon, 26 Mar 2012 14:34:23 +0300
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>, zajec5@gmail.com,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcma: fix build error on MIPS; implicit pcibios_enable_device
-References: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com> <CAGRGNgVBwKppzMa7HZeWm+ZW1a7u0JKwxxFS2xCRv=bpxXnk+Q@mail.gmail.com> <20120326012038.GA7722@windriver.com> <CAGRGNgVm_cNAdXZcSjj1oUz98vAVNEsdpZZ9L6=cc_sX_AZ8Rg@mail.gmail.com>
-In-Reply-To: <CAGRGNgVm_cNAdXZcSjj1oUz98vAVNEsdpZZ9L6=cc_sX_AZ8Rg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:39805 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052Ab2CIIdO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Mar 2012 03:33:14 -0500
+Subject: Re: [rt2x00-users] [PATCH 3.3 v2] rt2x00: fix random stalls
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+In-Reply-To: <20120309082216.GA2339@redhat.com> (sfid-20120309_092236_584600_4D716D27)
+References: <20120307183103.GB15839@redhat.com> <4F59275B.2010309@gmail.com>
+	 <20120309082216.GA2339@redhat.com> (sfid-20120309_092236_584600_4D716D27)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 09 Mar 2012 09:33:07 +0100
+Message-ID: <1331281987.3491.0.camel@jlt3.sipsolutions.net> (sfid-20120309_093318_079436_39EA5F6E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/26/2012 04:28 AM, Julian Calaby wrote:
-> Hi Paul,
-> 
-> On Mon, Mar 26, 2012 at 12:20, Paul Gortmaker
-> <paul.gortmaker@windriver.com> wrote:
->> [Re: [PATCH] bcma: fix build error on MIPS; implicit pcibios_enable_device] On 26/03/2012 (Mon 11:13) Julian Calaby wrote:
->>
->>> Hi Paul,
->>>
->>> On Mon, Mar 26, 2012 at 11:02, Paul Gortmaker
->>> <paul.gortmaker@windriver.com> wrote:
->>>> The following is seen during allmodconfig builds for MIPS:
->>>>
->>>> drivers/bcma/driver_pci_host.c:518:2: error: implicit declaration
->>>> of function 'pcibios_enable_device' [-Werror=implicit-function-declaration]
->>>> cc1: some warnings being treated as errors
->>>> make[3]: *** [drivers/bcma/driver_pci_host.o] Error 1
->>>>
->>>> Most likey introduced by commit 49dc9577155576b10ff79f0c1486c816b01f58bf
->>>>
->>>>    "bcma: add PCIe host controller"
->>>>
->>>> Add the header instead of implicitly assuming it will be present.
->>>> Sounds like a good idea, but that alone doesn't fix anything.
->>>>
->>>> The real problem is that the Kconfig has settings related to whether
->>>> PCI is possible, i.e.
->>>>
->>>>  config BCMA_HOST_PCI_POSSIBLE
->>>>        bool
->>>>        depends on BCMA && PCI = y
->>>>        default y
->>>>
->>>>  config BCMA_HOST_PCI
->>>>        bool "Support for BCMA on PCI-host bus"
->>>>        depends on BCMA_HOST_PCI_POSSIBLE
->>>>
->>>> ...but what is missing is that BCMA_DRIVER_PCI_HOSTMODE doesn't
->>>> have any dependencies on the above.  Add one.
->>>>
->>>> CC: Hauke Mehrtens <hauke@hauke-m.de>
->>>> CC: John W. Linville <linville@tuxdriver.com>
->>>> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
->>>>
->>>> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->>>> index c1172da..fb7c80f 100644
->>>> --- a/drivers/bcma/Kconfig
->>>> +++ b/drivers/bcma/Kconfig
->>>> @@ -29,7 +29,7 @@ config BCMA_HOST_PCI
->>>>
->>>>  config BCMA_DRIVER_PCI_HOSTMODE
->>>>        bool "Driver for PCI core working in hostmode"
->>>> -       depends on BCMA && MIPS
->>>> +       depends on BCMA && MIPS && BCMA_HOST_PCI
->>>
->>> I don't know the hardware, but I'm sure there'd be situations
->>> (probably for embedded devices) where hostmode would be wanted without
->>> the PCI host support - so shouldn't this depend on
->>> BCMA_HOST_PCI_POSSIBLE?
->>
->> My reading of things is that BCMA_HOST_PCI is equivalent to, or
->> at most a subset of BCMA_HOST_PCI_POSSIBLE.  But if the maintainers
->> want to tweak things accordingly, then great -- I'm just reporting
->> what I see in build failures.
-> 
-> That's not the case.
-> 
-> BCMA_HOST_PCI is a separate config option that depends on
-> ...._POSSIBLE but is user selectable. ...._POSSIBLE isn't user
-> selectable and is automatically "y" when the conditions for PCI
-> support for BCMA are true.
-> 
-> Thanks,
-> 
-Yes that's correct. BCMA_HOST_PCI_POSSIBLE is used to only show
-BCMA_DRIVER_PCI_HOSTMODE if PCI is enabled. For now you are not able to
-use PCI host mode without also supporting client mode in bcma. I have
-only seen device where an other bcma based device was being behind the
-PCIe link.
+On Fri, 2012-03-09 at 09:22 +0100, Stanislaw Gruszka wrote:
 
-Hauke
+> > > +	spin_lock(&queue->tx_lock);
+> > >  	rt2x00queue_pause_queue(queue);
+> > > +	spin_unlock(&queue->tx_lock);
+> > >   exit_free_skb:
+> > >  	ieee80211_free_txskb(hw, skb);
+> > >  }
+> > 
+> > I'm sorry, but I'm still not convinced that we can use spin_lock_bh in
+> > one place of the code and then spin_lock in another place of the code,
+> > using the *same* spinlock.
+> > I always use the cheat sheet shown in:
+> > http://www.kernel.org/pub/linux/kernel/people/rusty/kernel-locking/c214.html
+> > 
+> > which to me shows that by definition we should be using spin_lock_bh in
+> > all cases now, the new ones and the existing cases where we lock tx_lock.
+> 
+> We have bh disabled here since ieee80211_xmit is always called with bh
+> disabled (early on dev_queue_xmit() or in ieee80211_tx_skb_tid()). I can
+> add comment about that.
+
+And in fact if you were to use spin_unlock_bh() in that kind of context
+it would be a bug :-)
+
+johannes
+
