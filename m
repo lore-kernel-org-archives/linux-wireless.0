@@ -1,300 +1,525 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog103.obsmtp.com ([207.126.144.115]:53392 "EHLO
-	eu1sys200aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759314Ab2CBU1J (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44562 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755764Ab2CIWCF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:27:09 -0500
-Received: from zeta.dmz-us.st.com (ns4.st.com [167.4.16.71])
-	by beta.dmz-us.st.com (STMicroelectronics) with ESMTP id 5F28676
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:54 +0000 (GMT)
-Received: from relay1.stm.gmessaging.net (unknown [10.230.100.17])
-	by zeta.dmz-us.st.com (STMicroelectronics) with ESMTP id 5CA9157
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 18:57:41 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay1.stm.gmessaging.net (Postfix) with ESMTPS id A565F24C2C0
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:55 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 21/21] cw1200: Kconfig + Makefile for the driver.
-Date: Fri, 2 Mar 2012 21:26:43 +0100
-Message-ID: <1330720003-15866-22-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212744_786845_925B834C)
-In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
- <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+	Fri, 9 Mar 2012 17:02:05 -0500
+Date: Fri, 9 Mar 2012 16:49:39 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-03-09
+Message-ID: <20120309214939.GH2478@tuxdriver.com> (sfid-20120309_230218_569286_7CFBD39E)
+References: <20120309214118.GG2478@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120309214118.GG2478@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch contains build system files for the cw1200 driver.
+Doh!  Messed-up Dave's address...
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
----
- drivers/net/wireless/Kconfig         |    1 +
- drivers/net/wireless/Makefile        |    2 +
- drivers/net/wireless/cw1200/Kconfig  |  203 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/Makefile |   19 +++
- 4 files changed, 225 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/cw1200/Kconfig
- create mode 100644 drivers/net/wireless/cw1200/Makefile
+On Fri, Mar 09, 2012 at 04:41:18PM -0500, John W. Linville wrote:
+> commit 74dd1521d0b4f940cdd3ce7b9d988836bef589b8
+> 
+> Dave,
+> 
+> It looks like the wireless guys weren't quite done with 3.4 just yet,
+> so here we have another big batch of updates.  The biggest portion
+> of them are some iwlwifi refactoring from Johannes and the rest of
+> the Intel team.  The NFC guys also chime-in with some cleanups for
+> some style issues identified earlier.  Also included is a batch of
+> wl12xx updates, some ssb work from Hauke Mehrtens, a few mesh updates
+> from Thomas and Javier, some random fixes from Dan Carpenter, and a
+> handful of other updates.
+> 
+> Please let me know if there are problems!
+> 
+> Thanks,
+> 
+> John
+> 
+> ---
+> 
+> The following changes since commit 2f2d76cc3e938389feee671b46252dde6880b3b7:
+> 
+>   dlm: Do not allocate a fd for peeloff (2012-03-08 13:52:09 -0800)
+> 
+> are available in the git repository at:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git for-davem
+> 
+> Amit Beka (2):
+>       iwlwifi: add testmode command for rx forwarding
+>       iwlwifi: fixed testmode notifications length
+> 
+> Amitkumar Karwar (4):
+>       mwifiex: handle auto authentication mode correctly
+>       mwifiex: remove unnecessary struct mwifiex_802_11_ssid
+>       mwifiex: fix bug in wildcard scan handling
+>       mwifiex: correction in number of bitrates
+> 
+> Arend van Spriel (9):
+>       brcm80211: fmac: remove unnecessary NULL pointer check
+>       brcm80211: fmac: remove brcmf_usb_attrib structure
+>       brcm80211: fmac: use counters in brcmf_bus structure
+>       brcm80211: fmac: initialize host interface drivers regardless result
+>       brcm80211: fmac: remove firmware requests from init_module syscall
+>       brcm80211: smac: remove firmware requests from init_module syscall
+>       brcm80211: smac: cleanup couple of debug output statements
+>       bcma: return error in bcma_sprom_get() when fallback fails
+>       bcma: add support for on-chip OTP memory used for SPROM storage
+> 
+> Arik Nemtsov (8):
+>       wl12xx: set the ELP entry delay to the FW dyn-ps timeout
+>       wl12xx: change bits in the link_map under spin lock
+>       wl12xx: reset link Tx queues when freeing it
+>       wl12xx: avoid starving the system hlid
+>       wl12xx: flush all Tx queues on tx_flush timeout
+>       wl12xx: flush Tx during suspend and 802.11h chan switch
+>       wl12xx: increase dynamic PS timeout to 200ms
+>       wl12xx: implement SW Tx watchdog
+> 
+> Ashok Nagarajan (2):
+>       {nl,cfg,mac}80211: Implement RSSI threshold for mesh peering
+>       mac80211: Fix potential null pointer dereferencing
+> 
+> Attila Fazekas (1):
+>       rtl8187: Add AD-HOC support
+> 
+> Avinash Patil (1):
+>       mwifiex: correct bitrates advertised to cfg80211
+> 
+> Christian Lamparter (2):
+>       p54: pass interface setup errors back to mac80211
+>       p54pci: use new driver.pm interface for suspend/resume
+> 
+> Chun-Yeow Yeoh (3):
+>       mac80211: Fix the generation of PREQs in proactive RANN mechanism of HWMP
+>       mac80211: fix the support of setting non-forwarding entity in Mesh
+>       ath5k: allow AP and mesh mode to operate simultaneously
+> 
+> Dan Carpenter (6):
+>       rndis_wlan: integer overflows in rndis_wlan_do_link_up_work()
+>       rndis_wlan: remove unneeded variables
+>       rndis_wlan: make some variables unsigned
+>       rndis_wlan: prevent integer overflow in indication()
+>       mwifiex: endian bug in mwifiex_drv_change_adhoc_chan()
+>       airo: fix test for FLAG_RADIO_DOWN
+> 
+> David Spinadel (1):
+>       iwlwifi: add option to test MFP
+> 
+> Don Fry (3):
+>       iwlwifi: separate status to priv and trans
+>       iwlwifi: more status bit factoring
+>       iwlwifi: correct status bit refactoring errors
+> 
+> Eliad Peller (11):
+>       wl12xx: don't start dev role on ibss vifs
+>       wl12xx: consider bss_conf->idle instead of hw->conf.flags
+>       wl12xx: implement sta_state callback
+>       wl12xx: set authorized AP on sta_state notification
+>       wl12xx: increment session_counter for device role as well
+>       wl12xx: set correct vif type in change_interface callback
+>       wl12xx: don't handle change_channel while associated
+>       wl12xx: don't allow scanning while device is in ROC
+>       wl12xx: configure the correct beacon_interval
+>       wl12xx: avoid bug_on_recovery during fw switch
+>       wl12xx: print the tx packet len
+> 
+> Emmanuel Grumbach (2):
+>       iwlwifi: log stop / wake queues
+>       iwlwifi: restore PAN support
+> 
+> Felix Fietkau (14):
+>       Revert "ath9k_hw: Fix false tx hung detection in AR9003 chips"
+>       ath9k: do not call ath9k_hw_txprocdesc on AR9003 outside of the tx tasklet
+>       ath9k_hw: enable interrupts for beacon tx completion events
+>       ath9k: fix drv_tx_last_beacon on AR9003 by processing beacon tx status
+>       mac80211: use 16 bit alignment for the if_ibss bssid field
+>       mac80211: use compare_ether_addr on MAC addresses instead of memcmp
+>       mac80211: add an rx flag for ignoring a packet's signal strength
+>       ath5k: do not stop queues for full calibration
+>       ath5k: do not re-run AGC calibration periodically
+>       ath9k_hw: use cold instead of warm reset on AR9280
+>       ath9k: make MAC sample statistics optional
+>       ath9k: remove rssi/antenna information from recv debug stats
+>       ath9k: get rid of double queueing of rx frames on EDMA
+>       ath9k: fix signal strength reporting issues
+> 
+> Hauke Mehrtens (12):
+>       ssb: sprom fix some sizes / signedness
+>       ssb: remove 5GHz antenna gain from sprom
+>       ssb: fix per path sprom vars
+>       ssb: add alpha2
+>       ssb: add some missing sprom attributes
+>       bcma: export bcma_find_core
+>       bcma: add support for sprom not found on the device
+>       MIPS: BCM47XX: return number of written bytes in nvram_getenv
+>       MIPS: BCM47XX: fix signature of nvram_parse_macaddr
+>       MIPS: BCM47XX: move and extend sprom parsing
+>       MIPS: BCM47XX: provide sprom to bcma bus
+>       b43: prevent firmware on bcm5354 from taking over wrong GPIO pins
+> 
+> Javier Cardona (2):
+>       mac80211_hwsim: Add tsf to beacons, probe responses and radiotap header.
+>       mac80211: Modify tsf via debugfs in mesh interfaces
+> 
+> Jingjun Wu (1):
+>       rtlwifi: rtl8192ce: Fix loss of receive performance
+> 
+> Johannes Berg (87):
+>       cfg80211: fix kernel-doc
+>       mac80211: use common radiotap code for cooked monitors
+>       mac80211: combine QoS with other BSS changes
+>       cfg80211/mac80211: report signal strength for mgmt frames
+>       iwlwifi: always monitor for stuck queues
+>       iwlwifi: move iwl_clear_driver_stations to user
+>       iwlwifi: remove an unused argument
+>       iwlwifi: reduce sta_lock hold time in TX
+>       iwlwifi: simplify code in iwlagn_key_sta_id
+>       iwlwifi: build some station commands directly
+>       iwlwifi: introduce per-queue locks
+>       iwlwifi: make sta lock private & BH lock
+>       iwlwifi: introduce statistics lock
+>       iwlwifi: remove shared lock
+>       iwlwifi: make EXIT_PENDING depend on mac80211
+>       iwlwifi: simplify auth/assoc flow
+>       iwlwifi: remove per-device debug level
+>       iwlwifi: remove SKU from config
+>       iwlwifi: use valid TX/RX antenna from hw_params
+>       iwlwifi: make config const
+>       iwlwifi: reduce IDI code ifdef
+>       iwlwifi: clean up (wowlan) suspend flow
+>       iwlwifi: move wowlan bool into priv
+>       iwlwifi: use ieee80211_tx_status
+>       iwlwifi: pass response packet directly
+>       iwlwifi: don't pass iwl_rx_mem_buffer to upper layers
+>       iwlwifi: refactor PCI-E RX path
+>       iwlwifi: transport's tx_agg_alloc must not sleep
+>       iwlwifi: move queue functions to PCI-E
+>       iwlwifi: iwl_rx_cmd_buffer belongs to transport API
+>       iwlwifi: move tid_to_ac to PCI-E
+>       iwlwifi: move IWL_MASK into file using it
+>       iwlwifi: move traffic log definitions
+>       iwlwifi: fix station HT parameters
+>       iwlwifi: move uCode deallocation to drv
+>       iwlwifi: move iwl_base_params to shared header
+>       iwlwifi: move firmware request into drv
+>       iwlwifi: move firmware completion wait
+>       iwlwifi: move ucode loading to op_mode
+>       iwlwifi: split out firmware store
+>       iwlwifi: remove iwl-wifi.h
+>       iwlwifi: add wrappers for command sending
+>       iwlwifi: move RF/CT kill check to command wrapper
+>       iwlwifi: move lockdep assertion into DVM
+>       iwlwifi: move mutex out of shared
+>       iwlwifi: move rfkill status handling out of transport
+>       iwlwifi: rename ucode.h to fw-file.h
+>       iwlwifi: remove AMT check from transport
+>       iwlwifi: remove shadow_reg_enable from hw_params
+>       iwlwifi: move status check functions out of shared
+>       iwlwifi: make tracing use device as identifier
+>       iwlwifi: virtualize command queue full behaviour
+>       iwlwifi: clean up iwl-core.h inclusions
+>       iwlwifi: remove num_of_queues module parameter
+>       iwlwifi: remove max_txq_num from hw_params
+>       iwlwifi: keep plcp_delta_threshold in priv
+>       iwlwifi: use watchdog timeout from hw_params
+>       iwlwifi: put use_rts_for_aggregation into hw_params
+>       iwlwifi: constify remaining config data
+>       iwlwifi: fix notification wait bug
+>       iwlwifi: abstract out notification wait support
+>       iwlwifi: move ucode_owner to priv
+>       iwlwifi: move all uCode load variables
+>       iwlwifi: move irq to PCIe
+>       iwlwifi: move packet to transport
+>       iwlwifi: virtualize nic_config
+>       iwlwifi: remove priv from shared
+>       iwlwifi: remove PA type configuration
+>       iwlwifi: don't include iwl-prph.h everywhere
+>       iwlwifi: clean up iwl-commands.h
+>       iwlwifi: make iwl_fill_probe_req static
+>       iwlwifi: remove unused arguments from iwlagn_gain_computation
+>       iwlwifi: remove unused argument from rs_initialize_lq
+>       iwlwifi: move iwl_sta_id_or_broadcast to user
+>       iwlwifi: remove unused argument from iwl_init_hw_rates
+>       iwlwifi: remove two unused arguments in testmode
+>       iwlwifi: remove unused argument from iwlagn_suspend
+>       iwlwifi: redesign PASSIVE_NO_RX workaround
+>       iwlwifi: transport's tx_agg_disable must be atomic
+>       iwlwifi: remove BT handlers from lib_ops
+>       iwlwifi: move BT/HT params to shared
+>       iwlwifi: make EEPROM enhanced TX power a bool
+>       iwlwifi: remove unused max_nrg_cck from sensitivity and constify
+>       iwlwifi: return error if loading uCode failed
+>       iwlwifi: remove messages from queue wake/stop
+>       iwlwifi: make iwl_init_context static
+>       iwlwifi: don't delete AP station directly
+> 
+> John W. Linville (1):
+>       Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next into for-davem
+> 
+> Jussi Kivilinna (3):
+>       rndis_wlan: fix le16/le32_to_cpu mix up with config.beacon_period
+>       rndis_wlan: use RNDIS_WLAN_NUM_KEYS for all key index checks
+>       rndis_wlan: use u8 for key indexes
+> 
+> Larry Finger (3):
+>       rtlwifi: Detect misread of end-point count
+>       rtlwifi: Remove extraneous value return
+>       rtlwifi: rtl8192c: Prevent sleeping from invalid context in rtl8192cu
+> 
+> Luciano Coelho (1):
+>       Merge branch 'wl12xx-next' into for-linville
+> 
+> Max Filippov (1):
+>       p54spi: Release GPIO lines and IRQ on error in p54spi_probe
+> 
+> Meenakshi Venkataraman (3):
+>       iwlwifi: configure transport layer from dvm op mode
+>       iwlwifi: move setting up fw parameters
+>       iwlwifi: move command queue number out of the iwl_shared struct
+> 
+> Mohammed Shafi Shajakhan (2):
+>       ath9k: completely zero intialize valid_phy_rate_idx
+>       ath9k: make use of list_for_each_entry_safe
+> 
+> Paul Stewart (1):
+>       mac80211: Filter duplicate IE ids
+> 
+> Rafał Miłecki (1):
+>       bcma: silence PMU warning for BCM4331
+> 
+> Samuel Ortiz (22):
+>       NFC: Export NFCID1 from pn533
+>       NFC: Add device powered netlink attribute
+>       NFC: Factorize the I frame queueing routine
+>       NFC: Handle Receiver Not Ready LLCP frame
+>       NFC: LLCP socket sendmsg implemetation
+>       NFC: Fix bitops usage in LLCP
+>       NFC: Clear pn533 target structure
+>       NFC: Clear LLCP SDPs whan MAC goes down
+>       NFC: Set the right LLCP N(R) value for I frames
+>       NFC: Send LLCP RR frames to acknowledge received I frames
+>       NFC: Set MIU and RW values from CONNECT and CC LLCP frames
+>       NFC: Fragment LLCP I frames
+>       NFC: Export sensf from pn533
+>       NFC: Export Jewel/Topaz ID from pn533
+>       NFC: Export NFCID when detecting a p2p target with pn533
+>       NFC: Unlink LLCP child sockets from llcp_sock_release
+>       NFC: SN is not an invalid GT value
+>       NFC: Remove the rf mode parameter from the DEP link up routine
+>       NFC: Fix LLCP sockets releasing path
+>       NFC: LLCP code identation fixes
+>       NFC: Core code identation fixes
+>       NFC: NCI code identation fixes
+> 
+> Simon Wunderlich (1):
+>       mac80211: update ieee80211_tx_rate_control kerneldoc
+> 
+> Stanislav Yakovlev (1):
+>       net/wireless: ipw2x00: remove WEXT_USECHANNELS define
+> 
+> Stanislaw Gruszka (7):
+>       iwlwifi: dump stack when fail to gain access to the device
+>       iwlwifi: always check if got h/w access before write
+>       iwlwifi: cleanup/fix memory barriers
+>       iwlwifi: use writeb,writel,readl directly
+>       iwlwifi: print DMA stop timeout error only if it happened
+>       iwlwifi: reintroduce iwl_enable_rfkill_int
+>       iwlwifi: make tx_cmd_pool kmem cache global
+> 
+> Thomas Pedersen (3):
+>       cfg80211: expose cfg80211_calculate_bitrate()
+>       mac80211: fix mesh airtime link metric estimating
+>       mac80211: fix smatch lock errors in mesh
+> 
+> Vasanthakumar Thiagarajan (1):
+>       cfg80211: Add an attribute to set inactivity timeout in AP mode
+> 
+> Wey-Yi Guy (2):
+>       iwlwifi: fix cmd_queue number merge
+>       iwlwifi: fix the delta for remove max_txq_num patch
+> 
+>  arch/mips/bcm47xx/Makefile                         |    2 +-
+>  arch/mips/bcm47xx/nvram.c                          |    3 +-
+>  arch/mips/bcm47xx/setup.c                          |  188 +----
+>  arch/mips/bcm47xx/sprom.c                          |  620 +++++++++++++
+>  arch/mips/include/asm/mach-bcm47xx/bcm47xx.h       |    3 +
+>  arch/mips/include/asm/mach-bcm47xx/nvram.h         |    2 +-
+>  drivers/bcma/driver_chipcommon_pmu.c               |    1 +
+>  drivers/bcma/main.c                                |    3 +-
+>  drivers/bcma/sprom.c                               |  182 ++++-
+>  drivers/net/wireless/airo.c                        |    2 +-
+>  drivers/net/wireless/ath/ath5k/ath5k.h             |    1 +
+>  drivers/net/wireless/ath/ath5k/base.c              |   20 +-
+>  drivers/net/wireless/ath/ath5k/mac80211-ops.c      |    4 +
+>  drivers/net/wireless/ath/ath5k/phy.c               |   34 +-
+>  drivers/net/wireless/ath/ath6kl/wmi.c              |    6 +-
+>  drivers/net/wireless/ath/ath9k/Kconfig             |    8 +
+>  drivers/net/wireless/ath/ath9k/ar9003_mac.c        |   26 +-
+>  drivers/net/wireless/ath/ath9k/ath9k.h             |    1 -
+>  drivers/net/wireless/ath/ath9k/beacon.c            |    8 +-
+>  drivers/net/wireless/ath/ath9k/debug.c             |   41 +-
+>  drivers/net/wireless/ath/ath9k/debug.h             |   27 +-
+>  drivers/net/wireless/ath/ath9k/hw.c                |   14 +-
+>  drivers/net/wireless/ath/ath9k/init.c              |    4 +-
+>  drivers/net/wireless/ath/ath9k/mac.c               |    6 +-
+>  drivers/net/wireless/ath/ath9k/main.c              |    3 +-
+>  drivers/net/wireless/ath/ath9k/rc.c                |    2 +-
+>  drivers/net/wireless/ath/ath9k/rc.h                |    2 -
+>  drivers/net/wireless/ath/ath9k/recv.c              |   68 +-
+>  drivers/net/wireless/ath/ath9k/xmit.c              |    7 +-
+>  drivers/net/wireless/b43/main.c                    |    2 +
+>  drivers/net/wireless/b43legacy/phy.c               |    2 +-
+>  .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    4 +-
+>  drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    4 +-
+>  .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   30 +-
+>  drivers/net/wireless/brcm80211/brcmfmac/usb.c      |   32 +-
+>  drivers/net/wireless/brcm80211/brcmfmac/usb.h      |   27 +-
+>  drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    |   20 +-
+>  .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   31 +-
+>  drivers/net/wireless/ipw2x00/ipw2100.c             |    2 -
+>  drivers/net/wireless/ipw2x00/ipw2200.h             |    2 -
+>  drivers/net/wireless/iwlwifi/Kconfig               |   11 +-
+>  drivers/net/wireless/iwlwifi/Makefile              |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-1000.c            |   31 +-
+>  drivers/net/wireless/iwlwifi/iwl-2000.c            |   44 +-
+>  drivers/net/wireless/iwlwifi/iwl-5000.c            |   63 +-
+>  drivers/net/wireless/iwlwifi/iwl-6000.c            |  103 +--
+>  drivers/net/wireless/iwlwifi/iwl-agn-calib.c       |   65 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c         |  101 ++-
+>  drivers/net/wireless/iwlwifi/iwl-agn-rs.c          |    6 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn-rx.c          |  180 ++--
+>  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c        |   91 +--
+>  drivers/net/wireless/iwlwifi/iwl-agn-sta.c         |  385 ++++-----
+>  drivers/net/wireless/iwlwifi/iwl-agn-tt.c          |   47 +-
+>  drivers/net/wireless/iwlwifi/iwl-agn-tx.c          |  164 ++--
+>  drivers/net/wireless/iwlwifi/iwl-agn.c             |  357 +++++---
+>  drivers/net/wireless/iwlwifi/iwl-agn.h             |  166 ++--
+>  drivers/net/wireless/iwlwifi/iwl-cfg.h             |   82 +-
+>  drivers/net/wireless/iwlwifi/iwl-commands.h        |  106 +---
+>  drivers/net/wireless/iwlwifi/iwl-core.c            |  111 +--
+>  drivers/net/wireless/iwlwifi/iwl-core.h            |   78 +--
+>  drivers/net/wireless/iwlwifi/iwl-debug.c           |    4 +-
+>  drivers/net/wireless/iwlwifi/iwl-debug.h           |   26 +-
+>  drivers/net/wireless/iwlwifi/iwl-debugfs.c         |  167 ++---
+>  drivers/net/wireless/iwlwifi/iwl-dev.h             |   37 +-
+>  drivers/net/wireless/iwlwifi/iwl-devtrace.h        |  141 ++--
+>  drivers/net/wireless/iwlwifi/iwl-drv.c             |  684 +++++++++++++++-
+>  drivers/net/wireless/iwlwifi/iwl-drv.h             |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl-eeprom.c          |   69 +-
+>  drivers/net/wireless/iwlwifi/iwl-eeprom.h          |    4 +-
+>  .../iwlwifi/{iwl-ucode.h => iwl-fw-file.h}         |   66 +--
+>  .../net/wireless/iwlwifi/{iwl-wifi.h => iwl-fw.h}  |   97 ++-
+>  drivers/net/wireless/iwlwifi/iwl-io.c              |   69 +-
+>  drivers/net/wireless/iwlwifi/iwl-io.h              |    8 +-
+>  drivers/net/wireless/iwlwifi/iwl-led.c             |    4 +-
+>  drivers/net/wireless/iwlwifi/iwl-mac80211.c        |  403 ++++-----
+>  drivers/net/wireless/iwlwifi/iwl-notif-wait.c      |  157 ++++
+>  .../iwlwifi/{iwl-trans.c => iwl-notif-wait.h}      |   76 ++-
+>  drivers/net/wireless/iwlwifi/iwl-op-mode.h         |   26 +-
+>  drivers/net/wireless/iwlwifi/iwl-pci.c             |   13 +-
+>  drivers/net/wireless/iwlwifi/iwl-power.c           |   14 +-
+>  drivers/net/wireless/iwlwifi/iwl-prph.h            |    4 -
+>  drivers/net/wireless/iwlwifi/iwl-scan.c            |  218 +++---
+>  drivers/net/wireless/iwlwifi/iwl-shared.h          |  331 ++------
+>  drivers/net/wireless/iwlwifi/iwl-testmode.c        |  103 ++-
+>  drivers/net/wireless/iwlwifi/iwl-testmode.h        |   13 +-
+>  drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h  |  104 ++-
+>  drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c   |  313 ++++----
+>  drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c   |  164 +++--
+>  drivers/net/wireless/iwlwifi/iwl-trans-pcie.c      |  285 +++----
+>  drivers/net/wireless/iwlwifi/iwl-trans.h           |  191 +++--
+>  drivers/net/wireless/iwlwifi/iwl-ucode.c           |  911 +++-----------------
+>  drivers/net/wireless/mac80211_hwsim.c              |   45 +-
+>  drivers/net/wireless/mwifiex/cfg80211.c            |   32 +-
+>  drivers/net/wireless/mwifiex/cmdevt.c              |    8 +-
+>  drivers/net/wireless/mwifiex/decl.h                |    5 -
+>  drivers/net/wireless/mwifiex/fw.h                  |   10 +-
+>  drivers/net/wireless/mwifiex/ioctl.h               |    4 +-
+>  drivers/net/wireless/mwifiex/join.c                |    6 +-
+>  drivers/net/wireless/mwifiex/main.h                |   19 +-
+>  drivers/net/wireless/mwifiex/scan.c                |   47 +-
+>  drivers/net/wireless/mwifiex/sta_event.c           |    2 +-
+>  drivers/net/wireless/mwifiex/sta_ioctl.c           |   20 +-
+>  drivers/net/wireless/p54/main.c                    |    5 +-
+>  drivers/net/wireless/p54/p54pci.c                  |   48 +-
+>  drivers/net/wireless/p54/p54spi.c                  |   14 +-
+>  drivers/net/wireless/rndis_wlan.c                  |   61 +-
+>  drivers/net/wireless/rtl818x/rtl8187/dev.c         |  110 ++-
+>  drivers/net/wireless/rtl818x/rtl8187/rtl8187.h     |    9 +
+>  drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |   15 +-
+>  drivers/net/wireless/rtlwifi/usb.c                 |   18 +-
+>  drivers/net/wireless/wl12xx/cmd.c                  |   26 +-
+>  drivers/net/wireless/wl12xx/conf.h                 |    3 +
+>  drivers/net/wireless/wl12xx/main.c                 |  438 ++++++----
+>  drivers/net/wireless/wl12xx/ps.c                   |    4 +-
+>  drivers/net/wireless/wl12xx/scan.c                 |    6 +
+>  drivers/net/wireless/wl12xx/tx.c                   |   41 +-
+>  drivers/net/wireless/wl12xx/tx.h                   |    1 +
+>  drivers/net/wireless/wl12xx/wl12xx.h               |    7 +-
+>  drivers/nfc/pn533.c                                |   31 +-
+>  drivers/ssb/pci.c                                  |   41 +-
+>  drivers/ssb/pcmcia.c                               |   12 +-
+>  drivers/ssb/sdio.c                                 |   12 +-
+>  include/linux/bcma/bcma.h                          |    7 +
+>  include/linux/bcma/bcma_driver_chipcommon.h        |   10 +-
+>  include/linux/nfc.h                                |    1 +
+>  include/linux/nl80211.h                            |   26 +-
+>  include/linux/ssb/ssb.h                            |  102 ++-
+>  include/net/cfg80211.h                             |   29 +-
+>  include/net/mac80211.h                             |   12 +-
+>  include/net/nfc/nci_core.h                         |   10 +-
+>  include/net/nfc/nfc.h                              |   30 +-
+>  net/mac80211/cfg.c                                 |   31 +-
+>  net/mac80211/debugfs_netdev.c                      |    9 +-
+>  net/mac80211/ibss.c                                |   10 +-
+>  net/mac80211/ieee80211_i.h                         |   46 +-
+>  net/mac80211/iface.c                               |    2 +-
+>  net/mac80211/mesh.c                                |    2 +-
+>  net/mac80211/mesh.h                                |    4 +
+>  net/mac80211/mesh_hwmp.c                           |   54 +-
+>  net/mac80211/mesh_pathtbl.c                        |   34 +-
+>  net/mac80211/mesh_plink.c                          |   17 +-
+>  net/mac80211/mlme.c                                |   56 +-
+>  net/mac80211/rx.c                                  |   70 +-
+>  net/mac80211/scan.c                                |   74 ++-
+>  net/mac80211/sta_info.c                            |    5 +-
+>  net/mac80211/sta_info.h                            |    6 +-
+>  net/mac80211/status.c                              |    3 +-
+>  net/mac80211/util.c                                |   46 +-
+>  net/nfc/af_nfc.c                                   |    2 +-
+>  net/nfc/core.c                                     |   50 +-
+>  net/nfc/llcp/commands.c                            |  163 ++++-
+>  net/nfc/llcp/llcp.c                                |  201 +++--
+>  net/nfc/llcp/llcp.h                                |   12 +-
+>  net/nfc/llcp/sock.c                                |  120 ++-
+>  net/nfc/nci/core.c                                 |  113 ++--
+>  net/nfc/nci/data.c                                 |   28 +-
+>  net/nfc/nci/ntf.c                                  |   75 +-
+>  net/nfc/nci/rsp.c                                  |   17 +-
+>  net/nfc/netlink.c                                  |   71 +-
+>  net/nfc/nfc.h                                      |   18 +-
+>  net/nfc/rawsock.c                                  |   16 +-
+>  net/wireless/mesh.c                                |    3 +
+>  net/wireless/mlme.c                                |    7 +-
+>  net/wireless/nl80211.c                             |   22 +-
+>  net/wireless/nl80211.h                             |    3 +-
+>  net/wireless/util.c                                |    1 +
+>  166 files changed, 6184 insertions(+), 4875 deletions(-)
+>  create mode 100644 arch/mips/bcm47xx/sprom.c
+>  rename drivers/net/wireless/iwlwifi/{iwl-ucode.h => iwl-fw-file.h} (76%)
+>  rename drivers/net/wireless/iwlwifi/{iwl-wifi.h => iwl-fw.h} (60%)
+>  create mode 100644 drivers/net/wireless/iwlwifi/iwl-notif-wait.c
+>  rename drivers/net/wireless/iwlwifi/{iwl-trans.c => iwl-notif-wait.h} (59%)
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
 
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index abd3b71..6fcda14 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -286,5 +286,6 @@ source "drivers/net/wireless/wl1251/Kconfig"
- source "drivers/net/wireless/wl12xx/Kconfig"
- source "drivers/net/wireless/zd1211rw/Kconfig"
- source "drivers/net/wireless/mwifiex/Kconfig"
-+source "drivers/net/wireless/cw1200/Kconfig"
- 
- endif # WLAN
-diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-index 98db761..d57fb4b 100644
---- a/drivers/net/wireless/Makefile
-+++ b/drivers/net/wireless/Makefile
-@@ -61,3 +61,5 @@ obj-$(CONFIG_MWIFIEX)	+= mwifiex/
- 
- obj-$(CONFIG_BRCMFMAC)	+= brcm80211/
- obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
-+
-+obj-$(CONFIG_CW1200)	+= cw1200/
-diff --git a/drivers/net/wireless/cw1200/Kconfig b/drivers/net/wireless/cw1200/Kconfig
-new file mode 100644
-index 0000000..43b86dd
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/Kconfig
-@@ -0,0 +1,203 @@
-+menuconfig CW1200
-+	tristate "ST-Ericsson cw1200 WiFi driver"
-+	select MAC80211
-+	select CFG80211
-+	---help---
-+	  This is a mac80211 driver for the ST-Ericsson cw1200 chip-set.
-+	  The driver supports also cw1100 chipset.
-+
-+	  If you enable this option, two modules will be built: cw1200_core
-+	  module with core cw1200 support and cw1200_wlan, an SDIO glue layer
-+	  for the driver.
-+
-+config CW1200_STANDALONE
-+	bool "Build a standalone cw1200 driver"
-+	depends on CW1200
-+	---help---
-+	  Usually it is not enough just to build the driver modules, you need
-+	  to provide platform-specific data for the driver from your mach- code
-+	  (unless you device does not require any power, clock or reset control).
-+
-+	  Say Y here if you would like to build a standalone cw1200 driver,
-+	  not associated with any platform. Likely you will not be able to use
-+	  it for any purposes.
-+
-+	  If unsure, say N.
-+
-+config CW1200_USE_GPIO_IRQ
-+	bool "Use GPIO interrupt"
-+	depends on CW1200 && !CW1200_STANDALONE
-+	---help---
-+	  Say Y here if you want to include GPIO IRQ support instead of SDIO IRQ.
-+
-+	  GPIO IRQ signalling is significantly faster than SDIO, but it requires
-+	  a dedicated GPIO line to be connected to the cw1200 device. It is safe
-+	  to use SDIO IRQ even if GPIO is connected, but it will lead to some
-+	  performance penalty.
-+
-+	  Please refer to your hardware design to find out if SDIO IRQ is
-+	  supported on your platform.
-+
-+	  If unsure, say N.
-+
-+config CW1200_U5500_SUPPORT
-+	bool "Enable U5500 support"
-+	depends on CW1200 && !CW1200_STANDALONE
-+	---help---
-+	  Say Y if you want to enable wlan support on u5500 STE platform.
-+
-+	  u5500 uses a bit different method of enabling power end resetting of
-+	  the chip. The code under this configuration option uses a prcmu_ctrl
-+	  callback in the device platform data structure to enable or disable
-+	  power.
-+
-+	  You can also create a custom prcmu_ctrl callback and use this option
-+	  if the generic power on / power off sequence does not fit your system
-+	  design.
-+
-+	  If unsure, say N.
-+
-+config CW1200_NON_POWER_OF_TWO_BLOCKSIZES
-+	bool "Platform supports non-power-of-two SDIO transfer"
-+	depends on CW1200
-+	---help---
-+	  Say N here only if you are running the driver on a platform
-+	  which does not have support for non-power-of-two SDIO transfer.
-+
-+	  Disabling this option is safe, but it will lead to some performance
-+	  penalty.
-+
-+	  If unsure, say Y.
-+
-+config CW1200_5GHZ_SUPPORT
-+	bool "5GHz band support"
-+	depends on CW1200
-+	---help---
-+	  Say Y if your device supports 5GHz band. Usually a system based on cw1200
-+	  device supports 5GHz band, while a cw1100-based system does not. But it
-+	  might be some variations, please check your system design.
-+
-+	  If unsure, say N.
-+
-+config CW1200_CERTIFICATION_TRICKS
-+	bool "Enable WiFi certification tricks"
-+	depends on CW1200
-+	---help---
-+	  Say Y here if you would like to build a system which can be WiFi-certified.
-+	  It is mostly related to WFD test case 6.1.10 of the WiFi Direct test plan,
-+	  but not only. It is safe to have this option enabled. Impact to the system
-+	  performance is minimal.
-+
-+	  If unsure, say Y.
-+
-+config CW1200_DISABLE_BEACON_HINTS
-+	bool "Disable 11d beacon hints"
-+	depends on CW1200
-+	---help---
-+	  Say Y if you want to disable 11d beacon hints. Usually you don't need to
-+	  do it, because they are used for 11d support in the mac80211 code.
-+
-+	  However, in some variants of design you might know for sure the regulatory
-+	  domain you are residing in. In that rare case using this option you can
-+	  disable unnecessary AI. One of examples of such kind of design is a mobile
-+	  phone, where positioning information is available directly from the mobile
-+	  network, and this information takes precedence over 11d hints.
-+
-+	  If unsure, say N.
-+
-+config CW1200_DEBUGFS
-+	bool "Expose driver internals to DebugFS (DEVELOPMENT)"
-+	depends on CW1200
-+	---help---
-+	  Say Y if you want to expose driver internals to DebugFS.
-+
-+	  If unsure, say N.
-+
-+config CW1200_ITP
-+	bool "Enable ITP DebugFS (DEVELOPMENT)"
-+	depends on CW1200_DEBUGFS
-+	---help---
-+	  Say Y if you want to include ITP (device calibration and "productization")
-+	  code.
-+
-+	  If unsure, say N.
-+
-+menu "Driver debug features"
-+	depends on CW1200
-+
-+config CW1200_BH_DEBUG
-+	bool "Enable low-level device communication logs (DEVELOPMENT)"
-+	---help---
-+	  Say Y if you want to enable low-level communication logs: interrupts,
-+	  device wakeups, wake-downs, suspends, resumes etc.
-+
-+	  If unsure, say N.
-+
-+config CW1200_WSM_DEBUG
-+	bool "Enable WSM API debug messages (DEVELOPMENT)"
-+	---help---
-+	  Say Y if you want to enable WSM logs. The logs will help you to trace
-+	  the sequence of WSM commands sent over the device interface. No additional
-+	  information will be stored, like command payload, just WSM message ID.
-+
-+	  Usually you would like to enable verbose WSM logging in addition.
-+
-+	  If unsure, say N.
-+
-+config CW1200_WSM_DUMPS
-+	bool "Verbose WSM API logging (DEVELOPMENT)"
-+	---help---
-+	  Say Y if you want to enable WSM dumps. The dumps will store in the kernel
-+	  log all data sent over the device interface.
-+
-+	  Note: WSM dumps are quite time- and log space consuming.
-+
-+	  If unsure, say N.
-+
-+config CW1200_WSM_DUMPS_SHORT
-+	depends on CW1200_WSM_DUMPS
-+	bool "Dump only first x bytes (default 20) (DEVELOPMENT)"
-+	---help---
-+	  Say Y if you want to limit amount of data printed in WSM dumps. It reduces
-+	  system performance impact, but reduces also ability to debug some tricky cases.
-+
-+	  If unsure, say Y.
-+
-+config CW1200_TXRX_DEBUG
-+	bool "Enable TX/RX debug messages (DEVELOPMENT)"
-+	---help---
-+	  Say Y if you want to enable TX and RX logs.
-+
-+	  Note: TX logs consumes quite a lot of log space. Usually it's more natural
-+	  to enable WSM dumps instead.
-+
-+	  If unsure, say N.
-+
-+config CW1200_TX_POLICY_DEBUG
-+	bool "Enable TX policy debug (DEVELOPMENT)"
-+	---help---
-+	  Say Y if you want to enable TX rate control logs.
-+
-+	  Usually you do not need this kind of logs. The only exception is if you are
-+	  going to debug rate control selection code in the driver.
-+
-+	  If unsure, say N.
-+
-+config CW1200_STA_DEBUG
-+	bool "Enable STA/AP debug (DEVELOPMENT)"
-+	---help---
-+	  Say Y if you want to enable STA and AP logs.
-+
-+	  This kind of logs is often quite useful for generic debugging and tracing.
-+	  The logs are quite lightweight.
-+
-+	  If unsure, say N.
-+
-+config CW1200_DUMP_ON_ERROR
-+	bool "Dump kernel in case of critical error (DEVELOPMENT)"
-+	---help---
-+	  Say Y only if you really know what are you doing.
-+
-+	  If unsure, say N.
-+
-+endmenu
-diff --git a/drivers/net/wireless/cw1200/Makefile b/drivers/net/wireless/cw1200/Makefile
-new file mode 100644
-index 0000000..01a3290
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/Makefile
-@@ -0,0 +1,19 @@
-+cw1200_core-y := \
-+		fwio.o \
-+		txrx.o \
-+		main.o \
-+		queue.o \
-+		hwio.o \
-+		bh.o \
-+		wsm.o \
-+		sta.o \
-+		ap.o \
-+		scan.o
-+cw1200_core-$(CONFIG_CW1200_DEBUGFS)	+= debug.o
-+cw1200_core-$(CONFIG_CW1200_ITP)	+= itp.o
-+cw1200_core-$(CONFIG_PM)		+= pm.o
-+
-+cw1200_wlan-y := cw1200_sdio.o
-+
-+obj-$(CONFIG_CW1200) += cw1200_core.o
-+obj-$(CONFIG_CW1200) += cw1200_wlan.o
+
+
 -- 
-1.7.9
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
