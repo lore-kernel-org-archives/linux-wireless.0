@@ -1,70 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:32841 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753641Ab2CHCfk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 21:35:40 -0500
-Received: by obbuo6 with SMTP id uo6so38251obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2012 18:35:39 -0800 (PST)
-Message-ID: <4F581AF8.4080001@lwfinger.net> (sfid-20120308_033543_964084_12BE301B)
-Date: Wed, 07 Mar 2012 20:35:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: jerome huang <jerome.syno@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rt8192cu on USB3
-References: <CAHaq0gKf+VE9T15J91rvyxbF8=rNCExTZfE-WcwHjUN1afjnTA@mail.gmail.com> <CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>
-In-Reply-To: <CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:2830 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751658Ab2CJU71 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Mar 2012 15:59:27 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/10] iwlwifi: abstract out missing SEQ_RX_FRAME workaround
+Date: Sat, 10 Mar 2012 13:00:07 -0800
+Message-Id: <1331413215-10027-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120310_215957_119930_94269D57)
+In-Reply-To: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/2012 08:16 PM, jerome huang wrote:
-> log:
-> [53614.238023] Compat-wireless backport release: compat-wireless-v3.2-1-s
-> [53614.244729] Backport based on linux-stable.git v3.2
-> [53614.368074] alg: No test for arc4 (arc4-generic)
-> [53614.402781] cfg80211: Calling CRDA to update world regulatory domain
-> [53614.498603] rtl8192cu 3-3:1.0: usb_probe_interface
-> [53614.503552] rtl8192cu 3-3:1.0: usb_probe_interface - got id
-> [53614.509920] rtl8192cu: rtl8192cu: Chip version 0x11
-> [53615.359336] rtl8192cu: MAC address: 08:10:74:f1:a1:0f
-> [53615.364575] rtl8192cu: Board Type 0
-> [53615.400583] rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
-> [53615.408918] usbcore: registered new interface driver rtl8192cu
-> [53652.483311] rtl8192cu: MAC auto ON okay!
-> [53652.887348] rtl8192cu: Tx queue select: 0x05
-> [53652.921326] rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
->
-> And I'm sure the function rtl_block_fw_writeN is used for firmware uploading.
->
-> On 8 March 2012 10:03, jerome huang<jerome.syno@gmail.com>  wrote:
->> Hi,
->>
->> I found a problem just like in the older discussion "Question about
->> error from xhci-hcd",
->> there was a xhci error "no room on ep ring" when plugin rtl8192cu on USB3.
->> (it works on USB2)
->>
->> After applying Larry's patch "rtlwifi: rtl8192cu: Change firmware
->> upload to use block writes",
->> I still get the same error "no room on ep ring".
->>
->> But under the same compat-wireless version,
->> rt8712 works on USB3.
->>
->> Does anyone still encounter this problem after applying this patch?
->> or do I miss something/patches?
+From: Johannes Berg <johannes.berg@intel.com>
 
-This problem is in the USB system, not in the wireless driver. Keep me as a Cc, 
-but send mail to Sarah Sharp <sarah.a.sharp@linux.intel.com> and
-linux-usb@vger.kernel.org. They will tell you what debugging is needed.
+Mohammed Shafi ran into [1] the SEQ_RX_FRAME workaround
+warning with a statistics notification, this means we
+can't just remove it as we'd hoped.
 
-The patch was an attempt to minimize the number of writes needed to upload the 
-firmware, but it had no effect; however, it was still a good change.
+Abstract it out so that the higher layer can configure
+this as a kind of "filter" in the transport.
 
-I'm confused about one statement you made. There is no rt8712 driver, but there 
-is one named r8712u; however, it controls a completely different device than 
-rtl8192cu. Do you have both devices?
+[1] http://mid.gmane.org/CAD2nsn1_DzbRHuSbS_1rFNzuux_9pW1-pABEasQ01_y7-ndO5w@mail.gmail.com
 
-Larry
+Reported-by: Mohammed Shafi <shafi.wireless@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |   10 +++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 +
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |   29 ++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    7 +++++
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |    9 ++++++
+ 5 files changed, 39 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 28422c0..5ef1585 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1186,6 +1186,14 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 	u16 num_mac;
+ 	u32 ucode_flags;
+ 	struct iwl_trans_config trans_cfg;
++	static const u8 no_reclaim_cmds[] = {
++		REPLY_RX_PHY_CMD,
++		REPLY_RX,
++		REPLY_RX_MPDU_CMD,
++		REPLY_COMPRESSED_BA,
++		STATISTICS_NOTIFICATION,
++		REPLY_TX,
++	};
+ 
+ 	/************************
+ 	 * 1. Allocating HW data
+@@ -1211,6 +1219,8 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 	 * to know about.
+ 	 */
+ 	trans_cfg.op_mode = op_mode;
++	trans_cfg.no_reclaim_cmds = no_reclaim_cmds;
++	trans_cfg.n_no_reclaim_cmds = ARRAY_SIZE(no_reclaim_cmds);
+ 
+ 	ucode_flags = fw->ucode_capa.flags;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 6796559..1c2fe87 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -291,6 +291,8 @@ struct iwl_trans_pcie {
+ 	wait_queue_head_t ucode_write_waitq;
+ 	unsigned long status;
+ 	u8 cmd_queue;
++	u8 n_no_reclaim_cmds;
++	u8 no_reclaim_cmds[MAX_NO_RECLAIM_CMDS];
+ };
+ 
+ #define IWL_TRANS_GET_PCIE_TRANS(_iwl_trans) \
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 9bc3c73..8bec0e1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -395,13 +395,17 @@ static void iwl_rx_handle_rxbuf(struct iwl_trans *trans,
+ 	 *   there is no command buffer to reclaim.
+ 	 * Ucode should set SEQ_RX_FRAME bit if ucode-originated,
+ 	 *   but apparently a few don't get set; catch them here. */
+-	reclaim = !(pkt->hdr.sequence & SEQ_RX_FRAME) &&
+-		  (pkt->hdr.cmd != REPLY_RX_PHY_CMD) &&
+-		  (pkt->hdr.cmd != REPLY_RX) &&
+-		  (pkt->hdr.cmd != REPLY_RX_MPDU_CMD) &&
+-		  (pkt->hdr.cmd != REPLY_COMPRESSED_BA) &&
+-		  (pkt->hdr.cmd != STATISTICS_NOTIFICATION) &&
+-		  (pkt->hdr.cmd != REPLY_TX);
++	reclaim = !(pkt->hdr.sequence & SEQ_RX_FRAME);
++	if (reclaim) {
++		int i;
++
++		for (i = 0; i < trans_pcie->n_no_reclaim_cmds; i++) {
++			if (trans_pcie->no_reclaim_cmds[i] == pkt->hdr.cmd) {
++				reclaim = false;
++				break;
++			}
++		}
++	}
+ 
+ 	sequence = le16_to_cpu(pkt->hdr.sequence);
+ 	index = SEQ_TO_INDEX(sequence);
+@@ -412,17 +416,6 @@ static void iwl_rx_handle_rxbuf(struct iwl_trans *trans,
+ 	else
+ 		cmd = NULL;
+ 
+-	/* warn if this is cmd response / notification and the uCode
+-	 * didn't set the SEQ_RX_FRAME for a frame that is
+-	 * uCode-originated
+-	 * If you saw this code after the second half of 2012, then
+-	 * please remove it
+-	 */
+-	WARN(pkt->hdr.cmd != REPLY_TX && reclaim == false &&
+-	     (!(pkt->hdr.sequence & SEQ_RX_FRAME)),
+-	     "reclaim is false, SEQ_RX_FRAME unset: %s\n",
+-	     get_cmd_string(pkt->hdr.cmd));
+-
+ 	err = iwl_op_mode_rx(trans->op_mode, &rxcb, cmd);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 14b0361..4900dfa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1626,6 +1626,13 @@ static void iwl_trans_pcie_configure(struct iwl_trans *trans,
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+ 	trans_pcie->cmd_queue = trans_cfg->cmd_queue;
++	if (WARN_ON(trans_cfg->n_no_reclaim_cmds > MAX_NO_RECLAIM_CMDS))
++		trans_pcie->n_no_reclaim_cmds = 0;
++	else
++		trans_pcie->n_no_reclaim_cmds = trans_cfg->n_no_reclaim_cmds;
++	if (trans_pcie->n_no_reclaim_cmds)
++		memcpy(trans_pcie->no_reclaim_cmds, trans_cfg->no_reclaim_cmds,
++		       trans_pcie->n_no_reclaim_cmds * sizeof(u8));
+ }
+ 
+ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 7d1990c..95f3faf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -274,6 +274,8 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
+ 	return p;
+ }
+ 
++#define MAX_NO_RECLAIM_CMDS	6
++
+ /**
+  * struct iwl_trans_config - transport configuration
+  *
+@@ -281,10 +283,17 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
+  *	Must be set before any other call.
+  * @cmd_queue: the index of the command queue.
+  *	Must be set before start_fw.
++ * @no_reclaim_cmds: Some devices erroneously don't set the
++ *	SEQ_RX_FRAME bit on some notifications, this is the
++ *	list of such notifications to filter. Max length is
++ *	%MAX_NO_RECLAIM_CMDS.
++ * @n_no_reclaim_cmds: # of commands in list
+  */
+ struct iwl_trans_config {
+ 	struct iwl_op_mode *op_mode;
+ 	u8 cmd_queue;
++	const u8 *no_reclaim_cmds;
++	int n_no_reclaim_cmds;
+ };
+ 
+ /**
+-- 
+1.7.0.4
+
