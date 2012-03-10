@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60146 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030519Ab2CAOfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 09:35:53 -0500
-Message-ID: <4F4F8934.6070101@hauke-m.de> (sfid-20120301_153609_553961_7CEF5E17)
-Date: Thu, 01 Mar 2012 15:35:32 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Saul St. John" <saul.stjohn@gmail.com>,
-	Rafal Milecki <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for SPROM
- storage
-References: <1330033977-5741-1-git-send-email-arend@broadcom.com> <4F48D997.1060400@hauke-m.de> <4F4B571E.7040704@broadcom.com> <4F4D34FA.8070800@hauke-m.de> <4F4F83D2.8030101@broadcom.com>
-In-Reply-To: <4F4F83D2.8030101@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:2830 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751849Ab2CJU70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Mar 2012 15:59:26 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/10] iwlwifi: remove TX hex debug
+Date: Sat, 10 Mar 2012 13:00:06 -0800
+Message-Id: <1331413215-10027-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120310_215959_422473_D066E6DB)
+In-Reply-To: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/01/2012 03:12 PM, Arend van Spriel wrote:
-> On 02/28/2012 09:11 PM, Hauke Mehrtens wrote:
->> On 02/27/2012 11:12 AM, Arend van Spriel wrote:
->>> On 02/25/2012 01:52 PM, Hauke Mehrtens wrote:
->>>> I will test you patch on my device soon and will report if something is
->>>> wrong. If you are sending a non RFC patch in the next days I would
->>>> rebase my patch onto yours. The code searching in the SoCs flash chip
->>>> will be added to run if bcma_sprom_onchip_available() returns false.
->>>
->>> Appreciate any testing on SoCs. I think I will need some time to modify
->>> brcmsmac so let your patch go first.
->>
->> The sprom part of my SoC is working with this patch on top of my sprom
->> patches, but it uses the sprom from flash/nvram for both wifi devices
->> (one integrated in the bCM4716 and the other a BCM43224 connected to the
->> PCIe host controller of the BCM4716).
->> For my BCM4716 bcma_sprom_ext_available() and
->> bcma_sprom_onchip_available() are returning false and for the BCM43224
->> bcma_sprom_ext_available() is returning false and
->> bcma_sprom_onchip_offset() 0.
-> 
-> Thanks, Hauke
-> 
-> Did the BCM43224 come with the router. If so I am assuming the onchip is
-> not used and the system relies on flash/nvram completely. I will inform
-> whether my assumption is correct.
-Yes the BCM43224 is direly soldered onto the board where also the
-BCM4716 is on, there is no physical PCIe port or something like this.
-The nvram on the flash chip contains the sprom for this devices, one set
-of variables in the nvram has the prefix pci/1/1/ (for the BCM43224 with
-the options for 5GHz only) and the other has sb/1/ (for the BCM4716 with
-the options for 2.4 GHz only).
+From: Johannes Berg <johannes.berg@intel.com>
 
-It is this device: http://infodepot.wikia.com/wiki/Netgear_WNDR3400
+Tracing is much better for this, so
+remove the hex printk debug for the
+TX command.
 
-Hauke
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 9162856..14b0361 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1466,8 +1466,6 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 	IWL_DEBUG_TX(trans, "sequence nr = 0X%x\n",
+ 		     le16_to_cpu(dev_cmd->hdr.sequence));
+ 	IWL_DEBUG_TX(trans, "tx_flags = 0X%x\n", le32_to_cpu(tx_cmd->tx_flags));
+-	iwl_print_hex_dump(trans, IWL_DL_TX, (u8 *)tx_cmd, sizeof(*tx_cmd));
+-	iwl_print_hex_dump(trans, IWL_DL_TX, (u8 *)tx_cmd->hdr, hdr_len);
+ 
+ 	/* Set up entry for this TFD in Tx byte-count array */
+ 	iwl_trans_txq_update_byte_cnt_tbl(trans, txq, le16_to_cpu(tx_cmd->len));
+-- 
+1.7.0.4
+
