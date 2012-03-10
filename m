@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.polymtl.ca ([132.207.4.11]:43364 "EHLO smtp.polymtl.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754466Ab2C0QnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 12:43:03 -0400
-Received: from localhost (imp-4-1.polymtl.ca [132.207.4.76])
-	by smtp.polymtl.ca (8.14.3/8.14.3) with ESMTP id q2RGh1Nr023819
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2012 12:43:01 -0400
-Message-ID: <1332866581.4f71ee152ce84@www.imp.polymtl.ca> (sfid-20120327_184311_346221_00E2D26A)
-Date: Tue, 27 Mar 2012 12:43:01 -0400
-From: Naveen Goswamy <naveen.goswamy@polymtl.ca>
-To: linux-wireless@vger.kernel.org
-Subject: brcmsmac TCP problems and txop exceeded
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from vms173007pub.verizon.net ([206.46.173.7]:58964 "EHLO
+	vms173007pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750930Ab2CJSKw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Mar 2012 13:10:52 -0500
+Received: from vznit170136 ([unknown] [192.168.1.3]) by vms173007.mailsrvcs.net
+ (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
+ with ESMTPA id <0M0O00LCZL63FWD0@vms173007.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Sat, 10 Mar 2012 12:10:52 -0600 (CST)
+Date: Sat, 10 Mar 2012 12:10:51 -0600 (CST)
+From: alupu@verizon.net
+To: Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org
+Message-id: <7971088.142916.1331403052068.JavaMail.root@vznit170136> (sfid-20120310_191105_130500_EBA5228A)
+Subject: Re: r8712u staging in kernel 3.2.9
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, this thread should be a continuation of one I started about a month ago and
-can be found here:
+ Hi Larry,
 
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/86324
+I ran a few more tests around the subject thread.
+Brought up my machine on the Knoppix-6.7.1 DVD, (his latest):
 
-(I lost the header to it and inadvertantly cross posted into another thread, my
-apologies for that)
+uname -a
+Linux Microknoppix 3.0.4 #12 SMP PREEMPT Thu Sep 8 05:27:05 CEST 2011
+ i686 GNU/Linux
 
+iwconfig --version
+iwconfig Wireless-Tools version 30
+ Compatible with Wireless Extension v11 to v22.
 
+ Kernel Currently compiled with Wireless Extension v22.
 
-So here goes:
+Please note the same weird version, 30.
+There must be a thriving black market for wireless-tools in Germany :)
 
-I have the BCM4313 [14e4:4727] (rev 01)
+Whatever driver Knoppix uses, it is in the kernel
+(i.e., not as a module) and BTW, 'iwconfig wlan0 essid ...'
+ doesn't work either.
 
-When using wireshark, I see that I am getting many {TCP Retransmission,TCP Dup
-ACK,TCP RST} with {TCP, HTTP, SSH} when using brcmsmac driver in the 3.2.1
-kernel.  I've tried 3.3-rc5 kernel with similar results.
+lsusb --version
+lsusb (usbutils) 0.87
 
-I notice a lot of these popping up in /var/log/messages as well:
+Two odd things:
+1. Bus 002 Device 003:
+ ID 0bda:8172 Realtek Semiconductor Corp. RTL8191S WLAN Adapter
+ 
+Please note "RTL8191S" above.
 
-ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 155/256 dur
-1746/1504
-ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
-1546/1504
-ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
-1546/1504
+2. ls -og /lib/firmware/rtlwifi
+ -rw-r--r-- 1 122328 Jan 4 2011 rtl8712u.bin
 
+As opposed to things on my subject machine (3.2.9):
+lsusb --version
+lsusb (usbutils) 0.73
 
-any ideas how to solve this?
+1. Bus 002 Device 003: ID 0bda:8172 Realtek Semiconductor Corp.
+Note: the missing "RTL8191S" could very well be caused by
+ my using a lower lsusb version.
 
+2. ls -og /lib/firmware/rtlwifi
+ -rw-r--r-- 1 129304 2012-03-04 15:42 rtl8712u.bin
+------
+
+The 'menuconfig' on my version, 3.2.9, has only these choices for
+RTL staging devices:
+ 8187SE
+ 8192U
+ 8192E
+ 8712 (8192SU)
+
+No trace of an RTL8191S possibility.
+
+Maybe you can make more heads (or even tails) of it.
 
 Regards,
+-- Alex
 
-ng
+PS.  Just to prevent any uncalled-for suspicions, this Rosewill device
+works smoothly and perfectly on Win XP (very same machine, different
+partition) and Win 7.  Surprise, surprise.
