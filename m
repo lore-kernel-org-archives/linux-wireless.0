@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51544 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755167Ab2CDUnJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:09 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 070/101] iwlwifi: remove unused argument from iwl_init_hw_rates
-Date: Sun,  4 Mar 2012 11:29:24 -0800
-Message-Id: <1330889395-533-71-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214526_668689_14A0E00D)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58415 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756221Ab2CJC5u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Mar 2012 21:57:50 -0500
+Received: by iagz16 with SMTP id z16so3158399iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 18:57:49 -0800 (PST)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, zefir.kurtisi@neratec.com,
+	chunkeey@googlemail.com, Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH v2] ath9k: Fix mactime from being clobbered in rx_status
+Date: Fri,  9 Mar 2012 18:57:39 -0800
+Message-Id: <1331348259-14985-1-git-send-email-ashok@cozybit.com> (sfid-20120310_035754_424558_E2AB4382)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+mactime was being overwritten by the function ath9k_rx_skb_preprocess. Fixed by
+memsetting rx_status in ath_rx_tasklet.
 
-The function never uses the priv argument as it
-only fills in the passed data, so remove the
-argument.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+v1:
+Fix reverting "ath9k: trivial: reorder rx_tasklet processing" logic (Christian
+Lamparter)
+ drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 4cd375c..397faf9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1010,8 +1010,7 @@ void iwl_cancel_deferred_work(struct iwl_priv *priv)
- 	del_timer_sync(&priv->ucode_trace);
- }
- 
--static void iwl_init_hw_rates(struct iwl_priv *priv,
--			      struct ieee80211_rate *rates)
-+static void iwl_init_hw_rates(struct ieee80211_rate *rates)
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 1b1b279..f4ae3ba 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -982,8 +982,6 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
  {
- 	int i;
+ 	struct ath_hw *ah = common->ah;
  
-@@ -1090,7 +1089,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 		IWL_ERR(priv, "initializing geos failed: %d\n", ret);
- 		goto err_free_channel_map;
- 	}
--	iwl_init_hw_rates(priv, priv->ieee_rates);
-+	iwl_init_hw_rates(priv->ieee_rates);
+-	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+-
+ 	/*
+ 	 * everything but the rate is checked here, the rate check is done
+ 	 * separately to avoid doing two lookups for a rate for each frame.
+@@ -1841,6 +1839,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (sc->sc_flags & SC_OP_RXFLUSH)
+ 			goto requeue_drop_frag;
  
- 	return 0;
- 
++		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
++
+ 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
+ 		if (rs.rs_tstamp > tsf_lower &&
+ 		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
 -- 
-1.7.0.4
+1.7.5.4
 
