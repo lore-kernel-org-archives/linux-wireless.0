@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37122 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965463Ab2CBXaP convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48494 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900Ab2CJRQ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 18:30:15 -0500
-Received: by vbbff1 with SMTP id ff1so1980354vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 15:30:14 -0800 (PST)
+	Sat, 10 Mar 2012 12:16:27 -0500
+Message-ID: <4F5B8C66.4060808@candelatech.com> (sfid-20120310_181631_281918_50A11B62)
+Date: Sat, 10 Mar 2012 09:16:22 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1330730316.3865.0.camel@jlt3.sipsolutions.net>
-References: <1330729524-1010-1-git-send-email-thomas@cozybit.com>
- <1330729524-1010-3-git-send-email-thomas@cozybit.com> <1330730316.3865.0.camel@jlt3.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Fri, 2 Mar 2012 15:29:54 -0800
-Message-ID: <CAG6hwVNhs7Fk1VLbvpj0sa5C=HE7iy46xFBU0uoJ-YOj6YYoOg@mail.gmail.com> (sfid-20120303_003019_726394_8D7C0A4A)
-Subject: Re: [PATCH 3/3] mac80211: fix mesh airtime link metric estimating
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Add iface name when calling WARN-ON.
+References: <1331318216-27235-1-git-send-email-greearb@candelatech.com>  (sfid-20120310_015306_799372_9A7E4047) <1331366543.3348.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1331366543.3348.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 2, 2012 at 3:18 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2012-03-02 at 15:05 -0800, Thomas Pedersen wrote:
->> Airtime link metric estimation was broken in HT mesh, use
->> cfg80211_calculate_bitrate to get the right rate value.
+On 03/10/2012 12:02 AM, Johannes Berg wrote:
+> On Fri, 2012-03-09 at 10:36 -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> This lets the user know which interface has failed
+>> the check_sdata_in_driver check.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>> :100644 100644 e8960ae... e62e7c3... M	net/mac80211/driver-ops.h
+>>   net/mac80211/driver-ops.h |    6 +++++-
+>>   1 files changed, 5 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+>> index e8960ae..e62e7c3 100644
+>> --- a/net/mac80211/driver-ops.h
+>> +++ b/net/mac80211/driver-ops.h
+>> @@ -7,7 +7,11 @@
+>>
+>>   static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
+>>   {
+>> -	WARN_ON(!(sdata->flags&  IEEE80211_SDATA_IN_DRIVER));
+>> +	if (unlikely(!(sdata->flags&  IEEE80211_SDATA_IN_DRIVER))) {
+>> +		printk(KERN_ERR "%s:  Failed check-sdata-in-driver check, flags: 0x%x\n",
+>> +		       sdata->dev->name, sdata->flags);
+>> +		WARN_ON(1);
+>> +	}
 >
->> -     if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
->> +     sta_set_sinfo(sta, &sinfo);
->> +     rate = cfg80211_calculate_bitrate(&sinfo.txrate);
->> +     if (WARN_ON(!rate))
->>               return MAX_METRIC;
+> How about WARN(!(...), ...) instead -- that way the message will be part
+> of the warning too.
 >
-> Patch 1 should be rolled into this, but I don't like it -- you fill a
-> lot of info you don't need, I think the rate should be factored out of
-> sta_set_sinfo then
->
+> johannes
 
-Yes that would be better.
+Sure.  Also, should I maybe un-inline this thing since it is now a bit
+bigger code wise?
 
 Thanks,
-Thomas
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
