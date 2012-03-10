@@ -1,37 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:41173 "EHLO ackle.nomi.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932480Ab2CEPSK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 10:18:10 -0500
-Date: Mon, 5 Mar 2012 16:18:08 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>, security@kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20120305151808.GA24309@nomi.cz> (sfid-20120305_161834_322304_00B20CD7)
-References: <1321755233.22510.1.camel@wwguy-ubuntu> <20111120032016.GA14520@nomi.cz> <1321763314.22510.4.camel@wwguy-ubuntu> <20111120204007.GA7273@nomi.cz> <20120210180929.GA17733@nomi.cz> <20120214092020.GB12905@redhat.com> <20120305140130.GA15186@nomi.cz> <20120305145700.GA17800@redhat.com> <20120305150031.GA22387@nomi.cz> <20120305151138.GB17800@redhat.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35753 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150Ab2CJAWA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Mar 2012 19:22:00 -0500
+Received: by wejx9 with SMTP id x9so1519051wej.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 16:21:59 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 3/5 V2] p54usb: Load firmware from work queue and not from probe routine
+Date: Sat, 10 Mar 2012 01:21:53 +0100
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <1331267337-19605-1-git-send-email-Larry.Finger@lwfinger.net> <201203092245.14420.chunkeey@googlemail.com> <4F5A9612.8040301@lwfinger.net>
+In-Reply-To: <4F5A9612.8040301@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20120305151138.GB17800@redhat.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201203100121.54274.chunkeey@googlemail.com> (sfid-20120310_012205_437061_C64698ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Saturday 10 March 2012 00:45:22 Larry Finger wrote:
+> On 03/09/2012 03:45 PM, Christian Lamparter wrote:
+> > On Friday, March 09, 2012 05:28:57 AM Larry Finger wrote:
+> >> Drivers that load firmware from their probe routine have problems with the
+> >> latest versions of udev as they get timeouts while waiting for user
+> >> space to start. The problem is fixed by loading the firmware and starting
+> >> mac80211 from a work queue. By using this method, most of the
+> >> original code is preserved.
+> >>
+> >> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+> >> ---
+> > Well, I thought this over and I think unless we change the Kconfig
+> > and make the backend modules [p54pci, p54usb and p54spi]
+> > module-only options, we have to go with request_firmware_nowait.
+> >
+> > You see, if the p54* modules are compiled into the very bzImage:
+> > The instant workqueue option wouldn't work because the device
+> > might be initialized before the filesystem is. A combo approach
+> > [delayed workqueue, when no userspacehelper is available and a
+> > direct call to request_firmware (when it is availabe)] would
+> > work too, but then we would be reimplementing
+> > request_firmware_nowait ...
+> 
+> Christian,
+> 
+> Your point is well taken. I will rewrite this one. John was
+> holding it for 3.5 anyway.
+Thanks, I really appreciate your help. In the meantime. I'll try
+to talk some sense into the pcmcia and firmware_class people [or
+they talk some sense into me ;)].
 
-On Mon, Mar 05, 2012 at 04:11:41PM +0100, Stanislaw Gruszka wrote:
-> Perhaps bug was triggered because KVM 32-bit guest had CONFIG_CRYPTO_AES_NI_INTEL
-> enabled ?
+> Do we still want to try for the legacy firmware if the primary
+> is not available?
+It's not like we drop support for legacy firmware, I just want to
+get rid of the confusing name [The first generation usb devices
+uses a isl3886 chip too [behind a net2280 pci<->usb bridge]. So
+people tried to use the usb firmwares with pcmcia/pci cards -
+needless to say that didn't work]. Of course, this wasn't the only
+reason why I hated the idea of having them in the first place, so
+while I lost the argument back then... At least I managed to keep
+the legacy firmware names from being listed by modinfo.
+So officially we "never" really claimed we know them :-D.
 
-Nope. CONFIG_CRYPTO_AES_NI_INTEL is enabled only in the 64-bit host kernel.
-Guest kernel version is 2.6.32-220.2.1.el6.i686 and there's no mention of
-AES_NI_INTEL in its .config.
-
-(And I do run a 32-bit userspace, perhaps if I had 64-bit userspace, the guest
-would be safe. Or maybe not. I have no idea and no time to get a 64-bit
-userspace. :-))
-
--- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+Regards,
+	Christan
