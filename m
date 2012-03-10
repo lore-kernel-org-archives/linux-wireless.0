@@ -1,946 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:50772 "EHLO
-	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759320Ab2CBU1J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:27:09 -0500
-Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 0F153CB
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:18:38 +0000 (GMT)
-Received: from relay2.stm.gmessaging.net (unknown [10.230.100.18])
-	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 2345CA71
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:27:02 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay2.stm.gmessaging.net (Postfix) with ESMTPS id CB9C1A8065
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:53 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 16/21] cw1200: itp.*, internal device test and calibration code.
-Date: Fri, 2 Mar 2012 21:26:38 +0100
-Message-ID: <1330720003-15866-17-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212744_220018_DCC6FD5F)
-In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
- <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:15620 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752173Ab2CJU73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Mar 2012 15:59:29 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/10] iwlwifi: Add TLVs and fields for 16.0 uCode
+Date: Sat, 10 Mar 2012 13:00:13 -0800
+Message-Id: <1331413215-10027-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120310_220009_358283_C21CD8E0)
+In-Reply-To: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch implements a debugfs entry which is used primary
-for device calibration purposes. Not needed for an end-user.
+From: David Spinadel <david.spinadel@intel.com>
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+New TLVs for ucode sections that are not known as
+instruction or data.
+
+New TLVs for phy-configuration and default calibrations.
+
+Add default calib and phy config fields to iwl_fw.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/cw1200/itp.c |  739 +++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/itp.h |  151 ++++++++
- 2 files changed, 890 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/cw1200/itp.c
- create mode 100644 drivers/net/wireless/cw1200/itp.h
+ drivers/net/wireless/iwlwifi/iwl-drv.c     |   84 ++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h |    5 ++
+ drivers/net/wireless/iwlwifi/iwl-fw.h      |   19 ++++++
+ drivers/net/wireless/iwlwifi/iwl-shared.h  |   16 -----
+ 4 files changed, 108 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/cw1200/itp.c b/drivers/net/wireless/cw1200/itp.c
-new file mode 100644
-index 0000000..eb7e53b
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/itp.c
-@@ -0,0 +1,739 @@
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index a21af3d..19ccd36 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -208,6 +208,25 @@ struct fw_img_parsing {
+ 	int sec_counter;
+ };
+ 
 +/*
-+ * mac80211 glue code for mac80211 ST-Ericsson CW1200 drivers
-+ * ITP code
-+ *
-+ * Copyright (c) 2010-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
++ * struct fw_sec_parsing: to extract fw section and it's offset from tlv
 + */
-+
-+#include <linux/module.h>
-+#include <linux/debugfs.h>
-+#include <linux/poll.h>
-+#include <linux/time.h>
-+#include <linux/kallsyms.h>
-+#include <net/mac80211.h>
-+#include "cw1200.h"
-+#include "debug.h"
-+#include "itp.h"
-+#include "sta.h"
-+
-+static int __cw1200_itp_open(struct cw1200_common *priv);
-+static int __cw1200_itp_close(struct cw1200_common *priv);
-+static void cw1200_itp_rx_start(struct cw1200_common *priv);
-+static void cw1200_itp_rx_stop(struct cw1200_common *priv);
-+static void cw1200_itp_rx_stats(struct cw1200_common *priv);
-+static void cw1200_itp_rx_reset(struct cw1200_common *priv);
-+static void cw1200_itp_tx_stop(struct cw1200_common *priv);
-+static void cw1200_itp_handle(struct cw1200_common *priv,
-+			      struct sk_buff *skb);
-+static void cw1200_itp_err(struct cw1200_common *priv,
-+			   int err,
-+			   int arg);
-+static void __cw1200_itp_tx_stop(struct cw1200_common *priv);
-+
-+static ssize_t cw1200_itp_read(struct file *file,
-+	char __user *user_buf, size_t count, loff_t *ppos)
-+{
-+	struct cw1200_common *priv = file->private_data;
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	struct sk_buff *skb;
-+	int ret;
-+
-+	if (skb_queue_empty(&itp->log_queue))
-+		return 0;
-+
-+	skb = skb_dequeue(&itp->log_queue);
-+	ret = copy_to_user(user_buf, skb->data, skb->len);
-+	*ppos += skb->len;
-+	skb->data[skb->len] = 0;
-+	itp_printk(KERN_DEBUG "[ITP] >>> %s", skb->data);
-+	consume_skb(skb);
-+
-+	return skb->len - ret;
-+}
-+
-+static ssize_t cw1200_itp_write(struct file *file,
-+	const char __user *user_buf, size_t count, loff_t *ppos)
-+{
-+	struct cw1200_common *priv = file->private_data;
-+	struct sk_buff *skb;
-+
-+	if (!count || count > 1024)
-+		return -EINVAL;
-+	skb = dev_alloc_skb(count + 1);
-+	if (!skb)
-+		return -ENOMEM;
-+	skb_trim(skb, 0);
-+	skb_put(skb, count + 1);
-+	if (copy_from_user(skb->data, user_buf, count)) {
-+		kfree_skb(skb);
-+		return -EFAULT;
-+	}
-+	skb->data[count] = 0;
-+
-+	cw1200_itp_handle(priv, skb);
-+	consume_skb(skb);
-+	return count;
-+}
-+
-+static unsigned int cw1200_itp_poll(struct file *file, poll_table *wait)
-+{
-+	struct cw1200_common *priv = file->private_data;
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	unsigned int mask = 0;
-+
-+	poll_wait(file, &itp->read_wait, wait);
-+
-+	if (!skb_queue_empty(&itp->log_queue))
-+		mask |= POLLIN | POLLRDNORM;
-+
-+	mask |= POLLOUT | POLLWRNORM;
-+
-+	return mask;
-+}
-+
-+static int cw1200_itp_open(struct inode *inode, struct file *file)
-+{
-+	struct cw1200_common *priv = inode->i_private;
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	int ret = 0;
-+
-+	file->private_data = priv;
-+	if (atomic_inc_return(&itp->open_count) == 1) {
-+		ret = __cw1200_itp_open(priv);
-+		if (ret && !atomic_dec_return(&itp->open_count))
-+			__cw1200_itp_close(priv);
-+	} else {
-+		atomic_dec(&itp->open_count);
-+		ret = -EBUSY;
-+	}
-+
-+	return ret;
-+}
-+
-+static int cw1200_itp_close(struct inode *inode, struct file *file)
-+{
-+	struct cw1200_common *priv = file->private_data;
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	if (!atomic_dec_return(&itp->open_count)) {
-+		__cw1200_itp_close(priv);
-+		wake_up(&itp->close_wait);
-+	}
-+	return 0;
-+}
-+
-+static const struct file_operations fops_itp = {
-+	.open = cw1200_itp_open,
-+	.read = cw1200_itp_read,
-+	.write = cw1200_itp_write,
-+	.poll = cw1200_itp_poll,
-+	.release = cw1200_itp_close,
-+	.llseek = default_llseek,
-+	.owner = THIS_MODULE,
-+};
-+
-+static void cw1200_itp_fill_pattern(u8 *data, int size,
-+		enum cw1200_itp_data_modes mode)
-+{
-+	u8 *p = data;
-+
-+	if (size <= 0)
-+		return;
-+
-+	switch (mode) {
-+	default:
-+	case ITP_DATA_ZEROS:
-+		memset(data, 0x0, size);
-+		break;
-+	case ITP_DATA_ONES:
-+		memset(data, 0xff, size);
-+		break;
-+	case ITP_DATA_ZERONES:
-+		memset(data, 0x55, size);
-+		break;
-+	case ITP_DATA_RANDOM:
-+		while (p < data+size-sizeof(u32)) {
-+			(*(u32 *)p) = random32();
-+			p += sizeof(u32);
-+		}
-+		while (p < data+size) {
-+			(*p) = random32() & 0xFF;
-+			p++;
-+		}
-+		break;
-+	}
-+	return;
-+}
-+
-+static void cw1200_itp_tx_work(struct work_struct *work)
-+{
-+	struct cw1200_itp *itp = container_of(work, struct cw1200_itp,
-+		    tx_work.work);
-+	struct cw1200_common *priv = itp->priv;
-+	atomic_set(&priv->bh_tx, 1);
-+	wake_up(&priv->bh_wq);
-+}
-+
-+static void cw1200_itp_tx_finish(struct work_struct *work)
-+{
-+	struct cw1200_itp *itp = container_of(work, struct cw1200_itp,
-+		    tx_finish.work);
-+	__cw1200_itp_tx_stop(itp->priv);
-+}
-+
-+int cw1200_itp_init(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+
-+	itp->priv = priv;
-+	atomic_set(&itp->open_count, 0);
-+	atomic_set(&itp->stop_tx, 0);
-+	atomic_set(&itp->awaiting_confirm, 0);
-+	skb_queue_head_init(&itp->log_queue);
-+	spin_lock_init(&itp->tx_lock);
-+	init_waitqueue_head(&itp->read_wait);
-+	init_waitqueue_head(&itp->write_wait);
-+	init_waitqueue_head(&itp->close_wait);
-+	INIT_DELAYED_WORK(&itp->tx_work, cw1200_itp_tx_work);
-+	INIT_DELAYED_WORK(&itp->tx_finish, cw1200_itp_tx_finish);
-+	itp->data = NULL;
-+	itp->hdr_len = WSM_TX_EXTRA_HEADROOM +
-+			sizeof(struct ieee80211_hdr_3addr);
-+
-+	if (!debugfs_create_file("itp", S_IRUSR | S_IWUSR,
-+			priv->debug->debugfs_phy, priv, &fops_itp))
-+		return -ENOMEM;
-+
-+	return 0;
-+}
-+
-+void cw1200_itp_release(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+
-+	wait_event_interruptible(itp->close_wait,
-+			!atomic_read(&itp->open_count));
-+
-+	WARN_ON(atomic_read(&itp->open_count));
-+
-+	skb_queue_purge(&itp->log_queue);
-+	cw1200_itp_tx_stop(priv);
-+}
-+
-+static int __cw1200_itp_open(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+
-+	if (!priv->vif)
-+		return -EINVAL;
-+	if (priv->join_status)
-+		return -EINVAL;
-+	itp->saved_channel = priv->channel;
-+	if (!priv->channel)
-+		priv->channel = &priv->hw->
-+			wiphy->bands[IEEE80211_BAND_2GHZ]->channels[0];
-+	wsm_set_bssid_filtering(priv, false);
-+	cw1200_itp_rx_reset(priv);
-+	return 0;
-+}
-+
-+static int __cw1200_itp_close(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	if (atomic_read(&itp->test_mode) == TEST_MODE_RX_TEST)
-+		cw1200_itp_rx_stop(priv);
-+	cw1200_itp_tx_stop(priv);
-+	cw1200_disable_listening(priv);
-+	cw1200_update_filtering(priv);
-+	priv->channel = itp->saved_channel;
-+	return 0;
-+}
-+
-+bool cw1200_is_itp(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	return atomic_read(&itp->open_count) != 0;
-+}
-+
-+static void cw1200_itp_rx_reset(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	itp->rx_cnt = 0;
-+	itp->rx_rssi = 0;
-+	itp->rx_rssi_max = -1000;
-+	itp->rx_rssi_min = 1000;
-+}
-+
-+static void cw1200_itp_rx_start(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+
-+	itp_printk(KERN_DEBUG "[ITP] RX start, band = %d, ch = %d\n",
-+			itp->band, itp->ch);
-+	atomic_set(&itp->test_mode, TEST_MODE_RX_TEST);
-+	cw1200_update_listening(priv, false);
-+	priv->channel = &priv->hw->
-+		wiphy->bands[itp->band]->channels[itp->ch];
-+	cw1200_update_listening(priv, true);
-+	wsm_set_bssid_filtering(priv, false);
-+}
-+
-+static void cw1200_itp_rx_stop(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	itp_printk(KERN_DEBUG "[ITP] RX stop\n");
-+	atomic_set(&itp->test_mode, TEST_MODE_NO_TEST);
-+	cw1200_itp_rx_reset(priv);
-+}
-+
-+static void cw1200_itp_rx_stats(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	struct sk_buff *skb;
-+	char buf[128];
-+	int len, ret;
-+	struct wsm_counters_table counters;
-+
-+	ret = wsm_get_counters_table(priv, &counters);
-+
-+	if (ret)
-+		cw1200_itp_err(priv, -EBUSY, 20);
-+
-+	if (!itp->rx_cnt)
-+		len = snprintf(buf, sizeof(buf), "1,0,0,0,0,%d\n",
-+				counters.countRxPacketErrors);
-+	else
-+		len = snprintf(buf, sizeof(buf), "1,%d,%ld,%d,%d,%d\n",
-+			itp->rx_cnt,
-+			itp->rx_cnt ? itp->rx_rssi / itp->rx_cnt : 0,
-+			itp->rx_rssi_min, itp->rx_rssi_max,
-+			counters.countRxPacketErrors);
-+
-+	if (len <= 0) {
-+		cw1200_itp_err(priv, -EBUSY, 21);
-+		return;
-+	}
-+
-+	skb = dev_alloc_skb(len);
-+	if (!skb) {
-+		cw1200_itp_err(priv, -ENOMEM, 22);
-+		return;
-+	}
-+
-+	itp->rx_cnt = 0;
-+	itp->rx_rssi = 0;
-+	itp->rx_rssi_max = -1000;
-+	itp->rx_rssi_min = 1000;
-+
-+	skb_trim(skb, 0);
-+	skb_put(skb, len);
-+
-+	memcpy(skb->data, buf, len);
-+	skb_queue_tail(&itp->log_queue, skb);
-+	wake_up(&itp->read_wait);
-+}
-+
-+static void cw1200_itp_tx_start(struct cw1200_common *priv)
-+{
-+	struct wsm_tx *tx;
-+	struct ieee80211_hdr_3addr *hdr;
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	struct wsm_association_mode assoc_mode = {
-+		.flags = WSM_ASSOCIATION_MODE_USE_PREAMBLE_TYPE,
-+		.preambleType = itp->preamble,
-+	};
-+	int len;
-+	u8 da_addr[6] = ITP_DEFAULT_DA_ADDR;
-+
-+	/* Rates index 4 and 5 are not supported */
-+	if (itp->rate > 3)
-+		itp->rate += 2;
-+
-+	itp_printk(KERN_DEBUG "[ITP] TX start: band = %d, ch = %d, rate = %d,"
-+			" preamble = %d, number = %d, data_mode = %d,"
-+			" interval = %d, power = %d, data_len = %d\n",
-+			itp->band, itp->ch, itp->rate, itp->preamble,
-+			itp->number, itp->data_mode, itp->interval_us,
-+			itp->power, itp->data_len);
-+
-+	len = itp->hdr_len + itp->data_len;
-+
-+	itp->data = kmalloc(len, GFP_KERNEL);
-+	tx = (struct wsm_tx *)itp->data;
-+	tx->hdr.len = itp->data_len + itp->hdr_len;
-+	tx->hdr.id = __cpu_to_le16(0x0004 | 1 << 6);
-+	tx->maxTxRate = itp->rate;
-+	tx->queueId = 3;
-+	tx->more = 0;
-+	tx->flags = 0xc;
-+	tx->packetID = 0x55ff55;
-+	tx->reserved = 0;
-+	tx->expireTime = 1;
-+
-+	if (itp->preamble == ITP_PREAMBLE_GREENFIELD)
-+		tx->htTxParameters = WSM_HT_TX_GREENFIELD;
-+	else if (itp->preamble == ITP_PREAMBLE_MIXED)
-+		tx->htTxParameters = WSM_HT_TX_MIXED;
-+
-+	hdr = (struct ieee80211_hdr_3addr *)&itp->data[sizeof(struct wsm_tx)];
-+	memset(hdr, 0, sizeof(*hdr));
-+	hdr->frame_control = cpu_to_le16(IEEE80211_FTYPE_DATA |
-+			IEEE80211_FCTL_TODS);
-+	memcpy(hdr->addr1, da_addr, ETH_ALEN);
-+	memcpy(hdr->addr2, priv->vif->addr, ETH_ALEN);
-+	memcpy(hdr->addr3, da_addr, ETH_ALEN);
-+
-+	cw1200_itp_fill_pattern(&itp->data[itp->hdr_len],
-+			itp->data_len, itp->data_mode);
-+
-+	cw1200_update_listening(priv, false);
-+	priv->channel = &priv->hw->
-+		wiphy->bands[itp->band]->channels[itp->ch];
-+	WARN_ON(wsm_set_output_power(priv, itp->power));
-+	if (itp->preamble == ITP_PREAMBLE_SHORT ||
-+			itp->preamble == ITP_PREAMBLE_LONG)
-+		WARN_ON(wsm_set_association_mode(priv,
-+					&assoc_mode));
-+	wsm_set_bssid_filtering(priv, false);
-+	cw1200_update_listening(priv, true);
-+
-+	spin_lock_bh(&itp->tx_lock);
-+	atomic_set(&itp->test_mode, TEST_MODE_TX_TEST);
-+	atomic_set(&itp->awaiting_confirm, 0);
-+	atomic_set(&itp->stop_tx, 0);
-+	atomic_set(&priv->bh_tx, 1);
-+	ktime_get_ts(&itp->last_sent);
-+	wake_up(&priv->bh_wq);
-+	spin_unlock_bh(&itp->tx_lock);
-+}
-+
-+void __cw1200_itp_tx_stop(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	spin_lock_bh(&itp->tx_lock);
-+	kfree(itp->data);
-+	itp->data = NULL;
-+	atomic_set(&itp->test_mode, TEST_MODE_NO_TEST);
-+	spin_unlock_bh(&itp->tx_lock);
-+}
-+
-+static void cw1200_itp_tx_stop(struct cw1200_common *priv)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	itp_printk(KERN_DEBUG "[ITP] TX stop\n");
-+	atomic_set(&itp->stop_tx, 1);
-+	flush_workqueue(priv->workqueue);
-+
-+	/* time for FW to confirm all tx requests */
-+	msleep(500);
-+
-+	__cw1200_itp_tx_stop(priv);
-+}
-+
-+static void cw1200_itp_get_version(struct cw1200_common *priv,
-+		enum cw1200_itp_version_type type)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	struct sk_buff *skb;
-+	char buf[ITP_BUF_SIZE];
-+	size_t size = 0;
-+	int len;
-+	itp_printk(KERN_DEBUG "[ITP] print %s version\n", type == ITP_CHIP_ID ?
-+			"chip" : "firmware");
-+
-+	len = snprintf(buf, ITP_BUF_SIZE, "2,");
-+	if (len <= 0) {
-+		cw1200_itp_err(priv, -EINVAL, 40);
-+		return;
-+	}
-+	size += len;
-+
-+	switch (type) {
-+	case ITP_CHIP_ID:
-+		len = cw1200_print_fw_version(priv, buf+size,
-+				ITP_BUF_SIZE - size);
-+
-+		if (len <= 0) {
-+			cw1200_itp_err(priv, -EINVAL, 41);
-+			return;
-+		}
-+		size += len;
-+		break;
-+	case ITP_FW_VER:
-+		len = snprintf(buf+size, ITP_BUF_SIZE - size,
-+				"%d.%d", priv->wsm_caps.hardwareId,
-+				priv->wsm_caps.hardwareSubId);
-+		if (len <= 0) {
-+			cw1200_itp_err(priv, -EINVAL, 42);
-+			return;
-+		}
-+		size += len;
-+		break;
-+	default:
-+		cw1200_itp_err(priv, -EINVAL, 43);
-+		break;
-+	}
-+
-+	len = snprintf(buf+size, ITP_BUF_SIZE-size, "\n");
-+	if (len <= 0) {
-+		cw1200_itp_err(priv, -EINVAL, 44);
-+		return;
-+	}
-+	size += len;
-+
-+	skb = dev_alloc_skb(size);
-+	if (!skb) {
-+		cw1200_itp_err(priv, -ENOMEM, 45);
-+		return;
-+	}
-+
-+	skb_trim(skb, 0);
-+	skb_put(skb, size);
-+
-+	memcpy(skb->data, buf, size);
-+	skb_queue_tail(&itp->log_queue, skb);
-+	wake_up(&itp->read_wait);
-+}
-+
-+int cw1200_itp_get_tx(struct cw1200_common *priv, u8 **data,
-+		size_t *tx_len, int *burst)
-+{
-+	struct cw1200_itp *itp;
-+	struct timespec now;
-+	int time_left_us;
-+
-+	if (!priv->debug)
-+		return 0;
-+
-+	itp	= &priv->debug->itp;
-+
-+	if (!itp)
-+		return 0;
-+
-+	spin_lock_bh(&itp->tx_lock);
-+	if (atomic_read(&itp->test_mode) != TEST_MODE_TX_TEST)
-+		goto out;
-+
-+	if (atomic_read(&itp->stop_tx))
-+		goto out;
-+
-+	if (itp->number == 0) {
-+		atomic_set(&itp->stop_tx, 1);
-+		queue_delayed_work(priv->workqueue, &itp->tx_finish,
-+				HZ/10);
-+		goto out;
-+	}
-+
-+	if (!itp->data)
-+		goto out;
-+
-+	if (priv->hw_bufs_used >= 2) {
-+		if (!atomic_read(&priv->bh_rx))
-+				atomic_set(&priv->bh_rx, 1);
-+		atomic_set(&priv->bh_tx, 1);
-+		goto out;
-+	}
-+
-+	ktime_get_ts(&now);
-+	time_left_us = (itp->last_sent.tv_sec -
-+			now.tv_sec)*1000000 +
-+		(itp->last_sent.tv_nsec - now.tv_nsec)/1000
-+		+ itp->interval_us;
-+
-+	if (time_left_us > ITP_TIME_THRES_US) {
-+		queue_delayed_work(priv->workqueue, &itp->tx_work,
-+				ITP_US_TO_MS(time_left_us)*HZ/1000);
-+		goto out;
-+	}
-+
-+	if (time_left_us > 50)
-+		udelay(time_left_us);
-+
-+	if (itp->number > 0)
-+		itp->number--;
-+
-+	*data = itp->data;
-+	*tx_len = itp->data_len + itp->hdr_len;
-+
-+	if (itp->data_mode == ITP_DATA_RANDOM)
-+		cw1200_itp_fill_pattern(&itp->data[itp->hdr_len],
-+				itp->data_len, itp->data_mode);
-+	*burst = 2;
-+	atomic_set(&priv->bh_tx, 1);
-+	ktime_get_ts(&itp->last_sent);
-+	atomic_add(1, &itp->awaiting_confirm);
-+	spin_unlock_bh(&itp->tx_lock);
-+	return 1;
-+
-+out:
-+	spin_unlock_bh(&itp->tx_lock);
-+	return 0;
-+}
-+
-+bool cw1200_itp_rxed(struct cw1200_common *priv, struct sk_buff *skb)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	struct ieee80211_rx_status *rx = IEEE80211_SKB_RXCB(skb);
-+	int signal;
-+
-+	if (atomic_read(&itp->test_mode) != TEST_MODE_RX_TEST)
-+		return cw1200_is_itp(priv);
-+	if (rx->freq != priv->channel->center_freq)
-+		return true;
-+
-+	signal = rx->signal;
-+	itp->rx_cnt++;
-+	itp->rx_rssi += signal;
-+	if (itp->rx_rssi_min > rx->signal)
-+		itp->rx_rssi_min = rx->signal;
-+	if (itp->rx_rssi_max < rx->signal)
-+		itp->rx_rssi_max = rx->signal;
-+
-+	return true;
-+}
-+
-+void cw1200_itp_wake_up_tx(struct cw1200_common *priv)
-+{
-+	wake_up(&priv->debug->itp.write_wait);
-+}
-+
-+bool cw1200_itp_tx_running(struct cw1200_common *priv)
-+{
-+	if (atomic_read(&priv->debug->itp.awaiting_confirm) ||
-+			atomic_read(&priv->debug->itp.test_mode) ==
-+			TEST_MODE_TX_TEST) {
-+		atomic_sub(1, &priv->debug->itp.awaiting_confirm);
-+		return true;
-+	}
-+	return false;
-+}
-+
-+static void cw1200_itp_handle(struct cw1200_common *priv,
-+			      struct sk_buff *skb)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	const struct wiphy *wiphy = priv->hw->wiphy;
-+	int cmd;
-+	int ret;
-+
-+	itp_printk(KERN_DEBUG "[ITP] <<< %s", skb->data);
-+	if (sscanf(skb->data, "%d", &cmd) != 1) {
-+		cw1200_itp_err(priv, -EINVAL, 1);
-+		return;
-+	}
-+
-+	switch (cmd) {
-+	case 1: /* RX test */
-+		if (atomic_read(&itp->test_mode)) {
-+			cw1200_itp_err(priv, -EBUSY, 0);
-+			return;
-+		}
-+		ret = sscanf(skb->data, "%d,%d,%d",
-+				&cmd, &itp->band, &itp->ch);
-+		if (ret != 3) {
-+			cw1200_itp_err(priv, -EINVAL, ret + 1);
-+			return;
-+		}
-+		if (itp->band >= 2)
-+			cw1200_itp_err(priv, -EINVAL, 2);
-+		else if (!wiphy->bands[itp->band])
-+			cw1200_itp_err(priv, -EINVAL, 2);
-+		else if (itp->ch >=
-+				wiphy->bands[itp->band]->n_channels)
-+			cw1200_itp_err(priv, -EINVAL, 3);
-+		else {
-+			cw1200_itp_rx_stats(priv);
-+			cw1200_itp_rx_start(priv);
-+		}
-+		break;
-+	case 2: /* RX stat */
-+		cw1200_itp_rx_stats(priv);
-+		break;
-+	case 3: /* RX/TX stop */
-+		if (atomic_read(&itp->test_mode) == TEST_MODE_RX_TEST) {
-+			cw1200_itp_rx_stats(priv);
-+			cw1200_itp_rx_stop(priv);
-+		} else if (atomic_read(&itp->test_mode) == TEST_MODE_TX_TEST) {
-+			cw1200_itp_tx_stop(priv);
-+		} else
-+			cw1200_itp_err(priv, -EBUSY, 0);
-+		break;
-+	case 4: /* TX start */
-+		if (atomic_read(&itp->test_mode) != TEST_MODE_NO_TEST) {
-+			cw1200_itp_err(priv, -EBUSY, 0);
-+			return;
-+		}
-+		ret = sscanf(skb->data, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-+				&cmd, &itp->band, &itp->ch, &itp->rate,
-+				&itp->preamble, &itp->number, &itp->data_mode,
-+				&itp->interval_us, &itp->power, &itp->data_len);
-+		if (ret != 10) {
-+			cw1200_itp_err(priv, -EINVAL, ret + 1);
-+			return;
-+		}
-+		if (itp->band >= 2)
-+			cw1200_itp_err(priv, -EINVAL, 2);
-+		else if (!wiphy->bands[itp->band])
-+			cw1200_itp_err(priv, -EINVAL, 2);
-+		else if (itp->ch >=
-+				wiphy->bands[itp->band]->n_channels)
-+			cw1200_itp_err(priv, -EINVAL, 3);
-+		else if (itp->rate >= 20)
-+			cw1200_itp_err(priv, -EINVAL, 4);
-+		else if (itp->preamble >= ITP_PREAMBLE_MAX)
-+			cw1200_itp_err(priv, -EINVAL, 5);
-+		else if (itp->data_mode >= ITP_DATA_MAX_MODE)
-+			cw1200_itp_err(priv, -EINVAL, 7);
-+		else if (itp->data_len < ITP_MIN_DATA_SIZE ||
-+				itp->data_len > priv->wsm_caps.sizeInpChBuf -
-+				itp->hdr_len)
-+			cw1200_itp_err(priv, -EINVAL, 8);
-+		else {
-+		    cw1200_itp_tx_start(priv);
-+		}
-+		break;
-+	case 5:
-+		cw1200_itp_get_version(priv, ITP_CHIP_ID);
-+		break;
-+	case 6:
-+		cw1200_itp_get_version(priv, ITP_FW_VER);
-+		break;
-+
-+	}
-+}
-+
-+static void cw1200_itp_err(struct cw1200_common *priv,
-+			   int err, int arg)
-+{
-+	struct cw1200_itp *itp = &priv->debug->itp;
-+	struct sk_buff *skb;
-+	static char buf[255];
-+	int len;
-+
-+	len = snprintf(buf, sizeof(buf), "%d,%d\n",
-+		err, arg);
-+	if (len <= 0)
-+		return;
-+
-+	skb = dev_alloc_skb(len);
-+	if (!skb)
-+		return;
-+
-+	skb_trim(skb, 0);
-+	skb_put(skb, len);
-+
-+	memcpy(skb->data, buf, len);
-+	skb_queue_tail(&itp->log_queue, skb);
-+	wake_up(&itp->read_wait);
-+
-+	len = sprint_symbol(buf,
-+			(unsigned long)__builtin_return_address(0));
-+	if (len <= 0)
-+		return;
-+	itp_printk(KERN_DEBUG "[ITP] error %d,%d from %s\n",
-+			err, arg, buf);
-+}
-diff --git a/drivers/net/wireless/cw1200/itp.h b/drivers/net/wireless/cw1200/itp.h
-new file mode 100644
-index 0000000..635e7f8
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/itp.h
-@@ -0,0 +1,151 @@
++struct fw_sec_parsing {
++	__le32 offset;
++	const u8 data[];
++} __packed;
++
++/**
++ * struct iwl_tlv_calib_data - parse the default calib data from TLV
++ *
++ * @ucode_type: the uCode to which the following default calib relates.
++ * @calib: default calibrations.
++ */
++struct iwl_tlv_calib_data {
++	__le32 ucode_type;
++	__le64 calib;
++} __packed;
++
+ struct iwl_firmware_pieces {
+ 	struct fw_img_parsing img[IWL_UCODE_TYPE_MAX];
+ 
+@@ -257,6 +276,47 @@ static void set_sec_offset(struct iwl_firmware_pieces *pieces,
+ 	pieces->img[type].sec[sec].offset = offset;
+ }
+ 
 +/*
-+ * ITP code for ST-Ericsson CW1200 mac80211 driver
-+ *
-+ * Copyright (c) 2011-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
++ * Gets uCode section from tlv.
 + */
-+
-+#ifndef CW1200_ITP_H_INCLUDED
-+#define CW1200_ITP_H_INCLUDED
-+
-+struct cw200_common;
-+struct wsm_tx_confirm;
-+struct dentry;
-+
-+#ifdef CONFIG_CW1200_ITP
-+
-+/*extern*/ struct ieee80211_channel;
-+
-+#define TEST_MODE_NO_TEST	(0)
-+#define TEST_MODE_RX_TEST	(1)
-+#define TEST_MODE_TX_TEST	(2)
-+
-+#define itp_printk(...) printk(__VA_ARGS__)
-+#define ITP_DEFAULT_DA_ADDR {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
-+#define ITP_MIN_DATA_SIZE 6
-+#define ITP_MAX_DATA_SIZE 1600
-+#define ITP_TIME_THRES_US 10000
-+#define ITP_US_TO_MS(x) ((x)/1000)
-+#define ITP_MS_TO_US(x) ((x)*1000)
-+#if ((ITP_US_TO_MS(ITP_TIME_THRES_US))*HZ/1000) < 1
-+#warning not able to achieve non-busywaiting ITP_TIME_THRES_US\
-+precision with current HZ value !
-+#endif
-+#define ITP_BUF_SIZE 255
-+
-+
-+enum cw1200_itp_data_modes {
-+	ITP_DATA_ZEROS,
-+	ITP_DATA_ONES,
-+	ITP_DATA_ZERONES,
-+	ITP_DATA_RANDOM,
-+	ITP_DATA_MAX_MODE,
-+};
-+
-+enum cw1200_itp_version_type {
-+	ITP_CHIP_ID,
-+	ITP_FW_VER,
-+};
-+
-+enum cw1200_itp_preamble_type {
-+	ITP_PREAMBLE_LONG,
-+	ITP_PREAMBLE_SHORT,
-+	ITP_PREAMBLE_OFDM,
-+	ITP_PREAMBLE_MIXED,
-+	ITP_PREAMBLE_GREENFIELD,
-+	ITP_PREAMBLE_MAX,
-+};
-+
-+
-+struct cw1200_itp {
-+	struct cw1200_common	*priv;
-+	atomic_t		open_count;
-+	atomic_t		awaiting_confirm;
-+	struct sk_buff_head	log_queue;
-+	wait_queue_head_t	read_wait;
-+	wait_queue_head_t	write_wait;
-+	wait_queue_head_t	close_wait;
-+	struct ieee80211_channel *saved_channel;
-+	atomic_t		stop_tx;
-+	struct delayed_work	tx_work;
-+	struct delayed_work	tx_finish;
-+	spinlock_t		tx_lock;
-+	struct timespec		last_sent;
-+	atomic_t		test_mode;
-+	int			rx_cnt;
-+	long			rx_rssi;
-+	int			rx_rssi_max;
-+	int			rx_rssi_min;
-+	unsigned		band;
-+	unsigned		ch;
-+	unsigned		rate;
-+	unsigned		preamble;
-+	unsigned int		number;
-+	unsigned		data_mode;
-+	int			interval_us;
-+	int			power;
-+	u8			*data;
-+	int			hdr_len;
-+	int			data_len;
-+};
-+
-+int cw1200_itp_init(struct cw1200_common *priv);
-+void cw1200_itp_release(struct cw1200_common *priv);
-+
-+bool cw1200_is_itp(struct cw1200_common *priv);
-+bool cw1200_itp_rxed(struct cw1200_common *priv, struct sk_buff *skb);
-+void cw1200_itp_wake_up_tx(struct cw1200_common *priv);
-+int cw1200_itp_get_tx(struct cw1200_common *priv, u8 **data,
-+		size_t *tx_len, int *burst);
-+bool cw1200_itp_tx_running(struct cw1200_common *priv);
-+
-+#else /* CONFIG_CW1200_ITP */
-+
-+static inline int
-+cw1200_itp_init(struct cw1200_common *priv)
++static int iwl_store_ucode_sec(struct iwl_firmware_pieces *pieces,
++			       const void *data, enum iwl_ucode_type type,
++			       int size)
 +{
++	struct fw_img_parsing *img;
++	struct fw_sec *sec;
++	struct fw_sec_parsing *sec_parse;
++
++	if (WARN_ON(!pieces || !data || type >= IWL_UCODE_TYPE_MAX))
++		return -1;
++
++	sec_parse = (struct fw_sec_parsing *)data;
++
++	img = &pieces->img[type];
++	sec = &img->sec[img->sec_counter];
++
++	sec->offset = le32_to_cpu(sec_parse->offset);
++	sec->data = sec_parse->data;
++
++	++img->sec_counter;
++
 +	return 0;
 +}
 +
-+static inline void cw1200_itp_release(struct cw1200_common *priv)
++static int iwl_set_default_calib(struct iwl_drv *drv, const u8 *data)
 +{
-+}
-+
-+static inline bool cw1200_is_itp(struct cw1200_common *priv)
-+{
-+	return false;
-+}
-+
-+static inline bool cw1200_itp_rxed(struct cw1200_common *priv,
-+		struct sk_buff *skb)
-+{
-+	return false;
-+}
-+
-+
-+static inline void cw1200_itp_consume_txed(struct cw1200_common *priv)
-+{
-+}
-+
-+static inline void cw1200_itp_wake_up_tx(struct cw1200_common *priv)
-+{
-+}
-+
-+static inline int cw1200_itp_get_tx(struct cw1200_common *priv, u8 **data,
-+		size_t *tx_len, int *burst)
-+{
++	struct iwl_tlv_calib_data *def_calib =
++					(struct iwl_tlv_calib_data *)data;
++	u32 ucode_type = le32_to_cpu(def_calib->ucode_type);
++	if (ucode_type >= IWL_UCODE_TYPE_MAX) {
++		IWL_ERR(drv, "Wrong ucode_type %u for default calibration.\n",
++			ucode_type);
++		return -EINVAL;
++	}
++	drv->fw.default_calib[ucode_type] = le64_to_cpu(def_calib->calib);
 +	return 0;
 +}
 +
-+static inline bool cw1200_itp_tx_running(struct cw1200_common *priv)
-+{
-+	return false;
-+}
+ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
+ 				    const struct firmware *ucode_raw,
+ 				    struct iwl_firmware_pieces *pieces)
+@@ -586,6 +646,29 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			capa->standard_phy_calibration_size =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
++		 case IWL_UCODE_TLV_SEC_RT:
++			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_REGULAR,
++					    tlv_len);
++			break;
++		case IWL_UCODE_TLV_SEC_INIT:
++			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_INIT,
++					    tlv_len);
++			break;
++		case IWL_UCODE_TLV_SEC_WOWLAN:
++			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_WOWLAN,
++					    tlv_len);
++			break;
++		case IWL_UCODE_TLV_DEF_CALIB:
++			if (tlv_len != sizeof(struct iwl_tlv_calib_data))
++				goto invalid_tlv_len;
++			if (iwl_set_default_calib(drv, tlv_data))
++				goto tlv_error;
++			break;
++		case IWL_UCODE_TLV_PHY_SKU:
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			drv->fw.phy_config = le32_to_cpup((__le32 *)tlv_data);
++			break;
+ 		default:
+ 			IWL_DEBUG_INFO(drv, "unknown TLV: %d\n", tlv_type);
+ 			break;
+@@ -602,6 +685,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 
+  invalid_tlv_len:
+ 	IWL_ERR(drv, "TLV %d has invalid size: %u\n", tlv_type, tlv_len);
++ tlv_error:
+ 	iwl_print_hex_dump(drv, IWL_DL_FW, tlv_data, tlv_len);
+ 
+ 	return -EINVAL;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 7ca6c95..c924ccb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -124,6 +124,11 @@ enum iwl_ucode_tlv_type {
+ 	IWL_UCODE_TLV_WOWLAN_INST	= 16,
+ 	IWL_UCODE_TLV_WOWLAN_DATA	= 17,
+ 	IWL_UCODE_TLV_FLAGS		= 18,
++	IWL_UCODE_TLV_SEC_RT		= 19,
++	IWL_UCODE_TLV_SEC_INIT		= 20,
++	IWL_UCODE_TLV_SEC_WOWLAN	= 21,
++	IWL_UCODE_TLV_DEF_CALIB		= 22,
++	IWL_UCODE_TLV_PHY_SKU		= 23,
+ };
+ 
+ struct iwl_ucode_tlv {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 253f7e5..c99a7fd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -85,6 +85,22 @@ enum iwl_ucode_tlv_flag {
+ #define IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE		19
+ #define IWL_MAX_PHY_CALIBRATE_TBL_SIZE			253
+ 
++/**
++ * enum iwl_ucode_type
++ *
++ * The type of ucode.
++ *
++ * @IWL_UCODE_REGULAR: Normal runtime ucode
++ * @IWL_UCODE_INIT: Initial ucode
++ * @IWL_UCODE_WOWLAN: Wake on Wireless enabled ucode
++ */
++enum iwl_ucode_type {
++	IWL_UCODE_REGULAR,
++	IWL_UCODE_INIT,
++	IWL_UCODE_WOWLAN,
++	IWL_UCODE_TYPE_MAX,
++};
 +
-+#endif /* CONFIG_CW1200_ITP */
+ struct iwl_ucode_capabilities {
+ 	u32 max_probe_length;
+ 	u32 standard_phy_calibration_size;
+@@ -142,6 +158,9 @@ struct iwl_fw {
+ 
+ 	u32 init_evtlog_ptr, init_evtlog_size, init_errlog_ptr;
+ 	u32 inst_evtlog_ptr, inst_evtlog_size, inst_errlog_ptr;
 +
-+#endif /* CW1200_ITP_H_INCLUDED */
++	u64 default_calib[IWL_UCODE_TYPE_MAX];
++	u32 phy_config;
+ };
+ 
+ #endif  /* __iwl_fw_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index d899c5c..b515d65 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -192,22 +192,6 @@ struct iwl_hw_params {
+ 	const struct iwl_sensitivity_ranges *sens;
+ };
+ 
+-/**
+- * enum iwl_ucode_type
+- *
+- * The type of ucode.
+- *
+- * @IWL_UCODE_REGULAR: Normal runtime ucode
+- * @IWL_UCODE_INIT: Initial ucode
+- * @IWL_UCODE_WOWLAN: Wake on Wireless enabled ucode
+- */
+-enum iwl_ucode_type {
+-	IWL_UCODE_REGULAR,
+-	IWL_UCODE_INIT,
+-	IWL_UCODE_WOWLAN,
+-	IWL_UCODE_TYPE_MAX,
+-};
+-
+ /*
+  * LED mode
+  *    IWL_LED_DEFAULT:  use device default
 -- 
-1.7.9
+1.7.0.4
 
