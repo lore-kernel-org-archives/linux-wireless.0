@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3557 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796Ab2C2Jl5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2012 05:41:57 -0400
-Date: Thu, 29 Mar 2012 11:40:57 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Matt Chen <machen@suse.com>
-Cc: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2x00dev: move rfkill_polling
- register to proper place
-Message-ID: <20120329094055.GC2351@redhat.com> (sfid-20120329_114200_777747_FAB534C9)
-References: <1332829680-32457-1-git-send-email-machen@suse.com>
- <20120327123822.GA2565@redhat.com>
- <CALx5=V-aouK2ge3f2EQa07n2oJZRBXQGf15pXUdbsk6BjE+cdg@mail.gmail.com>
- <CALx5=V9++V8c-=Nu5X6rigkMcU5Lv6tgn9wn7DS4pwn4P0Yr-A@mail.gmail.com>
+Received: from SpacedOut.fries.net ([67.64.210.234]:49686 "EHLO
+	SpacedOut.fries.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116Ab2CJS5E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Mar 2012 13:57:04 -0500
+Date: Sat, 10 Mar 2012 12:56:50 -0600
+From: David Fries <david@fries.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Subject: Re: ath5k phy0: gain calibration timeout
+Message-ID: <20120310185649.GC1190@spacedout.fries.net> (sfid-20120310_195709_003315_4D6303CC)
+References: <20120227031232.GA1190@spacedout.fries.net>
+ <4F4B71F2.1020709@openwrt.org>
+ <20120227144255.GB1190@spacedout.fries.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CALx5=V9++V8c-=Nu5X6rigkMcU5Lv6tgn9wn7DS4pwn4P0Yr-A@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120227144255.GB1190@spacedout.fries.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 29, 2012 at 10:50:25AM +0800, Matt Chen wrote:
-> Hi John,
-> 
-> Would it be possible to merge my patch to v3.4 merging ？
-> It would be great if this patch got merged. This patch fixes an
-> initialization of probing pci device. Since a lot users reported the
-> issue is making no sense after rebooting the machine and got No
-> wireless device working due to rfkill is not yet started to work.
-> 
-> Thank you for your kindly help. :)
-> 
-> Would it be possible to merge this patch into v3.4 tree before the
-> merging window closed ?
-Since patch is a fix, it could be applied after merge window. But first
-you should fix sign-off's and repost.
+On Mon, Feb 27, 2012 at 08:42:55AM -0600, David Fries wrote:
+> On Mon, Feb 27, 2012 at 01:07:14PM +0100, Felix Fietkau wrote:
+> > On 2012-02-27 4:12 AM, David Fries wrote:
+> > > Wireless network stopped working after 22 hours with ath5k, I have the
+> > > following message repeating, suspending to ram and back was enough to
+> > > get it talking again.
+> > > ath5k phy0: gain calibration timeout (2462MHz)
+> > > 
+> > Please try applying the following two patches:
+> > http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/440-ath5k_calibrate_no_queue_stop.patch;hb=HEAD
+> > http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/441-ath5k_no_agc_recalibration.patch;hb=HEAD
 
-Stanislaw
+No problems running with the above two patches after 12 days.  No
+calibration timeout messages either.  Thanks.
+
+-- 
+David Fries <david@fries.net>    PGP pub CB1EE8F0
+http://fries.net/~david/
