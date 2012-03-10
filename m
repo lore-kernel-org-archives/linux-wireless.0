@@ -1,77 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11829 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342Ab2CHTHo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34712 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627Ab2CJIC2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 14:07:44 -0500
-From: "Quan, David" <dquan@qca.qualcomm.com>
-To: "Rodriguez, Luis" <rodrigue@qca.qualcomm.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Green, Michael" <green@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: RE: Problems with regulatory domain support and BCM43224
-Date: Thu, 8 Mar 2012 19:07:30 +0000
-Message-ID: <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com> (sfid-20120308_200748_796648_FEA60A93)
-References: <20120307194001.GA2506@ubuntu-macmini>
- <20120308174101.GB28133@ubuntu-macmini>
- <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
-In-Reply-To: <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Sat, 10 Mar 2012 03:02:28 -0500
+Subject: Re: [PATCH] mac80211:  Add iface name when calling WARN-ON.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1331318216-27235-1-git-send-email-greearb@candelatech.com> (sfid-20120310_015306_799372_9A7E4047)
+References: <1331318216-27235-1-git-send-email-greearb@candelatech.com>
+	 (sfid-20120310_015306_799372_9A7E4047)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 10 Mar 2012 09:02:23 +0100
+Message-ID: <1331366543.3348.1.camel@jlt3.sipsolutions.net> (sfid-20120310_090255_505475_C8F8CE81)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MSkgRGVwZW5kaW5nIG9uIHdoaWNoIFdXIHNrdSBudW1iZXIgeW91IHNlbGVjdGVkLCBpdCBtYXkg
-YW5kIG1heSBub3Qgc3VwcG9ydCB0aGUgREZTIGNoYW5uZWxzLiBTbyB0aGlzIGlzIG5vdCB0cnVl
-IHRoYXQgd2UgZG8gbm90IHN1cHBvcnQgREZTIGNoYW5uZWxzIGluIFdXIG1vZGUuDQoyKSBUb2Rh
-eSwgSSBkbyBub3QgYmVsaWV2ZSBhdGg5ayBjb2RlIHN1cHBvcnRzIERGUyBkZXRlY3Rpb24uIElm
-IHRoYXQgaXMgd2hhdCB5b3UgbWVhbi4gVGhlcmVmb3JlIFNUQSBtb2RlIHdpbGwgbm90IHN1cHBv
-cnQgREZTIGRldGVjdGlvbi4gSG93ZXZlciwgU1RBIGRvZXMgc3VwcG9ydCBERlMgY2hhbm5lbHMu
-IERGUyBjaGFubmVsIHN1cHBvcnQgdnMgREZTIGRldGVjdGlvbiBzdXBwb3J0IGlzIHR3byBkaWZm
-ZXJlbnQgdGhpbmdzLiBERlMgY2hhbm5lbCBzdXBwb3J0IGFzIGEgc2xhdmUgZGV2aWNlLCBvbmx5
-IGhhcyB0byBkbyBwYXNzaXZlIHNjYW5uaW5nLg0KDQpMZXQgbWUga25vdyBpZiB0aGF0IGFuc3dl
-cnMgeW91ciBxdWVzdGlvbnMuDQpEYXZpZA0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQpGcm9tOiBtY2dyb2ZAZ21haWwuY29tIFttYWlsdG86bWNncm9mQGdtYWlsLmNvbV0gT24gQmVo
-YWxmIE9mIEx1aXMgUi4gUm9kcmlndWV6DQpTZW50OiBUaHVyc2RheSwgTWFyY2ggMDgsIDIwMTIg
-MTA6NTMgQU0NClRvOiBTZXRoIEZvcnNoZWU7IFF1YW4sIERhdmlkOyBHcmVlbiwgTWljaGFlbA0K
-Q2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSm9oYW5uZXMgQmVyZw0KU3ViamVj
-dDogUmU6IFByb2JsZW1zIHdpdGggcmVndWxhdG9yeSBkb21haW4gc3VwcG9ydCBhbmQgQkNNNDMy
-MjQNCg0KRGF2aWQsIE1pY2hhZWwsDQoNCmJlbG93IGlzIGEgdGhyZWFkIG9uIHdvcmxkIHJlZ3Vs
-YXRvcnkgZG9tYWlucyBhbmQgREZTLiBUaGlzIGlzIGEgcHVibGljIHRocmVhZCBzbyByZXBseWlu
-ZyB0byB0aGlzIGlzIHB1YmxpYy4gVGhlIHF1ZXN0aW9uIGlzIHNpbXBsZToNCndoeSBub3QgYWRk
-IERGUyBjaGFubmVscyB0byB0aGUgd29ybGQgcmVndWxhdG9yeSBkb21haW4gcHJvdmlkZWQgdGhh
-dA0KMSkgd2Ugb25seSBwYXNzaXZlIHNjYW4gb24gdGhlbSAyKSBTVEEgZG9lcyBzdXBwb3J0IERG
-UyBzdXBwb3J0LiBJdCBzZWVtcyBsb2dpY2FsIHRvIG1lIG5vdyB0aGF0IHRoaXMgc2hvdWxkIGJl
-IGVuYWJsZWQsIGJ1dCBJIGNhbid0IHJlY2FsbCBpZiBwZXJoYXBzIEkgYW0gZm9yZ2V0dGluZyBz
-b21ldGhpbmcuDQoNClRoZSBiZWFjb24gaGludCBjb2RlIHdlIGhhdmUsIHdoaWNoIGVuYWJsZXMg
-cmFkaWF0aW9uIHVwb24gZmluZGluZyBhIGJlYWNvbiBmcm9tIGFuIEFQIG9uIGEgNSBHSHogY2hh
-bm5lbCBvbmx5IGRvZXMgYmVhY29uIGhpbnRzIGZvciBub24tREZTIGNoYW5uZWxzLCBzbyBhIGRl
-dmljZSB1c2luZyB0aGUgd29ybGQgcmVndWxhdG9yeSBkb21haW4gaXMgZ3VhcmFudGVlZCB0byBu
-b3QgaW5pdGlhdGUgcmFkaWF0aW9uIG9uIHRoZXNlIGNoYW5uZWxzLg0KDQoNClNldGgsIG15IHJl
-c3BvbnNlIHRvIHlvdSBiZWxvdy4NCg0KT24gVGh1LCBNYXIgOCwgMjAxMiBhdCA5OjQxIEFNLCBT
-ZXRoIEZvcnNoZWUgPHNldGguZm9yc2hlZUBjYW5vbmljYWwuY29tPiB3cm90ZToNCj4gQXMgSSB1
-bmRlcnN0YW5kIGl0LCB0aGUgREZTIGNoYW5uZWxzIGFyZW4ndCBpbmNsdWRlZCBpbiB0aGUgd29y
-bGQgDQo+IGRvbWFpbiBiZWNhdXNlIExpbnV4IGRvZXMgbm90IHlldCBmdWxseSBzdXBwb3J0IERG
-Uy4NCg0KQSBTVEEgZGV2aWNlIGNhbiBjb25uZWN0IHRvIGEgREZTIEFQIHdoZW4gdGhlIFNUQSBk
-ZXZpY2UgZG9lcyBoYXZlIHRob3NlIERGUyBjaGFubmVscyBhcyBwYXJ0IG9mIGl0cyB3b3JsZCBy
-ZWd1bGF0b3J5IGRvbWFpbiwgYnV0IHRoZSBTVEEgd2lsbCBwYXNzaXZlbHkgc2NhbiBvbiB0aG9z
-ZSBjaGFubmVscyBnaXZlbiB0aGF0IHNlbmRpbmcgYSBwcm9iZSByZXF1ZXN0IGlzIGFjdGl2ZSBy
-YWRpYXRpb24gYW5kIGFjdGl2ZSByYWRpYXRpb24gcmVxdWlyZXMgYSBiaXQgb2YgY29kZSB3aGlj
-aCBpcyBub3QgeWV0IGNvbXBsZXRlIGFuZCBvbmx5IHVzZWQgYXMgYSBBUC4gWW91IGFyZSByaWdo
-dCB0aG91Z2ggdGhhdCB0aGUgTGludXggcmVndWxhdG9yeSBjb2RlIHRob3VnaCBkb2VzIG5vdCBp
-bmNsdWRlIGFueSBERlMgY2hhbm5lbHMgaW4gdGhlIHdvcmxkIHJlZ3VsYXRvcnkgZG9tYWluLiBU
-aGUgd29ybGQgcmVndWxhdG9yeSBkb21haW4gaXMgdGhlIG1hdGhlbWF0aWNhbCBpbnRlcnNlY3Rp
-b24gb2YgYWxsIHRoZSByZWd1bGF0b3J5IGRvbWFpbnMgaW4gdGhlIHdvcmxkIChzZWUgaW50ZXJz
-ZWN0LmMgb24gQ1JEQSkgYnV0IGEgZmV3IHNldCBvZiBjaGFubmVscyB3ZXJlIGFkZGVkIGFzIHdl
-bGwgd2hpY2ggYXJlIG5vdCBERlMgd2l0aCB0aGUgY29uZGl0aW9uIHRoYXQgd2UgZG8gcGFzc2l2
-ZSBzY2Fucy4NCldlIGRpZCByZW1vdmUgdGhlIERGUyBjaGFubmVscyBjb21wbGV0ZWx5Lg0KDQo+
-IEJ1dCBJIGNhbiB0aGVuIHNwZWNpZnkgYQ0KPiBkb21haW4gdGhhdCdzIGtub3duIHRvIHJlcXVp
-cmUgREZTIG9uIHRoZXNlIGNoYW5uZWxzLCBhbmQgdGhleSBhcmUgDQo+IGVuYWJsZWQuIFRoaXMg
-c2VlbXMgaWxsb2dpY2FsLiBJZiBwYXNzaXZlIHNjYW5uaW5nIGlzIG9rYXkgd2hlbiB3ZSANCj4g
-a25vdyBERlMgaXMgcmVxdWlyZWQsIHdoeSBjYW4ndCBpdCBiZSBlbmFibGVkIGluIHRoZSB3b3Js
-ZCBkb21haW4gd2hlbiANCj4gd2Ugc2ltcGx5IGRvbid0IGtub3cgaWYgaXQncyByZXF1aXJlZD8N
-Cg0KSXRzIGEgZmFpciBwb2ludCBhbmQgZ2l2ZW4gdGhlIHdheSB3ZSBoYW5kbGUgYmVhY29uIGhp
-bnRzIGFuZCBub3QgZW5hYmxpbmcgdGhlbSBmb3IgREZTIGNoYW5uZWxzIGF0IGFsbCwgYW5kIGlm
-IHdlIG9ubHkgcGFzc2l2ZWx5IHNjYW4gZm9yIERGUyBjaGFubmVscyBJIHRoaW5rIHRoaXMgc2hv
-dWxkIGJlIGdvb2QuDQoNCiAgTHVpcw0K
+On Fri, 2012-03-09 at 10:36 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> This lets the user know which interface has failed
+> the check_sdata_in_driver check.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> :100644 100644 e8960ae... e62e7c3... M	net/mac80211/driver-ops.h
+>  net/mac80211/driver-ops.h |    6 +++++-
+>  1 files changed, 5 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+> index e8960ae..e62e7c3 100644
+> --- a/net/mac80211/driver-ops.h
+> +++ b/net/mac80211/driver-ops.h
+> @@ -7,7 +7,11 @@
+>  
+>  static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
+>  {
+> -	WARN_ON(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER));
+> +	if (unlikely(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER))) {
+> +		printk(KERN_ERR "%s:  Failed check-sdata-in-driver check, flags: 0x%x\n",
+> +		       sdata->dev->name, sdata->flags);
+> +		WARN_ON(1);
+> +	}
+
+How about WARN(!(...), ...) instead -- that way the message will be part
+of the warning too.
+
+johannes
+
