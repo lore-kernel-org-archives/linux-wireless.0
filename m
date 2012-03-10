@@ -1,317 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54845 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030992Ab2COPxw (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:60348 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754565Ab2CJOTA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 11:53:52 -0400
-Message-Id: <20120315155228.274041439@sipsolutions.net> (sfid-20120315_165357_711846_BD2A4F5C)
-Date: Thu, 15 Mar 2012 16:41:35 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Paul Stewart <pstew@chromium.org>
-Subject: [RFC 2/3] mac80211: remove channel type argument from rate_update
-References: <20120315154133.312616639@sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 10 Mar 2012 09:19:00 -0500
+Received: by vcqp1 with SMTP id p1so2448493vcq.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Mar 2012 06:18:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4F5B5A15.1000808@neratec.com>
+References: <1331340008-1713-1-git-send-email-ashok@cozybit.com>
+	<201203100206.46537.chunkeey@googlemail.com>
+	<4F5B5A15.1000808@neratec.com>
+Date: Sat, 10 Mar 2012 19:48:59 +0530
+Message-ID: <CAD2nsn3zjFkvdHQaokSpzrZeA_qK2j+U_rUtx0ywz+1o_x8=xw@mail.gmail.com> (sfid-20120310_151904_688681_A8AD6F98)
+Subject: Re: [PATCH] ath9k: Fix mactime from being clobbered in rx_status
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Ashok Nagarajan <ashok@cozybit.com>,
+	linux-wireless@vger.kernel.org, javier@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, Mar 10, 2012 at 7:11 PM, Zefir Kurtisi
+<zefir.kurtisi@neratec.com> wrote:
+> Thanks for the ping.
+>
+> The patch that is reverted here was meant as pre-work for modifications
+> required to generate DFS events with correctly set mactime that are still
+> pending. It was obviously not as 'trivial' as claimed, since I overlooked
+> the memset() in ath9k_rx_skb_preprocess() that effectively set the time to 0
+> for all fragments.
+>
+> Therefore full ACK to revert it. Just wondering why it was not noticed for
+> nearly 4 months now.
 
-The channel type 
+blame me, i also missed the memset in ath9k_rx_skb_preprocess. also we
+missed quite a few of patches that caused some other regression and
+they were missed
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    5 +--
- drivers/net/wireless/rtlwifi/rc.c   |    3 --
- include/net/mac80211.h              |    5 +--
- net/mac80211/chan.c                 |   26 ------------------
- net/mac80211/ieee80211_i.h          |    5 ---
- net/mac80211/mlme.c                 |   51 ++++++++++++++++++++++++------------
- net/mac80211/rate.h                 |    5 +--
- net/mac80211/rc80211_minstrel_ht.c  |   15 ++--------
- net/mac80211/rx.c                   |    7 +---
- net/mac80211/sta_info.h             |    2 +
- 10 files changed, 50 insertions(+), 74 deletions(-)
-
---- a/include/net/mac80211.h	2012-03-15 16:20:00.000000000 +0100
-+++ b/include/net/mac80211.h	2012-03-15 16:21:09.000000000 +0100
-@@ -3567,9 +3567,8 @@ struct rate_control_ops {
- 	void (*rate_init)(void *priv, struct ieee80211_supported_band *sband,
- 			  struct ieee80211_sta *sta, void *priv_sta);
- 	void (*rate_update)(void *priv, struct ieee80211_supported_band *sband,
--			    struct ieee80211_sta *sta,
--			    void *priv_sta, u32 changed,
--			    enum nl80211_channel_type oper_chan_type);
-+			    struct ieee80211_sta *sta, void *priv_sta,
-+			    u32 changed);
- 	void (*free_sta)(void *priv, struct ieee80211_sta *sta,
- 			 void *priv_sta);
- 
---- a/drivers/net/wireless/ath/ath9k/rc.c	2012-03-15 16:20:01.000000000 +0100
-+++ b/drivers/net/wireless/ath/ath9k/rc.c	2012-03-15 16:21:09.000000000 +0100
-@@ -1436,7 +1436,7 @@ static void ath_rate_init(void *priv, st
- 
- static void ath_rate_update(void *priv, struct ieee80211_supported_band *sband,
- 			    struct ieee80211_sta *sta, void *priv_sta,
--			    u32 changed, enum nl80211_channel_type oper_chan_type)
-+			    u32 changed)
- {
- 	struct ath_softc *sc = priv;
- 	struct ath_rate_priv *ath_rc_priv = priv_sta;
-@@ -1451,8 +1451,7 @@ static void ath_rate_update(void *priv,
- 		if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
- 			return;
- 
--		if (oper_chan_type == NL80211_CHAN_HT40MINUS ||
--		    oper_chan_type == NL80211_CHAN_HT40PLUS)
-+		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
- 			oper_cw40 = true;
- 
- 		if (oper_cw40)
---- a/net/mac80211/rx.c	2012-03-15 16:20:01.000000000 +0100
-+++ b/net/mac80211/rx.c	2012-03-15 16:21:09.000000000 +0100
-@@ -2269,11 +2269,8 @@ ieee80211_rx_h_action(struct ieee80211_r
- 
- 			sband = rx->local->hw.wiphy->bands[status->band];
- 
--			rate_control_rate_update(
--				local, sband, rx->sta,
--				IEEE80211_RC_SMPS_CHANGED,
--				ieee80211_get_tx_channel_type(
--					local, local->_oper_channel_type));
-+			rate_control_rate_update(local, sband, rx->sta,
-+						 IEEE80211_RC_SMPS_CHANGED);
- 			goto handled;
- 		}
- 		default:
---- a/net/mac80211/mlme.c	2012-03-15 16:20:16.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-15 16:21:09.000000000 +0100
-@@ -180,21 +180,38 @@ static u32 ieee80211_config_ht_tx(struct
- 	struct sta_info *sta;
- 	u32 changed = 0;
- 	u16 ht_opmode;
--	enum nl80211_channel_type channel_type;
-+	bool disable_40 = false;
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	channel_type = local->hw.conf.channel_type;
- 
--	if (WARN_ON_ONCE(channel_type == NL80211_CHAN_NO_HT))
--		return 0;
--
--	channel_type = ieee80211_get_tx_channel_type(local, channel_type);
-+	switch (sdata->vif.bss_conf.channel_type) {
-+	case NL80211_CHAN_HT40PLUS:
-+		if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40PLUS)
-+			disable_40 = true;
-+		break;
-+	case NL80211_CHAN_HT40MINUS:
-+		if (local->hw.conf.channel->flags & IEEE80211_CHAN_NO_HT40MINUS)
-+			disable_40 = true;
-+		break;
-+	default:
-+		break;
-+	}
- 
- 	/* This can change during the lifetime of the BSS */
- 	if (!(ht_oper->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY))
--		channel_type = NL80211_CHAN_HT20;
-+		disable_40 = true;
-+
-+	mutex_lock(&local->sta_mtx);
-+	sta = sta_info_get(sdata, bssid);
- 
--	if (!reconfig || (sdata->u.mgd.tx_chantype != channel_type)) {
-+	WARN_ON_ONCE(!sta);
-+
-+	if (sta && !sta->supports_40mhz)
-+		disable_40 = true;
-+
-+	if (sta && (!reconfig ||
-+		    (disable_40 != !!(sta->sta.ht_cap.cap &
-+		    			IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
- 		if (reconfig) {
- 			/*
- 			 * Whenever the AP announces the HT mode changed
-@@ -211,20 +228,19 @@ static u32 ieee80211_config_ht_tx(struct
- 			drv_flush(local, false);
- 		}
- 
--		rcu_read_lock();
--		sta = sta_info_get(sdata, bssid);
--		if (sta)
--			rate_control_rate_update(local, sband, sta,
--						 IEEE80211_RC_HT_CHANGED,
--						 channel_type);
--		rcu_read_unlock();
-+		if (disable_40)
-+			sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+		else
-+			sta->sta.ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 
--		sdata->u.mgd.tx_chantype = channel_type;
-+		rate_control_rate_update(local, sband, sta,
-+					 IEEE80211_RC_HT_CHANGED);
- 
- 		if (reconfig)
- 			ieee80211_wake_queues_by_reason(&sdata->local->hw,
- 				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
- 	}
-+	mutex_unlock(&local->sta_mtx);
- 
- 	ht_opmode = le16_to_cpu(ht_oper->operation_mode);
- 
-@@ -1995,6 +2011,9 @@ static bool ieee80211_assoc_success(stru
- 		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 				elems.ht_cap_elem, &sta->sta.ht_cap);
- 
-+	sta->supports_40mhz =
-+		sta->sta.ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+
- 	rate_control_rate_init(sta);
- 
- 	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
---- a/net/mac80211/rate.h	2012-03-15 16:20:01.000000000 +0100
-+++ b/net/mac80211/rate.h	2012-03-15 16:21:09.000000000 +0100
-@@ -63,8 +63,7 @@ static inline void rate_control_rate_ini
- 
- static inline void rate_control_rate_update(struct ieee80211_local *local,
- 				    struct ieee80211_supported_band *sband,
--				    struct sta_info *sta, u32 changed,
--				    enum nl80211_channel_type oper_chan_type)
-+				    struct sta_info *sta, u32 changed)
- {
- 	struct rate_control_ref *ref = local->rate_ctrl;
- 	struct ieee80211_sta *ista = &sta->sta;
-@@ -72,7 +71,7 @@ static inline void rate_control_rate_upd
- 
- 	if (ref && ref->ops->rate_update)
- 		ref->ops->rate_update(ref->priv, sband, ista,
--				      priv_sta, changed, oper_chan_type);
-+				      priv_sta, changed);
- }
- 
- static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
---- a/net/mac80211/rc80211_minstrel_ht.c	2012-03-15 16:20:01.000000000 +0100
-+++ b/net/mac80211/rc80211_minstrel_ht.c	2012-03-15 16:21:09.000000000 +0100
-@@ -679,8 +679,7 @@ minstrel_ht_get_rate(void *priv, struct
- 
- static void
- minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
--                        struct ieee80211_sta *sta, void *priv_sta,
--			enum nl80211_channel_type oper_chan_type)
-+                        struct ieee80211_sta *sta, void *priv_sta)
- {
- 	struct minstrel_priv *mp = priv;
- 	struct minstrel_ht_sta_priv *msp = priv_sta;
-@@ -728,10 +727,6 @@ minstrel_ht_update_caps(void *priv, stru
- 	if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
- 		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
- 
--	if (oper_chan_type != NL80211_CHAN_HT40MINUS &&
--	    oper_chan_type != NL80211_CHAN_HT40PLUS)
--		sta_cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
--
- 	smps = (sta_cap & IEEE80211_HT_CAP_SM_PS) >>
- 		IEEE80211_HT_CAP_SM_PS_SHIFT;
- 
-@@ -781,17 +776,15 @@ static void
- minstrel_ht_rate_init(void *priv, struct ieee80211_supported_band *sband,
-                       struct ieee80211_sta *sta, void *priv_sta)
- {
--	struct minstrel_priv *mp = priv;
--
--	minstrel_ht_update_caps(priv, sband, sta, priv_sta, mp->hw->conf.channel_type);
-+	minstrel_ht_update_caps(priv, sband, sta, priv_sta);
- }
- 
- static void
- minstrel_ht_rate_update(void *priv, struct ieee80211_supported_band *sband,
-                         struct ieee80211_sta *sta, void *priv_sta,
--                        u32 changed, enum nl80211_channel_type oper_chan_type)
-+                        u32 changed)
- {
--	minstrel_ht_update_caps(priv, sband, sta, priv_sta, oper_chan_type);
-+	minstrel_ht_update_caps(priv, sband, sta, priv_sta);
- }
- 
- static void *
---- a/drivers/net/wireless/rtlwifi/rc.c	2012-03-15 16:20:01.000000000 +0100
-+++ b/drivers/net/wireless/rtlwifi/rc.c	2012-03-15 16:21:09.000000000 +0100
-@@ -225,8 +225,7 @@ static void rtl_rate_init(void *ppriv,
- static void rtl_rate_update(void *ppriv,
- 			    struct ieee80211_supported_band *sband,
- 			    struct ieee80211_sta *sta, void *priv_sta,
--			    u32 changed,
--			    enum nl80211_channel_type oper_chan_type)
-+			    u32 changed)
- {
- }
- 
---- a/net/mac80211/chan.c	2012-03-15 16:20:01.000000000 +0100
-+++ b/net/mac80211/chan.c	2012-03-15 16:21:09.000000000 +0100
-@@ -135,29 +135,3 @@ bool ieee80211_set_channel_type(struct i
- 
- 	return result;
- }
--
--/*
-- * ieee80211_get_tx_channel_type returns the channel type we should
-- * use for packet transmission, given the channel capability and
-- * whatever regulatory flags we have been given.
-- */
--enum nl80211_channel_type ieee80211_get_tx_channel_type(
--				struct ieee80211_local *local,
--				enum nl80211_channel_type channel_type)
--{
--	switch (channel_type) {
--	case NL80211_CHAN_HT40PLUS:
--		if (local->hw.conf.channel->flags &
--				IEEE80211_CHAN_NO_HT40PLUS)
--			return NL80211_CHAN_HT20;
--		break;
--	case NL80211_CHAN_HT40MINUS:
--		if (local->hw.conf.channel->flags &
--				IEEE80211_CHAN_NO_HT40MINUS)
--			return NL80211_CHAN_HT20;
--		break;
--	default:
--		break;
--	}
--	return channel_type;
--}
---- a/net/mac80211/ieee80211_i.h	2012-03-15 16:20:01.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2012-03-15 16:21:09.000000000 +0100
-@@ -498,8 +498,6 @@ struct ieee80211_if_managed {
- 	int rssi_min_thold, rssi_max_thold;
- 	int last_ave_beacon_signal;
- 
--	enum nl80211_channel_type tx_chantype;
--
- 	struct ieee80211_ht_cap ht_capa; /* configured ht-cap over-rides */
- 	struct ieee80211_ht_cap ht_capa_mask; /* Valid parts of ht_capa */
- };
-@@ -1498,9 +1496,6 @@ bool ieee80211_set_channel_type(struct i
- 				enum nl80211_channel_type chantype);
- enum nl80211_channel_type
- ieee80211_ht_oper_to_channel_type(struct ieee80211_ht_operation *ht_oper);
--enum nl80211_channel_type ieee80211_get_tx_channel_type(
--					struct ieee80211_local *local,
--					enum nl80211_channel_type channel_type);
- 
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
---- a/net/mac80211/sta_info.h	2012-03-15 16:20:01.000000000 +0100
-+++ b/net/mac80211/sta_info.h	2012-03-15 16:21:09.000000000 +0100
-@@ -365,6 +365,8 @@ struct sta_info {
- 	unsigned int lost_packets;
- 	unsigned int beacon_loss_count;
- 
-+	bool supports_40mhz;
-+
- 	/* keep last! */
- 	struct ieee80211_sta sta;
- };
+>
+>
+> On 10.03.2012 02:06, Christian Lamparter wrote:
+>>
+>> On Saturday 10 March 2012 01:40:08 Ashok Nagarajan wrote:
+>>>
+>>> mactime was being overwritten by the function
+>>> ath9k_rx_skb_preprocess.  Fixed by calling the
+>>> function before setting the mactime.
+>>
+>>
+>> This looks rather odd... In essence you're trying to revert
+>> "ath9k: trivial: reorder rx_tasklet processing"
+>>
+>> Anyway, I 'CC'ed the original author Zefir Kurtisi. So if
+>> there are any open question, now is the time.
+>>
+>>> Signed-off-by: Ashok Nagarajan<ashok@cozybit.com>
+>>> Signed-off-by: Javier Cardona<javier@cozybit.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath9k/recv.c |    5 +++--
+>>>  1 files changed, 3 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c
+>>> b/drivers/net/wireless/ath/ath9k/recv.c
+>>> index 1b1b279..52a0466 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>>> @@ -1841,6 +1841,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush,
+>>> bool hp)
+>>>                if (sc->sc_flags&  SC_OP_RXFLUSH)
+>>>
+>>>                        goto requeue_drop_frag;
+>>>
+>>> +               retval = ath9k_rx_skb_preprocess(common, hw, hdr,&rs,
+>>> +                                                rxs,&decrypt_error);
+>>> +
+>>
+>>
+>> Instead of moving ath9k_rx_skb_preprocess around, you could just
+>> put the memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+>> right here.
+>>
+>> [Also, why leave the if (retval) check behind?]
+>>
+>>>                rxs->mactime = (tsf&  ~0xffffffffULL) | rs.rs_tstamp;
+>>>                if (rs.rs_tstamp>  tsf_lower&&
+>>>                unlikely(rs.rs_tstamp - tsf_lower>  0x10000000))
+>>> @@ -1850,8 +1853,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush,
+>>> bool hp)
+>>>                    unlikely(tsf_lower - rs.rs_tstamp>  0x10000000))
+>>>                        rxs->mactime += 0x100000000ULL;
+>>>
+>>> -               retval = ath9k_rx_skb_preprocess(common, hw, hdr,&rs,
+>>> -                                                rxs,&decrypt_error);
+>>>                if (retval)
+>>>                        goto requeue_drop_frag;
+>>
+>>                ^^ that one
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+
+-- 
+thanks,
+shafi
