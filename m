@@ -1,34 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:48901 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756500Ab2CSVv7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 17:51:59 -0400
-Date: Mon, 19 Mar 2012 21:51:54 +0000
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>
-Message-ID: <20120319215154.GA18508@srcf.ucam.org> (sfid-20120319_225203_372020_0F7C1537)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:48736 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752184Ab2CJU73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Mar 2012 15:59:29 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/10] iwlwifi: Add bool mvm_ucode to iwl_fw
+Date: Sat, 10 Mar 2012 13:00:15 -0800
+Message-Id: <1331413215-10027-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120310_220005_224184_88EC9F5B)
+In-Reply-To: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bcc: 
-Subject: brcmsmac hangs machine if loaded after busmastering disabled
-Reply-To: 
+From: David Spinadel <david.spinadel@intel.com>
 
-I'm dealing with a platform with some buggy system firmware that enables 
-DMA on the wireless card and leaves it running even after OS handover, 
-triggering memory corruption. I'm working around that by disabling bus 
-mastering on the device in the bootloader, but that results in the 
-system hanging during brcmsmac init. pci_set_master() is being called in 
-the bcma code, so it's nothing that straghtforward. Any idea what might 
-be going wrong here?
+mvm_ucode is true when mvm TLVs arive.
 
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.c |    9 ++++++++-
+ drivers/net/wireless/iwlwifi/iwl-fw.h  |    2 ++
+ 2 files changed, 10 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 54e0969..6f312c7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -636,14 +636,17 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 		 case IWL_UCODE_TLV_SEC_RT:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_REGULAR,
+ 					    tlv_len);
++			drv->fw.mvm_fw = true;
+ 			break;
+ 		case IWL_UCODE_TLV_SEC_INIT:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_INIT,
+ 					    tlv_len);
++			drv->fw.mvm_fw = true;
+ 			break;
+ 		case IWL_UCODE_TLV_SEC_WOWLAN:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_WOWLAN,
+ 					    tlv_len);
++			drv->fw.mvm_fw = true;
+ 			break;
+ 		case IWL_UCODE_TLV_DEF_CALIB:
+ 			if (tlv_len != sizeof(struct iwl_tlv_calib_data))
+@@ -870,7 +873,11 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		goto try_again;
+ 	}
+ 
+-	if (validate_sec_sizes(drv, &pieces, cfg))
++	/*
++	 * In mvm uCode there is no difference between data and instructions
++	 * sections.
++	 */
++	if (!fw->mvm_fw && validate_sec_sizes(drv, &pieces, cfg))
+ 		goto try_again;
+ 
+ 	/* Allocate ucode buffers for card's bus-master loading ... */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 5d634f3..8e36bdc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -170,6 +170,8 @@ struct iwl_fw {
+ 
+ 	u64 default_calib[IWL_UCODE_TYPE_MAX];
+ 	u32 phy_config;
++
++	bool mvm_fw;
+ };
+ 
+ #endif  /* __iwl_fw_h__ */
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.0.4
+
