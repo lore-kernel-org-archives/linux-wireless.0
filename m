@@ -1,445 +1,503 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:34259 "HELO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1030408Ab2CNCXW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 22:23:22 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 8/9] mwifiex: fix checkpatch --strict warnings/errors Part 8
-Date: Tue, 13 Mar 2012 19:22:41 -0700
-Message-Id: <1331691762-5514-9-git-send-email-bzhao@marvell.com> (sfid-20120314_032327_355067_6F3245E6)
-In-Reply-To: <1331691762-5514-1-git-send-email-bzhao@marvell.com>
-References: <1331691762-5514-1-git-send-email-bzhao@marvell.com>
+Received: from mga09.intel.com ([134.134.136.24]:2830 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752113Ab2CJU72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Mar 2012 15:59:28 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/10] iwlwifi: more modularity in fw images and sections
+Date: Sat, 10 Mar 2012 13:00:12 -0800
+Message-Id: <1331413215-10027-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120310_220008_786507_84FCA5DB)
+In-Reply-To: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+From: David Spinadel <david.spinadel@intel.com>
 
-For files sta_event.c and sta_ioctl.c
+Changed iwl_firmware_pieces structure to support an array of
+separate images, and an array of sections for each image.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+In fw_sec and fw_desc structures, added a field for
+offset from the HW address, to support 16.0 uCode that
+provides an offset instead of any other data about the section.
+This field is filled with default values when parsing instruction
+or data section.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/mwifiex/sta_event.c |   41 +++++++------
- drivers/net/wireless/mwifiex/sta_ioctl.c |  102 +++++++++++++++---------------
- 2 files changed, 73 insertions(+), 70 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-drv.c    |  280 +++++++++++++++++++++--------
+ drivers/net/wireless/iwlwifi/iwl-fw.h     |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    1 +
+ 3 files changed, 207 insertions(+), 77 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index b9b59db..cc531b5 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -93,11 +93,11 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv)
- 	 */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 29a3ae4..a21af3d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -69,6 +69,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-shared.h"
+ #include "iwl-op-mode.h"
++#include "iwl-agn-hw.h"
  
- 	dev_dbg(adapter->dev, "info: previous SSID=%s, SSID len=%u\n",
--	       priv->prev_ssid.ssid, priv->prev_ssid.ssid_len);
-+		priv->prev_ssid.ssid, priv->prev_ssid.ssid_len);
+ /* private includes */
+ #include "iwl-fw-file.h"
+@@ -96,6 +97,16 @@ struct iwl_drv {
  
- 	dev_dbg(adapter->dev, "info: current SSID=%s, SSID len=%u\n",
--	       priv->curr_bss_params.bss_descriptor.ssid.ssid,
--	       priv->curr_bss_params.bss_descriptor.ssid.ssid_len);
-+		priv->curr_bss_params.bss_descriptor.ssid.ssid,
-+		priv->curr_bss_params.bss_descriptor.ssid.ssid_len);
  
- 	memcpy(&priv->prev_ssid,
- 	       &priv->curr_bss_params.bss_descriptor.ssid,
-@@ -115,9 +115,9 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv)
- 	if (adapter->num_cmd_timeout && adapter->curr_cmd)
- 		return;
- 	priv->media_connected = false;
--	dev_dbg(adapter->dev, "info: successfully disconnected from"
--			" %pM: reason code %d\n", priv->cfg_bssid,
--			WLAN_REASON_DEAUTH_LEAVING);
-+	dev_dbg(adapter->dev,
-+		"info: successfully disconnected from %pM: reason code %d\n",
-+		priv->cfg_bssid, WLAN_REASON_DEAUTH_LEAVING);
- 	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
- 		cfg80211_disconnected(priv->netdev, WLAN_REASON_DEAUTH_LEAVING,
- 				      NULL, 0, GFP_KERNEL);
-@@ -192,8 +192,8 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
  
- 	switch (eventcause) {
- 	case EVENT_DUMMY_HOST_WAKEUP_SIGNAL:
--		dev_err(adapter->dev, "invalid EVENT: DUMMY_HOST_WAKEUP_SIGNAL,"
--				" ignoring it\n");
-+		dev_err(adapter->dev,
-+			"invalid EVENT: DUMMY_HOST_WAKEUP_SIGNAL, ignore it\n");
- 		break;
- 	case EVENT_LINK_SENSED:
- 		dev_dbg(adapter->dev, "event: LINK_SENSED\n");
-@@ -235,8 +235,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 	case EVENT_PS_AWAKE:
- 		dev_dbg(adapter->dev, "info: EVENT: AWAKE\n");
- 		if (!adapter->pps_uapsd_mode &&
--			priv->media_connected &&
--			adapter->sleep_period.period) {
-+		    priv->media_connected && adapter->sleep_period.period) {
- 				adapter->pps_uapsd_mode = true;
- 				dev_dbg(adapter->dev,
- 					"event: PPS/UAPSD mode activated\n");
-@@ -244,15 +243,19 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		adapter->tx_lock_flag = false;
- 		if (adapter->pps_uapsd_mode && adapter->gen_null_pkt) {
- 			if (mwifiex_check_last_packet_indication(priv)) {
--				if (!adapter->data_sent) {
--					if (!mwifiex_send_null_packet(priv,
--					MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET
--					|
--					MWIFIEX_TxPD_POWER_MGMT_LAST_PACKET))
-+				if (adapter->data_sent) {
-+					adapter->ps_state = PS_STATE_AWAKE;
-+					adapter->pm_wakeup_card_req = false;
-+					adapter->pm_wakeup_fw_try = false;
-+					break;
-+				}
-+				if (!mwifiex_send_null_packet
-+					(priv,
-+					 MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET |
-+					 MWIFIEX_TxPD_POWER_MGMT_LAST_PACKET))
- 						adapter->ps_state =
- 							PS_STATE_SLEEP;
- 					return 0;
--				}
- 			}
- 		}
- 		adapter->ps_state = PS_STATE_AWAKE;
-@@ -371,12 +374,12 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		break;
- 	case EVENT_AMSDU_AGGR_CTRL:
- 		dev_dbg(adapter->dev, "event:  AMSDU_AGGR_CTRL %d\n",
--		       *(u16 *) adapter->event_body);
-+			*(u16 *) adapter->event_body);
- 		adapter->tx_buf_size =
- 			min(adapter->curr_tx_buf_size,
- 			    le16_to_cpu(*(__le16 *) adapter->event_body));
- 		dev_dbg(adapter->dev, "event: tx_buf_size %d\n",
--				adapter->tx_buf_size);
-+			adapter->tx_buf_size);
- 		break;
- 
- 	case EVENT_WEP_ICV_ERR:
-@@ -392,7 +395,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		break;
- 	default:
- 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
--						eventcause);
-+			eventcause);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index a3d79f4..64e0b10 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -71,7 +71,7 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter)
- 
- 	/* Wait for completion */
- 	wait_event_interruptible(adapter->cmd_wait_q.wait,
--					*(cmd_queued->condition));
-+				 *(cmd_queued->condition));
- 	if (!*(cmd_queued->condition))
- 		cancel_flag = true;
- 
-@@ -266,9 +266,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 		/* Adhoc mode */
- 		/* If the requested SSID matches current SSID, return */
- 		if (bss_desc && bss_desc->ssid.ssid_len &&
--		    (!mwifiex_ssid_cmp
--		     (&priv->curr_bss_params.bss_descriptor.ssid,
--		      &bss_desc->ssid))) {
-+		    (!mwifiex_ssid_cmp(&priv->curr_bss_params.bss_descriptor.
-+				       ssid, &bss_desc->ssid))) {
- 			kfree(bss_desc);
- 			kfree(beacon_ie);
- 			return 0;
-@@ -350,9 +349,8 @@ static int mwifiex_set_hs_params(struct mwifiex_private *priv, u16 action,
- 				adapter->hs_cfg.gpio = (u8)hs_cfg->gpio;
- 				if (hs_cfg->gap)
- 					adapter->hs_cfg.gap = (u8)hs_cfg->gap;
--			} else if (adapter->hs_cfg.conditions ==
--						cpu_to_le32(
--						HOST_SLEEP_CFG_CANCEL)) {
-+			} else if (adapter->hs_cfg.conditions
-+				   == cpu_to_le32(HOST_SLEEP_CFG_CANCEL)) {
- 				/* Return failure if no parameters for HS
- 				   enable */
- 				status = -1;
-@@ -374,7 +372,7 @@ static int mwifiex_set_hs_params(struct mwifiex_private *priv, u16 action,
- 						cpu_to_le32(prev_cond);
- 		} else {
- 			adapter->hs_cfg.conditions =
--				cpu_to_le32(hs_cfg->conditions);
-+						cpu_to_le32(hs_cfg->conditions);
- 			adapter->hs_cfg.gpio = (u8)hs_cfg->gpio;
- 			adapter->hs_cfg.gap = (u8)hs_cfg->gap;
- 		}
-@@ -431,7 +429,7 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
- 	hscfg.is_invoke_hostcmd = true;
- 
- 	if (mwifiex_set_hs_params(mwifiex_get_priv(adapter,
--						       MWIFIEX_BSS_ROLE_STA),
-+						   MWIFIEX_BSS_ROLE_STA),
- 				  HostCmd_ACT_GEN_SET, MWIFIEX_SYNC_CMD,
- 				  &hscfg)) {
- 		dev_err(adapter->dev, "IOCTL request HS enable failed\n");
-@@ -439,7 +437,7 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
- 	}
- 
- 	wait_event_interruptible(adapter->hs_activate_wait_q,
--			adapter->hs_activate_wait_q_woken);
-+				 adapter->hs_activate_wait_q_woken);
- 
- 	return true;
- }
-@@ -536,7 +534,7 @@ int mwifiex_bss_set_channel(struct mwifiex_private *priv,
- 			if (cfp) {
- 				if (adapter->adhoc_11n_enabled)
- 					adapter->adhoc_start_band = BAND_A
--						| BAND_AN;
-+								    | BAND_AN;
- 				else
- 					adapter->adhoc_start_band = BAND_A;
- 			}
-@@ -549,7 +547,7 @@ int mwifiex_bss_set_channel(struct mwifiex_private *priv,
- 			if (cfp) {
- 				if (adapter->adhoc_11n_enabled)
- 					adapter->adhoc_start_band = BAND_A
--						| BAND_AN;
-+								    | BAND_AN;
- 				else
- 					adapter->adhoc_start_band = BAND_A;
- 			}
-@@ -585,7 +583,7 @@ static int mwifiex_bss_ioctl_ibss_channel(struct mwifiex_private *priv,
- 	}
- 
- 	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_RF_CHANNEL,
--				    action, 0, channel);
-+				     action, 0, channel);
++/*
++ * struct fw_sec: Just for the image parsing proccess.
++ * For the fw storage we are using struct fw_desc.
++ */
++struct fw_sec {
++	const void *data;		/* the sec data */
++	size_t size;			/* section size */
++	u32 offset;			/* offset of writing in the device */
++};
++
+ static void iwl_free_fw_desc(struct iwl_drv *drv, struct fw_desc *desc)
+ {
+ 	if (desc->v_addr)
+@@ -119,20 +130,21 @@ static void iwl_dealloc_ucode(struct iwl_drv *drv)
  }
  
- /*
-@@ -631,7 +629,7 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel)
- 		goto done;
+ static int iwl_alloc_fw_desc(struct iwl_drv *drv, struct fw_desc *desc,
+-		      const void *data, size_t len)
++		      struct fw_sec *sec)
+ {
+-	if (!len) {
++	if (!sec || !sec->size) {
+ 		desc->v_addr = NULL;
+ 		return -EINVAL;
  	}
- 	dev_dbg(priv->adapter->dev, "cmd: updating channel from %d to %d\n",
--			curr_chan, channel);
-+		curr_chan, channel);
  
- 	if (!bss_info.media_connected) {
- 		ret = 0;
-@@ -653,7 +651,8 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel)
- 
- 	band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
- 	chan = __ieee80211_get_channel(priv->wdev->wiphy,
--			ieee80211_channel_to_frequency(channel, band));
-+				       ieee80211_channel_to_frequency(channel,
-+								      band));
- 
- 	/* Find the BSS we want using available scan results */
- 	bss = cfg80211_get_bss(priv->wdev->wiphy, chan, bss_info.bssid,
-@@ -661,7 +660,7 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel)
- 			       WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
- 	if (!bss)
- 		wiphy_warn(priv->wdev->wiphy, "assoc: bss %pM not in scan results\n",
--			  bss_info.bssid);
-+			   bss_info.bssid);
- 
- 	ret = mwifiex_bss_start(priv, bss, &bss_info.ssid);
- done:
-@@ -790,7 +789,9 @@ int mwifiex_drv_get_data_rate(struct mwifiex_private *priv,
- 	if (!ret) {
- 		if (rate->is_rate_auto)
- 			rate->rate = mwifiex_index_to_data_rate(priv,
--					priv->tx_rate, priv->tx_htinfo);
-+								priv->tx_rate,
-+								priv->tx_htinfo
-+								);
- 		else
- 			rate->rate = priv->data_rate;
- 	} else {
-@@ -827,16 +828,16 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 		if ((dbm < priv->min_tx_power_level) ||
- 		    (dbm > priv->max_tx_power_level)) {
- 			dev_err(priv->adapter->dev, "txpower value %d dBm"
--					" is out of range (%d dBm-%d dBm)\n",
--					dbm, priv->min_tx_power_level,
--					priv->max_tx_power_level);
-+				" is out of range (%d dBm-%d dBm)\n",
-+				dbm, priv->min_tx_power_level,
-+				priv->max_tx_power_level);
- 			return -1;
- 		}
- 	}
- 	buf = kzalloc(MWIFIEX_SIZE_OF_CMD_BUFFER, GFP_KERNEL);
- 	if (!buf) {
- 		dev_err(priv->adapter->dev, "%s: failed to alloc cmd buffer\n",
--				__func__);
-+			__func__);
+-	desc->v_addr = dma_alloc_coherent(trans(drv)->dev, len,
++	desc->v_addr = dma_alloc_coherent(trans(drv)->dev, sec->size,
+ 					  &desc->p_addr, GFP_KERNEL);
+ 	if (!desc->v_addr)
  		return -ENOMEM;
- 	}
  
-@@ -844,13 +845,13 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 	txp_cfg->action = cpu_to_le16(HostCmd_ACT_GEN_SET);
- 	if (!power_cfg->is_power_auto) {
- 		txp_cfg->mode = cpu_to_le32(1);
--		pg_tlv = (struct mwifiex_types_power_group *) (buf +
--				sizeof(struct host_cmd_ds_txpwr_cfg));
-+		pg_tlv = (struct mwifiex_types_power_group *)
-+			 (buf + sizeof(struct host_cmd_ds_txpwr_cfg));
- 		pg_tlv->type = TLV_TYPE_POWER_GROUP;
- 		pg_tlv->length = 4 * sizeof(struct mwifiex_power_group);
--		pg = (struct mwifiex_power_group *) (buf +
--				sizeof(struct host_cmd_ds_txpwr_cfg) +
--				sizeof(struct mwifiex_types_power_group));
-+		pg = (struct mwifiex_power_group *)
-+		     (buf + sizeof(struct host_cmd_ds_txpwr_cfg)
-+		      + sizeof(struct mwifiex_types_power_group));
- 		/* Power group for modulation class HR/DSSS */
- 		pg->first_rate_code = 0x00;
- 		pg->last_rate_code = 0x03;
-@@ -913,8 +914,8 @@ int mwifiex_drv_set_power(struct mwifiex_private *priv, u32 *ps_mode)
- 				    sub_cmd, BITMAP_STA_PS, NULL);
- 	if ((!ret) && (sub_cmd == DIS_AUTO_PS))
- 		ret = mwifiex_send_cmd_async(priv,
--				HostCmd_CMD_802_11_PS_MODE_ENH, GET_PS,
--				0, NULL);
-+					     HostCmd_CMD_802_11_PS_MODE_ENH,
-+					     GET_PS, 0, NULL);
- 
- 	return ret;
- }
-@@ -938,7 +939,7 @@ static int mwifiex_set_wpa_ie_helper(struct mwifiex_private *priv,
- 		memcpy(priv->wpa_ie, ie_data_ptr, ie_len);
- 		priv->wpa_ie_len = (u8) ie_len;
- 		dev_dbg(priv->adapter->dev, "cmd: Set Wpa_ie_len=%d IE=%#x\n",
--				priv->wpa_ie_len, priv->wpa_ie[0]);
-+			priv->wpa_ie_len, priv->wpa_ie[0]);
- 
- 		if (priv->wpa_ie[0] == WLAN_EID_WPA) {
- 			priv->sec_info.wpa_enabled = true;
-@@ -979,7 +980,7 @@ static int mwifiex_set_wapi_ie(struct mwifiex_private *priv,
- 		memcpy(priv->wapi_ie, ie_data_ptr, ie_len);
- 		priv->wapi_ie_len = ie_len;
- 		dev_dbg(priv->adapter->dev, "cmd: Set wapi_ie_len=%d IE=%#x\n",
--				priv->wapi_ie_len, priv->wapi_ie[0]);
-+			priv->wapi_ie_len, priv->wapi_ie[0]);
- 
- 		if (priv->wapi_ie[0] == WLAN_EID_BSS_AC_ACCESS_DELAY)
- 			priv->sec_info.wapi_enabled = true;
-@@ -1005,8 +1006,8 @@ static int mwifiex_sec_ioctl_set_wapi_key(struct mwifiex_private *priv,
- {
- 
- 	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_KEY_MATERIAL,
--				    HostCmd_ACT_GEN_SET, KEY_INFO_ENABLED,
--				    encrypt_key);
-+				     HostCmd_ACT_GEN_SET, KEY_INFO_ENABLED,
-+				     encrypt_key);
- }
- 
- /*
-@@ -1100,9 +1101,9 @@ static int mwifiex_sec_ioctl_set_wpa_key(struct mwifiex_private *priv,
- 		/* Send the key as PTK to firmware */
- 		encrypt_key->key_index = MWIFIEX_KEY_INDEX_UNICAST;
- 		ret = mwifiex_send_cmd_async(priv,
--					HostCmd_CMD_802_11_KEY_MATERIAL,
--					HostCmd_ACT_GEN_SET, KEY_INFO_ENABLED,
--					encrypt_key);
-+					     HostCmd_CMD_802_11_KEY_MATERIAL,
-+					     HostCmd_ACT_GEN_SET,
-+					     KEY_INFO_ENABLED, encrypt_key);
- 		if (ret)
- 			return ret;
- 
-@@ -1127,14 +1128,14 @@ static int mwifiex_sec_ioctl_set_wpa_key(struct mwifiex_private *priv,
- 
- 	if (remove_key)
- 		ret = mwifiex_send_cmd_sync(priv,
--				       HostCmd_CMD_802_11_KEY_MATERIAL,
--				       HostCmd_ACT_GEN_SET, !(KEY_INFO_ENABLED),
--				       encrypt_key);
-+					    HostCmd_CMD_802_11_KEY_MATERIAL,
-+					    HostCmd_ACT_GEN_SET,
-+					    !KEY_INFO_ENABLED, encrypt_key);
- 	else
- 		ret = mwifiex_send_cmd_sync(priv,
--					HostCmd_CMD_802_11_KEY_MATERIAL,
--					HostCmd_ACT_GEN_SET, KEY_INFO_ENABLED,
--					encrypt_key);
-+					    HostCmd_CMD_802_11_KEY_MATERIAL,
-+					    HostCmd_ACT_GEN_SET,
-+					    KEY_INFO_ENABLED, encrypt_key);
- 
- 	return ret;
- }
-@@ -1253,7 +1254,7 @@ mwifiex_get_ver_ext(struct mwifiex_private *priv)
- 
- 	memset(&ver_ext, 0, sizeof(struct host_cmd_ds_version_ext));
- 	if (mwifiex_send_cmd_sync(priv, HostCmd_CMD_VERSION_EXT,
--				    HostCmd_ACT_GEN_GET, 0, &ver_ext))
-+				  HostCmd_ACT_GEN_GET, 0, &ver_ext))
- 		return -1;
- 
+-	desc->len = len;
+-	memcpy(desc->v_addr, data, len);
++	desc->len = sec->size;
++	desc->offset = sec->offset;
++	memcpy(desc->v_addr, sec->data, sec->size);
  	return 0;
-@@ -1270,7 +1271,7 @@ mwifiex_get_stats_info(struct mwifiex_private *priv,
- 		       struct mwifiex_ds_get_stats *log)
- {
- 	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_GET_LOG,
--				    HostCmd_ACT_GEN_GET, 0, log);
-+				     HostCmd_ACT_GEN_GET, 0, log);
  }
  
- /*
-@@ -1410,9 +1411,9 @@ mwifiex_set_gen_ie_helper(struct mwifiex_private *priv, u8 *ie_data_ptr,
- 	}
- 	pvendor_ie = (struct ieee_types_vendor_header *) ie_data_ptr;
- 	/* Test to see if it is a WPA IE, if not, then it is a gen IE */
--	if (((pvendor_ie->element_id == WLAN_EID_WPA)
--	     && (!memcmp(pvendor_ie->oui, wpa_oui, sizeof(wpa_oui))))
--			|| (pvendor_ie->element_id == WLAN_EID_RSN)) {
-+	if (((pvendor_ie->element_id == WLAN_EID_WPA) &&
-+	     (!memcmp(pvendor_ie->oui, wpa_oui, sizeof(wpa_oui)))) ||
-+	    (pvendor_ie->element_id == WLAN_EID_RSN)) {
+@@ -177,18 +189,77 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
+ 				       GFP_KERNEL, drv, iwl_ucode_callback);
+ }
  
- 		/* IE is a WPA/WPA2 IE so call set_wpa function */
- 		ret = mwifiex_set_wpa_ie_helper(priv, ie_data_ptr, ie_len);
-@@ -1435,9 +1436,8 @@ mwifiex_set_gen_ie_helper(struct mwifiex_private *priv, u8 *ie_data_ptr,
- 		 * wps session flag
- 		 */
- 		pvendor_ie = (struct ieee_types_vendor_header *) ie_data_ptr;
--		if ((pvendor_ie->element_id == WLAN_EID_VENDOR_SPECIFIC)
--				&& (!memcmp(pvendor_ie->oui, wps_oui,
--						sizeof(wps_oui)))) {
-+		if ((pvendor_ie->element_id == WLAN_EID_VENDOR_SPECIFIC) &&
-+		    (!memcmp(pvendor_ie->oui, wps_oui, sizeof(wps_oui)))) {
- 			priv->wps.session_enable = true;
- 			dev_dbg(priv->adapter->dev,
- 				"info: WPS Session Enabled.\n");
-@@ -1446,7 +1446,7 @@ mwifiex_set_gen_ie_helper(struct mwifiex_private *priv, u8 *ie_data_ptr,
- 		/* Append the passed data to the end of the
- 		   genIeBuffer */
- 		memcpy(priv->gen_ie_buf + priv->gen_ie_buf_len, ie_data_ptr,
--									ie_len);
-+		       ie_len);
- 		/* Increment the stored buffer length by the
- 		   size passed */
- 		priv->gen_ie_buf_len += ie_len;
-@@ -1490,7 +1490,7 @@ static int mwifiex_misc_ioctl_gen_ie(struct mwifiex_private *priv,
- 			return -1;
- 		} else {
- 			memcpy(adapter->arp_filter, gen_ie->ie_data,
--								gen_ie->len);
-+			       gen_ie->len);
- 			adapter->arp_filter_size = gen_ie->len;
+-struct iwlagn_firmware_pieces {
+-	const void *inst, *data, *init, *init_data, *wowlan_inst, *wowlan_data;
+-	size_t inst_size, data_size, init_size, init_data_size,
+-	       wowlan_inst_size, wowlan_data_size;
++/*
++ * enumeration of ucode section.
++ * This enumeration is used for legacy tlv style (before 16.0 uCode).
++ */
++enum iwl_ucode_sec {
++	IWL_UCODE_SECTION_INST,
++	IWL_UCODE_SECTION_DATA,
++};
++/*
++ * For 16.0 uCode and above, there is no differentiation between section,
++ * just an offset to the HW address.
++ */
++#define UCODE_SECTION_MAX 4
++
++struct fw_img_parsing {
++	struct fw_sec sec[UCODE_SECTION_MAX];
++	int sec_counter;
++};
++
++struct iwl_firmware_pieces {
++	struct fw_img_parsing img[IWL_UCODE_TYPE_MAX];
+ 
+ 	u32 init_evtlog_ptr, init_evtlog_size, init_errlog_ptr;
+ 	u32 inst_evtlog_ptr, inst_evtlog_size, inst_errlog_ptr;
+ };
+ 
++/*
++ * These functions are just to extract uCode section data from the pieces
++ * structure.
++ */
++static struct fw_sec *get_sec(struct iwl_firmware_pieces *pieces,
++			      enum iwl_ucode_type type,
++			      int  sec)
++{
++	return &pieces->img[type].sec[sec];
++}
++
++static void set_sec_data(struct iwl_firmware_pieces *pieces,
++			 enum iwl_ucode_type type,
++			 int sec,
++			 const void *data)
++{
++	pieces->img[type].sec[sec].data = data;
++}
++
++static void set_sec_size(struct iwl_firmware_pieces *pieces,
++			 enum iwl_ucode_type type,
++			 int sec,
++			 size_t size)
++{
++	pieces->img[type].sec[sec].size = size;
++}
++
++static size_t get_sec_size(struct iwl_firmware_pieces *pieces,
++			   enum iwl_ucode_type type,
++			   int sec)
++{
++	return pieces->img[type].sec[sec].size;
++}
++
++static void set_sec_offset(struct iwl_firmware_pieces *pieces,
++			   enum iwl_ucode_type type,
++			   int sec,
++			   u32 offset)
++{
++	pieces->img[type].sec[sec].offset = offset;
++}
++
+ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
+-				       const struct firmware *ucode_raw,
+-				       struct iwlagn_firmware_pieces *pieces)
++				    const struct firmware *ucode_raw,
++				    struct iwl_firmware_pieces *pieces)
+ {
+ 	struct iwl_ucode_header *ucode = (void *)ucode_raw->data;
+ 	u32 api_ver, hdr_size, build;
+@@ -206,11 +277,14 @@ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
+ 			return -EINVAL;
  		}
+ 		build = le32_to_cpu(ucode->u.v2.build);
+-		pieces->inst_size = le32_to_cpu(ucode->u.v2.inst_size);
+-		pieces->data_size = le32_to_cpu(ucode->u.v2.data_size);
+-		pieces->init_size = le32_to_cpu(ucode->u.v2.init_size);
+-		pieces->init_data_size =
+-			le32_to_cpu(ucode->u.v2.init_data_size);
++		set_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST,
++			     le32_to_cpu(ucode->u.v2.inst_size));
++		set_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA,
++			     le32_to_cpu(ucode->u.v2.data_size));
++		set_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST,
++			     le32_to_cpu(ucode->u.v2.init_size));
++		set_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA,
++			     le32_to_cpu(ucode->u.v2.init_data_size));
+ 		src = ucode->u.v2.data;
  		break;
+ 	case 0:
+@@ -222,11 +296,14 @@ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
+ 			return -EINVAL;
+ 		}
+ 		build = 0;
+-		pieces->inst_size = le32_to_cpu(ucode->u.v1.inst_size);
+-		pieces->data_size = le32_to_cpu(ucode->u.v1.data_size);
+-		pieces->init_size = le32_to_cpu(ucode->u.v1.init_size);
+-		pieces->init_data_size =
+-			le32_to_cpu(ucode->u.v1.init_data_size);
++		set_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST,
++			     le32_to_cpu(ucode->u.v1.inst_size));
++		set_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA,
++			     le32_to_cpu(ucode->u.v1.data_size));
++		set_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST,
++			     le32_to_cpu(ucode->u.v1.init_size));
++		set_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA,
++			     le32_to_cpu(ucode->u.v1.init_data_size));
+ 		src = ucode->u.v1.data;
+ 		break;
+ 	}
+@@ -248,9 +325,12 @@ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
+ 		 buildstr);
+ 
+ 	/* Verify size of file vs. image size info in file's header */
+-	if (ucode_raw->size != hdr_size + pieces->inst_size +
+-				pieces->data_size + pieces->init_size +
+-				pieces->init_data_size) {
++
++	if (ucode_raw->size != hdr_size +
++	    get_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST) +
++	    get_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA) +
++	    get_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST) +
++	    get_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA)) {
+ 
+ 		IWL_ERR(drv,
+ 			"uCode file size %d does not match expected size\n",
+@@ -258,21 +338,29 @@ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
+ 		return -EINVAL;
+ 	}
+ 
+-	pieces->inst = src;
+-	src += pieces->inst_size;
+-	pieces->data = src;
+-	src += pieces->data_size;
+-	pieces->init = src;
+-	src += pieces->init_size;
+-	pieces->init_data = src;
+-	src += pieces->init_data_size;
+ 
++	set_sec_data(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST, src);
++	src += get_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST);
++	set_sec_offset(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST,
++		       IWLAGN_RTC_INST_LOWER_BOUND);
++	set_sec_data(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA, src);
++	src += get_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA);
++	set_sec_offset(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA,
++		       IWLAGN_RTC_DATA_LOWER_BOUND);
++	set_sec_data(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST, src);
++	src += get_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST);
++	set_sec_offset(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST,
++		       IWLAGN_RTC_INST_LOWER_BOUND);
++	set_sec_data(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA, src);
++	src += get_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA);
++	set_sec_offset(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA,
++		       IWLAGN_RTC_DATA_LOWER_BOUND);
+ 	return 0;
+ }
+ 
+ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 				const struct firmware *ucode_raw,
+-				struct iwlagn_firmware_pieces *pieces,
++				struct iwl_firmware_pieces *pieces,
+ 				struct iwl_ucode_capabilities *capa)
+ {
+ 	struct iwl_tlv_ucode_header *ucode = (void *)ucode_raw->data;
+@@ -368,20 +456,40 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 
+ 		switch (tlv_type) {
+ 		case IWL_UCODE_TLV_INST:
+-			pieces->inst = tlv_data;
+-			pieces->inst_size = tlv_len;
++			set_sec_data(pieces, IWL_UCODE_REGULAR,
++				     IWL_UCODE_SECTION_INST, tlv_data);
++			set_sec_size(pieces, IWL_UCODE_REGULAR,
++				     IWL_UCODE_SECTION_INST, tlv_len);
++			set_sec_offset(pieces, IWL_UCODE_REGULAR,
++				       IWL_UCODE_SECTION_INST,
++				       IWLAGN_RTC_INST_LOWER_BOUND);
+ 			break;
+ 		case IWL_UCODE_TLV_DATA:
+-			pieces->data = tlv_data;
+-			pieces->data_size = tlv_len;
++			set_sec_data(pieces, IWL_UCODE_REGULAR,
++				     IWL_UCODE_SECTION_DATA, tlv_data);
++			set_sec_size(pieces, IWL_UCODE_REGULAR,
++				     IWL_UCODE_SECTION_DATA, tlv_len);
++			set_sec_offset(pieces, IWL_UCODE_REGULAR,
++				       IWL_UCODE_SECTION_DATA,
++				       IWLAGN_RTC_DATA_LOWER_BOUND);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT:
+-			pieces->init = tlv_data;
+-			pieces->init_size = tlv_len;
++			set_sec_data(pieces, IWL_UCODE_INIT,
++				     IWL_UCODE_SECTION_INST, tlv_data);
++			set_sec_size(pieces, IWL_UCODE_INIT,
++				     IWL_UCODE_SECTION_INST, tlv_len);
++			set_sec_offset(pieces, IWL_UCODE_INIT,
++				       IWL_UCODE_SECTION_INST,
++				       IWLAGN_RTC_INST_LOWER_BOUND);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT_DATA:
+-			pieces->init_data = tlv_data;
+-			pieces->init_data_size = tlv_len;
++			set_sec_data(pieces, IWL_UCODE_INIT,
++				     IWL_UCODE_SECTION_DATA, tlv_data);
++			set_sec_size(pieces, IWL_UCODE_INIT,
++				     IWL_UCODE_SECTION_DATA, tlv_len);
++			set_sec_offset(pieces, IWL_UCODE_INIT,
++				       IWL_UCODE_SECTION_DATA,
++				       IWLAGN_RTC_DATA_LOWER_BOUND);
+ 			break;
+ 		case IWL_UCODE_TLV_BOOT:
+ 			IWL_ERR(drv, "Found unexpected BOOT ucode\n");
+@@ -455,12 +563,22 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			drv->fw.enhance_sensitivity_table = true;
+ 			break;
+ 		case IWL_UCODE_TLV_WOWLAN_INST:
+-			pieces->wowlan_inst = tlv_data;
+-			pieces->wowlan_inst_size = tlv_len;
++			set_sec_data(pieces, IWL_UCODE_WOWLAN,
++				     IWL_UCODE_SECTION_INST, tlv_data);
++			set_sec_size(pieces, IWL_UCODE_WOWLAN,
++				     IWL_UCODE_SECTION_INST, tlv_len);
++			set_sec_offset(pieces, IWL_UCODE_WOWLAN,
++				       IWL_UCODE_SECTION_INST,
++				       IWLAGN_RTC_INST_LOWER_BOUND);
+ 			break;
+ 		case IWL_UCODE_TLV_WOWLAN_DATA:
+-			pieces->wowlan_data = tlv_data;
+-			pieces->wowlan_data_size = tlv_len;
++			set_sec_data(pieces, IWL_UCODE_WOWLAN,
++				     IWL_UCODE_SECTION_DATA, tlv_data);
++			set_sec_size(pieces, IWL_UCODE_WOWLAN,
++				     IWL_UCODE_SECTION_DATA, tlv_len);
++			set_sec_offset(pieces, IWL_UCODE_WOWLAN,
++				       IWL_UCODE_SECTION_DATA,
++				       IWLAGN_RTC_DATA_LOWER_BOUND);
+ 			break;
+ 		case IWL_UCODE_TLV_PHY_CALIBRATION_SIZE:
+ 			if (tlv_len != sizeof(u32))
+@@ -502,7 +620,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	struct iwl_fw *fw = &drv->fw;
+ 	struct iwl_ucode_header *ucode;
+ 	int err;
+-	struct iwlagn_firmware_pieces pieces;
++	struct iwl_firmware_pieces pieces;
+ 	const unsigned int api_max = cfg->ucode_api_max;
+ 	unsigned int api_ok = cfg->ucode_api_ok;
+ 	const unsigned int api_min = cfg->ucode_api_min;
+@@ -588,36 +706,46 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	IWL_DEBUG_INFO(drv, "f/w package hdr ucode version raw = 0x%x\n",
+ 		       drv->fw.ucode_ver);
+ 	IWL_DEBUG_INFO(drv, "f/w package hdr runtime inst size = %Zd\n",
+-		       pieces.inst_size);
++		get_sec_size(&pieces, IWL_UCODE_REGULAR,
++			     IWL_UCODE_SECTION_INST));
+ 	IWL_DEBUG_INFO(drv, "f/w package hdr runtime data size = %Zd\n",
+-		       pieces.data_size);
++		get_sec_size(&pieces, IWL_UCODE_REGULAR,
++			     IWL_UCODE_SECTION_DATA));
+ 	IWL_DEBUG_INFO(drv, "f/w package hdr init inst size = %Zd\n",
+-		       pieces.init_size);
++		get_sec_size(&pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST));
+ 	IWL_DEBUG_INFO(drv, "f/w package hdr init data size = %Zd\n",
+-		       pieces.init_data_size);
++		get_sec_size(&pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA));
+ 
+ 	/* Verify that uCode images will fit in card's SRAM */
+-	if (pieces.inst_size > cfg->max_inst_size) {
++	if (get_sec_size(&pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST) >
++							cfg->max_inst_size) {
+ 		IWL_ERR(drv, "uCode instr len %Zd too large to fit in\n",
+-			pieces.inst_size);
++			get_sec_size(&pieces, IWL_UCODE_REGULAR,
++				     IWL_UCODE_SECTION_INST));
+ 		goto try_again;
+ 	}
+ 
+-	if (pieces.data_size > cfg->max_data_size) {
++	if (get_sec_size(&pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA) >
++							cfg->max_data_size) {
+ 		IWL_ERR(drv, "uCode data len %Zd too large to fit in\n",
+-			pieces.data_size);
++			get_sec_size(&pieces, IWL_UCODE_REGULAR,
++				     IWL_UCODE_SECTION_DATA));
+ 		goto try_again;
+ 	}
+ 
+-	if (pieces.init_size > cfg->max_inst_size) {
++	 if (get_sec_size(&pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST) >
++							cfg->max_inst_size) {
+ 		IWL_ERR(drv, "uCode init instr len %Zd too large to fit in\n",
+-			pieces.init_size);
++			get_sec_size(&pieces, IWL_UCODE_INIT,
++				     IWL_UCODE_SECTION_INST));
+ 		goto try_again;
+ 	}
+ 
+-	if (pieces.init_data_size > cfg->max_data_size) {
++	if (get_sec_size(&pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA) >
++							cfg->max_data_size) {
+ 		IWL_ERR(drv, "uCode init data len %Zd too large to fit in\n",
+-			pieces.init_data_size);
++			get_sec_size(&pieces, IWL_UCODE_REGULAR,
++				     IWL_UCODE_SECTION_DATA));
+ 		goto try_again;
+ 	}
+ 
+@@ -627,35 +755,35 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	 * 1) unmodified from disk
+ 	 * 2) backup cache for save/restore during power-downs */
+ 	if (iwl_alloc_fw_desc(drv, &drv->fw.ucode_rt.code,
+-			      pieces.inst, pieces.inst_size))
++		get_sec(&pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST)))
+ 		goto err_pci_alloc;
+ 	if (iwl_alloc_fw_desc(drv, &drv->fw.ucode_rt.data,
+-			      pieces.data, pieces.data_size))
++		get_sec(&pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA)))
+ 		goto err_pci_alloc;
+ 
+ 	/* Initialization instructions and data */
+-	if (pieces.init_size && pieces.init_data_size) {
+-		if (iwl_alloc_fw_desc(drv,
+-				      &drv->fw.ucode_init.code,
+-				      pieces.init, pieces.init_size))
++	if (get_sec_size(&pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST) &&
++	    get_sec_size(&pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA)) {
++		if (iwl_alloc_fw_desc(drv, &drv->fw.ucode_init.code,
++			get_sec(&pieces, IWL_UCODE_INIT,
++						IWL_UCODE_SECTION_INST)))
+ 			goto err_pci_alloc;
+-		if (iwl_alloc_fw_desc(drv,
+-				      &drv->fw.ucode_init.data,
+-				      pieces.init_data, pieces.init_data_size))
++		if (iwl_alloc_fw_desc(drv, &drv->fw.ucode_init.data,
++			get_sec(&pieces, IWL_UCODE_INIT,
++						IWL_UCODE_SECTION_DATA)))
+ 			goto err_pci_alloc;
+ 	}
+ 
+ 	/* WoWLAN instructions and data */
+-	if (pieces.wowlan_inst_size && pieces.wowlan_data_size) {
+-		if (iwl_alloc_fw_desc(drv,
+-				      &drv->fw.ucode_wowlan.code,
+-				      pieces.wowlan_inst,
+-				      pieces.wowlan_inst_size))
++	if (get_sec_size(&pieces, IWL_UCODE_WOWLAN, IWL_UCODE_SECTION_INST) &&
++	    get_sec_size(&pieces, IWL_UCODE_WOWLAN, IWL_UCODE_SECTION_DATA)) {
++		if (iwl_alloc_fw_desc(drv, &drv->fw.ucode_wowlan.code,
++			get_sec(&pieces, IWL_UCODE_WOWLAN,
++						IWL_UCODE_SECTION_INST)))
+ 			goto err_pci_alloc;
+-		if (iwl_alloc_fw_desc(drv,
+-				      &drv->fw.ucode_wowlan.data,
+-				      pieces.wowlan_data,
+-				      pieces.wowlan_data_size))
++		if (iwl_alloc_fw_desc(drv, &drv->fw.ucode_wowlan.data,
++			get_sec(&pieces, IWL_UCODE_WOWLAN,
++						IWL_UCODE_SECTION_DATA)))
+ 			goto err_pci_alloc;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
+index 453812a..253f7e5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
+@@ -91,11 +91,12 @@ struct iwl_ucode_capabilities {
+ 	u32 flags;
+ };
+ 
+-/* one for each uCode image (inst/data, boot/init/runtime) */
++/* one for each uCode image (inst/data, init/runtime/wowlan) */
+ struct fw_desc {
+ 	dma_addr_t p_addr;	/* hardware address */
+ 	void *v_addr;		/* software address */
+ 	u32 len;		/* size in bytes */
++	u32 offset;		/* offset in the device */
+ };
+ 
+ struct fw_img {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 4cd2ece..d899c5c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -205,6 +205,7 @@ enum iwl_ucode_type {
+ 	IWL_UCODE_REGULAR,
+ 	IWL_UCODE_INIT,
+ 	IWL_UCODE_WOWLAN,
++	IWL_UCODE_TYPE_MAX,
+ };
+ 
+ /*
 -- 
-1.7.0.2
+1.7.0.4
 
