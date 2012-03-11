@@ -1,105 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:53227 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031621Ab2COTPe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 15:15:34 -0400
-Received: by yhmm54 with SMTP id m54so3473210yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 12:15:33 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36720 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751530Ab2CKUJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Mar 2012 16:09:01 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: gregkh@linuxfoundation.org
+Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
+	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3/7] bcma: scan for extra address space
+Date: Sun, 11 Mar 2012 21:08:21 +0100
+Message-Id: <1331496505-18697-4-git-send-email-hauke@hauke-m.de> (sfid-20120311_210912_614359_02D9900C)
+In-Reply-To: <1331496505-18697-1-git-send-email-hauke@hauke-m.de>
+References: <1331496505-18697-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <1331837984.3432.42.camel@jlt3.sipsolutions.net>
-References: <4F6236D0.40505@candelatech.com>
-	<1331836777.3432.31.camel@jlt3.sipsolutions.net>
-	<CAB3XZEeDtJKpSbYB8sMM35rRT7KH5dVuKOWntDBhDp+unRkWGA@mail.gmail.com>
-	<1331837984.3432.42.camel@jlt3.sipsolutions.net>
-Date: Thu, 15 Mar 2012 21:15:33 +0200
-Message-ID: <CAB3XZEf9oq5GQO_F6zjdo8qTHoDX8-CPozfDouuw7GVzipJpww@mail.gmail.com> (sfid-20120315_201538_941801_362D3175)
-Subject: Re: compiler warning in wireless-testing.
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 15, 2012 at 8:59 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-03-15 at 20:53 +0200, Eliad Peller wrote:
->> On Thu, Mar 15, 2012 at 8:39 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Thu, 2012-03-15 at 11:37 -0700, Ben Greear wrote:
->> >> Looks like this is the compiler's fault to me..but might be
->> >> worth explicitly initializing the sta variable just to make
->> >> it quiet.
->> >
->> > I disagree, doing that will only hide legitimate warnings if somebody
->> > changes the code. Initializing for compiler happiness is almost always
->> > the worst thing you can do.
->> >
->> what about
->>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 6cb5361..96fc201 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -3094,7 +3094,6 @@ static int ieee80211_prep_connection(struct
->> ieee80211_sub_if_data *sdata,
->> † † † † struct ieee80211_local *local = sdata->local;
->> † † † † struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
->> † † † † struct ieee80211_bss *bss = (void *)cbss->priv;
->> - † † † struct sta_info *sta;
->> † † † † bool have_sta = false;
->> † † † † int err;
->>
->> @@ -3107,12 +3106,6 @@ static int ieee80211_prep_connection(struct
->> ieee80211_sub_if_data *sdata,
->> † † † † † † † † rcu_read_unlock();
->> † † † † }
->>
->> - † † † if (!have_sta) {
->> - † † † † † † † sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
->> - † † † † † † † if (!sta)
->> - † † † † † † † † † † † return -ENOMEM;
->> - † † † }
->> -
->> † † † † mutex_lock(&local->mtx);
->> † † † † ieee80211_recalc_idle(sdata->local);
->> † † † † mutex_unlock(&local->mtx);
->> @@ -3123,10 +3116,15 @@ static int ieee80211_prep_connection(struct
->> ieee80211_sub_if_data *sdata,
->>
->> † † † † if (!have_sta) {
->> † † † † † † † † struct ieee80211_supported_band *sband;
->> + † † † † † † † struct sta_info *sta;
->> † † † † † † † † u32 rates = 0, basic_rates = 0;
->> † † † † † † † † bool have_higher_than_11mbit;
->> † † † † † † † † int min_rate = INT_MAX, min_rate_index = -1;
->>
->> + † † † † † † † sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
->> + † † † † † † † if (!sta)
->> + † † † † † † † † † † † return -ENOMEM;
->> +
->> † † † † † † † † sband = sdata->local->hw.wiphy->bands[cbss->channel->band];
->>
->> † † † † † † † † ieee80211_get_rates(sband, bss->supp_rates,
->>
->>
->> it also makes the code more clear, imho.
->
-> Yeah, I thought about that for a second, but I'm working on changes in
-> this area that would essentially require me to revert this again ...
->
-> I really want to do the allocation first so the failure path for that is
-> easy. On the other hand, I'm adding channel type switching (see my RFC
-> patchset) in the middle of this, and unwinding that would be a larger
-> change that even touches the device.
->
-> What may be possible instead is to replace the second have_sta in the
-> second if with "if (sta)", which may make Ben's compiler a bit happier,
-> but I have no way of even testing that since my compiler doesn't
-> complain to start with.
->
-that's possible, but then you'll have to initialize sta anyway :)
+Some cores like the USB core have two address spaces. In the USB host
+controller one address space is used for the OHCI and the other for the
+EHCI controller interface. The USB controller is the only core I found
+with two address spaces. This code is based on the AI scan function
+ai_scan() in shared/aiutils.c i the Broadcom SDK.
 
-Eliad.
+CC: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/scan.c       |   18 +++++++++++++++++-
+ include/linux/bcma/bcma.h |    1 +
+ 2 files changed, 18 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 3a2f672..3c2eeed 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -286,6 +286,22 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			return -EILSEQ;
+ 	}
+ 
++
++	/* First Slave Address Descriptor should be port 0:
++	 * the main register space for the core
++	 */
++	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
++	if (tmp <= 0) {
++		/* Try again to see if it is a bridge */
++		tmp = bcma_erom_get_addr_desc(bus, eromptr,
++					      SCAN_ADDR_TYPE_BRIDGE, 0);
++		if (tmp > 0) {
++			pr_info("found bridge");
++			return -ENXIO;
++		}
++	}
++	core->addr = tmp;
++
+ 	/* get & parse slave ports */
+ 	for (i = 0; i < ports[1]; i++) {
+ 		for (j = 0; ; j++) {
+@@ -298,7 +314,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 				break;
+ 			} else {
+ 				if (i == 0 && j == 0)
+-					core->addr = tmp;
++					core->addr1 = tmp;
+ 			}
+ 		}
+ 	}
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 83c209f..7fe41e1 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -138,6 +138,7 @@ struct bcma_device {
+ 	u8 core_index;
+ 
+ 	u32 addr;
++	u32 addr1;
+ 	u32 wrap;
+ 
+ 	void __iomem *io_addr;
+-- 
+1.7.5.4
+
