@@ -1,240 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46404 "EHLO mga11.intel.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:38447 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755072Ab2CDX6Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 18:58:16 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 18/22] NFC: Remove the rf mode parameter from the DEP link up routine
-Date: Mon,  5 Mar 2012 01:03:50 +0100
-Message-Id: <1330905834-6994-19-git-send-email-sameo@linux.intel.com> (sfid-20120305_005821_366186_CFE8BBDC)
-In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
-References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+	id S1751517Ab2CKWIm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Mar 2012 18:08:42 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 3.3-rc7: Reported regressions 3.1 -> 3.2
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <5lvJI01hLEP.A.LnC.3_RXPB@chimera> (sfid-20120311_230906_808128_FBC32D2E)
+Date: Sun, 11 Mar 2012 22:46:18 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When calling nfc_dep_link_up, we implicitely are in initiator mode.
-Which means we also can provide the general bytes as a function argument,
-as all drivers will eventually request them.
+This message contains a list of some post-3.1 regressions introduced before
+3.2, for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c   |   20 +++++---------------
- include/net/nfc/nfc.h |    6 ++----
- net/nfc/core.c        |   22 +++++++++++-----------
- net/nfc/llcp/llcp.c   |    2 +-
- net/nfc/netlink.c     |   11 +++--------
- net/nfc/nfc.h         |    5 ++---
- 6 files changed, 24 insertions(+), 42 deletions(-)
+If you know of any other unresolved post-3.1 regressions, please let us know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index ef33f64..cb6204f 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -1340,21 +1340,15 @@ static int pn533_in_dep_link_up_complete(struct pn533 *dev, void *arg,
- }
- 
- static int pn533_dep_link_up(struct nfc_dev *nfc_dev, int target_idx,
--						u8 comm_mode, u8 rf_mode)
-+			     u8 comm_mode, u8* gb, size_t gb_len)
- {
- 	struct pn533 *dev = nfc_get_drvdata(nfc_dev);
- 	struct pn533_cmd_jump_dep *cmd;
--	u8 cmd_len, local_gt_len, *local_gt;
-+	u8 cmd_len;
- 	int rc;
- 
- 	nfc_dev_dbg(&dev->interface->dev, "%s", __func__);
- 
--	if (rf_mode == NFC_RF_TARGET) {
--		nfc_dev_err(&dev->interface->dev, "Target mode not supported");
--		return -EOPNOTSUPP;
--	}
--
--
- 	if (dev->poll_mod_count) {
- 		nfc_dev_err(&dev->interface->dev,
- 				"Cannot bring the DEP link up while polling");
-@@ -1367,11 +1361,7 @@ static int pn533_dep_link_up(struct nfc_dev *nfc_dev, int target_idx,
- 		return -EBUSY;
- 	}
- 
--	local_gt = nfc_get_local_general_bytes(dev->nfc_dev, &local_gt_len);
--	if (local_gt_len > NFC_MAX_GT_LEN)
--		return -EINVAL;
--
--	cmd_len = sizeof(struct pn533_cmd_jump_dep) + local_gt_len;
-+	cmd_len = sizeof(struct pn533_cmd_jump_dep) + gb_len;
- 	cmd = kzalloc(cmd_len, GFP_KERNEL);
- 	if (cmd == NULL)
- 		return -ENOMEM;
-@@ -1380,9 +1370,9 @@ static int pn533_dep_link_up(struct nfc_dev *nfc_dev, int target_idx,
- 
- 	cmd->active = !comm_mode;
- 	cmd->baud = 0;
--	if (local_gt != NULL) {
-+	if (gb != NULL && gb_len > 0) {
- 		cmd->next = 4; /* We have some Gi */
--		memcpy(cmd->gt, local_gt, local_gt_len);
-+		memcpy(cmd->gt, gb, gb_len);
- 	} else {
- 		cmd->next = 0;
- 	}
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index d253278..d608e4e 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -53,8 +53,8 @@ struct nfc_ops {
- 	int (*dev_down)(struct nfc_dev *dev);
- 	int (*start_poll)(struct nfc_dev *dev, u32 protocols);
- 	void (*stop_poll)(struct nfc_dev *dev);
--	int (*dep_link_up)(struct nfc_dev *dev, int target_idx,
--				u8 comm_mode, u8 rf_mode);
-+	int (*dep_link_up)(struct nfc_dev *dev, int target_idx, u8 comm_mode,
-+			   u8 *gb, size_t gb_len);
- 	int (*dep_link_down)(struct nfc_dev *dev);
- 	int (*activate_target)(struct nfc_dev *dev, u32 target_idx,
- 							u32 protocol);
-@@ -179,8 +179,6 @@ struct sk_buff *nfc_alloc_recv_skb(unsigned int size, gfp_t gfp);
- int nfc_set_remote_general_bytes(struct nfc_dev *dev,
- 					u8 *gt, u8 gt_len);
- 
--u8 *nfc_get_local_general_bytes(struct nfc_dev *dev, u8 *gt_len);
--
- int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
- 							int ntargets);
- 
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 6089aca..f4f526f 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -181,13 +181,13 @@ error:
- 	return rc;
- }
- 
--int nfc_dep_link_up(struct nfc_dev *dev, int target_index,
--					u8 comm_mode, u8 rf_mode)
-+int nfc_dep_link_up(struct nfc_dev *dev, int target_index, u8 comm_mode)
- {
- 	int rc = 0;
-+	u8 *gb;
-+	size_t gb_len;
- 
--	pr_debug("dev_name=%s comm:%d rf:%d\n",
--			dev_name(&dev->dev), comm_mode, rf_mode);
-+	pr_debug("dev_name=%s comm %d\n", dev_name(&dev->dev), comm_mode);
- 
- 	if (!dev->ops->dep_link_up)
- 		return -EOPNOTSUPP;
-@@ -204,7 +204,13 @@ int nfc_dep_link_up(struct nfc_dev *dev, int target_index,
- 		goto error;
- 	}
- 
--	rc = dev->ops->dep_link_up(dev, target_index, comm_mode, rf_mode);
-+	gb = nfc_llcp_general_bytes(dev, &gb_len);
-+	if (gb_len > NFC_MAX_GT_LEN) {
-+		rc = -EINVAL;
-+		goto error;
-+	}
-+
-+	rc = dev->ops->dep_link_up(dev, target_index, comm_mode, gb, gb_len);
- 
- error:
- 	device_unlock(&dev->dev);
-@@ -367,12 +373,6 @@ int nfc_set_remote_general_bytes(struct nfc_dev *dev, u8 *gb, u8 gb_len)
- }
- EXPORT_SYMBOL(nfc_set_remote_general_bytes);
- 
--u8 *nfc_get_local_general_bytes(struct nfc_dev *dev, u8 *gt_len)
--{
--	return nfc_llcp_general_bytes(dev, gt_len);
--}
--EXPORT_SYMBOL(nfc_get_local_general_bytes);
--
- /**
-  * nfc_alloc_send_skb - allocate a skb for data exchange responses
-  *
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index a0cb133..3ce646e 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -281,7 +281,7 @@ void nfc_llcp_put_ssap(struct nfc_llcp_local *local, u8 ssap)
- 	mutex_unlock(&local->sdp_lock);
- }
- 
--u8 *nfc_llcp_general_bytes(struct nfc_dev *dev, u8 *general_bytes_len)
-+u8 *nfc_llcp_general_bytes(struct nfc_dev *dev, size_t *general_bytes_len)
- {
- 	struct nfc_llcp_local *local;
- 
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index a1388e4..fa620d0 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -542,13 +542,12 @@ static int nfc_genl_dep_link_up(struct sk_buff *skb, struct genl_info *info)
- 	struct nfc_dev *dev;
- 	int rc, tgt_idx;
- 	u32 idx;
--	u8 comm, rf;
-+	u8 comm;
- 
- 	pr_debug("DEP link up\n");
- 
- 	if (!info->attrs[NFC_ATTR_DEVICE_INDEX] ||
--			!info->attrs[NFC_ATTR_COMM_MODE] ||
--			!info->attrs[NFC_ATTR_RF_MODE])
-+	    !info->attrs[NFC_ATTR_COMM_MODE])
- 		return -EINVAL;
- 
- 	idx = nla_get_u32(info->attrs[NFC_ATTR_DEVICE_INDEX]);
-@@ -558,19 +557,15 @@ static int nfc_genl_dep_link_up(struct sk_buff *skb, struct genl_info *info)
- 		tgt_idx = nla_get_u32(info->attrs[NFC_ATTR_TARGET_INDEX]);
- 
- 	comm = nla_get_u8(info->attrs[NFC_ATTR_COMM_MODE]);
--	rf = nla_get_u8(info->attrs[NFC_ATTR_RF_MODE]);
- 
- 	if (comm != NFC_COMM_ACTIVE && comm != NFC_COMM_PASSIVE)
- 		return -EINVAL;
- 
--	if (rf != NFC_RF_INITIATOR && comm != NFC_RF_TARGET)
--		return -EINVAL;
--
- 	dev = nfc_get_device(idx);
- 	if (!dev)
- 		return -ENODEV;
- 
--	rc = nfc_dep_link_up(dev, tgt_idx, comm, rf);
-+	rc = nfc_dep_link_up(dev, tgt_idx, comm);
- 
- 	nfc_put_device(dev);
- 
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-index 6d28d75..2fd83b1 100644
---- a/net/nfc/nfc.h
-+++ b/net/nfc/nfc.h
-@@ -54,7 +54,7 @@ void nfc_llcp_mac_is_up(struct nfc_dev *dev, u32 target_idx,
- int nfc_llcp_register_device(struct nfc_dev *dev);
- void nfc_llcp_unregister_device(struct nfc_dev *dev);
- int nfc_llcp_set_remote_gb(struct nfc_dev *dev, u8 *gb, u8 gb_len);
--u8 *nfc_llcp_general_bytes(struct nfc_dev *dev, u8 *general_bytes_len);
-+u8 *nfc_llcp_general_bytes(struct nfc_dev *dev, size_t *general_bytes_len);
- int __init nfc_llcp_init(void);
- void nfc_llcp_exit(void);
- 
-@@ -160,8 +160,7 @@ int nfc_start_poll(struct nfc_dev *dev, u32 protocols);
- 
- int nfc_stop_poll(struct nfc_dev *dev);
- 
--int nfc_dep_link_up(struct nfc_dev *dev, int target_idx,
--				u8 comm_mode, u8 rf_mode);
-+int nfc_dep_link_up(struct nfc_dev *dev, int target_idx, u8 comm_mode);
- 
- int nfc_dep_link_down(struct nfc_dev *dev);
- 
--- 
-1.7.7.3
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
+
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2012-03-11        9        6           5
+  2012-03-04        9        8           7
+  2012-02-24        9        8           7
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42684
+Subject		: FYIO: usb/video 3.2 breaks logitech 9000pro webcam focus control
+Submitter	: M G Berberich <berberic@fmi.uni-passau.de>
+Date		: 2012-01-23 21:49 (49 days old)
+Message-ID	: <20120123214934.GA4240@invalid>
+References	: http://marc.info/?l=linux-kernel&m=132735609521443&w=2
+
+
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42631
+Subject		: Sound broken in 3.2.0 and 3.2.1
+Submitter	: Joseph Parmelee <jparmele@wildbear.com>
+Date		: 2012-01-13 19:44 (59 days old)
+Message-ID	: <alpine.LNX.2.00.1201131241090.1239@bruno>
+References	: http://marc.info/?l=linux-kernel&m=132648462806235&w=2
+
+
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42629
+Subject		: recvmsg sleeping from invalid context
+Submitter	: Dave Jones <davej@redhat.com>
+Date		: 2012-01-13 18:24 (59 days old)
+Message-ID	: <20120113182401.GA25885@redhat.com>
+References	: http://marc.info/?l=linux-kernel&m=132647921304184&w=2
+
+
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42611
+Subject		: kernel 3.2 crashes too early on HP dc7700 and HP t5000 series
+Submitter	: Dmitry D. Khlebnikov <galaxy@openwall.com>
+Date		: 2012-01-10 11:49 (62 days old)
+Message-ID	: <20120110114905.GC13535@openwall.com>
+References	: http://marc.info/?l=linux-kernel&m=132619793012702&w=2
+
+
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42610
+Subject		: 3.2.0 reboot powers off machine
+Submitter	: Tom Weber <l_linux-kernel@mail2news.4t2.com>
+Date		: 2012-01-11 11:03 (61 days old)
+Message-ID	: <1326279818.24835.12.camel@utumno>
+References	: http://marc.info/?l=linux-kernel&m=132628059308023&w=2
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42571
+Subject		: BUG in ofcs2_change_file_space
+Submitter	: Bret Towe <magnade@gmail.com>
+Date		: 2012-01-05 22:23 (67 days old)
+Message-ID	: <CALjC5haTNDMOTDPL1m1uBTc2a-Qb8cvR44SCaVDFMzGc+Gw3+w@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=132580236211209&w=2
+Patch		: http://oss.oracle.com/pipermail/ocfs2-devel/2012-January/008464.html
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 3.1 and 3.2, unresolved as well as resolved, at:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=42566
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
