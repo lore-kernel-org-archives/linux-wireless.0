@@ -1,78 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8887 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965200Ab2CPPIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 11:08:19 -0400
-Date: Fri, 16 Mar 2012 15:37:31 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: do not nulify ctx->vif on reset
-Message-ID: <20120316143730.GA11278@redhat.com> (sfid-20120316_160823_174889_ADCD3B3D)
-References: <1331651434-4370-1-git-send-email-sgruszka@redhat.com>
- <1331651730.3329.6.camel@jlt3.sipsolutions.net>
- <20120314062549.GA2788@redhat.com>
- <1331708304.3376.0.camel@jlt3.sipsolutions.net>
- <20120314070748.GB2788@redhat.com>
- <20120314081424.GC2788@redhat.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:60218 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752107Ab2CKJxg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Mar 2012 05:53:36 -0400
+Received: by lahj13 with SMTP id j13so2861205lah.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Mar 2012 01:53:34 -0800 (PST)
+Message-ID: <4F5C761B.2050403@gmail.com> (sfid-20120311_105349_522371_241F5283)
+Date: Sun, 11 Mar 2012 10:53:31 +0100
+From: =?UTF-8?B?TWFydGluIEh1bmRlYsO4bGw=?= <m.hundeboll@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120314081424.GC2788@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 3.3] rt2x00: fix random stalls
+References: <20120305164813.GB2979@redhat.com> <4F564CDC.5040808@gmail.com> <20120307184635.GD15839@redhat.com>
+In-Reply-To: <20120307184635.GD15839@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 14, 2012 at 09:14:24AM +0100, Stanislaw Gruszka wrote:
-> On Wed, Mar 14, 2012 at 08:07:48AM +0100, Stanislaw Gruszka wrote:
-> > I'll update and recheck again.
-> 
-> On updated tree (head 035364916f75151b4b91ea53968c6beba7545317) devices
-> stop working here on any forced reset during TX as well. There are
-> messages like below in dmesg:
-> 
-> wlan3: dropped data frame to not associated station 00:00:00:00:00:00
-> 
-> And one time crash happened too, in:
-> 
-> (gdb) l *(iwl_remove_dynamic_key+0x1f0)
-> 0x15e20 is in iwl_remove_dynamic_key (drivers/net/wireless/iwlwifi/iwl-agn-sta.c:1105).
-> 1100		/*
-> 1101		 * The device expects GTKs for station interfaces to be
-> 1102		 * installed as GTKs for the AP station. If we have no
-> 1103		 * station ID, then use the ap_sta_id in that case.
-> 1104		 */
-> 1105		if (vif->type == NL80211_IFTYPE_STATION && vif_priv->ctx)
-> 1106			return vif_priv->ctx->ap_sta_id;
-> 1107	
-> 1108		return IWL_INVALID_STATION;
-> 1109	}
-> 
-> To reproduce problems, I'm doing "ping -f 192.168.1.1" on one console
-> and run script [1] on other console.
+Hi,
 
-So what we do here? Patch fix possible crash on firmware restart.
-We have a few places where ctx->vif is dereferences without a NULL
-check. Perhaps those places should be verified instead. What protects
-to dereference ctx->vif after iwl_mac_remove_interface() ?
+On 03/07/2012 07:46 PM, Stanislaw Gruszka wrote:
+> Hi
+>
+> On Tue, Mar 06, 2012 at 06:43:56PM +0100, Martin Hundebøll wrote:
+>> Hi,
+>>
+>> On 03/05/2012 05:48 PM, Stanislaw Gruszka wrote:
+>>> Is possible that we stop queue and then do not wake up it again,
+>>> especially when packets are transmitted fast. That can be easily
+>>> reproduced with modified tx queue entry_num to some small value e.g. 16.
+>>>
+>>> If mac80211 already hold local->queue_stop_reason_lock, then we can wait
+>>> on that lock in both rt2x00queue_pause_queue() and
+>>> rt2x00queue_unpause_queue(). After drooping ->queue_stop_reason_lock
+>>> is possible that __ieee80211_wake_queue() will be performed before
+>>> __ieee80211_stop_queue(), hence we stop queue and newer wake up it
+>>> again.
+>>>
+>>> To prevent stalls serialize pause/unpause by queue->tx_lock.
+>> I've been having CPU load issues with rt2800usb/Ralink RT2870, when doing simultaneous TX/RX between to nodes in an adhoc network. While transfering UDP packets in one direction with iperf[1], I get ~23Mbit/s and kworker is utilizing<10% of the CPU (OMAP4 1GHz dualcore or/and Pentium M 1.70GHz) on both ends. When doing bidirectional tests with iperf[2], one kworker thread jumps too 100% and throughput drops.
+>>
+>> By using two iperf clients to do bidirectional TCP transfers, I got ~6Mbit/s in both directions, so I suspected some queueing issues and thus applied this patch, but no change. I've tried to do some tracing[3], but this is quite new to me, so please instruct me, if you need more info.
+> I did short test here and do not enter that issue. Which kernel version are you using?
 
-Regarding restart, this apparently is broken - hung the adapter such the
-module reload is needed. To mitigate the problems You just disable
-watchdog on various adapters.
+I forgot to mention, that we work with adhoc networks. I've tested 2.6.38.4 and 3.2.7, with in-tree and compat-wireless on both versions.
 
-I do not think restart should be fixed. I think better would be disable
-restart by default (set fw_restart=0) and start to solve real problems :-)
+However, the issue is fixed by another patch-set posted on users@rt2x00.serialmonkey.com ([RFC/RFT 0/5] rt2x00: rt2800usb: rework tx path). So now I "just" see random stalls, which should be fixed by this patch. (I will test the most recent version shortly.)
 
-This is of course not easy, but perhaps could be done using tracing. It
-offer a nice feature that allow to enable and disable logging on
-runtime, (tracing_on(), tracing_off() functions). So offer a compile
-option to make IWL_DEBUG use trace_printk(), start tracing on module
-load, disable it on microcode error or queue stuck. All of that should
-help with debugging inimitable problems, as ftrace log data into memory
-and use ring buffer, hence allow to see (lot of) latest actions before
-the problem occurs. I could write the patches, but since you are
-constantly refactoring the iwlwifi driver better if you will do this.
-How about that?
+>> [3]
+>> out.txt has a trace from 10.10.10.55 while running iperf as in [2] and the following commands:
+> Please newer do this again :-) If you want to provide such big data, put it
+> somewhere and paste download link to the email. Moreover that tracing
+> did not provide any useful information.
 
-Stanislaw
+Will never happen again :)
 
+// Martin
