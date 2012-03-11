@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56151 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758873Ab2CJAw5 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:55736 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752528Ab2CKEXq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 19:52:57 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Add iface name when calling WARN-ON.
-Date: Fri,  9 Mar 2012 10:36:56 -0800
-Message-Id: <1331318216-27235-1-git-send-email-greearb@candelatech.com> (sfid-20120310_015306_799372_9A7E4047)
+	Sat, 10 Mar 2012 23:23:46 -0500
+Received: by iagz16 with SMTP id z16so4769640iag.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Mar 2012 20:23:45 -0800 (PST)
+Message-ID: <4F5C28CE.7020001@lwfinger.net> (sfid-20120311_052421_276242_D3DC0EF2)
+Date: Sat, 10 Mar 2012 22:23:42 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: alupu@verizon.net
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8712u staging in kernel 3.2.9
+References: <7971088.142916.1331403052068.JavaMail.root@vznit170136>
+In-Reply-To: <7971088.142916.1331403052068.JavaMail.root@vznit170136>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Alex,
 
-This lets the user know which interface has failed
-the check_sdata_in_driver check.
+I was not doing any finger pointing. Your system is everything - hardware, 
+kernel, and user-space routines. Obviously something is not working.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 e8960ae... e62e7c3... M	net/mac80211/driver-ops.h
- net/mac80211/driver-ops.h |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+I have a Rosewill RNX-N180UBE. The chip is a RTL8191RU, but appears to be 
+programmed the same as the RTL8191SU. Mine works with the standard r8712u driver.
 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index e8960ae..e62e7c3 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -7,7 +7,11 @@
- 
- static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
- {
--	WARN_ON(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER));
-+	if (unlikely(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER))) {
-+		printk(KERN_ERR "%s:  Failed check-sdata-in-driver check, flags: 0x%x\n",
-+		       sdata->dev->name, sdata->flags);
-+		WARN_ON(1);
-+	}
- }
- 
- static inline struct ieee80211_sub_if_data *
--- 
-1.7.3.4
+The two possible firmware files have the following md5sum:
 
+200fd952db3cc9259b1fd05e3e51966f  /lib/firmware/rtlwifi/rtl8712u.bin_122328
+8e6396b5844a3e279ae8679555dec3f0  /lib/firmware/rtlwifi/rtl8712u.bin_129304
+
+Could you please download a Live KDE CD from
+http://software.opensuse.org/121/en? It should not matter whether you use the 
+32- or 64-bit version. After you boot it, use the NetworkManager system tray 
+applet to connect to your system. Does that work?
+
+Next, use 'ps ax' to get the PID for NetworkManager and kill it. Then try your 
+iwconfig/ifconfig command sequence. Does that work?
+
+Both sets of connection methods work here. I used the 64-bit system with my 
+Rosewill device.
+
+Larry
