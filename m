@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:37928 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031094Ab2CFVED convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48006 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753519Ab2CKRn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 16:04:03 -0500
-Received: by wibhm2 with SMTP id hm2so2930190wib.19
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 13:04:01 -0800 (PST)
+	Sun, 11 Mar 2012 13:43:28 -0400
 MIME-Version: 1.0
-In-Reply-To: <1330458306-13169-1-git-send-email-hauke@hauke-m.de>
-References: <1330458306-13169-1-git-send-email-hauke@hauke-m.de>
-Date: Tue, 6 Mar 2012 22:04:01 +0100
-Message-ID: <CACna6rwzMas9239mUGRgOcNZ19+eL1MM59tPvcEdHL7ncnmX+Q@mail.gmail.com> (sfid-20120306_220408_877318_475E0B7D)
-Subject: Re: [PATCH] b43: prevent firmware on bcm5354 from taking over wrong
- GPIO pins
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, Larry.Finger@lwfinger.net,
-	florian@openwrt.org, m@bues.ch, b43-dev@lists.infradead.org,
+Date: Sun, 11 Mar 2012 17:43:26 +0000
+Message-ID: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com> (sfid-20120311_184406_607805_DE1E5A92)
+Subject: Initializing iwl3945 error
+From: Kamil Grzebien <ciptok@gmail.com>
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Cc: sgruszka@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/2/28 Hauke Mehrtens <hauke@hauke-m.de>:
-> When using the bcm5354 (Soc with integrated LP-PHY Wifi) with a recent
-> firmware >= 478.104 it runs out of memory after a very short time in
-> OpenWrt after doing an active scan or any thing else where packages are
-> send. This was cased by a gpio misconfiguration, the firmware triggered
-> the GPIO pins used for buttons on some devices and that caused an other
-> driver (OpenWrt diag) listening for these buttons irqs to send many
-> messages to the user space.
-> This patch fixes the bug for my devices (Asus WL-520GU) and makes it
-> work with firmware 666.2. Now the firmware just uses LED GPIO pin
-> number 1 and not the button pins any more.
->
-> This is the GPIO Pin layout used on my device, see [0].
-> GPIO pin layout:
-> pin#    name    type
-> 0       power   led
-> 1       wlan    led
-> 2       reset   button
-> 3       ses     buttom
->
-> This is the nvram configuration output of "nvram show |grep gpio"
->
-> related nvram configuration:
-> wl0gpio2=11
-> wl0gpio3=11
-> wl0gpio0=11
-> wl0gpio1=0x02
-> reset_gpio=2
->
-> [0]: https://dev.openwrt.org/browser/trunk/package/broadcom-diag/src/diag.c
+Hello,
 
-Hauke: could you provide me
+I've initialisation problem with my iwl3945 network card in Dell XPS
+M1530 laptop. The issue is known and described in couple of bug
+reports (eg. http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143).
+There are workarounds but I'd like to solve the problem permanently.
+Basically when initializing I get:
 
-pr_info("Init value of B43_GPIO_CONTROL: 0x%X\n",
-ssb_read32(gpiodev, B43_GPIO_CONTROL)
-);
+iwl3945 0000:0b:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+iwl3945 0000:0b:00.0: setting latency timer to 64
+iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+....
+iwl3945 0000:0b:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:0b:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
+iwl3945 0000:0b:00.0: EEPROM not found, EEPROM_GP=0xffffffff
 
-please? You can put proposed code right after
-gpiodev = b43_ssb_gpio_dev(dev);
+Currently I'm working on Fedora 16 with 3.1.5-6.fc16.i686 kernel. I
+did some investigation/debugging on iwlegacy driver and found out few
+things.
 
--- 
-Rafał
+1. Driver can't initialize card as all ioread32/iowrite32 seems to not
+do their job. All reads finalize with 0xffffffff.
+
+However I can see that:
+- pci_iomap(pdev, 0, 0) doesn't return error,
+- pci_resource_start(pdev, 0) seems gives correct address (I can
+compare it with the one I can see in /proc/iomem).
+
+If I access the memory directly, not by mapping, I can write and read
+pci memory but driver load fails anyway. I don't understand why can't
+access using mapped memory.
+
+2. If I check BASE_ADDRESS with setpci it doesn't give correct values:
+
+# setpci -v -s 0b:00.0 BASE_ADDRESS_0 BASE_ADDRESS_1
+0000:0b:00.0 @10 = 00000000
+0000:0b:00.0 @14 = 00000000
+
+Not sure if it's done by driver itself or it should point correct
+values even if the driver wasn't fully loaded.
+
+Have you got any idea of:
+- why IO memory isn't accessible? what could cause that?
+- how APIC could change the load process in this particular case? (if
+I boot with noapic kernel option it usually works fine)
+- is there a way to check the status or rescan the device from driver itself?
+
+This issue is reproducible in 100% on my system when I turn on the
+machine. It doesn't occur after some work on it. I'd be very happy to
+get rid of the issue.
+
+Could you point some ideas that might be worth checking in driver or
+kernel please? I've tried couple of ideas but none worked for me.
+
+Regards,
+Kamil Grzebien
