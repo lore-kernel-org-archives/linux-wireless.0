@@ -1,87 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55997 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761635Ab2COWuu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 18:50:50 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: gregkh@linuxfoundation.org
-Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
-	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v5 1/4] bcma: scan for extra address space
-Date: Thu, 15 Mar 2012 23:49:56 +0100
-Message-Id: <1331851799-5968-2-git-send-email-hauke@hauke-m.de> (sfid-20120315_235057_305436_C0B1763C)
-In-Reply-To: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
-References: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from vms173017pub.verizon.net ([206.46.173.17]:36114 "EHLO
+	vms173017pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406Ab2CKT54 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Mar 2012 15:57:56 -0400
+Received: from vms170029 ([unknown] [192.168.1.3]) by vms173017.mailsrvcs.net
+ (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
+ with ESMTPA id <0M0Q00AXOKSHLJ80@vms173017.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Sun, 11 Mar 2012 14:57:53 -0500 (CDT)
+Date: Sun, 11 Mar 2012 14:57:53 -0500 (CDT)
+From: alupu@verizon.net
+To: linux-wireless@vger.kernel.org
+Message-id: <13558318.560745.1331495873638.JavaMail.root@vms170029> (sfid-20120311_205827_784603_3B52E03C)
+Subject: Re: r8712u staging in kernel 3.2.9
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some cores like the USB core have two address spaces. In the USB host
-controller one address space is used for the OHCI and the other for the
-EHCI controller interface. The USB controller is the only core I found
-with two address spaces. This code is based on the AI scan function
-ai_scan() in shared/aiutils.c in the Broadcom SDK.
+On 03/10/12 11:23 PM, Larry Finger wrote:
 
-CC: Rafał Miłecki <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/scan.c       |   19 ++++++++++++++++++-
- include/linux/bcma/bcma.h |    1 +
- 2 files changed, 19 insertions(+), 1 deletions(-)
+> I have a Rosewill RNX-N180UBE. The chip is a RTL8191RU, but appears to be 
+> programmed the same as the RTL8191SU. Mine works with the standard r8712u driver.
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 3a2f672..1fa10ed 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -286,6 +286,23 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 			return -EILSEQ;
- 	}
- 
-+	/* First Slave Address Descriptor should be port 0:
-+	 * the main register space for the core
-+	 */
-+	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
-+	if (tmp <= 0) {
-+		/* Try again to see if it is a bridge */
-+		tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+					      SCAN_ADDR_TYPE_BRIDGE, 0);
-+		if (tmp <= 0) {
-+			return -EILSEQ;
-+		} else {
-+			pr_info("Bridge found\n");
-+			return -ENXIO;
-+		}
-+	}
-+	core->addr = tmp;
-+
- 	/* get & parse slave ports */
- 	for (i = 0; i < ports[1]; i++) {
- 		for (j = 0; ; j++) {
-@@ -298,7 +315,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 				break;
- 			} else {
- 				if (i == 0 && j == 0)
--					core->addr = tmp;
-+					core->addr1 = tmp;
- 			}
- 		}
- 	}
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 83c209f..7fe41e1 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -138,6 +138,7 @@ struct bcma_device {
- 	u8 core_index;
- 
- 	u32 addr;
-+	u32 addr1;
- 	u32 wrap;
- 
- 	void __iomem *io_addr;
--- 
-1.7.5.4
+In WinXP, the driver is identified as 'RTL8192su.sys', so
+for the heck of it, I enabled two additional modules,
+RTL8192U and RTL8192E.
+Not surprisingly, Rosewill wants to work with r8712u only.
 
+> The two possible firmware files have the following md5sum:
+> 200fd952db3cc9259b1fd05e3e51966f /lib/firmware/rtlwifi/rtl8712u.bin_122328
+> 8e6396b5844a3e279ae8679555dec3f0 /lib/firmware/rtlwifi/rtl8712u.bin_129304
+
+Both check out OK.
+
+> Could you please download a Live KDE CD from ...
+
+Working on that.
+
+Thanks,
+-- Alex
