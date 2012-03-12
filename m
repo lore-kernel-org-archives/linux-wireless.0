@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:58596 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934780Ab2C3VEz (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:56115 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753067Ab2CLLX2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 17:04:55 -0400
-Received: by wgbdr13 with SMTP id dr13so942409wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Mar 2012 14:04:53 -0700 (PDT)
+	Mon, 12 Mar 2012 07:23:28 -0400
+Subject: [PATCH 4/4] ath6kl: use max_t() in ath6kl_cfg80211_connect()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Mon, 12 Mar 2012 13:23:23 +0200
+Message-ID: <20120312112323.23253.64415.stgit@x201> (sfid-20120312_122332_024706_C0FEA8AD)
+In-Reply-To: <20120312112131.23253.74137.stgit@x201>
+References: <20120312112131.23253.74137.stgit@x201>
 MIME-Version: 1.0
-Date: Fri, 30 Mar 2012 16:04:53 -0500
-Message-ID: <CAJ8GFOihCt_JBPoawk2xKOO6wan_03F9LLwhsOAbmAKXSs0ygg@mail.gmail.com> (sfid-20120331_010503_460038_1BE7BA9D)
-Subject: Dual-band support for AP mode for AR9280?
-From: Harshal Chhaya <harshal@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+ath6kl/cfg80211.c:589: WARNING: max() should probably be
+max_t(u16, vif->listen_intvl_t, ATH6KL_MAX_WOW_LISTEN_INTL)
 
-The 'ath9k' project page
-(http://linuxwireless.org/en/users/Drivers/ath9k) mentions that '2x2
-DB 11n' operation is supported for AR9280. A later section says that
-'AP mode' is supported.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Does the AP mode support full 11n features in a dual-band
-configuration? Is there a hard limit to the number of clients when the
-AR9280 is used as an AP? I am currently using an AR9170 (using
-carl9170 - thanks, Christian) as an AP and found that I had to switch
-to software encryption to scale beyond 32 clients because of the
-number of key slots on the chip.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 5ecc53a..00d3895 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -586,8 +586,8 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	vif->reconnect_flag = 0;
+ 
+ 	if (vif->nw_type == INFRA_NETWORK) {
+-		interval = max(vif->listen_intvl_t,
+-			       (u16) ATH6KL_MAX_WOW_LISTEN_INTL);
++		interval = max_t(u16, vif->listen_intvl_t,
++				 ATH6KL_MAX_WOW_LISTEN_INTL);
+ 		status = ath6kl_wmi_listeninterval_cmd(ar->wmi, vif->fw_vif_idx,
+ 						       interval,
+ 						       0);
 
-And are the numbers in the 'power consumption' analysis
-(http://linuxwireless.org/en/users/Drivers/ath9k/power-consumption)
-for STA mode or AP mode? The 'PS On' configuration implies that this
-is for an STA mode but I wanted to confirm.
-
-Thanks,
-- Harshal
