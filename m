@@ -1,68 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51362 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756888Ab2COI6b (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58173 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982Ab2CLF5m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 04:58:31 -0400
-Subject: Re: [PATCH 3.5] cfg80211: enforce lack of interface combinations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Luciano Coelho <coelho@ti.com>
-In-Reply-To: <20120315085736.GB17590@vasanth-laptop>
-References: <20120313150613.300612962@sipsolutions.net>
-	 <20120315084217.GA17590@vasanth-laptop>
-	 <1331801488.3432.2.camel@jlt3.sipsolutions.net>
-	 <20120315085736.GB17590@vasanth-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Mar 2012 09:58:27 +0100
-Message-ID: <1331801907.3432.3.camel@jlt3.sipsolutions.net> (sfid-20120315_095836_580792_A5908763)
-Mime-Version: 1.0
+	Mon, 12 Mar 2012 01:57:42 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC] ath9k_hw: Fix chip revision checks
+Date: Mon, 12 Mar 2012 11:27:33 +0530
+Message-ID: <1331531853-5043-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120312_065745_996257_9BD17688)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-15 at 14:27 +0530, Vasanthakumar Thiagarajan wrote:
-> On Thu, Mar 15, 2012 at 09:51:28AM +0100, Johannes Berg wrote:
-> > On Thu, 2012-03-15 at 14:12 +0530, Vasanthakumar Thiagarajan wrote:
-> > > On Tue, Mar 13, 2012 at 04:06:03PM +0100, Johannes Berg wrote:
-> > > > From: Johannes Berg <johannes.berg@intel.com>
-> > > > 
-> > > > My grand plan to allow drivers to gradually move over
-> > > > to advertising virtual interface combinations and only
-> > > > enforce with drivers that do want it enforced doesn't
-> > > > seem to be working out, only Christian ever added the
-> > > > advertising (to carl9170), nobody else did.
-> > > > 
-> > > > Begin enforcing combinations in cfg80211 so that users
-> > > > can rely on the information reported about a device.
-> > > 
-> > > This breaks ath6kl AP mode and P2P, is it expected that the driver
-> > > needs to register the combination (?) even it supports a single
-> > > interface?
-> > 
-> > Kalle tells me that ath6kl does support multiple virtual interfaces, but
-> > if it didn't then it wouldn't have to register combinations.
-> > 
-> > I suspect you're using
-> > driver_param=use_p2p_group_interface=1
-> > in wpa_supplicant?
-> 
-> Actually, I verified only AP mode, since it affects any sort of change interface,
-> I mentioned P2P as well. AP is expected to work without any issue right?.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-As long as you don't try to add the AP interface as the second one...
+not sure if these checks are previously avoided may be those revision of
+chipsets are obselete ?
 
-johannes
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/reg.h |   20 +++++++++++++++-----
+ 1 files changed, 15 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 80b1856..55e3513 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -821,20 +821,28 @@
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9160_11))
+ #define AR_SREV_9280(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9280))
+-#define AR_SREV_9280_20_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9280))
+ #define AR_SREV_9280_20(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9280))
++#define AR_SREV_9280_10_OR_LATER(_ah) \
++	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9280))
++#define AR_SREV_9280_20_OR_LATER(_ah) \
++	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9280) || \
++	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9280) && \
++	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9280_20)))
+ 
+ #define AR_SREV_9285(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9285))
+ #define AR_SREV_9285_12_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9285))
++	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9285) || \
++	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9285) && \
++	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9285_12)))
+ 
+ #define AR_SREV_9287(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287))
+ #define AR_SREV_9287_11_OR_LATER(_ah) \
+-	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9287))
++	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9287) || \
++	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287) && \
++	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9285_11)))
+ #define AR_SREV_9287_11(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287) && \
+ 	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9287_11))
+@@ -862,7 +870,9 @@
+ #define AR_SREV_9300(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300))
+ #define AR_SREV_9300_20_OR_LATER(_ah) \
+-	((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9300)
++	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9300) || \
++	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300) && \
++	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9300_20)))
+ 
+ #define AR_SREV_9330(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9330))
+-- 
+1.7.0.4
 
