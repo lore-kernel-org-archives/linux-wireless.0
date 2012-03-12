@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49554 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753170Ab2CLQ1e (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:59220 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753186Ab2CLC2f convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 12:27:34 -0400
-Message-ID: <4F5E23F1.1010501@candelatech.com> (sfid-20120312_172744_232347_1618976A)
-Date: Mon, 12 Mar 2012 09:27:29 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 11 Mar 2012 22:28:35 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
-References: <4F57B7E6.1050103@candelatech.com>  (sfid-20120307_203301_816701_DF7D4715) <1331189709.3446.1.camel@jlt3.sipsolutions.net>  <4F5A4C83.50009@candelatech.com> <1331536233.3496.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1331536233.3496.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4F5D5D90.8020401@gmail.com>
+References: <4F5D4C4E.1060800@gmail.com> <CAGRGNgX-RDRFNXKTXf=qw7h4bQNypHx0Hgvjd7rvXu9T43f4WQ@mail.gmail.com>
+ <4F5D5D90.8020401@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 12 Mar 2012 13:28:14 +1100
+Message-ID: <CAGRGNgX37DgMzbTjdhQ5LRD_6JwQi8tyN_6VVzYzwQ-KAat4jA@mail.gmail.com> (sfid-20120312_032907_857936_499A8740)
+Subject: Re: [PATCH v2 1/3] mac80211: improve PID rate control mechanism by
+ avoiding rate oscillation problem
+To: wei <yinwei168@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/12/2012 12:10 AM, Johannes Berg wrote:
-> On Fri, 2012-03-09 at 10:31 -0800, Ben Greear wrote:
->> On 03/07/2012 10:55 PM, Johannes Berg wrote:
->>> On Wed, 2012-03-07 at 11:32 -0800, Ben Greear wrote:
->>>> This is with a somewhat hacked 3.3.0-rc5+.  Just
->>>> curious if this is a known problem.
->>>>
->>>>
->>>> Seems very reproducible on my system.
->>>>
->>>>
->>>> WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:10 ieee80211_bss_info_change_noti)
->>>
->>> The warning means you're modifying an interface the driver doesn't (yet)
->>> know about.
->>>
->>> It's odd that you should be running into this on config_beacon() though
->>> since that can only execute when the interface is up ... can you print
->>> out the interface name in the warning?
->>
->> This is still reproducible in 3.3.0-rc6+ from yesterday.
->>
->>
->> I create the VAP with this command:
->>
->> ./local/sbin/iw phy wiphy0 interface add vap0 type __ap
->>
->>
->> vap0:  Failed check-sdata-in-driver check, flags: 0x0
+Hi Wei,
+
+On Mon, Mar 12, 2012 at 13:21, wei <yinwei168@gmail.com> wrote:
+> Thank you, Julian.
+
+No problem =)
+
+> On 12/03/12 11:14, Julian Calaby wrote:
+>>> @@ -271,14 +473,17 @@ rate_control_pid_get_rate(void *priv, st
+>>>                info->control.rates[0].count =
+>>>                        txrc->hw->conf.long_frame_max_tx_count;
+>>>        else
+>>> -               info->control.rates[0].count =
+>>> -                       txrc->hw->conf.short_frame_max_tx_count;
+>>> -
+>>> +               info->control.rates[0].count = 2;
+>> Should this be a constant or something? Why is this being set to 2?
 >
-> That's it? That doesn't create a warning here, and somehow you're
-> running into nl80211_set_wiphy() which isn't called if you execute just
-> that iw command.
+> According to the principle of how PID works, the default FLR is 14% and it attempts to decrease the rate if the FLR is higher than 14%. Let us assume that the current FLR is 14%, Then the probability for two consecutive failed attempts should be 14% * 14% = 0.0196 = 1.96%. The probability is very low. So I think we should not try further retransmission at this rate and fall back as soon as possible. Another reason is that the number of probes at the proposed rate is set to MAX_PROBES = 3 in the implementation, which means we will have 6 attempts at the probing rate. If the current rate is the lowest, say 1 Mbit/s, in 120 ms (a rate adaptation period in PID), the maximum number of attempts is around 8--9. I think I should limit the number of probes within the maximum attempts that can be achieved in one rate adaptation period.
+>
+> We could switch back to the configured value. But I need to change the maximum number of probes, MAX_PROBES.
 
-Well, there's a lot of other stuff going on too.  Power is set, for one
-thing, hostapd is started, etc.
-
-I will see if I can come up with a easy way to reproduce this, but
-it might be a few days as I'm stacked up with work at the moment.
+You should either use a constant (i.e. #define
+PID_SHORT_FRAME_MAX_PROBES 2) or put this reasoning in a comment
+there, otherwise people may question why you've set the count to 2.
 
 Thanks,
-Ben
-
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
