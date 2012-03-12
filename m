@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60223 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761287Ab2C3SrZ (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63700 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758115Ab2CLXr4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 14:47:25 -0400
-Date: Fri, 30 Mar 2012 14:30:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Oliver Hartkopp <socketcan@hartkopp.net>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-03-30
-Message-ID: <20120330183045.GD8273@tuxdriver.com> (sfid-20120330_204743_128673_4D8D1894)
-References: <20120330175533.GC8273@tuxdriver.com>
- <4F75F620.9030101@hartkopp.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F75F620.9030101@hartkopp.net>
+	Mon, 12 Mar 2012 19:47:56 -0400
+Received: by dajr28 with SMTP id r28so5850181daj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 16:47:56 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH] iw: Show Toffset on station dump
+Date: Mon, 12 Mar 2012 16:47:51 -0700
+Message-Id: <1331596071-29747-1-git-send-email-ashok@cozybit.com> (sfid-20120313_004809_501605_701F8081)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 30, 2012 at 08:06:24PM +0200, Oliver Hartkopp wrote:
-> Hello John,
-> 
-> there are at least two patches that i know from that fix issues in the current
-> 3.4-merge tree.
-> 
-> [PATCH] iwlwifi: fix unused variable warning
-> http://marc.info/?l=linux-wireless&m=133266148006409&w=2
-> Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> http://marc.info/?l=linux-wireless&m=133272671523532&w=2
-> 
-> [PATCH 3.4] mac80211: fix association beacon wait timeout
-> http://marc.info/?l=linux-wireless&m=133296144416566&w=2
-> Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
-> http://marc.info/?l=linux-wireless&m=133296423617914&w=2
-> 
-> Did you miss them?
-> 
-> Regards,
-> Oliver
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+---
+ station.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-No, I didn't.  Please be patient.
-
-John
+diff --git a/station.c b/station.c
+index ef69ea5..75e2369 100644
+--- a/station.c
++++ b/station.c
+@@ -45,6 +45,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
++		[NL80211_STA_INFO_T_OFFSET] = { .type = NLA_U64 },
+ 		[NL80211_STA_INFO_TX_BITRATE] = { .type = NLA_NESTED },
+ 		[NL80211_STA_INFO_LLID] = { .type = NLA_U16 },
+ 		[NL80211_STA_INFO_PLID] = { .type = NLA_U16 },
+@@ -113,6 +114,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 	if (sinfo[NL80211_STA_INFO_SIGNAL_AVG])
+ 		printf("\n\tsignal avg:\t%d dBm",
+ 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL_AVG]));
++	if (sinfo[NL80211_STA_INFO_T_OFFSET])
++		printf("\n\tToffset:\t%lld us",
++			(int64_t)nla_get_u64(sinfo[NL80211_STA_INFO_T_OFFSET]));
+ 
+ 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
+ 		if (nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.5.4
+
