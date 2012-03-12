@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56585 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299Ab2CHURu convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:38658 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756673Ab2CLWNR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 15:17:50 -0500
-Received: by iagz16 with SMTP id z16so1153433iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 12:17:50 -0800 (PST)
+	Mon, 12 Mar 2012 18:13:17 -0400
+Received: by eaaq12 with SMTP id q12so1488841eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 15:13:16 -0700 (PDT)
+Message-ID: <4F5E7515.8060801@openwrt.org> (sfid-20120312_231321_243203_F090B422)
+Date: Mon, 12 Mar 2012 23:13:41 +0100
+From: Florian Fainelli <florian@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20120308200734.GC28133@ubuntu-macmini>
-References: <20120307194001.GA2506@ubuntu-macmini> <20120308174101.GB28133@ubuntu-macmini>
- <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
- <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com>
- <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com> <20120308200734.GC28133@ubuntu-macmini>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 8 Mar 2012 12:17:30 -0800
-Message-ID: <CAB=NE6W0g8j3SzNnegWeBuyVP_N_30EqtF+yZEjvgsnMgoZgSg@mail.gmail.com> (sfid-20120308_211754_286549_F6C90FEB)
-Subject: Re: Problems with regulatory domain support and BCM43224
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: "Quan, David" <dquan@qca.qualcomm.com>,
-	"Green, Michael" <green@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	vinodn@qca.qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+To: Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Hacking PCI-ids to allow Atheros NIC into Lenovo laptop.
+References: <4F5E7031.4000401@candelatech.com>
+In-Reply-To: <4F5E7031.4000401@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 8, 2012 at 12:07 PM, Seth Forshee
-<seth.forshee@canonical.com> wrote:
-> On Thu, Mar 08, 2012 at 11:51:03AM -0800, Luis R. Rodriguez wrote:
->> On Thu, Mar 8, 2012 at 11:45 AM, Quan, David <dquan@qca.qualcomm.com> wrote:
->> > I think there is to it more than SW.
->> > Where ever you get this card, is the card tested and regulatory approved for those countries, DFS or not?
->>
->> Seth, what driver are you using? I know you are using a BCM43224 card.
+Hi,
+
+Le 12/03/2012 22:52, Ben Greear a écrit :
+> It seems we bought a Lenovo laptop that has a BIOS lock where it will only
+> support certain wifi NICs based on the pci-id. It came with an Intel
+> NIC, so at least that ID must work...
 >
-> brcmsmac
-
-Oh this is a driver fully supported by Broadcom :D
-
->> > It is possible that this card is only regulatory tested for non DFS channels, but now you enable them for passive.
->>
->> That's a good point.
->>
->> > This means that yes, you are save and not violate DFS rules because you are in passive mode. However, you are in complete violation if the STA finds an AP on that DFS channel and then connects and transmits as this STA is not allow to transmit on that channel since it is not approved.
->>
->> If the driver being used is a supported vendor driver then I'll punt
->> this to the vendor (Broadcom). If this is the reversed engineered
->> driver (b43) that Broadcom to this day seems to blindly ignore even
->> for regulatory, then I'm happy to recommend based on your input to
->> leave the regulatory domain as-is given that we cannot guarantee what
->> the vendor meant as they have not done any work on releasing either
->> documentation or code to help with their regulatory situation.
+> One way around this might be to over-write the pci-id of an Atheros NIC
+> in it's non-volatile storage to make it look like an Intel, at least until
+> the kernel boots.
 >
-> It would be nice if Broadcom could weigh in. Cc-ing Arend.
+> Then maybe add some sort of ugly code to force the Atheros driver
+> to manage this Intel pci-id (and probably disable the same pci-id in
+> the Intel driver).
+>
+> Has anyone tried doing anything like this? Any suggestions for a cleaner
+> way to go about this?
 
-Indeed.
-
-> This is actually a special case. This is an Apple machine, and it's not
-> that there's no regulatory hint in the ROM, it's that the hint is the
-> bogus country code "X0". From reading online, Apple uses this to
-> indicate the regulatory domain is unknown, and it uses the first
-> regulatory hint it sees in a country IE. I can connect to DFS channels
-> using MacOS on the machine, so I'll assume it was approved for DFS
-> channels.
-
-I'll let Broadcom weigh in.
-
-> Since Linux (afaict) only uses hits from country IEs for APs it's
-> connected to, much of the time this card ends up using the world domain
-> and is unable to scan DFS channels.
-
-Indeed, we only process the IE if we connect to the AP.
-
-  Luis
+The only viable hack that I have came to with my laptop (Lenovo X61) is 
+to have a patched BIOS. Fortunately the web is full of such modified 
+BIOSes enabling various features (SATA2 vs SATA1, Wireless NICs 
+whitelisting ...)
+--
+Florian
