@@ -1,81 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46085 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40922 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031456Ab2CFXH6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 18:07:58 -0500
-Message-ID: <4F5698BD.9080302@hauke-m.de> (sfid-20120307_000801_874497_2CA6E693)
-Date: Wed, 07 Mar 2012 00:07:41 +0100
+	id S1756882Ab2CLUsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2012 16:48:23 -0400
+Message-ID: <4F5E60E2.3080203@hauke-m.de> (sfid-20120312_214828_942659_40F8D789)
+Date: Mon, 12 Mar 2012 21:47:30 +0100
 From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
+To: Florian Fainelli <florian@openwrt.org>
 CC: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Rafal Milecki <zajec5@gmail.com>
-Subject: Re: [PATCH v2 1/2] bcma: return error in bcma_sprom_get() when fallback
- fails
-References: <1331045448-12883-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1331045448-12883-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Julian Calaby <julian.calaby@gmail.com>,
+	gregkh@linuxfoundation.org, stern@rowland.harvard.edu,
+	linux-mips@linux-mips.org, ralf@linux-mips.org, m@bues.ch,
+	linux-usb@vger.kernel.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/7] bcma: scan for extra address space
+References: <1331496505-18697-1-git-send-email-hauke@hauke-m.de> <1331496505-18697-4-git-send-email-hauke@hauke-m.de> <CAGRGNgX116dRB03NTL_DFZ4b_PYcdY+Un_cVwt6ZUGR1bwZzHA@mail.gmail.com> <4F5D3679.3090900@hauke-m.de> <CAGRGNgWsO9s2rW1pKBFWd_-0oTAGs9_RXNGyn_y7ic=0Zer=qQ@mail.gmail.com> <20120312174113.GC2778@tuxdriver.com> <4F5E395F.9020603@openwrt.org>
+In-Reply-To: <4F5E395F.9020603@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2012 03:50 PM, Arend van Spriel wrote:
-> When not SPROM is available a fallback mechanism is used. However,
-> when that fails the code currently continues. This patch assures
-> that the bcma_sprom_get() function aborts when that happens.
+On 03/12/2012 06:58 PM, Florian Fainelli wrote:
 > 
-> Cc: Rafal Milecki <zajec5@gmail.com>
-> Cc: Hauke Mehrtens <hauke@hauke-m.de>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/bcma/sprom.c |   27 +++++++++++++++++----------
->  1 files changed, 17 insertions(+), 10 deletions(-)
 > 
-> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-> index 916ae25..fba8066 100644
-> --- a/drivers/bcma/sprom.c
-> +++ b/drivers/bcma/sprom.c
-> @@ -49,10 +49,23 @@ int bcma_arch_register_fallback_sprom(int (*sprom_callback)(struct bcma_bus *bus
->  static int bcma_fill_sprom_with_fallback(struct bcma_bus *bus,
->  					 struct ssb_sprom *out)
->  {
-> -	if (!get_fallback_sprom)
-> -		return -ENOENT;
-> +	int err;
->  
-> -	return get_fallback_sprom(bus, out);
-> +	if (!get_fallback_sprom) {
-> +		err = -ENOENT;
-> +		goto fail;
-> +	}
-> +
-> +	err = get_fallback_sprom(bus, out);
-> +	if (err)
-> +		goto fail;
-> +
-> +	pr_debug("Using SPROM revision %d provided by"
-> +		 " platform.\n", bus->sprom.revision);
-> +	return 0;
-> +fail:
-> +	pr_warn("Using fallback SPROM failed (err %d)\n", err);
-> +	return err;
->  }
->  
->  /**************************************************
-> @@ -317,13 +330,7 @@ int bcma_sprom_get(struct bcma_bus *bus)
->  		 * available for this device in some other storage.
->  		 */
->  		err = bcma_fill_sprom_with_fallback(bus, &bus->sprom);
-> -		if (err) {
-> -			pr_warn("Using fallback SPROM failed (err %d)\n", err);
-> -		} else {
-> -			pr_debug("Using SPROM revision %d provided by"
-> -				 " platform.\n", bus->sprom.revision);
-> -			return 0;
-> -		}
-> +		return err;
->  	}
->  
->  	sprom = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
+> Le 03/12/12 18:41, John W. Linville a écrit :
+>> On Mon, Mar 12, 2012 at 12:30:54PM +1100, Julian Calaby wrote:
+>>> Hi Hauke,
+>>>
+>>> On Mon, Mar 12, 2012 at 10:34, Hauke Mehrtens<hauke@hauke-m.de>  wrote:
+>>
+>>>> I will fix this, should I resend the hole series or just this patch?
+>>>
+>>> I'm not sure the rest of the series made it to linux-wireless, so
+>>> maybe you should resend everything.
+>>
+>> FWIW, this was the only one I saw...
+> 
+> For some reasons I received it from linux-mips-bounces using another
+> email account, but only patch 3 CC'd linux-wireless.
 
+Sorry for the confusion.
+I didn't send all patches to linux-wireless as the others are just
+touching usb and mips. The next round will go completely to linux-wireless.
+
+Hauke
