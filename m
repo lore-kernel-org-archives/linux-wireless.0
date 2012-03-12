@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11846 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151Ab2CIXgZ (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43436 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752723Ab2CLLXT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 18:36:25 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] ath9k: configure bss info at assoc notification
-Date: Sat, 10 Mar 2012 05:06:49 +0530
-Message-ID: <1331336209-4917-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120310_003629_611610_B4B1F370)
+	Mon, 12 Mar 2012 07:23:19 -0400
+Subject: [PATCH 3/4] ath6kl: fix open parenthesis alignment in
+ ath6kl_sdio_suspend()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Mon, 12 Mar 2012 13:23:14 +0200
+Message-ID: <20120312112314.23253.26734.stgit@x201> (sfid-20120312_122322_784391_6D961182)
+In-Reply-To: <20120312112131.23253.74137.stgit@x201>
+References: <20120312112131.23253.74137.stgit@x201>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The proper place to configure bss info is at assoc notification. So that
-ath9k continues to work if the supirous bssid notification will be
-removed in future.
+ath6kl/sdio.c:875: CHECK: Alignment should match open parenthesis
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Reported-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/sdio.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index cc2535c..33403a9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1973,7 +1973,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	ath9k_ps_wakeup(sc);
- 	mutex_lock(&sc->mutex);
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 5a03082..5352864 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -871,12 +871,13 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 		if (ret && ret != -ENOTCONN)
+ 			ath6kl_err("wow suspend failed: %d\n", ret);
  
--	if (changed & BSS_CHANGED_BSSID) {
-+	if (changed & BSS_CHANGED_ASSOC) {
- 		ath9k_config_bss(sc, vif);
- 
- 		ath_dbg(common, CONFIG, "BSSID: %pM aid: 0x%x\n",
--- 
-1.7.9.3
+-		if (ret && (!ar->wow_suspend_mode ||
+-		    ar->wow_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
+-				try_deepsleep = true;
++		if (ret &&
++		    (!ar->wow_suspend_mode ||
++		     ar->wow_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
++			try_deepsleep = true;
+ 		else if (ret &&
+ 			 ar->wow_suspend_mode == WLAN_POWER_STATE_CUT_PWR)
+-				goto cut_pwr;
++			goto cut_pwr;
+ 		if (!ret)
+ 			return 0;
+ 	}
 
