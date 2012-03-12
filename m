@@ -1,127 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4373 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754762Ab2CBV4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 16:56:13 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 2/7] brcm80211: fmac: remove brcmf_usb_attrib structure
-Date: Fri, 2 Mar 2012 22:55:46 +0100
-Message-ID: <1330725351-3803-3-git-send-email-arend@broadcom.com> (sfid-20120302_225622_789801_617095AF)
-In-Reply-To: <1330725351-3803-1-git-send-email-arend@broadcom.com>
-References: <1330725351-3803-1-git-send-email-arend@broadcom.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:34680 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757751Ab2CLWcb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2012 18:32:31 -0400
+Received: by bkcik5 with SMTP id ik5so3024049bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 15:32:29 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: Hacking PCI-ids to allow Atheros NIC into Lenovo laptop.
+Date: Mon, 12 Mar 2012 23:32:16 +0100
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <4F5E7031.4000401@candelatech.com>
+In-Reply-To: <4F5E7031.4000401@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201203122332.16325.chunkeey@googlemail.com> (sfid-20120312_233245_048112_668CF82C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several fields in this structure are only written once or not used
-at all. Remaining two fields have been moved and brcmf_usb_attrib
-definition has been removed.
+On Monday, March 12, 2012 10:52:49 PM Ben Greear wrote:
+> It seems we bought a Lenovo laptop that has a BIOS lock where it will only
+> support certain wifi NICs based on the pci-id.  It came with an Intel
+> NIC, so at least that ID must work...
+> 
+> One way around this might be to over-write the pci-id of an Atheros NIC
+> in it's non-volatile storage to make it look like an Intel, at least until
+> the kernel boots.
+> 
+> Then maybe add some sort of ugly code to force the Atheros driver
+> to manage this Intel pci-id (and probably disable the same pci-id in
+> the Intel driver).
+> 
+> Has anyone tried doing anything like this?  Any suggestions for a cleaner
+> way to go about this?
+Been down this road before. First an old X41 Tablet and more recently a HP
+dv6 laptop.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Kan Yan <kanyan@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/usb.c |   17 +++++++++--------
- drivers/net/wireless/brcm80211/brcmfmac/usb.h |   16 ++--------------
- 2 files changed, 11 insertions(+), 22 deletions(-)
+I think if you manage to reprogram the cards pciids then you are more than
+halfway there. Because theoretically, you can get away with adding the fake
+intel id to ath9k through sysfs: 
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 8616961..0418a40 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -897,8 +897,8 @@ brcmf_usb_dlneeded(struct brcmf_usbdev_info *devinfo)
- 			sizeof(struct bootrom_id_le));
- 		return false;
- 	} else {
--		devinfo->bus_pub.attrib.devid = chipid;
--		devinfo->bus_pub.attrib.chiprev = chiprev;
-+		devinfo->bus_pub.devid = chipid;
-+		devinfo->bus_pub.chiprev = chiprev;
- 	}
- 	return true;
- }
-@@ -1064,7 +1064,7 @@ static int brcmf_usb_dlstart(struct brcmf_usbdev_info *devinfo, u8 *fw, int len)
- 	if (devinfo == NULL)
- 		return -EINVAL;
- 
--	if (devinfo->bus_pub.attrib.devid == 0xDEAD)
-+	if (devinfo->bus_pub.devid == 0xDEAD)
- 		return -EINVAL;
- 
- 	err = brcmf_usb_dl_writeimage(devinfo, fw, len);
-@@ -1085,7 +1085,7 @@ static int brcmf_usb_dlrun(struct brcmf_usbdev_info *devinfo)
- 	if (!devinfo)
- 		return -EINVAL;
- 
--	if (devinfo->bus_pub.attrib.devid == 0xDEAD)
-+	if (devinfo->bus_pub.devid == 0xDEAD)
- 		return -EINVAL;
- 
- 	/* Check we are runnable */
-@@ -1124,18 +1124,19 @@ static bool brcmf_usb_chip_support(int chipid, int chiprev)
- static int
- brcmf_usb_fw_download(struct brcmf_usbdev_info *devinfo)
- {
--	struct brcmf_usb_attrib *attr;
-+	int devid, chiprev;
- 	int err;
- 
- 	brcmf_dbg(TRACE, "enter\n");
- 	if (devinfo == NULL)
- 		return -ENODEV;
- 
--	attr = &devinfo->bus_pub.attrib;
-+	devid = devinfo->bus_pub.devid;
-+	chiprev = devinfo->bus_pub.chiprev;
- 
--	if (!brcmf_usb_chip_support(attr->devid, attr->chiprev)) {
-+	if (!brcmf_usb_chip_support(devid, chiprev)) {
- 		brcmf_dbg(ERROR, "unsupported chip %d rev %d\n",
--			  attr->devid, attr->chiprev);
-+			  devid, chiprev);
- 		return -EINVAL;
- 	}
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.h b/drivers/net/wireless/brcm80211/brcmfmac/usb.h
-index b31da7b..3377d63 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.h
-@@ -50,19 +50,6 @@ struct brcmf_stats {
- 
- };
- 
--struct brcmf_usb_attrib {
--	int bustype;
--	int vid;
--	int pid;
--	int devid;
--	int chiprev; /* chip revsion number */
--	int mtu;
--	int nchan; /* Data Channels */
--	int has_2nd_bulk_in_ep;
--};
--
--struct brcmf_usbdev_info;
--
- struct brcmf_usbdev {
- 	struct brcmf_bus *bus;
- 	struct brcmf_usbdev_info *devinfo;
-@@ -70,7 +57,8 @@ struct brcmf_usbdev {
- 	struct brcmf_stats stats;
- 	int ntxq, nrxq, rxsize;
- 	u32 bus_mtu;
--	struct brcmf_usb_attrib attrib;
-+	int devid;
-+	int chiprev; /* chip revsion number */
- };
- 
- /* IO Request Block (IRB) */
--- 
-1.7.5.4
+echo "8086 dead" > /sys/bus/pci/drivers/ath9k/new_id
+[for more information, take a look at the new_id sysfs interface]
+(Of course, you'll have to get rid of the intel driver first)
 
+That said, in both cases I risked flashing a modded bios. So whitelists are
+no longer a problem. 
 
+PS: AFAIK [Maybe some QCA dev can verify this]: all AR9300+ have OTP ROMs
+for the pciids. So you might want to get an older AR9280 for your laptop.
