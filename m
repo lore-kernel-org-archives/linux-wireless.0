@@ -1,69 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:23476 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756384Ab2CPROV (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34076 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756787Ab2CLUQ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 13:14:21 -0400
-Message-ID: <4F6374EA.6020605@hp.com> (sfid-20120316_181447_225399_A6367824)
-Date: Fri, 16 Mar 2012 10:14:18 -0700
-From: Rick Jones <rick.jones2@hp.com>
-MIME-Version: 1.0
-To: Florian Fainelli <florian@openwrt.org>
-CC: Ben Greear <greearb@candelatech.com>,
+	Mon, 12 Mar 2012 16:16:57 -0400
+Date: Mon, 12 Mar 2012 13:16:50 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: Felix Fietkau <nbd@openwrt.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/2] mac80211:  Support getting sta_info stats via ethtool.
-References: <1331833159-12694-1-git-send-email-greearb@candelatech.com> <1331833159-12694-2-git-send-email-greearb@candelatech.com> <1331837531.3432.36.camel@jlt3.sipsolutions.net> <4F623B58.1070106@candelatech.com> <20120316134909.GA2563@tuxdriver.com> <4F634BB2.8050408@openwrt.org> <4F63543A.2000108@candelatech.com> <4F635562.6090505@openwrt.org>
-In-Reply-To: <4F635562.6090505@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	<ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k_hw: Fix chip revision checks
+Message-ID: <20120312201650.GG26059@tux> (sfid-20120312_211700_807775_031B96F1)
+References: <1331531853-5043-1-git-send-email-mohammed@qca.qualcomm.com>
+ <4F5DBB8B.1070000@openwrt.org>
+ <4F5DBED4.4050500@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4F5DBED4.4050500@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/2012 07:59 AM, Florian Fainelli wrote:
-> Le 03/16/12 15:54, Ben Greear a écrit :
->> On 03/16/2012 07:18 AM, Florian Fainelli wrote:
->>> Hello,
->>>
->>> Le 03/16/12 14:49, John W. Linville a écrit :
->>>> On Thu, Mar 15, 2012 at 11:56:24AM -0700, Ben Greear wrote:
->>>>> On 03/15/2012 11:52 AM, Johannes Berg wrote:
->>>>>> On Thu, 2012-03-15 at 10:39 -0700, greearb@candelatech.com wrote:
->>>>>>> From: Ben Greear<greearb@candelatech.com>
->>>>>>>
->>>>>>> This lets ethtool print out stats related to station
->>>>>>> interfaces. Does not yet get stats from the underlying
->>>>>>> driver.
->>>>>>
->>>>>> Hmm. What's the advantage of using ethtool over iw, which already
->>>>>> has a bunch of these numbers?
->>>>>
->>>>> Well, ethtool api might be easier for some apps to use,
->>>>> and perhaps easier for users to read if all they want
->>>>> are stats.
->>>>
->>>> And they can use the same tool for both wired and wireless interfaces
->>>> -- could be handy.
->>>
->>> iw already provides statistics which are relevant for wireless
->>> interfaces. I really don't see the point in also reporting them via
->>> ethtool, also it is going to
->>> be error prone if someone updates the netlink interface and forgets
->>> about the ethtool one.
->>
->> Ethtool provides what it provides. If it's missing a stat, I or
->> someone else can add it.
->
-> What if we don't want to bloat ethtool with new stats? I mean, someone
-> else one day will see wireless stats in, and say, hey why don't I add
-> atm, x25, or any protocol of the moment to ethtool, then what do we do?
+On Mon, Mar 12, 2012 at 02:46:04PM +0530, Mohammed Shafi Shajakhan wrote:
+> Hi Felix,
+> 
+> On Monday 12 March 2012 02:32 PM, Felix Fietkau wrote:
+> >On 2012-03-12 6:57 AM, Mohammed Shafi Shajakhan wrote:
+> >>From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+> >>
+> >>not sure if these checks are previously avoided may be those revision of
+> >>chipsets are obselete ?
+> >NACK. The extra checks that this patch adds have been intentionally
+> >removed, since all earlier versions were never sold and thus do not need
+> >to be considered. This simplifies the generated binary code.
+> 
+> IMHO i don't think this patch does anything wrong to deserve a NACK!
+> sometimes these optimizations make it tad difficult if we want to
+> quickly check with the HAL code.
 
-Rejoice and perhaps add an alias to ethtool called nictool or linktool 
-or somesuch?   As already pointed-out there is a non-trivial niceness to 
-not having to have umpteen different tools to get stats from a network 
-interface.
+"HAL" code from internal codebases need to change, not the other
+way around. You have your priorities wrong. I support the NACK.
 
-"What's in a name" may apply, but these are wireless *ethernet* 
-interfaces right?
-
-rick jones
+  Luis
