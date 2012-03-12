@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:41072 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755550Ab2CFV3P (ORCPT
+Received: from thb-mta-12-tx.emailfiltering.com ([194.116.199.210]:38862 "EHLO
+	ixe-mta-12.emailfiltering.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752920Ab2CLVNb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 16:29:15 -0500
-Received: by wgbds11 with SMTP id ds11so39810wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 13:29:14 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Cc: b43-dev@lists.infradead.org, larry.finger@lwfinger.net,
-	florian@openwrt.org, m@bues.ch,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFT][PATCH] b43: fix logic in GPIO configuration
-Date: Tue,  6 Mar 2012 23:11:38 +0100
-Message-Id: <1331071898-3651-1-git-send-email-zajec5@gmail.com> (sfid-20120306_222919_245153_408D44CA)
+	Mon, 12 Mar 2012 17:13:31 -0400
+Received: from [10.10.10.229] (account nikodem.ciesielski@microgen.com HELO [10.0.2.15])
+  by microgen.pl (CommuniGate Pro SMTP 5.0.2)
+  with ESMTPA id 1984902 for linux-wireless@vger.kernel.org; Mon, 12 Mar 2012 21:09:35 +0100
+Message-ID: <4F5E658B.9060503@microgen.com> (sfid-20120312_221335_329696_AD453D56)
+Date: Mon, 12 Mar 2012 22:07:23 +0100
+From: Nikodem Ciesielski <nikodem.ciesielski@microgen.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: 4addr explanation
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By using reverted mask we were taking over pins we were not supporsed to
-touch. After fixing this workaround for BCM5354 should not be needed
-anymore.
+Hello
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/main.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+The question is:
+Does 4addr mode require that wireless device to support WDS mode?
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 1d633f3..8a89885 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -2706,8 +2706,6 @@ static int b43_gpio_init(struct b43_wldev *dev)
- 		mask |= 0x0060;
- 		set |= 0x0060;
- 	}
--	if (dev->dev->chip_id == 0x5354)
--		set &= 0xff02;
- 	if (0 /* FIXME: conditional unknown */ ) {
- 		b43_write16(dev, B43_MMIO_GPIO_MASK,
- 			    b43_read16(dev, B43_MMIO_GPIO_MASK)
-@@ -2730,7 +2728,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
- 	case B43_BUS_BCMA:
- 		bcma_cc_write32(&dev->dev->bdev->bus->drv_cc, BCMA_CC_GPIOCTL,
- 				(bcma_cc_read32(&dev->dev->bdev->bus->drv_cc,
--					BCMA_CC_GPIOCTL) & mask) | set);
-+					BCMA_CC_GPIOCTL) & ~mask) | set);
- 		break;
- #endif
- #ifdef CONFIG_B43_SSB
-@@ -2739,7 +2737,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
- 		if (gpiodev)
- 			ssb_write32(gpiodev, B43_GPIO_CONTROL,
- 				    (ssb_read32(gpiodev, B43_GPIO_CONTROL)
--				    & mask) | set);
-+				    & ~mask) | set);
- 		break;
- #endif
- 	}
--- 
-1.7.3.4
+I'm trying to achive the following:
+- bridge wire and wireless interface (Broadcom BCM43224) on Dell Latitude E6510
+  os: Ubuntu 11.10 with  iw 3.3 (compiled and installed)
+- setting wireless interface to 4addr mode and managed mode
+- connect to Asus RT-n16 (firmware: TomatoUSB by shibby 1.28.0000 MIPSR2-085V K26 USB AIO)
+*- * setting router to AP+WDS mode and add Laptop wireless MAC to WDS device
 
+Simply I want to bridge wireless and wire intterface to work like an ordinary (wire) ethernet bridge.
+And I can't. I followed the instrucion from:
+http://nullroute.eu.org/~grawity/not-a-blog.html
+topic: VirtualBox bridged network and WLAN
+
+I think that my router refuse 4addr packages but I'm not sure.
+Broadcom BCM43224 does not support WDS mode,
+however it seems that 4addr mode can be set
+and the wirelass card is able to assing with the router.
+What can I do?
+
+Best regards
+Nikodem Ciesielski
+
+
+________________________________________________________________________
+This email is confidential, may also be privileged and is subject to the information set out at http://www.microgen.com/emailinfo/ which forms part of this email.
