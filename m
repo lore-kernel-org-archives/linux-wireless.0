@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56852 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965046Ab2CMKPt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 06:15:49 -0400
-Message-ID: <4F5F1E53.3000506@openwrt.org> (sfid-20120313_111553_004974_75A2F68B)
-Date: Tue, 13 Mar 2012 11:15:47 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Nikodem Ciesielski <nikodem.ciesielski@microgen.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: 4addr explanation
-References: <4F5E658B.9060503@microgen.com>
-In-Reply-To: <4F5E658B.9060503@microgen.com>
-Content-Type: text/plain; charset=ISO-8859-2
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:51519 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753012Ab2CLOh6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2012 10:37:58 -0400
+Received: by mail-gx0-f173.google.com with SMTP id j2so3115221ggn.4
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 07:37:58 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <coelho@ti.com>
+Subject: [PATCH] wl12xx: fix station channel switch
+Date: Mon, 12 Mar 2012 16:36:48 +0200
+Message-Id: <1331563008-25481-1-git-send-email-victorg@ti.com> (sfid-20120312_153804_342107_744BC572)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-12 10:07 PM, Nikodem Ciesielski wrote:
-> Hello
-> 
-> The question is:
-> Does 4addr mode require that wireless device to support WDS mode?
-> 
-> I'm trying to achive the following:
-> - bridge wire and wireless interface (Broadcom BCM43224) on Dell Latitude E6510
->   os: Ubuntu 11.10 with  iw 3.3 (compiled and installed)
-> - setting wireless interface to 4addr mode and managed mode
-> - connect to Asus RT-n16 (firmware: TomatoUSB by shibby 1.28.0000 MIPSR2-085V K26 USB AIO)
-> *- * setting router to AP+WDS mode and add Laptop wireless MAC to WDS device
-> 
-> Simply I want to bridge wireless and wire intterface to work like an ordinary (wire) ethernet bridge.
-> And I can't. I followed the instrucion from:
-> http://nullroute.eu.org/~grawity/not-a-blog.html
-> topic: VirtualBox bridged network and WLAN
-> 
-> I think that my router refuse 4addr packages but I'm not sure.
-> Broadcom BCM43224 does not support WDS mode,
-> however it seems that 4addr mode can be set
-> and the wirelass card is able to assing with the router.
-> What can I do?
-mac80211 4addr mode is incompatible with the Broadcom specific WDS mode
-implemented in your router.
+Channel switch complete event wasn't handled
+properly in station mode, as we checked wrong
+CS flag.
 
-- Felix
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ drivers/net/wireless/wl12xx/event.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index c953717..60e6f27 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -196,7 +196,7 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 			bool success;
+ 
+ 			if (!test_and_clear_bit(WLVIF_FLAG_CS_PROGRESS,
+-						&wl->flags))
++						&wlvif->flags))
+ 				continue;
+ 
+ 			success = mbox->channel_switch_status ? false : true;
+-- 
+1.7.5.4
+
