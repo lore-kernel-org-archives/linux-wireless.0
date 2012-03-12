@@ -1,64 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55973 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755209Ab2CDUnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:12 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 091/101] iwlwifi: log stop / wake queues
-Date: Sun,  4 Mar 2012 11:29:45 -0800
-Message-Id: <1330889395-533-92-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214412_008631_328F6FFE)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:49386 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754401Ab2CLCNu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Mar 2012 22:13:50 -0400
+Message-ID: <4F5D5D90.8020401@gmail.com> (sfid-20120312_031355_108268_0AD985EB)
+Date: Mon, 12 Mar 2012 12:21:04 +1000
+From: wei <yinwei168@gmail.com>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] mac80211: improve PID rate control mechanism by
+ avoiding rate oscillation problem
+References: <4F5D4C4E.1060800@gmail.com> <CAGRGNgX-RDRFNXKTXf=qw7h4bQNypHx0Hgvjd7rvXu9T43f4WQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgX-RDRFNXKTXf=qw7h4bQNypHx0Hgvjd7rvXu9T43f4WQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Thank you, Julian.
 
-There were a few missing occurences when we get PASSIVE_NO_RX
-notification.
+You helped me a lot improving the patch. Your suggestion are very
+valuable. Thank you.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 ++
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    6 +++++-
- 2 files changed, 7 insertions(+), 1 deletions(-)
+The reason for why I change this value to 2 is below.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 1d67e6c..1cd4831 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -1088,6 +1088,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
- 			    ctx->vif->type == NL80211_IFTYPE_STATION) {
- 				/* block and stop all queues */
- 				priv->passive_no_rx = true;
-+				IWL_DEBUG_TX_QUEUES(priv, "stop all queues: "
-+						    "passive channel");
- 				ieee80211_stop_queues(priv->hw);
- 
- 				IWL_DEBUG_TX_REPLY(priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 7927e3e..6ed2f78 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1450,8 +1450,12 @@ void iwlagn_lift_passive_no_rx(struct iwl_priv *priv)
- 		return;
- 
- 	for (ac = IEEE80211_AC_VO; ac < IEEE80211_NUM_ACS; ac++) {
--		if (!test_bit(ac, &priv->transport_queue_stop))
-+		if (!test_bit(ac, &priv->transport_queue_stop)) {
-+			IWL_DEBUG_TX_QUEUES(priv, "Wake queue %d");
- 			ieee80211_wake_queue(priv->hw, ac);
-+		} else {
-+			IWL_DEBUG_TX_QUEUES(priv, "Don't wake queue %d");
-+		}
- 	}
- 
- 	priv->passive_no_rx = false;
--- 
-1.7.0.4
+On 12/03/12 11:14, Julian Calaby wrote:
+> Hi Wei,
+>
+> Much better!
+>
+> Still a few style comments below.
+>
+> On Mon, Mar 12, 2012 at 12:07, wei <yinwei168@gmail.com> wrote:
+>> From Wei YIN <Wei.Yin@nicta.com.au>
+>> Improve PID rate control mechanism by avoiding rate oscillation problem
+>>
+>> Signed-off-by: Wei YIN <Wei.Yin@nicta.com.au>
+>> ---
+>> kernel 3.3.0
+>> net/mac80211/rc80211_pid_algo.c | 392 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---------------------------------------------------------------------------
+>> 1 file changed, 317 insertions(+), 75 deletions(-)
+>>
+>> --- wireless-testing_orig/net/mac80211/rc80211_pid_algo.c       2012-02-17 13:59:53.495254495 +1000
+>> +++ wireless-testing/net/mac80211/rc80211_pid_algo.c    2012-03-08 20:00:31.791698813 +1000
+>> @@ -155,99 +217,239 @@ static void rate_control_pid_sample(stru
+>>        /* Ignore all frames that were sent with a different rate than the rate
+>>         * we currently advise mac80211 to use. */
+>> -       if (info->status.rates[0].idx != spinfo->txrate_idx)
+>> -               return;
+>>
+>> -       spinfo->tx_num_xmit++;
+>> +       if ((info->status.rates[0].idx != spinfo->txrate_idx) &&
+>> +                       (info->status.rates[0].idx != spinfo->tmp_rate_idx))
+>> +               return;
+> You don't need the parentheses around the != expressions.
+>
+>> @@ -271,14 +473,17 @@ rate_control_pid_get_rate(void *priv, st
+>>                info->control.rates[0].count =
+>>                        txrc->hw->conf.long_frame_max_tx_count;
+>>        else
+>> -               info->control.rates[0].count =
+>> -                       txrc->hw->conf.short_frame_max_tx_count;
+>> -
+>> +               info->control.rates[0].count = 2;
+> Should this be a constant or something? Why is this being set to 2?
+
+According to the principle of how PID works, the default FLR is 14% and it attempts to decrease the rate if the FLR is higher than 14%. Let us assume that the current FLR is 14%, Then the probability for two consecutive failed attempts should be 14% * 14% = 0.0196 = 1.96%. The probability is very low. So I think we should not try further retransmission at this rate and fall back as soon as possible. Another reason is that the number of probes at the proposed rate is set to MAX_PROBES = 3 in the implementation, which means we will have 6 attempts at the probing rate. If the current rate is the lowest, say 1 Mbit/s, in 120 ms (a rate adaptation period in PID), the maximum number of attempts is around 8--9. I think I should limit the number of probes within the maximum attempts that can be achieved in one rate adaptation period.
+
+We could switch back to the configured value. But I need to change the maximum number of probes, MAX_PROBES. 
+
+>  
+>> @@ -321,7 +530,7 @@ rate_control_pid_rate_init(void *priv, s
+>>                s = false;
+>>                for (j = 0; j < sband->n_bitrates - i; j++)
+>>                        if (unlikely(sband->bitrates[rinfo[j].index].bitrate >
+>> -                                    sband->bitrates[rinfo[j + 1].index].bitrate)) {
+>> +                               sband->bitrates[rinfo[j + 1].index].bitrate)) {
+> You should drop this whitespace change as it's unrelated to the rest
+> of your patch.
+>
+> Thanks,
+>
 
