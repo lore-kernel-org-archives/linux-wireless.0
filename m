@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58415 "EHLO
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37470 "EHLO
 	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756221Ab2CJC5u (ORCPT
+	with ESMTP id S1753949Ab2CLBVP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 21:57:50 -0500
-Received: by iagz16 with SMTP id z16so3158399iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 18:57:49 -0800 (PST)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, zefir.kurtisi@neratec.com,
-	chunkeey@googlemail.com, Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH v2] ath9k: Fix mactime from being clobbered in rx_status
-Date: Fri,  9 Mar 2012 18:57:39 -0800
-Message-Id: <1331348259-14985-1-git-send-email-ashok@cozybit.com> (sfid-20120310_035754_424558_E2AB4382)
+	Sun, 11 Mar 2012 21:21:15 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F5D4D1D.40004@gmail.com>
+References: <4F5D4D1D.40004@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 12 Mar 2012 12:20:54 +1100
+Message-ID: <CAGRGNgXjOvxr1e3PPfRZNKT8WVq9erTxNgiXPYPEmwdBWJVW_A@mail.gmail.com> (sfid-20120312_022122_121469_6FB1221F)
+Subject: Re: [PATCH v2 2/3]mac80211: improve PID rate control mechanism by
+ avoiding rate oscillation problem
+To: wei <yinwei168@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mactime was being overwritten by the function ath9k_rx_skb_preprocess. Fixed by
-memsetting rx_status in ath_rx_tasklet.
+Hi Wei,
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
-v1:
-Fix reverting "ath9k: trivial: reorder rx_tasklet processing" logic (Christian
-Lamparter)
- drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Again, a couple of comments
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 1b1b279..f4ae3ba 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -982,8 +982,6 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- {
- 	struct ath_hw *ah = common->ah;
- 
--	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
--
- 	/*
- 	 * everything but the rate is checked here, the rate check is done
- 	 * separately to avoid doing two lookups for a rate for each frame.
-@@ -1841,6 +1839,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (sc->sc_flags & SC_OP_RXFLUSH)
- 			goto requeue_drop_frag;
- 
-+		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
-+
- 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
- 		if (rs.rs_tstamp > tsf_lower &&
- 		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
+On Mon, Mar 12, 2012 at 12:10, wei <yinwei168@gmail.com> wrote:
+> From Wei YIN <Wei.Yin@nicta.com.au>
+> Improve PID rate control mechanism by avoiding rate oscillation problem
+>
+> Signed-off-by: Wei YIN <Wei.Yin@nicta.com.au>
+> ---
+> kernel 3.3.0
+> net/mac80211/rc80211_pid.h | 38 ++++++++++++++++++++++++++++++++++++++
+> 1 file changed, 38 insertions(+), 0 deletions(-)
+
+You shouldn't split this change up into separate files. When I said
+"this should be in a separate patch" - I meant that the change I was
+referring to was unrelated to what your patch was about - most of
+these were minor cleanups or things like that. You should write
+patches that do one thing and do it properly, and if you find any
+places that could use work unrelated to that "one thing", those
+changes should go in a separate patch.
+
+Also, this patch looks like it adds all the data structures that the
+first patch in this series would depend on - this should be part of
+that patch.
+
+Thanks,
+
 -- 
-1.7.5.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
