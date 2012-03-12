@@ -1,103 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40284 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754605Ab2CMPPe (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28587 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754966Ab2CLJor (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 11:15:34 -0400
-Subject: Re: [PATCH] iwlwifi: do not nulify ctx->vif on reset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1331651434-4370-1-git-send-email-sgruszka@redhat.com> (sfid-20120313_161044_513721_26122C7B)
-References: <1331651434-4370-1-git-send-email-sgruszka@redhat.com>
-	 (sfid-20120313_161044_513721_26122C7B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 13 Mar 2012 16:15:30 +0100
-Message-ID: <1331651730.3329.6.camel@jlt3.sipsolutions.net> (sfid-20120313_161537_914786_E6849BAA)
-Mime-Version: 1.0
+	Mon, 12 Mar 2012 05:44:47 -0400
+Message-ID: <4F5DC58A.10808@qca.qualcomm.com> (sfid-20120312_104452_017076_38F38878)
+Date: Mon, 12 Mar 2012 15:14:42 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>, "nbd@openwrt.org" <nbd@openwrt.org>
+Subject: Re: [RFC] ath9k_hw: Fix chip revision checks
+References: <1331531853-5043-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1331531853-5043-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-03-13 at 16:10 +0100, Stanislaw Gruszka wrote:
-> ctx->vif is dereferenced in different part of iwlwifi code, so do not
-> nullify it.
-> 
-> This should address at least one of the possible reasons of WARNING at
-> iwlagn_mac_remove_interface, and perhaps some random crashes when
-> firmware reset is performed.
-
-I'm not completely convinced -- there are parts of the driver that are
-active even when no interface has ever been added.
-
-Have you seen crashes due to this? I have seen the warning in the past
-but in some recent firmware reset testing I never ran into it again...
-
-johannes
-
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On Monday 12 March 2012 11:27 AM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>
+> not sure if these checks are previously avoided may be those revision of
+> chipsets are obselete ?
+>
+> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
 > ---
->  drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 ---
->  drivers/net/wireless/iwlwifi/iwl-mac80211.c |   10 +++++++++-
->  2 files changed, 9 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index 28422c0..6375e5a 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -862,7 +862,6 @@ static void iwl_bg_run_time_calib_work(struct work_struct *work)
->  
->  void iwlagn_prepare_restart(struct iwl_priv *priv)
->  {
-> -	struct iwl_rxon_context *ctx;
->  	bool bt_full_concurrent;
->  	u8 bt_ci_compliance;
->  	u8 bt_load;
-> @@ -871,8 +870,6 @@ void iwlagn_prepare_restart(struct iwl_priv *priv)
->  
->  	lockdep_assert_held(&priv->mutex);
->  
-> -	for_each_context(priv, ctx)
-> -		ctx->vif = NULL;
->  	priv->is_open = 0;
->  
->  	/*
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> index 9212ee3..4e8786d 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> @@ -1241,6 +1241,7 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
->  	struct iwl_rxon_context *tmp, *ctx = NULL;
->  	int err;
->  	enum nl80211_iftype viftype = ieee80211_vif_type_p2p(vif);
-> +	bool reset = false;
->  
->  	IWL_DEBUG_MAC80211(priv, "enter: type %d, addr %pM\n",
->  			   viftype, vif->addr);
-> @@ -1262,6 +1263,13 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
->  			tmp->interface_modes | tmp->exclusive_interface_modes;
->  
->  		if (tmp->vif) {
-> +			/* On reset we need to add the same interface again */
-> +			if (tmp->vif == vif) {
-> +				reset = true;
-> +				ctx = tmp;
-> +				break;
-> +			}
-> +
->  			/* check if this busy context is exclusive */
->  			if (tmp->exclusive_interface_modes &
->  						BIT(tmp->vif->type)) {
-> @@ -1288,7 +1296,7 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
->  	ctx->vif = vif;
->  
->  	err = iwl_setup_interface(priv, ctx);
-> -	if (!err)
-> +	if (!err || reset)
->  		goto out;
->  
->  	ctx->vif = NULL;
+>   drivers/net/wireless/ath/ath9k/reg.h |   20 +++++++++++++++-----
+>   1 files changed, 15 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+> index 80b1856..55e3513 100644
+> --- a/drivers/net/wireless/ath/ath9k/reg.h
+> +++ b/drivers/net/wireless/ath/ath9k/reg.h
+> @@ -821,20 +821,28 @@
+>   	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9160_11))
+>   #define AR_SREV_9280(_ah) \
+>   	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9280))
+> -#define AR_SREV_9280_20_OR_LATER(_ah) \
+> -	(((_ah)->hw_version.macVersion>= AR_SREV_VERSION_9280))
+>   #define AR_SREV_9280_20(_ah) \
+>   	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9280))
+> +#define AR_SREV_9280_10_OR_LATER(_ah) \
+> +	(((_ah)->hw_version.macVersion>= AR_SREV_VERSION_9280))
+> +#define AR_SREV_9280_20_OR_LATER(_ah) \
+> +	(((_ah)->hw_version.macVersion>  AR_SREV_VERSION_9280) || \
+> +	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9280)&&  \
+> +	  ((_ah)->hw_version.macRev>= AR_SREV_REVISION_9280_20)))
+>
+>   #define AR_SREV_9285(_ah) \
+>   	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9285))
+>   #define AR_SREV_9285_12_OR_LATER(_ah) \
+> -	(((_ah)->hw_version.macVersion>= AR_SREV_VERSION_9285))
+> +	(((_ah)->hw_version.macVersion>  AR_SREV_VERSION_9285) || \
+> +	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9285)&&  \
+> +	  ((_ah)->hw_version.macRev>= AR_SREV_REVISION_9285_12)))
+>
+>   #define AR_SREV_9287(_ah) \
+>   	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287))
+>   #define AR_SREV_9287_11_OR_LATER(_ah) \
+> -	(((_ah)->hw_version.macVersion>= AR_SREV_VERSION_9287))
+> +	(((_ah)->hw_version.macVersion>  AR_SREV_VERSION_9287) || \
+> +	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287)&&  \
+> +	  ((_ah)->hw_version.macRev>= AR_SREV_REVISION_9285_11)))
+
+oops, also i made a mistake here, it should be AR_SREV_REVISION_9287_11
 
 
+>   #define AR_SREV_9287_11(_ah) \
+>   	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287)&&  \
+>   	 ((_ah)->hw_version.macRev == AR_SREV_REVISION_9287_11))
+> @@ -862,7 +870,9 @@
+>   #define AR_SREV_9300(_ah) \
+>   	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300))
+>   #define AR_SREV_9300_20_OR_LATER(_ah) \
+> -	((_ah)->hw_version.macVersion>= AR_SREV_VERSION_9300)
+> +	(((_ah)->hw_version.macVersion>  AR_SREV_VERSION_9300) || \
+> +	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9300)&&  \
+> +	  ((_ah)->hw_version.macRev>= AR_SREV_REVISION_9300_20)))
+>
+>   #define AR_SREV_9330(_ah) \
+>   	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9330))
+
+
+-- 
+thanks,
+shafi
