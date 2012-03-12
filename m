@@ -1,76 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755140Ab2CDUnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:08 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 065/101] iwlwifi: clean up iwl-commands.h
-Date: Sun,  4 Mar 2012 11:29:19 -0800
-Message-Id: <1330889395-533-66-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214512_069800_84876B38)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:33617 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517Ab2CLBDi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Mar 2012 21:03:38 -0400
+Message-ID: <4F5D4D1D.40004@gmail.com> (sfid-20120312_020402_330050_69EB4BAD)
+Date: Mon, 12 Mar 2012 11:10:53 +1000
+From: wei <yinwei168@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+CC: linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/3]mac80211: improve PID rate control mechanism by avoiding
+ rate oscillation problem
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+>From Wei YIN <Wei.Yin@nicta.com.au>
+Improve PID rate control mechanism by avoiding rate oscillation problem
 
-Do some cleanups here:
- * remove an unused prototype
- * remove some unused constants
- * clean up includes
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wei YIN <Wei.Yin@nicta.com.au>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |   10 +---------
- 2 files changed, 2 insertions(+), 10 deletions(-)
+kernel 3.3.0
+net/mac80211/rc80211_pid.h | 38 ++++++++++++++++++++++++++++++++++++++
+1 file changed, 38 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index cb6c230..cf5cc10 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -26,7 +26,7 @@
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
--
-+#include <linux/etherdevice.h>
- #include <net/mac80211.h>
- 
- #include "iwl-dev.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 70ba962..9ed73e5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -69,15 +69,9 @@
- #ifndef __iwl_commands_h__
- #define __iwl_commands_h__
- 
--#include <linux/etherdevice.h>
- #include <linux/ieee80211.h>
-+#include <linux/types.h>
- 
--struct iwl_priv;
--
--/* Tx rates */
--#define IWL_CCK_RATES	4
--#define IWL_OFDM_RATES	8
--#define IWL_MAX_RATES	(IWL_CCK_RATES + IWL_OFDM_RATES)
- 
- enum {
- 	REPLY_ALIVE = 0x1,
-@@ -3851,8 +3845,6 @@ struct iwlagn_wowlan_kek_kck_material_cmd {
- 	__le64	replay_ctr;
- } __packed;
- 
--int iwl_agn_check_rxon_cmd(struct iwl_priv *priv);
--
+--- wireless-testing_orig/net/mac80211/rc80211_pid.h	2012-02-17 13:59:53.403182811 +1000
++++ wireless-testing/net/mac80211/rc80211_pid.h	2012-03-08 14:07:49.775694466 +1000
+@@ -1,6 +1,7 @@
  /*
-  * REPLY_WIPAN_PARAMS = 0xb2 (Commands and Notification)
-  */
--- 
-1.7.0.4
+  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
+  * Copyright 2007, Stefano Brivio <stefano.brivio@polimi.it>
++ * Copyright 2012, Wei Yin, National ICT Australia <Wei.Yin@nicta.com.au>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -24,6 +25,9 @@
+ /* Fixed point arithmetic shifting amount. */
+ #define RC_PID_ARITH_SHIFT		8
+ 
++/* Fixed point arithmetic factor. */
++#define RC_PID_ARITH_FACTOR		(1 << RC_PID_ARITH_SHIFT)
++
+ /* Proportional PID component coefficient. */
+ #define RC_PID_COEFF_P			15
+ /* Integral PID component coefficient. */
+@@ -48,6 +52,10 @@
+ #define RC_PID_DO_ARITH_RIGHT_SHIFT(x, y) \
+ 	((x) < 0 ? -((-(x)) >> (y)) : (x) >> (y))
+ 
++#define MAXPROBES 3
++#define TDIFS 34
++#define TSLOT 9
++
+ enum rc_pid_event_type {
+ 	RC_PID_EVENT_TYPE_TX_STATUS,
+ 	RC_PID_EVENT_TYPE_RATE_CHANGE,
+@@ -118,6 +126,11 @@ struct rc_pid_events_file_info {
+ 	unsigned int next_entry;
+ };
+ 
++struct rc_pid_debugfs_info {
++	size_t len;
++	char buf[];
++};
++
+ /**
+  * struct rc_pid_debugfs_entries - tunable parameters
+  *
+@@ -169,6 +182,11 @@ void rate_control_pid_add_sta_debugfs(vo
+ 
+ void rate_control_pid_remove_sta_debugfs(void *priv, void *priv_sta);
+ 
++int pid_stats_open(struct inode *inode, struct file *file);
++ssize_t pid_stats_read(struct file *file, char __user *buf, size_t len,
++		       loff_t *ppos);
++int pid_stats_release(struct inode *inode, struct file *file);
++
+ struct rc_pid_sta_info {
+ 	unsigned long last_change;
+ 	unsigned long last_sample;
+@@ -219,6 +237,16 @@ struct rc_pid_sta_info {
+ 
+ 	/* Events debugfs file entry */
+ 	struct dentry *events_entry;
++
++	int last_dlr; 
++	int fail_probes; 
++	int probes; 
++	int monitoring; 
++	int oldrate;
++	int n_rates;
++	int tmp_rate_idx;
++	int probe_cnt;
++	struct rc_pid_rateinfo *rinfo;
+ #endif
+ };
+ 
+@@ -238,6 +266,16 @@ struct rc_pid_rateinfo {
+ 
+ 	/* Comparison with the lowest rate. */
+ 	int diff;
++
++	int bitrate;
++	int perfect_tx_time;
++	unsigned int throughput;
++	unsigned int this_attempt;
++	unsigned int this_success;
++	unsigned int this_fail;
++	unsigned long attempt;
++	unsigned long success;
++	unsigned long fail;
+ };
+ 
+ struct rc_pid_info {
 
