@@ -1,62 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:60516 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161887Ab2CSQPS (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58350 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757514Ab2CLXrF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 12:15:18 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Subject: [PATCH 1/9] ath6kl: set ram reserved size only for ar6003
-Date: Mon, 19 Mar 2012 18:14:56 +0200
-Message-Id: <1332173704-18877-2-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171535_137635_F9918157)
-In-Reply-To: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
+	Mon, 12 Mar 2012 19:47:05 -0400
+Received: by dajr28 with SMTP id r28so5849163daj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 16:47:04 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH 1/3] mac80211: Record timing offset (Toffset) for all mesh neighbors
+Date: Mon, 12 Mar 2012 16:46:58 -0700
+Message-Id: <1331596020-29695-1-git-send-email-ashok@cozybit.com> (sfid-20120313_004715_336234_1BB0EA35)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ram reserved size is not needed with ar6004.
+802.11s standard introduced timing offset calculation by mesh stations. The
+mesh STA shall calculate the timing offset value with respect to the neighbor
+STA with which it maintains synchronization.
+	Toffset = timestamp from beacon/probe response frames -
+		  frame reception time (mactime).
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/ath/ath6kl/init.c |   22 ++++++++++++----------
- 1 files changed, 12 insertions(+), 10 deletions(-)
+ net/mac80211/mesh.c       |    8 +++++++-
+ net/mac80211/mesh.h       |    2 +-
+ net/mac80211/mesh_plink.c |    3 ++-
+ net/mac80211/sta_info.h   |    2 ++
+ 4 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 03cae14..1b97f26 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -539,18 +539,20 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 	 * but possible in theory.
- 	 */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index e5fbb7c..bbf5807 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -621,6 +621,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	u32 supp_rates = 0;
+ 	size_t baselen;
+ 	int freq;
++	s64 t_offset = 0;
+ 	enum ieee80211_band band = rx_status->band;
  
--	param = ar->hw.board_ext_data_addr;
--	ram_reserved_size = ar->hw.reserved_ram_size;
-+	if (ar->target_type == TARGET_TYPE_AR6003) {
-+		param = ar->hw.board_ext_data_addr;
-+		ram_reserved_size = ar->hw.reserved_ram_size;
+ 	/* ignore ProbeResp to foreign address */
+@@ -649,10 +650,15 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+ 		return;
  
--	if (ath6kl_bmi_write_hi32(ar, hi_board_ext_data, param) != 0) {
--		ath6kl_err("bmi_write_memory for hi_board_ext_data failed\n");
--		return -EIO;
--	}
-+		if (ath6kl_bmi_write_hi32(ar, hi_board_ext_data, param) != 0) {
-+			ath6kl_err("bmi_write_memory for hi_board_ext_data failed\n");
-+			return -EIO;
-+		}
- 
--	if (ath6kl_bmi_write_hi32(ar, hi_end_ram_reserve_sz,
--				  ram_reserved_size) != 0) {
--		ath6kl_err("bmi_write_memory for hi_end_ram_reserve_sz failed\n");
--		return -EIO;
-+		if (ath6kl_bmi_write_hi32(ar, hi_end_ram_reserve_sz,
-+					  ram_reserved_size) != 0) {
-+			ath6kl_err("bmi_write_memory for hi_end_ram_reserve_sz failed\n");
-+			return -EIO;
-+		}
++	if (rx_status->flag & RX_FLAG_MACTIME_MPDU)
++		t_offset = le64_to_cpu(mgmt->u.beacon.timestamp) -
++			   rx_status->mactime;
++
+ 	if (elems.mesh_id && elems.mesh_config &&
+ 	    mesh_matches_local(&elems, sdata)) {
+ 		supp_rates = ieee80211_sta_get_rates(local, &elems, band);
+-		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems);
++		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems,
++					t_offset);
  	}
+ }
  
- 	/* set the block size for the target */
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 8d53b71..d867cc8 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -258,7 +258,7 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata);
+ /* Mesh plinks */
+ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+ 		struct ieee80211_sub_if_data *sdata,
+-		struct ieee802_11_elems *ie);
++		struct ieee802_11_elems *ie, s64 t_offset);
+ bool mesh_peer_accepts_plinks(struct ieee802_11_elems *ie);
+ void mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata);
+ void mesh_plink_broken(struct sta_info *sta);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 4e53c4c..06e5180 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -276,7 +276,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 
+ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+ 		struct ieee80211_sub_if_data *sdata,
+-		struct ieee802_11_elems *elems)
++		struct ieee802_11_elems *elems, s64 t_offset)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+@@ -304,6 +304,7 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+ 
+ 	sta->last_rx = jiffies;
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
++	sta->t_offset = t_offset;
+ 	if (mesh_peer_accepts_plinks(elems) &&
+ 			sta->plink_state == NL80211_PLINK_LISTEN &&
+ 			sdata->u.mesh.accepting_plinks &&
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index ab05768..764eb65 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -264,6 +264,7 @@ struct sta_ampdu_mlme {
+  * @plink_timeout: timeout of peer link
+  * @plink_timer: peer link watch timer
+  * @plink_timer_was_running: used by suspend/resume to restore timers
++ * @t_offset: timing offset relative to this host
+  * @debugfs: debug filesystem info
+  * @dead: set to true when sta is unlinked
+  * @uploaded: set to true when sta is uploaded to the driver
+@@ -353,6 +354,7 @@ struct sta_info {
+ 	enum nl80211_plink_state plink_state;
+ 	u32 plink_timeout;
+ 	struct timer_list plink_timer;
++	s64 t_offset;
+ #endif
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
 -- 
-1.7.1
+1.7.5.4
 
