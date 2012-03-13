@@ -1,112 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53210 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542Ab2CWPBh (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:56870 "HELO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752437Ab2CMCfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 11:01:37 -0400
-Message-ID: <1332514895.10384.40.camel@jlt3.sipsolutions.net> (sfid-20120323_160141_068030_63DCD1AC)
-Subject: Re: [RFC 00/12] multi-channel support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Micha=C5=82?= Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 23 Mar 2012 16:01:35 +0100
-In-Reply-To: <4F6C82A5.5080302@tieto.com> (sfid-20120323_150333_004349_1A5648D7)
-References: <06edaf32-5a4f-4887-8b22-6bec31c2c7c6@FIVLA-EXHUB02.eu.tieto.com>
-		 (sfid-20120320_154008_038091_B257E507) <1332494945.3506.23.camel@jlt3.sipsolutions.net>
-	 <4F6C82A5.5080302@tieto.com> (sfid-20120323_150333_004349_1A5648D7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 12 Mar 2012 22:35:38 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 03/15] mwifiex: merge functions to derive cfp by chan & freq in one
+Date: Mon, 12 Mar 2012 19:35:10 -0700
+Message-Id: <1331606116-32745-4-git-send-email-bzhao@marvell.com> (sfid-20120313_033541_603461_97180512)
+In-Reply-To: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
+References: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-23 at 15:03 +0100, Michał Kazior wrote:
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-> What if we create a new structure that would be a channel 
-> stream/reservation? Driver could then report multiple such objects.
-> Each such would have a tx queue and it's own locking. Let's assume
-> something like:
-> 
->    struct ieee80211_channel_stream {
->      struct list_head vif; // list of vifs we're attached to
->      struct ieee80211_channel *ch;
->      struct sk_buff_head pending;
->      int stop_reasons[IEEE80211_MAX_QUEUES];
->      // .. other stuff
->      u8 *drv_priv[0] __attribute__((__aligned__((void *))));
->    };
+There exist different functions with very long names
+to derive the channel frequency and power tripplet
+based on band and channel/freq.
 
-I'm not sure I see the need to have the driver register these, but it
-seems useful to maintain this abstraction somehow in mac80211.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfp.c       |   86 ++++++++++-------------------
+ drivers/net/wireless/mwifiex/join.c      |    9 ++--
+ drivers/net/wireless/mwifiex/main.h      |    9 +---
+ drivers/net/wireless/mwifiex/scan.c      |   11 ++--
+ drivers/net/wireless/mwifiex/sta_ioctl.c |   13 ++---
+ 5 files changed, 46 insertions(+), 82 deletions(-)
 
-Due to the interface combinations advertising, we already know (*) what
-is supported by the driver, so there's no need for the driver to
-register this again.
-
-Like I said earlier, I see basically two ways of handling this.
-
-The explicit way would essentially consist of something like this:
-
-struct ieee80211_channel_context {
-	struct ieee80211_channel *chan;
-	enum nl80211_channel_type type;
-};
-
-with API to add/remove such contexts from/to the device:
-
-struct ieee80211_ops {
-	...
-	void (*add_channel_context)(hw, ctx),
-	void (*remove_channel_context)(hw, ctx),
-	void (*change_channel_type)(hw, ctx),
-	void (*assign_vif_channel_context)(hw, vif, ctx),
-};
-
-The assign function would have rather strange semantics though -- it can
-be called only when the interface is up (added to the driver), but it
-can't be called while the interface is associated, active as an AP, etc.
-EXCEPT ... maybe it can in CSA scenarios. But I said that before: CSA is
-a bit of a mess to handle.
-
-Now that I think about it, the implicit way I previously thought was
-quite a separate mechanism is really very similar: you'd still have to
-have the assign_vif_channel_context function, maybe as part of
-bss_info_changed, but not have explicit add/remove. I think the
-add/remove is useful so let's not consider implicit methods any more :)
-
-The internal handling in mac80211 might have a linked list of the
-channel contexts, or just a static array of a handful of them, doesn't
-really matter. It would, however, make sure that there aren't more than
-the current interface combination advertised as supported (see (*)
-again.)
-
-Of course mac80211 would also assign the interfaces to channel contexts
-as needed -- if a given interface is already on channel 1, the next one
-wouldn't need a new channel context if it also uses channel 1 and the
-channel types are compatible. But that reminds me -- when we do that we
-may have to update the channel context to change its channel type, so
-add an operation for that.
-
-
-Wrt. off-channel, I'm not sure I've understood you correctly. The
-current off-channel is a very short-lived thing that doesn't really use
-a "complete" channel context. In fact, in our implementation it is
-completely separate since it's temporary (**).
-
-As far as scanning is concerned, I'm not really sure. I haven't spent
-much time thinking about it since we have hardware offload for it (and
-also off-channel) -- I'm not sure what a good solution would be.
-
-johannes
-
-
-(*) after we refactor cfg80211_can_change_interface() and export
-cfg80211_get_current_combination() that returns the pointer to the
-combination that's currently in use, or something like that. We'd have
-to figure out if another combination is available that has more channels
-though, if needed.
-
-(**) However, we're thinking about implementing a P2P-device context
-that would allow offloading things like periodic listen
-(discoverability) or find (search + listen). That would probably use a
-channel context then.
+diff --git a/drivers/net/wireless/mwifiex/cfp.c b/drivers/net/wireless/mwifiex/cfp.c
+index 1782a77..7541d9a 100644
+--- a/drivers/net/wireless/mwifiex/cfp.c
++++ b/drivers/net/wireless/mwifiex/cfp.c
+@@ -169,59 +169,18 @@ u32 mwifiex_get_active_data_rates(struct mwifiex_private *priv, u8 *rates)
+ 
+ /*
+  * This function locates the Channel-Frequency-Power triplet based upon
+- * band and channel parameters.
++ * band and channel/frequency parameters.
+  */
+ struct mwifiex_chan_freq_power *
+-mwifiex_get_cfp_by_band_and_channel_from_cfg80211(struct mwifiex_private
+-						  *priv, u8 band, u16 channel)
++mwifiex_get_cfp(struct mwifiex_private *priv, u8 band, u16 channel, u32 freq)
+ {
+ 	struct mwifiex_chan_freq_power *cfp = NULL;
+ 	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *ch;
++	struct ieee80211_channel *ch = NULL;
+ 	int i;
+ 
+-	if (mwifiex_band_to_radio_type(band) == HostCmd_SCAN_RADIO_TYPE_BG)
+-		sband = priv->wdev->wiphy->bands[IEEE80211_BAND_2GHZ];
+-	else
+-		sband = priv->wdev->wiphy->bands[IEEE80211_BAND_5GHZ];
+-
+-	if (!sband) {
+-		dev_err(priv->adapter->dev, "%s: cannot find cfp by band %d"
+-				" & channel %d\n", __func__, band, channel);
++	if (!channel && !freq)
+ 		return cfp;
+-	}
+-
+-	for (i = 0; i < sband->n_channels; i++) {
+-		ch = &sband->channels[i];
+-		if (((ch->hw_value == channel) ||
+-			(channel == FIRST_VALID_CHANNEL))
+-			&& !(ch->flags & IEEE80211_CHAN_DISABLED)) {
+-			priv->cfp.channel = channel;
+-			priv->cfp.freq = ch->center_freq;
+-			priv->cfp.max_tx_power = ch->max_power;
+-			cfp = &priv->cfp;
+-			break;
+-		}
+-	}
+-	if (i == sband->n_channels)
+-		dev_err(priv->adapter->dev, "%s: cannot find cfp by band %d"
+-				" & channel %d\n", __func__, band, channel);
+-
+-	return cfp;
+-}
+-
+-/*
+- * This function locates the Channel-Frequency-Power triplet based upon
+- * band and frequency parameters.
+- */
+-struct mwifiex_chan_freq_power *
+-mwifiex_get_cfp_by_band_and_freq_from_cfg80211(struct mwifiex_private *priv,
+-					       u8 band, u32 freq)
+-{
+-	struct mwifiex_chan_freq_power *cfp = NULL;
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *ch;
+-	int i;
+ 
+ 	if (mwifiex_band_to_radio_type(band) == HostCmd_SCAN_RADIO_TYPE_BG)
+ 		sband = priv->wdev->wiphy->bands[IEEE80211_BAND_2GHZ];
+@@ -229,25 +188,40 @@ mwifiex_get_cfp_by_band_and_freq_from_cfg80211(struct mwifiex_private *priv,
+ 		sband = priv->wdev->wiphy->bands[IEEE80211_BAND_5GHZ];
+ 
+ 	if (!sband) {
+-		dev_err(priv->adapter->dev, "%s: cannot find cfp by band %d"
+-				" & freq %d\n", __func__, band, freq);
++		dev_err(priv->adapter->dev, "%s: cannot find cfp by band %d\n",
++			__func__, band);
+ 		return cfp;
+ 	}
+ 
+ 	for (i = 0; i < sband->n_channels; i++) {
+ 		ch = &sband->channels[i];
+-		if ((ch->center_freq == freq) &&
+-			!(ch->flags & IEEE80211_CHAN_DISABLED)) {
+-			priv->cfp.channel = ch->hw_value;
+-			priv->cfp.freq = freq;
+-			priv->cfp.max_tx_power = ch->max_power;
+-			cfp = &priv->cfp;
+-			break;
++
++		if (ch->flags & IEEE80211_CHAN_DISABLED)
++			continue;
++
++		if (freq) {
++			if (ch->center_freq == freq)
++				break;
++		} else {
++			/* find by valid channel*/
++			if (ch->hw_value == channel ||
++			    channel == FIRST_VALID_CHANNEL)
++				break;
+ 		}
+ 	}
+-	if (i == sband->n_channels)
++	if (i == sband->n_channels) {
+ 		dev_err(priv->adapter->dev, "%s: cannot find cfp by band %d"
+-				" & freq %d\n", __func__, band, freq);
++			" & channel=%d freq=%d\n", __func__, band, channel,
++			freq);
++	} else {
++		if (!ch)
++			return cfp;
++
++		priv->cfp.channel = ch->hw_value;
++		priv->cfp.freq = ch->center_freq;
++		priv->cfp.max_tx_power = ch->max_power;
++		cfp = &priv->cfp;
++	}
+ 
+ 	return cfp;
+ }
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index bce9991..803275f 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -777,12 +777,11 @@ mwifiex_cmd_802_11_ad_hoc_start(struct mwifiex_private *priv,
+ 	adhoc_start->phy_param_set.ds_param_set.element_id = DS_PARA_IE_ID;
+ 	adhoc_start->phy_param_set.ds_param_set.len = DS_PARA_IE_LEN;
+ 
+-	if (!mwifiex_get_cfp_by_band_and_channel_from_cfg80211
+-			(priv, adapter->adhoc_start_band, (u16)
+-				priv->adhoc_channel)) {
++	if (!mwifiex_get_cfp(priv, adapter->adhoc_start_band,
++			     (u16) priv->adhoc_channel, 0)) {
+ 		struct mwifiex_chan_freq_power *cfp;
+-		cfp = mwifiex_get_cfp_by_band_and_channel_from_cfg80211(priv,
+-				adapter->adhoc_start_band, FIRST_VALID_CHANNEL);
++		cfp = mwifiex_get_cfp(priv, adapter->adhoc_start_band,
++				      FIRST_VALID_CHANNEL, 0);
+ 		if (cfp)
+ 			priv->adhoc_channel = (u8) cfp->channel;
+ 	}
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 58748b1..c0df48f 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -771,13 +771,8 @@ int mwifiex_cmd_802_11_ad_hoc_join(struct mwifiex_private *priv,
+ int mwifiex_ret_802_11_ad_hoc(struct mwifiex_private *priv,
+ 			      struct host_cmd_ds_command *resp);
+ int mwifiex_cmd_802_11_bg_scan_query(struct host_cmd_ds_command *cmd);
+-struct mwifiex_chan_freq_power *
+-			mwifiex_get_cfp_by_band_and_channel_from_cfg80211(
+-						struct mwifiex_private *priv,
+-						u8 band, u16 channel);
+-struct mwifiex_chan_freq_power *mwifiex_get_cfp_by_band_and_freq_from_cfg80211(
+-						struct mwifiex_private *priv,
+-						u8 band, u32 freq);
++struct mwifiex_chan_freq_power *mwifiex_get_cfp(struct mwifiex_private *priv,
++						u8 band, u16 channel, u32 freq);
+ u32 mwifiex_index_to_data_rate(struct mwifiex_private *priv, u8 index,
+ 							u8 ht_info);
+ u32 mwifiex_find_freq_from_band_chan(u8, u8);
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index fd0302f..0a0c289 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1434,8 +1434,8 @@ int mwifiex_check_network_compatibility(struct mwifiex_private *priv,
+ 	if (!bss_desc)
+ 		return -1;
+ 
+-	if ((mwifiex_get_cfp_by_band_and_channel_from_cfg80211(priv,
+-			(u8) bss_desc->bss_band, (u16) bss_desc->channel))) {
++	if ((mwifiex_get_cfp(priv, (u8) bss_desc->bss_band,
++			     (u16) bss_desc->channel, 0))) {
+ 		switch (priv->bss_mode) {
+ 		case NL80211_IFTYPE_STATION:
+ 		case NL80211_IFTYPE_ADHOC:
+@@ -1625,7 +1625,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 		s32 rssi;
+ 		const u8 *ie_buf;
+ 		size_t ie_len;
+-		int channel = -1;
++		u16 channel = 0;
+ 		u64 network_tsf = 0;
+ 		u16 beacon_size = 0;
+ 		u32 curr_bcn_bytes;
+@@ -1723,7 +1723,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 					&tsf_tlv->tsf_data[idx * TSF_DATA_SIZE],
+ 					sizeof(network_tsf));
+ 
+-		if (channel != -1) {
++		if (channel) {
+ 			struct ieee80211_channel *chan;
+ 			u8 band;
+ 
+@@ -1736,8 +1736,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 						& (BIT(0) | BIT(1)));
+ 			}
+ 
+-			cfp = mwifiex_get_cfp_by_band_and_channel_from_cfg80211(
+-						priv, (u8)band, (u16)channel);
++			cfp = mwifiex_get_cfp(priv, band, channel, 0);
+ 
+ 			freq = cfp ? cfp->freq : 0;
+ 
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 0ae1209..a3d79f4 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -529,11 +529,10 @@ int mwifiex_bss_set_channel(struct mwifiex_private *priv,
+ 		adapter->adhoc_start_band = BAND_G | BAND_B;
+ 	if (chan->channel) {
+ 		if (chan->channel <= MAX_CHANNEL_BAND_BG)
+-			cfp = mwifiex_get_cfp_by_band_and_channel_from_cfg80211
+-					(priv, 0, (u16) chan->channel);
++			cfp = mwifiex_get_cfp(priv, 0, (u16) chan->channel, 0);
+ 		if (!cfp) {
+-			cfp = mwifiex_get_cfp_by_band_and_channel_from_cfg80211
+-					(priv, BAND_A, (u16) chan->channel);
++			cfp = mwifiex_get_cfp(priv, BAND_A,
++					      (u16) chan->channel, 0);
+ 			if (cfp) {
+ 				if (adapter->adhoc_11n_enabled)
+ 					adapter->adhoc_start_band = BAND_A
+@@ -544,11 +543,9 @@ int mwifiex_bss_set_channel(struct mwifiex_private *priv,
+ 		}
+ 	} else {
+ 		if (chan->freq <= MAX_FREQUENCY_BAND_BG)
+-			cfp = mwifiex_get_cfp_by_band_and_freq_from_cfg80211(
+-							priv, 0, chan->freq);
++			cfp = mwifiex_get_cfp(priv, 0, 0, chan->freq);
+ 		if (!cfp) {
+-			cfp = mwifiex_get_cfp_by_band_and_freq_from_cfg80211
+-						  (priv, BAND_A, chan->freq);
++			cfp = mwifiex_get_cfp(priv, BAND_A, 0, chan->freq);
+ 			if (cfp) {
+ 				if (adapter->adhoc_11n_enabled)
+ 					adapter->adhoc_start_band = BAND_A
+-- 
+1.7.0.2
 
