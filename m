@@ -1,92 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4013 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751838Ab2CWLNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 07:13:20 -0400
-Message-ID: <4F6C5B05.40003@linux.intel.com> (sfid-20120323_121324_722485_6CAC30A3)
-Date: Fri, 23 Mar 2012 12:14:13 +0100
-From: Eric Lapuyade <eric.lapuyade@linux.intel.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:61350 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752514Ab2CMMkh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Mar 2012 08:40:37 -0400
+Received: by yhmm54 with SMTP id m54so469749yhm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2012 05:40:36 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-CC: Samuel Ortiz <sameo@linux.intel.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: [PATCH] NFC: Changed target activated state logic
-Content-Type: text/plain; charset=UTF-8
+Date: Tue, 13 Mar 2012 20:40:36 +0800
+Message-ID: <CAG9cJmmvyG7-DJOVZoRMNaVd+_ieFyciyJcmk5ZaNoZq8EHTxA@mail.gmail.com> (sfid-20120313_134040_420764_1077736D)
+Subject: compact-wireless # ./scripts/driver-select select
+From: lina <lina.lastname@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As we need to maintain the currently activated target idx, use this variable instead of the redundant remote_activated bool.
+Hi,
 
-Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- include/net/nfc/nfc.h |    3 ++-
- net/nfc/core.c        |    8 +++++---
- 2 files changed, 7 insertions(+), 4 deletions(-)
+Which driver I should select to install form
 
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index f4f6950..7273ff1 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -66,6 +66,7 @@ struct nfc_ops {
- 
- #define NFC_TARGET_IDX_ANY -1
- #define NFC_MAX_GT_LEN 48
-+#define NFC_TARGET_IDX_NONE 0xffffffff
- 
- struct nfc_target {
- 	u32 idx;
-@@ -97,7 +98,7 @@ struct nfc_dev {
- 	struct device dev;
- 	bool dev_up;
- 	bool polling;
--	bool remote_activated;
-+	u32 activated_target_idx;
- 	bool dep_link_up;
- 	u32 dep_rf_mode;
- 	struct nfc_genl_data genl_data;
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index d3a2cfb..e9936d9 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -95,7 +95,7 @@ int nfc_dev_down(struct nfc_dev *dev)
- 		goto error;
- 	}
- 
--	if (dev->polling || dev->remote_activated) {
-+	if (dev->polling || dev->activated_target_idx != NFC_TARGET_IDX_NONE) {
- 		rc = -EBUSY;
- 		goto error;
- 	}
-@@ -290,7 +290,7 @@ int nfc_activate_target(struct nfc_dev *dev, u32 target_idx, u32 protocol)
- 
- 	rc = dev->ops->activate_target(dev, target_idx, protocol);
- 	if (!rc)
--		dev->remote_activated = true;
-+		dev->activated_target_idx = target_idx;
- 
- error:
- 	device_unlock(&dev->dev);
-@@ -318,7 +318,7 @@ int nfc_deactivate_target(struct nfc_dev *dev, u32 target_idx)
- 	}
- 
- 	dev->ops->deactivate_target(dev, target_idx);
--	dev->remote_activated = false;
-+	dev->activated_target_idx = NFC_TARGET_IDX_NONE;
- 
- error:
- 	device_unlock(&dev->dev);
-@@ -587,6 +587,8 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
- 	/* first generation must not be 0 */
- 	dev->targets_generation = 1;
- 
-+	dev->activated_target_idx = NFC_TARGET_IDX_NONE;
-+
- 	return dev;
- }
- EXPORT_SYMBOL(nfc_allocate_device);
--- 
-1.7.6.5
+# ./scripts/driver-select
 
+Supported 802.11 drivers:
+	ath5k
+	ath9k
+	ath9k_htc
+	carl9170
+	ath6kl
+	b43
+	zd1211rw
+	rt2x00
+	wl1251
+	wl12xx
+	brcmsmac
+	brcmfmac
+
+Supported Ethernet drivers:
+	atl1
+	atl2
+	atl1e
+	atl1c
+
+Supported group drivers:
+	atheros <  ath5k ath9k carl9170 zd1211rw ath6kl >
+	ath <  ath5k ath9k carl9170 ath6kl >
+	brcm80211 <  brcmsmac brcmfmac >
+	intel <  iwlwifi, iwlegacy >
+	rtl818x <  rtl8180 rtl8187 >
+	rtlwifi <  rtl8192ce >
+	ti <  wl1251 wl12xx (SPI and SDIO)>
+
+Supported group drivers: Bluetooth & Ethernet:
+	atlxx <  atl1 atl2 atl1e atl1c >
+	bt <  Linux bluetooth drivers >
+Restoring compat-wireless:
+	restore: you can use this option to restore compat-wireless to the
+original state
+
+
+6# lspci  | grep Net
+02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57765
+Gigabit Ethernet PCIe (rev 10)
+02:00.1 SD Host controller: Broadcom Corporation NetXtreme BCM57765
+Memory Card Reader (rev 10)
+03:00.0 Network controller: Broadcom Corporation BCM4331 802.11a/b/g/n (rev 02)
+
+
+Thanks for your suggestions, I wish to have a not-so-heavy installation.
+
+Best regards,
