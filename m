@@ -1,35 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3948 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934146Ab2C3LuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 07:50:17 -0400
-Message-ID: <4F759DE4.6070201@broadcom.com> (sfid-20120330_135021_877689_1664469C)
-Date: Fri, 30 Mar 2012 13:49:56 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48357 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755873Ab2CMAxY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2012 20:53:24 -0400
+Received: by iagz16 with SMTP id z16so7626006iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 17:53:23 -0700 (PDT)
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] compat: crc8: undef pr_fmt
-References: <1333105980.3908.14.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1333105980.3908.14.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <4F5E7A81.8090605@candelatech.com>
+References: <4F5E7031.4000401@candelatech.com> <201203122332.16325.chunkeey@googlemail.com>
+ <4F5E7A81.8090605@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 12 Mar 2012 17:53:03 -0700
+Message-ID: <CAB=NE6WeB8X51xdEOT3-XjyBBVrwdMSMYmFOTbuH3pKzCM8jyw@mail.gmail.com> (sfid-20120313_015332_660672_81A18997)
+Subject: Re: Hacking PCI-ids to allow Atheros NIC into Lenovo laptop.
+To: Ben Greear <greearb@candelatech.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2012 01:13 PM, Johannes Berg wrote:
+On Mon, Mar 12, 2012 at 3:36 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 03/12/2012 03:32 PM, Christian Lamparter wrote:
+>>
+>> On Monday, March 12, 2012 10:52:49 PM Ben Greear wrote:
+>>>
+>>> It seems we bought a Lenovo laptop that has a BIOS lock where it will
+>>> only
+>>> support certain wifi NICs based on the pci-id.  It came with an Intel
+>>> NIC, so at least that ID must work...
+>>>
+>>> One way around this might be to over-write the pci-id of an Atheros NIC
+>>> in it's non-volatile storage to make it look like an Intel, at least
+>>> until
+>>> the kernel boots.
+>>>
+>>> Then maybe add some sort of ugly code to force the Atheros driver
+>>> to manage this Intel pci-id (and probably disable the same pci-id in
+>>> the Intel driver).
+>>>
+>>> Has anyone tried doing anything like this?  Any suggestions for a cleaner
+>>> way to go about this?
+>>
+>> Been down this road before. First an old X41 Tablet and more recently a HP
+>> dv6 laptop.
+>>
+>> I think if you manage to reprogram the cards pciids then you are more than
+>> halfway there. Because theoretically, you can get away with adding the
+>> fake
+>> intel id to ath9k through sysfs:
+>>
+>> echo "8086 dead">  /sys/bus/pci/drivers/ath9k/new_id
+>> [for more information, take a look at the new_id sysfs interface]
+>> (Of course, you'll have to get rid of the intel driver first)
+>>
+>> That said, in both cases I risked flashing a modded bios. So whitelists
+>> are
+>> no longer a problem.
+>>
+>> PS: AFAIK [Maybe some QCA dev can verify this]: all AR9300+ have OTP ROMs
+>> for the pciids. So you might want to get an older AR9280 for your laptop.
 >
-> +#ifdef pr_fmt
-> +#undef pr_fmt
-> +#endif
->   #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
 >
->   #include<linux/module.h>
+>
+> We're hoping to use the WPEA-127N.
 
-Trivial remark. Not really necessary to do the #ifdef. #undef works fine 
-if pr_fmt has not been defined.
+I might as well chime in to explain the long story. If we figure out a
+way to ensure we can always get the antenna gain uniformly across
+different systems and expose this to the OS I suspect we can convince
+some OEMs this would be a better solution than simply restricting
+devices. I looked a the newer generation of dmidecode (its not called
+DMI, its something else now) thingy but saw no one yet had added
+802.11 specifically, perhaps it may be good to consider it in the
+future for this. that's as far as I got from trying to kill this
+concern.
 
-Gr. AvS
-
+  Luis
