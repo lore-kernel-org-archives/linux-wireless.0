@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:39578 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758603Ab2CTOaq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44523 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752677Ab2CMNET (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 10:30:46 -0400
-Received: by vbbff1 with SMTP id ff1so36417vbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 07:30:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJdJm_MD1QQG3hyQmo-RffeObGBSViLAOBZeyRJqoEbh0x2PMA@mail.gmail.com>
-References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
-	<1332214021-9716-3-git-send-email-mcgrof@frijolero.org>
-	<1332245223.3329.5.camel@jlt3.sipsolutions.net>
-	<CAB=NE6V4NuNc8Xr3qKAaXgs2og-2e6qusek=ZFdvQCq4JtKavQ@mail.gmail.com>
-	<CAJdJm_MD1QQG3hyQmo-RffeObGBSViLAOBZeyRJqoEbh0x2PMA@mail.gmail.com>
-Date: Tue, 20 Mar 2012 10:30:45 -0400
-Message-ID: <CAJdJm_MrA8pKaKCAY_Sr05dB0=6tmGPpU4jw2zmrTPGr-rw-TA@mail.gmail.com> (sfid-20120320_153101_676750_FF89373D)
-Subject: Re: [Lf_driver_backport] [PATCH 2/4] compat: backport work_busy()
-From: Anderson Lizardo <anderson.lizardo@openbossa.org>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 13 Mar 2012 09:04:19 -0400
+Message-Id: <20120313125919.633112600@sipsolutions.net> (sfid-20120313_140424_065595_DC661A93)
+Date: Tue, 13 Mar 2012 13:57:04 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] cfg80211: clarify timestamp in cfg80211_inform_bss
+References: <20120313125702.703540202@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2012 at 10:29 AM, Anderson Lizardo
-<anderson.lizardo@openbossa.org> wrote:
-> Hi Luiz,
+From: Johannes Berg <johannes.berg@intel.com>
 
-s/Luiz/Luis/ of course :)
+This is intended to be the timestamp sent by the
+peer in the beacon/probe response, not any form
+of host timestamp. Clarify the documentation and
+variable names.
 
-Regards,
--- 
-Anderson Lizardo
-Instituto Nokia de Tecnologia - INdT
-Manaus - Brazil
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h |    7 +++----
+ net/wireless/scan.c    |    7 +++----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
+
+--- a/include/net/cfg80211.h	2012-03-13 09:11:23.000000000 +0100
++++ b/include/net/cfg80211.h	2012-03-13 13:49:53.000000000 +0100
+@@ -2697,7 +2697,7 @@ cfg80211_inform_bss_frame(struct wiphy *
+  * @wiphy: the wiphy reporting the BSS
+  * @channel: The channel the frame was received on
+  * @bssid: the BSSID of the BSS
+- * @timestamp: the TSF timestamp sent by the peer
++ * @tsf: the TSF sent by the peer in the beacon/probe response (or 0)
+  * @capability: the capability field sent by the peer
+  * @beacon_interval: the beacon interval announced by the peer
+  * @ie: additional IEs sent by the peer
+@@ -2713,9 +2713,8 @@ cfg80211_inform_bss_frame(struct wiphy *
+ struct cfg80211_bss * __must_check
+ cfg80211_inform_bss(struct wiphy *wiphy,
+ 		    struct ieee80211_channel *channel,
+-		    const u8 *bssid,
+-		    u64 timestamp, u16 capability, u16 beacon_interval,
+-		    const u8 *ie, size_t ielen,
++		    const u8 *bssid, u64 tsf, u16 capability,
++		    u16 beacon_interval, const u8 *ie, size_t ielen,
+ 		    s32 signal, gfp_t gfp);
+ 
+ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
+--- a/net/wireless/scan.c	2012-03-10 09:17:06.000000000 +0100
++++ b/net/wireless/scan.c	2012-03-13 13:50:24.000000000 +0100
+@@ -734,9 +734,8 @@ cfg80211_bss_update(struct cfg80211_regi
+ struct cfg80211_bss*
+ cfg80211_inform_bss(struct wiphy *wiphy,
+ 		    struct ieee80211_channel *channel,
+-		    const u8 *bssid,
+-		    u64 timestamp, u16 capability, u16 beacon_interval,
+-		    const u8 *ie, size_t ielen,
++		    const u8 *bssid, u64 tsf, u16 capability,
++		    u16 beacon_interval, const u8 *ie, size_t ielen,
+ 		    s32 signal, gfp_t gfp)
+ {
+ 	struct cfg80211_internal_bss *res;
+@@ -758,7 +757,7 @@ cfg80211_inform_bss(struct wiphy *wiphy,
+ 	memcpy(res->pub.bssid, bssid, ETH_ALEN);
+ 	res->pub.channel = channel;
+ 	res->pub.signal = signal;
+-	res->pub.tsf = timestamp;
++	res->pub.tsf = tsf;
+ 	res->pub.beacon_interval = beacon_interval;
+ 	res->pub.capability = capability;
+ 	/*
+
+
