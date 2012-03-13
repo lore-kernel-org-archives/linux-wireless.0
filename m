@@ -1,177 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:31533 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755146Ab2CDUnJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:09 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 066/101] iwlwifi: make iwl_fill_probe_req static
-Date: Sun,  4 Mar 2012 11:29:20 -0800
-Message-Id: <1330889395-533-67-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214515_202302_B59525B8)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:39918 "HELO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752720Ab2CMCfr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2012 22:35:47 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 05/15] mwifiex: rearrange if and else blocks to avoid extra indentation
+Date: Mon, 12 Mar 2012 19:35:12 -0700
+Message-Id: <1331606116-32745-6-git-send-email-bzhao@marvell.com> (sfid-20120313_033552_644172_9125C392)
+In-Reply-To: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
+References: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-This function is only used in iwl-scan.c, so
-if we move it up a little in the file it can
-be made static.
+This adds better readability.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 -
- drivers/net/wireless/iwlwifi/iwl-scan.c |   98 +++++++++++++++---------------
- 2 files changed, 49 insertions(+), 51 deletions(-)
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   15 +++--
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |   93 ++++++++++++--------------
+ drivers/net/wireless/mwifiex/wmm.c           |   30 +++++----
+ 3 files changed, 68 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 7259cbf..e0423c4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -202,8 +202,6 @@ void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
- void iwl_force_scan_end(struct iwl_priv *priv);
- void iwl_internal_short_hw_scan(struct iwl_priv *priv);
- int iwl_force_reset(struct iwl_priv *priv, int mode, bool external);
--u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
--		       const u8 *ta, const u8 *ie, int ie_len, int left);
- void iwl_setup_rx_scan_handlers(struct iwl_priv *priv);
- void iwl_setup_scan_deferred_work(struct iwl_priv *priv);
- void iwl_cancel_scan_deferred_work(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 91a1457..8c3fb32 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -572,6 +572,53 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
- 	return added;
- }
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index ad41fab..491cd85 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -205,14 +205,17 @@ mwifiex_flush_data(unsigned long context)
+ 	int start_win;
  
-+/**
-+ * iwl_fill_probe_req - fill in all required fields and IE for probe request
-+ */
+ 	start_win = mwifiex_11n_find_last_seq_num(reorder_cnxt->ptr);
+-	if (start_win >= 0) {
+-		dev_dbg(reorder_cnxt->priv->adapter->dev,
+-				"info: flush data %d\n", start_win);
 +
-+static u16 iwl_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
-+			      const u8 *ies, int ie_len, int left)
-+{
-+	int len = 0;
-+	u8 *pos = NULL;
++	if (start_win < 0)
++		return;
 +
-+	/* Make sure there is enough space for the probe request,
-+	 * two mandatory IEs and the data */
-+	left -= 24;
-+	if (left < 0)
-+		return 0;
-+
-+	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
-+	memcpy(frame->da, iwl_bcast_addr, ETH_ALEN);
-+	memcpy(frame->sa, ta, ETH_ALEN);
-+	memcpy(frame->bssid, iwl_bcast_addr, ETH_ALEN);
-+	frame->seq_ctrl = 0;
-+
-+	len += 24;
-+
-+	/* ...next IE... */
-+	pos = &frame->u.probe_req.variable[0];
-+
-+	/* fill in our indirect SSID IE */
-+	left -= 2;
-+	if (left < 0)
-+		return 0;
-+	*pos++ = WLAN_EID_SSID;
-+	*pos++ = 0;
-+
-+	len += 2;
-+
-+	if (WARN_ON(left < ie_len))
-+		return len;
-+
-+	if (ies && ie_len) {
-+		memcpy(pos, ies, ie_len);
-+		len += ie_len;
-+	}
-+
-+	return (u16)len;
-+}
-+
- static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	struct iwl_host_cmd cmd = {
-@@ -791,7 +838,7 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	scan->rx_chain = cpu_to_le16(rx_chain);
- 	switch (priv->scan_type) {
- 	case IWL_SCAN_NORMAL:
--		cmd_len = iwl_fill_probe_req(priv,
-+		cmd_len = iwl_fill_probe_req(
- 					(struct ieee80211_mgmt *)scan->data,
- 					vif->addr,
- 					priv->scan_request->ie,
-@@ -801,7 +848,7 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	case IWL_SCAN_RADIO_RESET:
- 	case IWL_SCAN_ROC:
- 		/* use bcast addr, will not be transmitted but must be valid */
--		cmd_len = iwl_fill_probe_req(priv,
-+		cmd_len = iwl_fill_probe_req(
- 					(struct ieee80211_mgmt *)scan->data,
- 					iwl_bcast_addr, NULL, 0,
- 					IWL_MAX_SCAN_SIZE - sizeof(*scan));
-@@ -1004,53 +1051,6 @@ static void iwl_bg_scan_check(struct work_struct *data)
- 	mutex_unlock(&priv->mutex);
- }
- 
--/**
-- * iwl_fill_probe_req - fill in all required fields and IE for probe request
-- */
--
--u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
--		       const u8 *ta, const u8 *ies, int ie_len, int left)
--{
--	int len = 0;
--	u8 *pos = NULL;
--
--	/* Make sure there is enough space for the probe request,
--	 * two mandatory IEs and the data */
--	left -= 24;
--	if (left < 0)
--		return 0;
--
--	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
--	memcpy(frame->da, iwl_bcast_addr, ETH_ALEN);
--	memcpy(frame->sa, ta, ETH_ALEN);
--	memcpy(frame->bssid, iwl_bcast_addr, ETH_ALEN);
--	frame->seq_ctrl = 0;
--
--	len += 24;
--
--	/* ...next IE... */
--	pos = &frame->u.probe_req.variable[0];
--
--	/* fill in our indirect SSID IE */
--	left -= 2;
--	if (left < 0)
--		return 0;
--	*pos++ = WLAN_EID_SSID;
--	*pos++ = 0;
--
--	len += 2;
--
--	if (WARN_ON(left < ie_len))
--		return len;
--
--	if (ies && ie_len) {
--		memcpy(pos, ies, ie_len);
--		len += ie_len;
++	dev_dbg(reorder_cnxt->priv->adapter->dev, "info: flush data %d\n",
++		start_win);
+ 		mwifiex_11n_dispatch_pkt_until_start_win(reorder_cnxt->priv,
+ 				reorder_cnxt->ptr,
+-				((reorder_cnxt->ptr->start_win +
+-				  start_win + 1) & (MAX_TID_VALUE - 1)));
 -	}
++						 ((reorder_cnxt->ptr->start_win
++						   + start_win + 1) &
++						  (MAX_TID_VALUE - 1)));
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 3f13ff0..a2a9c51 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -327,31 +327,26 @@ static int mwifiex_ret_tx_rate_cfg(struct mwifiex_private *priv,
+ 					  HostCmd_CMD_802_11_TX_RATE_QUERY,
+ 					  HostCmd_ACT_GEN_GET, 0, NULL);
+ 
+-	if (ds_rate) {
+-		if (le16_to_cpu(rate_cfg->action) == HostCmd_ACT_GEN_GET) {
+-			if (priv->is_data_rate_auto) {
+-				ds_rate->is_rate_auto = 1;
+-			} else {
+-				ds_rate->rate = mwifiex_get_rate_index(priv->
+-							       bitmap_rates,
+-							       sizeof(priv->
+-							       bitmap_rates));
+-				if (ds_rate->rate >=
+-				    MWIFIEX_RATE_BITMAP_OFDM0
+-				    && ds_rate->rate <=
+-				    MWIFIEX_RATE_BITMAP_OFDM7)
+-					ds_rate->rate -=
+-						(MWIFIEX_RATE_BITMAP_OFDM0 -
+-						 MWIFIEX_RATE_INDEX_OFDM0);
+-				if (ds_rate->rate >=
+-				    MWIFIEX_RATE_BITMAP_MCS0
+-				    && ds_rate->rate <=
+-				    MWIFIEX_RATE_BITMAP_MCS127)
+-					ds_rate->rate -=
+-						(MWIFIEX_RATE_BITMAP_MCS0 -
+-						 MWIFIEX_RATE_INDEX_MCS0);
+-			}
+-		}
++	if (!ds_rate)
++		return ret;
++
++	if (le16_to_cpu(rate_cfg->action) == HostCmd_ACT_GEN_GET) {
++		if (priv->is_data_rate_auto) {
++			ds_rate->is_rate_auto = 1;
++		return ret;
++	}
++	ds_rate->rate = mwifiex_get_rate_index(priv->bitmap_rates,
++					       sizeof(priv->bitmap_rates));
++
++	if (ds_rate->rate >= MWIFIEX_RATE_BITMAP_OFDM0 &&
++	    ds_rate->rate <= MWIFIEX_RATE_BITMAP_OFDM7)
++		ds_rate->rate -= (MWIFIEX_RATE_BITMAP_OFDM0 -
++				  MWIFIEX_RATE_INDEX_OFDM0);
++
++	if (ds_rate->rate >= MWIFIEX_RATE_BITMAP_MCS0 &&
++	    ds_rate->rate <= MWIFIEX_RATE_BITMAP_MCS127)
++		ds_rate->rate -= (MWIFIEX_RATE_BITMAP_MCS0 -
++				  MWIFIEX_RATE_INDEX_MCS0);
+ 	}
+ 
+ 	return ret;
+@@ -369,34 +364,32 @@ static int mwifiex_get_power_level(struct mwifiex_private *priv, void *data_buf)
+ 	struct mwifiex_types_power_group *pg_tlv_hdr;
+ 	struct mwifiex_power_group *pg;
+ 
+-	if (data_buf) {
+-		pg_tlv_hdr =
+-			(struct mwifiex_types_power_group *) ((u8 *) data_buf
+-					+ sizeof(struct host_cmd_ds_txpwr_cfg));
+-		pg = (struct mwifiex_power_group *) ((u8 *) pg_tlv_hdr +
+-				sizeof(struct mwifiex_types_power_group));
+-		length = pg_tlv_hdr->length;
+-		if (length > 0) {
++	if (!data_buf)
++		return -1;
++
++	pg_tlv_hdr = (struct mwifiex_types_power_group *)
++		((u8 *) data_buf + sizeof(struct host_cmd_ds_txpwr_cfg));
++	pg = (struct mwifiex_power_group *)
++		((u8 *) pg_tlv_hdr + sizeof(struct mwifiex_types_power_group));
++	length = pg_tlv_hdr->length;
++	if (length > 0) {
++		max_power = pg->power_max;
++		min_power = pg->power_min;
++		length -= sizeof(struct mwifiex_power_group);
++	}
++	while (length) {
++		pg++;
++		if (max_power < pg->power_max)
+ 			max_power = pg->power_max;
+-			min_power = pg->power_min;
+-			length -= sizeof(struct mwifiex_power_group);
+-		}
+-		while (length) {
+-			pg++;
+-			if (max_power < pg->power_max)
+-				max_power = pg->power_max;
+ 
+-			if (min_power > pg->power_min)
+-				min_power = pg->power_min;
++		if (min_power > pg->power_min)
++			min_power = pg->power_min;
+ 
+-			length -= sizeof(struct mwifiex_power_group);
+-		}
+-		if (pg_tlv_hdr->length > 0) {
+-			priv->min_tx_power_level = (u8) min_power;
+-			priv->max_tx_power_level = (u8) max_power;
+-		}
+-	} else {
+-		return -1;
++		length -= sizeof(struct mwifiex_power_group);
++	}
++	if (pg_tlv_hdr->length > 0) {
++		priv->min_tx_power_level = (u8) min_power;
++		priv->max_tx_power_level = (u8) max_power;
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 5757ebd..6f0cc21 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -850,6 +850,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 	struct mwifiex_ra_list_tbl *ptr, *head;
+ 	struct mwifiex_bss_prio_node *bssprio_node, *bssprio_head;
+ 	struct mwifiex_tid_tbl *tid_ptr;
++	atomic_t *hqp;
+ 	int is_list_empty;
+ 	unsigned long flags;
+ 	int i, j;
+@@ -879,12 +880,8 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 		}
+ 
+ 		do {
+-			atomic_t *hqp;
+-			spinlock_t *lock;
 -
--	return (u16)len;
--}
--
- static void iwl_bg_abort_scan(struct work_struct *work)
- {
- 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
+ 			priv_tmp = bssprio_node->priv;
+ 			hqp = &priv_tmp->wmm.highest_queued_prio;
+-			lock = &priv_tmp->wmm.ra_list_spinlock;
+ 
+ 			for (i = atomic_read(hqp); i >= LOW_PRIO_TID; --i) {
+ 
+@@ -923,16 +920,10 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 				do {
+ 					is_list_empty =
+ 						skb_queue_empty(&ptr->skb_head);
+-					if (!is_list_empty) {
+-						spin_lock_irqsave(lock, flags);
+-						if (atomic_read(hqp) > i)
+-							atomic_set(hqp, i);
+-						spin_unlock_irqrestore(lock,
+-									flags);
+-						*priv = priv_tmp;
+-						*tid = tos_to_tid[i];
+-						return ptr;
+-					}
++
++					if (!is_list_empty)
++						goto found;
++
+ 					/* Get next ra */
+ 					ptr = list_first_entry(&ptr->list,
+ 						 struct mwifiex_ra_list_tbl,
+@@ -969,6 +960,17 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 		} while (bssprio_node != bssprio_head);
+ 	}
+ 	return NULL;
++
++found:
++	spin_lock_irqsave(&priv_tmp->wmm.ra_list_spinlock, flags);
++	if (atomic_read(hqp) > i)
++		atomic_set(hqp, i);
++	spin_unlock_irqrestore(&priv_tmp->wmm.ra_list_spinlock, flags);
++
++	*priv = priv_tmp;
++	*tid = tos_to_tid[i];
++
++	return ptr;
+ }
+ 
+ /*
 -- 
-1.7.0.4
+1.7.0.2
 
