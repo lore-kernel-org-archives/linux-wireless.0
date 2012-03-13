@@ -1,40 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:57481 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932186Ab2CSCqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 22:46:39 -0400
-Message-ID: <1332125197.23125.41.camel@joe2Laptop> (sfid-20120319_034643_031597_1473A602)
-Subject: Re: [PATCH] rtlwifi: Preallocate USB read buffers and eliminate
- kalloc in read routine
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Sun, 18 Mar 2012 19:46:37 -0700
-In-Reply-To: <4f669d14.5MVnZ/K9sIFwYerB%Larry.Finger@lwfinger.net>
-References: <4f669d14.5MVnZ/K9sIFwYerB%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:43157 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755233Ab2CMPKl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Mar 2012 11:10:41 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] iwlwifi: do not nulify ctx->vif on reset
+Date: Tue, 13 Mar 2012 16:10:34 +0100
+Message-Id: <1331651434-4370-1-git-send-email-sgruszka@redhat.com> (sfid-20120313_161044_513721_26122C7B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-03-18 at 21:42 -0500, Larry Finger wrote:
-> The current version of rtlwifi for USB operations uses kmalloc to
-> acquire a 32-bit buffer for reading.
+ctx->vif is dereferenced in different part of iwlwifi code, so do not
+nullify it.
 
-trivia:
+This should address at least one of the possible reasons of WARNING at
+iwlagn_mac_remove_interface, and perhaps some random crashes when
+firmware reset is performed.
 
-> +++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-[]
-> @@ -955,6 +947,13 @@ int __devinit rtl_usb_probe(struct usb_i
->  		return -ENOMEM;
->  	}
->  	rtlpriv = hw->priv;
-> +	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
-> +				    GFP_KERNEL);
-> +	if (!rtlpriv->usb_data) {
-> +		RT_ASSERT(false, "USB data buffer allocation failed\n");
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |   10 +++++++++-
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-The RT_ASSERT isn't really necessary as kzalloc already
-does a dump_stack on allocation failure.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 28422c0..6375e5a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -862,7 +862,6 @@ static void iwl_bg_run_time_calib_work(struct work_struct *work)
+ 
+ void iwlagn_prepare_restart(struct iwl_priv *priv)
+ {
+-	struct iwl_rxon_context *ctx;
+ 	bool bt_full_concurrent;
+ 	u8 bt_ci_compliance;
+ 	u8 bt_load;
+@@ -871,8 +870,6 @@ void iwlagn_prepare_restart(struct iwl_priv *priv)
+ 
+ 	lockdep_assert_held(&priv->mutex);
+ 
+-	for_each_context(priv, ctx)
+-		ctx->vif = NULL;
+ 	priv->is_open = 0;
+ 
+ 	/*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 9212ee3..4e8786d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -1241,6 +1241,7 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
+ 	struct iwl_rxon_context *tmp, *ctx = NULL;
+ 	int err;
+ 	enum nl80211_iftype viftype = ieee80211_vif_type_p2p(vif);
++	bool reset = false;
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter: type %d, addr %pM\n",
+ 			   viftype, vif->addr);
+@@ -1262,6 +1263,13 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
+ 			tmp->interface_modes | tmp->exclusive_interface_modes;
+ 
+ 		if (tmp->vif) {
++			/* On reset we need to add the same interface again */
++			if (tmp->vif == vif) {
++				reset = true;
++				ctx = tmp;
++				break;
++			}
++
+ 			/* check if this busy context is exclusive */
+ 			if (tmp->exclusive_interface_modes &
+ 						BIT(tmp->vif->type)) {
+@@ -1288,7 +1296,7 @@ static int iwlagn_mac_add_interface(struct ieee80211_hw *hw,
+ 	ctx->vif = vif;
+ 
+ 	err = iwl_setup_interface(priv, ctx);
+-	if (!err)
++	if (!err || reset)
+ 		goto out;
+ 
+ 	ctx->vif = NULL;
+-- 
+1.7.1
 
