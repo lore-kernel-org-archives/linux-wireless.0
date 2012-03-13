@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42248 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756143Ab2CJBD5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 20:03:57 -0500
+Received: from mms2.broadcom.com ([216.31.210.18]:3979 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756263Ab2CMPe1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Mar 2012 11:34:27 -0400
+Message-ID: <4F5F6759.3030005@broadcom.com> (sfid-20120313_163431_796904_84F94361)
+Date: Tue, 13 Mar 2012 16:27:21 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Fri, 9 Mar 2012 17:03:36 -0800
-Message-ID: <CAB=NE6W98XLxHq-Uom4g0q_bFKaNGJ4WN11x9_9oqWDZFXOy0g@mail.gmail.com> (sfid-20120310_020424_938379_7E03CF34)
-Subject: [ANN] compat-wireless released based on 3.3-rc6
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org,
-	Felix Fietkau <nbd@openwrt.org>,
-	Kathy Giori <kgiori@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+To: "Stanislaw Gruszka" <sgruszka@redhat.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: oops upon driver unload
+References: <4F5F4300.6090103@broadcom.com>
+ <20120313143916.GA2396@redhat.com>
+In-Reply-To: <20120313143916.GA2396@redhat.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We chug along and are now at 3.3-rc6. We're close to the final release
-so we push out the first Wireless / Bluetooth / Ethernet backport rc
-release based on rc6. We have two releases for this update, a vanilla
-one [0] and a -n release [1] which has 14 patches cherry picked from
-linux-next.git as suggested by nbd as listed below. These additional
-patches are patches which have been deemed as non-critical-fix but
-important for AP mode users at least. As explained previously, we have
-directories to help with coping with "emergency" fixes or "extra
-fixes" or "hot fixes" or whatever your favorite PHB wants to call it
-[2], we categorize these patches accordingly to help ensure we keep
-patches in route upstream. If you want patches merged into these
-releases that fit those descriptions just send me a patch!
+On 03/13/2012 03:39 PM, Stanislaw Gruszka wrote:
+> On Tue, Mar 13, 2012 at 01:52:16PM +0100, Arend van Spriel wrote:
+>> During testing I got an OOPS with the brcmsmac (see attachment). I
+>> suspect mac80211 is using a driver callback after the module is
+>> removed (could be wrong here). The connection with the AP is
+>> dropped, and after 1 sec. the driver is unloaded using rmmod, which
+>> causes the driver to unregister from mac80211.
+>>
+>> Any clues?
+> [snip]
+>
+>> Mar 12 02:52:36 lb-bun-09 kernel: [575889.112002] Call Trace:
+>> Mar 12 02:52:36 lb-bun-09 kernel: [575889.112002]  [<c103f0ea>] ? run_timer_softirq+0x11a/0x2d0
+> Those options are useful to debug such problems:
+>
+> CONFIG_DEBUG_OBJECTS=y
+> CONFIG_DEBUG_OBJECTS_FREE=y
+> CONFIG_DEBUG_OBJECTS_TIMERS=y
+> CONFIG_DEBUG_OBJECTS_WORK=y
+>
+> Stanislaw
+>
 
-For complete details of this release you can read the
-ChangeLog-3.3-wireless file [3]. And yes, I should clarify this is not
-just a release for wireless, it includes wireless, bluetooth and
-ethernet. They all use the shared compat module [4] but
-compat-wireless [5] is the framework that pulls them all together.
-What's new now is we have a shiny web page for the compat module [4].
-If you're curious about hacking on compat-wireless see the hacking
-page [6] and if you want to help as a student go check out the Google
-Summer of Code project [7]
+Thanks,
 
-Please report any issues you see with this release.
+I will go and try that.
 
-mcgrof@tux ~/devel/compat-wireless (git::linux-3.3.y)$ ls -1
-linux-next-cherry-picks/
-0001-mac80211-Fix-incorrect-num_sta_ps-decrement-in-__sta.patch
-0002-mac80211-Fix-incorrect-num_sta_ps-decrement-in-ap_st.patch
-0003-mac80211-Move-num_sta_ps-counter-decrement-after-syn.patch
-0004-ath9k-Initialize-NF-values-properly.patch
-0005-ath9k-Fix-programming-SYNTH4-for-AR9462.patch
-0006-ath9k-Fix-descriptor-length-for-AR9462.patch
-0007-mac80211-handle-non-bufferable-MMPDUs-correctly.patch
-0008-Revert-ath9k_hw-Fix-false-tx-hung-detection-in-AR900.patch
-0009-ath9k-do-not-call-ath9k_hw_txprocdesc-on-AR9003-outs.patch
-0010-ath9k_hw-enable-interrupts-for-beacon-tx-completion-.patch
-0011-ath9k-fix-drv_tx_last_beacon-on-AR9003-by-processing.patch
-0012-ath9k_hw-use-cold-instead-of-warm-reset-on-AR9280.patch
-0013-mac80211-add-an-rx-flag-for-ignoring-a-packet-s-sign.patch
-0014-ath9k-fix-signal-strength-reporting-issues.patch
+Gr. AvS
 
-[0] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.3/compat-wireless-3.3-rc6-1.tar.bz2
-[1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.3/compat-wireless-3.3-rc6-1-n.tar.bz2
-[2] http://wireless.kernel.org/en/users/Download/stable/#Additional_patches_to_stable_releases
-[3] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.3/ChangeLog-3.3-wireless
-[4] http://mcgrof.github.com/compat/
-[5] http://wireless.kernel.org/en/users/Download/
-[6] http://wireless.kernel.org/en/users/Download/hacking
-[7] https://www.linuxfoundation.org/collaborate/workgroups/gsoc/2012-gsoc-driver-backports
-
-  Luis
