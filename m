@@ -1,360 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62579 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751793Ab2C2HCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2012 03:02:03 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] mac80211: remove hw.conf.channel usage where possible
-Date: Thu, 29 Mar 2012 09:01:58 +0200
-Message-ID: <1333004518-12068-1-git-send-email-michal.kazior@tieto.com> (sfid-20120329_090208_393200_1CA2DFE1)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:38899 "HELO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752148Ab2CMCfc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2012 22:35:32 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 00/15] mwifiex: coding style cleanups
+Date: Mon, 12 Mar 2012 19:35:07 -0700
+Message-Id: <1331606116-32745-1-git-send-email-bzhao@marvell.com> (sfid-20120313_033536_406796_B0307C9C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removes hw.conf.channel usage from the following functions:
- * ieee80211_mandatory_rates
- * ieee80211_sta_get_rates
- * ieee80211_frame_duration
- * ieee80211_rts_duration
- * ieee80211_ctstoself_duration
+Hi John,
 
-This is in preparation for multi-channel operation.
+This series of patches takes care of the coding style issues
+in mwifiex driver.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    2 +-
- drivers/net/wireless/ath/ath5k/pcu.c   |    9 ++++---
- drivers/net/wireless/ath/ath5k/qcu.c   |    8 ++++--
- include/net/mac80211.h                 |    1 +
- net/mac80211/ieee80211_i.h             |    2 +-
- net/mac80211/rc80211_minstrel.c        |   13 ++++++-----
- net/mac80211/rc80211_minstrel_ht.c     |    5 +--
- net/mac80211/tx.c                      |    4 +-
- net/mac80211/util.c                    |   34 ++++++++++++++-----------------
- 9 files changed, 39 insertions(+), 39 deletions(-)
+These patches have been checked with "checkpatch.pl --strict"
+using the patch from Joe Perches <joe@perches.com>:
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 8d434b8..727f2e5 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1524,7 +1524,7 @@ void ath5k_eeprom_detach(struct ath5k_hw *ah);
- 
- /* Protocol Control Unit Functions */
- /* Helpers */
--int ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
-+int ath5k_hw_get_frame_duration(struct ath5k_hw *ah, enum ieee80211_band band,
- 		int len, struct ieee80211_rate *rate, bool shortpre);
- unsigned int ath5k_hw_get_default_slottime(struct ath5k_hw *ah);
- unsigned int ath5k_hw_get_default_sifs(struct ath5k_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index cebfd6f..1f16b42 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -110,7 +110,7 @@ static const unsigned int ack_rates_high[] =
-  * bwmodes.
-  */
- int
--ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
-+ath5k_hw_get_frame_duration(struct ath5k_hw *ah, enum ieee80211_band band,
- 		int len, struct ieee80211_rate *rate, bool shortpre)
- {
- 	int sifs, preamble, plcp_bits, sym_time;
-@@ -120,7 +120,7 @@ ath5k_hw_get_frame_duration(struct ath5k_hw *ah,
- 	/* Fallback */
- 	if (!ah->ah_bwmode) {
- 		__le16 raw_dur = ieee80211_generic_frame_duration(ah->hw,
--					NULL, len, rate);
-+					NULL, band, len, rate);
- 
- 		/* subtract difference between long and short preamble */
- 		dur = le16_to_cpu(raw_dur);
-@@ -302,14 +302,15 @@ ath5k_hw_write_rate_duration(struct ath5k_hw *ah)
- 		 * actual rate for this rate. See mac80211 tx.c
- 		 * ieee80211_duration() for a brief description of
- 		 * what rate we should choose to TX ACKs. */
--		tx_time = ath5k_hw_get_frame_duration(ah, 10, rate, false);
-+		tx_time = ath5k_hw_get_frame_duration(ah, band, 10,
-+					rate, false);
- 
- 		ath5k_hw_reg_write(ah, tx_time, reg);
- 
- 		if (!(rate->flags & IEEE80211_RATE_SHORT_PREAMBLE))
- 			continue;
- 
--		tx_time = ath5k_hw_get_frame_duration(ah, 10, rate, true);
-+		tx_time = ath5k_hw_get_frame_duration(ah, band, 10, rate, true);
- 		ath5k_hw_reg_write(ah, tx_time,
- 			reg + (AR5K_SET_SHORT_PREAMBLE << 2));
- 	}
-diff --git a/drivers/net/wireless/ath/ath5k/qcu.c b/drivers/net/wireless/ath/ath5k/qcu.c
-index 30b50f9..1f9677a 100644
---- a/drivers/net/wireless/ath/ath5k/qcu.c
-+++ b/drivers/net/wireless/ath/ath5k/qcu.c
-@@ -563,6 +563,7 @@ ath5k_hw_reset_tx_queue(struct ath5k_hw *ah, unsigned int queue)
- int ath5k_hw_set_ifs_intervals(struct ath5k_hw *ah, unsigned int slot_time)
- {
- 	struct ieee80211_channel *channel = ah->ah_current_channel;
-+	enum ieee80211_band band;
- 	struct ieee80211_rate *rate;
- 	u32 ack_tx_time, eifs, eifs_clock, sifs, sifs_clock;
- 	u32 slot_time_clock = ath5k_hw_htoclock(ah, slot_time);
-@@ -598,11 +599,12 @@ int ath5k_hw_set_ifs_intervals(struct ath5k_hw *ah, unsigned int slot_time)
- 	 * Also we have different lowest rate for 802.11a
- 	 */
- 	if (channel->band == IEEE80211_BAND_5GHZ)
--		rate = &ah->sbands[IEEE80211_BAND_5GHZ].bitrates[0];
-+		band = IEEE80211_BAND_5GHZ;
- 	else
--		rate = &ah->sbands[IEEE80211_BAND_2GHZ].bitrates[0];
-+		band = IEEE80211_BAND_2GHZ;
- 
--	ack_tx_time = ath5k_hw_get_frame_duration(ah, 10, rate, false);
-+	rate = &ah->sbands[band].bitrates[0];
-+	ack_tx_time = ath5k_hw_get_frame_duration(ah, band, 10, rate, false);
- 
- 	/* ack_tx_time includes an SIFS already */
- 	eifs = ack_tx_time + sifs + 2 * slot_time;
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 9a012be..ee7a38b 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2842,6 +2842,7 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
-  */
- __le16 ieee80211_generic_frame_duration(struct ieee80211_hw *hw,
- 					struct ieee80211_vif *vif,
-+					enum ieee80211_band band,
- 					size_t frame_len,
- 					struct ieee80211_rate *rate);
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d9798a3..c5c6ab0 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1383,7 +1383,7 @@ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
- extern void *mac80211_wiphy_privid; /* for wiphy privid */
- u8 *ieee80211_get_bssid(struct ieee80211_hdr *hdr, size_t len,
- 			enum nl80211_iftype type);
--int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
-+int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
- 			     int rate, int erp, int short_preamble);
- void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int keyidx,
- 				     struct ieee80211_hdr *hdr, const u8 *tsc,
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index b39dda5..79633ae 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -334,14 +334,15 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
- 
- 
- static void
--calc_rate_durations(struct ieee80211_local *local, struct minstrel_rate *d,
-+calc_rate_durations(enum ieee80211_band band,
-+		    struct minstrel_rate *d,
- 		    struct ieee80211_rate *rate)
- {
- 	int erp = !!(rate->flags & IEEE80211_RATE_ERP_G);
- 
--	d->perfect_tx_time = ieee80211_frame_duration(local, 1200,
-+	d->perfect_tx_time = ieee80211_frame_duration(band, 1200,
- 			rate->bitrate, erp, 1);
--	d->ack_time = ieee80211_frame_duration(local, 10,
-+	d->ack_time = ieee80211_frame_duration(band, 10,
- 			rate->bitrate, erp, 1);
- }
- 
-@@ -379,14 +380,14 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- {
- 	struct minstrel_sta_info *mi = priv_sta;
- 	struct minstrel_priv *mp = priv;
--	struct ieee80211_local *local = hw_to_local(mp->hw);
- 	struct ieee80211_rate *ctl_rate;
- 	unsigned int i, n = 0;
- 	unsigned int t_slot = 9; /* FIXME: get real slot time */
- 
- 	mi->lowest_rix = rate_lowest_index(sband, sta);
- 	ctl_rate = &sband->bitrates[mi->lowest_rix];
--	mi->sp_ack_dur = ieee80211_frame_duration(local, 10, ctl_rate->bitrate,
-+	mi->sp_ack_dur = ieee80211_frame_duration(sband->band, 10,
-+				ctl_rate->bitrate,
- 				!!(ctl_rate->flags & IEEE80211_RATE_ERP_G), 1);
- 
- 	for (i = 0; i < sband->n_bitrates; i++) {
-@@ -402,7 +403,7 @@ minstrel_rate_init(void *priv, struct ieee80211_supported_band *sband,
- 
- 		mr->rix = i;
- 		mr->bitrate = sband->bitrates[i].bitrate / 5;
--		calc_rate_durations(local, mr, &sband->bitrates[i]);
-+		calc_rate_durations(sband->band, mr, &sband->bitrates[i]);
- 
- 		/* calculate maximum number of retransmissions before
- 		 * fallback (based on maximum segment size) */
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 16e0b27..08048fc 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -693,7 +693,6 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	struct minstrel_ht_sta_priv *msp = priv_sta;
- 	struct minstrel_ht_sta *mi = &msp->ht;
- 	struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
--	struct ieee80211_local *local = hw_to_local(mp->hw);
- 	u16 sta_cap = sta->ht_cap.cap;
- 	int n_supported = 0;
- 	int ack_dur;
-@@ -712,8 +711,8 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	memset(mi, 0, sizeof(*mi));
- 	mi->stats_update = jiffies;
- 
--	ack_dur = ieee80211_frame_duration(local, 10, 60, 1, 1);
--	mi->overhead = ieee80211_frame_duration(local, 0, 60, 1, 1) + ack_dur;
-+	ack_dur = ieee80211_frame_duration(sband->band, 10, 60, 1, 1);
-+	mi->overhead = ieee80211_frame_duration(sband->band, 0, 60, 1, 1) + ack_dur;
- 	mi->overhead_rtscts = mi->overhead + 2 * ack_dur;
- 
- 	mi->avg_ampdu_len = MINSTREL_FRAC(1, 1);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 782a601..1a0732d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -159,7 +159,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 		/* Time needed to transmit ACK
- 		 * (10 bytes + 4-byte FCS = 112 bits) plus SIFS; rounded up
- 		 * to closest integer */
--		dur = ieee80211_frame_duration(local, 10, rate, erp,
-+		dur = ieee80211_frame_duration(sband->band, 10, rate, erp,
- 				tx->sdata->vif.bss_conf.use_short_preamble);
- 
- 	if (next_frag_len) {
-@@ -167,7 +167,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 		 * transmit next fragment plus ACK and 2 x SIFS. */
- 		dur *= 2; /* ACK + SIFS */
- 		/* next fragment */
--		dur += ieee80211_frame_duration(local, next_frag_len,
-+		dur += ieee80211_frame_duration(sband->band, next_frag_len,
- 				txrate->bitrate, erp,
- 				tx->sdata->vif.bss_conf.use_short_preamble);
- 	}
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 32f7a3b..cae3dc4 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -106,7 +106,7 @@ void ieee80211_tx_set_protected(struct ieee80211_tx_data *tx)
- 	}
- }
- 
--int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
-+int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
- 			     int rate, int erp, int short_preamble)
- {
- 	int dur;
-@@ -120,7 +120,7 @@ int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
- 	 * DIV_ROUND_UP() operations.
- 	 */
- 
--	if (local->hw.conf.channel->band == IEEE80211_BAND_5GHZ || erp) {
-+	if (band == IEEE80211_BAND_5GHZ || erp) {
- 		/*
- 		 * OFDM:
- 		 *
-@@ -162,10 +162,10 @@ int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
- /* Exported duration function for driver use */
- __le16 ieee80211_generic_frame_duration(struct ieee80211_hw *hw,
- 					struct ieee80211_vif *vif,
-+					enum ieee80211_band band,
- 					size_t frame_len,
- 					struct ieee80211_rate *rate)
- {
--	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
- 	u16 dur;
- 	int erp;
-@@ -179,7 +179,7 @@ __le16 ieee80211_generic_frame_duration(struct ieee80211_hw *hw,
- 			erp = rate->flags & IEEE80211_RATE_ERP_G;
- 	}
- 
--	dur = ieee80211_frame_duration(local, frame_len, rate->bitrate, erp,
-+	dur = ieee80211_frame_duration(band, frame_len, rate->bitrate, erp,
- 				       short_preamble);
- 
- 	return cpu_to_le16(dur);
-@@ -198,7 +198,7 @@ __le16 ieee80211_rts_duration(struct ieee80211_hw *hw,
- 	u16 dur;
- 	struct ieee80211_supported_band *sband;
- 
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	sband = local->hw.wiphy->bands[frame_txctl->band];
- 
- 	short_preamble = false;
- 
-@@ -213,13 +213,13 @@ __le16 ieee80211_rts_duration(struct ieee80211_hw *hw,
- 	}
- 
- 	/* CTS duration */
--	dur = ieee80211_frame_duration(local, 10, rate->bitrate,
-+	dur = ieee80211_frame_duration(sband->band, 10, rate->bitrate,
- 				       erp, short_preamble);
- 	/* Data frame duration */
--	dur += ieee80211_frame_duration(local, frame_len, rate->bitrate,
-+	dur += ieee80211_frame_duration(sband->band, frame_len, rate->bitrate,
- 					erp, short_preamble);
- 	/* ACK duration */
--	dur += ieee80211_frame_duration(local, 10, rate->bitrate,
-+	dur += ieee80211_frame_duration(sband->band, 10, rate->bitrate,
- 					erp, short_preamble);
- 
- 	return cpu_to_le16(dur);
-@@ -239,7 +239,7 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
- 	u16 dur;
- 	struct ieee80211_supported_band *sband;
- 
--	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-+	sband = local->hw.wiphy->bands[frame_txctl->band];
- 
- 	short_preamble = false;
- 
-@@ -253,11 +253,11 @@ __le16 ieee80211_ctstoself_duration(struct ieee80211_hw *hw,
- 	}
- 
- 	/* Data frame duration */
--	dur = ieee80211_frame_duration(local, frame_len, rate->bitrate,
-+	dur = ieee80211_frame_duration(sband->band, frame_len, rate->bitrate,
- 				       erp, short_preamble);
- 	if (!(frame_txctl->flags & IEEE80211_TX_CTL_NO_ACK)) {
- 		/* ACK duration */
--		dur += ieee80211_frame_duration(local, 10, rate->bitrate,
-+		dur += ieee80211_frame_duration(sband->band, 10, rate->bitrate,
- 						erp, short_preamble);
- 	}
- 
-@@ -878,10 +878,8 @@ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 	int i;
- 
- 	sband = local->hw.wiphy->bands[band];
--	if (!sband) {
--		WARN_ON(1);
--		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	}
-+	if (WARN_ON(!sband))
-+		return 1;
- 
- 	if (band == IEEE80211_BAND_2GHZ)
- 		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
-@@ -1115,10 +1113,8 @@ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
- 	int i, j;
- 	sband = local->hw.wiphy->bands[band];
- 
--	if (!sband) {
--		WARN_ON(1);
--		sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--	}
-+	if (WARN_ON(!sband))
-+		return 1;
- 
- 	bitrates = sband->bitrates;
- 	num_rates = sband->n_bitrates;
--- 
-1.7.0.4
+[PATCH v3] checkpatch: Add some --strict coding style checks
+
+Argument alignment across multiple lines should
+match the open parenthesis.
+
+Logical continuations should be at the end of
+the previous line, not the start of a new line.
+
+These are not required by CodingStyle so make the
+tests active only when using --strict.
+
+Improved_by_examples_from: "Bruce W. Allen" <bruce.w.allan@intel.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+
+V3: Use perl 5.10 features
+    Use a runtime check of perl version so $balanced_parens
+    is not used in perl versions that don't support it.
+    Update memset and min_t checks for newer $balanced_parens
+    test.
+    Improve alignment position test.
+    Add message suggesting perl upgrade.
+V2: Scan the entire line for balanced parentheses,
+    use the position of the last non-balanced open parenthesis.
+    Allow all space indentation too, checkpatch will complain
+    in a different message about that if it's too long.
+
+ scripts/checkpatch.pl |   94 +++++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 84 insertions(+), 10 deletions(-)
+
+
+Thanks,
+Bing
+
+--
+Yogesh Ashok Powar (15):
+  mwifiex: rename long function names to shorter ones
+  mwifiex: rearrange switch statement
+  mwifiex: merge functions to derive cfp by chan & freq in one
+  mwifiex: use usleep_range instead of udelay
+  mwifiex: rearrange if and else blocks to avoid extra indentation
+  mwifiex: rename fuctions and variables for better readability
+  mwifiex: fix checkpatch --strict warnings/errors  Part 1
+  mwifiex: fix checkpatch --strict warnings/errors  Part 2
+  mwifiex: fix checkpatch --strict warnings/errors  Part 3
+  mwifiex: fix checkpatch --strict warnings/errors  Part 4
+  mwifiex: fix checkpatch --strict warnings/errors  Part 5
+  mwifiex: fix checkpatch --strict warnings/errors  Part 6
+  mwifiex: fix checkpatch --strict warnings/errors  Part 7
+  mwifiex: fix checkpatch --strict warnings/errors  Part 8
+  mwifiex: fix checkpatch --strict warnings/errors  Part 9
+
+ drivers/net/wireless/mwifiex/11n.c           |   82 +++----
+ drivers/net/wireless/mwifiex/11n.h           |   16 +-
+ drivers/net/wireless/mwifiex/11n_aggr.c      |   15 +-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |  207 ++++++++--------
+ drivers/net/wireless/mwifiex/11n_rxreorder.h |    5 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      |   83 +++---
+ drivers/net/wireless/mwifiex/cfp.c           |   90 +++-----
+ drivers/net/wireless/mwifiex/cmdevt.c        |  147 ++++++------
+ drivers/net/wireless/mwifiex/fw.h            |    4 +-
+ drivers/net/wireless/mwifiex/init.c          |   32 +--
+ drivers/net/wireless/mwifiex/join.c          |  156 ++++++------
+ drivers/net/wireless/mwifiex/main.c          |   44 ++--
+ drivers/net/wireless/mwifiex/main.h          |   19 +-
+ drivers/net/wireless/mwifiex/pcie.c          |  255 ++++++++++----------
+ drivers/net/wireless/mwifiex/scan.c          |  335 ++++++++++++-------------
+ drivers/net/wireless/mwifiex/sdio.c          |  163 ++++++------
+ drivers/net/wireless/mwifiex/sta_cmd.c       |  175 +++++++-------
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |  348 ++++++++++++--------------
+ drivers/net/wireless/mwifiex/sta_event.c     |   37 ++--
+ drivers/net/wireless/mwifiex/sta_ioctl.c     |  115 ++++-----
+ drivers/net/wireless/mwifiex/sta_rx.c        |   12 +-
+ drivers/net/wireless/mwifiex/sta_tx.c        |   21 +-
+ drivers/net/wireless/mwifiex/txrx.c          |   13 +-
+ drivers/net/wireless/mwifiex/util.c          |   20 +-
+ drivers/net/wireless/mwifiex/wmm.c           |  158 ++++++------
+ 25 files changed, 1227 insertions(+), 1325 deletions(-)
 
