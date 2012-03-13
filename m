@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:36865 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796Ab2CDWOu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 17:14:50 -0500
-Received: by vcqp1 with SMTP id p1so2887571vcq.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 14:14:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1330774746.3619.2.camel@jlt3.sipsolutions.net>
-References: <1330774746.3619.2.camel@jlt3.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Sun, 4 Mar 2012 14:14:29 -0800
-Message-ID: <CAG6hwVN7NV2qx6J+wZpgoXm=5VUCXg2Yx8NA1vxs6hNTSUyt+w@mail.gmail.com> (sfid-20120304_231453_423369_8BD165F1)
-Subject: Re: mesh smatch (or sparse?) errors
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Javier Cardona <javier@cozybit.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:35058 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753967Ab2CMCwT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Mar 2012 22:52:19 -0400
+Message-ID: <1331607135.7100.4.camel@joe2Laptop> (sfid-20120313_035222_415442_BBDCED21)
+Subject: Re: [PATCH 10/15] mwifiex: fix checkpatch --strict warnings/errors
+ Part 4
+From: Joe Perches <joe@perches.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 12 Mar 2012 19:52:15 -0700
+In-Reply-To: <1331606291-322-1-git-send-email-bzhao@marvell.com>
+References: <1331606291-322-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 3, 2012 at 3:39 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->  CHECK   net/mac80211/mesh_pathtbl.c
-> net/mac80211/mesh_pathtbl.c:562 mesh_path_add() error: double lock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:579 mesh_path_add() error: double unlock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:588 mesh_path_add() error: double unlock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:690 mpp_path_add() error: double lock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:705 mpp_path_add() error: double unlock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:714 mpp_path_add() error: double unlock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:812 mesh_path_flush_by_nexthop() error: double lock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:817 mesh_path_flush_by_nexthop() error: double unlock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:885 mesh_path_del() error: double lock 'bottom_half:'
-> net/mac80211/mesh_pathtbl.c:899 mesh_path_del() error: double unlock 'bottom_half:'
->
+On Mon, 2012-03-12 at 19:38 -0700, Bing Zhao wrote:
+[]
+> diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+[]
+> @@ -495,7 +495,7 @@ mwifiex_set_mac_address(struct net_device *dev, void *addr)
+>  		memcpy(priv->netdev->dev_addr, priv->curr_addr, ETH_ALEN);
+>  	else
+>  		dev_err(priv->adapter->dev, "set mac address failed: ret=%d"
+> -					    "\n", ret);
+> +			"\n", ret);
 
-I'll take a look, thanks.
+Feel free to exceed 80 columns for formats.
+This would be much more readable by coalescing the
+formats like either of:
 
-Thomas
->
-> johannes
->
+		dev_err(priv->adapter->dev, "set mac address failed: ret=%d\n",
+			ret);
+or
+		dev_err(priv->adapter->dev,
+			"set mac address failed: ret=%d\n", ret);
+[]
+> diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+[]
+> @@ -391,15 +391,16 @@ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
+>  	card->txbd_ring_pbase = virt_to_phys(card->txbd_ring_vbase);
+>  
+>  	dev_dbg(adapter->dev, "info: txbd_ring - base: %p, pbase: %#x:%x,"
+> -			"len: %x\n", card->txbd_ring_vbase,
+> -			(u32)card->txbd_ring_pbase,
+> -			(u32)((u64)card->txbd_ring_pbase >> 32),
+> -			card->txbd_ring_size);
+> +		"len: %x\n", card->txbd_ring_vbase,
+> +		(u32)card->txbd_ring_pbase,
+> +		(u32)((u64)card->txbd_ring_pbase >> 32),
+> +		card->txbd_ring_size);
+
+etc...
+
+
