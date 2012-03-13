@@ -1,49 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41476 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757998Ab2CSLMv (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31495 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753538Ab2CMEgI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 07:12:51 -0400
-Subject: RE: mac80211 20/40 coexist
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20327.2859.202760.119343@gargle.gargle.HOWL>
-References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
-	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
-	 <1331902885.6753.10.camel@jlt3.sipsolutions.net>
-	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
-	 <1332065984.3609.5.camel@jlt3.sipsolutions.net>
-	 <20326.41009.17936.152095@gargle.gargle.HOWL>
-	 <1332145412.3359.2.camel@jlt3.sipsolutions.net>
-	 <20327.1220.845693.349959@gargle.gargle.HOWL>
-	 <1332151743.3359.19.camel@jlt3.sipsolutions.net>
-	 <20327.2859.202760.119343@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Mar 2012 12:12:46 +0100
-Message-ID: <1332155566.3359.22.camel@jlt3.sipsolutions.net> (sfid-20120319_121257_256257_A4923B65)
-Mime-Version: 1.0
+	Tue, 13 Mar 2012 00:36:08 -0400
+Message-ID: <4F5ECEB2.7050903@qca.qualcomm.com> (sfid-20120313_053615_776238_830204F2)
+Date: Tue, 13 Mar 2012 10:06:02 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k_hw: Fix chip revision checks
+References: <1331531853-5043-1-git-send-email-mohammed@qca.qualcomm.com> <4F5DBB8B.1070000@openwrt.org> <4F5DBED4.4050500@qca.qualcomm.com> <20120312201650.GG26059@tux>
+In-Reply-To: <20120312201650.GG26059@tux>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 16:02 +0530, Sujith Manoharan wrote:
-> Johannes Berg wrote:
-> > > 11.14.4.3 specifies that if the operating bandwidth has been changed by the AP
-> > > to 20 MHz, then transmitting frames in an extension channel is not allowed ?
-> > 
-> > Ok, good point. Paul's case was regulatory related, where we
-> > (voluntarily) ceased 40 MHz transmissions.
-> > 
-> > Still though, I think reconfiguring the channel type rather than the
-> > rate control algorithm doesn't make a lot of sense in this case since
-> > it'd make this very special and unlike the other cases (e.g. AP mode).
-> 
-> The regulatory issue could have been fixed by sending out the action frame
-> specified in 7.4.10.2, no ?
+Hi Luis,
 
-Technically, but that would be assuming it's implemented everywhere ...
-if it was tested by the WFA we'd implement it :-)
+On Tuesday 13 March 2012 01:46 AM, Luis R. Rodriguez wrote:
+> On Mon, Mar 12, 2012 at 02:46:04PM +0530, Mohammed Shafi Shajakhan wrote:
+>> Hi Felix,
+>>
+>> On Monday 12 March 2012 02:32 PM, Felix Fietkau wrote:
+>>> On 2012-03-12 6:57 AM, Mohammed Shafi Shajakhan wrote:
+>>>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>>>
+>>>> not sure if these checks are previously avoided may be those revision of
+>>>> chipsets are obselete ?
+>>> NACK. The extra checks that this patch adds have been intentionally
+>>> removed, since all earlier versions were never sold and thus do not need
+>>> to be considered. This simplifies the generated binary code.
+>>
+>> IMHO i don't think this patch does anything wrong to deserve a NACK!
+>> sometimes these optimizations make it tad difficult if we want to
+>> quickly check with the HAL code.
+>
+> "HAL" code from internal codebases need to change, not the other
+> way around. You have your priorities wrong. I support the NACK.
+>
 
-johannes
+we have checks like this
 
+case 1.#define AR_SREV_9280_20_OR_LATER(_ah) \
+	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9280))
+
+case 2. #define AR_SREV_9485_OR_LATER(_ah) \
+	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9485))
+
+
+case 3. #define AR_SREV_9287_13_OR_LATER(_ah) \
+	(((_ah)->hw_version.macVersion > AR_SREV_VERSION_9287) || \
+	 (((_ah)->hw_version.macVersion == AR_SREV_VERSION_9287) && \
+	  ((_ah)->hw_version.macRev >= AR_SREV_REVISION_9287_13)))
+
+it made be bit confused and i was just adding some hardware related 
+changes, let me do accept i missed to see why the check for AR9280 is 
+like that. i just thought of making the changes in sync with the other 
+macros, also thats why sent an RFC too
+
+Felix suggested a better solution would be
+
+#define AR_SREV_9280_OR_LATER(_ah) \
+	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9280))
+
+instead of the older one (or) what my patch does
+
+#define AR_SREV_9280_20_OR_LATER(_ah) \
+	(((_ah)->hw_version.macVersion >= AR_SREV_VERSION_9280))
+
+and make corresponding changes in the hardware code.
+
+thanks!
+
+
+-- 
+thanks,
+shafi
