@@ -1,1684 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:53884 "EHLO
-	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756575Ab2CBU1A (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:35811 "HELO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751814Ab2CMCfc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:27:00 -0500
-Received: from zeta.dmz-eu.st.com (zeta.dmz-eu.st.com [164.129.230.9])
-	by beta.dmz-eu.st.com (STMicroelectronics) with ESMTP id E05E51AF
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:57 +0000 (GMT)
-Received: from relay2.stm.gmessaging.net (unknown [10.230.100.18])
-	by zeta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 3A80F29FF
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:57 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay2.stm.gmessaging.net (Postfix) with ESMTPS id 71497A8065
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:49 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+	Mon, 12 Mar 2012 22:35:32 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 12/21] cw1200: sta.*, mac80211 STA callbacks.
-Date: Fri, 2 Mar 2012 21:26:34 +0100
-Message-ID: <1330720003-15866-13-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212714_434724_F679A879)
-In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
- <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 01/15] mwifiex: rename long function names to shorter ones
+Date: Mon, 12 Mar 2012 19:35:08 -0700
+Message-Id: <1331606116-32745-2-git-send-email-bzhao@marvell.com> (sfid-20120313_033537_102667_38AACFB8)
+In-Reply-To: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
+References: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code implements mac80211 STA callbacks.
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+This saves some space and adds better readability.
+
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/cw1200/sta.c | 1542 +++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/sta.h |   87 +++
- 2 files changed, 1629 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/cw1200/sta.c
- create mode 100644 drivers/net/wireless/cw1200/sta.h
+ drivers/net/wireless/mwifiex/11n.c           |   60 ++++++++++++--------------
+ drivers/net/wireless/mwifiex/11n.h           |    9 ++--
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |    6 +-
+ drivers/net/wireless/mwifiex/11n_rxreorder.h |    5 +-
+ drivers/net/wireless/mwifiex/main.h          |    6 +-
+ drivers/net/wireless/mwifiex/wmm.c           |   10 ++---
+ 6 files changed, 43 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/net/wireless/cw1200/sta.c b/drivers/net/wireless/cw1200/sta.c
-new file mode 100644
-index 0000000..e741bd4
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/sta.c
-@@ -0,0 +1,1542 @@
-+/*
-+ * Mac80211 STA API for ST-Ericsson CW1200 drivers
-+ *
-+ * Copyright (c) 2010-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/vmalloc.h>
-+#include <linux/sched.h>
-+#include <linux/firmware.h>
-+
-+#include "cw1200.h"
-+#include "sta.h"
-+#include "ap.h"
-+#include "fwio.h"
-+#include "bh.h"
-+#include "debug.h"
-+
-+#if defined(CONFIG_CW1200_STA_DEBUG)
-+#define sta_printk(...) printk(__VA_ARGS__)
-+#else
-+#define sta_printk(...)
-+#endif
-+
-+static inline void __cw1200_free_event_queue(struct list_head *list)
-+{
-+	while (!list_empty(list)) {
-+		struct cw1200_wsm_event *event =
-+			list_first_entry(list, struct cw1200_wsm_event,
-+			link);
-+		list_del(&event->link);
-+		kfree(event);
-+	}
-+}
-+
-+/* ******************************************************************** */
-+/* STA API								*/
-+
-+int cw1200_start(struct ieee80211_hw *dev)
-+{
-+	struct cw1200_common *priv = dev->priv;
-+	int ret = 0;
-+
-+	mutex_lock(&priv->conf_mutex);
-+
-+	/* default EDCA */
-+	WSM_EDCA_SET(&priv->edca, 0, 0x0002, 0x0003, 0x0007, 47, 0xc8, false);
-+	WSM_EDCA_SET(&priv->edca, 1, 0x0002, 0x0007, 0x000f, 94, 0xc8, false);
-+	WSM_EDCA_SET(&priv->edca, 2, 0x0003, 0x000f, 0x03ff, 0, 0xc8, false);
-+	WSM_EDCA_SET(&priv->edca, 3, 0x0007, 0x000f, 0x03ff, 0, 0xc8, false);
-+	ret = wsm_set_edca_params(priv, &priv->edca);
-+	if (WARN_ON(ret))
-+		goto out;
-+
-+	ret = cw1200_set_uapsd_param(priv, &priv->edca);
-+	if (WARN_ON(ret))
-+		goto out;
-+
-+	priv->setbssparams_done = false;
-+
-+	memset(priv->bssid, ~0, ETH_ALEN);
-+	memcpy(priv->mac_addr, dev->wiphy->perm_addr, ETH_ALEN);
-+	priv->mode = NL80211_IFTYPE_MONITOR;
-+	priv->softled_state = 0;
-+	priv->wep_default_key_id = -1;
-+
-+	priv->cqm_link_loss_count = 60;
-+	priv->cqm_beacon_loss_count = 20;
-+
-+	/* Temporary configuration - beacon filter table */
-+	priv->bf_table.numOfIEs = __cpu_to_le32(2);
-+	priv->bf_table.entry[0].ieId = WLAN_EID_VENDOR_SPECIFIC;
-+	priv->bf_table.entry[0].actionFlags = WSM_BEACON_FILTER_IE_HAS_CHANGED |
-+					WSM_BEACON_FILTER_IE_NO_LONGER_PRESENT |
-+					WSM_BEACON_FILTER_IE_HAS_APPEARED;
-+	priv->bf_table.entry[0].oui[0] = 0x50;
-+	priv->bf_table.entry[0].oui[1] = 0x6F;
-+	priv->bf_table.entry[0].oui[2] = 0x9A;
-+	priv->bf_table.entry[1].ieId = WLAN_EID_ERP_INFO;
-+	priv->bf_table.entry[1].actionFlags = WSM_BEACON_FILTER_IE_HAS_CHANGED |
-+					WSM_BEACON_FILTER_IE_NO_LONGER_PRESENT |
-+					WSM_BEACON_FILTER_IE_HAS_APPEARED;
-+
-+	priv->bf_control.enabled = 1;
-+	ret = cw1200_setup_mac(priv);
-+	if (WARN_ON(ret))
-+		goto out;
-+
-+	/* err = cw1200_set_leds(priv); */
-+
-+out:
-+	mutex_unlock(&priv->conf_mutex);
-+	return ret;
-+}
-+
-+void cw1200_stop(struct ieee80211_hw *dev)
-+{
-+	struct cw1200_common *priv = dev->priv;
-+	LIST_HEAD(list);
-+	int i;
-+
-+	wsm_lock_tx(priv);
-+
-+	while (down_trylock(&priv->scan.lock)) {
-+		/* Scan is in progress. Force it to stop. */
-+		priv->scan.req = NULL;
-+		schedule();
-+	}
-+	up(&priv->scan.lock);
-+
-+	cancel_delayed_work_sync(&priv->scan.probe_work);
-+	cancel_delayed_work_sync(&priv->scan.timeout);
-+	cancel_delayed_work_sync(&priv->join_timeout);
-+	cancel_delayed_work_sync(&priv->bss_loss_work);
-+	cancel_delayed_work_sync(&priv->connection_loss_work);
-+	cancel_delayed_work_sync(&priv->link_id_gc_work);
-+	flush_workqueue(priv->workqueue);
-+	del_timer_sync(&priv->mcast_timeout);
-+	del_timer_sync(&priv->ba_timer);
-+
-+	mutex_lock(&priv->conf_mutex);
-+	priv->mode = NL80211_IFTYPE_UNSPECIFIED;
-+	priv->listening = false;
-+
-+	priv->softled_state = 0;
-+	/* cw1200_set_leds(priv); */
-+
-+	spin_lock(&priv->event_queue_lock);
-+	list_splice_init(&priv->event_queue, &list);
-+	spin_unlock(&priv->event_queue_lock);
-+	__cw1200_free_event_queue(&list);
-+
-+	priv->delayed_link_loss = 0;
-+
-+	priv->join_status = CW1200_JOIN_STATUS_PASSIVE;
-+
-+	for (i = 0; i < 4; i++)
-+		cw1200_queue_clear(&priv->tx_queue[i]);
-+
-+	/* HACK! */
-+	if (atomic_xchg(&priv->tx_lock, 1) != 1)
-+		sta_printk(KERN_DEBUG "[STA] TX is force-unlocked "
-+			"due to stop request.\n");
-+
-+	wsm_unlock_tx(priv);
-+
-+	mutex_unlock(&priv->conf_mutex);
-+}
-+
-+int cw1200_add_interface(struct ieee80211_hw *dev,
-+			 struct ieee80211_vif *vif)
-+{
-+	int ret;
-+	struct cw1200_common *priv = dev->priv;
-+	/* __le32 auto_calibration_mode = __cpu_to_le32(1); */
-+
-+	mutex_lock(&priv->conf_mutex);
-+
-+	if (priv->mode != NL80211_IFTYPE_MONITOR) {
-+		mutex_unlock(&priv->conf_mutex);
-+		return -EOPNOTSUPP;
-+	}
-+
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
-+	case NL80211_IFTYPE_AP:
-+		priv->mode = vif->type;
-+		break;
-+	default:
-+		mutex_unlock(&priv->conf_mutex);
-+		return -EOPNOTSUPP;
-+	}
-+
-+	priv->vif = vif;
-+	memcpy(priv->mac_addr, vif->addr, ETH_ALEN);
-+
-+	ret = WARN_ON(cw1200_setup_mac(priv));
-+	/* Enable auto-calibration */
-+	/* Exception in subsequent channel switch; disabled.
-+	WARN_ON(wsm_write_mib(priv, WSM_MIB_ID_SET_AUTO_CALIBRATION_MODE,
-+		&auto_calibration_mode, sizeof(auto_calibration_mode)));
-+	*/
-+
-+	mutex_unlock(&priv->conf_mutex);
-+	return ret;
-+}
-+
-+void cw1200_remove_interface(struct ieee80211_hw *dev,
-+			     struct ieee80211_vif *vif)
-+{
-+	struct cw1200_common *priv = dev->priv;
-+	struct wsm_reset reset = {
-+		.reset_statistics = true,
-+	};
-+	int i;
-+
-+	mutex_lock(&priv->conf_mutex);
-+	wsm_lock_tx(priv);
-+	switch (priv->join_status) {
-+	case CW1200_JOIN_STATUS_STA:
-+		wsm_lock_tx(priv);
-+		if (queue_work(priv->workqueue, &priv->unjoin_work) <= 0)
-+			wsm_unlock_tx(priv);
-+		break;
-+	case CW1200_JOIN_STATUS_AP:
-+		for (i = 0; priv->link_id_map; ++i) {
-+			if (priv->link_id_map & BIT(i)) {
-+				reset.link_id = i;
-+				wsm_reset(priv, &reset);
-+				priv->link_id_map &= ~BIT(i);
-+			}
-+		}
-+		memset(priv->link_id_db, 0,
-+				sizeof(priv->link_id_db));
-+		priv->sta_asleep_mask = 0;
-+		priv->enable_beacon = false;
-+		priv->tx_multicast = false;
-+		priv->aid0_bit_set = false;
-+		priv->buffered_multicasts = false;
-+		priv->pspoll_mask = 0;
-+		reset.link_id = 0;
-+		wsm_reset(priv, &reset);
-+		break;
-+	case CW1200_JOIN_STATUS_MONITOR:
-+		cw1200_update_listening(priv, false);
-+		break;
-+	default:
-+		break;
-+	}
-+	priv->vif = NULL;
-+	priv->mode = NL80211_IFTYPE_MONITOR;
-+	memset(priv->mac_addr, 0, ETH_ALEN);
-+	memset(priv->bssid, 0, ETH_ALEN);
-+	cw1200_free_keys(priv);
-+	cw1200_setup_mac(priv);
-+	priv->listening = false;
-+	priv->join_status = CW1200_JOIN_STATUS_PASSIVE;
-+	if (!__cw1200_flush(priv, true))
-+		wsm_unlock_tx(priv);
-+	wsm_unlock_tx(priv);
-+
-+	mutex_unlock(&priv->conf_mutex);
-+}
-+
-+int cw1200_config(struct ieee80211_hw *dev, u32 changed)
-+{
-+	int ret = 0;
-+	struct cw1200_common *priv = dev->priv;
-+	struct ieee80211_conf *conf = &dev->conf;
-+
-+	down(&priv->scan.lock);
-+	mutex_lock(&priv->conf_mutex);
-+	/* TODO: IEEE80211_CONF_CHANGE_QOS */
-+	if (changed & IEEE80211_CONF_CHANGE_POWER) {
-+		priv->output_power = conf->power_level;
-+		sta_printk(KERN_DEBUG "[STA] TX power: %d\n",
-+				priv->output_power);
-+		WARN_ON(wsm_set_output_power(priv, priv->output_power * 10));
-+	}
-+
-+	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) &&
-+			(priv->channel != conf->channel)) {
-+		struct ieee80211_channel *ch = conf->channel;
-+		struct wsm_switch_channel channel = {
-+			.newChannelNumber = ch->hw_value,
-+		};
-+		sta_printk(KERN_DEBUG "[STA] Freq %d (wsm ch: %d).\n",
-+			ch->center_freq, ch->hw_value);
-+
-+		ret = WARN_ON(__cw1200_flush(priv, false));
-+		if (!ret) {
-+			ret = WARN_ON(wsm_switch_channel(priv, &channel));
-+			if (!ret) {
-+				ret = wait_event_timeout(
-+					priv->channel_switch_done,
-+					!priv->channel_switch_in_progress,
-+					3 * HZ);
-+				/* TODO: We should check also switch channel
-+				 * complete indication
-+				 */
-+				if (ret) {
-+					priv->channel = ch;
-+					ret = 0;
-+				} else
-+					ret = -ETIMEDOUT;
-+			} else
-+				wsm_unlock_tx(priv);
-+		}
-+	}
-+
-+	if (changed & IEEE80211_CONF_CHANGE_PS) {
-+		if (!(conf->flags & IEEE80211_CONF_PS))
-+			priv->powersave_mode.pmMode = WSM_PSM_ACTIVE;
-+		else if (conf->dynamic_ps_timeout <= 0)
-+			priv->powersave_mode.pmMode = WSM_PSM_PS;
-+		else
-+			priv->powersave_mode.pmMode = WSM_PSM_FAST_PS;
-+
-+		/* Firmware requires that value for this 1-byte field must
-+		 * be specified in units of 500us. Values above the 128ms
-+		 * threshold are not supported. */
-+		if (conf->dynamic_ps_timeout >= 0x80)
-+			priv->powersave_mode.fastPsmIdlePeriod = 0xFF;
-+		else
-+			priv->powersave_mode.fastPsmIdlePeriod =
-+					conf->dynamic_ps_timeout << 1;
-+
-+		if (priv->join_status == CW1200_JOIN_STATUS_STA &&
-+				priv->bss_params.aid)
-+			cw1200_set_pm(priv, &priv->powersave_mode);
-+	}
-+
-+	if (changed & IEEE80211_CONF_CHANGE_MONITOR) {
-+		/* TBD: It looks like it's transparent
-+		 * there's a monitor interface present -- use this
-+		 * to determine for example whether to calculate
-+		 * timestamps for packets or not, do not use instead
-+		 * of filter flags! */
-+	}
-+
-+	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
-+		struct wsm_operational_mode mode = {
-+			.power_mode = wsm_power_mode_quiescent,
-+			.disableMoreFlagUsage = true,
-+		};
-+
-+		wsm_lock_tx(priv);
-+		/* Disable p2p-dev mode forced by TX request */
-+		if ((priv->join_status == CW1200_JOIN_STATUS_MONITOR) &&
-+				(conf->flags & IEEE80211_CONF_IDLE) &&
-+				!priv->listening) {
-+			cw1200_disable_listening(priv);
-+			priv->join_status = CW1200_JOIN_STATUS_PASSIVE;
-+		}
-+		WARN_ON(wsm_set_operational_mode(priv, &mode));
-+		wsm_unlock_tx(priv);
-+	}
-+
-+	if (changed & IEEE80211_CONF_CHANGE_RETRY_LIMITS) {
-+		sta_printk(KERN_DEBUG "[STA] Retry limits: %d (long), " \
-+			"%d (short).\n",
-+			conf->long_frame_max_tx_count,
-+			conf->short_frame_max_tx_count);
-+		spin_lock_bh(&priv->tx_policy_cache.lock);
-+		priv->long_frame_max_tx_count = conf->long_frame_max_tx_count;
-+		priv->short_frame_max_tx_count =
-+			(conf->short_frame_max_tx_count < 0x0F) ?
-+			conf->short_frame_max_tx_count : 0x0F;
-+		priv->hw->max_rate_tries = priv->short_frame_max_tx_count;
-+		spin_unlock_bh(&priv->tx_policy_cache.lock);
-+		/* TBD: I think we don't need tx_policy_force_upload().
-+		 * Outdated policies will leave cache in a normal way. */
-+		/* WARN_ON(tx_policy_force_upload(priv)); */
-+	}
-+	mutex_unlock(&priv->conf_mutex);
-+	up(&priv->scan.lock);
-+	return ret;
-+}
-+
-+void cw1200_update_filtering(struct cw1200_common *priv)
-+{
-+	int ret;
-+	bool bssid_filtering = !priv->rx_filter.bssid;
-+	static struct wsm_beacon_filter_control bf_disabled = {
-+		.enabled = 0,
-+		.bcn_count = 1,
-+	};
-+
-+	if (priv->join_status == CW1200_JOIN_STATUS_PASSIVE)
-+		return;
-+	else if (priv->join_status == CW1200_JOIN_STATUS_MONITOR)
-+		bssid_filtering = false;
-+
-+	/*
-+	* When acting as p2p client being connected to p2p GO, in order to
-+	* receive frames from a different p2p device, turn off bssid filter.
-+	*
-+	* WARNING: FW dependency!
-+	* This can only be used with FW WSM371 and its successors.
-+	* In that FW version even with bssid filter turned off,
-+	* device will block most of the unwanted frames.
-+	*/
-+	if (priv->vif->p2p)
-+		bssid_filtering = false;
-+
-+	ret = wsm_set_rx_filter(priv, &priv->rx_filter);
-+	if (!ret)
-+		ret = wsm_set_beacon_filter_table(priv, &priv->bf_table);
-+	if (!ret) {
-+		if (priv->disable_beacon_filter)
-+			ret = wsm_beacon_filter_control(priv,
-+					&bf_disabled);
-+		else
-+			ret = wsm_beacon_filter_control(priv,
-+					&priv->bf_control);
-+	}
-+	if (!ret)
-+		ret = wsm_set_bssid_filtering(priv, bssid_filtering);
-+	if (!ret)
-+		ret = wsm_set_multicast_filter(priv, &priv->multicast_filter);
-+	if (ret)
-+		wiphy_err(priv->hw->wiphy,
-+				"%s: Update filtering failed: %d.\n",
-+				__func__, ret);
-+	return;
-+}
-+
-+void cw1200_update_filtering_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common,
-+		update_filtering_work);
-+
-+	cw1200_update_filtering(priv);
-+}
-+
-+u64 cw1200_prepare_multicast(struct ieee80211_hw *hw,
-+			     struct netdev_hw_addr_list *mc_list)
-+{
-+	static u8 broadcast_ipv6[ETH_ALEN] = {
-+		0x33, 0x33, 0x00, 0x00, 0x00, 0x01
-+	};
-+	static u8 broadcast_ipv4[ETH_ALEN] = {
-+		0x01, 0x00, 0x5e, 0x00, 0x00, 0x01
-+	};
-+	struct cw1200_common *priv = hw->priv;
-+	struct netdev_hw_addr *ha;
-+	int count = 0;
-+
-+	/* Disable multicast filtering */
-+	priv->has_multicast_subscription = false;
-+	memset(&priv->multicast_filter, 0x00, sizeof(priv->multicast_filter));
-+
-+	if (netdev_hw_addr_list_count(mc_list) > WSM_MAX_GRP_ADDRTABLE_ENTRIES)
-+		return 0;
-+
-+	/* Enable if requested */
-+	netdev_hw_addr_list_for_each(ha, mc_list) {
-+		sta_printk(KERN_DEBUG "[STA] multicast: %pM\n", ha->addr);
-+		memcpy(&priv->multicast_filter.macAddress[count],
-+		       ha->addr, ETH_ALEN);
-+		if (memcmp(ha->addr, broadcast_ipv4, ETH_ALEN) &&
-+				memcmp(ha->addr, broadcast_ipv6, ETH_ALEN))
-+			priv->has_multicast_subscription = true;
-+		count++;
-+	}
-+
-+	if (count) {
-+		priv->multicast_filter.enable = __cpu_to_le32(1);
-+		priv->multicast_filter.numOfAddresses = __cpu_to_le32(count);
-+	}
-+
-+	return netdev_hw_addr_list_count(mc_list);
-+}
-+
-+void cw1200_configure_filter(struct ieee80211_hw *dev,
-+			     unsigned int changed_flags,
-+			     unsigned int *total_flags,
-+			     u64 multicast)
-+{
-+	struct cw1200_common *priv = dev->priv;
-+	bool listening = !!(*total_flags &
-+			(FIF_PROMISC_IN_BSS |
-+			 FIF_OTHER_BSS |
-+			 FIF_BCN_PRBRESP_PROMISC |
-+			 FIF_PROBE_REQ));
-+
-+	*total_flags &= FIF_PROMISC_IN_BSS |
-+			FIF_OTHER_BSS |
-+			FIF_FCSFAIL |
-+			FIF_BCN_PRBRESP_PROMISC |
-+			FIF_PROBE_REQ;
-+
-+	down(&priv->scan.lock);
-+	mutex_lock(&priv->conf_mutex);
-+
-+	priv->rx_filter.promiscuous = (*total_flags & FIF_PROMISC_IN_BSS)
-+			? 1 : 0;
-+	priv->rx_filter.bssid = (*total_flags & (FIF_OTHER_BSS |
-+			FIF_PROBE_REQ)) ? 1 : 0;
-+	priv->rx_filter.fcs = (*total_flags & FIF_FCSFAIL) ? 1 : 0;
-+	priv->bf_control.bcn_count = (*total_flags &
-+			(FIF_BCN_PRBRESP_PROMISC |
-+			 FIF_PROMISC_IN_BSS |
-+			 FIF_PROBE_REQ)) ? 1 : 0;
-+	if (priv->listening ^ listening) {
-+		priv->listening = listening;
-+		wsm_lock_tx(priv);
-+		cw1200_update_listening(priv, listening);
-+		wsm_unlock_tx(priv);
-+	}
-+	cw1200_update_filtering(priv);
-+	mutex_unlock(&priv->conf_mutex);
-+	up(&priv->scan.lock);
-+}
-+
-+int cw1200_conf_tx(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
-+		   u16 queue, const struct ieee80211_tx_queue_params *params)
-+{
-+	struct cw1200_common *priv = dev->priv;
-+	int ret = 0;
-+	/* To prevent re-applying PM request OID again and again*/
-+	bool old_uapsdFlags;
-+
-+	mutex_lock(&priv->conf_mutex);
-+
-+	if (queue < dev->queues) {
-+		old_uapsdFlags = priv->uapsd_info.uapsdFlags;
-+
-+		WSM_TX_QUEUE_SET(&priv->tx_queue_params, queue, 0, 0, 0);
-+		ret = wsm_set_tx_queue_params(priv,
-+				&priv->tx_queue_params.params[queue], queue);
-+		if (ret) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		WSM_EDCA_SET(&priv->edca, queue, params->aifs,
-+			params->cw_min, params->cw_max, params->txop, 0xc8,
-+			params->uapsd);
-+		ret = wsm_set_edca_params(priv, &priv->edca);
-+		if (ret) {
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		if (priv->mode == NL80211_IFTYPE_STATION) {
-+			ret = cw1200_set_uapsd_param(priv, &priv->edca);
-+			if (!ret && priv->setbssparams_done &&
-+				(priv->join_status == CW1200_JOIN_STATUS_STA) &&
-+				(old_uapsdFlags != priv->uapsd_info.uapsdFlags))
-+				cw1200_set_pm(priv, &priv->powersave_mode);
-+		}
-+	} else
-+		ret = -EINVAL;
-+
-+out:
-+	mutex_unlock(&priv->conf_mutex);
-+	return ret;
-+}
-+
-+int cw1200_get_stats(struct ieee80211_hw *dev,
-+		     struct ieee80211_low_level_stats *stats)
-+{
-+	struct cw1200_common *priv = dev->priv;
-+
-+	memcpy(stats, &priv->stats, sizeof(*stats));
-+	return 0;
-+}
-+
-+/*
-+int cw1200_get_tx_stats(struct ieee80211_hw *dev,
-+			struct ieee80211_tx_queue_stats *stats)
-+{
-+	int i;
-+	struct cw1200_common *priv = dev->priv;
-+
-+	for (i = 0; i < dev->queues; ++i)
-+		cw1200_queue_get_stats(&priv->tx_queue[i], &stats[i]);
-+
-+	return 0;
-+}
-+*/
-+
-+int cw1200_set_pm(struct cw1200_common *priv, const struct wsm_set_pm *arg)
-+{
-+	struct wsm_set_pm pm = *arg;
-+
-+	if (priv->uapsd_info.uapsdFlags != 0)
-+		pm.pmMode &= ~WSM_PSM_FAST_PS_FLAG;
-+
-+	if (memcmp(&pm, &priv->firmware_ps_mode,
-+			sizeof(struct wsm_set_pm))) {
-+		priv->firmware_ps_mode = pm;
-+		return wsm_set_pm(priv, &pm);
-+	} else {
-+		return 0;
-+	}
-+}
-+
-+int cw1200_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
-+		   struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-+		   struct ieee80211_key_conf *key)
-+{
-+	int ret = -EOPNOTSUPP;
-+	struct cw1200_common *priv = dev->priv;
-+
-+	mutex_lock(&priv->conf_mutex);
-+
-+	if (cmd == SET_KEY) {
-+		u8 *peer_addr = NULL;
-+		int pairwise = (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) ?
-+			1 : 0;
-+		int idx = cw1200_alloc_key(priv);
-+		struct wsm_add_key *wsm_key = &priv->keys[idx];
-+
-+		if (idx < 0) {
-+			ret = -EINVAL;
-+			goto finally;
-+		}
-+
-+		BUG_ON(pairwise && !sta);
-+		if (sta)
-+			peer_addr = sta->addr;
-+
-+		switch (key->cipher) {
-+		case WLAN_CIPHER_SUITE_WEP40:
-+		case WLAN_CIPHER_SUITE_WEP104:
-+			if (key->keylen > 16) {
-+				cw1200_free_key(priv, idx);
-+				ret = -EINVAL;
-+				goto finally;
-+			}
-+
-+			if (pairwise) {
-+				wsm_key->type = WSM_KEY_TYPE_WEP_PAIRWISE;
-+				memcpy(wsm_key->wepPairwiseKey.peerAddress,
-+					 peer_addr, ETH_ALEN);
-+				memcpy(wsm_key->wepPairwiseKey.keyData,
-+					&key->key[0], key->keylen);
-+				wsm_key->wepPairwiseKey.keyLength = key->keylen;
-+			} else {
-+				wsm_key->type = WSM_KEY_TYPE_WEP_DEFAULT;
-+				memcpy(wsm_key->wepGroupKey.keyData,
-+					&key->key[0], key->keylen);
-+				wsm_key->wepGroupKey.keyLength = key->keylen;
-+				wsm_key->wepGroupKey.keyId = key->keyidx;
-+			}
-+			break;
-+		case WLAN_CIPHER_SUITE_TKIP:
-+			if (pairwise) {
-+				wsm_key->type = WSM_KEY_TYPE_TKIP_PAIRWISE;
-+				memcpy(wsm_key->tkipPairwiseKey.peerAddress,
-+					peer_addr, ETH_ALEN);
-+				memcpy(wsm_key->tkipPairwiseKey.tkipKeyData,
-+					&key->key[0],  16);
-+				memcpy(wsm_key->tkipPairwiseKey.txMicKey,
-+					&key->key[16],  8);
-+				memcpy(wsm_key->tkipPairwiseKey.rxMicKey,
-+					&key->key[24],  8);
-+			} else {
-+				size_t mic_offset =
-+					(priv->mode == NL80211_IFTYPE_AP) ?
-+					16 : 24;
-+				wsm_key->type = WSM_KEY_TYPE_TKIP_GROUP;
-+				memcpy(wsm_key->tkipGroupKey.tkipKeyData,
-+					&key->key[0],  16);
-+				memcpy(wsm_key->tkipGroupKey.rxMicKey,
-+					&key->key[mic_offset],  8);
-+
-+				/* TODO: Where can I find TKIP SEQ? */
-+				memset(wsm_key->tkipGroupKey.rxSeqCounter,
-+					0,		8);
-+				wsm_key->tkipGroupKey.keyId = key->keyidx;
-+
-+				print_hex_dump_bytes("TKIP: ", DUMP_PREFIX_NONE,
-+					key->key, key->keylen);
-+			}
-+			break;
-+		case WLAN_CIPHER_SUITE_CCMP:
-+			if (pairwise) {
-+				wsm_key->type = WSM_KEY_TYPE_AES_PAIRWISE;
-+				memcpy(wsm_key->aesPairwiseKey.peerAddress,
-+					peer_addr, ETH_ALEN);
-+				memcpy(wsm_key->aesPairwiseKey.aesKeyData,
-+					&key->key[0],  16);
-+			} else {
-+				wsm_key->type = WSM_KEY_TYPE_AES_GROUP;
-+				memcpy(wsm_key->aesGroupKey.aesKeyData,
-+					&key->key[0],  16);
-+				/* TODO: Where can I find AES SEQ? */
-+				memset(wsm_key->aesGroupKey.rxSeqCounter,
-+					0,              8);
-+				wsm_key->aesGroupKey.keyId = key->keyidx;
-+			}
-+			break;
-+		case WLAN_CIPHER_SUITE_SMS4:
-+			if (pairwise) {
-+				wsm_key->type = WSM_KEY_TYPE_WAPI_PAIRWISE;
-+				memcpy(wsm_key->wapiPairwiseKey.peerAddress,
-+					peer_addr, ETH_ALEN);
-+				memcpy(wsm_key->wapiPairwiseKey.wapiKeyData,
-+					&key->key[0],  16);
-+				memcpy(wsm_key->wapiPairwiseKey.micKeyData,
-+					&key->key[16], 16);
-+				wsm_key->wapiPairwiseKey.keyId = key->keyidx;
-+			} else {
-+				wsm_key->type = WSM_KEY_TYPE_WAPI_GROUP;
-+				memcpy(wsm_key->wapiGroupKey.wapiKeyData,
-+					&key->key[0],  16);
-+				memcpy(wsm_key->wapiGroupKey.micKeyData,
-+					&key->key[16], 16);
-+				wsm_key->wapiGroupKey.keyId = key->keyidx;
-+			}
-+			break;
-+		default:
-+			WARN_ON(1);
-+			cw1200_free_key(priv, idx);
-+			ret = -EOPNOTSUPP;
-+			goto finally;
-+		}
-+		ret = WARN_ON(wsm_add_key(priv, wsm_key));
-+		if (!ret)
-+			key->hw_key_idx = idx;
-+		else
-+			cw1200_free_key(priv, idx);
-+	} else if (cmd == DISABLE_KEY) {
-+		struct wsm_remove_key wsm_key = {
-+			.entryIndex = key->hw_key_idx,
-+		};
-+
-+		if (wsm_key.entryIndex > WSM_KEY_MAX_INDEX) {
-+			ret = -EINVAL;
-+			goto finally;
-+		}
-+
-+		cw1200_free_key(priv, wsm_key.entryIndex);
-+		ret = wsm_remove_key(priv, &wsm_key);
-+	} else {
-+		BUG_ON("Unsupported command");
-+	}
-+
-+finally:
-+	mutex_unlock(&priv->conf_mutex);
-+	return ret;
-+}
-+
-+void cw1200_wep_key_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, wep_key_work);
-+	u8 queueId = cw1200_queue_get_queue_id(priv->pending_frame_id);
-+	struct cw1200_queue *queue = &priv->tx_queue[queueId];
-+	__le32 wep_default_key_id = __cpu_to_le32(
-+		priv->wep_default_key_id);
-+
-+	BUG_ON(queueId >= 4);
-+
-+	sta_printk(KERN_DEBUG "[STA] Setting default WEP key: %d\n",
-+		priv->wep_default_key_id);
-+	wsm_flush_tx(priv);
-+	WARN_ON(wsm_write_mib(priv, WSM_MIB_ID_DOT11_WEP_DEFAULT_KEY_ID,
-+		&wep_default_key_id, sizeof(wep_default_key_id)));
-+	cw1200_queue_requeue(queue, priv->pending_frame_id);
-+	wsm_unlock_tx(priv);
-+}
-+
-+int cw1200_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
-+{
-+	int ret;
-+	__le32 val32;
-+
-+	if (value != (u32) -1)
-+		val32 = __cpu_to_le32(value);
-+	else
-+		val32 = 0; /* disabled */
-+
-+	/* mutex_lock(&priv->conf_mutex); */
-+	ret = WARN_ON(wsm_write_mib(hw->priv, WSM_MIB_ID_DOT11_RTS_THRESHOLD,
-+		&val32, sizeof(val32)));
-+	/* mutex_unlock(&priv->conf_mutex); */
-+	return ret;
-+}
-+
-+int __cw1200_flush(struct cw1200_common *priv, bool drop)
-+{
-+	int i, ret;
-+
-+	for (;;) {
-+		/* TODO: correct flush handling is required when dev_stop.
-+		 * Temporary workaround: 2s
-+		 */
-+		if (drop) {
-+			for (i = 0; i < 4; ++i)
-+				cw1200_queue_clear(&priv->tx_queue[i]);
-+		} else {
-+			ret = wait_event_timeout(
-+				priv->tx_queue_stats.wait_link_id_empty,
-+				cw1200_queue_stats_is_empty(
-+					&priv->tx_queue_stats, -1),
-+				2 * HZ);
-+		}
-+
-+		if (!drop && unlikely(ret <= 0)) {
-+			ret = -ETIMEDOUT;
-+			break;
-+		} else {
-+			ret = 0;
-+		}
-+
-+		wsm_lock_tx(priv);
-+		if (unlikely(!cw1200_queue_stats_is_empty(
-+				&priv->tx_queue_stats, -1))) {
-+			/* Highly unlekely: WSM requeued frames. */
-+			wsm_unlock_tx(priv);
-+			continue;
-+		}
-+		break;
-+	}
-+	return ret;
-+}
-+
-+void cw1200_flush(struct ieee80211_hw *hw, bool drop)
-+{
-+	struct cw1200_common *priv = hw->priv;
-+
-+	switch (priv->mode) {
-+	case NL80211_IFTYPE_MONITOR:
-+		drop = true;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+		if (!priv->enable_beacon)
-+			drop = true;
-+		break;
-+	}
-+
-+	if (!WARN_ON(__cw1200_flush(priv, drop)))
-+		wsm_unlock_tx(priv);
-+
-+	return;
-+}
-+
-+/* ******************************************************************** */
-+/* WSM callbacks							*/
-+
-+void cw1200_channel_switch_cb(struct cw1200_common *priv)
-+{
-+	wsm_unlock_tx(priv);
-+}
-+
-+void cw1200_free_event_queue(struct cw1200_common *priv)
-+{
-+	LIST_HEAD(list);
-+
-+	spin_lock(&priv->event_queue_lock);
-+	list_splice_init(&priv->event_queue, &list);
-+	spin_unlock(&priv->event_queue_lock);
-+
-+	__cw1200_free_event_queue(&list);
-+}
-+
-+void cw1200_event_handler(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, event_handler);
-+	struct cw1200_wsm_event *event;
-+	LIST_HEAD(list);
-+
-+	spin_lock(&priv->event_queue_lock);
-+	list_splice_init(&priv->event_queue, &list);
-+	spin_unlock(&priv->event_queue_lock);
-+
-+	list_for_each_entry(event, &list, link) {
-+		switch (event->evt.eventId) {
-+		case WSM_EVENT_ERROR:
-+			/* I even don't know what is it about.. */
-+			STUB();
-+			break;
-+		case WSM_EVENT_BSS_LOST:
-+		{
-+			spin_lock(&priv->bss_loss_lock);
-+			if (priv->bss_loss_status > CW1200_BSS_LOSS_NONE) {
-+				spin_unlock(&priv->bss_loss_lock);
-+				break;
-+			}
-+			priv->bss_loss_status = CW1200_BSS_LOSS_CHECKING;
-+			spin_unlock(&priv->bss_loss_lock);
-+
-+			sta_printk(KERN_DEBUG "[CQM] BSS lost.\n");
-+			cancel_delayed_work_sync(&priv->bss_loss_work);
-+			cancel_delayed_work_sync(&priv->connection_loss_work);
-+			if (!down_trylock(&priv->scan.lock)) {
-+				up(&priv->scan.lock);
-+				priv->delayed_link_loss = 0;
-+				queue_delayed_work(priv->workqueue,
-+						&priv->bss_loss_work, 0);
-+			} else {
-+				/* Scan is in progress. Delay reporting. */
-+				/* Scan complete will trigger bss_loss_work */
-+				priv->delayed_link_loss = 1;
-+				/* Also we're starting watchdog. */
-+				queue_delayed_work(priv->workqueue,
-+						&priv->bss_loss_work, 10 * HZ);
-+			}
-+			break;
-+		}
-+		case WSM_EVENT_BSS_REGAINED:
-+		{
-+			sta_printk(KERN_DEBUG "[CQM] BSS regained.\n");
-+			priv->delayed_link_loss = 0;
-+			spin_lock(&priv->bss_loss_lock);
-+			priv->bss_loss_status = CW1200_BSS_LOSS_NONE;
-+			spin_unlock(&priv->bss_loss_lock);
-+			cancel_delayed_work_sync(&priv->bss_loss_work);
-+			cancel_delayed_work_sync(&priv->connection_loss_work);
-+			break;
-+		}
-+		case WSM_EVENT_RADAR_DETECTED:
-+			STUB();
-+			break;
-+		case WSM_EVENT_RCPI_RSSI:
-+		{
-+			/* RSSI: signed Q8.0, RCPI: unsigned Q7.1
-+			 * RSSI = RCPI / 2 - 110 */
-+			int rcpiRssi = (int)(event->evt.eventData & 0xFF);
-+			int cqm_evt;
-+			if (priv->cqm_use_rssi)
-+				rcpiRssi = (s8)rcpiRssi;
-+			else
-+				rcpiRssi =  rcpiRssi / 2 - 110;
-+
-+			cqm_evt = (rcpiRssi <= priv->cqm_rssi_thold) ?
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW :
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
-+			sta_printk(KERN_DEBUG "[CQM] RSSI event: %d", rcpiRssi);
-+			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt,
-+								GFP_KERNEL);
-+			break;
-+		}
-+		case WSM_EVENT_BT_INACTIVE:
-+			STUB();
-+			break;
-+		case WSM_EVENT_BT_ACTIVE:
-+			STUB();
-+			break;
-+		}
-+	}
-+	__cw1200_free_event_queue(&list);
-+}
-+
-+void cw1200_bss_loss_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, bss_loss_work.work);
-+	int timeout; /* in beacons */
-+	struct sk_buff *skb;
-+
-+	timeout = priv->cqm_link_loss_count -
-+		priv->cqm_beacon_loss_count;
-+
-+	/* Skip the confimration procedure in P2P case */
-+	if (priv->vif->p2p)
-+		goto report;
-+
-+	spin_lock(&priv->bss_loss_lock);
-+	if (priv->bss_loss_status == CW1200_BSS_LOSS_CHECKING) {
-+		spin_unlock(&priv->bss_loss_lock);
-+		skb = ieee80211_nullfunc_get(priv->hw, priv->vif);
-+		if (!(WARN_ON(!skb))) {
-+			cw1200_tx(priv->hw, skb);
-+			/* Start watchdog -- if nullfunc TX doesn't fail
-+			 * in 1 sec, forward event to upper layers */
-+			queue_delayed_work(priv->workqueue,
-+					&priv->bss_loss_work, 1 * HZ);
-+		}
-+		return;
-+	} else if (priv->bss_loss_status == CW1200_BSS_LOSS_CONFIRMING) {
-+		priv->bss_loss_status = CW1200_BSS_LOSS_NONE;
-+		spin_unlock(&priv->bss_loss_lock);
-+		return;
-+	}
-+	spin_unlock(&priv->bss_loss_lock);
-+
-+report:
-+	if (priv->cqm_beacon_loss_count) {
-+		sta_printk(KERN_DEBUG "[CQM] Beacon loss.\n");
-+		if (timeout <= 0)
-+			timeout = 0;
-+		/* ieee80211_cqm_beacon_miss_notify(priv->vif, GFP_KERNEL); */
-+	} else {
-+		timeout = 0;
-+	}
-+
-+	cancel_delayed_work_sync(&priv->connection_loss_work);
-+	queue_delayed_work(priv->workqueue,
-+		&priv->connection_loss_work,
-+		timeout * HZ / 10);
-+
-+	spin_lock(&priv->bss_loss_lock);
-+	priv->bss_loss_status = CW1200_BSS_LOSS_NONE;
-+	spin_unlock(&priv->bss_loss_lock);
-+}
-+
-+void cw1200_connection_loss_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common,
-+				connection_loss_work.work);
-+	sta_printk(KERN_DEBUG "[CQM] Reporting connection loss.\n");
-+	ieee80211_connection_loss(priv->vif);
-+}
-+
-+void cw1200_tx_failure_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, tx_failure_work);
-+	sta_printk(KERN_DEBUG "[CQM] Reporting TX failure.\n");
-+	/* ieee80211_cqm_tx_fail_notify(priv->vif, GFP_KERNEL); */
-+	(void)priv;
-+}
-+
-+/* ******************************************************************** */
-+/* Internal API								*/
-+
-+
-+
-+/*
-+* This function is called to Parse the SDD file
-+ *to extract listen_interval and PTA related information
-+*/
-+static int cw1200_parse_SDD_file(struct cw1200_common *priv)
-+{
-+	u8 *sdd_data = (u8 *)priv->sdd->data;
-+	struct cw1200_sdd {
-+		u8 id ;
-+		u8 length ;
-+		u8 data[] ;
-+	} *pElement;
-+	int parsedLength = 0;
-+	#define SDD_PTA_CFG_ELT_ID 0xEB
-+	#define FIELD_OFFSET(type, field) ((u8 *)&((type *)0)->field - (u8 *)0)
-+
-+	priv->is_BT_Present = false;
-+
-+	pElement = (struct cw1200_sdd *)sdd_data;
-+
-+	pElement = (struct cw1200_sdd *)((u8 *)pElement +
-+		FIELD_OFFSET(struct cw1200_sdd, data) + pElement->length);
-+
-+	parsedLength += (FIELD_OFFSET(struct cw1200_sdd, data) +
-+			pElement->length);
-+
-+	while (parsedLength <= priv->sdd->size) {
-+		switch (pElement->id) {
-+		case SDD_PTA_CFG_ELT_ID:
-+		{
-+			priv->conf_listen_interval =
-+				(*((u16 *)pElement->data+1) >> 7) & 0x1F;
-+			priv->is_BT_Present = true;
-+			sta_printk(KERN_DEBUG "PTA element found.\n");
-+			sta_printk(KERN_DEBUG "Listen Interval %d\n",
-+						priv->conf_listen_interval);
-+		}
-+		break;
-+
-+		default:
-+		break;
-+		}
-+
-+		pElement = (struct cw1200_sdd *)
-+			((u8 *)pElement + FIELD_OFFSET(struct cw1200_sdd, data)
-+					+ pElement->length);
-+		parsedLength +=
-+		(FIELD_OFFSET(struct cw1200_sdd, data) + pElement->length);
-+	}
-+
-+	if (priv->is_BT_Present == false) {
-+		sta_printk(KERN_DEBUG "PTA element NOT found.\n");
-+		priv->conf_listen_interval = 0;
-+	}
-+	return 0;
-+
-+	#undef SDD_PTA_CFG_ELT_ID
-+	#undef FIELD_OFFSET
-+}
-+
-+
-+int cw1200_setup_mac(struct cw1200_common *priv)
-+{
-+	int ret = 0;
-+
-+	/* NOTE: There is a bug in FW: it reports signal
-+	* as RSSI if RSSI subscription is enabled.
-+	* It's not enough to set WSM_RCPI_RSSI_USE_RSSI. */
-+	/* NOTE2: RSSI based reports have been switched to RCPI, since
-+	* FW has a bug and RSSI reported values are not stable,
-+	* what can leads to signal level oscilations in user-end applications */
-+	struct wsm_rcpi_rssi_threshold threshold = {
-+		.rssiRcpiMode = WSM_RCPI_RSSI_THRESHOLD_ENABLE |
-+		WSM_RCPI_RSSI_DONT_USE_UPPER |
-+		WSM_RCPI_RSSI_DONT_USE_LOWER,
-+		.rollingAverageCount = 16,
-+	};
-+
-+	/* Remember the decission here to make sure, we will handle
-+	 * the RCPI/RSSI value correctly on WSM_EVENT_RCPI_RSS */
-+	if (threshold.rssiRcpiMode & WSM_RCPI_RSSI_USE_RSSI)
-+		priv->cqm_use_rssi = true;
-+
-+	if (!priv->sdd) {
-+		const char *sdd_path = NULL;
-+		struct wsm_configuration cfg = {
-+			.dot11StationId = &priv->mac_addr[0],
-+		};
-+
-+		switch (priv->hw_revision) {
-+		case CW1200_HW_REV_CUT10:
-+			sdd_path = SDD_FILE_10;
-+			break;
-+		case CW1200_HW_REV_CUT11:
-+			sdd_path = SDD_FILE_11;
-+			break;
-+		case CW1200_HW_REV_CUT20:
-+			sdd_path = SDD_FILE_20;
-+			break;
-+		case CW1200_HW_REV_CUT22:
-+			sdd_path = SDD_FILE_22;
-+			break;
-+		default:
-+			BUG_ON(1);
-+		}
-+
-+		ret = request_firmware(&priv->sdd,
-+			sdd_path, priv->pdev);
-+
-+		if (unlikely(ret)) {
-+			cw1200_dbg(CW1200_DBG_ERROR,
-+				"%s: can't load sdd file %s.\n",
-+				__func__, sdd_path);
-+			return ret;
-+		}
-+
-+		cfg.dpdData = priv->sdd->data;
-+		cfg.dpdData_size = priv->sdd->size;
-+		ret = WARN_ON(wsm_configuration(priv, &cfg));
-+		/* Parse SDD file for PTA element */
-+		cw1200_parse_SDD_file(priv);
-+	}
-+	if (ret)
-+		return ret;
-+
-+	/* Configure RSSI/SCPI reporting as RSSI. */
-+	WARN_ON(wsm_set_rcpi_rssi_threshold(priv, &threshold));
-+
-+	/* TODO: */
-+	switch (priv->mode) {
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_MONITOR:
-+	case NL80211_IFTYPE_AP:
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_MESH_POINT:
-+		/* TODO: Not verified yet. */
-+		STUB();
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+void cw1200_offchannel_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, offchannel_work);
-+	u8 queueId = cw1200_queue_get_queue_id(priv->pending_frame_id);
-+	struct cw1200_queue *queue = &priv->tx_queue[queueId];
-+
-+	BUG_ON(queueId >= 4);
-+	BUG_ON(!priv->channel);
-+
-+	mutex_lock(&priv->conf_mutex);
-+	if (likely(!priv->join_status)) {
-+		wsm_flush_tx(priv);
-+		cw1200_update_listening(priv, true);
-+		cw1200_update_filtering(priv);
-+	}
-+	if (unlikely(!priv->join_status))
-+		cw1200_queue_remove(queue, priv->pending_frame_id);
-+	else
-+		cw1200_queue_requeue(queue, priv->pending_frame_id);
-+	mutex_unlock(&priv->conf_mutex);
-+	wsm_unlock_tx(priv);
-+}
-+
-+void cw1200_join_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, join_work);
-+	u8 queueId = cw1200_queue_get_queue_id(priv->pending_frame_id);
-+	struct cw1200_queue *queue = &priv->tx_queue[queueId];
-+	const struct cw1200_txpriv *txpriv = NULL;
-+	struct sk_buff *skb = NULL;
-+	const struct wsm_tx *wsm;
-+	const struct ieee80211_hdr *frame;
-+	const u8 *bssid;
-+	struct cfg80211_bss *bss;
-+	const u8 *ssidie;
-+	const u8 *dtimie;
-+	const struct ieee80211_tim_ie *tim = NULL;
-+	struct wsm_protected_mgmt_policy mgmt_policy;
-+
-+	BUG_ON(queueId >= 4);
-+	if (cw1200_queue_get_skb(queue,	priv->pending_frame_id,
-+			&skb, &txpriv)) {
-+		wsm_unlock_tx(priv);
-+		return;
-+	}
-+	wsm = (struct wsm_tx *)&skb->data[0];
-+	frame = (struct ieee80211_hdr *)&skb->data[txpriv->offset];
-+	bssid = &frame->addr1[0]; /* AP SSID in a 802.11 frame */
-+
-+	BUG_ON(!wsm);
-+	BUG_ON(!priv->channel);
-+
-+	if (unlikely(priv->join_status)) {
-+		wsm_lock_tx(priv);
-+		cw1200_unjoin_work(&priv->unjoin_work);
-+	}
-+
-+	cancel_delayed_work_sync(&priv->join_timeout);
-+
-+	bss = cfg80211_get_bss(priv->hw->wiphy, priv->channel,
-+			bssid, NULL, 0, 0, 0);
-+	if (!bss) {
-+		cw1200_queue_remove(queue, priv->pending_frame_id);
-+		wsm_unlock_tx(priv);
-+		return;
-+	}
-+	ssidie = cfg80211_find_ie(WLAN_EID_SSID,
-+		bss->information_elements,
-+		bss->len_information_elements);
-+	dtimie = cfg80211_find_ie(WLAN_EID_TIM,
-+		bss->information_elements,
-+		bss->len_information_elements);
-+	if (dtimie)
-+		tim = (struct ieee80211_tim_ie *)&dtimie[2];
-+
-+	mutex_lock(&priv->conf_mutex);
-+	{
-+		struct wsm_join join = {
-+			.mode = (bss->capability & WLAN_CAPABILITY_IBSS) ?
-+				WSM_JOIN_MODE_IBSS : WSM_JOIN_MODE_BSS,
-+			.preambleType = WSM_JOIN_PREAMBLE_SHORT,
-+			.probeForJoin = 1,
-+			/* dtimPeriod will be updated after association */
-+			.dtimPeriod = 1,
-+			.beaconInterval = bss->beacon_interval,
-+			/* basicRateSet will be updated after association */
-+			.basicRateSet = 7,
-+		};
-+
-+		/* BT Coex related changes */
-+		if (priv->is_BT_Present) {
-+			if (((priv->conf_listen_interval * 100) %
-+					bss->beacon_interval) == 0)
-+				priv->listen_interval =
-+					((priv->conf_listen_interval * 100) /
-+					bss->beacon_interval);
-+			else
-+				priv->listen_interval =
-+					((priv->conf_listen_interval * 100) /
-+					bss->beacon_interval + 1);
-+		}
-+
-+		if (tim && tim->dtim_period > 1) {
-+			join.dtimPeriod = tim->dtim_period;
-+			priv->join_dtim_period = tim->dtim_period;
-+		}
-+		priv->beacon_int = bss->beacon_interval;
-+		sta_printk(KERN_DEBUG "[STA] Join DTIM: %d, interval: %d\n",
-+				join.dtimPeriod, priv->beacon_int);
-+
-+		join.channelNumber = priv->channel->hw_value;
-+		join.band = (priv->channel->band == IEEE80211_BAND_5GHZ) ?
-+			WSM_PHY_BAND_5G : WSM_PHY_BAND_2_4G;
-+
-+		memcpy(&join.bssid[0], bssid, sizeof(join.bssid));
-+		memcpy(&priv->join_bssid[0], bssid, sizeof(priv->join_bssid));
-+
-+		if (ssidie) {
-+			join.ssidLength = ssidie[1];
-+			if (WARN_ON(join.ssidLength > sizeof(join.ssid)))
-+				join.ssidLength = sizeof(join.ssid);
-+			memcpy(&join.ssid[0], &ssidie[2], join.ssidLength);
-+		}
-+
-+		if (priv->vif->p2p) {
-+			join.flags |= WSM_JOIN_FLAGS_P2P_GO;
-+			join.basicRateSet =
-+				cw1200_rate_mask_to_wsm(priv, 0xFF0);
-+		}
-+
-+		wsm_flush_tx(priv);
-+
-+		/* Queue unjoin if not associated in 3 sec. */
-+		queue_delayed_work(priv->workqueue,
-+			&priv->join_timeout, 3 * HZ);
-+		/*Stay Awake for Join Timeout*/
-+		cw1200_pm_stay_awake(&priv->pm_state, 3 * HZ);
-+
-+		cw1200_update_listening(priv, false);
-+		/* BlockACK policy will be updated when assoc is done */
-+		WARN_ON(wsm_set_block_ack_policy(priv,
-+			0, priv->ba_tid_mask));
-+
-+		spin_lock_bh(&priv->ba_lock);
-+		priv->ba_ena = false;
-+		priv->ba_cnt = 0;
-+		priv->ba_acc = 0;
-+		priv->ba_hist = 0;
-+		spin_unlock_bh(&priv->ba_lock);
-+
-+		mgmt_policy.protectedMgmtEnable = 0;
-+		mgmt_policy.unprotectedMgmtFramesAllowed = 1;
-+		mgmt_policy.encryptionForAuthFrame = 1;
-+		wsm_set_protected_mgmt_policy(priv, &mgmt_policy);
-+
-+		if (wsm_join(priv, &join)) {
-+			memset(&priv->join_bssid[0],
-+				0, sizeof(priv->join_bssid));
-+			cw1200_queue_remove(queue, priv->pending_frame_id);
-+			cancel_delayed_work_sync(&priv->join_timeout);
-+			cw1200_update_listening(priv, priv->listening);
-+		} else {
-+			/* Upload keys */
-+			WARN_ON(cw1200_upload_keys(priv));
-+			cw1200_queue_requeue(queue, priv->pending_frame_id);
-+			priv->join_status = CW1200_JOIN_STATUS_STA;
-+
-+			/* Due to beacon filtering it is possible that the
-+			 * AP's beacon is not known for the mac80211 stack.
-+			 * Disable filtering temporary to make sure the stack
-+			 * receives at least one */
-+			priv->disable_beacon_filter = true;
-+
-+		}
-+		cw1200_update_filtering(priv);
-+	}
-+	mutex_unlock(&priv->conf_mutex);
-+	cfg80211_put_bss(bss);
-+	wsm_unlock_tx(priv);
-+}
-+
-+void cw1200_join_timeout(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, join_timeout.work);
-+	sta_printk(KERN_DEBUG "[WSM] Issue unjoin command (TMO).\n");
-+	wsm_lock_tx(priv);
-+	cw1200_unjoin_work(&priv->unjoin_work);
-+}
-+
-+void cw1200_unjoin_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, unjoin_work);
-+
-+	struct wsm_reset reset = {
-+		.reset_statistics = true,
-+	};
-+
-+	del_timer_sync(&priv->ba_timer);
-+	mutex_lock(&priv->conf_mutex);
-+	if (unlikely(atomic_read(&priv->scan.in_progress))) {
-+		if (priv->delayed_unjoin) {
-+			wiphy_dbg(priv->hw->wiphy,
-+				"%s: Delayed unjoin "
-+				"is already scheduled.\n",
-+				__func__);
-+			wsm_unlock_tx(priv);
-+		} else {
-+			priv->delayed_unjoin = true;
-+		}
-+		mutex_unlock(&priv->conf_mutex);
-+		return;
-+	}
-+
-+	if (priv->join_status &&
-+			priv->join_status > CW1200_JOIN_STATUS_STA) {
-+		wiphy_err(priv->hw->wiphy,
-+				"%s: Unexpected: join status: %d\n",
-+				__func__, priv->join_status);
-+		BUG_ON(1);
-+	}
-+	if (priv->join_status) {
-+		cancel_work_sync(&priv->update_filtering_work);
-+		memset(&priv->join_bssid[0], 0, sizeof(priv->join_bssid));
-+		priv->join_status = CW1200_JOIN_STATUS_PASSIVE;
-+
-+		/* Unjoin is a reset. */
-+		wsm_flush_tx(priv);
-+		WARN_ON(wsm_keep_alive_period(priv, 0));
-+		WARN_ON(wsm_reset(priv, &reset));
-+		priv->join_dtim_period = 0;
-+		WARN_ON(cw1200_setup_mac(priv));
-+		cw1200_free_event_queue(priv);
-+		cancel_work_sync(&priv->event_handler);
-+		cancel_delayed_work_sync(&priv->connection_loss_work);
-+		cw1200_update_listening(priv, priv->listening);
-+		WARN_ON(wsm_set_block_ack_policy(priv,
-+			0, priv->ba_tid_mask));
-+		priv->disable_beacon_filter = false;
-+		cw1200_update_filtering(priv);
-+		priv->setbssparams_done = false;
-+		memset(&priv->association_mode, 0,
-+			sizeof(priv->association_mode));
-+		memset(&priv->bss_params, 0, sizeof(priv->bss_params));
-+		memset(&priv->firmware_ps_mode, 0,
-+			sizeof(priv->firmware_ps_mode));
-+		sta_printk(KERN_DEBUG "[STA] Unjoin.\n");
-+	}
-+	mutex_unlock(&priv->conf_mutex);
-+	wsm_unlock_tx(priv);
-+}
-+
-+int cw1200_enable_listening(struct cw1200_common *priv)
-+{
-+	struct wsm_start start = {
-+		.mode = WSM_START_MODE_P2P_DEV,
-+		.band = (priv->channel->band == IEEE80211_BAND_5GHZ) ?
-+				WSM_PHY_BAND_5G : WSM_PHY_BAND_2_4G,
-+		.channelNumber = priv->channel->hw_value,
-+		.beaconInterval = 100,
-+		.DTIMPeriod = 1,
-+		.probeDelay = 0,
-+		.basicRateSet = 0x0F,
-+	};
-+	return wsm_start(priv, &start);
-+}
-+
-+int cw1200_disable_listening(struct cw1200_common *priv)
-+{
-+	int ret;
-+	struct wsm_reset reset = {
-+		.reset_statistics = true,
-+	};
-+	ret = wsm_reset(priv, &reset);
-+	return ret;
-+}
-+
-+void cw1200_update_listening(struct cw1200_common *priv, bool enabled)
-+{
-+	if (enabled) {
-+		switch (priv->join_status) {
-+		case CW1200_JOIN_STATUS_PASSIVE:
-+			if (!WARN_ON(cw1200_enable_listening(priv)))
-+				priv->join_status = CW1200_JOIN_STATUS_MONITOR;
-+			break;
-+		default:
-+			break;
-+		}
-+	} else {
-+		switch (priv->join_status) {
-+		case CW1200_JOIN_STATUS_MONITOR:
-+			if (!WARN_ON(cw1200_disable_listening(priv)))
-+				priv->join_status = CW1200_JOIN_STATUS_PASSIVE;
-+		default:
-+			break;
-+		}
-+	}
-+}
-+
-+int cw1200_set_uapsd_param(struct cw1200_common *priv,
-+				const struct wsm_edca_params *arg)
-+{
-+	int ret;
-+	u16 uapsdFlags = 0;
-+
-+	/* Here's the mapping AC [queue, bit]
-+	VO [0,3], VI [1, 2], BE [2, 1], BK [3, 0]*/
-+
-+	if (arg->params[0].uapsdEnable)
-+		uapsdFlags |= 1 << 3;
-+
-+	if (arg->params[1].uapsdEnable)
-+		uapsdFlags |= 1 << 2;
-+
-+	if (arg->params[2].uapsdEnable)
-+		uapsdFlags |= 1 << 1;
-+
-+	if (arg->params[3].uapsdEnable)
-+		uapsdFlags |= 1;
-+
-+	/* Currently pseudo U-APSD operation is not supported, so setting
-+	* MinAutoTriggerInterval, MaxAutoTriggerInterval and
-+	* AutoTriggerStep to 0 */
-+
-+	priv->uapsd_info.uapsdFlags = cpu_to_le16(uapsdFlags);
-+	priv->uapsd_info.minAutoTriggerInterval = 0;
-+	priv->uapsd_info.maxAutoTriggerInterval = 0;
-+	priv->uapsd_info.autoTriggerStep = 0;
-+
-+	ret = wsm_set_uapsd_info(priv, &priv->uapsd_info);
-+	return ret;
-+}
-+
-+void cw1200_ba_work(struct work_struct *work)
-+{
-+	struct cw1200_common *priv =
-+		container_of(work, struct cw1200_common, ba_work);
-+	u8 tx_ba_tid_mask;
-+
-+	if (priv->join_status != CW1200_JOIN_STATUS_STA)
-+		return;
-+	if (!priv->setbssparams_done)
-+		return;
-+
-+	spin_lock_bh(&priv->ba_lock);
-+	tx_ba_tid_mask = priv->ba_ena ? priv->ba_tid_mask : 0;
-+	spin_unlock_bh(&priv->ba_lock);
-+
-+	WARN_ON(wsm_set_block_ack_policy(priv,
-+		tx_ba_tid_mask, priv->ba_tid_mask));
-+}
-+
-+void cw1200_ba_timer(unsigned long arg)
-+{
-+	bool ba_ena;
-+	struct cw1200_common *priv =
-+		(struct cw1200_common *)arg;
-+
-+	spin_lock_bh(&priv->ba_lock);
-+	cw1200_debug_ba(priv, priv->ba_cnt, priv->ba_acc);
-+
-+	if (atomic_read(&priv->scan.in_progress))
-+		goto skip_statistic_update;
-+
-+	ba_ena = (priv->ba_cnt >= CW1200_BLOCK_ACK_CNT &&
-+			priv->ba_acc / priv->ba_cnt >= CW1200_BLOCK_ACK_THLD);
-+	priv->ba_cnt = 0;
-+	priv->ba_acc = 0;
-+
-+	if (ba_ena != priv->ba_ena) {
-+		if (ba_ena || ++priv->ba_hist >= CW1200_BLOCK_ACK_HIST) {
-+			priv->ba_ena = ba_ena;
-+			priv->ba_hist = 0;
-+			sta_printk(KERN_DEBUG "[STA] %s block ACK:\n",
-+				ba_ena ? "enable" : "disable");
-+			queue_work(priv->workqueue, &priv->ba_work);
-+		}
-+	} else if (priv->ba_hist)
-+		--priv->ba_hist;
-+
-+skip_statistic_update:
-+	spin_unlock_bh(&priv->ba_lock);
-+}
-diff --git a/drivers/net/wireless/cw1200/sta.h b/drivers/net/wireless/cw1200/sta.h
-new file mode 100644
-index 0000000..4e4833a
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/sta.h
-@@ -0,0 +1,87 @@
-+/*
-+ * Mac80211 STA interface for ST-Ericsson CW1200 mac80211 drivers
-+ *
-+ * Copyright (c) 2010-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef STA_H_INCLUDED
-+#define STA_H_INCLUDED
-+
-+/* ******************************************************************** */
-+/* mac80211 API								*/
-+
-+int cw1200_start(struct ieee80211_hw *dev);
-+void cw1200_stop(struct ieee80211_hw *dev);
-+int cw1200_add_interface(struct ieee80211_hw *dev,
-+			 struct ieee80211_vif *vif);
-+void cw1200_remove_interface(struct ieee80211_hw *dev,
-+			     struct ieee80211_vif *vif);
-+int cw1200_config(struct ieee80211_hw *dev, u32 changed);
-+void cw1200_configure_filter(struct ieee80211_hw *dev,
-+			     unsigned int changed_flags,
-+			     unsigned int *total_flags,
-+			     u64 multicast);
-+int cw1200_conf_tx(struct ieee80211_hw *dev, struct ieee80211_vif *vif,
-+		   u16 queue, const struct ieee80211_tx_queue_params *params);
-+int cw1200_get_stats(struct ieee80211_hw *dev,
-+		     struct ieee80211_low_level_stats *stats);
-+/* Not more a part of interface?
-+int cw1200_get_tx_stats(struct ieee80211_hw *dev,
-+			struct ieee80211_tx_queue_stats *stats);
-+*/
-+int cw1200_set_key(struct ieee80211_hw *dev, enum set_key_cmd cmd,
-+		   struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-+		   struct ieee80211_key_conf *key);
-+
-+int cw1200_set_rts_threshold(struct ieee80211_hw *hw, u32 value);
-+
-+void cw1200_flush(struct ieee80211_hw *hw, bool drop);
-+
-+u64 cw1200_prepare_multicast(struct ieee80211_hw *hw,
-+			     struct netdev_hw_addr_list *mc_list);
-+
-+int cw1200_set_pm(struct cw1200_common *priv, const struct wsm_set_pm *arg);
-+
-+/* ******************************************************************** */
-+/* WSM callbacks							*/
-+
-+/* void cw1200_set_pm_complete_cb(struct cw1200_common *priv,
-+	struct wsm_set_pm_complete *arg); */
-+void cw1200_channel_switch_cb(struct cw1200_common *priv);
-+
-+/* ******************************************************************** */
-+/* WSM events								*/
-+
-+void cw1200_free_event_queue(struct cw1200_common *priv);
-+void cw1200_event_handler(struct work_struct *work);
-+void cw1200_bss_loss_work(struct work_struct *work);
-+void cw1200_connection_loss_work(struct work_struct *work);
-+void cw1200_keep_alive_work(struct work_struct *work);
-+void cw1200_tx_failure_work(struct work_struct *work);
-+
-+/* ******************************************************************** */
-+/* Internal API								*/
-+
-+int cw1200_setup_mac(struct cw1200_common *priv);
-+void cw1200_join_work(struct work_struct *work);
-+void cw1200_join_timeout(struct work_struct *work);
-+void cw1200_unjoin_work(struct work_struct *work);
-+void cw1200_offchannel_work(struct work_struct *work);
-+void cw1200_wep_key_work(struct work_struct *work);
-+void cw1200_update_listening(struct cw1200_common *priv, bool enabled);
-+void cw1200_update_filtering(struct cw1200_common *priv);
-+void cw1200_update_filtering_work(struct work_struct *work);
-+int __cw1200_flush(struct cw1200_common *priv, bool drop);
-+int cw1200_enable_listening(struct cw1200_common *priv);
-+int cw1200_disable_listening(struct cw1200_common *priv);
-+int cw1200_set_uapsd_param(struct cw1200_common *priv,
-+				const struct wsm_edca_params *arg);
-+void cw1200_ba_work(struct work_struct *work);
-+void cw1200_ba_timer(unsigned long arg);
-+
-+#endif
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 34bba52..aeb456d 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -69,8 +69,8 @@ mwifiex_fill_cap_info(struct mwifiex_private *priv, u8 radio_type,
+  * table which matches the requested BA status.
+  */
+ static struct mwifiex_tx_ba_stream_tbl *
+-mwifiex_11n_get_tx_ba_stream_status(struct mwifiex_private *priv,
+-				  enum mwifiex_ba_status ba_status)
++mwifiex_get_ba_status(struct mwifiex_private *priv,
++		      enum mwifiex_ba_status ba_status)
+ {
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tsr_tbl;
+ 	unsigned long flags;
+@@ -107,12 +107,11 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
+ 
+ 	tid = del_ba_param_set >> DELBA_TID_POS;
+ 	if (del_ba->del_result == BA_RESULT_SUCCESS) {
+-		mwifiex_11n_delete_ba_stream_tbl(priv, tid,
+-				del_ba->peer_mac_addr, TYPE_DELBA_SENT,
+-				INITIATOR_BIT(del_ba_param_set));
++		mwifiex_del_ba_tbl(priv, tid, del_ba->peer_mac_addr,
++				   TYPE_DELBA_SENT,
++				   INITIATOR_BIT(del_ba_param_set));
+ 
+-		tx_ba_tbl = mwifiex_11n_get_tx_ba_stream_status(priv,
+-						BA_STREAM_SETUP_INPROGRESS);
++		tx_ba_tbl = mwifiex_get_ba_status(priv, BA_SETUP_INPROGRESS);
+ 		if (tx_ba_tbl)
+ 			mwifiex_send_addba(priv, tx_ba_tbl->tid,
+ 					   tx_ba_tbl->ra);
+@@ -120,18 +119,17 @@ int mwifiex_ret_11n_delba(struct mwifiex_private *priv,
+ 		  * In case of failure, recreate the deleted stream in case
+ 		  * we initiated the ADDBA
+ 		  */
+-		if (INITIATOR_BIT(del_ba_param_set)) {
+-			mwifiex_11n_create_tx_ba_stream_tbl(priv,
+-					del_ba->peer_mac_addr, tid,
+-					BA_STREAM_SETUP_INPROGRESS);
+-
+-			tx_ba_tbl = mwifiex_11n_get_tx_ba_stream_status(priv,
+-					BA_STREAM_SETUP_INPROGRESS);
+-			if (tx_ba_tbl)
+-				mwifiex_11n_delete_ba_stream_tbl(priv,
+-						tx_ba_tbl->tid, tx_ba_tbl->ra,
+-						TYPE_DELBA_SENT, true);
+-		}
++		if (!INITIATOR_BIT(del_ba_param_set))
++			return 0;
++
++		mwifiex_create_ba_tbl(priv, del_ba->peer_mac_addr, tid,
++				      BA_SETUP_INPROGRESS);
++
++		tx_ba_tbl = mwifiex_get_ba_status(priv, BA_SETUP_INPROGRESS);
++
++		if (tx_ba_tbl)
++			mwifiex_del_ba_tbl(priv, tx_ba_tbl->tid, tx_ba_tbl->ra,
++					   TYPE_DELBA_SENT, true);
+ 	}
+ 
+ 	return 0;
+@@ -160,18 +158,17 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 		& IEEE80211_ADDBA_PARAM_TID_MASK)
+ 		>> BLOCKACKPARAM_TID_POS;
+ 	if (le16_to_cpu(add_ba_rsp->status_code) == BA_RESULT_SUCCESS) {
+-		tx_ba_tbl = mwifiex_11n_get_tx_ba_stream_tbl(priv, tid,
++		tx_ba_tbl = mwifiex_get_ba_tbl(priv, tid,
+ 						add_ba_rsp->peer_mac_addr);
+ 		if (tx_ba_tbl) {
+ 			dev_dbg(priv->adapter->dev, "info: BA stream complete\n");
+-			tx_ba_tbl->ba_status = BA_STREAM_SETUP_COMPLETE;
++			tx_ba_tbl->ba_status = BA_SETUP_COMPLETE;
+ 		} else {
+ 			dev_err(priv->adapter->dev, "BA stream not created\n");
+ 		}
+ 	} else {
+-		mwifiex_11n_delete_ba_stream_tbl(priv, tid,
+-						add_ba_rsp->peer_mac_addr,
+-						TYPE_DELBA_SENT, true);
++		mwifiex_del_ba_tbl(priv, tid, add_ba_rsp->peer_mac_addr,
++				   TYPE_DELBA_SENT, true);
+ 		if (add_ba_rsp->add_rsp_result != BA_RESULT_TIMEOUT)
+ 			priv->aggr_prio_tbl[tid].ampdu_ap =
+ 				BA_STREAM_NOT_ALLOWED;
+@@ -544,8 +541,7 @@ void mwifiex_11n_delete_all_tx_ba_stream_tbl(struct mwifiex_private *priv)
+  * table which matches the given RA/TID pair.
+  */
+ struct mwifiex_tx_ba_stream_tbl *
+-mwifiex_11n_get_tx_ba_stream_tbl(struct mwifiex_private *priv,
+-				 int tid, u8 *ra)
++mwifiex_get_ba_tbl(struct mwifiex_private *priv, int tid, u8 *ra)
+ {
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tsr_tbl;
+ 	unsigned long flags;
+@@ -567,14 +563,13 @@ mwifiex_11n_get_tx_ba_stream_tbl(struct mwifiex_private *priv,
+  * This function creates an entry in Tx BA stream table for the
+  * given RA/TID pair.
+  */
+-void mwifiex_11n_create_tx_ba_stream_tbl(struct mwifiex_private *priv,
+-					 u8 *ra, int tid,
+-					 enum mwifiex_ba_status ba_status)
++void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
++			   enum mwifiex_ba_status ba_status)
+ {
+ 	struct mwifiex_tx_ba_stream_tbl *new_node;
+ 	unsigned long flags;
+ 
+-	if (!mwifiex_11n_get_tx_ba_stream_tbl(priv, tid, ra)) {
++	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
+ 		new_node = kzalloc(sizeof(struct mwifiex_tx_ba_stream_tbl),
+ 				   GFP_ATOMIC);
+ 		if (!new_node) {
+@@ -668,9 +663,8 @@ void mwifiex_11n_delete_ba_stream(struct mwifiex_private *priv, u8 *del_ba)
+ 
+ 	tid = del_ba_param_set >> DELBA_TID_POS;
+ 
+-	mwifiex_11n_delete_ba_stream_tbl(priv, tid, cmd_del_ba->peer_mac_addr,
+-					 TYPE_DELBA_RECEIVE,
+-					 INITIATOR_BIT(del_ba_param_set));
++	mwifiex_del_ba_tbl(priv, tid, cmd_del_ba->peer_mac_addr,
++			   TYPE_DELBA_RECEIVE, INITIATOR_BIT(del_ba_param_set));
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index 90b421e..139aa6e 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -46,13 +46,12 @@ void mwifiex_11n_delete_tx_ba_stream_tbl_entry(struct mwifiex_private *priv,
+ 					     struct mwifiex_tx_ba_stream_tbl
+ 					     *tx_tbl);
+ void mwifiex_11n_delete_all_tx_ba_stream_tbl(struct mwifiex_private *priv);
+-struct mwifiex_tx_ba_stream_tbl *mwifiex_11n_get_tx_ba_stream_tbl(struct
++struct mwifiex_tx_ba_stream_tbl *mwifiex_get_ba_tbl(struct
+ 							     mwifiex_private
+ 							     *priv, int tid,
+ 							     u8 *ra);
+-void mwifiex_11n_create_tx_ba_stream_tbl(struct mwifiex_private *priv, u8 *ra,
+-				       int tid,
+-				       enum mwifiex_ba_status ba_status);
++void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
++			   enum mwifiex_ba_status ba_status);
+ int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac);
+ int mwifiex_send_delba(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ 		       int initiator);
+@@ -154,7 +153,7 @@ mwifiex_is_ba_stream_setup(struct mwifiex_private *priv,
+ {
+ 	struct mwifiex_tx_ba_stream_tbl *tx_tbl;
+ 
+-	tx_tbl = mwifiex_11n_get_tx_ba_stream_tbl(priv, tid, ptr->ra);
++	tx_tbl = mwifiex_get_ba_tbl(priv, tid, ptr->ra);
+ 	if (tx_tbl && IS_BASTREAM_SETUP(tx_tbl))
+ 		return true;
+ 
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 681d3f2..ad41fab 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -480,8 +480,8 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+  * The TID/TA are taken from del BA event body.
+  */
+ void
+-mwifiex_11n_delete_ba_stream_tbl(struct mwifiex_private *priv, int tid,
+-				u8 *peer_mac, u8 type, int initiator)
++mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
++		   u8 type, int initiator)
+ {
+ 	struct mwifiex_rx_reorder_tbl *rx_reor_tbl_ptr;
+ 	struct mwifiex_tx_ba_stream_tbl *ptx_tbl;
+@@ -506,7 +506,7 @@ mwifiex_11n_delete_ba_stream_tbl(struct mwifiex_private *priv, int tid,
+ 		}
+ 		mwifiex_11n_delete_rx_reorder_tbl_entry(priv, rx_reor_tbl_ptr);
+ 	} else {
+-		ptx_tbl = mwifiex_11n_get_tx_ba_stream_tbl(priv, tid, peer_mac);
++		ptx_tbl = mwifiex_get_ba_tbl(priv, tid, peer_mac);
+ 		if (!ptx_tbl) {
+ 			dev_dbg(priv->adapter->dev,
+ 					"event: TID, RA not found in table\n");
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.h b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+index 033c8ad..f1bffeb 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.h
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.h
+@@ -41,9 +41,8 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *,
+ 			       u16 seqNum,
+ 			       u16 tid, u8 *ta,
+ 			       u8 pkttype, void *payload);
+-void mwifiex_11n_delete_ba_stream_tbl(struct mwifiex_private *priv, int Tid,
+-				     u8 *PeerMACAddr, u8 type,
+-				     int initiator);
++void mwifiex_del_ba_tbl(struct mwifiex_private *priv, int Tid,
++			u8 *PeerMACAddr, u8 type, int initiator);
+ void mwifiex_11n_ba_stream_timeout(struct mwifiex_private *priv,
+ 				   struct host_cmd_ds_11n_batimeout *event);
+ int mwifiex_ret_11n_addba_resp(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 6dc1166..58748b1 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -462,9 +462,9 @@ struct mwifiex_private {
+ };
+ 
+ enum mwifiex_ba_status {
+-	BA_STREAM_NOT_SETUP = 0,
+-	BA_STREAM_SETUP_INPROGRESS,
+-	BA_STREAM_SETUP_COMPLETE
++	BA_SETUP_NONE = 0,
++	BA_SETUP_INPROGRESS,
++	BA_SETUP_COMPLETE
+ };
+ 
+ struct mwifiex_tx_ba_stream_tbl {
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 75f79ef..5757ebd 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -1218,15 +1218,13 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
+ 	} else {
+ 		if (mwifiex_is_ampdu_allowed(priv, tid)) {
+ 			if (mwifiex_space_avail_for_new_ba_stream(adapter)) {
+-				mwifiex_11n_create_tx_ba_stream_tbl(priv,
+-						ptr->ra, tid,
+-						BA_STREAM_SETUP_INPROGRESS);
++				mwifiex_create_ba_tbl(priv, ptr->ra, tid,
++						      BA_SETUP_INPROGRESS);
+ 				mwifiex_send_addba(priv, tid, ptr->ra);
+ 			} else if (mwifiex_find_stream_to_delete
+ 				   (priv, tid, &tid_del, ra)) {
+-				mwifiex_11n_create_tx_ba_stream_tbl(priv,
+-						ptr->ra, tid,
+-						BA_STREAM_SETUP_INPROGRESS);
++				mwifiex_create_ba_tbl(priv, ptr->ra, tid,
++						      BA_SETUP_INPROGRESS);
+ 				mwifiex_send_delba(priv, tid_del, ra, 1);
+ 			}
+ 		}
 -- 
-1.7.9
+1.7.0.2
 
