@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54287 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753840Ab2CBXSm (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:44535 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757478Ab2CNMba (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 18:18:42 -0500
-Subject: Re: [PATCH 3/3] mac80211: fix mesh airtime link metric estimating
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-In-Reply-To: <1330729524-1010-3-git-send-email-thomas@cozybit.com> (sfid-20120303_000604_467410_A1483369)
-References: <1330729524-1010-1-git-send-email-thomas@cozybit.com>
-	 <1330729524-1010-3-git-send-email-thomas@cozybit.com>
-	 (sfid-20120303_000604_467410_A1483369)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 03 Mar 2012 00:18:36 +0100
-Message-ID: <1330730316.3865.0.camel@jlt3.sipsolutions.net> (sfid-20120303_001850_594943_BBE98E17)
-Mime-Version: 1.0
+	Wed, 14 Mar 2012 08:31:30 -0400
+Received: by wibhj6 with SMTP id hj6so7069109wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2012 05:31:29 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net, nbd@openwrt.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] mac80211: Don't sample max throughput rate in minstrel_ht
+Date: Wed, 14 Mar 2012 13:31:11 +0100
+Message-Id: <1331728271-7645-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120314_133134_173453_1DCA4C88)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-02 at 15:05 -0800, Thomas Pedersen wrote:
-> Airtime link metric estimation was broken in HT mesh, use
-> cfg80211_calculate_bitrate to get the right rate value.
+The current max throughput rate is known to be good as otherwise it
+wouldn't be the max throughput rate. Since rate sampling can introduce
+some overhead (by adding RTS for example or due to not aggregating the
+frame) don't sample the max throughput rate.
 
-> -	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
-> +	sta_set_sinfo(sta, &sinfo);
-> +	rate = cfg80211_calculate_bitrate(&sinfo.txrate);
-> +	if (WARN_ON(!rate))
->  		return MAX_METRIC;
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
 
-Patch 1 should be rolled into this, but I don't like it -- you fill a
-lot of info you don't need, I think the rate should be factored out of
-sta_set_sinfo then
+ net/mac80211/rc80211_minstrel_ht.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index dbe3dd3..dc40b7b 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -591,6 +591,13 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	minstrel_next_sample_idx(mi);
+ 
+ 	/*
++	 * Sampling might add some overhead (RTS, no aggregation)
++	 * to the frame. Hence, don't use sampling for the currently
++	 * used max TP rate.
++	 */
++	if (sample_idx == mi->max_tp_rate)
++		return -1;
++	/*
+ 	 * When not using MRR, do not sample if the probability is already
+ 	 * higher than 95% to avoid wasting airtime
+ 	 */
+-- 
+1.7.7
 
