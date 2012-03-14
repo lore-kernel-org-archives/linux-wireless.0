@@ -1,74 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:24839 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758679Ab2CBVXn (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:42167 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753875Ab2CNUW7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 16:23:43 -0500
-Date: Fri, 02 Mar 2012 15:23:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: ronald.wahl@raritan.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192c: Prevent sleeping from invalid context
- in rtl8192cu
-Message-ID: <4f513a58.E0eEZJwAkXtCWjTf%Larry.Finger@lwfinger.net> (sfid-20120302_222350_870866_6C51E950)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 14 Mar 2012 16:22:59 -0400
+Received: by dadp12 with SMTP id p12so3463683dad.11
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2012 13:22:59 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	javier@cozybit.com, ashok@cozybit.com
+Subject: [PATCH v3 2/3] cfg80211: Fill Toffset for each station
+Date: Wed, 14 Mar 2012 13:22:46 -0700
+Message-Id: <1331756567-5001-2-git-send-email-ashok@cozybit.com> (sfid-20120314_212304_499400_FD833867)
+In-Reply-To: <1331756567-5001-1-git-send-email-ashok@cozybit.com>
+References: <1331756567-5001-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When driver rtl8192cu is used with the debug level set to 3 or greater,
-the result is "sleeping function called from invalid context" due to
-an rcu_read_lock() call in the DM refresh routine in driver rtl8192c.
-This lock is not necessary as the USB driver does not use the struct
-being protected, thus the lock is set only when a PCI interface is
-active.
-
-This bug is reported in https://bugzilla.kernel.org/show_bug.cgi?id=42775.
-
-Reported-by: Ronald Wahl <ronald.wahl@raritan.com>
-Tested-by: Ronald Wahl <ronald.wahl@raritan.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
-Cc: Ronald Wahl <ronald.wahl@raritan.com>
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
+v2:
+Report toffset to userspace only when RX_FLAG_MACTIME_MPDU is set (Johannes)
 
-John,
+v3:
+Introduced a new sta flag to check if toffset calculated is valid
 
-This patch should be added to 3.3, which is why I Cc'd Stable; however,
-as most people do not use the debug mode, it probably does not matter.
-I'll leave it to your judgement.
+ include/net/cfg80211.h |    6 +++++-
+ net/mac80211/cfg.c     |    4 ++++
+ 2 files changed, 9 insertions(+), 1 deletions(-)
 
-Larry
----
-
- dm_common.c |   11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -1205,13 +1205,18 @@ static void rtl92c_dm_refresh_rate_adapt
- 				 "PreState = %d, CurState = %d\n",
- 				 p_ra->pre_ratr_state, p_ra->ratr_state);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 66f4603..22c42bb 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -520,6 +520,7 @@ struct station_parameters {
+  * @STATION_INFO_ASSOC_REQ_IES: @assoc_req_ies filled
+  * @STATION_INFO_STA_FLAGS: @sta_flags filled
+  * @STATION_INFO_BEACON_LOSS_COUNT: @beacon_loss_count filled
++ * @STATION_INFO_T_OFFSET: @t_offset filled
+  */
+ enum station_info_flags {
+ 	STATION_INFO_INACTIVE_TIME	= 1<<0,
+@@ -541,7 +542,8 @@ enum station_info_flags {
+ 	STATION_INFO_CONNECTED_TIME	= 1<<16,
+ 	STATION_INFO_ASSOC_REQ_IES	= 1<<17,
+ 	STATION_INFO_STA_FLAGS		= 1<<18,
+-	STATION_INFO_BEACON_LOSS_COUNT	= 1<<19
++	STATION_INFO_BEACON_LOSS_COUNT	= 1<<19,
++	STATION_INFO_T_OFFSET		= 1<<20,
+ };
  
--			rcu_read_lock();
--			sta = ieee80211_find_sta(mac->vif, mac->bssid);
-+			/* Only the PCI card uses sta in the update rate table
-+			 * callback routine */
-+			if (rtlhal->interface == INTF_PCI) {
-+				rcu_read_lock();
-+				sta = ieee80211_find_sta(mac->vif, mac->bssid);
-+			}
- 			rtlpriv->cfg->ops->update_rate_tbl(hw, sta,
- 					p_ra->ratr_state);
+ /**
+@@ -640,6 +642,7 @@ struct sta_bss_parameters {
+  * @assoc_req_ies_len: Length of assoc_req_ies buffer in octets.
+  * @sta_flags: station flags mask & values
+  * @beacon_loss_count: Number of times beacon loss event has triggered.
++ * @t_offset: Time offset of the station relative to this host.
+  */
+ struct station_info {
+ 	u32 filled;
+@@ -668,6 +671,7 @@ struct station_info {
+ 	size_t assoc_req_ies_len;
  
- 			p_ra->pre_ratr_state = p_ra->ratr_state;
--			rcu_read_unlock();
-+			if (rtlhal->interface == INTF_PCI)
-+				rcu_read_unlock();
- 		}
+ 	u32 beacon_loss_count;
++	s64 t_offset;
+ 
+ 	/*
+ 	 * Note: Add a new enum station_info_flags value for each new field and
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 677d659..75a5bcd 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -412,6 +412,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->llid = le16_to_cpu(sta->llid);
+ 		sinfo->plid = le16_to_cpu(sta->plid);
+ 		sinfo->plink_state = sta->plink_state;
++		if (test_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN)) {
++			sinfo->filled |= STATION_INFO_T_OFFSET;
++			sinfo->t_offset = sta->t_offset;
++		}
+ #endif
  	}
- }
+ 
+-- 
+1.7.5.4
 
