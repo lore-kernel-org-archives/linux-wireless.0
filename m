@@ -1,36 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:50696 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755587Ab2CIVzM (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31844 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932424Ab2CNJK7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 16:55:12 -0500
-Date: Fri, 09 Mar 2012 13:54:08 -0800 (PST)
-Message-Id: <20120309.135408.208353384110238402.davem@davemloft.net> (sfid-20120309_225523_942479_AC09139F)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-03-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120309214118.GG2478@tuxdriver.com>
-References: <20120309214118.GG2478@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 14 Mar 2012 05:10:59 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20320.24711.242360.534814@gargle.gargle.HOWL> (sfid-20120314_101102_132784_F28DD46B)
+Date: Wed, 14 Mar 2012 14:40:31 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 2/6] ath9k: Remove unused variables
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 9 Mar 2012 16:41:18 -0500
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 --
+ drivers/net/wireless/ath/ath9k/main.c  |    4 ----
+ 2 files changed, 6 deletions(-)
 
-> It looks like the wireless guys weren't quite done with 3.4 just yet,
-> so here we have another big batch of updates.  The biggest portion
-> of them are some iwlwifi refactoring from Johannes and the rest of
-> the Intel team.  The NFC guys also chime-in with some cleanups for
-> some style issues identified earlier.  Also included is a batch of
-> wl12xx updates, some ssb work from Hauke Mehrtens, a few mesh updates
-> from Thomas and Javier, some random fixes from Dan Carpenter, and a
-> handful of other updates.
-> 
-> Please let me know if there are problems!
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 3d8e51c..fa5eb30 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -624,8 +624,6 @@ struct ath_softc {
+ 	struct ieee80211_hw *hw;
+ 	struct device *dev;
+ 
+-	int chan_idx;
+-	int chan_is_ht;
+ 	struct survey_info *cur_survey;
+ 	struct survey_info survey[ATH9K_NUM_CHANNELS];
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index db38a4e..fe1d796 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -995,12 +995,8 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		curchan->center_freq);
+ 
+ 	ath9k_ps_wakeup(sc);
+-
+ 	mutex_lock(&sc->mutex);
+ 
+-	/* setup initial channel */
+-	sc->chan_idx = curchan->hw_value;
+-
+ 	init_channel = ath9k_cmn_get_curchannel(hw, ah);
+ 
+ 	/* Reset SERDES registers */
+-- 
+1.7.9.4
 
-Pulled, thanks John.
-
-BTW, you typo'd my email address.
