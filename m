@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44840 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161909Ab2CSQPc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 12:15:32 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Subject: [PATCH 5/9] ath6kl: add rx data padding support
-Date: Mon, 19 Mar 2012 18:15:00 +0200
-Message-Id: <1332173704-18877-6-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171602_523647_B38B33C0)
-In-Reply-To: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:55429 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756048Ab2CNPko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2012 11:40:44 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 10/14] ath9k_hw: fix AR9380 register settings for channel 14
+Date: Wed, 14 Mar 2012 16:40:30 +0100
+Message-Id: <1331739634-22318-10-git-send-email-nbd@openwrt.org> (sfid-20120314_164055_241954_633F782F)
+In-Reply-To: <1331739634-22318-9-git-send-email-nbd@openwrt.org>
+References: <1331739634-22318-1-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-2-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-3-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-4-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-5-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-6-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-7-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-8-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-9-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Needed when using USB.
+Program the ah->ini_japan2484 INI values which were left out by accident
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath6kl/txrx.c |    7 +++++++
- drivers/net/wireless/ath/ath6kl/wmi.h  |    3 +++
- 2 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 53d0334..5559c9b 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1287,6 +1287,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	struct wmi_data_hdr *dhdr;
- 	int min_hdr_len;
- 	u8 meta_type, dot11_hdr = 0;
-+	u8 pad_before_data_start;
- 	int status = packet->status;
- 	enum htc_endpoint_id ept = packet->endpoint;
- 	bool is_amsdu, prev_ps, ps_state = false;
-@@ -1498,6 +1499,10 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	seq_no = wmi_data_hdr_get_seqno(dhdr);
- 	meta_type = wmi_data_hdr_get_meta(dhdr);
- 	dot11_hdr = wmi_data_hdr_get_dot11(dhdr);
-+	pad_before_data_start =
-+		(le16_to_cpu(dhdr->info3) >> WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT)
-+			& WMI_DATA_HDR_PAD_BEFORE_DATA_MASK;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 70e27d2..99b64f2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -691,6 +691,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 	if (AR_SREV_9462(ah))
+ 		ar9003_hw_prog_ini(ah, &ah->ini_BTCOEX_MAX_TXPWR, 1);
+ 
++	if (chan->channel == 2484)
++		ar9003_hw_prog_ini(ah, &ah->ini_japan2484, 1);
 +
- 	skb_pull(skb, sizeof(struct wmi_data_hdr));
- 
- 	switch (meta_type) {
-@@ -1516,6 +1521,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 		break;
- 	}
- 
-+	skb_pull(skb, pad_before_data_start);
-+
- 	if (dot11_hdr)
- 		status = ath6kl_wmi_dot11_hdr_remove(ar->wmi, skb);
- 	else if (!is_amsdu)
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 4092e3e..7989b33 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -182,6 +182,9 @@ enum wmi_data_hdr_flags {
- #define WMI_DATA_HDR_META_MASK      0x7
- #define WMI_DATA_HDR_META_SHIFT     13
- 
-+#define WMI_DATA_HDR_PAD_BEFORE_DATA_MASK               0xFF
-+#define WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT              0x8
-+
- /* Macros for operating on WMI_DATA_HDR (info3) field */
- #define WMI_DATA_HDR_IF_IDX_MASK    0xF
- 
+ 	ah->modes_index = modesIndex;
+ 	ar9003_hw_override_ini(ah);
+ 	ar9003_hw_set_channel_regs(ah, chan);
 -- 
-1.7.1
+1.7.3.2
 
