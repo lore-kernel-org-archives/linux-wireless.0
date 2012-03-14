@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fa0-f46.google.com ([209.85.161.46]:39184 "EHLO
-	mail-fa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750857Ab2CNOiA (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:51732 "HELO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1030391Ab2CNCsA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2012 10:38:00 -0400
-Received: by faas1 with SMTP id s1so306669faa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2012 07:37:59 -0700 (PDT)
-From: "Yohannes Tesfai" <ytesfai@dianisystems.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: Questions from a newbie
-Date: Wed, 14 Mar 2012 10:37:57 -0400
-Message-ID: <D81A6EFD35144D4B9574946C3BF4A32B@dianixp1> (sfid-20120314_153806_099585_7F097DAF)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+	Tue, 13 Mar 2012 22:48:00 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: correction in structure name passed to sizeof()
+Date: Tue, 13 Mar 2012 19:36:49 -0700
+Message-Id: <1331692609-5845-1-git-send-email-bzhao@marvell.com> (sfid-20120314_034804_647644_113CC689)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-1. What is the best documentation of the code structure so that a newbie
-like me can navigate and quickly get familiar?
-2. More specifically, I am trying to find the code for ath9k where I can:
-   a. Change the frequency/channels supported so I can control it from
-(reduce/expand it). This is for internal testing only not for release so I
-don't think there should be regulatory issues?
-   b. Is active scanning software controllable? If so can you point me to
-the section of the software that implements the functionality?
+"hscfg" is declared as struct mwifiex_ds_hs_cfg. Use same structure
+name for calculating it's size.
 
-Thanks
-Yohannes Tesfai
-Diani Systems, Inc.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_ioctl.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 64e0b10..d7b11de 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -425,7 +425,7 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+ 
+ 	adapter->hs_activate_wait_q_woken = false;
+ 
+-	memset(&hscfg, 0, sizeof(struct mwifiex_hs_config_param));
++	memset(&hscfg, 0, sizeof(struct mwifiex_ds_hs_cfg));
+ 	hscfg.is_invoke_hostcmd = true;
+ 
+ 	if (mwifiex_set_hs_params(mwifiex_get_priv(adapter,
+-- 
+1.7.0.2
 
