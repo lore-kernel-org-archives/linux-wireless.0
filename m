@@ -1,149 +1,356 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:53480 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752939Ab2CTLgY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 07:36:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn10svpDFkpbkCtFMGFdqW9G0syWrhL3s-ApQH2bKt0P2g@mail.gmail.com>
-References: <4F576FD5.2050208@gmail.com>
-	<CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com>
-	<4F577D9B.7020402@gmail.com>
-	<4F579A88.6030503@openwrt.org>
-	<4F61F551.5010608@gmail.com>
-	<4F639851.5080500@gmail.com>
-	<4F674616.8080103@gmail.com>
-	<CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com>
-	<4F674FF5.2060406@gmail.com>
-	<4F6751B2.1030809@openwrt.org>
-	<4F681B78.9000207@gmail.com>
-	<CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com>
-	<4F68235C.5090701@gmail.com>
-	<CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com>
-	<4F682555.3020502@gmail.com>
-	<20328.16366.166909.255035@gargle.gargle.HOWL>
-	<CAD2nsn0JCKd4NnXOLfw4QXHTJdxrfepw9s6yYca=uSHwWXq3-A@mail.gmail.com>
-	<CAD2nsn10svpDFkpbkCtFMGFdqW9G0syWrhL3s-ApQH2bKt0P2g@mail.gmail.com>
-Date: Tue, 20 Mar 2012 17:06:23 +0530
-Message-ID: <CAD2nsn1SxhX3MZTF+XYN=cQEfHuD9bu5_TuLtVOCNmVBoZNJ2A@mail.gmail.com> (sfid-20120320_123643_438066_381B02C2)
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024
- AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
-	Linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
-	Linux-netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:55432 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755085Ab2CNPkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2012 11:40:45 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 14/14] ath9k_hw: remove unused initvals
+Date: Wed, 14 Mar 2012 16:40:34 +0100
+Message-Id: <1331739634-22318-14-git-send-email-nbd@openwrt.org> (sfid-20120314_164100_449959_F6EF071D)
+In-Reply-To: <1331739634-22318-13-git-send-email-nbd@openwrt.org>
+References: <1331739634-22318-1-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-2-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-3-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-4-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-5-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-6-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-7-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-8-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-9-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-10-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-11-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-12-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-13-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2012 at 4:45 PM, Mohammed Shafi
-<shafi.wireless@gmail.com> wrote:
-> On Tue, Mar 20, 2012 at 3:07 PM, Mohammed Shafi
-> <shafi.wireless@gmail.com> wrote:
->> Hi Sujith/Justin,
->>
->> On Tue, Mar 20, 2012 at 1:59 PM, Sujith Manoharan
->> <c_manoha@qca.qualcomm.com> wrote:
->>> Justin P. Mattock wrote:
->>>> yeah this works:
->>>>
->>>> eading symbols from
->>>> /home/kernel/linux-next/drivers/net/wireless/ath/ath9k/ath9k.o...done.
->>>> (gdb) l *(ath_tx_start+0x284)
->>>> 0xcad4 is in ath_tx_start (drivers/net/wireless/ath/ath9k/xmit.c:1878).
->>>> 1873                  ieee80211_is_data_qos(hdr->frame_control)) {
->>>> 1874                  tidno = ieee80211_get_qos_ctl(hdr)[0] &
->>>> 1875                          IEEE80211_QOS_CTL_TID_MASK;
->>>> 1876                  tid = ATH_AN_2_TID(txctl->an, tidno);
->>>> 1877
->>>> 1878                  WARN_ON(tid->ac->txq != txctl->txq);
->>>> 1879          }
->>>> 1880
->>>> 1881          if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && tid) {
->>>> 1882                  /*
->>>> (gdb)
->>>
->>> Can you try this patch ?
->>
->> just found out that 'ht_supported' may not  be set, if assoc response
->> does not has ht_cap IE (or) if we could not parse it (why), then the
->> driver won't initialize those tid related structures ath_tx_node_init,
->> while we later access them in ath_tx_start. so this should fix the
->> issue.
->
-> now i was able to quite easily recreate this issue in wireless testing
-> even without suspend resume and with the patch the issue seems to get
-> fixed.
-> i was using 2ghz channel 6 and TKIP (no HT!).
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  302 --------------------
+ 1 files changed, 0 insertions(+), 302 deletions(-)
 
-i was keep on trying with 5ghz TKIP and it seems HT enable even with
-TKIP (need to see why this happens), thats why even i could not
-recreate this issue. mac80211 seems to disable HT, ht_supported false
-while in driver we go with ATH9K_HW_CAP HT
-
-
->
->
->>
->>>
->>> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->>> Date: Tue, 20 Mar 2012 13:51:26 +0530
->>> Subject: [PATCH] ath9k: Use HW HT capabilites properly
->>>
->>> The commit "ath9k: Remove aggregation flags" changed how
->>> nodes were being initialized. Use the HW HT cap bits
->>> to initialize/de-initialize nodes, else we would be
->>> accessing an uninitialized entry during a suspend/resume cycle,
->>> resulting in a panic.
->>>
->>> Reported-by: Justin P. Mattock <justinmattock@gmail.com>
->>> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->>> ---
->>>  drivers/net/wireless/ath/ath9k/main.c |    4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->>> index 3879485..215eb25 100644
->>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>> @@ -640,7 +640,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
->>>        an->sta = sta;
->>>        an->vif = vif;
->>>
->>> -       if (sta->ht_cap.ht_supported) {
->>> +       if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
->>>                ath_tx_node_init(sc, an);
->>>                an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
->>>                                     sta->ht_cap.ampdu_factor);
->>> @@ -659,7 +659,7 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
->>>        an->sta = NULL;
->>>  #endif
->>>
->>> -       if (sta->ht_cap.ht_supported)
->>> +       if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
->>>                ath_tx_node_cleanup(sc, an);
->>>  }
->>>
->>> --
->>> 1.7.9.4
->>>
->>
->>
->>
->> --
->> thanks,
->> shafi
->
->
->
-> --
-> thanks,
-> shafi
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+index 026f9de..46c79a3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
+@@ -295,266 +295,6 @@ static const u32 ar9300_2p2_radio_core[][2] = {
+ 	{0x00016bd4, 0x00000000},
+ };
+ 
+-static const u32 ar9300Common_rx_gain_table_merlin_2p2[][2] = {
+-	/* Addr      allmodes  */
+-	{0x0000a000, 0x02000101},
+-	{0x0000a004, 0x02000102},
+-	{0x0000a008, 0x02000103},
+-	{0x0000a00c, 0x02000104},
+-	{0x0000a010, 0x02000200},
+-	{0x0000a014, 0x02000201},
+-	{0x0000a018, 0x02000202},
+-	{0x0000a01c, 0x02000203},
+-	{0x0000a020, 0x02000204},
+-	{0x0000a024, 0x02000205},
+-	{0x0000a028, 0x02000208},
+-	{0x0000a02c, 0x02000302},
+-	{0x0000a030, 0x02000303},
+-	{0x0000a034, 0x02000304},
+-	{0x0000a038, 0x02000400},
+-	{0x0000a03c, 0x02010300},
+-	{0x0000a040, 0x02010301},
+-	{0x0000a044, 0x02010302},
+-	{0x0000a048, 0x02000500},
+-	{0x0000a04c, 0x02010400},
+-	{0x0000a050, 0x02020300},
+-	{0x0000a054, 0x02020301},
+-	{0x0000a058, 0x02020302},
+-	{0x0000a05c, 0x02020303},
+-	{0x0000a060, 0x02020400},
+-	{0x0000a064, 0x02030300},
+-	{0x0000a068, 0x02030301},
+-	{0x0000a06c, 0x02030302},
+-	{0x0000a070, 0x02030303},
+-	{0x0000a074, 0x02030400},
+-	{0x0000a078, 0x02040300},
+-	{0x0000a07c, 0x02040301},
+-	{0x0000a080, 0x02040302},
+-	{0x0000a084, 0x02040303},
+-	{0x0000a088, 0x02030500},
+-	{0x0000a08c, 0x02040400},
+-	{0x0000a090, 0x02050203},
+-	{0x0000a094, 0x02050204},
+-	{0x0000a098, 0x02050205},
+-	{0x0000a09c, 0x02040500},
+-	{0x0000a0a0, 0x02050301},
+-	{0x0000a0a4, 0x02050302},
+-	{0x0000a0a8, 0x02050303},
+-	{0x0000a0ac, 0x02050400},
+-	{0x0000a0b0, 0x02050401},
+-	{0x0000a0b4, 0x02050402},
+-	{0x0000a0b8, 0x02050403},
+-	{0x0000a0bc, 0x02050500},
+-	{0x0000a0c0, 0x02050501},
+-	{0x0000a0c4, 0x02050502},
+-	{0x0000a0c8, 0x02050503},
+-	{0x0000a0cc, 0x02050504},
+-	{0x0000a0d0, 0x02050600},
+-	{0x0000a0d4, 0x02050601},
+-	{0x0000a0d8, 0x02050602},
+-	{0x0000a0dc, 0x02050603},
+-	{0x0000a0e0, 0x02050604},
+-	{0x0000a0e4, 0x02050700},
+-	{0x0000a0e8, 0x02050701},
+-	{0x0000a0ec, 0x02050702},
+-	{0x0000a0f0, 0x02050703},
+-	{0x0000a0f4, 0x02050704},
+-	{0x0000a0f8, 0x02050705},
+-	{0x0000a0fc, 0x02050708},
+-	{0x0000a100, 0x02050709},
+-	{0x0000a104, 0x0205070a},
+-	{0x0000a108, 0x0205070b},
+-	{0x0000a10c, 0x0205070c},
+-	{0x0000a110, 0x0205070d},
+-	{0x0000a114, 0x02050710},
+-	{0x0000a118, 0x02050711},
+-	{0x0000a11c, 0x02050712},
+-	{0x0000a120, 0x02050713},
+-	{0x0000a124, 0x02050714},
+-	{0x0000a128, 0x02050715},
+-	{0x0000a12c, 0x02050730},
+-	{0x0000a130, 0x02050731},
+-	{0x0000a134, 0x02050732},
+-	{0x0000a138, 0x02050733},
+-	{0x0000a13c, 0x02050734},
+-	{0x0000a140, 0x02050735},
+-	{0x0000a144, 0x02050750},
+-	{0x0000a148, 0x02050751},
+-	{0x0000a14c, 0x02050752},
+-	{0x0000a150, 0x02050753},
+-	{0x0000a154, 0x02050754},
+-	{0x0000a158, 0x02050755},
+-	{0x0000a15c, 0x02050770},
+-	{0x0000a160, 0x02050771},
+-	{0x0000a164, 0x02050772},
+-	{0x0000a168, 0x02050773},
+-	{0x0000a16c, 0x02050774},
+-	{0x0000a170, 0x02050775},
+-	{0x0000a174, 0x00000776},
+-	{0x0000a178, 0x00000776},
+-	{0x0000a17c, 0x00000776},
+-	{0x0000a180, 0x00000776},
+-	{0x0000a184, 0x00000776},
+-	{0x0000a188, 0x00000776},
+-	{0x0000a18c, 0x00000776},
+-	{0x0000a190, 0x00000776},
+-	{0x0000a194, 0x00000776},
+-	{0x0000a198, 0x00000776},
+-	{0x0000a19c, 0x00000776},
+-	{0x0000a1a0, 0x00000776},
+-	{0x0000a1a4, 0x00000776},
+-	{0x0000a1a8, 0x00000776},
+-	{0x0000a1ac, 0x00000776},
+-	{0x0000a1b0, 0x00000776},
+-	{0x0000a1b4, 0x00000776},
+-	{0x0000a1b8, 0x00000776},
+-	{0x0000a1bc, 0x00000776},
+-	{0x0000a1c0, 0x00000776},
+-	{0x0000a1c4, 0x00000776},
+-	{0x0000a1c8, 0x00000776},
+-	{0x0000a1cc, 0x00000776},
+-	{0x0000a1d0, 0x00000776},
+-	{0x0000a1d4, 0x00000776},
+-	{0x0000a1d8, 0x00000776},
+-	{0x0000a1dc, 0x00000776},
+-	{0x0000a1e0, 0x00000776},
+-	{0x0000a1e4, 0x00000776},
+-	{0x0000a1e8, 0x00000776},
+-	{0x0000a1ec, 0x00000776},
+-	{0x0000a1f0, 0x00000776},
+-	{0x0000a1f4, 0x00000776},
+-	{0x0000a1f8, 0x00000776},
+-	{0x0000a1fc, 0x00000776},
+-	{0x0000b000, 0x02000101},
+-	{0x0000b004, 0x02000102},
+-	{0x0000b008, 0x02000103},
+-	{0x0000b00c, 0x02000104},
+-	{0x0000b010, 0x02000200},
+-	{0x0000b014, 0x02000201},
+-	{0x0000b018, 0x02000202},
+-	{0x0000b01c, 0x02000203},
+-	{0x0000b020, 0x02000204},
+-	{0x0000b024, 0x02000205},
+-	{0x0000b028, 0x02000208},
+-	{0x0000b02c, 0x02000302},
+-	{0x0000b030, 0x02000303},
+-	{0x0000b034, 0x02000304},
+-	{0x0000b038, 0x02000400},
+-	{0x0000b03c, 0x02010300},
+-	{0x0000b040, 0x02010301},
+-	{0x0000b044, 0x02010302},
+-	{0x0000b048, 0x02000500},
+-	{0x0000b04c, 0x02010400},
+-	{0x0000b050, 0x02020300},
+-	{0x0000b054, 0x02020301},
+-	{0x0000b058, 0x02020302},
+-	{0x0000b05c, 0x02020303},
+-	{0x0000b060, 0x02020400},
+-	{0x0000b064, 0x02030300},
+-	{0x0000b068, 0x02030301},
+-	{0x0000b06c, 0x02030302},
+-	{0x0000b070, 0x02030303},
+-	{0x0000b074, 0x02030400},
+-	{0x0000b078, 0x02040300},
+-	{0x0000b07c, 0x02040301},
+-	{0x0000b080, 0x02040302},
+-	{0x0000b084, 0x02040303},
+-	{0x0000b088, 0x02030500},
+-	{0x0000b08c, 0x02040400},
+-	{0x0000b090, 0x02050203},
+-	{0x0000b094, 0x02050204},
+-	{0x0000b098, 0x02050205},
+-	{0x0000b09c, 0x02040500},
+-	{0x0000b0a0, 0x02050301},
+-	{0x0000b0a4, 0x02050302},
+-	{0x0000b0a8, 0x02050303},
+-	{0x0000b0ac, 0x02050400},
+-	{0x0000b0b0, 0x02050401},
+-	{0x0000b0b4, 0x02050402},
+-	{0x0000b0b8, 0x02050403},
+-	{0x0000b0bc, 0x02050500},
+-	{0x0000b0c0, 0x02050501},
+-	{0x0000b0c4, 0x02050502},
+-	{0x0000b0c8, 0x02050503},
+-	{0x0000b0cc, 0x02050504},
+-	{0x0000b0d0, 0x02050600},
+-	{0x0000b0d4, 0x02050601},
+-	{0x0000b0d8, 0x02050602},
+-	{0x0000b0dc, 0x02050603},
+-	{0x0000b0e0, 0x02050604},
+-	{0x0000b0e4, 0x02050700},
+-	{0x0000b0e8, 0x02050701},
+-	{0x0000b0ec, 0x02050702},
+-	{0x0000b0f0, 0x02050703},
+-	{0x0000b0f4, 0x02050704},
+-	{0x0000b0f8, 0x02050705},
+-	{0x0000b0fc, 0x02050708},
+-	{0x0000b100, 0x02050709},
+-	{0x0000b104, 0x0205070a},
+-	{0x0000b108, 0x0205070b},
+-	{0x0000b10c, 0x0205070c},
+-	{0x0000b110, 0x0205070d},
+-	{0x0000b114, 0x02050710},
+-	{0x0000b118, 0x02050711},
+-	{0x0000b11c, 0x02050712},
+-	{0x0000b120, 0x02050713},
+-	{0x0000b124, 0x02050714},
+-	{0x0000b128, 0x02050715},
+-	{0x0000b12c, 0x02050730},
+-	{0x0000b130, 0x02050731},
+-	{0x0000b134, 0x02050732},
+-	{0x0000b138, 0x02050733},
+-	{0x0000b13c, 0x02050734},
+-	{0x0000b140, 0x02050735},
+-	{0x0000b144, 0x02050750},
+-	{0x0000b148, 0x02050751},
+-	{0x0000b14c, 0x02050752},
+-	{0x0000b150, 0x02050753},
+-	{0x0000b154, 0x02050754},
+-	{0x0000b158, 0x02050755},
+-	{0x0000b15c, 0x02050770},
+-	{0x0000b160, 0x02050771},
+-	{0x0000b164, 0x02050772},
+-	{0x0000b168, 0x02050773},
+-	{0x0000b16c, 0x02050774},
+-	{0x0000b170, 0x02050775},
+-	{0x0000b174, 0x00000776},
+-	{0x0000b178, 0x00000776},
+-	{0x0000b17c, 0x00000776},
+-	{0x0000b180, 0x00000776},
+-	{0x0000b184, 0x00000776},
+-	{0x0000b188, 0x00000776},
+-	{0x0000b18c, 0x00000776},
+-	{0x0000b190, 0x00000776},
+-	{0x0000b194, 0x00000776},
+-	{0x0000b198, 0x00000776},
+-	{0x0000b19c, 0x00000776},
+-	{0x0000b1a0, 0x00000776},
+-	{0x0000b1a4, 0x00000776},
+-	{0x0000b1a8, 0x00000776},
+-	{0x0000b1ac, 0x00000776},
+-	{0x0000b1b0, 0x00000776},
+-	{0x0000b1b4, 0x00000776},
+-	{0x0000b1b8, 0x00000776},
+-	{0x0000b1bc, 0x00000776},
+-	{0x0000b1c0, 0x00000776},
+-	{0x0000b1c4, 0x00000776},
+-	{0x0000b1c8, 0x00000776},
+-	{0x0000b1cc, 0x00000776},
+-	{0x0000b1d0, 0x00000776},
+-	{0x0000b1d4, 0x00000776},
+-	{0x0000b1d8, 0x00000776},
+-	{0x0000b1dc, 0x00000776},
+-	{0x0000b1e0, 0x00000776},
+-	{0x0000b1e4, 0x00000776},
+-	{0x0000b1e8, 0x00000776},
+-	{0x0000b1ec, 0x00000776},
+-	{0x0000b1f0, 0x00000776},
+-	{0x0000b1f4, 0x00000776},
+-	{0x0000b1f8, 0x00000776},
+-	{0x0000b1fc, 0x00000776},
+-};
+-
+ static const u32 ar9300_2p2_mac_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
+@@ -572,48 +312,6 @@ static const u32 ar9300_2p2_soc_postamble[][5] = {
+ 	{0x00007010, 0x00000023, 0x00000023, 0x00000023, 0x00000023},
+ };
+ 
+-static const u32 ar9200_merlin_2p2_radio_core[][2] = {
+-	/* Addr      allmodes  */
+-	{0x00007800, 0x00040000},
+-	{0x00007804, 0xdb005012},
+-	{0x00007808, 0x04924914},
+-	{0x0000780c, 0x21084210},
+-	{0x00007810, 0x6d801300},
+-	{0x00007814, 0x0019beff},
+-	{0x00007818, 0x07e41000},
+-	{0x0000781c, 0x00392000},
+-	{0x00007820, 0x92592480},
+-	{0x00007824, 0x00040000},
+-	{0x00007828, 0xdb005012},
+-	{0x0000782c, 0x04924914},
+-	{0x00007830, 0x21084210},
+-	{0x00007834, 0x6d801300},
+-	{0x00007838, 0x0019beff},
+-	{0x0000783c, 0x07e40000},
+-	{0x00007840, 0x00392000},
+-	{0x00007844, 0x92592480},
+-	{0x00007848, 0x00100000},
+-	{0x0000784c, 0x773f0567},
+-	{0x00007850, 0x54214514},
+-	{0x00007854, 0x12035828},
+-	{0x00007858, 0x92592692},
+-	{0x0000785c, 0x00000000},
+-	{0x00007860, 0x56400000},
+-	{0x00007864, 0x0a8e370e},
+-	{0x00007868, 0xc0102850},
+-	{0x0000786c, 0x812d4000},
+-	{0x00007870, 0x807ec400},
+-	{0x00007874, 0x001b6db0},
+-	{0x00007878, 0x00376b63},
+-	{0x0000787c, 0x06db6db6},
+-	{0x00007880, 0x006d8000},
+-	{0x00007884, 0xffeffffe},
+-	{0x00007888, 0xffeffffe},
+-	{0x0000788c, 0x00010000},
+-	{0x00007890, 0x02060aeb},
+-	{0x00007894, 0x5a108000},
+-};
+-
+ static const u32 ar9300_2p2_baseband_postamble[][5] = {
+ 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a8011},
 -- 
-thanks,
-shafi
+1.7.3.2
+
