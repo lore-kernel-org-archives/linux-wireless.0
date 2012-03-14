@@ -1,42 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:58289 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756429Ab2CGOVx (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:54480 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754184Ab2CNOUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 09:21:53 -0500
-Received: by yhmm54 with SMTP id m54so2891455yhm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2012 06:21:53 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAEFj985EYVeAYef1-G3uVPOxZqwjose9Ge7=MRsbmFWrLNz_RQ@mail.gmail.com>
-References: <CAEFj984b_Aihd9hc-dMArPxZPod8eKsxzekLwO74XbTUKGX9LQ@mail.gmail.com>
-	<CAEFj984gKDRtjP9NJYqjvWCZ=HxwW3DQ036guVY6Vbj=yx1H6g@mail.gmail.com>
-	<1331105902.3519.2.camel@jlt3.sipsolutions.net>
-	<CAEFj985EYVeAYef1-G3uVPOxZqwjose9Ge7=MRsbmFWrLNz_RQ@mail.gmail.com>
-Date: Wed, 7 Mar 2012 22:21:52 +0800
-Message-ID: <CAEFj984tNRXvBL4cCdJAq2VL7_AgeFYDB=w1b=aLy89pCM5UdA@mail.gmail.com> (sfid-20120307_152156_861413_69983598)
-Subject: Re: Hw Accel in Secured Mesh No Longer Work
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+	Wed, 14 Mar 2012 10:20:45 -0400
+Received: by wibhq7 with SMTP id hq7so2681340wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2012 07:20:44 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] mac80211: add NULL terminator to debugfs_netdev write buf
+Date: Wed, 14 Mar 2012 16:15:02 +0200
+Message-Id: <1331734503-22049-1-git-send-email-eliad@wizery.com> (sfid-20120314_152049_554526_D2548185)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes
+Some debugfs write functions call kstrto* functions, which
+assume the string is null-terminated. Make it valid by changing
+ieee80211_if_write() to use static buffer instead of allocating
+one, and set the last char to NULL.
 
-> Huh? Well that's odd, maybe there's a race condition and you program the
-> key before the peer was added to the device?
+(The write functions try to parse some integer/mac address,
+so 64 bytes buffer should be enough)
 
-Not so sure. The adding of key is actually done by the meshd-nl80211
-(authsae) daemon running in userspace.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/debugfs_netdev.c |   13 +++++--------
+ 1 files changed, 5 insertions(+), 8 deletions(-)
 
-https://github.com/cozybit/authsae/blob/master/linux/meshd-nl80211.c
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index f6de8a6..ef5cf26 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -49,16 +49,15 @@ static ssize_t ieee80211_if_write(
+ 	size_t count, loff_t *ppos,
+ 	ssize_t (*write)(struct ieee80211_sub_if_data *, const char *, int))
+ {
+-	u8 *buf;
++	char buf[64];
+ 	ssize_t ret;
+ 
+-	buf = kmalloc(count, GFP_KERNEL);
+-	if (!buf)
+-		return -ENOMEM;
++	if (count >= sizeof(buf))
++		return -E2BIG;
+ 
+-	ret = -EFAULT;
+ 	if (copy_from_user(buf, userbuf, count))
+-		goto freebuf;
++		return -EFAULT;
++	buf[count] = '\0';
+ 
+ 	ret = -ENODEV;
+ 	rtnl_lock();
+@@ -66,8 +65,6 @@ static ssize_t ieee80211_if_write(
+ 		ret = (*write)(sdata, buf, count);
+ 	rtnl_unlock();
+ 
+-freebuf:
+-	kfree(buf);
+ 	return ret;
+ }
+ 
+-- 
+1.7.6.401.g6a319
 
-/* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
-install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
-
-> What device are you working with?
-I am using atheros 11n chipset (ath9k).
-
-Regards,
-Chun-Yeow
