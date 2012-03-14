@@ -1,691 +1,302 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55496 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030267Ab2COOuT (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:57244 "HELO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1760193Ab2CNCWt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 10:50:19 -0400
-Subject: [PATCH v2] wireless: rename ht_info to ht_operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Bing Zhao <bzhao@marvell.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1331806879.3432.7.camel@jlt3.sipsolutions.net> (sfid-20120315_112131_819302_49364FC7)
-References: <1331806879.3432.7.camel@jlt3.sipsolutions.net>
-	 (sfid-20120315_112131_819302_49364FC7)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Mar 2012 15:50:14 +0100
-Message-ID: <1331823014.3432.23.camel@jlt3.sipsolutions.net> (sfid-20120315_155029_590112_CAFFA07D)
-Mime-Version: 1.0
+	Tue, 13 Mar 2012 22:22:49 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 1/9] mwifiex: fix checkpatch --strict warnings/errors Part 1
+Date: Tue, 13 Mar 2012 19:22:34 -0700
+Message-Id: <1331691762-5514-2-git-send-email-bzhao@marvell.com> (sfid-20120314_032254_664425_263FCE40)
+In-Reply-To: <1331691762-5514-1-git-send-email-bzhao@marvell.com>
+References: <1331691762-5514-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-Since some of the HT code pre-dates 802.11n-2009
-some names are wrong. The one that bothers me most
-is that "HT operation" is called "HT information"
-in our code and that causes confusion.
+For files 11n.c, 11n.h, 11n_aggr.c, 11n_rxreorder.c
 
-Rename "HT information" to "HT operation" and also
-the control_chan field to primary_chan to match
-the name used in the spec.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
-v2: fix patch for new mwifiex changes
+ drivers/net/wireless/mwifiex/11n.c           |   22 +++++++-------
+ drivers/net/wireless/mwifiex/11n.h           |    7 ++--
+ drivers/net/wireless/mwifiex/11n_aggr.c      |   15 ++++-----
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   42 +++++++++++++------------
+ 4 files changed, 43 insertions(+), 43 deletions(-)
 
- drivers/net/wireless/mwifiex/11n.c  |   16 ++++++------
- drivers/net/wireless/mwifiex/fw.h   |    2 -
- drivers/net/wireless/mwifiex/join.c |   14 +++++-----
- drivers/net/wireless/mwifiex/main.h |    2 -
- drivers/net/wireless/mwifiex/scan.c |   10 +++----
- drivers/net/wireless/wl12xx/main.c  |    2 -
- include/linux/ieee80211.h           |   14 ++++------
- include/net/mac80211.h              |    2 -
- net/mac80211/ibss.c                 |   16 +++++-------
- net/mac80211/ieee80211_i.h          |   13 ++++-----
- net/mac80211/mesh.c                 |   12 ++++-----
- net/mac80211/mesh.h                 |    2 -
- net/mac80211/mesh_plink.c           |    4 +--
- net/mac80211/mlme.c                 |   48 ++++++++++++++++++------------------
- net/mac80211/tx.c                   |    4 +--
- net/mac80211/util.c                 |   43 +++++++++++++++-----------------
- 16 files changed, 99 insertions(+), 105 deletions(-)
-
---- a/drivers/net/wireless/mwifiex/11n.c	2012-03-15 15:33:29.000000000 +0100
-+++ b/drivers/net/wireless/mwifiex/11n.c	2012-03-15 15:49:19.000000000 +0100
-@@ -350,25 +350,25 @@ mwifiex_cmd_append_11n_tlv(struct mwifie
- 		ret_len += sizeof(struct mwifiex_ie_types_htcap);
- 	}
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index aeb456d..a5e182b 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -44,16 +44,16 @@ mwifiex_fill_cap_info(struct mwifiex_private *priv, u8 radio_type,
  
--	if (bss_desc->bcn_ht_info) {
-+	if (bss_desc->bcn_ht_oper) {
- 		if (priv->bss_mode == NL80211_IFTYPE_ADHOC) {
- 			ht_info = (struct mwifiex_ie_types_htinfo *) *buffer;
- 			memset(ht_info, 0,
- 			       sizeof(struct mwifiex_ie_types_htinfo));
- 			ht_info->header.type =
--					cpu_to_le16(WLAN_EID_HT_INFORMATION);
-+					cpu_to_le16(WLAN_EID_HT_OPERATION);
- 			ht_info->header.len =
--				cpu_to_le16(sizeof(struct ieee80211_ht_info));
-+				cpu_to_le16(sizeof(struct ieee80211_ht_operation));
+ 	ht_cap->ht_cap.ampdu_params_info =
+ 		(sband->ht_cap.ampdu_factor &
+-		 IEEE80211_HT_AMPDU_PARM_FACTOR)|
++		 IEEE80211_HT_AMPDU_PARM_FACTOR) |
+ 		((sband->ht_cap.ampdu_density <<
+ 		 IEEE80211_HT_AMPDU_PARM_DENSITY_SHIFT) &
+ 		 IEEE80211_HT_AMPDU_PARM_DENSITY);
  
- 			memcpy((u8 *) ht_info +
- 			       sizeof(struct mwifiex_ie_types_header),
--			       (u8 *) bss_desc->bcn_ht_info +
-+			       (u8 *) bss_desc->bcn_ht_oper +
- 			       sizeof(struct ieee_types_header),
- 			       le16_to_cpu(ht_info->header.len));
+ 	memcpy((u8 *) &ht_cap->ht_cap.mcs, &sband->ht_cap.mcs,
+-						sizeof(sband->ht_cap.mcs));
++	       sizeof(sband->ht_cap.mcs));
  
- 			if (!(sband->ht_cap.cap &
- 					IEEE80211_HT_CAP_SUP_WIDTH_20_40))
--				ht_info->ht_info.ht_param &=
-+				ht_info->ht_oper.ht_param &=
- 					~(IEEE80211_HT_PARAM_CHAN_WIDTH_ANY |
- 					IEEE80211_HT_PARAM_CHA_SEC_OFFSET);
+ 	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
+-			(sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40))
++	    sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
+ 		/* Set MCS32 for infra mode or ad-hoc mode with 40MHz support */
+ 		SETHT_MCS32(ht_cap->ht_cap.mcs.rx_mask);
  
-@@ -385,16 +385,16 @@ mwifiex_cmd_append_11n_tlv(struct mwifie
- 			sizeof(struct mwifiex_ie_types_chan_list_param_set) -
- 			sizeof(struct mwifiex_ie_types_header));
- 		chan_list->chan_scan_param[0].chan_number =
--			bss_desc->bcn_ht_info->control_chan;
-+			bss_desc->bcn_ht_oper->primary_chan;
+@@ -389,9 +389,9 @@ mwifiex_cmd_append_11n_tlv(struct mwifiex_private *priv,
  		chan_list->chan_scan_param[0].radio_type =
  			mwifiex_band_to_radio_type((u8) bss_desc->bss_band);
  
- 		if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 &&
--		    bss_desc->bcn_ht_info->ht_param &
-+		    bss_desc->bcn_ht_oper->ht_param &
- 		    IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)
+-		if ((sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
+-			&& (bss_desc->bcn_ht_info->ht_param &
+-				IEEE80211_HT_PARAM_CHAN_WIDTH_ANY))
++		if (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 &&
++		    bss_desc->bcn_ht_info->ht_param &
++		    IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)
  			SET_SECONDARYCHAN(chan_list->chan_scan_param[0].
  					  radio_type,
--					  (bss_desc->bcn_ht_info->ht_param &
-+					  (bss_desc->bcn_ht_oper->ht_param &
- 					  IEEE80211_HT_PARAM_CHA_SEC_OFFSET));
+ 					  (bss_desc->bcn_ht_info->ht_param &
+@@ -464,7 +464,7 @@ mwifiex_cfg_tx_buf(struct mwifiex_private *priv,
+ 	tx_buf = min(priv->adapter->max_tx_buf_size, max_amsdu);
  
- 		*buffer += sizeof(struct mwifiex_ie_types_chan_list_param_set);
---- a/drivers/net/wireless/mwifiex/scan.c	2012-03-15 15:33:29.000000000 +0100
-+++ b/drivers/net/wireless/mwifiex/scan.c	2012-03-15 15:39:59.000000000 +0100
-@@ -1221,8 +1221,8 @@ mwifiex_update_bss_desc_with_ie(struct m
- 					sizeof(struct ieee_types_header) -
- 					bss_entry->beacon_buf);
- 			break;
--		case WLAN_EID_HT_INFORMATION:
--			bss_entry->bcn_ht_info = (struct ieee80211_ht_info *)
-+		case WLAN_EID_HT_OPERATION:
-+			bss_entry->bcn_ht_oper = (struct ieee80211_ht_operation *)
- 					(current_ptr +
- 					sizeof(struct ieee_types_header));
- 			bss_entry->ht_info_offset = (u16) (current_ptr +
-@@ -1493,7 +1493,7 @@ mwifiex_update_curr_bss_params(struct mw
- 	priv->curr_bss_params.bss_descriptor.bcn_ht_cap = NULL;
- 	priv->curr_bss_params.bss_descriptor.ht_cap_offset =
- 		0;
--	priv->curr_bss_params.bss_descriptor.bcn_ht_info = NULL;
-+	priv->curr_bss_params.bss_descriptor.bcn_ht_oper = NULL;
- 	priv->curr_bss_params.bss_descriptor.ht_info_offset =
- 		0;
- 	priv->curr_bss_params.bss_descriptor.bcn_bss_co_2040 =
-@@ -2019,8 +2019,8 @@ mwifiex_save_curr_bcn(struct mwifiex_pri
- 			(curr_bss->beacon_buf +
- 			 curr_bss->ht_cap_offset);
+ 	dev_dbg(priv->adapter->dev, "info: max_amsdu=%d, max_tx_buf=%d\n",
+-			max_amsdu, priv->adapter->max_tx_buf_size);
++		max_amsdu, priv->adapter->max_tx_buf_size);
  
--	if (curr_bss->bcn_ht_info)
--		curr_bss->bcn_ht_info = (struct ieee80211_ht_info *)
-+	if (curr_bss->bcn_ht_oper)
-+		curr_bss->bcn_ht_oper = (struct ieee80211_ht_operation *)
- 			(curr_bss->beacon_buf +
- 			 curr_bss->ht_info_offset);
- 
---- a/drivers/net/wireless/wl12xx/main.c	2012-03-15 15:32:27.000000000 +0100
-+++ b/drivers/net/wireless/wl12xx/main.c	2012-03-15 15:39:59.000000000 +0100
-@@ -232,7 +232,7 @@ static struct conf_drv_settings default_
- 				.rule        = CONF_BCN_RULE_PASS_ON_APPEARANCE,
- 			},
- 			[1] = {
--				.ie          = WLAN_EID_HT_INFORMATION,
-+				.ie          = WLAN_EID_HT_OPERATION,
- 				.rule        = CONF_BCN_RULE_PASS_ON_CHANGE,
- 			},
- 		},
---- a/include/linux/ieee80211.h	2012-03-15 15:32:26.000000000 +0100
-+++ b/include/linux/ieee80211.h	2012-03-15 15:39:59.000000000 +0100
-@@ -1007,13 +1007,13 @@ enum ieee80211_min_mpdu_spacing {
- };
- 
- /**
-- * struct ieee80211_ht_info - HT information
-+ * struct ieee80211_ht_operation - HT operation IE
-  *
-- * This structure is the "HT information element" as
-- * described in 802.11n D5.0 7.3.2.58
-+ * This structure is the "HT operation element" as
-+ * described in 802.11n-2009 7.3.2.57
-  */
--struct ieee80211_ht_info {
--	u8 control_chan;
-+struct ieee80211_ht_operation {
-+	u8 primary_chan;
- 	u8 ht_param;
- 	__le16 operation_mode;
- 	__le16 stbc_param;
-@@ -1027,8 +1027,6 @@ struct ieee80211_ht_info {
- #define		IEEE80211_HT_PARAM_CHA_SEC_BELOW	0x03
- #define IEEE80211_HT_PARAM_CHAN_WIDTH_ANY		0x04
- #define IEEE80211_HT_PARAM_RIFS_MODE			0x08
--#define IEEE80211_HT_PARAM_SPSMP_SUPPORT		0x10
--#define IEEE80211_HT_PARAM_SERV_INTERVAL_GRAN		0xE0
- 
- /* for operation_mode */
- #define IEEE80211_HT_OP_MODE_PROTECTION			0x0003
-@@ -1301,7 +1299,7 @@ enum ieee80211_eid {
- 	WLAN_EID_EXT_SUPP_RATES = 50,
- 
- 	WLAN_EID_HT_CAPABILITY = 45,
--	WLAN_EID_HT_INFORMATION = 61,
-+	WLAN_EID_HT_OPERATION = 61,
- 
- 	WLAN_EID_RSN = 48,
- 	WLAN_EID_MMIE = 76,
---- a/net/mac80211/mlme.c	2012-03-15 15:33:29.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-15 15:39:59.000000000 +0100
-@@ -177,7 +177,7 @@ static int ecw2cw(int ecw)
-  * HT abilities for a specific band.
-  */
- static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
--			       struct ieee80211_ht_info *hti,
-+			       struct ieee80211_ht_operation *ht_oper,
- 			       const u8 *bssid, u16 ap_ht_cap_flags,
- 			       bool beacon_htcap_ie)
+ 	if (priv->adapter->curr_tx_buf_size <= MWIFIEX_TX_DATA_BUF_SIZE_2K)
+ 		curr_tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K;
+@@ -504,7 +504,7 @@ void mwifiex_11n_delete_tx_ba_stream_tbl_entry(struct mwifiex_private *priv,
+ 				struct mwifiex_tx_ba_stream_tbl *tx_ba_tsr_tbl)
  {
-@@ -185,7 +185,7 @@ static u32 ieee80211_enable_ht(struct ie
- 	struct ieee80211_supported_band *sband;
- 	struct sta_info *sta;
- 	u32 changed = 0;
--	int hti_cfreq;
-+	int ht_cfreq;
- 	u16 ht_opmode;
- 	bool enable_ht = true;
- 	enum nl80211_channel_type prev_chantype;
-@@ -196,10 +196,10 @@ static u32 ieee80211_enable_ht(struct ie
- 	prev_chantype = sdata->vif.bss_conf.channel_type;
- 
- 
--	hti_cfreq = ieee80211_channel_to_frequency(hti->control_chan,
--						   sband->band);
-+	ht_cfreq = ieee80211_channel_to_frequency(ht_oper->primary_chan,
-+						  sband->band);
- 	/* check that channel matches the right operating channel */
--	if (local->hw.conf.channel->center_freq != hti_cfreq) {
-+	if (local->hw.conf.channel->center_freq != ht_cfreq) {
- 		/* Some APs mess this up, evidently.
- 		 * Netgear WNDR3700 sometimes reports 4 higher than
- 		 * the actual channel, for instance.
-@@ -207,11 +207,11 @@ static u32 ieee80211_enable_ht(struct ie
- 		printk(KERN_DEBUG
- 		       "%s: Wrong control channel in association"
- 		       " response: configured center-freq: %d"
--		       " hti-cfreq: %d  hti->control_chan: %d"
-+		       " ht-cfreq: %d  ht->control_chan: %d"
- 		       " band: %d.  Disabling HT.\n",
- 		       sdata->name,
- 		       local->hw.conf.channel->center_freq,
--		       hti_cfreq, hti->control_chan,
-+		       ht_cfreq, ht_oper->primary_chan,
- 		       sband->band);
- 		enable_ht = false;
- 	}
-@@ -222,8 +222,8 @@ static u32 ieee80211_enable_ht(struct ie
- 		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
- 		    !ieee80111_cfg_override_disables_ht40(sdata) &&
- 		    (sband->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
--		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
--			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+		    (ht_oper->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
-+			switch(ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
- 			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
- 				rx_channel_type = NL80211_CHAN_HT40PLUS;
- 				break;
-@@ -278,7 +278,7 @@ static u32 ieee80211_enable_ht(struct ie
- 				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
- 	}
- 
--	ht_opmode = le16_to_cpu(hti->operation_mode);
-+	ht_opmode = le16_to_cpu(ht_oper->operation_mode);
- 
- 	/* if bss configuration changed store the new one */
- 	if (sdata->ht_opmode_valid != enable_ht ||
-@@ -316,12 +316,12 @@ static int ieee80211_compatible_rates(co
- }
- 
- static void ieee80211_add_ht_ie(struct ieee80211_sub_if_data *sdata,
--				struct sk_buff *skb, const u8 *ht_info_ie,
-+				struct sk_buff *skb, const u8 *ht_oper_ie,
- 				struct ieee80211_supported_band *sband,
- 				struct ieee80211_channel *channel,
- 				enum ieee80211_smps_mode smps)
- {
--	struct ieee80211_ht_info *ht_info;
-+	struct ieee80211_ht_operation *ht_oper;
- 	u8 *pos;
- 	u32 flags = channel->flags;
- 	u16 cap;
-@@ -329,21 +329,21 @@ static void ieee80211_add_ht_ie(struct i
- 
- 	BUILD_BUG_ON(sizeof(ht_cap) != sizeof(sband->ht_cap));
- 
--	if (!ht_info_ie)
-+	if (!ht_oper_ie)
+ 	if (!tx_ba_tsr_tbl &&
+-			mwifiex_is_tx_ba_stream_ptr_valid(priv, tx_ba_tsr_tbl))
++	    mwifiex_is_tx_ba_stream_ptr_valid(priv, tx_ba_tsr_tbl))
  		return;
  
--	if (ht_info_ie[1] < sizeof(struct ieee80211_ht_info))
-+	if (ht_oper_ie[1] < sizeof(struct ieee80211_ht_operation))
- 		return;
+ 	dev_dbg(priv->adapter->dev, "info: tx_ba_tsr_tbl %p\n", tx_ba_tsr_tbl);
+@@ -548,8 +548,8 @@ mwifiex_get_ba_tbl(struct mwifiex_private *priv, int tid, u8 *ra)
  
- 	memcpy(&ht_cap, &sband->ht_cap, sizeof(ht_cap));
- 	ieee80211_apply_htcap_overrides(sdata, &ht_cap);
- 
--	ht_info = (struct ieee80211_ht_info *)(ht_info_ie + 2);
-+	ht_oper = (struct ieee80211_ht_operation *)(ht_oper_ie + 2);
- 
- 	/* determine capability flags */
- 	cap = ht_cap.cap;
- 
--	switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+	switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
- 	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
- 		if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
- 			cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-@@ -557,7 +557,7 @@ static void ieee80211_send_assoc(struct
- 	}
- 
- 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
--		ieee80211_add_ht_ie(sdata, skb, assoc_data->ht_information_ie,
-+		ieee80211_add_ht_ie(sdata, skb, assoc_data->ht_operation_ie,
- 				    sband, local->oper_channel, ifmgd->ap_smps);
- 
- 	/* if present, add any custom non-vendor IEs that go after HT */
-@@ -2092,9 +2092,9 @@ static bool ieee80211_assoc_success(stru
- 		ieee80211_set_wmm_default(sdata, false);
- 	changed |= BSS_CHANGED_QOS;
- 
--	if (elems.ht_info_elem && elems.wmm_param &&
-+	if (elems.ht_operation && elems.wmm_param &&
- 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
--		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
-+		changed |= ieee80211_enable_ht(sdata, elems.ht_operation,
- 					       cbss->bssid, ap_ht_cap_flags,
- 					       false);
- 
-@@ -2319,7 +2319,7 @@ static const u64 care_about_ies =
- 	(1ULL << WLAN_EID_CHANNEL_SWITCH) |
- 	(1ULL << WLAN_EID_PWR_CONSTRAINT) |
- 	(1ULL << WLAN_EID_HT_CAPABILITY) |
--	(1ULL << WLAN_EID_HT_INFORMATION);
-+	(1ULL << WLAN_EID_HT_OPERATION);
- 
- static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_mgmt *mgmt,
-@@ -2504,7 +2504,7 @@ static void ieee80211_rx_mgmt_beacon(str
- 			erp_valid, erp_value);
- 
- 
--	if (elems.ht_cap_elem && elems.ht_info_elem && elems.wmm_param &&
-+	if (elems.ht_cap_elem && elems.ht_operation && elems.wmm_param &&
- 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N)) {
- 		struct sta_info *sta;
- 		struct ieee80211_supported_band *sband;
-@@ -2527,7 +2527,7 @@ static void ieee80211_rx_mgmt_beacon(str
- 
- 		rcu_read_unlock();
- 
--		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
-+		changed |= ieee80211_enable_ht(sdata, elems.ht_operation,
- 					       bssid, ap_ht_cap_flags, true);
- 	}
- 
-@@ -3335,8 +3335,8 @@ int ieee80211_mgd_assoc(struct ieee80211
- 	assoc_data->wmm = bss->wmm_used && (local->hw.queues >= 4);
- 	assoc_data->supp_rates = bss->supp_rates;
- 	assoc_data->supp_rates_len = bss->supp_rates_len;
--	assoc_data->ht_information_ie =
--		ieee80211_bss_get_ie(req->bss, WLAN_EID_HT_INFORMATION);
-+	assoc_data->ht_operation_ie =
-+		ieee80211_bss_get_ie(req->bss, WLAN_EID_HT_OPERATION);
- 
- 	if (bss->wmm_used && bss->uapsd_supported &&
- 	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)) {
---- a/net/mac80211/util.c	2012-03-15 15:32:26.000000000 +0100
-+++ b/net/mac80211/util.c	2012-03-15 15:39:59.000000000 +0100
-@@ -684,9 +684,9 @@ u32 ieee802_11_parse_elems_crc(u8 *start
- 			else
- 				elem_parse_failed = true;
- 			break;
--		case WLAN_EID_HT_INFORMATION:
--			if (elen >= sizeof(struct ieee80211_ht_info))
--				elems->ht_info_elem = (void *)pos;
-+		case WLAN_EID_HT_OPERATION:
-+			if (elen >= sizeof(struct ieee80211_ht_operation))
-+				elems->ht_operation = (void *)pos;
- 			else
- 				elem_parse_failed = true;
- 			break;
-@@ -1611,57 +1611,56 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, s
- 	return pos;
- }
- 
--u8 *ieee80211_ie_build_ht_info(u8 *pos,
--			       struct ieee80211_sta_ht_cap *ht_cap,
-+u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       struct ieee80211_channel *channel,
- 			       enum nl80211_channel_type channel_type)
+ 	spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 	list_for_each_entry(tx_ba_tsr_tbl, &priv->tx_ba_stream_tbl_ptr, list) {
+-		if ((!memcmp(tx_ba_tsr_tbl->ra, ra, ETH_ALEN))
+-		    && (tx_ba_tsr_tbl->tid == tid)) {
++		if (!memcmp(tx_ba_tsr_tbl->ra, ra, ETH_ALEN) &&
++		    tx_ba_tsr_tbl->tid == tid) {
+ 			spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock,
+ 					       flags);
+ 			return tx_ba_tsr_tbl;
+@@ -718,7 +718,7 @@ int mwifiex_get_tx_ba_stream_tbl(struct mwifiex_private *priv,
+ 	list_for_each_entry(tx_ba_tsr_tbl, &priv->tx_ba_stream_tbl_ptr, list) {
+ 		rx_reo_tbl->tid = (u16) tx_ba_tsr_tbl->tid;
+ 		dev_dbg(priv->adapter->dev, "data: %s tid=%d\n",
+-						__func__, rx_reo_tbl->tid);
++			__func__, rx_reo_tbl->tid);
+ 		memcpy(rx_reo_tbl->ra, tx_ba_tsr_tbl->ra, ETH_ALEN);
+ 		rx_reo_tbl++;
+ 		count++;
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index 139aa6e..77646d7 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -86,9 +86,8 @@ mwifiex_is_ampdu_allowed(struct mwifiex_private *priv, int tid)
+ static inline u8
+ mwifiex_is_amsdu_allowed(struct mwifiex_private *priv, int tid)
  {
--	struct ieee80211_ht_info *ht_info;
-+	struct ieee80211_ht_operation *ht_oper;
- 	/* Build HT Information */
--	*pos++ = WLAN_EID_HT_INFORMATION;
--	*pos++ = sizeof(struct ieee80211_ht_info);
--	ht_info = (struct ieee80211_ht_info *)pos;
--	ht_info->control_chan =
-+	*pos++ = WLAN_EID_HT_OPERATION;
-+	*pos++ = sizeof(struct ieee80211_ht_operation);
-+	ht_oper = (struct ieee80211_ht_operation *)pos;
-+	ht_oper->primary_chan =
- 			ieee80211_frequency_to_channel(channel->center_freq);
- 	switch (channel_type) {
- 	case NL80211_CHAN_HT40MINUS:
--		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+		ht_oper->ht_param = IEEE80211_HT_PARAM_CHA_SEC_BELOW;
- 		break;
- 	case NL80211_CHAN_HT40PLUS:
--		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+		ht_oper->ht_param = IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
- 		break;
- 	case NL80211_CHAN_HT20:
- 	default:
--		ht_info->ht_param = IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+		ht_oper->ht_param = IEEE80211_HT_PARAM_CHA_SEC_NONE;
- 		break;
- 	}
- 	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
--		ht_info->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
-+		ht_oper->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
- 
- 	/*
- 	 * Note: According to 802.11n-2009 9.13.3.1, HT Protection field and
- 	 * RIFS Mode are reserved in IBSS mode, therefore keep them at 0
- 	 */
--	ht_info->operation_mode = 0x0000;
--	ht_info->stbc_param = 0x0000;
-+	ht_oper->operation_mode = 0x0000;
-+	ht_oper->stbc_param = 0x0000;
- 
- 	/* It seems that Basic MCS set and Supported MCS set
- 	   are identical for the first 10 bytes */
--	memset(&ht_info->basic_set, 0, 16);
--	memcpy(&ht_info->basic_set, &ht_cap->mcs, 10);
-+	memset(&ht_oper->basic_set, 0, 16);
-+	memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
- 
--	return pos + sizeof(struct ieee80211_ht_info);
-+	return pos + sizeof(struct ieee80211_ht_operation);
+-	return (((priv->aggr_prio_tbl[tid].amsdu != BA_STREAM_NOT_ALLOWED)
+-			&& ((priv->is_data_rate_auto)
+-			|| !((priv->bitmap_rates[2]) & 0x03)))
++	return (((priv->aggr_prio_tbl[tid].amsdu != BA_STREAM_NOT_ALLOWED) &&
++		 (priv->is_data_rate_auto || !(priv->bitmap_rates[2] & 0x03)))
+ 		? true : false);
  }
  
- enum nl80211_channel_type
--ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info *ht_info)
-+ieee80211_ht_oper_to_channel_type(struct ieee80211_ht_operation *ht_oper)
+@@ -149,7 +148,7 @@ mwifiex_find_stream_to_delete(struct mwifiex_private *priv, int ptr_tid,
+  */
+ static inline int
+ mwifiex_is_ba_stream_setup(struct mwifiex_private *priv,
+-			  struct mwifiex_ra_list_tbl *ptr, int tid)
++			   struct mwifiex_ra_list_tbl *ptr, int tid)
  {
- 	enum nl80211_channel_type channel_type;
+ 	struct mwifiex_tx_ba_stream_tbl *tx_tbl;
  
--	if (!ht_info)
-+	if (!ht_oper)
- 		return NL80211_CHAN_NO_HT;
+diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
+index ea6832d..9eefb2a 100644
+--- a/drivers/net/wireless/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/mwifiex/11n_aggr.c
+@@ -84,7 +84,7 @@ mwifiex_11n_form_amsdu_pkt(struct sk_buff *skb_aggr,
+ 	/* Add payload */
+ 	skb_put(skb_aggr, skb_src->len);
+ 	memcpy(skb_aggr->data + sizeof(*tx_header), skb_src->data,
+-							skb_src->len);
++	       skb_src->len);
+ 	*pad = (((skb_src->len + LLC_SNAP_LEN) & 3)) ? (4 - (((skb_src->len +
+ 						      LLC_SNAP_LEN)) & 3)) : 0;
+ 	skb_put(skb_aggr, *pad);
+@@ -119,14 +119,14 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
+ 	local_tx_pd->tx_pkt_offset = cpu_to_le16(sizeof(struct txpd));
+ 	local_tx_pd->tx_pkt_type = cpu_to_le16(PKT_TYPE_AMSDU);
+ 	local_tx_pd->tx_pkt_length = cpu_to_le16(skb->len -
+-			sizeof(*local_tx_pd));
++						 sizeof(*local_tx_pd));
  
--	switch (ht_info->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+	switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
- 	case IEEE80211_HT_PARAM_CHA_SEC_NONE:
- 		channel_type = NL80211_CHAN_HT20;
- 		break;
---- a/drivers/net/wireless/mwifiex/fw.h	2012-03-15 15:33:29.000000000 +0100
-+++ b/drivers/net/wireless/mwifiex/fw.h	2012-03-15 15:39:59.000000000 +0100
-@@ -1045,7 +1045,7 @@ struct mwifiex_ie_types_htcap {
+ 	if (local_tx_pd->tx_control == 0)
+ 		/* TxCtrl set by user or default */
+ 		local_tx_pd->tx_control = cpu_to_le32(priv->pkt_tx_ctrl);
  
- struct mwifiex_ie_types_htinfo {
- 	struct mwifiex_ie_types_header header;
--	struct ieee80211_ht_info ht_info;
-+	struct ieee80211_ht_operation ht_oper;
- } __packed;
- 
- struct mwifiex_ie_types_2040bssco {
---- a/drivers/net/wireless/mwifiex/main.h	2012-03-15 15:33:29.000000000 +0100
-+++ b/drivers/net/wireless/mwifiex/main.h	2012-03-15 15:39:59.000000000 +0100
-@@ -269,7 +269,7 @@ struct mwifiex_bssdescriptor {
- 	u8  disable_11n;
- 	struct ieee80211_ht_cap *bcn_ht_cap;
- 	u16 ht_cap_offset;
--	struct ieee80211_ht_info *bcn_ht_info;
-+	struct ieee80211_ht_operation *bcn_ht_oper;
- 	u16 ht_info_offset;
- 	u8 *bcn_bss_co_2040;
- 	u16 bss_co_2040_offset;
---- a/include/net/mac80211.h	2012-03-15 15:33:29.000000000 +0100
-+++ b/include/net/mac80211.h	2012-03-15 15:39:59.000000000 +0100
-@@ -242,7 +242,7 @@ enum ieee80211_rssi_event {
-  * @channel_type: Channel type for this BSS -- the hardware might be
-  *	configured for HT40+ while this BSS only uses no-HT, for
-  *	example.
-- * @ht_operation_mode: HT operation mode (like in &struct ieee80211_ht_info).
-+ * @ht_operation_mode: HT operation mode like in &struct ieee80211_ht_operation.
-  *	This field is only valid when the channel type is one of the HT types.
-  * @cqm_rssi_thold: Connection quality monitor RSSI threshold, a zero value
-  *	implies disabled
---- a/net/mac80211/ibss.c	2012-03-15 15:32:26.000000000 +0100
-+++ b/net/mac80211/ibss.c	2012-03-15 15:39:59.000000000 +0100
-@@ -160,13 +160,11 @@ static void __ieee80211_sta_join_ibss(st
- 	if (channel_type && sband->ht_cap.ht_supported) {
- 		pos = skb_put(skb, 4 +
- 				   sizeof(struct ieee80211_ht_cap) +
--				   sizeof(struct ieee80211_ht_info));
-+				   sizeof(struct ieee80211_ht_operation));
- 		pos = ieee80211_ie_build_ht_cap(pos, &sband->ht_cap,
- 						sband->ht_cap.cap);
--		pos = ieee80211_ie_build_ht_info(pos,
--						 &sband->ht_cap,
--						 chan,
--						 channel_type);
-+		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
-+						 chan, channel_type);
- 	}
- 
- 	if (local->hw.queues >= 4) {
-@@ -441,13 +439,13 @@ static void ieee80211_rx_bss_info(struct
- 		if (sta && elems->wmm_info)
- 			set_sta_flag(sta, WLAN_STA_WME);
- 
--		if (sta && elems->ht_info_elem && elems->ht_cap_elem &&
-+		if (sta && elems->ht_operation && elems->ht_cap_elem &&
- 		    sdata->u.ibss.channel_type != NL80211_CHAN_NO_HT) {
- 			/* we both use HT */
- 			struct ieee80211_sta_ht_cap sta_ht_cap_new;
- 			enum nl80211_channel_type channel_type =
--				ieee80211_ht_info_to_channel_type(
--							elems->ht_info_elem);
-+				ieee80211_ht_oper_to_channel_type(
-+							elems->ht_operation);
- 
- 			ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 							  elems->ht_cap_elem,
-@@ -1063,7 +1061,7 @@ int ieee80211_ibss_join(struct ieee80211
- 			    4 /* IBSS params */ +
- 			    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
- 			    2 + sizeof(struct ieee80211_ht_cap) +
--			    2 + sizeof(struct ieee80211_ht_info) +
-+			    2 + sizeof(struct ieee80211_ht_operation) +
- 			    params->ie_len);
- 	if (!skb)
- 		return -ENOMEM;
---- a/net/mac80211/ieee80211_i.h	2012-03-15 15:33:29.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2012-03-15 15:39:59.000000000 +0100
-@@ -397,7 +397,7 @@ struct ieee80211_mgd_auth_data {
- struct ieee80211_mgd_assoc_data {
- 	struct cfg80211_bss *bss;
- 	const u8 *supp_rates;
--	const u8 *ht_information_ie;
-+	const u8 *ht_operation_ie;
- 
- 	unsigned long timeout;
- 	int tries;
-@@ -1117,7 +1117,7 @@ struct ieee802_11_elems {
- 	u8 *wmm_info;
- 	u8 *wmm_param;
- 	struct ieee80211_ht_cap *ht_cap_elem;
--	struct ieee80211_ht_info *ht_info_elem;
-+	struct ieee80211_ht_operation *ht_operation;
- 	struct ieee80211_meshconf_ie *mesh_config;
- 	u8 *mesh_id;
- 	u8 *peering;
-@@ -1470,10 +1470,9 @@ size_t ieee80211_ie_split(const u8 *ies,
- size_t ieee80211_ie_split_vendor(const u8 *ies, size_t ielen, size_t offset);
- u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			      u16 cap);
--u8 *ieee80211_ie_build_ht_info(u8 *pos,
--				struct ieee80211_sta_ht_cap *ht_cap,
--				struct ieee80211_channel *channel,
--				enum nl80211_channel_type channel_type);
-+u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
-+			       struct ieee80211_channel *channel,
-+			       enum nl80211_channel_type channel_type);
- 
- /* internal work items */
- void ieee80211_work_init(struct ieee80211_local *local);
-@@ -1501,7 +1500,7 @@ bool ieee80211_set_channel_type(struct i
- 				struct ieee80211_sub_if_data *sdata,
- 				enum nl80211_channel_type chantype);
- enum nl80211_channel_type
--ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info *ht_info);
-+ieee80211_ht_oper_to_channel_type(struct ieee80211_ht_operation *ht_oper);
- enum nl80211_channel_type ieee80211_get_tx_channel_type(
- 					struct ieee80211_local *local,
- 					enum nl80211_channel_type channel_type);
---- a/net/mac80211/mesh.c	2012-03-15 15:32:26.000000000 +0100
-+++ b/net/mac80211/mesh.c	2012-03-15 15:39:59.000000000 +0100
-@@ -98,9 +98,9 @@ bool mesh_matches_local(struct ieee802_1
- 		goto mismatch;
- 
- 	/* disallow peering with mismatched channel types for now */
--	if (ie->ht_info_elem &&
-+	if (ie->ht_operation &&
- 	    (local->_oper_channel_type !=
--	     ieee80211_ht_info_to_channel_type(ie->ht_info_elem)))
-+	     ieee80211_ht_oper_to_channel_type(ie->ht_operation)))
- 		goto mismatch;
- 
- 	return true;
-@@ -371,7 +371,7 @@ int mesh_add_ht_cap_ie(struct sk_buff *s
- 	return 0;
- }
- 
--int mesh_add_ht_info_ie(struct sk_buff *skb,
-+int mesh_add_ht_oper_ie(struct sk_buff *skb,
- 			struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -385,11 +385,11 @@ int mesh_add_ht_info_ie(struct sk_buff *
- 	if (!ht_cap->ht_supported || channel_type == NL80211_CHAN_NO_HT)
- 		return 0;
- 
--	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_info))
-+	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_operation))
- 		return -ENOMEM;
- 
--	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_info));
--	ieee80211_ie_build_ht_info(pos, ht_cap, channel, channel_type);
-+	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_operation));
-+	ieee80211_ie_build_ht_oper(pos, ht_cap, channel, channel_type);
- 
- 	return 0;
- }
---- a/net/mac80211/mesh_plink.c	2012-03-15 15:32:26.000000000 +0100
-+++ b/net/mac80211/mesh_plink.c	2012-03-15 15:39:59.000000000 +0100
-@@ -187,7 +187,7 @@ static int mesh_plink_frame_tx(struct ie
- 			    2 + sdata->u.mesh.mesh_id_len +
- 			    2 + sizeof(struct ieee80211_meshconf_ie) +
- 			    2 + sizeof(struct ieee80211_ht_cap) +
--			    2 + sizeof(struct ieee80211_ht_info) +
-+			    2 + sizeof(struct ieee80211_ht_operation) +
- 			    2 + 8 + /* peering IE */
- 			    sdata->u.mesh.ie_len);
- 	if (!skb)
-@@ -263,7 +263,7 @@ static int mesh_plink_frame_tx(struct ie
- 
- 	if (action != WLAN_SP_MESH_PEERING_CLOSE) {
- 		if (mesh_add_ht_cap_ie(skb, sdata) ||
--		    mesh_add_ht_info_ie(skb, sdata))
-+		    mesh_add_ht_oper_ie(skb, sdata))
+-	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
+-		(priv->adapter->pps_uapsd_mode)) {
++	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA &&
++	    priv->adapter->pps_uapsd_mode) {
+ 		if (true == mwifiex_check_last_packet_indication(priv)) {
+ 			priv->adapter->tx_lock_flag = true;
+ 			local_tx_pd->flags =
+@@ -257,9 +257,8 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 			mwifiex_write_data_complete(adapter, skb_aggr, -1);
  			return -1;
+ 		}
+-		if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
+-			(adapter->pps_uapsd_mode) &&
+-			(adapter->tx_lock_flag)) {
++		if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA &&
++		    adapter->pps_uapsd_mode && adapter->tx_lock_flag) {
+ 				priv->adapter->tx_lock_flag = false;
+ 				if (ptx_pd)
+ 					ptx_pd->flags = 0;
+@@ -279,7 +278,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
+ 	case -1:
+ 		adapter->data_sent = false;
+ 		dev_err(adapter->dev, "%s: host_to_card failed: %#x\n",
+-						__func__, ret);
++			__func__, ret);
+ 		adapter->dbg.num_tx_host_to_card_failure++;
+ 		mwifiex_write_data_complete(adapter, skb_aggr, ret);
+ 		return 0;
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index 06f5d36..9c44088 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -220,7 +220,7 @@ mwifiex_flush_data(unsigned long context)
+  */
+ static void
+ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
+-				 int tid, int win_size, int seq_num)
++				  int tid, int win_size, int seq_num)
+ {
+ 	int i;
+ 	struct mwifiex_rx_reorder_tbl *tbl, *new_node;
+@@ -240,7 +240,7 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
+ 	new_node = kzalloc(sizeof(struct mwifiex_rx_reorder_tbl), GFP_KERNEL);
+ 	if (!new_node) {
+ 		dev_err(priv->adapter->dev, "%s: failed to alloc new_node\n",
+-		       __func__);
++			__func__);
+ 		return;
  	}
  
---- a/net/mac80211/tx.c	2012-03-15 15:33:29.000000000 +0100
-+++ b/net/mac80211/tx.c	2012-03-15 15:39:59.000000000 +0100
-@@ -2390,7 +2390,7 @@ struct sk_buff *ieee80211_beacon_get_tim
- 				    2 + 3 + /* DS params */
- 				    2 + (IEEE80211_MAX_SUPP_RATES - 8) +
- 				    2 + sizeof(struct ieee80211_ht_cap) +
--				    2 + sizeof(struct ieee80211_ht_info) +
-+				    2 + sizeof(struct ieee80211_ht_operation) +
- 				    2 + sdata->u.mesh.mesh_id_len +
- 				    2 + sizeof(struct ieee80211_meshconf_ie) +
- 				    sdata->u.mesh.ie_len);
-@@ -2419,7 +2419,7 @@ struct sk_buff *ieee80211_beacon_get_tim
- 		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
- 		    mesh_add_rsn_ie(skb, sdata) ||
- 		    mesh_add_ht_cap_ie(skb, sdata) ||
--		    mesh_add_ht_info_ie(skb, sdata) ||
-+		    mesh_add_ht_oper_ie(skb, sdata) ||
- 		    mesh_add_meshid_ie(skb, sdata) ||
- 		    mesh_add_meshconf_ie(skb, sdata) ||
- 		    mesh_add_vendor_ies(skb, sdata)) {
---- a/net/mac80211/mesh.h	2012-03-15 15:32:26.000000000 +0100
-+++ b/net/mac80211/mesh.h	2012-03-15 15:39:59.000000000 +0100
-@@ -220,7 +220,7 @@ int mesh_add_ds_params_ie(struct sk_buff
- 			  struct ieee80211_sub_if_data *sdata);
- int mesh_add_ht_cap_ie(struct sk_buff *skb,
- 		       struct ieee80211_sub_if_data *sdata);
--int mesh_add_ht_info_ie(struct sk_buff *skb,
-+int mesh_add_ht_oper_ie(struct sk_buff *skb,
- 			struct ieee80211_sub_if_data *sdata);
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
- int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
---- a/drivers/net/wireless/mwifiex/join.c	2012-03-15 15:33:29.000000000 +0100
-+++ b/drivers/net/wireless/mwifiex/join.c	2012-03-15 15:48:53.000000000 +0100
-@@ -932,20 +932,20 @@ mwifiex_cmd_802_11_ad_hoc_start(struct m
- 		/* Fill HT INFORMATION */
- 		ht_info = (struct mwifiex_ie_types_htinfo *) pos;
- 		memset(ht_info, 0, sizeof(struct mwifiex_ie_types_htinfo));
--		ht_info->header.type = cpu_to_le16(WLAN_EID_HT_INFORMATION);
-+		ht_info->header.type = cpu_to_le16(WLAN_EID_HT_OPERATION);
- 		ht_info->header.len =
--				cpu_to_le16(sizeof(struct ieee80211_ht_info));
-+			cpu_to_le16(sizeof(struct ieee80211_ht_operation));
+@@ -352,7 +352,8 @@ int mwifiex_cmd_11n_addba_rsp_gen(struct mwifiex_private *priv,
+ 	cmd_addba_req->block_ack_param_set = cpu_to_le16(block_ack_param_set);
  
--		ht_info->ht_info.control_chan =
-+		ht_info->ht_oper.primary_chan =
- 			(u8) priv->curr_bss_params.bss_descriptor.channel;
- 		if (adapter->sec_chan_offset) {
--			ht_info->ht_info.ht_param = adapter->sec_chan_offset;
--			ht_info->ht_info.ht_param |=
-+			ht_info->ht_oper.ht_param = adapter->sec_chan_offset;
-+			ht_info->ht_oper.ht_param |=
- 					IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
+ 	mwifiex_11n_create_rx_reorder_tbl(priv, cmd_addba_req->peer_mac_addr,
+-			    tid, win_size, le16_to_cpu(cmd_addba_req->ssn));
++					  tid, win_size,
++					  le16_to_cpu(cmd_addba_req->ssn));
+ 	return 0;
+ }
+ 
+@@ -416,11 +417,11 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 	 * packet
+ 	 */
+ 	if ((start_win + TWOPOW11) > (MAX_TID_VALUE - 1)) {/* Wrap */
+-		if (seq_num >= ((start_win + (TWOPOW11)) & (MAX_TID_VALUE - 1))
+-				&& (seq_num < start_win))
++		if (seq_num >= ((start_win + TWOPOW11) &
++				(MAX_TID_VALUE - 1)) && (seq_num < start_win))
+ 			return -1;
+-	} else if ((seq_num < start_win)
+-			|| (seq_num > (start_win + (TWOPOW11)))) {
++	} else if ((seq_num < start_win) ||
++		   (seq_num > (start_win + TWOPOW11))) {
+ 		return -1;
+ 	}
+ 
+@@ -431,10 +432,11 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 	if (pkt_type == PKT_TYPE_BAR)
+ 		seq_num = ((seq_num + win_size) - 1) & (MAX_TID_VALUE - 1);
+ 
+-	if (((end_win < start_win)
+-	     && (seq_num < (TWOPOW11 - (MAX_TID_VALUE - start_win)))
+-	     && (seq_num > end_win)) || ((end_win > start_win)
+-	     && ((seq_num > end_win) || (seq_num < start_win)))) {
++	if (((end_win < start_win) &&
++	     (seq_num < (TWOPOW11 - (MAX_TID_VALUE - start_win))) &&
++	     (seq_num > end_win)) ||
++	    ((end_win > start_win) && ((seq_num > end_win) ||
++				       (seq_num < start_win)))) {
+ 		end_win = seq_num;
+ 		if (((seq_num - win_size) + 1) >= 0)
+ 			start_win = (end_win - win_size) + 1;
+@@ -483,15 +485,15 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ 	else
+ 		cleanup_rx_reorder_tbl = (initiator) ? false : true;
+ 
+-	dev_dbg(priv->adapter->dev, "event: DELBA: %pM tid=%d, "
+-	       "initiator=%d\n", peer_mac, tid, initiator);
++	dev_dbg(priv->adapter->dev, "event: DELBA: %pM tid=%d initiator=%d\n",
++		peer_mac, tid, initiator);
+ 
+ 	if (cleanup_rx_reorder_tbl) {
+ 		tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid,
+ 								 peer_mac);
+ 		if (!tbl) {
+ 			dev_dbg(priv->adapter->dev,
+-					"event: TID, TA not found in table\n");
++				"event: TID, TA not found in table\n");
+ 			return;
  		}
--		ht_info->ht_info.operation_mode =
-+		ht_info->ht_oper.operation_mode =
- 		     cpu_to_le16(IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
--		ht_info->ht_info.basic_set[0] = 0xff;
-+		ht_info->ht_oper.basic_set[0] = 0xff;
- 		pos += sizeof(struct mwifiex_ie_types_htinfo);
- 		cmd_append_size +=
- 				sizeof(struct mwifiex_ie_types_htinfo);
-
+ 		mwifiex_del_rx_reorder_entry(priv, tbl);
+@@ -499,7 +501,7 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ 		ptx_tbl = mwifiex_get_ba_tbl(priv, tid, peer_mac);
+ 		if (!ptx_tbl) {
+ 			dev_dbg(priv->adapter->dev,
+-					"event: TID, RA not found in table\n");
++				"event: TID, RA not found in table\n");
+ 			return;
+ 		}
+ 
+@@ -538,13 +540,13 @@ int mwifiex_ret_11n_addba_resp(struct mwifiex_private *priv,
+ 			IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK)
+ 			>> BLOCKACKPARAM_WINSIZE_POS;
+ 
+-		dev_dbg(priv->adapter->dev, "cmd: ADDBA RSP: %pM"
+-		       " tid=%d ssn=%d win_size=%d\n",
+-		       add_ba_rsp->peer_mac_addr,
+-		       tid, add_ba_rsp->ssn, win_size);
++		dev_dbg(priv->adapter->dev,
++			"cmd: ADDBA RSP: %pM tid=%d ssn=%d win_size=%d\n",
++			add_ba_rsp->peer_mac_addr, tid,
++			add_ba_rsp->ssn, win_size);
+ 	} else {
+ 		dev_err(priv->adapter->dev, "ADDBA RSP: failed %pM tid=%d)\n",
+-				add_ba_rsp->peer_mac_addr, tid);
++			add_ba_rsp->peer_mac_addr, tid);
+ 
+ 		tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid,
+ 						     add_ba_rsp->peer_mac_addr);
+-- 
+1.7.0.2
 
