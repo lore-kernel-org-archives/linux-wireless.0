@@ -1,76 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44766 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293Ab2CLB0B convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3678 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932450Ab2CNJLe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 21:26:01 -0400
+	Wed, 14 Mar 2012 05:11:34 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <4F5D4E02.4080209@gmail.com>
-References: <4F5D4E02.4080209@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 12 Mar 2012 12:25:40 +1100
-Message-ID: <CAGRGNgUufVtfdX6D=LPmWXGL=O_x-uBRUWNNyKt1enMEPhGH4w@mail.gmail.com> (sfid-20120312_022605_818063_F01C6BB7)
-Subject: Re: [PATCH v2 3/3] mac80211: improve PID rate control mechanism by
- avoiding rate oscillation problem
-To: wei <yinwei168@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20320.24745.258144.136367@gargle.gargle.HOWL> (sfid-20120314_101138_890966_C719F077)
+Date: Wed, 14 Mar 2012 14:41:05 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 6/6] ath9k: Fix multi-VIF BSS handling
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wei,
+mac80211 provides short preamble information and ERP protection
+information on a per-BSS basis, which can be used. Remove flags
+stored in the driver, which was incorrect since they were being used
+in a global manner.
 
-Again, a couple of minor comments.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |   16 ++++++----------
+ drivers/net/wireless/ath/ath9k/beacon.c |    6 +++---
+ drivers/net/wireless/ath/ath9k/main.c   |   19 -------------------
+ drivers/net/wireless/ath/ath9k/rc.c     |    3 ++-
+ drivers/net/wireless/ath/ath9k/xmit.c   |    4 +++-
+ 5 files changed, 14 insertions(+), 34 deletions(-)
 
-On Mon, Mar 12, 2012 at 12:14, wei <yinwei168@gmail.com> wrote:
-> From Wei YIN <Wei.Yin@nicta.com.au>
-> Improve PID rate control mechanism by avoiding rate oscillation problem
->
-> Signed-off-by: Wei YIN <Wei.Yin@nicta.com.au>
-> ---
-> kernel 3.3.0
-> net/mac80211/rc80211_pid_debugfs.c | 71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++------
-> 1 file changed, 65 insertions(+), 6 deletions(-)
->
-> --- wireless-testing_orig/net/mac80211/rc80211_pid_debugfs.c    2012-02-17 13:59:53.487182968 +1000
-> +++ wireless-testing/net/mac80211/rc80211_pid_debugfs.c 2012-03-08 14:45:38.727184486 +1000
-> @@ -1,5 +1,6 @@
->  /*
->  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
-> + * Copyright 2012, Wei Yin, National ICT Australia <Wei.Yin@nicta.com.au>
->  *
->  * This program is free software; you can redistribute it and/or modify
->  * it under the terms of the GNU General Public License version 2 as
-> @@ -13,12 +14,72 @@
->  #include <linux/types.h>
->  #include <linux/skbuff.h>
->  #include <linux/slab.h>
-> -#include <linux/export.h>
-
-This change should go in a separate patch.
-
->  #include <net/mac80211.h>
->  #include "rate.h"
->
->  #include "rc80211_pid.h"
-> +#include <linux/debugfs.h>
-> +#include <linux/ieee80211.h>
-> +#include <linux/slab.h>
-> +#include <linux/export.h>
-
-Different types of includes should be grouped together, the #include
-<linux/*> lines should go with their fellows at the top.
-
-Overall, this is significantly improved over your first patch. Well Done.
-
-Does anyone else have any comments about this?
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 5ecec83..8c84049 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -584,16 +584,12 @@ struct ath_ant_comb {
+ #define SC_OP_INVALID                BIT(0)
+ #define SC_OP_BEACONS                BIT(1)
+ #define SC_OP_OFFCHANNEL             BIT(2)
+-#define SC_OP_PREAMBLE_SHORT         BIT(3)
+-#define SC_OP_PROTECT_ENABLE         BIT(4)
+-#define SC_OP_RXFLUSH                BIT(5)
+-#define SC_OP_LED_ASSOCIATED         BIT(6)
+-#define SC_OP_LED_ON                 BIT(7)
+-#define SC_OP_TSF_RESET              BIT(8)
+-#define SC_OP_BT_PRIORITY_DETECTED   BIT(9)
+-#define SC_OP_BT_SCAN                BIT(10)
+-#define SC_OP_ANI_RUN                BIT(11)
+-#define SC_OP_PRIM_STA_VIF           BIT(12)
++#define SC_OP_RXFLUSH                BIT(3)
++#define SC_OP_TSF_RESET              BIT(4)
++#define SC_OP_BT_PRIORITY_DETECTED   BIT(5)
++#define SC_OP_BT_SCAN                BIT(6)
++#define SC_OP_ANI_RUN                BIT(7)
++#define SC_OP_PRIM_STA_VIF           BIT(8)
+ 
+ /* Powersave flags */
+ #define PS_WAIT_FOR_BEACON        BIT(0)
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 43882f9..6264182 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -67,7 +67,7 @@ int ath_beaconq_config(struct ath_softc *sc)
+  *  up rate codes, and channel flags. Beacons are always sent out at the
+  *  lowest rate, and are not retried.
+ */
+-static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
++static void ath_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 			     struct ath_buf *bf, int rateidx)
+ {
+ 	struct sk_buff *skb = bf->bf_mpdu;
+@@ -82,7 +82,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 
+ 	sband = &sc->sbands[common->hw->conf.channel->band];
+ 	rate = sband->bitrates[rateidx].hw_value;
+-	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
++	if (vif->bss_conf.use_short_preamble)
+ 		rate |= sband->bitrates[rateidx].hw_value_short;
+ 
+ 	memset(&info, 0, sizeof(info));
+@@ -209,7 +209,7 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	ath_beacon_setup(sc, avp, bf, info->control.rates[0].idx);
++	ath_beacon_setup(sc, vif, bf, info->control.rates[0].idx);
+ 
+ 	while (skb) {
+ 		ath_tx_cabq(hw, skb);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3f00daa..3879485 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2044,25 +2044,6 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 			ath_beacon_config(sc, vif);
+ 	}
+ 
+-	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
+-		ath_dbg(common, CONFIG, "BSS Changed PREAMBLE %d\n",
+-			bss_conf->use_short_preamble);
+-		if (bss_conf->use_short_preamble)
+-			sc->sc_flags |= SC_OP_PREAMBLE_SHORT;
+-		else
+-			sc->sc_flags &= ~SC_OP_PREAMBLE_SHORT;
+-	}
+-
+-	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
+-		ath_dbg(common, CONFIG, "BSS Changed CTS PROT %d\n",
+-			bss_conf->use_cts_prot);
+-		if (bss_conf->use_cts_prot &&
+-		    hw->conf.channel->band != IEEE80211_BAND_5GHZ)
+-			sc->sc_flags |= SC_OP_PROTECT_ENABLE;
+-		else
+-			sc->sc_flags &= ~SC_OP_PROTECT_ENABLE;
+-	}
+-
+ 	mutex_unlock(&sc->mutex);
+ 	ath9k_ps_restore(sc);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index f26e984..4f84849 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -748,7 +748,8 @@ static void ath_rc_rate_set_rtscts(struct ath_softc *sc,
+ 	 * If 802.11g protection is enabled, determine whether to use RTS/CTS or
+ 	 * just CTS.  Note that this is only done for OFDM/HT unicast frames.
+ 	 */
+-	if ((sc->sc_flags & SC_OP_PROTECT_ENABLE) &&
++	if ((tx_info->control.vif &&
++	     tx_info->control.vif->bss_conf.use_cts_prot) &&
+ 	    (rate_table->info[rix].phy == WLAN_RC_PHY_OFDM ||
+ 	     WLAN_RC_PHY_HT(rate_table->info[rix].phy))) {
+ 		rates[0].flags |= IEEE80211_TX_RC_USE_CTS_PROTECT;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index d2c635d..5faec1e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -955,7 +955,9 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 	 */
+ 	rate = ieee80211_get_rts_cts_rate(sc->hw, tx_info);
+ 	info->rtscts_rate = rate->hw_value;
+-	if (sc->sc_flags & SC_OP_PREAMBLE_SHORT)
++
++	if (tx_info->control.vif &&
++	    tx_info->control.vif->bss_conf.use_short_preamble)
+ 		info->rtscts_rate |= rate->hw_value_short;
+ 
+ 	for (i = 0; i < 4; i++) {
 -- 
-Julian Calaby
+1.7.9.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
