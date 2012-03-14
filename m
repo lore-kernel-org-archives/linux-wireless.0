@@ -1,50 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:43436 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752723Ab2CLLXT (ORCPT
+Received: from hermes.mlbassoc.com ([64.234.241.98]:39537 "EHLO
+	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759298Ab2CNSot (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 07:23:19 -0400
-Subject: [PATCH 3/4] ath6kl: fix open parenthesis alignment in
- ath6kl_sdio_suspend()
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Mon, 12 Mar 2012 13:23:14 +0200
-Message-ID: <20120312112314.23253.26734.stgit@x201> (sfid-20120312_122322_784391_6D961182)
-In-Reply-To: <20120312112131.23253.74137.stgit@x201>
-References: <20120312112131.23253.74137.stgit@x201>
+	Wed, 14 Mar 2012 14:44:49 -0400
+Message-ID: <4F60E71F.10701@mlbassoc.com> (sfid-20120314_194452_887417_8C562A01)
+Date: Wed, 14 Mar 2012 12:44:47 -0600
+From: Gary Thomas <gary@mlbassoc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Luciano Coelho <coelho@ti.com>
+Subject: Re: Troubles with wl12xx
+References: <4F6092FB.6030809@mlbassoc.com> <4F60A024.9060306@mlbassoc.com>
+In-Reply-To: <4F60A024.9060306@mlbassoc.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath6kl/sdio.c:875: CHECK: Alignment should match open parenthesis
+On 2012-03-14 07:41, Gary Thomas wrote:
+> On 2012-03-14 06:45, Gary Thomas wrote:
+>> I'm having some issues getting my [newly designed] board to run
+>> with wl12xx (wl1271 on SDIO) My kernel is 2.6.37 and I'm using
+>> a compat-wireless snapshot from 2012-02-28
+>>
+>> Here's what I see when I boot - looks OK:
+>> Compat-wireless backport release: compat-wireless-2012-02-28
+>> Backport based on linux-next.git next-20120228
+>> cfg80211: Calling CRDA to update world regulatory domain
+>> wl12xx: loaded
+>>
+>> If I bring up the wlan0 interface manually, I can talk to the
+>> device, scan for access points, etc. All looks good.
+>>
+>> The problem comes when I try to negotiate for an address with
+>> WPA security.
+>> # ifup wlan0
+>> wl12xx: firmware booted (Rev 6.3.5.0.98)
+>> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> udhcpc (v1.19.3) started
+>> Sending discover...
+>> wl12xx: down
+>> Sending discover...
+>> Sending discover...
+>> No lease, failing
+>>
+>> A few seconds later, everything falls apart. Sorry for the verbosity, but
+>> the messages changed at the end and I wanted to make sure you saw it all.
+>
+> A little more information - maybe this helps:
+> # ifup -v wlan0
+> run-parts /etc/network/if-pre-up.d
+> wl12xx: firmware booted (Rev 6.3.5.0.98)
+> wl12xx: ERROR watchdog interrupt received! starting recovery.
+> wl12xx: Reading FW panic log
+> wl12xx: Hardware recovery in progress. FW ver: Rev 6.3.5.0.98 pc: 0x0
+> wl12xx: down
+> ieee80211 phy0: Hardware restart was requested
+> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> wl12xx: ERROR timeout waiting for the hardware to complete initialization
+> wl12xx: ERROR timeout waiting for the hardware to complete initialization
+> wl12xx: ERROR timeout waiting for the hardware to complete initialization
+> wl12xx: ERROR firmware boot failed despite 3 retries
+> ifconfig wlan0 up
+> udhcpc -R -n -p /var/run/udhcpc.wlan0.pid -i wlan0
+> udhcpc (v1.19.3) started
+> Sending discover...
+> Sending discover...
+> Sending discover...
+> No lease, failing
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+Even more info - I enabled all the debug flags in the wl12xx driver and
+captured this sequence (it's 100% repeatable with my current configuration)
+The log is at http://www.mlbassoc.com/misc/messages.wl12xx
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 5a03082..5352864 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -871,12 +871,13 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 		if (ret && ret != -ENOTCONN)
- 			ath6kl_err("wow suspend failed: %d\n", ret);
- 
--		if (ret && (!ar->wow_suspend_mode ||
--		    ar->wow_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
--				try_deepsleep = true;
-+		if (ret &&
-+		    (!ar->wow_suspend_mode ||
-+		     ar->wow_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
-+			try_deepsleep = true;
- 		else if (ret &&
- 			 ar->wow_suspend_mode == WLAN_POWER_STATE_CUT_PWR)
--				goto cut_pwr;
-+			goto cut_pwr;
- 		if (!ret)
- 			return 0;
- 	}
+Any ideas what's going on?
 
+
+-- 
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
