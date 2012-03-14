@@ -1,75 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3710 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755446Ab2C0SNq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 14:13:46 -0400
-Message-ID: <4F720358.1010606@gmail.com> (sfid-20120327_201348_746115_38AA5ECE)
-Date: Tue, 27 Mar 2012 20:13:44 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Jakub Kicinski <kubakici@wp.pl>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 3/4] rt2x00: initialize queues before giving up due to
- DMA error
-References: <1332859867-27921-1-git-send-email-kubakici@wp.pl> <1332859867-27921-4-git-send-email-kubakici@wp.pl>
-In-Reply-To: <1332859867-27921-4-git-send-email-kubakici@wp.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:55433 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755871Ab2CNPko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2012 11:40:44 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 03/14] ath9k_hw: remove ath9k_hw_htc_resetinit
+Date: Wed, 14 Mar 2012 16:40:23 +0100
+Message-Id: <1331739634-22318-3-git-send-email-nbd@openwrt.org> (sfid-20120314_164110_562868_A56857F3)
+In-Reply-To: <1331739634-22318-2-git-send-email-nbd@openwrt.org>
+References: <1331739634-22318-1-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/12 16:51, Jakub Kicinski wrote:
-> Don't immediately abort .start if DMA is busy before we
-> initialize the queues. Some drivers do not deinitialize
-> queues properly and we would fail to take over after them.
-> 
-> This behaviour is consistent with legacy driver.
-> 
-> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Automatically set the ah->htc_reset_init on init and after PHY disable.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
-> 2011_0406_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO
-> common/rtmp_init.c:2007
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
->  drivers/net/wireless/rt2x00/rt2800pci.c |    6 ++++--
->  2 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index c872ba6..de975ef 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -290,7 +290,7 @@ int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
->  		msleep(10);
->  	}
->  
-> -	ERROR(rt2x00dev, "WPDMA TX/RX busy, aborting.\n");
-> +	ERROR(rt2x00dev, "WPDMA TX/RX busy [0x%08x].\n", reg);
->  	return -EACCES;
->  }
->  EXPORT_SYMBOL_GPL(rt2800_wait_wpdma_ready);
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 5a2f68f..f39587b 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -501,8 +501,10 @@ static int rt2800pci_enable_radio(struct rt2x00_dev *rt2x00dev)
->  {
->  	int retval;
->  
-> -	if (unlikely(rt2800_wait_wpdma_ready(rt2x00dev) ||
-> -		     rt2800pci_init_queues(rt2x00dev)))
-> +	/* Wait for DMA, ignore error until we initialize queues. */
-> +	rt2800_wait_wpdma_ready(rt2x00dev);
-> +
-> +	if (unlikely(rt2800pci_init_queues(rt2x00dev)))
->  		return -EIO;
->  
->  	retval = rt2800_enable_radio(rt2x00dev);
-
-
--- 
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Gertjan
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c           |    8 ++------
+ drivers/net/wireless/ath/ath9k/hw.h           |    3 ---
+ 3 files changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 2a29a7c..2b8f61c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -919,7 +919,6 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
+ 	/* setup initial channel */
+ 	init_channel = ath9k_cmn_get_curchannel(hw, ah);
+ 
+-	ath9k_hw_htc_resetinit(ah);
+ 	ret = ath9k_hw_reset(ah, init_channel, ah->caldata, false);
+ 	if (ret) {
+ 		ath_err(common,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 02cc1ce..5bd872f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -449,6 +449,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->slottime = ATH9K_SLOT_TIME_9;
+ 	ah->globaltxtimeout = (u32) -1;
+ 	ah->power_mode = ATH9K_PM_UNDEFINED;
++	ah->htc_reset_init = true;
+ }
+ 
+ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
+@@ -2589,6 +2590,7 @@ bool ath9k_hw_phy_disable(struct ath_hw *ah)
+ 		return false;
+ 
+ 	ath9k_hw_init_pll(ah, NULL);
++	ah->htc_reset_init = true;
+ 	return true;
+ }
+ EXPORT_SYMBOL(ath9k_hw_phy_disable);
+@@ -2949,12 +2951,6 @@ EXPORT_SYMBOL(ath_gen_timer_isr);
+ /* HTC  */
+ /********/
+ 
+-void ath9k_hw_htc_resetinit(struct ath_hw *ah)
+-{
+-	ah->htc_reset_init = true;
+-}
+-EXPORT_SYMBOL(ath9k_hw_htc_resetinit);
+-
+ static struct {
+ 	u32 version;
+ 	const char * name;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1707137..a703423 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -988,9 +988,6 @@ void ath_gen_timer_isr(struct ath_hw *hw);
+ 
+ void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
+ 
+-/* HTC */
+-void ath9k_hw_htc_resetinit(struct ath_hw *ah);
+-
+ /* PHY */
+ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+ 				   u32 *coef_mantissa, u32 *coef_exponent);
+-- 
+1.7.3.2
+
