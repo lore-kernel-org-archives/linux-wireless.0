@@ -1,54 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:51711 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753309Ab2CSPZo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 11:25:44 -0400
-Message-ID: <4F674FF5.2060406@gmail.com> (sfid-20120319_162603_509224_FF629763)
-Date: Mon, 19 Mar 2012 08:25:41 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: Linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
-	Linux-netdev <netdev@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com>
-In-Reply-To: <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:55431 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755946Ab2CNPko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2012 11:40:44 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 09/14] ath9k_hw: fold ar9002_hw_cck_chan14_spread into mode regs initialization
+Date: Wed, 14 Mar 2012 16:40:29 +0100
+Message-Id: <1331739634-22318-9-git-send-email-nbd@openwrt.org> (sfid-20120314_164111_139502_6710B9A6)
+In-Reply-To: <1331739634-22318-8-git-send-email-nbd@openwrt.org>
+References: <1331739634-22318-1-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-2-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-3-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-4-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-5-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-6-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-7-git-send-email-nbd@openwrt.org>
+ <1331739634-22318-8-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/19/2012 08:20 AM, Mohammed Shafi wrote:
-> Hi Justin,
->
->> seems I got this when waking up from suspend, was trying to connect with NM
->> then all of a sudden Xorg shut off and this appeared on the screen(image
->> links below I could not save dmesg only pic)
->> http://flic.kr/p/bEhf2K
->> http://flic.kr/p/bEhf2x
->> http://flic.kr/p/bEhf2n
->> http://flic.kr/p/bEhf26
->>
->> I see ath9k in the image, but am unsure if its related.
->> kernel is: 3.3.0-rc7-next-20120316
->
-> this looks like some new issue  in ath9k, lets try to recreate it here
->
->>
->> Justin P. Mattock
->>
->>
->>
->
->
->
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |    5 -----
+ drivers/net/wireless/ath/ath9k/hw.c        |    3 ---
+ drivers/net/wireless/ath/ath9k/hw.h        |    1 -
+ 3 files changed, 0 insertions(+), 9 deletions(-)
 
-would be nice to recreate, then bisecting will be more accurate to do.. 
-I am trying userspace tweaks here and there but no luck(hostapd etc..) 
-keep in mind this is for the RX DMA, the above just occured..
-as for writing a small app I still need to try, but my C skills only go 
-so far(anything to trigger!).
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 2829c8c..1d06dab 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -154,11 +154,6 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 			INI_RA(addac, 31,1) = 0;
+ 		}
+ 	}
+-}
+-
+-/* Support for Japan ch.14 (2484) spread */
+-void ar9002_hw_cck_chan14_spread(struct ath_hw *ah)
+-{
+ 	if (AR_SREV_9287_11_OR_LATER(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniCckfirNormal,
+ 		       ar9287Common_normal_cck_fir_coeff_9287_1_1,
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index c55157a..189bea3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -620,9 +620,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (!ah->is_pciexpress)
+ 		ath9k_hw_disablepcie(ah);
+ 
+-	if (!AR_SREV_9300_20_OR_LATER(ah))
+-		ar9002_hw_cck_chan14_spread(ah);
+-
+ 	r = ath9k_hw_post_init(ah);
+ 	if (r)
+ 		return r;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 5b9f05b..7efb06d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -994,7 +994,6 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan);
+  * Code Specific to AR5008, AR9001 or AR9002,
+  * we stuff these here to avoid callbacks for AR9003.
+  */
+-void ar9002_hw_cck_chan14_spread(struct ath_hw *ah);
+ int ar9002_hw_rf_claim(struct ath_hw *ah);
+ void ar9002_hw_enable_async_fifo(struct ath_hw *ah);
+ 
+-- 
+1.7.3.2
 
-Justin P. mattock
