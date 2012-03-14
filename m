@@ -1,74 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1966 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752699Ab2CHNzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 08:55:41 -0500
-Date: Thu, 8 Mar 2012 14:55:30 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Don Fry <donald.h.fry@intel.com>
-Subject: Re: [PATCH RESEND 34/35] iwlwifi: correct status bit refactoring
- errors
-Message-ID: <20120308135529.GA14445@redhat.com> (sfid-20120308_145545_354863_21A18601)
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
- <1331142764-5750-35-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49883 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932401Ab2CNJLF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2012 05:11:05 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1331142764-5750-35-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20320.24718.586432.959379@gargle.gargle.HOWL> (sfid-20120314_101110_952178_19BB5B13)
+Date: Wed, 14 Mar 2012 14:40:38 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 3/6] ath9k: Remove 'other' VIF count
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 07, 2012 at 09:52:43AM -0800, Wey-Yi Guy wrote:
-> From: Don Fry <donald.h.fry@intel.com>
-> 
-> I missed a couple of status bits in my refactoring changes.  This
-> fixes the ones I missed.
-> 
-> Signed-off-by: Don Fry <donald.h.fry@intel.com>
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn-rx.c |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-agn.c    |    8 ++++----
->  2 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-> index 3ad4333..cc0227c 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-> @@ -628,7 +628,7 @@ static int iwlagn_rx_card_state_notif(struct iwl_priv *priv,
->  	struct iwl_rx_packet *pkt = rxb_addr(rxb);
->  	struct iwl_card_state_notif *card_state_notif = (void *)pkt->data;
->  	u32 flags = le32_to_cpu(card_state_notif->flags);
-> -	unsigned long status = priv->shrd->status;
-> +	unsigned long status = priv->status;
->  
->  	IWL_DEBUG_RF_KILL(priv, "Card state received: HW:%s SW:%s CT:%s\n",
->  			  (flags & HW_CARD_DISABLED) ? "Kill" : "On",
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> index 3793dc4..28422c0 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> @@ -819,15 +819,15 @@ void iwl_down(struct iwl_priv *priv)
->  	iwl_trans_stop_device(trans(priv));
->  
->  	/* Clear out all status bits but a few that are stable across reset */
-> -	priv->shrd->status &=
-> -			test_bit(STATUS_RF_KILL_HW, &priv->status) <<
-> +	priv->status &= test_bit(STATUS_RF_KILL_HW, &priv->status) <<
->  				STATUS_RF_KILL_HW |
->  			test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
->  				STATUS_GEO_CONFIGURED |
-> -			test_bit(STATUS_FW_ERROR, &priv->shrd->status) <<
-> -				STATUS_FW_ERROR |
->  			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
->  				STATUS_EXIT_PENDING;
-> +	priv->shrd->status &=
-> +			test_bit(STATUS_FW_ERROR, &priv->shrd->status) <<
-> +				STATUS_FW_ERROR;
+It is not needed and will not be used anyway since
+unsupported interfaces are not allowed to be created.
 
-So we have now priv->shrd->status & priv->status, how do you prevent to
-confuse them? Also I still do not understand at all what for this ->shrd stuff
-is needed.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/debug.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/main.c  |    1 -
+ 3 files changed, 2 insertions(+), 4 deletions(-)
 
-Stanislaw
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index fa5eb30..419bf4e 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -617,7 +617,6 @@ struct ath9k_vif_iter_data {
+ 	int nstations; /* number of station vifs */
+ 	int nwds;      /* number of WDS vifs */
+ 	int nadhocs;   /* number of adhoc vifs */
+-	int nothers;   /* number of vifs not specified above. */
+ };
+ 
+ struct ath_softc {
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index c2edf68..35d1c8e 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -738,9 +738,9 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"VIF-COUNTS: AP: %i STA: %i MESH: %i WDS: %i"
+-			" ADHOC: %i OTHER: %i TOTAL: %hi BEACON-VIF: %hi\n",
++			" ADHOC: %i TOTAL: %hi BEACON-VIF: %hi\n",
+ 			iter_data.naps, iter_data.nstations, iter_data.nmeshes,
+-			iter_data.nwds, iter_data.nadhocs, iter_data.nothers,
++			iter_data.nwds, iter_data.nadhocs,
+ 			sc->nvifs, sc->nbcnvifs);
+ 
+ 	if (len > sizeof(buf))
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index fe1d796..77c61bc 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1272,7 +1272,6 @@ static void ath9k_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 		iter_data->nwds++;
+ 		break;
+ 	default:
+-		iter_data->nothers++;
+ 		break;
+ 	}
+ }
+-- 
+1.7.9.4
+
