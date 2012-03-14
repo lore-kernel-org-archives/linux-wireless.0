@@ -1,85 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52453 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759808Ab2CTNyM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 09:54:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <1332245766.3329.14.camel@jlt3.sipsolutions.net>
-References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
- <1332214021-9716-5-git-send-email-mcgrof@frijolero.org> <1332245766.3329.14.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 20 Mar 2012 06:53:52 -0700
-Message-ID: <CAB=NE6XyDDfzu71K-1ecMQ+F-0Z1iTN4OKCUjJ+E3yxvydks0Q@mail.gmail.com> (sfid-20120320_145429_684463_681CC69D)
-Subject: Re: [PATCH 4/4] compat: add some tracing backport work
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:60855 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030720Ab2CNKQy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Mar 2012 06:16:54 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 4/5] rt2x00: rt2800usb: do not check packedid for aggregated frames
+Date: Wed, 14 Mar 2012 11:16:20 +0100
+Message-Id: <1331720181-18564-4-git-send-email-sgruszka@redhat.com> (sfid-20120314_111658_909940_D4CBDACD)
+In-Reply-To: <1331720181-18564-1-git-send-email-sgruszka@redhat.com>
+References: <1331720181-18564-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2012 at 5:16 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> In other words:
->
->>  #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
->
-> I'd change this to 2.6.33 so
+Tx statuses of aggregated subframes contain packetid of first subframe
+in the AMPDU. We can not identify AMPDU subframes based on packedid, so
+simply assume that status match first pending frame in the queue. Thats
+mostly the same what 2800pci do.
 
-I think I tried this approach as well.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
->>  #include_next <linux/tracepoint.h>
->
-> I don't have to think about this:
->
->> +/* Backports f42c85e7 */
->> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
->> +#undef TP_STRUCT__entry
->> +#define TP_STRUCT__entry(args...) args
->> +#endif
->> +
->> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
->> +/* Backports 091ad365, a rename */
->> +#define DECLARE_EVENT_CLASS TRACE_EVENT_TEMPLATE
->> +
->> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
->> +#define TP_PROTO TPPROTO
->> +#define TP_ARGS TPARGS
->> +#define TP_FMT TPFMT
->> +#define TP_RAW_FMT TPRAWFMT
->> +#endif
->> +
->> +#endif
->
->
-> This seems worthwhile and looks good:
->
->> +#else /* just disable tracing */
->> +
->> +/* Disable all tracing */
->> +#undef TRACE_EVENT
->> +#define TRACE_EVENT(name, proto, ...) \
->> +static inline void trace_ ## name(proto) {}
->> +#undef DECLARE_EVENT_CLASS
->> +#define DECLARE_EVENT_CLASS(...)
->> +#undef DEFINE_EVENT
->> +#define DEFINE_EVENT(evt_class, name, proto, ...) \
->> +static inline void trace_ ## name(proto) {}
->> +
->> +#define TP_PROTO(args...)  args
->> +#define TP_ARGS(args...)   args
->> +#define TP_CONDITION(args...)      args
->
-> That doesn't seem to be needed since these are used inside the other
-> macros only?
->
->> +struct tracepoint_iter {
->> +};
->
-> Not sure why that would be needed?
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index eacf94b..8c1d2c0 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -502,7 +502,7 @@ rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
+ 	__le32 *txwi;
+ 	u32 word;
+ 	int wcid, ack, pid;
+-	int tx_wcid, tx_ack, tx_pid;
++	int tx_wcid, tx_ack, tx_pid, is_agg;
+ 
+ 	/*
+ 	 * This frames has returned with an IO error,
+@@ -515,6 +515,7 @@ rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
+ 	wcid	= rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
+ 	ack	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
+ 	pid	= rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
++	is_agg	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_AGGRE);
+ 
+ 	/*
+ 	 * Validate if this TX status report is intended for
+@@ -527,7 +528,7 @@ rt2800usb_txdone_entry_check(struct queue_entry *entry, u32 reg)
+ 	tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
+ 	tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
+ 
+-	if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid)) {
++	if (wcid != tx_wcid || ack != tx_ack || (!is_agg && pid != tx_pid)) {
+ 		WARNING(entry->queue->rt2x00dev,
+ 			"TX status report missed for queue %d entry %d\n",
+ 			entry->queue->qid, entry->entry_idx);
+-- 
+1.7.1
 
-Sure, yeah I think I tried disabling as you suggested and ran into
-compilation issues with mac80211 on 2.6.31.
-
-  Luis
