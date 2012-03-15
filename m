@@ -1,116 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755040Ab2CDUnE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:04 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 038/101] iwlwifi: move RF/CT kill check to command wrapper
-Date: Sun,  4 Mar 2012 11:28:52 -0800
-Message-Id: <1330889395-533-39-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214622_001068_39B2494C)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:53285 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965409Ab2COTrM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 15:47:12 -0400
+Received: by yenl12 with SMTP id l12so3435303yen.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 12:47:11 -0700 (PDT)
+Date: Thu, 15 Mar 2012 12:47:07 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
+	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4 0/7] USB: OHCI/EHCI: generic platform driver
+Message-ID: <20120315194707.GA8079@kroah.com> (sfid-20120315_204718_454254_21A77D41)
+References: <1331597093-425-1-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1331597093-425-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Mar 13, 2012 at 01:04:46AM +0100, Hauke Mehrtens wrote:
+> This EHCI/OHCI platform driver should replace the simple EHCI and OHCI 
+> platform drivers. It was developed to be used for the USB core of the 
+> Broadcom SoCs supported by ssb and bcma, but it should also work for 
+> other devices.
+> 
+> Drivers like ehci-ath79.c, ehci-xls.c and ehci-ixp4xx.c should be 
+> relative easy be ported to this EHCI driver.
+> And drivers like ohci-ath79.c, ohci-ppc-soc.c, ohci-sh.c and ohci-xls.c 
+> should be easy be ported to the this OHCI driver.
+> 
+> I am unable to test the suspend and resume part, as my SoC does not 
+> support this, but most of the platform driver do not support 
+> suspend/resume too. The code here should work, but was never runtime 
+> tested.
+> 
+> This also contains patches adding USB support for the SoCs based on ssb 
+> and bcma and converts the ath79 code to use the generic usb driver.
+> 
+> This patch series is based on the usb tree and should go through it to Linus.
 
-Currently, we cannot send any commands when the
-uCode is in RF or CT kill, but that will not be
-true for all new uCode versions, so we need to
-move the check into the uCode specific code.
+I've applied patches 1, 2, and 7 of this series.  3 and 4 I've commented
+on, and I'm guessing 5 and 6 depend on 3 and 4.
 
-Also remove the duplicate rfkill check.
+Care to refresh the remaining ones and get the BCMA developers ack so
+that I can take them?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   19 ++++---------------
- 2 files changed, 10 insertions(+), 15 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 4c777df..11f2411 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1292,6 +1292,12 @@ int iwlagn_suspend(struct iwl_priv *priv,
- 
- int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- {
-+	if (iwl_is_rfkill(priv->shrd) || iwl_is_ctkill(priv->shrd)) {
-+		IWL_WARN(priv, "Not sending command - %s KILL\n",
-+			 iwl_is_rfkill(priv->shrd) ? "RF" : "CT");
-+		return -EIO;
-+	}
-+
- 	return iwl_trans_send_cmd(trans(priv), cmd);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 0164154..c85975e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -721,12 +721,6 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	if (WARN_ON(copy_size > TFD_MAX_PAYLOAD_SIZE))
- 		return -EINVAL;
- 
--	if (iwl_is_rfkill(trans->shrd) || iwl_is_ctkill(trans->shrd)) {
--		IWL_WARN(trans, "Not sending command - %s KILL\n",
--			 iwl_is_rfkill(trans->shrd) ? "RF" : "CT");
--		return -EIO;
--	}
--
- 	spin_lock_bh(&txq->lock);
- 
- 	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
-@@ -965,7 +959,7 @@ static int iwl_send_cmd_async(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 
- 	ret = iwl_enqueue_hcmd(trans, cmd);
- 	if (ret < 0) {
--		IWL_DEBUG_QUIET_RFKILL(trans,
-+		IWL_ERR(trans,
- 			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
- 		return ret;
-@@ -984,11 +978,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
- 			get_cmd_string(cmd->id));
- 
--	if (test_bit(STATUS_RF_KILL_HW, &trans->shrd->status)) {
--		IWL_ERR(trans, "Command %s aborted: RF KILL Switch\n",
--			       get_cmd_string(cmd->id));
--		return -ECANCELED;
--	}
- 	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
- 		IWL_ERR(trans, "Command %s failed: FW Error\n",
- 			       get_cmd_string(cmd->id));
-@@ -1002,7 +991,7 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	if (cmd_idx < 0) {
- 		ret = cmd_idx;
- 		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
--		IWL_DEBUG_QUIET_RFKILL(trans,
-+		IWL_ERR(trans,
- 			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
- 		return ret;
-@@ -1017,12 +1006,12 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 				&trans_pcie->txq[trans->shrd->cmd_queue];
- 			struct iwl_queue *q = &txq->q;
- 
--			IWL_DEBUG_QUIET_RFKILL(trans,
-+			IWL_ERR(trans,
- 				"Error sending %s: time out after %dms.\n",
- 				get_cmd_string(cmd->id),
- 				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
- 
--			IWL_DEBUG_QUIET_RFKILL(trans,
-+			IWL_ERR(trans,
- 				"Current CMD queue read_ptr %d write_ptr %d\n",
- 				q->read_ptr, q->write_ptr);
- 
--- 
-1.7.0.4
-
+greg k-h
