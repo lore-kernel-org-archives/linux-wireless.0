@@ -1,66 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:59487 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754924Ab2CLMxK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 08:53:10 -0400
-Received: by wejx9 with SMTP id x9so3177449wej.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 05:53:09 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: set do_join on BSS_CHANGED_ASSOC
-Date: Mon, 12 Mar 2012 14:53:04 +0200
-Message-Id: <1331556784-25291-1-git-send-email-eliad@wizery.com> (sfid-20120312_135313_989561_C18FCD18)
+Received: from mga09.intel.com ([134.134.136.24]:37228 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161450Ab2COU2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:06 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 11/26] iwlwifi: use scan while idle
+Date: Thu, 15 Mar 2012 13:26:51 -0700
+Message-Id: <1331843226-29860-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212818_848527_143887C1)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wl12xx sets the do_join flag (which later starts the
-sta role) when the bssid was changed and the sta is
-associated. However, this no longer happens after
-the "mac80211: remove spurious BSSID change flag"
-patch.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fix it by setting the do_join flag on BSS_CHANGED_ASSOC
-(for IBSS, do_join is already set on BSS_CHANGED_IBSS)
+As idle is just a deep powersave mode for
+the device, it will easily scan while idle
+since that turns off powersave.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+This reduces the number of commands sent
+to the device when scanning.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    8 ++++++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 7e0a096..ea654b8 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3950,8 +3950,7 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 		wlvif->rssi_thold = bss_conf->cqm_rssi_thold;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index b6805f8..d2be4b6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -157,7 +157,8 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 	 */
  
--	if (changed & BSS_CHANGED_BSSID &&
--	    (is_ibss || bss_conf->assoc))
-+	if (changed & BSS_CHANGED_BSSID)
- 		if (!is_zero_ether_addr(bss_conf->bssid)) {
- 			ret = wl12xx_cmd_build_null_data(wl, wlvif);
- 			if (ret < 0)
-@@ -3960,9 +3959,6 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
- 			ret = wl1271_build_qos_null_data(wl, vif);
- 			if (ret < 0)
- 				goto out;
--
--			/* Need to update the BSSID (for filtering etc) */
--			do_join = true;
- 		}
+ 	hw->flags |= IEEE80211_HW_SUPPORTS_PS |
+-		     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
++		     IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
++		     IEEE80211_HW_SCAN_WHILE_IDLE;
  
- 	if (changed & (BSS_CHANGED_ASSOC | BSS_CHANGED_HT)) {
-@@ -3989,6 +3985,7 @@ sta_not_found:
- 			int ieoffset;
- 			wlvif->aid = bss_conf->aid;
- 			wlvif->beacon_int = bss_conf->beacon_int;
-+			do_join = true;
- 			set_assoc = true;
+ 	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 863ad0c..4338d49 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -806,8 +806,12 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	rate_flags |= iwl_ant_idx_to_flags(priv->scan_tx_ant[band]);
+ 	scan->tx_cmd.rate_n_flags = iwl_hw_set_rate_n_flags(rate, rate_flags);
  
- 			/*
+-	/* In power save mode use one chain, otherwise use all chains */
+-	if (test_bit(STATUS_POWER_PMI, &priv->shrd->status)) {
++	/*
++	 * In power save mode while associated use one chain,
++	 * otherwise use all chains
++	 */
++	if (test_bit(STATUS_POWER_PMI, &priv->shrd->status) &&
++	    !(priv->hw->conf.flags & IEEE80211_CONF_IDLE)) {
+ 		/* rx_ant has been set to all valid chains previously */
+ 		active_chains = rx_ant &
+ 				((u8)(priv->chain_noise_data.active_chains));
 -- 
-1.7.6.401.g6a319
+1.7.0.4
 
