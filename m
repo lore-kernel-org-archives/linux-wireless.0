@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1797 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932740Ab2CZRPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 13:15:54 -0400
-Message-ID: <4F70A435.7050906@broadcom.com> (sfid-20120326_191557_692246_6354C061)
-Date: Mon, 26 Mar 2012 19:15:33 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from nm7.bullet.mail.ukl.yahoo.com ([217.146.182.248]:36252 "HELO
+	nm7.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750911Ab2COGWw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 02:22:52 -0400
+References: <1323870210.97711.YahooMailNeo@web28203.mail.ukl.yahoo.com> <1323871164.8146.0.camel@jlt3.sipsolutions.net> <CANJm+iAm2pzESyLv8fmCkQYa6cD2HyxhAWN+eCGar_Q4gvd4xw@mail.gmail.com>
+Message-ID: <1331792570.68534.YahooMailNeo@web28210.mail.ukl.yahoo.com> (sfid-20120315_072256_846200_289EF5A6)
+Date: Thu, 15 Mar 2012 06:22:50 +0000 (GMT)
+From: Soumik Das <soumik_kgp@yahoo.co.uk>
+Reply-To: Soumik Das <soumik_kgp@yahoo.co.uk>
+Subject: Re: wmm admission control in mac80211
+To: "Divinsky, Yonatan" <yoni.divinsky@ti.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CANJm+iAm2pzESyLv8fmCkQYa6cD2HyxhAWN+eCGar_Q4gvd4xw@mail.gmail.com>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>,
-	"jrnieder@gmail.com" <jrnieder@gmail.com>
-Subject: Re: brcmsmac still woes, possible regression?
-References: <CAKprTDELdRWtJWpmn9RMuMUYXxuaR6Cf41+jot4_fZixHQtcMw@mail.gmail.com>
- <4F6D939F.3030206@broadcom.com>
- <CAKprTDHSyh2Sv2wyY0hg4cjzWobV-zA4stY19-vB_hOBVAq5KQ@mail.gmail.com>
- <CAKprTDHpLtPu2+navGzJU9K8XX-h=Purw_q_Qs2mYn4QFEex+w@mail.gmail.com>
- <4F7035AD.1080503@broadcom.com> <20120326143232.GA17126@thinkpad-t410>
- <4F709F3E.1090405@broadcom.com> <20120326171301.GC17126@thinkpad-t410>
-In-Reply-To: <20120326171301.GC17126@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/26/2012 07:13 PM, Seth Forshee wrote:
-> On Mon, Mar 26, 2012 at 06:54:22PM +0200, Arend van Spriel wrote:
->> I suspect the warning is caused because mac80211 flush callback is
->> done after scanning on channels 12 and/or 13. I have a quick fix.
->> The longer and preferred fix would be to cleanup channel.c and
->> incorporate your regdom change. I plan to do that in separate
->> patches.
+Hi,
+
+In the current driver operation (ieee80211_ops)  there is no provision for configuring medium time. But this would be essential for admission control.
+
+Will it be better to add a new (optional) operation in ieee80211 or can we add a new field in ieee80211_tx_queue_params?
+
+Regards,
+Soumik
+
+
+
+----- Original Message -----
+From: "Divinsky, Yonatan" <yoni.divinsky@ti.com>
+To: Soumik Das <soumik_kgp@yahoo.co.uk>
+Cc: Johannes Berg <johannes@sipsolutions.net>; "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Sent: Sunday, 18 December 2011, 13:12
+Subject: Re: wmm admission control in mac80211
+
+On Wed, Dec 14, 2011 at 3:59 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
 >
-> At this point I think the regdom patch I sent is incomplete. We can do a
-> lot better. I'll follow up on the other thread a little later today with
-> my thoughts.
+> On Wed, 2011-12-14 at 13:43 +0000, Soumik Das wrote:
+> > Hi,
+> >
+> > I was looking at the mac80211. It seems there is no support for admission control in the current implementation.
+> >
+> >
+> > Is there any near term plan for adding the support? Otherwise can I add the support myself?
+>
+> I don't know of any plans to add it, but feel free to.
 >
 
-Agree. And I will keep an eye on my email ;-)
+I have started and implementation to support wmm admission control in mac80211
 
-Gr. AvS
+The implementation also included an API with nl80211.
 
+I will probably send an RFC in the upcoming days.
+
+Thanks,
+Yoni Divinsky
+
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
