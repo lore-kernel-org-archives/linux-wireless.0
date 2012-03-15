@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50526 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757481Ab2CEUYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:24:42 -0500
-Message-ID: <4F552104.9000707@openwrt.org> (sfid-20120305_212448_920909_5A6704C5)
-Date: Mon, 05 Mar 2012 21:24:36 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com
-Subject: Re: [PATCH 3.3 1/4] Revert "ath9k_hw: Fix false tx hung detection
- in AR9003 chips"
-References: <1330369122-60220-1-git-send-email-nbd@openwrt.org> <20120229180825.GB13733@tuxdriver.com> <4F4E6D6C.5010605@openwrt.org> <20120305193348.GE18128@tuxdriver.com>
-In-Reply-To: <20120305193348.GE18128@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:51937 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759503Ab2COTFl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 15:05:41 -0400
+Subject: Re: [RFC 2/2] mac80211:  Support getting sta_info stats via
+ ethtool.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4F623D19.7090105@candelatech.com>
+References: <1331833159-12694-1-git-send-email-greearb@candelatech.com>
+	 <1331833159-12694-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20120315_183942_222982_FD61EFBD) <1331837740.3432.39.camel@jlt3.sipsolutions.net>
+	 <4F623D19.7090105@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 20:05:40 +0100
+Message-ID: <1331838340.3432.43.camel@jlt3.sipsolutions.net> (sfid-20120315_200545_362843_6411A859)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-05 8:33 PM, John W. Linville wrote:
-> On Wed, Feb 29, 2012 at 07:24:44PM +0100, Felix Fietkau wrote:
->> On 2012-02-29 7:08 PM, John W. Linville wrote:
->> > On Mon, Feb 27, 2012 at 07:58:39PM +0100, Felix Fietkau wrote:
->> >> The approach of this change is flawed, as it triggers tx status processing
->> >> from more callsites, yet the chips only have one global tx status queue.
->> >> Subsequent patches will properly fix the issue that this one tried to address.
->> >> 
->> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> > 
->> > How flawed is the current approach?  That commit looks like it has been
->> > around for months already.  Does it really _need_ to be fixed in 3.3?
->> It only slightly reduces the severity of the issue it tried to address,
->> while adding some ugly race conditions. It is not possible to properly
->> fix the issue without a revert of that commit, so I really would like to
->> see this patch series in 3.3.
-> 
-> I am happy to take this series for 3.4, but it seems quite late
-> for 3.3.  We have been living with it for a while already.
-OK, no problem. I'm using bleeding edge anyway ;)
+On Thu, 2012-03-15 at 12:03 -0700, Ben Greear wrote:
 
-- Felix
+> >> +	list_for_each_entry(sta,&sdata->local->sta_list, list) {
+> >
+> > That's not right -- these stats are per netdev so you should only
+> > aggregate for the netdev, no?
+> 
+> Ummm, maybe so.  I had trouble figuring out how to find
+> the sta entries that are associated with a netdev, and I'd
+> like to sum up all station entries for an AP interfaces.
+> 
+> If you know of any code that uses this, a pointer would
+> be welcome.
+
+Just compare sta->sdata?
+
+> >> +		BUG_ON(i != STA_STATS_LEN);
+> >
+> > That I really don't like much.
+> 
+> Ok, I'll remove it from a final patch.  It catches bugs
+> in the meantime (miss a comma between strings and
+> it blows up spectacularly :P).
+
+Heh. Some verification would be nice I guess, but I can't really figure
+out a good way either.
+
+johannes
+
