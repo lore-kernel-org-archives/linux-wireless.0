@@ -1,48 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:35806 "EHLO ackle.nomi.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964794Ab2CEOBf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 09:01:35 -0500
-Date: Mon, 5 Mar 2012 15:01:30 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>, security@kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20120305140130.GA15186@nomi.cz> (sfid-20120305_150157_186737_C9B808D7)
-References: <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <1321755233.22510.1.camel@wwguy-ubuntu> <20111120032016.GA14520@nomi.cz> <1321763314.22510.4.camel@wwguy-ubuntu> <20111120204007.GA7273@nomi.cz> <20120210180929.GA17733@nomi.cz> <20120214092020.GB12905@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20120214092020.GB12905@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:52710 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031173Ab2CORdM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 13:33:12 -0400
+Subject: Re: [PATCH v2] cfg80211: allow CFG80211_SIGNAL_TYPE_UNSPEC in
+ station_info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Cristian Morales Vega <cristian@samknows.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <1331832341-30795-1-git-send-email-linville@tuxdriver.com>
+References: <1331827087-21339-1-git-send-email-linville@tuxdriver.com>
+	 <1331832341-30795-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 18:33:10 +0100
+Message-ID: <1331832790.3432.28.camel@jlt3.sipsolutions.net> (sfid-20120315_183316_113194_637395D7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2012-03-15 at 13:25 -0400, John W. Linville wrote:
+> The station_info struct had demanded dBm signal values, but the
+> cfg80211 wireless extensions implementation was also accepting
+> "unspecified" (i.e. RSSI) unit values while the nl80211 code was
+> completely unaware of them.  Resolve this by formally allowing the
+> "unspecified" units while making nl80211 ignore them.
 
-On Tue, Feb 14, 2012 at 10:20:21AM +0100, Stanislaw Gruszka wrote:
-> > So it doesn't look like a memory corruption after all. It
-> > seems as if certain CPU instructions didn't work properly if running on a
-> > 32-bit kernel with a WiFi adapter doing something. But how can it be
-> > that those same CPU instructions work on a 64-bit host with 32-bit userspace?
-> > At the same time! That's just completely insane, and I can't think of an
-> > explanation. Shall I get a new CPU perhaps? :-)
-> >
-> > 
-> > Please, give me any ideas that you might have.
+Looks good, thanks.
+
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> The switch statement could be an if, but used it because I copied it
+> from elsewhere in the file and because we might (?) want to support a
+> different attribute to report the unspecified unit values through
+> nl80211?
 > 
-> That make sense! Your "CPU instructions break things" theory sounds crazy,
-> but I think it's logical. WPA enterprise differ from WPA-PSA (pre shared
-> key) that the key changed periodically, SSL is used when keys are changed
-> (via wpa_supplicant). So looks like 32-bit openssl generate object code
-> that trigger bug on CPU, which crash other processes.
+> v2: Fix typo in commit message and add note about using dBm for drivers
+>     using CFG80211_SIGNAL_TYPE_MBM.
+> 
+>  include/net/cfg80211.h |    4 ++--
+>  net/wireless/nl80211.c |   29 +++++++++++++++++++----------
+>  2 files changed, 21 insertions(+), 12 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index a067d30..4263a62 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -605,8 +605,10 @@ struct sta_bss_parameters {
+>   * @llid: mesh local link id
+>   * @plid: mesh peer link id
+>   * @plink_state: mesh peer link state
+> - * @signal: signal strength of last received packet in dBm
+> - * @signal_avg: signal strength average in dBm
+> + * @signal: the signal strength, type depends on the wiphy's signal_type
+> +	NOTE: For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
+> + * @signal_avg: avg signal strength, type depends on the wiphy's signal_type
+> +	NOTE: For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
+>   * @txrate: current unicast bitrate from this station
+>   * @rxrate: current unicast bitrate to this station
+>   * @rx_packets: packets received from this station
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index afeea32..3105c77 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -2349,7 +2349,9 @@ nla_put_failure:
+>  }
+>  
+>  static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+> -				int flags, struct net_device *dev,
+> +				int flags,
+> +				struct cfg80211_registered_device *rdev,
+> +				struct net_device *dev,
+>  				const u8 *mac_addr, struct station_info *sinfo)
+>  {
+>  	void *hdr;
+> @@ -2388,12 +2390,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+>  	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+>  		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+>  			    sinfo->plink_state);
+> -	if (sinfo->filled & STATION_INFO_SIGNAL)
+> -		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
+> -			   sinfo->signal);
+> -	if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
+> -		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
+> -			   sinfo->signal_avg);
+> +	switch (rdev->wiphy.signal_type) {
+> +	case CFG80211_SIGNAL_TYPE_MBM:
+> +		if (sinfo->filled & STATION_INFO_SIGNAL)
+> +			NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
+> +				   sinfo->signal);
+> +		if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
+> +			NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
+> +				   sinfo->signal_avg);
+> +		break;
+> +	default:
+> +		break;
+> +	}
+>  	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
+>  		if (!nl80211_put_sta_rate(msg, &sinfo->txrate,
+>  					  NL80211_STA_INFO_TX_BITRATE))
+> @@ -2486,7 +2494,7 @@ static int nl80211_dump_station(struct sk_buff *skb,
+>  		if (nl80211_send_station(skb,
+>  				NETLINK_CB(cb->skb).pid,
+>  				cb->nlh->nlmsg_seq, NLM_F_MULTI,
+> -				netdev, mac_addr,
+> +				dev, netdev, mac_addr,
+>  				&sinfo) < 0)
+>  			goto out;
+>  
+> @@ -2531,7 +2539,7 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+>  		return -ENOMEM;
+>  
+>  	if (nl80211_send_station(msg, info->snd_pid, info->snd_seq, 0,
+> -				 dev, mac_addr, &sinfo) < 0) {
+> +				 rdev, dev, mac_addr, &sinfo) < 0) {
+>  		nlmsg_free(msg);
+>  		return -ENOBUFS;
+>  	}
+> @@ -7482,7 +7490,8 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+>  	if (!msg)
+>  		return;
+>  
+> -	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
+> +	if (nl80211_send_station(msg, 0, 0, 0,
+> +				 rdev, dev, mac_addr, sinfo) < 0) {
+>  		nlmsg_free(msg);
+>  		return;
+>  	}
 
-It seems that someone beat me to it. Since Linus fixed the FPU leaks in
-3.3-rc4, I haven't experienced the problem. And I was this close! :-)
 
-Anyway, thanks for assistance and sorry for being so slow to respond.
-
-Regards,
--- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
