@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62958 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab2CaTSE (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54064 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760860Ab2COTD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2012 15:18:04 -0400
-Received: by iagz16 with SMTP id z16so2403945iag.19
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 12:18:03 -0700 (PDT)
+	Thu, 15 Mar 2012 15:03:58 -0400
+Message-ID: <4F623D19.7090105@candelatech.com> (sfid-20120315_200402_520674_3895BA22)
+Date: Thu, 15 Mar 2012 12:03:53 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Date: Sat, 31 Mar 2012 15:18:03 -0400
-Message-ID: <CAAaUcVyTk7zRs4XACXa_Sw_n6qgcF_7b2Mf_dNhEMsiwgGa_QA@mail.gmail.com> (sfid-20120331_211808_549917_48C38F76)
-Subject: BCM4329 chipset -- open80211s
-From: Kiran Karra <kiran.karra@gmail.com>
-To: linux wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/2] mac80211:  Support getting sta_info stats via ethtool.
+References: <1331833159-12694-1-git-send-email-greearb@candelatech.com>  <1331833159-12694-2-git-send-email-greearb@candelatech.com>  (sfid-20120315_183942_222982_FD61EFBD) <1331837740.3432.39.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1331837740.3432.39.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-I would like to know if I can use open80211s with the BCM4329 chipset?
- From the research I've done, the BCM4329 is a FullMAC device, not a
-SoftMAC device.  The open-source linux driver that can work with the
-BCM4329 chipset is the brcmfmac.  Therefore, it does not use the
-mac80211 framework.  The brcmfmac driver is integrated with cfg80211.
-Since open80211s is based off the mac80211 stack, does this mean
-open80211s can never be used with brcmfmac?  Is it possible to
-interface the open80211s code directly with cfg80211?  Would the
-cfg80211 api provide all the necessary callbacks in order to acheive
-mesh functionality?  If this is possible, does anyone have an idea of
-how much time this effort would require?
+On 03/15/2012 11:55 AM, Johannes Berg wrote:
+> Ok more technical look ...
+>
+>
+> It doesn't look like NUM_STA_INFO_STATS gets used at all, or am I
+> missing it?
+>
+>> +static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
+>> +				       struct net_device *dev,
+>> +				       int sset)
+>> +{
+>> +	switch (sset) {
+>> +	case ETH_SS_STATS:
+>> +		return STA_STATS_LEN;
+>
+> Are there different "s* sets" that could be used to return different
+> types of stats, or how does this work?
 
-Additionally, looking at the documentation on the b43 driver, the
-website (http://linuxwireless.org/en/users/Drivers/b43) says that all
-BCM43xx are supported by the b43 driver.  The b43 driver does support
-open80211s, so I am confused as to whether I can use this driver for
-the BCM4329 device, although the device list doesnt have BCM4329?
+Yes, there are diag strings too, I think..but I wasn't
+planning to add support for that, though perhaps someone
+else might know how to do that.
 
-Are there any other options for getting 802.11s support with the
-BCM4329 chipset?
+>> +	mutex_lock(&sdata->local->sta_mtx);
+>
+> Why not use RCU? The mutex doesn't really protect anything useful here
+> except for the list iteration.
 
-Thanks in advance,
-Kiran
+No reason.  I'll try to make it RCU instead.
+
+>> +	list_for_each_entry(sta,&sdata->local->sta_list, list) {
+>
+> That's not right -- these stats are per netdev so you should only
+> aggregate for the netdev, no?
+
+Ummm, maybe so.  I had trouble figuring out how to find
+the sta entries that are associated with a netdev, and I'd
+like to sum up all station entries for an AP interfaces.
+
+If you know of any code that uses this, a pointer would
+be welcome.
+
+>> +		BUG_ON(i != STA_STATS_LEN);
+>
+> That I really don't like much.
+
+Ok, I'll remove it from a final patch.  It catches bugs
+in the meantime (miss a comma between strings and
+it blows up spectacularly :P).
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
