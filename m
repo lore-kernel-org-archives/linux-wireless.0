@@ -1,73 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59085 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1032860Ab2CPPgB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 11:36:01 -0400
-Message-ID: <4F635DCF.7060101@hauke-m.de> (sfid-20120316_163609_067491_7F4F6B88)
-Date: Fri, 16 Mar 2012 16:35:43 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64221 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756888Ab2COI5S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 04:57:18 -0400
+Date: Thu, 15 Mar 2012 14:27:38 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 3.5] cfg80211: enforce lack of interface combinations
+Message-ID: <20120315085736.GB17590@vasanth-laptop> (sfid-20120315_095724_892916_33F9FFC2)
+References: <20120313150613.300612962@sipsolutions.net>
+ <20120315084217.GA17590@vasanth-laptop>
+ <1331801488.3432.2.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"stern@rowland.harvard.edu" <stern@rowland.harvard.edu>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"ralf@linux-mips.org" <ralf@linux-mips.org>,
-	"m@bues.ch" <m@bues.ch>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"zajec5@gmail.com" <zajec5@gmail.com>
-Subject: Re: [PATCH v5 4/4] USB: OHCI: remove old SSB OHCI driver
-References: <1331851799-5968-1-git-send-email-hauke@hauke-m.de> <1331851799-5968-5-git-send-email-hauke@hauke-m.de> <4F630267.5050909@broadcom.com>
-In-Reply-To: <4F630267.5050909@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1331801488.3432.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/2012 10:05 AM, Arend van Spriel wrote:
-> On 03/15/2012 11:49 PM, Hauke Mehrtens wrote:
->> This is now replaced by the new ssb USB driver, which also supports
->> devices with an EHCI controller.
->>
->> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
->> ---
->>   drivers/usb/host/Kconfig    |    7 +-
->>   drivers/usb/host/ohci-hcd.c |   21 +----
->>   drivers/usb/host/ohci-ssb.c |  260
->> -------------------------------------------
->>   3 files changed, 7 insertions(+), 281 deletions(-)
->>   delete mode 100644 drivers/usb/host/ohci-ssb.c
->>
->> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
->> index 2fc5637..00b6fc8 100644
->> --- a/drivers/usb/host/Kconfig
->> +++ b/drivers/usb/host/Kconfig
->> @@ -373,10 +373,15 @@ config USB_OHCI_HCD_PCI
->>         If unsure, say Y.
->>
->>   config USB_OHCI_HCD_SSB
->> -    bool "OHCI support for Broadcom SSB OHCI core"
->> +    bool "OHCI support for Broadcom SSB OHCI core (DEPRECATED)"
->>       depends on USB_OHCI_HCD&&  (SSB = y || SSB = USB_OHCI_HCD)&& 
->> EXPERIMENTAL
->> +    select USB_HCD_SSB
->> +    select USB_OHCI_HCD_PLATFORM
->>       default n
->>       ---help---
->> +      This option is deprecated now and the driver was removed, use
->> +      USB_HCD_SSB and USB_OHCI_HCD_PLATFORM instead.
->> +
->>         Support for the Sonics Silicon Backplane (SSB) attached
->>         Broadcom USB OHCI core.
+On Thu, Mar 15, 2012 at 09:51:28AM +0100, Johannes Berg wrote:
+> On Thu, 2012-03-15 at 14:12 +0530, Vasanthakumar Thiagarajan wrote:
+> > On Tue, Mar 13, 2012 at 04:06:03PM +0100, Johannes Berg wrote:
+> > > From: Johannes Berg <johannes.berg@intel.com>
+> > > 
+> > > My grand plan to allow drivers to gradually move over
+> > > to advertising virtual interface combinations and only
+> > > enforce with drivers that do want it enforced doesn't
+> > > seem to be working out, only Christian ever added the
+> > > advertising (to carl9170), nobody else did.
+> > > 
+> > > Begin enforcing combinations in cfg80211 so that users
+> > > can rely on the information reported about a device.
+> > 
+> > This breaks ath6kl AP mode and P2P, is it expected that the driver
+> > needs to register the combination (?) even it supports a single
+> > interface?
 > 
-> Looks fine as it helps transitioning old .config files. Should the
-> select statements be mentioned in the help section, ie. 'using' iso 'use'.
+> Kalle tells me that ath6kl does support multiple virtual interfaces, but
+> if it didn't then it wouldn't have to register combinations.
+> 
+> I suspect you're using
+> driver_param=use_p2p_group_interface=1
+> in wpa_supplicant?
 
-I think "use" is better as USB_OHCI_HCD_SSB will be removed in some time
-and it should not be used any more. If someone generated the config or a
-base config with some other script it should be changed to USB_HCD_SSB
-and USB_OHCI_HCD_PLATFORM.
+Actually, I verified only AP mode, since it affects any sort of change interface,
+I mentioned P2P as well. AP is expected to work without any issue right?.
 
-Hauke
-
-Hauke
-
+Vasanth
