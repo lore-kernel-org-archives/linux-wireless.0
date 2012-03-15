@@ -1,88 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41058 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006Ab2CLBbO convert rfc822-to-8bit (ORCPT
+Received: from hermes.mlbassoc.com ([64.234.241.98]:41939 "EHLO
+	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760965Ab2COPnZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 21:31:14 -0400
+	Thu, 15 Mar 2012 11:43:25 -0400
+Message-ID: <4F620E1A.1030309@mlbassoc.com> (sfid-20120315_164328_864658_9174A0C6)
+Date: Thu, 15 Mar 2012 09:43:22 -0600
+From: Gary Thomas <gary@mlbassoc.com>
 MIME-Version: 1.0
-In-Reply-To: <4F5D3679.3090900@hauke-m.de>
-References: <1331496505-18697-1-git-send-email-hauke@hauke-m.de>
- <1331496505-18697-4-git-send-email-hauke@hauke-m.de> <CAGRGNgX116dRB03NTL_DFZ4b_PYcdY+Un_cVwt6ZUGR1bwZzHA@mail.gmail.com>
- <4F5D3679.3090900@hauke-m.de>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 12 Mar 2012 12:30:54 +1100
-Message-ID: <CAGRGNgWsO9s2rW1pKBFWd_-0oTAGs9_RXNGyn_y7ic=0Zer=qQ@mail.gmail.com> (sfid-20120312_023148_487284_A0770752)
-Subject: Re: [PATCH 3/7] bcma: scan for extra address space
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: gregkh@linuxfoundation.org, stern@rowland.harvard.edu,
-	linux-mips@linux-mips.org, ralf@linux-mips.org, m@bues.ch,
-	linux-usb@vger.kernel.org,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Luciano Coelho <coelho@ti.com>
+Subject: Re: Troubles with wl12xx
+References: <4F6092FB.6030809@mlbassoc.com> <4F60A024.9060306@mlbassoc.com> <4F60E71F.10701@mlbassoc.com>
+In-Reply-To: <4F60E71F.10701@mlbassoc.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hauke,
-
-On Mon, Mar 12, 2012 at 10:34, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 03/11/2012 10:59 PM, Julian Calaby wrote:
->> Hi Hauke,
+On 2012-03-14 12:44, Gary Thomas wrote:
+> On 2012-03-14 07:41, Gary Thomas wrote:
+>> On 2012-03-14 06:45, Gary Thomas wrote:
+>>> I'm having some issues getting my [newly designed] board to run
+>>> with wl12xx (wl1271 on SDIO) My kernel is 2.6.37 and I'm using
+>>> a compat-wireless snapshot from 2012-02-28
+>>>
+>>> Here's what I see when I boot - looks OK:
+>>> Compat-wireless backport release: compat-wireless-2012-02-28
+>>> Backport based on linux-next.git next-20120228
+>>> cfg80211: Calling CRDA to update world regulatory domain
+>>> wl12xx: loaded
+>>>
+>>> If I bring up the wlan0 interface manually, I can talk to the
+>>> device, scan for access points, etc. All looks good.
+>>>
+>>> The problem comes when I try to negotiate for an address with
+>>> WPA security.
+>>> # ifup wlan0
+>>> wl12xx: firmware booted (Rev 6.3.5.0.98)
+>>> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>>> udhcpc (v1.19.3) started
+>>> Sending discover...
+>>> wl12xx: down
+>>> Sending discover...
+>>> Sending discover...
+>>> No lease, failing
+>>>
+>>> A few seconds later, everything falls apart. Sorry for the verbosity, but
+>>> the messages changed at the end and I wanted to make sure you saw it all.
 >>
->> On Mon, Mar 12, 2012 at 07:08, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>> Some cores like the USB core have two address spaces. In the USB host
->>> controller one address space is used for the OHCI and the other for the
->>> EHCI controller interface. The USB controller is the only core I found
->>> with two address spaces. This code is based on the AI scan function
->>> ai_scan() in shared/aiutils.c i the Broadcom SDK.
->>>
->>> CC: Rafał Miłecki <zajec5@gmail.com>
->>> CC: linux-wireless@vger.kernel.org
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>> ---
->>>  drivers/bcma/scan.c       |   18 +++++++++++++++++-
->>>  include/linux/bcma/bcma.h |    1 +
->>>  2 files changed, 18 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
->>> index 3a2f672..3c2eeed 100644
->>> --- a/drivers/bcma/scan.c
->>> +++ b/drivers/bcma/scan.c
->>> @@ -286,6 +286,22 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
->>>                        return -EILSEQ;
->>>        }
->>>
->>> +
->>> +       /* First Slave Address Descriptor should be port 0:
->>> +        * the main register space for the core
->>> +        */
->>> +       tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
->>> +       if (tmp <= 0) {
->>> +               /* Try again to see if it is a bridge */
->>> +               tmp = bcma_erom_get_addr_desc(bus, eromptr,
->>> +                                             SCAN_ADDR_TYPE_BRIDGE, 0);
->>> +               if (tmp > 0) {
->>> +                       pr_info("found bridge");
->>> +                       return -ENXIO;
->>> +               }
->>
->> Should this do something if the second bcma_erom_get_addr_desc() call
->> returns an error? We seem to be putting any errors from that call into
->> the addr member of the core structure below.
-> Yes that's true, we should handle that error. If tmp <= 0 the
-> description entry was malformed and something went wrong and we should
-> handle it, a correctly found bridge should just be ignored.
+>> A little more information - maybe this helps:
+>> # ifup -v wlan0
+>> run-parts /etc/network/if-pre-up.d
+>> wl12xx: firmware booted (Rev 6.3.5.0.98)
+>> wl12xx: ERROR watchdog interrupt received! starting recovery.
+>> wl12xx: Reading FW panic log
+>> wl12xx: Hardware recovery in progress. FW ver: Rev 6.3.5.0.98 pc: 0x0
+>> wl12xx: down
+>> ieee80211 phy0: Hardware restart was requested
+>> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> wl12xx: ERROR timeout waiting for the hardware to complete initialization
+>> wl12xx: ERROR timeout waiting for the hardware to complete initialization
+>> wl12xx: ERROR timeout waiting for the hardware to complete initialization
+>> wl12xx: ERROR firmware boot failed despite 3 retries
+>> ifconfig wlan0 up
+>> udhcpc -R -n -p /var/run/udhcpc.wlan0.pid -i wlan0
+>> udhcpc (v1.19.3) started
+>> Sending discover...
+>> Sending discover...
+>> Sending discover...
+>> No lease, failing
 >
-> I will fix this, should I resend the hole series or just this patch?
+> Even more info - I enabled all the debug flags in the wl12xx driver and
+> captured this sequence (it's 100% repeatable with my current configuration)
+> The log is at http://www.mlbassoc.com/misc/messages.wl12xx
+>
+> Any ideas what's going on?
 
-I'm not sure the rest of the series made it to linux-wireless, so
-maybe you should resend everything.
+Even more confusion - I've found that I need to be careful with the
+sequence and timing of bringing up the wl12xx.
 
-Thanks,
+* This sequence will always fail:
+   -- [re]boot Linux
+   # ifup wlan0
+
+* This sequence also fails:
+   -- [re]boot Linux
+   # ifconfig wlan0 up
+   # ifup wlan0
+
+* This sequence seems to always work:
+   -- [re]boot Linux
+   # ifconfig wlan0 up
+   # iw wlan0 scan
+   # ifup wlan0
+
+What could be special about this [slight] change in bring-up behaviour/timing?
+
+Sadly, even when it works, it dies if I try to run
+   # ifdown wlan0
+   # ifup wlan0
+
+Interestingly, I've seen this work perfectly on my OMAP4430 PandaBoard.  We based
+our design on that board, so it's a bit puzzling why we are having so much trouble.
+
+Any ideas?
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
