@@ -1,125 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20333 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:37228 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758076Ab2CGTG3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:29 -0500
+	id S1161450Ab2COU2O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:14 -0400
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 03/35] iwlwifi: move iwl_sta_id_or_broadcast to user
-Date: Wed,  7 Mar 2012 09:52:12 -0800
-Message-Id: <1331142764-5750-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200724_978056_E5C063CF)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Subject: [PATCH 24/26] iwlwifi: remove firmware info from iwl_shared
+Date: Thu, 15 Mar 2012 13:27:04 -0700
+Message-Id: <1331843226-29860-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212822_185269_06B497DB)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-There's only one user, so the function
-can be moved into the correct file. It
-also loses an argument along the way.
+With error logging now completely handled in
+the op_mode, the transport layer does not
+need to know information about the loaded
+firmware.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Remove this state information from the
+iwl_shared data structure.
+
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   31 ++++++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-agn.h    |   31 -----------------------------
- 2 files changed, 30 insertions(+), 32 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |   20 +++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    1 -
+ 2 files changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index e707e99..14a6bde 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -248,6 +248,35 @@ static void iwlagn_tx_cmd_build_hwcrypto(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index b8fcb4a..e91d88d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1498,8 +1498,6 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 	priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 	priv->shrd = trans->shrd;
+ 	priv->fw = fw;
+-	/* TODO: remove fw from shared data later */
+-	priv->shrd->fw = fw;
+ 
+ 	/*
+ 	 * Populate the state variables that the transport layer needs
+@@ -1817,10 +1815,10 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 	base = priv->device_pointers.error_event_table;
+ 	if (priv->cur_ucode == IWL_UCODE_INIT) {
+ 		if (!base)
+-			base = priv->shrd->fw->init_errlog_ptr;
++			base = priv->fw->init_errlog_ptr;
+ 	} else {
+ 		if (!base)
+-			base = priv->shrd->fw->inst_errlog_ptr;
++			base = priv->fw->inst_errlog_ptr;
  	}
- }
  
-+/**
-+ * iwl_sta_id_or_broadcast - return sta_id or broadcast sta
-+ * @context: the current context
-+ * @sta: mac80211 station
-+ *
-+ * In certain circumstances mac80211 passes a station pointer
-+ * that may be %NULL, for example during TX or key setup. In
-+ * that case, we need to use the broadcast station, so this
-+ * inline wraps that pattern.
-+ */
-+static int iwl_sta_id_or_broadcast(struct iwl_rxon_context *context,
-+				   struct ieee80211_sta *sta)
-+{
-+	int sta_id;
-+
-+	if (!sta)
-+		return context->bcast_sta_id;
-+
-+	sta_id = iwl_sta_id(sta);
-+
-+	/*
-+	 * mac80211 should not be passing a partially
-+	 * initialised station!
-+	 */
-+	WARN_ON(sta_id == IWL_INVALID_STATION);
-+
-+	return sta_id;
-+}
-+
- /*
-  * start REPLY_TX command process
-  */
-@@ -304,7 +333,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 		sta_id = ctx->bcast_sta_id;
- 	else {
- 		/* Find index into station table for destination station */
--		sta_id = iwl_sta_id_or_broadcast(priv, ctx, info->control.sta);
-+		sta_id = iwl_sta_id_or_broadcast(ctx, info->control.sta);
- 		if (sta_id == IWL_INVALID_STATION) {
- 			IWL_DEBUG_DROP(priv, "Dropping - INVALID STATION: %pM\n",
- 				       hdr->addr1);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index ec3a90c..8384c05 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -258,37 +258,6 @@ static inline int iwl_sta_id(struct ieee80211_sta *sta)
- 	return ((struct iwl_station_priv *)sta->drv_priv)->sta_id;
- }
+ 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
+@@ -1908,10 +1906,10 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
+ 	base = priv->device_pointers.log_event_table;
+ 	if (priv->cur_ucode == IWL_UCODE_INIT) {
+ 		if (!base)
+-			base = priv->shrd->fw->init_evtlog_ptr;
++			base = priv->fw->init_evtlog_ptr;
+ 	} else {
+ 		if (!base)
+-			base = priv->shrd->fw->inst_evtlog_ptr;
++			base = priv->fw->inst_evtlog_ptr;
+ 	}
  
--/**
-- * iwl_sta_id_or_broadcast - return sta_id or broadcast sta
-- * @priv: iwl priv
-- * @context: the current context
-- * @sta: mac80211 station
-- *
-- * In certain circumstances mac80211 passes a station pointer
-- * that may be %NULL, for example during TX or key setup. In
-- * that case, we need to use the broadcast station, so this
-- * inline wraps that pattern.
-- */
--static inline int iwl_sta_id_or_broadcast(struct iwl_priv *priv,
--					  struct iwl_rxon_context *context,
--					  struct ieee80211_sta *sta)
--{
--	int sta_id;
--
--	if (!sta)
--		return context->bcast_sta_id;
--
--	sta_id = iwl_sta_id(sta);
--
--	/*
--	 * mac80211 should not be passing a partially
--	 * initialised station!
--	 */
--	WARN_ON(sta_id == IWL_INVALID_STATION);
--
--	return sta_id;
--}
--
- int iwlagn_alloc_bcast_station(struct iwl_priv *priv,
- 			       struct iwl_rxon_context *ctx);
- int iwlagn_add_bssid_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 	if (mode == 0)
+@@ -2022,13 +2020,13 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
+ 
+ 	base = priv->device_pointers.log_event_table;
+ 	if (priv->cur_ucode == IWL_UCODE_INIT) {
+-		logsize = priv->shrd->fw->init_evtlog_size;
++		logsize = priv->fw->init_evtlog_size;
+ 		if (!base)
+-			base = priv->shrd->fw->init_evtlog_ptr;
++			base = priv->fw->init_evtlog_ptr;
+ 	} else {
+-		logsize = priv->shrd->fw->inst_evtlog_size;
++		logsize = priv->fw->inst_evtlog_size;
+ 		if (!base)
+-			base = priv->shrd->fw->inst_evtlog_ptr;
++			base = priv->fw->inst_evtlog_ptr;
+ 	}
+ 
+ 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
+@@ -2117,7 +2115,7 @@ static void iwl_nic_error(struct iwl_op_mode *op_mode)
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 
+ 	IWL_ERR(priv, "Loaded firmware version: %s\n",
+-		priv->shrd->fw->fw_version);
++		priv->fw->fw_version);
+ 
+ 	iwl_dump_nic_error_log(priv);
+ 	iwl_dump_nic_event_log(priv, false, NULL, false);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 90f464e..983b41e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -354,7 +354,6 @@ struct iwl_shared {
+ 	struct iwl_trans *trans;
+ 	void *drv;
+ 	struct iwl_hw_params hw_params;
+-	const struct iwl_fw *fw;
+ 
+ 	/* eeprom -- this is in the card's little endian byte order */
+ 	u8 *eeprom;
 -- 
 1.7.0.4
 
