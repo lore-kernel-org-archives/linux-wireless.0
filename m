@@ -1,93 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:64563 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760232Ab2CTOzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 10:55:22 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Mon, 19 Mar 2012 13:17:20 +0100
-Subject: [RFC 10/12] mac80211: rename ieee80211_offchannel_return
-To: <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <753ef3c0-9ad4-4340-b763-2b37006a5406@FIVLA-EXHUB02.eu.tieto.com> (sfid-20120320_155528_733022_063F5D48)
+Received: from he.sipsolutions.net ([78.46.109.217]:55486 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761373Ab2COOrQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 10:47:16 -0400
+Subject: Re: [PATCH] rndis_wlan: don't report station signal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20120315142527.GC31717@tuxdriver.com>
+References: <1331820805.3432.17.camel@jlt3.sipsolutions.net>
+	 <20120315142527.GC31717@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 15:47:14 +0100
+Message-ID: <1331822834.3432.22.camel@jlt3.sipsolutions.net> (sfid-20120315_154728_041264_A1BCBDC8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Semantic rename.
+On Thu, 2012-03-15 at 10:25 -0400, John W. Linville wrote:
+> On Thu, Mar 15, 2012 at 03:13:25PM +0100, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > The station signal value is supposed to be in dBm
+> > which the device can't give, so don't report it.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> 
+> Won't this break functionality for users of this device?
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/ieee80211_i.h |    4 ++--
- net/mac80211/offchannel.c  |    4 ++--
- net/mac80211/scan.c        |    4 ++--
- net/mac80211/work.c        |    2 +-
- 4 files changed, 7 insertions(+), 7 deletions(-)
+I don't know if it breaks functionality, but filling in values in the
+wrong units doesn't seem like a good plan.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a4307dc..4ceedff 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1282,8 +1282,8 @@ void ieee80211_sched_scan_stopped_work(struct work_struct *work);
- /* off-channel helpers */
- void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 				    bool offchannel_ps_enable);
--void ieee80211_offchannel_return(struct ieee80211_local *local,
--				 bool offchannel_ps_disable);
-+void ieee80211_offchannel_return_vifs(struct ieee80211_local *local,
-+				      bool offchannel_ps_disable);
- void ieee80211_hw_roc_setup(struct ieee80211_local *local);
- 
- /* interface handling */
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index f054e94..06a809d 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -138,8 +138,8 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 	mutex_unlock(&local->iflist_mtx);
- }
- 
--void ieee80211_offchannel_return(struct ieee80211_local *local,
--				 bool offchannel_ps_disable)
-+void ieee80211_offchannel_return_vifs(struct ieee80211_local *local,
-+				      bool offchannel_ps_disable)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 5e7a1f8..56a11bc 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -330,7 +330,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
- 	if (!was_hw_scan) {
- 		ieee80211_configure_filter(local);
- 		drv_sw_scan_complete(local);
--		ieee80211_offchannel_return(local, true);
-+		ieee80211_offchannel_return_vifs(local, true);
- 	}
- 
- 	ieee80211_recalc_idle(local);
-@@ -636,7 +636,7 @@ static void ieee80211_scan_state_suspend(struct ieee80211_local *local,
- 	 * in off-channel state..will put that back
- 	 * on-channel at the end of scanning.
- 	 */
--	ieee80211_offchannel_return(local, false);
-+	ieee80211_offchannel_return_vifs(local, false);
- 
- 	*next_delay = HZ / 5;
- 	/* afterwards, resume scan & go to next channel */
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 91114db..b0f5071 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -221,7 +221,7 @@ static void ieee80211_work_work(struct work_struct *work)
- 		chan_state->tmp_channel = NULL;
- 		ieee80211_hw_config(local, 0);
- 
--		ieee80211_offchannel_return(local, true);
-+		ieee80211_offchannel_return_vifs(local, true);
- 
- 		/* give connection some time to breathe */
- 		run_again(local, jiffies + HZ/2);
--- 
-1.7.0.4
+johannes
 
