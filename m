@@ -1,59 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:12731 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932509Ab2CZPsW (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:39401 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031664Ab2COQ0H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 11:48:22 -0400
-Date: Mon, 26 Mar 2012 10:48:20 -0500
+	Thu, 15 Mar 2012 12:26:07 -0400
+Received: by yhmm54 with SMTP id m54so3285990yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 09:26:05 -0700 (PDT)
+Message-ID: <4F62181A.7020304@lwfinger.net> (sfid-20120315_172613_667375_9C88D40D)
+Date: Thu, 15 Mar 2012 11:26:02 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Add missing DMA buffer unmapping for PCI drivers
-Message-ID: <4f708fc4.MoefCE/S2mC5iHWx%Larry.Finger@lwfinger.net> (sfid-20120326_174826_112192_DD4DE03C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH] cfg80211: allow CFG80211_SIGNAL_TYPE_UNSPEC in station_info
+References: <1331825203.3432.25.camel@jlt3.sipsolutions.net> <1331827087-21339-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1331827087-21339-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In https://bugzilla.kernel.org/show_bug.cgi?id=42976, a system with driver
-rtl8192se used as an AP suffers from "Out of SW-IOMMU space" errors. These
-are caused by the DMA buffers used for beacons never being unmapped.
-
-This bug was also reported at
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/961618
-
-Reported-and-Tested-by: Da Xue <da@lessconfused.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
-
-John,
-
-This is not a regression. The problem has been in the driver from the
-beginning. It has not been found earlier due to the infrequent use of
-these devices in access points.
-
-I think it can be applied to 3.5.
+On 03/15/2012 10:58 AM, John W. Linville wrote:
+> The station_info struct had demanded dBm signal values, but the
+> cfg80211 wireless extensions implementation was also accepting
+> "unspecified" (i.e. RSSI) unit values while the nl80211 code was
+> completely unaware of them.  Resolve this by formalling allowing the
+                                                formally ?
 
 Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-@@ -912,8 +912,13 @@ static void _rtl_pci_prepare_bcn_tasklet
- 	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
- 	ring = &rtlpci->tx_ring[BEACON_QUEUE];
- 	pskb = __skb_dequeue(&ring->queue);
--	if (pskb)
-+	if (pskb) {
-+		struct rtl_tx_desc *entry = &ring->desc[ring->idx];
-+		pci_unmap_single(rtlpci->pdev, rtlpriv->cfg->ops->get_desc(
-+				 (u8 *) entry, true, HW_DESC_TXBUFF_ADDR),
-+				 pskb->len, PCI_DMA_TODEVICE);
- 		kfree_skb(pskb);
-+	}
- 
- 	/*NB: the beacon data buffer must be 32-bit aligned. */
- 	pskb = ieee80211_beacon_get(hw, mac->vif);
