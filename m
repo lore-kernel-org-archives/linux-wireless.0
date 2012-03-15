@@ -1,80 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57657 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759107Ab2CPQvQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51362 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756888Ab2COI6b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 12:51:16 -0400
-Message-ID: <4F636F81.9070804@candelatech.com> (sfid-20120316_175120_277690_49C0048F)
-Date: Fri, 16 Mar 2012 09:51:13 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] ath9k:  Support ethtool getstats api.
-References: <1331853606-28434-1-git-send-email-greearb@candelatech.com> <1331853606-28434-4-git-send-email-greearb@candelatech.com> <4F6356E8.3050906@openwrt.org> <4F6368E9.2040007@candelatech.com> <4F636C07.7060202@openwrt.org>
-In-Reply-To: <4F636C07.7060202@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 15 Mar 2012 04:58:31 -0400
+Subject: Re: [PATCH 3.5] cfg80211: enforce lack of interface combinations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>
+In-Reply-To: <20120315085736.GB17590@vasanth-laptop>
+References: <20120313150613.300612962@sipsolutions.net>
+	 <20120315084217.GA17590@vasanth-laptop>
+	 <1331801488.3432.2.camel@jlt3.sipsolutions.net>
+	 <20120315085736.GB17590@vasanth-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 09:58:27 +0100
+Message-ID: <1331801907.3432.3.camel@jlt3.sipsolutions.net> (sfid-20120315_095836_580792_A5908763)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/2012 09:36 AM, Felix Fietkau wrote:
-> On 2012-03-16 5:23 PM, Ben Greear wrote:
->> On 03/16/2012 08:06 AM, Felix Fietkau wrote:
+On Thu, 2012-03-15 at 14:27 +0530, Vasanthakumar Thiagarajan wrote:
+> On Thu, Mar 15, 2012 at 09:51:28AM +0100, Johannes Berg wrote:
+> > On Thu, 2012-03-15 at 14:12 +0530, Vasanthakumar Thiagarajan wrote:
+> > > On Tue, Mar 13, 2012 at 04:06:03PM +0100, Johannes Berg wrote:
+> > > > From: Johannes Berg <johannes.berg@intel.com>
+> > > > 
+> > > > My grand plan to allow drivers to gradually move over
+> > > > to advertising virtual interface combinations and only
+> > > > enforce with drivers that do want it enforced doesn't
+> > > > seem to be working out, only Christian ever added the
+> > > > advertising (to carl9170), nobody else did.
+> > > > 
+> > > > Begin enforcing combinations in cfg80211 so that users
+> > > > can rely on the information reported about a device.
+> > > 
+> > > This breaks ath6kl AP mode and P2P, is it expected that the driver
+> > > needs to register the combination (?) even it supports a single
+> > > interface?
+> > 
+> > Kalle tells me that ath6kl does support multiple virtual interfaces, but
+> > if it didn't then it wouldn't have to register combinations.
+> > 
+> > I suspect you're using
+> > driver_param=use_p2p_group_interface=1
+> > in wpa_supplicant?
+> 
+> Actually, I verified only AP mode, since it affects any sort of change interface,
+> I mentioned P2P as well. AP is expected to work without any issue right?.
 
->> My personal goal is to give my users a better insight into their
->> wireless environment.  I would like to be able to break out the
->> various low-level errors (as well as add them together to present
->> summary errors).
->>
->> For anyone reporting mysterious bugs on mailing lists and such, I'd like
->> to ask them to dump the stats and send it to me/list/whatever.
->> I am still of the mind that looking for patterns in various
->> counters might point to underlying problems, so anything that
->> makes it easier to get that data is a win in my mind.
-> That's what debugfs is for, and it's not exactly hard to use.
-> I think it would be bad if tools started depending on the counters in
-> their current state, they're pretty messy.
+As long as you don't try to add the AP interface as the second one...
 
-With a bit of work, we could make the ethtool stats
-available when debugfs is compiled out, which might give
-you actual space savings and still allow at least much of
-the stats.  Either way, the ability to programatically
-parse the ethtool stats is a big win for my use, at least.
-
->> If there are some stats that really don't work, maybe I
->> will notice, or maybe someone else will and we can fix
->> them.  If you are aware of any specific ones that don't
->> work right, please let me know and I'll at least add some
->> comments to the code to mention they are questionable,
->> or fix them if I'm able.
-> There's lots of confusion in the AMPDU/Aggregates counters (some count
-> whole A-MPDUs, some count subframes).
-
-That sounds fixable, if it's a problem at all.
-
-> Also, many of these counters are useless unless you're doing live
-> debugging and actually know what you're doing - especially the ones that
-> display the current queue state.
-
-I tried to skip all of those current-queue-state counters, but I
-will double-check.
-
-> Most of the PHY error counters aren't even tracked by the hw, nothing in
-> the driver enables their use.
-
-Well, any reason we cannot enable those?
-
-> For some of these counters it might make sense to track them in
-> mac80211, as they're sufficiently generic.
-
-That sounds nice.  Maybe add a 'get_stats' object to the driver
-api?  If you have a list of what you want to be made
-generic I'll make a try at implementing it.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
