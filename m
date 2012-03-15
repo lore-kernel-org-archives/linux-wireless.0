@@ -1,56 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53448 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037Ab2CHRlH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54849 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031252Ab2COPxx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 12:41:07 -0500
-Date: Thu, 8 Mar 2012 11:41:02 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
+	Thu, 15 Mar 2012 11:53:53 -0400
+Message-Id: <20120315155228.414054879@sipsolutions.net> (sfid-20120315_165400_634340_09667D15)
+Date: Thu, 15 Mar 2012 16:41:36 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Problems with regulatory domain support and BCM43224
-Message-ID: <20120308174101.GB28133@ubuntu-macmini> (sfid-20120308_184112_320907_2400F157)
-References: <20120307194001.GA2506@ubuntu-macmini>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120307194001.GA2506@ubuntu-macmini>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Paul Stewart <pstew@chromium.org>
+Subject: [RFC 3/3] mac80211: remove queue stop on rate control update
+References: <20120315154133.312616639@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding some Cc's.
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Wed, Mar 07, 2012 at 01:40:01PM -0600, Seth Forshee wrote:
-> I set up an AP recently in the 5 GHz band and noticed that a MacBook Air
-> with BCM43224 wireless can't see it. iw shows that the 5260-5700 MHz
-> frequency range is disabled. I compared this to an Intel Centrino 6205
-> card which shows passive scanning is allowed in this range. Both show
-> that they're using the world regulatory domain, and I can get the
-> BCM43224 to see my AP when I force the domain to US.
-> 
-> I've been going through the regulatory code trying to understand what's
-> happening, and while I haven't fully grokked it yet it seems to me the
-> difference is that iwlwifi is setting WIPHY_FLAG_CUSTOM_REGULATORY and
-> brcmsmac is not. iwlwifi isn't supplying a regulatory hint, and mac80211
-> doesn't end up applying any regulatory settings due to the flag.
-> brcmsmac supplies a hint using the country code it reads from its srom,
-> "X0" (which Google tells me is an interim code that Apple uses while the
-> actual country code is unknown). Since this code is bogus the world
-> domain gets applied.
-> 
-> mac80211 doesn't appear to update the regulatory domain from the beacons
-> unless connected to an AP that happens to be providing the country IE,
-> so we're left in the unfortunate situation of being unable to scan
-> certain frequencies unless the user connects to such an AP or sets the
-> domain manually.
+We currently stop the queue when changing the rate
+control between 20/40 MHz in the BSS. This seems to
+have been necessary when we actually changed the
+channel, but now that we just update the station it
+doesn't seem right any more. Remove it.
 
-As I understand it, the DFS channels aren't included in the world domain
-because Linux does not yet fully support DFS. But I can then specify a
-domain that's known to require DFS on these channels, and they are
-enabled. This seems illogical. If passive scanning is okay when we know
-DFS is required, why can't it be enabled in the world domain when we
-simply don't know if it's required?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/mlme.c        |   19 -------------------
+ 2 files changed, 20 deletions(-)
 
-Thanks,
-Seth
+--- a/net/mac80211/ieee80211_i.h	2012-03-15 16:39:21.000000000 +0100
++++ b/net/mac80211/ieee80211_i.h	2012-03-15 16:39:47.000000000 +0100
+@@ -743,7 +743,6 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
+ 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
+-	IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE,
+ };
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+--- a/net/mac80211/mlme.c	2012-03-15 16:39:21.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-03-15 16:39:57.000000000 +0100
+@@ -212,21 +212,6 @@ static u32 ieee80211_config_ht_tx(struct
+ 	if (sta && (!reconfig ||
+ 		    (disable_40 != !!(sta->sta.ht_cap.cap &
+ 		    			IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
+-		if (reconfig) {
+-			/*
+-			 * Whenever the AP announces the HT mode changed
+-			 * (e.g. 40 MHz intolerant) stop queues to avoid
+-			 * sending out frames while the rate control is
+-			 * reconfiguring.
+-			 */
+-			ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
+-
+-			/* flush out all packets */
+-			synchronize_net();
+-
+-			drv_flush(local, false);
+-		}
+ 
+ 		if (disable_40)
+ 			sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+@@ -235,10 +220,6 @@ static u32 ieee80211_config_ht_tx(struct
+ 
+ 		rate_control_rate_update(local, sband, sta,
+ 					 IEEE80211_RC_HT_CHANGED);
+-
+-		if (reconfig)
+-			ieee80211_wake_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+
 
