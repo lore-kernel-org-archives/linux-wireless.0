@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44690 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753783Ab2CINZl (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57941 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161044Ab2COShF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 08:25:41 -0500
-Subject: Re: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses
- static SMPS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	nbd@openwrt.org
-In-Reply-To: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120309_141428_440266_4DD1AD56)
-References: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
-	 (sfid-20120309_141428_440266_4DD1AD56)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Mar 2012 14:25:38 +0100
-Message-ID: <1331299538.3491.4.camel@jlt3.sipsolutions.net> (sfid-20120309_142544_291169_CDDEE3D9)
-Mime-Version: 1.0
+	Thu, 15 Mar 2012 14:37:05 -0400
+Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q2FIb4ro005848
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 11:37:04 -0700
+Message-ID: <4F6236D0.40505@candelatech.com> (sfid-20120315_193710_650107_511DE533)
+Date: Thu, 15 Mar 2012 11:37:04 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: compiler warning in wireless-testing.
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-09 at 14:13 +0100, Helmut Schaa wrote:
-> Disable multi stream rates (MCS > 7) when a STA is in static SMPS mode
-> since it has only one active rx chain. Hence, it doesn't even make
-> sense to sample multi stream rates.
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> ---
-> 
-> I haven't found a STA that makes use of static SMPS, so this is only compile tested.
+Looks like this is the compiler's fault to me..but might be
+worth explicitly initializing the sta variable just to make
+it quiet.
 
-You can easily make a mac80211 use it with the debugfs file?
+   CC [M]  net/mac80211/mlme.o
+/home/greearb/git/linux.wireless-testing/net/mac80211/mlme.c: In function ‘ieee80211_prep_connection’:
+/home/greearb/git/linux.wireless-testing/net/mac80211/mlme.c:3058: warning: ‘sta’ may be used uninitialized in this function
+   CC [M]  net/mac80211/debugfs.o
+   CC [M]  net/mac80211/debugfs_netdev.o
 
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
