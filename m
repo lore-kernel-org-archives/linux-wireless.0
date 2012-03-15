@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33406 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755465Ab2CBVKU (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36054 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754919Ab2COSwn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 16:10:20 -0500
-Subject: Re: [PATCHv3 1/2] mac80211_hwsim:  Add tsf to beacons, probe
- responses and radiotap header.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1330722280-28879-1-git-send-email-javier@cozybit.com> (sfid-20120302_220521_770334_56729013)
-References: <1330722280-28879-1-git-send-email-javier@cozybit.com>
-	 (sfid-20120302_220521_770334_56729013)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Mar 2012 22:10:16 +0100
-Message-ID: <1330722616.8542.24.camel@jlt3.sipsolutions.net> (sfid-20120302_221024_373251_6B809240)
-Mime-Version: 1.0
+	Thu, 15 Mar 2012 14:52:43 -0400
+Message-ID: <4F623A78.4010909@candelatech.com> (sfid-20120315_195247_596415_39DA5B8C)
+Date: Thu, 15 Mar 2012 11:52:40 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/2] cfg80211:  Add framework to support ethtool stats.
+References: <1331833159-12694-1-git-send-email-greearb@candelatech.com>  (sfid-20120315_183939_019754_FB9DFB9F) <1331837442.3432.35.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1331837442.3432.35.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-02 at 13:04 -0800, Javier Cardona wrote:
-> Generate a tsf from jiffies.  Prepare the path for having different tsf
-> offsets on the each phy.  This will be useful for testing mesh
-> synchronization algorithms.
-> 
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> ---
-> v2: Added timestamp to probe responses, as suggested by Johannes
->     Also implement tx_last_beacon, useful for testing (new patch 1/3)
-> v3: Drop poorly implemented tx_last_beacon patch
->     TSF in microsecs, not TUs!    (Johannes)
->     Use high-resolution timer, not jiffies (Johannes)
- 
-> +static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
-> +{
-> +	return cpu_to_le64(jiffies_to_msecs(jiffies)*1000/1024 +
-> +			data->tsf_offset);
-> +}
+On 03/15/2012 11:50 AM, Johannes Berg wrote:
+> On Thu, 2012-03-15 at 10:39 -0700, greearb@candelatech.com wrote:
+>
+>> --- a/net/mac80211/sta_info.h
+>> +++ b/net/mac80211/sta_info.h
+>> @@ -379,6 +379,8 @@ struct sta_info {
+>>   	struct ieee80211_sta sta;
+>>   };
+>>
+>> +#define NUM_STA_INFO_STATS 12
+>> +
+>
+> That doesn't seem to belong into this patch?
 
-Did you forget to quilt refresh or so? :-)
+Er, no..it does not.  I'll fix that.
 
-johannes
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
