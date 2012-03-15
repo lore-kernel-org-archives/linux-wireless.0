@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:46468 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752255Ab2CAE7s convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 23:59:48 -0500
-Received: by vcqp1 with SMTP id p1so175542vcq.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 20:59:47 -0800 (PST)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55942 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761064Ab2COWnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 18:43:45 -0400
+Message-ID: <4F627092.7030207@hauke-m.de> (sfid-20120315_234350_918234_0E2901B9)
+Date: Thu, 15 Mar 2012 23:43:30 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB30B3B09@HASMSX103.ger.corp.intel.com>
-References: <CAD2nsn1b0FtbY3MX9MhWxkRwv9KvNvRD7p5jM8GDA=PqS_yiqA@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB30B3B09@HASMSX103.ger.corp.intel.com>
-Date: Thu, 1 Mar 2012 10:29:47 +0530
-Message-ID: <CAD2nsn03T=Pq3HdAVb8TzTdgxWCeH8ujuizOciC8R16O9xArgw@mail.gmail.com> (sfid-20120301_055951_375056_C31E650D)
-Subject: Re: sleeping function called from invalid context at drivers/net/wireless/iwlwifi/iwl-trans.h:452
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Greg KH <gregkh@linuxfoundation.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
+	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4 3/7] bcma: scan for extra address space
+References: <1331597093-425-1-git-send-email-hauke@hauke-m.de> <1331597093-425-4-git-send-email-hauke@hauke-m.de> <20120315194453.GB30682@kroah.com>
+In-Reply-To: <20120315194453.GB30682@kroah.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 29, 2012 at 9:25 PM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
->> Hi Emmanuel,
+On 03/15/2012 08:44 PM, Greg KH wrote:
+> On Tue, Mar 13, 2012 at 01:04:49AM +0100, Hauke Mehrtens wrote:
+>> Some cores like the USB core have two address spaces. In the USB host
+>> controller one address space is used for the OHCI and the other for the
+>> EHCI controller interface. The USB controller is the only core I found
+>> with two address spaces. This code is based on the AI scan function
+>> ai_scan() in shared/aiutils.c in the Broadcom SDK.
 >>
->> was debugging some issue in ath9k with UDP bidirectional traffic and
->> then used my inbuilt iwlwifi with bidirectional UDP had this warnings
->>
->> * iwlagn_mac_ampdu_action->iwlagn_tx_agg_start -> †(we take spinlock
->> 'sta_lock' ) -> iwl_trans_tx_agg_alloc (which has might_sleep)
->> * iwlagn_mac_ampdu_action->iwlagn_tx_agg_stop -> †(we take spinlock
->> 'sta_lock' ) -> iwl_trans_tx_agg_disable (which has might_sleep)
->>
-> So I was hoping that nobody would hit that one before we push the next batch of patches that includes the fix for this (courtesy of Johannes). In vain.
-> Sorry, this is stupid bug: iwl_trans_tx_agg_{alloc,disable} must be atomic...
+>> CC: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+>> CC: linux-wireless@vger.kernel.org
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  drivers/bcma/scan.c       |   19 ++++++++++++++++++-
+>>  include/linux/bcma/bcma.h |    1 +
+>>  2 files changed, 19 insertions(+), 1 deletions(-)
+> 
+> Is this required for the 4/7 patch?
+> 
+> If so, can I get an ack from the BCMA developers so that I can take this
+> through the USB tree?
+> 
+> thanks,
+> 
+> greg k-h
 
-oh ok , thanks.
+Hi Rafa≈Ç,
 
--- 
-thanks,
-shafi
+could you give me an ack for this patch please.
+
+This patch is only required for the patch "Add driver for the bcma bus".
+
+Hauke
