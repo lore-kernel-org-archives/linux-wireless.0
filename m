@@ -1,85 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56233 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031717Ab2CPNkm (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:57191 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161282Ab2COTo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 09:40:42 -0400
-Subject: Re: [mac80211] UAPSD: WLAN_STA_PS flag  cleared prematurely?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4F634259.7040107@etit.tu-chemnitz.de>
-References: <4F630757.6070901@etit.tu-chemnitz.de>
-	 <1331901852.6753.2.camel@jlt3.sipsolutions.net>
-	 <4F634259.7040107@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Mar 2012 14:40:40 +0100
-Message-ID: <1331905240.6753.14.camel@jlt3.sipsolutions.net> (sfid-20120316_144048_531360_661629AA)
-Mime-Version: 1.0
+	Thu, 15 Mar 2012 15:44:58 -0400
+Received: by mail-yw0-f46.google.com with SMTP id m54so3504624yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 12:44:58 -0700 (PDT)
+Date: Thu, 15 Mar 2012 12:44:53 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
+	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH v4 3/7] bcma: scan for extra address space
+Message-ID: <20120315194453.GB30682@kroah.com> (sfid-20120315_204518_429300_FB81CE9D)
+References: <1331597093-425-1-git-send-email-hauke@hauke-m.de>
+ <1331597093-425-4-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1331597093-425-4-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-16 at 14:38 +0100, Marco Porsch wrote:
-> On 03/16/12 13:44, Johannes Berg wrote:
-> > On Fri, 2012-03-16 at 10:26 +0100, Marco Porsch wrote:
-> >> Hi all,
-> >>
-> >> in sta_info.c : ieee80211_sta_ps_deliver_response the
-> >> IEEE80211_TX_STATUS_EOSP is set for all to-be-sent frames, not only for
-> >> the last. But only the last buffered frame actually gets the EOSP flag.
-> >>
-> >>
-> >> /* set EOSP for the frame */
-> >> if (reason == IEEE80211_FRAME_RELEASE_UAPSD&&
-> >>       qoshdr&&  skb_queue_empty(&frames))
-> >> 	*qoshdr |= IEEE80211_QOS_CTL_EOSP;
-> >>
-> >> info->flags |= IEEE80211_TX_STATUS_EOSP |
-> >>          IEEE80211_TX_CTL_REQ_TX_STATUS;
-> >>
-> >>
-> >> Consequence is, that the WLAN_STA_SP flag gets cleared (multiple times)
-> >> in ieee80211_tx_status before the last frame with EOSP has been sent.
-> >> Is this correct?
-> >
-> > Looks like the bug is above, the EOSP/TX_STATUS should only be set for
-> > the last frame?
+On Tue, Mar 13, 2012 at 01:04:49AM +0100, Hauke Mehrtens wrote:
+> Some cores like the USB core have two address spaces. In the USB host
+> controller one address space is used for the OHCI and the other for the
+> EHCI controller interface. The USB controller is the only core I found
+> with two address spaces. This code is based on the AI scan function
+> ai_scan() in shared/aiutils.c in the Broadcom SDK.
 > 
-> I Agree. But what about the case, when the last frame is not a QoS 
-> frame? Can this even happen - or is U-APSD only for QoS STA?
+> CC: Rafał Miłecki <zajec5@gmail.com>
+> CC: linux-wireless@vger.kernel.org
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/bcma/scan.c       |   19 ++++++++++++++++++-
+>  include/linux/bcma/bcma.h |    1 +
+>  2 files changed, 19 insertions(+), 1 deletions(-)
 
-uAPSD can only be used by a QoS STA.
+Is this required for the 4/7 patch?
 
-> Then we would have to manually append a QoS Null with the EOSP flag + 
-> TX_STATUS?
-> 
-> So like this:
-> 
-> /* set EOSP for the _last_ frame or appended a QoS Null when needed */
-> if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
->      skb_queue_empty(&frames)) {
-> 	if (qoshdr) {
-> 		*qoshdr |= IEEE80211_QOS_CTL_EOSP;
-> 
-> 		info->flags |= IEEE80211_TX_STATUS_EOSP |
-> 		               IEEE80211_TX_CTL_REQ_TX_STATUS;
-> 	} else {
-> 		ieee80211_send_null_response(sdata, tid, reason);
-> 	}
-> }
+If so, can I get an ack from the BCMA developers so that I can take this
+through the USB tree?
 
-No, I think it should be more like this:
+thanks,
 
-
-/* set EOSP for the frame */
-
-if (skb_queue_empty(&frames)) {
-	if (reason == IEEE80211_FRAME_RELEASE_UAPSD && qoshdr)
-	        *qoshdr |= IEEE80211_QOS_CTL_EOSP;
-
-	info->flags |= IEEE80211_TX_STATUS_EOSP |
-			IEEE80211_TX_CTL_REQ_TX_STATUS;
-}
-
-johannes
-
+greg k-h
