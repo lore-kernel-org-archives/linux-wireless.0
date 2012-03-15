@@ -1,255 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49748 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757744Ab2C1JS4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 05:18:56 -0400
-Message-Id: <20120328091811.108837459@sipsolutions.net> (sfid-20120328_111900_662868_94048B5D)
-Date: Wed, 28 Mar 2012 11:13:47 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 1/2] mac80211: add explicit monitor interface if needed
-References: <20120328091346.442543219@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:21225 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161383Ab2COU2D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:03 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/26] iwlwifi: add trailing newline to various messages
+Date: Thu, 15 Mar 2012 13:26:46 -0700
+Message-Id: <1331843226-29860-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212856_443141_90705BD6)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The queue mapping redesign that I'm planning to do
-will break pure injection unless we handle monitor
-interfaces explicitly. One possible option would
-be to have the driver tell mac80211 about monitor
-mode queues etc., but that would duplicate the API
-since we already need to have queue assignments
-handled per virtual interface.
-
-So in order to solve this, have a virtual monitor
-interface that is added whenever all active vifs
-are monitors. We could also use the state of one
-of the monitor interfaces, but managing that would
-be complicated, so allocate separate state.
+A whole bunch of messages, even some recent ones,
+didn't include a trailing newline so add it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |    3 +
- include/net/mac80211.h                |    6 ++-
- net/mac80211/driver-ops.h             |    3 -
- net/mac80211/ieee80211_i.h            |    3 +
- net/mac80211/iface.c                  |   65 ++++++++++++++++++++++++++++++++++
- net/mac80211/pm.c                     |    4 ++
- net/mac80211/tx.c                     |    7 ++-
- net/mac80211/util.c                   |   10 +++++
- 8 files changed, 95 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |   14 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c        |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 +-
+ 7 files changed, 16 insertions(+), 16 deletions(-)
 
---- a/net/mac80211/ieee80211_i.h	2012-03-28 10:29:13.000000000 +0200
-+++ b/net/mac80211/ieee80211_i.h	2012-03-28 10:39:22.000000000 +0200
-@@ -1077,6 +1077,9 @@ struct ieee80211_local {
- 	struct net_device napi_dev;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 3e1698d..53b9a11 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -615,7 +615,7 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 				struct iwl_bt_uart_msg *uart_msg)
+ {
+ 	IWL_DEBUG_COEX(priv, "Message Type = 0x%X, SSN = 0x%X, "
+-			"Update Req = 0x%X",
++			"Update Req = 0x%X\n",
+ 		(BT_UART_MSG_FRAME1MSGTYPE_MSK & uart_msg->frame1) >>
+ 			BT_UART_MSG_FRAME1MSGTYPE_POS,
+ 		(BT_UART_MSG_FRAME1SSN_MSK & uart_msg->frame1) >>
+@@ -624,7 +624,7 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 			BT_UART_MSG_FRAME1UPDATEREQ_POS);
  
- 	struct napi_struct napi;
-+
-+	/* virtual monitor interface */
-+	struct ieee80211_sub_if_data __rcu *monitor_sdata;
- };
+ 	IWL_DEBUG_COEX(priv, "Open connections = 0x%X, Traffic load = 0x%X, "
+-			"Chl_SeqN = 0x%X, In band = 0x%X",
++			"Chl_SeqN = 0x%X, In band = 0x%X\n",
+ 		(BT_UART_MSG_FRAME2OPENCONNECTIONS_MSK & uart_msg->frame2) >>
+ 			BT_UART_MSG_FRAME2OPENCONNECTIONS_POS,
+ 		(BT_UART_MSG_FRAME2TRAFFICLOAD_MSK & uart_msg->frame2) >>
+@@ -635,7 +635,7 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 			BT_UART_MSG_FRAME2INBAND_POS);
  
- static inline struct ieee80211_sub_if_data *
---- a/net/mac80211/pm.c	2012-03-28 10:29:13.000000000 +0200
-+++ b/net/mac80211/pm.c	2012-03-28 10:29:13.000000000 +0200
-@@ -127,6 +127,10 @@ int __ieee80211_suspend(struct ieee80211
- 		drv_remove_interface(local, sdata);
+ 	IWL_DEBUG_COEX(priv, "SCO/eSCO = 0x%X, Sniff = 0x%X, A2DP = 0x%X, "
+-			"ACL = 0x%X, Master = 0x%X, OBEX = 0x%X",
++			"ACL = 0x%X, Master = 0x%X, OBEX = 0x%X\n",
+ 		(BT_UART_MSG_FRAME3SCOESCO_MSK & uart_msg->frame3) >>
+ 			BT_UART_MSG_FRAME3SCOESCO_POS,
+ 		(BT_UART_MSG_FRAME3SNIFF_MSK & uart_msg->frame3) >>
+@@ -649,12 +649,12 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 		(BT_UART_MSG_FRAME3OBEX_MSK & uart_msg->frame3) >>
+ 			BT_UART_MSG_FRAME3OBEX_POS);
+ 
+-	IWL_DEBUG_COEX(priv, "Idle duration = 0x%X",
++	IWL_DEBUG_COEX(priv, "Idle duration = 0x%X\n",
+ 		(BT_UART_MSG_FRAME4IDLEDURATION_MSK & uart_msg->frame4) >>
+ 			BT_UART_MSG_FRAME4IDLEDURATION_POS);
+ 
+ 	IWL_DEBUG_COEX(priv, "Tx Activity = 0x%X, Rx Activity = 0x%X, "
+-			"eSCO Retransmissions = 0x%X",
++			"eSCO Retransmissions = 0x%X\n",
+ 		(BT_UART_MSG_FRAME5TXACTIVITY_MSK & uart_msg->frame5) >>
+ 			BT_UART_MSG_FRAME5TXACTIVITY_POS,
+ 		(BT_UART_MSG_FRAME5RXACTIVITY_MSK & uart_msg->frame5) >>
+@@ -662,14 +662,14 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 		(BT_UART_MSG_FRAME5ESCORETRANSMIT_MSK & uart_msg->frame5) >>
+ 			BT_UART_MSG_FRAME5ESCORETRANSMIT_POS);
+ 
+-	IWL_DEBUG_COEX(priv, "Sniff Interval = 0x%X, Discoverable = 0x%X",
++	IWL_DEBUG_COEX(priv, "Sniff Interval = 0x%X, Discoverable = 0x%X\n",
+ 		(BT_UART_MSG_FRAME6SNIFFINTERVAL_MSK & uart_msg->frame6) >>
+ 			BT_UART_MSG_FRAME6SNIFFINTERVAL_POS,
+ 		(BT_UART_MSG_FRAME6DISCOVERABLE_MSK & uart_msg->frame6) >>
+ 			BT_UART_MSG_FRAME6DISCOVERABLE_POS);
+ 
+ 	IWL_DEBUG_COEX(priv, "Sniff Activity = 0x%X, Page = "
+-			"0x%X, Inquiry = 0x%X, Connectable = 0x%X",
++			"0x%X, Inquiry = 0x%X, Connectable = 0x%X\n",
+ 		(BT_UART_MSG_FRAME7SNIFFACTIVITY_MSK & uart_msg->frame7) >>
+ 			BT_UART_MSG_FRAME7SNIFFACTIVITY_POS,
+ 		(BT_UART_MSG_FRAME7PAGE_MSK & uart_msg->frame7) >>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 53f8c51..2343412 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2166,7 +2166,7 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
+ 		    (lq_sta->total_success > lq_sta->max_success_limit) ||
+ 		    ((!lq_sta->search_better_tbl) && (lq_sta->flush_timer)
+ 		     && (flush_interval_passed))) {
+-			IWL_DEBUG_RATE(priv, "LQ: stay is expired %d %d %d\n:",
++			IWL_DEBUG_RATE(priv, "LQ: stay is expired %d %d %d\n",
+ 				     lq_sta->total_failed,
+ 				     lq_sta->total_success,
+ 				     flush_interval_passed);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index 872dc86..0a8c3e6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -970,7 +970,7 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
  	}
  
-+	sdata = rtnl_dereference(local->monitor_sdata);
-+	if (sdata)
-+		drv_remove_interface(local, sdata);
-+
- 	/* stop hardware - this must stop RX */
- 	if (local->open_count)
- 		ieee80211_stop_device(local);
---- a/include/net/mac80211.h	2012-03-28 10:29:13.000000000 +0200
-+++ b/include/net/mac80211.h	2012-03-28 10:39:22.000000000 +0200
-@@ -1173,6 +1173,10 @@ enum sta_notify_cmd {
-  * @IEEE80211_HW_SCAN_WHILE_IDLE: The device can do hw scan while
-  *	being idle (i.e. mac80211 doesn't have to go idle-off during the
-  *	the scan).
-+ *
-+ * @IEEE80211_HW_WANT_MONITOR_VIF: The driver would like to be informed of
-+ *	a virtual monitor interface when monitor interfaces are the only
-+ *	active interfaces.
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -1189,7 +1193,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_PS_NULLFUNC_STACK			= 1<<11,
- 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
- 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
--	/* reuse bit 14 */
-+	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
- 	IEEE80211_HW_SUPPORTS_STATIC_SMPS		= 1<<15,
- 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
- 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
---- a/net/mac80211/iface.c	2012-03-28 10:29:13.000000000 +0200
-+++ b/net/mac80211/iface.c	2012-03-28 10:39:38.000000000 +0200
-@@ -169,6 +169,59 @@ void ieee80211_adjust_monitor_flags(stru
- #undef ADJUST
- }
- 
-+static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	int ret;
-+
-+	if (!(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))
-+		return 0;
-+
-+	if (local->monitor_sdata)
-+		return 0;
-+
-+	sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);
-+	if (!sdata)
-+		return -ENOMEM;
-+
-+	/* set up data */
-+	sdata->local = local;
-+	sdata->vif.type = NL80211_IFTYPE_MONITOR;
-+	snprintf(sdata->name, IFNAMSIZ, "%s-monitor",
-+		 wiphy_name(local->hw.wiphy));
-+
-+	ret = drv_add_interface(local, sdata);
-+	if (WARN_ON(ret)) {
-+		/* ok .. stupid driver, it asked for this! */
-+		kfree(sdata);
-+		return ret;
-+	}
-+
-+	rcu_assign_pointer(local->monitor_sdata, sdata);
-+
-+	return 0;
-+}
-+
-+static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	if (!(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))
-+		return;
-+
-+	sdata = rtnl_dereference(local->monitor_sdata);
-+
-+	if (WARN_ON(!sdata))
-+		return;
-+
-+	rcu_assign_pointer(local->monitor_sdata, NULL);
-+	synchronize_net();
-+
-+	drv_remove_interface(local, sdata);
-+
-+	kfree(sdata);
-+}
-+
- /*
-  * NOTE: Be very careful when changing this function, it must NOT return
-  * an error on interface type changes that have been pre-checked, so most
-@@ -266,6 +319,12 @@ static int ieee80211_do_open(struct net_
- 			break;
- 		}
- 
-+		if (local->monitors == 0 && local->open_count == 0) {
-+			res = ieee80211_add_virtual_monitor(local);
-+			if (res)
-+				return res;
-+		}
-+
- 		/* must be before the call to ieee80211_configure_filter */
- 		local->monitors++;
- 		if (local->monitors == 1) {
-@@ -280,6 +339,8 @@ static int ieee80211_do_open(struct net_
- 		break;
- 	default:
- 		if (coming_up) {
-+			ieee80211_del_virtual_monitor(local);
-+
- 			res = drv_add_interface(local, sdata);
- 			if (res)
- 				goto err_stop;
-@@ -511,6 +572,7 @@ static void ieee80211_do_stop(struct iee
- 		if (local->monitors == 0) {
- 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
- 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
-+			ieee80211_del_virtual_monitor(local);
- 		}
- 
- 		ieee80211_adjust_monitor_flags(sdata, -1);
-@@ -584,6 +646,9 @@ static void ieee80211_do_stop(struct iee
- 		}
+ 	if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
+-		IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d/n",
++		IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
+ 				phy_res->cfg_phy_cnt);
+ 		return 0;
  	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+
-+	if (local->monitors == local->open_count && local->monitors > 0)
-+		ieee80211_add_virtual_monitor(local);
- }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 8125f4b..9494d75 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -550,7 +550,7 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	const struct iwl_channel_info *ch_info;
+ 	int ret = 0;
  
- static int ieee80211_stop(struct net_device *dev)
---- a/net/mac80211/util.c	2012-03-28 10:29:13.000000000 +0200
-+++ b/net/mac80211/util.c	2012-03-28 10:39:22.000000000 +0200
-@@ -1213,6 +1213,16 @@ int ieee80211_reconfig(struct ieee80211_
- 				   IEEE80211_TPT_LEDTRIG_FL_RADIO, 0);
+-	IWL_DEBUG_MAC80211(priv, "enter: changed %#x", changed);
++	IWL_DEBUG_MAC80211(priv, "enter: changed %#x\n", changed);
  
- 	/* add interfaces */
-+	sdata = rtnl_dereference(local->monitor_sdata);
-+	if (sdata) {
-+		res = drv_add_interface(local, sdata);
-+		if (WARN_ON(res)) {
-+			rcu_assign_pointer(local->monitor_sdata, NULL);
-+			synchronize_net();
-+			kfree(sdata);
-+		}
-+	}
-+
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
- 		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
---- a/net/mac80211/tx.c	2012-03-28 10:29:13.000000000 +0200
-+++ b/net/mac80211/tx.c	2012-03-28 10:39:22.000000000 +0200
-@@ -1284,8 +1284,11 @@ static bool __ieee80211_tx(struct ieee80
+ 	mutex_lock(&priv->mutex);
  
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_MONITOR:
--		sdata = NULL;
--		vif = NULL;
-+		sdata = rcu_dereference(local->monitor_sdata);
-+		if (sdata)
-+			vif = &sdata->vif;
-+		else
-+			vif = NULL;
- 		break;
- 	case NL80211_IFTYPE_AP_VLAN:
- 		sdata = container_of(sdata->bss,
---- a/drivers/net/wireless/mac80211_hwsim.c	2012-03-28 10:29:13.000000000 +0200
-+++ b/drivers/net/wireless/mac80211_hwsim.c	2012-03-28 10:29:13.000000000 +0200
-@@ -1789,7 +1789,8 @@ static int __init init_mac80211_hwsim(vo
- 			    IEEE80211_HW_SIGNAL_DBM |
- 			    IEEE80211_HW_SUPPORTS_STATIC_SMPS |
- 			    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
--			    IEEE80211_HW_AMPDU_AGGREGATION;
-+			    IEEE80211_HW_AMPDU_AGGREGATION |
-+			    IEEE80211_HW_WANT_MONITOR_VIF;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 34adedc..453d880 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -515,7 +515,7 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 		return 0;
+ 	}
  
- 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
- 				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
---- a/net/mac80211/driver-ops.h	2012-03-28 10:29:13.000000000 +0200
-+++ b/net/mac80211/driver-ops.h	2012-03-28 10:29:13.000000000 +0200
-@@ -98,8 +98,7 @@ static inline int drv_add_interface(stru
+-	IWL_DEBUG_TX_QUEUES(priv, "Can proceed: ssn = next_recl = %d",
++	IWL_DEBUG_TX_QUEUES(priv, "Can proceed: ssn = next_recl = %d\n",
+ 			    tid_data->agg.ssn);
+ turn_off:
+ 	priv->tid_data[sta_id][tid].agg.state = IWL_AGG_OFF;
+@@ -570,13 +570,13 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	}
  
- 	might_sleep();
+ 	if (*ssn == tid_data->next_reclaimed) {
+-		IWL_DEBUG_TX_QUEUES(priv, "Can proceed: ssn = next_recl = %d",
++		IWL_DEBUG_TX_QUEUES(priv, "Can proceed: ssn = next_recl = %d\n",
+ 				    tid_data->agg.ssn);
+ 		tid_data->agg.state = IWL_AGG_ON;
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 	} else {
+ 		IWL_DEBUG_TX_QUEUES(priv, "Can't proceed: ssn %d, "
+-				    "next_reclaimed = %d",
++				    "next_reclaimed = %d\n",
+ 				    tid_data->agg.ssn,
+ 				    tid_data->next_reclaimed);
+ 		tid_data->agg.state = IWL_EMPTYING_HW_QUEUE_ADDBA;
+@@ -1059,7 +1059,7 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 		if (tid != IWL_TID_NON_QOS) {
+ 			priv->tid_data[sta_id][tid].next_reclaimed =
+ 				next_reclaimed;
+-			IWL_DEBUG_TX_REPLY(priv, "Next reclaimed packet:%d",
++			IWL_DEBUG_TX_REPLY(priv, "Next reclaimed packet:%d\n",
+ 						  next_reclaimed);
+ 		}
  
--	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
--		    sdata->vif.type == NL80211_IFTYPE_MONITOR))
-+	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
- 		return -EINVAL;
- 
- 	trace_drv_add_interface(local, sdata);
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index b282311..bab5114 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -976,7 +976,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 	if (iwl_have_debug_level(IWL_DL_ISR)) {
+ 		/* just for debug */
+ 		inta_mask = iwl_read32(trans, CSR_INT_MASK);
+-		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n ",
++		IWL_DEBUG_ISR(trans, "inta 0x%08x, enabled 0x%08x\n",
+ 				inta, inta_mask);
+ 	}
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index a66ad9b..8b3eb9e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -448,7 +448,7 @@ static void iwlagn_tx_queue_stop_scheduler(struct iwl_trans *trans, u16 txq_id)
+ void iwl_trans_set_wr_ptrs(struct iwl_trans *trans,
+ 				int txq_id, u32 index)
+ {
+-	IWL_DEBUG_TX_QUEUES(trans, "Q %d  WrPtr: %d", txq_id, index & 0xff);
++	IWL_DEBUG_TX_QUEUES(trans, "Q %d  WrPtr: %d\n", txq_id, index & 0xff);
+ 	iwl_write_direct32(trans, HBUS_TARG_WRPTR,
+ 			(index & 0xff) | (txq_id << 8));
+ 	iwl_write_prph(trans, SCD_QUEUE_RDPTR(txq_id), index);
+-- 
+1.7.0.4
 
