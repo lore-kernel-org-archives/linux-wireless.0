@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:2830 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:21182 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751849Ab2CJU70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 15:59:26 -0500
+	id S1161435Ab2COU2D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:03 -0400
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/10] iwlwifi: remove TX hex debug
-Date: Sat, 10 Mar 2012 13:00:06 -0800
-Message-Id: <1331413215-10027-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120310_215959_422473_D066E6DB)
-In-Reply-To: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/26] iwlwifi: clarify config struct comments
+Date: Thu, 15 Mar 2012 13:26:47 -0700
+Message-Id: <1331843226-29860-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212809_360866_32E99209)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Tracing is much better for this, so
-remove the hex printk debug for the
-TX command.
+It talks about treating different uCode APIs
+as different pieces of hardware which really
+isn't how we handle things.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-shared.h |   10 +++-------
+ 1 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 9162856..14b0361 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1466,8 +1466,6 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	IWL_DEBUG_TX(trans, "sequence nr = 0X%x\n",
- 		     le16_to_cpu(dev_cmd->hdr.sequence));
- 	IWL_DEBUG_TX(trans, "tx_flags = 0X%x\n", le32_to_cpu(tx_cmd->tx_flags));
--	iwl_print_hex_dump(trans, IWL_DL_TX, (u8 *)tx_cmd, sizeof(*tx_cmd));
--	iwl_print_hex_dump(trans, IWL_DL_TX, (u8 *)tx_cmd->hdr, hdr_len);
- 
- 	/* Set up entry for this TFD in Tx byte-count array */
- 	iwl_trans_txq_update_byte_cnt_tbl(trans, txq, le16_to_cpu(tx_cmd->len));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index b515d65..94b16cc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -307,13 +307,9 @@ struct iwl_ht_params {
+  * @iq_invert: I/Q inversion
+  * @temp_offset_v2: support v2 of temperature offset calibration
+  *
+- * We enable the driver to be backward compatible wrt API version. The
+- * driver specifies which APIs it supports (with @ucode_api_max being the
+- * highest and @ucode_api_min the lowest). Firmware will only be loaded if
+- * it has a supported API version.
+- *
+- * The ideal usage of this infrastructure is to treat a new ucode API
+- * release as a new hardware revision.
++ * We enable the driver to be backward compatible wrt. hardware features.
++ * API differences in uCode shouldn't be handled here but through TLVs
++ * and/or the uCode API version instead.
+  */
+ struct iwl_cfg {
+ 	/* params specific to an individual device within a device family */
 -- 
 1.7.0.4
 
