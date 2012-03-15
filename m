@@ -1,95 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:52058 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031820Ab2CQALI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 20:11:08 -0400
-Date: Sat, 17 Mar 2012 09:11:05 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: iwlagn in linux-next
-Message-ID: <20120317001105.GB22560@gamma.logic.tuwien.ac.at> (sfid-20120317_011126_952337_D4A195F1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:21225 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161470Ab2COU2O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:14 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 25/26] iwlwifi: move FW_ERROR to priv
+Date: Thu, 15 Mar 2012 13:27:05 -0700
+Message-Id: <1331843226-29860-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212836_753278_B31DC1FF)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+From: Don Fry <donald.h.fry@intel.com>
 
-based on a suggestion of Emmanuel, I have now tried linux-next
-to see how it improve on iwlagn hanging. (long threads)
+The op_mode should check for FW_ERROR before calling send_cmd.  This
+removes the need to test for FW_ERROR in the trans layer.
 
-Here are some results, based on 3.3.0-rc7-next-20120315
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    7 +++----
+ drivers/net/wireless/iwlwifi/iwl-core.c          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   11 -----------
+ 6 files changed, 12 insertions(+), 18 deletions(-)
 
-Genereal impression: much more stable, with some hiccups.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index d07e0d2..22ff87f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1298,6 +1298,12 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		return -EIO;
+ 	}
+ 
++	if (test_bit(STATUS_FW_ERROR, &priv->status)) {
++		IWL_ERR(priv, "Command %s failed: FW Error\n",
++			get_cmd_string(cmd->id));
++		return -EIO;
++	}
++
+ 	/*
+ 	 * Synchronous commands from this op-mode must hold
+ 	 * the mutex, this ensures we don't try to send two
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e91d88d..94af564 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -920,11 +920,10 @@ void iwl_down(struct iwl_priv *priv)
+ 				STATUS_RF_KILL_HW |
+ 			test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
+ 				STATUS_GEO_CONFIGURED |
++			test_bit(STATUS_FW_ERROR, &priv->status) <<
++				STATUS_FW_ERROR |
+ 			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
+ 				STATUS_EXIT_PENDING;
+-	priv->shrd->status &=
+-			test_bit(STATUS_FW_ERROR, &priv->shrd->status) <<
+-				STATUS_FW_ERROR;
+ 
+ 	dev_kfree_skb(priv->beacon_skb);
+ 	priv->beacon_skb = NULL;
+@@ -1013,7 +1012,7 @@ static void iwl_bg_restart(struct work_struct *data)
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+ 
+-	if (test_and_clear_bit(STATUS_FW_ERROR, &priv->shrd->status)) {
++	if (test_and_clear_bit(STATUS_FW_ERROR, &priv->status)) {
+ 		mutex_lock(&priv->mutex);
+ 		iwlagn_prepare_restart(priv);
+ 		mutex_unlock(&priv->mutex);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index ed201e7..88ea31d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -369,7 +369,7 @@ void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
+ 	priv->ucode_loaded = false;
+ 
+ 	/* Set the FW error flag -- cleared on iwl_down */
+-	set_bit(STATUS_FW_ERROR, &priv->shrd->status);
++	set_bit(STATUS_FW_ERROR, &priv->status);
+ 
+ 	/* Cancel currently queued command. */
+ 	clear_bit(STATUS_HCMD_ACTIVE, &priv->shrd->status);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index a2baf17..03fc27d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -557,7 +557,7 @@ static ssize_t iwl_dbgfs_status_read(struct file *file,
+ 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_POWER_PMI:\t %d\n",
+ 		test_bit(STATUS_POWER_PMI, &priv->shrd->status));
+ 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_FW_ERROR:\t %d\n",
+-		test_bit(STATUS_FW_ERROR, &priv->shrd->status));
++		test_bit(STATUS_FW_ERROR, &priv->status));
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index f3e5c2a..56becf2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -69,7 +69,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
+ 	if (!test_bit(STATUS_READY, &priv->status) ||
+ 	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status) ||
+ 	    !test_bit(STATUS_SCAN_HW, &priv->status) ||
+-	    test_bit(STATUS_FW_ERROR, &priv->shrd->status))
++	    test_bit(STATUS_FW_ERROR, &priv->status))
+ 		return -EIO;
+ 
+ 	ret = iwl_dvm_send_cmd(priv, &cmd);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 105c093..61b0fba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -536,11 +536,6 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	int trace_idx;
+ #endif
+ 
+-	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
+-		IWL_WARN(trans, "fw recovery, no hcmd send\n");
+-		return -EIO;
+-	}
+-
+ 	copy_size = sizeof(out_cmd->hdr);
+ 	cmd_size = sizeof(out_cmd->hdr);
+ 
+@@ -821,12 +816,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
+-	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
+-		IWL_ERR(trans, "Command %s failed: FW Error\n",
+-			       get_cmd_string(cmd->id));
+-		return -EIO;
+-	}
+-
+ 	if (WARN_ON(test_and_set_bit(STATUS_HCMD_ACTIVE,
+ 				     &trans->shrd->status))) {
+ 		IWL_ERR(trans, "Command %s: a command is already active!\n",
+-- 
+1.7.0.4
 
-Details: After some suspend to ram and resume cycles it is getting 
-a bit bad again, with many of that (that is at the university network):
-[ 6169.024075] tx session timer expired on tid 0
-[ 6169.024124] Tx BA session stop requested for 00:24:c4:ab:bd:ef tid 0
-[ 6169.044472] Stopping Tx BA session for 00:24:c4:ab:bd:ef tid 0
-[ 6170.930940] Open BA session requested for 00:24:c4:ab:bd:ef tid 0
-[ 6170.948299] activated addBA response timer on tid 0
-[ 6170.948877] switched off addBA timer for tid 0
-[ 6170.948883] Aggregation is on for tid 0
-
-BUT: At least it resettles without connection breaking down completely.
-That is a *big* step forward!
-
-On the home network I see many of 
-[18392.488123] ieee80211 phy0: release an RX reorder frame due to timeout on earlier frames
-but with some intermittend slow-downs it is working.
-
-In both cases an ssh session to a remote computer did *not* break down,
-which was permanently the case in former times (withlout linux-next)
-
-
-In addition, there are some *very*interesting observations:
-
-ALso I am pinging and everything works, iwconfig reports:
-wlan0     IEEE 802.11abgn  ESSID:off/any  
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=15 dBm   
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
-
-
-I also saw some WARNINGs in the dmesg output:
-[17987.181066] Call Trace:
-[17987.181072]  [<ffffffff8102b796>] warn_slowpath_common+0x83/0x9b
-[17987.181075]  [<ffffffff8102b7c8>] warn_slowpath_null+0x1a/0x1c
-[17987.181082]  [<ffffffffa0213fda>] iwl_send_lq_cmd+0x14a/0x246 [iwlwifi]
-[17987.181090]  [<ffffffffa0214480>] iwl_restore_stations+0x206/0x279 [iwlwifi]
-[17987.181097]  [<ffffffffa021c388>] iwlagn_commit_rxon+0x4b5/0x6a8 [iwlwifi]
-[17987.181104]  [<ffffffffa021cc51>] iwlagn_bss_info_changed+0x307/0x504 [iwlwifi]
-[17987.181115]  [<ffffffffa008c504>] ieee80211_bss_info_change_notify+0x179/0x1a3 [mac80211]
-[17987.181127]  [<ffffffffa00b54aa>] ieee80211_destroy_auth_data+0x50/0x75 [mac80211]
-[17987.181138]  [<ffffffffa00b84a6>] ieee80211_sta_work+0x9e/0x91d [mac80211]
-...
-
-
-----------------------------
-
-But to repeat, the general feeling is much better, being able to have
-a persistent ssh connection is a huge win!
-
-
-Please let me know if you need any further testing, information, or
-changes.
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-DITHERINGTON (n)
-Sudden access to panic experienced by one who realises that he is
-being drawn inexorably into a clabby (q.v.) conversation, i.e. one he
-has no hope of enjoying, benefiting from or understanding.
-			--- Douglas Adams, The Meaning of Liff
