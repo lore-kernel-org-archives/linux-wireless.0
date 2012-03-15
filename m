@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10207 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648Ab2C0Ejl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 00:39:41 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20337.17503.790777.715110@gargle.gargle.HOWL> (sfid-20120327_063944_595706_EA0A017B)
-Date: Tue, 27 Mar 2012 10:08:55 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Use HW HT capabilites properly
+Received: from mga09.intel.com ([134.134.136.24]:21225 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161445Ab2COU2E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:04 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/26] iwlwifi: remove scan_rx_antennas
+Date: Thu, 15 Mar 2012 13:26:50 -0700
+Message-Id: <1331843226-29860-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212849_580509_03F13FF9)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit "ath9k: Remove aggregation flags" changed how
-nodes were being initialized. Use the HW HT cap bits
-to initialize/de-initialize nodes, else we would be
-accessing an uninitialized entry during a suspend/resume cycle,
-resulting in a panic.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reported-by: Justin P. Mattock <justinmattock@gmail.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This is not (no longer?) used by any device
+so just remove it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c   |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    2 --
+ 2 files changed, 0 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3879485..215eb25 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -640,7 +640,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	an->sta = sta;
- 	an->vif = vif;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 902efe4..863ad0c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -793,9 +793,6 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
  
--	if (sta->ht_cap.ht_supported) {
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
- 		ath_tx_node_init(sc, an);
- 		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
- 				     sta->ht_cap.ampdu_factor);
-@@ -659,7 +659,7 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
- 	an->sta = NULL;
- #endif
+ 	band = priv->scan_band;
  
--	if (sta->ht_cap.ht_supported)
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
- 		ath_tx_node_cleanup(sc, an);
- }
- 
+-	if (cfg(priv)->scan_rx_antennas[band])
+-		rx_ant = cfg(priv)->scan_rx_antennas[band];
+-
+ 	if (band == IEEE80211_BAND_2GHZ &&
+ 	    cfg(priv)->bt_params &&
+ 	    cfg(priv)->bt_params->advanced_bt_coexist) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 229c4b9..f53feb8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -297,7 +297,6 @@ struct iwl_ht_params {
+  * @need_temp_offset_calib: need to perform temperature offset calibration
+  * @no_xtal_calib: some devices do not need crystal calibration data,
+  *	don't send it to those
+- * @scan_rx_antennas: available antenna for scan operation
+  * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
+  * @adv_pm: advance power management
+  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
+@@ -330,7 +329,6 @@ struct iwl_cfg {
+ 	const struct iwl_bt_params *bt_params;
+ 	const bool need_temp_offset_calib; /* if used set to true */
+ 	const bool no_xtal_calib;
+-	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
+ 	enum iwl_led_mode led_mode;
+ 	const bool adv_pm;
+ 	const bool rx_with_siso_diversity;
 -- 
-1.7.9.4
+1.7.0.4
 
