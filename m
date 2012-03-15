@@ -1,164 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:41541 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932091Ab2CFAeW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 19:34:22 -0500
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:52158 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760836Ab2COJhj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 05:37:39 -0400
+Received: by mail-lpp01m010-f42.google.com with SMTP id l5so2457187lah.29
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 02:37:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201203050143.24541.s.L-H@gmx.de>
-References: <20120228010511.GA8453@kroah.com> <20120228010434.412979550@linuxfoundation.org>
- <87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 5 Mar 2012 16:34:00 -0800
-Message-ID: <CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com> (sfid-20120306_013457_589337_34A1FB76)
-Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-Cc: Sven Joachim <svenjoac@gmx.de>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <CAK80WHZMu_NjN0Kofx39uF+uebSFkUtjZUzC=qYOp4+206gxNA@mail.gmail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-4-git-send-email-victorg@ti.com>
+	<4F277F85.1090901@sipsolutions.net>
+	<CAK80WHbAE0+NhLgLAxE+6BmkHFy2hw=sNV1TBjjOTajhHcdxRw@mail.gmail.com>
+	<1328562090.3466.1.camel@jlt3.sipsolutions.net>
+	<CAK80WHZF5f1R-iCPRgd3N2J2N-JM9P6qY6pVj_=Twej-RVjd4w@mail.gmail.com>
+	<CAB=NE6XApT+FVBiGERxMVCYtBDEj0+SYa3s-rgsystUNvhh41A@mail.gmail.com>
+	<CAK80WHZMu_NjN0Kofx39uF+uebSFkUtjZUzC=qYOp4+206gxNA@mail.gmail.com>
+Date: Thu, 15 Mar 2012 11:37:37 +0200
+Message-ID: <CAK80WHZeAV7MCo6y6=2VkicUjUe4nU2YdUF5vk_0-m2_R8wdXA@mail.gmail.com> (sfid-20120315_103743_239463_19307292)
+Subject: Re: [RFC 3/9] nl80211/cfg80211: add ability to enable TX on op-channel
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thomas, should we just plan on reverting that commit from mainline? It
-clearly causes regressions.
+On Wed, Feb 15, 2012 at 6:45 PM, Goldenshtein, Victor <victorg@ti.com> wrote:
+> On Fri, Feb 10, 2012 at 12:34 AM, Luis R. Rodriguez
+> > I'd be more comfortable with a timer for the CAC as well.
+> >
+> >  Luis
+>
+> Not sure I"m understand what you're saying here, the CAC timer handled
+> in the hostap, kernel doesn't know anything about it. The
+> WIPHY_FLAG_DFS_CAC_IN_PROGRESS exactly says that DFS master (hostapd)
+> performs a channel availability check, which also indicates that the
+> CAC timer is running (if this what you mean).
+>
 
-                Linus
+To add an additional protection will also save a time stamp of the
+last start radar detection command (something like
+"last_dfs_cac_time"), and prior enabling the tx on the DFS channels
+will validate whether DFS_MIN_CAC_TIME (60 seconds) has passed since
+"last_dfs_cac_time".
 
-On Sun, Mar 4, 2012 at 4:43 PM, Stefan Lippers-Hollmann <s.L-H@gmx.de> wrote:
-> Hi
->
-> On Monday 05 March 2012, Sven Joachim wrote:
->> On 2012-02-28 02:05 +0100, Greg KH wrote:
->>
->> > 3.2-stable review patch.  If anyone has any objections, please let me know.
->>
->> Alas, the commit below broke the WiFi on my laptop, where
->> "iwlist wlan0 scan" now just reports: " wlan0     No scan results".
->>
->> This is not specific to 3.2, the same problem exists in 3.0.23 and
->> 3.3-rc6 while previous releases worked.
->
-> I can confirm this regression on an old PIII based notebook with a
-> 32 bit BCM4306/3 PCMCIA card:
->
-> 02:00.0 Network controller [0280]: Broadcom Corporation BCM4306 802.11b/g Wireless LAN Controller [14e4:4320] (rev 03)
->        Subsystem: Linksys WPC54G v1 / WPC54GS v1 802.11g Wireless-G Notebook Adapter [1737:4320]
->        Flags: bus master, fast devsel, latency 64, IRQ 10
->        Memory at 20000000 (32-bit, non-prefetchable) [size=8K]
->        Capabilities: [40] Power Management version 2
->        Kernel driver in use: b43-pci-bridge
->
-> I can observe these differences in the dmesg output (3.2.9 + current
-> stable queue-3.2):
->
-> The kernel configuration is identical in both cases, the only
-> difference is "genirq: Unmask oneshot irqs when thread was not woken"
-> being applied or not.
->
-> --- working     <-- 3.2.9 + current stable queue-3.2, with "genirq: Unmask oneshot irqs when thread was not woken" reverted
-> +++ broken      <-- 3.2.9 + current stable queue-3.2
-> @@ -125,6 +125,7 @@ Initializing cgroup subsys freezer
->  Initializing cgroup subsys net_cls
->  Initializing cgroup subsys blkio
->  Initializing cgroup subsys perf_event
-> +CPU serial number disabled.
->  mce: CPU supports 5 MCE banks
->  SMP alternatives: switching to UP code
->  Freeing SMP alternatives: 8k freed
-> @@ -137,9 +138,16 @@ SMP disabled
->  Performance Events:
->  no APIC, boot with the "lapic" boot parameter to force-enable it.
->  no hardware sampling interrupt available.
-> -Broken PMU hardware detected, using software events only.
-> +p6 PMU driver.
-> +... version:                0
-> +... bit width:              32
-> +... generic registers:      2
-> +... value mask:             00000000ffffffff
-> +... max period:             000000007fffffff
-> +... fixed-purpose events:   0
-> +... event mask:             0000000000000003
->  Brought up 1 CPUs
->  Total of 1 processors activated (1989.75 BogoMIPS).
->  devtmpfs: initialized
->  PM: Registering ACPI NVS region at eeff000 (4096 bytes)
->  print_constraints: dummy:
-> @@ -174,12 +182,12 @@ pci 0000:00:00.0: reg 10: [mem 0xec00000
->  type 1 class 0x000604
->  pci 0000:00:01.0: supports D1
->  type 2 class 0x000607
-> -pci 0000:00:04.0: reg 10: [mem 0x10000000-0x10000fff]
-> +pci 0000:00:04.0: reg 10: [mem 0x00000000-0x00000fff]
->  pci 0000:00:04.0: supports D1 D2
->  pci 0000:00:04.0: PME# supported from D0 D1 D2 D3hot D3cold
->  pci 0000:00:04.0: PME# disabled
->  type 2 class 0x000607
-> -pci 0000:00:04.1: reg 10: [mem 0x14000000-0x14000fff]
-> +pci 0000:00:04.1: reg 10: [mem 0x00000000-0x00000fff]
->  pci 0000:00:04.1: supports D1 D2
->  pci 0000:00:04.1: PME# supported from D0 D1 D2 D3hot D3cold
->  pci 0000:00:04.1: PME# disabled
-> @@ -299,6 +307,10 @@ pnp: PnP ACPI: found 11 devices
->  ACPI: ACPI bus type pnp unregistered
->  Switching to clocksource acpi_pm
->  PCI: max bus depth: 1 pci_try_num: 2
-> +pci 0000:00:04.0: BAR 0: assigned [mem 0x10000000-0x10000fff]
-> +(PCI address [0x10000000-0x10000fff])
-> +pci 0000:00:04.1: BAR 0: assigned [mem 0x14000000-0x14000fff]
-> +(PCI address [0x14000000-0x14000fff])
->  pci 0000:00:11.0: BAR 6: assigned [mem 0x10020000-0x1003ffff pref]
->  pci 0000:00:04.1: BAR 16: assigned [mem 0x18000000-0x1bffffff]
->  pci 0000:00:04.1: BAR 15: assigned [mem 0x1c000000-0x1fffffff pref]
-> @@ -326,9 +338,11 @@ pci 0000:00:01.0: setting latency timer
->  enabled at IRQ 10
->  PCI: setting IRQ 10 as level-triggered
->  -> GSI 10 (level, low) -> IRQ 10
-> +pci 0000:00:04.0: setting latency timer to 64
->  enabled at IRQ 11
->  PCI: setting IRQ 11 as level-triggered
->  -> GSI 11 (level, low) -> IRQ 11
-> +pci 0000:00:04.1: setting latency timer to 64
->  pci_bus 0000:00: resource 0 [io  0x0000-0xffff]
->  pci_bus 0000:00: resource 1 [mem 0x00000000-0xffffffff]
->  pci_bus 0000:01: resource 1 [mem 0xe8100000-0xe81fffff]
-> @@ -562,20 +576,6 @@ b43-phy0: Hardware crypto acceleration n
->  b43-phy0: QoS not supported by firmware
->  ADDRCONF(NETDEV_UP): wlan0: link is not ready
->  NET: Registered protocol family 17
-> -wlan0: authenticate with [redacted MAC address] (try 1)
-> -wlan0: authenticated
-> -wlan0: associate with [redacted MAC address] (try 1)
-> -wlan0: RX AssocResp from [redacted MAC address] (capab=0x411 status=0 aid=1)
-> -wlan0: associated
-> -ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> -cfg80211: Calling CRDA for country: DE
-> -Intel AES-NI instructions are not detected.
-> -cfg80211: Regulatory domain changed to country: DE
-> -cfg80211:     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> -cfg80211:     (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> -cfg80211:     (5150000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> -cfg80211:     (5250000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-> -cfg80211:     (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
->  lp0: using parport0 (interrupt-driven).
->  lp0: console ready
->  ppdev: user-space parallel port driver
-> @@ -589,4 +589,3 @@ mtrr: base(0xf2000000) is not aligned on
->  agpgart-via 0000:00:00.0: AGP 2.0 bridge
->  agpgart-via 0000:00:00.0: putting AGP V2 device into 0x mode
->  pci 0000:01:00.0: putting AGP V2 device into 0x mode
-> -wlan0: no IPv6 routers present
->
-> While I don't get any revealing error messages, once "genirq: Unmask
-> oneshot irqs when thread was not woken" is applied the wlan card
-> stops working (no scan results, unable to auth).
->
-> I cannot reproduce this problem on a different amd64/ 64 bit system
-> with a BCM4318 PCI card, which continues to work fine.
->
-> Regards
->        Stefan Lippers-Hollmann
+--
+Thanks,
+Victor.
