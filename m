@@ -1,86 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:47822 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754072Ab2C0Wws (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 18:52:48 -0400
-Date: Wed, 28 Mar 2012 00:52:44 +0200
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 1/4] rt2x00: broaden PCIE L1-state wakeup
- configuration
-Message-ID: <20120328005244.727d9f05@north> (sfid-20120328_005251_942983_75EBDC22)
-In-Reply-To: <4F720494.3030509@gmail.com>
-References: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
-	<1332859867-27921-2-git-send-email-kubakici@wp.pl>
-	<4F720494.3030509@gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:43854 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756317Ab2COJLz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 05:11:55 -0400
+Subject: Re: [PATCH 3.5] cfg80211: enforce lack of interface combinations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>
+In-Reply-To: <20120315090231.GC17590@vasanth-laptop>
+References: <20120313150613.300612962@sipsolutions.net>
+	 <20120315084217.GA17590@vasanth-laptop>
+	 <1331801488.3432.2.camel@jlt3.sipsolutions.net>
+	 <20120315085736.GB17590@vasanth-laptop>
+	 <1331801907.3432.3.camel@jlt3.sipsolutions.net>
+	 <20120315090231.GC17590@vasanth-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 10:11:49 +0100
+Message-ID: <1331802709.3432.4.camel@jlt3.sipsolutions.net> (sfid-20120315_101159_127421_E2CCFC95)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Tue, 27 Mar 2012 20:19:00 +0200 Gertjan van Wingerde <gwingerde@gmail.com> wrote:
-> On 03/27/12 16:51, Jakub Kicinski wrote:
-> > Broaden wakeup configuration to all PCIE from rt3xxx on.
+On Thu, 2012-03-15 at 14:32 +0530, Vasanthakumar Thiagarajan wrote:
+> On Thu, Mar 15, 2012 at 09:58:27AM +0100, Johannes Berg wrote:
+> > On Thu, 2012-03-15 at 14:27 +0530, Vasanthakumar Thiagarajan wrote:
+> > > On Thu, Mar 15, 2012 at 09:51:28AM +0100, Johannes Berg wrote:
+> > > > On Thu, 2012-03-15 at 14:12 +0530, Vasanthakumar Thiagarajan wrote:
+> > > > > On Tue, Mar 13, 2012 at 04:06:03PM +0100, Johannes Berg wrote:
+> > > > > > From: Johannes Berg <johannes.berg@intel.com>
+> > > > > > 
+> > > > > > My grand plan to allow drivers to gradually move over
+> > > > > > to advertising virtual interface combinations and only
+> > > > > > enforce with drivers that do want it enforced doesn't
+> > > > > > seem to be working out, only Christian ever added the
+> > > > > > advertising (to carl9170), nobody else did.
+> > > > > > 
+> > > > > > Begin enforcing combinations in cfg80211 so that users
+> > > > > > can rely on the information reported about a device.
+> > > > > 
+> > > > > This breaks ath6kl AP mode and P2P, is it expected that the driver
+> > > > > needs to register the combination (?) even it supports a single
+> > > > > interface?
+> > > > 
+> > > > Kalle tells me that ath6kl does support multiple virtual interfaces, but
+> > > > if it didn't then it wouldn't have to register combinations.
+> > > > 
+> > > > I suspect you're using
+> > > > driver_param=use_p2p_group_interface=1
+> > > > in wpa_supplicant?
+> > > 
+> > > Actually, I verified only AP mode, since it affects any sort of change interface,
+> > > I mentioned P2P as well. AP is expected to work without any issue right?.
 > > 
-> > Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-> > ---
-> > 2011_0406_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO
-> > rtmp_init_inf.c:171
-> > 
-> > Legacy driver applies this configuration to the following devices:
-> > 3071 3090 3572 3592 3562 3062 3390 3593 5390 5370 5392 5372 5360 5362
-> > if they are working on PCIE bus. AFAIK these are all post 2xxx PCIE
-> > devices.
-> > ---
-> >  drivers/net/wireless/rt2x00/rt2800lib.c |    4 +---
-> >  drivers/net/wireless/rt2x00/rt2800pci.c |    5 +----
-> >  2 files changed, 2 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > index 6c0a12e..4722030 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > @@ -401,9 +401,7 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
-> >  		return -EBUSY;
-> >  
-> >  	if (rt2x00_is_pci(rt2x00dev)) {
-> > -		if (rt2x00_rt(rt2x00dev, RT3572) ||
-> > -		    rt2x00_rt(rt2x00dev, RT5390) ||
-> > -		    rt2x00_rt(rt2x00dev, RT5392)) {
-> > +		if (rt2x00_is_pcie(rt2x00dev) && rt2x00dev->chip.rt > 0x3000) {
-> >  			rt2800_register_read(rt2x00dev, AUX_CTRL, &reg);
-> >  			rt2x00_set_field32(&reg, AUX_CTRL_FORCE_PCIE_CLK, 1);
-> >  			rt2x00_set_field32(&reg, AUX_CTRL_WAKE_PCIE_EN, 1);
+> > As long as you don't try to add the AP interface as the second one...
 > 
-> I don't like the comparison against 0x3000. Maybe you should invert the
-> conditions and test for the chipsets for which this does not have to be
-> applied (e.g. !rt2x00_rt(rt2x00dev, RT2860) && !rt2x00_rt(rt2x00dev,
-> RT2872).
-Not sure about that. Excluding old chips would be opposite to what
-legacy driver is doing.
+> Right, I'm trying on a single interface.
 
-Legacy driver uses a long list of almost all > 0x3000 devices here. It
-leaves out only RT3070, RT3352 and RT5350 but those chips are not used
-on PCIe. The same list is later used throughout PCIe power management
-code. I can only guess that from 0x3000 on PCIe devices gained some
-kind of new power management capabilities.
+Hmm, ok, looking at the code again it seems there's a bug ... let me try
+to fix it.
 
-It might be worth adding a macro which will check for all those devices
-(rt2800pci_has_pcie_ps or sth) later on, when implementing support for
-that PCIe PS, but for now I thought check against 0x3000 will be
-equally good.
+johannes
 
-> Also, the flow looks a bit strange here. The old code applied to all PCI
-> and PCIe devices, now you narrow it down to just PCIe devices.
-> Is that right?
-Yes, legacy driver applies this to PCIe only.
-
-> Can anything be done to the strange flow now, with first checking for
-> PCI and PCIe devices and then immediately only for PCIe devices?
-Well, there are pros and cons for leaving it as it is, but I will move
-PCIe checks out of PCI block if you like ;-)
-
-  -- Kuba
