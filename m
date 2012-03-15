@@ -1,88 +1,407 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tqs.de ([62.157.136.17]:30438 "EHLO mail.tqs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755873Ab2CBI6R convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 03:58:17 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: AW: [PATCH] Staging: rtl8712: Change double device ID back to original value
-Date: Fri, 2 Mar 2012 09:57:23 +0100
-Message-ID: <47F3F98010FF784EBEE6526EAAB078D10FD7EF81@tq-mailsrv.tq-net.de> (sfid-20120302_095821_223866_0F39C7CA)
-In-Reply-To: <4F4BA81D.1070800@lwfinger.net>
-References: <20120227102857.21246.43090.stgit@localhost.localdomain> <4F4BA81D.1070800@lwfinger.net>
-From: "Martin Krause" <Martin.Krause@tqs.de>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	"John Linville" <linville@tuxdriver.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56014 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031206Ab2COWvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 18:51:04 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: gregkh@linuxfoundation.org
+Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
+	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v5 2/4] USB: Add driver for the bcma bus
+Date: Thu, 15 Mar 2012 23:49:57 +0100
+Message-Id: <1331851799-5968-3-git-send-email-hauke@hauke-m.de> (sfid-20120315_235110_950236_93661416)
+In-Reply-To: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
+References: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+This adds a USB driver using the generic platform device driver for the
+USB controller found on the Broadcom bcma bus. The bcma bus just
+exposes one device which serves the OHCI and the EHCI controller at the
+same time. This driver probes for this USB controller and creates and
+registers two new platform devices which will be probed by the new
+generic platform device driver. This makes it possible to use the EHCI
+and the OCHI controller on the bcma bus at the same time.
 
-Larry Finger wrote on :
-> On 02/27/2012 04:29 AM, Martin Krause wrote:
->> In the rtl8712 staging driver the 0bda:8172 usb device id exists two
->> times. It seems that this was an error when integrating the original
->> Realtek driver into the kernel. This patch changes the double device
->> id back to the value used in the last Realtek driver
->> (rtl8712_8188_8191_8192SU_usb_linux_v2.6.6.0.20110401).
->> 
->> Signed-off-by: Martin Krause<martin.krause@tqs.de>
->> ---
->> I tested this patch on a powerpc board (p2020 based) with a WIFIHU
->> Radicom wireless module with a RTL8191SU chip on it (usb device id
->> 0bda:8192). 
->> 
->>   drivers/staging/rtl8712/usb_intf.c |    2 +-
->>   1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> Your patch does two things. One is the deletion of a
-> duplicate USB ID, and the
-> other is the addition of a new one. I would prefer that any
-> patch do one or the
-> other, but not both. Note, there are two sets of duplicate
-> IDs in the table for
-> the driver - the one you note in the RTL8191SU section, and another
-> for 0bda:8174 in the section that covers the RTL8192SU.
-> 
-> I think you are deleting the wrong 0bda:8172 with this patch.
-> The 0bda code is
-> for Realtek, thus the one in the Asus section is the one to remove.
-> 
-> Does your chip really have an RTL8191SU label? The USB
-> database says that ID
-> 0bda:8192 is for the RTL8192SU. I would like to correct the database
-> if it is wrong.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/usb/host/Kconfig    |   12 ++
+ drivers/usb/host/Makefile   |    1 +
+ drivers/usb/host/bcma-hcd.c |  334 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 347 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/usb/host/bcma-hcd.c
 
->From the Radicom engineers I get the following answer:
+diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+index f788eb8..57d16b1 100644
+--- a/drivers/usb/host/Kconfig
++++ b/drivers/usb/host/Kconfig
+@@ -638,3 +638,15 @@ config USB_OCTEON_OHCI
+ config USB_OCTEON2_COMMON
+ 	bool
+ 	default y if USB_OCTEON_EHCI || USB_OCTEON_OHCI
++
++config USB_HCD_BCMA
++	tristate "BCMA usb host driver"
++	depends on BCMA && EXPERIMENTAL
++	select USB_OHCI_HCD_PLATFORM if USB_OHCI_HCD
++	select USB_EHCI_HCD_PLATFORM if USB_EHCI_HCD
++	help
++	  Enbale support for the EHCI and OCHI host controller on an bcma bus.
++	  It converts the bcma driver into two platform device drivers
++	  for ehci and ohci.
++
++	  If unsure, say N.
+diff --git a/drivers/usb/host/Makefile b/drivers/usb/host/Makefile
+index 0982bcc..11b3de0 100644
+--- a/drivers/usb/host/Makefile
++++ b/drivers/usb/host/Makefile
+@@ -41,3 +41,4 @@ obj-$(CONFIG_USB_IMX21_HCD)	+= imx21-hcd.o
+ obj-$(CONFIG_USB_FSL_MPH_DR_OF)	+= fsl-mph-dr-of.o
+ obj-$(CONFIG_USB_OCTEON2_COMMON) += octeon2-common.o
+ obj-$(CONFIG_MIPS_ALCHEMY)	+= alchemy-common.o
++obj-$(CONFIG_USB_HCD_BCMA)	+= bcma-hcd.o
+diff --git a/drivers/usb/host/bcma-hcd.c b/drivers/usb/host/bcma-hcd.c
+new file mode 100644
+index 0000000..afec047
+--- /dev/null
++++ b/drivers/usb/host/bcma-hcd.c
+@@ -0,0 +1,334 @@
++/*
++ * Broadcom specific Advanced Microcontroller Bus
++ * Broadcom USB-core driver (BCMA bus glue)
++ *
++ * Copyright 2011-2012 Hauke Mehrtens <hauke@hauke-m.de>
++ *
++ * Based on ssb-ohci driver
++ * Copyright 2007 Michael Buesch <m@bues.ch>
++ *
++ * Derived from the OHCI-PCI driver
++ * Copyright 1999 Roman Weissgaerber
++ * Copyright 2000-2002 David Brownell
++ * Copyright 1999 Linus Torvalds
++ * Copyright 1999 Gregory P. Smith
++ *
++ * Derived from the USBcore related parts of Broadcom-SB
++ * Copyright 2005-2011 Broadcom Corporation
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++#include <linux/bcma/bcma.h>
++#include <linux/delay.h>
++#include <linux/platform_device.h>
++#include <linux/module.h>
++#include <linux/usb/ehci_pdriver.h>
++#include <linux/usb/ohci_pdriver.h>
++
++MODULE_AUTHOR("Hauke Mehrtens");
++MODULE_DESCRIPTION("Common USB driver for BCMA Bus");
++MODULE_LICENSE("GPL");
++
++struct bcma_hcd_device {
++	struct platform_device *ehci_dev;
++	struct platform_device *ohci_dev;
++};
++
++/* Wait for bitmask in a register to get set or cleared.
++ * timeout is in units of ten-microseconds.
++ */
++static int bcma_wait_bits(struct bcma_device *dev, u16 reg, u32 bitmask,
++			  int timeout)
++{
++	int i;
++	u32 val;
++
++	for (i = 0; i < timeout; i++) {
++		val = bcma_read32(dev, reg);
++		if ((val & bitmask) == bitmask)
++			return 0;
++		udelay(10);
++	}
++
++	return -ETIMEDOUT;
++}
++
++static void __devinit bcma_hcd_4716wa(struct bcma_device *dev)
++{
++#ifdef CONFIG_BCMA_DRIVER_MIPS
++	/* Work around for 4716 failures. */
++	if (dev->bus->chipinfo.id == 0x4716) {
++		u32 tmp;
++
++		tmp = bcma_cpu_clock(&dev->bus->drv_mips);
++		if (tmp >= 480000000)
++			tmp = 0x1846b; /* set CDR to 0x11(fast) */
++		else if (tmp == 453000000)
++			tmp = 0x1046b; /* set CDR to 0x10(slow) */
++		else
++			tmp = 0;
++
++		/* Change Shim mdio control reg to fix host not acking at
++		 * high frequencies
++		 */
++		if (tmp) {
++			bcma_write32(dev, 0x524, 0x1); /* write sel to enable */
++			udelay(500);
++
++			bcma_write32(dev, 0x524, tmp);
++			udelay(500);
++			bcma_write32(dev, 0x524, 0x4ab);
++			udelay(500);
++			bcma_read32(dev, 0x528);
++			bcma_write32(dev, 0x528, 0x80000000);
++		}
++	}
++#endif /* CONFIG_BCMA_DRIVER_MIPS */
++}
++
++/* based on arch/mips/brcm-boards/bcm947xx/pcibios.c */
++static void __devinit bcma_hcd_init_chip(struct bcma_device *dev)
++{
++	u32 tmp;
++
++	/*
++	 * USB 2.0 special considerations:
++	 *
++	 * 1. Since the core supports both OHCI and EHCI functions, it must
++	 *    only be reset once.
++	 *
++	 * 2. In addition to the standard SI reset sequence, the Host Control
++	 *    Register must be programmed to bring the USB core and various
++	 *    phy components out of reset.
++	 */
++	if (!bcma_core_is_enabled(dev)) {
++		bcma_core_enable(dev, 0);
++		mdelay(10);
++		if (dev->id.rev >= 5) {
++			/* Enable Misc PLL */
++			tmp = bcma_read32(dev, 0x1e0);
++			tmp |= 0x100;
++			bcma_write32(dev, 0x1e0, tmp);
++			if (bcma_wait_bits(dev, 0x1e0, 1 << 24, 100))
++				printk(KERN_EMERG "Failed to enable misc PPL!\n");
++
++			/* Take out of resets */
++			bcma_write32(dev, 0x200, 0x4ff);
++			udelay(25);
++			bcma_write32(dev, 0x200, 0x6ff);
++			udelay(25);
++
++			/* Make sure digital and AFE are locked in USB PHY */
++			bcma_write32(dev, 0x524, 0x6b);
++			udelay(50);
++			tmp = bcma_read32(dev, 0x524);
++			udelay(50);
++			bcma_write32(dev, 0x524, 0xab);
++			udelay(50);
++			tmp = bcma_read32(dev, 0x524);
++			udelay(50);
++			bcma_write32(dev, 0x524, 0x2b);
++			udelay(50);
++			tmp = bcma_read32(dev, 0x524);
++			udelay(50);
++			bcma_write32(dev, 0x524, 0x10ab);
++			udelay(50);
++			tmp = bcma_read32(dev, 0x524);
++
++			if (bcma_wait_bits(dev, 0x528, 0xc000, 10000)) {
++				tmp = bcma_read32(dev, 0x528);
++				printk(KERN_EMERG
++				       "USB20H mdio_rddata 0x%08x\n", tmp);
++			}
++			bcma_write32(dev, 0x528, 0x80000000);
++			tmp = bcma_read32(dev, 0x314);
++			udelay(265);
++			bcma_write32(dev, 0x200, 0x7ff);
++			udelay(10);
++
++			/* Take USB and HSIC out of non-driving modes */
++			bcma_write32(dev, 0x510, 0);
++		} else {
++			bcma_write32(dev, 0x200, 0x7ff);
++
++			udelay(1);
++		}
++
++		bcma_hcd_4716wa(dev);
++	}
++}
++
++static const struct usb_ehci_pdata ehci_pdata = {
++};
++
++static const struct usb_ohci_pdata ohci_pdata = {
++};
++
++static struct platform_device * __devinit
++bcma_hcd_create_pdev(struct bcma_device *dev, bool ohci, u32 addr)
++{
++	struct platform_device *hci_dev;
++	struct resource hci_res[2];
++	int ret = -ENOMEM;
++
++	memset(hci_res, 0, sizeof(hci_res));
++
++	hci_res[0].start = addr;
++	hci_res[0].end = hci_res[0].start + 0x1000 - 1;
++	hci_res[0].flags = IORESOURCE_MEM;
++
++	hci_res[1].start = dev->irq;
++	hci_res[1].flags = IORESOURCE_IRQ;
++
++	hci_dev = platform_device_alloc(ohci ? "ohci-platform" :
++					"ehci-platform" , 0);
++	if (!hci_dev)
++		return NULL;
++
++	hci_dev->dev.parent = &dev->dev;
++	hci_dev->dev.dma_mask = &hci_dev->dev.coherent_dma_mask;
++
++	ret = platform_device_add_resources(hci_dev, hci_res,
++					    ARRAY_SIZE(hci_res));
++	if (ret)
++		goto err_alloc;
++	if (ohci)
++		ret = platform_device_add_data(hci_dev, &ohci_pdata,
++					       sizeof(ohci_pdata));
++	else
++		ret = platform_device_add_data(hci_dev, &ehci_pdata,
++					       sizeof(ehci_pdata));
++	if (ret)
++		goto err_alloc;
++	ret = platform_device_add(hci_dev);
++	if (ret)
++		goto err_alloc;
++
++	return hci_dev;
++
++err_alloc:
++	platform_device_put(hci_dev);
++	return ERR_PTR(ret);
++}
++
++static int __devinit bcma_hcd_probe(struct bcma_device *dev)
++{
++	int err;
++	u16 chipid_top;
++	u32 ohci_addr;
++	struct bcma_hcd_device *usb_dev;
++	struct bcma_chipinfo *chipinfo;
++
++	chipinfo = &dev->bus->chipinfo;
++	/* USBcores are only connected on embedded devices. */
++	chipid_top = (chipinfo->id & 0xFF00);
++	if (chipid_top != 0x4700 && chipid_top != 0x5300)
++		return -ENODEV;
++
++	/* TODO: Probably need checks here; is the core connected? */
++
++	if (dma_set_mask(dev->dma_dev, DMA_BIT_MASK(32)) ||
++	    dma_set_coherent_mask(dev->dma_dev, DMA_BIT_MASK(32)))
++		return -EOPNOTSUPP;
++
++	usb_dev = kzalloc(sizeof(struct bcma_hcd_device), GFP_KERNEL);
++	if (!usb_dev)
++		return -ENOMEM;
++
++	bcma_hcd_init_chip(dev);
++
++	/* In AI chips EHCI is addrspace 0, OHCI is 1 */
++	ohci_addr = dev->addr1;
++	if ((chipinfo->id == 0x5357 || chipinfo->id == 0x4749)
++	    && chipinfo->rev == 0)
++		ohci_addr = 0x18009000;
++
++	usb_dev->ohci_dev = bcma_hcd_create_pdev(dev, true, ohci_addr);
++	if (IS_ERR(usb_dev->ohci_dev)) {
++		err = PTR_ERR(usb_dev->ohci_dev);
++		goto err_free_usb_dev;
++	}
++
++	usb_dev->ehci_dev = bcma_hcd_create_pdev(dev, false, dev->addr);
++	if (IS_ERR(usb_dev->ehci_dev)) {
++		err = PTR_ERR(usb_dev->ehci_dev);
++		goto err_unregister_ohci_dev;
++	}
++
++	bcma_set_drvdata(dev, usb_dev);
++	return 0;
++
++err_unregister_ohci_dev:
++	platform_device_unregister(usb_dev->ohci_dev);
++err_free_usb_dev:
++	kfree(usb_dev);
++	return err;
++}
++
++static void __devexit bcma_hcd_remove(struct bcma_device *dev)
++{
++	struct bcma_hcd_device *usb_dev = bcma_get_drvdata(dev);
++	struct platform_device *ohci_dev = usb_dev->ohci_dev;
++	struct platform_device *ehci_dev = usb_dev->ehci_dev;
++
++	if (ohci_dev)
++		platform_device_unregister(ohci_dev);
++	if (ehci_dev)
++		platform_device_unregister(ehci_dev);
++
++	bcma_core_disable(dev, 0);
++}
++
++static void bcma_hcd_shutdown(struct bcma_device *dev)
++{
++	bcma_core_disable(dev, 0);
++}
++
++#ifdef CONFIG_PM
++
++static int bcma_hcd_suspend(struct bcma_device *dev, pm_message_t state)
++{
++	bcma_core_disable(dev, 0);
++
++	return 0;
++}
++
++static int bcma_hcd_resume(struct bcma_device *dev)
++{
++	bcma_core_enable(dev, 0);
++
++	return 0;
++}
++
++#else /* !CONFIG_PM */
++#define bcma_hcd_suspend	NULL
++#define bcma_hcd_resume	NULL
++#endif /* CONFIG_PM */
++
++static const struct bcma_device_id bcma_hcd_table[] __devinitconst = {
++	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_USB20_HOST, BCMA_ANY_REV, BCMA_ANY_CLASS),
++	BCMA_CORETABLE_END
++};
++MODULE_DEVICE_TABLE(bcma, bcma_hcd_table);
++
++static struct bcma_driver bcma_hcd_driver = {
++	.name		= KBUILD_MODNAME,
++	.id_table	= bcma_hcd_table,
++	.probe		= bcma_hcd_probe,
++	.remove		= __devexit_p(bcma_hcd_remove),
++	.shutdown	= bcma_hcd_shutdown,
++	.suspend	= bcma_hcd_suspend,
++	.resume		= bcma_hcd_resume,
++};
++
++static int __init bcma_hcd_init(void)
++{
++	return bcma_driver_register(&bcma_hcd_driver);
++}
++module_init(bcma_hcd_init);
++
++static void __exit bcma_hcd_exit(void)
++{
++	bcma_driver_unregister(&bcma_hcd_driver);
++}
++module_exit(bcma_hcd_exit);
+-- 
+1.7.5.4
 
-"Our WiFiHU is using RTL8191SU and USB ID is 0BDA/8192".
-
-It seems the USB database is wrong, so. And this might be also an
-explanation why this USB ID is used in the rtl8192su staging driver
-(file drivers\staging\rtl8192u\r8192U_core.c). I compiled this driver
-during my tests with the embedded Radicum WIFIHU wireless module
-and it accepts this USB id (0bda:8192), but it did not work with
-it. In contrast, the rtl8712 staging driver is working with this
-moudule if adding this USB ID to it (as done in my patch).
-
-Regards,
-Martin
-
->> diff --git a/drivers/staging/rtl8712/usb_intf.c
-> b/drivers/staging/rtl8712/usb_intf.c
->> index 9bade18..bb247ce 100644
->> --- a/drivers/staging/rtl8712/usb_intf.c
->> +++ b/drivers/staging/rtl8712/usb_intf.c
->> @@ -104,7 +104,7 @@ static struct usb_device_id rtl871x_usb_id_tbl[]
->> = { 
->> 
->>   /* RTL8191SU */
->>   	/* Realtek */
->> -	{USB_DEVICE(0x0BDA, 0x8172)},
->> +	{USB_DEVICE(0x0BDA, 0x8192)},
->>   	/* Amigo */
->>   	{USB_DEVICE(0x0EB0, 0x9061)},
->>   	/* ASUS/EKB */
