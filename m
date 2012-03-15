@@ -1,85 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42627 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758728Ab2CHWNH convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57972 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030464Ab2CORje (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 17:13:07 -0500
-Received: by yhmm54 with SMTP id m54so570854yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 14:13:07 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120308215913.GC13667@ubuntu-macmini>
-References: <20120307194001.GA2506@ubuntu-macmini> <20120308174101.GB28133@ubuntu-macmini>
- <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
- <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com>
- <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com> <20120308215913.GC13667@ubuntu-macmini>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 8 Mar 2012 14:12:46 -0800
-Message-ID: <CAB=NE6VziFZRTuyZx6unuaOY9=AYrSJ8DD2SFtWxSz5FcdHRQg@mail.gmail.com> (sfid-20120308_231326_438489_798C3A13)
-Subject: Re: Problems with regulatory domain support and BCM43224
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: "Quan, David" <dquan@qca.qualcomm.com>,
-	"Green, Michael" <green@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 15 Mar 2012 13:39:34 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [RFC 1/2] cfg80211:  Add framework to support ethtool stats.
+Date: Thu, 15 Mar 2012 10:39:18 -0700
+Message-Id: <1331833159-12694-1-git-send-email-greearb@candelatech.com> (sfid-20120315_183939_019754_FB9DFB9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 8, 2012 at 1:59 PM, Seth Forshee <seth.forshee@canonical.com> wrote:
-> On Thu, Mar 08, 2012 at 11:51:03AM -0800, Luis R. Rodriguez wrote:
->> On Thu, Mar 8, 2012 at 11:45 AM, Quan, David <dquan@qca.qualcomm.com> wrote:
->> > I think there is to it more than SW.
->> > Where ever you get this card, is the card tested and regulatory approved for those countries, DFS or not?
->>
->> Seth, what driver are you using? I know you are using a BCM43224 card.
->>
->> > It is possible that this card is only regulatory tested for non DFS channels, but now you enable them for passive.
->>
->> That's a good point.
->>
->> > This means that yes, you are save and not violate DFS rules because you are in passive mode. However, you are in complete violation if the STA finds an AP on that DFS channel and then connects and transmits as this STA is not allow to transmit on that channel since it is not approved.
->
-> I was thinking about this some more. I still don't understand why it
-> makes sense to omit these frequencies from the world domain. Isn't the
-> point of geographic domains to communicate the rules for wherever the
-> user happens to be at the time?
+From: Ben Greear <greearb@candelatech.com>
 
-Yes
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 9ed8021... d97c9da... M	include/net/cfg80211.h
+:100644 100644 bfed851... bc75a32... M	net/mac80211/sta_info.h
+:100644 100644 9bde4d1... 7eecdf4... M	net/wireless/ethtool.c
+ include/net/cfg80211.h  |    7 +++++++
+ net/mac80211/sta_info.h |    2 ++
+ net/wireless/ethtool.c  |   29 +++++++++++++++++++++++++++++
+ 3 files changed, 38 insertions(+), 0 deletions(-)
 
-> Does the core regulatory support really
-> ever know which frequencies the hardware has ben approved for, even
-> among those it already allows?
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9ed8021..d97c9da 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1689,6 +1689,13 @@ struct cfg80211_ops {
+ 				  u16 noack_map);
+ 
+ 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
++
++	int	(*get_et_sset_count)(struct wiphy *wiphy,
++				     struct net_device* dev, int sset);
++	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device* dev,
++				struct ethtool_stats *stats, u64 *data);
++	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device* dev,
++				  u32 sset, u8 *data);
+ };
+ 
+ /*
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index bfed851..bc75a32 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -379,6 +379,8 @@ struct sta_info {
+ 	struct ieee80211_sta sta;
+ };
+ 
++#define NUM_STA_INFO_STATS 12
++
+ static inline enum nl80211_plink_state sta_plink_state(struct sta_info *sta)
+ {
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
+index 9bde4d1..7eecdf4 100644
+--- a/net/wireless/ethtool.c
++++ b/net/wireless/ethtool.c
+@@ -68,6 +68,32 @@ static int cfg80211_set_ringparam(struct net_device *dev,
+ 	return -ENOTSUPP;
+ }
+ 
++static int cfg80211_get_sset_count(struct net_device *dev, int sset)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_sset_count)
++		return rdev->ops->get_et_sset_count(wdev->wiphy, dev, sset);
++	return -EOPNOTSUPP;
++}
++
++static void cfg80211_get_stats(struct net_device *dev,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_stats)
++		rdev->ops->get_et_stats(wdev->wiphy, dev, stats, data);
++}
++
++static void cfg80211_get_strings(struct net_device *dev, u32 sset, u8 *data)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_strings)
++		rdev->ops->get_et_strings(wdev->wiphy, dev, sset, data);
++}
++
+ const struct ethtool_ops cfg80211_ethtool_ops = {
+ 	.get_drvinfo = cfg80211_get_drvinfo,
+ 	.get_regs_len = cfg80211_get_regs_len,
+@@ -75,4 +101,7 @@ const struct ethtool_ops cfg80211_ethtool_ops = {
+ 	.get_link = ethtool_op_get_link,
+ 	.get_ringparam = cfg80211_get_ringparam,
+ 	.set_ringparam = cfg80211_set_ringparam,
++	.get_strings = cfg80211_get_strings,
++	.get_ethtool_stats = cfg80211_get_stats,
++	.get_sset_count = cfg80211_get_sset_count,
+ };
+-- 
+1.7.3.4
 
-It depends, some drivers are hacks, some drivers are vendor supported.
-For those driver with vendor support yes, you do know what the
-hardware should have been approved for. For reversed engineers
-drivers, no.
-
-Problem with using frequencies a card was not properly tested with is
-that those frequencies may not have calibrated data for it on the
-actual card, this may take the card out of compliance.
-
-> It seems to me that it's the job of the driver to communicate
-> hardware-specific regulatory hints.
-
-It is!
-
-> So _if_ passive scanning of the DFS
-> frequencies is allowed worldwide (I emphasize the if because I don't
-> know whether or not that's true), why should the world domain not allow
-> this?
-
-This is what I am in agreement with but you are missing that some
-cards do not have programmed certain frequencies on them certain
-calibration information. For DFS -- its a pain, and DFS is one of the
-areas where regulatory bodies tend to be more proactive on enforcing
-so the better thing to do is to avoid these at all costs -- unless the
-driver knows it can certainly use them.
-
-Fortunately today we get proper vendor support for all 802.11 drivers
-now on Linux so moving forward this is not an issue and I rather have
-safer and cautious code in place than not, specially for DFS.
-
-  Luis
