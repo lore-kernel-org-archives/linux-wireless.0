@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54590 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932409Ab2COPRL (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:51227 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536Ab2COKeO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 11:17:11 -0400
-Date: Thu, 15 Mar 2012 11:03:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rndis_wlan: don't report station signal
-Message-ID: <20120315150313.GD31717@tuxdriver.com> (sfid-20120315_161714_837232_2744F88A)
-References: <1331820805.3432.17.camel@jlt3.sipsolutions.net>
- <20120315142527.GC31717@tuxdriver.com>
- <1331822834.3432.22.camel@jlt3.sipsolutions.net>
+	Thu, 15 Mar 2012 06:34:14 -0400
+Received: by yenl12 with SMTP id l12so2844363yen.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 03:34:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1331822834.3432.22.camel@jlt3.sipsolutions.net>
+In-Reply-To: <CAJwzM1=GYDoE5C4idMOHnY71HAM1O+Joc-Tw+ciWZwdGi8P3kg@mail.gmail.com>
+References: <CAJwzM1=GYDoE5C4idMOHnY71HAM1O+Joc-Tw+ciWZwdGi8P3kg@mail.gmail.com>
+Date: Thu, 15 Mar 2012 12:34:13 +0200
+Message-ID: <CAB3XZEcysgM=u3Xj34fd7_AOuMPgkCoxSCt7NvFSDEQSrXGEuA@mail.gmail.com> (sfid-20120315_113417_788550_B71C8060)
+Subject: Re: Compilation errors in module mac80211 with latest tree
+From: Eliad Peller <eliad@wizery.com>
+To: Avinash Patil <avinashapatil@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 15, 2012 at 03:47:14PM +0100, Johannes Berg wrote:
-> On Thu, 2012-03-15 at 10:25 -0400, John W. Linville wrote:
-> > On Thu, Mar 15, 2012 at 03:13:25PM +0100, Johannes Berg wrote:
-> > > From: Johannes Berg <johannes.berg@intel.com>
-> > > 
-> > > The station signal value is supposed to be in dBm
-> > > which the device can't give, so don't report it.
-> > > 
-> > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > 
-> > Won't this break functionality for users of this device?
-> 
-> I don't know if it breaks functionality, but filling in values in the
-> wrong units doesn't seem like a good plan.
+On Thu, Mar 15, 2012 at 11:13 AM, Avinash Patil <avinashapatil@gmail.com> wrote:
+>   CC [M]  net/mac80211/cfg.o
+> net/mac80211/cfg.c: In function ‘sta_apply_parameters’:
+> net/mac80211/cfg.c:769: error: implicit declaration of function
+> ‘sta_info_move_state_checked’
+> make[1]: *** [net/mac80211/cfg.o] Error 1
+>
+what version is it?
+it doesn't seem to exist in wireless-testing.
 
-No, but if it isn't actually hurting anyting then I would rather
-change a comment or two (and perhaps augment the nl80211 code) than
-to simply break things for users.
+>
+> When I searched markmail.org, it looks like Eliad Peller had removed
+> all instances of sta_info_move_state_checked and replaced with
+> sta_info_move_state. Has it reappeared because of some other
+> check-in/or some issue with my git setup?
+>
+not every sent patch is getting applied.
+you should do such investigations with git log/blame.
 
-FWIW, cfg80211_wireless_stats has been able to cope with the
-unspecified units since it was implemented in commit 8990646d.
-Maybe that was a bug but it is a user-visible one that has been around
-for years now...
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Eliad.
