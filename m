@@ -1,56 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:3570 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750757Ab2CTELu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 00:11:50 -0400
-Message-ID: <4F680383.8020707@gmail.com> (sfid-20120320_051154_542360_535744C7)
-Date: Tue, 20 Mar 2012 05:11:47 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55997 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761635Ab2COWuu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 18:50:50 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: gregkh@linuxfoundation.org
+Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
+	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v5 1/4] bcma: scan for extra address space
+Date: Thu, 15 Mar 2012 23:49:56 +0100
+Message-Id: <1331851799-5968-2-git-send-email-hauke@hauke-m.de> (sfid-20120315_235057_305436_C0B1763C)
+In-Reply-To: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
+References: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Jakub Kicinski <moorray@wp.pl>
-Subject: Re: [PATCH] rt2x00: rt2800usb: fix status register reread logic
-References: <1332169181-23169-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1332169181-23169-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/19/12 15:59, Stanislaw Gruszka wrote:
-> Another good catch from Jakub Kicinski. This patch fixes my
-> recent commit: ed61e2b02027935520d1be884fac0b2ffce8379a
-> "rt2x00: rt2800usb: rework txdone code"
-> 
-> We should reread status register only when nobody else start already
-> reading status i.e. test_and_set_bit(TX_STATUS_READING, flags) return 0.
-> 
-> Reported-by: Jakub Kicinski <moorray@wp.pl>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Some cores like the USB core have two address spaces. In the USB host
+controller one address space is used for the OHCI and the other for the
+EHCI controller interface. The USB controller is the only core I found
+with two address spaces. This code is based on the AI scan function
+ai_scan() in shared/aiutils.c in the Broadcom SDK.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index f97f846..001735f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -184,7 +184,7 @@ stop_reading:
->  	 * here again if status reading is needed.
->  	 */
->  	if (rt2800usb_txstatus_pending(rt2x00dev) &&
-> -	    test_and_set_bit(TX_STATUS_READING, &rt2x00dev->flags))
-> +	    !test_and_set_bit(TX_STATUS_READING, &rt2x00dev->flags))
->  		return true;
->  	else
->  		return false;
-
-
--- 
+CC: Rafał Miłecki <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-Gertjan
+ drivers/bcma/scan.c       |   19 ++++++++++++++++++-
+ include/linux/bcma/bcma.h |    1 +
+ 2 files changed, 19 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 3a2f672..1fa10ed 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -286,6 +286,23 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			return -EILSEQ;
+ 	}
+ 
++	/* First Slave Address Descriptor should be port 0:
++	 * the main register space for the core
++	 */
++	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
++	if (tmp <= 0) {
++		/* Try again to see if it is a bridge */
++		tmp = bcma_erom_get_addr_desc(bus, eromptr,
++					      SCAN_ADDR_TYPE_BRIDGE, 0);
++		if (tmp <= 0) {
++			return -EILSEQ;
++		} else {
++			pr_info("Bridge found\n");
++			return -ENXIO;
++		}
++	}
++	core->addr = tmp;
++
+ 	/* get & parse slave ports */
+ 	for (i = 0; i < ports[1]; i++) {
+ 		for (j = 0; ; j++) {
+@@ -298,7 +315,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 				break;
+ 			} else {
+ 				if (i == 0 && j == 0)
+-					core->addr = tmp;
++					core->addr1 = tmp;
+ 			}
+ 		}
+ 	}
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 83c209f..7fe41e1 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -138,6 +138,7 @@ struct bcma_device {
+ 	u8 core_index;
+ 
+ 	u32 addr;
++	u32 addr1;
+ 	u32 wrap;
+ 
+ 	void __iomem *io_addr;
+-- 
+1.7.5.4
+
