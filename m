@@ -1,96 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2173 "EHLO MMS3.broadcom.com"
+Received: from mga09.intel.com ([134.134.136.24]:37228 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751548Ab2CHVcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 16:32:03 -0500
-Message-ID: <4F592542.7000005@broadcom.com> (sfid-20120308_223208_292428_5A574D59)
-Date: Thu, 8 Mar 2012 22:31:46 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-cc: "Seth Forshee" <seth.forshee@canonical.com>,
-	"Quan, David" <dquan@qca.qualcomm.com>,
-	"Green, Michael" <green@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Problems with regulatory domain support and BCM43224
-References: <20120307194001.GA2506@ubuntu-macmini>
- <20120308174101.GB28133@ubuntu-macmini>
- <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
- <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com>
- <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com>
- <20120308200734.GC28133@ubuntu-macmini> <4F591E14.4010000@broadcom.com>
- <CAB=NE6XnorRDEu976uMkPFNKHQjhRT0Craf3ZjL9dYysPjmQng@mail.gmail.com>
-In-Reply-To: <CAB=NE6XnorRDEu976uMkPFNKHQjhRT0Craf3ZjL9dYysPjmQng@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	id S1161461Ab2COU2L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:11 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 20/26] iwlwifi: move iwl_set_rxon_hwcrypto and mark it static
+Date: Thu, 15 Mar 2012 13:27:00 -0700
+Message-Id: <1331843226-29860-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212819_424968_8A80874C)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/2012 10:06 PM, Luis R. Rodriguez wrote:
-> On Thu, Mar 8, 2012 at 1:01 PM, Arend van Spriel<arend@broadcom.com>  wrote:
->> On 03/08/2012 09:07 PM, Seth Forshee wrote:
->>>
->>> On Thu, Mar 08, 2012 at 11:51:03AM -0800, Luis R. Rodriguez wrote:
->>>>
->>>> On Thu, Mar 8, 2012 at 11:45 AM, Quan, David<dquan@qca.qualcomm.com>
->>>>   wrote:
->>>>>
->>>>> I think there is to it more than SW.
->>>>> Where ever you get this card, is the card tested and regulatory approved
->>>>> for those countries, DFS or not?
->>>>
->>>>
->>>> Seth, what driver are you using? I know you are using a BCM43224 card.
->>>
->>>
->>> brcmsmac
->>>
->>>>> It is possible that this card is only regulatory tested for non DFS
->>>>> channels, but now you enable them for passive.
->>>>
->>>>
->>>> That's a good point.
->>>>
->>>>> This means that yes, you are save and not violate DFS rules because you
->>>>> are in passive mode. However, you are in complete violation if the STA finds
->>>>> an AP on that DFS channel and then connects and transmits as this STA is not
->>>>> allow to transmit on that channel since it is not approved.
->>>>
->>>>
->>>> If the driver being used is a supported vendor driver then I'll punt
->>>> this to the vendor (Broadcom). If this is the reversed engineered
->>>> driver (b43) that Broadcom to this day seems to blindly ignore even
->>>> for regulatory, then I'm happy to recommend based on your input to
->>>> leave the regulatory domain as-is given that we cannot guarantee what
->>>> the vendor meant as they have not done any work on releasing either
->>>> documentation or code to help with their regulatory situation.
->>>
->>>
->>> It would be nice if Broadcom could weigh in. Cc-ing Arend.
->>
->>
->> Hi, Seth
->>
->> Noticed your email yesterday, but did not get to chime into the
->> conversation. brcmsmac does indeed provide a regulatory hint, which is
->> either from SPROM or hard-coded to "US". Since "X0" is not a known
->> regulatory domain for crda it does not make sense to pass it as a regulatory
->> hint. However, the "full" story is told on linuxwireless.org (see [1]).
->
-> The Linux kernel allows you to define custom regulatory domains, the
-> ath module uses these, it defines 13 of them. You can review that code
-> for an example of how to use them. So your X0 can still be used, you
-> just have to define the data structure.
->
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-Thanks, Luis
+iwl_set_rxon_hwcrypto is used only in
+iwl-agn-rxon.c. Move it there and mark it
+static.
 
-I will dive into that.
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   12 ++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   12 ------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 --
+ 3 files changed, 12 insertions(+), 14 deletions(-)
 
-Gr. AvS
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 6a2fad3..ed88cf9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -500,6 +500,18 @@ int iwlagn_set_pan_params(struct iwl_priv *priv)
+ 	return ret;
+ }
+ 
++static void iwl_set_rxon_hwcrypto(struct iwl_priv *priv,
++				  struct iwl_rxon_context *ctx, int hw_decrypt)
++{
++	struct iwl_rxon_cmd *rxon = &ctx->staging;
++
++	if (hw_decrypt)
++		rxon->filter_flags &= ~RXON_FILTER_DIS_DECRYPT_MSK;
++	else
++		rxon->filter_flags |= RXON_FILTER_DIS_DECRYPT_MSK;
++
++}
++
+ /**
+  * iwlagn_commit_rxon - commit staging_rxon to hardware
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 796f4a1..4290d40 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -88,18 +88,6 @@ bool iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+ 			ctx->ht.extension_chan_offset);
+ }
+ 
+-void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-			   int hw_decrypt)
+-{
+-	struct iwl_rxon_cmd *rxon = &ctx->staging;
+-
+-	if (hw_decrypt)
+-		rxon->filter_flags &= ~RXON_FILTER_DIS_DECRYPT_MSK;
+-	else
+-		rxon->filter_flags |= RXON_FILTER_DIS_DECRYPT_MSK;
+-
+-}
+-
+ /* validate RXON structure is valid */
+ int iwl_check_rxon_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 7217be8..cdcf139 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -93,8 +93,6 @@ struct iwl_lib_ops {
+  *   L i b                 *
+  ***************************/
+ 
+-void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+-			   int hw_decrypt);
+ int iwl_check_rxon_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+ int iwl_full_rxon_required(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
+ void iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch,
+-- 
+1.7.0.4
 
