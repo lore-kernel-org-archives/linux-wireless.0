@@ -1,116 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:23627 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031267Ab2CFWna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:30 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 05/33] iwlwifi: move RF/CT kill check to command wrapper
-Date: Tue,  6 Mar 2012 13:30:40 -0800
-Message-Id: <1331069468-11074-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234434_337259_ADADFA12)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:36005 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759939Ab2CON5t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 09:57:49 -0400
+Message-ID: <4F61F551.5010608@gmail.com> (sfid-20120315_145812_754846_7F595EA5)
+Date: Thu, 15 Mar 2012 06:57:37 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>,
+	Linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org>
+In-Reply-To: <4F579A88.6030503@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Currently, we cannot send any commands when the
-uCode is in RF or CT kill, but that will not be
-true for all new uCode versions, so we need to
-move the check into the uCode specific code.
+>> ok! I have set that on the machine.. will see if I get this message in
+>> the upcoming weeks.
+> Also, please try this patch with powersave enabled:
+> http://nbd.name/ps-fix.patch
+>
+> - Felix
+>
 
-Also remove the duplicate rfkill check.
+I did have ps-fix patch running, but removed it in the kernel due to not 
+being able to connect once I wakeup from suspend. anyway I have enable 
+debugging for the wireless(hopefully) and was able to trigger this after 
+a fresh build of the kernel last night(git clean -fx and all)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   19 ++++---------------
- 2 files changed, 10 insertions(+), 15 deletions(-)
+the message I have in dmesg is:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 4c777df..11f2411 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1292,6 +1292,12 @@ int iwlagn_suspend(struct iwl_priv *priv,
- 
- int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- {
-+	if (iwl_is_rfkill(priv->shrd) || iwl_is_ctkill(priv->shrd)) {
-+		IWL_WARN(priv, "Not sending command - %s KILL\n",
-+			 iwl_is_rfkill(priv->shrd) ? "RF" : "CT");
-+		return -EIO;
-+	}
-+
- 	return iwl_trans_send_cmd(trans(priv), cmd);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 0164154..c85975e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -721,12 +721,6 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	if (WARN_ON(copy_size > TFD_MAX_PAYLOAD_SIZE))
- 		return -EINVAL;
- 
--	if (iwl_is_rfkill(trans->shrd) || iwl_is_ctkill(trans->shrd)) {
--		IWL_WARN(trans, "Not sending command - %s KILL\n",
--			 iwl_is_rfkill(trans->shrd) ? "RF" : "CT");
--		return -EIO;
--	}
--
- 	spin_lock_bh(&txq->lock);
- 
- 	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
-@@ -965,7 +959,7 @@ static int iwl_send_cmd_async(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 
- 	ret = iwl_enqueue_hcmd(trans, cmd);
- 	if (ret < 0) {
--		IWL_DEBUG_QUIET_RFKILL(trans,
-+		IWL_ERR(trans,
- 			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
- 		return ret;
-@@ -984,11 +978,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
- 			get_cmd_string(cmd->id));
- 
--	if (test_bit(STATUS_RF_KILL_HW, &trans->shrd->status)) {
--		IWL_ERR(trans, "Command %s aborted: RF KILL Switch\n",
--			       get_cmd_string(cmd->id));
--		return -ECANCELED;
--	}
- 	if (test_bit(STATUS_FW_ERROR, &trans->shrd->status)) {
- 		IWL_ERR(trans, "Command %s failed: FW Error\n",
- 			       get_cmd_string(cmd->id));
-@@ -1002,7 +991,7 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	if (cmd_idx < 0) {
- 		ret = cmd_idx;
- 		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
--		IWL_DEBUG_QUIET_RFKILL(trans,
-+		IWL_ERR(trans,
- 			"Error sending %s: enqueue_hcmd failed: %d\n",
- 			  get_cmd_string(cmd->id), ret);
- 		return ret;
-@@ -1017,12 +1006,12 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 				&trans_pcie->txq[trans->shrd->cmd_queue];
- 			struct iwl_queue *q = &txq->q;
- 
--			IWL_DEBUG_QUIET_RFKILL(trans,
-+			IWL_ERR(trans,
- 				"Error sending %s: time out after %dms.\n",
- 				get_cmd_string(cmd->id),
- 				jiffies_to_msecs(HOST_COMPLETE_TIMEOUT));
- 
--			IWL_DEBUG_QUIET_RFKILL(trans,
-+			IWL_ERR(trans,
- 				"Current CMD queue read_ptr %d write_ptr %d\n",
- 				q->read_ptr, q->write_ptr);
- 
--- 
-1.7.0.4
+[ 3348.274932] ath: Failed to stop TX DMA, queues=0x004!
+[ 3348.292637] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 
+AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
+[ 3348.292643] ath: Could not stop RX, we could be confusing the DMA 
+engine when we start RX up
+[ 3348.292648] ------------[ cut here ]------------
+[ 3348.292662] WARNING: at drivers/net/wireless/ath/ath9k/recv.c:537 
+ath_stoprecv+0xed/0x100 [ath9k]()
+[ 3348.292666] Hardware name: 0914
+[ 3348.292669] Modules linked in: dm_crypt ipt_REJECT ipt_LOG xt_limit 
+xt_tcpudp xt_addrtype joydev xt_state arc4 snd_hda_codec_hdmi 
+snd_hda_codec_conexant ath9k snd_hda_intel snd_hda_codec snd_hwdep 
+mac80211 snd_pcm snd_seq_midi nf_conntrack_netbios_ns 
+nf_conntrack_broadcast nf_nat_ftp nf_nat snd_rawmidi ath9k_common 
+nf_conntrack_ipv4 uvcvideo nf_defrag_ipv4 ath9k_hw snd_seq_midi_event 
+nf_conntrack_ftp nf_conntrack snd_seq snd_timer snd_seq_device ath 
+videobuf2_core videodev cfg80211 psmouse iptable_filter ip_tables 
+videobuf2_vmalloc videobuf2_memops name_laptop intel_ips sparse_keymap 
+serio_raw snd lp parport x_tables soundcore snd_page_alloc i915 
+drm_kms_helper drm i2c_algo_bit intel_agp intel_gtt usb_storage agpgart 
+video r8169 uas
+[ 3348.292786] Pid: 5972, comm: kworker/u:24 Not tainted 
+3.3.0-rc7-00048-g762ad8a #1
+[ 3348.292790] Call Trace:
+[ 3348.292804]  [<c1046f32>] warn_slowpath_common+0x72/0xa0
+[ 3348.292816]  [<f8f528bd>] ? ath_stoprecv+0xed/0x100 [ath9k]
+[ 3348.292826]  [<f8f528bd>] ? ath_stoprecv+0xed/0x100 [ath9k]
+[ 3348.292832]  [<c1046f82>] warn_slowpath_null+0x22/0x30
+[ 3348.292842]  [<f8f528bd>] ath_stoprecv+0xed/0x100 [ath9k]
+[ 3348.292855]  [<f8f4e35d>] ath_prepare_reset+0x5d/0xd0 [ath9k]
+[ 3348.292865]  [<f8f4f92c>] ath_reset_internal+0x7c/0x160 [ath9k]
+[ 3348.292875]  [<c10a862b>] ? trace_hardirqs_on+0xb/0x10
+[ 3348.292885]  [<f8f4fa35>] ath_reset+0x25/0xb0 [ath9k]
+[ 3348.292891]  [<c10a8594>] ? trace_hardirqs_on_caller+0xf4/0x180
+[ 3348.292901]  [<f8f51377>] ath_reset_work+0x17/0x20 [ath9k]
+[ 3348.292909]  [<c10663d6>] process_one_work+0x166/0x5b0
+[ 3348.292916]  [<c1066362>] ? process_one_work+0xf2/0x5b0
+[ 3348.292924]  [<c12ca72b>] ? do_raw_spin_lock+0x3b/0xf0
+[ 3348.292935]  [<f8f51360>] ? ath_isr+0x270/0x270 [ath9k]
+[ 3348.292944]  [<c1066b34>] worker_thread+0x124/0x2c0
+[ 3348.292950]  [<c1066a10>] ? rescuer_thread+0x1c0/0x1c0
+[ 3348.292957]  [<c106b77d>] kthread+0x7d/0x90
+[ 3348.292963]  [<c106b700>] ? __init_kthread_worker+0x60/0x60
+[ 3348.292972]  [<c158ed42>] kernel_thread_helper+0x6/0x10
+[ 3348.292976] ---[ end trace ced0f48896d487b2 ]---
+[ 3349.735411] ath: Failed to stop TX DMA, queues=0x005!
+[ 3349.753028] ath: DMA failed to stop in 10 ms AR_CR=0x00000024 
+AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
+[ 3349.753034] ath: Could not stop RX, we could be confusing the DMA 
+engine when we start RX up
 
+
+full dmesg is here;
+http://fpaste.org/YhqT/
+
+hope this helps with finding the bug!
+
+Justin P. Mattock
