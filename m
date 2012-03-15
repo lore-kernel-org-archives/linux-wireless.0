@@ -1,161 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51544 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754975Ab2CDUnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:00 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 017/101] iwlwifi: clean up (wowlan) suspend flow
-Date: Sun,  4 Mar 2012 11:28:31 -0800
-Message-Id: <1330889395-533-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214341_902159_F9AF8382)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:52483 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751557Ab2COON3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 10:13:29 -0400
+Subject: [PATCH] rndis_wlan: don't report station signal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 15:13:25 +0100
+Message-ID: <1331820805.3432.17.camel@jlt3.sipsolutions.net> (sfid-20120315_151332_776986_E60095A8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-In the WoWLAN suspend flow, instead of accessing
-registers directly, ask the transport to do the
-required setup at the end of suspend. If the
-transport doesn't implement this, don't tell the
-stack we support WoWLAN.
-
-When the device suspends w/o WoWLAN, mac80211
-will have stopped it already, which has already
-called iwl_apm_stop() via stop_hw(). Thus, it
-isn't necessary to call it again in pcie_suspend
-and we can simply do nothing there.
-
-This unifies the regular and WoWLAN suspend.
+The station signal value is supposed to be in dBm
+which the device can't give, so don't report it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-mac80211.c   |    5 +--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   32 ++++++++++--------------
- drivers/net/wireless/iwlwifi/iwl-trans.h      |   11 ++++++++
- 3 files changed, 26 insertions(+), 22 deletions(-)
+ drivers/net/wireless/rndis_wlan.c |    9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 8b26f32..8c7ca73 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -196,6 +196,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 			    WIPHY_FLAG_IBSS_RSN;
- 
- 	if (nic(priv)->fw.ucode_wowlan.code.len &&
-+	    trans(priv)->ops->wowlan_suspend &&
- 	    device_can_wakeup(trans(priv)->dev)) {
- 		hw->wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
- 					  WIPHY_WOWLAN_DISCONNECT |
-@@ -412,9 +413,7 @@ static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
- 
- 	device_set_wakeup_enable(trans(priv)->dev, true);
- 
--	/* Now let the ucode operate on its own */
--	iwl_write32(trans(priv), CSR_UCODE_DRV_GP1_SET,
--			  CSR_UCODE_DRV_GP1_BIT_D3_CFG_COMPLETE);
-+	iwl_trans_wowlan_suspend(trans(priv));
- 
- 	goto out;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index f47426a..bb8f2fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1303,6 +1303,17 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	iwl_write32(trans, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
- }
- 
-+static void iwl_trans_pcie_wowlan_suspend(struct iwl_trans *trans)
-+{
-+	/* let the ucode operate on its own */
-+	iwl_write32(trans, CSR_UCODE_DRV_GP1_SET,
-+		    CSR_UCODE_DRV_GP1_BIT_D3_CFG_COMPLETE);
-+
-+	iwl_disable_interrupts(trans);
-+	iwl_clear_bit(trans, CSR_GP_CNTRL,
-+		      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+}
-+
- static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		struct iwl_device_cmd *dev_cmd, enum iwl_rxon_context_id ctx,
- 		u8 sta_id, u8 tid)
-@@ -1641,25 +1652,6 @@ static void iwl_trans_pcie_free(struct iwl_trans *trans)
- #ifdef CONFIG_PM_SLEEP
- static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
+--- a/drivers/net/wireless/rndis_wlan.c	2012-03-10 09:17:00.000000000 +0100
++++ b/drivers/net/wireless/rndis_wlan.c	2012-03-15 15:11:52.000000000 +0100
+@@ -2505,7 +2505,7 @@ static int rndis_set_default_key(struct
+ static void rndis_fill_station_info(struct usbnet *usbdev,
+ 						struct station_info *sinfo)
  {
--	/*
--	 * This function is called when system goes into suspend state
--	 * mac80211 will call iwlagn_mac_stop() from the mac80211 suspend
--	 * function first but since iwlagn_mac_stop() has no knowledge of
--	 * who the caller is,
--	 * it will not call apm_ops.stop() to stop the DMA operation.
--	 * Calling apm_ops.stop here to make sure we stop the DMA.
--	 *
--	 * But of course ... if we have configured WoWLAN then we did other
--	 * things already :-)
--	 */
--	if (!trans->shrd->wowlan) {
--		iwl_apm_stop(trans);
--	} else {
--		iwl_disable_interrupts(trans);
--		iwl_clear_bit(trans, CSR_GP_CNTRL,
--			      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
--	}
+-	__le32 linkspeed, rssi;
++	__le32 linkspeed;
+ 	int ret, len;
+ 
+ 	memset(sinfo, 0, sizeof(*sinfo));
+@@ -2516,13 +2516,6 @@ static void rndis_fill_station_info(stru
+ 		sinfo->txrate.legacy = le32_to_cpu(linkspeed) / 1000;
+ 		sinfo->filled |= STATION_INFO_TX_BITRATE;
+ 	}
 -
- 	return 0;
+-	len = sizeof(rssi);
+-	ret = rndis_query_oid(usbdev, OID_802_11_RSSI, &rssi, &len);
+-	if (ret == 0) {
+-		sinfo->signal = level_to_qual(le32_to_cpu(rssi));
+-		sinfo->filled |= STATION_INFO_SIGNAL;
+-	}
  }
  
-@@ -2227,6 +2219,8 @@ const struct iwl_trans_ops trans_ops_pcie = {
- 	.start_fw = iwl_trans_pcie_start_fw,
- 	.stop_device = iwl_trans_pcie_stop_device,
- 
-+	.wowlan_suspend = iwl_trans_pcie_wowlan_suspend,
-+
- 	.wake_any_queue = iwl_trans_pcie_wake_any_queue,
- 
- 	.send_cmd = iwl_trans_pcie_send_cmd,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index e2f21cf..83f04c9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -210,6 +210,9 @@ struct iwl_host_cmd {
-  * @wake_any_queue: wake all the queues of a specfic context IWL_RXON_CTX_*
-  * @stop_device:stops the whole device (embedded CPU put to reset)
-  *	May sleep
-+ * @wowlan_suspend: put the device into the correct mode for WoWLAN during
-+ *	suspend. This is optional, if not implemented WoWLAN will not be
-+ *	supported. This callback may sleep.
-  * @send_cmd:send a host command
-  *	May sleep only if CMD_SYNC is set
-  * @tx: send an skb
-@@ -247,6 +250,8 @@ struct iwl_trans_ops {
- 	void (*fw_alive)(struct iwl_trans *trans);
- 	void (*stop_device)(struct iwl_trans *trans);
- 
-+	void (*wowlan_suspend)(struct iwl_trans *trans);
-+
- 	void (*wake_any_queue)(struct iwl_trans *trans,
- 			       enum iwl_rxon_context_id ctx,
- 			       const char *msg);
-@@ -396,6 +401,12 @@ static inline void iwl_trans_stop_device(struct iwl_trans *trans)
- 	trans->state = IWL_TRANS_NO_FW;
- }
- 
-+static inline void iwl_trans_wowlan_suspend(struct iwl_trans *trans)
-+{
-+	might_sleep();
-+	trans->ops->wowlan_suspend(trans);
-+}
-+
- static inline void iwl_trans_wake_any_queue(struct iwl_trans *trans,
- 					    enum iwl_rxon_context_id ctx,
- 					    const char *msg)
--- 
-1.7.0.4
+ static int rndis_get_station(struct wiphy *wiphy, struct net_device *dev,
+
 
