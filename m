@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36837 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100Ab2C0MUT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63502 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753992Ab2COAUG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 08:20:19 -0400
-Message-Id: <20120327121921.715465599@sipsolutions.net> (sfid-20120327_142028_274507_F2DAF893)
-Date: Tue, 27 Mar 2012 14:18:40 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/5] mac80211: use AC constants
-References: <20120327121835.299635879@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 14 Mar 2012 20:20:06 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH] mac80211: do not send pspoll when powersave is disabled
+Date: Thu, 15 Mar 2012 05:50:36 +0530
+Message-ID: <1331770836-20312-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120315_012011_825372_A97186FC)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+There might be latency at AP side to update TIM IE which could cause the
+station to send pspoll frame even after the wakeup. If the powersave is
+disabled, the nullfunc notification alone is sufficient to receive
+frames from the AP. And if the pspoll frame was already sent, no need to
+resend the frame till it was acked by AP.
 
-Use the AC constants instead of hard-coding
-the numbers with comments.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- net/mac80211/util.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ net/mac80211/mlme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/net/mac80211/util.c	2012-03-23 17:45:09.000000000 +0100
-+++ b/net/mac80211/util.c	2012-03-23 17:45:18.000000000 +0100
-@@ -790,20 +790,20 @@ void ieee80211_set_wmm_default(struct ie
- 			aCWmin = 15;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 39c1393..355a5e7 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2472,7 +2472,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 				ieee80211_hw_config(local,
+ 						    IEEE80211_CONF_CHANGE_PS);
+ 				ieee80211_send_nullfunc(local, sdata, 0);
+-			} else {
++			} else if (!local->pspolling && sdata->u.mgd.powersave) {
+ 				local->pspolling = true;
  
- 		switch (queue) {
--		case 3: /* AC_BK */
-+		case IEEE80211_AC_BK:
- 			qparam.cw_max = aCWmax;
- 			qparam.cw_min = aCWmin;
- 			qparam.txop = 0;
- 			qparam.aifs = 7;
- 			break;
- 		default: /* never happens but let's not leave undefined */
--		case 2: /* AC_BE */
-+		case IEEE80211_AC_BE:
- 			qparam.cw_max = aCWmax;
- 			qparam.cw_min = aCWmin;
- 			qparam.txop = 0;
- 			qparam.aifs = 3;
- 			break;
--		case 1: /* AC_VI */
-+		case IEEE80211_AC_VI:
- 			qparam.cw_max = aCWmin;
- 			qparam.cw_min = (aCWmin + 1) / 2 - 1;
- 			if (use_11b)
-@@ -812,7 +812,7 @@ void ieee80211_set_wmm_default(struct ie
- 				qparam.txop = 3008/32;
- 			qparam.aifs = 2;
- 			break;
--		case 0: /* AC_VO */
-+		case IEEE80211_AC_VO:
- 			qparam.cw_max = (aCWmin + 1) / 2 - 1;
- 			qparam.cw_min = (aCWmin + 1) / 4 - 1;
- 			if (use_11b)
-
+ 				/*
+-- 
+1.7.9.4
 
