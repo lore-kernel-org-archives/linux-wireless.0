@@ -1,44 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56184 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964Ab2CSKHj (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56541 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964869Ab2COR2K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 06:07:39 -0400
-Received: by mail-we0-f174.google.com with SMTP id x9so5669979wej.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 03:07:39 -0700 (PDT)
-From: Eyal Shapira <eyal@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] wl12xx: increase scan timeout to 30s
-Date: Mon, 19 Mar 2012 12:06:29 +0200
-Message-Id: <1332151589-27272-5-git-send-email-eyal@wizery.com> (sfid-20120319_110743_722002_4ACA4738)
-In-Reply-To: <1332151589-27272-1-git-send-email-eyal@wizery.com>
-References: <1332151589-27272-1-git-send-email-eyal@wizery.com>
+	Thu, 15 Mar 2012 13:28:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Cristian Morales Vega <cristian@samknows.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] cfg80211: allow CFG80211_SIGNAL_TYPE_UNSPEC in station_info
+Date: Thu, 15 Mar 2012 13:25:41 -0400
+Message-Id: <1331832341-30795-1-git-send-email-linville@tuxdriver.com> (sfid-20120315_182817_097718_0A2384F2)
+In-Reply-To: <1331827087-21339-1-git-send-email-linville@tuxdriver.com>
+References: <1331827087-21339-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In certain scenarios involving sched scan + normal scan + COEX
-scan could take longer than 10s and this triggers a recovery
-where it shouldn't. Increase the timeout to avoid that.
+The station_info struct had demanded dBm signal values, but the
+cfg80211 wireless extensions implementation was also accepting
+"unspecified" (i.e. RSSI) unit values while the nl80211 code was
+completely unaware of them.  Resolve this by formally allowing the
+"unspecified" units while making nl80211 ignore them.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/wl12xx/scan.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The switch statement could be an if, but used it because I copied it
+from elsewhere in the file and because we might (?) want to support a
+different attribute to report the unspecified unit values through
+nl80211?
 
-diff --git a/drivers/net/wireless/wl12xx/scan.h b/drivers/net/wireless/wl12xx/scan.h
-index 96ff457..2b300f4 100644
---- a/drivers/net/wireless/wl12xx/scan.h
-+++ b/drivers/net/wireless/wl12xx/scan.h
-@@ -55,7 +55,7 @@ void wl1271_scan_sched_scan_results(struct wl1271 *wl);
- #define WL1271_SCAN_BAND_2_4_GHZ 0
- #define WL1271_SCAN_BAND_5_GHZ 1
+v2: Fix typo in commit message and add note about using dBm for drivers
+    using CFG80211_SIGNAL_TYPE_MBM.
+
+ include/net/cfg80211.h |    4 ++--
+ net/wireless/nl80211.c |   29 +++++++++++++++++++----------
+ 2 files changed, 21 insertions(+), 12 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a067d30..4263a62 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -605,8 +605,10 @@ struct sta_bss_parameters {
+  * @llid: mesh local link id
+  * @plid: mesh peer link id
+  * @plink_state: mesh peer link state
+- * @signal: signal strength of last received packet in dBm
+- * @signal_avg: signal strength average in dBm
++ * @signal: the signal strength, type depends on the wiphy's signal_type
++	NOTE: For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
++ * @signal_avg: avg signal strength, type depends on the wiphy's signal_type
++	NOTE: For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
+  * @txrate: current unicast bitrate from this station
+  * @rxrate: current unicast bitrate to this station
+  * @rx_packets: packets received from this station
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index afeea32..3105c77 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2349,7 +2349,9 @@ nla_put_failure:
+ }
  
--#define WL1271_SCAN_TIMEOUT    10000 /* msec */
-+#define WL1271_SCAN_TIMEOUT    30000 /* msec */
+ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+-				int flags, struct net_device *dev,
++				int flags,
++				struct cfg80211_registered_device *rdev,
++				struct net_device *dev,
+ 				const u8 *mac_addr, struct station_info *sinfo)
+ {
+ 	void *hdr;
+@@ -2388,12 +2390,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
+ 	if (sinfo->filled & STATION_INFO_PLINK_STATE)
+ 		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
+ 			    sinfo->plink_state);
+-	if (sinfo->filled & STATION_INFO_SIGNAL)
+-		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
+-			   sinfo->signal);
+-	if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
+-		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
+-			   sinfo->signal_avg);
++	switch (rdev->wiphy.signal_type) {
++	case CFG80211_SIGNAL_TYPE_MBM:
++		if (sinfo->filled & STATION_INFO_SIGNAL)
++			NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
++				   sinfo->signal);
++		if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
++			NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
++				   sinfo->signal_avg);
++		break;
++	default:
++		break;
++	}
+ 	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
+ 		if (!nl80211_put_sta_rate(msg, &sinfo->txrate,
+ 					  NL80211_STA_INFO_TX_BITRATE))
+@@ -2486,7 +2494,7 @@ static int nl80211_dump_station(struct sk_buff *skb,
+ 		if (nl80211_send_station(skb,
+ 				NETLINK_CB(cb->skb).pid,
+ 				cb->nlh->nlmsg_seq, NLM_F_MULTI,
+-				netdev, mac_addr,
++				dev, netdev, mac_addr,
+ 				&sinfo) < 0)
+ 			goto out;
  
- enum {
- 	WL1271_SCAN_STATE_IDLE,
+@@ -2531,7 +2539,7 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
+ 		return -ENOMEM;
+ 
+ 	if (nl80211_send_station(msg, info->snd_pid, info->snd_seq, 0,
+-				 dev, mac_addr, &sinfo) < 0) {
++				 rdev, dev, mac_addr, &sinfo) < 0) {
+ 		nlmsg_free(msg);
+ 		return -ENOBUFS;
+ 	}
+@@ -7482,7 +7490,8 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
+ 	if (!msg)
+ 		return;
+ 
+-	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
++	if (nl80211_send_station(msg, 0, 0, 0,
++				 rdev, dev, mac_addr, sinfo) < 0) {
+ 		nlmsg_free(msg);
+ 		return;
+ 	}
 -- 
-1.7.4.1
+1.7.4.4
 
