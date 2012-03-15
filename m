@@ -1,151 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:50720 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752162Ab2CUGkK convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52489 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752039Ab2COOPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2012 02:40:10 -0400
-Received: by obbeh20 with SMTP id eh20so505480obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 23:40:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1332333182-11941-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1332333182-11941-1-git-send-email-yeohchunyeow@gmail.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 20 Mar 2012 23:39:49 -0700
-Message-ID: <CAPjQAd_v+jez4woV+=rp3LB8QTgPDT=CX0oixjcu7=fUZscm6w@mail.gmail.com> (sfid-20120321_074014_951175_86B06E67)
-Subject: Re: [PATCH] mac80211: fix the RANN propagation issues
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	thomas@cozybit.com, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 15 Mar 2012 10:15:37 -0400
+Subject: [PATCH] mac80211: report only dBm station signal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Cristian Morales Vega <cristian@samknows.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <1331820417.3432.16.camel@jlt3.sipsolutions.net> (sfid-20120315_150702_997199_9C292885)
+References: <CAGUfO+wJd8wdcwzaigV=DYzhCNt8cNtWc4P=MoXJLd9ozHyPjg@mail.gmail.com>
+	 (sfid-20120315_145933_601091_9647B8FA)  <1331820417.3432.16.camel@jlt3.sipsolutions.net>
+	 (sfid-20120315_150702_997199_9C292885)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 15:15:35 +0100
+Message-ID: <1331820935.3432.18.camel@jlt3.sipsolutions.net> (sfid-20120315_151540_937993_65922EE3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeoh,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Looks good from here.  Just one question (inline), which is probably
-more for Thomas than you...
+The station signal can currently only be reported
+in dBm, so don't report it at all if we only have
+unspecified units from the device.
 
-On Wed, Mar 21, 2012 at 5:33 AM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
-> This patch is intended to solve the follwing issues in RANN propagation:
-> [1] The interval in propagated RANN should be based on the interval of received RANN.
-> [2] The aggregated path metric for propagated RANN is as received plus own link metric
->    towards the transmitting mesh STA (not root mesh STA).
-> [3] The comparison of path metric for RANN with same sequence number should be done
->    before deciding whether to propagate or not.
->
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
->  net/mac80211/mesh.h      |    2 ++
->  net/mac80211/mesh_hwmp.c |   21 +++++++++++++++++----
->  2 files changed, 19 insertions(+), 4 deletions(-)
->
-> diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-> index 8d53b71..adf1be3 100644
-> --- a/net/mac80211/mesh.h
-> +++ b/net/mac80211/mesh.h
-> @@ -86,6 +86,7 @@ enum mesh_deferred_task_flags {
->  * mpath itself.  No need to take this lock when adding or removing
->  * an mpath to a hash bucket on a path table.
->  * @rann_snd_addr: the RANN sender address
-> + * @rann_metric: the aggregated path metric towards the root node
->  * @is_root: the destination station of this path is a root node
->  * @is_gate: the destination station of this path is a mesh gate
->  *
-> @@ -112,6 +113,7 @@ struct mesh_path {
->        enum mesh_path_flags flags;
->        spinlock_t state_lock;
->        u8 rann_snd_addr[ETH_ALEN];
-> +       u32 rann_metric;
->        bool is_root;
->        bool is_gate;
->  };
-> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> index f80a9e3..fcfebc7 100644
-> --- a/net/mac80211/mesh_hwmp.c
-> +++ b/net/mac80211/mesh_hwmp.c
-> @@ -88,6 +88,7 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
->  #define MSEC_TO_TU(x) (x*1000/1024)
->  #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
->  #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
-> +#define SN_EQ(x, y) ((long) (x) - (long) (y) == 0)
+Cc: stable@kernel.org
+Reported-by: Cristian Morales Vega <cristian@samknows.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-I never understood the point of these macros so I'm not too happy
-about seeing another one creep in :)
-Can someone explain why we need them?  Why not just use good
-old-fashioned '=='  (and '<' or '>')?
-
->  #define net_traversal_jiffies(s) \
->        msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime)
-> @@ -732,11 +733,12 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
->                                struct ieee80211_rann_ie *rann)
->  {
->        struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-> +       struct ieee80211_local *local = sdata->local;
-> +       struct sta_info *sta;
->        struct mesh_path *mpath;
->        u8 ttl, flags, hopcount;
->        u8 *orig_addr;
-> -       u32 orig_sn, metric;
-> -       u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
-> +       u32 orig_sn, metric, metric_txsta, interval;
->        bool root_is_gate;
->
->        ttl = rann->rann_ttl;
-> @@ -749,6 +751,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
->        root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
->        orig_addr = rann->rann_addr;
->        orig_sn = le32_to_cpu(rann->rann_seq);
-> +       interval = le32_to_cpu(rann->rann_interval);
->        hopcount = rann->rann_hopcount;
->        hopcount++;
->        metric = le32_to_cpu(rann->rann_metric);
-> @@ -761,6 +764,14 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
->                        orig_addr, mgmt->sa, root_is_gate);
->
->        rcu_read_lock();
-> +       sta = sta_info_get(sdata, mgmt->sa);
-> +       if (!sta) {
-> +               rcu_read_unlock();
-> +               return;
-> +       }
-> +
-> +       metric_txsta = airtime_link_metric_get(local, sta);
-> +
->        mpath = mesh_path_lookup(orig_addr, sdata);
->        if (!mpath) {
->                mesh_path_add(orig_addr, sdata);
-> @@ -780,14 +791,16 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
->                mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
->        }
->
-> -       if (mpath->sn < orig_sn && ifmsh->mshcfg.dot11MeshForwarding) {
-> +       if ((SN_LT(mpath->sn, orig_sn) || (SN_EQ(mpath->sn, orig_sn) &&
-> +          metric < mpath->rann_metric)) && ifmsh->mshcfg.dot11MeshForwarding) {
-
-i.e.
-
-if ((mpath->sn < orig_sn || (mpath->sn == orig_sn && metric <
-mpath->rann_metric))
-    && ifmsh->mshcfg.dot11MeshForwarding) {
+--- a/net/mac80211/cfg.c	2012-03-10 09:17:06.000000000 +0100
++++ b/net/mac80211/cfg.c	2012-03-15 15:14:01.000000000 +0100
+@@ -385,8 +385,7 @@ static void sta_set_sinfo(struct sta_inf
+ 	sinfo->rx_dropped_misc = sta->rx_dropped;
+ 	sinfo->beacon_loss_count = sta->beacon_loss_count;
+ 
+-	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+-	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
++	if (sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) {
+ 		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
+ 		sinfo->signal = (s8)sta->last_signal;
+ 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
 
 
->                mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
->                                       cpu_to_le32(orig_sn),
->                                       0, NULL, 0, broadcast_addr,
->                                       hopcount, ttl, cpu_to_le32(interval),
-> -                                      cpu_to_le32(metric + mpath->metric),
-> +                                      cpu_to_le32(metric + metric_txsta),
->                                       0, sdata);
->                mpath->sn = orig_sn;
-> +               mpath->rann_metric = metric + metric_txsta;
->        }
->
->        /* Using individually addressed PREQ for root node */
-> --
-> 1.7.0.4
->
-
-Thanks,
-
-Javier
