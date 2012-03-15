@@ -1,154 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:13804 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632Ab2CSUoe (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43909 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759218Ab2COJQT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 16:44:34 -0400
-Date: Mon, 19 Mar 2012 15:44:31 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: joe@perches.com, linux-wireless@vger.kernel.org
-Subject: [PATCH V2] rtlwifi: Preallocate USB read buffers and eliminate
- kalloc in read routine
-Message-ID: <4f679aaf.mzz0Ty2aMFrgD2NO%Larry.Finger@lwfinger.net> (sfid-20120319_214438_360735_759E6511)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 15 Mar 2012 05:16:19 -0400
+Subject: [PATCH 3.5 v2] cfg80211: enforce lack of interface combinations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>
+In-Reply-To: <20120313150613.300612962@sipsolutions.net> (sfid-20120313_160723_685669_68C2D49D)
+References: <20120313150613.300612962@sipsolutions.net>
+	 (sfid-20120313_160723_685669_68C2D49D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 10:16:16 +0100
+Message-ID: <1331802976.3432.5.camel@jlt3.sipsolutions.net> (sfid-20120315_101623_586096_64F1B4CC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current version of rtlwifi for USB operations uses kmalloc to
-acquire a 32-bit buffer for each read of the device. When
-_usb_read_sync() is called with the rcu_lock held, the result is
-a "sleeping function called from invalid context" BUG. This is
-reported for two cases in https://bugzilla.kernel.org/show_bug.cgi?id=42775.
-The first case has the lock originating from within rtlwifi and could
-be fixed by rearranging the locking; however, the second originates from
-within mac80211. The kmalloc() call is removed from _usb_read_sync()
-by creating a ring buffer pointer in the private area and
-allocating the buffer data in the probe routine.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [This version good for 3.3+ - different patch for 3.2 - 2.6.39]
+My grand plan to allow drivers to gradually move over
+to advertising virtual interface combinations and only
+enforce with drivers that do want it enforced doesn't
+seem to be working out, only Christian ever added the
+advertising (to carl9170), nobody else did.
+
+Begin enforcing combinations in cfg80211 so that users
+can rely on the information reported about a device.
+
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>  
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ include/net/cfg80211.h |    6 +-----
+ net/wireless/core.c    |    4 ----
+ net/wireless/util.c    |   10 +++-------
+ 3 files changed, 4 insertions(+), 16 deletions(-)
 
-V2 - rewrote the commit message.
-   - eliminated an ASSERT message that is not needed.
----
-
-John,
-
-This bug only shows up with full debugging; therefore, it can be part of
-kernel 3.5.
-
-Larry
----
-
- usb.c  |   34 ++++++++++++++++------------------
- wifi.h |    6 +++++-
- 2 files changed, 21 insertions(+), 19 deletions(-)
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/usb.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-@@ -124,46 +124,38 @@ static int _usbctrl_vendorreq_sync_read(
- 	return status;
- }
+--- a/include/net/cfg80211.h	2012-03-15 10:15:08.000000000 +0100
++++ b/include/net/cfg80211.h	2012-03-15 10:15:10.000000000 +0100
+@@ -1729,10 +1729,6 @@ struct cfg80211_ops {
+  *	hints read the documenation for regulatory_hint_found_beacon()
+  * @WIPHY_FLAG_NETNS_OK: if not set, do not allow changing the netns of this
+  *	wiphy at all
+- * @WIPHY_FLAG_ENFORCE_COMBINATIONS: Set this flag to enforce interface
+- *	combinations for this device. This flag is used for backward
+- *	compatibility only until all drivers advertise combinations and
+- *	they will always be enforced.
+  * @WIPHY_FLAG_PS_ON_BY_DEFAULT: if set to true, powersave will be enabled
+  *	by default -- this flag will be set depending on the kernel's default
+  *	on wiphy_new(), but can be changed by the driver if it has a good
+@@ -1777,7 +1773,7 @@ enum wiphy_flags {
+ 	WIPHY_FLAG_IBSS_RSN			= BIT(8),
+ 	WIPHY_FLAG_MESH_AUTH			= BIT(10),
+ 	WIPHY_FLAG_SUPPORTS_SCHED_SCAN		= BIT(11),
+-	WIPHY_FLAG_ENFORCE_COMBINATIONS		= BIT(12),
++	/* use hole at 12 */
+ 	WIPHY_FLAG_SUPPORTS_FW_ROAM		= BIT(13),
+ 	WIPHY_FLAG_AP_UAPSD			= BIT(14),
+ 	WIPHY_FLAG_SUPPORTS_TDLS		= BIT(15),
+--- a/net/wireless/core.c	2012-03-15 10:15:08.000000000 +0100
++++ b/net/wireless/core.c	2012-03-15 10:15:10.000000000 +0100
+@@ -422,10 +422,6 @@ static int wiphy_verify_combinations(str
+ 	const struct ieee80211_iface_combination *c;
+ 	int i, j;
  
--static u32 _usb_read_sync(struct usb_device *udev, u32 addr, u16 len)
-+static u32 _usb_read_sync(struct rtl_priv *rtlpriv, u32 addr, u16 len)
- {
-+	struct device *dev = rtlpriv->io.dev;
-+	struct usb_device *udev = to_usb_device(dev);
- 	u8 request;
- 	u16 wvalue;
- 	u16 index;
--	u32 *data;
--	u32 ret;
-+	__le32 *data = &rtlpriv->usb_data[rtlpriv->usb_data_index];
- 
--	data = kmalloc(sizeof(u32), GFP_KERNEL);
--	if (!data)
--		return -ENOMEM;
- 	request = REALTEK_USB_VENQT_CMD_REQ;
- 	index = REALTEK_USB_VENQT_CMD_IDX; /* n/a */
- 
- 	wvalue = (u16)addr;
- 	_usbctrl_vendorreq_sync_read(udev, request, wvalue, index, data, len);
--	ret = le32_to_cpu(*data);
--	kfree(data);
--	return ret;
-+	if (++rtlpriv->usb_data_index >= RTL_USB_MAX_RX_COUNT)
-+		rtlpriv->usb_data_index = 0;
-+	return le32_to_cpu(*data);
- }
- 
- static u8 _usb_read8_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	struct device *dev = rtlpriv->io.dev;
+-	/* If we have combinations enforce them */
+-	if (wiphy->n_iface_combinations)
+-		wiphy->flags |= WIPHY_FLAG_ENFORCE_COMBINATIONS;
 -
--	return (u8)_usb_read_sync(to_usb_device(dev), addr, 1);
-+	return (u8)_usb_read_sync(rtlpriv, addr, 1);
- }
+ 	for (i = 0; i < wiphy->n_iface_combinations; i++) {
+ 		u32 cnt = 0;
+ 		u16 all_iftypes = 0;
+--- a/net/wireless/util.c	2012-03-15 10:15:08.000000000 +0100
++++ b/net/wireless/util.c	2012-03-15 10:15:29.000000000 +0100
+@@ -946,13 +946,6 @@ int cfg80211_can_change_interface(struct
+ 	if (rdev->wiphy.software_iftypes & BIT(iftype))
+ 		return 0;
  
- static u16 _usb_read16_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	struct device *dev = rtlpriv->io.dev;
+-	/*
+-	 * Drivers will gradually all set this flag, until all
+-	 * have it we only enforce for those that set it.
+-	 */
+-	if (!(rdev->wiphy.flags & WIPHY_FLAG_ENFORCE_COMBINATIONS))
+-		return 0;
 -
--	return (u16)_usb_read_sync(to_usb_device(dev), addr, 2);
-+	return (u16)_usb_read_sync(rtlpriv, addr, 2);
- }
+ 	memset(num, 0, sizeof(num));
  
- static u32 _usb_read32_sync(struct rtl_priv *rtlpriv, u32 addr)
- {
--	struct device *dev = rtlpriv->io.dev;
--
--	return _usb_read_sync(to_usb_device(dev), addr, 4);
-+	return _usb_read_sync(rtlpriv, addr, 4);
- }
- 
- static void _usb_write_async(struct usb_device *udev, u32 addr, u32 val,
-@@ -955,6 +947,11 @@ int __devinit rtl_usb_probe(struct usb_i
- 		return -ENOMEM;
+ 	num[iftype] = 1;
+@@ -972,6 +965,9 @@ int cfg80211_can_change_interface(struct
  	}
- 	rtlpriv = hw->priv;
-+	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
-+				    GFP_KERNEL);
-+	if (!rtlpriv->usb_data)
-+		return -ENOMEM;
-+	rtlpriv->usb_data_index = 0;
- 	init_completion(&rtlpriv->firmware_loading_complete);
- 	SET_IEEE80211_DEV(hw, &intf->dev);
- 	udev = interface_to_usbdev(intf);
-@@ -1025,6 +1022,7 @@ void rtl_usb_disconnect(struct usb_inter
- 	/* rtl_deinit_rfkill(hw); */
- 	rtl_usb_deinit(hw);
- 	rtl_deinit_core(hw);
-+	kfree(rtlpriv->usb_data);
- 	rtlpriv->cfg->ops->deinit_sw_leds(hw);
- 	rtlpriv->cfg->ops->deinit_sw_vars(hw);
- 	_rtl_usb_io_handler_release(hw);
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-@@ -67,7 +67,7 @@
- #define QOS_QUEUE_NUM				4
- #define RTL_MAC80211_NUM_QUEUE			5
- #define REALTEK_USB_VENQT_MAX_BUF_SIZE		254
--
-+#define RTL_USB_MAX_RX_COUNT			100
- #define QBSS_LOAD_SIZE				5
- #define MAX_WMMELE_LENGTH			64
+ 	mutex_unlock(&rdev->devlist_mtx);
  
-@@ -1629,6 +1629,10 @@ struct rtl_priv {
- 	   interface or hardware */
- 	unsigned long status;
- 
-+	/* data buffer pointer for USB reads */
-+	__le32 *usb_data;
-+	int usb_data_index;
++	if (total == 1)
++		return 0;
 +
- 	/*This must be the last item so
- 	   that it points to the data allocated
- 	   beyond  this structure like:
+ 	for (i = 0; i < rdev->wiphy.n_iface_combinations; i++) {
+ 		const struct ieee80211_iface_combination *c;
+ 		struct ieee80211_iface_limit *limits;
+
+
