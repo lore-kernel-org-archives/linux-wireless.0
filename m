@@ -1,108 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:45767 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752694Ab2CaUcZ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40186 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031943Ab2COXUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2012 16:32:25 -0400
-Received: by obbtb18 with SMTP id tb18so473315obb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 13:32:25 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
+	Thu, 15 Mar 2012 19:20:25 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
-	devel@lists.open80211s.org, linville@tuxdriver.com,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [[PATCH v2 4/4] mac80211: Check basic rates when peering
-Date: Sat, 31 Mar 2012 13:32:10 -0700
-Message-Id: <1333225930-320-4-git-send-email-ashok@cozybit.com> (sfid-20120331_223230_832782_D18C067C)
-In-Reply-To: <1333225930-320-1-git-send-email-ashok@cozybit.com>
-References: <1333225930-320-1-git-send-email-ashok@cozybit.com>
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/4] mac80211:  Support getting sta_info stats via ethtool.
+Date: Thu, 15 Mar 2012 16:20:04 -0700
+Message-Id: <1331853606-28434-2-git-send-email-greearb@candelatech.com> (sfid-20120316_002029_724124_C2E93636)
+In-Reply-To: <1331853606-28434-1-git-send-email-greearb@candelatech.com>
+References: <1331853606-28434-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Section 13.2.3 of IEEE 80211s standard requires BSSBasicRateSet of mesh nodes
-to be identical to establish peer link.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+This lets ethtool print out stats related to station
+interfaces.  Does not yet get stats from the underlying
+driver.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/mesh.c       |   15 ++++++++++-----
- net/mac80211/mesh.h       |    2 +-
- net/mac80211/mesh_plink.c |    2 +-
- 3 files changed, 12 insertions(+), 7 deletions(-)
+:100644 100644 cf5b08a... 0aef0d2... M	net/mac80211/cfg.c
+ net/mac80211/cfg.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 71 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 964d8a9..a67b24e 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -69,11 +69,13 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
-  *
-  * @ie: information elements of a management frame from the mesh peer
-  * @sdata: local mesh subif
-+ * @basic_rates: BSSBasicRateSet of the peer candidate
-  *
-  * This function checks if the mesh configuration of a mesh point matches the
-  * local mesh configuration, i.e. if both nodes belong to the same mesh network.
-  */
--bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_data *sdata)
-+bool mesh_matches_local(struct ieee802_11_elems *ie,
-+			struct ieee80211_sub_if_data *sdata, u32 basic_rates)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_local *local = sdata->local;
-@@ -97,6 +99,9 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
- 	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
- 		goto mismatch;
- 
-+	if (sdata->vif.bss_conf.basic_rates != basic_rates)
-+		goto mismatch;
-+
- 	/* disallow peering with mismatched channel types for now */
- 	/*if (ie->ht_info_elem &&
- 	    (local->_oper_channel_type !=
-@@ -653,13 +658,13 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
- 		return;
- 
-+	supp_rates = ieee80211_sta_get_rates(local, &elems,
-+					     band, &basic_rates);
-+
- 	if (elems.mesh_id && elems.mesh_config &&
--	    mesh_matches_local(&elems, sdata)) {
--		supp_rates = ieee80211_sta_get_rates(local, &elems,
--						     band, &basic_rates);
-+	    mesh_matches_local(&elems, sdata, basic_rates))
- 		mesh_neighbour_update(mgmt, supp_rates, sdata, &elems,
- 					rx_status);
--	}
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index cf5b08a..0aef0d2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -112,6 +112,74 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 	return 0;
  }
  
- static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 7d5d34b..0e40c8a 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -204,7 +204,7 @@ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
- int mesh_rmc_check(u8 *addr, struct ieee80211s_hdr *mesh_hdr,
- 		struct ieee80211_sub_if_data *sdata);
- bool mesh_matches_local(struct ieee802_11_elems *ie,
--		struct ieee80211_sub_if_data *sdata);
-+			struct ieee80211_sub_if_data *sdata, u32 basic_rates);
- void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
- void mesh_mgmt_ies_add(struct sk_buff *skb,
- 		struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 133f267..d742355 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -573,7 +573,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 					rx_status->band, &basic_rates);
- 
- 	if (ftype != WLAN_SP_MESH_PEERING_CLOSE &&
--	    (!mesh_matches_local(&elems, sdata))) {
-+	    (!mesh_matches_local(&elems, sdata, basic_rates))) {
- 		matches_local = false;
- 		switch (ftype) {
- 		case WLAN_SP_MESH_PEERING_OPEN:
++static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
++	"rx_packets", "rx_bytes", "wep_weak_iv_count",
++	"rx_duplicates", "rx_fragments", "rx_dropped",
++	"tx_packets", "tx_bytes", "tx_fragments",
++	"tx_filtered", "tx_retry_failed", "tx_retries",
++	"beacon_loss"
++};
++#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
++
++static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
++				       struct net_device *dev,
++				       int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return STA_STATS_LEN;
++	
++	return -EOPNOTSUPP;
++}
++
++static void ieee80211_get_et_stats(struct wiphy *wiphy,
++				   struct net_device *dev,
++				   struct ethtool_stats *stats,
++				   u64 *data)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++	struct ieee80211_local *local = sdata->local;
++
++	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		int i = 0;
++
++		/* Make sure this station belongs to the proper dev */
++		if (sta->sdata->dev != dev)
++			continue;
++
++		data[i++] += sta->rx_packets;
++		data[i++] += sta->rx_bytes;
++		data[i++] += sta->wep_weak_iv_count;
++		data[i++] += sta->num_duplicates;
++		data[i++] += sta->rx_fragments;
++		data[i++] += sta->rx_dropped;
++
++		data[i++] += sta->tx_packets;
++		data[i++] += sta->tx_bytes;
++		data[i++] += sta->tx_fragments;
++		data[i++] += sta->tx_filtered_count;
++		data[i++] += sta->tx_retry_failed;
++		data[i++] += sta->tx_retry_count;
++		data[i++] += sta->beacon_loss_count;
++		BUG_ON(i != STA_STATS_LEN);
++	}
++	rcu_read_unlock();
++}
++
++static void ieee80211_get_et_strings(struct wiphy *wiphy,
++				     struct net_device *dev,
++				     u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS) {
++		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
++		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
++	}
++}
++
++
+ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 			     struct key_params *params)
+@@ -2768,4 +2836,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
++	.get_et_sset_count = ieee80211_get_et_sset_count,
++	.get_et_stats = ieee80211_get_et_stats,
++	.get_et_strings = ieee80211_get_et_strings,
+ };
 -- 
-1.7.5.4
+1.7.3.4
 
