@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38762 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932527Ab2CGUSl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38066 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762064Ab2COSzl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 15:18:41 -0500
-Message-ID: <4F57C29C.1050900@qca.qualcomm.com> (sfid-20120307_211845_332490_246ADD3B)
-Date: Wed, 7 Mar 2012 22:18:36 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 03/12] ath6kl: alignment should match open parenthesis
-References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>	 <20120229171855.24264.64135.stgit@localhost6.localdomain6> <1331148403.2140.67.camel@joe2Laptop>
-In-Reply-To: <1331148403.2140.67.camel@joe2Laptop>
+	Thu, 15 Mar 2012 14:55:41 -0400
+Subject: Re: [RFC 2/2] mac80211:  Support getting sta_info stats via
+ ethtool.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1331833159-12694-2-git-send-email-greearb@candelatech.com> (sfid-20120315_183942_222982_FD61EFBD)
+References: <1331833159-12694-1-git-send-email-greearb@candelatech.com>
+	 <1331833159-12694-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20120315_183942_222982_FD61EFBD)
 Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 19:55:40 +0100
+Message-ID: <1331837740.3432.39.camel@jlt3.sipsolutions.net> (sfid-20120315_195547_948416_59ED5CCD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/2012 09:26 PM, Joe Perches wrote:
-> On Wed, 2012-02-29 at 19:18 +0200, Kalle Valo wrote:
->> Fix the issues which checkpatch found and were easy to fix. Especially
->> callers of ath6kl_bmi_write() are tricky and that needs to be fixed
->> separately.
-> 
-> Just a trivial note.
-> 
->> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> []
->> @@ -390,7 +390,7 @@ static bool ath6kl_is_valid_iftype(struct ath6kl *ar, enum nl80211_iftype type,
->>  		return false;
->>  
->>  	if (ar->ibss_if_active || ((type == NL80211_IFTYPE_ADHOC) &&
->> -	    ar->num_vif))
->> +				   ar->num_vif))
-> 
-> I think this would be better as:
-> 
-> 	if (ar->ibss_if_active ||
-> 	    (type == NL80211_IFTYPE_ADHOC && ar->num_vif))
-> 
-> Bundling dependent tests on a single line is sensible.
+Ok more technical look ...
 
-I agree, but I just pushed this patch and I can't change it anymore. I
-try to remember this in the future.
 
-Kalle
+It doesn't look like NUM_STA_INFO_STATS gets used at all, or am I
+missing it?
+
+> +static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
+> +				       struct net_device *dev,
+> +				       int sset)
+> +{
+> +	switch (sset) {
+> +	case ETH_SS_STATS:
+> +		return STA_STATS_LEN;
+
+Are there different "s* sets" that could be used to return different
+types of stats, or how does this work?
+
+> +	mutex_lock(&sdata->local->sta_mtx);
+
+Why not use RCU? The mutex doesn't really protect anything useful here
+except for the list iteration.
+
+> +	list_for_each_entry(sta, &sdata->local->sta_list, list) {
+
+That's not right -- these stats are per netdev so you should only
+aggregate for the netdev, no?
+
+> +		BUG_ON(i != STA_STATS_LEN);
+
+That I really don't like much.
+
+johannes
+
