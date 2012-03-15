@@ -1,81 +1,440 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43085 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:21182 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757326Ab2CPRGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 13:06:50 -0400
-Message-ID: <4F637325.2020205@openwrt.org> (sfid-20120316_180653_660569_B0457AD6)
-Date: Fri, 16 Mar 2012 18:06:45 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] ath9k:  Support ethtool getstats api.
-References: <1331853606-28434-1-git-send-email-greearb@candelatech.com> <1331853606-28434-4-git-send-email-greearb@candelatech.com> <4F6356E8.3050906@openwrt.org> <4F6368E9.2040007@candelatech.com> <4F636C07.7060202@openwrt.org> <4F636F81.9070804@candelatech.com>
-In-Reply-To: <4F636F81.9070804@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1161458Ab2COU2I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:08 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 18/26] iwlwifi: move iwl_init_geos to iwl-agn.c
+Date: Thu, 15 Mar 2012 13:26:58 -0700
+Message-Id: <1331843226-29860-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212842_298105_8C1FA900)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-16 5:51 PM, Ben Greear wrote:
-> On 03/16/2012 09:36 AM, Felix Fietkau wrote:
->> On 2012-03-16 5:23 PM, Ben Greear wrote:
->>> On 03/16/2012 08:06 AM, Felix Fietkau wrote:
-> 
->>> My personal goal is to give my users a better insight into their
->>> wireless environment.  I would like to be able to break out the
->>> various low-level errors (as well as add them together to present
->>> summary errors).
->>>
->>> For anyone reporting mysterious bugs on mailing lists and such, I'd like
->>> to ask them to dump the stats and send it to me/list/whatever.
->>> I am still of the mind that looking for patterns in various
->>> counters might point to underlying problems, so anything that
->>> makes it easier to get that data is a win in my mind.
->> That's what debugfs is for, and it's not exactly hard to use.
->> I think it would be bad if tools started depending on the counters in
->> their current state, they're pretty messy.
-> 
-> With a bit of work, we could make the ethtool stats
-> available when debugfs is compiled out, which might give
-> you actual space savings and still allow at least much of
-> the stats.  Either way, the ability to programatically
-> parse the ethtool stats is a big win for my use, at least.
-I'm OK with exporting some stats in a way that can be easily parsed, but
-it should be limited to data that actually makes sense and isn't
-available through normal API.
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
->>> If there are some stats that really don't work, maybe I
->>> will notice, or maybe someone else will and we can fix
->>> them.  If you are aware of any specific ones that don't
->>> work right, please let me know and I'll at least add some
->>> comments to the code to mention they are questionable,
->>> or fix them if I'm able.
->> There's lots of confusion in the AMPDU/Aggregates counters (some count
->> whole A-MPDUs, some count subframes).
-> That sounds fixable, if it's a problem at all.
-> 
->> Also, many of these counters are useless unless you're doing live
->> debugging and actually know what you're doing - especially the ones that
->> display the current queue state.
-> 
-> I tried to skip all of those current-queue-state counters, but I
-> will double-check.
-Yeah, seems like I misread something there.
+This is used only in one file, move it there
+and make it static.
 
->> Most of the PHY error counters aren't even tracked by the hw, nothing in
->> the driver enables their use.
-> 
-> Well, any reason we cannot enable those?
-The hardware has a limited number of counter registers available for
-tracking PHY errors. Enabling PHY errors to be reported via DMA wastes
-tons of precious CPU cycles.
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |  183 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c |  183 -------------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    7 -
+ 3 files changed, 183 insertions(+), 190 deletions(-)
 
->> For some of these counters it might make sense to track them in
->> mac80211, as they're sufficiently generic.
-> 
-> That sounds nice.  Maybe add a 'get_stats' object to the driver
-> api?  If you have a list of what you want to be made
-> generic I'll make a try at implementing it.
-I don't have a list.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3476130..b8fcb4a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1134,6 +1134,189 @@ static void iwl_init_hw_rates(struct ieee80211_rate *rates)
+ 	}
+ }
+ 
++#define MAX_BIT_RATE_40_MHZ 150 /* Mbps */
++#define MAX_BIT_RATE_20_MHZ 72 /* Mbps */
++static void iwl_init_ht_hw_capab(const struct iwl_priv *priv,
++			      struct ieee80211_sta_ht_cap *ht_info,
++			      enum ieee80211_band band)
++{
++	u16 max_bit_rate = 0;
++	u8 rx_chains_num = hw_params(priv).rx_chains_num;
++	u8 tx_chains_num = hw_params(priv).tx_chains_num;
++
++	ht_info->cap = 0;
++	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
++
++	ht_info->ht_supported = true;
++
++	if (cfg(priv)->ht_params &&
++	    cfg(priv)->ht_params->ht_greenfield_support)
++		ht_info->cap |= IEEE80211_HT_CAP_GRN_FLD;
++	ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
++	max_bit_rate = MAX_BIT_RATE_20_MHZ;
++	if (hw_params(priv).ht40_channel & BIT(band)) {
++		ht_info->cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++		ht_info->cap |= IEEE80211_HT_CAP_SGI_40;
++		ht_info->mcs.rx_mask[4] = 0x01;
++		max_bit_rate = MAX_BIT_RATE_40_MHZ;
++	}
++
++	if (iwlagn_mod_params.amsdu_size_8K)
++		ht_info->cap |= IEEE80211_HT_CAP_MAX_AMSDU;
++
++	ht_info->ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
++	ht_info->ampdu_density = CFG_HT_MPDU_DENSITY_DEF;
++
++	ht_info->mcs.rx_mask[0] = 0xFF;
++	if (rx_chains_num >= 2)
++		ht_info->mcs.rx_mask[1] = 0xFF;
++	if (rx_chains_num >= 3)
++		ht_info->mcs.rx_mask[2] = 0xFF;
++
++	/* Highest supported Rx data rate */
++	max_bit_rate *= rx_chains_num;
++	WARN_ON(max_bit_rate & ~IEEE80211_HT_MCS_RX_HIGHEST_MASK);
++	ht_info->mcs.rx_highest = cpu_to_le16(max_bit_rate);
++
++	/* Tx MCS capabilities */
++	ht_info->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
++	if (tx_chains_num != rx_chains_num) {
++		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
++		ht_info->mcs.tx_params |= ((tx_chains_num - 1) <<
++				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
++	}
++}
++
++/**
++ * iwl_init_geos - Initialize mac80211's geo/channel info based from eeprom
++ */
++static int iwl_init_geos(struct iwl_priv *priv)
++{
++	struct iwl_channel_info *ch;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *channels;
++	struct ieee80211_channel *geo_ch;
++	struct ieee80211_rate *rates;
++	int i = 0;
++	s8 max_tx_power = IWLAGN_TX_POWER_TARGET_POWER_MIN;
++
++	if (priv->bands[IEEE80211_BAND_2GHZ].n_bitrates ||
++	    priv->bands[IEEE80211_BAND_5GHZ].n_bitrates) {
++		IWL_DEBUG_INFO(priv, "Geography modes already initialized.\n");
++		set_bit(STATUS_GEO_CONFIGURED, &priv->status);
++		return 0;
++	}
++
++	channels = kcalloc(priv->channel_count,
++			   sizeof(struct ieee80211_channel), GFP_KERNEL);
++	if (!channels)
++		return -ENOMEM;
++
++	rates = kcalloc(IWL_RATE_COUNT_LEGACY, sizeof(struct ieee80211_rate),
++			GFP_KERNEL);
++	if (!rates) {
++		kfree(channels);
++		return -ENOMEM;
++	}
++
++	/* 5.2GHz channels start after the 2.4GHz channels */
++	sband = &priv->bands[IEEE80211_BAND_5GHZ];
++	sband->channels = &channels[ARRAY_SIZE(iwl_eeprom_band_1)];
++	/* just OFDM */
++	sband->bitrates = &rates[IWL_FIRST_OFDM_RATE];
++	sband->n_bitrates = IWL_RATE_COUNT_LEGACY - IWL_FIRST_OFDM_RATE;
++
++	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
++		iwl_init_ht_hw_capab(priv, &sband->ht_cap,
++					 IEEE80211_BAND_5GHZ);
++
++	sband = &priv->bands[IEEE80211_BAND_2GHZ];
++	sband->channels = channels;
++	/* OFDM & CCK */
++	sband->bitrates = rates;
++	sband->n_bitrates = IWL_RATE_COUNT_LEGACY;
++
++	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
++		iwl_init_ht_hw_capab(priv, &sband->ht_cap,
++					 IEEE80211_BAND_2GHZ);
++
++	priv->ieee_channels = channels;
++	priv->ieee_rates = rates;
++
++	for (i = 0;  i < priv->channel_count; i++) {
++		ch = &priv->channel_info[i];
++
++		/* FIXME: might be removed if scan is OK */
++		if (!is_channel_valid(ch))
++			continue;
++
++		sband =  &priv->bands[ch->band];
++
++		geo_ch = &sband->channels[sband->n_channels++];
++
++		geo_ch->center_freq =
++			ieee80211_channel_to_frequency(ch->channel, ch->band);
++		geo_ch->max_power = ch->max_power_avg;
++		geo_ch->max_antenna_gain = 0xff;
++		geo_ch->hw_value = ch->channel;
++
++		if (is_channel_valid(ch)) {
++			if (!(ch->flags & EEPROM_CHANNEL_IBSS))
++				geo_ch->flags |= IEEE80211_CHAN_NO_IBSS;
++
++			if (!(ch->flags & EEPROM_CHANNEL_ACTIVE))
++				geo_ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
++
++			if (ch->flags & EEPROM_CHANNEL_RADAR)
++				geo_ch->flags |= IEEE80211_CHAN_RADAR;
++
++			geo_ch->flags |= ch->ht40_extension_channel;
++
++			if (ch->max_power_avg > max_tx_power)
++				max_tx_power = ch->max_power_avg;
++		} else {
++			geo_ch->flags |= IEEE80211_CHAN_DISABLED;
++		}
++
++		IWL_DEBUG_INFO(priv, "Channel %d Freq=%d[%sGHz] %s flag=0x%X\n",
++				ch->channel, geo_ch->center_freq,
++				is_channel_a_band(ch) ?  "5.2" : "2.4",
++				geo_ch->flags & IEEE80211_CHAN_DISABLED ?
++				"restricted" : "valid",
++				 geo_ch->flags);
++	}
++
++	priv->tx_power_device_lmt = max_tx_power;
++	priv->tx_power_user_lmt = max_tx_power;
++	priv->tx_power_next = max_tx_power;
++
++	if ((priv->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
++	     hw_params(priv).sku & EEPROM_SKU_CAP_BAND_52GHZ) {
++		IWL_INFO(priv, "Incorrectly detected BG card as ABG. "
++			"Please send your %s to maintainer.\n",
++			trans(priv)->hw_id_str);
++		hw_params(priv).sku &= ~EEPROM_SKU_CAP_BAND_52GHZ;
++	}
++
++	IWL_INFO(priv, "Tunable channels: %d 802.11bg, %d 802.11a channels\n",
++		   priv->bands[IEEE80211_BAND_2GHZ].n_channels,
++		   priv->bands[IEEE80211_BAND_5GHZ].n_channels);
++
++	set_bit(STATUS_GEO_CONFIGURED, &priv->status);
++
++	return 0;
++}
++
++/*
++ * iwl_free_geos - undo allocations in iwl_init_geos
++ */
++static void iwl_free_geos(struct iwl_priv *priv)
++{
++	kfree(priv->ieee_channels);
++	kfree(priv->ieee_rates);
++	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
++}
++
+ static int iwl_init_drv(struct iwl_priv *priv)
+ {
+ 	int ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 0a9bc98..06bcf27 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -44,189 +44,6 @@
+ 
+ const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ 
+-#define MAX_BIT_RATE_40_MHZ 150 /* Mbps */
+-#define MAX_BIT_RATE_20_MHZ 72 /* Mbps */
+-static void iwl_init_ht_hw_capab(const struct iwl_priv *priv,
+-			      struct ieee80211_sta_ht_cap *ht_info,
+-			      enum ieee80211_band band)
+-{
+-	u16 max_bit_rate = 0;
+-	u8 rx_chains_num = hw_params(priv).rx_chains_num;
+-	u8 tx_chains_num = hw_params(priv).tx_chains_num;
+-
+-	ht_info->cap = 0;
+-	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+-
+-	ht_info->ht_supported = true;
+-
+-	if (cfg(priv)->ht_params &&
+-	    cfg(priv)->ht_params->ht_greenfield_support)
+-		ht_info->cap |= IEEE80211_HT_CAP_GRN_FLD;
+-	ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
+-	max_bit_rate = MAX_BIT_RATE_20_MHZ;
+-	if (hw_params(priv).ht40_channel & BIT(band)) {
+-		ht_info->cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+-		ht_info->cap |= IEEE80211_HT_CAP_SGI_40;
+-		ht_info->mcs.rx_mask[4] = 0x01;
+-		max_bit_rate = MAX_BIT_RATE_40_MHZ;
+-	}
+-
+-	if (iwlagn_mod_params.amsdu_size_8K)
+-		ht_info->cap |= IEEE80211_HT_CAP_MAX_AMSDU;
+-
+-	ht_info->ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
+-	ht_info->ampdu_density = CFG_HT_MPDU_DENSITY_DEF;
+-
+-	ht_info->mcs.rx_mask[0] = 0xFF;
+-	if (rx_chains_num >= 2)
+-		ht_info->mcs.rx_mask[1] = 0xFF;
+-	if (rx_chains_num >= 3)
+-		ht_info->mcs.rx_mask[2] = 0xFF;
+-
+-	/* Highest supported Rx data rate */
+-	max_bit_rate *= rx_chains_num;
+-	WARN_ON(max_bit_rate & ~IEEE80211_HT_MCS_RX_HIGHEST_MASK);
+-	ht_info->mcs.rx_highest = cpu_to_le16(max_bit_rate);
+-
+-	/* Tx MCS capabilities */
+-	ht_info->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+-	if (tx_chains_num != rx_chains_num) {
+-		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
+-		ht_info->mcs.tx_params |= ((tx_chains_num - 1) <<
+-				IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
+-	}
+-}
+-
+-/**
+- * iwl_init_geos - Initialize mac80211's geo/channel info based from eeprom
+- */
+-int iwl_init_geos(struct iwl_priv *priv)
+-{
+-	struct iwl_channel_info *ch;
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_channel *channels;
+-	struct ieee80211_channel *geo_ch;
+-	struct ieee80211_rate *rates;
+-	int i = 0;
+-	s8 max_tx_power = IWLAGN_TX_POWER_TARGET_POWER_MIN;
+-
+-	if (priv->bands[IEEE80211_BAND_2GHZ].n_bitrates ||
+-	    priv->bands[IEEE80211_BAND_5GHZ].n_bitrates) {
+-		IWL_DEBUG_INFO(priv, "Geography modes already initialized.\n");
+-		set_bit(STATUS_GEO_CONFIGURED, &priv->status);
+-		return 0;
+-	}
+-
+-	channels = kcalloc(priv->channel_count,
+-			   sizeof(struct ieee80211_channel), GFP_KERNEL);
+-	if (!channels)
+-		return -ENOMEM;
+-
+-	rates = kcalloc(IWL_RATE_COUNT_LEGACY, sizeof(struct ieee80211_rate),
+-			GFP_KERNEL);
+-	if (!rates) {
+-		kfree(channels);
+-		return -ENOMEM;
+-	}
+-
+-	/* 5.2GHz channels start after the 2.4GHz channels */
+-	sband = &priv->bands[IEEE80211_BAND_5GHZ];
+-	sband->channels = &channels[ARRAY_SIZE(iwl_eeprom_band_1)];
+-	/* just OFDM */
+-	sband->bitrates = &rates[IWL_FIRST_OFDM_RATE];
+-	sband->n_bitrates = IWL_RATE_COUNT_LEGACY - IWL_FIRST_OFDM_RATE;
+-
+-	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
+-		iwl_init_ht_hw_capab(priv, &sband->ht_cap,
+-					 IEEE80211_BAND_5GHZ);
+-
+-	sband = &priv->bands[IEEE80211_BAND_2GHZ];
+-	sband->channels = channels;
+-	/* OFDM & CCK */
+-	sband->bitrates = rates;
+-	sband->n_bitrates = IWL_RATE_COUNT_LEGACY;
+-
+-	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
+-		iwl_init_ht_hw_capab(priv, &sband->ht_cap,
+-					 IEEE80211_BAND_2GHZ);
+-
+-	priv->ieee_channels = channels;
+-	priv->ieee_rates = rates;
+-
+-	for (i = 0;  i < priv->channel_count; i++) {
+-		ch = &priv->channel_info[i];
+-
+-		/* FIXME: might be removed if scan is OK */
+-		if (!is_channel_valid(ch))
+-			continue;
+-
+-		sband =  &priv->bands[ch->band];
+-
+-		geo_ch = &sband->channels[sband->n_channels++];
+-
+-		geo_ch->center_freq =
+-			ieee80211_channel_to_frequency(ch->channel, ch->band);
+-		geo_ch->max_power = ch->max_power_avg;
+-		geo_ch->max_antenna_gain = 0xff;
+-		geo_ch->hw_value = ch->channel;
+-
+-		if (is_channel_valid(ch)) {
+-			if (!(ch->flags & EEPROM_CHANNEL_IBSS))
+-				geo_ch->flags |= IEEE80211_CHAN_NO_IBSS;
+-
+-			if (!(ch->flags & EEPROM_CHANNEL_ACTIVE))
+-				geo_ch->flags |= IEEE80211_CHAN_PASSIVE_SCAN;
+-
+-			if (ch->flags & EEPROM_CHANNEL_RADAR)
+-				geo_ch->flags |= IEEE80211_CHAN_RADAR;
+-
+-			geo_ch->flags |= ch->ht40_extension_channel;
+-
+-			if (ch->max_power_avg > max_tx_power)
+-				max_tx_power = ch->max_power_avg;
+-		} else {
+-			geo_ch->flags |= IEEE80211_CHAN_DISABLED;
+-		}
+-
+-		IWL_DEBUG_INFO(priv, "Channel %d Freq=%d[%sGHz] %s flag=0x%X\n",
+-				ch->channel, geo_ch->center_freq,
+-				is_channel_a_band(ch) ?  "5.2" : "2.4",
+-				geo_ch->flags & IEEE80211_CHAN_DISABLED ?
+-				"restricted" : "valid",
+-				 geo_ch->flags);
+-	}
+-
+-	priv->tx_power_device_lmt = max_tx_power;
+-	priv->tx_power_user_lmt = max_tx_power;
+-	priv->tx_power_next = max_tx_power;
+-
+-	if ((priv->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
+-	     hw_params(priv).sku & EEPROM_SKU_CAP_BAND_52GHZ) {
+-		IWL_INFO(priv, "Incorrectly detected BG card as ABG. "
+-			"Please send your %s to maintainer.\n",
+-			trans(priv)->hw_id_str);
+-		hw_params(priv).sku &= ~EEPROM_SKU_CAP_BAND_52GHZ;
+-	}
+-
+-	IWL_INFO(priv, "Tunable channels: %d 802.11bg, %d 802.11a channels\n",
+-		   priv->bands[IEEE80211_BAND_2GHZ].n_channels,
+-		   priv->bands[IEEE80211_BAND_5GHZ].n_channels);
+-
+-	set_bit(STATUS_GEO_CONFIGURED, &priv->status);
+-
+-	return 0;
+-}
+-
+-/*
+- * iwl_free_geos - undo allocations in iwl_init_geos
+- */
+-void iwl_free_geos(struct iwl_priv *priv)
+-{
+-	kfree(priv->ieee_channels);
+-	kfree(priv->ieee_rates);
+-	clear_bit(STATUS_GEO_CONFIGURED, &priv->status);
+-}
+-
+ static bool iwl_is_channel_extension(struct iwl_priv *priv,
+ 				     enum ieee80211_band band,
+ 				     u16 channel, u8 extension_chan_offset)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 635eb68..8a7d6fc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -204,13 +204,6 @@ u32 iwl_usecs_to_beacons(struct iwl_priv *priv, u32 usec, u32 beacon_interval);
+ __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
+ 			   u32 addon, u32 beacon_interval);
+ 
+-
+-/*****************************************************
+-*  GEOS
+-******************************************************/
+-int iwl_init_geos(struct iwl_priv *priv);
+-void iwl_free_geos(struct iwl_priv *priv);
+-
+ extern void iwl_send_bt_config(struct iwl_priv *priv);
+ extern int iwl_send_statistics_request(struct iwl_priv *priv,
+ 				       u8 flags, bool clear);
+-- 
+1.7.0.4
 
-- Felix
