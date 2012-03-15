@@ -1,44 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:60053 "HELO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1031128Ab2CPDwH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36853 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759429Ab2COJWp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 23:52:07 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/5] mwifiex: support CQM
-Date: Thu, 15 Mar 2012 20:51:46 -0700
-Message-Id: <1331869911-10624-1-git-send-email-bzhao@marvell.com> (sfid-20120316_045213_501964_E46425FC)
+	Thu, 15 Mar 2012 05:22:45 -0400
+Date: Thu, 15 Mar 2012 14:53:05 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 3.5] cfg80211: enforce lack of interface combinations
+Message-ID: <20120315092304.GA13932@vasanth-laptop> (sfid-20120315_102249_055066_8E357AF2)
+References: <20120313150613.300612962@sipsolutions.net>
+ <20120315084217.GA17590@vasanth-laptop>
+ <1331801488.3432.2.camel@jlt3.sipsolutions.net>
+ <20120315085736.GB17590@vasanth-laptop>
+ <1331801907.3432.3.camel@jlt3.sipsolutions.net>
+ <20120315090231.GC17590@vasanth-laptop>
+ <1331802709.3432.4.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1331802709.3432.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds CQM support in mwifiex driver.
+On Thu, Mar 15, 2012 at 10:11:49AM +0100, Johannes Berg wrote:
+> On Thu, 2012-03-15 at 14:32 +0530, Vasanthakumar Thiagarajan wrote:
+> > On Thu, Mar 15, 2012 at 09:58:27AM +0100, Johannes Berg wrote:
+> > > On Thu, 2012-03-15 at 14:27 +0530, Vasanthakumar Thiagarajan wrote:
+> > > > On Thu, Mar 15, 2012 at 09:51:28AM +0100, Johannes Berg wrote:
+> > > > > On Thu, 2012-03-15 at 14:12 +0530, Vasanthakumar Thiagarajan wrote:
+> > > > > > On Tue, Mar 13, 2012 at 04:06:03PM +0100, Johannes Berg wrote:
+> > > > > > > From: Johannes Berg <johannes.berg@intel.com>
+> > > > > > > 
+> > > > > > > My grand plan to allow drivers to gradually move over
+> > > > > > > to advertising virtual interface combinations and only
+> > > > > > > enforce with drivers that do want it enforced doesn't
+> > > > > > > seem to be working out, only Christian ever added the
+> > > > > > > advertising (to carl9170), nobody else did.
+> > > > > > > 
+> > > > > > > Begin enforcing combinations in cfg80211 so that users
+> > > > > > > can rely on the information reported about a device.
+> > > > > > 
+> > > > > > This breaks ath6kl AP mode and P2P, is it expected that the driver
+> > > > > > needs to register the combination (?) even it supports a single
+> > > > > > interface?
+> > > > > 
+> > > > > Kalle tells me that ath6kl does support multiple virtual interfaces, but
+> > > > > if it didn't then it wouldn't have to register combinations.
+> > > > > 
+> > > > > I suspect you're using
+> > > > > driver_param=use_p2p_group_interface=1
+> > > > > in wpa_supplicant?
+> > > > 
+> > > > Actually, I verified only AP mode, since it affects any sort of change interface,
+> > > > I mentioned P2P as well. AP is expected to work without any issue right?.
+> > > 
+> > > As long as you don't try to add the AP interface as the second one...
+> > 
+> > Right, I'm trying on a single interface.
+> 
+> Hmm, ok, looking at the code again it seems there's a bug ... let me try
+> to fix it.
 
-Thanks,
-Bing
+V2 fixes this, thanks!.
 
---
-Amitkumar Karwar (5):
-  mwifiex: update signal strength in mBm units
-  mwifiex: add cfg80211 dump_station handler
-  mwifiex: remove redundant signal handling code
-  mwifiex: support STATION_INFO_SIGNAL_AVG
-  mwifiex: add set_cqm_rssi_config handler support
-
- drivers/net/wireless/mwifiex/cfg80211.c    |   81 +++++++++++++++++++----
- drivers/net/wireless/mwifiex/fw.h          |   17 +++++
- drivers/net/wireless/mwifiex/ioctl.h       |   49 ++++++--------
- drivers/net/wireless/mwifiex/main.h        |    6 +-
- drivers/net/wireless/mwifiex/scan.c        |    5 +-
- drivers/net/wireless/mwifiex/sta_cmd.c     |   98 ++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/sta_cmdresp.c |   80 ++++++++++++++---------
- drivers/net/wireless/mwifiex/sta_event.c   |   15 ++++-
- drivers/net/wireless/mwifiex/sta_ioctl.c   |   33 ---------
- 9 files changed, 273 insertions(+), 111 deletions(-)
-
+Vasanth
