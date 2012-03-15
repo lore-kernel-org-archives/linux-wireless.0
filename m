@@ -1,63 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:59761 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965407Ab2CBXFc (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16391 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756303Ab2COIl6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 18:05:32 -0500
-Received: by mail-pz0-f46.google.com with SMTP id r28so2500808daj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 15:05:32 -0800 (PST)
+	Thu, 15 Mar 2012 04:41:58 -0400
+Date: Thu, 15 Mar 2012 14:12:19 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Luciano Coelho <coelho@ti.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 3.5] cfg80211: enforce lack of interface combinations
+Message-ID: <20120315084217.GA17590@vasanth-laptop> (sfid-20120315_094207_672121_D1F86C46)
+References: <20120313150613.300612962@sipsolutions.net>
 MIME-Version: 1.0
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH 3/3] mac80211: fix mesh airtime link metric estimating
-Date: Fri,  2 Mar 2012 15:05:24 -0800
-Message-Id: <1330729524-1010-3-git-send-email-thomas@cozybit.com> (sfid-20120303_000542_290976_4F80F825)
-In-Reply-To: <1330729524-1010-1-git-send-email-thomas@cozybit.com>
-References: <1330729524-1010-1-git-send-email-thomas@cozybit.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120313150613.300612962@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Airtime link metric estimation was broken in HT mesh, use
-cfg80211_calculate_bitrate to get the right rate value.
+On Tue, Mar 13, 2012 at 04:06:03PM +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> My grand plan to allow drivers to gradually move over
+> to advertising virtual interface combinations and only
+> enforce with drivers that do want it enforced doesn't
+> seem to be working out, only Christian ever added the
+> advertising (to carl9170), nobody else did.
+> 
+> Begin enforcing combinations in cfg80211 so that users
+> can rely on the information reported about a device.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_hwmp.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+This breaks ath6kl AP mode and P2P, is it expected that the driver
+needs to register the combination (?) even it supports a single
+interface?
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 31bc762..d4cc3e3 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -323,6 +323,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 				   struct sta_info *sta)
- {
- 	struct ieee80211_supported_band *sband;
-+	struct station_info sinfo;
- 	/* This should be adjusted for each device */
- 	int device_constant = 1 << ARITH_SHIFT;
- 	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
-@@ -336,7 +337,9 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	if (sta->fail_avg >= 100)
- 		return MAX_METRIC;
- 
--	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
-+	sta_set_sinfo(sta, &sinfo);
-+	rate = cfg80211_calculate_bitrate(&sinfo.txrate);
-+	if (WARN_ON(!rate))
- 		return MAX_METRIC;
- 
- 	err = (sta->fail_avg << ARITH_SHIFT) / 100;
-@@ -344,7 +347,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	/* bitrate is in units of 100 Kbps, while we need rate in units of
- 	 * 1Mbps. This will be corrected on tx_time computation.
- 	 */
--	rate = sband->bitrates[sta->last_tx_rate.idx].bitrate;
- 	tx_time = (device_constant + 10 * test_frame_len / rate);
- 	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
- 	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
--- 
-1.7.5.4
-
+Vasanth
