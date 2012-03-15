@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35766 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755895Ab2CMVid (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35454 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030189Ab2COADU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 17:38:33 -0400
+	Wed, 14 Mar 2012 20:03:20 -0400
 From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 To: <linville@tuxdriver.com>
 CC: <linux-wireless@vger.kernel.org>,
@@ -11,9 +11,9 @@ CC: <linux-wireless@vger.kernel.org>,
 	Paul Stewart <pstew@google.com>,
 	Susinder Gulasekaran <susinder@qca.qualcomm.com>,
 	Suresh Chandrasekaran <csuresh@qca.qualcomm.com>
-Subject: [PATCH RESEND 1/2] ath9k_hw: improve ANI processing and rx desensitizing parameters
-Date: Wed, 14 Mar 2012 03:08:52 +0530
-Message-ID: <1331674733-10580-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120313_223838_539987_6FAD8FD1)
+Subject: [PATCH 1/2] ath9k_hw: improve ANI processing and rx desensitizing parameters
+Date: Thu, 15 Mar 2012 05:33:49 +0530
+Message-ID: <1331769830-19018-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120315_010325_336326_667E567D)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
