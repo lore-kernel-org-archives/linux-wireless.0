@@ -1,132 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:36927
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S936354Ab2C3Vsx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50603 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031672Ab2COQdp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 17:48:53 -0400
-Date: Fri, 30 Mar 2012 17:48:48 -0400
-From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Richard Farina <sidhayn@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	lf_driver_backport@lists.linux-foundation.org
-Subject: Re: [PATCH 0/2] compat: fix extreme build slowdowns
-Message-ID: <20120330214848.GD11929@bombadil.infradead.org> (sfid-20120330_234905_868798_BE404304)
-References: <1333105815.3908.11.camel@jlt3.sipsolutions.net>
- <20341.39041.645223.592030@gargle.gargle.HOWL>
- <1333107022.3908.16.camel@jlt3.sipsolutions.net>
- <4F75C634.1010400@gmail.com>
- <CAB=NE6XbYMo=or0QLKw3-w5rbnMkwvxRntaRPK6O=LeYT-nkeA@mail.gmail.com>
- <20120330212442.GC11929@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20120330212442.GC11929@bombadil.infradead.org>
+	Thu, 15 Mar 2012 12:33:45 -0400
+Subject: Re: [PATCH] cfg80211: allow CFG80211_SIGNAL_TYPE_UNSPEC in
+ station_info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1331827087-21339-1-git-send-email-linville@tuxdriver.com>
+References: <1331825203.3432.25.camel@jlt3.sipsolutions.net>
+	 <1331827087-21339-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Mar 2012 17:33:42 +0100
+Message-ID: <1331829222.3432.27.camel@jlt3.sipsolutions.net> (sfid-20120315_173400_676334_91CCF0B9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 30, 2012 at 05:24:42PM -0400, Luis R. Rodriguez wrote:
-> On Fri, Mar 30, 2012 at 01:43:20PM -0700, Luis R. Rodriguez wrote:
-> > On Fri, Mar 30, 2012 at 7:41 AM, Richard Farina <sidhayn@gmail.com> wrote:
-> > > On 03/30/12 07:30, Johannes Berg wrote:
-> > >> On Fri, 2012-03-30 at 16:56 +0530, Sujith Manoharan wrote:
-> > >>> Johannes Berg wrote:
-> > >>>> Somehow exporting too many variables completely confuses the kernel's
-> > >>>> Makefiles into trying to calculate the size of every file in a very slow
-> > >>>> shell script ... this is causing EXTREME build slowdowns for me.
-> > >>>>
-> > >>>> These two patches fix it.
-> > >>> Nice.
-> > >>>
-> > >>> Trying to build ath9k..
-> > >>>
-> > >>> Before:
-> > >>>
-> > >>> real    1m18.689s
-> > >>> user    3m1.382s
-> > >>> sys     0m6.833s
-> > >>>
-> > >>> After:
-> > >>>
-> > >>> real    0m42.091s
-> > >>> user    1m30.024s
-> > >>> sys     0m5.700s
-> > > Please put this in stable as well, seems like a good thing ;-)
-> > 
-> > Johannes, kick ass patches, thanks!!! Richard, I will propagate to
-> > stable, but first gotta figure why the patch, "compat: explicitly
-> > export generated variables" broke builds for older kernels:
-> > 
-> > mcgrof@tux ~/compat (git::master)$ ckmake
-> > Trying kernel                  3.3.0-030300rc2-generic	[OK]
-> > Trying kernel                     3.2.2-030202-generic	[OK]
-> > Trying kernel                    3.1.10-030110-generic	[OK]
-> > Trying kernel                    3.0.18-030018-generic	[OK]
-> > Trying kernel                  2.6.39-02063904-generic	[OK]
-> > Trying kernel                        2.6.38-13-generic	[OK]
-> > Trying kernel                  2.6.38-02063808-generic	[OK]
-> > Trying kernel                  2.6.37-02063706-generic	[OK]
-> > Trying kernel                  2.6.36-02063604-generic	[OK]
-> > Trying kernel                  2.6.35-02063512-generic	[OK]
-> > Trying kernel                  2.6.34-02063410-generic	[OK]
-> > Trying kernel                  2.6.33-02063305-generic	[OK]
-> > Trying kernel                  2.6.32-02063255-generic	[FAILED]
-> > Trying kernel                        2.6.31-22-generic	[FAILED]
-> > Trying kernel                  2.6.31-02063113-generic	[FAILED]
-> > Trying kernel                  2.6.30-02063010-generic	[FAILED]
-> > Trying kernel                  2.6.29-02062906-generic	[FAILED]
-> > Trying kernel                  2.6.28-02062810-generic	[FAILED]
-> > Trying kernel                    2.6.27-020627-generic	[FAILED]
-> > Trying kernel                    2.6.26-020626-generic	[FAILED]
-> > Trying kernel                    2.6.25-020625-generic	[FAILED]
-> > Trying kernel                    2.6.24-020624-generic	[FAILED]
-> 
-> Applying this patch prior to yours fixes it:
+On Thu, 2012-03-15 at 11:58 -0400, John W. Linville wrote:
+> The station_info struct had demanded dBm signal values, but the
+> cfg80211 wireless extensions implementation was also accepting
+> "unspecified" (i.e. RSSI) unit values while the nl80211 code was
+> completely unaware of them.  Resolve this by formalling allowing the
+> "unspecified" units while making nl80211 ignore them.
 
-I added one more hunk:
+Looks fine, just a minor comment below.
 
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index a11d80f..0c71af9 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -15,7 +15,7 @@
- #include <linux/firmware.h>
- #include <linux/input.h>
- 
--#if defined(CONFIG_COMPAT_FIRMWARE_CLASS)
-+#if defined(CONFIG_FW_LOADER) || defined(CONFIG_FW_LOADER_MODULE)
- #define release_firmware compat_release_firmware
- #define request_firmware compat_request_firmware
- #define request_firmware_nowait compat_request_firmware_nowait
+> + * @signal: the signal strength, type depends on the wiphy's signal_type
+> + * @signal_avg: avg signal strength, type depends on the wiphy's signal_type
 
-And another:
+This should be more specific since the BSS signal is "unspec" or "mBm"
+where this now demands "unspec" or "dBm"... I suppose it could be made
+more consistent at some point.
 
-diff --git a/Makefile b/Makefile
-index 570dd8b..8775294 100644
---- a/Makefile
-+++ b/Makefile
-@@ -7,9 +7,8 @@ export KLIB:=          /lib/modules/$(shell uname -r)
- endif
- export KLIB_BUILD ?=    $(KLIB)/build
- 
--export PWD := $(shell pwd)
--
- ifeq ($(KERNELRELEASE),)
-+export PWD := $(shell pwd)
- export COMPAT_BASE_TREE := "linux-next.git"
- # For this specific tree this is only relevant in
- # terms of the last time we synched code up with upstream
+johannes
 
-Still not sure why this fixes it but it does... anyway, I merged these
-two patches as individual atomic patches with a sensible individual
-commit log message, before yours, and then added yours. Thanks so much!
-
-Applied all and pushed out!
-
-PS. If anyone wants patches propagated to a stable branch you can
-use: stable@orbit-lab.org on the commit log and later I can suck these
-out automatically.
-
-  Luis
