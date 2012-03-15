@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932735Ab2CGTGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:42 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 31/35] iwlwifi: make iwl_init_context static
-Date: Wed,  7 Mar 2012 09:52:40 -0800
-Message-Id: <1331142764-5750-32-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200657_806727_6D9E1F86)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10616 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161383Ab2COUto convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:49:44 -0400
+From: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: mac80211 20/40 coexist
+Date: Thu, 15 Mar 2012 20:49:39 +0000
+Message-ID: <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b> (sfid-20120315_214949_123720_9212BA88)
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-It's not needed anywhere but during init.
+> The commit "mac80211: stop tx before doing hw config and rate
+> update" (and a later commit fixing it) introduced a queue stop & flush
+> on switching 20/40.
+>
+> I'm working on not calling hw_config() for switching between 20/40 but
+> instead only calling rate_control_rate_update() and
+> ieee80211_bss_info_change_notify() to tell the rate control and driver.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
- 2 files changed, 1 insertions(+), 2 deletions(-)
+Johannes,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 76ee2dd..f150edc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -488,7 +488,7 @@ static void iwl_bg_tx_flush(struct work_struct *work)
- 	iwlagn_dev_txfifo_flush(priv, IWL_DROP_ALL);
- }
- 
--void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
-+static void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
- {
- 	int i;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index eb96855..5410dfd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -118,7 +118,6 @@ void iwlagn_config_ht40(struct ieee80211_conf *conf,
- int iwlagn_rx_calib_result(struct iwl_priv *priv,
- 			    struct iwl_rx_cmd_buffer *rxb,
- 			    struct iwl_device_cmd *cmd);
--void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
- int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
- void iwl_send_prio_tbl(struct iwl_priv *priv);
- int iwl_init_alive_start(struct iwl_priv *priv);
--- 
-1.7.0.4
+Not calling hw_config could affect drivers like ath9k_htc where the rate control runs in the firmware.
+Those drivers will update the rate control based on CHANGED_HT flag.
 
+>
+> If we do that, is it still necessary to stop the queues for it? It seems
+> like it shouldn't.
+
+Actually the queue stop was added to avoid mismatches b/w hw and rate control. But If you dont stop the queues
+before the rate control change, the station might send the frames in different ht mode (for example ht40) wrt AP's ht mode (ht20).
+
+-Rajkumar
