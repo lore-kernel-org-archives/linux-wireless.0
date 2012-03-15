@@ -1,58 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58272 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:21225 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031486Ab2CFWnf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:35 -0500
+	id S1161466Ab2COU2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 16:28:13 -0400
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 15/33] iwlwifi: clean up iwl-core.h inclusions
-Date: Tue,  6 Mar 2012 13:30:50 -0800
-Message-Id: <1331069468-11074-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234426_129621_214315E4)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+Subject: [PATCH 23/26] iwlwifi: move iwl_get_single_channel_number and mark it static
+Date: Thu, 15 Mar 2012 13:27:03 -0700
+Message-Id: <1331843226-29860-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212833_633961_BB43B584)
+In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-The transport doesn't need to include iwl-core.h any more.
+iwl_get_single_channel_number is used only in
+iwl-scan.c, move it there and mark it static.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    1 -
- 2 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-core.c |   40 -------------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   40 +++++++++++++++++++++++++++++++
+ 3 files changed, 40 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 33a933b..f145621 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -30,8 +30,7 @@
- #include <linux/wait.h>
- #include <linux/gfp.h>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index ec250b2..ed201e7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -162,46 +162,6 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf)
+ 		_iwl_set_rxon_ht(priv, ht_conf, ctx);
+ }
  
--/*TODO: Remove include to iwl-core.h*/
--#include "iwl-core.h"
-+#include "iwl-prph.h"
- #include "iwl-io.h"
- #include "iwl-trans-pcie-int.h"
- #include "iwl-op-mode.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index ef4e122..6090e98 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -75,7 +75,6 @@
- #include "iwl-shared.h"
- #include "iwl-eeprom.h"
- #include "iwl-agn-hw.h"
--#include "iwl-core.h"
+-/* Return valid, unused, channel for a passive scan to reset the RF */
+-u8 iwl_get_single_channel_number(struct iwl_priv *priv,
+-				 enum ieee80211_band band)
+-{
+-	const struct iwl_channel_info *ch_info;
+-	int i;
+-	u8 channel = 0;
+-	u8 min, max;
+-	struct iwl_rxon_context *ctx;
+-
+-	if (band == IEEE80211_BAND_5GHZ) {
+-		min = 14;
+-		max = priv->channel_count;
+-	} else {
+-		min = 0;
+-		max = 14;
+-	}
+-
+-	for (i = min; i < max; i++) {
+-		bool busy = false;
+-
+-		for_each_context(priv, ctx) {
+-			busy = priv->channel_info[i].channel ==
+-				le16_to_cpu(ctx->staging.channel);
+-			if (busy)
+-				break;
+-		}
+-
+-		if (busy)
+-			continue;
+-
+-		channel = priv->channel_info[i].channel;
+-		ch_info = iwl_get_channel_info(priv, band, channel);
+-		if (is_channel_valid(ch_info))
+-			break;
+-	}
+-
+-	return channel;
+-}
+-
+ /**
+  * iwl_set_rxon_channel - Set the band and channel values in staging RXON
+  * @ch: requested channel as a pointer to struct ieee80211_channel
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 2488fc1..7aa3060 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -99,8 +99,6 @@ void iwl_set_flags_for_band(struct iwl_priv *priv,
+ 			    struct iwl_rxon_context *ctx,
+ 			    enum ieee80211_band band,
+ 			    struct ieee80211_vif *vif);
+-u8 iwl_get_single_channel_number(struct iwl_priv *priv,
+-				  enum ieee80211_band band);
+ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf);
+ bool iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+ 			    struct iwl_rxon_context *ctx,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 4338d49..f3e5c2a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -451,6 +451,46 @@ static u16 iwl_get_passive_dwell_time(struct iwl_priv *priv,
+ 	return iwl_limit_dwell(priv, passive);
+ }
  
- #define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
- 
++/* Return valid, unused, channel for a passive scan to reset the RF */
++static u8 iwl_get_single_channel_number(struct iwl_priv *priv,
++				 enum ieee80211_band band)
++{
++	const struct iwl_channel_info *ch_info;
++	int i;
++	u8 channel = 0;
++	u8 min, max;
++	struct iwl_rxon_context *ctx;
++
++	if (band == IEEE80211_BAND_5GHZ) {
++		min = 14;
++		max = priv->channel_count;
++	} else {
++		min = 0;
++		max = 14;
++	}
++
++	for (i = min; i < max; i++) {
++		bool busy = false;
++
++		for_each_context(priv, ctx) {
++			busy = priv->channel_info[i].channel ==
++				le16_to_cpu(ctx->staging.channel);
++			if (busy)
++				break;
++		}
++
++		if (busy)
++			continue;
++
++		channel = priv->channel_info[i].channel;
++		ch_info = iwl_get_channel_info(priv, band, channel);
++		if (is_channel_valid(ch_info))
++			break;
++	}
++
++	return channel;
++}
++
+ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
+ 					   struct ieee80211_vif *vif,
+ 					   enum ieee80211_band band,
 -- 
 1.7.0.4
 
