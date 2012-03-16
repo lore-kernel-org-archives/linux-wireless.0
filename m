@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55912 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757243Ab2CBIel (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14885 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754638Ab2CPSjg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 03:34:41 -0500
-Subject: Re: [PATCH 08/21] cw1200: wsm.*, implementation of device
- high-level interface.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1330652495-25837-9-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024221_236578_27353535)
-References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
-	 <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-	 <1330652495-25837-9-git-send-email-dmitry.tarnyagin@stericsson.com>
-	 (sfid-20120302_024221_236578_27353535)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Mar 2012 09:34:39 +0100
-Message-ID: <1330677279.3367.8.camel@jlt3.sipsolutions.net> (sfid-20120302_093443_968746_218925D2)
-Mime-Version: 1.0
+	Fri, 16 Mar 2012 14:39:36 -0400
+From: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: mac80211 20/40 coexist
+Date: Fri, 16 Mar 2012 18:39:29 +0000
+Message-ID: <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b> (sfid-20120316_193939_860344_525E3322)
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>,<1331902885.6753.10.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1331902885.6753.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-02 at 02:41 +0100, Dmitry Tarnyagin wrote:
+> Hi,
+> 
+> [I'll also fold in your other email]
+> 
+> > Not calling hw_config could affect drivers like ath9k_htc where the rate control runs in the firmware.
+> > Those drivers will update the rate control based on CHANGED_HT flag.
+> 
+> Yeah that's actually an interesting point -- but we have it wrong right
+> now I think. Did you see Paul's recent patch? We really shouldn't be
+> reconfiguring the channel if all we want is to stop transmitting 40 MHz,
+> we should just update rate control only. Now for in-device rate control
+> that isn't really possible today since they can't get rate_update(), but
+> that means we should add a separate callback, I think?
 
-> +/* ******************************************************************** */
-> +/* Queue mapping: WSM <---> linux					*/
-> +/* Linux: VO VI BE BK							*/
-> +/* WSM:   BE BK VI VO							*/
-> +
-> +static inline u8 wsm_queue_id_to_linux(u8 queueId)
-> +{
-> +	static const u8 queue_mapping[] = {
-> +		2, 3, 1, 0
-> +	};
-> +	return queue_mapping[queueId];
-> +}
+Yes. I missed that. I am not sure about the new callback alone is sufficient. We have to issue a WMI command
+to reconfigure the rc in firmware. If so, it needs firmware changes also. May be Sujith is the right person to answer
+about ath9k_htc.
 
-This could use the IEEE80211_AC_* defines I think.
+> > > If we do that, is it still necessary to stop the queues for it? It seems
+> > > like it shouldn't.
+> > 
+> > Actually the queue stop was added to avoid mismatches b/w hw and rate control. But If you dont stop the queues
+> > before the rate control change, the station might send the frames in different ht mode (for example ht40) wrt AP's ht mode (ht20).
+> 
+> Yes, but that's probably OK. It's going to do that anyway since there
+> are still frames in the hardware queues, and those will go out without
+> updated rate information. There can be no guarantee (without having some
+> form of hardware assist) that from the point we receive a 20/40
+> notification we'll send the right bandwidth.
 
-johannes
+Yes. Sounds fine.
 
+-Rajkumar
