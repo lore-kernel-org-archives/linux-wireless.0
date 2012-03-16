@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37769 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755669Ab2COSTQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 14:19:16 -0400
-Subject: RE: [PATCH v2] wireless: rename ht_info to ht_operation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <477F20668A386D41ADCC57781B1F70430836909651@SC-VEXCH1.marvell.com>
-References: <1331806879.3432.7.camel@jlt3.sipsolutions.net>
-	 (sfid-20120315_112131_819302_49364FC7) <1331823014.3432.23.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F70430836909651@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Mar 2012 19:19:10 +0100
-Message-ID: <1331835550.3432.29.camel@jlt3.sipsolutions.net> (sfid-20120315_191923_464898_44F0B52C)
-Mime-Version: 1.0
+Received: from smtp1.u-psud.fr ([129.175.33.41]:62950 "EHLO smtp1.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1032143Ab2CPXbd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 19:31:33 -0400
+Message-ID: <4F63CD33.7030009@lri.fr> (sfid-20120317_003203_062380_8EC73CDE)
+Date: Sat, 17 Mar 2012 00:30:59 +0100
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+MIME-Version: 1.0
+To: Mathieu Trudel-Lapierre <mathieu.trudel-lapierre@canonical.com>
+CC: linux-wireless@vger.kernel.org, mathieu-tl@ubuntu.com
+Subject: Re: Issues with IBSS/WPA being created unsecured IBSS
+References: <4F63A135.1060909@canonical.com>
+In-Reply-To: <4F63A135.1060909@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 16/03/2012 21:23, Mathieu Trudel-Lapierre wrote:
+>
+> Hi,
+>
+> I'm trying to figure out how to fix WPA-secured IBSS; which appears
+> to be silently falling back to creating unsecured IBSS networks at
+> the kernel level (or IBSS/RSN really, if need be, as it seems to
+> react pretty much just the same, although I understand it's not
+> supported by all devices).
 
-> For mwifiex part, the change looks fine except for a couple checkpatch warnings.
+If you are talking about WPA-none, it's been broken for a loooong time
+(2009?).
+First, wpasupplicant tries to set the key just after requesting an ibss
+join without
+waiting for the driver to actually join the IBSS. With current kernels,
+you cannot
+set keys until joined, so that fails. But even if
+wpasupplicant did it right, it would still break, because, among other
+things, the
+kernel will just refuse to decrypt unicast frames with anything else
+than pairwise keys.
 
-Ok, thanks. I knew there were going to be checkpatch warnings but
-decided that the code wasn't going to be easier to read if I forced it
-down to 80 colums, so decided to leave them.
 
-johannes
+If wpasupplicant supports IBSS RSN (which is disabled in ubuntu, IIRC),
+at least mac80211 based drivers will not send/accept plaintext frames,
+whether IBSS RSN is supported by the driver or not.
 
 
