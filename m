@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58486 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661Ab2C0IaF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 04:30:05 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20337.31328.528725.786517@gargle.gargle.HOWL> (sfid-20120327_103013_663831_E44A0CAD)
-Date: Tue, 27 Mar 2012 13:59:20 +0530
-To: David Madore <david+ml@madore.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k_htc fails with "Target is unresponsive"
-In-Reply-To: <20120323174708.GA2797@aldebaran.gro-tsen.net>
-References: <20120321175800.GA28516@aldebaran.gro-tsen.net>
-	<CAJ-Vmom2fPUuuT8mUa2fWrbBQGuDtd7nh7Tkn3Sa2_TmhjtJaA@mail.gmail.com>
-	<20120321220242.GA26363@aldebaran.gro-tsen.net>
-	<20120322002955.GA9391@aldebaran.gro-tsen.net>
-	<20331.61854.29639.644902@gargle.gargle.HOWL>
-	<20120323174708.GA2797@aldebaran.gro-tsen.net>
+Received: from mx.polito.it ([130.192.182.65]:58348 "EHLO mx.polito.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760682Ab2CPJ2n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 05:28:43 -0400
+Received: from polito.it (atena.polito.it [130.192.3.45])
+	by fm1nodo5.polito.it  with ESMTP id q2G91KTw024753-q2G91KTx024753
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Mar 2012 10:01:20 +0100
+Received: from [130.192.86.1] (HELO [192.168.85.111])
+  by atena.polito.it (CommuniGate Pro SMTP 5.4.3)
+  with ESMTPS id 52502318 for linux-wireless@vger.kernel.org; Fri, 16 Mar 2012 10:01:20 +0100
+Message-ID: <1331888479.13561.22.camel@MacGyver> (sfid-20120316_102847_230657_EE87E801)
+Subject: ath9k state machine ?
+From: Guido Gavilanes <gavilanes@ismb.it>
+Reply-To: gavilanes@ismb.it
+To: linux-wireless@vger.kernel.org
+Date: Fri, 16 Mar 2012 10:01:19 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Madore wrote:
-> In other words: loading the module seems to place the dongle in a bad
-> state that goes away after ifconfig up (but not by removing the
-> modules), and if a reboot happens while the dongle is in that bad
-> state, it will fail permanently.
 
-Right, there's a difference here, a 'reboot' of the card is done only when
-if the interface is brought up. The device status from the USB subsystem
-is used to handle this - it works on x86.
+Hello linux-wireless colleagues,
 
-On your platform, I think that a full reboot is required even when doing just
-a simple load/unload cycle. I'll come up with a patch to test this.
+Let me disturb you with a non-deep-in-the-code question...
+I am working on an specific application starting from ath9k driver.
+Basically I have to capture acks being used as triggers for other
+actions at user level, so it would be useful to know the "journey of a
+packet" through the driver (ath9k). Is this information available to
+you? (publicly available?) I have searched for a while without results;
+at the moment I am "blindly" working with a code analyzer through the
+driver source with little and slow results, but A description of the
+"state machine" would be more than useful; do you now where can I get
+something?
 
-Thanks for the detailed log.
+Thank you in advance for your help
+Guido
 
-Sujith
+
+
