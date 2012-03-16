@@ -1,62 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:47365 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758428Ab2CGQUo (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:39334 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757723Ab2CPWJ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 11:20:44 -0500
-Received: by bkcik5 with SMTP id ik5so5379493bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2012 08:20:43 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] mac80211: Limit TID buffering during BA session setup/teardown
-Date: Wed,  7 Mar 2012 17:20:30 +0100
-Message-Id: <1331137230-12430-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120307_172048_123618_731B3CE6)
+	Fri, 16 Mar 2012 18:09:58 -0400
+Message-ID: <4F63BA31.1080608@etit.tu-chemnitz.de> (sfid-20120316_231032_428812_D09A3850)
+Date: Fri, 16 Mar 2012 23:09:53 +0100
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, henry@logout.com,
+	"greenmesh@lists.osll.spb.ru" <greenmesh@lists.osll.spb.ru>
+Subject: Re: [ath9k] mesh powersave hardware sleep + wakeup
+References: <4F630AEA.10703@etit.tu-chemnitz.de> <20120316204547.GG18861@tux>
+In-Reply-To: <20120316204547.GG18861@tux>
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While setting up or tearing down a BA session mac80211 is buffering
-pending frames for the according TID. However, there's currently no
-limit on how many frames are buffered possibly leading to an out-of-
-memory situation. This can happen on systems with little memory when
-the CPU is fully loaded since the BA session work is executed in
-process context while frames can still come via softirq.
+On 03/16/12 21:45, Luis R. Rodriguez wrote:
+> On Fri, Mar 16, 2012 at 10:42:02AM +0100, Marco Porsch wrote:
+>> Hi,
+>>
+>> I am trying to implement the IEEE 802.11s power save schemes in mac80211.
+>> In 11s it is defined that power save STA doze AND send beacons AND
+>> wake up periodically for multiple neighbors beacons.
+>>
+>> Is this actually possible with current hardware/drivers (especially ath9k)?
 
-Apply a limitation to the TIDs pending queue to avoid consuming
-too much memory in this situation.
+[ ... ]
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/tx.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+> I don't have time to review this but it sounds correct that the part
+> you want to focus on is introducing a wake up mechanism when you
+> need to initiate radiation for your own beacons.  I think right now
+> we simply disable PS in mac80211 completely if we have a mode of
+> operation that require beconing.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1be0ca2..4b07828 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1060,6 +1060,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
- {
- 	bool queued = false;
- 	bool reset_agg_timer = false;
-+	struct sk_buff *purge_skb = NULL;
- 
- 	if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
- 		info->flags |= IEEE80211_TX_CTL_AMPDU;
-@@ -1101,8 +1102,13 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
- 			info->control.vif = &tx->sdata->vif;
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 			__skb_queue_tail(&tid_tx->pending, skb);
-+			if (skb_queue_len(&tid_tx->pending) > STA_MAX_TX_BUFFER)
-+				purge_skb = __skb_dequeue(&tid_tx->pending);
- 		}
- 		spin_unlock(&tx->sta->lock);
-+
-+		if (purge_skb)
-+			dev_kfree_skb(purge_skb);
- 	}
- 
- 	/* reset session timer */
--- 
-1.7.7
+Actually the whole power save code is only written specifically for 
+managed mode.
+E.g. for ad-hoc, you wouldn't suspend the radio, since the MAC schemes 
+that must deal with the resulting deafness issues are not implemented in 
+mac80211. (That would be frame buffering + release in ATIM window, ...)
 
+Concerning mesh, I already have a hackish - but mostly working - PS 
+frame buffering and release.
+But, what is power save without actually saving power?
+
+Problem: I don't have a reference how to suspend/wake the radio between 
+sending beacons.
+That's why I hoped you can tell me, if - at least in theory - the 
+hardware/ath9k even allows this.
+
+ > Your challenge is to lift that and
+> deal with the issues there and all the possible combinations. You
+> can help with this
+>
+> This should help you:
+>
+> http://wireless.kernel.org/en/users/Documentation/Power-consumption
+
+Thanks, the numbers are nice I can use them for analytical estimation or 
+simulation.
+
+> For now you can focus on only allowing through Mesh devices and
+> the combinations of it but I suspect that some of the work you do
+> may also help with addressing P2P powersave.
+
+Correct. When this is implemented, it is easy to port this to ad-hoc. 
+Because mesh is definitively more complex, but similar.
+
+Regards,
+Marco
