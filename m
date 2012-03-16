@@ -1,56 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759051Ab2CGTGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:30 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 04/35] iwlwifi: remove unused argument from iwl_init_hw_rates
-Date: Wed,  7 Mar 2012 09:52:13 -0800
-Message-Id: <1331142764-5750-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200739_352893_E2E15CDF)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:57496 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753171Ab2CPNB2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 09:01:28 -0400
+Subject: RE: mac80211 20/40 coexist
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Mar 2012 14:01:25 +0100
+Message-ID: <1331902885.6753.10.camel@jlt3.sipsolutions.net> (sfid-20120316_140157_658300_7E065B29)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-The function never uses the priv argument as it
-only fills in the passed data, so remove the
-argument.
+[I'll also fold in your other email]
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+> Not calling hw_config could affect drivers like ath9k_htc where the rate control runs in the firmware.
+> Those drivers will update the rate control based on CHANGED_HT flag.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 4cd375c..397faf9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1010,8 +1010,7 @@ void iwl_cancel_deferred_work(struct iwl_priv *priv)
- 	del_timer_sync(&priv->ucode_trace);
- }
- 
--static void iwl_init_hw_rates(struct iwl_priv *priv,
--			      struct ieee80211_rate *rates)
-+static void iwl_init_hw_rates(struct ieee80211_rate *rates)
- {
- 	int i;
- 
-@@ -1090,7 +1089,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 		IWL_ERR(priv, "initializing geos failed: %d\n", ret);
- 		goto err_free_channel_map;
- 	}
--	iwl_init_hw_rates(priv, priv->ieee_rates);
-+	iwl_init_hw_rates(priv->ieee_rates);
- 
- 	return 0;
- 
--- 
-1.7.0.4
+Yeah that's actually an interesting point -- but we have it wrong right
+now I think. Did you see Paul's recent patch? We really shouldn't be
+reconfiguring the channel if all we want is to stop transmitting 40 MHz,
+we should just update rate control only. Now for in-device rate control
+that isn't really possible today since they can't get rate_update(), but
+that means we should add a separate callback, I think?
+
+> > If we do that, is it still necessary to stop the queues for it? It seems
+> > like it shouldn't.
+> 
+> Actually the queue stop was added to avoid mismatches b/w hw and rate control. But If you dont stop the queues
+> before the rate control change, the station might send the frames in different ht mode (for example ht40) wrt AP's ht mode (ht20).
+
+Yes, but that's probably OK. It's going to do that anyway since there
+are still frames in the hardware queues, and those will go out without
+updated rate information. There can be no guarantee (without having some
+form of hardware assist) that from the point we receive a 20/40
+notification we'll send the right bandwidth.
+
+
+In the other mail you said almost the same thing:
+
+> The queue stop was added to avoid sending frames while the hw
+> reconfigure is in progress.
+> So that we can prevent differences b/w hw and rate control ht mode.
+> But I doubt that hw_reconfig
+> removal could not affect split drivers where the rc is offloaded.
+
+Like above, I think we need a new callback for rc offloaded drivers so
+that they can update when the bandwidth changes -- I do remove the
+bandwidth update after all, i.e. we no longer reconfigure the channel
+when it's desired to no longer TX 40 MHz.
+
+I'll think about offloaded rate control a bit more.
+
+johannes
 
