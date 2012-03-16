@@ -1,78 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8043 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751002Ab2CDX4l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 18:56:41 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 00/22] NFC changes for 3.4
-Date: Mon,  5 Mar 2012 01:03:32 +0100
-Message-Id: <1330905834-6994-1-git-send-email-sameo@linux.intel.com> (sfid-20120305_005720_252476_0494831F)
+Received: from mail.candelatech.com ([208.74.158.172]:57657 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759107Ab2CPQvQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 12:51:16 -0400
+Message-ID: <4F636F81.9070804@candelatech.com> (sfid-20120316_175120_277690_49C0048F)
+Date: Fri, 16 Mar 2012 09:51:13 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] ath9k:  Support ethtool getstats api.
+References: <1331853606-28434-1-git-send-email-greearb@candelatech.com> <1331853606-28434-4-git-send-email-greearb@candelatech.com> <4F6356E8.3050906@openwrt.org> <4F6368E9.2040007@candelatech.com> <4F636C07.7060202@openwrt.org>
+In-Reply-To: <4F636C07.7060202@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On 03/16/2012 09:36 AM, Felix Fietkau wrote:
+> On 2012-03-16 5:23 PM, Ben Greear wrote:
+>> On 03/16/2012 08:06 AM, Felix Fietkau wrote:
 
-This is my NFC patchset for the next merge window.
-I was hoping to include our HCI implementation, but it may have to wait a few
-more days.
-Anyway, the below patchset provides mostly LLCP fixes and enhancements. It
-also implements the few missing NFC data exports from the pn533 driver, adds a
-new powered netink attribute, and fixes the whole NFC code identation.
+>> My personal goal is to give my users a better insight into their
+>> wireless environment.  I would like to be able to break out the
+>> various low-level errors (as well as add them together to present
+>> summary errors).
+>>
+>> For anyone reporting mysterious bugs on mailing lists and such, I'd like
+>> to ask them to dump the stats and send it to me/list/whatever.
+>> I am still of the mind that looking for patterns in various
+>> counters might point to underlying problems, so anything that
+>> makes it easier to get that data is a win in my mind.
+> That's what debugfs is for, and it's not exactly hard to use.
+> I think it would be bad if tools started depending on the counters in
+> their current state, they're pretty messy.
 
-You can apply them manually or pull from here:
+With a bit of work, we could make the ethtool stats
+available when debugfs is compiled out, which might give
+you actual space savings and still allow at least much of
+the stats.  Either way, the ability to programatically
+parse the ethtool stats is a big win for my use, at least.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git nfc-next
+>> If there are some stats that really don't work, maybe I
+>> will notice, or maybe someone else will and we can fix
+>> them.  If you are aware of any specific ones that don't
+>> work right, please let me know and I'll at least add some
+>> comments to the code to mention they are questionable,
+>> or fix them if I'm able.
+> There's lots of confusion in the AMPDU/Aggregates counters (some count
+> whole A-MPDUs, some count subframes).
 
-it should apply cleanly on top of wireless-next.
+That sounds fixable, if it's a problem at all.
 
-Samuel Ortiz (22):
-  NFC: Export NFCID1 from pn533
-  NFC: Add device powered netlink attribute
-  NFC: Factorize the I frame queueing routine
-  NFC: Handle Receiver Not Ready LLCP frame
-  NFC: LLCP socket sendmsg implemetation
-  NFC: Fix bitops usage in LLCP
-  NFC: Clear pn533 target structure
-  NFC: Clear LLCP SDPs whan MAC goes down
-  NFC: Set the right LLCP N(R) value for I frames
-  NFC: Send LLCP RR frames to acknowledge received I frames
-  NFC: Set MIU and RW values from CONNECT and CC LLCP frames
-  NFC: Fragment LLCP I frames
-  NFC: Export sensf from pn533
-  NFC: Export Jewel/Topaz ID from pn533
-  NFC: Export NFCID when detecting a p2p target with pn533
-  NFC: Unlink LLCP child sockets from llcp_sock_release
-  NFC: SN is not an invalid GT value
-  NFC: Remove the rf mode parameter from the DEP link up routine
-  NFC: Fix LLCP sockets releasing path
-  NFC: LLCP code identation fixes
-  NFC: Core code identation fixes
-  NFC: NCI code identation fixes
+> Also, many of these counters are useless unless you're doing live
+> debugging and actually know what you're doing - especially the ones that
+> display the current queue state.
 
- drivers/nfc/pn533.c        |   31 ++++----
- include/linux/nfc.h        |    1 +
- include/net/nfc/nci_core.h |   10 +-
- include/net/nfc/nfc.h      |   30 +++----
- net/nfc/af_nfc.c           |    2 +-
- net/nfc/core.c             |   50 +++++------
- net/nfc/llcp/commands.c    |  163 ++++++++++++++++++++++++++++++++----
- net/nfc/llcp/llcp.c        |  201 +++++++++++++++++++++++++++-----------------
- net/nfc/llcp/llcp.h        |   12 ++-
- net/nfc/llcp/sock.c        |  120 ++++++++++++++++----------
- net/nfc/nci/core.c         |  113 ++++++++++++-------------
- net/nfc/nci/data.c         |   28 +++---
- net/nfc/nci/ntf.c          |   75 ++++++++---------
- net/nfc/nci/rsp.c          |   17 ++--
- net/nfc/netlink.c          |   71 +++++++--------
- net/nfc/nfc.h              |   18 ++--
- net/nfc/rawsock.c          |   16 ++--
- 17 files changed, 573 insertions(+), 385 deletions(-)
+I tried to skip all of those current-queue-state counters, but I
+will double-check.
+
+> Most of the PHY error counters aren't even tracked by the hw, nothing in
+> the driver enables their use.
+
+Well, any reason we cannot enable those?
+
+> For some of these counters it might make sense to track them in
+> mac80211, as they're sufficiently generic.
+
+That sounds nice.  Maybe add a 'get_stats' object to the driver
+api?  If you have a list of what you want to be made
+generic I'll make a try at implementing it.
+
+Thanks,
+Ben
 
 -- 
-1.7.7.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
