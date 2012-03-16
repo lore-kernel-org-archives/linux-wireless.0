@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55973 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755028Ab2CDUnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:03 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 030/101] iwlwifi: move uCode deallocation to drv
-Date: Sun,  4 Mar 2012 11:28:44 -0800
-Message-Id: <1330889395-533-31-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214630_824707_B5415AAE)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:51718 "HELO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1161299Ab2CPDwf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Mar 2012 23:52:35 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 4/5] mwifiex: support STATION_INFO_SIGNAL_AVG
+Date: Thu, 15 Mar 2012 20:51:50 -0700
+Message-Id: <1331869911-10624-5-git-send-email-bzhao@marvell.com> (sfid-20120316_045239_181190_8A2CB64D)
+In-Reply-To: <1331869911-10624-1-git-send-email-bzhao@marvell.com>
+References: <1331869911-10624-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-This shouldn't be in the op_mode, as it
-will later be switchable at runtime.
+This patch adds the support for updating average signal information
+in dump_station().
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-drv.c |    2 ++
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 6dd4fae..c3b5946 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1385,8 +1385,6 @@ static void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
- 	/*This will stop the queues, move the device to low power state */
- 	iwl_trans_stop_device(trans(priv));
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 9cf8d53..96c1e3b 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -519,9 +519,9 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
+ 	struct mwifiex_rate_cfg rate;
  
--	iwl_dealloc_ucode(nic(priv));
--
- 	iwl_eeprom_free(priv->shrd);
+ 	sinfo->filled = STATION_INFO_RX_BYTES | STATION_INFO_TX_BYTES |
+-		STATION_INFO_RX_PACKETS |
+-		STATION_INFO_TX_PACKETS
+-		| STATION_INFO_SIGNAL | STATION_INFO_TX_BITRATE;
++			STATION_INFO_RX_PACKETS | STATION_INFO_TX_PACKETS |
++			STATION_INFO_TX_BITRATE |
++			STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
  
- 	/*netif_stop_queue(dev); */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 76fc440..590f576 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -99,5 +99,7 @@ void iwl_drv_stop(struct iwl_shared *shrd)
- 	if (shrd->nic->op_mode)
- 		iwl_op_mode_stop(shrd->nic->op_mode);
+ 	/* Get signal information from the firmware */
+ 	if (mwifiex_send_cmd_sync(priv, HostCmd_CMD_RSSI_INFO,
+@@ -555,6 +555,7 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
+ 			sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+ 	}
  
-+	iwl_dealloc_ucode(shrd->nic);
-+
- 	kfree(shrd->nic);
- }
++	sinfo->signal_avg = priv->bcn_rssi_avg;
+ 	sinfo->rx_bytes = priv->stats.rx_bytes;
+ 	sinfo->tx_bytes = priv->stats.tx_bytes;
+ 	sinfo->rx_packets = priv->stats.rx_packets;
 -- 
-1.7.0.4
+1.7.0.2
 
