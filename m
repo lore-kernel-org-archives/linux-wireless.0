@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27750 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750800Ab2CFFG2 (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:57259 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758476Ab2CPOa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 00:06:28 -0500
-Message-ID: <4F559B4D.5030006@qca.qualcomm.com> (sfid-20120306_060632_663145_A5F3CE29)
-Date: Tue, 6 Mar 2012 10:36:21 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<senthilb@qca.qualcomm.com>, <vthiagar@qca.qualcomm.com>,
-	<rodrigue@qca.qualcomm.com>,
-	Rajkumar_contact <rmanohar@qca.qualcomm.com>,
-	"Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
-Subject: Re: [RFC 1/2] ath9k: use ieee80211_free_txskb
-References: <d053a9a1ec34c2e1b15cf50b272ba7863fb17088.1330360738.git.chunkeey@googlemail.com> <4F4F7DC2.8030204@qca.qualcomm.com> <4F54D53D.80300@qca.qualcomm.com> <201203051943.15875.chunkeey@googlemail.com>
-In-Reply-To: <201203051943.15875.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Fri, 16 Mar 2012 10:30:59 -0400
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Subject: [PATCH] mac80211: end service period only after sending last buffered frame
+Date: Fri, 16 Mar 2012 15:30:26 +0100
+Message-Id: <1331908226-6694-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20120316_153104_695060_A088C5D3)
+In-Reply-To: <1331905240.6753.14.camel@jlt3.sipsolutions.net>
+References: <1331905240.6753.14.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> would you like me to test this patch,
-> ? Sure, I would like someone with a AR9300+ to test the patch.
-> Currently, I'm stuck with a puny AR9287 [in a router].
-> So, I can't run tests all day :(.
->
->> i can just ran a bidirectional traffic test parallel y enabling
->> PAPRD,with this proposed patch.
-> Actually, the changes are all within ath9k's tx error paths. So,
-> I'm afraid just continuous traffic testing won't do, unless of course
-> you can churn out all sorts of tx (dma) errors at the same time.
 
-yes, i can just a start stress test that can run few days in a noisy 
-channel, with the AR9300 card.
+Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+---
+ net/mac80211/sta_info.c |   16 +++++++++-------
+ 1 files changed, 9 insertions(+), 7 deletions(-)
 
->
-> Regards,
-> 	Chr
-
-
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f468eb1..9b63cd7 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1257,13 +1257,15 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
+ 			    ieee80211_is_qos_nullfunc(hdr->frame_control))
+ 				qoshdr = ieee80211_get_qos_ctl(hdr);
+ 
+-			/* set EOSP for the frame */
+-			if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
+-			    qoshdr && skb_queue_empty(&frames))
+-				*qoshdr |= IEEE80211_QOS_CTL_EOSP;
+-
+-			info->flags |= IEEE80211_TX_STATUS_EOSP |
+-				       IEEE80211_TX_CTL_REQ_TX_STATUS;
++			/* end service period after last frame */
++			if (skb_queue_empty(&frames)) {
++				if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
++				    qoshdr)
++					*qoshdr |= IEEE80211_QOS_CTL_EOSP;
++
++				info->flags |= IEEE80211_TX_STATUS_EOSP |
++					       IEEE80211_TX_CTL_REQ_TX_STATUS;
++			}
+ 
+ 			if (qoshdr)
+ 				tids |= BIT(*qoshdr & IEEE80211_QOS_CTL_TID_MASK);
 -- 
-thanks,
-shafi
+1.7.5.4
+
