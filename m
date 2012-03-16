@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:53926 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753846Ab2C3BRh (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53578 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754441Ab2CPQXJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2012 21:17:37 -0400
-Date: Fri, 30 Mar 2012 10:17:34 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: iwlagn (3.3-wl), the saga continuous
-Message-ID: <20120330011734.GH6277@gamma.logic.tuwien.ac.at> (sfid-20120330_031757_711616_AB85C74A)
+	Fri, 16 Mar 2012 12:23:09 -0400
+Message-ID: <4F6368E9.2040007@candelatech.com> (sfid-20120316_172314_292899_ACA6E902)
+Date: Fri, 16 Mar 2012 09:23:05 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 4/4] ath9k:  Support ethtool getstats api.
+References: <1331853606-28434-1-git-send-email-greearb@candelatech.com> <1331853606-28434-4-git-send-email-greearb@candelatech.com> <4F6356E8.3050906@openwrt.org>
+In-Reply-To: <4F6356E8.3050906@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+On 03/16/2012 08:06 AM, Felix Fietkau wrote:
+> On 2012-03-16 12:20 AM, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> This returns many of the values that formerly could
+>> only be obtained from debugfs.  This should be an
+>> improvement when trying to access these counters
+>> programatically.  Currently this support is only
+>> enabled when DEBUGFS is enabled because otherwise
+>> these stats are not accumulated.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+> I don't really like the idea just throwing every random counter into
+> ethtool. Many of these counters are actually quite misleading, not
+> properly tracked, or not even updated properly, and thus do not deserve
+> to be made visible through ethtool.
+>
+> I think before something gets exported that way, it should be made clear
+> what it's for and what the limitations are.
 
-I am now running 3.3.0-wl, and I was now travelling quite some time
-without having *any*problems with wlan. But as soon as I come
-home or to the university the horror starts. Here at home I am 
-now, after fresh reboot, no suspend involved, swamped with dmesg
-lines:
-[ 8206.158741] delba from 00:0a:79:eb:56:10 (initiator) tid 0 reason code 39
-[ 8206.158744] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 inititator reason: 0
-[ 8206.430282] Rx A-MPDU request on tid 0 result 0
+My personal goal is to give my users a better insight into their
+wireless environment.  I would like to be able to break out the
+various low-level errors (as well as add them together to present
+summary errors).
 
-So around 4000+ in 2 hours ... I guess you can evaluate how flaky the
-connection is ...
+For anyone reporting mysterious bugs on mailing lists and such, I'd like
+to ask them to dump the stats and send it to me/list/whatever.
+I am still of the mind that looking for patterns in various
+counters might point to underlying problems, so anything that
+makes it easier to get that data is a win in my mind.
 
-As usual, any patches to be tested etc I can do. All of that is easy
-to reproduce ;-)
+If there are some stats that really don't work, maybe I
+will notice, or maybe someone else will and we can fix
+them.  If you are aware of any specific ones that don't
+work right, please let me know and I'll at least add some
+comments to the code to mention they are questionable,
+or fix them if I'm able.
 
-Best wishes
+Thanks,
+Ben
 
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-NAAS (n.)
-The winemaking region of Albania where most of the wine that people
-take to bottle-parties comes from.
-			--- Douglas Adams, The Meaning of Liff
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
