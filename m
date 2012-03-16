@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41209 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754397Ab2CLVwu (ORCPT
+Received: from exchange.solarflare.com ([216.237.3.220]:52098 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932695Ab2CPUxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 17:52:50 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q2CLqnIe032213
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 14:52:49 -0700
-Message-ID: <4F5E7031.4000401@candelatech.com> (sfid-20120312_225254_930303_F3662791)
-Date: Mon, 12 Mar 2012 14:52:49 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 16 Mar 2012 16:53:55 -0400
+Message-ID: <1331931232.2504.9.camel@bwh-desktop.uk.solarflarecom.com> (sfid-20120316_215410_346282_1A3155CD)
+Subject: Re: [PATCH v2 4/4] ath9k:  Support ethtool getstats api.
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Date: Fri, 16 Mar 2012 20:53:52 +0000
+In-Reply-To: <1331927952-8706-4-git-send-email-greearb@candelatech.com>
+References: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
+	 <1331927952-8706-4-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Hacking PCI-ids to allow Atheros NIC into Lenovo laptop.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems we bought a Lenovo laptop that has a BIOS lock where it will only
-support certain wifi NICs based on the pci-id.  It came with an Intel
-NIC, so at least that ID must work...
+On Fri, 2012-03-16 at 12:59 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> This returns many of the values that formerly could
+> only be obtained from debugfs.  This should be an
+> improvement when trying to access these counters
+> programatically.  Currently this support is only
+> enabled when DEBUGFS is enabled because otherwise
+> these stats are not accumulated.
+[...]
 
-One way around this might be to over-write the pci-id of an Atheros NIC
-in it's non-volatile storage to make it look like an Intel, at least until
-the kernel boots.
+Given that ethtool (unlike debugfs) is itself an unconditional feature,
+why not make this unconditional?  Is it expensive to accumulate the
+stats?
 
-Then maybe add some sort of ugly code to force the Atheros driver
-to manage this Intel pci-id (and probably disable the same pci-id in
-the Intel driver).
+Please at least fix the name.
 
-Has anyone tried doing anything like this?  Any suggestions for a cleaner
-way to go about this?
-
-Thanks,
-Ben
+Ben.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
