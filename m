@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46277 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754582Ab2C3GjR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 02:39:17 -0400
-Message-ID: <1333089555.3908.0.camel@jlt3.sipsolutions.net> (sfid-20120330_083937_807379_7F4DEADD)
-Subject: Re: [RFC 1/2] mac80211: add explicit monitor interface if needed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 30 Mar 2012 08:39:15 +0200
-In-Reply-To: <CAB3XZEdx6=58pyiEFWAiLGvtJ9eSTacyKD3Y-jKaR-7iDrF3zg@mail.gmail.com> (sfid-20120329_220943_880343_818A1AF7)
-References: <20120328091346.442543219@sipsolutions.net>
-	 <20120328091811.108837459@sipsolutions.net>
-	 <CAB3XZEdx6=58pyiEFWAiLGvtJ9eSTacyKD3Y-jKaR-7iDrF3zg@mail.gmail.com>
-	 (sfid-20120329_220943_880343_818A1AF7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2281 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161311Ab2CPJFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 05:05:55 -0400
+Message-ID: <4F630267.5050909@broadcom.com> (sfid-20120316_100608_198304_CA09F26D)
+Date: Fri, 16 Mar 2012 10:05:43 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"stern@rowland.harvard.edu" <stern@rowland.harvard.edu>,
+	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
+	"ralf@linux-mips.org" <ralf@linux-mips.org>,
+	"m@bues.ch" <m@bues.ch>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"zajec5@gmail.com" <zajec5@gmail.com>
+Subject: Re: [PATCH v5 4/4] USB: OHCI: remove old SSB OHCI driver
+References: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
+ <1331851799-5968-5-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1331851799-5968-5-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-29 at 22:09 +0200, Eliad Peller wrote:
+On 03/15/2012 11:49 PM, Hauke Mehrtens wrote:
+> This is now replaced by the new ssb USB driver, which also supports
+> devices with an EHCI controller.
+>
+> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
+> ---
+>   drivers/usb/host/Kconfig    |    7 +-
+>   drivers/usb/host/ohci-hcd.c |   21 +----
+>   drivers/usb/host/ohci-ssb.c |  260 -------------------------------------------
+>   3 files changed, 7 insertions(+), 281 deletions(-)
+>   delete mode 100644 drivers/usb/host/ohci-ssb.c
+>
+> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+> index 2fc5637..00b6fc8 100644
+> --- a/drivers/usb/host/Kconfig
+> +++ b/drivers/usb/host/Kconfig
+> @@ -373,10 +373,15 @@ config USB_OHCI_HCD_PCI
+>   	  If unsure, say Y.
+>
+>   config USB_OHCI_HCD_SSB
+> -	bool "OHCI support for Broadcom SSB OHCI core"
+> +	bool "OHCI support for Broadcom SSB OHCI core (DEPRECATED)"
+>   	depends on USB_OHCI_HCD&&  (SSB = y || SSB = USB_OHCI_HCD)&&  EXPERIMENTAL
+> +	select USB_HCD_SSB
+> +	select USB_OHCI_HCD_PLATFORM
+>   	default n
+>   	---help---
+> +	  This option is deprecated now and the driver was removed, use
+> +	  USB_HCD_SSB and USB_OHCI_HCD_PLATFORM instead.
+> +
+>   	  Support for the Sonics Silicon Backplane (SSB) attached
+>   	  Broadcom USB OHCI core.
 
-> > +       if (WARN_ON(!sdata))
-> > +               return;
-> > +
-> ...
-> 
-> > @@ -280,6 +339,8 @@ static int ieee80211_do_open(struct net_
-> >                break;
-> >        default:
-> >                if (coming_up) {
-> > +                       ieee80211_del_virtual_monitor(local);
-> > +
-> 
-> i think this will always trigger the warning?
+Looks fine as it helps transitioning old .config files. Should the 
+select statements be mentioned in the help section, ie. 'using' iso 'use'.
 
-Yeah, somehow I didn't see this in my first round of testing. I
-distinctly remember thinking "I need to remove the warning then" but
-clearly never did :-)
+Gr. AvS
 
-> > -       if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
-> > -                   sdata->vif.type == NL80211_IFTYPE_MONITOR))
-> > +       if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
-> >                return -EINVAL;
-> >
-> maybe check for IEEE80211_HW_WANT_MONITOR_VIF instead?
-
-Good point, should do that.
-
-johannes
 
