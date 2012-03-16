@@ -1,191 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37663 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:10471 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753151Ab2CHTl6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 14:41:58 -0500
-Subject: Re: [PATCH RESEND 33/35] iwlwifi: restore PAN support
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
+	id S1032773Ab2CPMDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 08:03:15 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-In-Reply-To: <20120308192000.GB2469@tuxdriver.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1331142764-5750-33-git-send-email-wey-yi.w.guy@intel.com>
-	 <20120308192000.GB2469@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 08 Mar 2012 10:29:25 -0800
-Message-ID: <1331231365.12612.60.camel@wwguy-huron> (sfid-20120308_204202_510498_97712EFF)
-Mime-Version: 1.0
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RFC 1/3] mac80211: do not scan and monitor connection in parallel
+Date: Fri, 16 Mar 2012 13:02:56 +0100
+Message-Id: <1331899378-10543-1-git-send-email-sgruszka@redhat.com> (sfid-20120316_130318_801255_E6602E32)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Before we send probes in connection monitoring we check if scan is not
+pending. But we do that check without locking. Fix that and also do not
+start scan if connection monitoring is in progress.
 
-Thank you, we will fix and re-send
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   35 +++++++++++++++++++++++------------
+ net/mac80211/scan.c        |   29 ++++++++++++++++++++++++++++-
+ net/mac80211/work.c        |    7 +------
+ 4 files changed, 53 insertions(+), 19 deletions(-)
 
-Wey
-
-On Thu, 2012-03-08 at 14:20 -0500, John W. Linville wrote:
-> This one didn't apply either.  Please check against wireless-next.
-> 
-> Thanks,
-> 
-> John
-> 
-> On Wed, Mar 07, 2012 at 09:52:41AM -0800, Wey-Yi Guy wrote:
-> > From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > 
-> > in iwlwifi: move setting up fw parameters
-> > 
-> > Meenakshi moved code up to configure the transport layer, but this
-> > code read the sku before it was set (from the EEPROM). This killed
-> > P2P.
-> > Only the ucode_flags are needed to configure the transport layer, not
-> > the sku which _must_ be set after the EEPROM is read.
-> > 
-> > We need to reconfigure the transport in case the EEPROM disabled PAN
-> > support. This is not the nicest thing to do, but we have no choice.
-> > Document that we are allowed to configure the transport several times
-> > before start_fw, but not after.
-> > 
-> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-agn.c   |   59 +++++++++++++++---------------
-> >  drivers/net/wireless/iwlwifi/iwl-trans.h |    3 +-
-> >  2 files changed, 32 insertions(+), 30 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> > index f150edc..3793dc4 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-> > @@ -1206,35 +1206,17 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
-> >  	/* TODO: remove fw from shared data later */
-> >  	priv->shrd->fw = fw;
-> >  
-> > -	/************************
-> > -	 * 2. Setup HW constants
-> > -	 ************************/
-> > -	iwl_set_hw_params(priv);
-> > +	/*
-> > +	 * Populate the state variables that the transport layer needs
-> > +	 * to know about.
-> > +	 */
-> > +	trans_cfg.op_mode = op_mode;
-> >  
-> >  	ucode_flags = fw->ucode_capa.flags;
-> >  
-> >  #ifndef CONFIG_IWLWIFI_P2P
-> >  	ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
-> >  #endif
-> > -	if (!(hw_params(priv).sku & EEPROM_SKU_CAP_IPAN_ENABLE))
-> > -		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
-> > -
-> > -	/*
-> > -	 * if not PAN, then don't support P2P -- might be a uCode
-> > -	 * packaging bug or due to the eeprom check above
-> > -	 */
-> > -	if (!(ucode_flags & IWL_UCODE_TLV_FLAGS_PAN))
-> > -		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
-> > -
-> > -
-> > -	/*****************************
-> > -	 * Configure transport layer
-> > -	 *****************************/
-> > -	/*
-> > -	 * Populate the state variables that the transport layer needs
-> > -	 * to know about.
-> > -	 */
-> > -	trans_cfg.op_mode = op_mode;
-> >  
-> >  	if (ucode_flags & IWL_UCODE_TLV_FLAGS_PAN) {
-> >  		priv->sta_key_max_num = STA_KEY_MAX_NUM_PAN;
-> > @@ -1277,7 +1259,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
-> >  	spin_lock_init(&priv->statistics.lock);
-> >  
-> >  	/***********************
-> > -	 * 3. Read REV register
-> > +	 * 2. Read REV register
-> >  	 ***********************/
-> >  	IWL_INFO(priv, "Detected %s, REV=0x%X\n",
-> >  		cfg(priv)->name, trans(priv)->hw_rev);
-> > @@ -1287,9 +1269,8 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
-> >  		goto out_free_traffic_mem;
-> >  
-> >  	/*****************
-> > -	 * 4. Read EEPROM
-> > +	 * 3. Read EEPROM
-> >  	 *****************/
-> > -	/* Read the EEPROM */
-> >  	err = iwl_eeprom_init(trans(priv), trans(priv)->hw_rev);
-> >  	/* Reset chip to save power until we load uCode during "up". */
-> >  	iwl_trans_stop_hw(trans(priv));
-> > @@ -1318,8 +1299,28 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
-> >  		priv->hw->wiphy->n_addresses++;
-> >  	}
-> >  
-> > +	/************************
-> > +	 * 4. Setup HW constants
-> > +	 ************************/
-> > +	iwl_set_hw_params(priv);
-> > +
-> > +	if (!(hw_params(priv).sku & EEPROM_SKU_CAP_IPAN_ENABLE)) {
-> > +		IWL_DEBUG_INFO(priv, "Your EEPROM disabled PAN");
-> > +		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
-> > +		/*
-> > +		 * if not PAN, then don't support P2P -- might be a uCode
-> > +		 * packaging bug or due to the eeprom check above
-> > +		 */
-> > +		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
-> > +		priv->sta_key_max_num = STA_KEY_MAX_NUM;
-> > +		trans_cfg.cmd_queue = IWL_DEFAULT_CMD_QUEUE_NUM;
-> > +
-> > +		/* Configure transport layer again*/
-> > +		iwl_trans_configure(trans(priv), &trans_cfg);
-> > +	}
-> > +
-> >  	/*******************
-> > -	 * 6. Setup priv
-> > +	 * 5. Setup priv
-> >  	 *******************/
-> >  
-> >  	err = iwl_init_drv(priv);
-> > @@ -1328,7 +1329,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
-> >  	/* At this point both hw and priv are initialized. */
-> >  
-> >  	/********************
-> > -	 * 7. Setup services
-> > +	 * 6. Setup services
-> >  	 ********************/
-> >  	iwl_setup_deferred_work(priv);
-> >  	iwl_setup_rx_handlers(priv);
-> > @@ -1355,7 +1356,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
-> >  	/**************************************************
-> >  	 * This is still part of probe() in a sense...
-> >  	 *
-> > -	 * 9. Setup and register with mac80211 and debugfs
-> > +	 * 7. Setup and register with mac80211 and debugfs
-> >  	 **************************************************/
-> >  	err = iwlagn_mac_setup_register(priv, &fw->ucode_capa);
-> >  	if (err)
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-> > index a40c272..7d1990c 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-> > @@ -335,7 +335,8 @@ struct iwl_trans_config {
-> >   * @write32: write a u32 to a register at offset ofs from the BAR
-> >   * @read32: read a u32 register at offset ofs from the BAR
-> >   * @configure: configure parameters required by the transport layer from
-> > - *	the op_mode.
-> > + *	the op_mode. May be called several times before start_fw, can't be
-> > + *	called after that.
-> >   */
-> >  struct iwl_trans_ops {
-> >  
-> > -- 
-> > 1.7.0.4
-> > 
-> > 
-> 
-
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 63fb0eb..a48d40f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1239,6 +1239,7 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 			   struct cfg80211_scan_request *req);
+ void ieee80211_scan_cancel(struct ieee80211_local *local);
++void ieee80211_run_deferred_scan(struct ieee80211_local *local);
+ ieee80211_rx_result
+ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0df2237..0737278 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1496,19 +1496,24 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct ieee80211_local *local = sdata->local;
+ 
++	mutex_lock(&local->mtx);
+ 	if (!(ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+-			      IEEE80211_STA_CONNECTION_POLL)))
+-	    return;
++			      IEEE80211_STA_CONNECTION_POLL))) {
++		mutex_unlock(&local->mtx);
++		return;
++	}
+ 
+ 	ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 			  IEEE80211_STA_BEACON_POLL);
+-	mutex_lock(&sdata->local->iflist_mtx);
+-	ieee80211_recalc_ps(sdata->local, -1);
+-	mutex_unlock(&sdata->local->iflist_mtx);
++
++	mutex_lock(&local->iflist_mtx);
++	ieee80211_recalc_ps(local, -1);
++	mutex_unlock(&local->iflist_mtx);
+ 
+ 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+-		return;
++		goto out;
+ 
+ 	/*
+ 	 * We've received a probe response, but are not sure whether
+@@ -1520,6 +1525,9 @@ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+ 	mod_timer(&ifmgd->conn_mon_timer,
+ 		  round_jiffies_up(jiffies +
+ 				   IEEE80211_CONNECTION_IDLE_TIME));
++out:
++	ieee80211_run_deferred_scan(local);
++	mutex_unlock(&local->mtx);
+ }
+ 
+ void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
+@@ -1586,17 +1594,18 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+ 
+-	if (sdata->local->scanning)
+-		return;
+-
+-	if (sdata->local->tmp_channel)
+-		return;
+-
+ 	mutex_lock(&ifmgd->mtx);
+ 
+ 	if (!ifmgd->associated)
+ 		goto out;
+ 
++	mutex_lock(&sdata->local->mtx);
++
++	if (sdata->local->tmp_channel || sdata->local->scanning) {
++		mutex_unlock(&sdata->local->mtx);
++		goto out;
++	}
++
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 	if (beacon && net_ratelimit())
+ 		printk(KERN_DEBUG "%s: detected beacon loss from AP "
+@@ -1623,6 +1632,8 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	else
+ 		ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
+ 
++	mutex_unlock(&sdata->local->mtx);
++
+ 	if (already)
+ 		goto out;
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 33cd169..1b90f97 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -387,6 +387,33 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 	return 0;
+ }
+ 
++static bool ieee80211_can_scan(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata)
++{
++	if (!list_empty(&local->work_list))
++		return false;
++
++	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++	    sdata->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
++				  IEEE80211_STA_CONNECTION_POLL))
++		return false;
++
++	return true;
++}
++
++void ieee80211_run_deferred_scan(struct ieee80211_local *local)
++{
++	lockdep_assert_held(&local->mtx);
++
++	if (!local->scan_req || local->scanning)
++		return;
++
++	if (!ieee80211_can_scan(local, local->scan_sdata))
++		return;
++
++	ieee80211_queue_delayed_work(&local->hw, &local->scan_work,
++				     round_jiffies_relative(0));
++}
+ 
+ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 				  struct cfg80211_scan_request *req)
+@@ -399,7 +426,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	if (local->scan_req)
+ 		return -EBUSY;
+ 
+-	if (!list_empty(&local->work_list)) {
++	if (!ieee80211_can_scan(local, sdata)) {
+ 		/* wait for the work to finish/time out */
+ 		local->scan_req = req;
+ 		local->scan_sdata = sdata;
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index c6e230e..1f74af3 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -226,13 +226,8 @@ static void ieee80211_work_work(struct work_struct *work)
+ 		run_again(local, jiffies + HZ/2);
+ 	}
+ 
+-	if (list_empty(&local->work_list) && local->scan_req &&
+-	    !local->scanning)
+-		ieee80211_queue_delayed_work(&local->hw,
+-					     &local->scan_work,
+-					     round_jiffies_relative(0));
+-
+ 	ieee80211_recalc_idle(local);
++	ieee80211_run_deferred_scan(local);
+ 
+ 	mutex_unlock(&local->mtx);
+ 
+-- 
+1.7.1
 
