@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6551 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758871Ab2CTPMY convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50875 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab2CPNWA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 11:12:24 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"Thiruvengadam, Aarthi" <athiruve@qca.qualcomm.com>
-CC: ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath6kl: handle probe response from P2P device in P2P
- GO mode
-Date: Tue, 20 Mar 2012 15:12:23 +0000
-Message-ID: <CB8DEBD4.A1E6%jouni@qca.qualcomm.com> (sfid-20120320_161228_921673_D5F386F6)
-In-Reply-To: <4F684247.6070800@qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 16 Mar 2012 09:22:00 -0400
+Subject: Re: [RFC 1/3] mac80211: do not scan and monitor connection in
+ parallel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20120316131322.GA10844@redhat.com>
+References: <1331899378-10543-1-git-send-email-sgruszka@redhat.com>
+	 <1331902378.6753.3.camel@jlt3.sipsolutions.net>
+	 <20120316131322.GA10844@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Mar 2012 14:21:58 +0100
+Message-ID: <1331904118.6753.11.camel@jlt3.sipsolutions.net> (sfid-20120316_142232_936517_F799675F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2012-03-16 at 14:13 +0100, Stanislaw Gruszka wrote:
+> On Fri, Mar 16, 2012 at 01:52:58PM +0100, Johannes Berg wrote:
+> > On Fri, 2012-03-16 at 13:02 +0100, Stanislaw Gruszka wrote:
+> > > Before we send probes in connection monitoring we check if scan is not
+> > > pending. But we do that check without locking. Fix that and also do not
+> > > start scan if connection monitoring is in progress.
+> > 
+> > Wouldn't it be easier to just abort the check instead of deferring the
+> > scan?
+> 
+> It would be easier. However we already defer scan on
+> !list_empty(&local->work_list) case. Also random failures of
+> scan request can not be well seen from user-space perspective.
 
+Ah, I didn't mean aborting the scan request, but rather the connection
+monitor check. But yeah, I guess you're right about already deferring.
 
-On 3/20/12 1:39 AM, "Kalle Valo" <kvalo@qca.qualcomm.com> wrote:
-
->On 03/15/2012 11:34 PM, Aarthi Thiruvengadam wrote:
->>+/* Check if SSID length is greater than DIRECT- */
->> +static bool ath6kl_is_p2p_go_ssid(const u8 *buf, size_t len)
->> +{
->> +	const struct ieee80211_mgmt *mgmt;
->> +	mgmt = (const struct ieee80211_mgmt *) buf;
->> +
->> +	/* variable[1] contains the SSID tag length */
-
->How do you know that it's SSID without checking the IE id from
->variable[0]? Is that guaranteed or something?
-
-The information elements in Probe Response frames (and other management
-frames for that matter) are in a fixed order, so the SSID element is
-always in this location.
-
-- Jouni
+johannes
 
