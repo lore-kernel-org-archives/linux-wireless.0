@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11459 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964952Ab2CEUiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:38:01 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 03/33] iwlwifi: reduce sta_lock hold time in TX
-Date: Mon,  5 Mar 2012 11:24:21 -0800
-Message-Id: <1330975491-19680-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213807_118417_1591E9BC)
-In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:36499 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932382Ab2CPV0h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 17:26:37 -0400
+Message-ID: <4F63B00A.4050904@candelatech.com> (sfid-20120316_222647_538321_B10BE2E4)
+Date: Fri, 16 Mar 2012 14:26:34 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 4/4] ath9k:  Support ethtool getstats api.
+References: <1331927952-8706-1-git-send-email-greearb@candelatech.com>  <1331927952-8706-4-git-send-email-greearb@candelatech.com>  <1331931232.2504.9.camel@bwh-desktop.uk.solarflarecom.com> <1331931427.2504.12.camel@bwh-desktop.uk.solarflarecom.com>
+In-Reply-To: <1331931427.2504.12.camel@bwh-desktop.uk.solarflarecom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/16/2012 01:57 PM, Ben Hutchings wrote:
+> On Fri, 2012-03-16 at 20:53 +0000, Ben Hutchings wrote:
+>> On Fri, 2012-03-16 at 12:59 -0700, greearb@candelatech.com wrote:
+>>> From: Ben Greear<greearb@candelatech.com>
+>>>
+>>> This returns many of the values that formerly could
+>>> only be obtained from debugfs.  This should be an
+>>> improvement when trying to access these counters
+>>> programatically.  Currently this support is only
+>>> enabled when DEBUGFS is enabled because otherwise
+>>> these stats are not accumulated.
+>> [...]
+>>
+>> Given that ethtool (unlike debugfs) is itself an unconditional feature,
+>> why not make this unconditional?  Is it expensive to accumulate the
+>> stats?
+>>
+>> Please at least fix the name.
+>                           ^ config option
+>
 
-When we TX, we hold the sta_lock for a long
-time, a lot of which isn't needed. Reduce
-the time we hold the lock. Note that this
-doesn't really change anything as the code
-is already under the other spinlock, but it
-makes the code easier to read.
+The ath9k stats are currently only gathered when debugfs is enabled.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+I could do some patches in the future to allow stats to always
+be gathered regardless of debugfs being enabled, but since
+ath9k is used on small form factor systems, there may be some
+resistance to enabling that all the time.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 81a3b0e..59509d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -341,13 +341,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	if (info->flags & IEEE80211_TX_CTL_AMPDU)
- 		is_agg = true;
- 
--	/* irqs already disabled/saved above when locking priv->shrd->lock */
--	spin_lock(&priv->shrd->sta_lock);
--
- 	dev_cmd = kmem_cache_alloc(priv->tx_cmd_pool, GFP_ATOMIC);
- 
- 	if (unlikely(!dev_cmd))
--		goto drop_unlock_sta;
-+		goto drop_unlock_priv;
- 
- 	memset(dev_cmd, 0, sizeof(*dev_cmd));
- 	tx_cmd = (struct iwl_tx_cmd *) dev_cmd->payload;
-@@ -372,6 +369,9 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	info->driver_data[0] = ctx;
- 	info->driver_data[1] = dev_cmd;
- 
-+	/* irqs already disabled/saved above when locking priv->shrd->lock */
-+	spin_lock(&priv->shrd->sta_lock);
-+
- 	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
- 		u8 *qc = NULL;
- 		struct iwl_tid_data *tid_data;
+Thanks,
+Ben
+
 -- 
-1.7.0.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
