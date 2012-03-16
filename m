@@ -1,46 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64977 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964794Ab2CUJVo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2012 05:21:44 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V3] ath6kl: Dump htc header when invalid Rx frame length is detected
-Date: Wed, 21 Mar 2012 14:52:16 +0530
-Message-ID: <1332321736-26881-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120321_102148_125941_73E6FD26)
+Received: from mx1.redhat.com ([209.132.183.28]:8887 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965200Ab2CPPIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 11:08:19 -0400
+Date: Fri, 16 Mar 2012 15:37:31 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: do not nulify ctx->vif on reset
+Message-ID: <20120316143730.GA11278@redhat.com> (sfid-20120316_160823_174889_ADCD3B3D)
+References: <1331651434-4370-1-git-send-email-sgruszka@redhat.com>
+ <1331651730.3329.6.camel@jlt3.sipsolutions.net>
+ <20120314062549.GA2788@redhat.com>
+ <1331708304.3376.0.camel@jlt3.sipsolutions.net>
+ <20120314070748.GB2788@redhat.com>
+ <20120314081424.GC2788@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120314081424.GC2788@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dump htc header along with the warning message when the request
-to Rx with invalid frame length is detected.
+On Wed, Mar 14, 2012 at 09:14:24AM +0100, Stanislaw Gruszka wrote:
+> On Wed, Mar 14, 2012 at 08:07:48AM +0100, Stanislaw Gruszka wrote:
+> > I'll update and recheck again.
+> 
+> On updated tree (head 035364916f75151b4b91ea53968c6beba7545317) devices
+> stop working here on any forced reset during TX as well. There are
+> messages like below in dmesg:
+> 
+> wlan3: dropped data frame to not associated station 00:00:00:00:00:00
+> 
+> And one time crash happened too, in:
+> 
+> (gdb) l *(iwl_remove_dynamic_key+0x1f0)
+> 0x15e20 is in iwl_remove_dynamic_key (drivers/net/wireless/iwlwifi/iwl-agn-sta.c:1105).
+> 1100		/*
+> 1101		 * The device expects GTKs for station interfaces to be
+> 1102		 * installed as GTKs for the AP station. If we have no
+> 1103		 * station ID, then use the ap_sta_id in that case.
+> 1104		 */
+> 1105		if (vif->type == NL80211_IFTYPE_STATION && vif_priv->ctx)
+> 1106			return vif_priv->ctx->ap_sta_id;
+> 1107	
+> 1108		return IWL_INVALID_STATION;
+> 1109	}
+> 
+> To reproduce problems, I'm doing "ping -f 192.168.1.1" on one console
+> and run script [1] on other console.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
-V2 - Leave a space before htc_hdr
-V3 - Don't split the debug message
+So what we do here? Patch fix possible crash on firmware restart.
+We have a few places where ctx->vif is dereferences without a NULL
+check. Perhaps those places should be verified instead. What protects
+to dereference ctx->vif after iwl_mac_remove_interface() ?
 
- drivers/net/wireless/ath/ath6kl/htc.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Regarding restart, this apparently is broken - hung the adapter such the
+module reload is needed. To mitigate the problems You just disable
+watchdog on various adapters.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 4849d99..4dc3228 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -1353,7 +1353,9 @@ static int ath6kl_htc_rx_setup(struct htc_target *target,
- 					sizeof(*htc_hdr));
- 
- 	if (!htc_valid_rx_frame_len(target, ep->eid, full_len)) {
--		ath6kl_warn("Rx buffer requested with invalid length\n");
-+		ath6kl_warn("Rx buffer requested with invalid length htc_hdr:eid %d, flags 0x%x, len %d\n",
-+			     htc_hdr->eid, htc_hdr->flags,
-+			     le16_to_cpu(htc_hdr->payld_len));
- 		return -EINVAL;
- 	}
- 
--- 
-1.7.0.4
+I do not think restart should be fixed. I think better would be disable
+restart by default (set fw_restart=0) and start to solve real problems :-)
+
+This is of course not easy, but perhaps could be done using tracing. It
+offer a nice feature that allow to enable and disable logging on
+runtime, (tracing_on(), tracing_off() functions). So offer a compile
+option to make IWL_DEBUG use trace_printk(), start tracing on module
+load, disable it on microcode error or queue stuck. All of that should
+help with debugging inimitable problems, as ftrace log data into memory
+and use ring buffer, hence allow to see (lot of) latest actions before
+the problem occurs. I could write the patches, but since you are
+constantly refactoring the iwlwifi driver better if you will do this.
+How about that?
+
+Stanislaw
 
