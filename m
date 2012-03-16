@@ -1,83 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2171 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752057Ab2CBV4K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 16:56:10 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 7/7] brcm80211: smac: cleanup couple of debug output
- statements
-Date: Fri, 2 Mar 2012 22:55:51 +0100
-Message-ID: <1330725351-3803-8-git-send-email-arend@broadcom.com> (sfid-20120302_225614_737807_43711970)
-In-Reply-To: <1330725351-3803-1-git-send-email-arend@broadcom.com>
-References: <1330725351-3803-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.candelatech.com ([208.74.158.172]:33694 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932273Ab2CPT7Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 15:59:25 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 3/4] mac80211:  Framework to get wifi-driver stats via ethtool.
+Date: Fri, 16 Mar 2012 12:59:11 -0700
+Message-Id: <1331927952-8706-3-git-send-email-greearb@candelatech.com> (sfid-20120316_205934_920145_D2D3379E)
+In-Reply-To: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
+References: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tidying up some debug statements in brcms_c_ampdu_dotxstatus_complete()
-that got broken strings to satisfy checkpatch, but the rules changed.
+From: Ben Greear <greearb@candelatech.com>
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This adds hooks to call into the driver to get additional
+stats for the ethtool API.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |   20 +++++++++-----------
- 1 files changed, 9 insertions(+), 11 deletions(-)
+v2:  Add kdoc comments, trace support.
+     Patch differs based on chaging of 2/4 patch as well.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index dbee696..95b5902 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -959,14 +959,13 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 		if (supr_status) {
- 			update_rate = false;
- 			if (supr_status == TX_STATUS_SUPR_BADCH) {
--				wiphy_err(wiphy, "%s: Pkt tx suppressed, "
--					  "illegal channel possibly %d\n",
-+				wiphy_err(wiphy,
-+					  "%s: Pkt tx suppressed, illegal channel possibly %d\n",
- 					  __func__, CHSPEC_CHANNEL(
- 					  wlc->default_bss->chanspec));
- 			} else {
- 				if (supr_status != TX_STATUS_SUPR_FRAG)
--					wiphy_err(wiphy, "%s:"
--						  "supr_status 0x%x\n",
-+					wiphy_err(wiphy, "%s: supr_status 0x%x\n",
- 						  __func__, supr_status);
- 			}
- 			/* no need to retry for badch; will fail again */
-@@ -988,9 +987,8 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 			}
- 		} else if (txs->phyerr) {
- 			update_rate = false;
--			wiphy_err(wiphy, "wl%d: ampdu tx phy "
--				  "error (0x%x)\n", wlc->pub->unit,
--				  txs->phyerr);
-+			wiphy_err(wiphy, "%s: ampdu tx phy error (0x%x)\n",
-+				  __func__, txs->phyerr);
+:100644 100644 d49928b... a90cc8e... M	include/net/mac80211.h
+:100644 100644 bb834d7... f82b285... M	net/mac80211/cfg.c
+:100644 100644 b6ef8e7... c2d1661... M	net/mac80211/driver-ops.h
+:100644 100644 6e9df8f... f05fc9c... M	net/mac80211/driver-trace.h
+ include/net/mac80211.h      |   17 +++++++++++++++++
+ net/mac80211/cfg.c          |   19 ++++++++++++++++---
+ net/mac80211/driver-ops.h   |   37 +++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-trace.h |   15 +++++++++++++++
+ 4 files changed, 85 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d49928b..a90cc8e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2108,6 +2108,14 @@ enum ieee80211_frame_release_type {
+  *	The @tids parameter is a bitmap and tells the driver which TIDs the
+  *	frames will be on; it will at most have two bits set.
+  *	This callback must be atomic.
++ *
++ * @get_et_sset_count:  Ethtool API to get string-set count.
++ *
++ * @get_et_stats:  Ethtool API to get a set of u64 stats.
++ *
++ * @get_et_strings:  Ethtool API to get a set of strings to describe stats
++ *	and perhaps other supported types of ethtool data-sets.
++ *
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2236,6 +2244,15 @@ struct ieee80211_ops {
+ 					u16 tids, int num_frames,
+ 					enum ieee80211_frame_release_type reason,
+ 					bool more_data);
++
++	int	(*get_et_sset_count)(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif, int sset);
++	void	(*get_et_stats)(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ethtool_stats *stats, u64 *data);
++	void	(*get_et_strings)(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  u32 sset, u8 *data);
+ };
  
- 			if (brcm_msg_level & LOG_ERROR_VAL) {
- 				brcmu_prpkt("txpkt (AMPDU)", p);
-@@ -1018,10 +1016,10 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 		ack_recd = false;
- 		if (ba_recd) {
- 			bindex = MODSUB_POW2(seq, start_seq, SEQNUM_MAX);
--			BCMMSG(wlc->wiphy, "tid %d seq %d,"
--				" start_seq %d, bindex %d set %d, index %d\n",
--				tid, seq, start_seq, bindex,
--				isset(bitmap, bindex), index);
-+			BCMMSG(wiphy,
-+			       "tid %d seq %d, start_seq %d, bindex %d set %d, index %d\n",
-+			       tid, seq, start_seq, bindex,
-+			       isset(bitmap, bindex), index);
- 			/* if acked then clear bit and free packet */
- 			if ((bindex < AMPDU_TX_BA_MAX_WSIZE)
- 			    && isset(bitmap, bindex)) {
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index bb834d7..f82b285 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -125,10 +125,17 @@ static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       int sset)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	int rv = 0;
++
+ 	if (sset == ETH_SS_STATS)
+-		return STA_STATS_LEN;
++		rv += STA_STATS_LEN;
+ 
+-	return -EOPNOTSUPP;
++	rv += drv_get_et_sset_count(sdata, sset);
++
++	if (rv == 0)
++		return -EOPNOTSUPP;
++	return rv;
+ }
+ 
+ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+@@ -167,16 +174,22 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+ 		BUG_ON(i != STA_STATS_LEN);
+ 	}
+ 	rcu_read_unlock();
++
++	drv_get_et_stats(sdata, stats, &(data[STA_STATS_LEN]));
+ }
+ 
+ static void ieee80211_get_et_strings(struct wiphy *wiphy,
+ 				     struct net_device *dev,
+ 				     u32 sset, u8 *data)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	int sz_sta_stats = 0;
++
+ 	if (sset == ETH_SS_STATS) {
+-		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
++		sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
+ 		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
+ 	}
++	drv_get_et_strings(sdata, sset, &(data[sz_sta_stats]));
+ }
+ 
+ 
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index b6ef8e7..c2d1661 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -35,6 +35,43 @@ static inline void drv_tx_frags(struct ieee80211_local *local,
+ 	local->ops->tx_frags(&local->hw, vif, sta, skbs);
+ }
+ 
++static inline void drv_get_et_strings(struct ieee80211_sub_if_data *sdata,
++				      u32 sset, u8 *data)
++{
++	struct ieee80211_local *local = sdata->local;
++	if (local->ops->get_et_strings) {
++		trace_drv_get_et_strings(local, sset);
++		local->ops->get_et_strings(&local->hw, &sdata->vif, sset, data);
++		trace_drv_return_void(local);
++	}
++}
++
++static inline void drv_get_et_stats(struct ieee80211_sub_if_data *sdata,
++				    struct ethtool_stats *stats,
++				    u64 *data)
++{
++	struct ieee80211_local *local = sdata->local;
++	if (local->ops->get_et_stats) {
++		trace_drv_get_et_stats(local);
++		local->ops->get_et_stats(&local->hw, &sdata->vif, stats, data);
++		trace_drv_return_void(local);
++	}
++}
++
++static inline int drv_get_et_sset_count(struct ieee80211_sub_if_data *sdata,
++					int sset)
++{
++	struct ieee80211_local *local = sdata->local;
++	int rv = 0;
++	if (local->ops->get_et_sset_count) {
++		trace_drv_get_et_sset_count(local, sset);
++		rv = local->ops->get_et_sset_count(&local->hw, &sdata->vif,
++						   sset);
++		trace_drv_return_int(local, rv);
++	}
++	return rv;
++}
++
+ static inline int drv_start(struct ieee80211_local *local)
+ {
+ 	int ret;
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6e9df8f..f05fc9c 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -161,6 +161,21 @@ DEFINE_EVENT(local_only_evt, drv_start,
+ 	TP_ARGS(local)
+ );
+ 
++DEFINE_EVENT(local_u32_evt, drv_get_et_strings,
++	     TP_PROTO(struct ieee80211_local *local, u32 sset),
++	     TP_ARGS(local, sset)
++);
++
++DEFINE_EVENT(local_u32_evt, drv_get_et_sset_count,
++	     TP_PROTO(struct ieee80211_local *local, u32 sset),
++	     TP_ARGS(local, sset)
++);
++
++DEFINE_EVENT(local_only_evt, drv_get_et_stats,
++	     TP_PROTO(struct ieee80211_local *local),
++	     TP_ARGS(local)
++);
++
+ DEFINE_EVENT(local_only_evt, drv_suspend,
+ 	TP_PROTO(struct ieee80211_local *local),
+ 	TP_ARGS(local)
 -- 
-1.7.5.4
-
+1.7.3.4
 
