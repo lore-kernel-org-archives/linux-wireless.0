@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:54894 "HELO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1161114Ab2CPDwW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47374 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032852Ab2CPPVp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 23:52:22 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 1/5] mwifiex: update signal strength in mBm units
-Date: Thu, 15 Mar 2012 20:51:47 -0700
-Message-Id: <1331869911-10624-2-git-send-email-bzhao@marvell.com> (sfid-20120316_045225_449495_6E281EC1)
-In-Reply-To: <1331869911-10624-1-git-send-email-bzhao@marvell.com>
-References: <1331869911-10624-1-git-send-email-bzhao@marvell.com>
+	Fri, 16 Mar 2012 11:21:45 -0400
+Subject: Re: [RFC] cfg80211: Indicate the automatic channel selection
+ capability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vivek Natarajan <nataraja@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1331909733-16767-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20120316_155551_647367_7F3C7BB8)
+References: <1331909733-16767-1-git-send-email-nataraja@qca.qualcomm.com>
+	 (sfid-20120316_155551_647367_7F3C7BB8)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Mar 2012 16:21:42 +0100
+Message-ID: <1331911302.6753.26.camel@jlt3.sipsolutions.net> (sfid-20120316_162148_685342_A72D04B0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Fri, 2012-03-16 at 20:25 +0530, Vivek Natarajan wrote:
+> Let the driver automatically select the channel based on the
+> channel conditions when it is not explicitly set.
+> The drivers which have this capability in the firmware can set
+> the WIPHY_FLAG_SUPPORTS_ACS flag to indicate that to the
+> userspace.
 
-During wiphy registration signal_type is initialized to
-CFG80211_SIGNAL_TYPE_MBM. So convert signal strength from dBm to
-mBm. Also, the value is absolute. Make it negative before
-sending to cfg80211.
+> + * @NL80211_ATTR_ACS: Indicates whether the firmware is capable of doing
+> + *      automatic channel selection if the channel is not explicitly set.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/scan.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Ok so ... this is lacking a lot of information. The state "channel is
+not explicitly set" doesn't even really exist either for AP mode. I'm
+assuming you're talking about AP mode since you never actually said
+so ......
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index aff9cd7..0c4ea5b 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1667,8 +1667,9 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 
- 		memcpy(bssid, bcn_param->bssid, ETH_ALEN);
- 
--		rssi = (s32) (bcn_param->rssi);
--		dev_dbg(adapter->dev, "info: InterpretIE: RSSI=%02X\n", rssi);
-+		rssi = (s32) bcn_param->rssi;
-+		rssi = (-rssi) * 100;		/* Convert dBm to mBm */
-+		dev_dbg(adapter->dev, "info: InterpretIE: RSSI=%d\n", rssi);
- 
- 		beacon_period = le16_to_cpu(bcn_param->beacon_period);
- 
--- 
-1.7.0.2
+Since there's no "channel unset" state, you'd want to have some sort of
+"please select a good channel and tell me" when you do START_AP in
+nl80211, or something like that, right?
+
+Please think about this a bit more.
+
+johannes
 
