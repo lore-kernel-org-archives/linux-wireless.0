@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38575 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753235Ab2CJM5R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 07:57:17 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	c_manoha@qca.qualcomm.com
-Subject: [PATCH 3.4] ath9k: fix going to full-sleep on PS idle
-Date: Sat, 10 Mar 2012 13:57:04 +0100
-Message-Id: <1331384224-61867-1-git-send-email-nbd@openwrt.org> (sfid-20120310_135748_014890_A92D8247)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:49518 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750751Ab2CPEC5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 00:02:57 -0400
+Received: by bkcik5 with SMTP id ik5so2609019bkc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 21:02:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120315110219.GA2335@redhat.com>
+References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com>
+	<20120130184446.GB2493@tuxdriver.com>
+	<CA++WF2PnEzS5CAfryaPrJSs3Xb3s0WK1zR7N5o8+ud2HiU5GCw@mail.gmail.com>
+	<20120315110219.GA2335@redhat.com>
+Date: Thu, 15 Mar 2012 21:02:56 -0700
+Message-ID: <CA++WF2P8E=0Xym92MuU84RwaP5Y9uyCyqw5jefh25QDz-Cpzkw@mail.gmail.com> (sfid-20120316_050301_332237_2314CCD6)
+Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tom Gundersen <teg@jklm.no>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The check for PS_WAIT_FOR_TX_ACK was inverted, the hardware should only go
-to full sleep if no tx is pending.
+Hi Stanislaw,
 
-Reported-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
----
- drivers/net/wireless/ath/ath9k/main.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+On 15 March 2012 04:02, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Are you plan to fix issues caused on current firmware loading changes on
+> linux?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index cc2535c..ca25f50 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -118,13 +118,15 @@ void ath9k_ps_restore(struct ath_softc *sc)
- 	if (--sc->ps_usecount != 0)
- 		goto unlock;
- 
--	if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
-+	if (sc->ps_flags & PS_WAIT_FOR_TX_ACK)
-+		goto unlock;
-+
-+	if (sc->ps_idle)
- 		mode = ATH9K_PM_FULL_SLEEP;
- 	else if (sc->ps_enabled &&
- 		 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
- 			      PS_WAIT_FOR_CAB |
--			      PS_WAIT_FOR_PSPOLL_DATA |
--			      PS_WAIT_FOR_TX_ACK)))
-+			      PS_WAIT_FOR_PSPOLL_DATA)))
- 		mode = ATH9K_PM_NETWORK_SLEEP;
- 	else
- 		goto unlock;
--- 
-1.7.3.2
+I was able to reproduce this issue; unfortunately, I don't have a
+proper fix for it yet.
 
+> We have a few bug reports about that:
+>
+> https://bugzilla.redhat.com/show_bug.cgi?id=783708
+> https://bugzilla.redhat.com/show_bug.cgi?id=802106
+
+Thanks for the info, I will take a look.
+
+Stanislav.
