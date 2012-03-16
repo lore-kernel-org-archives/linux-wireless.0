@@ -1,58 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58075 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752958Ab2CQVO4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2012 17:14:56 -0400
-Message-ID: <4F64FECD.9000802@lwfinger.net> (sfid-20120317_221521_165969_241F0FFF)
-Date: Sat, 17 Mar 2012 16:14:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:58819 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756364Ab2CPNN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 09:13:27 -0400
+Date: Fri, 16 Mar 2012 14:13:23 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 1/3] mac80211: do not scan and monitor connection in
+ parallel
+Message-ID: <20120316131322.GA10844@redhat.com> (sfid-20120316_141331_017635_61E7372E)
+References: <1331899378-10543-1-git-send-email-sgruszka@redhat.com>
+ <1331902378.6753.3.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] rtlwifi: Use is_zero_ether_addr, remove line continuation
-References: <1d738d4a4dd61978f969ed4a43f2dd3717f51a19.1332011552.git.joe@perches.com>
-In-Reply-To: <1d738d4a4dd61978f969ed4a43f2dd3717f51a19.1332011552.git.joe@perches.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1331902378.6753.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/17/2012 02:13 PM, Joe Perches wrote:
-> Use the normal kernel facilities and use %pM
-> to print the all zero mac address.
->
-> Remove unnecessary line continuation.
->
-> Signed-off-by: Joe Perches<joe@perches.com>
-> ---
->   drivers/net/wireless/rtlwifi/cam.c |    5 ++---
->   1 files changed, 2 insertions(+), 3 deletions(-)
+On Fri, Mar 16, 2012 at 01:52:58PM +0100, Johannes Berg wrote:
+> On Fri, 2012-03-16 at 13:02 +0100, Stanislaw Gruszka wrote:
+> > Before we send probes in connection monitoring we check if scan is not
+> > pending. But we do that check without locking. Fix that and also do not
+> > start scan if connection monitoring is in progress.
+> 
+> Wouldn't it be easier to just abort the check instead of deferring the
+> scan?
 
-ACKed-by: Larry.Finger@lwfinger.net
+It would be easier. However we already defer scan on
+!list_empty(&local->work_list) case. Also random failures of
+scan request can not be well seen from user-space perspective.
 
-Is there a PATCH 2/2? I did not receive it.
-
-Larry
-
->
-> diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-> index 5c7d579..3d8cc4a 100644
-> --- a/drivers/net/wireless/rtlwifi/cam.c
-> +++ b/drivers/net/wireless/rtlwifi/cam.c
-> @@ -328,10 +328,9 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
->   		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG, "sta_addr is NULL\n");
->   	}
->
-> -	if ((sta_addr[0]|sta_addr[1]|sta_addr[2]|sta_addr[3]|\
-> -				sta_addr[4]|sta_addr[5]) == 0) {
-> +	if (is_zero_ether_addr(sta_addr)) {
->   		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
-> -			 "sta_addr is 00:00:00:00:00:00\n");
-> +			 "sta_addr is %pM\n", sta_addr);
->   		return;
->   	}
->   	/* Does STA already exist? */
-
+Stanislaw
