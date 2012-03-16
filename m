@@ -1,40 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:36967 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772Ab2CAFJ4 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33696 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932583Ab2CPT7a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 00:09:56 -0500
-Received: by vcqp1 with SMTP id p1so180394vcq.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 21:09:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4F4E9A36.2080809@lacto.se>
-References: <4F4E9A36.2080809@lacto.se>
-Date: Thu, 1 Mar 2012 10:39:55 +0530
-Message-ID: <CAD2nsn2ifGDPr_J7LtBS04yCkxg12jQShrCDCBUERmOC5kodyA@mail.gmail.com> (sfid-20120301_061038_169931_67F924F8)
-Subject: Re: "Failed to stop Tx DMA" and "Could not stop RX" with AR9485
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: =?ISO-8859-1?Q?Kim_Lidstr=F6m?= <dexter@lacto.se>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Adrian Chadd <adrian.chadd@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 16 Mar 2012 15:59:30 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 2/4] mac80211:  Support getting sta_info stats via ethtool.
+Date: Fri, 16 Mar 2012 12:59:10 -0700
+Message-Id: <1331927952-8706-2-git-send-email-greearb@candelatech.com> (sfid-20120316_205945_542022_CB39D3A7)
+In-Reply-To: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
+References: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> With this message I have attached a log with the error messages.
-> This has been a problem since.. Uhm.. Kernel 3.2.something and I'm
-> currently running 3.2.8.
-> For some reason it happened at least 3-4 times shortly after each other
-> today - so I thought I might ask on here what's happening.
+From: Ben Greear <greearb@candelatech.com>
 
-disabling power save would be a nice idea,  to see if this issue disappears.
-i got the same issue after a long stress test with some other card, sujith
-gave me the idea to see if disabling PS helps
-sudo iwconfig wlanX power off
-sudo iw dev wlanX set power_save off
-also please ensure that you run with your power adapter :) i noticed
-PS gets enabled
-via wext when we plug out the power adapter
+This lets ethtool print out stats related to station
+interfaces.  Does not yet get stats from the underlying
+driver.
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+v2:  Minor changes to make next patch that adds calls
+     into the driver smaller/cleaner.
+
+:100644 100644 cf5b08a... bb834d7... M	net/mac80211/cfg.c
+ net/mac80211/cfg.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 71 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index cf5b08a..bb834d7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -112,6 +112,74 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
++	"rx_packets", "rx_bytes", "wep_weak_iv_count",
++	"rx_duplicates", "rx_fragments", "rx_dropped",
++	"tx_packets", "tx_bytes", "tx_fragments",
++	"tx_filtered", "tx_retry_failed", "tx_retries",
++	"beacon_loss"
++};
++#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
++
++static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
++				       struct net_device *dev,
++				       int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return STA_STATS_LEN;
++
++	return -EOPNOTSUPP;
++}
++
++static void ieee80211_get_et_stats(struct wiphy *wiphy,
++				   struct net_device *dev,
++				   struct ethtool_stats *stats,
++				   u64 *data)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++	struct ieee80211_local *local = sdata->local;
++
++	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		int i = 0;
++
++		/* Make sure this station belongs to the proper dev */
++		if (sta->sdata->dev != dev)
++			continue;
++
++		data[i++] += sta->rx_packets;
++		data[i++] += sta->rx_bytes;
++		data[i++] += sta->wep_weak_iv_count;
++		data[i++] += sta->num_duplicates;
++		data[i++] += sta->rx_fragments;
++		data[i++] += sta->rx_dropped;
++
++		data[i++] += sta->tx_packets;
++		data[i++] += sta->tx_bytes;
++		data[i++] += sta->tx_fragments;
++		data[i++] += sta->tx_filtered_count;
++		data[i++] += sta->tx_retry_failed;
++		data[i++] += sta->tx_retry_count;
++		data[i++] += sta->beacon_loss_count;
++		BUG_ON(i != STA_STATS_LEN);
++	}
++	rcu_read_unlock();
++}
++
++static void ieee80211_get_et_strings(struct wiphy *wiphy,
++				     struct net_device *dev,
++				     u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS) {
++		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
++		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
++	}
++}
++
++
+ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 			     struct key_params *params)
+@@ -2768,4 +2836,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
++	.get_et_sset_count = ieee80211_get_et_sset_count,
++	.get_et_stats = ieee80211_get_et_stats,
++	.get_et_strings = ieee80211_get_et_strings,
+ };
 -- 
-thanks,
-shafi
+1.7.3.4
+
