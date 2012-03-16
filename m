@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32468 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755681Ab2CDX5r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 18:57:47 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 09/22] NFC: Set the right LLCP N(R) value for I frames
-Date: Mon,  5 Mar 2012 01:03:41 +0100
-Message-Id: <1330905834-6994-10-git-send-email-sameo@linux.intel.com> (sfid-20120305_005751_391943_EDE512CB)
-In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
-References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:52207 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032852Ab2CPPG1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 11:06:27 -0400
+Message-ID: <4F6356F0.5060307@candelatech.com> (sfid-20120316_160631_246052_7AA08EFB)
+Date: Fri, 16 Mar 2012 08:06:24 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Florian Fainelli <florian@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/4] cfg80211:  Add framework to support ethtool stats.
+References: <1331853606-28434-1-git-send-email-greearb@candelatech.com> <4F631087.4040509@openwrt.org>
+In-Reply-To: <4F631087.4040509@openwrt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/llcp.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On 03/16/2012 03:05 AM, Florian Fainelli wrote:
+> Hi,
+>
 
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index 577bcb9..2506810 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -419,7 +419,7 @@ static u8 nfc_llcp_nr(struct sk_buff *pdu)
- 
- static void nfc_llcp_set_nrns(struct nfc_llcp_sock *sock, struct sk_buff *pdu)
- {
--	pdu->data[2] = (sock->send_n << 4) | ((sock->recv_n - 1) % 16);
-+	pdu->data[2] = (sock->send_n << 4) | (sock->recv_n % 16);
- 	sock->send_n = (sock->send_n + 1) % 16;
- 	sock->recv_ack_n = (sock->recv_n - 1) % 16;
- }
+> I do not think this is particularly a good idea to make eththool report wireless interfaces statistics:
+> - these are 802.11 interfaces and so they have specific statistics to report which are different from pure ethernet adapters
+> - people will start adding more statistics to ethtool because this or that wifi-specific counter is not reported, it is abusing the tool imho.
+
+The ethtool stats are designed to display custom driver stats in a somewhat standard manner.  There is no
+expectation as to what stats are or should be available..some new wired Intel drivers report great numbers of
+stats, and some drivers report none.
+
+But, assuming we do not change the stat names all the time (adding new ones or re-arranging order is fine),
+a tool can be written to parse the stats on a per-driver basis without much difficulty.
+
+Thanks,
+Ben
+
 -- 
-1.7.7.3
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
