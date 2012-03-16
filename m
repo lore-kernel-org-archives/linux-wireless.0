@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:33504 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755953Ab2CGShk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 13:37:40 -0500
-Message-ID: <1331145456.2140.61.camel@joe2Laptop> (sfid-20120307_193743_634493_F72B115C)
-Subject: Re: [PATCH 00/12] ath6kl: checkpatch fixes
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 07 Mar 2012 10:37:36 -0800
-In-Reply-To: <4F57A193.3030406@qca.qualcomm.com>
-References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
-	 <1330537026.13689.1.camel@joe2Laptop> <4F4E635A.3060003@qca.qualcomm.com>
-	 <1330539665.13689.9.camel@joe2Laptop> <4F57A193.3030406@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51563 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753171Ab2CPNif (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 09:38:35 -0400
+Message-ID: <4F634259.7040107@etit.tu-chemnitz.de> (sfid-20120316_143842_804261_776D594F)
+Date: Fri, 16 Mar 2012 14:38:33 +0100
+From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [mac80211] UAPSD: WLAN_STA_PS flag  cleared prematurely?
+References: <4F630757.6070901@etit.tu-chemnitz.de> <1331901852.6753.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1331901852.6753.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-03-07 at 19:57 +0200, Kalle Valo wrote:
-> On 02/29/2012 08:21 PM, Joe Perches wrote:
-> > On Wed, 2012-02-29 at 19:41 +0200, Kalle Valo wrote:
-> >> On 02/29/2012 07:37 PM, Joe Perches wrote:
-> >>> Why not just make these functions?
-> >> Because of the HI_ITEM() macro I can't pass the item parameter to a
-> >> function:
-> >> #define HI_ITEM(item)  offsetof(struct host_interest, item)
-> > Perhaps something like:
-> > void _ath6kl_bmi_write_hi32(struct ath6kl ar, size_t offset, u32 *val)
-> > {
-> > 	u32 addr;
-> > 	__le32 v;
-> > 
-> > 	addr = ath6kl_get_hi_item_addr(ar, offset);
-> > 	v = cpu_to_le32(*val);
-> > 	ath6kl_bmi_write(ar, addr, (u8 *)&v, sizeof(v));
-> > }
-> > #define ath6kl_bmi_write_hi32(ar, item, val)		\
-> > 	_ath6kl_bmi_write_hi32(ar, HI_ITEM(item), &(val))
-> 
-> I tried this but actually this ends to a header file dependency hell. I
-> don't want to deal with that right now so I have to use the original macros.
+On 03/16/12 13:44, Johannes Berg wrote:
+> On Fri, 2012-03-16 at 10:26 +0100, Marco Porsch wrote:
+>> Hi all,
+>>
+>> in sta_info.c : ieee80211_sta_ps_deliver_response the
+>> IEEE80211_TX_STATUS_EOSP is set for all to-be-sent frames, not only for
+>> the last. But only the last buffered frame actually gets the EOSP flag.
+>>
+>>
+>> /* set EOSP for the frame */
+>> if (reason == IEEE80211_FRAME_RELEASE_UAPSD&&
+>>       qoshdr&&  skb_queue_empty(&frames))
+>> 	*qoshdr |= IEEE80211_QOS_CTL_EOSP;
+>>
+>> info->flags |= IEEE80211_TX_STATUS_EOSP |
+>>          IEEE80211_TX_CTL_REQ_TX_STATUS;
+>>
+>>
+>> Consequence is, that the WLAN_STA_SP flag gets cleared (multiple times)
+>> in ieee80211_tx_status before the last frame with EOSP has been sent.
+>> Is this correct?
+>
+> Looks like the bug is above, the EOSP/TX_STATUS should only be set for
+> the last frame?
 
-No worries.
-When your series is stable, maybe I'll play with it.
+I Agree. But what about the case, when the last frame is not a QoS 
+frame? Can this even happen - or is U-APSD only for QoS STA?
+Then we would have to manually append a QoS Null with the EOSP flag + 
+TX_STATUS?
 
+So like this:
+
+/* set EOSP for the _last_ frame or appended a QoS Null when needed */
+if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
+     skb_queue_empty(&frames)) {
+	if (qoshdr) {
+		*qoshdr |= IEEE80211_QOS_CTL_EOSP;
+
+		info->flags |= IEEE80211_TX_STATUS_EOSP |
+		               IEEE80211_TX_CTL_REQ_TX_STATUS;
+	} else {
+		ieee80211_send_null_response(sdata, tid, reason);
+	}
+}
+
+Open issues:
+Which tid?
+Would this Null now be sent after or before the last frame?
+What if the EOSP frame is lost?
+
+Regards,
+Marco
 
