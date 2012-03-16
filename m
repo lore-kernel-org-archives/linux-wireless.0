@@ -1,66 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:35690 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753227Ab2CGJv4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 04:51:56 -0500
-Date: Wed, 7 Mar 2012 12:51:42 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: sameo@linux.intel.com
+Received: from mx1.redhat.com ([209.132.183.28]:43670 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752517Ab2CPN06 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 09:26:58 -0400
+Date: Fri, 16 Mar 2012 14:16:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Subject: re: NFC: Fragment LLCP I frames
-Message-ID: <20120307095142.GA24805@elgon.mountain> (sfid-20120307_105159_753731_F6B0C6A8)
+Subject: Re: [RFC 2/3] mac80211: protect ->scanning by mutex in
+ ieee80211_work_work()
+Message-ID: <20120316131644.GB10844@redhat.com> (sfid-20120316_142702_123468_60726234)
+References: <1331899378-10543-1-git-send-email-sgruszka@redhat.com>
+ <1331899378-10543-2-git-send-email-sgruszka@redhat.com>
+ <1331902453.6753.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1331902453.6753.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel,
+On Fri, Mar 16, 2012 at 01:54:13PM +0100, Johannes Berg wrote:
+> I don't really see the point in this. It seems that this doesn't really
+> help, you'd actually have to protect all the work stuff here with the
+> mutex so the scanning can also be excluded or so?
 
-I had some questions about the patch e65b0f46edfd: "NFC: Fragment LLCP I
-frames" from Mar 5, 2012.
+You mean some other work stuff than ieee80211_work_work() ?
 
-net/nfc/llcp/commands.c
-+       while (remaining_len > 0) {
-+
-+               frag_len = min_t(u16, local->remote_miu, remaining_len);
-                                 ^^^
+We have almost all ieee80211_work_work() code protected by local->mtx
+already, I just moved local->scanning check after the mutex_lock.
 
-This should be a cast to size_t.  Otherwise for a large value of
-remaining_len we'd loop until we hit an allocation failure with
-pdu = llcp_allocate_pdu();
-
- 
--       sk = &sock->sk;
--       lock_sock(sk);
-+               pr_debug("Fragment %zd bytes remaining %zd",
-+                        frag_len, remaining_len);
- 
--       nfc_llcp_queue_i_frames(sock);
-+               pdu = llcp_allocate_pdu(sock, LLCP_PDU_I,
-+                                       frag_len + LLCP_SEQUENCE_SIZE);
-+               if (pdu == NULL)
-+                       return -ENOMEM;
-+
-+               skb_put(pdu, LLCP_SEQUENCE_SIZE);
-+
-+               memcpy(skb_put(pdu, frag_len), msg_ptr, frag_len);
-+
-+               skb_queue_head(&sock->tx_queue, pdu);
-+
-+               lock_sock(sk);
-+
-+               nfc_llcp_queue_i_frames(sock);
-+
-+               release_sock(sk);
-+
-+               remaining_len -= frag_len;
-+               msg_ptr += len;
-
-Shouldn't this be msg_ptr += frag_len?
-
-+       }
-
-regards,
-dan carpenter
-
+Stanislaw
