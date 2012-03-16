@@ -1,115 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51742 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754318Ab2CFXZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 18:25:40 -0500
-Subject: [PATCH] compat-wireless: Handle name change from iwlagn to iwlwifi
- in 3.2
-From: Don Fry <donald.h.fry@intel.com>
-To: mcgrof@frijolero.org
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 06 Mar 2012 15:23:42 -0800
-Message-ID: <1331076222.28277.2.camel@dfry-linux1> (sfid-20120307_002543_750662_F6CA6EE1)
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36939 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031294Ab2CPUpv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 16:45:51 -0400
+Date: Fri, 16 Mar 2012 13:45:47 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+CC: <linux-wireless@vger.kernel.org>, <henry@logout.com>
+Subject: Re: [ath9k] mesh powersave hardware sleep + wakeup
+Message-ID: <20120316204547.GG18861@tux> (sfid-20120316_214555_754189_E1EF61D6)
+References: <4F630AEA.10703@etit.tu-chemnitz.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4F630AEA.10703@etit.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On Fri, Mar 16, 2012 at 10:42:02AM +0100, Marco Porsch wrote:
+> Hi,
+> 
+> I am trying to implement the IEEE 802.11s power save schemes in mac80211.
+> In 11s it is defined that power save STA doze AND send beacons AND
+> wake up periodically for multiple neighbors beacons.
+> 
+> Is this actually possible with current hardware/drivers (especially ath9k)?
+> 
+> Regards
+> Marco Porsch
+> 
+> 
+> 
+> PS: More details:
+> 
+> We currently have power mode indication and state
+> tracking and are working on powersave frame buffering and mesh
+> synchronization.
+> 
+> A next topic will be to put the hardware to sleep to actually save energy.
+> Until now we only implemented in mac82011. I looked through mac80211 and
+> ath9k and am unsure, how to actually manage sleep and wakeup in the mesh
+> context.
+> Maybe I should give a brief introduction to IEEE 802.11s powersave here:
+> - Each node has to send its own beacon
+> - Power mode is not global, but link-specific
+> - 3 power modes: active, light sleep, deep sleep
+>   - active = always on
+>   - light sleep = wake up for the neighbors beacon
+>   - deep sleep = only wake up for sending own beacon
+> 
+> So the critical point here is, that we need to put the hardware to
+> sleep but wake up for:
+> - sending own beacon
+> - TBTT of all neighbors towards we are in light sleep (or maybe all
+> neighbors as proof-of-concept)
+> so it is a mixture of ad-hoc , station code and completely new stuff.
+> 
+> A better explanation and a nice example of IEEE 802.11s powersave is
+> given here:
+> http://dl.dropbox.com/u/31741282/11s_powersave.pdf
 
-With linux-3.2 the iwlagn driver is renamed iwlwifi.  For some kernels
-(like 3.1.5) this causes the non-compat iwlagn.ko to try and run against
-the compat mac80211 resulting in an oops.  This change prevents the
-non-compat iwlagn.ko from being loaded.
+I don't have time to review this but it sounds correct that the part
+you want to focus on is introducing a wake up mechanism when you
+need to initiate radiation for your own beacons. I think right now
+we simply disable PS in mac80211 completely if we have a mode of
+operation that require beconing. Your challenge is to lift that and
+deal with the issues there and all the possible combinations. You
+can help with this
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
----
-v2 based on today's compat-wireless
----
- Makefile            |   10 ++++++++++
- scripts/iwl-enable  |   11 ++++++++++-
- scripts/unload.sh   |    2 +-
- scripts/wlunload.sh |    2 +-
- 4 files changed, 22 insertions(+), 3 deletions(-)
+This should help you:
 
-diff --git a/Makefile b/Makefile
-index 6b6f097..204c63d 100644
---- a/Makefile
-+++ b/Makefile
-@@ -163,6 +163,16 @@ install-scripts:
- 		echo Running iwl-enable iwlagn...;\
- 		$(DESTDIR)/usr/sbin/iwl-enable iwlagn ;\
- 	fi
-+	@if [ $(shell modinfo iwlagn > /dev/null 2>&1 && echo 1) ] \
-+	 && [ $(shell modinfo iwlwifi > /dev/null 2>&1 && echo 1) ]; then \
-+		echo ;\
-+		echo -n "Note: iwlagn detected, we're going to disable it. " ;\
-+		echo "If you would like to enable it later you can run:"  ;\
-+		echo "    sudo iwl-load iwlagn"  ;\
-+		echo ;\
-+		echo Running iwl-enable iwlwifi...;\
-+		$(DESTDIR)/usr/sbin/iwl-enable iwlwifi ;\
-+	fi
- 	@if [ $(shell modinfo atl1c > /dev/null 2>&1 && echo 1) ]; then \
- 		echo ;\
- 		echo -n "Note: atl1c detected, we're going to disable it. "  ;\
-diff --git a/scripts/iwl-enable b/scripts/iwl-enable
-index 765195b..b18fdc2 100755
---- a/scripts/iwl-enable
-+++ b/scripts/iwl-enable
-@@ -17,7 +17,14 @@ IWL_NEW="iwlagn"
- IWL_OLD="iwl4965"
- 
- # Appended to module file at the end when we want to ignore one
--USAGE="Usage: $0 [ $IWL_NEW | $IWL_OLD ]"
-+USAGE="Usage: $0 [ $IWL_NEW | $IWL_OLD | iwlwifi ]"
-+
-+function enable_iwlwifi {
-+	for i in $IWL_OLD $IWL_NEW; do
-+		module_disable $i
-+	done
-+	module_enable iwlwifi
-+}
- 
- function enable_iwlagn {
- 	module_disable $IWL_OLD
-@@ -41,6 +48,8 @@ if [ "$MODULE" == "iwl4965" ]; then
- 	module_enable $IWL_OLD
- elif [ "$MODULE" == "iwlagn" ]; then
- 	enable_iwlagn
-+elif [ "$MODULE" == "iwlwifi" ]; then
-+	enable_iwlwifi
- else
- 	echo "$USAGE"
- 	exit
-diff --git a/scripts/unload.sh b/scripts/unload.sh
-index c659a70..fc7261d 100755
---- a/scripts/unload.sh
-+++ b/scripts/unload.sh
-@@ -15,7 +15,7 @@ MODULES="$MODULES adm8211 zd1211rw"
- MODULES="$MODULES orinoco_cs orinoco_nortel orinoco_pci orinoco_plx"
- MODULES="$MODULES orinoco_tld orinoco_usb spectrum_cs orinoco"
- MODULES="$MODULES b43 b44 b43legacy brcm80211 ssb"
--MODULES="$MODULES iwl3945 iwlagn iwlcore"
-+MODULES="$MODULES iwl3945 iwlwifi iwlagn iwlcore"
- MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
- MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
- MODULES="$MODULES p54pci p54usb p54spi p54common"
-diff --git a/scripts/wlunload.sh b/scripts/wlunload.sh
-index cd6298d..c6c6af9 100755
---- a/scripts/wlunload.sh
-+++ b/scripts/wlunload.sh
-@@ -15,7 +15,7 @@ MODULES="$MODULES adm8211 zd1211rw"
- MODULES="$MODULES orinoco_cs orinoco_nortel orinoco_pci orinoco_plx"
- MODULES="$MODULES orinoco_tld orinoco_usb spectrum_cs orinoco"
- MODULES="$MODULES b43 b44 b43legacy brcm80211 ssb"
--MODULES="$MODULES iwl3945 iwlagn iwlcore"
-+MODULES="$MODULES iwl3945 iwlwifi iwlagn iwlcore"
- MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
- MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
- MODULES="$MODULES p54pci p54usb p54spi p54common"
--- 
-1.7.4.4
+http://wireless.kernel.org/en/users/Documentation/Power-consumption
 
+For now you can focus on only allowing through Mesh devices and
+the combinations of it but I suspect that some of the work you do
+may also help with addressing P2P powersave.
 
-
+  Luis
