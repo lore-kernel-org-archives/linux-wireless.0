@@ -1,542 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:34245 "EHLO
-	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759311Ab2CBU0v (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57582 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758435Ab2CPNqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:26:51 -0500
-Received: from zeta.dmz-us.st.com (ns4.st.com [167.4.16.71])
-	by beta.dmz-us.st.com (STMicroelectronics) with ESMTP id 75C3C75
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:35 +0000 (GMT)
-Received: from relay1.stm.gmessaging.net (unknown [10.230.100.17])
-	by zeta.dmz-us.st.com (STMicroelectronics) with ESMTP id 58F7957
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 18:57:22 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay1.stm.gmessaging.net (Postfix) with ESMTPS id 9D38E24C2E5
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:36 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 04/21] cw1200: cw1200_sdio.c, implementation of SDIO wrapper for the driver.
-Date: Fri, 2 Mar 2012 21:26:26 +0100
-Message-ID: <1330720003-15866-5-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212656_016662_F8B25937)
-In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
- <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 16 Mar 2012 09:46:53 -0400
+Subject: RE: mac80211 20/40 coexist
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1331902885.6753.10.camel@jlt3.sipsolutions.net> (sfid-20120316_140157_658300_7E065B29)
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+	 <1331902885.6753.10.camel@jlt3.sipsolutions.net>
+	 (sfid-20120316_140157_658300_7E065B29)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Mar 2012 14:46:50 +0100
+Message-ID: <1331905610.6753.17.camel@jlt3.sipsolutions.net> (sfid-20120316_144657_750872_E3D9560B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch contains SDIO wrapper for the cw1200 wireless driver.
-The wrapper instantiates driver's core and implements common sbus
-interface for the core.
+On Fri, 2012-03-16 at 14:01 +0100, Johannes Berg wrote:
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+> > Not calling hw_config could affect drivers like ath9k_htc where the rate control runs in the firmware.
+> > Those drivers will update the rate control based on CHANGED_HT flag.
+> 
+> Yeah that's actually an interesting point -- but we have it wrong right
+> now I think. Did you see Paul's recent patch? We really shouldn't be
+> reconfiguring the channel if all we want is to stop transmitting 40 MHz,
+> we should just update rate control only. Now for in-device rate control
+> that isn't really possible today since they can't get rate_update(), but
+> that means we should add a separate callback, I think?
+
+Below patch is what I've just added to my patchset. This will allow
+drivers like ath9k_htc to update their internal rate control as needed
+without requiring that we actually change the channel type, which we
+don't want to do for the reasons we discussed with Paul in the thread
+around his patch (see the thread at
+http://mid.gmane.org/20120221060932.8A38C20517@glenhelen.mtv.corp.google.com and go to my later replies)
+
+I think this is the right thing to do -- we leave the channel type set
+to whatever we wanted to have to start with, and just update the 20/40
+bandwidth as needed.
+
+johannes
+
+
+
+mac80211: notify driver of rate control updates
+
+From: Johannes Berg <johannes.berg@intel.com>
+
+Devices that have internal rate control need to be
+notified when the bandwidth or SMPS state changes
+just like external rate control algorithms get a
+notification now.
+
+Add this notification and clarify the change bits
+while at it, the HT_CHANGED bit really meant only
+bandwidth changed.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/cw1200/cw1200_sdio.c |  493 +++++++++++++++++++++++++++++
- 1 files changed, 493 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/cw1200/cw1200_sdio.c
+ Documentation/DocBook/80211.tmpl    |    2 -
+ drivers/net/wireless/ath/ath9k/rc.c |    2 -
+ include/net/mac80211.h              |   37 +++++++++++++++++++++++-------------
+ net/mac80211/driver-ops.h           |   17 ++++++++++++++++
+ net/mac80211/driver-trace.h         |   28 +++++++++++++++++++++++++++
+ net/mac80211/mlme.c                 |    2 -
+ net/mac80211/rate.h                 |    2 +
+ 7 files changed, 74 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/cw1200/cw1200_sdio.c b/drivers/net/wireless/cw1200/cw1200_sdio.c
-new file mode 100644
-index 0000000..dfa7e64
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/cw1200_sdio.c
-@@ -0,0 +1,493 @@
-+/*
-+ * Mac80211 SDIO driver for ST-Ericsson CW1200 device
+--- a/Documentation/DocBook/80211.tmpl	2012-03-16 14:13:10.000000000 +0100
++++ b/Documentation/DocBook/80211.tmpl	2012-03-16 14:25:57.000000000 +0100
+@@ -533,7 +533,7 @@ MISSING
+ !Finclude/net/mac80211.h ieee80211_start_tx_ba_cb_irqsafe
+ !Finclude/net/mac80211.h ieee80211_stop_tx_ba_session
+ !Finclude/net/mac80211.h ieee80211_stop_tx_ba_cb_irqsafe
+-!Finclude/net/mac80211.h rate_control_changed
++!Finclude/net/mac80211.h ieee80211_rate_control_changed
+ !Finclude/net/mac80211.h ieee80211_tx_rate_control
+ !Finclude/net/mac80211.h rate_control_send_low
+       </chapter>
+--- a/include/net/mac80211.h	2012-03-16 14:14:31.000000000 +0100
++++ b/include/net/mac80211.h	2012-03-16 14:36:25.000000000 +0100
+@@ -1778,6 +1778,18 @@ enum ieee80211_frame_release_type {
+ };
+ 
+ /**
++ * enum ieee80211_rate_control_changed - flags to indicate what changed
 + *
-+ * Copyright (c) 2010-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
++ * @IEEE80211_RC_BW_CHANGED: The bandwidth that can be used to transmit
++ *	to this station changed.
++ * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed.
 + */
-+
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/gpio.h>
-+#include <linux/delay.h>
-+#include <linux/mmc/host.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/card.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/spinlock.h>
-+#include <net/mac80211.h>
-+
-+#include "cw1200.h"
-+#include "sbus.h"
-+#include "cw1200_plat.h"
-+
-+MODULE_AUTHOR("Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>");
-+MODULE_DESCRIPTION("mac80211 ST-Ericsson CW1200 SDIO driver");
-+MODULE_LICENSE("GPL");
-+MODULE_ALIAS("cw1200_wlan");
-+
-+#if defined(CONFIG_CW1200_STANDALONE)
-+static char cw1200_mmc_id[10];
-+module_param_string(mmc_id, cw1200_mmc_id, sizeof(cw1200_mmc_id), 0);
-+#endif /* CONFIG_CW1200_STANDALONE */
-+
-+struct sbus_priv {
-+	struct sdio_func	*func;
-+	struct cw1200_common	*core;
-+	const struct cw1200_platform_data *pdata;
-+	spinlock_t		lock;
-+	sbus_irq_handler	irq_handler;
-+	void			*irq_priv;
++enum ieee80211_rate_control_changed {
++	IEEE80211_RC_BW_CHANGED		= BIT(0),
++	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
 +};
 +
-+static const struct sdio_device_id cw1200_sdio_ids[] = {
-+	{ SDIO_DEVICE(SDIO_ANY_ID, SDIO_ANY_ID) },
-+	{ /* end: all zeroes */			},
-+};
++/**
+  * struct ieee80211_ops - callbacks from mac80211 to the driver
+  *
+  * This structure contains various callbacks that the driver may
+@@ -1978,6 +1990,14 @@ enum ieee80211_frame_release_type {
+  *	up the list of states.
+  *	The callback can sleep.
+  *
++ * @sta_rc_update: Notifies the driver of changes to the bitrates that can be
++ *	used to transmit to the station. The changes are advertised with bits
++ *	from &enum ieee80211_rate_control_changed and the values are reflected
++ *	in the station data. This callback should only be used when the driver
++ *	uses hardware rate control (%IEEE80211_HW_HAS_RATE_CONTROL) since
++ *	otherwise the rate control algorithm is notified directly.
++ *	Must be atomic.
++ *
+  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+  *	bursting) for a hardware TX queue.
+  *	Returns a negative error code on failure.
+@@ -2194,6 +2214,10 @@ struct ieee80211_ops {
+ 			 struct ieee80211_sta *sta,
+ 			 enum ieee80211_sta_state old_state,
+ 			 enum ieee80211_sta_state new_state);
++	void (*sta_rc_update)(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct ieee80211_sta *sta,
++			      u32 changed);
+ 	int (*conf_tx)(struct ieee80211_hw *hw,
+ 		       struct ieee80211_vif *vif, u16 queue,
+ 		       const struct ieee80211_tx_queue_params *params);
+@@ -3510,19 +3534,6 @@ void ieee80211_send_bar(struct ieee80211
+ /* Rate control API */
+ 
+ /**
+- * enum rate_control_changed - flags to indicate which parameter changed
+- *
+- * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
+- *	changed, rate control algorithm can update its internal state if needed.
+- * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed, the rate
+- *	control algorithm needs to adjust accordingly.
+- */
+-enum rate_control_changed {
+-	IEEE80211_RC_HT_CHANGED		= BIT(0),
+-	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
+-};
+-
+-/**
+  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
+  *
+  * @hw: The hardware the algorithm is invoked for.
+--- a/drivers/net/wireless/ath/ath9k/rc.c	2012-03-16 14:14:31.000000000 +0100
++++ b/drivers/net/wireless/ath/ath9k/rc.c	2012-03-16 14:28:34.000000000 +0100
+@@ -1447,7 +1447,7 @@ static void ath_rate_update(void *priv,
+ 
+ 	/* FIXME: Handle AP mode later when we support CWM */
+ 
+-	if (changed & IEEE80211_RC_HT_CHANGED) {
++	if (changed & IEEE80211_RC_BW_CHANGED) {
+ 		if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
+ 			return;
+ 
+--- a/net/mac80211/mlme.c	2012-03-16 14:23:40.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-03-16 14:28:30.000000000 +0100
+@@ -219,7 +219,7 @@ static u32 ieee80211_config_ht_tx(struct
+ 			sta->sta.ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 
+ 		rate_control_rate_update(local, sband, sta,
+-					 IEEE80211_RC_HT_CHANGED);
++					 IEEE80211_RC_BW_CHANGED);
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+--- a/net/mac80211/driver-trace.h	2012-03-15 20:43:13.000000000 +0100
++++ b/net/mac80211/driver-trace.h	2012-03-16 14:37:24.000000000 +0100
+@@ -624,6 +624,34 @@ TRACE_EVENT(drv_sta_state,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_sta_rc_update,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta,
++		 u32 changed),
 +
-+/* sbus_ops implemetation */
++	TP_ARGS(local, sdata, sta, changed),
 +
-+static int cw1200_sdio_memcpy_fromio(struct sbus_priv *self,
-+				     unsigned int addr,
-+				     void *dst, int count)
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(u32, changed)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->changed = changed;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " changed: 0x%x",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->changed
++	)
++);
++
+ TRACE_EVENT(drv_sta_add,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
+--- a/net/mac80211/driver-ops.h	2012-03-15 20:43:13.000000000 +0100
++++ b/net/mac80211/driver-ops.h	2012-03-16 14:35:54.000000000 +0100
+@@ -474,6 +474,23 @@ int drv_sta_state(struct ieee80211_local
+ 	return ret;
+ }
+ 
++static inline void drv_sta_rc_update(struct ieee80211_local *local,
++				     struct ieee80211_sub_if_data *sdata,
++				     struct ieee80211_sta *sta, u32 changed)
 +{
-+	return sdio_memcpy_fromio(self->func, dst, addr, count);
++	might_sleep();
++
++	sdata = get_bss_sdata(sdata);
++	check_sdata_in_driver(sdata);
++
++	trace_drv_sta_rc_update(local, sdata, sta, changed);
++	if (local->ops->sta_rc_update)
++		local->ops->sta_rc_update(&local->hw, &sdata->vif,
++					  sta, changed);
++
++	trace_drv_return_void(local);
 +}
 +
-+static int cw1200_sdio_memcpy_toio(struct sbus_priv *self,
-+				   unsigned int addr,
-+				   const void *src, int count)
-+{
-+	return sdio_memcpy_toio(self->func, addr, (void *)src, count);
-+}
-+
-+static void cw1200_sdio_lock(struct sbus_priv *self)
-+{
-+	sdio_claim_host(self->func);
-+}
-+
-+static void cw1200_sdio_unlock(struct sbus_priv *self)
-+{
-+	sdio_release_host(self->func);
-+}
-+
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+static void cw1200_sdio_irq_handler(struct sdio_func *func)
-+{
-+	struct sbus_priv *self = sdio_get_drvdata(func);
-+	unsigned long flags;
-+
-+	BUG_ON(!self);
-+	spin_lock_irqsave(&self->lock, flags);
-+	if (self->irq_handler)
-+		self->irq_handler(self->irq_priv);
-+	spin_unlock_irqrestore(&self->lock, flags);
-+}
-+#else /* CONFIG_CW1200_USE_GPIO_IRQ */
-+static irqreturn_t cw1200_gpio_irq_handler(int irq, void *dev_id)
-+{
-+	struct sbus_priv *self = dev_id;
-+
-+	BUG_ON(!self);
-+	if (self->irq_handler)
-+		self->irq_handler(self->irq_priv);
-+	return IRQ_HANDLED;
-+}
-+
-+static int cw1200_request_irq(struct sbus_priv *self,
-+			      irq_handler_t handler)
-+{
-+	int ret;
-+	int func_num;
-+	const struct resource *irq = self->pdata->irq;
-+	u8 cccr;
-+
-+	if (!irq)
-+		return -EINVAL;
-+
-+	ret = request_any_context_irq(irq->start, handler,
-+			IRQF_TRIGGER_RISING, irq->name, self);
-+	if (WARN_ON(ret < 0))
-+		goto exit;
-+
-+	/* Hack to access Fuction-0 */
-+	func_num = self->func->num;
-+	self->func->num = 0;
-+
-+	cccr = sdio_readb(self->func, SDIO_CCCR_IENx, &ret);
-+	if (WARN_ON(ret))
-+		goto set_func;
-+
-+	/* Master interrupt enable ... */
-+	cccr |= BIT(0);
-+
-+	/* ... for our function */
-+	cccr |= BIT(func_num);
-+
-+	sdio_writeb(self->func, cccr, SDIO_CCCR_IENx, &ret);
-+	if (WARN_ON(ret))
-+		goto set_func;
-+
-+	/* Restore the WLAN function number */
-+	self->func->num = func_num;
-+	return 0;
-+
-+set_func:
-+	self->func->num = func_num;
-+	free_irq(irq->start, self);
-+exit:
-+	return ret;
-+}
-+#endif /* CONFIG_CW1200_USE_GPIO_IRQ */
-+
-+static int cw1200_sdio_irq_subscribe(struct sbus_priv *self,
-+				     sbus_irq_handler handler,
-+				     void *priv)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	if (!handler)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(&self->lock, flags);
-+	self->irq_priv = priv;
-+	self->irq_handler = handler;
-+	spin_unlock_irqrestore(&self->lock, flags);
-+
-+	printk(KERN_DEBUG "SW IRQ subscribe\n");
-+	sdio_claim_host(self->func);
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+	ret = sdio_claim_irq(self->func, cw1200_sdio_irq_handler);
-+#else
-+	ret = cw1200_request_irq(self, cw1200_gpio_irq_handler);
-+#endif
-+	sdio_release_host(self->func);
-+	return ret;
-+}
-+
-+static int cw1200_sdio_irq_unsubscribe(struct sbus_priv *self)
-+{
-+	int ret = 0;
-+	unsigned long flags;
-+#ifdef CONFIG_CW1200_USE_GPIO_IRQ
-+	const struct resource *irq = self->pdata->irq;
-+
-+	if (!irq)
-+		return -EINVAL;
-+#endif
-+
-+	WARN_ON(!self->irq_handler);
-+	if (!self->irq_handler)
-+		return 0;
-+
-+	printk(KERN_DEBUG "SW IRQ unsubscribe\n");
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+	sdio_claim_host(self->func);
-+	ret = sdio_release_irq(self->func);
-+	sdio_release_host(self->func);
-+#else
-+	free_irq(irq->start, self);
-+#endif
-+
-+	spin_lock_irqsave(&self->lock, flags);
-+	self->irq_priv = NULL;
-+	self->irq_handler = NULL;
-+	spin_unlock_irqrestore(&self->lock, flags);
-+
-+	return ret;
-+}
-+
-+static int cw1200_detect_card(const struct cw1200_platform_data *pdata)
-+{
-+	/* HACK!!!
-+	 * Rely on mmc->class_dev.class set in mmc_alloc_host
-+	 * Tricky part: a new mmc hook is being (temporary) created
-+	 * to discover mmc_host class.
-+	 * Do you know more elegant way how to enumerate mmc_hosts?
-+	 */
-+
-+	struct mmc_host *mmc = NULL;
-+	struct class_dev_iter iter;
-+	struct device *dev;
-+
-+	mmc = mmc_alloc_host(0, NULL);
-+	if (!mmc)
-+		return -ENOMEM;
-+
-+	BUG_ON(!mmc->class_dev.class);
-+	class_dev_iter_init(&iter, mmc->class_dev.class, NULL, NULL);
-+	for (;;) {
-+		dev = class_dev_iter_next(&iter);
-+		if (!dev) {
-+			printk(KERN_ERR "cw1200: %s is not found.\n",
-+				pdata->mmc_id);
-+			break;
-+		} else {
-+			struct mmc_host *host = container_of(dev,
-+				struct mmc_host, class_dev);
-+
-+			if (dev_name(&host->class_dev) &&
-+				strcmp(dev_name(&host->class_dev),
-+					pdata->mmc_id))
-+				continue;
-+
-+			mmc_detect_change(host, 10);
-+			break;
-+		}
-+	}
-+	mmc_free_host(mmc);
-+	return 0;
-+}
-+
-+static int cw1200_sdio_off(const struct cw1200_platform_data *pdata)
-+{
-+	int ret = 0;
-+#ifndef CONFIG_CW1200_U5500_SUPPORT
-+	const struct resource *reset = pdata->reset;
-+	if (reset) {
-+		gpio_set_value(reset->start, 0);
-+		gpio_free(reset->start);
-+	}
-+#else
-+	if (pdata->prcmu_ctrl)
-+		ret = pdata->prcmu_ctrl(pdata, false);
-+	msleep(50);
-+#endif
-+	cw1200_detect_card(pdata);
-+	return ret;
-+}
-+
-+static int cw1200_sdio_on(const struct cw1200_platform_data *pdata)
-+{
-+	int ret = 0;
-+#ifndef CONFIG_CW1200_U5500_SUPPORT
-+	const struct resource *reset = pdata->reset;
-+	if (reset) {
-+		gpio_request(reset->start, reset->name);
-+		gpio_direction_output(reset->start, 1);
-+		/* It is not stated in the datasheet, but at least some
-+		 * of devices have problems with reset if this stage
-+		 * is omited. */
-+		msleep(50);
-+		gpio_direction_output(reset->start, 0);
-+		/* A valid reset shall be obtained by maintaining WRESETN
-+		 * active (low) for at least two cycles of LP_CLK after VDDIO
-+		 * is stable within it operating range. */
-+		usleep_range(1000, 20000);
-+		gpio_set_value(reset->start, 1);
-+		/* The host should wait 32 ms after the WRESETN release
-+		 * for the on-chip LDO to stabilize */
-+		msleep(32);
-+	}
-+#else
-+	if (pdata->prcmu_ctrl)
-+		ret = pdata->prcmu_ctrl(pdata, true);
-+	msleep(50);
-+#endif
-+	cw1200_detect_card(pdata);
-+	return ret;
-+}
-+
-+static int cw1200_sdio_reset(struct sbus_priv *self)
-+{
-+	cw1200_sdio_off(self->pdata);
-+	msleep(1000);
-+	cw1200_sdio_on(self->pdata);
-+	return 0;
-+}
-+
-+static size_t cw1200_sdio_align_size(struct sbus_priv *self, size_t size)
-+{
-+	size_t aligned = sdio_align_size(self->func, size);
-+	return aligned;
-+}
-+
-+int cw1200_sdio_set_block_size(struct sbus_priv *self, size_t size)
-+{
-+	return sdio_set_block_size(self->func, size);
-+}
-+
-+static int cw1200_sdio_pm(struct sbus_priv *self, bool  suspend)
-+{
-+	int ret = 0;
-+	const struct resource *irq = self->pdata->irq;
-+
-+	if (irq)
-+		ret = irq_set_irq_wake(irq->start, suspend);
-+
-+	return ret;
-+}
-+
-+static struct sbus_ops cw1200_sdio_sbus_ops = {
-+	.sbus_memcpy_fromio	= cw1200_sdio_memcpy_fromio,
-+	.sbus_memcpy_toio	= cw1200_sdio_memcpy_toio,
-+	.lock			= cw1200_sdio_lock,
-+	.unlock			= cw1200_sdio_unlock,
-+	.irq_subscribe		= cw1200_sdio_irq_subscribe,
-+	.irq_unsubscribe	= cw1200_sdio_irq_unsubscribe,
-+	.reset			= cw1200_sdio_reset,
-+	.align_size		= cw1200_sdio_align_size,
-+	.power_mgmt		= cw1200_sdio_pm,
-+	.set_block_size		= cw1200_sdio_set_block_size,
-+};
-+
-+/* Probe Function to be called by SDIO stack when device is discovered */
-+static int cw1200_sdio_probe(struct sdio_func *func,
-+			      const struct sdio_device_id *id)
-+{
-+	struct sbus_priv *self;
-+	int status;
-+
-+	cw1200_dbg(CW1200_DBG_INIT, "Probe called\n");
-+
-+	self = kzalloc(sizeof(*self), GFP_KERNEL);
-+	if (!self) {
-+		cw1200_dbg(CW1200_DBG_ERROR, "Can't allocate SDIO sbus_priv.");
-+		return -ENOMEM;
-+	}
-+
-+	spin_lock_init(&self->lock);
-+	self->pdata = cw1200_get_platform_data();
-+	self->func = func;
-+	sdio_set_drvdata(func, self);
-+	sdio_claim_host(func);
-+	sdio_enable_func(func);
-+	sdio_release_host(func);
-+
-+	status = cw1200_core_probe(&cw1200_sdio_sbus_ops,
-+			      self, &func->dev, &self->core);
-+	if (status) {
-+		sdio_claim_host(func);
-+		sdio_disable_func(func);
-+		sdio_release_host(func);
-+		sdio_set_drvdata(func, NULL);
-+		kfree(self);
-+	}
-+
-+	return status;
-+}
-+
-+/* Disconnect Function to be called by SDIO stack when
-+ * device is disconnected */
-+static void cw1200_sdio_disconnect(struct sdio_func *func)
-+{
-+	struct sbus_priv *self = sdio_get_drvdata(func);
-+
-+	if (self) {
-+		if (self->core) {
-+			cw1200_core_release(self->core);
-+			self->core = NULL;
-+		}
-+		sdio_claim_host(func);
-+		sdio_disable_func(func);
-+		sdio_release_host(func);
-+		sdio_set_drvdata(func, NULL);
-+		kfree(self);
-+	}
-+}
-+
-+static int cw1200_suspend(struct device *dev)
-+{
-+	int ret;
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+
-+	/* Notify SDIO that CW1200 will remain powered during suspend */
-+	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
-+	if (ret)
-+		cw1200_dbg(CW1200_DBG_ERROR,
-+			   "Error setting SDIO pm flags: %i\n", ret);
-+
-+	return ret;
-+}
-+
-+static int cw1200_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops cw1200_pm_ops = {
-+	.suspend = cw1200_suspend,
-+	.resume = cw1200_resume,
-+};
-+
-+static struct sdio_driver sdio_driver = {
-+	.name		= "cw1200_wlan",
-+	.id_table	= cw1200_sdio_ids,
-+	.probe		= cw1200_sdio_probe,
-+	.remove		= cw1200_sdio_disconnect,
-+	.drv = {
-+		.pm = &cw1200_pm_ops,
-+	}
-+};
-+
-+/* Init Module function -> Called by insmod */
-+static int __init cw1200_sdio_init(void)
-+{
-+	const struct cw1200_platform_data *pdata;
-+	int ret;
-+
-+	pdata = cw1200_get_platform_data();
-+
-+	ret = sdio_register_driver(&sdio_driver);
-+	if (ret)
-+		goto err_reg;
-+
-+	if (pdata->clk_ctrl) {
-+		ret = pdata->clk_ctrl(pdata, true);
-+		if (ret)
-+			goto err_clk;
-+	}
-+
-+	if (pdata->power_ctrl) {
-+		ret = pdata->power_ctrl(pdata, true);
-+		if (ret)
-+			goto err_power;
-+	}
-+
-+	ret = cw1200_sdio_on(pdata);
-+	if (ret)
-+		goto err_on;
-+
-+	return 0;
-+
-+err_on:
-+	if (pdata->power_ctrl)
-+		pdata->power_ctrl(pdata, false);
-+err_power:
-+	if (pdata->clk_ctrl)
-+		pdata->clk_ctrl(pdata, false);
-+err_clk:
-+	sdio_unregister_driver(&sdio_driver);
-+err_reg:
-+	return ret;
-+}
-+
-+/* Called at Driver Unloading */
-+static void __exit cw1200_sdio_exit(void)
-+{
-+	const struct cw1200_platform_data *pdata;
-+	pdata = cw1200_get_platform_data();
-+	sdio_unregister_driver(&sdio_driver);
-+	cw1200_sdio_off(pdata);
-+	if (pdata->power_ctrl)
-+		pdata->power_ctrl(pdata, false);
-+	if (pdata->clk_ctrl)
-+		pdata->clk_ctrl(pdata, false);
-+}
-+
-+#if defined(CONFIG_CW1200_STANDALONE)
-+const struct cw1200_platform_data *cw1200_get_platform_data()
-+{
-+	static const struct cw1200_platform_data pdata = {
-+		.mmc_id = cw1200_mmc_id,
-+	};
-+	return &pdata;
-+}
-+#endif /* CONFIG_CW1200_STANDALONE */
-+
-+module_init(cw1200_sdio_init);
-+module_exit(cw1200_sdio_exit);
--- 
-1.7.9
+ static inline int drv_conf_tx(struct ieee80211_local *local,
+ 			      struct ieee80211_sub_if_data *sdata, u16 queue,
+ 			      const struct ieee80211_tx_queue_params *params)
+--- a/net/mac80211/rate.h	2012-03-16 14:14:31.000000000 +0100
++++ b/net/mac80211/rate.h	2012-03-16 14:38:20.000000000 +0100
+@@ -17,6 +17,7 @@
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ #include "sta_info.h"
++#include "driver-ops.h"
+ 
+ struct rate_control_ref {
+ 	struct ieee80211_local *local;
+@@ -72,6 +73,7 @@ static inline void rate_control_rate_upd
+ 	if (ref && ref->ops->rate_update)
+ 		ref->ops->rate_update(ref->priv, sband, ista,
+ 				      priv_sta, changed);
++	drv_sta_rc_update(local, sta->sdata, &sta->sta, changed);
+ }
+ 
+ static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
+
 
