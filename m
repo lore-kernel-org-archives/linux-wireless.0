@@ -1,40 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:45052 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755610Ab2COIPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 04:15:08 -0400
-Message-ID: <4F61A506.9010309@openwrt.org> (sfid-20120315_091523_925651_CA9DFE0C)
-Date: Thu, 15 Mar 2012 09:15:02 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	rodrigue@qca.qualcomm.com
-Subject: Re: [PATCH 03/14] ath9k_hw: remove ath9k_hw_htc_resetinit
-References: <1331739634-22318-1-git-send-email-nbd@openwrt.org> <1331739634-22318-2-git-send-email-nbd@openwrt.org> <1331739634-22318-3-git-send-email-nbd@openwrt.org> <20321.33695.439509.73251@gargle.gargle.HOWL>
-In-Reply-To: <20321.33695.439509.73251@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail.candelatech.com ([208.74.158.172]:33698 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964874Ab2CPT7d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Mar 2012 15:59:33 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 4/4] ath9k:  Support ethtool getstats api.
+Date: Fri, 16 Mar 2012 12:59:12 -0700
+Message-Id: <1331927952-8706-4-git-send-email-greearb@candelatech.com> (sfid-20120316_205941_921286_9CD98692)
+In-Reply-To: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
+References: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-15 6:52 AM, Sujith Manoharan wrote:
-> Felix Fietkau wrote:
->> Automatically set the ah->htc_reset_init on init and after PHY disable.
->> 
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |    1 -
->>  drivers/net/wireless/ath/ath9k/hw.c           |    8 ++------
->>  drivers/net/wireless/ath/ath9k/hw.h           |    3 ---
->>  3 files changed, 2 insertions(+), 10 deletions(-)
-> 
-> ath9k_htc still has remnants of the old radio enable/disable code when
-> drivers were handling RFKILL events. And until that area is cleaned up,
-> this should probably be kept - since PHY disable is done there too, and
-> we are fiddling with RST/RF registers.
-I did see the old radio enabled/disable code and my patch preserves the
-existing behavior. ath9k_hw_phy_disable sets ah->htc_reset_init = true,
-so the first reset called by ath9k_htc_start() will trigger the extra
-reset just like before.
+From: Ben Greear <greearb@candelatech.com>
 
-- Felix
+This returns many of the values that formerly could
+only be obtained from debugfs.  This should be an
+improvement when trying to access these counters
+programatically.  Currently this support is only
+enabled when DEBUGFS is enabled because otherwise
+these stats are not accumulated.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+v2:  Remove phy-err counters that are currently never
+     set.  Remove a few other stats that appeared
+     useless.
+
+:100644 100644 4a00806... 7261f88... M	drivers/net/wireless/ath/ath9k/main.c
+ drivers/net/wireless/ath/ath9k/main.c |  134 +++++++++++++++++++++++++++++++++
+ 1 files changed, 134 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 4a00806..7261f88 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2430,6 +2430,134 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ATH9K_DEBUGFS
++
++/* Ethtool support for get-stats */
++
++#define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
++static const char ath9k_gstrings_stats[][ETH_GSTRING_LEN] = {
++	"tx_pkts_nic",
++	"tx_bytes_nic",
++	"rx_pkts_nic",
++	"rx_bytes_nic",
++	AMKSTR(d_tx_pkts),
++	AMKSTR(d_tx_bytes),
++	AMKSTR(d_tx_mpdus_queued),
++	AMKSTR(d_tx_mpdus_completed),
++	AMKSTR(d_tx_mpdu_retries),
++	AMKSTR(d_tx_aggregates),
++	AMKSTR(d_tx_ampdus_queued_hw),
++	AMKSTR(d_tx_ampdus_queued_sw),
++	AMKSTR(d_tx_ampdus_completed),
++	AMKSTR(d_tx_ampdu_retries),
++	AMKSTR(d_tx_ampdu_xretries),
++	AMKSTR(d_tx_fifo_underrun),
++	AMKSTR(d_tx_op_exceeded),
++	AMKSTR(d_tx_timer_expiry),
++	AMKSTR(d_tx_desc_cfg_err),
++	AMKSTR(d_tx_data_underrun),
++	AMKSTR(d_tx_delim_underrun),
++
++	"d_rx_decrypt_crc_err",
++	"d_rx_phy_err",
++	"d_rx_mic_err",
++	"d_rx_pre_delim_crc_err",
++	"d_rx_post_delim_crc_err",
++	"d_rx_decrypt_busy_err",
++
++	"d_rx_phyerr_radar",
++	"d_rx_phyerr_ofdm_timing",
++	"d_rx_phyerr_cck_timing",
++
++};
++#define ATH9K_SSTATS_LEN ARRAY_SIZE(ath9k_gstrings_stats)
++
++static void ath9k_get_et_strings(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS)
++		memcpy(data, *ath9k_gstrings_stats,
++		       sizeof(ath9k_gstrings_stats));
++}
++
++static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif, int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return ATH9K_SSTATS_LEN;
++	return 0;
++}
++
++#define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
++#define AWDATA(elem)							\
++	do {								\
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
++	} while (0)
++
++#define AWDATA_RX(elem)						\
++	do {							\
++		data[i++] = sc->debug.stats.rxstats.elem;	\
++	} while (0)
++
++static void ath9k_get_et_stats(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	struct ath_softc *sc = hw->priv;
++	int i = 0;
++
++	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_pkts_all);
++	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_bytes_all);
++	AWDATA_RX(rx_pkts_all);
++	AWDATA_RX(rx_bytes_all);
++
++	AWDATA(tx_pkts_all);
++	AWDATA(tx_bytes_all);
++	AWDATA(queued);
++	AWDATA(completed);
++	AWDATA(xretries);
++	AWDATA(a_aggr);
++	AWDATA(a_queued_hw);
++	AWDATA(a_queued_sw);
++	AWDATA(a_completed);
++	AWDATA(a_retries);
++	AWDATA(a_xretries);
++	AWDATA(fifo_underrun);
++	AWDATA(xtxop);
++	AWDATA(timer_exp);
++	AWDATA(desc_cfg_err);
++	AWDATA(data_underrun);
++	AWDATA(delim_underrun);
++
++	AWDATA_RX(decrypt_crc_err);
++	AWDATA_RX(phy_err);
++	AWDATA_RX(mic_err);
++	AWDATA_RX(pre_delim_crc_err);
++	AWDATA_RX(post_delim_crc_err);
++	AWDATA_RX(decrypt_busy_err);
++
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_RADAR]);
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_OFDM_TIMING]);
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_CCK_TIMING]);
++
++	BUG_ON(i != ATH9K_SSTATS_LEN);
++}
++
++/* End of ethtool get-stats functions */
++
++#endif
++
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2458,4 +2586,10 @@ struct ieee80211_ops ath9k_ops = {
+ 	.get_stats	    = ath9k_get_stats,
+ 	.set_antenna	    = ath9k_set_antenna,
+ 	.get_antenna	    = ath9k_get_antenna,
++
++#ifdef CONFIG_ATH9K_DEBUGFS
++	.get_et_sset_count  = ath9k_get_et_sset_count,
++	.get_et_stats  = ath9k_get_et_stats,
++	.get_et_strings  = ath9k_get_et_strings,
++#endif
+ };
+-- 
+1.7.3.4
+
