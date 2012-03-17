@@ -1,95 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:51607 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030254Ab2CNCMt convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36416 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754487Ab2CQJHk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 22:12:49 -0400
-Received: by ghrr11 with SMTP id r11so1305230ghr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2012 19:12:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1331668045-16384-2-git-send-email-ashok@cozybit.com>
-References: <1331668045-16384-1-git-send-email-ashok@cozybit.com>
-	<1331668045-16384-2-git-send-email-ashok@cozybit.com>
-Date: Tue, 13 Mar 2012 19:12:48 -0700
-Message-ID: <CACcxo+oYpVKuN5W=B4wdQB+x1FBu5rE-43mNcgnZUkn=it5z_Q@mail.gmail.com> (sfid-20120314_031253_166278_EE6CDC58)
-Subject: Re: [PATCH v2 2/3] cfg80211: Fill Toffset for each station
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	javier@cozybit.com, ashok@cozybit.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 17 Mar 2012 05:07:40 -0400
+Subject: Re: [PATCH v2 2/4] mac80211:  Support getting sta_info stats via
+ ethtool.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <1331927952-8706-2-git-send-email-greearb@candelatech.com> (sfid-20120316_205945_542022_CB39D3A7)
+References: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
+	 <1331927952-8706-2-git-send-email-greearb@candelatech.com>
+	 (sfid-20120316_205945_542022_CB39D3A7)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 17 Mar 2012 10:07:36 +0100
+Message-ID: <1331975256.4523.57.camel@jlt3.sipsolutions.net> (sfid-20120317_100751_005883_6B49C0C0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please ignore this patchset. Version 3 is coming
+On Fri, 2012-03-16 at 12:59 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> This lets ethtool print out stats related to station
+> interfaces.
 
-Thanks,
-Ashok
+That's kinda misleading -- it makes it print out "stats related to
+stations connected to the interface" :-)
 
-On Tue, Mar 13, 2012 at 12:47 PM, Ashok Nagarajan <ashok@cozybit.com> wrote:
-> Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> ---
-> v2:
-> Report toffset to userspace only when RX_FLAG_MACTIME_MPDU is set (Johannes)
->
->  include/net/cfg80211.h |    6 +++++-
->  net/mac80211/cfg.c     |    4 ++++
->  2 files changed, 9 insertions(+), 1 deletions(-)
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 69b7ad3..5daffad 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -520,6 +520,7 @@ struct station_parameters {
->  * @STATION_INFO_ASSOC_REQ_IES: @assoc_req_ies filled
->  * @STATION_INFO_STA_FLAGS: @sta_flags filled
->  * @STATION_INFO_BEACON_LOSS_COUNT: @beacon_loss_count filled
-> + * @STATION_INFO_T_OFFSET: @t_offset filled
->  */
->  enum station_info_flags {
->        STATION_INFO_INACTIVE_TIME      = 1<<0,
-> @@ -541,7 +542,8 @@ enum station_info_flags {
->        STATION_INFO_CONNECTED_TIME     = 1<<16,
->        STATION_INFO_ASSOC_REQ_IES      = 1<<17,
->        STATION_INFO_STA_FLAGS          = 1<<18,
-> -       STATION_INFO_BEACON_LOSS_COUNT  = 1<<19
-> +       STATION_INFO_BEACON_LOSS_COUNT  = 1<<19,
-> +       STATION_INFO_T_OFFSET           = 1<<20,
->  };
->
->  /**
-> @@ -640,6 +642,7 @@ struct sta_bss_parameters {
->  * @assoc_req_ies_len: Length of assoc_req_ies buffer in octets.
->  * @sta_flags: station flags mask & values
->  * @beacon_loss_count: Number of times beacon loss event has triggered.
-> + * @t_offset: Time offset of the station relative to this host.
->  */
->  struct station_info {
->        u32 filled;
-> @@ -668,6 +671,7 @@ struct station_info {
->        size_t assoc_req_ies_len;
->
->        u32 beacon_loss_count;
-> +       s64 t_offset;
->
->        /*
->         * Note: Add a new enum station_info_flags value for each new field and
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 677d659..25e25d5 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -412,6 +412,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
->                sinfo->llid = le16_to_cpu(sta->llid);
->                sinfo->plid = le16_to_cpu(sta->plid);
->                sinfo->plink_state = sta->plink_state;
-> +               if (sta->last_rx_rate_flag & RX_FLAG_MACTIME_MPDU) {
-> +                       sinfo->filled |= STATION_INFO_T_OFFSET;
-> +                       sinfo->t_offset = sta->t_offset;
-> +               }
->  #endif
->        }
->
-> --
-> 1.7.5.4
->
+johannes
+
