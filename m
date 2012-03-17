@@ -1,47 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36656 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752229Ab2CNG6b (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:52058 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031820Ab2CQALI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2012 02:58:31 -0400
-Subject: Re: [PATCH] iwlwifi: do not nulify ctx->vif on reset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20120314062549.GA2788@redhat.com>
-References: <1331651434-4370-1-git-send-email-sgruszka@redhat.com>
-	 <1331651730.3329.6.camel@jlt3.sipsolutions.net>
-	 <20120314062549.GA2788@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 14 Mar 2012 07:58:24 +0100
-Message-ID: <1331708304.3376.0.camel@jlt3.sipsolutions.net> (sfid-20120314_075836_071094_19B57767)
-Mime-Version: 1.0
+	Fri, 16 Mar 2012 20:11:08 -0400
+Date: Sat, 17 Mar 2012 09:11:05 +0900
+From: Norbert Preining <preining@logic.at>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: iwlagn in linux-next
+Message-ID: <20120317001105.GB22560@gamma.logic.tuwien.ac.at> (sfid-20120317_011126_952337_D4A195F1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-03-14 at 07:25 +0100, Stanislaw Gruszka wrote:
+Dear all,
 
-> > Have you seen crashes due to this? I have seen the warning in the past
-> > but in some recent firmware reset testing I never ran into it again...
-> 
-> I have vif == NULL crashes reports on old RHEL6, that _possibly_ are
-> caused by this issue, but I'm not 100% sure, RHEL6 include own vif related
-> changes needed by backport.
-> 
-> I'm not able to reproduce vif crashes on force_reset on current
-> wireless-testing, but when I transmit data and trigger a reset,
-> device stops working. There are some messages [1] (20:00.0 is 6300
-> adapter, but on others I tested 5300 and 100 reset does not work too).
-> 
-> So hw reset is completely broken at present, perhaps is time to remove
-> watchdog and related infrastructure.
+based on a suggestion of Emmanuel, I have now tried linux-next
+to see how it improve on iwlagn hanging. (long threads)
 
-I wish :-)
-But last I tried (after refactoring queue stop/wake), I could
-successfully recover from hw restart in the middle of aggregation
-sessions -- which code did you try with?
+Here are some results, based on 3.3.0-rc7-next-20120315
 
-johannes
+Genereal impression: much more stable, with some hiccups.
 
+Details: After some suspend to ram and resume cycles it is getting 
+a bit bad again, with many of that (that is at the university network):
+[ 6169.024075] tx session timer expired on tid 0
+[ 6169.024124] Tx BA session stop requested for 00:24:c4:ab:bd:ef tid 0
+[ 6169.044472] Stopping Tx BA session for 00:24:c4:ab:bd:ef tid 0
+[ 6170.930940] Open BA session requested for 00:24:c4:ab:bd:ef tid 0
+[ 6170.948299] activated addBA response timer on tid 0
+[ 6170.948877] switched off addBA timer for tid 0
+[ 6170.948883] Aggregation is on for tid 0
+
+BUT: At least it resettles without connection breaking down completely.
+That is a *big* step forward!
+
+On the home network I see many of 
+[18392.488123] ieee80211 phy0: release an RX reorder frame due to timeout on earlier frames
+but with some intermittend slow-downs it is working.
+
+In both cases an ssh session to a remote computer did *not* break down,
+which was permanently the case in former times (withlout linux-next)
+
+
+In addition, there are some *very*interesting observations:
+
+ALso I am pinging and everything works, iwconfig reports:
+wlan0     IEEE 802.11abgn  ESSID:off/any  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=15 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+
+
+I also saw some WARNINGs in the dmesg output:
+[17987.181066] Call Trace:
+[17987.181072]  [<ffffffff8102b796>] warn_slowpath_common+0x83/0x9b
+[17987.181075]  [<ffffffff8102b7c8>] warn_slowpath_null+0x1a/0x1c
+[17987.181082]  [<ffffffffa0213fda>] iwl_send_lq_cmd+0x14a/0x246 [iwlwifi]
+[17987.181090]  [<ffffffffa0214480>] iwl_restore_stations+0x206/0x279 [iwlwifi]
+[17987.181097]  [<ffffffffa021c388>] iwlagn_commit_rxon+0x4b5/0x6a8 [iwlwifi]
+[17987.181104]  [<ffffffffa021cc51>] iwlagn_bss_info_changed+0x307/0x504 [iwlwifi]
+[17987.181115]  [<ffffffffa008c504>] ieee80211_bss_info_change_notify+0x179/0x1a3 [mac80211]
+[17987.181127]  [<ffffffffa00b54aa>] ieee80211_destroy_auth_data+0x50/0x75 [mac80211]
+[17987.181138]  [<ffffffffa00b84a6>] ieee80211_sta_work+0x9e/0x91d [mac80211]
+...
+
+
+----------------------------
+
+But to repeat, the general feeling is much better, being able to have
+a persistent ssh connection is a huge win!
+
+
+Please let me know if you need any further testing, information, or
+changes.
+
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+DITHERINGTON (n)
+Sudden access to panic experienced by one who realises that he is
+being drawn inexorably into a clabby (q.v.) conversation, i.e. one he
+has no hope of enjoying, benefiting from or understanding.
+			--- Douglas Adams, The Meaning of Liff
