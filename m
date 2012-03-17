@@ -1,142 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21182 "EHLO mga09.intel.com"
+Received: from nbd.name ([46.4.11.11]:39183 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161448Ab2COU2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 16:28:05 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/26] iwlwifi: move valid_contexts to priv
-Date: Thu, 15 Mar 2012 13:26:53 -0700
-Message-Id: <1331843226-29860-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212818_045256_91B48CED)
-In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753611Ab2CQXBI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Mar 2012 19:01:08 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 2/3] mac80211: reduce code duplication in debugfs code
+Date: Sun, 18 Mar 2012 00:00:53 +0100
+Message-Id: <1332025254-5048-2-git-send-email-nbd@openwrt.org> (sfid-20120318_000116_673371_12B113B7)
+In-Reply-To: <1332025254-5048-1-git-send-email-nbd@openwrt.org>
+References: <1332025254-5048-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-No other component is accessing it any more,
-so it can move to the correct place in priv.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-shared.h   |    2 --
- 6 files changed, 8 insertions(+), 9 deletions(-)
+ net/mac80211/debugfs_netdev.c |   71 +++++++---------------------------------
+ 1 files changed, 13 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 53b9a11..d07e0d2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -228,7 +228,7 @@ int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control)
- 				 IWL_SCD_BE_MSK | IWL_SCD_BK_MSK |
- 				 IWL_SCD_MGMT_MSK;
- 	if ((flush_control & BIT(IWL_RXON_CTX_PAN)) &&
--	    (priv->shrd->valid_contexts != BIT(IWL_RXON_CTX_BSS)))
-+	    (priv->valid_contexts != BIT(IWL_RXON_CTX_BSS)))
- 		flush_cmd.fifo_control |= IWL_PAN_SCD_VO_MSK |
- 				IWL_PAN_SCD_VI_MSK | IWL_PAN_SCD_BE_MSK |
- 				IWL_PAN_SCD_BK_MSK | IWL_PAN_SCD_MGMT_MSK |
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 9494d75..0a6b014 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -312,7 +312,7 @@ int iwlagn_set_pan_params(struct iwl_priv *priv)
- 	int slot0 = 300, slot1 = 0;
- 	int ret;
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index a32eeda..6ed0455 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -499,26 +499,23 @@ IEEE80211_IF_FILE(dot11MeshForwarding, u.mesh.mshcfg.dot11MeshForwarding, DEC);
+ IEEE80211_IF_FILE(rssi_threshold, u.mesh.mshcfg.rssi_threshold, DEC);
+ #endif
  
--	if (priv->shrd->valid_contexts == BIT(IWL_RXON_CTX_BSS))
-+	if (priv->valid_contexts == BIT(IWL_RXON_CTX_BSS))
- 		return 0;
+-
+-#define DEBUGFS_ADD(name) \
+-	debugfs_create_file(#name, 0400, sdata->debugfs.dir, \
+-			    sdata, &name##_ops);
+-
+ #define DEBUGFS_ADD_MODE(name, mode) \
+ 	debugfs_create_file(#name, mode, sdata->debugfs.dir, \
+ 			    sdata, &name##_ops);
  
- 	BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c9079af..fa18968 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -583,9 +583,9 @@ static void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
- 	 * The default context is always valid,
- 	 * the PAN context depends on uCode.
- 	 */
--	priv->shrd->valid_contexts = BIT(IWL_RXON_CTX_BSS);
-+	priv->valid_contexts = BIT(IWL_RXON_CTX_BSS);
- 	if (ucode_flags & IWL_UCODE_TLV_FLAGS_PAN)
--		priv->shrd->valid_contexts |= BIT(IWL_RXON_CTX_PAN);
-+		priv->valid_contexts |= BIT(IWL_RXON_CTX_PAN);
- 
- 	for (i = 0; i < NUM_IWL_RXON_CTX; i++)
- 		priv->contexts[i].ctxid = i;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 297508d..6178b99 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -739,6 +739,7 @@ struct iwl_priv {
- 	struct workqueue_struct *workqueue;
- 
- 	enum ieee80211_band band;
-+	u8 valid_contexts;
- 
- 	void (*pre_rx_handler)(struct iwl_priv *priv,
- 			       struct iwl_rx_cmd_buffer *rxb);
-@@ -1006,7 +1007,7 @@ iwl_rxon_ctx_from_vif(struct ieee80211_vif *vif)
- #define for_each_context(priv, ctx)				\
- 	for (ctx = &priv->contexts[IWL_RXON_CTX_BSS];		\
- 	     ctx < &priv->contexts[NUM_IWL_RXON_CTX]; ctx++)	\
--		if (priv->shrd->valid_contexts & BIT(ctx->ctxid))
-+		if (priv->valid_contexts & BIT(ctx->ctxid))
- 
- static inline int iwl_is_associated_ctx(struct iwl_rxon_context *ctx)
+-static void add_sta_files(struct ieee80211_sub_if_data *sdata)
++#define DEBUGFS_ADD(name) DEBUGFS_ADD_MODE(name, 0400)
++
++static void add_common_files(struct ieee80211_sub_if_data *sdata)
  {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 1bd021a..b0c40c8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -1006,7 +1006,7 @@ static int iwlagn_mac_remain_on_channel(struct ieee80211_hw *hw,
- 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_PAN];
- 	int err = 0;
+ 	DEBUGFS_ADD(drop_unencrypted);
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+ 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
++}
  
--	if (!(priv->shrd->valid_contexts & BIT(IWL_RXON_CTX_PAN)))
-+	if (!(priv->valid_contexts & BIT(IWL_RXON_CTX_PAN)))
- 		return -EOPNOTSUPP;
++static void add_sta_files(struct ieee80211_sub_if_data *sdata)
++{
+ 	DEBUGFS_ADD(bssid);
+ 	DEBUGFS_ADD(aid);
+ 	DEBUGFS_ADD(last_beacon);
+@@ -531,15 +528,6 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
  
- 	if (!(ctx->interface_modes & BIT(NL80211_IFTYPE_P2P_CLIENT)))
-@@ -1094,7 +1094,7 @@ static int iwlagn_mac_cancel_remain_on_channel(struct ieee80211_hw *hw)
+ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
  {
- 	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
+-	DEBUGFS_ADD(drop_unencrypted);
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+-	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
+-
+ 	DEBUGFS_ADD(num_sta_authorized);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
+@@ -549,48 +537,14 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
  
--	if (!(priv->shrd->valid_contexts & BIT(IWL_RXON_CTX_PAN)))
-+	if (!(priv->valid_contexts & BIT(IWL_RXON_CTX_PAN)))
- 		return -EOPNOTSUPP;
+ static void add_ibss_files(struct ieee80211_sub_if_data *sdata)
+ {
+-	DEBUGFS_ADD(channel_type);
+-	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
+-
+ 	DEBUGFS_ADD_MODE(tsf, 0600);
+ }
  
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index e4f619c..c19c096 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -338,7 +338,6 @@ struct iwl_cfg {
-  *
-  * @status: STATUS_*
-  * @wowlan: are we running wowlan uCode
-- * @valid_contexts: microcode/device supports multiple contexts
-  * @bus: pointer to the bus layer data
-  * @cfg: see struct iwl_cfg
-  * @priv: pointer to the upper layer data
-@@ -352,7 +351,6 @@ struct iwl_cfg {
-  */
- struct iwl_shared {
- 	unsigned long status;
--	u8 valid_contexts;
+ static void add_wds_files(struct ieee80211_sub_if_data *sdata)
+ {
+-	DEBUGFS_ADD(drop_unencrypted);
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+-	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
+-
+ 	DEBUGFS_ADD(peer);
+ }
  
- 	const struct iwl_cfg *cfg;
- 	struct iwl_trans *trans;
+-static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
+-{
+-	DEBUGFS_ADD(drop_unencrypted);
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+-	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
+-}
+-
+-static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
+-{
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+-}
+-
+ #ifdef CONFIG_MAC80211_MESH
+ 
+ static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
+@@ -651,6 +605,13 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	if (!sdata->debugfs.dir)
+ 		return;
+ 
++	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(state);
++	DEBUGFS_ADD(channel_type);
++
++	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
++		add_common_files(sdata);
++
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MESH_POINT:
+ #ifdef CONFIG_MAC80211_MESH
+@@ -671,12 +632,6 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	case NL80211_IFTYPE_WDS:
+ 		add_wds_files(sdata);
+ 		break;
+-	case NL80211_IFTYPE_MONITOR:
+-		add_monitor_files(sdata);
+-		break;
+-	case NL80211_IFTYPE_AP_VLAN:
+-		add_vlan_files(sdata);
+-		break;
+ 	default:
+ 		break;
+ 	}
 -- 
-1.7.0.4
+1.7.3.2
 
