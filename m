@@ -1,74 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:36858 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756077Ab2CYOPz (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.187]:52936 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756568Ab2CQQoV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Mar 2012 10:15:55 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Subject: [PATCH v2 5/9] ath6kl: add rx data padding support
-Date: Sun, 25 Mar 2012 17:15:25 +0300
-Message-Id: <1332684929-6405-6-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120325_161629_646562_8FED00C5)
-In-Reply-To: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
+	Sat, 17 Mar 2012 12:44:21 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Mircea Gherzan <mgherzan@gmail.com>
+Subject: Re: [PATCH] wl12xx: fix DMA-API-related warnings
+Date: Sat, 17 Mar 2012 16:44:14 +0000
+Cc: Luciano Coelho <coelho@ti.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+References: <1332001592-17074-1-git-send-email-mgherzan@gmail.com>
+In-Reply-To: <1332001592-17074-1-git-send-email-mgherzan@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201203171644.14573.arnd@arndb.de> (sfid-20120317_174522_372224_C66A38E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Needed when using USB.
+On Saturday 17 March 2012, Mircea Gherzan wrote:
+>  int wl1271_event_handle(struct wl1271 *wl, u8 mbox_num)
+>  {
+> -       struct event_mailbox mbox;
+> -       int ret;
+> +       struct event_mailbox *mbox;
+> +       int ret = 0;
+>  
+>         wl1271_debug(DEBUG_EVENT, "EVENT on mbox %d", mbox_num);
+>  
+>         if (mbox_num > 1)
+>                 return -EINVAL;
+>  
+> +       /* no GFP_ATOMIC: we're called from the threaded IRQ handler */
+> +       mbox = kmalloc(sizeof(*mbox), GFP_DMA);
+> +
+>         /* first we read the mbox descriptor */
+> -       wl1271_read(wl, wl->mbox_ptr[mbox_num], &mbox,
+> -                   sizeof(struct event_mailbox), false);
+> +       wl1271_read(wl, wl->mbox_ptr[mbox_num], mbox, sizeof(*mbox), false);
+>  
+>         /* process the descriptor */
+> -       ret = wl1271_event_process(wl, &mbox);
+> +       ret = wl1271_event_process(wl, mbox);
+>         if (ret < 0)
+> -               return ret;
+> +               goto out;
+>  
+>         /* then we let the firmware know it can go on...*/
+>         wl1271_write32(wl, ACX_REG_INTERRUPT_TRIG, INTR_TRIG_EVENT_ACK);
+>  
+> -       return 0;
+> +out:
+> +       kfree(mbox);
+> +       return ret;
+>  }
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    7 +++++++
- drivers/net/wireless/ath/ath6kl/wmi.h  |    3 +++
- 2 files changed, 10 insertions(+), 0 deletions(-)
+I think it would be better here to put another field into struct wl1271 to hold
+the mailbox. There is no point allocating and freeing the field every time
+you get into the interrupt handler.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 53d0334..5559c9b 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1287,6 +1287,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	struct wmi_data_hdr *dhdr;
- 	int min_hdr_len;
- 	u8 meta_type, dot11_hdr = 0;
-+	u8 pad_before_data_start;
- 	int status = packet->status;
- 	enum htc_endpoint_id ept = packet->endpoint;
- 	bool is_amsdu, prev_ps, ps_state = false;
-@@ -1498,6 +1499,10 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	seq_no = wmi_data_hdr_get_seqno(dhdr);
- 	meta_type = wmi_data_hdr_get_meta(dhdr);
- 	dot11_hdr = wmi_data_hdr_get_dot11(dhdr);
-+	pad_before_data_start =
-+		(le16_to_cpu(dhdr->info3) >> WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT)
-+			& WMI_DATA_HDR_PAD_BEFORE_DATA_MASK;
-+
- 	skb_pull(skb, sizeof(struct wmi_data_hdr));
- 
- 	switch (meta_type) {
-@@ -1516,6 +1521,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 		break;
- 	}
- 
-+	skb_pull(skb, pad_before_data_start);
-+
- 	if (dot11_hdr)
- 		status = ath6kl_wmi_dot11_hdr_remove(ar->wmi, skb);
- 	else if (!is_amsdu)
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 4092e3e..7989b33 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -182,6 +182,9 @@ enum wmi_data_hdr_flags {
- #define WMI_DATA_HDR_META_MASK      0x7
- #define WMI_DATA_HDR_META_SHIFT     13
- 
-+#define WMI_DATA_HDR_PAD_BEFORE_DATA_MASK               0xFF
-+#define WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT              0x8
-+
- /* Macros for operating on WMI_DATA_HDR (info3) field */
- #define WMI_DATA_HDR_IF_IDX_MASK    0xF
- 
--- 
-1.7.1
-
+	Arnd
