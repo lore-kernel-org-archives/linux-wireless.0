@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40272 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753704Ab2CTMHG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 08:07:06 -0400
-Subject: Re: [PATCH 2/4] compat: backport work_busy()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org
-In-Reply-To: <1332214021-9716-3-git-send-email-mcgrof@frijolero.org> (sfid-20120320_042853_043155_41AC0608)
-References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
-	 <1332214021-9716-3-git-send-email-mcgrof@frijolero.org>
-	 (sfid-20120320_042853_043155_41AC0608)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Mar 2012 13:07:03 +0100
-Message-ID: <1332245223.3329.5.camel@jlt3.sipsolutions.net> (sfid-20120320_130737_033669_7AE6BA84)
-Mime-Version: 1.0
+Received: from perches-mx.perches.com ([206.117.179.246]:49249 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753180Ab2CQTNf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Mar 2012 15:13:35 -0400
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] rtlwifi: Use is_zero_ether_addr, remove line continuation
+Date: Sat, 17 Mar 2012 12:13:30 -0700
+Message-Id: <1d738d4a4dd61978f969ed4a43f2dd3717f51a19.1332011552.git.joe@perches.com> (sfid-20120317_201357_433068_2DE1ECD6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 20:26 -0700, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-> 
-> Best we can do is just tell the users of we are WORK_BUSY_PENDING
-> for older kernels. The ckmake log:
+Use the normal kernel facilities and use %pM
+to print the all zero mac address.
 
-[...]
+Remove unnecessary line continuation.
 
-> + * Test whether @work is currently pending or running.  There is no
-> + * synchronization around this function and the test result is
-> + * unreliable and only useful as advisory hints or for debugging.
-> + * Especially for reentrant wqs, the pending state might hide the
-> + * running state.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/rtlwifi/cam.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-What's this needed for? It seems if it's used only for hints/debugging
-we should not need the function, or possibly simply return some
-pointless combination like -1?
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 5c7d579..3d8cc4a 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -328,10 +328,9 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
+ 		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG, "sta_addr is NULL\n");
+ 	}
+ 
+-	if ((sta_addr[0]|sta_addr[1]|sta_addr[2]|sta_addr[3]|\
+-				sta_addr[4]|sta_addr[5]) == 0) {
++	if (is_zero_ether_addr(sta_addr)) {
+ 		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
+-			 "sta_addr is 00:00:00:00:00:00\n");
++			 "sta_addr is %pM\n", sta_addr);
+ 		return;
+ 	}
+ 	/* Does STA already exist? */
+-- 
+1.7.8.111.gad25c.dirty
 
