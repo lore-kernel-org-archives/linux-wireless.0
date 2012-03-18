@@ -1,95 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39340 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755446Ab2CEUCG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:02:06 -0500
-Date: Mon, 5 Mar 2012 14:46:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>, stable@vger.kernel.org
-Subject: Re: [PATCH 3.3] iwlwifi: always monitor for stuck queues
-Message-ID: <20120305194644.GF18128@tuxdriver.com> (sfid-20120305_210211_266165_46802003)
-References: <1330879846-30311-1-git-send-email-wey-yi.w.guy@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1330879846-30311-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from nbd.name ([46.4.11.11]:48839 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754100Ab2CRV6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Mar 2012 17:58:18 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v2 2/3] mac80211: reduce code duplication in debugfs code
+Date: Sun, 18 Mar 2012 22:58:05 +0100
+Message-Id: <1332107886-41282-2-git-send-email-nbd@openwrt.org> (sfid-20120318_225823_183819_A0D2C129)
+In-Reply-To: <1332107886-41282-1-git-send-email-nbd@openwrt.org>
+References: <1332107886-41282-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 04, 2012 at 08:50:46AM -0800, Wey-Yi Guy wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> If we only monitor while associated, the following
-> can happen:
->  - we're associated, and the queue stuck check
->    runs, setting the queue "touch" time to X
->  - we disassociate, stopping the monitoring,
->    which leaves the time set to X
->  - almost 2s later, we associate, and enqueue
->    a frame
->  - before the frame is transmitted, we monitor
->    for stuck queues, and find the time set to
->    X, although it is now later than X + 2000ms,
->    so we decide that the queue is stuck and
->    erroneously restart the device
-> 
-> It happens more with P2P because there we can
-> go between associated/unassociated frequently.
-> 
-> Cc: stable@vger.kernel.org
-> Reported-by: Ben Cahill <ben.m.cahill@intel.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/debugfs_netdev.c |   71 +++++++---------------------------------
+ 1 files changed, 13 insertions(+), 58 deletions(-)
 
-So what is the effect of this bug?  An unnecessary firmware restart?  How often does this happen?
-
-It is very late in the 3.3 cycle.  Fixes should be for regressions, crashes, etc.
-
-John
-
-> this patch will be also available from wireless branch on
->  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
-> 
->  drivers/net/wireless/iwlwifi/iwl-core.c |   18 ++++--------------
->  1 files changed, 4 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-> index 7bcfa78..3abe9ed 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-> @@ -1465,20 +1465,10 @@ void iwl_bg_watchdog(unsigned long data)
->  	if (timeout == 0)
->  		return;
->  
-> -	/* monitor and check for stuck cmd queue */
-> -	if (iwl_check_stuck_queue(priv, priv->shrd->cmd_queue))
-> -		return;
-> -
-> -	/* monitor and check for other stuck queues */
-> -	if (iwl_is_any_associated(priv)) {
-> -		for (cnt = 0; cnt < hw_params(priv).max_txq_num; cnt++) {
-> -			/* skip as we already checked the command queue */
-> -			if (cnt == priv->shrd->cmd_queue)
-> -				continue;
-> -			if (iwl_check_stuck_queue(priv, cnt))
-> -				return;
-> -		}
-> -	}
-> +	/* monitor and check for stuck queues */
-> +	for (cnt = 0; cnt < hw_params(priv).max_txq_num; cnt++)
-> +		if (iwl_check_stuck_queue(priv, cnt))
-> +			return;
->  
->  	mod_timer(&priv->watchdog, jiffies +
->  		  msecs_to_jiffies(IWL_WD_TICK(timeout)));
-> -- 
-> 1.7.0.4
-> 
-> 
-
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index a32eeda..6ed0455 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -499,26 +499,23 @@ IEEE80211_IF_FILE(dot11MeshForwarding, u.mesh.mshcfg.dot11MeshForwarding, DEC);
+ IEEE80211_IF_FILE(rssi_threshold, u.mesh.mshcfg.rssi_threshold, DEC);
+ #endif
+ 
+-
+-#define DEBUGFS_ADD(name) \
+-	debugfs_create_file(#name, 0400, sdata->debugfs.dir, \
+-			    sdata, &name##_ops);
+-
+ #define DEBUGFS_ADD_MODE(name, mode) \
+ 	debugfs_create_file(#name, mode, sdata->debugfs.dir, \
+ 			    sdata, &name##_ops);
+ 
+-static void add_sta_files(struct ieee80211_sub_if_data *sdata)
++#define DEBUGFS_ADD(name) DEBUGFS_ADD_MODE(name, 0400)
++
++static void add_common_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(drop_unencrypted);
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+ 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
++}
+ 
++static void add_sta_files(struct ieee80211_sub_if_data *sdata)
++{
+ 	DEBUGFS_ADD(bssid);
+ 	DEBUGFS_ADD(aid);
+ 	DEBUGFS_ADD(last_beacon);
+@@ -531,15 +528,6 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ 
+ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ {
+-	DEBUGFS_ADD(drop_unencrypted);
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+-	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
+-
+ 	DEBUGFS_ADD(num_sta_authorized);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
+@@ -549,48 +537,14 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ 
+ static void add_ibss_files(struct ieee80211_sub_if_data *sdata)
+ {
+-	DEBUGFS_ADD(channel_type);
+-	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
+-
+ 	DEBUGFS_ADD_MODE(tsf, 0600);
+ }
+ 
+ static void add_wds_files(struct ieee80211_sub_if_data *sdata)
+ {
+-	DEBUGFS_ADD(drop_unencrypted);
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+-	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
+-
+ 	DEBUGFS_ADD(peer);
+ }
+ 
+-static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
+-{
+-	DEBUGFS_ADD(drop_unencrypted);
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+-	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_2ghz);
+-	DEBUGFS_ADD(rc_rateidx_mcs_mask_5ghz);
+-}
+-
+-static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
+-{
+-	DEBUGFS_ADD(flags);
+-	DEBUGFS_ADD(state);
+-	DEBUGFS_ADD(channel_type);
+-}
+-
+ #ifdef CONFIG_MAC80211_MESH
+ 
+ static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
+@@ -651,6 +605,13 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	if (!sdata->debugfs.dir)
+ 		return;
+ 
++	DEBUGFS_ADD(flags);
++	DEBUGFS_ADD(state);
++	DEBUGFS_ADD(channel_type);
++
++	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
++		add_common_files(sdata);
++
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MESH_POINT:
+ #ifdef CONFIG_MAC80211_MESH
+@@ -671,12 +632,6 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	case NL80211_IFTYPE_WDS:
+ 		add_wds_files(sdata);
+ 		break;
+-	case NL80211_IFTYPE_MONITOR:
+-		add_monitor_files(sdata);
+-		break;
+-	case NL80211_IFTYPE_AP_VLAN:
+-		add_vlan_files(sdata);
+-		break;
+ 	default:
+ 		break;
+ 	}
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.2
+
