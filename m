@@ -1,62 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30286 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755412Ab2CSDuS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 23:50:18 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20326.44233.811876.892785@gargle.gargle.HOWL> (sfid-20120319_045022_784918_90A682FF)
-Date: Mon, 19 Mar 2012 09:19:29 +0530
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211 20/40 coexist
-In-Reply-To: <CAJ-VmomNGku0CNfX+feeeUET4mXEFDj976sSfg-GG-KUSGCWvw@mail.gmail.com>
-References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
-	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
-	<1331902885.6753.10.camel@jlt3.sipsolutions.net>
-	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
-	<1332065984.3609.5.camel@jlt3.sipsolutions.net>
-	<CAJ-VmomNGku0CNfX+feeeUET4mXEFDj976sSfg-GG-KUSGCWvw@mail.gmail.com>
+Received: from nbd.name ([46.4.11.11]:48851 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754100Ab2CRV63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Mar 2012 17:58:29 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v2 1/3] cfg80211: use compare_ether_addr on MAC addresses instead of memcmp
+Date: Sun, 18 Mar 2012 22:58:04 +0100
+Message-Id: <1332107886-41282-1-git-send-email-nbd@openwrt.org> (sfid-20120318_225832_100415_7A7C6869)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Chadd wrote:
-> On 18 March 2012 03:19, Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
-> > I'm not sure I can believe this -- surely the firmware has to have a way
-> > of dealing with stations that can't do 40 MHz and stations that can, so
-> > switching between the two doesn't seem like a major proposal? We also
-> > don't currently handle the action frames for that, but it seems like we
-> > should.
-> >
-> > Note, however, that we're now discussing something already done --
-> > Paul's patch already removed the channel type update when all we wanted
-> > was update the RC.
-> 
-> When are stations being notified of a CWM change?
-> 
-> I know FreeBSD handles it with a big stick at the moment - it just
-> does a full interface reset and channel change. I don't necessarily
-> like it, but I haven't yet sat down to look at when and why this is
-> occuring.
+Because of the constant size and guaranteed 16 bit alignment, the inline
+compare_ether_addr function is much cheaper than calling memcmp.
 
-For AP mode, we currently don't have dynamic CWM - and if it is ever implemented,
-it would probably be in hostapd.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/wireless/mlme.c |   32 +++++++++++++++++---------------
+ net/wireless/scan.c |    2 +-
+ 2 files changed, 18 insertions(+), 16 deletions(-)
 
-For station mode, HT bandwidth changes can be notified via beacons, probe responses
-or action frames. mac80211 currently processes beacons and the HT operation element.
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index f5a7ac3..e14fdcc 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -6,6 +6,7 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/etherdevice.h>
+ #include <linux/netdevice.h>
+ #include <linux/nl80211.h>
+ #include <linux/slab.h>
+@@ -100,7 +101,7 @@ void __cfg80211_send_deauth(struct net_device *dev,
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	if (wdev->current_bss &&
+-	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
++	    compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0) {
+ 		cfg80211_unhold_bss(wdev->current_bss);
+ 		cfg80211_put_bss(&wdev->current_bss->pub);
+ 		wdev->current_bss = NULL;
+@@ -115,7 +116,7 @@ void __cfg80211_send_deauth(struct net_device *dev,
+ 
+ 		reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
+ 
+-		from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
++		from_ap = compare_ether_addr(mgmt->sa, dev->dev_addr) != 0;
+ 		__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
+ 	} else if (wdev->sme_state == CFG80211_SME_CONNECTING) {
+ 		__cfg80211_connect_result(dev, mgmt->bssid, NULL, 0, NULL, 0,
+@@ -154,7 +155,7 @@ void __cfg80211_send_disassoc(struct net_device *dev,
+ 		return;
+ 
+ 	if (wdev->current_bss &&
+-	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
++	    compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0) {
+ 		cfg80211_sme_disassoc(dev, wdev->current_bss);
+ 		cfg80211_unhold_bss(wdev->current_bss);
+ 		cfg80211_put_bss(&wdev->current_bss->pub);
+@@ -165,7 +166,7 @@ void __cfg80211_send_disassoc(struct net_device *dev,
+ 
+ 	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
+ 
+-	from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
++	from_ap = compare_ether_addr(mgmt->sa, dev->dev_addr) != 0;
+ 	__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
+ }
+ EXPORT_SYMBOL(__cfg80211_send_disassoc);
+@@ -285,7 +286,7 @@ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 			return -EINVAL;
+ 
+ 	if (wdev->current_bss &&
+-	    memcmp(bssid, wdev->current_bss->pub.bssid, ETH_ALEN) == 0)
++	    compare_ether_addr(bssid, wdev->current_bss->pub.bssid) == 0)
+ 		return -EALREADY;
+ 
+ 	memset(&req, 0, sizeof(req));
+@@ -362,7 +363,7 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	memset(&req, 0, sizeof(req));
+ 
+ 	if (wdev->current_bss && prev_bssid &&
+-	    memcmp(wdev->current_bss->pub.bssid, prev_bssid, ETH_ALEN) == 0) {
++	    compare_ether_addr(wdev->current_bss->pub.bssid, prev_bssid) == 0) {
+ 		/*
+ 		 * Trying to reassociate: Allow this to proceed and let the old
+ 		 * association to be dropped when the new one is completed.
+@@ -446,7 +447,8 @@ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+ 
+ 	if (local_state_change) {
+ 		if (wdev->current_bss &&
+-		    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
++		    compare_ether_addr(wdev->current_bss->pub.bssid, bssid)
++		    == 0) {
+ 			cfg80211_unhold_bss(wdev->current_bss);
+ 			cfg80211_put_bss(&wdev->current_bss->pub);
+ 			wdev->current_bss = NULL;
+@@ -495,7 +497,7 @@ static int __cfg80211_mlme_disassoc(struct cfg80211_registered_device *rdev,
+ 	req.local_state_change = local_state_change;
+ 	req.ie = ie;
+ 	req.ie_len = ie_len;
+-	if (memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0)
++	if (compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0)
+ 		req.bss = &wdev->current_bss->pub;
+ 	else
+ 		return -ENOTCONN;
+@@ -758,8 +760,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 				break;
+ 			}
+ 
+-			if (memcmp(wdev->current_bss->pub.bssid,
+-				   mgmt->bssid, ETH_ALEN)) {
++			if (compare_ether_addr(wdev->current_bss->pub.bssid,
++					       mgmt->bssid)) {
+ 				err = -ENOTCONN;
+ 				break;
+ 			}
+@@ -772,8 +774,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 				break;
+ 
+ 			/* for station, check that DA is the AP */
+-			if (memcmp(wdev->current_bss->pub.bssid,
+-				   mgmt->da, ETH_ALEN)) {
++			if (compare_ether_addr(wdev->current_bss->pub.bssid,
++					       mgmt->da)) {
+ 				err = -ENOTCONN;
+ 				break;
+ 			}
+@@ -781,11 +783,11 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_P2P_GO:
+ 		case NL80211_IFTYPE_AP_VLAN:
+-			if (memcmp(mgmt->bssid, dev->dev_addr, ETH_ALEN))
++			if (compare_ether_addr(mgmt->bssid, dev->dev_addr))
+ 				err = -EINVAL;
+ 			break;
+ 		case NL80211_IFTYPE_MESH_POINT:
+-			if (memcmp(mgmt->sa, mgmt->bssid, ETH_ALEN)) {
++			if (compare_ether_addr(mgmt->sa, mgmt->bssid)) {
+ 				err = -EINVAL;
+ 				break;
+ 			}
+@@ -804,7 +806,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			return err;
+ 	}
+ 
+-	if (memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0)
++	if (compare_ether_addr(mgmt->sa, dev->dev_addr) != 0)
+ 		return -EINVAL;
+ 
+ 	/* Transmit the Action frame as requested by user space */
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 70faadf..fdbcfe6 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -378,7 +378,7 @@ static int cmp_bss_core(struct cfg80211_bss *a,
+ 			       b->len_information_elements);
+ 	}
+ 
+-	return memcmp(a->bssid, b->bssid, ETH_ALEN);
++	return compare_ether_addr(a->bssid, b->bssid);
+ }
+ 
+ static int cmp_bss(struct cfg80211_bss *a,
+-- 
+1.7.3.2
 
-Also, only legacy CSA announcements are handled by mac80211 right now, the 11n
-extensions to the CSA action frame are yet to be implemented.
-
-As far as ath9k/ath9k_htc is concerned, I think we have to reset/reconfigure the HW
-when a channel switch happens, since we reprogram various MAC/PHY registers based on
-the HT bandwidth. Both ath9k and ath9k_htc update their rate control modules
-correctly - ath9k via the rate_update() callback and ath9k_htc using BSS_CHANGED_HT
-in bss_info_changed().
-
-Sujith
