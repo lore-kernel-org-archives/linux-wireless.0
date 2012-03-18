@@ -1,74 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:25158 "EHLO mx4.wp.pl"
+Received: from nbd.name ([46.4.11.11]:48846 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752235Ab2CQXQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2012 19:16:58 -0400
-From: Jakub Kicinski <kubakici@wp.pl>
-To: linville@tuxdriver.com
-Cc: IvDoorn@gmail.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com, Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH] rt2x00: increase led's name buffer length
-Date: Sun, 18 Mar 2012 00:16:52 +0100
-Message-Id: <1332026212-5391-1-git-send-email-kubakici@wp.pl> (sfid-20120318_001702_591670_52D92962)
+	id S1754100Ab2CRV6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Mar 2012 17:58:20 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v2 3/3] mac80211: optimize aggregation session timeout handling
+Date: Sun, 18 Mar 2012 22:58:06 +0100
+Message-Id: <1332107886-41282-3-git-send-email-nbd@openwrt.org> (sfid-20120318_225824_183280_759A199D)
+In-Reply-To: <1332107886-41282-2-git-send-email-nbd@openwrt.org>
+References: <1332107886-41282-1-git-send-email-nbd@openwrt.org>
+ <1332107886-41282-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With 9-letter driver names phy's number was truncated
-to two characters, which caused warnings when creating
-sysfs entries for leds on systems with multiple devices.
+Calling mod_timer from the rx/tx hotpath is somewhat expensive, and the
+timeout doesn't need to be so precise.
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Switch to a different strategy: Schedule the timer initially, store jiffies
+of all last rx/tx activity which would previously modify the timer, and
+let the timer re-arm itself after checking the last rx/tx timestamp.
+Make the session timers deferrable to avoid causing extra wakeups on systems
+running on battery.
+This visibly reduces CPU load under high network load on small embedded
+systems.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2x00leds.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+ net/mac80211/agg-rx.c      |   18 ++++++++++++++++--
+ net/mac80211/agg-tx.c      |   18 ++++++++++++++++--
+ net/mac80211/ieee80211_i.h |    3 ++-
+ net/mac80211/rx.c          |    3 +--
+ net/mac80211/sta_info.h    |    4 ++++
+ net/mac80211/tx.c          |    3 +--
+ 6 files changed, 40 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
-index ca585e3..8679d78 100644
---- a/drivers/net/wireless/rt2x00/rt2x00leds.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
-@@ -124,17 +124,15 @@ static int rt2x00leds_register_led(struct rt2x00_dev *rt2x00dev,
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 1068f66..9de183f 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -141,6 +141,18 @@ static void sta_rx_agg_session_timer_expired(unsigned long data)
+ 	u8 *timer_to_id = ptid - *ptid;
+ 	struct sta_info *sta = container_of(timer_to_id, struct sta_info,
+ 					 timer_to_tid[0]);
++	struct tid_ampdu_rx *tid_rx;
++	unsigned long timeout;
++
++	tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[*ptid]);
++	if (!tid_rx)
++		return;
++
++	timeout = tid_rx->last_rx + TU_TO_JIFFIES(tid_rx->timeout);
++	if (time_is_after_jiffies(timeout)) {
++		mod_timer(&tid_rx->session_timer, timeout);
++		return;
++	}
  
- void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- {
--	char dev_name[16];
--	char name[32];
-+	char name[36];
- 	int retval;
- 	unsigned long on_period;
- 	unsigned long off_period;
--
--	snprintf(dev_name, sizeof(dev_name), "%s-%s",
--		 rt2x00dev->ops->name, wiphy_name(rt2x00dev->hw->wiphy));
-+	const char *phy_name = wiphy_name(rt2x00dev->hw->wiphy);
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
+@@ -290,7 +302,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 	/* rx timer */
+ 	tid_agg_rx->session_timer.function = sta_rx_agg_session_timer_expired;
+ 	tid_agg_rx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+-	init_timer(&tid_agg_rx->session_timer);
++	init_timer_deferrable(&tid_agg_rx->session_timer);
  
- 	if (rt2x00dev->led_radio.flags & LED_INITIALIZED) {
--		snprintf(name, sizeof(name), "%s::radio", dev_name);
-+		snprintf(name, sizeof(name), "%s-%s::radio",
-+			 rt2x00dev->ops->name, phy_name);
+ 	/* rx reorder timer */
+ 	tid_agg_rx->reorder_timer.function = sta_rx_agg_reorder_timer_expired;
+@@ -334,8 +346,10 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 	/* activate it for RX */
+ 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
  
- 		retval = rt2x00leds_register_led(rt2x00dev,
- 						 &rt2x00dev->led_radio,
-@@ -144,7 +142,8 @@ void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- 	}
+-	if (timeout)
++	if (timeout) {
+ 		mod_timer(&tid_agg_rx->session_timer, TU_TO_EXP_TIME(timeout));
++		tid_agg_rx->last_rx = jiffies;
++	}
  
- 	if (rt2x00dev->led_assoc.flags & LED_INITIALIZED) {
--		snprintf(name, sizeof(name), "%s::assoc", dev_name);
-+		snprintf(name, sizeof(name), "%s-%s::assoc",
-+			 rt2x00dev->ops->name, phy_name);
+ end:
+ 	mutex_unlock(&sta->ampdu_mlme.mtx);
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 76be617..9628a18 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -417,6 +417,18 @@ static void sta_tx_agg_session_timer_expired(unsigned long data)
+ 	u8 *timer_to_id = ptid - *ptid;
+ 	struct sta_info *sta = container_of(timer_to_id, struct sta_info,
+ 					 timer_to_tid[0]);
++	struct tid_ampdu_tx *tid_tx;
++	unsigned long timeout;
++
++	tid_tx = rcu_dereference_protected_tid_tx(sta, *ptid);
++	if (!tid_tx)
++		return;
++
++	timeout = tid_tx->last_tx + TU_TO_JIFFIES(tid_tx->timeout);
++	if (time_is_after_jiffies(timeout)) {
++		mod_timer(&tid_tx->session_timer, timeout);
++		return;
++	}
  
- 		retval = rt2x00leds_register_led(rt2x00dev,
- 						 &rt2x00dev->led_assoc,
-@@ -154,7 +153,8 @@ void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
- 	}
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "tx session timer expired on tid %d\n", (u16)*ptid);
+@@ -542,7 +554,7 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+ 	/* tx timer */
+ 	tid_tx->session_timer.function = sta_tx_agg_session_timer_expired;
+ 	tid_tx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+-	init_timer(&tid_tx->session_timer);
++	init_timer_deferrable(&tid_tx->session_timer);
  
- 	if (rt2x00dev->led_qual.flags & LED_INITIALIZED) {
--		snprintf(name, sizeof(name), "%s::quality", dev_name);
-+		snprintf(name, sizeof(name), "%s-%s::quality",
-+			 rt2x00dev->ops->name, phy_name);
+ 	/* assign a dialog token */
+ 	sta->ampdu_mlme.dialog_token_allocator++;
+@@ -884,9 +896,11 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
  
- 		retval = rt2x00leds_register_led(rt2x00dev,
- 						 &rt2x00dev->led_qual,
+ 		sta->ampdu_mlme.addba_req_num[tid] = 0;
+ 
+-		if (tid_tx->timeout)
++		if (tid_tx->timeout) {
+ 			mod_timer(&tid_tx->session_timer,
+ 				  TU_TO_EXP_TIME(tid_tx->timeout));
++			tid_tx->last_tx = jiffies;
++		}
+ 
+ 	} else {
+ 		___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d9798a3..2785976 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -52,7 +52,8 @@ struct ieee80211_local;
+  * increased memory use (about 2 kB of RAM per entry). */
+ #define IEEE80211_FRAGMENT_MAX 4
+ 
+-#define TU_TO_EXP_TIME(x)	(jiffies + usecs_to_jiffies((x) * 1024))
++#define TU_TO_JIFFIES(x)	(usecs_to_jiffies((x) * 1024))
++#define TU_TO_EXP_TIME(x)	(jiffies + TU_TO_JIFFIES(x))
+ 
+ #define IEEE80211_DEFAULT_UAPSD_QUEUES \
+ 	(IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |	\
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bcfe8c7..8da3b36 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -793,8 +793,7 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx)
+ 
+ 	/* reset session timer */
+ 	if (tid_agg_rx->timeout)
+-		mod_timer(&tid_agg_rx->session_timer,
+-			  TU_TO_EXP_TIME(tid_agg_rx->timeout));
++		tid_agg_rx->last_rx = jiffies;
+ 
+ 	/* if this mpdu is fragmented - terminate rx aggregation session */
+ 	sc = le16_to_cpu(hdr->seq_ctrl);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index ab05768..e21652b 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -101,6 +101,7 @@ enum ieee80211_sta_info_flags {
+  * @dialog_token: dialog token for aggregation session
+  * @timeout: session timeout value to be filled in ADDBA requests
+  * @state: session state (see above)
++ * @last_tx: jiffies of last tx activity
+  * @stop_initiator: initiator of a session stop
+  * @tx_stop: TX DelBA frame when stopping
+  * @buf_size: reorder buffer size at receiver
+@@ -122,6 +123,7 @@ struct tid_ampdu_tx {
+ 	struct timer_list addba_resp_timer;
+ 	struct sk_buff_head pending;
+ 	unsigned long state;
++	unsigned long last_tx;
+ 	u16 timeout;
+ 	u8 dialog_token;
+ 	u8 stop_initiator;
+@@ -139,6 +141,7 @@ struct tid_ampdu_tx {
+  * @reorder_time: jiffies when skb was added
+  * @session_timer: check if peer keeps Tx-ing on the TID (by timeout value)
+  * @reorder_timer: releases expired frames from the reorder buffer.
++ * @last_rx: jiffies of last rx activity
+  * @head_seq_num: head sequence number in reordering buffer.
+  * @stored_mpdu_num: number of MPDUs in reordering buffer
+  * @ssn: Starting Sequence Number expected to be aggregated.
+@@ -163,6 +166,7 @@ struct tid_ampdu_rx {
+ 	unsigned long *reorder_time;
+ 	struct timer_list session_timer;
+ 	struct timer_list reorder_timer;
++	unsigned long last_rx;
+ 	u16 head_seq_num;
+ 	u16 stored_mpdu_num;
+ 	u16 ssn;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 782a601..5ad2c40 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1118,8 +1118,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 
+ 	/* reset session timer */
+ 	if (reset_agg_timer && tid_tx->timeout)
+-		mod_timer(&tid_tx->session_timer,
+-			  TU_TO_EXP_TIME(tid_tx->timeout));
++		tid_tx->last_tx = jiffies;
+ 
+ 	return queued;
+ }
 -- 
-1.7.7.6
+1.7.3.2
 
