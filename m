@@ -1,76 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64658 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031507Ab2CFWnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:41 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH RESEND 32/33] iwlwifi: clean up iwl-commands.h
-Date: Tue,  6 Mar 2012 13:31:07 -0800
-Message-Id: <1331069468-11074-33-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234349_168713_EDE3EE25)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:49249 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757946Ab2CSSwS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 14:52:18 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 2/4] mac80211:  Support getting sta_info stats via ethtool.
+Date: Mon, 19 Mar 2012 11:51:43 -0700
+Message-Id: <1332183105-4447-2-git-send-email-greearb@candelatech.com> (sfid-20120319_195226_092477_54C0C01E)
+In-Reply-To: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
+References: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Do some cleanups here:
- * remove an unused prototype
- * remove some unused constants
- * clean up includes
+This lets ethtool print out stats related to stations
+connected to the interface.  Does not yet get stats
+from the underlying driver.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h |   10 +---------
- 2 files changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index cb6c230..cf5cc10 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -26,7 +26,7 @@
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  *****************************************************************************/
--
-+#include <linux/etherdevice.h>
- #include <net/mac80211.h>
+v3:  Update patch description.
+
+:100644 100644 cf5b08a... bb834d7... M	net/mac80211/cfg.c
+ net/mac80211/cfg.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 71 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index cf5b08a..bb834d7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -112,6 +112,74 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 	return 0;
+ }
  
- #include "iwl-dev.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 70ba962..9ed73e5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -69,15 +69,9 @@
- #ifndef __iwl_commands_h__
- #define __iwl_commands_h__
- 
--#include <linux/etherdevice.h>
- #include <linux/ieee80211.h>
-+#include <linux/types.h>
- 
--struct iwl_priv;
--
--/* Tx rates */
--#define IWL_CCK_RATES	4
--#define IWL_OFDM_RATES	8
--#define IWL_MAX_RATES	(IWL_CCK_RATES + IWL_OFDM_RATES)
- 
- enum {
- 	REPLY_ALIVE = 0x1,
-@@ -3851,8 +3845,6 @@ struct iwlagn_wowlan_kek_kck_material_cmd {
- 	__le64	replay_ctr;
- } __packed;
- 
--int iwl_agn_check_rxon_cmd(struct iwl_priv *priv);
--
- /*
-  * REPLY_WIPAN_PARAMS = 0xb2 (Commands and Notification)
-  */
++static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
++	"rx_packets", "rx_bytes", "wep_weak_iv_count",
++	"rx_duplicates", "rx_fragments", "rx_dropped",
++	"tx_packets", "tx_bytes", "tx_fragments",
++	"tx_filtered", "tx_retry_failed", "tx_retries",
++	"beacon_loss"
++};
++#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
++
++static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
++				       struct net_device *dev,
++				       int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return STA_STATS_LEN;
++
++	return -EOPNOTSUPP;
++}
++
++static void ieee80211_get_et_stats(struct wiphy *wiphy,
++				   struct net_device *dev,
++				   struct ethtool_stats *stats,
++				   u64 *data)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++	struct ieee80211_local *local = sdata->local;
++
++	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		int i = 0;
++
++		/* Make sure this station belongs to the proper dev */
++		if (sta->sdata->dev != dev)
++			continue;
++
++		data[i++] += sta->rx_packets;
++		data[i++] += sta->rx_bytes;
++		data[i++] += sta->wep_weak_iv_count;
++		data[i++] += sta->num_duplicates;
++		data[i++] += sta->rx_fragments;
++		data[i++] += sta->rx_dropped;
++
++		data[i++] += sta->tx_packets;
++		data[i++] += sta->tx_bytes;
++		data[i++] += sta->tx_fragments;
++		data[i++] += sta->tx_filtered_count;
++		data[i++] += sta->tx_retry_failed;
++		data[i++] += sta->tx_retry_count;
++		data[i++] += sta->beacon_loss_count;
++		BUG_ON(i != STA_STATS_LEN);
++	}
++	rcu_read_unlock();
++}
++
++static void ieee80211_get_et_strings(struct wiphy *wiphy,
++				     struct net_device *dev,
++				     u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS) {
++		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
++		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
++	}
++}
++
++
+ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 			     struct key_params *params)
+@@ -2768,4 +2836,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
++	.get_et_sset_count = ieee80211_get_et_sset_count,
++	.get_et_stats = ieee80211_get_et_stats,
++	.get_et_strings = ieee80211_get_et_strings,
+ };
 -- 
-1.7.0.4
+1.7.3.4
 
