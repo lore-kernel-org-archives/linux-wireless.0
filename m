@@ -1,106 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36487 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1032863Ab2CPOzr (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39811 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753844Ab2CSKFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 10:55:47 -0400
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC] wpa_supplicant: Add support for ACS.
-Date: Fri, 16 Mar 2012 20:25:33 +0530
-Message-ID: <1331909733-16767-2-git-send-email-nataraja@qca.qualcomm.com> (sfid-20120316_155619_745732_DEA16ED9)
-In-Reply-To: <1331909733-16767-1-git-send-email-nataraja@qca.qualcomm.com>
-References: <1331909733-16767-1-git-send-email-nataraja@qca.qualcomm.com>
+	Mon, 19 Mar 2012 06:05:24 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20327.1220.845693.349959@gargle.gargle.HOWL> (sfid-20120319_110528_368319_6E5631F0)
+Date: Mon, 19 Mar 2012 15:34:52 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: mac80211 20/40 coexist
+In-Reply-To: <1332145412.3359.2.camel@jlt3.sipsolutions.net>
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+	<1331902885.6753.10.camel@jlt3.sipsolutions.net>
+	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
+	<1332065984.3609.5.camel@jlt3.sipsolutions.net>
+	<20326.41009.17936.152095@gargle.gargle.HOWL>
+	<1332145412.3359.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the frequency is set as 0 in the conf file, pass it to the driver
-for using automatic channel selection instead of hardcoding the channel
-as 11. Since some drivers have the capability to choose the channel
-based on the channel conditions, this patch enables that flexibility.
+Johannes Berg wrote:
+> Actually, no -- that's how we got into this mess to start with :-)
+> Bandwidth here is a per-peer property, BSS_CHANGED_HT is changing the
+> operation mode (things like non-HT protection).
+> 
+> We used to change the channel bandwidth when the AP wanted to only
+> receive 20 MHz, but that seems like a bug because that doesn't even
+> necessarily mean it wants to TX 20 MHz.
 
-Signed-hostap-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
----
- src/ap/hw_features.c         |    3 ++-
- src/drivers/driver.h         |    2 ++
- src/drivers/driver_nl80211.c |    8 +++++++-
- wpa_supplicant/ap.c          |    8 +++++---
- 4 files changed, 16 insertions(+), 5 deletions(-)
+11.14.4.3 specifies that if the operating bandwidth has been changed by the AP
+to 20 MHz, then transmitting frames in an extension channel is not allowed ?
 
-diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
-index 8c6fef2..997d205 100644
---- a/src/ap/hw_features.c
-+++ b/src/ap/hw_features.c
-@@ -677,7 +677,8 @@ int hostapd_select_hw_mode(struct hostapd_iface *iface)
- 		 * the channel automatically */
- 		wpa_printf(MSG_ERROR, "Channel not configured "
- 			   "(hw_mode/channel in hostapd.conf)");
--		return -3;
-+		if (!(iface->drv_flags & WPA_DRIVER_FLAGS_ACS))
-+			return -3;
- 	}
- 	if (ok == 0 && iface->conf->channel != 0) {
- 		hostapd_logger(iface->bss[0], NULL,
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 04aedcf..92e078b 100644
---- a/src/drivers/driver.h
-+++ b/src/drivers/driver.h
-@@ -790,6 +790,8 @@ struct wpa_driver_capa {
- #define WPA_DRIVER_FLAGS_PROBE_RESP_OFFLOAD		0x00200000
- /* Driver supports U-APSD in AP mode */
- #define WPA_DRIVER_FLAGS_AP_UAPSD			0x00400000
-+#define WPA_DRIVER_FLAGS_ACS				0x00800000
-+
- 	unsigned int flags;
- 
- 	int max_scan_ssids;
-diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
-index 184b26f..1f0e6ee 100644
---- a/src/drivers/driver_nl80211.c
-+++ b/src/drivers/driver_nl80211.c
-@@ -2466,6 +2466,11 @@ broken_combination:
- 		capa->flags |= WPA_DRIVER_FLAGS_BSS_SELECTION;
- 	}
- 
-+	if (tb[NL80211_ATTR_ACS]) {
-+		wpa_printf(MSG_DEBUG, "nl80211: Using driver-based ACS");
-+		capa->flags |= WPA_DRIVER_FLAGS_ACS;
-+	}
-+
- 	/* default to 5000 since early versions of mac80211 don't set it */
- 	capa->max_remain_on_chan = 5000;
- 
-@@ -6365,7 +6370,8 @@ static int wpa_driver_nl80211_ap(struct wpa_driver_nl80211_data *drv,
- 		nlmode = NL80211_IFTYPE_AP;
- 
- 	if (wpa_driver_nl80211_set_mode(&drv->first_bss, nlmode) ||
--	    wpa_driver_nl80211_set_freq(&drv->first_bss, params->freq, 0, 0)) {
-+	   ((params->freq) &&
-+	   wpa_driver_nl80211_set_freq(&drv->first_bss, params->freq, 0, 0))) {
- 		nl80211_remove_monitor_interface(drv);
- 		return -1;
- 	}
-diff --git a/wpa_supplicant/ap.c b/wpa_supplicant/ap.c
-index 48a6169..6a9187c 100644
---- a/wpa_supplicant/ap.c
-+++ b/wpa_supplicant/ap.c
-@@ -53,9 +53,11 @@ static int wpa_supplicant_conf_ap(struct wpa_supplicant *wpa_s,
- 	os_strlcpy(bss->iface, wpa_s->ifname, sizeof(bss->iface));
- 
- 	if (ssid->frequency == 0) {
--		/* default channel 11 */
--		conf->hw_mode = HOSTAPD_MODE_IEEE80211G;
--		conf->channel = 11;
-+		if (!(wpa_s->drv_flags & WPA_DRIVER_FLAGS_ACS)) {
-+			/* default channel 11 */
-+			conf->hw_mode = HOSTAPD_MODE_IEEE80211G;
-+			conf->channel = 11;
-+		}
- 	} else if (ssid->frequency >= 2412 && ssid->frequency <= 2472) {
- 		conf->hw_mode = HOSTAPD_MODE_IEEE80211G;
- 		conf->channel = (ssid->frequency - 2407) / 5;
--- 
-1.7.0.4
-
+Sujith
