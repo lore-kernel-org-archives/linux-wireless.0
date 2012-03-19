@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:44535 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757478Ab2CNMba (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:60976 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932341Ab2CSUUF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2012 08:31:30 -0400
-Received: by wibhj6 with SMTP id hj6so7069109wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2012 05:31:29 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net, nbd@openwrt.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] mac80211: Don't sample max throughput rate in minstrel_ht
-Date: Wed, 14 Mar 2012 13:31:11 +0100
-Message-Id: <1331728271-7645-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120314_133134_173453_1DCA4C88)
+	Mon, 19 Mar 2012 16:20:05 -0400
+Received: by wejx9 with SMTP id x9so6180754wej.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 13:20:04 -0700 (PDT)
+References: <4F673690.40302@raritan.com>
+In-Reply-To: <4F673690.40302@raritan.com>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <9D564AC6-306B-4E75-A235-AC3DDF54F7D3@gmail.com> (sfid-20120319_212010_761508_E33818A0)
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	RT2x00 Users <users@rt2x00.serialmonkey.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] mac80211: when receiving DTIM disable power-save mode only if it was enabled
+Date: Mon, 19 Mar 2012 21:20:02 +0100
+To: Ronald Wahl <ronald.wahl@raritan.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current max throughput rate is known to be good as otherwise it
-wouldn't be the max throughput rate. Since rate sampling can introduce
-some overhead (by adding RTS for example or due to not aggregating the
-frame) don't sample the max throughput rate.
+On 19 mrt. 2012, at 14:37, Ronald Wahl <ronald.wahl@raritan.com> wrote:
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
+> When receiving DTIM we currently disable power save mode in the
+> hardware unconditionally, i.e. also when the hardware was not sleeping.
+> This causes trouble with at least one wireless chipset (Ralink RT3572).
+> When the hardware is not sleeping and we send a wakeup command (e.g.
+> this happens after a scan) then a significant decrease of the link
+> quality or a disconnect may occur.
+> Disabling power save mode only when it was enabled prevents this issue.
+> 
+> Signed-off-by: Ronald Wahl <ronald.wahl@raritan.com>
 
- net/mac80211/rc80211_minstrel_ht.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Reviewed-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index dbe3dd3..dc40b7b 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -591,6 +591,13 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	minstrel_next_sample_idx(mi);
- 
- 	/*
-+	 * Sampling might add some overhead (RTS, no aggregation)
-+	 * to the frame. Hence, don't use sampling for the currently
-+	 * used max TP rate.
-+	 */
-+	if (sample_idx == mi->max_tp_rate)
-+		return -1;
-+	/*
- 	 * When not using MRR, do not sample if the probability is already
- 	 * higher than 95% to avoid wasting airtime
- 	 */
--- 
-1.7.7
+Obviously rt2x00 is the only one that seems to need this, but simply replicating maintaining the PS state inside rt2x00 while mac80211 already does this doesn't seem right to me.
 
+> ---
+> Index: linux/net/mac80211/mlme.c
+> ===================================================================
+> --- linux/net/mac80211/mlme.c    (revision 213137)
+> +++ linux/net/mac80211/mlme.c    (working copy)
+> @@ -1922,9 +1922,11 @@
+>    if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
+>        if (directed_tim) {
+>            if (local->hw.conf.dynamic_ps_timeout > 0) {
+> -                local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+> -                ieee80211_hw_config(local,
+> -                            IEEE80211_CONF_CHANGE_PS);
+> +                if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+> +                    local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+> +                    ieee80211_hw_config(local,
+> +                                IEEE80211_CONF_CHANGE_PS);
+> +                }
+>                ieee80211_send_nullfunc(local, sdata, 0);
+>            } else {
+>                local->pspolling = true;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
