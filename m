@@ -1,64 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:38198 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751517Ab2CKWFL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 18:05:11 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1S6qsy-0002fV-KY
-	for linux-wireless@vger.kernel.org; Sun, 11 Mar 2012 23:05:04 +0100
-Received: from 234-87-136-186.fibertel.com.ar ([234-87-136-186.fibertel.com.ar])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Mar 2012 23:05:04 +0100
-Received: from damianmontaldo by 234-87-136-186.fibertel.com.ar with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Mar 2012 23:05:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Damian Montaldo <damianmontaldo@gmail.com>
-Subject: Re: Fwd: Can't compile latest compat-wireless on Fedora 16 -  =?utf-8?b?My4yLjctMS5mYzE2Lng4Nl82NC5kZWJ1Zw==?=
-Date: Sat, 10 Mar 2012 19:02:53 +0000 (UTC)
-Message-ID: <loom.20120310T195728-825@post.gmane.org> (sfid-20120311_230546_485483_A38CCA9B)
-References: <f4dafaf24a15bdee30366ec46f4e8429@www.thefabfarrows.com> <591bc8272f5a32225a4ca6f8ae8c2773@www.thefabfarrows.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:48018 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292Ab2CSNDK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 09:03:10 -0400
+Subject: Re: [RFC] mac80211: fix possible tid_rx->reorder_timer use after
+ free
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1332161442-7315-1-git-send-email-sgruszka@redhat.com>
+References: <1332161442-7315-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Mar 2012 14:03:08 +0100
+Message-ID: <1332162188.3359.33.camel@jlt3.sipsolutions.net> (sfid-20120319_140315_064637_786D2F10)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paul Farrow <linuxwireless@...> writes:
-> On Tue, 28 Feb 2012 15:00:24 -0500, Paul Farrow wrote:
-> > Hi guys
-> >
-> > I have in recent times compiled the latest compat-wireless with no
-> > problem but I seem to be having trouble compiling it on this kernel -
-> > lots of undefined warnings in the mac80211 area.
-> >
-> > Output from make is attached.
-> >
-> > Can any one tell me what I have done wrong?
-> >
-> > Thanks
-> >
-> > Paul
+On Mon, 2012-03-19 at 13:50 +0100, Stanislaw Gruszka wrote:
+> Is possible that we arm tid_rx->reorder_timer after del_timer_sync(). To
+> fix: first wait for RCU grace period finish and then delete timer. Timer
+> will not be armed again as rcu_dereference(sta->ampdu_mlme.tid_rx[tid])
+> will return NULL.
 > 
+> Debug object detected problem with the following warning:
+> ODEBUG: free active (active state 0) object type: timer_list hint: sta_rx_agg_reorder_timer_expired+0x0/0xf0 [mac80211]
 > 
+> Bug report (with full warning):
+> https://bugzilla.redhat.com/show_bug.cgi?id=804007
 > 
-> [ 7821.750967] ath9k 0000:03:00.0: PCI INT A disabled
-> [ 7821.751115] ath9k: Driver unloaded
+> Reported-by: "jan p. springer" <jsd@igroup.org>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  net/mac80211/agg-rx.c   |    8 ++++----
+>  net/mac80211/sta_info.h |    1 -
+>  2 files changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+> index 1068f66..2c1223e 100644
+> --- a/net/mac80211/agg-rx.c
+> +++ b/net/mac80211/agg-rx.c
+> @@ -43,10 +43,8 @@
+>  #include "ieee80211_i.h"
+>  #include "driver-ops.h"
+>  
+> -static void ieee80211_free_tid_rx(struct rcu_head *h)
+> +static void ieee80211_free_tid_rx(struct tid_ampdu_rx *tid_rx)
+>  {
+> -	struct tid_ampdu_rx *tid_rx =
+> -		container_of(h, struct tid_ampdu_rx, rcu_head);
+>  	int i;
+>  
+>  	for (i = 0; i < tid_rx->buf_size; i++)
+> @@ -90,10 +88,12 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+>  		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+>  				     tid, WLAN_BACK_RECIPIENT, reason);
+>  
+> +	synchronize_rcu();
+> +
+>  	del_timer_sync(&tid_rx->session_timer);
+>  	del_timer_sync(&tid_rx->reorder_timer);
+>  
+> -	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
+> +	ieee80211_free_tid_rx(tid_rx);
 
+Hmmm. That synchronize_rcu() could become rather expensive. I've been
+trying to reduce our use of synchronize_rcu() now.
 
-Hi, I have the same errors trying to compile compat-wireless-2012-03-08 (the
-last stable version available) in kubuntu oneiric with kernel 3.0.0-16-generic
-(up-to-date) x86_64
+I was checking if we could move the timer deletions into
+ieee80211_free_tid_rx since call_rcu runs from another softirq, but I'm
+not really sure -- the timer softirq could be running on another CPU?
 
- [   13.194249] mac80211: Unknown symbol __tracepoint_drv_start (err 0)
- [   13.194292] mac80211: Unknown symbol __tracepoint_drv_finish_tx_sync (err 0)
- [   13.194302] mac80211: Unknown symbol __tracepoint_drv_sta_remove (err 0)
- [   13.194312] mac80211: Unknown symbol __tracepoint_drv_conf_tx (err 0)
- [   13.194321] mac80211: Unknown symbol
-__tracepoint_drv_cancel_remain_on_channel (err 0)
- [   13.194356] mac80211: Unknown symbol __tracepoint_drv_remain_on_channel (err 0)
-...etc...
-
-any idea?
+johannes
 
