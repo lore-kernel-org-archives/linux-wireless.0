@@ -1,297 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50675 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590Ab2CILtX (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:34540 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031012Ab2CSQPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 06:49:23 -0500
-Subject: [PATCH] mac80211: remove tx_sync
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Mar 2012 12:49:21 +0100
-Message-ID: <1331293761.3491.2.camel@jlt3.sipsolutions.net> (sfid-20120309_124936_801749_B5E68A7B)
-Mime-Version: 1.0
+	Mon, 19 Mar 2012 12:15:23 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH 2/9] ath6kl: Add tx_complete() to struct htc_ep_callbacks
+Date: Mon, 19 Mar 2012 18:14:57 +0200
+Message-Id: <1332173704-18877-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171535_648249_E3CF4657)
+In-Reply-To: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is needed by the USB code. Also while at it replace one void pointer
+with a properly typed pointer.
 
-When the station state callback was added, this
-was no longer needed in theory. With the iwlwifi
-changes to remove use of it landing, we can kill
-the entire tx-sync framework again, RIP.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- include/net/mac80211.h      |   41 -----------------------------------------
- net/mac80211/driver-ops.h   |   35 -----------------------------------
- net/mac80211/driver-trace.h |   43 -------------------------------------------
- net/mac80211/ieee80211_i.h  |    1 -
- net/mac80211/mlme.c         |   41 -----------------------------------------
- 5 files changed, 161 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h |    3 ++-
+ drivers/net/wireless/ath/ath6kl/htc.c  |    2 +-
+ drivers/net/wireless/ath/ath6kl/htc.h  |    1 +
+ drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++--
+ 4 files changed, 7 insertions(+), 4 deletions(-)
 
---- a/include/net/mac80211.h	2012-03-09 12:46:56.000000000 +0100
-+++ b/include/net/mac80211.h	2012-03-09 12:47:46.000000000 +0100
-@@ -1766,20 +1766,6 @@ enum ieee80211_ampdu_mlme_action {
- };
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index f1dd890..6485ef0 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -746,7 +746,8 @@ void init_netdev(struct net_device *dev);
+ void ath6kl_cookie_init(struct ath6kl *ar);
+ void ath6kl_cookie_cleanup(struct ath6kl *ar);
+ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet);
+-void ath6kl_tx_complete(void *context, struct list_head *packet_queue);
++void ath6kl_tx_complete(struct htc_target *context,
++			struct list_head *packet_queue);
+ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 					       struct htc_packet *packet);
+ void ath6kl_stop_txrx(struct ath6kl *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 4849d99..187f449 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -432,7 +432,7 @@ static void htc_tx_complete(struct htc_endpoint *endpoint,
+ 		   "htc tx complete ep %d pkts %d\n",
+ 		   endpoint->eid, get_queue_depth(txq));
  
- /**
-- * enum ieee80211_tx_sync_type - TX sync type
-- * @IEEE80211_TX_SYNC_AUTH: sync TX for authentication
-- *	(and possibly also before direct probe)
-- * @IEEE80211_TX_SYNC_ASSOC: sync TX for association
-- * @IEEE80211_TX_SYNC_ACTION: sync TX for action frame
-- *	(not implemented yet)
-- */
--enum ieee80211_tx_sync_type {
--	IEEE80211_TX_SYNC_AUTH,
--	IEEE80211_TX_SYNC_ASSOC,
--	IEEE80211_TX_SYNC_ACTION,
--};
--
--/**
-  * enum ieee80211_frame_release_type - frame release reason
-  * @IEEE80211_FRAME_RELEASE_PSPOLL: frame released for PS-Poll
-  * @IEEE80211_FRAME_RELEASE_UAPSD: frame(s) released due to
-@@ -1889,26 +1875,6 @@ enum ieee80211_frame_release_type {
-  *	of the bss parameters has changed when a call is made. The callback
-  *	can sleep.
-  *
-- * @tx_sync: Called before a frame is sent to an AP/GO. In the GO case, the
-- *	driver should sync with the GO's powersaving so the device doesn't
-- *	transmit the frame while the GO is asleep. In the regular AP case
-- *	it may be used by drivers for devices implementing other restrictions
-- *	on talking to APs, e.g. due to regulatory enforcement or just HW
-- *	restrictions.
-- *	This function is called for every authentication, association and
-- *	action frame separately since applications might attempt to auth
-- *	with multiple APs before chosing one to associate to. If it returns
-- *	an error, the corresponding authentication, association or frame
-- *	transmission is aborted and reported as having failed. It is always
-- *	called after tuning to the correct channel.
-- *	The callback might be called multiple times before @finish_tx_sync
-- *	(but @finish_tx_sync will be called once for each) but in practice
-- *	this is unlikely to happen. It can also refuse in that case if the
-- *	driver cannot handle that situation.
-- *	This callback can sleep.
-- * @finish_tx_sync: Called as a counterpart to @tx_sync, unless that returned
-- *	an error. This callback can sleep.
-- *
-  * @prepare_multicast: Prepare for multicast filter configuration.
-  *	This callback is optional, and its return value is passed
-  *	to configure_filter(). This callback must be atomic.
-@@ -2180,13 +2146,6 @@ struct ieee80211_ops {
- 				 struct ieee80211_bss_conf *info,
- 				 u32 changed);
- 
--	int (*tx_sync)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		       const u8 *bssid, enum ieee80211_tx_sync_type type);
--	void (*finish_tx_sync)(struct ieee80211_hw *hw,
--			       struct ieee80211_vif *vif,
--			       const u8 *bssid,
--			       enum ieee80211_tx_sync_type type);
--
- 	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
- 				 struct netdev_hw_addr_list *mc_list);
- 	void (*configure_filter)(struct ieee80211_hw *hw,
---- a/net/mac80211/driver-ops.h	2012-03-09 12:46:56.000000000 +0100
-+++ b/net/mac80211/driver-ops.h	2012-03-09 12:47:46.000000000 +0100
-@@ -168,41 +168,6 @@ static inline void drv_bss_info_changed(
- 	trace_drv_return_void(local);
+-	ath6kl_tx_complete(endpoint->target->dev->ar, txq);
++	ath6kl_tx_complete(endpoint->target, txq);
  }
  
--static inline int drv_tx_sync(struct ieee80211_local *local,
--			      struct ieee80211_sub_if_data *sdata,
--			      const u8 *bssid,
--			      enum ieee80211_tx_sync_type type)
--{
--	int ret = 0;
--
--	might_sleep();
--
--	check_sdata_in_driver(sdata);
--
--	trace_drv_tx_sync(local, sdata, bssid, type);
--	if (local->ops->tx_sync)
--		ret = local->ops->tx_sync(&local->hw, &sdata->vif,
--					  bssid, type);
--	trace_drv_return_int(local, ret);
--	return ret;
--}
--
--static inline void drv_finish_tx_sync(struct ieee80211_local *local,
--				      struct ieee80211_sub_if_data *sdata,
--				      const u8 *bssid,
--				      enum ieee80211_tx_sync_type type)
--{
--	might_sleep();
--
--	check_sdata_in_driver(sdata);
--
--	trace_drv_finish_tx_sync(local, sdata, bssid, type);
--	if (local->ops->finish_tx_sync)
--		local->ops->finish_tx_sync(&local->hw, &sdata->vif,
--					   bssid, type);
--	trace_drv_return_void(local);
--}
--
- static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
- 					struct netdev_hw_addr_list *mc_list)
- {
---- a/net/mac80211/driver-trace.h	2012-03-09 12:46:56.000000000 +0100
-+++ b/net/mac80211/driver-trace.h	2012-03-09 12:47:46.000000000 +0100
-@@ -308,49 +308,6 @@ TRACE_EVENT(drv_bss_info_changed,
- 	)
- );
+ static void htc_tx_comp_handler(struct htc_target *target,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 5027ccc..7b0c489 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -319,6 +319,7 @@ enum htc_send_full_action {
+ };
  
--DECLARE_EVENT_CLASS(tx_sync_evt,
--	TP_PROTO(struct ieee80211_local *local,
--		 struct ieee80211_sub_if_data *sdata,
--		 const u8 *bssid,
--		 enum ieee80211_tx_sync_type type),
--	TP_ARGS(local, sdata, bssid, type),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--		VIF_ENTRY
--		__array(char, bssid, ETH_ALEN)
--		__field(u32, sync_type)
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--		VIF_ASSIGN;
--		memcpy(__entry->bssid, bssid, ETH_ALEN);
--		__entry->sync_type = type;
--	),
--
--	TP_printk(
--		LOCAL_PR_FMT  VIF_PR_FMT " bssid:%pM type:%d",
--		LOCAL_PR_ARG, VIF_PR_ARG, __entry->bssid, __entry->sync_type
--	)
--);
--
--DEFINE_EVENT(tx_sync_evt, drv_tx_sync,
--	TP_PROTO(struct ieee80211_local *local,
--		 struct ieee80211_sub_if_data *sdata,
--		 const u8 *bssid,
--		 enum ieee80211_tx_sync_type type),
--	TP_ARGS(local, sdata, bssid, type)
--);
--
--DEFINE_EVENT(tx_sync_evt, drv_finish_tx_sync,
--	TP_PROTO(struct ieee80211_local *local,
--		 struct ieee80211_sub_if_data *sdata,
--		 const u8 *bssid,
--		 enum ieee80211_tx_sync_type type),
--	TP_ARGS(local, sdata, bssid, type)
--);
--
- TRACE_EVENT(drv_prepare_multicast,
- 	TP_PROTO(struct ieee80211_local *local, int mc_count),
- 
---- a/net/mac80211/ieee80211_i.h	2012-03-09 12:47:46.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2012-03-09 12:47:46.000000000 +0100
-@@ -388,7 +388,6 @@ struct ieee80211_mgd_auth_data {
- 
- 	u8 key[WLAN_KEY_LEN_WEP104];
- 	u8 key_len, key_idx;
--	bool synced;
- 	bool done;
- 
- 	size_t ie_len;
---- a/net/mac80211/mlme.c	2012-03-09 12:47:46.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-09 12:47:46.000000000 +0100
-@@ -1750,11 +1750,6 @@ static void ieee80211_destroy_auth_data(
- 
- 	lockdep_assert_held(&sdata->u.mgd.mtx);
- 
--	if (auth_data->synced)
--		drv_finish_tx_sync(sdata->local, sdata,
--				   auth_data->bss->bssid,
--				   IEEE80211_TX_SYNC_AUTH);
--
- 	if (!assoc) {
- 		sta_info_destroy_addr(sdata, auth_data->bss->bssid);
- 
-@@ -1842,10 +1837,6 @@ ieee80211_rx_mgmt_auth(struct ieee80211_
- 
- 	printk(KERN_DEBUG "%s: authenticated\n", sdata->name);
-  out:
--	if (ifmgd->auth_data->synced)
--		drv_finish_tx_sync(sdata->local, sdata, bssid,
--				   IEEE80211_TX_SYNC_AUTH);
--	ifmgd->auth_data->synced = false;
- 	ifmgd->auth_data->done = true;
- 	ifmgd->auth_data->timeout = jiffies + IEEE80211_AUTH_WAIT_ASSOC;
- 	run_again(ifmgd, ifmgd->auth_data->timeout);
-@@ -1985,11 +1976,6 @@ static void ieee80211_destroy_assoc_data
- 
- 	lockdep_assert_held(&sdata->u.mgd.mtx);
- 
--	if (assoc_data->synced)
--		drv_finish_tx_sync(sdata->local, sdata,
--				   assoc_data->bss->bssid,
--				   IEEE80211_TX_SYNC_ASSOC);
--
- 	if (!assoc) {
- 		sta_info_destroy_addr(sdata, assoc_data->bss->bssid);
- 
-@@ -2200,14 +2186,6 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee
- 	} else {
- 		printk(KERN_DEBUG "%s: associated\n", sdata->name);
- 
--		/* tell driver about sync done first */
--		if (assoc_data->synced) {
--			drv_finish_tx_sync(sdata->local, sdata,
--					   assoc_data->bss->bssid,
--					   IEEE80211_TX_SYNC_ASSOC);
--			assoc_data->synced = false;
--		}
--
- 		if (!ieee80211_assoc_success(sdata, *bss, mgmt, len)) {
- 			/* oops -- internal error -- send timeout for now */
- 			ieee80211_destroy_assoc_data(sdata, true);
-@@ -2692,14 +2670,6 @@ static int ieee80211_probe_auth(struct i
- 	if (WARN_ON_ONCE(!auth_data))
- 		return -EINVAL;
- 
--	if (!auth_data->synced) {
--		int ret = drv_tx_sync(local, sdata, auth_data->bss->bssid,
--				      IEEE80211_TX_SYNC_AUTH);
--		if (ret)
--			return ret;
--	}
--	auth_data->synced = true;
--
- 	auth_data->tries++;
- 
- 	if (auth_data->tries > IEEE80211_AUTH_MAX_TRIES) {
-@@ -2756,14 +2726,6 @@ static int ieee80211_do_assoc(struct iee
- 
- 	lockdep_assert_held(&sdata->u.mgd.mtx);
- 
--	if (!assoc_data->synced) {
--		int ret = drv_tx_sync(local, sdata, assoc_data->bss->bssid,
--				      IEEE80211_TX_SYNC_ASSOC);
--		if (ret)
--			return ret;
--	}
--	assoc_data->synced = true;
--
- 	assoc_data->tries++;
- 	if (assoc_data->tries > IEEE80211_ASSOC_MAX_TRIES) {
- 		printk(KERN_DEBUG "%s: association with %pM timed out\n",
-@@ -3261,9 +3223,6 @@ int ieee80211_mgd_auth(struct ieee80211_
- 
- 	err = ieee80211_probe_auth(sdata);
- 	if (err) {
--		if (auth_data->synced)
--			drv_finish_tx_sync(local, sdata, req->bss->bssid,
--					   IEEE80211_TX_SYNC_AUTH);
- 		sta_info_destroy_addr(sdata, req->bss->bssid);
- 		goto err_clear;
+ struct htc_ep_callbacks {
++	void (*tx_complete) (struct htc_target *, struct htc_packet *);
+ 	void (*rx) (struct htc_target *, struct htc_packet *);
+ 	void (*rx_refill) (struct htc_target *, enum htc_endpoint_id endpoint);
+ 	enum htc_send_full_action (*tx_full) (struct htc_target *,
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index f85353f..befe305 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -666,9 +666,10 @@ static void ath6kl_tx_clear_node_map(struct ath6kl_vif *vif,
  	}
-
+ }
+ 
+-void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
++void ath6kl_tx_complete(struct htc_target *target,
++			struct list_head *packet_queue)
+ {
+-	struct ath6kl *ar = context;
++	struct ath6kl *ar = target->dev->ar;
+ 	struct sk_buff_head skb_queue;
+ 	struct htc_packet *packet;
+ 	struct sk_buff *skb;
+-- 
+1.7.1
 
