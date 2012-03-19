@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58294 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753526Ab2CTOuw (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:52904 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757066Ab2CSJci (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 10:50:52 -0400
-Received: by iagz16 with SMTP id z16so118638iag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 07:50:51 -0700 (PDT)
-Date: Tue, 20 Mar 2012 10:48:40 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Subject: [PATCH] ath5k: drop self from MAINTAINERS
-Message-ID: <20120320144840.GA26066@localhost> (sfid-20120320_155100_415076_21E652D3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 19 Mar 2012 05:32:38 -0400
+Received: by wibhq7 with SMTP id hq7so3555150wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 02:32:37 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: free ap keys only in ap mode
+Date: Mon, 19 Mar 2012 11:32:55 +0200
+Message-Id: <1332149575-22284-1-git-send-email-eliad@wizery.com> (sfid-20120319_103240_827772_6BE49549)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I simply don't have any hobby hacking time after family time
-and non-kernel-related job time, so I resume status as part-time
-mailing list lurker.
+The ap keys should be freed only when removing
+ap role (otherwise, some arbitrary data might
+get freed).
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- MAINTAINERS |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 22186f5..61ef83a 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1247,7 +1247,6 @@ ATHEROS ATH5K WIRELESS DRIVER
- M:	Jiri Slaby <jirislaby@gmail.com>
- M:	Nick Kossifidis <mickflemm@gmail.com>
- M:	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
--M:	Bob Copeland <me@bobcopeland.com>
- L:	linux-wireless@vger.kernel.org
- L:	ath5k-devel@lists.ath5k.org
- W:	http://wireless.kernel.org/en/users/Drivers/ath5k
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 3900236..8cfbc95 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2360,10 +2360,10 @@ deinit:
+ 		for (i = 0; i < CONF_TX_MAX_AC_COUNT; i++)
+ 			wl12xx_free_rate_policy(wl,
+ 						&wlvif->ap.ucast_rate_idx[i]);
++		wl1271_free_ap_keys(wl, wlvif);
+ 	}
+ 
+ 	wl12xx_tx_reset_wlvif(wl, wlvif);
+-	wl1271_free_ap_keys(wl, wlvif);
+ 	if (wl->last_wlvif == wlvif)
+ 		wl->last_wlvif = NULL;
+ 	list_del(&wlvif->list);
 -- 
-1.7.2.5
+1.7.6.401.g6a319
 
--- 
-Bob Copeland %% www.bobcopeland.com
