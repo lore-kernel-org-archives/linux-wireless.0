@@ -1,78 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37313 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757669Ab2C1JGO (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:48901 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756500Ab2CSVv7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 05:06:14 -0400
-Message-Id: <20120328085901.307857420@sipsolutions.net> (sfid-20120328_110619_243292_1BF7F7AC)
-Date: Wed, 28 Mar 2012 10:58:38 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/4] mac80211: remove queue stop on rate control update
-References: <20120328085835.902687300@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 19 Mar 2012 17:51:59 -0400
+Date: Mon, 19 Mar 2012 21:51:54 +0000
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>
+Message-ID: <20120319215154.GA18508@srcf.ucam.org> (sfid-20120319_225203_372020_0F7C1537)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Bcc: 
+Subject: brcmsmac hangs machine if loaded after busmastering disabled
+Reply-To: 
 
-We currently stop the queue when changing the rate
-control between 20/40 MHz in the BSS. This seems to
-have been necessary when we actually changed the
-channel, but now that we just update the station it
-doesn't seem right any more. Remove it.
+I'm dealing with a platform with some buggy system firmware that enables 
+DMA on the wireless card and leaves it running even after OS handover, 
+triggering memory corruption. I'm working around that by disabling bus 
+mastering on the device in the bootloader, but that results in the 
+system hanging during brcmsmac init. pci_set_master() is being called in 
+the bcma code, so it's nothing that straghtforward. Any idea what might 
+be going wrong here?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |   19 -------------------
- 2 files changed, 20 deletions(-)
-
---- a/net/mac80211/ieee80211_i.h	2012-03-16 14:14:19.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2012-03-16 14:14:20.000000000 +0100
-@@ -757,7 +757,6 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
- 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
--	IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE,
- };
- 
- #ifdef CONFIG_MAC80211_LEDS
---- a/net/mac80211/mlme.c	2012-03-16 14:14:19.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-16 14:14:20.000000000 +0100
-@@ -212,21 +212,6 @@ static u32 ieee80211_config_ht_tx(struct
- 	if (sta && (!reconfig ||
- 		    (disable_40 != !!(sta->sta.ht_cap.cap &
- 					IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
--		if (reconfig) {
--			/*
--			 * Whenever the AP announces the HT mode changed
--			 * (e.g. 40 MHz intolerant) stop queues to avoid
--			 * sending out frames while the rate control is
--			 * reconfiguring.
--			 */
--			ieee80211_stop_queues_by_reason(&sdata->local->hw,
--				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
--
--			/* flush out all packets */
--			synchronize_net();
--
--			drv_flush(local, false);
--		}
- 
- 		if (disable_40)
- 			sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-@@ -235,10 +220,6 @@ static u32 ieee80211_config_ht_tx(struct
- 
- 		rate_control_rate_update(local, sband, sta,
- 					 IEEE80211_RC_HT_CHANGED);
--
--		if (reconfig)
--			ieee80211_wake_queues_by_reason(&sdata->local->hw,
--				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
- 	}
- 	mutex_unlock(&local->sta_mtx);
- 
-
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
