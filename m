@@ -1,72 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51563 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753171Ab2CPNif (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42921 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754210Ab2CSJ3s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 09:38:35 -0400
-Message-ID: <4F634259.7040107@etit.tu-chemnitz.de> (sfid-20120316_143842_804261_776D594F)
-Date: Fri, 16 Mar 2012 14:38:33 +0100
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+	Mon, 19 Mar 2012 05:29:48 -0400
+Received: by dajr28 with SMTP id r28so9666915daj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 02:29:48 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1332146368.3359.12.camel@jlt3.sipsolutions.net>
+References: <1332025254-5048-1-git-send-email-nbd@openwrt.org>
+	<1332025254-5048-2-git-send-email-nbd@openwrt.org>
+	<1332025254-5048-3-git-send-email-nbd@openwrt.org>
+	<1332065875.3609.3.camel@jlt3.sipsolutions.net>
+	<4F65C374.2060505@openwrt.org>
+	<1332146368.3359.12.camel@jlt3.sipsolutions.net>
+Date: Mon, 19 Mar 2012 10:29:47 +0100
+Message-ID: <CAGXE3d8P1r+DRv4UKbzSMXaf4fRB4cXAyz8+a1pf3RsfeAKOvQ@mail.gmail.com> (sfid-20120319_102951_852330_98DC4568)
+Subject: Re: [PATCH 3/3] mac80211: optimize aggregation session timeout handling
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [mac80211] UAPSD: WLAN_STA_PS flag  cleared prematurely?
-References: <4F630757.6070901@etit.tu-chemnitz.de> <1331901852.6753.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1331901852.6753.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/12 13:44, Johannes Berg wrote:
-> On Fri, 2012-03-16 at 10:26 +0100, Marco Porsch wrote:
->> Hi all,
->>
->> in sta_info.c : ieee80211_sta_ps_deliver_response the
->> IEEE80211_TX_STATUS_EOSP is set for all to-be-sent frames, not only for
->> the last. But only the last buffered frame actually gets the EOSP flag.
->>
->>
->> /* set EOSP for the frame */
->> if (reason == IEEE80211_FRAME_RELEASE_UAPSD&&
->>       qoshdr&&  skb_queue_empty(&frames))
->> 	*qoshdr |= IEEE80211_QOS_CTL_EOSP;
->>
->> info->flags |= IEEE80211_TX_STATUS_EOSP |
->>          IEEE80211_TX_CTL_REQ_TX_STATUS;
->>
->>
->> Consequence is, that the WLAN_STA_SP flag gets cleared (multiple times)
->> in ieee80211_tx_status before the last frame with EOSP has been sent.
->> Is this correct?
+Hi,
+
+On Mon, Mar 19, 2012 at 9:39 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2012-03-18 at 12:13 +0100, Felix Fietkau wrote:
+>> On 2012-03-18 11:17 AM, Johannes Berg wrote:
+>> > On Sun, 2012-03-18 at 00:00 +0100, Felix Fietkau wrote:
+>> >> Calling mod_timer from the rx/tx hotpath is somewhat expensive, and the
+>> >> timeout doesn't need to be so precise.
+>> >>
+>> >> Switch to a different strategy: Schedule the timer initially, store jiffies
+>> >> of all last rx/tx activity which would previously modify the timer, and
+>> >> let the timer re-arm itself after checking the last rx/tx timestamp.
+>> >
+>> > I don't like this. It's not the optimisation you think it is on other
+>> > ("embedded") systems where firing a timer is more expensive.
+>> >
+>> > You're trading power consumption against CPU utilisation by causing the
+>> > timer to wake up.
+>> I considered that was well, but didn't think one wakeup every 5 seconds
+>> or so would be significant. Would you take the patch if I change the
+>> timer to be deferrable, so that it doesn't cause wakeups by itself?
 >
-> Looks like the bug is above, the EOSP/TX_STATUS should only be set for
-> the last frame?
+> I'm not really convinced, for making them deferrable we should analyse
+> the consequences of that more carefully, for example it seems possible
+> that the system wakes up to send a packet, and then the first thing that
+> happens is a few aggregation handshakes ... that wastes a lot of time
+> and power.
 
-I Agree. But what about the case, when the last frame is not a QoS 
-frame? Can this even happen - or is U-APSD only for QoS STA?
-Then we would have to manually append a QoS Null with the EOSP flag + 
-TX_STATUS?
+I like the idea of getting rid of the mod_timer overhead. Looking at the timer
+code, if the timer value is unchanged mod_timer is not that expensive.
 
-So like this:
+So, instead of calling mod_timer for every successive frame with a slightly
+different timeout we could just use round_jiffies to round the timeout to the
+next full second. This would in most cases take the quick path through
+mod_timer and only update the timer once every second.
 
-/* set EOSP for the _last_ frame or appended a QoS Null when needed */
-if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
-     skb_queue_empty(&frames)) {
-	if (qoshdr) {
-		*qoshdr |= IEEE80211_QOS_CTL_EOSP;
+See code (untested, not even compile tested) below.
 
-		info->flags |= IEEE80211_TX_STATUS_EOSP |
-		               IEEE80211_TX_CTL_REQ_TX_STATUS;
-	} else {
-		ieee80211_send_null_response(sdata, tid, reason);
-	}
-}
+Helmut
 
-Open issues:
-Which tid?
-Would this Null now be sent after or before the last frame?
-What if the EOSP frame is lost?
+---
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 44627c8..25c1621 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -53,6 +53,7 @@ struct ieee80211_local;
+ #define IEEE80211_FRAGMENT_MAX 4
 
-Regards,
-Marco
+ #define TU_TO_EXP_TIME(x)	(jiffies + usecs_to_jiffies((x) * 1024))
++#define TU_TO_EXP_TIME_ROUNDED(x) round_jiffies(TU_TO_EXP_TIME(x))
 
+ #define IEEE80211_DEFAULT_UAPSD_QUEUES \
+ 	(IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |	\
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 491c96f..f1b111d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -794,7 +794,7 @@ static void ieee80211_rx_reorder_ampdu(struct
+ieee80211_rx_data *rx)
+ 	/* reset session timer */
+ 	if (tid_agg_rx->timeout)
+ 		mod_timer(&tid_agg_rx->session_timer,
+-			  TU_TO_EXP_TIME(tid_agg_rx->timeout));
++			  TU_TO_EXP_TIME_ROUNDED(tid_agg_rx->timeout));
+
+ 	/* if this mpdu is fragmented - terminate rx aggregation session */
+ 	sc = le16_to_cpu(hdr->seq_ctrl);
