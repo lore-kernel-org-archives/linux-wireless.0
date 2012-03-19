@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34680 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757751Ab2CLWcb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 18:32:31 -0400
-Received: by bkcik5 with SMTP id ik5so3024049bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 15:32:29 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ben Greear <greearb@candelatech.com>
-Subject: Re: Hacking PCI-ids to allow Atheros NIC into Lenovo laptop.
-Date: Mon, 12 Mar 2012 23:32:16 +0100
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <4F5E7031.4000401@candelatech.com>
-In-Reply-To: <4F5E7031.4000401@candelatech.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201203122332.16325.chunkeey@googlemail.com> (sfid-20120312_233245_048112_668CF82C)
+Received: from perches-mx.perches.com ([206.117.179.246]:57481 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932186Ab2CSCqj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Mar 2012 22:46:39 -0400
+Message-ID: <1332125197.23125.41.camel@joe2Laptop> (sfid-20120319_034643_031597_1473A602)
+Subject: Re: [PATCH] rtlwifi: Preallocate USB read buffers and eliminate
+ kalloc in read routine
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Sun, 18 Mar 2012 19:46:37 -0700
+In-Reply-To: <4f669d14.5MVnZ/K9sIFwYerB%Larry.Finger@lwfinger.net>
+References: <4f669d14.5MVnZ/K9sIFwYerB%Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, March 12, 2012 10:52:49 PM Ben Greear wrote:
-> It seems we bought a Lenovo laptop that has a BIOS lock where it will only
-> support certain wifi NICs based on the pci-id.  It came with an Intel
-> NIC, so at least that ID must work...
-> 
-> One way around this might be to over-write the pci-id of an Atheros NIC
-> in it's non-volatile storage to make it look like an Intel, at least until
-> the kernel boots.
-> 
-> Then maybe add some sort of ugly code to force the Atheros driver
-> to manage this Intel pci-id (and probably disable the same pci-id in
-> the Intel driver).
-> 
-> Has anyone tried doing anything like this?  Any suggestions for a cleaner
-> way to go about this?
-Been down this road before. First an old X41 Tablet and more recently a HP
-dv6 laptop.
+On Sun, 2012-03-18 at 21:42 -0500, Larry Finger wrote:
+> The current version of rtlwifi for USB operations uses kmalloc to
+> acquire a 32-bit buffer for reading.
 
-I think if you manage to reprogram the cards pciids then you are more than
-halfway there. Because theoretically, you can get away with adding the fake
-intel id to ath9k through sysfs: 
+trivia:
 
-echo "8086 dead" > /sys/bus/pci/drivers/ath9k/new_id
-[for more information, take a look at the new_id sysfs interface]
-(Of course, you'll have to get rid of the intel driver first)
+> +++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
+[]
+> @@ -955,6 +947,13 @@ int __devinit rtl_usb_probe(struct usb_i
+>  		return -ENOMEM;
+>  	}
+>  	rtlpriv = hw->priv;
+> +	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
+> +				    GFP_KERNEL);
+> +	if (!rtlpriv->usb_data) {
+> +		RT_ASSERT(false, "USB data buffer allocation failed\n");
 
-That said, in both cases I risked flashing a modded bios. So whitelists are
-no longer a problem. 
+The RT_ASSERT isn't really necessary as kzalloc already
+does a dump_stack on allocation failure.
 
-PS: AFAIK [Maybe some QCA dev can verify this]: all AR9300+ have OTP ROMs
-for the pciids. So you might want to get an older AR9280 for your laptop.
