@@ -1,93 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5450 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756724Ab2CGSb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 13:31:27 -0500
-Date: Wed, 7 Mar 2012 19:31:04 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: [PATCH 3.3 v2] rt2x00: fix random stalls
-Message-ID: <20120307183103.GB15839@redhat.com> (sfid-20120307_193130_855517_C4DB06F2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:50906 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753657Ab2CSNH6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 09:07:58 -0400
+Subject: Re: [RFC] mac80211: fix possible tid_rx->reorder_timer use after
+ free
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1332162188.3359.33.camel@jlt3.sipsolutions.net> (sfid-20120319_140315_064637_786D2F10)
+References: <1332161442-7315-1-git-send-email-sgruszka@redhat.com>
+	 <1332162188.3359.33.camel@jlt3.sipsolutions.net>
+	 (sfid-20120319_140315_064637_786D2F10)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Mar 2012 14:07:57 +0100
+Message-ID: <1332162477.3359.34.camel@jlt3.sipsolutions.net> (sfid-20120319_140801_969273_F5360D22)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is possible that we stop queue and then do not wake up it again,
-especially when packets are transmitted fast. That can be easily
-reproduced with modified tx queue entry_num to some small value e.g. 16.
+On Mon, 2012-03-19 at 14:03 +0100, Johannes Berg wrote:
+> On Mon, 2012-03-19 at 13:50 +0100, Stanislaw Gruszka wrote:
+> > Is possible that we arm tid_rx->reorder_timer after del_timer_sync(). To
+> > fix: first wait for RCU grace period finish and then delete timer. Timer
+> > will not be armed again as rcu_dereference(sta->ampdu_mlme.tid_rx[tid])
+> > will return NULL.
+> > 
+> > Debug object detected problem with the following warning:
+> > ODEBUG: free active (active state 0) object type: timer_list hint: sta_rx_agg_reorder_timer_expired+0x0/0xf0 [mac80211]
+> > 
+> > Bug report (with full warning):
+> > https://bugzilla.redhat.com/show_bug.cgi?id=804007
+> > 
+> > Reported-by: "jan p. springer" <jsd@igroup.org>
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> >  net/mac80211/agg-rx.c   |    8 ++++----
+> >  net/mac80211/sta_info.h |    1 -
+> >  2 files changed, 4 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+> > index 1068f66..2c1223e 100644
+> > --- a/net/mac80211/agg-rx.c
+> > +++ b/net/mac80211/agg-rx.c
+> > @@ -43,10 +43,8 @@
+> >  #include "ieee80211_i.h"
+> >  #include "driver-ops.h"
+> >  
+> > -static void ieee80211_free_tid_rx(struct rcu_head *h)
+> > +static void ieee80211_free_tid_rx(struct tid_ampdu_rx *tid_rx)
+> >  {
+> > -	struct tid_ampdu_rx *tid_rx =
+> > -		container_of(h, struct tid_ampdu_rx, rcu_head);
+> >  	int i;
+> >  
+> >  	for (i = 0; i < tid_rx->buf_size; i++)
+> > @@ -90,10 +88,12 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+> >  		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+> >  				     tid, WLAN_BACK_RECIPIENT, reason);
+> >  
+> > +	synchronize_rcu();
+> > +
+> >  	del_timer_sync(&tid_rx->session_timer);
+> >  	del_timer_sync(&tid_rx->reorder_timer);
+> >  
+> > -	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
+> > +	ieee80211_free_tid_rx(tid_rx);
+> 
+> Hmmm. That synchronize_rcu() could become rather expensive. I've been
+> trying to reduce our use of synchronize_rcu() now.
+> 
+> I was checking if we could move the timer deletions into
+> ieee80211_free_tid_rx since call_rcu runs from another softirq, but I'm
+> not really sure -- the timer softirq could be running on another CPU?
 
-If mac80211 already hold local->queue_stop_reason_lock, then we can wait
-on that lock in both rt2x00queue_pause_queue() and
-rt2x00queue_unpause_queue(). After drooping ->queue_stop_reason_lock
-is possible that __ieee80211_wake_queue() will be performed before
-__ieee80211_stop_queue(), hence we stop queue and newer wake up it
-again.
+I was actually thinking of using just del_timer(), but now that I think
+about it, should anything prevent us from using del_timer_sync() inside
+ieee80211_free_tid_rx?
 
-Another race condition is possible when between rt2x00queue_threshold()
-check and rt2x00queue_pause_queue() we will process all pending tx
-buffers on different cpu. This might happen if for example intterrupt
-will be triggered on cpu performing rt2x00mac_tx().
-
-To prevent race conditions serialize pause/unpause by queue->tx_lock.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
-v1 -> v2:
- - use spin_lock_bh
- - serialize also rt2x00queue_threshold()
-
- drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +++++-
- drivers/net/wireless/rt2x00/rt2x00mac.c |    7 +++++++
- 2 files changed, 12 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 49a51b4..61a5042 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -430,10 +430,14 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 	/*
- 	 * If the data queue was below the threshold before the txdone
- 	 * handler we must make sure the packet queue in the mac80211 stack
--	 * is reenabled when the txdone handler has finished.
-+	 * is reenabled when the txdone handler has finished. This has to be
-+	 * serialized with rt2x00mac_tx(), otherwise we can wake up queue
-+	 * before it was stopped.
- 	 */
-+	spin_lock_bh(&entry->queue->tx_lock);
- 	if (!rt2x00queue_threshold(entry->queue))
- 		rt2x00queue_unpause_queue(entry->queue);
-+	spin_unlock_bh(&entry->queue->tx_lock);
- }
- EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index ede3c58..923702c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -152,13 +152,20 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, false)))
- 		goto exit_fail;
- 
-+	/*
-+	 * Pausing queue has to be serialized with rt2x00lib_txdone() .
-+	 */
-+	spin_lock(&queue->tx_lock);
- 	if (rt2x00queue_threshold(queue))
- 		rt2x00queue_pause_queue(queue);
-+	spin_unlock(&queue->tx_lock);
- 
- 	return;
- 
-  exit_fail:
-+	spin_lock(&queue->tx_lock);
- 	rt2x00queue_pause_queue(queue);
-+	spin_unlock(&queue->tx_lock);
-  exit_free_skb:
- 	ieee80211_free_txskb(hw, skb);
- }
--- 
-1.7.1
+johannes
 
