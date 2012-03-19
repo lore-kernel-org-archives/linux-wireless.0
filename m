@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54581 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:44223 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759322Ab2CPMoO (ORCPT
+	with ESMTP id S1753419Ab2CSKJH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 08:44:14 -0400
-Subject: Re: [mac80211] UAPSD: WLAN_STA_PS flag  cleared prematurely?
+	Mon, 19 Mar 2012 06:09:07 -0400
+Subject: RE: mac80211 20/40 coexist
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4F630757.6070901@etit.tu-chemnitz.de>
-References: <4F630757.6070901@etit.tu-chemnitz.de>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20327.1220.845693.349959@gargle.gargle.HOWL>
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+	 <1331902885.6753.10.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
+	 <1332065984.3609.5.camel@jlt3.sipsolutions.net>
+	 <20326.41009.17936.152095@gargle.gargle.HOWL>
+	 <1332145412.3359.2.camel@jlt3.sipsolutions.net>
+	 <20327.1220.845693.349959@gargle.gargle.HOWL>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Mar 2012 13:44:12 +0100
-Message-ID: <1331901852.6753.2.camel@jlt3.sipsolutions.net> (sfid-20120316_134417_721543_CB1C9BF3)
+Date: Mon, 19 Mar 2012 11:09:03 +0100
+Message-ID: <1332151743.3359.19.camel@jlt3.sipsolutions.net> (sfid-20120319_110910_758495_7A353FC0)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-16 at 10:26 +0100, Marco Porsch wrote:
-> Hi all,
+On Mon, 2012-03-19 at 15:34 +0530, Sujith Manoharan wrote:
+> Johannes Berg wrote:
+> > Actually, no -- that's how we got into this mess to start with :-)
+> > Bandwidth here is a per-peer property, BSS_CHANGED_HT is changing the
+> > operation mode (things like non-HT protection).
+> > 
+> > We used to change the channel bandwidth when the AP wanted to only
+> > receive 20 MHz, but that seems like a bug because that doesn't even
+> > necessarily mean it wants to TX 20 MHz.
 > 
-> in sta_info.c : ieee80211_sta_ps_deliver_response the 
-> IEEE80211_TX_STATUS_EOSP is set for all to-be-sent frames, not only for 
-> the last. But only the last buffered frame actually gets the EOSP flag.
-> 
-> 
-> /* set EOSP for the frame */
-> if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
->      qoshdr && skb_queue_empty(&frames))
-> 	*qoshdr |= IEEE80211_QOS_CTL_EOSP;
-> 
-> info->flags |= IEEE80211_TX_STATUS_EOSP |
->         IEEE80211_TX_CTL_REQ_TX_STATUS;
-> 
-> 
-> Consequence is, that the WLAN_STA_SP flag gets cleared (multiple times) 
-> in ieee80211_tx_status before the last frame with EOSP has been sent.
-> Is this correct?
+> 11.14.4.3 specifies that if the operating bandwidth has been changed by the AP
+> to 20 MHz, then transmitting frames in an extension channel is not allowed ?
 
-Looks like the bug is above, the EOSP/TX_STATUS should only be set for
-the last frame?
+Ok, good point. Paul's case was regulatory related, where we
+(voluntarily) ceased 40 MHz transmissions.
+
+Still though, I think reconfiguring the channel type rather than the
+rate control algorithm doesn't make a lot of sense in this case since
+it'd make this very special and unlike the other cases (e.g. AP mode).
 
 johannes
 
