@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:34159 "EHLO
-	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030283Ab2CBPp0 (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44655 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161643Ab2CSQPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 10:45:26 -0500
-Message-ID: <4F50EB14.2060206@stericsson.com> (sfid-20120302_164529_192959_5B4C8D62)
-Date: Fri, 2 Mar 2012 16:45:24 +0100
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 21/21] cw1200: Kconfig + Makefile for the driver.
-References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>  <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>  <1330652495-25837-22-git-send-email-dmitry.tarnyagin@stericsson.com>  (sfid-20120302_024231_185549_5ECA663F) <1330678213.8542.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1330678213.8542.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Mon, 19 Mar 2012 12:15:15 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH 0/9] ath6kl: add full USB support
+Date: Mon, 19 Mar 2012 18:14:55 +0200
+Message-Id: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171657_926889_1E14952D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+This adds full USB support and new HTC pipe implementation. Please review
+and send comments.
 
-I fixed most of comments and cleaned up Kconfig a bit, will resubmit the 
-patchset soon.
->> +config CW1200_BH_DEBUG
->> +      bool "Enable low-level device communication logs (DEVELOPMENT)"
->> +      help
->> +        Say Y if you want to enable BH logs.
->> +        If unsure, say N.
-> What does "BH" stand for here? In the kernel it typically stands for
-> Bottom Half (or softirq) but that can't be meant? In other places in
-> your code you do mean that though, it seems, so this is a bit confusing.
-Well, I see it was a big mistake to call serving thread "bh" :). 
-Starting this project
-once again I would not do it like that. But it is difficult to rename it 
-all around
-the code now, just because the code is published already on Igloo.
+Kalle Valo (9):
+  ath6kl: set ram reserved size only for ar6003
+  ath6kl: Add tx_complete() to struct htc_ep_callbacks
+  ath6kl: add tx_comp_multi() to struct htc_ep_callbacks
+  ath6kl: add pointer to the skb in htc_packet
+  ath6kl: add rx data padding support
+  ath6kl: remove void pointer from ath6kl_credit_setup()
+  ath6kl: add htc ops
+  ath6kl: Add HTC pipe implementation
+  ath6kl: add full USB support
 
-> You should think about adding tracing instead.
-Good point. I added it to TODO list.
+ drivers/net/wireless/ath/ath6kl/Makefile           |    3 +-
+ drivers/net/wireless/ath/ath6kl/core.c             |   25 +-
+ drivers/net/wireless/ath/ath6kl/core.h             |   14 +-
+ drivers/net/wireless/ath/ath6kl/debug.h            |    1 +
+ drivers/net/wireless/ath/ath6kl/hif-ops.h          |   34 +
+ drivers/net/wireless/ath/ath6kl/hif.h              |    6 +
+ drivers/net/wireless/ath/ath6kl/htc-ops.h          |  113 ++
+ drivers/net/wireless/ath/ath6kl/htc.h              |   98 +-
+ .../net/wireless/ath/ath6kl/{htc.c => htc_mbox.c}  |   81 +-
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c         | 1713 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/init.c             |   26 +-
+ drivers/net/wireless/ath/ath6kl/sdio.c             |    2 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c             |   20 +-
+ drivers/net/wireless/ath/ath6kl/usb.c              |  785 +++++++++-
+ drivers/net/wireless/ath/ath6kl/wmi.h              |    3 +
+ 15 files changed, 2851 insertions(+), 73 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/htc-ops.h
+ rename drivers/net/wireless/ath/ath6kl/{htc.c => htc_mbox.c} (96%)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/htc_pipe.c
 
-Dmitry
