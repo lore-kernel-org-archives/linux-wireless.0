@@ -1,166 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31205 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754042Ab2C3GYi (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52144 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211Ab2CSFCD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 02:24:38 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Subject: [PATCH] wpa-supplicant: Send background scan period.
-Date: Fri, 30 Mar 2012 11:54:29 +0530
-Message-ID: <1333088669-2669-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120330_082500_984339_1CF4397A)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 19 Mar 2012 01:02:03 -0400
+Received: by pbcun15 with SMTP id un15so919528pbc.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2012 22:02:03 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: fix the sparse warnings on endian handling in RANN propagation
+Date: Mon, 19 Mar 2012 21:38:46 +0800
+Message-Id: <1332164326-17884-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120319_060208_316748_25EDBB8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Send background scan period as part of connect and
-associate command. Background scan will be
-disabled if period value is zero.
+The HWMP sequence number of received RANN element is compared to decide whether to be
+propagated. The sequence number is required to covert from 32bit little endian data into
+CPUs endianness for comparison. The same applies to the RANN metric.
 
-This patch depends on below kernel patch
-cfg80211: Add background scan period attribute.
-
-Signed-hostap: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- src/drivers/driver.h            |    5 +++++
- src/drivers/driver_nl80211.c    |   13 +++++++++++++
- wpa_supplicant/config.c         |    2 ++
- wpa_supplicant/config_file.c    |    1 +
- wpa_supplicant/config_ssid.h    |    6 ++++++
- wpa_supplicant/sme.c            |    1 +
- wpa_supplicant/wpa_supplicant.c |    1 +
- 7 files changed, 29 insertions(+), 0 deletions(-)
+ include/linux/ieee80211.h |    6 +++---
+ net/mac80211/mesh_hwmp.c  |    4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 04aedcf..ecd3d87 100644
---- a/src/drivers/driver.h
-+++ b/src/drivers/driver.h
-@@ -333,6 +333,11 @@ struct wpa_driver_associate_params {
- 	int freq;
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 210e2c3..cd4c7ed 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -640,9 +640,9 @@ struct ieee80211_rann_ie {
+ 	u8 rann_hopcount;
+ 	u8 rann_ttl;
+ 	u8 rann_addr[6];
+-	u32 rann_seq;
+-	u32 rann_interval;
+-	u32 rann_metric;
++	__le32 rann_seq;
++	__le32 rann_interval;
++	__le32 rann_metric;
+ } __attribute__ ((packed));
  
- 	/**
-+	 * bg_scan_period - Background scan period
-+	 */
-+	int bg_scan_period;
-+
-+	/**
- 	 * wpa_ie - WPA information element for (Re)Association Request
- 	 * WPA information element to be included in (Re)Association
- 	 * Request (including information element id and length). Use
-diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
-index 74865f3..ca96a73 100644
---- a/src/drivers/driver_nl80211.c
-+++ b/src/drivers/driver_nl80211.c
-@@ -6567,6 +6567,12 @@ static int wpa_driver_nl80211_connect(
- 		wpa_printf(MSG_DEBUG, "  * freq=%d", params->freq);
- 		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, params->freq);
- 	}
-+	if (params->bg_scan_period >= 0) {
-+		wpa_printf(MSG_DEBUG, "  * bg scan period=%d",
-+				params->bg_scan_period);
-+		NLA_PUT_U16(msg, NL80211_ATTR_BG_SCAN_PERIOD,
-+				params->bg_scan_period);
-+	}
- 	if (params->ssid) {
- 		wpa_hexdump_ascii(MSG_DEBUG, "  * SSID",
- 				  params->ssid, params->ssid_len);
-@@ -6779,6 +6785,13 @@ static int wpa_driver_nl80211_associate(
- 		NLA_PUT(msg, NL80211_ATTR_IE, params->wpa_ie_len,
- 			params->wpa_ie);
+ enum ieee80211_rann_flags {
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 1c6f3d0..f80a9e3 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -748,10 +748,10 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	flags = rann->rann_flags;
+ 	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
+ 	orig_addr = rann->rann_addr;
+-	orig_sn = rann->rann_seq;
++	orig_sn = le32_to_cpu(rann->rann_seq);
+ 	hopcount = rann->rann_hopcount;
+ 	hopcount++;
+-	metric = rann->rann_metric;
++	metric = le32_to_cpu(rann->rann_metric);
  
-+	if (params->bg_scan_period >= 0) {
-+		wpa_printf(MSG_DEBUG, "  * bg scan period=%d",
-+				params->bg_scan_period);
-+		NLA_PUT_U16(msg, NL80211_ATTR_BG_SCAN_PERIOD,
-+				params->bg_scan_period);
-+	}
-+
- 	if (params->pairwise_suite != CIPHER_NONE) {
- 		int cipher;
- 
-diff --git a/wpa_supplicant/config.c b/wpa_supplicant/config.c
-index a90e9d3..c57c1b9 100644
---- a/wpa_supplicant/config.c
-+++ b/wpa_supplicant/config.c
-@@ -1524,6 +1524,7 @@ static const struct parse_data ssid_fields[] = {
- 	{ FUNC_KEY(psk) },
- 	{ FUNC(proto) },
- 	{ FUNC(key_mgmt) },
-+	{ INT(bg_scan_period) },
- 	{ FUNC(pairwise) },
- 	{ FUNC(group) },
- 	{ FUNC(auth_alg) },
-@@ -1975,6 +1976,7 @@ void wpa_config_set_network_defaults(struct wpa_ssid *ssid)
- 	ssid->pairwise_cipher = DEFAULT_PAIRWISE;
- 	ssid->group_cipher = DEFAULT_GROUP;
- 	ssid->key_mgmt = DEFAULT_KEY_MGMT;
-+	ssid->bg_scan_period = DEFAULT_BG_SCAN_PERIOD;
- #ifdef IEEE8021X_EAPOL
- 	ssid->eapol_flags = DEFAULT_EAPOL_FLAGS;
- 	ssid->eap_workaround = DEFAULT_EAP_WORKAROUND;
-diff --git a/wpa_supplicant/config_file.c b/wpa_supplicant/config_file.c
-index b3dd40e..40a70de 100644
---- a/wpa_supplicant/config_file.c
-+++ b/wpa_supplicant/config_file.c
-@@ -587,6 +587,7 @@ static void wpa_config_write_network(FILE *f, struct wpa_ssid *ssid)
- 	write_psk(f, ssid);
- 	write_proto(f, ssid);
- 	write_key_mgmt(f, ssid);
-+	INT(bg_scan_period);
- 	write_pairwise(f, ssid);
- 	write_group(f, ssid);
- 	write_auth_alg(f, ssid);
-diff --git a/wpa_supplicant/config_ssid.h b/wpa_supplicant/config_ssid.h
-index f2bb597..3236091 100644
---- a/wpa_supplicant/config_ssid.h
-+++ b/wpa_supplicant/config_ssid.h
-@@ -25,6 +25,7 @@
- 		       WPA_CIPHER_WEP104 | WPA_CIPHER_WEP40)
- #define DEFAULT_FRAGMENT_SIZE 1398
- 
-+#define DEFAULT_BG_SCAN_PERIOD -1
- #define DEFAULT_DISABLE_HT 0
- #define DEFAULT_DISABLE_HT40 0
- #define DEFAULT_DISABLE_MAX_AMSDU -1 /* no change */
-@@ -157,6 +158,11 @@ struct wpa_ssid {
- 	int key_mgmt;
- 
- 	/**
-+	 * bg_scan_period - Background scan period
-+	 */
-+	int bg_scan_period;
-+
-+	/**
- 	 * proto - Bitfield of allowed protocols, WPA_PROTO_*
- 	 */
- 	int proto;
-diff --git a/wpa_supplicant/sme.c b/wpa_supplicant/sme.c
-index 690f395..8e7ca04 100644
---- a/wpa_supplicant/sme.c
-+++ b/wpa_supplicant/sme.c
-@@ -371,6 +371,7 @@ void sme_associate(struct wpa_supplicant *wpa_s, enum wpas_mode mode,
- 	params.ssid = wpa_s->sme.ssid;
- 	params.ssid_len = wpa_s->sme.ssid_len;
- 	params.freq = wpa_s->sme.freq;
-+	params.bg_scan_period = wpa_s->current_ssid->bg_scan_period;
- 	params.wpa_ie = wpa_s->sme.assoc_req_ie_len ?
- 		wpa_s->sme.assoc_req_ie : NULL;
- 	params.wpa_ie_len = wpa_s->sme.assoc_req_ie_len;
-diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
-index 36074d5..71542f0 100644
---- a/wpa_supplicant/wpa_supplicant.c
-+++ b/wpa_supplicant/wpa_supplicant.c
-@@ -1355,6 +1355,7 @@ void wpa_supplicant_associate(struct wpa_supplicant *wpa_s,
- 	params.wpa_proto = wpa_s->wpa_proto;
- 	params.auth_alg = algs;
- 	params.mode = ssid->mode;
-+	params.bg_scan_period = ssid->bg_scan_period;
- 	for (i = 0; i < NUM_WEP_KEYS; i++) {
- 		if (ssid->wep_key_len[i])
- 			params.wep_key[i] = ssid->wep_key[i];
+ 	/*  Ignore our own RANNs */
+ 	if (compare_ether_addr(orig_addr, sdata->vif.addr) == 0)
 -- 
-1.7.4.1
+1.7.0.4
 
