@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40624 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:42686 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752513Ab2CCO5k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2012 09:57:40 -0500
-Message-ID: <4F523162.6070306@openwrt.org> (sfid-20120303_155742_864702_69C6C963)
-Date: Sat, 03 Mar 2012 15:57:38 +0100
+	id S1753832Ab2CSKgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 06:36:11 -0400
+Message-ID: <4F670C16.9030009@openwrt.org> (sfid-20120319_113614_058353_53EA295C)
+Date: Mon, 19 Mar 2012 11:36:06 +0100
 From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	mcgrof@qca.qualcomm.com
-Subject: Re: [PATCH 1/5] ath9k_hw: use cold instead of warm reset on AR9280
-References: <1330784226-65563-1-git-send-email-nbd@openwrt.org> <CAD2nsn1epfw=N=Np8Ts+G6yF5JTXZXSE4bOL7_jY9mCZG9Cg4Q@mail.gmail.com>
-In-Reply-To: <CAD2nsn1epfw=N=Np8Ts+G6yF5JTXZXSE4bOL7_jY9mCZG9Cg4Q@mail.gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 3/3] mac80211: optimize aggregation session timeout handling
+References: <1332025254-5048-1-git-send-email-nbd@openwrt.org> <1332025254-5048-2-git-send-email-nbd@openwrt.org> <1332025254-5048-3-git-send-email-nbd@openwrt.org> <1332065875.3609.3.camel@jlt3.sipsolutions.net> <4F65C374.2060505@openwrt.org> <1332146368.3359.12.camel@jlt3.sipsolutions.net> <CAGXE3d8P1r+DRv4UKbzSMXaf4fRB4cXAyz8+a1pf3RsfeAKOvQ@mail.gmail.com>
+In-Reply-To: <CAGXE3d8P1r+DRv4UKbzSMXaf4fRB4cXAyz8+a1pf3RsfeAKOvQ@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-03 3:40 PM, Mohammed Shafi wrote:
-> Hi Felix,
+On 2012-03-19 10:29 AM, Helmut Schaa wrote:
+> Hi,
 > 
-> On Sat, Mar 3, 2012 at 7:47 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> Cold reset is more reliable for getting the hardware out of some specific
->> stuck states.
+> On Mon, Mar 19, 2012 at 9:39 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Sun, 2012-03-18 at 12:13 +0100, Felix Fietkau wrote:
+>>> On 2012-03-18 11:17 AM, Johannes Berg wrote:
+>>> > On Sun, 2012-03-18 at 00:00 +0100, Felix Fietkau wrote:
+>>> >> Calling mod_timer from the rx/tx hotpath is somewhat expensive, and the
+>>> >> timeout doesn't need to be so precise.
+>>> >>
+>>> >> Switch to a different strategy: Schedule the timer initially, store jiffies
+>>> >> of all last rx/tx activity which would previously modify the timer, and
+>>> >> let the timer re-arm itself after checking the last rx/tx timestamp.
+>>> >
+>>> > I don't like this. It's not the optimisation you think it is on other
+>>> > ("embedded") systems where firing a timer is more expensive.
+>>> >
+>>> > You're trading power consumption against CPU utilisation by causing the
+>>> > timer to wake up.
+>>> I considered that was well, but didn't think one wakeup every 5 seconds
+>>> or so would be significant. Would you take the patch if I change the
+>>> timer to be deferrable, so that it doesn't cause wakeups by itself?
 >>
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> ---
->>  drivers/net/wireless/ath/ath9k/hw.c |   14 ++++++++++----
->>  1 files changed, 10 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
->> index 8c840ca..d582cf7 100644
->> --- a/drivers/net/wireless/ath/ath9k/hw.c
->> +++ b/drivers/net/wireless/ath/ath9k/hw.c
->> @@ -1386,10 +1386,16 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
->>  static bool ath9k_hw_chip_reset(struct ath_hw *ah,
->>                                struct ath9k_channel *chan)
->>  {
->> -       if (AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL)) {
->> -               if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON))
->> -                       return false;
->> -       } else if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_WARM))
->> +       int reset_type = ATH9K_RESET_WARM;
->> +
->> +       if (AR_SREV_9280(ah)) {
->> +               if (ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
->> +                       reset_type = ATH9K_RESET_POWER_ON;
->> +               else
->> +                       reset_type = ATH9K_RESET_COLD;
->> +       }
+>> I'm not really convinced, for making them deferrable we should analyse
+>> the consequences of that more carefully, for example it seems possible
+>> that the system wakes up to send a packet, and then the first thing that
+>> happens is a few aggregation handshakes ... that wastes a lot of time
+>> and power.
 > 
+> I like the idea of getting rid of the mod_timer overhead. Looking at the timer
+> code, if the timer value is unchanged mod_timer is not that expensive.
 > 
-> cold reset seems to be applicable for older chip sets like AR9100,
-> should this be applicable to AR9280. won't there be any problem if we
-> perform cold reset in STA mode.
-What kind of issues do you expect from cold reset in STA mode? OpenWrt
-has had this patch for a while now, and I didn't notice any issues with it.
+> So, instead of calling mod_timer for every successive frame with a slightly
+> different timeout we could just use round_jiffies to round the timeout to the
+> next full second. This would in most cases take the quick path through
+> mod_timer and only update the timer once every second.
+> 
+> See code (untested, not even compile tested) below.
+I would still like to avoid the overhead of apply_slack(), which is
+called early by mod_timer(). It was visible in both CPU cycles and
+icache misses when I did some profiling under high tx load.
 
 - Felix
