@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:63789 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965115Ab2CMKWX (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:60516 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161887Ab2CSQPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 06:22:23 -0400
-Received: by iagz16 with SMTP id z16so595544iag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2012 03:22:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120313005744.GA30312@srcf.ucam.org>
-References: <4F5E7031.4000401@candelatech.com> <201203122332.16325.chunkeey@googlemail.com>
- <4F5E7A81.8090605@candelatech.com> <CAB=NE6WeB8X51xdEOT3-XjyBBVrwdMSMYmFOTbuH3pKzCM8jyw@mail.gmail.com>
- <20120313005744.GA30312@srcf.ucam.org>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 12 Mar 2012 18:11:09 -0700
-Message-ID: <CAB=NE6WvuZLAt86R8fn+OzQybdSkU0iPoHr51p_qe1_PkMfUcQ@mail.gmail.com> (sfid-20120313_112227_698615_DD70E8EA)
-Subject: Re: Hacking PCI-ids to allow Atheros NIC into Lenovo laptop.
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 19 Mar 2012 12:15:18 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH 1/9] ath6kl: set ram reserved size only for ar6003
+Date: Mon, 19 Mar 2012 18:14:56 +0200
+Message-Id: <1332173704-18877-2-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171535_137635_F9918157)
+In-Reply-To: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 12, 2012 at 5:57 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> On Mon, Mar 12, 2012 at 05:53:03PM -0700, Luis R. Rodriguez wrote:
->
->> I might as well chime in to explain the long story. If we figure out a
->> way to ensure we can always get the antenna gain uniformly across
->> different systems and expose this to the OS I suspect we can convince
->> some OEMs this would be a better solution than simply restricting
->> devices. I looked a the newer generation of dmidecode (its not called
->> DMI, its something else now) thingy but saw no one yet had added
->> 802.11 specifically, perhaps it may be good to consider it in the
->> future for this. that's as far as I got from trying to kill this
->> concern.
->
-> Exposing it as either an smbios table or in ACPI somewhere would be the
-> two most typical methods for doing this. It's easy to spec an ACPI table
-> for it if you think there'd be any vendor interest.
+Ram reserved size is not needed with ar6004.
 
-Better than what we have today, no alternative proposal.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |   22 ++++++++++++----------
+ 1 files changed, 12 insertions(+), 10 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 03cae14..1b97f26 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -539,18 +539,20 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 	 * but possible in theory.
+ 	 */
+ 
+-	param = ar->hw.board_ext_data_addr;
+-	ram_reserved_size = ar->hw.reserved_ram_size;
++	if (ar->target_type == TARGET_TYPE_AR6003) {
++		param = ar->hw.board_ext_data_addr;
++		ram_reserved_size = ar->hw.reserved_ram_size;
+ 
+-	if (ath6kl_bmi_write_hi32(ar, hi_board_ext_data, param) != 0) {
+-		ath6kl_err("bmi_write_memory for hi_board_ext_data failed\n");
+-		return -EIO;
+-	}
++		if (ath6kl_bmi_write_hi32(ar, hi_board_ext_data, param) != 0) {
++			ath6kl_err("bmi_write_memory for hi_board_ext_data failed\n");
++			return -EIO;
++		}
+ 
+-	if (ath6kl_bmi_write_hi32(ar, hi_end_ram_reserve_sz,
+-				  ram_reserved_size) != 0) {
+-		ath6kl_err("bmi_write_memory for hi_end_ram_reserve_sz failed\n");
+-		return -EIO;
++		if (ath6kl_bmi_write_hi32(ar, hi_end_ram_reserve_sz,
++					  ram_reserved_size) != 0) {
++			ath6kl_err("bmi_write_memory for hi_end_ram_reserve_sz failed\n");
++			return -EIO;
++		}
+ 	}
+ 
+ 	/* set the block size for the target */
+-- 
+1.7.1
+
