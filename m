@@ -1,57 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51544 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755225Ab2CDUnN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:13 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 097/101] iwlwifi: make iwl_init_context static
-Date: Sun,  4 Mar 2012 11:29:51 -0800
-Message-Id: <1330889395-533-98-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214430_837533_07394879)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:34684 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161563Ab2CSQP2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 12:15:28 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH 4/9] ath6kl: add pointer to the skb in htc_packet
+Date: Mon, 19 Mar 2012 18:14:59 +0200
+Message-Id: <1332173704-18877-5-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171646_862530_89700F24)
+In-Reply-To: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Needed by the USB code.
 
-It's not needed anywhere but during init.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
- 2 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/htc.h  |    8 ++++++++
+ drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 76ee2dd..f150edc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -488,7 +488,7 @@ static void iwl_bg_tx_flush(struct work_struct *work)
- 	iwlagn_dev_txfifo_flush(priv, IWL_DROP_ALL);
- }
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 51f2485..e97ebc3 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -311,6 +311,14 @@ struct htc_packet {
  
--void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
-+static void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
- {
- 	int i;
+ 	void (*completion) (struct htc_target *, struct htc_packet *);
+ 	struct htc_target *context;
++
++	/*
++	 * optimization for network-oriented data, the HTC packet
++	 * can pass the network buffer corresponding to the HTC packet
++	 * lower layers may optimized the transfer knowing this is
++	 * a network buffer
++	 */
++	struct sk_buff *skb;
+ };
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index eb96855..5410dfd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -118,7 +118,6 @@ void iwlagn_config_ht40(struct ieee80211_conf *conf,
- int iwlagn_rx_calib_result(struct iwl_priv *priv,
- 			    struct iwl_rx_cmd_buffer *rxb,
- 			    struct iwl_device_cmd *cmd);
--void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
- int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
- void iwl_send_prio_tbl(struct iwl_priv *priv);
- int iwl_init_alive_start(struct iwl_priv *priv);
+ enum htc_send_full_action {
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index befe305..53d0334 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -322,6 +322,7 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
+ 	cookie->map_no = 0;
+ 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
+ 			 eid, ATH6KL_CONTROL_PKT_TAG);
++	cookie->htc_pkt.skb = skb;
+ 
+ 	/*
+ 	 * This interface is asynchronous, if there is an error, cleanup
+@@ -490,6 +491,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 	cookie->map_no = map_no;
+ 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
+ 			 eid, htc_tag);
++	cookie->htc_pkt.skb = skb;
+ 
+ 	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "tx ",
+ 			skb->data, skb->len);
+@@ -888,6 +890,7 @@ void ath6kl_rx_refill(struct htc_target *target, enum htc_endpoint_id endpoint)
+ 			skb->data = PTR_ALIGN(skb->data - 4, 4);
+ 		set_htc_rxpkt_info(packet, skb, skb->data,
+ 				   ATH6KL_BUFFER_SIZE, endpoint);
++		packet->skb = skb;
+ 		list_add_tail(&packet->list, &queue);
+ 	}
+ 
+@@ -910,6 +913,8 @@ void ath6kl_refill_amsdu_rxbufs(struct ath6kl *ar, int count)
+ 			skb->data = PTR_ALIGN(skb->data - 4, 4);
+ 		set_htc_rxpkt_info(packet, skb, skb->data,
+ 				   ATH6KL_AMSDU_BUFFER_SIZE, 0);
++		packet->skb = skb;
++
+ 		spin_lock_bh(&ar->lock);
+ 		list_add_tail(&packet->list, &ar->amsdu_rx_buffer_queue);
+ 		spin_unlock_bh(&ar->lock);
 -- 
-1.7.0.4
+1.7.1
 
