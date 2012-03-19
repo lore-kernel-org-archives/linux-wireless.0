@@ -1,117 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20333 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758641Ab2CGTGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:31 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 12/35] iwlwifi: remove unused max_nrg_cck from sensitivity and constify
-Date: Wed,  7 Mar 2012 09:52:21 -0800
-Message-Id: <1331142764-5750-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200735_380424_A14B91D8)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35230 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572Ab2CSPwD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 11:52:03 -0400
+Received: by eaaq12 with SMTP id q12so2739401eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 08:52:02 -0700 (PDT)
+Message-ID: <4F67561F.4030902@gmail.com> (sfid-20120319_165208_911555_4D775FAB)
+Date: Mon, 19 Mar 2012 16:51:59 +0100
+From: Till Kamppeter <till.kamppeter@gmail.com>
+MIME-Version: 1.0
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>
+Subject: Google Summer of Code 2012 - Please register as mentor
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-The sensitivity parameters are never modified, so they
-should be const. Also remove the unused max_nrg_cck
-value to save some space.
+please register as mentor if you want to mentor or co-mentor a student. 
+If you did not do so yet, please reghister as follows:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-2000.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-5000.c |    4 +---
- drivers/net/wireless/iwlwifi/iwl-6000.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
- 5 files changed, 4 insertions(+), 10 deletions(-)
+1. If you do not have a Google account yet, get one. The processing of 
+your request is fully automatic, you do not need to wait for anyone to 
+approve.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 798e24e..5b0d888 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -96,9 +96,8 @@ static void iwl1000_nic_config(struct iwl_priv *priv)
- 				~APMG_SVR_VOLTAGE_CONFIG_BIT_MSK);
- }
- 
--static struct iwl_sensitivity_ranges iwl1000_sensitivity = {
-+static const struct iwl_sensitivity_ranges iwl1000_sensitivity = {
- 	.min_nrg_cck = 95,
--	.max_nrg_cck = 0, /* not used, set to 0 */
- 	.auto_corr_min_ofdm = 90,
- 	.auto_corr_min_ofdm_mrc = 170,
- 	.auto_corr_min_ofdm_x1 = 120,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 6931820..5635b9e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -91,9 +91,8 @@ static void iwl2000_nic_config(struct iwl_priv *priv)
- 			    CSR_GP_DRIVER_REG_BIT_RADIO_IQ_INVER);
- }
- 
--static struct iwl_sensitivity_ranges iwl2000_sensitivity = {
-+static const struct iwl_sensitivity_ranges iwl2000_sensitivity = {
- 	.min_nrg_cck = 97,
--	.max_nrg_cck = 0, /* not used, set to 0 */
- 	.auto_corr_min_ofdm = 80,
- 	.auto_corr_min_ofdm_mrc = 128,
- 	.auto_corr_min_ofdm_x1 = 105,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 0e97cfd..a805e97 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -75,9 +75,8 @@ static void iwl5000_nic_config(struct iwl_priv *priv)
- 				~APMG_PS_CTRL_EARLY_PWR_OFF_RESET_DIS);
- }
- 
--static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
-+static const struct iwl_sensitivity_ranges iwl5000_sensitivity = {
- 	.min_nrg_cck = 100,
--	.max_nrg_cck = 0, /* not used, set to 0 */
- 	.auto_corr_min_ofdm = 90,
- 	.auto_corr_min_ofdm_mrc = 170,
- 	.auto_corr_min_ofdm_x1 = 105,
-@@ -102,7 +101,6 @@ static struct iwl_sensitivity_ranges iwl5000_sensitivity = {
- 
- static struct iwl_sensitivity_ranges iwl5150_sensitivity = {
- 	.min_nrg_cck = 95,
--	.max_nrg_cck = 0, /* not used, set to 0 */
- 	.auto_corr_min_ofdm = 90,
- 	.auto_corr_min_ofdm_mrc = 170,
- 	.auto_corr_min_ofdm_x1 = 105,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 9fbab01..64060cd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -113,9 +113,8 @@ static void iwl6000_nic_config(struct iwl_priv *priv)
- 		cfg(priv)->additional_nic_config(priv);
- }
- 
--static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
-+static const struct iwl_sensitivity_ranges iwl6000_sensitivity = {
- 	.min_nrg_cck = 110,
--	.max_nrg_cck = 0, /* not used, set to 0 */
- 	.auto_corr_min_ofdm = 80,
- 	.auto_corr_min_ofdm_mrc = 128,
- 	.auto_corr_min_ofdm_x1 = 105,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 7442970..c3f372e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -294,7 +294,6 @@ struct iwl_vif_priv {
- 
- struct iwl_sensitivity_ranges {
- 	u16 min_nrg_cck;
--	u16 max_nrg_cck;
- 
- 	u16 nrg_th_cck;
- 	u16 nrg_th_ofdm;
--- 
-1.7.0.4
+2. Go to
+
+http://www.google-melange.com/
+
+log in, and click on the "Apply" button under "Mentors: Apply now!". 
+Select "The Linux Foundation" (LF) as your desired mentoring 
+organization and follow the further steps.
+
+3. I will approve your mentorship request shortly.
+
+Jeff, as you are the backup admin, please request mentorship also if you 
+do not intend to mentor.
+
+    Till
 
