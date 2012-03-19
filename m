@@ -1,103 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:49651 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965069Ab2CTN61 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 09:58:27 -0400
-Received: by ghrr11 with SMTP id r11so65319ghr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 06:58:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120320134629.GD19742@tuxdriver.com>
-References: <1332192901-2500-1-git-send-email-mcgrof@frijolero.org>
- <1332223323.3329.0.camel@jlt3.sipsolutions.net> <CAB=NE6WGdK0YJfi8hrWTqYr2zdUc5yEhV9VUbidi36fd==nEig@mail.gmail.com>
- <1332227307.3329.2.camel@jlt3.sipsolutions.net> <CAB=NE6UFLKvozoTX89k=XP1JoKCYdip_eSx-5FVRGje=6vnRvQ@mail.gmail.com>
- <20120320134629.GD19742@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 20 Mar 2012 06:58:06 -0700
-Message-ID: <CAB=NE6VYo8auK9TVvPrBZXKq6dQegDdhQjAjYwC4fPsUZUZ=sQ@mail.gmail.com> (sfid-20120320_145844_503756_2649989A)
-Subject: Re: [PATCH] cfg80211: warn if db.txt is empty with CONFIG_CFG80211_INTERNAL_REGDB
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, sfr@canb.auug.org.au,
-	linux-wireless@vger.kernel.org,
-	Youngsin Lee <youngsin@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>,
-	Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>,
-	Vipin Mehta <vipimeht@qca.qualcomm.com>,
-	yahuan@qca.qualcomm.com, jjan@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, henrykim@qualcomm.com,
-	jouni@qca.qualcomm.com, athiruve@qca.qualcomm.com,
-	cjkim@qualcomm.com, philipk@qca.qualcomm.com,
-	sunnykim@qualcomm.com, sskwak@qualcomm.com, kkim@qualcomm.com,
-	mattbyun@qualcomm.com, ryanlee@qualcomm.com, simbap@qualcomm.com,
-	krislee@qualcomm.com, conner@qualcomm.com, hojinkim@qualcomm.com,
-	honglee@qualcomm.com, johnwkim@qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:9221 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030976Ab2CSPAm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 11:00:42 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] mac80211: fix possible tid_rx->reorder_timer use after free
+Date: Mon, 19 Mar 2012 16:00:26 +0100
+Message-Id: <1332169226-23204-1-git-send-email-sgruszka@redhat.com> (sfid-20120319_160046_281112_FB7D1146)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2012 at 6:46 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Tue, Mar 20, 2012 at 12:13:34AM -0700, Luis R. Rodriguez wrote:
->> On Tue, Mar 20, 2012 at 12:08 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Tue, 2012-03-20 at 00:00 -0700, Luis R. Rodriguez wrote:
->> >
->> >> >>  net/wireless/reg.c |   12 ++++++++++++
->> >> >>  1 file changed, 12 insertions(+)
->> >> >>
->> >> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> >> >> index e9a0ac8..85f51b3 100644
->> >> >> --- a/net/wireless/reg.c
->> >> >> +++ b/net/wireless/reg.c
->> >> >> @@ -388,7 +388,18 @@ static void reg_regdb_query(const char *alpha2)
->> >> >>
->> >> >>       schedule_work(&reg_regdb_work);
->> >> >>  }
->> >> >> +
->> >> >> +/* Feel free to add any other sanity checks here */
->> >> >> +static void reg_regdb_size_check(void)
->> >> >> +{
->> >> >> +#ifdef CONFIG_CFG80211_REG_DEBUG
->> >> >> +     BUILD_BUG_ON(!reg_regdb_size);
->> >> >> +#else
->> >> >> +     WARN_ONCE(!reg_regdb_size, "db.txt is empty, you should update it...");
->> >> >> +#endif
->> >> >
->> >> > That ifdef seems a bit pointless? If anything I would have expected it
->> >> > the other way around since the BUILD_BUG_ON compiles to nothing?
->> >>
->> >> As I tested it, the BUILD_BUG_ON() forces a compile failure.
->> >
->> > Right. Why would you not want that always?
->>
->> Ah well that is a question for you, John and Stephen. I didn't use
->> that *always* given that it would break random build testing whenever
->> CFG80211_INTERNAL_REGDB was enabled, given that it requires a manual
->> cp of db.txt from wireless-regdb. With this it would only break build
->> testing with debugging cfg80211 regulatory, both
->> CFG80211_INTERNAL_REGDB and CONFIG_CFG80211_REG_DEBUG enabled. If you
->> guys are happy with it then so am I -- I prefer it, just didn't want
->> any surprises or anyone reporting an unexpected build breakage later.
->
-> My first inclination is like Johannes, just break the build in this
-> case.  But the random build test breakage could be an annoyance for
-> the folks doing that.  I don't suppose there is any Kconfig magic
-> that would prevent selecting CFG80211_INTERNAL_REGDB unless there is
-> a non-zero db.txt file?
+Is possible that we will arm the tid_rx->reorder_timer after
+del_timer_sync() in ___ieee80211_stop_rx_ba_session(). We need to stop
+timer after RCU grace period finish, so move it to
+ieee80211_free_tid_rx(). Timer will not be armed again, as
+rcu_dereference(sta->ampdu_mlme.tid_rx[tid]) will return NULL.
 
-That'd be really cool.
+Debug object detected problem with the following warning:
+ODEBUG: free active (active state 0) object type: timer_list hint: sta_rx_agg_reorder_timer_expired+0x0/0xf0 [mac80211]
 
-> Also, I guess that an empty db.txt just forces the user back to
-> the build it "world" domain.  While that is less than ideal, it is
-> sufficient for some minimal functionality.  So breaking the build in
-> that case seems like bad form too.
->
-> Maybe a runtime warning is sufficient?
+Bug report (with all warning messages):
+https://bugzilla.redhat.com/show_bug.cgi?id=804007
 
-That's what I have when CONFIG_CFG80211_REG_DEBUG is disabled in the
-patch. My only concern with this is that so far based on experience a
-lot of debugging may have undergone by then. But I'm also OK with this
-as well to avoid build breakage suffering. Will send a v2 that just
-does this.
+Reported-by: "jan p. springer" <jsd@igroup.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/agg-rx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 1068f66..64d3ce5 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -49,6 +49,8 @@ static void ieee80211_free_tid_rx(struct rcu_head *h)
+ 		container_of(h, struct tid_ampdu_rx, rcu_head);
+ 	int i;
+ 
++	del_timer_sync(&tid_rx->reorder_timer);
++
+ 	for (i = 0; i < tid_rx->buf_size; i++)
+ 		dev_kfree_skb(tid_rx->reorder_buf[i]);
+ 	kfree(tid_rx->reorder_buf);
+@@ -91,7 +93,6 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				     tid, WLAN_BACK_RECIPIENT, reason);
+ 
+ 	del_timer_sync(&tid_rx->session_timer);
+-	del_timer_sync(&tid_rx->reorder_timer);
+ 
+ 	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
+ }
+-- 
+1.7.1
+
