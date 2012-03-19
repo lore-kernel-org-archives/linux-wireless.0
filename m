@@ -1,87 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:34540 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031012Ab2CSQPX (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:35894 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758589Ab2CSPU0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 12:15:23 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Subject: [PATCH 2/9] ath6kl: Add tx_complete() to struct htc_ep_callbacks
-Date: Mon, 19 Mar 2012 18:14:57 +0200
-Message-Id: <1332173704-18877-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171535_648249_E3CF4657)
-In-Reply-To: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
+	Mon, 19 Mar 2012 11:20:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F674616.8080103@gmail.com>
+References: <4F576FD5.2050208@gmail.com>
+	<CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com>
+	<4F577D9B.7020402@gmail.com>
+	<4F579A88.6030503@openwrt.org>
+	<4F61F551.5010608@gmail.com>
+	<4F639851.5080500@gmail.com>
+	<4F674616.8080103@gmail.com>
+Date: Mon, 19 Mar 2012 20:50:25 +0530
+Message-ID: <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> (sfid-20120319_162045_887190_5E9387E2)
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+ AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed by the USB code. Also while at it replace one void pointer
-with a properly typed pointer.
+Hi Justin,
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    3 ++-
- drivers/net/wireless/ath/ath6kl/htc.c  |    2 +-
- drivers/net/wireless/ath/ath6kl/htc.h  |    1 +
- drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++--
- 4 files changed, 7 insertions(+), 4 deletions(-)
+> seems I got this when waking up from suspend, was trying to connect with NM
+> then all of a sudden Xorg shut off and this appeared on the screen(image
+> links below I could not save dmesg only pic)
+> http://flic.kr/p/bEhf2K
+> http://flic.kr/p/bEhf2x
+> http://flic.kr/p/bEhf2n
+> http://flic.kr/p/bEhf26
+>
+> I see ath9k in the image, but am unsure if its related.
+> kernel is: 3.3.0-rc7-next-20120316
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index f1dd890..6485ef0 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -746,7 +746,8 @@ void init_netdev(struct net_device *dev);
- void ath6kl_cookie_init(struct ath6kl *ar);
- void ath6kl_cookie_cleanup(struct ath6kl *ar);
- void ath6kl_rx(struct htc_target *target, struct htc_packet *packet);
--void ath6kl_tx_complete(void *context, struct list_head *packet_queue);
-+void ath6kl_tx_complete(struct htc_target *context,
-+			struct list_head *packet_queue);
- enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 					       struct htc_packet *packet);
- void ath6kl_stop_txrx(struct ath6kl *ar);
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 4849d99..187f449 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -432,7 +432,7 @@ static void htc_tx_complete(struct htc_endpoint *endpoint,
- 		   "htc tx complete ep %d pkts %d\n",
- 		   endpoint->eid, get_queue_depth(txq));
- 
--	ath6kl_tx_complete(endpoint->target->dev->ar, txq);
-+	ath6kl_tx_complete(endpoint->target, txq);
- }
- 
- static void htc_tx_comp_handler(struct htc_target *target,
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index 5027ccc..7b0c489 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -319,6 +319,7 @@ enum htc_send_full_action {
- };
- 
- struct htc_ep_callbacks {
-+	void (*tx_complete) (struct htc_target *, struct htc_packet *);
- 	void (*rx) (struct htc_target *, struct htc_packet *);
- 	void (*rx_refill) (struct htc_target *, enum htc_endpoint_id endpoint);
- 	enum htc_send_full_action (*tx_full) (struct htc_target *,
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index f85353f..befe305 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -666,9 +666,10 @@ static void ath6kl_tx_clear_node_map(struct ath6kl_vif *vif,
- 	}
- }
- 
--void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
-+void ath6kl_tx_complete(struct htc_target *target,
-+			struct list_head *packet_queue)
- {
--	struct ath6kl *ar = context;
-+	struct ath6kl *ar = target->dev->ar;
- 	struct sk_buff_head skb_queue;
- 	struct htc_packet *packet;
- 	struct sk_buff *skb;
+this looks like some new issue  in ath9k, lets try to recreate it here
+
+>
+> Justin P. Mattock
+>
+>
+>
+
+
+
 -- 
-1.7.1
-
+thanks,
+shafi
