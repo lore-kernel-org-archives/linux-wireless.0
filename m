@@ -1,67 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2281 "EHLO MMS3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:16333 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161311Ab2CPJFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 05:05:55 -0400
-Message-ID: <4F630267.5050909@broadcom.com> (sfid-20120316_100608_198304_CA09F26D)
-Date: Fri, 16 Mar 2012 10:05:43 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1756062Ab2CSO3Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 10:29:24 -0400
+Date: Mon, 19 Mar 2012 15:29:06 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jakub Kicinski <moorray@wp.pl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 3/5] rt2x00: rt2800usb: rework txstatus
+ code
+Message-ID: <20120319142905.GF6169@redhat.com> (sfid-20120319_152947_740797_B185F14E)
+References: <1331720181-18564-1-git-send-email-sgruszka@redhat.com>
+ <1331720181-18564-3-git-send-email-sgruszka@redhat.com>
+ <20120317175311.1cf09433@north>
+ <20120319075223.GC2251@redhat.com>
+ <20120319141339.3596b6d8@north>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"stern@rowland.harvard.edu" <stern@rowland.harvard.edu>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	"ralf@linux-mips.org" <ralf@linux-mips.org>,
-	"m@bues.ch" <m@bues.ch>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"zajec5@gmail.com" <zajec5@gmail.com>
-Subject: Re: [PATCH v5 4/4] USB: OHCI: remove old SSB OHCI driver
-References: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
- <1331851799-5968-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1331851799-5968-5-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120319141339.3596b6d8@north>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/15/2012 11:49 PM, Hauke Mehrtens wrote:
-> This is now replaced by the new ssb USB driver, which also supports
-> devices with an EHCI controller.
->
-> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
-> ---
->   drivers/usb/host/Kconfig    |    7 +-
->   drivers/usb/host/ohci-hcd.c |   21 +----
->   drivers/usb/host/ohci-ssb.c |  260 -------------------------------------------
->   3 files changed, 7 insertions(+), 281 deletions(-)
->   delete mode 100644 drivers/usb/host/ohci-ssb.c
->
-> diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
-> index 2fc5637..00b6fc8 100644
-> --- a/drivers/usb/host/Kconfig
-> +++ b/drivers/usb/host/Kconfig
-> @@ -373,10 +373,15 @@ config USB_OHCI_HCD_PCI
->   	  If unsure, say Y.
->
->   config USB_OHCI_HCD_SSB
-> -	bool "OHCI support for Broadcom SSB OHCI core"
-> +	bool "OHCI support for Broadcom SSB OHCI core (DEPRECATED)"
->   	depends on USB_OHCI_HCD&&  (SSB = y || SSB = USB_OHCI_HCD)&&  EXPERIMENTAL
-> +	select USB_HCD_SSB
-> +	select USB_OHCI_HCD_PLATFORM
->   	default n
->   	---help---
-> +	  This option is deprecated now and the driver was removed, use
-> +	  USB_HCD_SSB and USB_OHCI_HCD_PLATFORM instead.
-> +
->   	  Support for the Sonics Silicon Backplane (SSB) attached
->   	  Broadcom USB OHCI core.
+On Mon, Mar 19, 2012 at 02:13:39PM +0100, Jakub Kicinski wrote:
+> > > > +	if (rt2800usb_txstatus_pending(rt2x00dev) &&
+> > > > +	    test_and_set_bit(TX_STATUS_READING, &rt2x00dev->flags))
+> > > 
+> > > I would put a bang before that test_and...
+> > I don't understand what you mean, perhaps you could post a patch
+> > or provide code snipset here, so I could comment.
+> 
+> If I understand correctly, status should be read again if there are
+> pending entries and no one else has set TX_STATUS_READING yet. In that
+> case return value of test_and_set_bit should be negated. I might be
+> missing something though.
 
-Looks fine as it helps transitioning old .config files. Should the 
-select statements be mentioned in the help section, ie. 'using' iso 'use'.
+You are correct, this is another good catch! Fix is on the go.
 
-Gr. AvS
+> > I do not understand your objection here too. If rt2800usb_txstatus_pending()
+> > will return true and if TX_STATUS_READING bit is not set, we will run hrtimer
+> > to read status after 500 micro seconds. We exit the loop if kfifo is empty
+> > and no entry timed out waiting to get corresponding TX status.
+> 
+> Yes, I don't mean that this code is wrong. I just think that
+> rt2800usb_async_read_tx_status have no chance of actually going past
+> TX_STATUS_READING check. If every dma_done schedules reading and
+> reading stops only when all pending entries have their statuses then
+> call to rt2800usb_async_read_tx_status after we processed statuses is
+> excessive.
+> 
+> All that said, I haven't tested this hypothesis and may be completely
+> wrong (again). Also I _don't_ mean that this call should be removed,
+> just wanted to me sure I understand everything correctly ;-)
 
+I think you have right. I'll review that carefully and remove those
+lines if they are useless.
 
+Thanks
+Stanislaw
