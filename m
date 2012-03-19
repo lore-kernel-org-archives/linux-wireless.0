@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46602 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216Ab2CBTDk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 14:03:40 -0500
-Received: by iagz16 with SMTP id z16so2653712iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 11:03:40 -0800 (PST)
-Message-ID: <4F511989.8040508@lwfinger.net> (sfid-20120302_200344_864939_AB0CF849)
-Date: Fri, 02 Mar 2012 13:03:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nbd.name ([46.4.11.11]:47988 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754898Ab2CSKBT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 06:01:19 -0400
+Message-ID: <4F6703EA.2020306@openwrt.org> (sfid-20120319_110123_055102_9A10EB20)
+Date: Mon, 19 Mar 2012 11:01:14 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Patrick McMunn <doctorwhoguy@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Problem with b43 driver
-References: <CAKS+cu2g45-KvQdvT=5B8p7dCt76dwXgNjMSUARM5+v8Mz9joQ@mail.gmail.com>
-In-Reply-To: <CAKS+cu2g45-KvQdvT=5B8p7dCt76dwXgNjMSUARM5+v8Mz9joQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 3/3] mac80211: optimize aggregation session timeout handling
+References: <1332025254-5048-1-git-send-email-nbd@openwrt.org>  <1332025254-5048-2-git-send-email-nbd@openwrt.org>  <1332025254-5048-3-git-send-email-nbd@openwrt.org>  <1332065875.3609.3.camel@jlt3.sipsolutions.net>  <4F65C374.2060505@openwrt.org> <1332146368.3359.12.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1332146368.3359.12.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/02/2012 11:59 AM, Patrick McMunn wrote:
-> A while back, a fix was issued for the b43 driver where the driver was
-> not issuing beacons in ad-hoc mode (
-> http://www.kernel.org/pub/linux/kernel/v2.6/longterm/v2.6.33/ChangeLog-2.6.33.20
-> ). I have a card which uses the driver, and it did allow me to use
-> ad-hoc mode for sharing an internet connection. However, I think there
-> is still some problem with the driver. When I start up my laptop (with
-> an Intel wireless card) and try to connect to the connection which I
-> created on my desktop which uses the b43 driver, there are occasions
-> when it detects the network immediately, and there are occasions when
-> it never does detect it even if I go to my desktop and stop then
-> restart the network. I may wait 15 or 20 minutes before giving up on
-> it. At the same time, my laptop may detect 3 or 4 wireless networks
-> from neighbors' homes, but it will not detect mine. So I suspect that
-> the b43 driver is somehow issuing beacons inconsistently. I'll be
-> happy to supply any additional information I can upon request. Another
-> thing that may or may not be related is that even when I do connect,
-> the machines can only ping each other if I connect using channel 10.
-> No other channel seems to work even if they successfully connect.
+On 2012-03-19 9:39 AM, Johannes Berg wrote:
+> On Sun, 2012-03-18 at 12:13 +0100, Felix Fietkau wrote:
+>> On 2012-03-18 11:17 AM, Johannes Berg wrote:
+>> > On Sun, 2012-03-18 at 00:00 +0100, Felix Fietkau wrote:
+>> >> Calling mod_timer from the rx/tx hotpath is somewhat expensive, and the
+>> >> timeout doesn't need to be so precise.
+>> >> 
+>> >> Switch to a different strategy: Schedule the timer initially, store jiffies
+>> >> of all last rx/tx activity which would previously modify the timer, and
+>> >> let the timer re-arm itself after checking the last rx/tx timestamp.
+>> > 
+>> > I don't like this. It's not the optimisation you think it is on other
+>> > ("embedded") systems where firing a timer is more expensive.
+>> > 
+>> > You're trading power consumption against CPU utilisation by causing the
+>> > timer to wake up.
+>> I considered that was well, but didn't think one wakeup every 5 seconds
+>> or so would be significant. Would you take the patch if I change the
+>> timer to be deferrable, so that it doesn't cause wakeups by itself?
+> 
+> I'm not really convinced, for making them deferrable we should analyse
+> the consequences of that more carefully, for example it seems possible
+> that the system wakes up to send a packet, and then the first thing that
+> happens is a few aggregation handshakes ... that wastes a lot of time
+> and power.
+How is that any more expensive than triggering a wakeup before that time
+caused by the session timer expiry?
 
-Does your laptop have a reasonable operating system that will let you run 
-wireshark in promiscuous mode? If so, please capture the traffic when you are 
-having this problem and check to see if the beacons are present.
+> Also, at least for TX aggregation, you don't even give them a timeout in
+> ath9k so that wouldn't really be an issue?
+minstrel_ht does give it a timeout. OpenWrt is not using the ath9k rate
+control module.
 
-That problem of needing to use channel 10 seems a bit strange.
-
-Larry
-
+- Felix
