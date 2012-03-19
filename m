@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:35894 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758589Ab2CSPU0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50128 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758718Ab2CSMSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 11:20:26 -0400
-MIME-Version: 1.0
-In-Reply-To: <4F674616.8080103@gmail.com>
-References: <4F576FD5.2050208@gmail.com>
-	<CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com>
-	<4F577D9B.7020402@gmail.com>
-	<4F579A88.6030503@openwrt.org>
-	<4F61F551.5010608@gmail.com>
-	<4F639851.5080500@gmail.com>
-	<4F674616.8080103@gmail.com>
-Date: Mon, 19 Mar 2012 20:50:25 +0530
-Message-ID: <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> (sfid-20120319_162045_887190_5E9387E2)
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024
- AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
-	Linux-netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Mar 2012 08:18:35 -0400
+Subject: RE: mac80211 20/40 coexist
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1332155566.3359.22.camel@jlt3.sipsolutions.net> (sfid-20120319_121257_256257_A4923B65)
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+	 <1331902885.6753.10.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
+	 <1332065984.3609.5.camel@jlt3.sipsolutions.net>
+	 <20326.41009.17936.152095@gargle.gargle.HOWL>
+	 <1332145412.3359.2.camel@jlt3.sipsolutions.net>
+	 <20327.1220.845693.349959@gargle.gargle.HOWL>
+	 <1332151743.3359.19.camel@jlt3.sipsolutions.net>
+	 <20327.2859.202760.119343@gargle.gargle.HOWL>
+	 <1332155566.3359.22.camel@jlt3.sipsolutions.net>
+	 (sfid-20120319_121257_256257_A4923B65)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Mar 2012 13:18:31 +0100
+Message-ID: <1332159511.3359.24.camel@jlt3.sipsolutions.net> (sfid-20120319_131839_492468_96C695FB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Justin,
+On Mon, 2012-03-19 at 12:12 +0100, Johannes Berg wrote:
+> On Mon, 2012-03-19 at 16:02 +0530, Sujith Manoharan wrote:
+> > Johannes Berg wrote:
+> > > > 11.14.4.3 specifies that if the operating bandwidth has been changed by the AP
+> > > > to 20 MHz, then transmitting frames in an extension channel is not allowed ?
+> > > 
+> > > Ok, good point. Paul's case was regulatory related, where we
+> > > (voluntarily) ceased 40 MHz transmissions.
+> > > 
+> > > Still though, I think reconfiguring the channel type rather than the
+> > > rate control algorithm doesn't make a lot of sense in this case since
+> > > it'd make this very special and unlike the other cases (e.g. AP mode).
+> > 
+> > The regulatory issue could have been fixed by sending out the action frame
+> > specified in 7.4.10.2, no ?
+> 
+> Technically, but that would be assuming it's implemented everywhere ...
+> if it was tested by the WFA we'd implement it :-)
 
-> seems I got this when waking up from suspend, was trying to connect with NM
-> then all of a sudden Xorg shut off and this appeared on the screen(image
-> links below I could not save dmesg only pic)
-> http://flic.kr/p/bEhf2K
-> http://flic.kr/p/bEhf2x
-> http://flic.kr/p/bEhf2n
-> http://flic.kr/p/bEhf26
->
-> I see ath9k in the image, but am unsure if its related.
-> kernel is: 3.3.0-rc7-next-20120316
+Also, in order to actually implement it in AP mode we need to use the
+"RC update only".
 
-this looks like some new issue  in ath9k, lets try to recreate it here
+I think it makes more sense to unify the handling here -- change rate
+control (and also tell the driver, like one of my patches did) rather
+than treating 20/40 changes in managed mode differently than in AP mode.
 
->
-> Justin P. Mattock
->
->
->
+johannes
 
-
-
--- 
-thanks,
-shafi
