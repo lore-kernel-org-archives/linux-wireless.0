@@ -1,74 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:60071 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754584Ab2CJKs1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 05:48:27 -0500
-Received: by vcqp1 with SMTP id p1so2312498vcq.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Mar 2012 02:48:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1331348259-14985-1-git-send-email-ashok@cozybit.com>
-References: <1331348259-14985-1-git-send-email-ashok@cozybit.com>
-Date: Sat, 10 Mar 2012 16:18:26 +0530
-Message-ID: <CAD2nsn0ZfNx923wZubs2Xi=eueJN+FevCAY8VUUHDMAHV6uBpw@mail.gmail.com> (sfid-20120310_114831_045910_FDE64245)
-Subject: Re: [PATCH v2] ath9k: Fix mactime from being clobbered in rx_status
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	zefir.kurtisi@neratec.com, chunkeey@googlemail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:58983 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S964791Ab2CSAbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Mar 2012 20:31:49 -0400
+From: Joe Perches <joe@perches.com>
+To: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Bob Copeland <me@bobcopeland.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 2/3] ath5k: Introduce _ath5k_printk to reduce code/text
+Date: Sun, 18 Mar 2012 17:30:53 -0700
+Message-Id: <b157e2d1a746733d1814b9726f326d52d36da2fc.1332116921.git.joe@perches.com> (sfid-20120319_013231_816172_0F9491B5)
+In-Reply-To: <cover.1332116921.git.joe@perches.com>
+References: <cover.1332116921.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 10, 2012 at 8:27 AM, Ashok Nagarajan <ashok@cozybit.com> wrote:
-> mactime was being overwritten by the function ath9k_rx_skb_preprocess. Fixed by
-> memsetting rx_status in ath_rx_tasklet.
+Macros can be converted to functions to reduce overall object size.
 
-thanks for fixing this. now i can see a proper non-zero MAC time stamp
-in ath9k sniffer.
+Convert the ATH5K_PRINTK macro to use _ath5k_printk.
 
->
-> Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-> Signed-off-by: Javier Cardona <javier@cozybit.com>
-> ---
-> v1:
-> Fix reverting "ath9k: trivial: reorder rx_tasklet processing" logic (Christian
-> Lamparter)
->  drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-> index 1b1b279..f4ae3ba 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -982,8 +982,6 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
->  {
->        struct ath_hw *ah = common->ah;
->
-> -       memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-> -
->        /*
->         * everything but the rate is checked here, the rate check is done
->         * separately to avoid doing two lookups for a rate for each frame.
-> @@ -1841,6 +1839,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->                if (sc->sc_flags & SC_OP_RXFLUSH)
->                        goto requeue_drop_frag;
->
-> +               memset(rxs, 0, sizeof(struct ieee80211_rx_status));
-> +
->                rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
->                if (rs.rs_tstamp > tsf_lower &&
->                    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
-> --
-> 1.7.5.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Allyesconfig size is reduced ~10%
 
+$ size drivers/net/wireless/ath/ath5k/built-in.o*
+   text	   data	    bss	    dec	    hex	filename
+ 211557	   2032	  40672	 254261	  3e135	drivers/net/wireless/ath/ath5k/built-in.o.new
+ 235412	   2032	  47296	 284740	  45844	drivers/net/wireless/ath/ath5k/built-in.o.old
 
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/ath/ath5k/ath5k.h |    9 +++++----
+ drivers/net/wireless/ath/ath5k/base.c  |   20 ++++++++++++++++++++
+ 2 files changed, 25 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 954c373..55ef93d 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -79,11 +79,12 @@
+ #define ATH5K_PRINTF(fmt, ...)						\
+ 	pr_warn("%s: " fmt, __func__, ##__VA_ARGS__)
+ 
++void __printf(3, 4)
++_ath5k_printk(const struct ath5k_hw *ah, const char *level,
++	      const char *fmt, ...);
++
+ #define ATH5K_PRINTK(_sc, _level, _fmt, ...)				\
+-	printk(_level pr_fmt("%s%s" _fmt),				\
+-	       ((_sc) && (_sc)->hw) ? wiphy_name((_sc)->hw->wiphy) : "", \
+-	       ((_sc) && (_sc)->hw) ? ": " : "",			\
+-	       ##__VA_ARGS__)
++	_ath5k_printk(_sc, _level, _fmt, ##__VA_ARGS__)
+ 
+ #define ATH5K_PRINTK_LIMIT(_sc, _level, _fmt, ...)			\
+ do {									\
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index a9c0503..3007bba 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -3040,3 +3040,23 @@ ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable)
+ 	ath5k_hw_set_rx_filter(ah, rfilt);
+ 	ah->filter_flags = rfilt;
+ }
++
++void _ath5k_printk(const struct ath5k_hw *ah, const char *level,
++		   const char *fmt, ...)
++{
++	struct va_format vaf;
++	va_list args;
++
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++
++	if (ah && ah->hw)
++		printk("%s" pr_fmt("%s: %pV"),
++		       level, wiphy_name(ah->hw->wiphy), &vaf);
++	else
++		printk("%s" pr_fmt("%pV"), level, &vaf);
++
++	va_end(args);
++}
 -- 
-thanks,
-shafi
+1.7.8.111.gad25c.dirty
+
