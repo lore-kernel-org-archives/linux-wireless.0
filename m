@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54587 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755196Ab2CDUnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:12 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Amit Beka <amit.beka@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 087/101] iwlwifi: fixed testmode notifications length
-Date: Sun,  4 Mar 2012 11:29:41 -0800
-Message-Id: <1330889395-533-88-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214442_706242_4D92EE6A)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:51711 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753309Ab2CSPZo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 11:25:44 -0400
+Message-ID: <4F674FF5.2060406@gmail.com> (sfid-20120319_162603_509224_FF629763)
+Date: Mon, 19 Mar 2012 08:25:41 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com>
+In-Reply-To: <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amit Beka <amit.beka@intel.com>
+On 03/19/2012 08:20 AM, Mohammed Shafi wrote:
+> Hi Justin,
+>
+>> seems I got this when waking up from suspend, was trying to connect with NM
+>> then all of a sudden Xorg shut off and this appeared on the screen(image
+>> links below I could not save dmesg only pic)
+>> http://flic.kr/p/bEhf2K
+>> http://flic.kr/p/bEhf2x
+>> http://flic.kr/p/bEhf2n
+>> http://flic.kr/p/bEhf26
+>>
+>> I see ath9k in the image, but am unsure if its related.
+>> kernel is: 3.3.0-rc7-next-20120316
+>
+> this looks like some new issue  in ath9k, lets try to recreate it here
+>
+>>
+>> Justin P. Mattock
+>>
+>>
+>>
+>
+>
+>
 
-The length of iwl_rx_packet doesn't include the
-dword for the length itself, so add it manually.
+would be nice to recreate, then bisecting will be more accurate to do.. 
+I am trying userspace tweaks here and there but no luck(hostapd etc..) 
+keep in mind this is for the RX DMA, the above just occured..
+as for writing a small app I still need to try, but my C skills only go 
+so far(anything to trigger!).
 
-Signed-off-by: Amit Beka <amit.beka@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-testmode.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-index b8044bc..b06c676 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-@@ -185,7 +185,8 @@ static void iwl_testmode_ucode_rx_pkt(struct iwl_priv *priv,
- 		return;
- 	}
- 	NLA_PUT_U32(skb, IWL_TM_ATTR_COMMAND, IWL_TM_CMD_DEV2APP_UCODE_RX_PKT);
--	NLA_PUT(skb, IWL_TM_ATTR_UCODE_RX_PKT, length, data);
-+	/* the length doesn't include len_n_flags field, so add it manually */
-+	NLA_PUT(skb, IWL_TM_ATTR_UCODE_RX_PKT, length + sizeof(__le32), data);
- 	cfg80211_testmode_event(skb, GFP_ATOMIC);
- 	return;
- 
--- 
-1.7.0.4
-
+Justin P. mattock
