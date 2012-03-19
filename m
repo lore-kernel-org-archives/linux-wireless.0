@@ -1,63 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44768 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759202Ab2COIDi (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:40050 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881Ab2CSKHg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 04:03:38 -0400
-Subject: Re: [PATCH 1/2] cfg80211: Fix a compilation warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <nataraja@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1331797479-2838-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20120315_084450_920775_6E2CFD1C)
-References: <1331797479-2838-1-git-send-email-nataraja@qca.qualcomm.com>
-	 (sfid-20120315_084450_920775_6E2CFD1C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Mar 2012 09:03:30 +0100
-Message-ID: <1331798610.3432.0.camel@jlt3.sipsolutions.net> (sfid-20120315_090344_047879_BCF6E21A)
-Mime-Version: 1.0
+	Mon, 19 Mar 2012 06:07:36 -0400
+Received: by wibhj6 with SMTP id hj6so3561337wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 03:07:35 -0700 (PDT)
+From: Eyal Shapira <eyal@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/4] wl12xx: fix a memory leak of probereq template upon recovery
+Date: Mon, 19 Mar 2012 12:06:27 +0200
+Message-Id: <1332151589-27272-3-git-send-email-eyal@wizery.com> (sfid-20120319_110739_484332_BD6757A0)
+In-Reply-To: <1332151589-27272-1-git-send-email-eyal@wizery.com>
+References: <1332151589-27272-1-git-send-email-eyal@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-15 at 13:14 +0530, Vivek Natarajan wrote:
-> Fix a macro redefined warning:
-> 
-> net/wireless/reg.c:45:1 warning: "pr_fmt" redefined
-> 
-> Also remove an unused instance in core.c
-> 
-> Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
-> ---
->  net/wireless/core.c |    2 --
->  net/wireless/reg.c  |    2 ++
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index ccdfed8..067c008 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -4,8 +4,6 @@
->   * Copyright 2006-2010		Johannes Berg <johannes@sipsolutions.net>
->   */
->  
-> -#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> -
->  #include <linux/if.h>
->  #include <linux/module.h>
->  #include <linux/err.h>
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index e9a0ac8..1797fcc 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -42,7 +42,9 @@
->   *
->   */
->  
-> +#ifndef pr_fmt
->  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> +#endif
+wlvif->probereq is zeroed when adding an interface but
+the skb pointed to isn't freed when the interface is removed.
+This would lead to a mem leak on every recovery.
+Fix it by freeing the skb when removing the interface.
 
-Umm, no? This isn't right -- are you getting this warning while building
-a compat tree?
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 791cdcc..55a0191 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2357,6 +2357,8 @@ deinit:
+ 						&wlvif->ap.ucast_rate_idx[i]);
+ 	}
+ 
++	dev_kfree_skb(wlvif->probereq);
++	wlvif->probereq = NULL;
+ 	wl12xx_tx_reset_wlvif(wl, wlvif);
+ 	wl1271_free_ap_keys(wl, wlvif);
+ 	if (wl->last_wlvif == wlvif)
+-- 
+1.7.4.1
 
