@@ -1,91 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:64055 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750906Ab2CGGwz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 01:52:55 -0500
-Received: by wgbdr13 with SMTP id dr13so5238580wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 22:52:53 -0800 (PST)
+Received: from ebb06.tieto.com ([131.207.168.38]:42906 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754896Ab2CTOzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Mar 2012 10:55:05 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Mon, 19 Mar 2012 08:50:08 +0100
+Subject: [RFC 02/12] mac80211: prepare ieee80211_sta_get_rates to per-vif
+To: <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <4F5695CC.3010206@hauke-m.de>
-References: <1331071898-3651-1-git-send-email-zajec5@gmail.com>
-	<4F5695CC.3010206@hauke-m.de>
-Date: Wed, 7 Mar 2012 07:52:53 +0100
-Message-ID: <CACna6rwCbwW4iaZ8HRVo_Hrfk_Z+q-E7ad=i9f0C=pF=-zHeEQ@mail.gmail.com> (sfid-20120307_075258_664769_8F5E3A2D)
-Subject: Re: [RFT][PATCH] b43: fix logic in GPIO configuration
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org, larry.finger@lwfinger.net,
-	florian@openwrt.org, m@bues.ch
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Message-ID: <50e68d85-854e-4bfc-8a31-3f5db15e328d@FIVLA-EXHUB02.eu.tieto.com> (sfid-20120320_155509_904376_A71717D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 6 marca 2012 23:55 użytkownik Hauke Mehrtens <hauke@hauke-m.de> napisał:
-> On 03/06/2012 11:11 PM, Rafał Miłecki wrote:
->> By using reverted mask we were taking over pins we were not supporsed to
->> touch. After fixing this workaround for BCM5354 should not be needed
->> anymore.
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/main.c |    6 ++----
->>  1 files changed, 2 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
->> index 1d633f3..8a89885 100644
->> --- a/drivers/net/wireless/b43/main.c
->> +++ b/drivers/net/wireless/b43/main.c
->> @@ -2706,8 +2706,6 @@ static int b43_gpio_init(struct b43_wldev *dev)
->>               mask |= 0x0060;
->>               set |= 0x0060;
->>       }
->> -     if (dev->dev->chip_id == 0x5354)
->> -             set &= 0xff02;
->>       if (0 /* FIXME: conditional unknown */ ) {
->>               b43_write16(dev, B43_MMIO_GPIO_MASK,
->>                           b43_read16(dev, B43_MMIO_GPIO_MASK)
->> @@ -2730,7 +2728,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
->>       case B43_BUS_BCMA:
->>               bcma_cc_write32(&dev->dev->bdev->bus->drv_cc, BCMA_CC_GPIOCTL,
->>                               (bcma_cc_read32(&dev->dev->bdev->bus->drv_cc,
->> -                                     BCMA_CC_GPIOCTL) & mask) | set);
->> +                                     BCMA_CC_GPIOCTL) & ~mask) | set);
->>               break;
->>  #endif
->>  #ifdef CONFIG_B43_SSB
->> @@ -2739,7 +2737,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
->>               if (gpiodev)
->>                       ssb_write32(gpiodev, B43_GPIO_CONTROL,
->>                                   (ssb_read32(gpiodev, B43_GPIO_CONTROL)
->> -                                 & mask) | set);
->> +                                 & ~mask) | set);
->>               break;
->>  #endif
->>       }
->
-> Hi,
->
-> This patch did not helped fixing my problem. The ucode still takes over
-> the GPIOs of the buttons with firmware version 666.2. I am getting the
-> following messages:
->
-> [   83.620000] b43-phy0: Loading firmware version 666.2 (2011-02-23
-> 01:15:07)
-> [   83.624000] Init value of B43_GPIO_CONTROL: 0x0
-> [   83.632000] b43-phy0 debug: b2062: Using crystal tab entry 19200 kHz.
-> [   83.640000] hotplug_button: action: pressed, name: reset, seen: 17179652
-> [   83.644000] hotplug_button: action: pressed, name: ses, seen: 17179652
-> [   89.404000] b43-phy0 debug: Chip initialized
+In preparation for multi-channel operation.
 
-Interesting/weird. I suspected there are some bits set in
-B43_GPIO_CONTROL we should not clean. And you just adjusted "set" to
-keep them set. But now it seems B43_GPIO_CONTROL is *zero* at the
-beginning and we actually have to *set* 0xFF00 to stop firmware
-touching them? Really tricky, I didn't suspect we may need to change
-default state of non-b43-related GPIOs.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/ibss.c        |    4 ++--
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/mesh.c        |    2 +-
+ net/mac80211/mesh_plink.c  |    2 +-
+ net/mac80211/util.c        |    3 ++-
+ 5 files changed, 7 insertions(+), 6 deletions(-)
 
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 50ba1fa..8bea83b 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -409,7 +409,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		sta = sta_info_get(sdata, mgmt->sa);
+ 
+ 		if (elems->supp_rates) {
+-			supp_rates = ieee80211_sta_get_rates(local, elems,
++			supp_rates = ieee80211_sta_get_rates(sdata, elems,
+ 							     band);
+ 			if (sta) {
+ 				u32 prev_rates;
+@@ -560,7 +560,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		       sdata->name, mgmt->bssid);
+ #endif
+ 		ieee80211_sta_join_ibss(sdata, bss);
+-		supp_rates = ieee80211_sta_get_rates(local, elems, band);
++		supp_rates = ieee80211_sta_get_rates(sdata, elems, band);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+ 				       supp_rates, true);
+ 		rcu_read_unlock();
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index de9346e..822dafd 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1458,7 +1458,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 				  const size_t supp_rates_len,
+ 				  const u8 *supp_rates);
+-u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
++u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
+ 			    struct ieee802_11_elems *elems,
+ 			    enum ieee80211_band band);
+ int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index e5fbb7c..0e6106e 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -651,7 +651,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (elems.mesh_id && elems.mesh_config &&
+ 	    mesh_matches_local(&elems, sdata)) {
+-		supp_rates = ieee80211_sta_get_rates(local, &elems, band);
++		supp_rates = ieee80211_sta_get_rates(sdata, &elems, band);
+ 		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems);
+ 	}
+ }
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 4e53c4c..aee6014 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -592,7 +592,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			return;
+ 		}
+ 
+-		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
++		rates = ieee80211_sta_get_rates(sdata, &elems, rx_status->band);
+ 		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, &elems);
+ 		if (!sta) {
+ 			mpl_dbg("Mesh plink error: plink table full\n");
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 959b2c4..928721d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1105,10 +1105,11 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 	}
+ }
+ 
+-u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
++u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
+ 			    struct ieee802_11_elems *elems,
+ 			    enum ieee80211_band band)
+ {
++	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rate *bitrates;
+ 	size_t num_rates;
 -- 
-Rafał
+1.7.0.4
+
