@@ -1,239 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog108.obsmtp.com ([207.126.144.125]:49138 "EHLO
-	eu1sys200aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932368Ab2CBBl7 (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:61897 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030812Ab2CSRCl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 20:41:59 -0500
-Received: from zeta.dmz-us.st.com (ns4.st.com [167.4.16.71])
-	by beta.dmz-us.st.com (STMicroelectronics) with ESMTP id 8EA8C49
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:41:44 +0000 (GMT)
-Received: from relay2.stm.gmessaging.net (unknown [10.230.100.18])
-	by zeta.dmz-us.st.com (STMicroelectronics) with ESMTP id D93CE55
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 00:13:07 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay2.stm.gmessaging.net (Postfix) with ESMTPS id DD005A8065
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 02:41:54 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 21/21] cw1200: Kconfig + Makefile for the driver.
-Date: Fri, 2 Mar 2012 02:41:35 +0100
-Message-ID: <1330652495-25837-22-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024231_185549_5ECA663F)
-In-Reply-To: <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
- <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+	Mon, 19 Mar 2012 13:02:41 -0400
+Received: by yhmm54 with SMTP id m54so5676678yhm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 10:02:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1332164326-17884-1-git-send-email-yeohchunyeow@gmail.com>
+References: <1332164326-17884-1-git-send-email-yeohchunyeow@gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Mon, 19 Mar 2012 10:02:20 -0700
+Message-ID: <CAPjQAd9j_XgkXr-M5v58K-q3aEo15gK+O+GBi6spHyx27UPTow@mail.gmail.com> (sfid-20120319_180244_750740_4EF3FBA2)
+Subject: Re: [PATCH] mac80211: fix the sparse warnings on endian handling in
+ RANN propagation
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch contains build system files for the cw1200 driver.
+On Mon, Mar 19, 2012 at 6:38 AM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+> The HWMP sequence number of received RANN element is compared to decide whether to be
+> propagated. The sequence number is required to covert from 32bit little endian data into
+> CPUs endianness for comparison. The same applies to the RANN metric.
+>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
----
- drivers/staging/Kconfig         |    2 +
- drivers/staging/Makefile        |    1 +
- drivers/staging/cw1200/Kconfig  |  143 +++++++++++++++++++++++++++++++++++++++
- drivers/staging/cw1200/Makefile |   19 +++++
- 4 files changed, 165 insertions(+), 0 deletions(-)
- create mode 100644 drivers/staging/cw1200/Kconfig
- create mode 100644 drivers/staging/cw1200/Makefile
+> ---
+>  include/linux/ieee80211.h |    6 +++---
+>  net/mac80211/mesh_hwmp.c  |    4 ++--
+>  2 files changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> index 210e2c3..cd4c7ed 100644
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -640,9 +640,9 @@ struct ieee80211_rann_ie {
+>        u8 rann_hopcount;
+>        u8 rann_ttl;
+>        u8 rann_addr[6];
+> -       u32 rann_seq;
+> -       u32 rann_interval;
+> -       u32 rann_metric;
+> +       __le32 rann_seq;
+> +       __le32 rann_interval;
+> +       __le32 rann_metric;
+>  } __attribute__ ((packed));
+>
+>  enum ieee80211_rann_flags {
+> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+> index 1c6f3d0..f80a9e3 100644
+> --- a/net/mac80211/mesh_hwmp.c
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -748,10 +748,10 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>        flags = rann->rann_flags;
+>        root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
+>        orig_addr = rann->rann_addr;
+> -       orig_sn = rann->rann_seq;
+> +       orig_sn = le32_to_cpu(rann->rann_seq);
+>        hopcount = rann->rann_hopcount;
+>        hopcount++;
+> -       metric = rann->rann_metric;
+> +       metric = le32_to_cpu(rann->rann_metric);
+>
+>        /*  Ignore our own RANNs */
+>        if (compare_ether_addr(orig_addr, sdata->vif.addr) == 0)
+> --
+> 1.7.0.4
+>
 
-diff --git a/drivers/staging/Kconfig b/drivers/staging/Kconfig
-index f1abfb1..7134785 100644
---- a/drivers/staging/Kconfig
-+++ b/drivers/staging/Kconfig
-@@ -134,4 +134,6 @@ source "drivers/staging/ramster/Kconfig"
- 
- source "drivers/staging/ozwpan/Kconfig"
- 
-+source "drivers/staging/cw1200/Kconfig"
-+
- endif # STAGING
-diff --git a/drivers/staging/Makefile b/drivers/staging/Makefile
-index ffe7d44..09a9f22 100644
---- a/drivers/staging/Makefile
-+++ b/drivers/staging/Makefile
-@@ -57,3 +57,4 @@ obj-$(CONFIG_ANDROID)		+= android/
- obj-$(CONFIG_PHONE)		+= telephony/
- obj-$(CONFIG_RAMSTER)		+= ramster/
- obj-$(CONFIG_USB_WPAN_HCD)	+= ozwpan/
-+obj-$(CONFIG_CW1200)		+= cw1200/
-diff --git a/drivers/staging/cw1200/Kconfig b/drivers/staging/cw1200/Kconfig
-new file mode 100644
-index 0000000..1afd9b0
---- /dev/null
-+++ b/drivers/staging/cw1200/Kconfig
-@@ -0,0 +1,143 @@
-+config CW1200
-+       tristate "CW1200 WLAN support"
-+       select MAC80211
-+       select CFG80211
-+       help
-+
-+         This is an experimental driver for the cw1200 chip-set.
-+         Enabling this option enables the generic driver without
-+         any platform support.
-+
-+         Please select the appropriate platform below.
-+
-+if CW1200
-+
-+config CW1200_STANDALONE
-+      bool "Build a standalone cw1200 driver"
-+      depends on CW1200
-+      help
-+        Say Y here if you would like to build a standalone cw1200 driver,
-+        not associated with any platform. Likely you wil not be able to use
-+	it for any purposes.
-+        If unsure, say N.
-+
-+config CW1200_NON_POWER_OF_TWO_BLOCKSIZES
-+      bool "Platform supports non-power-of-two SDIO transfer"
-+      depends on CW1200
-+      help
-+        Say N here only if you are running the driver on a platform
-+        which does not have support for non-power-of-two SDIO transfer.
-+        If unsure, say Y.
-+
-+config CW1200_USE_GPIO_IRQ
-+      bool "Use GPIO interrupt"
-+      depends on CW1200 && !CW1200_STANDALONE
-+      help
-+        Say Y here if you want to include GPIO IRQ support instead of SDIO IRQ.
-+        If unsure, say N.
-+
-+config CW1200_5GHZ_SUPPORT
-+      bool "5GHz band support"
-+      depends on CW1200
-+      help
-+        Say Y if your device supports 5GHz band. Should be disabled for
-+        CW1100 silicon.
-+        If unsure, say N.
-+
-+config CW1200_USE_STE_EXTENSIONS
-+      bool "STE extensions"
-+      depends on CW1200
-+      help
-+        Say Y if you want to include experimental code or code with
-+	not resolved dependency.
-+        If unsure, say N.
-+
-+config CW1200_WAPI_SUPPORT
-+      bool "WAPI support"
-+      depends on CW1200_USE_STE_EXTENSIONS
-+      help
-+        Say Y if your compat-wireless support WAPI.
-+        If unsure, say N.
-+
-+config CW1200_DISABLE_BEACON_HINTS
-+      bool "Disable 11d beacon hints"
-+      depends on CW1200
-+      help
-+        Say Y if you want to disable 11d beacon hints.
-+        If unsure, say N.
-+
-+config CW1200_U5500_SUPPORT
-+      bool "Enable U5500 support"
-+      depends on CW1200 && !CW1200_STANDALONE
-+      help
-+        Say Y if you want to enable wlan on u5500 platform support.
-+        If unsure, say N.
-+
-+menu "Driver debug features"
-+      depends on CW1200
-+
-+config CW1200_DEBUGFS
-+      bool "Expose driver internals to DebugFS (DEVELOPMENT)"
-+      help
-+        Say Y if you want to expose driver internals to DebugFS.
-+        If unsure, say N.
-+
-+config CW1200_BH_DEBUG
-+      bool "Enable low-level device communication logs (DEVELOPMENT)"
-+      help
-+        Say Y if you want to enable BH logs.
-+        If unsure, say N.
-+
-+config CW1200_WSM_DEBUG
-+      bool "Enable WSM API debug messages (DEVELOPMENT)"
-+      help
-+        Say Y if you want to enable WSM logs.
-+        If unsure, say N.
-+
-+config CW1200_WSM_DUMPS
-+      bool "Verbose WSM API logging (DEVELOPMENT)"
-+      help
-+        Say Y if you want to enable WSM dumps.
-+        If unsure, say N.
-+
-+config CW1200_WSM_DUMPS_SHORT
-+      depends on CW1200_WSM_DUMPS
-+      bool "Dump only first x bytes (default 20) (DEVELOPMENT)"
-+      help
-+        Say Y if you want to limit amount of data printed in WSM dumps.
-+        If unsure, say N.
-+
-+config CW1200_TXRX_DEBUG
-+      bool "Enable TX/RX debug messages (DEVELOPMENT)"
-+      help
-+        Say Y if you want to enable TX logs.
-+        If unsure, say N.
-+
-+config CW1200_TX_POLICY_DEBUG
-+      bool "Enable TX policy debug (DEVELOPMENT)"
-+      help
-+        Say Y if you want to enable TX policy logs.
-+        If unsure, say N.
-+
-+config CW1200_STA_DEBUG
-+      bool "Enable STA/AP debug (DEVELOPMENT)"
-+      help
-+        Say Y if you want to enable STA logs.
-+        If unsure, say N.
-+
-+config CW1200_DUMP_ON_ERROR
-+      bool "Dump kernel in case of critical error (DEVELOPMENT)"
-+      help
-+        Say Y only if you know for sure what are you doing.
-+        If unsure, say N.
-+
-+endmenu
-+
-+config CW1200_ITP
-+      bool "Enable ITP DebugFS"
-+      depends on CW1200_DEBUGFS
-+      help
-+        Say Y if you want to include ITP code.
-+        If unsure, say N.
-+
-+endif
-diff --git a/drivers/staging/cw1200/Makefile b/drivers/staging/cw1200/Makefile
-new file mode 100644
-index 0000000..01a3290
---- /dev/null
-+++ b/drivers/staging/cw1200/Makefile
-@@ -0,0 +1,19 @@
-+cw1200_core-y := \
-+		fwio.o \
-+		txrx.o \
-+		main.o \
-+		queue.o \
-+		hwio.o \
-+		bh.o \
-+		wsm.o \
-+		sta.o \
-+		ap.o \
-+		scan.o
-+cw1200_core-$(CONFIG_CW1200_DEBUGFS)	+= debug.o
-+cw1200_core-$(CONFIG_CW1200_ITP)	+= itp.o
-+cw1200_core-$(CONFIG_PM)		+= pm.o
-+
-+cw1200_wlan-y := cw1200_sdio.o
-+
-+obj-$(CONFIG_CW1200) += cw1200_core.o
-+obj-$(CONFIG_CW1200) += cw1200_wlan.o
+
+
 -- 
-1.7.9
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
