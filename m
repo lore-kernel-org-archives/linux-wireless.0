@@ -1,156 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11400 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755010Ab2CDUnB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:01 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 026/101] iwlwifi: move tid_to_ac to PCI-E
-Date: Sun,  4 Mar 2012 11:28:40 -0800
-Message-Id: <1330889395-533-27-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214558_282371_BA48F086)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:49259 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030981Ab2CSSxO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 14:53:14 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 3/4] mac80211:  Framework to get wifi-driver stats via ethtool.
+Date: Mon, 19 Mar 2012 11:51:44 -0700
+Message-Id: <1332183105-4447-3-git-send-email-greearb@candelatech.com> (sfid-20120319_195320_144404_FA856933)
+In-Reply-To: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
+References: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Currently, queue mapping is handled in the
-transport. This may change, but until then
-the code for it can be close to where it's
-used rather than in iwl-shared.h.
+This adds hooks to call into the driver to get additional
+stats for the ethtool API.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-shared.h        |   46 ----------------------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   46 ++++++++++++++++++++++
- 2 files changed, 46 insertions(+), 46 deletions(-)
+v3:  No changes from v2.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 2b9d21a..740a058 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -412,52 +412,6 @@ static inline bool iwl_have_debug_level(u32 level)
- 	return iwlagn_mod_params.debug_level & level;
- }
- 
--/*
-- * mac80211 queues, ACs, hardware queues, FIFOs.
-- *
-- * Cf. http://wireless.kernel.org/en/developers/Documentation/mac80211/queues
-- *
-- * Mac80211 uses the following numbers, which we get as from it
-- * by way of skb_get_queue_mapping(skb):
-- *
-- *	VO	0
-- *	VI	1
-- *	BE	2
-- *	BK	3
-- *
-- *
-- * Regular (not A-MPDU) frames are put into hardware queues corresponding
-- * to the FIFOs, see comments in iwl-prph.h. Aggregated frames get their
-- * own queue per aggregation session (RA/TID combination), such queues are
-- * set up to map into FIFOs too, for which we need an AC->FIFO mapping. In
-- * order to map frames to the right queue, we also need an AC->hw queue
-- * mapping. This is implemented here.
-- *
-- * Due to the way hw queues are set up (by the hw specific modules like
-- * iwl-4965.c, iwl-5000.c etc.), the AC->hw queue mapping is the identity
-- * mapping.
-- */
--
--static const u8 tid_to_ac[] = {
--	IEEE80211_AC_BE,
--	IEEE80211_AC_BK,
--	IEEE80211_AC_BK,
--	IEEE80211_AC_BE,
--	IEEE80211_AC_VI,
--	IEEE80211_AC_VI,
--	IEEE80211_AC_VO,
--	IEEE80211_AC_VO
--};
--
--static inline int get_ac_from_tid(u16 tid)
--{
--	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
--		return tid_to_ac[tid];
--
--	/* no support for TIDs 8-15 yet */
--	return -EINVAL;
--}
--
- enum iwl_rxon_context_id {
- 	IWL_RXON_CTX_BSS,
- 	IWL_RXON_CTX_PAN,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 0513b90..0164154 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -41,6 +41,43 @@
- #define IWL_TX_CRC_SIZE 4
- #define IWL_TX_DELIMITER_SIZE 4
- 
-+/*
-+ * mac80211 queues, ACs, hardware queues, FIFOs.
+:100644 100644 d49928b... a90cc8e... M	include/net/mac80211.h
+:100644 100644 bb834d7... f82b285... M	net/mac80211/cfg.c
+:100644 100644 b6ef8e7... c2d1661... M	net/mac80211/driver-ops.h
+:100644 100644 6e9df8f... f05fc9c... M	net/mac80211/driver-trace.h
+ include/net/mac80211.h      |   17 +++++++++++++++++
+ net/mac80211/cfg.c          |   19 ++++++++++++++++---
+ net/mac80211/driver-ops.h   |   37 +++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-trace.h |   15 +++++++++++++++
+ 4 files changed, 85 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d49928b..a90cc8e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2108,6 +2108,14 @@ enum ieee80211_frame_release_type {
+  *	The @tids parameter is a bitmap and tells the driver which TIDs the
+  *	frames will be on; it will at most have two bits set.
+  *	This callback must be atomic.
 + *
-+ * Cf. http://wireless.kernel.org/en/developers/Documentation/mac80211/queues
++ * @get_et_sset_count:  Ethtool API to get string-set count.
 + *
-+ * Mac80211 uses the following numbers, which we get as from it
-+ * by way of skb_get_queue_mapping(skb):
++ * @get_et_stats:  Ethtool API to get a set of u64 stats.
 + *
-+ *	VO	0
-+ *	VI	1
-+ *	BE	2
-+ *	BK	3
++ * @get_et_strings:  Ethtool API to get a set of strings to describe stats
++ *	and perhaps other supported types of ethtool data-sets.
 + *
-+ *
-+ * Regular (not A-MPDU) frames are put into hardware queues corresponding
-+ * to the FIFOs, see comments in iwl-prph.h. Aggregated frames get their
-+ * own queue per aggregation session (RA/TID combination), such queues are
-+ * set up to map into FIFOs too, for which we need an AC->FIFO mapping. In
-+ * order to map frames to the right queue, we also need an AC->hw queue
-+ * mapping. This is implemented here.
-+ *
-+ * Due to the way hw queues are set up (by the hw specific code), the AC->hw
-+ * queue mapping is the identity mapping.
-+ */
-+
-+static const u8 tid_to_ac[] = {
-+	IEEE80211_AC_BE,
-+	IEEE80211_AC_BK,
-+	IEEE80211_AC_BK,
-+	IEEE80211_AC_BE,
-+	IEEE80211_AC_VI,
-+	IEEE80211_AC_VI,
-+	IEEE80211_AC_VO,
-+	IEEE80211_AC_VO
-+};
-+
-+
- /**
-  * iwl_trans_txq_update_byte_cnt_tbl - Set up entry in Tx byte-count array
   */
-@@ -442,6 +479,15 @@ void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
- 			scd_retry ? "BA" : "AC/CMD", txq_id);
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2236,6 +2244,15 @@ struct ieee80211_ops {
+ 					u16 tids, int num_frames,
+ 					enum ieee80211_frame_release_type reason,
+ 					bool more_data);
++
++	int	(*get_et_sset_count)(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif, int sset);
++	void	(*get_et_stats)(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ethtool_stats *stats, u64 *data);
++	void	(*get_et_strings)(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  u32 sset, u8 *data);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index bb834d7..f82b285 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -125,10 +125,17 @@ static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       int sset)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	int rv = 0;
++
+ 	if (sset == ETH_SS_STATS)
+-		return STA_STATS_LEN;
++		rv += STA_STATS_LEN;
+ 
+-	return -EOPNOTSUPP;
++	rv += drv_get_et_sset_count(sdata, sset);
++
++	if (rv == 0)
++		return -EOPNOTSUPP;
++	return rv;
  }
  
-+static inline int get_ac_from_tid(u16 tid)
-+{
-+	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
-+		return tid_to_ac[tid];
+ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+@@ -167,16 +174,22 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+ 		BUG_ON(i != STA_STATS_LEN);
+ 	}
+ 	rcu_read_unlock();
 +
-+	/* no support for TIDs 8-15 yet */
-+	return -EINVAL;
++	drv_get_et_stats(sdata, stats, &(data[STA_STATS_LEN]));
+ }
+ 
+ static void ieee80211_get_et_strings(struct wiphy *wiphy,
+ 				     struct net_device *dev,
+ 				     u32 sset, u8 *data)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	int sz_sta_stats = 0;
++
+ 	if (sset == ETH_SS_STATS) {
+-		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
++		sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
+ 		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
+ 	}
++	drv_get_et_strings(sdata, sset, &(data[sz_sta_stats]));
+ }
+ 
+ 
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index b6ef8e7..c2d1661 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -35,6 +35,43 @@ static inline void drv_tx_frags(struct ieee80211_local *local,
+ 	local->ops->tx_frags(&local->hw, vif, sta, skbs);
+ }
+ 
++static inline void drv_get_et_strings(struct ieee80211_sub_if_data *sdata,
++				      u32 sset, u8 *data)
++{
++	struct ieee80211_local *local = sdata->local;
++	if (local->ops->get_et_strings) {
++		trace_drv_get_et_strings(local, sset);
++		local->ops->get_et_strings(&local->hw, &sdata->vif, sset, data);
++		trace_drv_return_void(local);
++	}
 +}
 +
- static inline int get_fifo_from_tid(struct iwl_trans_pcie *trans_pcie,
- 				    u8 ctx, u16 tid)
++static inline void drv_get_et_stats(struct ieee80211_sub_if_data *sdata,
++				    struct ethtool_stats *stats,
++				    u64 *data)
++{
++	struct ieee80211_local *local = sdata->local;
++	if (local->ops->get_et_stats) {
++		trace_drv_get_et_stats(local);
++		local->ops->get_et_stats(&local->hw, &sdata->vif, stats, data);
++		trace_drv_return_void(local);
++	}
++}
++
++static inline int drv_get_et_sset_count(struct ieee80211_sub_if_data *sdata,
++					int sset)
++{
++	struct ieee80211_local *local = sdata->local;
++	int rv = 0;
++	if (local->ops->get_et_sset_count) {
++		trace_drv_get_et_sset_count(local, sset);
++		rv = local->ops->get_et_sset_count(&local->hw, &sdata->vif,
++						   sset);
++		trace_drv_return_int(local, rv);
++	}
++	return rv;
++}
++
+ static inline int drv_start(struct ieee80211_local *local)
  {
+ 	int ret;
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6e9df8f..f05fc9c 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -161,6 +161,21 @@ DEFINE_EVENT(local_only_evt, drv_start,
+ 	TP_ARGS(local)
+ );
+ 
++DEFINE_EVENT(local_u32_evt, drv_get_et_strings,
++	     TP_PROTO(struct ieee80211_local *local, u32 sset),
++	     TP_ARGS(local, sset)
++);
++
++DEFINE_EVENT(local_u32_evt, drv_get_et_sset_count,
++	     TP_PROTO(struct ieee80211_local *local, u32 sset),
++	     TP_ARGS(local, sset)
++);
++
++DEFINE_EVENT(local_only_evt, drv_get_et_stats,
++	     TP_PROTO(struct ieee80211_local *local),
++	     TP_ARGS(local)
++);
++
+ DEFINE_EVENT(local_only_evt, drv_suspend,
+ 	TP_PROTO(struct ieee80211_local *local),
+ 	TP_ARGS(local)
 -- 
-1.7.0.4
+1.7.3.4
 
