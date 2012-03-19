@@ -1,85 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39254 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932749Ab2CZSww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 14:52:52 -0400
-Subject: Re: [PATCH] iwlwifi: do not nulify ctx->vif on reset
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20120326184209.GJ13806@tuxdriver.com>
-References: <1331651434-4370-1-git-send-email-sgruszka@redhat.com>
-	 <1331651730.3329.6.camel@jlt3.sipsolutions.net>
-	 <20120314062549.GA2788@redhat.com>
-	 <1331708304.3376.0.camel@jlt3.sipsolutions.net>
-	 <20120314070748.GB2788@redhat.com> <20120314081424.GC2788@redhat.com>
-	 <1332752906.7081.10.camel@jlt3.sipsolutions.net>
-	 <1332772232.27767.14.camel@wwguy-huron>
-	 <20120326184209.GJ13806@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Mar 2012 11:51:32 -0700
-Message-ID: <1332787892.27767.17.camel@wwguy-huron> (sfid-20120326_205256_121843_BE8AFAAF)
-Mime-Version: 1.0
+Received: from mail.candelatech.com ([208.74.158.172]:49254 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759252Ab2CSSwm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 14:52:42 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 4/4] ath9k:  Support ethtool getstats api.
+Date: Mon, 19 Mar 2012 11:51:45 -0700
+Message-Id: <1332183105-4447-4-git-send-email-greearb@candelatech.com> (sfid-20120319_195247_588563_E4A1C083)
+In-Reply-To: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
+References: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Ben Greear <greearb@candelatech.com>
 
-On Mon, 2012-03-26 at 14:42 -0400, John W. Linville wrote:
-> On Mon, Mar 26, 2012 at 07:30:32AM -0700, Guy, Wey-Yi wrote:
-> > On Mon, 2012-03-26 at 11:08 +0200, Johannes Berg wrote:
-> > > On Wed, 2012-03-14 at 09:14 +0100, Stanislaw Gruszka wrote:
-> > > > On Wed, Mar 14, 2012 at 08:07:48AM +0100, Stanislaw Gruszka wrote:
-> > > > > I'll update and recheck again.
-> > > > 
-> > > > On updated tree (head 035364916f75151b4b91ea53968c6beba7545317) devices
-> > > > stop working here on any forced reset during TX as well. There are
-> > > > messages like below in dmesg:
-> > > > 
-> > > > wlan3: dropped data frame to not associated station 00:00:00:00:00:00
-> > > > 
-> > > > And one time crash happened too, in:
-> > > > 
-> > > > (gdb) l *(iwl_remove_dynamic_key+0x1f0)
-> > > > 0x15e20 is in iwl_remove_dynamic_key (drivers/net/wireless/iwlwifi/iwl-agn-sta.c:1105).
-> > > > 1100		/*
-> > > > 1101		 * The device expects GTKs for station interfaces to be
-> > > > 1102		 * installed as GTKs for the AP station. If we have no
-> > > > 1103		 * station ID, then use the ap_sta_id in that case.
-> > > > 1104		 */
-> > > > 1105		if (vif->type == NL80211_IFTYPE_STATION && vif_priv->ctx)
-> > > > 1106			return vif_priv->ctx->ap_sta_id;
-> > > > 1107	
-> > > > 1108		return IWL_INVALID_STATION;
-> > > > 1109	}
-> > > > 
-> > > > To reproduce problems, I'm doing "ping -f 192.168.1.1" on one console
-> > > > and run script [1] on other console.
-> > > 
-> > > Ok so I finally got some time to look into this in some detail. It seems
-> > > that the driver assumes a few calls from mac80211 like key settings can
-> > > only happen while the vif pointers are valid, which is correct under
-> > > normal circumstances but due to races with HW reset it's not really true
-> > > there.
-> > > 
-> > > We could fix all of those, but it seems your patch is the better
-> > > approach. Wey, can you pick it up?
-> > 
-> > yes
-> 
-> Should I just take it and try to get it merged for -rc1?
+This returns many of the values that formerly could
+only be obtained from debugfs.  This should be an
+improvement when trying to access these counters
+programatically.  Currently this support is only
+enabled when DEBUGFS is enabled because otherwise
+these stats are not accumulated.
 
-I am taking it into our internal tree for our regression, if it is ok
-for you, could you wait a bit, I will push it with all our other
-patches.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-btw, I have pretty large queue of patches again (~50+), this time I will
-break it up and push separated :-)
+v3:  No changes from v2
 
-Thanks
-Wey
+:100644 100644 4a00806... 7261f88... M	drivers/net/wireless/ath/ath9k/main.c
+ drivers/net/wireless/ath/ath9k/main.c |  134 +++++++++++++++++++++++++++++++++
+ 1 files changed, 134 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 4a00806..7261f88 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2430,6 +2430,134 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ATH9K_DEBUGFS
++
++/* Ethtool support for get-stats */
++
++#define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
++static const char ath9k_gstrings_stats[][ETH_GSTRING_LEN] = {
++	"tx_pkts_nic",
++	"tx_bytes_nic",
++	"rx_pkts_nic",
++	"rx_bytes_nic",
++	AMKSTR(d_tx_pkts),
++	AMKSTR(d_tx_bytes),
++	AMKSTR(d_tx_mpdus_queued),
++	AMKSTR(d_tx_mpdus_completed),
++	AMKSTR(d_tx_mpdu_retries),
++	AMKSTR(d_tx_aggregates),
++	AMKSTR(d_tx_ampdus_queued_hw),
++	AMKSTR(d_tx_ampdus_queued_sw),
++	AMKSTR(d_tx_ampdus_completed),
++	AMKSTR(d_tx_ampdu_retries),
++	AMKSTR(d_tx_ampdu_xretries),
++	AMKSTR(d_tx_fifo_underrun),
++	AMKSTR(d_tx_op_exceeded),
++	AMKSTR(d_tx_timer_expiry),
++	AMKSTR(d_tx_desc_cfg_err),
++	AMKSTR(d_tx_data_underrun),
++	AMKSTR(d_tx_delim_underrun),
++
++	"d_rx_decrypt_crc_err",
++	"d_rx_phy_err",
++	"d_rx_mic_err",
++	"d_rx_pre_delim_crc_err",
++	"d_rx_post_delim_crc_err",
++	"d_rx_decrypt_busy_err",
++
++	"d_rx_phyerr_radar",
++	"d_rx_phyerr_ofdm_timing",
++	"d_rx_phyerr_cck_timing",
++
++};
++#define ATH9K_SSTATS_LEN ARRAY_SIZE(ath9k_gstrings_stats)
++
++static void ath9k_get_et_strings(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS)
++		memcpy(data, *ath9k_gstrings_stats,
++		       sizeof(ath9k_gstrings_stats));
++}
++
++static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif, int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return ATH9K_SSTATS_LEN;
++	return 0;
++}
++
++#define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
++#define AWDATA(elem)							\
++	do {								\
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
++	} while (0)
++
++#define AWDATA_RX(elem)						\
++	do {							\
++		data[i++] = sc->debug.stats.rxstats.elem;	\
++	} while (0)
++
++static void ath9k_get_et_stats(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	struct ath_softc *sc = hw->priv;
++	int i = 0;
++
++	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_pkts_all);
++	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_bytes_all);
++	AWDATA_RX(rx_pkts_all);
++	AWDATA_RX(rx_bytes_all);
++
++	AWDATA(tx_pkts_all);
++	AWDATA(tx_bytes_all);
++	AWDATA(queued);
++	AWDATA(completed);
++	AWDATA(xretries);
++	AWDATA(a_aggr);
++	AWDATA(a_queued_hw);
++	AWDATA(a_queued_sw);
++	AWDATA(a_completed);
++	AWDATA(a_retries);
++	AWDATA(a_xretries);
++	AWDATA(fifo_underrun);
++	AWDATA(xtxop);
++	AWDATA(timer_exp);
++	AWDATA(desc_cfg_err);
++	AWDATA(data_underrun);
++	AWDATA(delim_underrun);
++
++	AWDATA_RX(decrypt_crc_err);
++	AWDATA_RX(phy_err);
++	AWDATA_RX(mic_err);
++	AWDATA_RX(pre_delim_crc_err);
++	AWDATA_RX(post_delim_crc_err);
++	AWDATA_RX(decrypt_busy_err);
++
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_RADAR]);
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_OFDM_TIMING]);
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_CCK_TIMING]);
++
++	BUG_ON(i != ATH9K_SSTATS_LEN);
++}
++
++/* End of ethtool get-stats functions */
++
++#endif
++
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2458,4 +2586,10 @@ struct ieee80211_ops ath9k_ops = {
+ 	.get_stats	    = ath9k_get_stats,
+ 	.set_antenna	    = ath9k_set_antenna,
+ 	.get_antenna	    = ath9k_get_antenna,
++
++#ifdef CONFIG_ATH9K_DEBUGFS
++	.get_et_sset_count  = ath9k_get_et_sset_count,
++	.get_et_stats  = ath9k_get_et_stats,
++	.get_et_strings  = ath9k_get_et_strings,
++#endif
+ };
+-- 
+1.7.3.4
 
