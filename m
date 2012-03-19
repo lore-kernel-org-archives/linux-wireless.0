@@ -1,119 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:54046 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753637Ab2CSVfK (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:38213 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965074Ab2CSWmH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 17:35:10 -0400
-Received: by obbeh20 with SMTP id eh20so1167654obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 14:35:09 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-To: sfr@canb.auug.org.au, linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	Youngsin Lee <youngsin@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>,
-	Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>,
-	Vipin Mehta <vipimeht@qca.qualcomm.com>,
-	yahuan@qca.qualcomm.com, jjan@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, henrykim@qualcomm.com,
-	jouni@qca.qualcomm.com, athiruve@qca.qualcomm.com,
-	cjkim@qualcomm.com, philipk@qca.qualcomm.com,
-	sunnykim@qualcomm.com, sskwak@qualcomm.com, kkim@qualcomm.com,
-	mattbyun@qualcomm.com, ryanlee@qualcomm.com, simbap@qualcomm.com,
-	krislee@qualcomm.com, conner@qualcomm.com, hojinkim@qualcomm.com,
-	honglee@qualcomm.com, johnwkim@qualcomm.com
-Subject: [PATCH] cfg80211: warn if db.txt is empty with CONFIG_CFG80211_INTERNAL_REGDB
-Date: Mon, 19 Mar 2012 14:35:01 -0700
-Message-Id: <1332192901-2500-1-git-send-email-mcgrof@frijolero.org> (sfid-20120319_223516_781886_87D088F1)
+	Mon, 19 Mar 2012 18:42:07 -0400
+Received: by eaaq12 with SMTP id q12so2830791eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 15:42:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1332164662-18232-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+References: <1332164662-18232-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 20 Mar 2012 09:41:45 +1100
+Message-ID: <CAGRGNgXbS4ZO_vZA3o0jgovL=_2_GxxGP8iE4snnzSdEztsyqA@mail.gmail.com> (sfid-20120319_234220_163060_7D0D3519)
+Subject: Re: [PATCH] e1000: Silence sparse warnings by correcting type
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Hi Andrei,
 
-It has happened twice now where elaborate troubleshooting has
-undergone on systems where CONFIG_CFG80211_INTERNAL_REGDB [0]
-has been set but yet net/wireless/db.txt was not updated.
+Stupid question: Why have you sent this to linux-wireless?
 
-Despite the documentation on this it seems system integrators could
-use some more help with this, so throw out a kernel warning at boot time
-when their database is empty, and if they enabled cfg80211 regulatory
-debugging (CONFIG_CFG80211_REG_DEBUG), simply fail at build time. If
-they didn't enable cfg80211 regulatory debugging then we'll just warn
-at boot time. This does mean that the error-prone system integrator
-won't likely realize the issue until they boot the machine but -- it
-does not seem to make sense to enable a build bug unless someone
-really is debugging.
+Thanks,
 
-[0] http://wireless.kernel.org/en/developers/Regulatory/CRDA#CONFIG_CFG80211_INTERNAL_REGDB
+Julian Calaby
 
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Youngsin Lee <youngsin@qualcomm.com>
-Cc: Raja Mani <rmani@qca.qualcomm.com>
-Cc: Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Vipin Mehta <vipimeht@qca.qualcomm.com>
-Cc: yahuan@qca.qualcomm.com
-Cc: jjan@qca.qualcomm.com
-Cc: vthiagar@qca.qualcomm.com
-Cc: henrykim@qualcomm.com
-Cc: jouni@qca.qualcomm.com
-Cc: athiruve@qca.qualcomm.com
-Cc: cjkim@qualcomm.com
-Cc: philipk@qca.qualcomm.com
-Cc: sunnykim@qualcomm.com
-Cc: sskwak@qualcomm.com
-Cc: kkim@qualcomm.com
-Cc: mattbyun@qualcomm.com
-Cc: ryanlee@qualcomm.com
-Cc: simbap@qualcomm.com
-Cc: krislee@qualcomm.com
-Cc: conner@qualcomm.com
-Cc: hojinkim@qualcomm.com
-Cc: honglee@qualcomm.com
-Cc: johnwkim@qualcomm.com
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
----
+On Tue, Mar 20, 2012 at 00:44, Andrei Emeltchenko
+<Andrei.Emeltchenko.news@gmail.com> wrote:
+> From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+>
+> Silence sparse warnings shown below:
+> ...
+> drivers/net/ethernet/intel/e1000/e1000_main.c:3435:17: warning:
+>        cast to restricted __le64
+> drivers/net/ethernet/intel/e1000/e1000_main.c:3435:17: warning:
+>        cast to restricted __le64
+> ...
+>
+> Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 
-Stephen, John, not sure what is best to address this since I know we shouldn't
-be failing to build kernels easily. This will only fail to build if both
-CONFIG_CFG80211_REG_DEBUG and CONFIG_CFG80211_INTERNAL_REGDB are enabled.
-We could get rid of the build bug check completely but this just means
-system integrators will likley fail to fix the issue early. Experience
-shows this is a common issue so far and a lot of time is going into debugging
-this. I'd like to avoid this in the future. Let me know what you guys think.
-
- net/wireless/reg.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e9a0ac8..85f51b3 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -388,7 +388,18 @@ static void reg_regdb_query(const char *alpha2)
- 
- 	schedule_work(&reg_regdb_work);
- }
-+
-+/* Feel free to add any other sanity checks here */
-+static void reg_regdb_size_check(void)
-+{
-+#ifdef CONFIG_CFG80211_REG_DEBUG
-+	BUILD_BUG_ON(!reg_regdb_size);
-+#else
-+	WARN_ONCE(!reg_regdb_size, "db.txt is empty, you should update it...");
-+#endif
-+}
- #else
-+static inline void reg_regdb_size_check(void) {}
- static inline void reg_regdb_query(const char *alpha2) {}
- #endif /* CONFIG_CFG80211_INTERNAL_REGDB */
- 
-@@ -2367,6 +2378,7 @@ void /* __init_or_exit */ regulatory_exit(void)
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
- 
-+	reg_regdb_size_check();
- 	reset_regdomains(true);
- 
- 	dev_set_uevent_suppress(&reg_pdev->dev, true);
 -- 
-1.7.10.rc1.22.gf5241
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
