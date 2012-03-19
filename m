@@ -1,79 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:36639 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932551Ab2C2X25 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2012 19:28:57 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so789148pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2012 16:28:57 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:6759 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932083Ab2CSNkZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 09:40:25 -0400
+Date: Mon, 19 Mar 2012 14:40:17 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: fix possible tid_rx->reorder_timer use after free
+Message-ID: <20120319134016.GC6169@redhat.com> (sfid-20120319_144028_919666_5128231D)
+References: <1332161442-7315-1-git-send-email-sgruszka@redhat.com>
+ <1332162188.3359.33.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
-	devel@lists.open80211s.org, linville@tuxdriver.com,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 2/4] mac80211: Indicate basic rates when adding supported rates
-Date: Thu, 29 Mar 2012 16:28:47 -0700
-Message-Id: <1333063729-9353-2-git-send-email-ashok@cozybit.com> (sfid-20120330_012901_671445_15225E49)
-In-Reply-To: <1333063729-9353-1-git-send-email-ashok@cozybit.com>
-References: <1333063729-9353-1-git-send-email-ashok@cozybit.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1332162188.3359.33.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-and extended supported rates
+On Mon, Mar 19, 2012 at 02:03:08PM +0100, Johannes Berg wrote:
+> On Mon, 2012-03-19 at 13:50 +0100, Stanislaw Gruszka wrote:
+> > Is possible that we arm tid_rx->reorder_timer after del_timer_sync(). To
+> > fix: first wait for RCU grace period finish and then delete timer. Timer
+> > will not be armed again as rcu_dereference(sta->ampdu_mlme.tid_rx[tid])
+> > will return NULL.
+> > 
+> > Debug object detected problem with the following warning:
+> > ODEBUG: free active (active state 0) object type: timer_list hint: sta_rx_agg_reorder_timer_expired+0x0/0xf0 [mac80211]
+> > 
+> > Bug report (with full warning):
+> > https://bugzilla.redhat.com/show_bug.cgi?id=804007
+> > 
+> > Reported-by: "jan p. springer" <jsd@igroup.org>
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> >  net/mac80211/agg-rx.c   |    8 ++++----
+> >  net/mac80211/sta_info.h |    1 -
+> >  2 files changed, 4 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+> > index 1068f66..2c1223e 100644
+> > --- a/net/mac80211/agg-rx.c
+> > +++ b/net/mac80211/agg-rx.c
+> > @@ -43,10 +43,8 @@
+> >  #include "ieee80211_i.h"
+> >  #include "driver-ops.h"
+> >  
+> > -static void ieee80211_free_tid_rx(struct rcu_head *h)
+> > +static void ieee80211_free_tid_rx(struct tid_ampdu_rx *tid_rx)
+> >  {
+> > -	struct tid_ampdu_rx *tid_rx =
+> > -		container_of(h, struct tid_ampdu_rx, rcu_head);
+> >  	int i;
+> >  
+> >  	for (i = 0; i < tid_rx->buf_size; i++)
+> > @@ -90,10 +88,12 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+> >  		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+> >  				     tid, WLAN_BACK_RECIPIENT, reason);
+> >  
+> > +	synchronize_rcu();
+> > +
+> >  	del_timer_sync(&tid_rx->session_timer);
+> >  	del_timer_sync(&tid_rx->reorder_timer);
+> >  
+> > -	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
+> > +	ieee80211_free_tid_rx(tid_rx);
+> 
+> Hmmm. That synchronize_rcu() could become rather expensive. I've been
+> trying to reduce our use of synchronize_rcu() now.
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/util.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+Expensive in what sense? Since we are in process context we are allowed
+to sleep, and some other processes will run while we sleep.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 32f7a3b..a1e2ff5 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1685,6 +1685,7 @@ int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
- 	struct ieee80211_supported_band *sband;
- 	int rate;
- 	u8 i, rates, *pos;
-+	u32 basic_rates = vif->bss_conf.basic_rates;
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 	rates = sband->n_bitrates;
-@@ -1698,8 +1699,11 @@ int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
- 	*pos++ = WLAN_EID_SUPP_RATES;
- 	*pos++ = rates;
- 	for (i = 0; i < rates; i++) {
-+		u8 basic = 0;
-+		if (basic_rates & BIT(i))
-+			basic = 0x80;
- 		rate = sband->bitrates[i].bitrate;
--		*pos++ = (u8) (rate / 5);
-+		*pos++ = basic | (u8) (rate / 5);
- 	}
- 
- 	return 0;
-@@ -1712,6 +1716,7 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
- 	struct ieee80211_supported_band *sband;
- 	int rate;
- 	u8 i, exrates, *pos;
-+	u32 basic_rates = vif->bss_conf.basic_rates;
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
- 	exrates = sband->n_bitrates;
-@@ -1728,8 +1733,11 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
- 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
- 		*pos++ = exrates;
- 		for (i = 8; i < sband->n_bitrates; i++) {
-+			u8 basic = 0;
-+			if (basic_rates & BIT(i))
-+				basic = 0x80;
- 			rate = sband->bitrates[i].bitrate;
--			*pos++ = (u8) (rate / 5);
-+			*pos++ = basic | (u8) (rate / 5);
- 		}
- 	}
- 	return 0;
--- 
-1.7.5.4
+> I was checking if we could move the timer deletions into
+> ieee80211_free_tid_rx since call_rcu runs from another softirq, but I'm
+> not really sure -- the timer softirq could be running on another CPU?
 
+Yes. I considered using async del_timer() from rcu callback, but that
+would be racy too. 
+
+We could do rcu_dereference (and check if it is not null) just
+before mod_timer(). But that will still be racy as long spin_lock
+will not be used.
+
+Stanislaw
