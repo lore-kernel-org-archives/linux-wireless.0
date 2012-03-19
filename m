@@ -1,96 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36476 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42042 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031672Ab2CPOzk (ORCPT
+	with ESMTP id S932134Ab2CSKJe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 10:55:40 -0400
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [RFC] cfg80211: Indicate the automatic channel selection capability
-Date: Fri, 16 Mar 2012 20:25:32 +0530
-Message-ID: <1331909733-16767-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20120316_155551_647367_7F3C7BB8)
+	Mon, 19 Mar 2012 06:09:34 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20327.1467.708015.943566@gargle.gargle.HOWL> (sfid-20120319_110941_886740_0F152CBF)
+Date: Mon, 19 Mar 2012 15:38:59 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Adrian Chadd <adrian@freebsd.org>,
+	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211 20/40 coexist
+In-Reply-To: <1332145593.3359.6.camel@jlt3.sipsolutions.net>
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+	<1331902885.6753.10.camel@jlt3.sipsolutions.net>
+	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
+	<1332065984.3609.5.camel@jlt3.sipsolutions.net>
+	<CAJ-VmomNGku0CNfX+feeeUET4mXEFDj976sSfg-GG-KUSGCWvw@mail.gmail.com>
+	<20326.44233.811876.892785@gargle.gargle.HOWL>
+	<1332145593.3359.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let the driver automatically select the channel based on the
-channel conditions when it is not explicitly set.
-The drivers which have this capability in the firmware can set
-the WIPHY_FLAG_SUPPORTS_ACS flag to indicate that to the
-userspace.
+Johannes Berg wrote:
+> > As far as ath9k/ath9k_htc is concerned, I think we have to reset/reconfigure the HW
+> > when a channel switch happens, since we reprogram various MAC/PHY registers based on
+> > the HT bandwidth. Both ath9k and ath9k_htc update their rate control modules
+> > correctly - ath9k via the rate_update() callback and ath9k_htc using BSS_CHANGED_HT
+> > in bss_info_changed().
+> 
+> I'm not sure ath9k_htc is behaving correctly. Ok I should say that
+> differently -- it's probably behaving "correctly" wrt. whatever mac80211
+> did before, but we're changing the way mac80211 behaves and I believe
+> that to be (more) correct, see my other email.
 
-Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
----
- include/linux/nl80211.h |    5 +++++
- include/net/cfg80211.h  |    2 ++
- net/wireless/nl80211.c  |    3 +++
- 3 files changed, 10 insertions(+), 0 deletions(-)
+Well, we do a bunch of HW configuration based on the channel bandwidth, like
+TX power, program MAC/PHY registers, various calibration routines at the baseband level.
+So when the bandwidth changes, doing a full HW reset is required, I think.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index be35a68..8d15101 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1197,6 +1197,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_NOACK_MAP: This u16 bitmap contains the No Ack Policy of
-  *      up to 16 TIDs.
-  *
-+ * @NL80211_ATTR_ACS: Indicates whether the firmware is capable of doing
-+ *      automatic channel selection if the channel is not explicitly set.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1442,6 +1445,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_NOACK_MAP,
- 
-+	NL80211_ATTR_ACS,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0178c74..aa93a2c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1760,6 +1760,7 @@ struct cfg80211_ops {
-  *	responds to probe-requests in hardware.
-  * @WIPHY_FLAG_OFFCHAN_TX: Device supports direct off-channel TX.
-  * @WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL: Device supports remain-on-channel call.
-+ * @WIPHY_FLAG_SUPPORTS_ACS: Device supports automatic channel selection.
-  */
- enum wiphy_flags {
- 	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
-@@ -1783,6 +1784,7 @@ enum wiphy_flags {
- 	WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD	= BIT(19),
- 	WIPHY_FLAG_OFFCHAN_TX			= BIT(20),
- 	WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL	= BIT(21),
-+	WIPHY_FLAG_SUPPORTS_ACS			= BIT(22),
- };
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1998c36..3a876326 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -204,6 +204,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 		.len = NL80211_HT_CAPABILITY_LEN
- 	},
- 	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
-+	[NL80211_ATTR_ACS] = { .type = NLA_FLAG },
- };
- 
- /* policy for the key attributes */
-@@ -749,6 +750,8 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_TDLS_SUPPORT);
- 	if (dev->wiphy.flags & WIPHY_FLAG_TDLS_EXTERNAL_SETUP)
- 		NLA_PUT_FLAG(msg, NL80211_ATTR_TDLS_EXTERNAL_SETUP);
-+	if (dev->wiphy.flags & WIPHY_FLAG_SUPPORTS_ACS)
-+		NLA_PUT_FLAG(msg, NL80211_ATTR_ACS);
- 
- 	NLA_PUT(msg, NL80211_ATTR_CIPHER_SUITES,
- 		sizeof(u32) * dev->wiphy.n_cipher_suites,
--- 
-1.7.9
-
+Sujith
