@@ -1,67 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:58739 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965091Ab2CUG5c convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 21 Mar 2012 02:57:32 -0400
-Received: by bkcik5 with SMTP id ik5so630096bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 23:57:26 -0700 (PDT)
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:20444 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755891Ab2CSCmb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Mar 2012 22:42:31 -0400
+Date: Sun, 18 Mar 2012 21:42:28 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Preallocate USB read buffers and eliminate
+ kalloc in read routine
+Message-ID: <4f669d14.5MVnZ/K9sIFwYerB%Larry.Finger@lwfinger.net> (sfid-20120319_034235_084270_F06885E7)
 MIME-Version: 1.0
-In-Reply-To: <1332246689.3329.16.camel@jlt3.sipsolutions.net>
-References: <CALx5=V_czM-3sqhutbYx27wHnLtQL_PvcSjKHd4RGtopkKqf3A@mail.gmail.com>
-	<1332224377.3329.1.camel@jlt3.sipsolutions.net>
-	<CALx5=V-CLY2QE=BuYoYOdBSELmFUxNXQ+Ws5Gh=rCND0SbJL1g@mail.gmail.com>
-	<1332246689.3329.16.camel@jlt3.sipsolutions.net>
-Date: Wed, 21 Mar 2012 14:57:26 +0800
-Message-ID: <CALx5=V_0pio6ycdEmChs18747Rvxr_-m-pyicx-hQWdhEb+Y8g@mail.gmail.com> (sfid-20120321_075743_046792_A7769D05)
-Subject: Re: About the .start function in ieee80211_ops.
-From: Matt Chen <machen@suse.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: users@rt2x00.serialmonkey.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+The current version of rtlwifi for USB operations uses kmalloc to
+acquire a 32-bit buffer for reading. When _usb_read_sync() is called
+with the rcu_lock held, the result is a "sleeping function called
+from invalid context" BUG. This is reported for two cases in
+https://bugzilla.kernel.org/show_bug.cgi?id=42775. The first case
+where the lock originates from within rtlwifi and could be fixed
+by rearranging the locking; however, the second originates from
+within mac80211. The kmalloc() call is removed from _usb_read_sync()
+by creating a ring buffer pointer in the private area and
+allocating the buffer data in the probe routine.
 
-2012/3/20 Johannes Berg <johannes@sipsolutions.net>:
-> On Tue, 2012-03-20 at 20:29 +0800, Matt Chen wrote:
->> Hi Johannes,
->>
->> 2012/3/20 Johannes Berg <johannes@sipsolutions.net>:
->> > On Tue, 2012-03-20 at 14:02 +0800, Matt Chen wrote:
->> >> Hi all,
->> >> I have a issue recently for rt2800pci, the way to duplicate this is
->> >> 1. Press function key to set rfkill hard blocked, it would cause
->> >> driver to power off.
->> >> 2. reboot
->> >> 3. find when load the driver (rt2800pci), it would stop in "Registered
->> >> led device: rt2800pci-phy0::quality".
->> >>
->> >> Here you would find the rfkill_poll function is not started to work,
->> >> also the rt2x00mac_start() registered in rt2800pci_mac80211_ops
->> >> structure is not yet be executed.
->> >> My question is when or what condition the rt2x00mac_start()  would be
->> >> running, because if it is not yet executed, then it would not be able
->> >> to load the firmware in rt2x00lib_start().
->> >
->> > That's a bug in the driver then -- it should probably start the rfkill
->> > stuff without mac80211's start() command. start() is only called when
->> > the first interface comes up, but that will never happen if it's in
->> > rfkill block.
->> Do you have any idea which part of code would make the first interface
->> comes up ?  :)
->> Would that be in cfg80211 ?
->
-> No code? You, as the user, running "ip link set wlan0 up" or
-> network-manager doing something similar etc.
-Big thank you for the information. :)
-For rt2x00, is this the only way to make the driver executing the .run
-function in ieee80211_ops structure definition ?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [This version good for 3.3+ - different patch for 3.2 - 2.6.39]
+---
 
-> johannes
->
+John,
 
--- 
-Thank you.
+This bug only shows up with full debugginh; therefore, it can be part of
+kernel 3.5.
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/usb.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
+@@ -124,46 +124,38 @@ static int _usbctrl_vendorreq_sync_read(
+ 	return status;
+ }
+ 
+-static u32 _usb_read_sync(struct usb_device *udev, u32 addr, u16 len)
++static u32 _usb_read_sync(struct rtl_priv *rtlpriv, u32 addr, u16 len)
+ {
++	struct device *dev = rtlpriv->io.dev;
++	struct usb_device *udev = to_usb_device(dev);
+ 	u8 request;
+ 	u16 wvalue;
+ 	u16 index;
+-	u32 *data;
+-	u32 ret;
++	__le32 *data = &rtlpriv->usb_data[rtlpriv->usb_data_index];
+ 
+-	data = kmalloc(sizeof(u32), GFP_KERNEL);
+-	if (!data)
+-		return -ENOMEM;
+ 	request = REALTEK_USB_VENQT_CMD_REQ;
+ 	index = REALTEK_USB_VENQT_CMD_IDX; /* n/a */
+ 
+ 	wvalue = (u16)addr;
+ 	_usbctrl_vendorreq_sync_read(udev, request, wvalue, index, data, len);
+-	ret = le32_to_cpu(*data);
+-	kfree(data);
+-	return ret;
++	if (++rtlpriv->usb_data_index >= RTL_USB_MAX_RX_COUNT)
++		rtlpriv->usb_data_index = 0;
++	return le32_to_cpu(*data);
+ }
+ 
+ static u8 _usb_read8_sync(struct rtl_priv *rtlpriv, u32 addr)
+ {
+-	struct device *dev = rtlpriv->io.dev;
+-
+-	return (u8)_usb_read_sync(to_usb_device(dev), addr, 1);
++	return (u8)_usb_read_sync(rtlpriv, addr, 1);
+ }
+ 
+ static u16 _usb_read16_sync(struct rtl_priv *rtlpriv, u32 addr)
+ {
+-	struct device *dev = rtlpriv->io.dev;
+-
+-	return (u16)_usb_read_sync(to_usb_device(dev), addr, 2);
++	return (u16)_usb_read_sync(rtlpriv, addr, 2);
+ }
+ 
+ static u32 _usb_read32_sync(struct rtl_priv *rtlpriv, u32 addr)
+ {
+-	struct device *dev = rtlpriv->io.dev;
+-
+-	return _usb_read_sync(to_usb_device(dev), addr, 4);
++	return _usb_read_sync(rtlpriv, addr, 4);
+ }
+ 
+ static void _usb_write_async(struct usb_device *udev, u32 addr, u32 val,
+@@ -955,6 +947,13 @@ int __devinit rtl_usb_probe(struct usb_i
+ 		return -ENOMEM;
+ 	}
+ 	rtlpriv = hw->priv;
++	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
++				    GFP_KERNEL);
++	if (!rtlpriv->usb_data) {
++		RT_ASSERT(false, "USB data buffer allocation failed\n");
++		return -ENOMEM;
++	}
++	rtlpriv->usb_data_index = 0;
+ 	init_completion(&rtlpriv->firmware_loading_complete);
+ 	SET_IEEE80211_DEV(hw, &intf->dev);
+ 	udev = interface_to_usbdev(intf);
+@@ -1025,6 +1024,7 @@ void rtl_usb_disconnect(struct usb_inter
+ 	/* rtl_deinit_rfkill(hw); */
+ 	rtl_usb_deinit(hw);
+ 	rtl_deinit_core(hw);
++	kfree(rtlpriv->usb_data);
+ 	rtlpriv->cfg->ops->deinit_sw_leds(hw);
+ 	rtlpriv->cfg->ops->deinit_sw_vars(hw);
+ 	_rtl_usb_io_handler_release(hw);
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
+@@ -67,7 +67,7 @@
+ #define QOS_QUEUE_NUM				4
+ #define RTL_MAC80211_NUM_QUEUE			5
+ #define REALTEK_USB_VENQT_MAX_BUF_SIZE		254
+-
++#define RTL_USB_MAX_RX_COUNT			100
+ #define QBSS_LOAD_SIZE				5
+ #define MAX_WMMELE_LENGTH			64
+ 
+@@ -1629,6 +1629,10 @@ struct rtl_priv {
+ 	   interface or hardware */
+ 	unsigned long status;
+ 
++	/* data buffer pointer for USB reads */
++	__le32 *usb_data;
++	int usb_data_index;
++
+ 	/*This must be the last item so
+ 	   that it points to the data allocated
+ 	   beyond  this structure like:
