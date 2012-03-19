@@ -1,217 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:47955 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758766Ab2CWPe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 11:34:26 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
-	rodrigue@qca.qualcomm.com,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [RFCv2 3/3] ath9k: update to DFS pattern detector interface
-Date: Fri, 23 Mar 2012 16:34:02 +0100
-Message-Id: <1332516842-27522-4-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120323_163431_069685_BDEADFA4)
-In-Reply-To: <1332516842-27522-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1332516842-27522-1-git-send-email-zefir.kurtisi@neratec.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26216 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752862Ab2CSFB4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 01:01:56 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20326.48447.815801.808651@gargle.gargle.HOWL> (sfid-20120319_060200_135594_1E20E7DF)
+Date: Mon, 19 Mar 2012 10:29:43 +0530
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211 20/40 coexist
+In-Reply-To: <CAJ-VmonSYm6G6Y9zkgwFvEQzDx56q=S6-USPkr7To-drMNh5JA@mail.gmail.com>
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+	<1331902885.6753.10.camel@jlt3.sipsolutions.net>
+	<8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
+	<1332065984.3609.5.camel@jlt3.sipsolutions.net>
+	<CAJ-VmomNGku0CNfX+feeeUET4mXEFDj976sSfg-GG-KUSGCWvw@mail.gmail.com>
+	<20326.44233.811876.892785@gargle.gargle.HOWL>
+	<CAJ-VmonSYm6G6Y9zkgwFvEQzDx56q=S6-USPkr7To-drMNh5JA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Follow updates in DFS pattern detector interface:
-a) use given pulse event structure
-b) adapt to boolean return value of add_pulse()
+Adrian Chadd wrote:
+> Right, but for AP mode what's involved?
+> 
+> * Does it send out a CSA to the same channel but different operational
+> mode stuff?
+> * are all current aggregation sessions maintained, or are they reset
+> when a CSA to the same channel is done?
+> * What about stuff to do with power saving?
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- drivers/net/wireless/ath/ath9k/dfs.c |   76 +++++++++++++---------------------
- drivers/net/wireless/ath/ath9k/dfs.h |    8 ++-
- 2 files changed, 34 insertions(+), 50 deletions(-)
+All of the above probably have to be handled. :)
+(along with virtual interface management).
 
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-index f4f56af..36f8936 100644
---- a/drivers/net/wireless/ath/ath9k/dfs.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs.c
-@@ -21,17 +21,6 @@
- #include "dfs.h"
- #include "dfs_debug.h"
- 
--/*
-- * TODO: move into or synchronize this with generic header
-- *	 as soon as IF is defined
-- */
--struct dfs_radar_pulse {
--	u16 freq;
--	u64 ts;
--	u32 width;
--	u8 rssi;
--};
--
- /* internal struct to pass radar data */
- struct ath_radar_data {
- 	u8 pulse_bw_info;
-@@ -60,44 +49,44 @@ static u32 dur_to_usecs(struct ath_hw *ah, u32 dur)
- #define EXT_CH_RADAR_FOUND 0x02
- static bool
- ath9k_postprocess_radar_event(struct ath_softc *sc,
--			      struct ath_radar_data *are,
--			      struct dfs_radar_pulse *drp)
-+			      struct ath_radar_data *ard,
-+			      struct pulse_event *pe)
- {
- 	u8 rssi;
- 	u16 dur;
- 
- 	ath_dbg(ath9k_hw_common(sc->sc_ah), DFS,
- 		"pulse_bw_info=0x%x, pri,ext len/rssi=(%u/%u, %u/%u)\n",
--		are->pulse_bw_info,
--		are->pulse_length_pri, are->rssi,
--		are->pulse_length_ext, are->ext_rssi);
-+		ard->pulse_bw_info,
-+		ard->pulse_length_pri, ard->rssi,
-+		ard->pulse_length_ext, ard->ext_rssi);
- 
- 	/*
- 	 * Only the last 2 bits of the BW info are relevant, they indicate
- 	 * which channel the radar was detected in.
- 	 */
--	are->pulse_bw_info &= 0x03;
-+	ard->pulse_bw_info &= 0x03;
- 
--	switch (are->pulse_bw_info) {
-+	switch (ard->pulse_bw_info) {
- 	case PRI_CH_RADAR_FOUND:
- 		/* radar in ctrl channel */
--		dur = are->pulse_length_pri;
-+		dur = ard->pulse_length_pri;
- 		DFS_STAT_INC(sc, pri_phy_errors);
- 		/*
- 		 * cannot use ctrl channel RSSI
- 		 * if extension channel is stronger
- 		 */
--		rssi = (are->ext_rssi >= (are->rssi + 3)) ? 0 : are->rssi;
-+		rssi = (ard->ext_rssi >= (ard->rssi + 3)) ? 0 : ard->rssi;
- 		break;
- 	case EXT_CH_RADAR_FOUND:
- 		/* radar in extension channel */
--		dur = are->pulse_length_ext;
-+		dur = ard->pulse_length_ext;
- 		DFS_STAT_INC(sc, ext_phy_errors);
- 		/*
- 		 * cannot use extension channel RSSI
- 		 * if control channel is stronger
- 		 */
--		rssi = (are->rssi >= (are->ext_rssi + 12)) ? 0 : are->ext_rssi;
-+		rssi = (ard->rssi >= (ard->ext_rssi + 12)) ? 0 : ard->ext_rssi;
- 		break;
- 	case (PRI_CH_RADAR_FOUND | EXT_CH_RADAR_FOUND):
- 		/*
-@@ -107,14 +96,14 @@ ath9k_postprocess_radar_event(struct ath_softc *sc,
- 		 * Radiated testing, when pulse is on DC, different pri and
- 		 * ext durations are reported, so take the larger of the two
- 		 */
--		if (are->pulse_length_ext >= are->pulse_length_pri)
--			dur = are->pulse_length_ext;
-+		if (ard->pulse_length_ext >= ard->pulse_length_pri)
-+			dur = ard->pulse_length_ext;
- 		else
--			dur = are->pulse_length_pri;
-+			dur = ard->pulse_length_pri;
- 		DFS_STAT_INC(sc, dc_phy_errors);
- 
- 		/* when both are present use stronger one */
--		rssi = (are->rssi < are->ext_rssi) ? are->ext_rssi : are->rssi;
-+		rssi = (ard->rssi < ard->ext_rssi) ? ard->ext_rssi : ard->rssi;
- 		break;
- 	default:
- 		/*
-@@ -137,8 +126,8 @@ ath9k_postprocess_radar_event(struct ath_softc *sc,
- 	 */
- 
- 	/* convert duration to usecs */
--	drp->width = dur_to_usecs(sc->sc_ah, dur);
--	drp->rssi = rssi;
-+	pe->width = dur_to_usecs(sc->sc_ah, dur);
-+	pe->rssi = rssi;
- 
- 	DFS_STAT_INC(sc, pulses_detected);
- 	return true;
-@@ -155,7 +144,7 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
- 	struct ath_radar_data ard;
- 	u16 datalen;
- 	char *vdata_end;
--	struct dfs_radar_pulse drp;
-+	struct pulse_event pe;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
-@@ -189,27 +178,20 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
- 	ard.pulse_bw_info = vdata_end[-1];
- 	ard.pulse_length_ext = vdata_end[-2];
- 	ard.pulse_length_pri = vdata_end[-3];
--
--	ath_dbg(common, DFS,
--		"bw_info=%d, length_pri=%d, length_ext=%d, "
--		"rssi_pri=%d, rssi_ext=%d\n",
--		ard.pulse_bw_info, ard.pulse_length_pri, ard.pulse_length_ext,
--		ard.rssi, ard.ext_rssi);
--
--	drp.freq = ah->curchan->channel;
--	drp.ts = mactime;
--	if (ath9k_postprocess_radar_event(sc, &ard, &drp)) {
-+	pe.freq = ah->curchan->channel;
-+	pe.ts = mactime;
-+	if (ath9k_postprocess_radar_event(sc, &ard, &pe)) {
-+		struct dfs_pattern_detector *pd = sc->dfs_detector;
- 		static u64 last_ts;
- 		ath_dbg(common, DFS,
- 			"ath9k_dfs_process_phyerr: channel=%d, ts=%llu, "
- 			"width=%d, rssi=%d, delta_ts=%llu\n",
--			drp.freq, drp.ts, drp.width, drp.rssi, drp.ts-last_ts);
--		last_ts = drp.ts;
--		/*
--		 * TODO: forward pulse to pattern detector
--		 *
--		 * ieee80211_add_radar_pulse(drp.freq, drp.ts,
--		 *                           drp.width, drp.rssi);
--		 */
-+			pe.freq, pe.ts, pe.width, pe.rssi, pe.ts-last_ts);
-+		last_ts = pe.ts;
-+		if (pd != NULL && pd->add_pulse(pd, &pe)) {
-+			/*
-+			 * TODO: forward radar event to upper layer
-+			 */
-+		}
- 	}
- }
-diff --git a/drivers/net/wireless/ath/ath9k/dfs.h b/drivers/net/wireless/ath/ath9k/dfs.h
-index c241285..3c839f0 100644
---- a/drivers/net/wireless/ath/ath9k/dfs.h
-+++ b/drivers/net/wireless/ath/ath9k/dfs.h
-@@ -17,6 +17,7 @@
- 
- #ifndef ATH9K_DFS_H
- #define ATH9K_DFS_H
-+#include "dfs_pattern_detector.h"
- 
- #if defined(CONFIG_ATH9K_DFS_CERTIFIED)
- /**
-@@ -31,13 +32,14 @@
-  *
-  * The radar information provided as raw payload data is validated and
-  * filtered for false pulses. Events passing all tests are forwarded to
-- * the upper layer for pattern detection.
-+ * the DFS detector for pattern detection.
-  */
- void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
- 			      struct ath_rx_status *rs, u64 mactime);
- #else
--static inline void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
--					    struct ath_rx_status *rs, u64 mactime) { }
-+static inline void
-+ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
-+			 struct ath_rx_status *rs, u64 mactime) { }
- #endif
- 
- #endif /* ATH9K_DFS_H */
--- 
-1.7.4.1
+> I'm ignoring CWM for now until I've finished off these SMP TX
+> aggregation bugs, then I'll sort out channel scanning and power saving
+> stuff. That sets all the right "bits" for CWM (ie, being able to queue
+> all the frames without flushing them, then restarting the software TX
+> queue as needed.) Once that's done, CWM should be:
+> 
+> * signal stop TX;
+> * wait for TX threads, TX completion and TX DMA to complete;
+> * signal a rate control change;
+> * recalculate the rate control selection for everything in the software queues;
+> * restart..
 
+You missed the MAC/PHY update based on the new channel information.
+Which is where it gets tricky, since we end up doing a full reset.
+
+Sujith
