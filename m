@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:47194 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205Ab2CAXkQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 18:40:16 -0500
-Received: by mail-pz0-f46.google.com with SMTP id r28so1303002daj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2012 15:40:16 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:53179 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964819Ab2CSKxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 06:53:03 -0400
+Message-ID: <4F671009.6070602@openwrt.org> (sfid-20120319_115308_539375_180ACCCB)
+Date: Mon, 19 Mar 2012 11:52:57 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCHv2 3/3] mac80211_hwsim: Implement ieee80211_ops:tx_last_beacon
-Date: Thu,  1 Mar 2012 15:40:07 -0800
-Message-Id: <1330645207-13964-3-git-send-email-javier@cozybit.com> (sfid-20120302_004026_804728_AC300718)
-In-Reply-To: <1330645207-13964-1-git-send-email-javier@cozybit.com>
-References: <1330645207-13964-1-git-send-email-javier@cozybit.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 3/3] mac80211: optimize aggregation session timeout handling
+References: <1332025254-5048-1-git-send-email-nbd@openwrt.org> <1332025254-5048-2-git-send-email-nbd@openwrt.org> <1332025254-5048-3-git-send-email-nbd@openwrt.org> <1332065875.3609.3.camel@jlt3.sipsolutions.net> <4F65C374.2060505@openwrt.org> <1332146368.3359.12.camel@jlt3.sipsolutions.net> <CAGXE3d8P1r+DRv4UKbzSMXaf4fRB4cXAyz8+a1pf3RsfeAKOvQ@mail.gmail.com> <4F670C16.9030009@openwrt.org> <CAGXE3d8D5Fg9r9xNNNcryDgXZU+rZ+2V087HJGyrNdyd736mZg@mail.gmail.com>
+In-Reply-To: <CAGXE3d8D5Fg9r9xNNNcryDgXZU+rZ+2V087HJGyrNdyd736mZg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without this you won't see probe responses in an IBSS/hwsim network,
-which is convenient for testing.
+On 2012-03-19 11:50 AM, Helmut Schaa wrote:
+> On Mon, Mar 19, 2012 at 11:36 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2012-03-19 10:29 AM, Helmut Schaa wrote:
+>>> Hi,
+>>>
+>>> On Mon, Mar 19, 2012 at 9:39 AM, Johannes Berg
+>>> <johannes@sipsolutions.net> wrote:
+>>>> On Sun, 2012-03-18 at 12:13 +0100, Felix Fietkau wrote:
+>>>>> On 2012-03-18 11:17 AM, Johannes Berg wrote:
+>>>>> > On Sun, 2012-03-18 at 00:00 +0100, Felix Fietkau wrote:
+>>>>> >> Calling mod_timer from the rx/tx hotpath is somewhat expensive, and the
+>>>>> >> timeout doesn't need to be so precise.
+>>>>> >>
+>>>>> >> Switch to a different strategy: Schedule the timer initially, store jiffies
+>>>>> >> of all last rx/tx activity which would previously modify the timer, and
+>>>>> >> let the timer re-arm itself after checking the last rx/tx timestamp.
+>>>>> >
+>>>>> > I don't like this. It's not the optimisation you think it is on other
+>>>>> > ("embedded") systems where firing a timer is more expensive.
+>>>>> >
+>>>>> > You're trading power consumption against CPU utilisation by causing the
+>>>>> > timer to wake up.
+>>>>> I considered that was well, but didn't think one wakeup every 5 seconds
+>>>>> or so would be significant. Would you take the patch if I change the
+>>>>> timer to be deferrable, so that it doesn't cause wakeups by itself?
+>>>>
+>>>> I'm not really convinced, for making them deferrable we should analyse
+>>>> the consequences of that more carefully, for example it seems possible
+>>>> that the system wakes up to send a packet, and then the first thing that
+>>>> happens is a few aggregation handshakes ... that wastes a lot of time
+>>>> and power.
+>>>
+>>> I like the idea of getting rid of the mod_timer overhead. Looking at the timer
+>>> code, if the timer value is unchanged mod_timer is not that expensive.
+>>>
+>>> So, instead of calling mod_timer for every successive frame with a slightly
+>>> different timeout we could just use round_jiffies to round the timeout to the
+>>> next full second. This would in most cases take the quick path through
+>>> mod_timer and only update the timer once every second.
+>>>
+>>> See code (untested, not even compile tested) below.
+>> I would still like to avoid the overhead of apply_slack(), which is
+>> called early by mod_timer(). It was visible in both CPU cycles and
+>> icache misses when I did some profiling under high tx load.
+> 
+> Indeed, however, I don't know the timer code at all. Seems like the default
+> slack for a timer is 0.4%. Setting the slack to 0 with set_timer_slack
+> should allow a shorter path through apply_slack. Not sure if that's sufficient
+> already.
+Looking at the code, it appears that this would not be sufficient.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index deed95f..e4b6ca6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -47,6 +47,8 @@ static bool fake_hw_scan;
- module_param(fake_hw_scan, bool, 0444);
- MODULE_PARM_DESC(fake_hw_scan, "Install fake (no-op) hw-scan handler");
- 
-+static struct ieee80211_hw *txed_last_beacon;
-+
- /**
-  * enum hwsim_regtest - the type of regulatory tests we offer
-  *
-@@ -821,6 +823,7 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 	hdr = (struct ieee80211_hdr_3addr *) skb->data;
- 	tsfpos = (__le64 *) (hdr + 1);
- 	put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
-+	txed_last_beacon = hw;
- 
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
-@@ -1220,6 +1223,11 @@ static void mac80211_hwsim_sw_scan_complete(struct ieee80211_hw *hw)
- 	mutex_unlock(&hwsim->mutex);
- }
- 
-+static int mac80211_hwsim_tx_last_beacon(struct ieee80211_hw *hw)
-+{
-+	return (hw == txed_last_beacon);
-+}
-+
- static struct ieee80211_ops mac80211_hwsim_ops =
- {
- 	.tx = mac80211_hwsim_tx,
-@@ -1244,6 +1252,7 @@ static struct ieee80211_ops mac80211_hwsim_ops =
- 	.flush = mac80211_hwsim_flush,
- 	.get_tsf = mac80211_hwsim_get_tsf,
- 	.set_tsf = mac80211_hwsim_set_tsf,
-+	.tx_last_beacon = mac80211_hwsim_tx_last_beacon,
- };
- 
- 
--- 
-1.7.6
-
+- Felix
