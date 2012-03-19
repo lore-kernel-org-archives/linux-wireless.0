@@ -1,147 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:61479 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753621Ab2CBVEt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 16:04:49 -0500
-Received: by dajr28 with SMTP id r28so2409561daj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 13:04:48 -0800 (PST)
-MIME-Version: 1.0
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCHv3 1/2] mac80211_hwsim:  Add tsf to beacons, probe responses and radiotap header.
-Date: Fri,  2 Mar 2012 13:04:39 -0800
-Message-Id: <1330722280-28879-1-git-send-email-javier@cozybit.com> (sfid-20120302_220506_374722_1B6412A4)
+Received: from perches-mx.perches.com ([206.117.179.246]:47539 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S964775Ab2CSAb6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Mar 2012 20:31:58 -0400
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH wireless-next 3/3] ath6kl: Add __printf verification to ath6kl_printk
+Date: Sun, 18 Mar 2012 17:30:54 -0700
+Message-Id: <a27a7b0fcddc2f2366ff5ab0968ca0ff78d420c5.1332116921.git.joe@perches.com> (sfid-20120319_013219_514989_3F444079)
+In-Reply-To: <cover.1332116921.git.joe@perches.com>
+References: <cover.1332116921.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Generate a tsf from jiffies.  Prepare the path for having different tsf
-offsets on the each phy.  This will be useful for testing mesh
-synchronization algorithms.
+Make sure printf formats and arguments match.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
-v2: Added timestamp to probe responses, as suggested by Johannes
-    Also implement tx_last_beacon, useful for testing (new patch 1/3)
-v3: Drop poorly implemented tx_last_beacon patch
-    TSF in microsecs, not TUs!    (Johannes)
-    Use high-resolution timer, not jiffies (Johannes)
+ drivers/net/wireless/ath/ath6kl/common.h |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/mac80211_hwsim.c |   39 +++++++++++++++++++++++++++++---
- 1 files changed, 35 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ba16f05..597f804 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -321,11 +321,15 @@ struct mac80211_hwsim_data {
- 	struct dentry *debugfs_group;
+diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
+index a60e78c..71f5450 100644
+--- a/drivers/net/wireless/ath/ath6kl/common.h
++++ b/drivers/net/wireless/ath/ath6kl/common.h
+@@ -22,7 +22,8 @@
  
- 	int power_level;
-+
-+	/* difference between this hw's clock and the real clock, in usecs */
-+	u64 tsf_offset;
- };
+ #define ATH6KL_MAX_IE			256
  
+-extern int ath6kl_printk(const char *level, const char *fmt, ...);
++extern __printf(2, 3)
++int ath6kl_printk(const char *level, const char *fmt, ...);
  
- struct hwsim_radiotap_hdr {
- 	struct ieee80211_radiotap_header hdr;
-+	u64 rt_tsft;
- 	u8 rt_flags;
- 	u8 rt_rate;
- 	__le16 rt_channel;
-@@ -367,6 +371,11 @@ static netdev_tx_t hwsim_mon_xmit(struct sk_buff *skb,
- 	return NETDEV_TX_OK;
- }
- 
-+static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
-+{
-+	return cpu_to_le64(jiffies_to_msecs(jiffies)*1000/1024 +
-+			data->tsf_offset);
-+}
- 
- static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 				      struct sk_buff *tx_skb)
-@@ -391,7 +400,9 @@ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 	hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
- 	hdr->hdr.it_present = cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
- 					  (1 << IEEE80211_RADIOTAP_RATE) |
-+					  (1 << IEEE80211_RADIOTAP_TSFT) |
- 					  (1 << IEEE80211_RADIOTAP_CHANNEL));
-+	hdr->rt_tsft = __mac80211_hwsim_get_tsf(data);
- 	hdr->rt_flags = 0;
- 	hdr->rt_rate = txrate->bitrate / 5;
- 	hdr->rt_channel = cpu_to_le16(data->channel->center_freq);
-@@ -610,7 +621,8 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	}
- 
- 	memset(&rx_status, 0, sizeof(rx_status));
--	/* TODO: set mactime */
-+	rx_status.mactime = le64_to_cpu(__mac80211_hwsim_get_tsf(data));
-+	rx_status.flag |= RX_FLAG_MACTIME_MPDU;
- 	rx_status.freq = data->channel->center_freq;
- 	rx_status.band = data->channel->band;
- 	rx_status.rate_idx = info->control.rates[0].idx;
-@@ -667,6 +679,19 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	bool ack;
- 	struct ieee80211_tx_info *txi;
- 	u32 _pid;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	__le64 *tsfpos;
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+	u16 fctypes = fc & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE);
-+
-+	if (fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_RESP) ||
-+	    fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) {
-+		struct ieee80211_hdr_3addr *hdr3 =
-+			(struct ieee80211_hdr_3addr *) skb->data;
-+		tsfpos = (__le64 *) (hdr3 + 1);
-+		put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
-+	}
- 
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
-@@ -685,10 +710,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	/* NO wmediumd detected, perfect medium simulation */
- 	ack = mac80211_hwsim_tx_frame_no_nl(hw, skb);
- 
--	if (ack && skb->len >= 16) {
--		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	if (ack && skb->len >= 16)
- 		mac80211_hwsim_monitor_ack(hw, hdr->addr2);
--	}
- 
- 	txi = IEEE80211_SKB_CB(skb);
- 
-@@ -763,9 +786,12 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 				     struct ieee80211_vif *vif)
- {
- 	struct ieee80211_hw *hw = arg;
-+	struct mac80211_hwsim_data *data = hw->priv;
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
- 	u32 _pid;
-+	struct ieee80211_hdr_3addr *hdr;
-+	__le64 *tsfpos;
- 
- 	hwsim_check_magic(vif);
- 
-@@ -779,6 +805,11 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 		return;
- 	info = IEEE80211_SKB_CB(skb);
- 
-+	/* add the timestamp to the beacon */
-+	hdr = (struct ieee80211_hdr_3addr *) skb->data;
-+	tsfpos = (__le64 *) (hdr + 1);
-+	put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
-+
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
- 	/* wmediumd mode check */
+ /*
+  * Reflects the version of binary interface exposed by ATH6KL target
 -- 
-1.7.6
+1.7.8.111.gad25c.dirty
 
