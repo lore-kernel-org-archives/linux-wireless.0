@@ -1,95 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:45014 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757122Ab2CATpm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 14:45:42 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-Date: Thu, 1 Mar 2012 11:45:32 -0800
-Subject: RE: [patch] mwifiex: endian bug in mwifiex_drv_change_adhoc_chan()
-Message-ID: <477F20668A386D41ADCC57781B1F70430836762FFC@SC-VEXCH1.marvell.com> (sfid-20120301_204548_425575_1AC482D4)
-References: <20120301072230.GC7152@elgon.mountain>
-In-Reply-To: <20120301072230.GC7152@elgon.mountain>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:43433 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752964Ab2CSNui (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 09:50:38 -0400
+Subject: Re: [RFC] mac80211: fix possible tid_rx->reorder_timer use after
+ free
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20120319134016.GC6169@redhat.com>
+References: <1332161442-7315-1-git-send-email-sgruszka@redhat.com>
+	 <1332162188.3359.33.camel@jlt3.sipsolutions.net>
+	 <20120319134016.GC6169@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Mar 2012 14:50:36 +0100
+Message-ID: <1332165036.3359.37.camel@jlt3.sipsolutions.net> (sfid-20120319_145041_994910_C747BE33)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On Mon, 2012-03-19 at 14:40 +0100, Stanislaw Gruszka wrote:
 
-Thanks for your patch.
-It looks correct.
-
-
-Hi John,
-
-There is a conflict between this patch and a patch I submitted previously.
-
-mwifiex: remove unnecessary struct mwifiex_802_11_ssid
-
-If you are going to take my patch series (except for the one 6/6, NACKed by Johannes), either Dan or myself can rebase this patch.
-
-I have ACKed Dan's patch under the s-o-b line below, in case you want to merge his patch first.
-
-Thanks,
-Bing
-
-> Subject: [patch] mwifiex: endian bug in mwifiex_drv_change_adhoc_chan()
+> > > +static void ieee80211_free_tid_rx(struct tid_ampdu_rx *tid_rx)
+> > >  {
+> > > -	struct tid_ampdu_rx *tid_rx =
+> > > -		container_of(h, struct tid_ampdu_rx, rcu_head);
+> > >  	int i;
+> > >  
+> > >  	for (i = 0; i < tid_rx->buf_size; i++)
+> > > @@ -90,10 +88,12 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+> > >  		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+> > >  				     tid, WLAN_BACK_RECIPIENT, reason);
+> > >  
+> > > +	synchronize_rcu();
+> > > +
+> > >  	del_timer_sync(&tid_rx->session_timer);
+> > >  	del_timer_sync(&tid_rx->reorder_timer);
+> > >  
+> > > -	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
+> > > +	ieee80211_free_tid_rx(tid_rx);
+> > 
+> > Hmmm. That synchronize_rcu() could become rather expensive. I've been
+> > trying to reduce our use of synchronize_rcu() now.
 > 
-> In mwifiex_drv_change_adhoc_chan() we pass channel to
-> mwifiex_bss_ioctl_ibss_channel() which sets the high 16 bits.  This
-> works on little endian systems but not on big endian ones.  I've changed
-> mwifiex_drv_change_adhoc_chan() to use a 16 bit variable.  This matches
-> the other functions in the file.
-> 
-> I considered changing mwifiex_change_adhoc_chan() as well but it turns
-> out that the function isn't implemented so I just removed the
-> definition.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Expensive in what sense? Since we are in process context we are allowed
+> to sleep, and some other processes will run while we sleep.
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
+It takes a long time, and we have to wait for it. So for example, it
+could delay roaming by another 100ms or however long it takes (yes, it
+can take a very long time, we've seen up to 200ms I think)
 
-> 
-> diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-> index 52810b1..60a6919 100644
-> --- a/drivers/net/wireless/mwifiex/main.h
-> +++ b/drivers/net/wireless/mwifiex/main.h
-> @@ -909,10 +909,9 @@ int mwifiex_request_scan(struct mwifiex_private *priv,
->  			 struct mwifiex_802_11_ssid *req_ssid);
->  int mwifiex_set_user_scan_ioctl(struct mwifiex_private *priv,
->  				struct mwifiex_user_scan_cfg *scan_req);
-> -int mwifiex_change_adhoc_chan(struct mwifiex_private *priv, int channel);
->  int mwifiex_set_radio(struct mwifiex_private *priv, u8 option);
-> 
-> -int mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel);
-> +int mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel);
-> 
->  int mwifiex_set_encode(struct mwifiex_private *priv, const u8 *key,
->  		       int key_len, u8 key_index, int disable);
-> diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-> index b0fbf5d..652d299 100644
-> --- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-> +++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-> @@ -599,7 +599,7 @@ static int mwifiex_bss_ioctl_ibss_channel(struct mwifiex_private *priv,
->   *          - Start/Join the IBSS
->   */
->  int
-> -mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
-> +mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel)
->  {
->  	int ret;
->  	struct mwifiex_bss_info bss_info;
-> @@ -636,7 +636,7 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
->  	ret = mwifiex_deauthenticate(priv, ssid_bssid.bssid);
-> 
->  	ret = mwifiex_bss_ioctl_ibss_channel(priv, HostCmd_ACT_GEN_SET,
-> -					     (u16 *) &channel);
-> +					     &channel);
-> 
->  	/* Do specific SSID scanning */
->  	if (mwifiex_request_scan(priv, &bss_info.ssid)) {
+johannes
+
