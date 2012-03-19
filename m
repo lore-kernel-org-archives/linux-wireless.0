@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:39855 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933001Ab2C2Cuj convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 28 Mar 2012 22:50:39 -0400
-Received: by bkcik5 with SMTP id ik5so1533117bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Mar 2012 19:50:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CALx5=V-aouK2ge3f2EQa07n2oJZRBXQGf15pXUdbsk6BjE+cdg@mail.gmail.com>
-References: <1332829680-32457-1-git-send-email-machen@suse.com>
-	<20120327123822.GA2565@redhat.com>
-	<CALx5=V-aouK2ge3f2EQa07n2oJZRBXQGf15pXUdbsk6BjE+cdg@mail.gmail.com>
-Date: Thu, 29 Mar 2012 10:50:25 +0800
-Message-ID: <CALx5=V9++V8c-=Nu5X6rigkMcU5Lv6tgn9wn7DS4pwn4P0Yr-A@mail.gmail.com> (sfid-20120329_045043_037026_E83ED4BD)
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2x00dev: move rfkill_polling
- register to proper place
-From: Matt Chen <machen@suse.com>
-To: linville@tuxdriver.com
-Cc: users@rt2x00.serialmonkey.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Content-Type: text/plain; charset=Big5
+Received: from he.sipsolutions.net ([78.46.109.217]:37489 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073Ab2CSIjb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 04:39:31 -0400
+Subject: Re: [PATCH 3/3] mac80211: optimize aggregation session timeout
+ handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <4F65C374.2060505@openwrt.org>
+References: <1332025254-5048-1-git-send-email-nbd@openwrt.org>
+	 <1332025254-5048-2-git-send-email-nbd@openwrt.org>
+	 <1332025254-5048-3-git-send-email-nbd@openwrt.org>
+	 <1332065875.3609.3.camel@jlt3.sipsolutions.net>
+	 <4F65C374.2060505@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Mar 2012 09:39:28 +0100
+Message-ID: <1332146368.3359.12.camel@jlt3.sipsolutions.net> (sfid-20120319_093935_080638_D479A1CE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Sun, 2012-03-18 at 12:13 +0100, Felix Fietkau wrote:
+> On 2012-03-18 11:17 AM, Johannes Berg wrote:
+> > On Sun, 2012-03-18 at 00:00 +0100, Felix Fietkau wrote:
+> >> Calling mod_timer from the rx/tx hotpath is somewhat expensive, and the
+> >> timeout doesn't need to be so precise.
+> >> 
+> >> Switch to a different strategy: Schedule the timer initially, store jiffies
+> >> of all last rx/tx activity which would previously modify the timer, and
+> >> let the timer re-arm itself after checking the last rx/tx timestamp.
+> > 
+> > I don't like this. It's not the optimisation you think it is on other
+> > ("embedded") systems where firing a timer is more expensive.
+> > 
+> > You're trading power consumption against CPU utilisation by causing the
+> > timer to wake up.
+> I considered that was well, but didn't think one wakeup every 5 seconds
+> or so would be significant. Would you take the patch if I change the
+> timer to be deferrable, so that it doesn't cause wakeups by itself?
 
-Would it be possible to merge my patch to v3.4 merging ¡H
-It would be great if this patch got merged. This patch fixes an
-initialization of probing pci device. Since a lot users reported the
-issue is making no sense after rebooting the machine and got No
-wireless device working due to rfkill is not yet started to work.
+I'm not really convinced, for making them deferrable we should analyse
+the consequences of that more carefully, for example it seems possible
+that the system wakes up to send a packet, and then the first thing that
+happens is a few aggregation handshakes ... that wastes a lot of time
+and power.
 
-Thank you for your kindly help. :)
+Also, at least for TX aggregation, you don't even give them a timeout in
+ath9k so that wouldn't really be an issue?
 
-Would it be possible to merge this patch into v3.4 tree before the
-merging window closed ?
+johannes
 
-2012/3/28 Matt Chen <machen@suse.com>:
-> Hi all,
->
-> 2012/3/27 Stanislaw Gruszka <sgruszka@redhat.com>:
->> On Tue, Mar 27, 2012 at 02:28:00PM +0800, Chen, Chien-Chia wrote:
->>> Move rt2x00rfkill_register(rt2x00dev) to rt2x00lib_probe_dev().
->>> It fixes of starting rfkill_poll function at the right time if
->>> sets hard rfkill block and reboot. rt2x00mac_rfkill_poll should
->>> be starting before bringing up the wireless interface.
->>>
->>> Signed-off-by: Kevin Chou <kevin.chou@mediatek.com>
->> You should sign off the patch, and probably add "From:" to mark real
->> author of the patch, and CC Kevin as well.
-> Yes, thank you for information of patch format. :)
->> Stanislaw
->>
->> _______________________________________________
->> users mailing list
->> users@rt2x00.serialmonkey.com
->> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
->>
->
->
->
-> --
-> Thank you.
-
-
-
--- 
-Thank you.
