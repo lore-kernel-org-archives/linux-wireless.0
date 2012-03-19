@@ -1,79 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36939 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031294Ab2CPUpv (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44840 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161909Ab2CSQPc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 16:45:51 -0400
-Date: Fri, 16 Mar 2012 13:45:47 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-CC: <linux-wireless@vger.kernel.org>, <henry@logout.com>
-Subject: Re: [ath9k] mesh powersave hardware sleep + wakeup
-Message-ID: <20120316204547.GG18861@tux> (sfid-20120316_214555_754189_E1EF61D6)
-References: <4F630AEA.10703@etit.tu-chemnitz.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F630AEA.10703@etit.tu-chemnitz.de>
+	Mon, 19 Mar 2012 12:15:32 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH 5/9] ath6kl: add rx data padding support
+Date: Mon, 19 Mar 2012 18:15:00 +0200
+Message-Id: <1332173704-18877-6-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171602_523647_B38B33C0)
+In-Reply-To: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 16, 2012 at 10:42:02AM +0100, Marco Porsch wrote:
-> Hi,
-> 
-> I am trying to implement the IEEE 802.11s power save schemes in mac80211.
-> In 11s it is defined that power save STA doze AND send beacons AND
-> wake up periodically for multiple neighbors beacons.
-> 
-> Is this actually possible with current hardware/drivers (especially ath9k)?
-> 
-> Regards
-> Marco Porsch
-> 
-> 
-> 
-> PS: More details:
-> 
-> We currently have power mode indication and state
-> tracking and are working on powersave frame buffering and mesh
-> synchronization.
-> 
-> A next topic will be to put the hardware to sleep to actually save energy.
-> Until now we only implemented in mac82011. I looked through mac80211 and
-> ath9k and am unsure, how to actually manage sleep and wakeup in the mesh
-> context.
-> Maybe I should give a brief introduction to IEEE 802.11s powersave here:
-> - Each node has to send its own beacon
-> - Power mode is not global, but link-specific
-> - 3 power modes: active, light sleep, deep sleep
->   - active = always on
->   - light sleep = wake up for the neighbors beacon
->   - deep sleep = only wake up for sending own beacon
-> 
-> So the critical point here is, that we need to put the hardware to
-> sleep but wake up for:
-> - sending own beacon
-> - TBTT of all neighbors towards we are in light sleep (or maybe all
-> neighbors as proof-of-concept)
-> so it is a mixture of ad-hoc , station code and completely new stuff.
-> 
-> A better explanation and a nice example of IEEE 802.11s powersave is
-> given here:
-> http://dl.dropbox.com/u/31741282/11s_powersave.pdf
+Needed when using USB.
 
-I don't have time to review this but it sounds correct that the part
-you want to focus on is introducing a wake up mechanism when you
-need to initiate radiation for your own beacons. I think right now
-we simply disable PS in mac80211 completely if we have a mode of
-operation that require beconing. Your challenge is to lift that and
-deal with the issues there and all the possible combinations. You
-can help with this
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/txrx.c |    7 +++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h  |    3 +++
+ 2 files changed, 10 insertions(+), 0 deletions(-)
 
-This should help you:
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 53d0334..5559c9b 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1287,6 +1287,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 	struct wmi_data_hdr *dhdr;
+ 	int min_hdr_len;
+ 	u8 meta_type, dot11_hdr = 0;
++	u8 pad_before_data_start;
+ 	int status = packet->status;
+ 	enum htc_endpoint_id ept = packet->endpoint;
+ 	bool is_amsdu, prev_ps, ps_state = false;
+@@ -1498,6 +1499,10 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 	seq_no = wmi_data_hdr_get_seqno(dhdr);
+ 	meta_type = wmi_data_hdr_get_meta(dhdr);
+ 	dot11_hdr = wmi_data_hdr_get_dot11(dhdr);
++	pad_before_data_start =
++		(le16_to_cpu(dhdr->info3) >> WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT)
++			& WMI_DATA_HDR_PAD_BEFORE_DATA_MASK;
++
+ 	skb_pull(skb, sizeof(struct wmi_data_hdr));
+ 
+ 	switch (meta_type) {
+@@ -1516,6 +1521,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 		break;
+ 	}
+ 
++	skb_pull(skb, pad_before_data_start);
++
+ 	if (dot11_hdr)
+ 		status = ath6kl_wmi_dot11_hdr_remove(ar->wmi, skb);
+ 	else if (!is_amsdu)
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 4092e3e..7989b33 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -182,6 +182,9 @@ enum wmi_data_hdr_flags {
+ #define WMI_DATA_HDR_META_MASK      0x7
+ #define WMI_DATA_HDR_META_SHIFT     13
+ 
++#define WMI_DATA_HDR_PAD_BEFORE_DATA_MASK               0xFF
++#define WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT              0x8
++
+ /* Macros for operating on WMI_DATA_HDR (info3) field */
+ #define WMI_DATA_HDR_IF_IDX_MASK    0xF
+ 
+-- 
+1.7.1
 
-http://wireless.kernel.org/en/users/Documentation/Power-consumption
-
-For now you can focus on only allowing through Mesh devices and
-the combinations of it but I suspect that some of the work you do
-may also help with addressing P2P powersave.
-
-  Luis
