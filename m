@@ -1,67 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36463 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932229Ab2CTPyc convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:47299 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752436Ab2CTFyK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 11:54:32 -0400
-From: "Thiruvengadam, Aarthi" <athiruve@qca.qualcomm.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v2] ath6kl: handle probe response from P2P device in P2P
- GO mode
-Date: Tue, 20 Mar 2012 15:54:19 +0000
-Message-ID: <EEF58C4275060743A995E9DD768A2A5227B4B27D@nasanexd02c.na.qualcomm.com> (sfid-20120320_165436_737152_5F3592E8)
-References: <1331847296-2086-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
- <4F684247.6070800@qca.qualcomm.com>
-In-Reply-To: <4F684247.6070800@qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 20 Mar 2012 01:54:10 -0400
+Message-ID: <4F681B78.9000207@gmail.com> (sfid-20120320_065416_619341_DD7A34D1)
+Date: Mon, 19 Mar 2012 22:54:00 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
+To: Linux-wireless <linux-wireless@vger.kernel.org>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	linux-kernel@vger.kernel.org, Linux-netdev <netdev@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org>
+In-Reply-To: <4F6751B2.1030809@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle,
+On 03/19/2012 08:33 AM, Felix Fietkau wrote:
+> On 2012-03-19 4:25 PM, Justin P. Mattock wrote:
+>> On 03/19/2012 08:20 AM, Mohammed Shafi wrote:
+>>> Hi Justin,
+>>>
+>>>> seems I got this when waking up from suspend, was trying to connect with NM
+>>>> then all of a sudden Xorg shut off and this appeared on the screen(image
+>>>> links below I could not save dmesg only pic)
+>>>> http://flic.kr/p/bEhf2K
+>>>> http://flic.kr/p/bEhf2x
+>>>> http://flic.kr/p/bEhf2n
+>>>> http://flic.kr/p/bEhf26
+>>>>
+>>>> I see ath9k in the image, but am unsure if its related.
+>>>> kernel is: 3.3.0-rc7-next-20120316
+>>>
+>>> this looks like some new issue  in ath9k, lets try to recreate it here
+>>>
+>>>>
+>>>> Justin P. Mattock
+>>>>
+>>>>
+>>>>
+>>>
+>>>
+>>>
+>>
+>> would be nice to recreate, then bisecting will be more accurate to do..
+>> I am trying userspace tweaks here and there but no luck(hostapd etc..)
+>> keep in mind this is for the RX DMA, the above just occured..
+>> as for writing a small app I still need to try, but my C skills only go
+>> so far(anything to trigger!).
+> Was your kernel compiled with debug info? If so, please run gdb on the
+> ath9k.ko module and enter this:
+> l *ath9k_tx+start+0x284
+> Then send me the output of that.
+>
+> - Felix
+>
 
-According to the standard (section 7.2.3.9), SSID always follows the capability information in a probe response frame. So I think we should be ok as long as we check the buffer length.
+I changed the Cc''s so hopefully its correct..
+  anyway I tried the above but might have gotten it wrong..:
 
-Thanks,
-Aarthi
+Reading symbols from 
+/home/kernel/linux-next/drivers/net/wireless/ath/ath9k/ath9k.o...done.
+(gdb) list *ath9k_tx+0xa3
+0x4673 is in ath9k_tx (drivers/net/wireless/ath/ath9k/main.c:1136).
+1131		memset(&txctl, 0, sizeof(struct ath_tx_control));
+1132		txctl.txq = sc->tx.txq_map[skb_get_queue_mapping(skb)];
+1133	
+1134		ath_dbg(common, XMIT, "transmitting packet, skb: %p\n", skb);
+1135	
+1136		if (ath_tx_start(hw, skb, &txctl) != 0) {
+1137			ath_dbg(common, XMIT, "TX failed\n");
+1138			goto exit;
+1139		}
+1140	
+(gdb) list *ath9k_tx+start+0x284
+No symbol "start" in current context.
 
------Original Message-----
-From: Valo, Kalle 
-Sent: Tuesday, March 20, 2012 1:40 AM
-To: Thiruvengadam, Aarthi
-Cc: ath6kl-devel; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] ath6kl: handle probe response from P2P device in P2P GO mode
+before receiving the email to do the above code with gdb I had cleaned 
+the tree out with git clean -fx so rebuilding might have misalighned 
+things(but could be wrong)..
 
-On 03/15/2012 11:34 PM, Aarthi Thiruvengadam wrote:
-> When the device is in P2P GO mode and in listen state, the correct 
-> behavior is to see two different probe response frames - one from P2P 
-> device and the other from GO. wpa_supplicant uses the same mechanism 
-> to send the frame in both cases (ath6kl_mgmt_tx). For GO probe 
-> response, ath6kl needs to call ath6kl_send_go_probe_resp (this will 
-> add only WSC/P2P IEs and the rest of the IEs are filled in by the 
-> firmware). That was done based on the nw_type == AP_NETWORK which 
-> would work if P2P Device role were in a separate netdev. When P2P 
-> Device and GO use the same netdev, ath6kl needs to use the special GO probe response case only if SSID is longer than P2P wildcard SSID.
-> 
-> Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-> Reviewed-by: Jouni Malinen <jouni@qca.qualcomm.com>
-
-Thanks, applied.
-
-But I still have one question:
-
-> +/* Check if SSID length is greater than DIRECT- */ static bool 
-> +ath6kl_is_p2p_go_ssid(const u8 *buf, size_t len) {
-> +	const struct ieee80211_mgmt *mgmt;
-> +	mgmt = (const struct ieee80211_mgmt *) buf;
-> +
-> +	/* variable[1] contains the SSID tag length */
-> +	if (buf + len >= &mgmt->u.probe_resp.variable[1] &&
-> +	    (mgmt->u.probe_resp.variable[1] > P2P_WILDCARD_SSID_LEN)) {
-> +		return true;
-
-How do you know that it's SSID without checking the IE id from variable[0]? Is that guaranteed or something?
-
-Kalle
