@@ -1,204 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60158 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754745Ab2CHODW (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52453 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759808Ab2CTNyM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 09:03:22 -0500
-Message-Id: <20120308140227.427040320@sipsolutions.net> (sfid-20120308_150327_513084_04A3AAE0)
-Date: Thu, 08 Mar 2012 15:02:08 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/6] mac80211: set basic rates earlier
-References: <20120308140202.751490800@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 20 Mar 2012 09:54:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <1332245766.3329.14.camel@jlt3.sipsolutions.net>
+References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
+ <1332214021-9716-5-git-send-email-mcgrof@frijolero.org> <1332245766.3329.14.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 20 Mar 2012 06:53:52 -0700
+Message-ID: <CAB=NE6XyDDfzu71K-1ecMQ+F-0Z1iTN4OKCUjJ+E3yxvydks0Q@mail.gmail.com> (sfid-20120320_145429_684463_681CC69D)
+Subject: Re: [PATCH 4/4] compat: add some tracing backport work
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Mar 20, 2012 at 5:16 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> In other words:
+>
+>>  #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
+>
+> I'd change this to 2.6.33 so
 
-The authentication and association handshake
-already happens in the context of the new BSS,
-and the basic rates are needed at least for
-the ACK response frame to the authentication
-or association response frames. Therefore the
-basic rates should already be configured into
-the driver when those frames are sent.
+I think I tried this approach as well.
 
-Change the logic to set up the basic rates in
-the connection preparation that happens for
-authentication and association (if needed).
+>>  #include_next <linux/tracepoint.h>
+>
+> I don't have to think about this:
+>
+>> +/* Backports f42c85e7 */
+>> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
+>> +#undef TP_STRUCT__entry
+>> +#define TP_STRUCT__entry(args...) args
+>> +#endif
+>> +
+>> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
+>> +/* Backports 091ad365, a rename */
+>> +#define DECLARE_EVENT_CLASS TRACE_EVENT_TEMPLATE
+>> +
+>> +#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
+>> +#define TP_PROTO TPPROTO
+>> +#define TP_ARGS TPARGS
+>> +#define TP_FMT TPFMT
+>> +#define TP_RAW_FMT TPRAWFMT
+>> +#endif
+>> +
+>> +#endif
+>
+>
+> This seems worthwhile and looks good:
+>
+>> +#else /* just disable tracing */
+>> +
+>> +/* Disable all tracing */
+>> +#undef TRACE_EVENT
+>> +#define TRACE_EVENT(name, proto, ...) \
+>> +static inline void trace_ ## name(proto) {}
+>> +#undef DECLARE_EVENT_CLASS
+>> +#define DECLARE_EVENT_CLASS(...)
+>> +#undef DEFINE_EVENT
+>> +#define DEFINE_EVENT(evt_class, name, proto, ...) \
+>> +static inline void trace_ ## name(proto) {}
+>> +
+>> +#define TP_PROTO(args...)  args
+>> +#define TP_ARGS(args...)   args
+>> +#define TP_CONDITION(args...)      args
+>
+> That doesn't seem to be needed since these are used inside the other
+> macros only?
+>
+>> +struct tracepoint_iter {
+>> +};
+>
+> Not sure why that would be needed?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |   97 ++++++++++++++++++++++++++--------------------------
- 1 file changed, 49 insertions(+), 48 deletions(-)
+Sure, yeah I think I tried disabling as you suggested and ran into
+compilation issues with mac80211 on 2.6.31.
 
---- a/net/mac80211/mlme.c	2012-03-08 14:26:34.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-08 14:34:31.000000000 +0100
-@@ -1344,12 +1344,6 @@ static void ieee80211_set_associated(str
- 		bss_conf->dtim_period = 0;
- 
- 	bss_conf->assoc = 1;
--	/*
--	 * For now just always ask the driver to update the basic rateset
--	 * when we have associated, we aren't checking whether it actually
--	 * changed or not.
--	 */
--	bss_info_changed |= BSS_CHANGED_BASIC_RATES;
- 
- 	/* Tell the driver to monitor connection quality (if supported) */
- 	if (sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI &&
-@@ -2016,15 +2010,12 @@ static bool ieee80211_assoc_success(stru
- 	struct ieee80211_supported_band *sband;
- 	struct sta_info *sta;
- 	u8 *pos;
--	u32 rates, basic_rates;
- 	u16 capab_info, aid;
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
- 	u32 changed = 0;
- 	int err;
--	bool have_higher_than_11mbit = false;
- 	u16 ap_ht_cap_flags;
--	int min_rate = INT_MAX, min_rate_index = -1;
- 
- 	/* AssocResp and ReassocResp have identical structure */
- 
-@@ -2069,39 +2060,8 @@ static bool ieee80211_assoc_success(stru
- 		return false;
- 	}
- 
--	rates = 0;
--	basic_rates = 0;
- 	sband = local->hw.wiphy->bands[local->oper_channel->band];
- 
--	ieee80211_get_rates(sband, elems.supp_rates, elems.supp_rates_len,
--			    &rates, &basic_rates, &have_higher_than_11mbit,
--			    &min_rate, &min_rate_index);
--
--	ieee80211_get_rates(sband, elems.ext_supp_rates,
--			    elems.ext_supp_rates_len, &rates, &basic_rates,
--			    &have_higher_than_11mbit,
--			    &min_rate, &min_rate_index);
--
--	/*
--	 * some buggy APs don't advertise basic_rates. use the lowest
--	 * supported rate instead.
--	 */
--	if (unlikely(!basic_rates) && min_rate_index >= 0) {
--		printk(KERN_DEBUG "%s: No basic rates in AssocResp. "
--		       "Using min supported rate instead.\n", sdata->name);
--		basic_rates = BIT(min_rate_index);
--	}
--
--	sta->sta.supp_rates[local->oper_channel->band] = rates;
--	sdata->vif.bss_conf.basic_rates = basic_rates;
--
--	/* cf. IEEE 802.11 9.2.12 */
--	if (local->oper_channel->band == IEEE80211_BAND_2GHZ &&
--	    have_higher_than_11mbit)
--		sdata->flags |= IEEE80211_SDATA_OPERATING_GMODE;
--	else
--		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
--
- 	if (elems.ht_cap_elem && !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
- 		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 				elems.ht_cap_elem, &sta->sta.ht_cap);
-@@ -3129,10 +3089,11 @@ int ieee80211_max_network_latency(struct
- }
- 
- static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
--				     struct cfg80211_bss *bss, bool assoc)
-+				     struct cfg80211_bss *cbss, bool assoc)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct ieee80211_bss *bss = (void *)cbss->priv;
- 	struct sta_info *sta;
- 	bool have_sta = false;
- 	int err;
-@@ -3142,12 +3103,12 @@ static int ieee80211_prep_connection(str
- 
- 	if (assoc) {
- 		rcu_read_lock();
--		have_sta = sta_info_get(sdata, bss->bssid);
-+		have_sta = sta_info_get(sdata, cbss->bssid);
- 		rcu_read_unlock();
- 	}
- 
- 	if (!have_sta) {
--		sta = sta_info_alloc(sdata, bss->bssid, GFP_KERNEL);
-+		sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
- 		if (!sta)
- 			return -ENOMEM;
- 	}
-@@ -3157,13 +3118,53 @@ static int ieee80211_prep_connection(str
- 	mutex_unlock(&local->mtx);
- 
- 	/* switch to the right channel */
--	local->oper_channel = bss->channel;
-+	local->oper_channel = cbss->channel;
- 	ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
- 
- 	if (!have_sta) {
--		/* set BSSID - if STA already there this will be set too */
--		memcpy(ifmgd->bssid, bss->bssid, ETH_ALEN);
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
-+		struct ieee80211_supported_band *sband;
-+		u32 rates = 0, basic_rates = 0;
-+		bool have_higher_than_11mbit;
-+		int min_rate = INT_MAX, min_rate_index = -1;
-+
-+		sband = sdata->local->hw.wiphy->bands[cbss->channel->band];
-+
-+		ieee80211_get_rates(sband, bss->supp_rates,
-+				    bss->supp_rates_len,
-+				    &rates, &basic_rates,
-+				    &have_higher_than_11mbit,
-+				    &min_rate, &min_rate_index);
-+
-+		/*
-+		 * This used to be a workaround for basic rates missing
-+		 * in the association response frame. Now that we no
-+		 * longer use the basic rates from there, it probably
-+		 * doesn't happen any more, but keep the workaround so
-+		 * in case some *other* APs are buggy in different ways
-+		 * we can connect -- with a warning.
-+		 */
-+		if (!basic_rates && min_rate_index >= 0) {
-+			printk(KERN_DEBUG
-+			       "%s: No basic rates, using min rate instead.\n",
-+			       sdata->name);
-+			basic_rates = BIT(min_rate_index);
-+		}
-+
-+		sta->sta.supp_rates[cbss->channel->band] = rates;
-+		sdata->vif.bss_conf.basic_rates = basic_rates;
-+
-+		/* cf. IEEE 802.11 9.2.12 */
-+		if (local->oper_channel->band == IEEE80211_BAND_2GHZ &&
-+		    have_higher_than_11mbit)
-+			sdata->flags |= IEEE80211_SDATA_OPERATING_GMODE;
-+		else
-+			sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
-+
-+		memcpy(ifmgd->bssid, cbss->bssid, ETH_ALEN);
-+
-+		/* tell driver about BSSID and basic rates */
-+		ieee80211_bss_info_change_notify(sdata,
-+			BSS_CHANGED_BSSID | BSS_CHANGED_BASIC_RATES);
- 
- 		if (assoc)
- 			sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-@@ -3177,7 +3178,7 @@ static int ieee80211_prep_connection(str
- 			return err;
- 		}
- 	} else
--		WARN_ON_ONCE(compare_ether_addr(ifmgd->bssid, bss->bssid));
-+		WARN_ON_ONCE(compare_ether_addr(ifmgd->bssid, cbss->bssid));
- 
- 	return 0;
- }
-
-
+  Luis
