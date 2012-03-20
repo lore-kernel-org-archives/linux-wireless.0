@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:60545 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760640Ab2CPJmH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37642 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757911Ab2CTNqT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 05:42:07 -0400
-Message-ID: <4F630AEA.10703@etit.tu-chemnitz.de> (sfid-20120316_104211_952642_0478FF4A)
-Date: Fri, 16 Mar 2012 10:42:02 +0100
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-MIME-Version: 1.0
-To: mcgrof@qca.qualcomm.com
-CC: linux-wireless@vger.kernel.org
-Subject: [ath9k] mesh powersave hardware sleep + wakeup
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
+	Tue, 20 Mar 2012 09:46:19 -0400
+Subject: Re: [RFC 01/12] mac80211: prepare ieee80211_mandatory_rates to
+ per-vif
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <add0a349-9bf4-4278-bc1d-25b34892b8e1@FIVLA-EXHUB02.eu.tieto.com>
+References: <add0a349-9bf4-4278-bc1d-25b34892b8e1@FIVLA-EXHUB02.eu.tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Mar 2012 14:46:19 +0100
+Message-ID: <1332251179.3329.26.camel@jlt3.sipsolutions.net> (sfid-20120320_144631_821781_C8950B06)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2012-03-19 at 08:36 +0100, Michal Kazior wrote:
 
-I am trying to implement the IEEE 802.11s power save schemes in mac80211.
-In 11s it is defined that power save STA doze AND send beacons AND wake 
-up periodically for multiple neighbors beacons.
+> -u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
+> +u32 ieee80211_mandatory_rates(struct ieee80211_sub_if_data *sdata,
+>  			      enum ieee80211_band band)
+>  {
+> +	struct ieee80211_local *local = sdata->local;
+>  	struct ieee80211_supported_band *sband;
+>  	struct ieee80211_rate *bitrates;
+>  	u32 mandatory_rates;
 
-Is this actually possible with current hardware/drivers (especially ath9k)?
+This doesn't make a lot of sense -- it's only used for a fallback path
+that never triggers so we can just remove that path.
 
-Regards
-Marco Porsch
+johannes
 
-
-
-PS: More details:
-
-We currently have power mode indication and state
-tracking and are working on powersave frame buffering and mesh
-synchronization.
-
-A next topic will be to put the hardware to sleep to actually save energy.
-Until now we only implemented in mac82011. I looked through mac80211 and
-ath9k and am unsure, how to actually manage sleep and wakeup in the mesh
-context.
-Maybe I should give a brief introduction to IEEE 802.11s powersave here:
-- Each node has to send its own beacon
-- Power mode is not global, but link-specific
-- 3 power modes: active, light sleep, deep sleep
-   - active = always on
-   - light sleep = wake up for the neighbors beacon
-   - deep sleep = only wake up for sending own beacon
-
-So the critical point here is, that we need to put the hardware to sleep 
-but wake up for:
-- sending own beacon
-- TBTT of all neighbors towards we are in light sleep (or maybe all 
-neighbors as proof-of-concept)
-so it is a mixture of ad-hoc , station code and completely new stuff.
-
-A better explanation and a nice example of IEEE 802.11s powersave is 
-given here:
-http://dl.dropbox.com/u/31741282/11s_powersave.pdf
