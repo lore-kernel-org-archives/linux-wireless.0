@@ -1,140 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:56871 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932609Ab2CGAmX (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:35163 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754808Ab2CTGgL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 19:42:23 -0500
-Received: by obbuo6 with SMTP id uo6so6132631obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 16:42:22 -0800 (PST)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: fix smatch lock errors in mesh
-Date: Tue,  6 Mar 2012 16:42:09 -0800
-Message-Id: <1331080929-8852-1-git-send-email-thomas@cozybit.com> (sfid-20120307_014226_620759_FAB594EE)
+	Tue, 20 Mar 2012 02:36:11 -0400
+Message-ID: <4F682555.3020502@gmail.com> (sfid-20120320_073632_518442_C898BA10)
+Date: Mon, 19 Mar 2012 23:36:05 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org> <4F681B78.9000207@gmail.com> <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com> <4F68235C.5090701@gmail.com> <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com>
+In-Reply-To: <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-smatch was complaining:
+On 03/19/2012 11:32 PM, Mohammed Shafi wrote:
+> On Tue, Mar 20, 2012 at 11:57 AM, Justin P. Mattock
+> <justinmattock@gmail.com>  wrote:
+>> On 03/19/2012 11:19 PM, Mohammed Shafi wrote:
+>>>>
+>>>> (gdb) list *ath9k_tx+start+0x284
+>>>> No symbol "start" in current context.
+>>>
+>>>
+>>> hey, pls try l *(ath9k_tx_start+0x284), yesterday i did the same in
+>>> the latest wireless testing tree it pointed to line 1929 of xmit.c
+>>>
+>>> sc->tx.seq_no +=0x10;
+>>>
+>>> also did few suspend/resume in my machine, nothing interesting happened
+>>>
+>>>>
+>>>> before receiving the email to do the above code with gdb I had cleaned
+>>>> the
+>>>> tree out with git clean -fx so rebuilding might have misalighned
+>>>> things(but
+>>>> could be wrong)..
+>>>>
+>>>
+>>>
+>>>
+>>
+>>
+>> seems gdb is not working with that code but works if I remove _start.
+>> (maybe -next took this out or something)
+>>
+>> (gdb) l *(ath9k_tx_start+0x284)
+>> No symbol "ath9k_tx_start" in current context.
+>
+> sorry its
+>   l *(ath_tx_start+0x284)
+>
+>> (gdb) l *(ath9k_tx+0x284)
+>> 0x4854 is in ath_paprd_activate (drivers/net/wireless/ath/ath9k/main.c:395).
+>> 390                             continue;
+>> 391
+>> 392                     ar9003_paprd_populate_single_table(ah, caldata,
+>> chain);
+>> 393             }
+>> 394
+>> 395             ar9003_paprd_enable(ah, true);
+>> 396             ath9k_ps_restore(sc);
+>> 397     }
+>> 398
+>> 399     static bool ath_paprd_send_frame(struct ath_softc *sc, struct
+>> sk_buff *skb, int chain)
+>>
+>> right now I am running next, will wait for the RX DMA to get a clean trace,
+>> then will look to see.. as for the other issue I just rebooted and hit this
+>> during bootup.
+>>
+>> Justin P. Mattock
+>
+>
+>
 
-CHECK   net/mac80211/mesh_pathtbl.c
-net/mac80211/mesh_pathtbl.c:562 mesh_path_add() error: double lock
-'bottom_half:'
-net/mac80211/mesh_pathtbl.c:580 mesh_path_add() error: double unlock
-'bottom_half:'
-net/mac80211/mesh_pathtbl.c:589 mesh_path_add() error: double unlock
-'bottom_half:'
-net/mac80211/mesh_pathtbl.c:691 mpp_path_add() error: double lock
-'bottom_half:'
-net/mac80211/mesh_pathtbl.c:707 mpp_path_add() error: double unlock
-'bottom_half:'
-net/mac80211/mesh_pathtbl.c:716 mpp_path_add() error: double unlock
-'bottom_half:'
-net/mac80211/mesh_pathtbl.c:814 mesh_path_flush_by_nexthop() error:
-double lock 'bottom_half:'
-net/mac80211/mesh_pathtbl.c:819 mesh_path_flush_by_nexthop() error:
-double unlock 'bottom_half:'
-net/mac80211/mesh_pathtbl.c:887 mesh_path_del() error: double lock
-'bottom_half:'
-net/mac80211/mesh_pathtbl.c:901 mesh_path_del() error: double unlock
-'bottom_half:'
+yeah this works:
 
-So don't lock / unlock with _bh() while bottom halves are already
-disabled.
-
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh_pathtbl.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 157642f..be1361b 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -559,7 +559,7 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 	hash_idx = mesh_table_hash(dst, sdata, tbl);
- 	bucket = &tbl->hash_buckets[hash_idx];
- 
--	spin_lock_bh(&tbl->hashwlock[hash_idx]);
-+	spin_lock(&tbl->hashwlock[hash_idx]);
- 
- 	err = -EEXIST;
- 	hlist_for_each_entry(node, n, bucket, list) {
-@@ -576,7 +576,7 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 
- 	mesh_paths_generation++;
- 
--	spin_unlock_bh(&tbl->hashwlock[hash_idx]);
-+	spin_unlock(&tbl->hashwlock[hash_idx]);
- 	read_unlock_bh(&pathtbl_resize_lock);
- 	if (grow) {
- 		set_bit(MESH_WORK_GROW_MPATH_TABLE,  &ifmsh->wrkq_flags);
-@@ -585,7 +585,7 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
- 	return 0;
- 
- err_exists:
--	spin_unlock_bh(&tbl->hashwlock[hash_idx]);
-+	spin_unlock(&tbl->hashwlock[hash_idx]);
- 	read_unlock_bh(&pathtbl_resize_lock);
- 	kfree(new_node);
- err_node_alloc:
-@@ -688,7 +688,7 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
- 	hash_idx = mesh_table_hash(dst, sdata, tbl);
- 	bucket = &tbl->hash_buckets[hash_idx];
- 
--	spin_lock_bh(&tbl->hashwlock[hash_idx]);
-+	spin_lock(&tbl->hashwlock[hash_idx]);
- 
- 	err = -EEXIST;
- 	hlist_for_each_entry(node, n, bucket, list) {
-@@ -703,7 +703,7 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
- 	    tbl->mean_chain_len * (tbl->hash_mask + 1))
- 		grow = 1;
- 
--	spin_unlock_bh(&tbl->hashwlock[hash_idx]);
-+	spin_unlock(&tbl->hashwlock[hash_idx]);
- 	read_unlock_bh(&pathtbl_resize_lock);
- 	if (grow) {
- 		set_bit(MESH_WORK_GROW_MPP_TABLE,  &ifmsh->wrkq_flags);
-@@ -712,7 +712,7 @@ int mpp_path_add(u8 *dst, u8 *mpp, struct ieee80211_sub_if_data *sdata)
- 	return 0;
- 
- err_exists:
--	spin_unlock_bh(&tbl->hashwlock[hash_idx]);
-+	spin_unlock(&tbl->hashwlock[hash_idx]);
- 	read_unlock_bh(&pathtbl_resize_lock);
- 	kfree(new_node);
- err_node_alloc:
-@@ -811,9 +811,9 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
- 	for_each_mesh_entry(tbl, p, node, i) {
- 		mpath = node->mpath;
- 		if (rcu_dereference(mpath->next_hop) == sta) {
--			spin_lock_bh(&tbl->hashwlock[i]);
-+			spin_lock(&tbl->hashwlock[i]);
- 			__mesh_path_del(tbl, node);
--			spin_unlock_bh(&tbl->hashwlock[i]);
-+			spin_unlock(&tbl->hashwlock[i]);
- 		}
- 	}
- 	read_unlock_bh(&pathtbl_resize_lock);
-@@ -884,7 +884,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
- 	hash_idx = mesh_table_hash(addr, sdata, tbl);
- 	bucket = &tbl->hash_buckets[hash_idx];
- 
--	spin_lock_bh(&tbl->hashwlock[hash_idx]);
-+	spin_lock(&tbl->hashwlock[hash_idx]);
- 	hlist_for_each_entry(node, n, bucket, list) {
- 		mpath = node->mpath;
- 		if (mpath->sdata == sdata &&
-@@ -897,7 +897,7 @@ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata)
- 	err = -ENXIO;
- enddel:
- 	mesh_paths_generation++;
--	spin_unlock_bh(&tbl->hashwlock[hash_idx]);
-+	spin_unlock(&tbl->hashwlock[hash_idx]);
- 	read_unlock_bh(&pathtbl_resize_lock);
- 	return err;
- }
--- 
-1.7.5.4
+eading symbols from 
+/home/kernel/linux-next/drivers/net/wireless/ath/ath9k/ath9k.o...done.
+(gdb) l *(ath_tx_start+0x284)
+0xcad4 is in ath_tx_start (drivers/net/wireless/ath/ath9k/xmit.c:1878).
+1873			ieee80211_is_data_qos(hdr->frame_control)) {
+1874			tidno = ieee80211_get_qos_ctl(hdr)[0] &
+1875				IEEE80211_QOS_CTL_TID_MASK;
+1876			tid = ATH_AN_2_TID(txctl->an, tidno);
+1877	
+1878			WARN_ON(tid->ac->txq != txctl->txq);
+1879		}
+1880	
+1881		if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && tid) {
+1882			/*
+(gdb)
 
