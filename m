@@ -1,113 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37228 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161383Ab2COU17 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 16:27:59 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 02/26] iwlwifi: remove un-needed parameter
-Date: Thu, 15 Mar 2012 13:26:42 -0700
-Message-Id: <1331843226-29860-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212805_193831_A5A9A3E7)
-In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:36938 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753605Ab2CTGcm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Mar 2012 02:32:42 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F68235C.5090701@gmail.com>
+References: <4F576FD5.2050208@gmail.com>
+	<CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com>
+	<4F577D9B.7020402@gmail.com>
+	<4F579A88.6030503@openwrt.org>
+	<4F61F551.5010608@gmail.com>
+	<4F639851.5080500@gmail.com>
+	<4F674616.8080103@gmail.com>
+	<CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com>
+	<4F674FF5.2060406@gmail.com>
+	<4F6751B2.1030809@openwrt.org>
+	<4F681B78.9000207@gmail.com>
+	<CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com>
+	<4F68235C.5090701@gmail.com>
+Date: Tue, 20 Mar 2012 12:02:40 +0530
+Message-ID: <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com> (sfid-20120320_073302_593903_22D605A6)
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+ AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-get rid of un-needed parameter
+On Tue, Mar 20, 2012 at 11:57 AM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> On 03/19/2012 11:19 PM, Mohammed Shafi wrote:
+>>>
+>>> (gdb) list *ath9k_tx+start+0x284
+>>> No symbol "start" in current context.
+>>
+>>
+>> hey, pls try l *(ath9k_tx_start+0x284), yesterday i did the same in
+>> the latest wireless testing tree it pointed to line 1929 of xmit.c
+>>
+>> sc->tx.seq_no +=0x10;
+>>
+>> also did few suspend/resume in my machine, nothing interesting happened
+>>
+>>>
+>>> before receiving the email to do the above code with gdb I had cleaned
+>>> the
+>>> tree out with git clean -fx so rebuilding might have misalighned
+>>> things(but
+>>> could be wrong)..
+>>>
+>>
+>>
+>>
+>
+>
+> seems gdb is not working with that code but works if I remove _start.
+> (maybe -next took this out or something)
+>
+> (gdb) l *(ath9k_tx_start+0x284)
+> No symbol "ath9k_tx_start" in current context.
 
-Change-Id: I992741e7382a3dbced7f8413bf1d5f301029d576
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |   33 ++++++++++++-------------------
- 1 files changed, 13 insertions(+), 20 deletions(-)
+sorry its
+ l *(ath_tx_start+0x284)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index f1226db..e7da3a5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1178,7 +1178,6 @@ static void iwl_debug_config(struct iwl_priv *priv)
- static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 						 const struct iwl_fw *fw)
- {
--	int err = 0;
- 	struct iwl_priv *priv;
- 	struct ieee80211_hw *hw;
- 	struct iwl_op_mode *op_mode;
-@@ -1201,7 +1200,6 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	if (!hw) {
- 		pr_err("%s: Cannot allocate network device\n",
- 				cfg(trans)->name);
--		err = -ENOMEM;
- 		goto out;
- 	}
- 
-@@ -1273,26 +1271,24 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	IWL_INFO(priv, "Detected %s, REV=0x%X\n",
- 		cfg(priv)->name, trans(priv)->hw_rev);
- 
--	err = iwl_trans_start_hw(trans(priv));
--	if (err)
-+	if (iwl_trans_start_hw(trans(priv)))
- 		goto out_free_traffic_mem;
- 
- 	/*****************
- 	 * 3. Read EEPROM
- 	 *****************/
--	err = iwl_eeprom_init(trans(priv), trans(priv)->hw_rev);
--	/* Reset chip to save power until we load uCode during "up". */
--	iwl_trans_stop_hw(trans(priv));
--	if (err) {
-+	/* Read the EEPROM */
-+	if (iwl_eeprom_init(trans(priv), trans(priv)->hw_rev)) {
- 		IWL_ERR(priv, "Unable to init EEPROM\n");
- 		goto out_free_traffic_mem;
- 	}
--	err = iwl_eeprom_check_version(priv);
--	if (err)
-+	/* Reset chip to save power until we load uCode during "up". */
-+	iwl_trans_stop_hw(trans(priv));
-+
-+	if (iwl_eeprom_check_version(priv))
- 		goto out_free_eeprom;
- 
--	err = iwl_eeprom_init_hw_params(priv);
--	if (err)
-+	if (iwl_eeprom_init_hw_params(priv))
- 		goto out_free_eeprom;
- 
- 	/* extract MAC Address */
-@@ -1332,9 +1328,9 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	 * 5. Setup priv
- 	 *******************/
- 
--	err = iwl_init_drv(priv);
--	if (err)
-+	if (iwl_init_drv(priv))
- 		goto out_free_eeprom;
-+
- 	/* At this point both hw and priv are initialized. */
- 
- 	/********************
-@@ -1367,15 +1363,12 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	 *
- 	 * 7. Setup and register with mac80211 and debugfs
- 	 **************************************************/
--	err = iwlagn_mac_setup_register(priv, &fw->ucode_capa);
--	if (err)
-+	if (iwlagn_mac_setup_register(priv, &fw->ucode_capa))
- 		goto out_destroy_workqueue;
- 
--	err = iwl_dbgfs_register(priv, DRV_NAME);
--	if (err)
-+	if (iwl_dbgfs_register(priv, DRV_NAME))
- 		IWL_ERR(priv,
--			"failed to create debugfs files. Ignoring error: %d\n",
--			err);
-+			"failed to create debugfs files. Ignoring error\n");
- 
- 	return op_mode;
- 
+> (gdb) l *(ath9k_tx+0x284)
+> 0x4854 is in ath_paprd_activate (drivers/net/wireless/ath/ath9k/main.c:395).
+> 390                             continue;
+> 391
+> 392                     ar9003_paprd_populate_single_table(ah, caldata,
+> chain);
+> 393             }
+> 394
+> 395             ar9003_paprd_enable(ah, true);
+> 396             ath9k_ps_restore(sc);
+> 397     }
+> 398
+> 399     static bool ath_paprd_send_frame(struct ath_softc *sc, struct
+> sk_buff *skb, int chain)
+>
+> right now I am running next, will wait for the RX DMA to get a clean trace,
+> then will look to see.. as for the other issue I just rebooted and hit this
+> during bootup.
+>
+> Justin P. Mattock
+
+
+
 -- 
-1.7.0.4
-
+thanks,
+shafi
