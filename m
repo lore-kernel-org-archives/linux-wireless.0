@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from SpacedOut.fries.net ([67.64.210.234]:49686 "EHLO
-	SpacedOut.fries.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116Ab2CJS5E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 13:57:04 -0500
-Date: Sat, 10 Mar 2012 12:56:50 -0600
-From: David Fries <david@fries.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
-Subject: Re: ath5k phy0: gain calibration timeout
-Message-ID: <20120310185649.GC1190@spacedout.fries.net> (sfid-20120310_195709_003315_4D6303CC)
-References: <20120227031232.GA1190@spacedout.fries.net>
- <4F4B71F2.1020709@openwrt.org>
- <20120227144255.GB1190@spacedout.fries.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120227144255.GB1190@spacedout.fries.net>
+Received: from perches-mx.perches.com ([206.117.179.246]:42483 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752456Ab2CTDsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 23:48:03 -0400
+Message-ID: <1332215281.7847.54.camel@joe2Laptop> (sfid-20120320_044917_101312_D04E0032)
+Subject: Re: [PATCH wireless-next 2/3] ath5k: Introduce _ath5k_printk to
+ reduce code/text
+From: Joe Perches <joe@perches.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 19 Mar 2012 20:48:01 -0700
+In-Reply-To: <CAJ-Vmom4n7Sk5P=HMb+Z-FNyfyk87Xbf5Q1kPA4i2eXwQ72kXQ@mail.gmail.com>
+References: <cover.1332116921.git.joe@perches.com>
+	 <b157e2d1a746733d1814b9726f326d52d36da2fc.1332116921.git.joe@perches.com>
+	 <CAJ-Vmo=ceSV38vQGfs8cKJScWjYF4kbQdK3+JJvQLCmnURaEwA@mail.gmail.com>
+	 <1332134336.23125.60.camel@joe2Laptop>
+	 <CAJ-Vmom4n7Sk5P=HMb+Z-FNyfyk87Xbf5Q1kPA4i2eXwQ72kXQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 27, 2012 at 08:42:55AM -0600, David Fries wrote:
-> On Mon, Feb 27, 2012 at 01:07:14PM +0100, Felix Fietkau wrote:
-> > On 2012-02-27 4:12 AM, David Fries wrote:
-> > > Wireless network stopped working after 22 hours with ath5k, I have the
-> > > following message repeating, suspending to ram and back was enough to
-> > > get it talking again.
-> > > ath5k phy0: gain calibration timeout (2462MHz)
-> > > 
-> > Please try applying the following two patches:
-> > http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/440-ath5k_calibrate_no_queue_stop.patch;hb=HEAD
-> > http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/441-ath5k_no_agc_recalibration.patch;hb=HEAD
+On Mon, 2012-03-19 at 20:39 -0700, Adrian Chadd wrote:
+> On 18 March 2012 22:18, Joe Perches <joe@perches.com> wrote:
+> >> Otherwise compiling in debugging will cause a _lot_ of spurious
+> >> register reads to occur that are then tossed. This was one of the big
+> >> reasons for instability and slow performance when AH_DEBUG was
+> >> enabled.
+> > That doesn't make any sense in this case.
+> >
+> > It's either a call to printk or _ath5_printk
+> > but it's still a call to a function.
+> 
+> The FreeBSD HAL used to be like this. I changed it so it didn't
+> evaluate the arguments before it figured out whether or not to do the
+> (k)printf().
+> 
+> I'm just pointing it out as you're (currently) knee deep in the
+> debugging code and it may be useful for you to also think about
+> implementing.
 
-No problems running with the above two patches after 12 days.  No
-calibration timeout messages either.  Thanks.
+I see, thanks for the heads-up.
 
--- 
-David Fries <david@fries.net>    PGP pub CB1EE8F0
-http://fries.net/~david/
+The no_printk function could/does eval args
+and can cause those sorts of issues.
+
+So care does need to be used.
+
+cheers, Joe
+
