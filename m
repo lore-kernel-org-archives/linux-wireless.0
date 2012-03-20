@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55942 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761064Ab2COWnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 18:43:45 -0400
-Message-ID: <4F627092.7030207@hauke-m.de> (sfid-20120315_234350_918234_0E2901B9)
-Date: Thu, 15 Mar 2012 23:43:30 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from victor.provo.novell.com ([137.65.250.26]:54649 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753491Ab2CTM3s convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Tue, 20 Mar 2012 08:29:48 -0400
+Received: by bkcik5 with SMTP id ik5so5069937bkc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 05:29:39 -0700 (PDT)
 MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
-	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 3/7] bcma: scan for extra address space
-References: <1331597093-425-1-git-send-email-hauke@hauke-m.de> <1331597093-425-4-git-send-email-hauke@hauke-m.de> <20120315194453.GB30682@kroah.com>
-In-Reply-To: <20120315194453.GB30682@kroah.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1332224377.3329.1.camel@jlt3.sipsolutions.net>
+References: <CALx5=V_czM-3sqhutbYx27wHnLtQL_PvcSjKHd4RGtopkKqf3A@mail.gmail.com>
+	<1332224377.3329.1.camel@jlt3.sipsolutions.net>
+Date: Tue, 20 Mar 2012 20:29:39 +0800
+Message-ID: <CALx5=V-CLY2QE=BuYoYOdBSELmFUxNXQ+Ws5Gh=rCND0SbJL1g@mail.gmail.com> (sfid-20120320_132953_451159_95C90941)
+Subject: Re: About the .start function in ieee80211_ops.
+From: Matt Chen <machen@suse.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: users@rt2x00.serialmonkey.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/15/2012 08:44 PM, Greg KH wrote:
-> On Tue, Mar 13, 2012 at 01:04:49AM +0100, Hauke Mehrtens wrote:
->> Some cores like the USB core have two address spaces. In the USB host
->> controller one address space is used for the OHCI and the other for the
->> EHCI controller interface. The USB controller is the only core I found
->> with two address spaces. This code is based on the AI scan function
->> ai_scan() in shared/aiutils.c in the Broadcom SDK.
+Hi Johannes,
+
+2012/3/20 Johannes Berg <johannes@sipsolutions.net>:
+> On Tue, 2012-03-20 at 14:02 +0800, Matt Chen wrote:
+>> Hi all,
+>> I have a issue recently for rt2800pci, the way to duplicate this is
+>> 1. Press function key to set rfkill hard blocked, it would cause
+>> driver to power off.
+>> 2. reboot
+>> 3. find when load the driver (rt2800pci), it would stop in "Registered
+>> led device: rt2800pci-phy0::quality".
 >>
->> CC: Rafał Miłecki <zajec5@gmail.com>
->> CC: linux-wireless@vger.kernel.org
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>  drivers/bcma/scan.c       |   19 ++++++++++++++++++-
->>  include/linux/bcma/bcma.h |    1 +
->>  2 files changed, 19 insertions(+), 1 deletions(-)
-> 
-> Is this required for the 4/7 patch?
-> 
-> If so, can I get an ack from the BCMA developers so that I can take this
-> through the USB tree?
-> 
-> thanks,
-> 
-> greg k-h
+>> Here you would find the rfkill_poll function is not started to work,
+>> also the rt2x00mac_start() registered in rt2800pci_mac80211_ops
+>> structure is not yet be executed.
+>> My question is when or what condition the rt2x00mac_start() �would be
+>> running, because if it is not yet executed, then it would not be able
+>> to load the firmware in rt2x00lib_start().
+>
+> That's a bug in the driver then -- it should probably start the rfkill
+> stuff without mac80211's start() command. start() is only called when
+> the first interface comes up, but that will never happen if it's in
+> rfkill block.
+Do you have any idea which part of code would make the first interface
+comes up ?  :)
+Would that be in cfg80211 ?
 
-Hi Rafał,
+Thanks.
+> johannes
+>
+> .
 
-could you give me an ack for this patch please.
-
-This patch is only required for the patch "Add driver for the bcma bus".
-
-Hauke
+-- 
+Thank you.
