@@ -1,119 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40186 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031943Ab2COXUZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47757 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755392Ab2CTHId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 19:20:25 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/4] mac80211:  Support getting sta_info stats via ethtool.
-Date: Thu, 15 Mar 2012 16:20:04 -0700
-Message-Id: <1331853606-28434-2-git-send-email-greearb@candelatech.com> (sfid-20120316_002029_724124_C2E93636)
-In-Reply-To: <1331853606-28434-1-git-send-email-greearb@candelatech.com>
-References: <1331853606-28434-1-git-send-email-greearb@candelatech.com>
+	Tue, 20 Mar 2012 03:08:33 -0400
+Subject: Re: [PATCH] cfg80211: warn if db.txt is empty with
+ CONFIG_CFG80211_INTERNAL_REGDB
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: sfr@canb.auug.org.au, linux-wireless@vger.kernel.org,
+	Youngsin Lee <youngsin@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>,
+	Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>,
+	Vipin Mehta <vipimeht@qca.qualcomm.com>,
+	yahuan@qca.qualcomm.com, jjan@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, henrykim@qualcomm.com,
+	jouni@qca.qualcomm.com, athiruve@qca.qualcomm.com,
+	cjkim@qualcomm.com, philipk@qca.qualcomm.com,
+	sunnykim@qualcomm.com, sskwak@qualcomm.com, kkim@qualcomm.com,
+	mattbyun@qualcomm.com, ryanlee@qualcomm.com, simbap@qualcomm.com,
+	krislee@qualcomm.com, conner@qualcomm.com, hojinkim@qualcomm.com,
+	honglee@qualcomm.com, johnwkim@qualcomm.com
+In-Reply-To: <CAB=NE6WGdK0YJfi8hrWTqYr2zdUc5yEhV9VUbidi36fd==nEig@mail.gmail.com> (sfid-20120320_080102_002254_C5C4A14A)
+References: <1332192901-2500-1-git-send-email-mcgrof@frijolero.org>
+	 <1332223323.3329.0.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6WGdK0YJfi8hrWTqYr2zdUc5yEhV9VUbidi36fd==nEig@mail.gmail.com>
+	 (sfid-20120320_080102_002254_C5C4A14A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Mar 2012 08:08:27 +0100
+Message-ID: <1332227307.3329.2.camel@jlt3.sipsolutions.net> (sfid-20120320_080836_909984_F010A1D9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Tue, 2012-03-20 at 00:00 -0700, Luis R. Rodriguez wrote:
 
-This lets ethtool print out stats related to station
-interfaces.  Does not yet get stats from the underlying
-driver.
+> >>  net/wireless/reg.c |   12 ++++++++++++
+> >>  1 file changed, 12 insertions(+)
+> >>
+> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> >> index e9a0ac8..85f51b3 100644
+> >> --- a/net/wireless/reg.c
+> >> +++ b/net/wireless/reg.c
+> >> @@ -388,7 +388,18 @@ static void reg_regdb_query(const char *alpha2)
+> >>
+> >>       schedule_work(&reg_regdb_work);
+> >>  }
+> >> +
+> >> +/* Feel free to add any other sanity checks here */
+> >> +static void reg_regdb_size_check(void)
+> >> +{
+> >> +#ifdef CONFIG_CFG80211_REG_DEBUG
+> >> +     BUILD_BUG_ON(!reg_regdb_size);
+> >> +#else
+> >> +     WARN_ONCE(!reg_regdb_size, "db.txt is empty, you should update it...");
+> >> +#endif
+> >
+> > That ifdef seems a bit pointless? If anything I would have expected it
+> > the other way around since the BUILD_BUG_ON compiles to nothing?
+> 
+> As I tested it, the BUILD_BUG_ON() forces a compile failure.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 cf5b08a... 0aef0d2... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 71 insertions(+), 0 deletions(-)
+Right. Why would you not want that always?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index cf5b08a..0aef0d2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -112,6 +112,74 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
-+	"rx_packets", "rx_bytes", "wep_weak_iv_count",
-+	"rx_duplicates", "rx_fragments", "rx_dropped",
-+	"tx_packets", "tx_bytes", "tx_fragments",
-+	"tx_filtered", "tx_retry_failed", "tx_retries",
-+	"beacon_loss"
-+};
-+#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
-+
-+static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return STA_STATS_LEN;
-+	
-+	return -EOPNOTSUPP;
-+}
-+
-+static void ieee80211_get_et_stats(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   struct ethtool_stats *stats,
-+				   u64 *data)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+	struct ieee80211_local *local = sdata->local;
-+
-+	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		int i = 0;
-+
-+		/* Make sure this station belongs to the proper dev */
-+		if (sta->sdata->dev != dev)
-+			continue;
-+
-+		data[i++] += sta->rx_packets;
-+		data[i++] += sta->rx_bytes;
-+		data[i++] += sta->wep_weak_iv_count;
-+		data[i++] += sta->num_duplicates;
-+		data[i++] += sta->rx_fragments;
-+		data[i++] += sta->rx_dropped;
-+
-+		data[i++] += sta->tx_packets;
-+		data[i++] += sta->tx_bytes;
-+		data[i++] += sta->tx_fragments;
-+		data[i++] += sta->tx_filtered_count;
-+		data[i++] += sta->tx_retry_failed;
-+		data[i++] += sta->tx_retry_count;
-+		data[i++] += sta->beacon_loss_count;
-+		BUG_ON(i != STA_STATS_LEN);
-+	}
-+	rcu_read_unlock();
-+}
-+
-+static void ieee80211_get_et_strings(struct wiphy *wiphy,
-+				     struct net_device *dev,
-+				     u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS) {
-+		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
-+		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
-+	}
-+}
-+
-+
- static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
- 			     struct key_params *params)
-@@ -2768,4 +2836,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.probe_client = ieee80211_probe_client,
- 	.get_channel = ieee80211_wiphy_get_channel,
- 	.set_noack_map = ieee80211_set_noack_map,
-+	.get_et_sset_count = ieee80211_get_et_sset_count,
-+	.get_et_stats = ieee80211_get_et_stats,
-+	.get_et_strings = ieee80211_get_et_strings,
- };
--- 
-1.7.3.4
+johannes
 
