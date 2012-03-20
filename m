@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54570 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756225Ab2CTIPZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52571 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952Ab2CTLci (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 04:15:25 -0400
-Message-ID: <4F683C96.4090807@qca.qualcomm.com> (sfid-20120320_091534_797482_FE9CEBCC)
-Date: Tue, 20 Mar 2012 10:15:18 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vivek Natarajan <nataraja@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl_sdio: Initialize sg_sz to fix a compilation
- warning
-References: <1331797541-2888-1-git-send-email-nataraja@qca.qualcomm.com>
-In-Reply-To: <1331797541-2888-1-git-send-email-nataraja@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 20 Mar 2012 07:32:38 -0400
+Subject: RE: mac80211 20/40 coexist
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20328.2559.331884.450794@gargle.gargle.HOWL>
+References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
+	 <1331902885.6753.10.camel@jlt3.sipsolutions.net>
+	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3040B@aphydexd01b>
+	 <1332065984.3609.5.camel@jlt3.sipsolutions.net>
+	 <20326.41009.17936.152095@gargle.gargle.HOWL>
+	 <1332145412.3359.2.camel@jlt3.sipsolutions.net>
+	 <20327.1220.845693.349959@gargle.gargle.HOWL>
+	 <1332151743.3359.19.camel@jlt3.sipsolutions.net>
+	 <20327.2859.202760.119343@gargle.gargle.HOWL>
+	 <1332155566.3359.22.camel@jlt3.sipsolutions.net>
+	 <1332159511.3359.24.camel@jlt3.sipsolutions.net>
+	 <20328.2559.331884.450794@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Mar 2012 12:32:34 +0100
+Message-ID: <1332243154.3329.4.camel@jlt3.sipsolutions.net> (sfid-20120320_123241_608617_6EBC6D75)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/15/2012 09:45 AM, Vivek Natarajan wrote:
-> Fix uninitialized variable warning on compilation.
+On Tue, 2012-03-20 at 10:09 +0530, Sujith Manoharan wrote:
+
+> > Also, in order to actually implement it in AP mode we need to use the
+> > "RC update only".
+> > 
+> > I think it makes more sense to unify the handling here -- change rate
+> > control (and also tell the driver, like one of my patches did) rather
+> > than treating 20/40 changes in managed mode differently than in AP mode.
 > 
-> sdio.c:333: warning: 'sg_sz' may be used uninitialized in this function
-> 
-> Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/sdio.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-> index 5a03082..fe6c9d8 100644
-> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
-> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-> @@ -335,7 +335,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
->  {
->  	struct hif_scatter_req *s_req;
->  	struct bus_request *bus_req;
-> -	int i, scat_req_sz, scat_list_sz, sg_sz, buf_sz;
-> +	int i, scat_req_sz, scat_list_sz, sg_sz = 0, buf_sz;
->  	u8 *virt_buf;
->  
->  	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
+> Agreed.
 
-I also see this false warning on an older arm gcc, but not with
-4.4.4-14ubuntu5 for x86.
+So what should we do with ath9k_htc? As I understood you, it relies on
+the no-longer updated global channel type?
 
-But initialising variables due to buggy gcc is not a good idea. If you
-want to get rid of the warning this would be better as the if clause is
-not really necessary:
+IOW -- I don't think the patches we were discussing break it, Paul's
+patch would already have broken it. However my patch with the new
+callback could help you fix it?
 
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -341,11 +341,8 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct
-ath6kl_sdio *ar_sdio,
-        scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
-        scat_req_sz = sizeof(*s_req) + scat_list_sz;
+johannes
 
--       if (!virt_scat)
--               sg_sz = sizeof(struct scatterlist) * n_scat_entry;
--       else
--               buf_sz =  2 * L1_CACHE_BYTES +
--                         ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
-+       sg_sz = sizeof(struct scatterlist) * n_scat_entry;
-+       buf_sz =  2 * L1_CACHE_BYTES + ATH6KL_MAX_TRANSFER_SIZE_PER_SCATTER;
-
-        for (i = 0; i < n_scat_req; i++) {
-                /* allocate the scatter request */
-
-Kalle
