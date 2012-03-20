@@ -1,69 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:31748 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759134Ab2CBTVY (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45039 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757570Ab2CTD1P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 14:21:24 -0500
-Date: Fri, 02 Mar 2012 13:21:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] rtlwifi: Detect misread of end-point count
-Message-ID: <4f511db2.c8Kdx49+RQ5tOZnL%Larry.Finger@lwfinger.net> (sfid-20120302_202138_501025_F6C3059C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 19 Mar 2012 23:27:15 -0400
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [PATCH 2/4] compat: backport work_busy()
+Date: Mon, 19 Mar 2012 20:26:59 -0700
+Message-Id: <1332214021-9716-3-git-send-email-mcgrof@frijolero.org> (sfid-20120320_042853_043155_41AC0608)
+In-Reply-To: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
+References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the unlikely event of a misread of the USB end point count, the driver
-generates a divide fault. To prevent this, add a check of the value
-returned by _rtl_usb_init(). In addition, add some logging to indicate
-why the condition occurred.
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Best we can do is just tell the users of we are WORK_BUSY_PENDING
+for older kernels. The ckmake log:
+
+Trying kernel                  3.3.0-030300rc2-generic  [OK]
+Trying kernel                     3.2.2-030202-generic  [OK]
+Trying kernel                    3.1.10-030110-generic  [OK]
+Trying kernel                    3.0.18-030018-generic  [OK]
+Trying kernel                  2.6.39-02063904-generic  [OK]
+Trying kernel                        2.6.38-13-generic  [OK]
+Trying kernel                  2.6.38-02063808-generic  [OK]
+Trying kernel                  2.6.37-02063706-generic  [OK]
+Trying kernel                  2.6.36-02063604-generic  [OK]
+Trying kernel                  2.6.35-02063512-generic  [OK]
+Trying kernel                  2.6.34-02063410-generic  [OK]
+Trying kernel                  2.6.33-02063305-generic  [OK]
+Trying kernel                  2.6.32-02063255-generic  [OK]
+Trying kernel                        2.6.31-22-generic  [OK]
+Trying kernel                  2.6.31-02063113-generic  [OK]
+Trying kernel                  2.6.30-02063010-generic  [OK]
+Trying kernel                  2.6.29-02062906-generic  [OK]
+Trying kernel                  2.6.28-02062810-generic  [OK]
+Trying kernel                    2.6.27-020627-generic  [OK]
+Trying kernel                    2.6.26-020626-generic  [OK]
+Trying kernel                    2.6.25-020625-generic  [OK]
+Trying kernel                    2.6.24-020624-generic  [OK]
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
 ---
+ compat/compat-2.6.36.c        |   24 ++++++++++++++++++++++++
+ include/linux/compat-2.6.28.h |    4 ++++
+ include/linux/compat-2.6.36.h |    8 ++++++++
+ 3 files changed, 36 insertions(+)
 
-John,
+diff --git a/compat/compat-2.6.36.c b/compat/compat-2.6.36.c
+index b79609c..9190ecd 100644
+--- a/compat/compat-2.6.36.c
++++ b/compat/compat-2.6.36.c
+@@ -145,6 +145,30 @@ void compat_flush_scheduled_work(void)
+ }
+ EXPORT_SYMBOL_GPL(compat_flush_scheduled_work);
+ 
++/**
++ * work_busy - test whether a work is currently pending or running
++ * @work: the work to be tested
++ *
++ * Test whether @work is currently pending or running.  There is no
++ * synchronization around this function and the test result is
++ * unreliable and only useful as advisory hints or for debugging.
++ * Especially for reentrant wqs, the pending state might hide the
++ * running state.
++ *
++ * RETURNS:
++ * OR'd bitmask of WORK_BUSY_* bits.
++ */
++unsigned int work_busy(struct work_struct *work)
++{
++	unsigned int ret = 0;
++
++	if (work_pending(work))
++		ret |= WORK_BUSY_PENDING;
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(work_busy);
++
+ void compat_system_workqueue_create()
+ {
+ 	system_wq = alloc_workqueue("events", 0, 0);
+diff --git a/include/linux/compat-2.6.28.h b/include/linux/compat-2.6.28.h
+index c0ca70b..e336f39 100644
+--- a/include/linux/compat-2.6.28.h
++++ b/include/linux/compat-2.6.28.h
+@@ -9,6 +9,8 @@
+ #include <linux/if_ether.h>
+ #include <linux/usb.h>
+ #include <linux/types.h>
++#include <linux/types.h>
++#include <linux/cpumask.h>
+ 
+ #ifndef ETH_P_PAE
+ #define ETH_P_PAE 0x888E      /* Port Access Entity (IEEE 802.1X) */
+@@ -16,6 +18,8 @@
+ 
+ #include <linux/pci.h>
+ 
++typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } compat_cpumask_t;
++
+ #if defined(CONFIG_X86) || defined(CONFIG_X86_64) || defined(CONFIG_PPC)
+ /*
+  * CONFIG_PHYS_ADDR_T_64BIT was added as new to all architectures
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index 4768e63..56d5961 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -168,6 +168,14 @@ int compat_schedule_delayed_work_on(int cpu,
+ 				    unsigned long delay);
+ void compat_flush_scheduled_work(void);
+ 
++enum {
++	/* bit mask for work_busy() return values */
++	WORK_BUSY_PENDING       = 1 << 0,
++	WORK_BUSY_RUNNING       = 1 << 1,
++};
++
++extern unsigned int work_busy(struct work_struct *work);
++
+ #define schedule_work(work) compat_schedule_work(work)
+ #define schedule_work_on(cpu, work) compat_schedule_work_on(cpu, work)
+ #define schedule_delayed_work(dwork, delay) compat_schedule_delayed_work(dwork, delay)
+-- 
+1.7.10.rc1.22.gf5241
 
-This patch needs no particular priority. The failure has only happened
-once for me, but it was nasty as the divide fault required a power off
-and reboot.
-
-Larry
----
-
- usb.c |   13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/usb.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-@@ -346,9 +346,14 @@ static int _rtl_usb_init(struct ieee8021
- 			 pep_desc->bEndpointAddress, pep_desc->wMaxPacketSize,
- 			 pep_desc->bInterval);
- 	}
--	if (rtlusb->in_ep_nums <  rtlpriv->cfg->usb_interface_cfg->in_ep_num)
--		return -EINVAL ;
--
-+	if (rtlusb->in_ep_nums <  rtlpriv->cfg->usb_interface_cfg->in_ep_num) {
-+		pr_err("Too few input end points found\n");
-+		return -EINVAL;
-+	}
-+	if (rtlusb->out_ep_nums == 0) {
-+		pr_err("No output end points found\n");
-+		return -EINVAL;
-+	}
- 	/* usb endpoint mapping */
- 	err = rtlpriv->cfg->usb_interface_cfg->usb_endpoint_mapping(hw);
- 	rtlusb->usb_mq_to_hwq =  rtlpriv->cfg->usb_interface_cfg->usb_mq_to_hwq;
-@@ -976,6 +981,8 @@ int __devinit rtl_usb_probe(struct usb_i
- 	}
- 	rtlpriv->cfg->ops->init_sw_leds(hw);
- 	err = _rtl_usb_init(hw);
-+	if (err)
-+		goto error_out;
- 	err = _rtl_usb_init_sw(hw);
- 	/* Init mac80211 sw */
- 	err = rtl_init_core(hw);
