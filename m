@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:35797 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1030205Ab2CSDir (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 23:38:47 -0400
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] rtlwifi: Remove unused ETH_ADDR_LEN defines
-Date: Sun, 18 Mar 2012 20:37:59 -0700
-Message-Id: <b1302b9179a9fb95c28201fdc8ca1208fba51644.1332128181.git.joe@perches.com> (sfid-20120319_043906_230392_14B88F4A)
-In-Reply-To: <cover.1332128181.git.joe@perches.com>
-References: <cover.1332128181.git.joe@perches.com>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:48168 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756020Ab2CTCLw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Mar 2012 22:11:52 -0400
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 679B4216F7
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 22:11:52 -0400 (EDT)
+Date: Mon, 19 Mar 2012 23:11:48 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Tom Gundersen <teg@jklm.no>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
+Message-ID: <20120320021148.GA9850@khazad-dum.debian.net> (sfid-20120320_031157_930224_6BCF16E0)
+References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com>
+ <20120130184446.GB2493@tuxdriver.com>
+ <CA++WF2PnEzS5CAfryaPrJSs3Xb3s0WK1zR7N5o8+ud2HiU5GCw@mail.gmail.com>
+ <20120315110219.GA2335@redhat.com>
+ <CA++WF2P8E=0Xym92MuU84RwaP5Y9uyCyqw5jefh25QDz-Cpzkw@mail.gmail.com>
+ <20120317143640.GC23594@khazad-dum.debian.net>
+ <CA++WF2PCO8ZdhfSMs6_gy2gz5OvTkVrGYXm0X6Aicoe5JmK+pg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA++WF2PCO8ZdhfSMs6_gy2gz5OvTkVrGYXm0X6Aicoe5JmK+pg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just neatening.
+On Mon, 19 Mar 2012, Stanislav Yakovlev wrote:
+> Hello Henrique,
+> On 17 March 2012 07:36, Henrique de Moraes Holschuh <hmh@hmh.eng.br> wrote:
+> > On Thu, 15 Mar 2012, Stanislav Yakovlev wrote:
+> >> On 15 March 2012 04:02, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> >> > Are you plan to fix issues caused on current firmware loading changes on
+> >> > linux?
+> >>
+> >> I was able to reproduce this issue; unfortunately, I don't have a
+> >> proper fix for it yet.
+> >
+> > Maybe you could delay the firmware load to when the device is opened (at
+> > which point you can probably change the driver to keep the device in PCI
+> > D3 state unless it is opened, which does save power), and just caching
+> > the firmware forever after the first load so that you don't need to
+> > request_firmware anything more than once.
+> >
+> > Chances are ipw2xxx firmware will never get a new revision anyway, so
+> > reloading the modules is not too large a price to pay if the user does
+> > decide he has to force a firmware refresh...
+> 
+> As far as I know there is no way to force firmware refresh at the
+> moment without reloading the driver. If you know any implementations
+> of such behavior, please let me know.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/reg.h |    1 -
- drivers/net/wireless/rtlwifi/rtl8192de/reg.h |    1 -
- 2 files changed, 0 insertions(+), 2 deletions(-)
+You just need to switch modes, which forces it to switch firmwares, and it
+always reloads it from disk (unless you've built it in the kernel, maybe.  I
+didn't try that).
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-index 43806d9..e4d738f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-@@ -1190,7 +1190,6 @@
- 
- #define USB_AGG_EN				BIT(3)
- 
--#define MAC_ADDR_LEN				6
- #define LAST_ENTRY_OF_TX_PKT_BUFFER		255
- 
- #define POLLING_LLT_THRESHOLD			20
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-index 9bc4623..ebb1d5f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-@@ -998,7 +998,6 @@
- #define SCR_RXBCUSEDK				BIT(7)
- 
- /* General definitions */
--#define MAC_ADDR_LEN				6
- #define LAST_ENTRY_OF_TX_PKT_BUFFER		255
- #define LAST_ENTRY_OF_TX_PKT_BUFFER_DUAL_MAC	127
- 
 -- 
-1.7.8.111.gad25c.dirty
-
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
