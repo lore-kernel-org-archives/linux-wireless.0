@@ -1,104 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:53677 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756488Ab2CETyd convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53975 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932090Ab2CTD1Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 14:54:33 -0500
-Received: by wgbdr13 with SMTP id dr13so3833009wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 11:54:32 -0800 (PST)
-References: <20120305164813.GB2979@redhat.com>
-In-Reply-To: <20120305164813.GB2979@redhat.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <8287E603-C5DE-4CF9-8647-DE63B9D3E93E@gmail.com> (sfid-20120305_205437_371038_0CF8257B)
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [rt2x00-users] [PATCH 3.3] rt2x00: fix random stalls
-Date: Mon, 5 Mar 2012 20:54:37 +0100
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+	Mon, 19 Mar 2012 23:27:24 -0400
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [PATCH 4/4] compat: add some tracing backport work
+Date: Mon, 19 Mar 2012 20:27:01 -0700
+Message-Id: <1332214021-9716-5-git-send-email-mcgrof@frijolero.org> (sfid-20120320_042820_342785_1C57CC56)
+In-Reply-To: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
+References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
 
-On 5 mrt. 2012, at 17:48, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+Its not really easy to backport the tracing stuff, but
+lets give it a shot. We should simply review how many
+subsystems we want tracing for and for what target kernels
+we want that enabled for. It doesn't make sense to
+backport tracing if we won't have much users.
 
-> Is possible that we stop queue and then do not wake up it again,
-> especially when packets are transmitted fast. That can be easily
-> reproduced with modified tx queue entry_num to some small value e.g. 16.
-> 
-> If mac80211 already hold local->queue_stop_reason_lock, then we can wait
-> on that lock in both rt2x00queue_pause_queue() and
-> rt2x00queue_unpause_queue(). After drooping ->queue_stop_reason_lock
-> is possible that __ieee80211_wake_queue() will be performed before
-> __ieee80211_stop_queue(), hence we stop queue and newer wake up it
-> again.
-> 
-> To prevent stalls serialize pause/unpause by queue->tx_lock.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> drivers/net/wireless/rt2x00/rt2x00dev.c |   10 ++++++++--
-> drivers/net/wireless/rt2x00/rt2x00mac.c |   10 +++++++++-
-> 2 files changed, 17 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index 49a51b4..6c64658 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -430,10 +430,16 @@ void rt2x00lib_txdone(struct queue_entry *entry,
->    /*
->     * If the data queue was below the threshold before the txdone
->     * handler we must make sure the packet queue in the mac80211 stack
-> -     * is reenabled when the txdone handler has finished.
-> +     * is reenabled when the txdone handler has finished. This has to be
-> +     * serialized with rt2x00mac_tx, otherwise we can wake up mac80211
-> +     * queue before it was stopped if someone else hold mac80211 internal
-> +     * local->queue_stop_reason_lock .
->     */
-> -    if (!rt2x00queue_threshold(entry->queue))
-> +    if (!rt2x00queue_threshold(entry->queue)) {
-> +        spin_lock_irq(&entry->queue->tx_lock);
->        rt2x00queue_unpause_queue(entry->queue);
-> +        spin_unlock_irq(&entry->queue->tx_lock);
-> +    }
-> }
-> EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index ede3c58..2880512 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -152,13 +152,21 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->    if (unlikely(rt2x00queue_write_tx_frame(queue, skb, false)))
->        goto exit_fail;
-> 
-> -    if (rt2x00queue_threshold(queue))
-> +    /*
-> +     * Pausing queue has to be serialized with rt2x00lib_txdone .
-> +     */
-> +    if (rt2x00queue_threshold(queue)) {
-> +        spin_lock(&queue->tx_lock);
->        rt2x00queue_pause_queue(queue);
-> +        spin_unlock(&queue->tx_lock);
-> +    }
-> 
->    return;
-> 
->  exit_fail:
-> +    spin_lock(&queue->tx_lock);
->    rt2x00queue_pause_queue(queue);
-> +    spin_unlock(&queue->tx_lock);
->  exit_free_skb:
->    ieee80211_free_txskb(hw, skb);
-> }
+For now add some code that at least does not break building.
 
-There are more places in the rt2x00 code that call upon rt2x00queue_pause_queue and rt2x00queue_unpause_queue. Shouldn't these places be protected with tx_lock as well?
-Or better, shouldn't the locking be moved inside the pause / unpause functions?
+Trying kernel                  3.3.0-030300rc2-generic  [OK]
+Trying kernel                     3.2.2-030202-generic  [OK]
+Trying kernel                    3.1.10-030110-generic  [OK]
+Trying kernel                    3.0.18-030018-generic  [OK]
+Trying kernel                  2.6.39-02063904-generic  [OK]
+Trying kernel                        2.6.38-13-generic  [OK]
+Trying kernel                  2.6.38-02063808-generic  [OK]
+Trying kernel                  2.6.37-02063706-generic  [OK]
+Trying kernel                  2.6.36-02063604-generic  [OK]
+Trying kernel                  2.6.35-02063512-generic  [OK]
+Trying kernel                  2.6.34-02063410-generic  [OK]
+Trying kernel                  2.6.33-02063305-generic  [OK]
+Trying kernel                  2.6.32-02063255-generic  [OK]
+Trying kernel                        2.6.31-22-generic  [OK]
+Trying kernel                  2.6.31-02063113-generic  [OK]
+Trying kernel                  2.6.30-02063010-generic  [OK]
+Trying kernel                  2.6.29-02062906-generic  [OK]
+Trying kernel                  2.6.28-02062810-generic  [OK]
+Trying kernel                    2.6.27-020627-generic  [OK]
+Trying kernel                    2.6.26-020626-generic  [OK]
+Trying kernel                    2.6.25-020625-generic  [OK]
+Trying kernel                    2.6.24-020624-generic  [OK]
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
 ---
-Gertjan
+ include/linux/tracepoint.h |   40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/include/linux/tracepoint.h b/include/linux/tracepoint.h
+index 9f5add1..a5bd743 100644
+--- a/include/linux/tracepoint.h
++++ b/include/linux/tracepoint.h
+@@ -4,7 +4,47 @@
+ #include <linux/version.h>
+ 
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
++
+ #include_next <linux/tracepoint.h>
++
++/* Backports f42c85e7 */
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
++#undef TP_STRUCT__entry
++#define TP_STRUCT__entry(args...) args
++#endif
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
++/* Backports 091ad365, a rename */
++#define DECLARE_EVENT_CLASS TRACE_EVENT_TEMPLATE
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
++#define TP_PROTO TPPROTO
++#define TP_ARGS TPARGS
++#define TP_FMT TPFMT
++#define TP_RAW_FMT TPRAWFMT
++#endif
++
++#endif
++
++#else /* just disable tracing */
++
++/* Disable all tracing */
++#undef TRACE_EVENT
++#define TRACE_EVENT(name, proto, ...) \
++static inline void trace_ ## name(proto) {}
++#undef DECLARE_EVENT_CLASS
++#define DECLARE_EVENT_CLASS(...)
++#undef DEFINE_EVENT
++#define DEFINE_EVENT(evt_class, name, proto, ...) \
++static inline void trace_ ## name(proto) {}
++
++#define TP_PROTO(args...)  args
++#define TP_ARGS(args...)   args
++#define TP_CONDITION(args...)      args
++
++struct tracepoint_iter {
++};
++
+ #endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27)) */
+ 
+ #endif	/* _COMPAT_LINUX_TRACEPOINT_H */
+-- 
+1.7.10.rc1.22.gf5241
+
