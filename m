@@ -1,130 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20496 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031499Ab2CFWni (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:38 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 26/33] iwlwifi: move irq to PCIe
-Date: Tue,  6 Mar 2012 13:31:01 -0800
-Message-Id: <1331069468-11074-27-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234358_553588_509312EE)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:59355 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753483Ab2CTGCL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Mar 2012 02:02:11 -0400
+Subject: Re: [PATCH] cfg80211: warn if db.txt is empty with
+ CONFIG_CFG80211_INTERNAL_REGDB
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: sfr@canb.auug.org.au, linux-wireless@vger.kernel.org,
+	Youngsin Lee <youngsin@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>,
+	Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>,
+	Vipin Mehta <vipimeht@qca.qualcomm.com>,
+	yahuan@qca.qualcomm.com, jjan@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, henrykim@qualcomm.com,
+	jouni@qca.qualcomm.com, athiruve@qca.qualcomm.com,
+	cjkim@qualcomm.com, philipk@qca.qualcomm.com,
+	sunnykim@qualcomm.com, sskwak@qualcomm.com, kkim@qualcomm.com,
+	mattbyun@qualcomm.com, ryanlee@qualcomm.com, simbap@qualcomm.com,
+	krislee@qualcomm.com, conner@qualcomm.com, hojinkim@qualcomm.com,
+	honglee@qualcomm.com, johnwkim@qualcomm.com
+In-Reply-To: <1332192901-2500-1-git-send-email-mcgrof@frijolero.org> (sfid-20120319_223516_781886_87D088F1)
+References: <1332192901-2500-1-git-send-email-mcgrof@frijolero.org>
+	 (sfid-20120319_223516_781886_87D088F1)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Mar 2012 07:02:03 +0100
+Message-ID: <1332223323.3329.0.camel@jlt3.sipsolutions.net> (sfid-20120320_070237_702983_CFD8B7F3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2012-03-19 at 14:35 -0700, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+> 
+> It has happened twice now where elaborate troubleshooting has
+> undergone on systems where CONFIG_CFG80211_INTERNAL_REGDB [0]
+> has been set but yet net/wireless/db.txt was not updated.
+> 
+> Despite the documentation on this it seems system integrators could
+> use some more help with this, so throw out a kernel warning at boot time
+> when their database is empty, and if they enabled cfg80211 regulatory
+> debugging (CONFIG_CFG80211_REG_DEBUG), simply fail at build time. If
+> they didn't enable cfg80211 regulatory debugging then we'll just warn
+> at boot time. This does mean that the error-prone system integrator
+> won't likely realize the issue until they boot the machine but -- it
+> does not seem to make sense to enable a build bug unless someone
+> really is debugging.
+> 
+> [0] http://wireless.kernel.org/en/developers/Regulatory/CRDA#CONFIG_CFG80211_INTERNAL_REGDB
+> 
+> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+> Cc: Youngsin Lee <youngsin@qualcomm.com>
+> Cc: Raja Mani <rmani@qca.qualcomm.com>
+> Cc: Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>
+> Cc: Vipin Mehta <vipimeht@qca.qualcomm.com>
+> Cc: yahuan@qca.qualcomm.com
+> Cc: jjan@qca.qualcomm.com
+> Cc: vthiagar@qca.qualcomm.com
+> Cc: henrykim@qualcomm.com
+> Cc: jouni@qca.qualcomm.com
+> Cc: athiruve@qca.qualcomm.com
+> Cc: cjkim@qualcomm.com
+> Cc: philipk@qca.qualcomm.com
+> Cc: sunnykim@qualcomm.com
+> Cc: sskwak@qualcomm.com
+> Cc: kkim@qualcomm.com
+> Cc: mattbyun@qualcomm.com
+> Cc: ryanlee@qualcomm.com
+> Cc: simbap@qualcomm.com
+> Cc: krislee@qualcomm.com
+> Cc: conner@qualcomm.com
+> Cc: hojinkim@qualcomm.com
+> Cc: honglee@qualcomm.com
+> Cc: johnwkim@qualcomm.com
+> Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+> ---
+> 
+> Stephen, John, not sure what is best to address this since I know we shouldn't
+> be failing to build kernels easily. This will only fail to build if both
+> CONFIG_CFG80211_REG_DEBUG and CONFIG_CFG80211_INTERNAL_REGDB are enabled.
+> We could get rid of the build bug check completely but this just means
+> system integrators will likley fail to fix the issue early. Experience
+> shows this is a common issue so far and a lot of time is going into debugging
+> this. I'd like to avoid this in the future. Let me know what you guys think.
+> 
+>  net/wireless/reg.c |   12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index e9a0ac8..85f51b3 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -388,7 +388,18 @@ static void reg_regdb_query(const char *alpha2)
+>  
+>  	schedule_work(&reg_regdb_work);
+>  }
+> +
+> +/* Feel free to add any other sanity checks here */
+> +static void reg_regdb_size_check(void)
+> +{
+> +#ifdef CONFIG_CFG80211_REG_DEBUG
+> +	BUILD_BUG_ON(!reg_regdb_size);
+> +#else
+> +	WARN_ONCE(!reg_regdb_size, "db.txt is empty, you should update it...");
+> +#endif
 
-Even if the variable might also be used by other
-transports, there's no need for anything outside
-of the transport itself to access it, so move it
-into the private area.
+That ifdef seems a bit pointless? If anything I would have expected it
+the other way around since the BUILD_BUG_ON compiles to nothing?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 ++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-trans.h          |    2 --
- 3 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 93f49ac..d13b8d1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -231,6 +231,7 @@ struct iwl_tx_queue {
-  * @rxq: all the RX queue data
-  * @rx_replenish: work that will be called when buffers need to be allocated
-  * @trans: pointer to the generic transport area
-+ * @irq - the irq number for the device
-  * @irq_requested: true when the irq has been requested
-  * @scd_base_addr: scheduler sram base address in SRAM
-  * @scd_bc_tbls: pointer to the byte count table of the scheduler
-@@ -262,6 +263,7 @@ struct iwl_trans_pcie {
- 	struct tasklet_struct irq_tasklet;
- 	struct isr_statistics isr_stats;
- 
-+	unsigned int irq;
- 	spinlock_t irq_lock;
- 	u32 inta_mask;
- 	u32 scd_base_addr;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 83143d8..d68dd65 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1303,7 +1303,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 
- 	/* wait to make sure we flush pending tasklet*/
--	synchronize_irq(trans->irq);
-+	synchronize_irq(trans_pcie->irq);
- 	tasklet_kill(&trans_pcie->irq_tasklet);
- 
- 	cancel_work_sync(&trans_pcie->rx_replenish);
-@@ -1522,11 +1522,11 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 
- 		iwl_alloc_isr_ict(trans);
- 
--		err = request_irq(trans->irq, iwl_isr_ict, IRQF_SHARED,
-+		err = request_irq(trans_pcie->irq, iwl_isr_ict, IRQF_SHARED,
- 			DRV_NAME, trans);
- 		if (err) {
- 			IWL_ERR(trans, "Error allocating IRQ %d\n",
--				trans->irq);
-+				trans_pcie->irq);
- 			goto error;
- 		}
- 
-@@ -1549,7 +1549,7 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 	return err;
- 
- err_free_irq:
--	free_irq(trans->irq, trans);
-+	free_irq(trans_pcie->irq, trans);
- error:
- 	iwl_free_isr_ict(trans);
- 	tasklet_kill(&trans_pcie->irq_tasklet);
-@@ -1638,7 +1638,7 @@ static void iwl_trans_pcie_free(struct iwl_trans *trans)
- 	iwl_trans_pcie_rx_free(trans);
- #endif
- 	if (trans_pcie->irq_requested == true) {
--		free_irq(trans->irq, trans);
-+		free_irq(trans_pcie->irq, trans);
- 		iwl_free_isr_ict(trans);
- 	}
- 
-@@ -2329,7 +2329,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
- 			"pci_enable_msi failed(0X%x)", err);
- 
- 	trans->dev = &pdev->dev;
--	trans->irq = pdev->irq;
-+	trans_pcie->irq = pdev->irq;
- 	trans_pcie->pci_dev = pdev;
- 	trans->hw_rev = iwl_read32(trans, CSR_HW_REV);
- 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index dcad694..a4a9efc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -334,7 +334,6 @@ enum iwl_trans_state {
-  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
-  * @reg_lock - protect hw register access
-  * @dev - pointer to struct device * that represents the device
-- * @irq - the irq number for the device
-  * @hw_id: a u32 with the ID of the device / subdevice.
-  *	Set during transport allocation.
-  * @hw_id_str: a string with info about HW ID. Set during transport allocation.
-@@ -349,7 +348,6 @@ struct iwl_trans {
- 	spinlock_t reg_lock;
- 
- 	struct device *dev;
--	unsigned int irq;
- 	u32 hw_rev;
- 	u32 hw_id;
- 	char hw_id_str[52];
--- 
-1.7.0.4
+johannes
 
