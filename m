@@ -1,51 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38015 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756964Ab2C3UeH (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:53480 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752939Ab2CTLgY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 16:34:07 -0400
-Message-ID: <1333139642.7679.7.camel@jlt3.sipsolutions.net> (sfid-20120330_223410_739762_16583610)
-Subject: Re: [PATCH 2/2] compat: explicitly export generated variables
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 30 Mar 2012 22:34:02 +0200
-In-Reply-To: <CAB=NE6XXzwKjFCbV=zi7DaPtpa4aqttB4EMTqaKSzhPMHwJd1A@mail.gmail.com> (sfid-20120330_223142_126396_7FBFC053)
-References: <1333105815.3908.11.camel@jlt3.sipsolutions.net>
-	 <1333105904.3908.13.camel@jlt3.sipsolutions.net>
-	 <CAB=NE6XXzwKjFCbV=zi7DaPtpa4aqttB4EMTqaKSzhPMHwJd1A@mail.gmail.com>
-	 (sfid-20120330_223142_126396_7FBFC053)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 20 Mar 2012 07:36:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn10svpDFkpbkCtFMGFdqW9G0syWrhL3s-ApQH2bKt0P2g@mail.gmail.com>
+References: <4F576FD5.2050208@gmail.com>
+	<CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com>
+	<4F577D9B.7020402@gmail.com>
+	<4F579A88.6030503@openwrt.org>
+	<4F61F551.5010608@gmail.com>
+	<4F639851.5080500@gmail.com>
+	<4F674616.8080103@gmail.com>
+	<CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com>
+	<4F674FF5.2060406@gmail.com>
+	<4F6751B2.1030809@openwrt.org>
+	<4F681B78.9000207@gmail.com>
+	<CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com>
+	<4F68235C.5090701@gmail.com>
+	<CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com>
+	<4F682555.3020502@gmail.com>
+	<20328.16366.166909.255035@gargle.gargle.HOWL>
+	<CAD2nsn0JCKd4NnXOLfw4QXHTJdxrfepw9s6yYca=uSHwWXq3-A@mail.gmail.com>
+	<CAD2nsn10svpDFkpbkCtFMGFdqW9G0syWrhL3s-ApQH2bKt0P2g@mail.gmail.com>
+Date: Tue, 20 Mar 2012 17:06:23 +0530
+Message-ID: <CAD2nsn1SxhX3MZTF+XYN=cQEfHuD9bu5_TuLtVOCNmVBoZNJ2A@mail.gmail.com> (sfid-20120320_123643_438066_381B02C2)
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024
+ AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
+	Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-30 at 13:30 -0700, Luis R. Rodriguez wrote:
-> On Fri, Mar 30, 2012 at 4:11 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > Doing the blanket "export" statement at the beginning
-> > of the generated file confuses the kernel's Makefiles
-> > and causes extreme build slowdowns.
-> >
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > ---
-> 
-> Nice, how did you figure this out BTW!?
+On Tue, Mar 20, 2012 at 4:45 PM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> On Tue, Mar 20, 2012 at 3:07 PM, Mohammed Shafi
+> <shafi.wireless@gmail.com> wrote:
+>> Hi Sujith/Justin,
+>>
+>> On Tue, Mar 20, 2012 at 1:59 PM, Sujith Manoharan
+>> <c_manoha@qca.qualcomm.com> wrote:
+>>> Justin P. Mattock wrote:
+>>>> yeah this works:
+>>>>
+>>>> eading symbols from
+>>>> /home/kernel/linux-next/drivers/net/wireless/ath/ath9k/ath9k.o...done.
+>>>> (gdb) l *(ath_tx_start+0x284)
+>>>> 0xcad4 is in ath_tx_start (drivers/net/wireless/ath/ath9k/xmit.c:1878).
+>>>> 1873                  ieee80211_is_data_qos(hdr->frame_control)) {
+>>>> 1874                  tidno = ieee80211_get_qos_ctl(hdr)[0] &
+>>>> 1875                          IEEE80211_QOS_CTL_TID_MASK;
+>>>> 1876                  tid = ATH_AN_2_TID(txctl->an, tidno);
+>>>> 1877
+>>>> 1878                  WARN_ON(tid->ac->txq != txctl->txq);
+>>>> 1879          }
+>>>> 1880
+>>>> 1881          if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && tid) {
+>>>> 1882                  /*
+>>>> (gdb)
+>>>
+>>> Can you try this patch ?
+>>
+>> just found out that 'ht_supported' may not  be set, if assoc response
+>> does not has ht_cap IE (or) if we could not parse it (why), then the
+>> driver won't initialize those tid related structures ath_tx_node_init,
+>> while we later access them in ath_tx_start. so this should fix the
+>> issue.
+>
+> now i was able to quite easily recreate this issue in wireless testing
+> even without suspend resume and with the patch the issue seems to get
+> fixed.
+> i was using 2ghz channel 6 and TKIP (no HT!).
 
-Random monkey approach ;-)
+i was keep on trying with 5ghz TKIP and it seems HT enable even with
+TKIP (need to see why this happens), thats why even i could not
+recreate this issue. mac80211 seems to disable HT, ht_supported false
+while in driver we go with ATH9K_HW_CAP HT
 
-I noticed it was slow and saw that it was due to some weird shit from
-the kernel Makefile.lib being executed when it shouldn't be.
 
-Since I have the compat *result* in git, I could easily see the diff
-between the old compat.git/compat-wireless.git and the new versions. And
-then I basically tried to identify the changes that caused this problem,
-my best guess was that it had to be the Makefile so I gradually changed
-that back to the previous version until the problem went away ... and
-then identified which changes were responsible.
+>
+>
+>>
+>>>
+>>> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>>> Date: Tue, 20 Mar 2012 13:51:26 +0530
+>>> Subject: [PATCH] ath9k: Use HW HT capabilites properly
+>>>
+>>> The commit "ath9k: Remove aggregation flags" changed how
+>>> nodes were being initialized. Use the HW HT cap bits
+>>> to initialize/de-initialize nodes, else we would be
+>>> accessing an uninitialized entry during a suspend/resume cycle,
+>>> resulting in a panic.
+>>>
+>>> Reported-by: Justin P. Mattock <justinmattock@gmail.com>
+>>> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath9k/main.c |    4 ++--
+>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>>> index 3879485..215eb25 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>> @@ -640,7 +640,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+>>>        an->sta = sta;
+>>>        an->vif = vif;
+>>>
+>>> -       if (sta->ht_cap.ht_supported) {
+>>> +       if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+>>>                ath_tx_node_init(sc, an);
+>>>                an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
+>>>                                     sta->ht_cap.ampdu_factor);
+>>> @@ -659,7 +659,7 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
+>>>        an->sta = NULL;
+>>>  #endif
+>>>
+>>> -       if (sta->ht_cap.ht_supported)
+>>> +       if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+>>>                ath_tx_node_cleanup(sc, an);
+>>>  }
+>>>
+>>> --
+>>> 1.7.9.4
+>>>
+>>
+>>
+>>
+>> --
+>> thanks,
+>> shafi
+>
+>
+>
+> --
+> thanks,
+> shafi
 
-johannes
 
+
+-- 
+thanks,
+shafi
