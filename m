@@ -1,33 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63600 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754902Ab2CLJlN (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:47958 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754528Ab2CTQrm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 05:41:13 -0400
-Message-ID: <4F5DC4B1.5070404@qca.qualcomm.com> (sfid-20120312_104118_700671_7B6E673E)
-Date: Mon, 12 Mar 2012 15:11:05 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Tue, 20 Mar 2012 12:47:42 -0400
+Message-ID: <4F68B4AA.3070306@candelatech.com> (sfid-20120320_174752_494070_07E777BE)
+Date: Tue, 20 Mar 2012 09:47:38 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<ath9k-devel@lists.ath9k.org>, <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>
-Subject: Re: [ath9k-devel] [RFC] ath9k_hw: Fix chip revision checks
-References: <1331531853-5043-1-git-send-email-mohammed@qca.qualcomm.com> <4F5DBB8B.1070000@openwrt.org> <4F5DBED4.4050500@qca.qualcomm.com>
-In-Reply-To: <4F5DBED4.4050500@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Florian Fainelli <florian@openwrt.org>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v3 4/4] ath9k:  Support ethtool getstats api.
+References: <1332183105-4447-1-git-send-email-greearb@candelatech.com> <1332183105-4447-4-git-send-email-greearb@candelatech.com> <4F684301.9040006@openwrt.org>
+In-Reply-To: <4F684301.9040006@openwrt.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 03/20/2012 01:42 AM, Florian Fainelli wrote:
+> Hi,
+>
+> Le 03/19/12 19:51, greearb@candelatech.com a écrit :
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> This returns many of the values that formerly could
+>> only be obtained from debugfs. This should be an
+>> improvement when trying to access these counters
+>> programatically. Currently this support is only
+>> enabled when DEBUGFS is enabled because otherwise
+>> these stats are not accumulated.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>>
+>> v3: No changes from v2
+>>
+>> :100644 100644 4a00806... 7261f88... M drivers/net/wireless/ath/ath9k/main.c
+>> drivers/net/wireless/ath/ath9k/main.c | 134 +++++++++++++++++++++++++++++++++
+>> 1 files changed, 134 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> index 4a00806..7261f88 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -2430,6 +2430,134 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+>> return 0;
+>> }
+>>
+>> +#ifdef CONFIG_ATH9K_DEBUGFS
+>
+> These are ethtool knobs, so you might want to introduce a new config symbol dedicated to it, which depends on CONFIG_ATH9K_DEBUGFS eventually.
 
-> while adding some new code while AR_9280_SREV_20 later was not in
-> uniform with the other chipset macros. i should have just checked with
-> git annotate reg.h could have found your commit.
+I'd like to gather at least most stats always, so ethtool can work regardless of
+debugfs.  But, that can be follow on patches in my opinion.  If it turns out
+that we need another config option for this, then that is fine too.
 
-Felix had said this could be better done by using AR_SREV_9280_OR_LATER 
-macro with the corresponding changes to be effect in the hardware code.
-thanks.
+Thanks,
+Ben
 
 -- 
-thanks,
-shafi
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
