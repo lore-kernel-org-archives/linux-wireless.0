@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65379 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754147Ab2CHCt4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 21:49:56 -0500
-Date: Thu, 8 Mar 2012 03:49:52 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: NFC: Fragment LLCP I frames
-Message-ID: <20120308024952.GA9008@sortiz-mobl> (sfid-20120308_035028_188421_F88657A2)
-References: <20120307095142.GA24805@elgon.mountain>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43378 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823Ab2CTRmP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Mar 2012 13:42:15 -0400
+Message-ID: <4F68C16B.1090707@gmail.com> (sfid-20120320_184245_260318_09F14063)
+Date: Tue, 20 Mar 2012 10:42:03 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120307095142.GA24805@elgon.mountain>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org> <4F681B78.9000207@gmail.com> <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com> <4F68235C.5090701@gmail.com> <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com> <4F682555.3020502@gmail.com> <20328.16366.166909.255035@gargle.gargle.HOWL> <4F6891F1.9010105@gmail.com> <20328.41155.468698.30887@gargle.gargle.HOWL>
+In-Reply-To: <20328.41155.468698.30887@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On 03/20/2012 08:22 AM, Sujith Manoharan wrote:
+> Justin P. Mattock wrote:
+>> both mohammed and sujith Thank you for the patches for this issue!
+>> I really appreciate this..
+>>
+>> I went and applied the debug printk and added ath_node_attach as well to
+>> my linux-next clone, will run for a few days to see if I get anything..
+>> full dmesg is here..: http://fpaste.org/jHSX/
+>
+> Thanks for testing and please report if the issue is fixed.
+>
+> Sujith
+>
 
-On Wed, Mar 07, 2012 at 12:51:42PM +0300, Dan Carpenter wrote:
-> Hi Samuel,
-> 
-> I had some questions about the patch e65b0f46edfd: "NFC: Fragment LLCP I
-> frames" from Mar 5, 2012.
-> 
-> net/nfc/llcp/commands.c
-> +       while (remaining_len > 0) {
-> +
-> +               frag_len = min_t(u16, local->remote_miu, remaining_len);
->                                  ^^^
-> 
-> This should be a cast to size_t.  Otherwise for a large value of
-> remaining_len we'd loop until we hit an allocation failure with
-> pdu = llcp_allocate_pdu();
-Right.
+no worries.. hopefully we can get this bug fixed.. will continue running 
+these patches and will send out anything I see..
 
-
-> +               pdu = llcp_allocate_pdu(sock, LLCP_PDU_I,
-> +                                       frag_len + LLCP_SEQUENCE_SIZE);
-> +               if (pdu == NULL)
-> +                       return -ENOMEM;
-> +
-> +               skb_put(pdu, LLCP_SEQUENCE_SIZE);
-> +
-> +               memcpy(skb_put(pdu, frag_len), msg_ptr, frag_len);
-> +
-> +               skb_queue_head(&sock->tx_queue, pdu);
-> +
-> +               lock_sock(sk);
-> +
-> +               nfc_llcp_queue_i_frames(sock);
-> +
-> +               release_sock(sk);
-> +
-> +               remaining_len -= frag_len;
-> +               msg_ptr += len;
-> 
-> Shouldn't this be msg_ptr += frag_len?
-Right as well.
-I'll send an patch to John for fixing that. Do you mind me adding a:
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-to it ?
-
-Cheers,
-Samuel.
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Justin P. Mattock
