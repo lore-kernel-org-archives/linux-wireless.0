@@ -1,49 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:44655 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161643Ab2CSQPP (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47768 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578Ab2CTFZB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 12:15:15 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Subject: [PATCH 0/9] ath6kl: add full USB support
-Date: Mon, 19 Mar 2012 18:14:55 +0200
-Message-Id: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171657_926889_1E14952D)
+	Tue, 20 Mar 2012 01:25:01 -0400
+Message-ID: <4F681685.4030109@gmail.com> (sfid-20120320_062534_010346_01814621)
+Date: Tue, 20 Mar 2012 15:32:53 +1000
+From: wei <yinwei168@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3] mac80211:  modify debugfs in  PID to monitor rate performance
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds full USB support and new HTC pipe implementation. Please review
-and send comments.
+>From Wei YIN <Wei.Yin@nicta.com.au>
+addressed v2 comments from Julian and John
 
-Kalle Valo (9):
-  ath6kl: set ram reserved size only for ar6003
-  ath6kl: Add tx_complete() to struct htc_ep_callbacks
-  ath6kl: add tx_comp_multi() to struct htc_ep_callbacks
-  ath6kl: add pointer to the skb in htc_packet
-  ath6kl: add rx data padding support
-  ath6kl: remove void pointer from ath6kl_credit_setup()
-  ath6kl: add htc ops
-  ath6kl: Add HTC pipe implementation
-  ath6kl: add full USB support
+Signed-off-by: Wei YIN <Wei.Yin@nicta.com.au>
+---
+kernel 3.3.0
+net/mac80211/rc80211_pid_debugfs.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+1 file changed, 64 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/ath/ath6kl/Makefile           |    3 +-
- drivers/net/wireless/ath/ath6kl/core.c             |   25 +-
- drivers/net/wireless/ath/ath6kl/core.h             |   14 +-
- drivers/net/wireless/ath/ath6kl/debug.h            |    1 +
- drivers/net/wireless/ath/ath6kl/hif-ops.h          |   34 +
- drivers/net/wireless/ath/ath6kl/hif.h              |    6 +
- drivers/net/wireless/ath/ath6kl/htc-ops.h          |  113 ++
- drivers/net/wireless/ath/ath6kl/htc.h              |   98 +-
- .../net/wireless/ath/ath6kl/{htc.c => htc_mbox.c}  |   81 +-
- drivers/net/wireless/ath/ath6kl/htc_pipe.c         | 1713 ++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/init.c             |   26 +-
- drivers/net/wireless/ath/ath6kl/sdio.c             |    2 +-
- drivers/net/wireless/ath/ath6kl/txrx.c             |   20 +-
- drivers/net/wireless/ath/ath6kl/usb.c              |  785 +++++++++-
- drivers/net/wireless/ath/ath6kl/wmi.h              |    3 +
- 15 files changed, 2851 insertions(+), 73 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/htc-ops.h
- rename drivers/net/wireless/ath/ath6kl/{htc.c => htc_mbox.c} (96%)
- create mode 100644 drivers/net/wireless/ath/ath6kl/htc_pipe.c
+--- wireless-testing_orig/net/mac80211/rc80211_pid_debugfs.c	2012-02-17 13:59:53.487182968 +1000
++++ wireless-testing/net/mac80211/rc80211_pid_debugfs.c	2012-03-17 12:52:48.335192212 +1000
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright 2007, Mattias Nissler <mattias.nissler@gmx.de>
++ * Copyright 2012, Wei Yin, National ICT Australia <Wei.Yin@nicta.com.au>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -14,12 +15,73 @@
+ #include <linux/skbuff.h>
+ #include <linux/slab.h>
+ #include <linux/export.h>
++#include <linux/debugfs.h>
++#include <linux/ieee80211.h>
++#include <linux/slab.h>
+ 
+ #include <net/mac80211.h>
+ #include "rate.h"
+ 
+ #include "rc80211_pid.h"
+ 
++
++int
++pid_stats_open(struct inode *inode, struct file *file)
++{
++	struct rc_pid_sta_info *sinfo = inode->i_private;
++	struct rc_pid_debugfs_info *ms;
++	struct rc_pid_rateinfo *rinfo;
++	char *p;
++	int i;
++
++	rinfo = sinfo->rinfo;
++	ms = kmalloc(sizeof(*ms) + 4096, GFP_KERNEL);
++	if (!ms)
++		return -ENOMEM;
++
++	file->private_data = ms;
++	p = ms->buf;
++	p += sprintf(p, "R for current rate;   T for temporary rate\n"
++			"rate    throughput      attempt          fail"
++			"        success         this_FLR\n");
++
++	for (i = 0; i < sinfo->n_rates; i++) {
++		struct rc_pid_rateinfo *pr = &rinfo[i];
++		*(p++) = (i == sinfo->txrate_idx) ? 'R' : ' ';
++		*(p++) = (i == sinfo->tmp_rate_idx) ? 'T' : ' ';
++		p += sprintf(p, "%3u%s", pr->bitrate / 2,
++				(pr->bitrate & 1 ? ".5" : "  "));
++		p += sprintf(p, 
++			 "%6u.%2u     %10lu     %10lu     %10lu        %2u%%\n",
++			 (pr->throughput * 1530 *8 / 1024 / 1024) /100,
++			 (pr->throughput * 1530 *8 / 1024 / 1024) % 100,
++			 pr->attempt, pr->fail, pr->success, 
++			 pr->this_fail == 0 ? 0: 
++			 (pr->this_fail *100 / 
++			 pr->this_attempt) % 100);
++	}
++	
++	ms->len = p - ms->buf;
++
++	return 0;
++}
++
++ssize_t
++pid_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos)
++{
++	struct rc_pid_debugfs_info *ms;
++
++	ms = file->private_data;
++	return simple_read_from_buffer(buf, len, ppos, ms->buf, ms->len);
++}
++
++int
++pid_stats_release(struct inode *inode, struct file *file)
++{
++	kfree(file->private_data);
++	return 0;
++}
++
+ static void rate_control_pid_event(struct rc_pid_event_buffer *buf,
+ 				   enum rc_pid_event_type type,
+ 				   union rc_pid_event_data *data)
+@@ -203,11 +265,9 @@ static ssize_t rate_control_pid_events_r
+ 
+ static const struct file_operations rc_pid_fop_events = {
+ 	.owner = THIS_MODULE,
+-	.read = rate_control_pid_events_read,
+-	.poll = rate_control_pid_events_poll,
+-	.open = rate_control_pid_events_open,
+-	.release = rate_control_pid_events_release,
+-	.llseek = noop_llseek,
++	.read = pid_stats_read,
++	.open = pid_stats_open,
++	.release = pid_stats_release,
+ };
+ 
+ void rate_control_pid_add_sta_debugfs(void *priv, void *priv_sta,
 
