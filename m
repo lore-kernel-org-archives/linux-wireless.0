@@ -1,64 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37946 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757521Ab2C1LRz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37133 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753051Ab2CTP4J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 07:17:55 -0400
-Message-ID: <1332933473.3479.31.camel@jlt3.sipsolutions.net> (sfid-20120328_131801_909499_BB9BAE56)
-Subject: Re: [PATCH] mac80211: remove hw.conf.channel usage where possible
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 28 Mar 2012 13:17:53 +0200
-In-Reply-To: <1332932064-13758-1-git-send-email-michal.kazior@tieto.com>
-References: <1332932064-13758-1-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 20 Mar 2012 11:56:09 -0400
+Message-ID: <4F68A893.7000108@qca.qualcomm.com> (sfid-20120320_165613_925050_5B23C208)
+Date: Tue, 20 Mar 2012 17:56:03 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: "Thiruvengadam, Aarthi" <athiruve@qca.qualcomm.com>
+CC: ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath6kl: handle probe response from P2P device in P2P
+ GO mode
+References: <1331847296-2086-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> <4F684247.6070800@qca.qualcomm.com> <EEF58C4275060743A995E9DD768A2A5227B4B27D@nasanexd02c.na.qualcomm.com>
+In-Reply-To: <EEF58C4275060743A995E9DD768A2A5227B4B27D@nasanexd02c.na.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-03-28 at 12:54 +0200, Michal Kazior wrote:
-> Removes hw.conf.channel usage from the following functions:
->  * ieee80211_mandatory_rates
->  * ieee80211_sta_get_rates
->  * ieee80211_frame_duration
-> 
-> This is in preparation for multi-channel operation.
+On 03/20/2012 05:54 PM, Thiruvengadam, Aarthi wrote:
 
-Nice, thanks.
+> According to the standard (section 7.2.3.9), SSID always follows the
+> capability information in a probe response frame. So I think we
+> should be ok as long as we check the buffer length.
 
-> @@ -120,7 +120,7 @@ int ieee80211_frame_duration(struct ieee80211_local *local, size_t len,
->  	 * DIV_ROUND_UP() operations.
->  	 */
->  
-> -	if (local->hw.conf.channel->band == IEEE80211_BAND_5GHZ || erp) {
-> +	if (!WARN_ON(!sband) && sband->band == IEEE80211_BAND_5GHZ || erp) {
+Ok, thanks for the confirmation.
 
-This seems a bit odd to me, maybe change to
-
-if (WARN_ON(!sband))
-	return 0;
-if (sband->band == ... || erp)
-	...
-
-or something like that? Or is there any code that has to pass NULL for
-some reason?
-
-Also, now that I think about it, is there a reason to pass
-	struct ieee80211_supported_band *sband
-rather than
-	enum ieee80211_band band?
-
-That wouldn't allow invalid/NULL value of course.
-
-
->  __le16 ieee80211_generic_frame_duration(struct ieee80211_hw *hw,
->  					struct ieee80211_vif *vif,
-> +					struct ieee80211_supported_band *sband,
-
-same here.
-
-Other than that, which may be needed, this looks good to me.
-
-johannes
-
+Kalle
