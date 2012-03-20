@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43306 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756536Ab2CLUKX (ORCPT
+Received: from mail.windriver.com ([147.11.1.11]:49381 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759907Ab2CTMWG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 16:10:23 -0400
-Received: by ghrr11 with SMTP id r11so2992208ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 13:10:22 -0700 (PDT)
-Message-ID: <4F5E582B.7020407@lwfinger.net> (sfid-20120312_211027_266659_6F889D52)
-Date: Mon, 12 Mar 2012 15:10:19 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 20 Mar 2012 08:22:06 -0400
+Message-ID: <4F687667.1030605@windriver.com> (sfid-20120320_132212_447015_82522215)
+Date: Tue, 20 Mar 2012 20:21:59 +0800
+From: Zhong Hongbo <hongbo.zhong@windriver.com>
 MIME-Version: 1.0
-To: althaser <althaser@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Linux Kernel /staging/rtl8192e network module
-References: <CAD=6cZrpC9WhoEZyespjt69LFR2Ay5vW5mSLojzY4cmrm-jPaQ@mail.gmail.com> <4F5E291D.8090809@lwfinger.net> <CAD=6cZo91uXx38OuJhjctT5ZrFOduYcMvUPUxNC8hFV0mbSVrQ@mail.gmail.com>
-In-Reply-To: <CAD=6cZo91uXx38OuJhjctT5ZrFOduYcMvUPUxNC8hFV0mbSVrQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Zhong Hongbo g <hongbo.zhong@windriver.com>,
+	"Cao, Qingtao (Harry)" <Qingtao.Cao@windriver.com>,
+	"Gao, Guijin" <Guijin.Gao@windriver.com>,
+	"'Cabuk, Yusuf'" <Yusuf.Cabuk@windriver.com>
+Subject: Dell E6400 + Windows XP can not work on intel N-6205 AP mode for
+  compat-wireless-2012-03-18.tar.bz2 package
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/12/2012 01:13 PM, althaser wrote:
+I try the latest compat-wireless package to test Intel Centrino N-6205 Taylor Peak Wi-Fi card  AP mode.
 
-> debian sid here
->
-> $ lsmod |grep 8192
-> rtl8192se              74082  0
-> rtlwifi                81350  1 rtl8192se
-> mac80211              192768  2 rtlwifi,rtl8192se
+1. Test enviroment
+My Wi-Fi client:
+Dell Latitude E6400 desktop + Ubuntu 10.04,
+Dell Latitude E6400 desktop + Windows XP.
 
-I put my RTL8192E in my computer, and using kernel 3.3-rc6, I got both rtl8192se 
-and r8192e_pci loaded as expected, with r8192e_pci active. The bad news is that 
-the driver got broken since the last time I tested it. I'm not the maintainer, 
-and only acquired one of the cards when I discovered the PCI ID overlap with 
-rtl8192se, which I do maintain.
+Compat-wireless package: compat-wireless-2012-03-18.tar.bz2
 
-I will try to bisect the driver to see what might be wrong.
+Wi-Fi AP: Intel Centrino N-6205 Taylor Peak
 
-The main difference between our two systems is the user-space components. My 
-system is running version 173 of udevd, which is likely the component in question.
+2. issue describe
+When I use E6400 + Ubuntu 10.04 connect to intel N-6205 Taylor PeaK AP， I can go to internet to browse web. E6400 + Windows XP can connect to intel N-6205 AP, But I can not go to internet.
+Is it interactions issue for the compat-wirelss package? Welcome any suggestion.
 
-You should be able to blacklist rtl8192se and rtlwifi to get r8192e_pci working. 
-Let me know if 3.2.9 works. Mine is unable to authenticate with 3.3-rc6.
+Thanks,
+hongbo
 
-Larry
+
+
