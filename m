@@ -1,70 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3029 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751950Ab2CHVBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 16:01:18 -0500
-Message-ID: <4F591E14.4010000@broadcom.com> (sfid-20120308_220123_075130_3F20DE2E)
-Date: Thu, 8 Mar 2012 22:01:08 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:55247 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752429Ab2CTOTd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Mar 2012 10:19:33 -0400
+Message-ID: <4F6891F1.9010105@gmail.com> (sfid-20120320_151954_651763_FE880E42)
+Date: Tue, 20 Mar 2012 07:19:29 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"Quan, David" <dquan@qca.qualcomm.com>,
-	"Green, Michael" <green@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: Problems with regulatory domain support and BCM43224
-References: <20120307194001.GA2506@ubuntu-macmini>
- <20120308174101.GB28133@ubuntu-macmini>
- <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
- <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com>
- <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com>
- <20120308200734.GC28133@ubuntu-macmini>
-In-Reply-To: <20120308200734.GC28133@ubuntu-macmini>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org> <4F681B78.9000207@gmail.com> <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com> <4F68235C.5090701@gmail.com> <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com> <4F682555.3020502@gmail.com> <20328.16366.166909.255035@gargle.gargle.HOWL>
+In-Reply-To: <20328.16366.166909.255035@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/08/2012 09:07 PM, Seth Forshee wrote:
-> On Thu, Mar 08, 2012 at 11:51:03AM -0800, Luis R. Rodriguez wrote:
->> On Thu, Mar 8, 2012 at 11:45 AM, Quan, David<dquan@qca.qualcomm.com>  wrote:
->>> I think there is to it more than SW.
->>> Where ever you get this card, is the card tested and regulatory approved for those countries, DFS or not?
+On 03/20/2012 01:29 AM, Sujith Manoharan wrote:
+> Justin P. Mattock wrote:
+>> yeah this works:
 >>
->> Seth, what driver are you using? I know you are using a BCM43224 card.
+>> eading symbols from
+>> /home/kernel/linux-next/drivers/net/wireless/ath/ath9k/ath9k.o...done.
+>> (gdb) l *(ath_tx_start+0x284)
+>> 0xcad4 is in ath_tx_start (drivers/net/wireless/ath/ath9k/xmit.c:1878).
+>> 1873			ieee80211_is_data_qos(hdr->frame_control)) {
+>> 1874			tidno = ieee80211_get_qos_ctl(hdr)[0]&
+>> 1875				IEEE80211_QOS_CTL_TID_MASK;
+>> 1876			tid = ATH_AN_2_TID(txctl->an, tidno);
+>> 1877	
+>> 1878			WARN_ON(tid->ac->txq != txctl->txq);
+>> 1879		}
+>> 1880	
+>> 1881		if ((tx_info->flags&  IEEE80211_TX_CTL_AMPDU)&&  tid) {
+>> 1882			/*
+>> (gdb)
 >
-> brcmsmac
+> Can you try this patch ?
 >
->>> It is possible that this card is only regulatory tested for non DFS channels, but now you enable them for passive.
->>
->> That's a good point.
->>
->>> This means that yes, you are save and not violate DFS rules because you are in passive mode. However, you are in complete violation if the STA finds an AP on that DFS channel and then connects and transmits as this STA is not allow to transmit on that channel since it is not approved.
->>
->> If the driver being used is a supported vendor driver then I'll punt
->> this to the vendor (Broadcom). If this is the reversed engineered
->> driver (b43) that Broadcom to this day seems to blindly ignore even
->> for regulatory, then I'm happy to recommend based on your input to
->> leave the regulatory domain as-is given that we cannot guarantee what
->> the vendor meant as they have not done any work on releasing either
->> documentation or code to help with their regulatory situation.
+> From: Sujith Manoharan<c_manoha@qca.qualcomm.com>
+> Date: Tue, 20 Mar 2012 13:51:26 +0530
+> Subject: [PATCH] ath9k: Use HW HT capabilites properly
 >
-> It would be nice if Broadcom could weigh in. Cc-ing Arend.
+> The commit "ath9k: Remove aggregation flags" changed how
+> nodes were being initialized. Use the HW HT cap bits
+> to initialize/de-initialize nodes, else we would be
+> accessing an uninitialized entry during a suspend/resume cycle,
+> resulting in a panic.
+>
+> Reported-by: Justin P. Mattock<justinmattock@gmail.com>
+> Signed-off-by: Sujith Manoharan<c_manoha@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/main.c |    4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 3879485..215eb25 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -640,7 +640,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+>   	an->sta = sta;
+>   	an->vif = vif;
+>
+> -	if (sta->ht_cap.ht_supported) {
+> +	if (sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_HT) {
+>   		ath_tx_node_init(sc, an);
+>   		an->maxampdu = 1<<  (IEEE80211_HT_MAX_AMPDU_FACTOR +
+>   				     sta->ht_cap.ampdu_factor);
+> @@ -659,7 +659,7 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
+>   	an->sta = NULL;
+>   #endif
+>
+> -	if (sta->ht_cap.ht_supported)
+> +	if (sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_HT)
+>   		ath_tx_node_cleanup(sc, an);
+>   }
+>
 
-Hi, Seth
 
-Noticed your email yesterday, but did not get to chime into the 
-conversation. brcmsmac does indeed provide a regulatory hint, which is 
-either from SPROM or hard-coded to "US". Since "X0" is not a known 
-regulatory domain for crda it does not make sense to pass it as a 
-regulatory hint. However, the "full" story is told on linuxwireless.org 
-(see [1]).
+alright!
 
-Gr. AvS
+both mohammed and sujith Thank you for the patches for this issue!
+I really appreciate this..
 
-[1] http://linuxwireless.org/en/users/Drivers/brcm80211
+I went and applied the debug printk and added ath_node_attach as well to 
+my linux-next clone, will run for a few days to see if I get anything..
+full dmesg is here..: http://fpaste.org/jHSX/
+
+Justin P. Mattock
 
