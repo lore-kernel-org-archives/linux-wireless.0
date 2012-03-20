@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:41013 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755031Ab2CDWIf (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40850 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756856Ab2CTNvG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 17:08:35 -0500
-From: Sven Joachim <svenjoac@gmx.de>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
-References: <20120228010511.GA8453@kroah.com>
-	<20120228010434.412979550@linuxfoundation.org>
-	<87hay4dqjr.fsf@turtle.gmx.de> <20120304215307.GA27157@burratino>
-Date: Sun, 04 Mar 2012 23:08:32 +0100
-In-Reply-To: <20120304215307.GA27157@burratino> (Jonathan Nieder's message of
-	"Sun, 4 Mar 2012 15:53:07 -0600")
-Message-ID: <87sjhoc93z.fsf@turtle.gmx.de> (sfid-20120304_230940_302575_AFE3018C)
+	Tue, 20 Mar 2012 09:51:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1332245223.3329.5.camel@jlt3.sipsolutions.net>
+References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
+ <1332214021-9716-3-git-send-email-mcgrof@frijolero.org> <1332245223.3329.5.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 20 Mar 2012 06:50:44 -0700
+Message-ID: <CAB=NE6V4NuNc8Xr3qKAaXgs2og-2e6qusek=ZFdvQCq4JtKavQ@mail.gmail.com> (sfid-20120320_145111_073362_6DBDC3D8)
+Subject: Re: [PATCH 2/4] compat: backport work_busy()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-04 22:53 +0100, Jonathan Nieder wrote:
-
-> Sven Joachim wrote:
->
->> The laptop is an Acer TravelMate 2490 with a Broadcom chip:
+On Tue, Mar 20, 2012 at 5:07 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-03-19 at 20:26 -0700, Luis R. Rodriguez wrote:
+>> From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
 >>
->> ,----
->> | 06:02.0 Network controller: Broadcom Corporation BCM4318 [AirForce One 54g] 802.11g Wireless LAN Controller (rev 02)
->> | 	Subsystem: AMBIT Microsystem Corp. TravelMate 2410
->> | 	Flags: bus master, fast devsel, latency 64, IRQ 10
->> | 	Memory at d0002000 (32-bit, non-prefetchable) [size=8K]
->> | 	Kernel driver in use: b43-pci-bridge
->> `----
+>> Best we can do is just tell the users of we are WORK_BUSY_PENDING
+>> for older kernels. The ckmake log:
 >
-> Odd.  Does it use that driver with both working and non-working
-> kernels?
+> [...]
+>
+>> + * Test whether @work is currently pending or running.  There is no
+>> + * synchronization around this function and the test result is
+>> + * unreliable and only useful as advisory hints or for debugging.
+>> + * Especially for reentrant wqs, the pending state might hide the
+>> + * running state.
+>
+> What's this needed for? It seems if it's used only for hints/debugging
+> we should not need the function, or possibly simply return some
+> pointless combination like -1?
 
-Yes, although lsmod just tells me that "b43" is loaded.  And
-"dmesg | grep b43" shows this:
+net/bluetooth/hci_core.c:1701:	if (work_busy(&hdev->le_scan))
 
-,----
-| [    0.628622] b43-pci-bridge 0000:06:02.0: enabling device (0000 -> 0002)
-| [    0.628780] b43-pci-bridge 0000:06:02.0: PCI INT A -> Link[LNKG] -> GSI 10 (level, low) -> IRQ 10
-| [    0.628795] b43-pci-bridge 0000:06:02.0: setting latency timer to 64
-| [    5.648519] b43-phy0: Broadcom 4318 WLAN found (core revision 9)
-| [   36.267694] b43-phy0: Loading firmware version 410.2160 (2007-05-26 15:32:10)
-`----
-
-The kernel configuration has these b43 related parameters:
-
-CONFIG_B43=m
-CONFIG_B43_SSB=y
-CONFIG_B43_PCI_AUTOSELECT=y
-CONFIG_B43_PCICORE_AUTOSELECT=y
-# CONFIG_B43_PCMCIA is not set
-# CONFIG_B43_SDIO is not set
-CONFIG_B43_PIO=y
-# CONFIG_B43_PHY_N is not set
-CONFIG_B43_PHY_LP=y
-# CONFIG_B43_PHY_HT is not set
-CONFIG_B43_HWRNG=y
-# CONFIG_B43_DEBUG is not set
-# CONFIG_B43LEGACY is not set
-CONFIG_SSB_B43_PCI_BRIDGE=y
-
-
-Cheers,
-       Sven
+  Luis
