@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39713 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754677Ab2CRQcj (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:59532 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754268Ab2CTG1o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 12:32:39 -0400
-Subject: Re: [PATCH] mac80211: fix the endianness problem of HWMP sequence
- number in RANN propagation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	devel@lists.open80211s.org
-In-Reply-To: <CAEFj9861XC5rvBBB3DxLaPDrYFz7FECA82KpEF+L6rMsK1F6Sw@mail.gmail.com> (sfid-20120318_171207_535953_770C2624)
-References: <1331923430-23861-1-git-send-email-yeohchunyeow@gmail.com>
-	 <1331901642.6753.1.camel@jlt3.sipsolutions.net>
-	 <CAEFj9861XC5rvBBB3DxLaPDrYFz7FECA82KpEF+L6rMsK1F6Sw@mail.gmail.com>
-	 (sfid-20120318_171207_535953_770C2624)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 18 Mar 2012 17:32:35 +0100
-Message-ID: <1332088355.3354.0.camel@jlt3.sipsolutions.net> (sfid-20120318_173242_352198_06B77E6A)
-Mime-Version: 1.0
+	Tue, 20 Mar 2012 02:27:44 -0400
+Message-ID: <4F68235C.5090701@gmail.com> (sfid-20120320_072809_573436_554B7F90)
+Date: Mon, 19 Mar 2012 23:27:40 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org> <4F681B78.9000207@gmail.com> <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com>
+In-Reply-To: <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 03/19/2012 11:19 PM, Mohammed Shafi wrote:
+>> (gdb) list *ath9k_tx+start+0x284
+>> No symbol "start" in current context.
+>
+> hey, pls try l *(ath9k_tx_start+0x284), yesterday i did the same in
+> the latest wireless testing tree it pointed to line 1929 of xmit.c
+>
+> sc->tx.seq_no +=0x10;
+>
+> also did few suspend/resume in my machine, nothing interesting happened
+>
+>>
+>> before receiving the email to do the above code with gdb I had cleaned the
+>> tree out with git clean -fx so rebuilding might have misalighned things(but
+>> could be wrong)..
+>>
+>
+>
+>
 
-> > You should mark struct ieee80211_rann_ie to contain __le32, so that
-> > sparse will warn about things like this.
-> >
-> 
-> I try to change u32 to __le32 for the following members in struct
-> ieee80211_rann_ie.
-> 
-> struct ieee80211_rann_ie {
->         u8 rann_flags;
->         u8 rann_hopcount;
->         u8 rann_ttl;
->         u8 rann_addr[6];
->         __le32 rann_seq;
->         __le32 rann_interval;
->         __le32 rann_metric;
-> } __attribute__ ((packed));
-> 
-> But when I compile using "make C=2 CF=-D__CHECK_ENDIAN__", I don't see
-> any sparse warning on this.
 
-Not sure, if I make the above change I get:
+seems gdb is not working with that code but works if I remove _start.
+(maybe -next took this out or something)
 
-  CHECK   net/mac80211/mesh_hwmp.c
-net/mac80211/mesh_hwmp.c:751:17: warning: incorrect type in assignment (different base types)
-net/mac80211/mesh_hwmp.c:751:17:    expected unsigned int [unsigned] [usertype] orig_sn
-net/mac80211/mesh_hwmp.c:751:17:    got restricted __le32 [usertype] rann_seq
-net/mac80211/mesh_hwmp.c:754:16: warning: incorrect type in assignment (different base types)
-net/mac80211/mesh_hwmp.c:754:16:    expected unsigned int [unsigned] [usertype] metric
-net/mac80211/mesh_hwmp.c:754:16:    got restricted __le32 [usertype] rann_metric
+(gdb) l *(ath9k_tx_start+0x284)
+No symbol "ath9k_tx_start" in current context.
+(gdb) l *(ath9k_tx+0x284)
+0x4854 is in ath_paprd_activate (drivers/net/wireless/ath/ath9k/main.c:395).
+390				continue;
+391	
+392			ar9003_paprd_populate_single_table(ah, caldata, chain);
+393		}
+394	
+395		ar9003_paprd_enable(ah, true);
+396		ath9k_ps_restore(sc);
+397	}
+398	
+399	static bool ath_paprd_send_frame(struct ath_softc *sc, struct 
+sk_buff *skb, int chain)
 
-johannes
+right now I am running next, will wait for the RX DMA to get a clean 
+trace, then will look to see.. as for the other issue I just rebooted 
+and hit this during bootup.
 
+Justin P. Mattock
