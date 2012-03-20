@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57191 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161282Ab2COTo6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53905 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753718Ab2CTMp3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 15:44:58 -0400
-Received: by mail-yw0-f46.google.com with SMTP id m54so3504624yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 12:44:58 -0700 (PDT)
-Date: Thu, 15 Mar 2012 12:44:53 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
-	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: [PATCH v4 3/7] bcma: scan for extra address space
-Message-ID: <20120315194453.GB30682@kroah.com> (sfid-20120315_204518_429300_FB81CE9D)
-References: <1331597093-425-1-git-send-email-hauke@hauke-m.de>
- <1331597093-425-4-git-send-email-hauke@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1331597093-425-4-git-send-email-hauke@hauke-m.de>
+	Tue, 20 Mar 2012 08:45:29 -0400
+Subject: Re: Dell E6400 + Windows XP can not work on intel N-6205 AP mode
+ for compat-wireless-2012-03-18.tar.bz2 package
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhong Hongbo <hongbo.zhong@windriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Cao, Qingtao (Harry)" <Qingtao.Cao@windriver.com>,
+	"Gao, Guijin" <Guijin.Gao@windriver.com>,
+	"'Cabuk, Yusuf'" <Yusuf.Cabuk@windriver.com>
+In-Reply-To: <4F687667.1030605@windriver.com>
+References: <4F687667.1030605@windriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Mar 2012 13:45:26 +0100
+Message-ID: <1332247526.3329.17.camel@jlt3.sipsolutions.net> (sfid-20120320_134533_086058_EB0A585F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 13, 2012 at 01:04:49AM +0100, Hauke Mehrtens wrote:
-> Some cores like the USB core have two address spaces. In the USB host
-> controller one address space is used for the OHCI and the other for the
-> EHCI controller interface. The USB controller is the only core I found
-> with two address spaces. This code is based on the AI scan function
-> ai_scan() in shared/aiutils.c in the Broadcom SDK.
+On Tue, 2012-03-20 at 20:21 +0800, Zhong Hongbo wrote:
+> I try the latest compat-wireless package to test Intel Centrino N-6205
+> Taylor Peak Wi-Fi card  AP mode.
 > 
-> CC: Rafał Miłecki <zajec5@gmail.com>
-> CC: linux-wireless@vger.kernel.org
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/bcma/scan.c       |   19 ++++++++++++++++++-
->  include/linux/bcma/bcma.h |    1 +
->  2 files changed, 19 insertions(+), 1 deletions(-)
+> 1. Test enviroment
+> My Wi-Fi client:
+> Dell Latitude E6400 desktop + Ubuntu 10.04,
+> Dell Latitude E6400 desktop + Windows XP.
+> 
+> Compat-wireless package: compat-wireless-2012-03-18.tar.bz2
+> 
+> Wi-Fi AP: Intel Centrino N-6205 Taylor Peak
+> 
+> 2. issue describe
+> When I use E6400 + Ubuntu 10.04 connect to intel N-6205 Taylor PeaK
+> AP， I can go to internet to browse web. E6400 + Windows XP can
+> connect to intel N-6205 AP, But I can not go to internet.
+> Is it interactions issue for the compat-wirelss package? Welcome any
+> suggestion.
 
-Is this required for the 4/7 patch?
+That's a bit confusing. Are you running DHCP etc. correctly?
 
-If so, can I get an ack from the BCMA developers so that I can take this
-through the USB tree?
+johannes
 
-thanks,
-
-greg k-h
