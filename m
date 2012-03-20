@@ -1,36 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37642 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757911Ab2CTNqT (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30631 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758456Ab2CTIjk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 09:46:19 -0400
-Subject: Re: [RFC 01/12] mac80211: prepare ieee80211_mandatory_rates to
- per-vif
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <add0a349-9bf4-4278-bc1d-25b34892b8e1@FIVLA-EXHUB02.eu.tieto.com>
-References: <add0a349-9bf4-4278-bc1d-25b34892b8e1@FIVLA-EXHUB02.eu.tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Mar 2012 14:46:19 +0100
-Message-ID: <1332251179.3329.26.camel@jlt3.sipsolutions.net> (sfid-20120320_144631_821781_C8950B06)
-Mime-Version: 1.0
+	Tue, 20 Mar 2012 04:39:40 -0400
+To: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+Message-ID: <4F684247.6070800@qca.qualcomm.com> (sfid-20120320_093952_583421_E1E364BB)
+Date: Tue, 20 Mar 2012 10:39:35 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath6kl: handle probe response from P2P device in P2P
+ GO mode
+References: <1331847296-2086-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
+In-Reply-To: <1331847296-2086-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 08:36 +0100, Michal Kazior wrote:
+On 03/15/2012 11:34 PM, Aarthi Thiruvengadam wrote:
+> When the device is in P2P GO mode and in listen state, the correct behavior is
+> to see two different probe response frames - one from P2P device and the other
+> from GO. wpa_supplicant uses the same mechanism to send the frame in both cases
+> (ath6kl_mgmt_tx). For GO probe response, ath6kl needs to call
+> ath6kl_send_go_probe_resp (this will add only WSC/P2P IEs and the rest of the
+> IEs are filled in by the firmware). That was done based on the nw_type ==
+> AP_NETWORK which would work if P2P Device role were in a separate netdev. When
+> P2P Device and GO use the same netdev, ath6kl needs to use the special GO probe
+> response case only if SSID is longer than P2P wildcard SSID.
+> 
+> Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+> Reviewed-by: Jouni Malinen <jouni@qca.qualcomm.com>
 
-> -u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
-> +u32 ieee80211_mandatory_rates(struct ieee80211_sub_if_data *sdata,
->  			      enum ieee80211_band band)
->  {
-> +	struct ieee80211_local *local = sdata->local;
->  	struct ieee80211_supported_band *sband;
->  	struct ieee80211_rate *bitrates;
->  	u32 mandatory_rates;
+Thanks, applied.
 
-This doesn't make a lot of sense -- it's only used for a fallback path
-that never triggers so we can just remove that path.
+But I still have one question:
 
-johannes
+> +/* Check if SSID length is greater than DIRECT- */
+> +static bool ath6kl_is_p2p_go_ssid(const u8 *buf, size_t len)
+> +{
+> +	const struct ieee80211_mgmt *mgmt;
+> +	mgmt = (const struct ieee80211_mgmt *) buf;
+> +
+> +	/* variable[1] contains the SSID tag length */
+> +	if (buf + len >= &mgmt->u.probe_resp.variable[1] &&
+> +	    (mgmt->u.probe_resp.variable[1] > P2P_WILDCARD_SSID_LEN)) {
+> +		return true;
 
+How do you know that it's SSID without checking the IE id from
+variable[0]? Is that guaranteed or something?
+
+Kalle
