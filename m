@@ -1,542 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog109.obsmtp.com ([207.126.144.127]:53807 "EHLO
-	eu1sys200aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754025Ab2CBBlj (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:50720 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752162Ab2CUGkK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 20:41:39 -0500
-Received: from zeta.dmz-eu.st.com (zeta.dmz-eu.st.com [164.129.230.9])
-	by beta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 39C382EA
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:41:37 +0000 (GMT)
-Received: from relay1.stm.gmessaging.net (unknown [10.230.100.17])
-	by zeta.dmz-eu.st.com (STMicroelectronics) with ESMTP id CE2D347AD
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:41:36 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay1.stm.gmessaging.net (Postfix) with ESMTPS id 5A50E24C2C0
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 02:41:35 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 04/21] cw1200: cw1200_sdio.c, implementation of SDIO wrapper for the driver.
-Date: Fri, 2 Mar 2012 02:41:18 +0100
-Message-ID: <1330652495-25837-5-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024143_623515_3D2929B7)
-In-Reply-To: <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
- <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+	Wed, 21 Mar 2012 02:40:10 -0400
+Received: by obbeh20 with SMTP id eh20so505480obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 23:40:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1332333182-11941-1-git-send-email-yeohchunyeow@gmail.com>
+References: <1332333182-11941-1-git-send-email-yeohchunyeow@gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Tue, 20 Mar 2012 23:39:49 -0700
+Message-ID: <CAPjQAd_v+jez4woV+=rp3LB8QTgPDT=CX0oixjcu7=fUZscm6w@mail.gmail.com> (sfid-20120321_074014_951175_86B06E67)
+Subject: Re: [PATCH] mac80211: fix the RANN propagation issues
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	thomas@cozybit.com, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch contains SDIO wrapper for the cw1200 wireless driver.
-The wrapper instantiates driver's core and implements common sbus
-interface for the core.
+Yeoh,
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
----
- drivers/staging/cw1200/cw1200_sdio.c |  493 ++++++++++++++++++++++++++++++++++
- 1 files changed, 493 insertions(+), 0 deletions(-)
- create mode 100644 drivers/staging/cw1200/cw1200_sdio.c
+Looks good from here.  Just one question (inline), which is probably
+more for Thomas than you...
 
-diff --git a/drivers/staging/cw1200/cw1200_sdio.c b/drivers/staging/cw1200/cw1200_sdio.c
-new file mode 100644
-index 0000000..dfa7e64
---- /dev/null
-+++ b/drivers/staging/cw1200/cw1200_sdio.c
-@@ -0,0 +1,493 @@
-+/*
-+ * Mac80211 SDIO driver for ST-Ericsson CW1200 device
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/version.h>
-+#include <linux/module.h>
-+#include <linux/gpio.h>
-+#include <linux/delay.h>
-+#include <linux/mmc/host.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/card.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/spinlock.h>
-+#include <net/mac80211.h>
-+
-+#include "cw1200.h"
-+#include "sbus.h"
-+#include "cw1200_plat.h"
-+
-+MODULE_AUTHOR("Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>");
-+MODULE_DESCRIPTION("mac80211 ST-Ericsson CW1200 SDIO driver");
-+MODULE_LICENSE("GPL");
-+MODULE_ALIAS("cw1200_wlan");
-+
-+#if defined(CONFIG_CW1200_STANDALONE)
-+static char cw1200_mmc_id[10];
-+module_param_string(mmc_id, cw1200_mmc_id, sizeof(cw1200_mmc_id), 0);
-+#endif /* CONFIG_CW1200_STANDALONE */
-+
-+struct sbus_priv {
-+	struct sdio_func	*func;
-+	struct cw1200_common	*core;
-+	const struct cw1200_platform_data *pdata;
-+	spinlock_t		lock;
-+	sbus_irq_handler	irq_handler;
-+	void			*irq_priv;
-+};
-+
-+static const struct sdio_device_id cw1200_sdio_ids[] = {
-+	{ SDIO_DEVICE(SDIO_ANY_ID, SDIO_ANY_ID) },
-+	{ /* end: all zeroes */			},
-+};
-+
-+/* sbus_ops implemetation */
-+
-+static int cw1200_sdio_memcpy_fromio(struct sbus_priv *self,
-+				     unsigned int addr,
-+				     void *dst, int count)
-+{
-+	return sdio_memcpy_fromio(self->func, dst, addr, count);
-+}
-+
-+static int cw1200_sdio_memcpy_toio(struct sbus_priv *self,
-+				   unsigned int addr,
-+				   const void *src, int count)
-+{
-+	return sdio_memcpy_toio(self->func, addr, (void *)src, count);
-+}
-+
-+static void cw1200_sdio_lock(struct sbus_priv *self)
-+{
-+	sdio_claim_host(self->func);
-+}
-+
-+static void cw1200_sdio_unlock(struct sbus_priv *self)
-+{
-+	sdio_release_host(self->func);
-+}
-+
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+static void cw1200_sdio_irq_handler(struct sdio_func *func)
-+{
-+	struct sbus_priv *self = sdio_get_drvdata(func);
-+	unsigned long flags;
-+
-+	BUG_ON(!self);
-+	spin_lock_irqsave(&self->lock, flags);
-+	if (self->irq_handler)
-+		self->irq_handler(self->irq_priv);
-+	spin_unlock_irqrestore(&self->lock, flags);
-+}
-+#else /* CONFIG_CW1200_USE_GPIO_IRQ */
-+static irqreturn_t cw1200_gpio_irq_handler(int irq, void *dev_id)
-+{
-+	struct sbus_priv *self = dev_id;
-+
-+	BUG_ON(!self);
-+	if (self->irq_handler)
-+		self->irq_handler(self->irq_priv);
-+	return IRQ_HANDLED;
-+}
-+
-+static int cw1200_request_irq(struct sbus_priv *self,
-+			      irq_handler_t handler)
-+{
-+	int ret;
-+	int func_num;
-+	const struct resource *irq = self->pdata->irq;
-+	u8 cccr;
-+
-+	if (!irq)
-+		return -EINVAL;
-+
-+	ret = request_any_context_irq(irq->start, handler,
-+			IRQF_TRIGGER_RISING, irq->name, self);
-+	if (WARN_ON(ret < 0))
-+		goto exit;
-+
-+	/* Hack to access Fuction-0 */
-+	func_num = self->func->num;
-+	self->func->num = 0;
-+
-+	cccr = sdio_readb(self->func, SDIO_CCCR_IENx, &ret);
-+	if (WARN_ON(ret))
-+		goto set_func;
-+
-+	/* Master interrupt enable ... */
-+	cccr |= BIT(0);
-+
-+	/* ... for our function */
-+	cccr |= BIT(func_num);
-+
-+	sdio_writeb(self->func, cccr, SDIO_CCCR_IENx, &ret);
-+	if (WARN_ON(ret))
-+		goto set_func;
-+
-+	/* Restore the WLAN function number */
-+	self->func->num = func_num;
-+	return 0;
-+
-+set_func:
-+	self->func->num = func_num;
-+	free_irq(irq->start, self);
-+exit:
-+	return ret;
-+}
-+#endif /* CONFIG_CW1200_USE_GPIO_IRQ */
-+
-+static int cw1200_sdio_irq_subscribe(struct sbus_priv *self,
-+				     sbus_irq_handler handler,
-+				     void *priv)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	if (!handler)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(&self->lock, flags);
-+	self->irq_priv = priv;
-+	self->irq_handler = handler;
-+	spin_unlock_irqrestore(&self->lock, flags);
-+
-+	printk(KERN_DEBUG "SW IRQ subscribe\n");
-+	sdio_claim_host(self->func);
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+	ret = sdio_claim_irq(self->func, cw1200_sdio_irq_handler);
-+#else
-+	ret = cw1200_request_irq(self, cw1200_gpio_irq_handler);
-+#endif
-+	sdio_release_host(self->func);
-+	return ret;
-+}
-+
-+static int cw1200_sdio_irq_unsubscribe(struct sbus_priv *self)
-+{
-+	int ret = 0;
-+	unsigned long flags;
-+#ifdef CONFIG_CW1200_USE_GPIO_IRQ
-+	const struct resource *irq = self->pdata->irq;
-+
-+	if (!irq)
-+		return -EINVAL;
-+#endif
-+
-+	WARN_ON(!self->irq_handler);
-+	if (!self->irq_handler)
-+		return 0;
-+
-+	printk(KERN_DEBUG "SW IRQ unsubscribe\n");
-+#ifndef CONFIG_CW1200_USE_GPIO_IRQ
-+	sdio_claim_host(self->func);
-+	ret = sdio_release_irq(self->func);
-+	sdio_release_host(self->func);
-+#else
-+	free_irq(irq->start, self);
-+#endif
-+
-+	spin_lock_irqsave(&self->lock, flags);
-+	self->irq_priv = NULL;
-+	self->irq_handler = NULL;
-+	spin_unlock_irqrestore(&self->lock, flags);
-+
-+	return ret;
-+}
-+
-+static int cw1200_detect_card(const struct cw1200_platform_data *pdata)
-+{
-+	/* HACK!!!
-+	 * Rely on mmc->class_dev.class set in mmc_alloc_host
-+	 * Tricky part: a new mmc hook is being (temporary) created
-+	 * to discover mmc_host class.
-+	 * Do you know more elegant way how to enumerate mmc_hosts?
-+	 */
-+
-+	struct mmc_host *mmc = NULL;
-+	struct class_dev_iter iter;
-+	struct device *dev;
-+
-+	mmc = mmc_alloc_host(0, NULL);
-+	if (!mmc)
-+		return -ENOMEM;
-+
-+	BUG_ON(!mmc->class_dev.class);
-+	class_dev_iter_init(&iter, mmc->class_dev.class, NULL, NULL);
-+	for (;;) {
-+		dev = class_dev_iter_next(&iter);
-+		if (!dev) {
-+			printk(KERN_ERR "cw1200: %s is not found.\n",
-+				pdata->mmc_id);
-+			break;
-+		} else {
-+			struct mmc_host *host = container_of(dev,
-+				struct mmc_host, class_dev);
-+
-+			if (dev_name(&host->class_dev) &&
-+				strcmp(dev_name(&host->class_dev),
-+					pdata->mmc_id))
-+				continue;
-+
-+			mmc_detect_change(host, 10);
-+			break;
-+		}
-+	}
-+	mmc_free_host(mmc);
-+	return 0;
-+}
-+
-+static int cw1200_sdio_off(const struct cw1200_platform_data *pdata)
-+{
-+	int ret = 0;
-+#ifndef CONFIG_CW1200_U5500_SUPPORT
-+	const struct resource *reset = pdata->reset;
-+	if (reset) {
-+		gpio_set_value(reset->start, 0);
-+		gpio_free(reset->start);
-+	}
-+#else
-+	if (pdata->prcmu_ctrl)
-+		ret = pdata->prcmu_ctrl(pdata, false);
-+	msleep(50);
-+#endif
-+	cw1200_detect_card(pdata);
-+	return ret;
-+}
-+
-+static int cw1200_sdio_on(const struct cw1200_platform_data *pdata)
-+{
-+	int ret = 0;
-+#ifndef CONFIG_CW1200_U5500_SUPPORT
-+	const struct resource *reset = pdata->reset;
-+	if (reset) {
-+		gpio_request(reset->start, reset->name);
-+		gpio_direction_output(reset->start, 1);
-+		/* It is not stated in the datasheet, but at least some
-+		 * of devices have problems with reset if this stage
-+		 * is omited. */
-+		msleep(50);
-+		gpio_direction_output(reset->start, 0);
-+		/* A valid reset shall be obtained by maintaining WRESETN
-+		 * active (low) for at least two cycles of LP_CLK after VDDIO
-+		 * is stable within it operating range. */
-+		usleep_range(1000, 20000);
-+		gpio_set_value(reset->start, 1);
-+		/* The host should wait 32 ms after the WRESETN release
-+		 * for the on-chip LDO to stabilize */
-+		msleep(32);
-+	}
-+#else
-+	if (pdata->prcmu_ctrl)
-+		ret = pdata->prcmu_ctrl(pdata, true);
-+	msleep(50);
-+#endif
-+	cw1200_detect_card(pdata);
-+	return ret;
-+}
-+
-+static int cw1200_sdio_reset(struct sbus_priv *self)
-+{
-+	cw1200_sdio_off(self->pdata);
-+	msleep(1000);
-+	cw1200_sdio_on(self->pdata);
-+	return 0;
-+}
-+
-+static size_t cw1200_sdio_align_size(struct sbus_priv *self, size_t size)
-+{
-+	size_t aligned = sdio_align_size(self->func, size);
-+	return aligned;
-+}
-+
-+int cw1200_sdio_set_block_size(struct sbus_priv *self, size_t size)
-+{
-+	return sdio_set_block_size(self->func, size);
-+}
-+
-+static int cw1200_sdio_pm(struct sbus_priv *self, bool  suspend)
-+{
-+	int ret = 0;
-+	const struct resource *irq = self->pdata->irq;
-+
-+	if (irq)
-+		ret = irq_set_irq_wake(irq->start, suspend);
-+
-+	return ret;
-+}
-+
-+static struct sbus_ops cw1200_sdio_sbus_ops = {
-+	.sbus_memcpy_fromio	= cw1200_sdio_memcpy_fromio,
-+	.sbus_memcpy_toio	= cw1200_sdio_memcpy_toio,
-+	.lock			= cw1200_sdio_lock,
-+	.unlock			= cw1200_sdio_unlock,
-+	.irq_subscribe		= cw1200_sdio_irq_subscribe,
-+	.irq_unsubscribe	= cw1200_sdio_irq_unsubscribe,
-+	.reset			= cw1200_sdio_reset,
-+	.align_size		= cw1200_sdio_align_size,
-+	.power_mgmt		= cw1200_sdio_pm,
-+	.set_block_size		= cw1200_sdio_set_block_size,
-+};
-+
-+/* Probe Function to be called by SDIO stack when device is discovered */
-+static int cw1200_sdio_probe(struct sdio_func *func,
-+			      const struct sdio_device_id *id)
-+{
-+	struct sbus_priv *self;
-+	int status;
-+
-+	cw1200_dbg(CW1200_DBG_INIT, "Probe called\n");
-+
-+	self = kzalloc(sizeof(*self), GFP_KERNEL);
-+	if (!self) {
-+		cw1200_dbg(CW1200_DBG_ERROR, "Can't allocate SDIO sbus_priv.");
-+		return -ENOMEM;
-+	}
-+
-+	spin_lock_init(&self->lock);
-+	self->pdata = cw1200_get_platform_data();
-+	self->func = func;
-+	sdio_set_drvdata(func, self);
-+	sdio_claim_host(func);
-+	sdio_enable_func(func);
-+	sdio_release_host(func);
-+
-+	status = cw1200_core_probe(&cw1200_sdio_sbus_ops,
-+			      self, &func->dev, &self->core);
-+	if (status) {
-+		sdio_claim_host(func);
-+		sdio_disable_func(func);
-+		sdio_release_host(func);
-+		sdio_set_drvdata(func, NULL);
-+		kfree(self);
-+	}
-+
-+	return status;
-+}
-+
-+/* Disconnect Function to be called by SDIO stack when
-+ * device is disconnected */
-+static void cw1200_sdio_disconnect(struct sdio_func *func)
-+{
-+	struct sbus_priv *self = sdio_get_drvdata(func);
-+
-+	if (self) {
-+		if (self->core) {
-+			cw1200_core_release(self->core);
-+			self->core = NULL;
-+		}
-+		sdio_claim_host(func);
-+		sdio_disable_func(func);
-+		sdio_release_host(func);
-+		sdio_set_drvdata(func, NULL);
-+		kfree(self);
-+	}
-+}
-+
-+static int cw1200_suspend(struct device *dev)
-+{
-+	int ret;
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+
-+	/* Notify SDIO that CW1200 will remain powered during suspend */
-+	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
-+	if (ret)
-+		cw1200_dbg(CW1200_DBG_ERROR,
-+			   "Error setting SDIO pm flags: %i\n", ret);
-+
-+	return ret;
-+}
-+
-+static int cw1200_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops cw1200_pm_ops = {
-+	.suspend = cw1200_suspend,
-+	.resume = cw1200_resume,
-+};
-+
-+static struct sdio_driver sdio_driver = {
-+	.name		= "cw1200_wlan",
-+	.id_table	= cw1200_sdio_ids,
-+	.probe		= cw1200_sdio_probe,
-+	.remove		= cw1200_sdio_disconnect,
-+	.drv = {
-+		.pm = &cw1200_pm_ops,
-+	}
-+};
-+
-+/* Init Module function -> Called by insmod */
-+static int __init cw1200_sdio_init(void)
-+{
-+	const struct cw1200_platform_data *pdata;
-+	int ret;
-+
-+	pdata = cw1200_get_platform_data();
-+
-+	ret = sdio_register_driver(&sdio_driver);
-+	if (ret)
-+		goto err_reg;
-+
-+	if (pdata->clk_ctrl) {
-+		ret = pdata->clk_ctrl(pdata, true);
-+		if (ret)
-+			goto err_clk;
-+	}
-+
-+	if (pdata->power_ctrl) {
-+		ret = pdata->power_ctrl(pdata, true);
-+		if (ret)
-+			goto err_power;
-+	}
-+
-+	ret = cw1200_sdio_on(pdata);
-+	if (ret)
-+		goto err_on;
-+
-+	return 0;
-+
-+err_on:
-+	if (pdata->power_ctrl)
-+		pdata->power_ctrl(pdata, false);
-+err_power:
-+	if (pdata->clk_ctrl)
-+		pdata->clk_ctrl(pdata, false);
-+err_clk:
-+	sdio_unregister_driver(&sdio_driver);
-+err_reg:
-+	return ret;
-+}
-+
-+/* Called at Driver Unloading */
-+static void __exit cw1200_sdio_exit(void)
-+{
-+	const struct cw1200_platform_data *pdata;
-+	pdata = cw1200_get_platform_data();
-+	sdio_unregister_driver(&sdio_driver);
-+	cw1200_sdio_off(pdata);
-+	if (pdata->power_ctrl)
-+		pdata->power_ctrl(pdata, false);
-+	if (pdata->clk_ctrl)
-+		pdata->clk_ctrl(pdata, false);
-+}
-+
-+#if defined(CONFIG_CW1200_STANDALONE)
-+const struct cw1200_platform_data *cw1200_get_platform_data()
-+{
-+	static const struct cw1200_platform_data pdata = {
-+		.mmc_id = cw1200_mmc_id,
-+	};
-+	return &pdata;
-+}
-+#endif /* CONFIG_CW1200_STANDALONE */
-+
-+module_init(cw1200_sdio_init);
-+module_exit(cw1200_sdio_exit);
--- 
-1.7.9
+On Wed, Mar 21, 2012 at 5:33 AM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+> This patch is intended to solve the follwing issues in RANN propagation:
+> [1] The interval in propagated RANN should be based on the interval of received RANN.
+> [2] The aggregated path metric for propagated RANN is as received plus own link metric
+>    towards the transmitting mesh STA (not root mesh STA).
+> [3] The comparison of path metric for RANN with same sequence number should be done
+>    before deciding whether to propagate or not.
+>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+>  net/mac80211/mesh.h      |    2 ++
+>  net/mac80211/mesh_hwmp.c |   21 +++++++++++++++++----
+>  2 files changed, 19 insertions(+), 4 deletions(-)
+>
+> diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+> index 8d53b71..adf1be3 100644
+> --- a/net/mac80211/mesh.h
+> +++ b/net/mac80211/mesh.h
+> @@ -86,6 +86,7 @@ enum mesh_deferred_task_flags {
+>  * mpath itself.  No need to take this lock when adding or removing
+>  * an mpath to a hash bucket on a path table.
+>  * @rann_snd_addr: the RANN sender address
+> + * @rann_metric: the aggregated path metric towards the root node
+>  * @is_root: the destination station of this path is a root node
+>  * @is_gate: the destination station of this path is a mesh gate
+>  *
+> @@ -112,6 +113,7 @@ struct mesh_path {
+>        enum mesh_path_flags flags;
+>        spinlock_t state_lock;
+>        u8 rann_snd_addr[ETH_ALEN];
+> +       u32 rann_metric;
+>        bool is_root;
+>        bool is_gate;
+>  };
+> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+> index f80a9e3..fcfebc7 100644
+> --- a/net/mac80211/mesh_hwmp.c
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -88,6 +88,7 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
+>  #define MSEC_TO_TU(x) (x*1000/1024)
+>  #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
+>  #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
+> +#define SN_EQ(x, y) ((long) (x) - (long) (y) == 0)
 
+I never understood the point of these macros so I'm not too happy
+about seeing another one creep in :)
+Can someone explain why we need them?  Why not just use good
+old-fashioned '=='  (and '<' or '>')?
+
+>  #define net_traversal_jiffies(s) \
+>        msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime)
+> @@ -732,11 +733,12 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>                                struct ieee80211_rann_ie *rann)
+>  {
+>        struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+> +       struct ieee80211_local *local = sdata->local;
+> +       struct sta_info *sta;
+>        struct mesh_path *mpath;
+>        u8 ttl, flags, hopcount;
+>        u8 *orig_addr;
+> -       u32 orig_sn, metric;
+> -       u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
+> +       u32 orig_sn, metric, metric_txsta, interval;
+>        bool root_is_gate;
+>
+>        ttl = rann->rann_ttl;
+> @@ -749,6 +751,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>        root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
+>        orig_addr = rann->rann_addr;
+>        orig_sn = le32_to_cpu(rann->rann_seq);
+> +       interval = le32_to_cpu(rann->rann_interval);
+>        hopcount = rann->rann_hopcount;
+>        hopcount++;
+>        metric = le32_to_cpu(rann->rann_metric);
+> @@ -761,6 +764,14 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>                        orig_addr, mgmt->sa, root_is_gate);
+>
+>        rcu_read_lock();
+> +       sta = sta_info_get(sdata, mgmt->sa);
+> +       if (!sta) {
+> +               rcu_read_unlock();
+> +               return;
+> +       }
+> +
+> +       metric_txsta = airtime_link_metric_get(local, sta);
+> +
+>        mpath = mesh_path_lookup(orig_addr, sdata);
+>        if (!mpath) {
+>                mesh_path_add(orig_addr, sdata);
+> @@ -780,14 +791,16 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>                mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
+>        }
+>
+> -       if (mpath->sn < orig_sn && ifmsh->mshcfg.dot11MeshForwarding) {
+> +       if ((SN_LT(mpath->sn, orig_sn) || (SN_EQ(mpath->sn, orig_sn) &&
+> +          metric < mpath->rann_metric)) && ifmsh->mshcfg.dot11MeshForwarding) {
+
+i.e.
+
+if ((mpath->sn < orig_sn || (mpath->sn == orig_sn && metric <
+mpath->rann_metric))
+    && ifmsh->mshcfg.dot11MeshForwarding) {
+
+
+>                mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
+>                                       cpu_to_le32(orig_sn),
+>                                       0, NULL, 0, broadcast_addr,
+>                                       hopcount, ttl, cpu_to_le32(interval),
+> -                                      cpu_to_le32(metric + mpath->metric),
+> +                                      cpu_to_le32(metric + metric_txsta),
+>                                       0, sdata);
+>                mpath->sn = orig_sn;
+> +               mpath->rann_metric = metric + metric_txsta;
+>        }
+>
+>        /* Using individually addressed PREQ for root node */
+> --
+> 1.7.0.4
+>
+
+Thanks,
+
+Javier
