@@ -1,95 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11459 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965036Ab2CEUiC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:38:02 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 05/33] iwlwifi: build some station commands directly
-Date: Mon,  5 Mar 2012 11:24:23 -0800
-Message-Id: <1330975491-19680-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213807_712230_0F3DD073)
-In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9440 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754947Ab2CUJPC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2012 05:15:02 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V2] ath6kl: Dump htc header when invalid Rx frame length is detected
+Date: Wed, 21 Mar 2012 14:45:33 +0530
+Message-ID: <1332321333-26064-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120321_101507_127352_CAED20CD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Dump htc header along with the warning message when the request
+to Rx with invalid frame length is detected.
 
-In the powersave related functions we only need
-to set a few parameters for the station command
-and can otherwise leave it blank -- there's no
-need to copy it from the database.
-
-This allows us to not use the sta lock here.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |   20 +++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |   16 ++++++----------
- 2 files changed, 15 insertions(+), 21 deletions(-)
+V2 - Leave a space before htc_hdr
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index 3eb8fd4..6b9af99 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -1437,16 +1437,14 @@ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
+ drivers/net/wireless/ath/ath6kl/htc.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 4849d99..b8146d7 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -1353,7 +1353,10 @@ static int ath6kl_htc_rx_setup(struct htc_target *target,
+ 					sizeof(*htc_hdr));
  
- void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt)
- {
--	unsigned long flags;
--
--	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
--	priv->stations[sta_id].sta.station_flags |= STA_FLG_PWR_SAVE_MSK;
--	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
--	priv->stations[sta_id].sta.sta.modify_mask =
--					STA_MODIFY_SLEEP_TX_COUNT_MSK;
--	priv->stations[sta_id].sta.sleep_tx_count = cpu_to_le16(cnt);
--	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
--	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
-+	struct iwl_addsta_cmd cmd = {
-+		.mode = STA_CONTROL_MODIFY_MSK,
-+		.station_flags = STA_FLG_PWR_SAVE_MSK,
-+		.station_flags_msk = STA_FLG_PWR_SAVE_MSK,
-+		.sta.sta_id = sta_id,
-+		.sta.modify_mask = STA_MODIFY_SLEEP_TX_COUNT_MSK,
-+		.sleep_tx_count = cpu_to_le16(cnt),
-+	};
+ 	if (!htc_valid_rx_frame_len(target, ep->eid, full_len)) {
+-		ath6kl_warn("Rx buffer requested with invalid length\n");
++		ath6kl_warn("Rx buffer requested with invalid length"
++			    " htc_hdr:eid - %d, flags - 0x%x, len - %d\n",
++			     htc_hdr->eid, htc_hdr->flags,
++			     le16_to_cpu(htc_hdr->payld_len));
+ 		return -EINVAL;
+ 	}
  
-+	iwl_send_add_sta(priv, &cmd, CMD_ASYNC);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 03f7705..9fba532 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -1505,17 +1505,13 @@ static int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
- 
- static void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
- {
--	unsigned long flags;
--
--	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
--	priv->stations[sta_id].sta.station_flags &= ~STA_FLG_PWR_SAVE_MSK;
--	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
--	priv->stations[sta_id].sta.sta.modify_mask = 0;
--	priv->stations[sta_id].sta.sleep_tx_count = 0;
--	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
--	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
-+	struct iwl_addsta_cmd cmd = {
-+		.mode = STA_CONTROL_MODIFY_MSK,
-+		.station_flags_msk = STA_FLG_PWR_SAVE_MSK,
-+		.sta.sta_id = sta_id,
-+	};
- 
-+	iwl_send_add_sta(priv, &cmd, CMD_ASYNC);
- }
- 
- static void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
 -- 
 1.7.0.4
 
