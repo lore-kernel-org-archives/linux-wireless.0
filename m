@@ -1,82 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:51303 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422755Ab2CPPAr (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41087 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074Ab2CUCMJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 11:00:47 -0400
-Received: by bkcik5 with SMTP id ik5so2971016bkc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Mar 2012 08:00:46 -0700 (PDT)
-Message-ID: <4F635562.6090505@openwrt.org> (sfid-20120316_160101_448263_DD7D41AA)
-Date: Fri, 16 Mar 2012 15:59:46 +0100
-From: Florian Fainelli <florian@openwrt.org>
+	Tue, 20 Mar 2012 22:12:09 -0400
+Message-ID: <4F6938EF.3080205@candelatech.com> (sfid-20120321_031213_705706_29DC92DF)
+Date: Tue, 20 Mar 2012 19:11:59 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/2] mac80211:  Support getting sta_info stats via ethtool.
-References: <1331833159-12694-1-git-send-email-greearb@candelatech.com> <1331833159-12694-2-git-send-email-greearb@candelatech.com> <1331837531.3432.36.camel@jlt3.sipsolutions.net> <4F623B58.1070106@candelatech.com> <20120316134909.GA2563@tuxdriver.com> <4F634BB2.8050408@openwrt.org> <4F63543A.2000108@candelatech.com>
-In-Reply-To: <4F63543A.2000108@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: avg-signal is weird in ath9k in 3.3.0
+References: <4F68DEE8.60506@candelatech.com> <4F690340.5090102@openwrt.org>
+In-Reply-To: <4F690340.5090102@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 03/16/12 15:54, Ben Greear a écrit :
-> On 03/16/2012 07:18 AM, Florian Fainelli wrote:
->> Hello,
+On 03/20/2012 03:22 PM, Felix Fietkau wrote:
+> On 2012-03-20 8:47 PM, Ben Greear wrote:
+>> I'm testing out some code to get a stations's avg-signal through ethtool-stats,
+>> and both it and /proc/net/wireless show ranges bouncing all over
+>> (from around -48 to -110) on an interface running heavy traffic.
 >>
->> Le 03/16/12 14:49, John W. Linville a écrit :
->>> On Thu, Mar 15, 2012 at 11:56:24AM -0700, Ben Greear wrote:
->>>> On 03/15/2012 11:52 AM, Johannes Berg wrote:
->>>>> On Thu, 2012-03-15 at 10:39 -0700, greearb@candelatech.com wrote:
->>>>>> From: Ben Greear<greearb@candelatech.com>
->>>>>>
->>>>>> This lets ethtool print out stats related to station
->>>>>> interfaces. Does not yet get stats from the underlying
->>>>>> driver.
->>>>>
->>>>> Hmm. What's the advantage of using ethtool over iw, which already 
->>>>> has a
->>>>> bunch of these numbers?
->>>>
->>>> Well, ethtool api might be easier for some apps to use,
->>>> and perhaps easier for users to read if all they want
->>>> are stats.
->>>
->>> And they can use the same tool for both wired and wireless interfaces
->>> -- could be handy.
->>
->> iw already provides statistics which are relevant for wireless 
->> interfaces. I really don't see the point in also reporting them via 
->> ethtool, also it is going to
->> be error prone if someone updates the netlink interface and forgets 
->> about the ethtool one.
->
-> Ethtool provides what it provides.  If it's missing a stat, I or 
-> someone else can add it.
+>> Are there any known bugs in 3.3.0 related to this?
+> As far as I know, this bug has always been there (RSSI values for A-MPDU
+> subframes are invalid, except for the last subframe).
+> I've sent fixes for this, which will show up in 3.4
 
-What if we don't want to bloat ethtool with new stats? I mean, someone 
-else one day will see wireless stats in, and say, hey why don't I add 
-atm, x25, or any protocol of the moment to ethtool, then what do we do?
+I found the two patches and they apply cleanly to 3.3.0, and it
+does appear to fix the problem.
 
->
-> And if it's not there, then users can do without or get it elsewhere.
->
-> iw does not provide any way to get underlying wifi radio counters, and
-> the only other way I've found is to parse various debugfs files that
-> are subject to change at a whim. 
+Thanks,
+Ben
 
-That's another topic, if debugfs interface changes you should complain 
-to their maintainers.
-
-> Ethtool is a step up from that at least.
->
-> iw is also not supposed to be screen-scraped, while ethtool stats are a
-> fairly easily parsed output so scripts and such could use that.
-
-Why not fix iw instead so its output gets nicely parsed?
-Would there be no reporting tool that I would not object, otherwise I 
-prefer to keep things where they are consistent, that is, iw configures 
-and reports stats for wireless, and so does ethtool for Ethernet interfaces.
---
-Florian
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
