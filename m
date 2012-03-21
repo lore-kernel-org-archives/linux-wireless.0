@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:57173 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754288Ab2CWRZx (ORCPT
+Received: from mail.solarflare.com ([216.237.3.220]:52420 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753776Ab2CUQLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 13:25:53 -0400
-Message-ID: <1332524036.5884.11.camel@sortiz-mobl> (sfid-20120323_182556_536840_B159CC95)
-Subject: Re: [PATCH] NFC: Add Core support to generate tag lost event
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Ilan Elias <ilane@ti.com>
-Cc: Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Date: Fri, 23 Mar 2012 18:33:56 +0100
-In-Reply-To: <CAK3JMAZhJP=RC09gA7jHf7Z5ZhuscHbsLW2dPq9Wk52uGQt7YA@mail.gmail.com>
-References: <4F6C5C59.2060708@linux.intel.com>
-	 <CAK3JMAZhJP=RC09gA7jHf7Z5ZhuscHbsLW2dPq9Wk52uGQt7YA@mail.gmail.com>
+	Wed, 21 Mar 2012 12:11:08 -0400
+Message-ID: <1332346257.3500.9.camel@deadeye> (sfid-20120321_171117_840956_1C9E56E8)
+Subject: Re: [PATCH v3 4/4] ath9k:  Support ethtool getstats api.
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: Ben Greear <greearb@candelatech.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Date: Wed, 21 Mar 2012 16:10:57 +0000
+In-Reply-To: <20329.32334.162938.169995@gargle.gargle.HOWL>
+References: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
+	 <1332183105-4447-4-git-send-email-greearb@candelatech.com>
+	 <4F684301.9040006@openwrt.org> <4F68B4AA.3070306@candelatech.com>
+	 <20329.32334.162938.169995@gargle.gargle.HOWL>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lauro,
-
-On Fri, 2012-03-23 at 14:11 -0300, Lauro Ramos Venancio wrote:
-> 2012/3/23 Eric Lapuyade <eric.lapuyade@linux.intel.com>:
-> > Some HW/drivers get notifications when a tag moves out of the radio field.
-> > This notification is now forwarded to user space through netlink.
+On Wed, 2012-03-21 at 12:37 +0530, Sujith Manoharan wrote:
+> Ben Greear wrote:
+> > I'd like to gather at least most stats always, so ethtool can work regardless
+> > of debugfs.  But, that can be follow on patches in my opinion.  If it turns
+> > out that we need another config option for this, then that is fine too.
 > 
-> I think to put a timer in the NFC core is not the best solution for
-> this problem.
-> This solution is not suitable for devices that receive an event when
-> the tag moves out of the field.
-I don't know of such device. HCI based devices don't get such event,
-neither does the pn53x USB ones.
-Ilan, does NCI provide such event ?
+> It would be good to have an option to compile this out. The information is
+> available via the debugfs interface, so this is basically duplicating things.
+> On APs using OpenWRT, debugfs is enabled by default, so we can just read
+> the debugfs files.
 
-Cheers,
-Samuel.
+ethtool is the normal way to expose extended network stats, so the
+debugfs interface should be dropped in favour of this.
 
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
