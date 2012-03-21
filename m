@@ -1,70 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55613 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753685Ab2CPQjp (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:55229 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424Ab2CURjJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 12:39:45 -0400
-Message-ID: <4F636CBB.8090700@candelatech.com> (sfid-20120316_173949_184290_08894B97)
-Date: Fri, 16 Mar 2012 09:39:23 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 21 Mar 2012 13:39:09 -0400
+Received: by vcqp1 with SMTP id p1so1244981vcq.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Mar 2012 10:39:08 -0700 (PDT)
 MIME-Version: 1.0
-To: Florian Fainelli <florian@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 2/2] mac80211:  Support getting sta_info stats via ethtool.
-References: <1331833159-12694-1-git-send-email-greearb@candelatech.com> <1331833159-12694-2-git-send-email-greearb@candelatech.com> <1331837531.3432.36.camel@jlt3.sipsolutions.net> <4F623B58.1070106@candelatech.com> <20120316134909.GA2563@tuxdriver.com> <4F634BB2.8050408@openwrt.org> <4F63543A.2000108@candelatech.com> <4F635562.6090505@openwrt.org>
-In-Reply-To: <4F635562.6090505@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAPjQAd_v+jez4woV+=rp3LB8QTgPDT=CX0oixjcu7=fUZscm6w@mail.gmail.com>
+References: <1332333182-11941-1-git-send-email-yeohchunyeow@gmail.com> <CAPjQAd_v+jez4woV+=rp3LB8QTgPDT=CX0oixjcu7=fUZscm6w@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Wed, 21 Mar 2012 10:33:18 -0700
+Message-ID: <CAG6hwVPnTvKDdPvcWi682DJhFOXMw2fR+o_Vxt48UNfv1Uy5Ug@mail.gmail.com> (sfid-20120321_183937_528044_723A8830)
+Subject: Re: [PATCH] mac80211: fix the RANN propagation issues
+To: Javier Cardona <javier@cozybit.com>
+Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/2012 07:59 AM, Florian Fainelli wrote:
-> Le 03/16/12 15:54, Ben Greear a Ã©crit :
+Hi,
 
->> Ethtool provides what it provides. If it's missing a stat, I or someone else can add it.
+>> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+>> index f80a9e3..fcfebc7 100644
+>> --- a/net/mac80211/mesh_hwmp.c
+>> +++ b/net/mac80211/mesh_hwmp.c
+>> @@ -88,6 +88,7 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
+>>  #define MSEC_TO_TU(x) (x*1000/1024)
+>>  #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
+>>  #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
+>> +#define SN_EQ(x, y) ((long) (x) - (long) (y) == 0)
 >
-> What if we don't want to bloat ethtool with new stats? I mean, someone else one day will see wireless stats in, and say, hey why don't I add atm, x25, or any
-> protocol of the moment to ethtool, then what do we do?
+> I never understood the point of these macros so I'm not too happy
+> about seeing another one creep in :)
+> Can someone explain why we need them?  Why not just use good
+> old-fashioned '=='  (and '<' or '>')?
+>
 
-Cheer and be happy!  Or, make the code conditionally compiled
-if you are very scarce on RAM.
+I suggested using these macros to remain consistent with other places
+in the code. Looking at them again, I don't see how "u32 < u32" , etc.
+might fail. If no one has any insight into why this might be a bug,
+just use ordinary conditionals for now. Later (if you feel like it),
+you can submit a patch removing these macros.
 
->> And if it's not there, then users can do without or get it elsewhere.
+>>  #define net_traversal_jiffies(s) \
+>>        msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime)
+>> @@ -732,11 +733,12 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>>                                struct ieee80211_rann_ie *rann)
+>>  {
+>>        struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+>> +       struct ieee80211_local *local = sdata->local;
+>> +       struct sta_info *sta;
+>>        struct mesh_path *mpath;
+>>        u8 ttl, flags, hopcount;
+>>        u8 *orig_addr;
+>> -       u32 orig_sn, metric;
+>> -       u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
+>> +       u32 orig_sn, metric, metric_txsta, interval;
+>>        bool root_is_gate;
 >>
->> iw does not provide any way to get underlying wifi radio counters, and
->> the only other way I've found is to parse various debugfs files that
->> are subject to change at a whim.
->
-> That's another topic, if debugfs interface changes you should complain to their maintainers.
->
->> Ethtool is a step up from that at least.
+>>        ttl = rann->rann_ttl;
+>> @@ -749,6 +751,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>>        root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
+>>        orig_addr = rann->rann_addr;
+>>        orig_sn = le32_to_cpu(rann->rann_seq);
+>> +       interval = le32_to_cpu(rann->rann_interval);
+>>        hopcount = rann->rann_hopcount;
+>>        hopcount++;
+>>        metric = le32_to_cpu(rann->rann_metric);
+>> @@ -761,6 +764,14 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>>                        orig_addr, mgmt->sa, root_is_gate);
 >>
->> iw is also not supposed to be screen-scraped, while ethtool stats are a
->> fairly easily parsed output so scripts and such could use that.
+>>        rcu_read_lock();
+>> +       sta = sta_info_get(sdata, mgmt->sa);
+>> +       if (!sta) {
+>> +               rcu_read_unlock();
+>> +               return;
+>> +       }
+>> +
+>> +       metric_txsta = airtime_link_metric_get(local, sta);
+>> +
+>>        mpath = mesh_path_lookup(orig_addr, sdata);
+>>        if (!mpath) {
+>>                mesh_path_add(orig_addr, sdata);
+>> @@ -780,14 +791,16 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>>                mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
+>>        }
+>>
+>> -       if (mpath->sn < orig_sn && ifmsh->mshcfg.dot11MeshForwarding) {
+>> +       if ((SN_LT(mpath->sn, orig_sn) || (SN_EQ(mpath->sn, orig_sn) &&
+>> +          metric < mpath->rann_metric)) && ifmsh->mshcfg.dot11MeshForwarding) {
 >
-> Why not fix iw instead so its output gets nicely parsed?
-
-debugfs and iw output is meant to be parsed by humans.
-In particular, debugfs is not a 'real' api and can change
-all the time.
-
-> Would there be no reporting tool that I would not object, otherwise I prefer to keep things where they are consistent, that is, iw configures and reports stats
-> for wireless, and so does ethtool for Ethernet interfaces.
-
-Another problem with using iw:  You have to modify user-space as well
-as the kernel to get new stats.  But, with ethtool, you can just modify
-the kernel and any remotely modern ethtool executable can display
-the new stats.
-
-Note that my patches require NO changes to the ethtool binary to display
-the new stats.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+> i.e.
+>
+> if ((mpath->sn < orig_sn || (mpath->sn == orig_sn && metric <
+> mpath->rann_metric))
+>    && ifmsh->mshcfg.dot11MeshForwarding) {
+>
+>
+>>                mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
+>>                                       cpu_to_le32(orig_sn),
+>>                                       0, NULL, 0, broadcast_addr,
+>>                                       hopcount, ttl, cpu_to_le32(interval),
+>> -                                      cpu_to_le32(metric + mpath->metric),
+>> +                                      cpu_to_le32(metric + metric_txsta),
+>>                                       0, sdata);
+>>                mpath->sn = orig_sn;
+>> +               mpath->rann_metric = metric + metric_txsta;
+>>        }
+>>
+>>        /* Using individually addressed PREQ for root node */
+>> --
+>> 1.7.0.4
+>>
+>
+> Thanks,
+>
+> Javier
