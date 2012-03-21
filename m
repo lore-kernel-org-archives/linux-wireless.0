@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58289 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753015Ab2CVTcT (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40807 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996Ab2CUPMH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2012 15:32:19 -0400
-Date: Thu, 22 Mar 2012 15:24:06 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: RFC/CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
- (Barcelona?)
-Message-ID: <20120322192406.GB2432@tuxdriver.com> (sfid-20120322_203225_065392_0995C35F)
+	Wed, 21 Mar 2012 11:12:07 -0400
+Message-ID: <4F69EFC2.8030204@candelatech.com> (sfid-20120321_161213_326941_4D7B0332)
+Date: Wed, 21 Mar 2012 08:12:02 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v3 4/4] ath9k:  Support ethtool getstats api.
+References: <1332183105-4447-1-git-send-email-greearb@candelatech.com> <1332183105-4447-4-git-send-email-greearb@candelatech.com> <4F684301.9040006@openwrt.org> <4F68B4AA.3070306@candelatech.com> <20329.32334.162938.169995@gargle.gargle.HOWL>
+In-Reply-To: <20329.32334.162938.169995@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings!
+On 03/21/2012 12:07 AM, Sujith Manoharan wrote:
+> Ben Greear wrote:
+>> I'd like to gather at least most stats always, so ethtool can work regardless
+>> of debugfs.  But, that can be follow on patches in my opinion.  If it turns
+>> out that we need another config option for this, then that is fine too.
+>
+> It would be good to have an option to compile this out. The information is
+> available via the debugfs interface, so this is basically duplicating things.
+> On APs using OpenWRT, debugfs is enabled by default, so we can just read
+> the debugfs files.
 
-For the past several years, Linux wireless LAN developers have held
-"mini-summit" events to bring us together face-to-face.  This has
-helped us to develop better working relationships with one and another
-and to resolve certain issues that would have been much more difficult
-to resolve strictly over email and IRC.
+Ok.  Hopefully at least the first 3 patches will go in, and when they do
+I'll post some more patches for consideration.
 
-For some time we have discussed combining these events with similar
-gatherings of Bluetooth developers.  Now that NFC has an in-kernel
-Linux presence, it makes sense to include them as well.  So, we
-are hoping to have a joint mini-summit event along the lines of the
-KVM Forum or the Linux File System, Storage, and Memory Management
-Summit events.
+Thanks,
+Ben
 
-A number of wireless developers reside in Europe, but our last few
-meetings have been held in North America.  So, there is a strong desire
-to have a European location for this event.  Initial contact with the
-Linux Foundation suggests that we can co-locate this event with the
-LinuxCon Europe event in Barcelona this November.  Other suggestions
-are welcome as well, of course.
-
-If we join the LinuxCon Europe event, we would need to decide how to
-fund the event.  One option would be to charge a separate entry fee for
-the mini-summit event, seperate from the LinuxCon EU fee.  Those that
-do not wish to attend LinuxCon EU may find that attractive.  OTOH,
-in the past we have simply said that all the mini-summit attendees
-had to register for the sponsoring event.  That has worked reasonably
-well, especially since event speakers would be eligible to attend
-the mini-summit for no fee.  I would lean toward keeping that approach.
-
-Given the potential to expand this into a larger event, we would
-likely need to be somewhat more formal about having proposals for
-speaking slots.  In that case, we might require a program committee
-for reviewing proposals, etc.  Anyone interested in participating in
-speaking at the mini-summit or in reviewing speaking proposals should
-contact me or reply in this thread.
-
-Well, that's about it -- let's kick this off!
-
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
