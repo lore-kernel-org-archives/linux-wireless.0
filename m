@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35754 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932550Ab2CZPcQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 11:32:16 -0400
-Date: Mon, 26 Mar 2012 11:25:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: RFC/CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona?)
-Message-ID: <20120326152541.GH13806@tuxdriver.com> (sfid-20120326_173220_565614_3B43EEF2)
-References: <20120322192406.GB2432@tuxdriver.com>
- <1332698585.1870.88.camel@aeonflux>
- <20120326145433.GE13806@tuxdriver.com>
- <1332774906.1870.98.camel@aeonflux>
+Received: from mms2.broadcom.com ([216.31.210.18]:3839 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751366Ab2CUIV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2012 04:21:28 -0400
+Message-ID: <4F698F7E.9030906@broadcom.com> (sfid-20120321_092134_732469_4BB9D487)
+Date: Wed, 21 Mar 2012 09:21:18 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1332774906.1870.98.camel@aeonflux>
+To: "Jean-Philippe MENGUAL" <mengualjeanphi@free.fr>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Is there a patch for a bug?
+References: <1332265928.7247.1.camel@HP>
+In-Reply-To: <1332265928.7247.1.camel@HP>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 26, 2012 at 05:15:06PM +0200, Marcel Holtmann wrote:
+On 03/20/2012 06:52 PM, Jean-Philippe MENGUAL wrote:
+> Hi,
+>
+>          I use the 2.6.32 kernel on a Debian system. I use the module
+>          mac80211 for my Wifi card. But in more and more numerous cases,
+>          I cannot get an IP with dhclient. It fails. While it searches
+>          for one, I get:
+>          wl0: wlc_d11hdrs_mac80211: AC_BE txop exceeded phylen 366/186
+>
+>          Is it a bug in the module? I found some info but not about some
+>          patch or fix. Is there a fix in the recent kernel? What release
+>          should I use? If no patch, is there some workaround?
+>
+>          Thanks,
+>
+>          Sincerely,
+>
+> Jean-Philippe MENGUAL
+>
 
-> > I don't think that 1 day is enough.  2 might not be enough, depending
-> > on how we stage it.  Do you think that we would have more than one
-> > "track" (e.g. separate Blueooth/802.11/NFC sessions)?  A single
-> > "plenary" session?  Or some mix?
-> 
-> so what about 2 days single track and 1 day with breakout sessions. So
-> we could do 12 talks with morning and afternoon sessions on the 3rd day
-> as needed.
-> 
-> If we have many proposals for presentations, we can always go switch to
-> 2 tracks. If we require LinuxCon registration, then it should be no
-> problem to get a second room. If not, I have to negotiate with Angela
-> next week ;)
+The message itself means that according to the driver we get a transmit 
+packet that exceeds the WMM txop. This message itself does not prevent 
+the packet from being transmitted. I have not seen the message lately in 
+recent driver versions.
 
-My only concern is filling the number of slots.  Will we have 12+
-presentation poposals?
+You can either try compat-wireless (see [1]), which should support 
+2.6.32. Or you can try the latest 3.3 kernel.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+btw. 9 out of 10 times not getting an IP with dhclient means a problem 
+with security credentials/handshake/etc. So if the option above do not 
+solve your problems, we have to dive into that.
+
+Gr. AvS
+
+[1] http://linuxwireless.org/en/users/Download
+
