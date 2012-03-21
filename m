@@ -1,201 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55973 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755061Ab2CDUnF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:05 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 045/101] iwlwifi: move status check functions out of shared
-Date: Sun,  4 Mar 2012 11:28:59 -0800
-Message-Id: <1330889395-533-46-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214612_702735_DA5254EE)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:56836 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755999Ab2CUQUT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2012 12:20:19 -0400
+Message-ID: <4F69FFBE.9000607@candelatech.com> (sfid-20120321_172028_954867_7AFD67B2)
+Date: Wed, 21 Mar 2012 09:20:14 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v3 4/4] ath9k:  Support ethtool getstats api.
+References: <1332183105-4447-1-git-send-email-greearb@candelatech.com>  <1332183105-4447-4-git-send-email-greearb@candelatech.com>  <4F684301.9040006@openwrt.org> <4F68B4AA.3070306@candelatech.com>  <20329.32334.162938.169995@gargle.gargle.HOWL> <1332346257.3500.9.camel@deadeye>
+In-Reply-To: <1332346257.3500.9.camel@deadeye>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/21/2012 09:10 AM, Ben Hutchings wrote:
+> On Wed, 2012-03-21 at 12:37 +0530, Sujith Manoharan wrote:
+>> Ben Greear wrote:
+>>> I'd like to gather at least most stats always, so ethtool can work regardless
+>>> of debugfs.  But, that can be follow on patches in my opinion.  If it turns
+>>> out that we need another config option for this, then that is fine too.
+>>
+>> It would be good to have an option to compile this out. The information is
+>> available via the debugfs interface, so this is basically duplicating things.
+>> On APs using OpenWRT, debugfs is enabled by default, so we can just read
+>> the debugfs files.
+>
+> ethtool is the normal way to expose extended network stats, so the
+> debugfs interface should be dropped in favour of this.
 
-They are only used in the DVM op_mode.
-Also move the rfkill debug macros that
-depend on them.
+No...ath9k debugfs offers a lot of additional info that is not easily
+packaged into ethtool stats, and is better formatted for reading
+by humans.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn.h    |   64 +++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-debug.h  |   16 -------
- drivers/net/wireless/iwlwifi/iwl-shared.h |   42 -------------------
- 4 files changed, 65 insertions(+), 58 deletions(-)
+So, both should be kept..though we can optionally compile
+out both/either/none.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-index 85fe590..7712c55 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-@@ -34,6 +34,7 @@
- 
- #include <net/mac80211.h>
- 
-+#include "iwl-agn.h"
- #include "iwl-eeprom.h"
- #include "iwl-dev.h"
- #include "iwl-core.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index dfd86f2..1f62d6d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -383,4 +383,68 @@ static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv,
- }
- #endif
- 
-+/* status checks */
-+
-+static inline int iwl_is_ready(struct iwl_shared *shrd)
-+{
-+	/* The adapter is 'ready' if READY and GEO_CONFIGURED bits are
-+	 * set but EXIT_PENDING is not */
-+	return test_bit(STATUS_READY, &shrd->status) &&
-+	       test_bit(STATUS_GEO_CONFIGURED, &shrd->status) &&
-+	       !test_bit(STATUS_EXIT_PENDING, &shrd->status);
-+}
-+
-+static inline int iwl_is_alive(struct iwl_shared *shrd)
-+{
-+	return test_bit(STATUS_ALIVE, &shrd->status);
-+}
-+
-+static inline int iwl_is_init(struct iwl_shared *shrd)
-+{
-+	return test_bit(STATUS_INIT, &shrd->status);
-+}
-+
-+static inline int iwl_is_rfkill_hw(struct iwl_shared *shrd)
-+{
-+	return test_bit(STATUS_RF_KILL_HW, &shrd->status);
-+}
-+
-+static inline int iwl_is_rfkill(struct iwl_shared *shrd)
-+{
-+	return iwl_is_rfkill_hw(shrd);
-+}
-+
-+static inline int iwl_is_ctkill(struct iwl_shared *shrd)
-+{
-+	return test_bit(STATUS_CT_KILL, &shrd->status);
-+}
-+
-+static inline int iwl_is_ready_rf(struct iwl_shared *shrd)
-+{
-+	if (iwl_is_rfkill(shrd))
-+		return 0;
-+
-+	return iwl_is_ready(shrd);
-+}
-+
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+#define IWL_DEBUG_QUIET_RFKILL(m, fmt, args...)	\
-+do {									\
-+	if (!iwl_is_rfkill((m)->shrd))					\
-+		IWL_ERR(m, fmt, ##args);				\
-+	else								\
-+		__iwl_err(trans(m)->dev, true,				\
-+			  !iwl_have_debug_level(IWL_DL_RADIO),		\
-+			  fmt, ##args);					\
-+} while (0)
-+#else
-+#define IWL_DEBUG_QUIET_RFKILL(m, fmt, args...)	\
-+do {									\
-+	if (!iwl_is_rfkill((m)->shrd))					\
-+		IWL_ERR(m, fmt, ##args);				\
-+	else								\
-+		__iwl_err(trans(m)->dev, true, true, fmt, ##args);	\
-+} while (0)
-+#endif				/* CONFIG_IWLWIFI_DEBUG */
-+
- #endif /* __iwl_agn_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 163d259..a6b32a1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -76,24 +76,8 @@ do {                                            			\
- 		print_hex_dump(KERN_DEBUG, "iwl data: ",		\
- 			       DUMP_PREFIX_OFFSET, 16, 1, p, len, 1);	\
- } while (0)
--#define IWL_DEBUG_QUIET_RFKILL(m, fmt, args...)	\
--do {									\
--	if (!iwl_is_rfkill((m)->shrd))					\
--		IWL_ERR(m, fmt, ##args);				\
--	else								\
--		__iwl_err(trans(m)->dev, true,				\
--			  !iwl_have_debug_level(IWL_DL_RADIO),		\
--			  fmt, ##args);					\
--} while (0)
- #else
- #define iwl_print_hex_dump(m, level, p, len)
--#define IWL_DEBUG_QUIET_RFKILL(m, fmt, args...)	\
--do {									\
--	if (!iwl_is_rfkill((m)->shrd))					\
--		IWL_ERR(m, fmt, ##args);				\
--	else								\
--		__iwl_err(trans(m)->dev, true, true, fmt, ##args);	\
--} while (0)
- #endif				/* CONFIG_IWLWIFI_DEBUG */
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index a5ab58c..5e12b50 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -508,46 +508,4 @@ iwl_remove_notification(struct iwl_shared *shrd,
- #define STATUS_CHANNEL_SWITCH_PENDING 19
- #define STATUS_SCAN_COMPLETE	20
- 
--static inline int iwl_is_ready(struct iwl_shared *shrd)
--{
--	/* The adapter is 'ready' if READY and GEO_CONFIGURED bits are
--	 * set but EXIT_PENDING is not */
--	return test_bit(STATUS_READY, &shrd->status) &&
--	       test_bit(STATUS_GEO_CONFIGURED, &shrd->status) &&
--	       !test_bit(STATUS_EXIT_PENDING, &shrd->status);
--}
--
--static inline int iwl_is_alive(struct iwl_shared *shrd)
--{
--	return test_bit(STATUS_ALIVE, &shrd->status);
--}
--
--static inline int iwl_is_init(struct iwl_shared *shrd)
--{
--	return test_bit(STATUS_INIT, &shrd->status);
--}
--
--static inline int iwl_is_rfkill_hw(struct iwl_shared *shrd)
--{
--	return test_bit(STATUS_RF_KILL_HW, &shrd->status);
--}
--
--static inline int iwl_is_rfkill(struct iwl_shared *shrd)
--{
--	return iwl_is_rfkill_hw(shrd);
--}
--
--static inline int iwl_is_ctkill(struct iwl_shared *shrd)
--{
--	return test_bit(STATUS_CT_KILL, &shrd->status);
--}
--
--static inline int iwl_is_ready_rf(struct iwl_shared *shrd)
--{
--	if (iwl_is_rfkill(shrd))
--		return 0;
--
--	return iwl_is_ready(shrd);
--}
--
- #endif /* #__iwl_shared_h__ */
+Thanks,
+Ben
+
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
