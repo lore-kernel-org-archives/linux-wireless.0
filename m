@@ -1,120 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:51707 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755840Ab2CFV7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 16:59:55 -0500
-Date: Tue, 6 Mar 2012 22:59:42 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>, b43-dev@lists.infradead.org,
-	larry.finger@lwfinger.net, florian@openwrt.org
-Subject: Re: [RFT][PATCH] b43: fix logic in GPIO configuration
-Message-ID: <20120306225942.6a115221@milhouse> (sfid-20120306_225959_326179_D419482A)
-In-Reply-To: <1331071898-3651-1-git-send-email-zajec5@gmail.com>
-References: <1331071898-3651-1-git-send-email-zajec5@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/mR5=gJtrz92IRRDpVKqTzVK"; protocol="application/pgp-signature"
+Received: from aldebaran.gro-tsen.net ([88.191.60.176]:35464 "EHLO
+	aldebaran.gro-tsen.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759743Ab2CUSGt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2012 14:06:49 -0400
+Date: Wed, 21 Mar 2012 18:58:00 +0100
+From: David Madore <david+ml@madore.org>
+To: linux-wireless@vger.kernel.org
+Subject: ath9k_htc fails with "Target is unresponsive"
+Message-ID: <20120321175800.GA28516@aldebaran.gro-tsen.net> (sfid-20120321_190653_801696_4C6EE95B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/mR5=gJtrz92IRRDpVKqTzVK
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
-On Tue,  6 Mar 2012 23:11:38 +0100
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
+(I'm aware that the following might be more of a USB problem than a
+Wireless problem, but I guess I need someone wiser than me to
+translate the problem in terms that can be submitted to wherever Linux
+USB problems should be submitted.)
 
-> By using reverted mask we were taking over pins we were not supporsed to
-> touch. After fixing this workaround for BCM5354 should not be needed
-> anymore.
->=20
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>
-> ---
->  drivers/net/wireless/b43/main.c |    6 ++----
->  1 files changed, 2 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/m=
-ain.c
-> index 1d633f3..8a89885 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -2706,8 +2706,6 @@ static int b43_gpio_init(struct b43_wldev *dev)
->  		mask |=3D 0x0060;
->  		set |=3D 0x0060;
->  	}
-> -	if (dev->dev->chip_id =3D=3D 0x5354)
-> -		set &=3D 0xff02;
->  	if (0 /* FIXME: conditional unknown */ ) {
->  		b43_write16(dev, B43_MMIO_GPIO_MASK,
->  			    b43_read16(dev, B43_MMIO_GPIO_MASK)
-> @@ -2730,7 +2728,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
->  	case B43_BUS_BCMA:
->  		bcma_cc_write32(&dev->dev->bdev->bus->drv_cc, BCMA_CC_GPIOCTL,
->  				(bcma_cc_read32(&dev->dev->bdev->bus->drv_cc,
-> -					BCMA_CC_GPIOCTL) & mask) | set);
-> +					BCMA_CC_GPIOCTL) & ~mask) | set);
->  		break;
->  #endif
->  #ifdef CONFIG_B43_SSB
-> @@ -2739,7 +2737,7 @@ static int b43_gpio_init(struct b43_wldev *dev)
->  		if (gpiodev)
->  			ssb_write32(gpiodev, B43_GPIO_CONTROL,
->  				    (ssb_read32(gpiodev, B43_GPIO_CONTROL)
-> -				    & mask) | set);
-> +				    & ~mask) | set);
->  		break;
->  #endif
->  	}
+I have an Atheros AR9271-based, TP-LINK model TL-WN422G USB wireless
+dongle (USB id 0cf3:1006; full output of lsusb -v is copied at
+bottom), which I'm trying to use with ath9k_htc from kernel version
+3.2.12.  For what it's worth, the host system is an ARM-based Marvell
+DreamPlug (the USB host adapter is orion-ehci; incidentally, the whole
+point of using this dongle was that the Marvell SD8787 is unsupported
+in master mode).
 
-This patch makes sense. Can you also check b43legacy? I guess it has the sa=
-me problem.
+Initially, the dongle works.  But after a system reset, ath9k_htc
+fails to load the firmware with a "Target is unresponsive" error, and
+it becomes impossible to do anything unless I physically unplug and
+replug the dongle.  (Unfortunately for me, this operation is not
+acceptable, and having to do this makes the whole darn thing
+completely useless.)
 
-And while we're at it, you could also remove these two lines:
+Here's what ath_9k says when it fails to initialize the dongle:
 
-2737         if (dev->dev->core_rev >=3D 2)
-2738                 mask |=3D 0x0010; /* FIXME: This is redundant. */
+[  156.507543] usb 1-1.3: new high-speed USB device number 6 using orion-ehci
+[  161.947765] usb 1-1.3: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
+[  162.947189] ath9k_htc 1-1.3:1.0: ath9k_htc: Target is unresponsive
+[  162.953411] Failed to initialize the device
+[  162.959828] ath9k_htc: probe of 1-1.3:1.0 failed with error -22
 
-because core_rev is always >=3D 2 in b43 and as the FIXME says the bit is a=
-lready set.
+And here's what it says when it suceeds:
 
+[  204.006037] usb 1-1.3: new high-speed USB device number 7 using orion-ehci
+[  204.456763] usb 1-1.3: ath9k_htc: Transferred FW: htc_9271.fw, size: 51272
+[  204.691885] ath9k_htc 1-1.3:1.0: ath9k_htc: HTC initialized with 33 credits
+[  204.889776] ath9k_htc 1-1.3:1.0: ath9k_htc: FW Version: 1.3
+[  204.895387] ath: EEPROM regdomain: 0x809c
+<snip many lines concerning regulatory domains>
+[  204.913054] ieee80211 phy2: Atheros AR9271 Rev:1
+[  204.920392] usb 1-1.3: ath9k_htc: USB layer initialized
 
-Also, take a look at b43_gpio_cleanup() (in b43 and b43legacy).
-It always forces all bits to zero. This clearly is wrong, too. It is suppos=
-ed to
-revert the changes done in the b43 GPIO setup. It seems too complicated to
-fixup the code to actually do this, though. I think we should simply get ri=
-d of
-b43_gpio_cleanup() completely and simply leave the GPIOs as-is. No kittens
-will be hurt by doing so; so it's ok.
+I also tried resetting the device with the usbreset program found at
+<URL:
+http://cpansearch.perl.org/src/DPAVLIN/Biblio-RFID-0.03/examples/usbreset.c
+ >, but it does not suffice (in fact, using it produced the "failed"
+log reproduced above).  Any suggestions on performing a deeper USB
+reset (one that would be equivalent to unplugging and replugging the
+dongle) would be welcome: the comments in the program mentioned above
+suggest writing to /sys/bus/usb/devices/${id}/power/state but this no
+longer exists and I was unable to find a replacement.
 
---=20
-Greetings, Michael.
+Any suggestions on debugging the problem, or finding a way to make the
+thing not completely useless, would be very welcome.
 
-PGP encryption is encouraged / 908D8B0E
+Other than that, if someone can suggest a USB wireless dongle model
+which is fully supported under Linux (including master mode) and does
+not have this kind of problem, I'd be very grateful.
 
---Sig_/mR5=gJtrz92IRRDpVKqTzVK
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+Lastly here is the output of "lsusb -v" for the device:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+Bus 001 Device 007: ID 0cf3:1006 Atheros Communications, Inc. TP-Link TL-WN322G v3 / TL-WN422G v2 802.11g [Atheros AR9271]
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass          255 Vendor Specific Class
+  bDeviceSubClass       255 Vendor Specific Subclass
+  bDeviceProtocol       255 Vendor Specific Protocol
+  bMaxPacketSize0        64
+  idVendor           0x0cf3 Atheros Communications, Inc.
+  idProduct          0x1006 TP-Link TL-WN322G v3 / TL-WN422G v2 802.11g [Atheros AR9271]
+  bcdDevice            1.08
+  iManufacturer          16 ATHEROS
+  iProduct               32 USB2.0 WLAN
+  iSerial                48 12345
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           60
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0 
+    bmAttributes         0x80
+      (Bus Powered)
+    MaxPower              500mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           6
+      bInterfaceClass       255 Vendor Specific Class
+      bInterfaceSubClass      0 
+      bInterfaceProtocol      0 
+      iInterface              0 
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x01  EP 1 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x82  EP 2 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x83  EP 3 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x04  EP 4 OUT
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               1
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x05  EP 5 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x06  EP 6 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+Device Qualifier (for other device speed):
+  bLength                10
+  bDescriptorType         6
+  bcdUSB               2.00
+  bDeviceClass          255 Vendor Specific Class
+  bDeviceSubClass       255 Vendor Specific Subclass
+  bDeviceProtocol       255 Vendor Specific Protocol
+  bMaxPacketSize0        64
+  bNumConfigurations      1
+Device Status:     0x0000
+  (Bus Powered)
 
-iQIcBAEBAgAGBQJPVojOAAoJEPUyvh2QjYsODycP/Ap+sRN+KlBcUKB/tsAGbCdZ
-NLOidjbjw141BeXaE1qbpiyb5HUPyHol3NKxjSlvesC32umLsW92gwyOaBmcWCkf
-UYELECBxSlQaCP7RgHqZTesw2tp+LnMfJniZ6pF08ILSMr1N07/ZQSEzDPDuT+io
-jyzjipFYitNlY1fW/XTpGkLHkKOiwzjYg/5s4bqylbBvAAi+gSyiFhbWZxwJUeNl
-uqMogt2UjADlcTX4mZWgWsWmdy823savOtjKut1p0iS+4lVKWiqU6gxW4hCK1Mzg
-njxF0ubAqO1u4pPS9rz7nGCdrQ03zTtprRdruwTORRNldoyMz+l+SNgEjfAwclfR
-rF/AYFB3lHowIgpFrOfIkLSFAish+DWmVxkx06+qN6Q1Szf1eHLmNb7JccqTTOHu
-uQsASDgrvq1aoVm7PCHw0XslbFaEcc/Q+qkT8i9Eo6ZwrcC9m0uKCG4GRx2aJOIV
-nt5BGtbeTMtLlQoM8H3V5qH2Pu8bfxMR5YgFvnJIk842lydwBiiRzNWpxzrJVrue
-rcZtMHyR0C82s4eBYhtEIlwR8jwmRRwNRLd5K5W7iP1XzpnnoUcSZcyhB3INrDKB
-pim17THpVT1fAenyoLQVoMRUhpHuDfEOjcWR9vmUU/RM4fbJGknJuQ2CK3sTI+UW
-hNncUOg2joEodaaESxwB
-=LTXS
------END PGP SIGNATURE-----
-
---Sig_/mR5=gJtrz92IRRDpVKqTzVK--
+-- 
+     David A. Madore
+   ( http://www.madore.org/~david/ )
