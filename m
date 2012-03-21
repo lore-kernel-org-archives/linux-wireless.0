@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50766 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932265Ab2CGOuz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50333 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754839Ab2CUGJx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 09:50:55 -0500
-Subject: Re: Hw Accel in Secured Mesh No Longer Work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-In-Reply-To: <CAEFj984W5PEwJ4ruXbwn0PwZV2s+fXkL=PzFX0DZm1gAyiGA3g@mail.gmail.com> (sfid-20120307_154743_314516_32C26C90)
-References: <CAEFj984b_Aihd9hc-dMArPxZPod8eKsxzekLwO74XbTUKGX9LQ@mail.gmail.com>
-	 <CAEFj984gKDRtjP9NJYqjvWCZ=HxwW3DQ036guVY6Vbj=yx1H6g@mail.gmail.com>
-	 <1331105902.3519.2.camel@jlt3.sipsolutions.net>
-	 <CAEFj985EYVeAYef1-G3uVPOxZqwjose9Ge7=MRsbmFWrLNz_RQ@mail.gmail.com>
-	 <CAEFj984tNRXvBL4cCdJAq2VL7_AgeFYDB=w1b=aLy89pCM5UdA@mail.gmail.com>
-	 <1331130686.3519.14.camel@jlt3.sipsolutions.net>
-	 <1331130810.3519.16.camel@jlt3.sipsolutions.net>
-	 <CAEFj984W5PEwJ4ruXbwn0PwZV2s+fXkL=PzFX0DZm1gAyiGA3g@mail.gmail.com>
-	 (sfid-20120307_154743_314516_32C26C90)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Mar 2012 15:50:53 +0100
-Message-ID: <1331131853.3519.17.camel@jlt3.sipsolutions.net> (sfid-20120307_155058_374701_FE09C43F)
-Mime-Version: 1.0
+	Wed, 21 Mar 2012 02:09:53 -0400
+Message-ID: <4F6970A8.6000707@qca.qualcomm.com> (sfid-20120321_070957_528034_76113D49)
+Date: Wed, 21 Mar 2012 11:39:44 +0530
+From: Raja Mani <rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+To: shonmou li <shonmou@gmail.com>
+CC: <kvalo@qca.qualcomm.com>, <ath6kl-devel@qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: avoiding 80211 scan does not complete before
+ start scheduled scan.
+References: <CADhJdvDbAORKoWUxLdcz7Jq2dt9DKEPzBwgmiNvZsj6iU2K9Kw@mail.gmail.com>
+In-Reply-To: <CADhJdvDbAORKoWUxLdcz7Jq2dt9DKEPzBwgmiNvZsj6iU2K9Kw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-03-07 at 22:47 +0800, Yeoh Chun-Yeow wrote:
-> Hi, Johannes
-> 
-> > Does meshd-nl80211 set the station flag NL80211_STA_FLAG_AUTHENTICATED
-> > before the key?
-> 
-> The key is installed before the set the station flag
-> NL80211_STA_FLAG_AUTHENTICATED.
-> 
-> /* key to encrypt/decrypt unicast data AND mgmt traffic to/from this peer */
-> install_key(&nlcfg, peer, CIPHER_CCMP, NL80211_KEYTYPE_PAIRWISE, 0, mtk);
-> .....
-> set_authenticated_flag(&nlcfg, peer);
+Tested-by: Raja Mani <rmani@qca.qualcomm.com>
 
-Does it work if you turn it around? Are there any problems with doing
-so?
-
-This is solvable in the kernel, but probably harder, and impossible if
-you wanted to use crypto algorithms that mac80211 doesn't support in
-software.
-
-johannes
-
+On Thursday 23 February 2012 09:45 PM, shonmou li wrote:
+> Dear Kvalo:
+>
+> In this patch, i stop 80211 scan before scheduled scan.
+> It could avoid the following situation it will cause wpa_supplicant
+> trigger scan fail:
+>
+> "The device connected with access point then system goes into suspend mode.
+> At this moment AP might be turned off or signal lost and then disconnect
+> with the device."
+>
+> The attached file is my patch.
+>
+> --
+> Best Regards,
+> shonmou
