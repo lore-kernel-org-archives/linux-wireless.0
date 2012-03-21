@@ -1,99 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58272 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031496Ab2CFWnl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:41 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 31/33] iwlwifi: don't include iwl-prph.h everywhere
-Date: Tue,  6 Mar 2012 13:31:06 -0800
-Message-Id: <1331069468-11074-32-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234351_750128_593184A1)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:42758 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028Ab2CUFBF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2012 01:01:05 -0400
+Received: by pbcun15 with SMTP id un15so532852pbc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 22:01:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6WvuZLAt86R8fn+OzQybdSkU0iPoHr51p_qe1_PkMfUcQ@mail.gmail.com>
+References: <4F5E7031.4000401@candelatech.com>
+	<201203122332.16325.chunkeey@googlemail.com>
+	<4F5E7A81.8090605@candelatech.com>
+	<CAB=NE6WeB8X51xdEOT3-XjyBBVrwdMSMYmFOTbuH3pKzCM8jyw@mail.gmail.com>
+	<20120313005744.GA30312@srcf.ucam.org>
+	<CAB=NE6WvuZLAt86R8fn+OzQybdSkU0iPoHr51p_qe1_PkMfUcQ@mail.gmail.com>
+Date: Tue, 20 Mar 2012 22:01:05 -0700
+Message-ID: <CAJ-Vmok+_suTznXcAJ4tdGo3npFvtW+PiqQMQqqH3JN70aX3Qg@mail.gmail.com> (sfid-20120321_060111_259150_20BCE62E)
+Subject: Re: Hacking PCI-ids to allow Atheros NIC into Lenovo laptop.
+From: Adrian Chadd <adrian@freebsd.org>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Ben Greear <greearb@candelatech.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 12 March 2012 18:11, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
 
-It's only needed in a few places.
+>> Exposing it as either an smbios table or in ACPI somewhere would be the
+>> two most typical methods for doing this. It's easy to spec an ACPI table
+>> for it if you think there'd be any vendor interest.
+>
+> Better than what we have today, no alternative proposal.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 --
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    1 +
- drivers/net/wireless/iwlwifi/iwl-testmode.c |    1 +
- 5 files changed, 4 insertions(+), 2 deletions(-)
+Is there any current "vendor space" in ACPI that we can write to and
+leverage as a kind of example test case?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 900d430..798e24e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -43,6 +43,7 @@
- #include "iwl-agn-hw.h"
- #include "iwl-shared.h"
- #include "iwl-cfg.h"
-+#include "iwl-prph.h"
- 
- /* Highest firmware API version supported */
- #define IWL1000_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 0b85ca0..0e97cfd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -45,6 +45,7 @@
- #include "iwl-trans.h"
- #include "iwl-shared.h"
- #include "iwl-cfg.h"
-+#include "iwl-prph.h"
- 
- /* Highest firmware API version supported */
- #define IWL5000_UCODE_API_MAX 5
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index a301daf..d1e722b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -37,11 +37,9 @@
- #include <linux/leds.h>
- #include <linux/slab.h>
- #include <linux/mutex.h>
--#include <net/ieee80211_radiotap.h>
- 
- #include "iwl-eeprom.h"
- #include "iwl-csr.h"
--#include "iwl-prph.h"
- #include "iwl-debug.h"
- #include "iwl-agn-hw.h"
- #include "iwl-led.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index f965ee3..e2d8084 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -75,6 +75,7 @@
- #include "iwl-agn.h"
- #include "iwl-eeprom.h"
- #include "iwl-io.h"
-+#include "iwl-prph.h"
- 
- /************************** EEPROM BANDS ****************************
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-index 63868df..5b06916 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-@@ -78,6 +78,7 @@
- #include "iwl-testmode.h"
- #include "iwl-trans.h"
- #include "iwl-fh.h"
-+#include "iwl-prph.h"
- 
- 
- /* Periphery registers absolute lower bound. This is used in order to
--- 
-1.7.0.4
 
+
+Adrian
