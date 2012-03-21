@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48400 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760736Ab2COIrp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64977 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964794Ab2CUJVo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 04:47:45 -0400
-Subject: Re: wmm admission control in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Soumik Das <soumik_kgp@yahoo.co.uk>
-Cc: "Divinsky, Yonatan" <yoni.divinsky@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1331792570.68534.YahooMailNeo@web28210.mail.ukl.yahoo.com>
-References: <1323870210.97711.YahooMailNeo@web28203.mail.ukl.yahoo.com>
-	 <1323871164.8146.0.camel@jlt3.sipsolutions.net>
-	 <CANJm+iAm2pzESyLv8fmCkQYa6cD2HyxhAWN+eCGar_Q4gvd4xw@mail.gmail.com>
-	 <1331792570.68534.YahooMailNeo@web28210.mail.ukl.yahoo.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Mar 2012 09:47:39 +0100
-Message-ID: <1331801259.3432.1.camel@jlt3.sipsolutions.net> (sfid-20120315_094805_130093_4BADEBC5)
-Mime-Version: 1.0
+	Wed, 21 Mar 2012 05:21:44 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V3] ath6kl: Dump htc header when invalid Rx frame length is detected
+Date: Wed, 21 Mar 2012 14:52:16 +0530
+Message-ID: <1332321736-26881-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120321_102148_125941_73E6FD26)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-15 at 06:22 +0000, Soumik Das wrote:
-> Hi,
-> 
-> In the current driver operation (ieee80211_ops)  there is no provision for configuring medium time. But this would be essential for admission control.
-> 
-> Will it be better to add a new (optional) operation in ieee80211 or can we add a new field in ieee80211_tx_queue_params?
+Dump htc header along with the warning message when the request
+to Rx with invalid frame length is detected.
 
-It seems a new TX queue field would be better, but keep in mind that not
-all drivers/devices will support it.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+V2 - Leave a space before htc_hdr
+V3 - Don't split the debug message
 
-johannes
+ drivers/net/wireless/ath/ath6kl/htc.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 4849d99..4dc3228 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -1353,7 +1353,9 @@ static int ath6kl_htc_rx_setup(struct htc_target *target,
+ 					sizeof(*htc_hdr));
+ 
+ 	if (!htc_valid_rx_frame_len(target, ep->eid, full_len)) {
+-		ath6kl_warn("Rx buffer requested with invalid length\n");
++		ath6kl_warn("Rx buffer requested with invalid length htc_hdr:eid %d, flags 0x%x, len %d\n",
++			     htc_hdr->eid, htc_hdr->flags,
++			     le16_to_cpu(htc_hdr->payld_len));
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+1.7.0.4
 
