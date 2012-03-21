@@ -1,56 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53686 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755259Ab2C1TKN (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54878 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752597Ab2CUD4n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 15:10:13 -0400
-Message-ID: <4F73620D.507@candelatech.com> (sfid-20120328_211018_039571_C9F11B1E)
-Date: Wed, 28 Mar 2012 12:10:05 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Bryan Phillippe <Bryan.Phillippe@watchguard.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
-References: <4F57B7E6.1050103@candelatech.com>  <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>  <4F735EF5.3010708@candelatech.com> <1332961193.3479.40.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1332961193.3479.40.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 20 Mar 2012 23:56:43 -0400
+Received: by dajr28 with SMTP id r28so958284daj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 20:56:42 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: fix the RANN propagation issues
+Date: Wed, 21 Mar 2012 20:33:02 +0800
+Message-Id: <1332333182-11941-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120321_045651_492547_578FC9B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/2012 11:59 AM, Johannes Berg wrote:
-> On Wed, 2012-03-28 at 11:56 -0700, Ben Greear wrote:
->> On 03/07/2012 11:45 AM, Bryan Phillippe wrote:
->>>
->>> Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
->>
->> I'm still seeing this and related warnings on 3.3.0.  At least some
->> of them comes from calls the 'hostapd' process makes (I printed
->> current->comm in the warning).
->>
->> I am not having luck writing a simple script that reproduce this,
->> but my application that creates a VAP and bunch of virtual station
->> hits it every time on startup.
->>
->> Bryan:  Do you have a simple script that reproduces this problem?
->>
->> Johannes:  Any ideas on likely causes of this problem?  Might help
->> me zero in on the problem quicker...
->
-> Hm. Maybe this is the problem?
->
-> http://p.sipsolutions.net/d432de678ae3ff17.txt
+This patch is intended to solve the follwing issues in RANN propagation:
+[1] The interval in propagated RANN should be based on the interval of received RANN.
+[2] The aggregated path metric for propagated RANN is as received plus own link metric
+    towards the transmitting mesh STA (not root mesh STA).
+[3] The comparison of path metric for RANN with same sequence number should be done
+    before deciding whether to propagate or not.
 
-I don't see any code that matches that in 3.3.0 (nothing with nl80211_start_ap, for instance)
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/mesh.h      |    2 ++
+ net/mac80211/mesh_hwmp.c |   21 +++++++++++++++++----
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-Thanks,
-Ben
-
->
-> johannes
-
-
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 8d53b71..adf1be3 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -86,6 +86,7 @@ enum mesh_deferred_task_flags {
+  * mpath itself.  No need to take this lock when adding or removing
+  * an mpath to a hash bucket on a path table.
+  * @rann_snd_addr: the RANN sender address
++ * @rann_metric: the aggregated path metric towards the root node
+  * @is_root: the destination station of this path is a root node
+  * @is_gate: the destination station of this path is a mesh gate
+  *
+@@ -112,6 +113,7 @@ struct mesh_path {
+ 	enum mesh_path_flags flags;
+ 	spinlock_t state_lock;
+ 	u8 rann_snd_addr[ETH_ALEN];
++	u32 rann_metric;
+ 	bool is_root;
+ 	bool is_gate;
+ };
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index f80a9e3..fcfebc7 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -88,6 +88,7 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
+ #define MSEC_TO_TU(x) (x*1000/1024)
+ #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
+ #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
++#define SN_EQ(x, y) ((long) (x) - (long) (y) == 0)
+ 
+ #define net_traversal_jiffies(s) \
+ 	msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime)
+@@ -732,11 +733,12 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				struct ieee80211_rann_ie *rann)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
+ 	struct mesh_path *mpath;
+ 	u8 ttl, flags, hopcount;
+ 	u8 *orig_addr;
+-	u32 orig_sn, metric;
+-	u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
++	u32 orig_sn, metric, metric_txsta, interval;
+ 	bool root_is_gate;
+ 
+ 	ttl = rann->rann_ttl;
+@@ -749,6 +751,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
+ 	orig_addr = rann->rann_addr;
+ 	orig_sn = le32_to_cpu(rann->rann_seq);
++	interval = le32_to_cpu(rann->rann_interval);
+ 	hopcount = rann->rann_hopcount;
+ 	hopcount++;
+ 	metric = le32_to_cpu(rann->rann_metric);
+@@ -761,6 +764,14 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			orig_addr, mgmt->sa, root_is_gate);
+ 
+ 	rcu_read_lock();
++	sta = sta_info_get(sdata, mgmt->sa);
++	if (!sta) {
++		rcu_read_unlock();
++		return;
++	}
++
++	metric_txsta = airtime_link_metric_get(local, sta);
++
+ 	mpath = mesh_path_lookup(orig_addr, sdata);
+ 	if (!mpath) {
+ 		mesh_path_add(orig_addr, sdata);
+@@ -780,14 +791,16 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
+ 	}
+ 
+-	if (mpath->sn < orig_sn && ifmsh->mshcfg.dot11MeshForwarding) {
++	if ((SN_LT(mpath->sn, orig_sn) || (SN_EQ(mpath->sn, orig_sn) &&
++	   metric < mpath->rann_metric)) && ifmsh->mshcfg.dot11MeshForwarding) {
+ 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
+ 				       cpu_to_le32(orig_sn),
+ 				       0, NULL, 0, broadcast_addr,
+ 				       hopcount, ttl, cpu_to_le32(interval),
+-				       cpu_to_le32(metric + mpath->metric),
++				       cpu_to_le32(metric + metric_txsta),
+ 				       0, sdata);
+ 		mpath->sn = orig_sn;
++		mpath->rann_metric = metric + metric_txsta;
+ 	}
+ 
+ 	/* Using individually addressed PREQ for root node */
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
