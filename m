@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55164 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754344Ab2CSLDw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 07:03:52 -0400
-Date: Mon, 19 Mar 2012 12:03:34 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jakub Kicinski <kubakici@wp.pl>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH] rt2x00: increase led's name buffer length
-Message-ID: <20120319110332.GB6169@redhat.com> (sfid-20120319_120355_639375_17F0382C)
-References: <1332026212-5391-1-git-send-email-kubakici@wp.pl>
+Received: from aldebaran.gro-tsen.net ([88.191.60.176]:35929 "EHLO
+	aldebaran.gro-tsen.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754036Ab2CVA35 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Mar 2012 20:29:57 -0400
+Date: Thu, 22 Mar 2012 01:29:55 +0100
+From: David Madore <david+ml@madore.org>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: ath9k_htc fails with "Target is unresponsive"
+Message-ID: <20120322002955.GA9391@aldebaran.gro-tsen.net> (sfid-20120322_013000_710846_94174858)
+References: <20120321175800.GA28516@aldebaran.gro-tsen.net>
+ <CAJ-Vmom2fPUuuT8mUa2fWrbBQGuDtd7nh7Tkn3Sa2_TmhjtJaA@mail.gmail.com>
+ <20120321220242.GA26363@aldebaran.gro-tsen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1332026212-5391-1-git-send-email-kubakici@wp.pl>
+In-Reply-To: <20120321220242.GA26363@aldebaran.gro-tsen.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 18, 2012 at 12:16:52AM +0100, Jakub Kicinski wrote:
-> With 9-letter driver names phy's number was truncated
-> to two characters, which caused warnings when creating
-> sysfs entries for leds on systems with multiple devices.
-> 
-> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-> ---
->  drivers/net/wireless/rt2x00/rt2x00leds.c |   16 ++++++++--------
->  1 files changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00leds.c b/drivers/net/wireless/rt2x00/rt2x00leds.c
-> index ca585e3..8679d78 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00leds.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00leds.c
-> @@ -124,17 +124,15 @@ static int rt2x00leds_register_led(struct rt2x00_dev *rt2x00dev,
->  
->  void rt2x00leds_register(struct rt2x00_dev *rt2x00dev)
->  {
-> -	char dev_name[16];
-> -	char name[32];
-> +	char name[36];
->  	int retval;
->  	unsigned long on_period;
->  	unsigned long off_period;
-> -
-> -	snprintf(dev_name, sizeof(dev_name), "%s-%s",
-> -		 rt2x00dev->ops->name, wiphy_name(rt2x00dev->hw->wiphy));
-> +	const char *phy_name = wiphy_name(rt2x00dev->hw->wiphy);
->  
->  	if (rt2x00dev->led_radio.flags & LED_INITIALIZED) {
-> -		snprintf(name, sizeof(name), "%s::radio", dev_name);
-> +		snprintf(name, sizeof(name), "%s-%s::radio",
-> +			 rt2x00dev->ops->name, phy_name);
-I guess simpler would be just increase dev_name length, but patch looks
-correct to me anyway.
+On Wed, Mar 21, 2012 at 11:02:42PM +0100, David Madore wrote:
+> Or, to summarize all of this: the dongle works if and only if
+> ath9k_htc is initializing it for the very first time since it was
+> physically plugged in or powered on.  No reset, USB reset or software
+> reset of any kind seems to help.
 
-Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
+More accurately: the dongle fails to work if and only if, since it was
+last plugged in, there has been a reboot (=anything short of a full
+power cycle) after it has been initialized by ath9k_htc.
+
+Unloading and reloading the kernel modules does not cause a failure
+(but neither does it solve the problem).  Rebooting[#] the machine
+causes the problem if and only if ath9k_htc has been loaded prior to
+reboot (even if there have been other intermediate reboots).  Powering
+the machine down, or unplugging the dongle, are the only way I've
+found of restoring a sane state: no lesser kind of USB reset has
+worked.
+
+[#] I should try kexec, but I haven't been able to get it to work.
+
+I'm willing to run any other experience which might elucidate things,
+of course.
+
+-- 
+     David A. Madore
+   ( http://www.madore.org/~david/ )
