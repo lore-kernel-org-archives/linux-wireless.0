@@ -1,96 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36832 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751903Ab2C0MUS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 08:20:18 -0400
-Message-Id: <20120327121921.444935239@sipsolutions.net> (sfid-20120327_142029_720349_6D10FE63)
-Date: Tue, 27 Mar 2012 14:18:38 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/5] mac80211: make ieee80211_downgrade_queue static
-References: <20120327121835.299635879@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:55486 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965257Ab2CVWbU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Mar 2012 18:31:20 -0400
+Date: Thu, 22 Mar 2012 15:31:07 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: jerome huang <jerome.syno@gmail.com>,
+	"Xu, Andiry" <Andiry.Xu@amd.com>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt8192cu on USB3
+Message-ID: <20120322223107.GA8877@xanatos> (sfid-20120322_233126_036940_8CA624EE)
+References: <CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>
+ <4F581AF8.4080001@lwfinger.net>
+ <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com>
+ <4F585BA9.6020903@amd.com>
+ <2A76B9D36150BE4293842BC2FE8FF165016A31@SCYBEXDAG04.amd.com>
+ <CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com>
+ <CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com>
+ <4F58F2D0.5060805@lwfinger.net>
+ <CAHaq0gKSSgYX19BH92Pg+gXifSEmjvubc_nd5brO8QeLCpr1yA@mail.gmail.com>
+ <4F59800B.80407@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F59800B.80407@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Mar 08, 2012 at 09:59:07PM -0600, Larry Finger wrote:
+> On 03/08/2012 09:28 PM, jerome huang wrote:
+> >
+> >It still got no any result if I wait for 30 sec (or longer) between
+> >(original) step 2 and 3.
+> >I double confirmed that it always does not work for steps: plugin ->
+> >up ->  scanning
+> >and always works for steps: plugin ->  up ->  down ->  up ->  scanning.
+> >
+> >And sometimes it works for next down->up->scanning, sometimes it doesn't.
+> >
+> >Is the change of firmware loading in kernel 3.3 made by rtlwifi only,
+> >or ring expansion in xhci is also necessary?
+> 
+> The only changes are in the rtlwifi drivers. I don't have a USB 3
+> device, thus I have no idea what might work there. I wrote something
+> incorrect earlier. The new code is not in mainline 3.3, but it is in
+> the wireless-testing git tree. If you want to try this, and don't
+> want to get the whole tree, the new code is in the bleeding-edge
+> compat-wireless package. Otherwise, I could send you the patches.
 
-There's no reason for it to not be static.
+Larry, if the driver doesn't cancel an URB that the device doesn't
+respond to, then it will just be left on the endpoint ring.  If the
+driver then tries to queue new transfers to that same endpoint, but the
+device keeps NAKing the uncancelled transfer, then the endpoint ring
+would fill up with unanswered transfers.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/wme.c |   40 ++++++++++++++++++++--------------------
- net/mac80211/wme.h |    3 ---
- 2 files changed, 20 insertions(+), 23 deletions(-)
+Perhaps some userspace or kernel portion is forgetting to cancel URBs
+before moving onto the next thing?  You said you moved to asynchronous
+transfers, so maybe the problem lies there?
 
---- a/net/mac80211/wme.c	2012-03-23 14:11:47.000000000 +0100
-+++ b/net/mac80211/wme.c	2012-03-23 14:14:00.000000000 +0100
-@@ -52,6 +52,26 @@ static int wme_downgrade_ac(struct sk_bu
- 	}
- }
- 
-+static u16 ieee80211_downgrade_queue(struct ieee80211_local *local,
-+				     struct sk_buff *skb)
-+{
-+	/* in case we are a client verify acm is not set for this ac */
-+	while (unlikely(local->wmm_acm & BIT(skb->priority))) {
-+		if (wme_downgrade_ac(skb)) {
-+			/*
-+			 * This should not really happen. The AP has marked all
-+			 * lower ACs to require admission control which is not
-+			 * a reasonable configuration. Allow the frame to be
-+			 * transmitted using AC_BK as a workaround.
-+			 */
-+			break;
-+		}
-+	}
-+
-+	/* look up which queue to use for frames with this 1d tag */
-+	return ieee802_1d_to_ac[skb->priority];
-+}
-+
- /* Indicate which queue to use for this fully formed 802.11 frame */
- u16 ieee80211_select_queue_80211(struct ieee80211_local *local,
- 				 struct sk_buff *skb,
-@@ -139,26 +159,6 @@ u16 ieee80211_select_queue(struct ieee80
- 	return ieee80211_downgrade_queue(local, skb);
- }
- 
--u16 ieee80211_downgrade_queue(struct ieee80211_local *local,
--			      struct sk_buff *skb)
--{
--	/* in case we are a client verify acm is not set for this ac */
--	while (unlikely(local->wmm_acm & BIT(skb->priority))) {
--		if (wme_downgrade_ac(skb)) {
--			/*
--			 * This should not really happen. The AP has marked all
--			 * lower ACs to require admission control which is not
--			 * a reasonable configuration. Allow the frame to be
--			 * transmitted using AC_BK as a workaround.
--			 */
--			break;
--		}
--	}
--
--	/* look up which queue to use for frames with this 1d tag */
--	return ieee802_1d_to_ac[skb->priority];
--}
--
- void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 			   struct sk_buff *skb)
- {
---- a/net/mac80211/wme.h	2012-03-15 14:31:56.000000000 +0100
-+++ b/net/mac80211/wme.h	2012-03-23 14:14:03.000000000 +0100
-@@ -22,8 +22,5 @@ u16 ieee80211_select_queue(struct ieee80
- 			   struct sk_buff *skb);
- void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 			   struct sk_buff *skb);
--u16 ieee80211_downgrade_queue(struct ieee80211_local *local,
--                              struct sk_buff *skb);
--
- 
- #endif /* _WME_H */
+Jerome, the xHCI ring expansion patches have been merged for 3.4, so you
+can test with Linus' latest tree and see if they help.  If the ring
+expands indefinitely, then there's probably an issue with the rtlwifi
+drivers.
 
-
+Sarah Sharp
