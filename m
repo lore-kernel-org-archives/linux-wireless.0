@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173015pub.verizon.net ([206.46.173.15]:58287 "EHLO
-	vms173015pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753532Ab2CKWSV (ORCPT
+Received: from nm13-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.248]:48282
+	"HELO nm13-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1759239Ab2CVTEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 18:18:21 -0400
-Received: from vms170029 ([unknown] [192.168.1.3]) by vms173015.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0M0Q00FBZKRJ3841@vms173015.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Sun, 11 Mar 2012 14:57:19 -0500 (CDT)
-Date: Sun, 11 Mar 2012 14:57:19 -0500 (CDT)
-From: alupu@verizon.net
-To: linux-wireless@vger.kernel.org
-Message-id: <21585786.560694.1331495839749.JavaMail.root@vms170029> (sfid-20120311_231825_142627_456898D6)
-Subject: Re: r8712u staging in kernel 3.2.9
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+	Thu, 22 Mar 2012 15:04:55 -0400
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: Javier Cardona <javier@cozybit.com>
+Subject: Re: [PATCH v2] mac80211: fix the RANN propagation issues
+Date: Thu, 22 Mar 2012 19:58:09 +0100
+Cc: "Chun-Yeow Yeoh" <yeohchunyeow@gmail.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	thomas@cozybit.com, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+References: <1332420968-16300-1-git-send-email-yeohchunyeow@gmail.com> <201203221133.51928.lindner_marek@yahoo.de> <CAPjQAd8BAjNFjmpjwrdNMpPNphqTBihitEPEPSiVqzS4KsPEAg@mail.gmail.com>
+In-Reply-To: <CAPjQAd8BAjNFjmpjwrdNMpPNphqTBihitEPEPSiVqzS4KsPEAg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201203221958.10427.lindner_marek@yahoo.de> (sfid-20120322_200459_391533_3407C943)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/10/12 11:23 PM, Larry Finger wrote:
+On Thursday, March 22, 2012 17:31:33 Javier Cardona wrote:
+> >>  #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
+> >>  #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
+> > 
+> > Your macros tried to address the problem but casting your sequence number
+> > to long also breaks the wrap around.
+> 
+> Ah, thanks for your help.  I guess we do need those macros after all
+> but they'd have to be re-written as
+> 
+> #define SN_LT(x, y) ((s32)(x - y) < 0)
+> #define SN_GT(x, y) ((s32)(x - y) > 0)
 
-> I have a Rosewill RNX-N180UBE. The chip is a RTL8191RU, but appears to be 
-> programmed the same as the RTL8191SU. Mine works with the standard r8712u driver.
+No, you need unsigned values for this arithmetic to work (which is why long 
+also fails).
 
-In WinXP, the driver is identified as 'RTL8192su.sys', so
-for the heck of it, I enabled two additional modules,
-RTL8192U and RTL8192E.
-Not surprisingly, Rosewill wants to work with r8712u only.
 
-> The two possible firmware files have the following md5sum:
-> 200fd952db3cc9259b1fd05e3e51966f /lib/firmware/rtlwifi/rtl8712u.bin_122328
-> 8e6396b5844a3e279ae8679555dec3f0 /lib/firmware/rtlwifi/rtl8712u.bin_129304
+> And since this is just to handle wrap arounds, there is no need for
+> the new SN_EQ that was suggested earlier.
 
-Both check out OK.
+Sounds reasonable to me.
 
-> Could you please download a Live KDE CD from ...
-
-Working on that.
-
-Thanks,
--- Alex
+Regards,
+Marek
