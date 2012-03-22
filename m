@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37228 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161450Ab2COU2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 16:28:06 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/26] iwlwifi: use scan while idle
-Date: Thu, 15 Mar 2012 13:26:51 -0700
-Message-Id: <1331843226-29860-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212818_848527_143887C1)
-In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from nm2.bullet.mail.ukl.yahoo.com ([217.146.183.219]:43721 "HELO
+	nm2.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754716Ab2CVTf7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Mar 2012 15:35:59 -0400
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: Javier Cardona <javier@cozybit.com>
+Subject: Re: [PATCH v2] mac80211: fix the RANN propagation issues
+Date: Thu, 22 Mar 2012 20:35:49 +0100
+Cc: "Chun-Yeow Yeoh" <yeohchunyeow@gmail.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	thomas@cozybit.com, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+References: <1332420968-16300-1-git-send-email-yeohchunyeow@gmail.com> <201203221958.10427.lindner_marek@yahoo.de> <CAPjQAd-j0mP9faqSkwuDWErX1v+dbzYqO+rL6sKN-2ZMYr_FGA@mail.gmail.com>
+In-Reply-To: <CAPjQAd-j0mP9faqSkwuDWErX1v+dbzYqO+rL6sKN-2ZMYr_FGA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201203222035.50568.lindner_marek@yahoo.de> (sfid-20120322_203603_954421_FFFC0679)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thursday, March 22, 2012 20:13:28 Javier Cardona wrote:
+> On Thu, Mar 22, 2012 at 11:58 AM, Marek Lindner <lindner_marek@yahoo.de> 
+wrote:
+> > On Thursday, March 22, 2012 17:31:33 Javier Cardona wrote:
+> >> >>  #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
+> >> >>  #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
+> >> > 
+> >> > Your macros tried to address the problem but casting your sequence
+> >> > number to long also breaks the wrap around.
+> >> 
+> >> Ah, thanks for your help.  I guess we do need those macros after all
+> >> but they'd have to be re-written as
+> >> 
+> >> #define SN_LT(x, y) ((s32)(x - y) < 0)
+> >> #define SN_GT(x, y) ((s32)(x - y) > 0)
+> > 
+> > No, you need unsigned values for this arithmetic to work (which is why
+> > long also fails).
+> 
+> The macro is always used on u32 values, so the arithmetic would be
+> unsigned in this case.
 
-As idle is just a deep powersave mode for
-the device, it will easily scan while idle
-since that turns off powersave.
+Ok - then you should be on the safe side.
 
-This reduces the number of commands sent
-to the device when scanning.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    8 ++++++--
- 2 files changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index b6805f8..d2be4b6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -157,7 +157,8 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 	 */
- 
- 	hw->flags |= IEEE80211_HW_SUPPORTS_PS |
--		     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
-+		     IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
-+		     IEEE80211_HW_SCAN_WHILE_IDLE;
- 
- 	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
- 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 863ad0c..4338d49 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -806,8 +806,12 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	rate_flags |= iwl_ant_idx_to_flags(priv->scan_tx_ant[band]);
- 	scan->tx_cmd.rate_n_flags = iwl_hw_set_rate_n_flags(rate, rate_flags);
- 
--	/* In power save mode use one chain, otherwise use all chains */
--	if (test_bit(STATUS_POWER_PMI, &priv->shrd->status)) {
-+	/*
-+	 * In power save mode while associated use one chain,
-+	 * otherwise use all chains
-+	 */
-+	if (test_bit(STATUS_POWER_PMI, &priv->shrd->status) &&
-+	    !(priv->hw->conf.flags & IEEE80211_CONF_IDLE)) {
- 		/* rx_ant has been set to all valid chains previously */
- 		active_chains = rx_ant &
- 				((u8)(priv->chain_noise_data.active_chains));
--- 
-1.7.0.4
-
+Regards,
+Marek
