@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54035 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758566Ab2CHUHj (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:57317 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932424Ab2CWArM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 15:07:39 -0500
-Date: Thu, 8 Mar 2012 14:07:34 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: "Quan, David" <dquan@qca.qualcomm.com>,
-	"Green, Michael" <green@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: Re: Problems with regulatory domain support and BCM43224
-Message-ID: <20120308200734.GC28133@ubuntu-macmini> (sfid-20120308_210750_965974_FF893E8A)
-References: <20120307194001.GA2506@ubuntu-macmini>
- <20120308174101.GB28133@ubuntu-macmini>
- <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
- <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com>
- <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com>
+	Thu, 22 Mar 2012 20:47:12 -0400
+Received: by iagz16 with SMTP id z16so3852309iag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Mar 2012 17:47:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com>
+In-Reply-To: <201203222035.50568.lindner_marek@yahoo.de>
+References: <1332420968-16300-1-git-send-email-yeohchunyeow@gmail.com>
+	<201203221958.10427.lindner_marek@yahoo.de>
+	<CAPjQAd-j0mP9faqSkwuDWErX1v+dbzYqO+rL6sKN-2ZMYr_FGA@mail.gmail.com>
+	<201203222035.50568.lindner_marek@yahoo.de>
+Date: Fri, 23 Mar 2012 08:47:12 +0800
+Message-ID: <CAEFj986ZP6bPBNXY2OtjyM_Sn8F1dUsZOAPTE_bSkAE6==Tx0w@mail.gmail.com> (sfid-20120323_014727_522207_96260335)
+Subject: Re: [PATCH v2] mac80211: fix the RANN propagation issues
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Marek Lindner <lindner_marek@yahoo.de>
+Cc: Javier Cardona <javier@cozybit.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	thomas@cozybit.com, linville@tuxdriver.com,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 08, 2012 at 11:51:03AM -0800, Luis R. Rodriguez wrote:
-> On Thu, Mar 8, 2012 at 11:45 AM, Quan, David <dquan@qca.qualcomm.com> wrote:
-> > I think there is to it more than SW.
-> > Where ever you get this card, is the card tested and regulatory approved for those countries, DFS or not?
-> 
-> Seth, what driver are you using? I know you are using a BCM43224 card.
+Hi, Marek
 
-brcmsmac
+Thanks. Appreciate your comments. HWMP sequence number is 32bits or 4
+octets. That's why it is defined as u32.
 
-> > It is possible that this card is only regulatory tested for non DFS channels, but now you enable them for passive.
-> 
-> That's a good point.
-> 
-> > This means that yes, you are save and not violate DFS rules because you are in passive mode. However, you are in complete violation if the STA finds an AP on that DFS channel and then connects and transmits as this STA is not allow to transmit on that channel since it is not approved.
-> 
-> If the driver being used is a supported vendor driver then I'll punt
-> this to the vendor (Broadcom). If this is the reversed engineered
-> driver (b43) that Broadcom to this day seems to blindly ignore even
-> for regulatory, then I'm happy to recommend based on your input to
-> leave the regulatory domain as-is given that we cannot guarantee what
-> the vendor meant as they have not done any work on releasing either
-> documentation or code to help with their regulatory situation.
+Hi, Javier
 
-It would be nice if Broadcom could weigh in. Cc-ing Arend.
+Thanks for your explanation and clarification.
 
-This is actually a special case. This is an Apple machine, and it's not
-that there's no regulatory hint in the ROM, it's that the hint is the
-bogus country code "X0". From reading online, Apple uses this to
-indicate the regulatory domain is unknown, and it uses the first
-regulatory hint it sees in a country IE. I can connect to DFS channels
-using MacOS on the machine, so I'll assume it was approved for DFS
-channels.
+I will resubmit the patch for the changes.
 
-Since Linux (afaict) only uses hits from country IEs for APs it's
-connected to, much of the time this card ends up using the world domain
-and is unable to scan DFS channels.
+"In the section 11C.9.8.3 HWMP sequence numbering, Comparing HWMP
+sequence numbers is done using a circular modulo 232 comparison."
 
-Thanks,
-Seth
-
+Regards,
+Chun-Yeow
