@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:56572 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753860Ab2CEVky (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57833 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508Ab2CWIhQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 16:40:54 -0500
-Date: Mon, 05 Mar 2012 16:39:35 -0500 (EST)
-Message-Id: <20120305.163935.366721302245242679.davem@davemloft.net> (sfid-20120305_224102_480072_EEA9D066)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-03-05
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120305210740.GI18128@tuxdriver.com>
-References: <20120305210740.GI18128@tuxdriver.com>
+	Fri, 23 Mar 2012 04:37:16 -0400
+Message-ID: <1332491831.3506.1.camel@jlt3.sipsolutions.net> (sfid-20120323_093727_320460_7F632E3A)
+Subject: Re: [RFC 03/12] mac80211: prepare ieee80211_frame_duration to
+ per-vif
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Mar 2012 09:37:11 +0100
+In-Reply-To: <5bd587b9-bc1e-4b91-b4a7-37db67681946@FIVLA-EXHUB02.eu.tieto.com> (sfid-20120320_154013_005213_D7DD082B)
+References: <5bd587b9-bc1e-4b91-b4a7-37db67681946@FIVLA-EXHUB02.eu.tieto.com>
+	 (sfid-20120320_154013_005213_D7DD082B)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 5 Mar 2012 16:07:41 -0500
-
-> This is another (and maybe the last) large batch of updates
-> intended for 3.4.  This includes the usual sorts of enhancements and
-> refactoring, touching ath9k, brcm80211, iwlwifi, iwlegacy, wl12xx,
-> and a handful of others.  The Intel drivers in particular saw a lot
-> of attention, due to some ongoing refactoring there.  Johannes also
-> chimes-in with some mac80211 enhancements and refactoring as well.
+On Mon, 2012-03-19 at 09:39 +0100, Michal Kazior wrote:
+> In preparation for multi-channel operation.
 > 
-> I have not included any Bluetooth updates, due to the unresoled
-> coding style issues of which you are already aware.  Also, I have
-> pulled from the wireless tree to avoid some build breakage.
+> Ath5k driver needs to be fixed. It uses
+> ieee80211_generic_frame_duration() through ath5k_hw_get_frame_duration()
+> which itself and it's parent callers have no access (except
+> bss_info_changed handler) to sdata pointer.
 > 
-> Please let me know if there are problems!
+> This requires us to preserve ieee80211_local pointer in the argument
+> list of ieee80211_generic_frame_duration.
+> 
+> I think we should get rid of ieee80211_local pointer eventually from
+> here, but to do that we need to deal with ath5k first.
 
-Pulled, thanks John.
+I think we should just pass the band instead of the local pointer. Then
+ath5k would be trivial to fix too (band info is part of TX info).
+
+johannes
+
