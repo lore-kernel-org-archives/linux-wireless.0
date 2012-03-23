@@ -1,31 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:45183
-	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750993Ab2CHHHD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 02:07:03 -0500
-Message-ID: <4F585A7D.8020901@amd.com> (sfid-20120308_080726_711725_E51A5460)
-Date: Thu, 8 Mar 2012 15:06:37 +0800
-From: Andiry Xu <andiry.xu@amd.com>
-MIME-Version: 1.0
-To: jerome huang <jerome.syno@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	<linux-wireless@vger.kernel.org>,
-	Sarah Sharp <sarah.a.sharp@linux.intel.com>,
-	<linux-usb@vger.kernel.org>
-Subject: Re: rt8192cu on USB3
-References: <CAHaq0gKf+VE9T15J91rvyxbF8=rNCExTZfE-WcwHjUN1afjnTA@mail.gmail.com>	<CAHaq0gLOPpDKazM0WPmkkOmJ1gR-vqOX9Q+J3nXArD5N0MgmMw@mail.gmail.com>	<4F581AF8.4080001@lwfinger.net> <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com>
-In-Reply-To: <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.neratec.ch ([80.75.119.105]:47949 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755290Ab2CWPe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2012 11:34:26 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
+	rodrigue@qca.qualcomm.com,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [RFCv2 2/3] ath9k: add DFS pattern detector instance to ath_softc
+Date: Fri, 23 Mar 2012 16:34:01 +0100
+Message-Id: <1332516842-27522-3-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120323_163430_470020_99DFF06F)
+In-Reply-To: <1332516842-27522-1-git-send-email-zefir.kurtisi@neratec.com>
+References: <1332516842-27522-1-git-send-email-zefir.kurtisi@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FILE QUARANTINED
-----------------
 
-The original contents of this file have been replaced with
-this message because of its characteristics.
-File name: "Body of Message"
-Virus name: "EngineError"
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 ++
+ drivers/net/wireless/ath/ath9k/init.c  |    4 ++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 8c84049..f2ade45 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -26,6 +26,7 @@
+ #include "debug.h"
+ #include "common.h"
+ #include "mci.h"
++#include "dfs.h"
+ 
+ /*
+  * Header for the ath9k.ko driver core *only* -- hw code nor any other driver
+@@ -680,6 +681,7 @@ struct ath_softc {
+ 
+ 	struct ath_ant_comb ant_comb;
+ 	u8 ant_tx, ant_rx;
++	struct dfs_pattern_detector *dfs_detector;
+ };
+ 
+ void ath9k_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 60159f4..bee25f4 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -519,6 +519,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	atomic_set(&ah->intr_ref_cnt, -1);
+ 	sc->sc_ah = ah;
+ 
++	sc->dfs_detector = dfs_pattern_detector_init(NL80211_DFS_UNSET);
++
+ 	if (!pdata) {
+ 		ah->ah_flags |= AH_USE_EEPROM;
+ 		sc->sc_ah->led_pin = -1;
+@@ -821,6 +823,8 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+ 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+ 
+ 	ath9k_hw_deinit(sc->sc_ah);
++	if (sc->dfs_detector != NULL)
++		sc->dfs_detector->exit(sc->dfs_detector);
+ 
+ 	kfree(sc->sc_ah);
+ 	sc->sc_ah = NULL;
+-- 
+1.7.4.1
 
