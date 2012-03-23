@@ -1,59 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:59288 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754648Ab2CFTbv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58555 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757954Ab2CWJ0t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 14:31:51 -0500
-Date: Tue, 6 Mar 2012 20:31:46 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Sven Joachim <svenjoac@gmx.de>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
-In-Reply-To: <alpine.LFD.2.02.1203060957140.2742@ionos>
-Message-ID: <alpine.LFD.2.02.1203062019340.2742@ionos> (sfid-20120306_203210_740456_AC2C4165)
-References: <20120228010511.GA8453@kroah.com> <20120228010434.412979550@linuxfoundation.org> <87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de> <CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com> <alpine.LFD.2.02.1203060927190.2742@ionos>
- <alpine.LFD.2.02.1203060957140.2742@ionos>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Fri, 23 Mar 2012 05:26:49 -0400
+Message-ID: <1332494807.3506.22.camel@jlt3.sipsolutions.net> (sfid-20120323_102653_611488_9D030C71)
+Subject: Re: [RFC 12/12] mac80211: return NULL from get_channel in
+ multi-channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Micha=C5=82?= Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 23 Mar 2012 10:26:47 +0100
+In-Reply-To: <4F6C4034.4050802@tieto.com>
+References: <892b9fb4-fb69-486f-b619-85d6336e5a31@FIVLA-EXHUB02.eu.tieto.com>
+		 (sfid-20120320_155530_182045_07E4AF64) <1332492860.3506.8.camel@jlt3.sipsolutions.net>
+	 <4F6C4034.4050802@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 6 Mar 2012, Thomas Gleixner wrote:
-> On Tue, 6 Mar 2012, Thomas Gleixner wrote:
+On Fri, 2012-03-23 at 10:19 +0100, Michał Kazior wrote:
+> Johannes Berg wrote:
+> > On Mon, 2012-03-19 at 13:57 +0100, Michal Kazior wrote:
+> >> According to comment on cfg80211_ops/get_channel we should return NULL
+> >> in case of concurrent multi-channel.
+> >>
+> >> Signed-off-by: Michal Kazior<michal.kazior@tieto.com>
+> >> ---
+> >>   net/mac80211/cfg.c |    3 +++
+> >>   1 files changed, 3 insertions(+), 0 deletions(-)
+> >>
+> >> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> >> index 88cc128..05f7022 100644
+> >> --- a/net/mac80211/cfg.c
+> >> +++ b/net/mac80211/cfg.c
+> >> @@ -2680,6 +2680,9 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy)
+> >>   	struct ieee80211_local *local = wiphy_priv(wiphy);
+> >>   	struct ieee80211_channel_state *chan_state =&local->chan_state;
+> >>
+> >> +	if (local->hw.flags&  IEEE80211_HW_SUPPORTS_MULTI_CHANNEL)
+> >> +		return NULL;
+> >> +
+> >
+> > We should return NULL if we're actually using multiple channels :-)
+> >
+> > So clearly we need mac80211 do more work in tracking which channels are
+> > used, compatible, etc.
 > 
-> > On Mon, 5 Mar 2012, Linus Torvalds wrote:
-> > 
-> > > Thomas, should we just plan on reverting that commit from mainline? It
-> > > clearly causes regressions.
-> > 
-> > Give me a day or two to figure out why it breaks stuff. I have no idea
-> > why it should wreckage anything.
-> 
-> Hmm. This is interesting. The b43 driver has a primary handler which
-> can return IRQ_NONE. So up to that change the interrupt line was kept
-> disabled when that happened. Possibly the driver relies on that
-> behaviour. Digging for a machine with a b43.
+> Oh. So will it be enough to iterate through the interfaces that are up 
+> and check if they have different operational channels?
 
-Does not reproduce. Now I was looking at the driver again, it does not
-use IRQ_ONESHOT anyway.
+Technically, yes. But again, I think we need to take a more involved
+channel management approach in mac80211, managing compatible channels
+etc.
 
-So for handle_fasteoi_irq() this patch is actually a NOOP. So the only
-affected handler would be handle_level_irq(). Still can't see how it
-changes the !IRQ_ONESHOT behaviour :(
+You've also completely ignored the need to tell userspace about what
+exactly the hardware supports, which was part of the original design of
+the multi-vif feature listing.
 
-Stephan, Sven: Can you please provide the output of /proc/interrupts ?
-
-Thanks,
-
-	tglx
+But when you think about that, you'll soon notice that this minimal
+approach won't work, what for example if a third interface gets added?
+With this approach you won't even know if it's on a third channel or
+not. Keep in mind that the driver only has limited ways of rejecting
+such configuration.
 
 
+(And as an aside that just crossed my mind: there's also the CSA
+handling, but I'm happy to mostly ignore that for now too -- we'll have
+to come up with a solution later.)
+
+johannes
 
