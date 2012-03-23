@@ -1,80 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58197 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932254Ab2CZLbP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 07:31:15 -0400
-Message-ID: <4F705371.1020406@hauke-m.de> (sfid-20120326_133118_737149_87AA834D)
-Date: Mon, 26 Mar 2012 14:30:57 +0300
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-CC: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcma: fix build error on MIPS; implicit pcibios_enable_device
-References: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:57835 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719Ab2CWIhv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2012 04:37:51 -0400
+Message-ID: <1332491869.3506.2.camel@jlt3.sipsolutions.net> (sfid-20120323_093819_460625_105A7EF9)
+Subject: Re: [RFC 04/12] mac80211: prepare ieee80211_get_tx_channel_type to
+ per-vif
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Mar 2012 09:37:49 +0100
+In-Reply-To: <fee1d9db-75c7-4e26-a463-e5d436a24cc2@FIVLA-EXHUB02.eu.tieto.com> (sfid-20120320_155525_168969_C5FBFFE9)
+References: <fee1d9db-75c7-4e26-a463-e5d436a24cc2@FIVLA-EXHUB02.eu.tieto.com>
+	 (sfid-20120320_155525_168969_C5FBFFE9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/26/2012 03:02 AM, Paul Gortmaker wrote:
-> The following is seen during allmodconfig builds for MIPS:
-> 
-> drivers/bcma/driver_pci_host.c:518:2: error: implicit declaration
-> of function 'pcibios_enable_device' [-Werror=implicit-function-declaration]
-> cc1: some warnings being treated as errors
-> make[3]: *** [drivers/bcma/driver_pci_host.o] Error 1
-> 
-> Most likey introduced by commit 49dc9577155576b10ff79f0c1486c816b01f58bf
-> 
->     "bcma: add PCIe host controller"
-> 
-> Add the header instead of implicitly assuming it will be present.
-> Sounds like a good idea, but that alone doesn't fix anything.
-> 
-> The real problem is that the Kconfig has settings related to whether
-> PCI is possible, i.e.
-> 
->   config BCMA_HOST_PCI_POSSIBLE
->         bool
->         depends on BCMA && PCI = y
->         default y
-> 
->   config BCMA_HOST_PCI
->         bool "Support for BCMA on PCI-host bus"
->         depends on BCMA_HOST_PCI_POSSIBLE
-> 
-> ...but what is missing is that BCMA_DRIVER_PCI_HOSTMODE doesn't
-> have any dependencies on the above.  Add one.
-> 
-> CC: Hauke Mehrtens <hauke@hauke-m.de>
-> CC: John W. Linville <linville@tuxdriver.com>
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
-> 
-> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-> index c1172da..fb7c80f 100644
-> --- a/drivers/bcma/Kconfig
-> +++ b/drivers/bcma/Kconfig
-> @@ -29,7 +29,7 @@ config BCMA_HOST_PCI
->  
->  config BCMA_DRIVER_PCI_HOSTMODE
->  	bool "Driver for PCI core working in hostmode"
-> -	depends on BCMA && MIPS
-> +	depends on BCMA && MIPS && BCMA_HOST_PCI
->  	help
->  	  PCI core hostmode operation (external PCI bus).
->  
-> diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
-> index 4e20bcf..d2097a1 100644
-> --- a/drivers/bcma/driver_pci_host.c
-> +++ b/drivers/bcma/driver_pci_host.c
-> @@ -10,6 +10,7 @@
->   */
->  
->  #include "bcma_private.h"
-> +#include <linux/pci.h>
->  #include <linux/export.h>
->  #include <linux/bcma/bcma.h>
->  #include <asm/paccess.h>
+
+>  enum nl80211_channel_type ieee80211_get_tx_channel_type(
+> -				struct ieee80211_local *local,
+> +				struct ieee80211_sub_if_data *sdata,
+>  				enum nl80211_channel_type channel_type)
+
+I have pending patches to delete this :)
+
+johannes
 
