@@ -1,74 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:39334 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757723Ab2CPWJ6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 18:09:58 -0400
-Message-ID: <4F63BA31.1080608@etit.tu-chemnitz.de> (sfid-20120316_231032_428812_D09A3850)
-Date: Fri, 16 Mar 2012 23:09:53 +0100
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Received: from mga14.intel.com ([143.182.124.37]:4013 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751838Ab2CWLNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2012 07:13:20 -0400
+Message-ID: <4F6C5B05.40003@linux.intel.com> (sfid-20120323_121324_722485_6CAC30A3)
+Date: Fri, 23 Mar 2012 12:14:13 +0100
+From: Eric Lapuyade <eric.lapuyade@linux.intel.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, henry@logout.com,
-	"greenmesh@lists.osll.spb.ru" <greenmesh@lists.osll.spb.ru>
-Subject: Re: [ath9k] mesh powersave hardware sleep + wakeup
-References: <4F630AEA.10703@etit.tu-chemnitz.de> <20120316204547.GG18861@tux>
-In-Reply-To: <20120316204547.GG18861@tux>
-Content-Type: text/plain; charset=US-ASCII;
-	format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+CC: Samuel Ortiz <sameo@linux.intel.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Subject: [PATCH] NFC: Changed target activated state logic
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/12 21:45, Luis R. Rodriguez wrote:
-> On Fri, Mar 16, 2012 at 10:42:02AM +0100, Marco Porsch wrote:
->> Hi,
->>
->> I am trying to implement the IEEE 802.11s power save schemes in mac80211.
->> In 11s it is defined that power save STA doze AND send beacons AND
->> wake up periodically for multiple neighbors beacons.
->>
->> Is this actually possible with current hardware/drivers (especially ath9k)?
+As we need to maintain the currently activated target idx, use this variable instead of the redundant remote_activated bool.
 
-[ ... ]
+Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ include/net/nfc/nfc.h |    3 ++-
+ net/nfc/core.c        |    8 +++++---
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-> I don't have time to review this but it sounds correct that the part
-> you want to focus on is introducing a wake up mechanism when you
-> need to initiate radiation for your own beacons.  I think right now
-> we simply disable PS in mac80211 completely if we have a mode of
-> operation that require beconing.
+diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
+index f4f6950..7273ff1 100644
+--- a/include/net/nfc/nfc.h
++++ b/include/net/nfc/nfc.h
+@@ -66,6 +66,7 @@ struct nfc_ops {
+ 
+ #define NFC_TARGET_IDX_ANY -1
+ #define NFC_MAX_GT_LEN 48
++#define NFC_TARGET_IDX_NONE 0xffffffff
+ 
+ struct nfc_target {
+ 	u32 idx;
+@@ -97,7 +98,7 @@ struct nfc_dev {
+ 	struct device dev;
+ 	bool dev_up;
+ 	bool polling;
+-	bool remote_activated;
++	u32 activated_target_idx;
+ 	bool dep_link_up;
+ 	u32 dep_rf_mode;
+ 	struct nfc_genl_data genl_data;
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index d3a2cfb..e9936d9 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -95,7 +95,7 @@ int nfc_dev_down(struct nfc_dev *dev)
+ 		goto error;
+ 	}
+ 
+-	if (dev->polling || dev->remote_activated) {
++	if (dev->polling || dev->activated_target_idx != NFC_TARGET_IDX_NONE) {
+ 		rc = -EBUSY;
+ 		goto error;
+ 	}
+@@ -290,7 +290,7 @@ int nfc_activate_target(struct nfc_dev *dev, u32 target_idx, u32 protocol)
+ 
+ 	rc = dev->ops->activate_target(dev, target_idx, protocol);
+ 	if (!rc)
+-		dev->remote_activated = true;
++		dev->activated_target_idx = target_idx;
+ 
+ error:
+ 	device_unlock(&dev->dev);
+@@ -318,7 +318,7 @@ int nfc_deactivate_target(struct nfc_dev *dev, u32 target_idx)
+ 	}
+ 
+ 	dev->ops->deactivate_target(dev, target_idx);
+-	dev->remote_activated = false;
++	dev->activated_target_idx = NFC_TARGET_IDX_NONE;
+ 
+ error:
+ 	device_unlock(&dev->dev);
+@@ -587,6 +587,8 @@ struct nfc_dev *nfc_allocate_device(struct nfc_ops *ops,
+ 	/* first generation must not be 0 */
+ 	dev->targets_generation = 1;
+ 
++	dev->activated_target_idx = NFC_TARGET_IDX_NONE;
++
+ 	return dev;
+ }
+ EXPORT_SYMBOL(nfc_allocate_device);
+-- 
+1.7.6.5
 
-Actually the whole power save code is only written specifically for 
-managed mode.
-E.g. for ad-hoc, you wouldn't suspend the radio, since the MAC schemes 
-that must deal with the resulting deafness issues are not implemented in 
-mac80211. (That would be frame buffering + release in ATIM window, ...)
-
-Concerning mesh, I already have a hackish - but mostly working - PS 
-frame buffering and release.
-But, what is power save without actually saving power?
-
-Problem: I don't have a reference how to suspend/wake the radio between 
-sending beacons.
-That's why I hoped you can tell me, if - at least in theory - the 
-hardware/ath9k even allows this.
-
- > Your challenge is to lift that and
-> deal with the issues there and all the possible combinations. You
-> can help with this
->
-> This should help you:
->
-> http://wireless.kernel.org/en/users/Documentation/Power-consumption
-
-Thanks, the numbers are nice I can use them for analytical estimation or 
-simulation.
-
-> For now you can focus on only allowing through Mesh devices and
-> the combinations of it but I suspect that some of the work you do
-> may also help with addressing P2P powersave.
-
-Correct. When this is implemented, it is easy to port this to ad-hoc. 
-Because mesh is definitively more complex, but similar.
-
-Regards,
-Marco
