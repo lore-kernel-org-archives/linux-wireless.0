@@ -1,85 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:49238 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966042Ab2CAKTF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39488 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754611Ab2CWPGn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 05:19:05 -0500
-Message-ID: <20120301121901.363327qut940t1lw@www.81.fi> (sfid-20120301_111910_030730_7FC305D7)
-Date: Thu, 01 Mar 2012 12:19:01 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch 1/4] rndis_wlan: integer overflows in
- rndis_wlan_do_link_up_work()
-References: <20120229063555.GC18031@elgon.mountain>
-In-Reply-To: <20120229063555.GC18031@elgon.mountain>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+	Fri, 23 Mar 2012 11:06:43 -0400
+Message-ID: <1332515202.10384.42.camel@jlt3.sipsolutions.net> (sfid-20120323_160647_135213_C28D7F15)
+Subject: Re: [RFC 00/12] multi-channel support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Micha=C5=82?= Kazior <michal.kazior@tieto.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 23 Mar 2012 16:06:42 +0100
+In-Reply-To: <1332514895.10384.40.camel@jlt3.sipsolutions.net> (sfid-20120323_160141_068030_63DCD1AC)
+References: <06edaf32-5a4f-4887-8b22-6bec31c2c7c6@FIVLA-EXHUB02.eu.tieto.com>
+	 (sfid-20120320_154008_038091_B257E507) <1332494945.3506.23.camel@jlt3.sipsolutions.net>
+	 <4F6C82A5.5080302@tieto.com>
+	 (sfid-20120323_150333_004349_1A5648D7) <1332514895.10384.40.camel@jlt3.sipsolutions.net>
+	 (sfid-20120323_160141_068030_63DCD1AC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Dan Carpenter <dan.carpenter@oracle.com>:
+On Fri, 2012-03-23 at 16:01 +0100, Johannes Berg wrote:
 
-> If "offset" is negative then we can get past this check:
-> 	if (offset > CONTROL_BUFFER_SIZE)
-> Or if we pick a very high "req_ie_len" then we can get around the check:
-> 	if (offset + req_ie_len > CONTROL_BUFFER_SIZE)
->
-> I made "resp_ie_len" and "req_ie_len" unsigned.  I don't know if it was
-> intentional that they were signed in the original.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/net/wireless/rndis_wlan.c  
-> b/drivers/net/wireless/rndis_wlan.c
-> index a330c69..6d8a986 100644
-> --- a/drivers/net/wireless/rndis_wlan.c
-> +++ b/drivers/net/wireless/rndis_wlan.c
-> @@ -2755,9 +2755,10 @@ static void rndis_wlan_do_link_up_work(struct  
-> usbnet *usbdev)
->  	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
->  	struct ndis_80211_assoc_info *info = NULL;
->  	u8 bssid[ETH_ALEN];
-> -	int resp_ie_len, req_ie_len;
-> +	unsigned int resp_ie_len, req_ie_len;
-> +	unsigned int offset;
->  	u8 *req_ie, *resp_ie;
-> -	int ret, offset;
-> +	int ret;
->  	bool roamed = false;
->  	bool match_bss;
->
-> @@ -2785,6 +2786,8 @@ static void rndis_wlan_do_link_up_work(struct  
-> usbnet *usbdev)
->  		ret = get_association_info(usbdev, info, CONTROL_BUFFER_SIZE);
->  		if (!ret) {
->  			req_ie_len = le32_to_cpu(info->req_ie_length);
-> +			if (req_ie_len > CONTROL_BUFFER_SIZE)
-> +				req_ie_len = CONTROL_BUFFER_SIZE;
->  			if (req_ie_len > 0) {
->  				offset = le32_to_cpu(info->offset_req_ies);
->
-> @@ -2799,6 +2802,8 @@ static void rndis_wlan_do_link_up_work(struct  
-> usbnet *usbdev)
->  			}
->
->  			resp_ie_len = le32_to_cpu(info->resp_ie_length);
-> +			if (resp_ie_len > CONTROL_BUFFER_SIZE)
-> +				resp_ie_len = CONTROL_BUFFER_SIZE;
->  			if (resp_ie_len > 0) {
+> struct ieee80211_ops {
+> 	...
+> 	void (*add_channel_context)(hw, ctx),
+> 	void (*remove_channel_context)(hw, ctx),
+> 	void (*change_channel_type)(hw, ctx),
+> 	void (*assign_vif_channel_context)(hw, vif, ctx),
+> };
 
-(resp_ie_len > 0), (resp_ie_len != 0), (resp_ie_len) .. all fine by me,
+And then we come full circle back to the queue mappings of course --
+when the channel context is assigned, the driver is able to change the
+queue details in the vif to map to whatever it needs, if anything
+different. Like I said in the other email, some devices may use queues
+for each interface regardless of channel (e.g. wl12xx, from discussions
+with them) while others (ath9k at least, I suspect) would use queues per
+channel context. For iwlwifi, I'm not sure yet.
 
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-
->  				offset = le32_to_cpu(info->offset_resp_ies);
->
->
->
-
-
+johannes
 
