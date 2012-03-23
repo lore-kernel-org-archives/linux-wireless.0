@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14917 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750871Ab2CFGxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 01:53:49 -0500
-Date: Tue, 6 Mar 2012 07:53:30 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [rt2x00-users] [PATCH 3.3] rt2x00: fix random stalls
-Message-ID: <20120306065329.GA2373@redhat.com> (sfid-20120306_075409_260303_A37F8529)
-References: <20120305164813.GB2979@redhat.com>
- <8287E603-C5DE-4CF9-8647-DE63B9D3E93E@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8287E603-C5DE-4CF9-8647-DE63B9D3E93E@gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:51295 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757643Ab2CWIyW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Mar 2012 04:54:22 -0400
+Message-ID: <1332492860.3506.8.camel@jlt3.sipsolutions.net> (sfid-20120323_095436_229294_E92813FD)
+Subject: Re: [RFC 12/12] mac80211: return NULL from get_channel in
+ multi-channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Mar 2012 09:54:20 +0100
+In-Reply-To: <892b9fb4-fb69-486f-b619-85d6336e5a31@FIVLA-EXHUB02.eu.tieto.com> (sfid-20120320_155530_182045_07E4AF64)
+References: <892b9fb4-fb69-486f-b619-85d6336e5a31@FIVLA-EXHUB02.eu.tieto.com>
+	 (sfid-20120320_155530_182045_07E4AF64)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gertjan
+On Mon, 2012-03-19 at 13:57 +0100, Michal Kazior wrote:
+> According to comment on cfg80211_ops/get_channel we should return NULL
+> in case of concurrent multi-channel.
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  net/mac80211/cfg.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 88cc128..05f7022 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -2680,6 +2680,9 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy)
+>  	struct ieee80211_local *local = wiphy_priv(wiphy);
+>  	struct ieee80211_channel_state *chan_state = &local->chan_state;
+>  
+> +	if (local->hw.flags & IEEE80211_HW_SUPPORTS_MULTI_CHANNEL)
+> +		return NULL;
+> +
 
-On Mon, Mar 05, 2012 at 08:54:37PM +0100, Gertjan van Wingerde wrote:
-> There are more places in the rt2x00 code that call upon rt2x00queue_pause_queue and rt2x00queue_unpause_queue. Shouldn't these places be protected with tx_lock as well?
+We should return NULL if we're actually using multiple channels :-)
 
-Hmm, good question. Perhaps there are possible races between other usage
-of pause/unpause, but they are not obvious for me. 
+So clearly we need mac80211 do more work in tracking which channels are
+used, compatible, etc.
 
-Seems there are more bugs there, i.e on rt2x00queue_stop_queue, we first
-clear QUEUE_STARTED then call pause_queue, which will just return with
-that bit cleared.
+johannes
 
-On rt2x00queue_flush_queue(), we first call pause queue, then
-->kick_queue, which will cause to call txdone and unpause queue. 
-
-So, it's hard to tell for me right now if other paces needs serialization,
-apparently related area needs some more detailed review, 
-
-> Or better, shouldn't the locking be moved inside the pause / unpause functions?
-
-Thats a bit more complication, because we need lock for TX queues only
-and it has to be taken before test_and_{set,clear}_bit(QUEUE_PAUSED, &queue->flags),
-otherwise we still can race.
-
-I believe this patch is simplest possible approach to solve the problem,
-at least for now.
-
-Stanislaw
