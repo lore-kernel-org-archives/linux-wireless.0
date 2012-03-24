@@ -1,86 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:51444 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965605Ab2CALrf (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52433 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756348Ab2CXE7D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 06:47:35 -0500
-Received: by mail-lpp01m010-f45.google.com with SMTP id e6so734882lah.4
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2012 03:47:33 -0800 (PST)
-Message-ID: <1330602450.18637.160.camel@cumari> (sfid-20120301_124739_020988_A8A32457)
-Subject: Re: Problems with wl1271
-From: Luciano Coelho <coelho@ti.com>
-To: Gary Thomas <gary@mlbassoc.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 01 Mar 2012 13:47:30 +0200
-In-Reply-To: <4F4F5EFB.3020400@mlbassoc.com>
-References: <4F4E903B.2030501@mlbassoc.com> <4F4F5EFB.3020400@mlbassoc.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 24 Mar 2012 00:59:03 -0400
+Message-ID: <4F6D5494.3000001@lwfinger.net> (sfid-20120324_055917_088442_73AB9F14)
+Date: Fri, 23 Mar 2012 23:59:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Richard Farina <sidhayn@gmail.com>
+CC: Sarah Sharp <sarah.a.sharp@linux.intel.com>,
+	jerome huang <jerome.syno@gmail.com>,
+	"Xu, Andiry" <Andiry.Xu@amd.com>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt8192cu on USB3
+References: <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com> <4F585BA9.6020903@amd.com> <2A76B9D36150BE4293842BC2FE8FF165016A31@SCYBEXDAG04.amd.com> <CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com> <CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com> <4F58F2D0.5060805@lwfinger.net> <CAHaq0gKSSgYX19BH92Pg+gXifSEmjvubc_nd5brO8QeLCpr1yA@mail.gmail.com> <4F59800B.80407@lwfinger.net> <20120322223107.GA8877@xanatos> <4F6BDEDF.2020907@lwfinger.net> <20120323203404.GD5207@xanatos> <4F6D2E76.90204@gmail.com>
+In-Reply-To: <4F6D2E76.90204@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-01 at 04:35 -0700, Gary Thomas wrote: 
-> On 2012-02-29 13:53, Gary Thomas wrote:
-> > I'm trying to bring up a new hardware platform which includes
-> > the TiWi-r02 (wl1271). Since the kernel for my target device
-> > (AM3874) is stuck in the dark ages, Luciano suggested that I
-> > try compat-wireless + iw. I've managed to build these now
-> > (after encountering many problems that I'll help iron out later)
-> > and now have the system ready to start using the device. Note:
-> > I'm using compat-wireless-2012-02-28 and iw-3.2
-> >
-> > The kernel modules load and initialize now, with these messages:
+On 03/23/2012 09:16 PM, Richard Farina wrote:
 
-[...]
+> Given that I can replicate this issue using several different drivers,
+> should I test using 3.4_rc1 kernel to see if the usb is fixed or using
+> compat-wireless based on 3.4_rc1 to see if the drivers are fixed? Or both?
 
-> > wl12xx: loaded
-> >
-> > When I try to bring up the device, I get this:
-> > # ifconfig wlan0 hw ether 2a:00:24:01:02:03
-> > # ifconfig wlan0 up
-> > wl12xx: firmware booted (Rev 6.3.5.0.98)
-> > ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> >
-> > If I try to scan for an access point, I get nothing:
-> > # iw wlan0 scan
-> > --- Nothing prints
-> > #
-> > I also see no additional messages in dmesg.
-> >
-> > Further checking of the device:
+You should test 3.4-rc1 first. According to what Sarah wrote, that should fix 
+many of the problems. If rtl8192cu still has the problem then, I have a 
+potential fix. At the moment, there is nothing in compat-wireless to help this 
+problem.
 
-[...]
-
-> > I don't know enough about this device to understand why it's not working.
-> > Perhaps the line
-> > Available Antennas: TX 0 RX 0
-> > is a clue?
-> >
-> > Any ideas what's not working & how I need to do to move forward?
-> >
-> > Thanks in advance for all the help
-> >
-> 
-> Any ideas at all?  Is there some debug info I can get to find
-> out what's going on?
-> 
-> Note: I compared the output of 'iw list' from my non-functional system
-> to that of a working one (OMAP4430 PandaBoard) and they are virtually
-> identical, even the line about the antenna...
-
-Yes, all this looks normal.  Try to enable some debugging in the driver.
-You need to enable the dynamic debugging in your kernel config (if you
-don't have it yet) and do something like this:
-
-echo "module wl12xx +p" > /sys/kernel/debug/dynamic_debug/control
-echo 0x101 > /sys/module/wlcore/parameters/debug_level
-
-The 0x101 value enables IRQ and SCAN debug prints.  You can see more
-options in drivers/net/wireless/wl12xx/debug.h.
-
-Please try to scan with this debugging level and send me what you get.
-
--- 
-Cheers,
-Luca.
-
+Larry
