@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:49518 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751Ab2CPEC5 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:40388 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754824Ab2CXHhw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 00:02:57 -0400
-Received: by bkcik5 with SMTP id ik5so2609019bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Mar 2012 21:02:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120315110219.GA2335@redhat.com>
-References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com>
-	<20120130184446.GB2493@tuxdriver.com>
-	<CA++WF2PnEzS5CAfryaPrJSs3Xb3s0WK1zR7N5o8+ud2HiU5GCw@mail.gmail.com>
-	<20120315110219.GA2335@redhat.com>
-Date: Thu, 15 Mar 2012 21:02:56 -0700
-Message-ID: <CA++WF2P8E=0Xym92MuU84RwaP5Y9uyCyqw5jefh25QDz-Cpzkw@mail.gmail.com> (sfid-20120316_050301_332237_2314CCD6)
-Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
+	Sat, 24 Mar 2012 03:37:52 -0400
+Received: by obbeh20 with SMTP id eh20so3103094obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Mar 2012 00:37:51 -0700 (PDT)
 From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Tom Gundersen <teg@jklm.no>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: linville@tuxdriver.com
+Cc: sgruszka@redhat.com, linux-wireless@vger.kernel.org,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Subject: [PATCH] MAINTAINERS: adding maintainer for ipw2x00
+Date: Sat, 24 Mar 2012 03:41:01 -0400
+Message-Id: <1332574861-1479-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20120324_083756_041625_36F801C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+Add myself as maintainer as suggested by Stanislaw Gruszka.
 
-On 15 March 2012 04:02, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Are you plan to fix issues caused on current firmware loading changes on
-> linux?
+Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+---
+ MAINTAINERS |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
 
-I was able to reproduce this issue; unfortunately, I don't have a
-proper fix for it yet.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 22186f5..cd3b39d 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3519,17 +3519,13 @@ L:	linux-pm@vger.kernel.org
+ S:	Supported
+ F:	arch/x86/platform/mrst/pmu.*
+ 
+-INTEL PRO/WIRELESS 2100 NETWORK CONNECTION SUPPORT
++INTEL PRO/WIRELESS 2100, 2200BG, 2915ABG NETWORK CONNECTION SUPPORT
++M:	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+ L:	linux-wireless@vger.kernel.org
+-S:	Orphan
++S:	Maintained
+ F:	Documentation/networking/README.ipw2100
+-F:	drivers/net/wireless/ipw2x00/ipw2100.*
+-
+-INTEL PRO/WIRELESS 2915ABG NETWORK CONNECTION SUPPORT
+-L:	linux-wireless@vger.kernel.org
+-S:	Orphan
+ F:	Documentation/networking/README.ipw2200
+-F:	drivers/net/wireless/ipw2x00/ipw2200.*
++F:	drivers/net/wireless/ipw2x00/
+ 
+ INTEL(R) TRUSTED EXECUTION TECHNOLOGY (TXT)
+ M:	Joseph Cihula <joseph.cihula@intel.com>
+-- 
+1.7.2.5
 
-> We have a few bug reports about that:
->
-> https://bugzilla.redhat.com/show_bug.cgi?id=783708
-> https://bugzilla.redhat.com/show_bug.cgi?id=802106
-
-Thanks for the info, I will take a look.
-
-Stanislav.
