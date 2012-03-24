@@ -1,141 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60150 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752159Ab2CHODP (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36797 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754964Ab2CXEzd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 09:03:15 -0500
-Message-Id: <20120308140226.857825320@sipsolutions.net> (sfid-20120308_150321_590543_712300B6)
-Date: Thu, 08 Mar 2012 15:02:04 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/6] mac80211: simplify HT checks
-References: <20120308140202.751490800@sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 24 Mar 2012 00:55:33 -0400
+Message-ID: <4F6D53BB.90203@lwfinger.net> (sfid-20120324_055538_657886_840CA329)
+Date: Fri, 23 Mar 2012 23:55:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+CC: jerome huang <jerome.syno@gmail.com>,
+	"Xu, Andiry" <Andiry.Xu@amd.com>, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt8192cu on USB3
+References: <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com> <4F585BA9.6020903@amd.com> <2A76B9D36150BE4293842BC2FE8FF165016A31@SCYBEXDAG04.amd.com> <CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com> <CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com> <4F58F2D0.5060805@lwfinger.net> <CAHaq0gKSSgYX19BH92Pg+gXifSEmjvubc_nd5brO8QeLCpr1yA@mail.gmail.com> <4F59800B.80407@lwfinger.net> <20120322223107.GA8877@xanatos> <4F6BDEDF.2020907@lwfinger.net> <20120323203404.GD5207@xanatos>
+In-Reply-To: <20120323203404.GD5207@xanatos>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/23/2012 03:34 PM, Sarah Sharp wrote:
+> On Thu, Mar 22, 2012 at 09:24:31PM -0500, Larry Finger wrote:
+>> On 03/22/2012 05:31 PM, Sarah Sharp wrote:
+>>
+>>> Larry, if the driver doesn't cancel an URB that the device doesn't
+>>> respond to, then it will just be left on the endpoint ring.  If the
+>>> driver then tries to queue new transfers to that same endpoint, but the
+>>> device keeps NAKing the uncancelled transfer, then the endpoint ring
+>>> would fill up with unanswered transfers.
+>>>
+>>> Perhaps some userspace or kernel portion is forgetting to cancel URBs
+>>> before moving onto the next thing?  You said you moved to asynchronous
+>>> transfers, so maybe the problem lies there?
+>>
+>> The writes have always been asynchronous and reads are synchronous.
+>> The only change was to convert the firmware uploading writes from
+>> 32-bits at a time into block writes of 1000+ 32-bit words.
+>
+> Yeah, that's going to cause the out-of-room warning under xHCI.  That
+> should be fixed in the 3.4-rc1 kernel though.
+>
+>> Would xhci be worse that ohci or ehci in terms of the device not
+>> responding to URBs? We only see problems with USB3.0 hubs, never
+>> with 2.0 or 1.1.
+>
+> That's because EHCI handles arbitrarily large transfers, and xHCI didn't
+> until now.
+>
+>> I am looking into changing the writes to be synchronous. That should
+>> clear up any problems.
+>
+> Yeah, your problem probably was in the bulk large transfer, not the
+> unfinished canceled URBs.  I would suggest getting your reporters to
+> just try 3.4-rc1 and see if it helps before doing too much work to debug
+> this.
 
-Always set/use IEEE80211_STA_DISABLE_11N instead
-of duplicating the queue, WMM and HT checks in
-all places.
+Interesting in that I switched to the large bulk transfers AFTER the problems 
+with xHCI were reported. I guess my attempts to fix the problem only made it worse.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |   57 +++++++++++++++++++++++-----------------------------
- 1 file changed, 26 insertions(+), 31 deletions(-)
-
---- a/net/mac80211/mlme.c	2012-03-08 13:19:50.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-08 13:19:55.000000000 +0100
-@@ -192,33 +192,27 @@ static u32 ieee80211_enable_ht(struct ie
- 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
- 
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
--
- 	prev_chantype = sdata->vif.bss_conf.channel_type;
- 
--	/* HT is not supported */
--	if (!sband->ht_cap.ht_supported)
--		enable_ht = false;
- 
--	if (enable_ht) {
--		hti_cfreq = ieee80211_channel_to_frequency(hti->control_chan,
--							   sband->band);
--		/* check that channel matches the right operating channel */
--		if (local->hw.conf.channel->center_freq != hti_cfreq) {
--			/* Some APs mess this up, evidently.
--			 * Netgear WNDR3700 sometimes reports 4 higher than
--			 * the actual channel, for instance.
--			 */
--			printk(KERN_DEBUG
--			       "%s: Wrong control channel in association"
--			       " response: configured center-freq: %d"
--			       " hti-cfreq: %d  hti->control_chan: %d"
--			       " band: %d.  Disabling HT.\n",
--			       sdata->name,
--			       local->hw.conf.channel->center_freq,
--			       hti_cfreq, hti->control_chan,
--			       sband->band);
--			enable_ht = false;
--		}
-+	hti_cfreq = ieee80211_channel_to_frequency(hti->control_chan,
-+						   sband->band);
-+	/* check that channel matches the right operating channel */
-+	if (local->hw.conf.channel->center_freq != hti_cfreq) {
-+		/* Some APs mess this up, evidently.
-+		 * Netgear WNDR3700 sometimes reports 4 higher than
-+		 * the actual channel, for instance.
-+		 */
-+		printk(KERN_DEBUG
-+		       "%s: Wrong control channel in association"
-+		       " response: configured center-freq: %d"
-+		       " hti-cfreq: %d  hti->control_chan: %d"
-+		       " band: %d.  Disabling HT.\n",
-+		       sdata->name,
-+		       local->hw.conf.channel->center_freq,
-+		       hti_cfreq, hti->control_chan,
-+		       sband->band);
-+		enable_ht = false;
- 	}
- 
- 	if (enable_ht) {
-@@ -335,9 +329,6 @@ static void ieee80211_add_ht_ie(struct i
- 
- 	BUILD_BUG_ON(sizeof(ht_cap) != sizeof(sband->ht_cap));
- 
--	if (!sband->ht_cap.ht_supported)
--		return;
--
- 	if (!ht_info_ie)
- 		return;
- 
-@@ -405,7 +396,6 @@ static void ieee80211_send_assoc(struct
- 	u16 capab;
- 	struct ieee80211_supported_band *sband;
- 	u32 rates = 0;
--	struct ieee80211_bss *bss = (void *)assoc_data->bss->priv;
- 
- 	lockdep_assert_held(&ifmgd->mtx);
- 
-@@ -566,8 +556,7 @@ static void ieee80211_send_assoc(struct
- 		offset = noffset;
- 	}
- 
--	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_11N) &&
--	    bss->wmm_used && local->hw.queues >= 4)
-+	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
- 		ieee80211_add_ht_ie(sdata, skb, assoc_data->ht_information_ie,
- 				    sband, local->oper_channel, ifmgd->ap_smps);
- 
-@@ -2162,7 +2151,6 @@ static bool ieee80211_assoc_success(stru
- 	changed |= BSS_CHANGED_QOS;
- 
- 	if (elems.ht_info_elem && elems.wmm_param &&
--	    (sdata->local->hw.queues >= 4) &&
- 	    !(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
- 		changed |= ieee80211_enable_ht(sdata, elems.ht_info_elem,
- 					       cbss->bssid, ap_ht_cap_flags,
-@@ -3274,6 +3262,7 @@ int ieee80211_mgd_assoc(struct ieee80211
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_bss *bss = (void *)req->bss->priv;
- 	struct ieee80211_mgd_assoc_data *assoc_data;
-+	struct ieee80211_supported_band *sband;
- 	struct sta_info *sta;
- 	const u8 *ssidie;
- 	int i, err;
-@@ -3332,6 +3321,12 @@ int ieee80211_mgd_assoc(struct ieee80211
- 	if (req->flags & ASSOC_REQ_DISABLE_HT)
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
- 
-+	/* Also disable HT if we don't support it or the AP doesn't use WMM */
-+	sband = local->hw.wiphy->bands[req->bss->channel->band];
-+	if (!sband->ht_cap.ht_supported ||
-+	    local->hw.queues < 4 || !bss->wmm_used)
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
-+
- 	memcpy(&ifmgd->ht_capa, &req->ht_capa, sizeof(ifmgd->ht_capa));
- 	memcpy(&ifmgd->ht_capa_mask, &req->ht_capa_mask,
- 	       sizeof(ifmgd->ht_capa_mask));
-
-
+Larry
