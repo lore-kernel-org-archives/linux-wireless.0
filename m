@@ -1,139 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755030Ab2CDUnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:03 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 031/101] iwlwifi: move iwl_base_params to shared header
-Date: Sun,  4 Mar 2012 11:28:45 -0800
-Message-Id: <1330889395-533-32-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214626_469360_734334CA)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:42150 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755380Ab2CYOPj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Mar 2012 10:15:39 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH v2 0/9] ath6kl: add full USB support
+Date: Sun, 25 Mar 2012 17:15:20 +0300
+Message-Id: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120325_161619_128057_5417D347)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This adds full USB support and new HTC pipe implementation. Please review
+and send comments.
 
-This is used from there, so should be in it.
+Changes in v2:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.h   |   42 ----------------------------
- drivers/net/wireless/iwlwifi/iwl-shared.h |   43 +++++++++++++++++++++++++++++
- 2 files changed, 43 insertions(+), 42 deletions(-)
+o fix sizeof(report) in htc_process_trailer() (Ray Chen)
+o add EXPORT_SYMBOL() to core.c (Ray Chen)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index db44115..7259cbf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -96,48 +96,6 @@ struct iwl_lib_ops {
- };
- 
- /*
-- * @max_ll_items: max number of OTP blocks
-- * @shadow_ram_support: shadow support for OTP memory
-- * @led_compensation: compensate on the led on/off time per HW according
-- *	to the deviation to achieve the desired led frequency.
-- *	The detail algorithm is described in iwl-led.c
-- * @chain_noise_num_beacons: number of beacons used to compute chain noise
-- * @adv_thermal_throttle: support advance thermal throttle
-- * @support_ct_kill_exit: support ct kill exit condition
-- * @support_wimax_coexist: support wimax/wifi co-exist
-- * @plcp_delta_threshold: plcp error rate threshold used to trigger
-- *	radio tuning when there is a high receiving plcp error rate
-- * @chain_noise_scale: default chain noise scale used for gain computation
-- * @wd_timeout: TX queues watchdog timeout
-- * @max_event_log_size: size of event log buffer size for ucode event logging
-- * @shadow_reg_enable: HW shadhow register bit
-- * @no_idle_support: do not support idle mode
-- * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
-- * wd_disable: disable watchdog timer
-- */
--struct iwl_base_params {
--	int eeprom_size;
--	int num_of_queues;	/* def: HW dependent */
--	int num_of_ampdu_queues;/* def: HW dependent */
--	/* for iwl_apm_init() */
--	u32 pll_cfg_val;
--
--	const u16 max_ll_items;
--	const bool shadow_ram_support;
--	u16 led_compensation;
--	bool adv_thermal_throttle;
--	bool support_ct_kill_exit;
--	const bool support_wimax_coexist;
--	u8 plcp_delta_threshold;
--	s32 chain_noise_scale;
--	unsigned int wd_timeout;
--	u32 max_event_log_size;
--	const bool shadow_reg_enable;
--	const bool no_idle_support;
--	const bool hd_v2;
--	const bool wd_disable;
--};
--/*
-  * @advanced_bt_coexist: support advanced bt coexist
-  * @bt_init_traffic_load: specify initial bt traffic load
-  * @bt_prio_boost: default bt priority boost value
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index b816e70..ef80e03 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -267,6 +267,49 @@ enum iwl_led_mode {
- 	IWL_LED_DISABLE,
- };
- 
-+/*
-+ * @max_ll_items: max number of OTP blocks
-+ * @shadow_ram_support: shadow support for OTP memory
-+ * @led_compensation: compensate on the led on/off time per HW according
-+ *	to the deviation to achieve the desired led frequency.
-+ *	The detail algorithm is described in iwl-led.c
-+ * @chain_noise_num_beacons: number of beacons used to compute chain noise
-+ * @adv_thermal_throttle: support advance thermal throttle
-+ * @support_ct_kill_exit: support ct kill exit condition
-+ * @support_wimax_coexist: support wimax/wifi co-exist
-+ * @plcp_delta_threshold: plcp error rate threshold used to trigger
-+ *	radio tuning when there is a high receiving plcp error rate
-+ * @chain_noise_scale: default chain noise scale used for gain computation
-+ * @wd_timeout: TX queues watchdog timeout
-+ * @max_event_log_size: size of event log buffer size for ucode event logging
-+ * @shadow_reg_enable: HW shadhow register bit
-+ * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
-+ * @no_idle_support: do not support idle mode
-+ * wd_disable: disable watchdog timer
-+ */
-+struct iwl_base_params {
-+	int eeprom_size;
-+	int num_of_queues;	/* def: HW dependent */
-+	int num_of_ampdu_queues;/* def: HW dependent */
-+	/* for iwl_apm_init() */
-+	u32 pll_cfg_val;
-+
-+	const u16 max_ll_items;
-+	const bool shadow_ram_support;
-+	u16 led_compensation;
-+	bool adv_thermal_throttle;
-+	bool support_ct_kill_exit;
-+	const bool support_wimax_coexist;
-+	u8 plcp_delta_threshold;
-+	s32 chain_noise_scale;
-+	unsigned int wd_timeout;
-+	u32 max_event_log_size;
-+	const bool shadow_reg_enable;
-+	const bool hd_v2;
-+	const bool no_idle_support;
-+	const bool wd_disable;
-+};
-+
- /**
-  * struct iwl_cfg
-  * @name: Offical name of the device
--- 
-1.7.0.4
+Kalle Valo (9):
+  ath6kl: set ram reserved size only for ar6003
+  ath6kl: Add tx_complete() to struct htc_ep_callbacks
+  ath6kl: add tx_comp_multi() to struct htc_ep_callbacks
+  ath6kl: add pointer to the skb in htc_packet
+  ath6kl: add rx data padding support
+  ath6kl: remove void pointer from ath6kl_credit_setup()
+  ath6kl: add htc ops
+  ath6kl: Add HTC pipe implementation
+  ath6kl: add full USB support
+
+ drivers/net/wireless/ath/ath6kl/Makefile           |    3 +-
+ drivers/net/wireless/ath/ath6kl/core.c             |   27 +-
+ drivers/net/wireless/ath/ath6kl/core.h             |   14 +-
+ drivers/net/wireless/ath/ath6kl/debug.h            |    1 +
+ drivers/net/wireless/ath/ath6kl/hif-ops.h          |   34 +
+ drivers/net/wireless/ath/ath6kl/hif.h              |    6 +
+ drivers/net/wireless/ath/ath6kl/htc-ops.h          |  113 ++
+ drivers/net/wireless/ath/ath6kl/htc.h              |   98 +-
+ .../net/wireless/ath/ath6kl/{htc.c => htc_mbox.c}  |   81 +-
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c         | 1713 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/init.c             |   26 +-
+ drivers/net/wireless/ath/ath6kl/sdio.c             |    2 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c             |   20 +-
+ drivers/net/wireless/ath/ath6kl/usb.c              |  785 +++++++++-
+ drivers/net/wireless/ath/ath6kl/wmi.h              |    3 +
+ 15 files changed, 2853 insertions(+), 73 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/htc-ops.h
+ rename drivers/net/wireless/ath/ath6kl/{htc.c => htc_mbox.c} (96%)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/htc_pipe.c
 
