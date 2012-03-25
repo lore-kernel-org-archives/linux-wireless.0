@@ -1,65 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:52936 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756568Ab2CQQoV (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:60503 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756076Ab2CYOPv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2012 12:44:21 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Mircea Gherzan <mgherzan@gmail.com>
-Subject: Re: [PATCH] wl12xx: fix DMA-API-related warnings
-Date: Sat, 17 Mar 2012 16:44:14 +0000
-Cc: Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-References: <1332001592-17074-1-git-send-email-mgherzan@gmail.com>
-In-Reply-To: <1332001592-17074-1-git-send-email-mgherzan@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201203171644.14573.arnd@arndb.de> (sfid-20120317_174522_372224_C66A38E5)
+	Sun, 25 Mar 2012 10:15:51 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH v2 4/9] ath6kl: add pointer to the skb in htc_packet
+Date: Sun, 25 Mar 2012 17:15:24 +0300
+Message-Id: <1332684929-6405-5-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120325_161630_163116_6F34594D)
+In-Reply-To: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 17 March 2012, Mircea Gherzan wrote:
->  int wl1271_event_handle(struct wl1271 *wl, u8 mbox_num)
->  {
-> -       struct event_mailbox mbox;
-> -       int ret;
-> +       struct event_mailbox *mbox;
-> +       int ret = 0;
->  
->         wl1271_debug(DEBUG_EVENT, "EVENT on mbox %d", mbox_num);
->  
->         if (mbox_num > 1)
->                 return -EINVAL;
->  
-> +       /* no GFP_ATOMIC: we're called from the threaded IRQ handler */
-> +       mbox = kmalloc(sizeof(*mbox), GFP_DMA);
-> +
->         /* first we read the mbox descriptor */
-> -       wl1271_read(wl, wl->mbox_ptr[mbox_num], &mbox,
-> -                   sizeof(struct event_mailbox), false);
-> +       wl1271_read(wl, wl->mbox_ptr[mbox_num], mbox, sizeof(*mbox), false);
->  
->         /* process the descriptor */
-> -       ret = wl1271_event_process(wl, &mbox);
-> +       ret = wl1271_event_process(wl, mbox);
->         if (ret < 0)
-> -               return ret;
-> +               goto out;
->  
->         /* then we let the firmware know it can go on...*/
->         wl1271_write32(wl, ACX_REG_INTERRUPT_TRIG, INTR_TRIG_EVENT_ACK);
->  
-> -       return 0;
-> +out:
-> +       kfree(mbox);
-> +       return ret;
->  }
+Needed by the USB code.
 
-I think it would be better here to put another field into struct wl1271 to hold
-the mailbox. There is no point allocating and freeing the field every time
-you get into the interrupt handler.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.h  |    8 ++++++++
+ drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
-	Arnd
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 51f2485..e97ebc3 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -311,6 +311,14 @@ struct htc_packet {
+ 
+ 	void (*completion) (struct htc_target *, struct htc_packet *);
+ 	struct htc_target *context;
++
++	/*
++	 * optimization for network-oriented data, the HTC packet
++	 * can pass the network buffer corresponding to the HTC packet
++	 * lower layers may optimized the transfer knowing this is
++	 * a network buffer
++	 */
++	struct sk_buff *skb;
+ };
+ 
+ enum htc_send_full_action {
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index befe305..53d0334 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -322,6 +322,7 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
+ 	cookie->map_no = 0;
+ 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
+ 			 eid, ATH6KL_CONTROL_PKT_TAG);
++	cookie->htc_pkt.skb = skb;
+ 
+ 	/*
+ 	 * This interface is asynchronous, if there is an error, cleanup
+@@ -490,6 +491,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 	cookie->map_no = map_no;
+ 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
+ 			 eid, htc_tag);
++	cookie->htc_pkt.skb = skb;
+ 
+ 	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "tx ",
+ 			skb->data, skb->len);
+@@ -888,6 +890,7 @@ void ath6kl_rx_refill(struct htc_target *target, enum htc_endpoint_id endpoint)
+ 			skb->data = PTR_ALIGN(skb->data - 4, 4);
+ 		set_htc_rxpkt_info(packet, skb, skb->data,
+ 				   ATH6KL_BUFFER_SIZE, endpoint);
++		packet->skb = skb;
+ 		list_add_tail(&packet->list, &queue);
+ 	}
+ 
+@@ -910,6 +913,8 @@ void ath6kl_refill_amsdu_rxbufs(struct ath6kl *ar, int count)
+ 			skb->data = PTR_ALIGN(skb->data - 4, 4);
+ 		set_htc_rxpkt_info(packet, skb, skb->data,
+ 				   ATH6KL_AMSDU_BUFFER_SIZE, 0);
++		packet->skb = skb;
++
+ 		spin_lock_bh(&ar->lock);
+ 		list_add_tail(&packet->list, &ar->amsdu_rx_buffer_queue);
+ 		spin_unlock_bh(&ar->lock);
+-- 
+1.7.1
+
