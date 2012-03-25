@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:26835 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757Ab2CCCwR (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:48362 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756072Ab2CYOPt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 21:52:17 -0500
-Date: Fri, 02 Mar 2012 20:52:14 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192ce: Fix loss of receive performance
-Message-ID: <4f51875e.mkSIJh/iQxO4b3ER%Larry.Finger@lwfinger.net> (sfid-20120303_035244_599064_45BC2A08)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 25 Mar 2012 10:15:49 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH v2 3/9] ath6kl: add tx_comp_multi() to struct htc_ep_callbacks
+Date: Sun, 25 Mar 2012 17:15:23 +0300
+Message-Id: <1332684929-6405-4-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120325_161620_166864_93798B4B)
+In-Reply-To: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jingjun Wu <jingjun_wu@realsil.com.cn>
+It's also needed by the USB code.
 
-Driver rtl8192ce when used with the RTL8188CE device would start at about
-20 Mbps on a 54 Mbps connection, but quickly drop to 1 Mbps. One of the
-symptoms is that the AP would need to retransmit each packet 4 of 5 times
-before the driver would acknowledge it. Recovery is possible only by
-unloading and reloading the driver. This problem was reported at
-https://bugzilla.redhat.com/show_bug.cgi?id=770207.
-
-The problem is due to a missing update of the gain setting.
-
-Signed-off-by: Jingjun Wu <jingjun_wu@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath6kl/htc.h  |    1 +
+ drivers/net/wireless/ath/ath6kl/init.c |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-John,
-
-I think this patch should be pushed to 3.3. The bug causes a nasty hit to
-the receive performance.
-
-I have been holding it to get feedback from the Redhat bugzilla, but none
-seems to be forthcoming.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -520,6 +520,10 @@ void rtl92c_dm_write_dig(struct ieee8021
- 		 dm_digtable.cur_igvalue, dm_digtable.pre_igvalue,
- 		 dm_digtable.backoff_val);
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 7b0c489..51f2485 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -326,6 +326,7 @@ struct htc_ep_callbacks {
+ 					      struct htc_packet *);
+ 	struct htc_packet *(*rx_allocthresh) (struct htc_target *,
+ 					      enum htc_endpoint_id, int);
++	void (*tx_comp_multi) (struct htc_target *, struct list_head *);
+ 	int rx_alloc_thresh;
+ 	int rx_refill_thresh;
+ };
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 1b97f26..d33691e 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -256,6 +256,7 @@ static int ath6kl_init_service_ep(struct ath6kl *ar)
+ 	memset(&connect, 0, sizeof(connect));
  
-+	dm_digtable.cur_igvalue += 2;
-+	if (dm_digtable.cur_igvalue > 0x3f)
-+		dm_digtable.cur_igvalue = 0x3f;
-+
- 	if (dm_digtable.pre_igvalue != dm_digtable.cur_igvalue) {
- 		rtl_set_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f,
- 			      dm_digtable.cur_igvalue);
+ 	/* these fields are the same for all service endpoints */
++	connect.ep_cb.tx_comp_multi = ath6kl_tx_complete;
+ 	connect.ep_cb.rx = ath6kl_rx;
+ 	connect.ep_cb.rx_refill = ath6kl_rx_refill;
+ 	connect.ep_cb.tx_full = ath6kl_tx_queue_full;
+-- 
+1.7.1
+
