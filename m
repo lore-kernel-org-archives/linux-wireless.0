@@ -1,64 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55216 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031096Ab2COQCL (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:59543 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757164Ab2CYXAa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 12:02:11 -0400
-Date: Thu, 15 Mar 2012 11:58:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rndis_wlan: don't report station signal
-Message-ID: <20120315155802.GE31717@tuxdriver.com> (sfid-20120315_170215_515351_67DBF5FF)
-References: <1331820805.3432.17.camel@jlt3.sipsolutions.net>
- <20120315142527.GC31717@tuxdriver.com>
- <1331822834.3432.22.camel@jlt3.sipsolutions.net>
- <20120315150313.GD31717@tuxdriver.com>
- <1331825203.3432.25.camel@jlt3.sipsolutions.net>
+	Sun, 25 Mar 2012 19:00:30 -0400
+Message-ID: <4F6FA388.9080408@gmail.com> (sfid-20120326_010106_641177_01DF43E5)
+Date: Sun, 25 Mar 2012 16:00:24 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1331825203.3432.25.camel@jlt3.sipsolutions.net>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: Mohammed Shafi <shafi.wireless@gmail.com>,
+	Linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
+	Linux-netdev <netdev@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org> <4F681B78.9000207@gmail.com> <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com> <4F68235C.5090701@gmail.com> <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com> <4F682555.3020502@gmail.com> <20328.16366.166909.255035@gargle.gargle.HOWL>
+In-Reply-To: <20328.16366.166909.255035@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 15, 2012 at 04:26:43PM +0100, Johannes Berg wrote:
-> On Thu, 2012-03-15 at 11:03 -0400, John W. Linville wrote:
-> > On Thu, Mar 15, 2012 at 03:47:14PM +0100, Johannes Berg wrote:
-> > > On Thu, 2012-03-15 at 10:25 -0400, John W. Linville wrote:
-> > > > On Thu, Mar 15, 2012 at 03:13:25PM +0100, Johannes Berg wrote:
-> > > > > From: Johannes Berg <johannes.berg@intel.com>
-> > > > > 
-> > > > > The station signal value is supposed to be in dBm
-> > > > > which the device can't give, so don't report it.
-> > > > > 
-> > > > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > > > 
-> > > > Won't this break functionality for users of this device?
-> > > 
-> > > I don't know if it breaks functionality, but filling in values in the
-> > > wrong units doesn't seem like a good plan.
-> > 
-> > No, but if it isn't actually hurting anyting then I would rather
-> > change a comment or two (and perhaps augment the nl80211 code) than
-> > to simply break things for users.
-> > 
-> > FWIW, cfg80211_wireless_stats has been able to cope with the
-> > unspecified units since it was implemented in commit 8990646d.
-> > Maybe that was a bug but it is a user-visible one that has been around
-> > for years now...
-> 
-> Interesting, I had no idea. I was more concerned with the actual nl80211
-> exporting (nl80211_send_station), not wext. Seems like something like
-> this patch would be sufficient then:
-> http://p.sipsolutions.net/ca88e4afc69683ca.txt
-> 
-> Of course, we could add nl80211 attributes for unspec in the station
-> info too.
+On 03/20/2012 01:29 AM, Sujith Manoharan wrote:
+> Justin P. Mattock wrote:
+>> yeah this works:
+>>
+>> eading symbols from
+>> /home/kernel/linux-next/drivers/net/wireless/ath/ath9k/ath9k.o...done.
+>> (gdb) l *(ath_tx_start+0x284)
+>> 0xcad4 is in ath_tx_start (drivers/net/wireless/ath/ath9k/xmit.c:1878).
+>> 1873			ieee80211_is_data_qos(hdr->frame_control)) {
+>> 1874			tidno = ieee80211_get_qos_ctl(hdr)[0]&
+>> 1875				IEEE80211_QOS_CTL_TID_MASK;
+>> 1876			tid = ATH_AN_2_TID(txctl->an, tidno);
+>> 1877	
+>> 1878			WARN_ON(tid->ac->txq != txctl->txq);
+>> 1879		}
+>> 1880	
+>> 1881		if ((tx_info->flags&  IEEE80211_TX_CTL_AMPDU)&&  tid) {
+>> 1882			/*
+>> (gdb)
+>
+> Can you try this patch ?
+>
+> From: Sujith Manoharan<c_manoha@qca.qualcomm.com>
+> Date: Tue, 20 Mar 2012 13:51:26 +0530
+> Subject: [PATCH] ath9k: Use HW HT capabilites properly
+>
+> The commit "ath9k: Remove aggregation flags" changed how
+> nodes were being initialized. Use the HW HT cap bits
+> to initialize/de-initialize nodes, else we would be
+> accessing an uninitialized entry during a suspend/resume cycle,
+> resulting in a panic.
+>
+> Reported-by: Justin P. Mattock<justinmattock@gmail.com>
+> Signed-off-by: Sujith Manoharan<c_manoha@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/main.c |    4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 3879485..215eb25 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -640,7 +640,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+>   	an->sta = sta;
+>   	an->vif = vif;
+>
+> -	if (sta->ht_cap.ht_supported) {
+> +	if (sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_HT) {
+>   		ath_tx_node_init(sc, an);
+>   		an->maxampdu = 1<<  (IEEE80211_HT_MAX_AMPDU_FACTOR +
+>   				     sta->ht_cap.ampdu_factor);
+> @@ -659,7 +659,7 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
+>   	an->sta = NULL;
+>   #endif
+>
+> -	if (sta->ht_cap.ht_supported)
+> +	if (sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_HT)
+>   		ath_tx_node_cleanup(sc, an);
+>   }
+>
 
-Yes, I came-up with something similar -- patch to follow...
+I would have to say this patch above does get rid of this crash I was 
+seeing. as a quick test I simply connect to a WPA network, then connect 
+to an open network going back and forth triggers this freeze for me 
+after applying this I am able to toggle back and forth without a freeze.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thanks!
+
+Justin P. Mattock
