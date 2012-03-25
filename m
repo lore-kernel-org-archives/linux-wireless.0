@@ -1,53 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42222 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753601Ab2CSNoJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 09:44:09 -0400
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] e1000: Silence sparse warnings by correcting type
-Date: Mon, 19 Mar 2012 15:44:22 +0200
-Message-Id: <1332164662-18232-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20120319_144413_552387_09136DD2)
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:60494 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755985Ab2CYOPq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Mar 2012 10:15:46 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Subject: [PATCH v2 2/9] ath6kl: Add tx_complete() to struct htc_ep_callbacks
+Date: Sun, 25 Mar 2012 17:15:22 +0300
+Message-Id: <1332684929-6405-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120325_161631_819080_CE754F56)
+In-Reply-To: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
+References: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+This is needed by the USB code. Also while at it replace one void pointer
+with a properly typed pointer.
 
-Silence sparse warnings shown below:
-...
-drivers/net/ethernet/intel/e1000/e1000_main.c:3435:17: warning:
-	cast to restricted __le64
-drivers/net/ethernet/intel/e1000/e1000_main.c:3435:17: warning:
-	cast to restricted __le64
-...
-
-Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/ethernet/intel/e1000/e1000_main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h |    3 ++-
+ drivers/net/wireless/ath/ath6kl/htc.c  |    2 +-
+ drivers/net/wireless/ath/ath6kl/htc.h  |    1 +
+ drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++--
+ 4 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/e1000/e1000_main.c b/drivers/net/ethernet/intel/e1000/e1000_main.c
-index 6419a88..1bf73cf 100644
---- a/drivers/net/ethernet/intel/e1000/e1000_main.c
-+++ b/drivers/net/ethernet/intel/e1000/e1000_main.c
-@@ -3377,7 +3377,7 @@ static void e1000_dump(struct e1000_adapter *adapter)
- 	for (i = 0; tx_ring->desc && (i < tx_ring->count); i++) {
- 		struct e1000_tx_desc *tx_desc = E1000_TX_DESC(*tx_ring, i);
- 		struct e1000_buffer *buffer_info = &tx_ring->buffer_info[i];
--		struct my_u { u64 a; u64 b; };
-+		struct my_u { __le64 a; __le64 b; };
- 		struct my_u *u = (struct my_u *)tx_desc;
- 		const char *type;
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index f1dd890..6485ef0 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -746,7 +746,8 @@ void init_netdev(struct net_device *dev);
+ void ath6kl_cookie_init(struct ath6kl *ar);
+ void ath6kl_cookie_cleanup(struct ath6kl *ar);
+ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet);
+-void ath6kl_tx_complete(void *context, struct list_head *packet_queue);
++void ath6kl_tx_complete(struct htc_target *context,
++			struct list_head *packet_queue);
+ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 					       struct htc_packet *packet);
+ void ath6kl_stop_txrx(struct ath6kl *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 4849d99..187f449 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -432,7 +432,7 @@ static void htc_tx_complete(struct htc_endpoint *endpoint,
+ 		   "htc tx complete ep %d pkts %d\n",
+ 		   endpoint->eid, get_queue_depth(txq));
  
-@@ -3421,7 +3421,7 @@ rx_ring_summary:
- 	for (i = 0; rx_ring->desc && (i < rx_ring->count); i++) {
- 		struct e1000_rx_desc *rx_desc = E1000_RX_DESC(*rx_ring, i);
- 		struct e1000_buffer *buffer_info = &rx_ring->buffer_info[i];
--		struct my_u { u64 a; u64 b; };
-+		struct my_u { __le64 a; __le64 b; };
- 		struct my_u *u = (struct my_u *)rx_desc;
- 		const char *type;
+-	ath6kl_tx_complete(endpoint->target->dev->ar, txq);
++	ath6kl_tx_complete(endpoint->target, txq);
+ }
  
+ static void htc_tx_comp_handler(struct htc_target *target,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 5027ccc..7b0c489 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -319,6 +319,7 @@ enum htc_send_full_action {
+ };
+ 
+ struct htc_ep_callbacks {
++	void (*tx_complete) (struct htc_target *, struct htc_packet *);
+ 	void (*rx) (struct htc_target *, struct htc_packet *);
+ 	void (*rx_refill) (struct htc_target *, enum htc_endpoint_id endpoint);
+ 	enum htc_send_full_action (*tx_full) (struct htc_target *,
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index f85353f..befe305 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -666,9 +666,10 @@ static void ath6kl_tx_clear_node_map(struct ath6kl_vif *vif,
+ 	}
+ }
+ 
+-void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
++void ath6kl_tx_complete(struct htc_target *target,
++			struct list_head *packet_queue)
+ {
+-	struct ath6kl *ar = context;
++	struct ath6kl *ar = target->dev->ar;
+ 	struct sk_buff_head skb_queue;
+ 	struct htc_packet *packet;
+ 	struct sk_buff *skb;
 -- 
-1.7.9.1
+1.7.1
 
