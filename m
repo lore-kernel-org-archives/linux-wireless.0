@@ -1,100 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44498 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760860Ab2COS7p (ORCPT
+Received: from mail.windriver.com ([147.11.1.11]:57689 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933059Ab2CZS5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 14:59:45 -0400
-Subject: Re: compiler warning in wireless-testing.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAB3XZEeDtJKpSbYB8sMM35rRT7KH5dVuKOWntDBhDp+unRkWGA@mail.gmail.com> (sfid-20120315_195400_146132_B767C0DD)
-References: <4F6236D0.40505@candelatech.com>
-	 <1331836777.3432.31.camel@jlt3.sipsolutions.net>
-	 <CAB3XZEeDtJKpSbYB8sMM35rRT7KH5dVuKOWntDBhDp+unRkWGA@mail.gmail.com>
-	 (sfid-20120315_195400_146132_B767C0DD)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Mar 2012 19:59:44 +0100
-Message-ID: <1331837984.3432.42.camel@jlt3.sipsolutions.net> (sfid-20120315_195949_860518_BAA29436)
-Mime-Version: 1.0
+	Mon, 26 Mar 2012 14:57:06 -0400
+Date: Mon, 26 Mar 2012 14:56:42 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Julian Calaby <julian.calaby@gmail.com>, <zajec5@gmail.com>,
+	<linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] bcma: fix build error on MIPS; implicit
+ pcibios_enable_device
+Message-ID: <20120326185641.GA22375@windriver.com> (sfid-20120326_205720_613971_2675F6A8)
+References: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com>
+ <CAGRGNgVBwKppzMa7HZeWm+ZW1a7u0JKwxxFS2xCRv=bpxXnk+Q@mail.gmail.com>
+ <20120326012038.GA7722@windriver.com>
+ <CAGRGNgVm_cNAdXZcSjj1oUz98vAVNEsdpZZ9L6=cc_sX_AZ8Rg@mail.gmail.com>
+ <4F70543F.2010007@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4F70543F.2010007@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-15 at 20:53 +0200, Eliad Peller wrote:
-> On Thu, Mar 15, 2012 at 8:39 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Thu, 2012-03-15 at 11:37 -0700, Ben Greear wrote:
-> >> Looks like this is the compiler's fault to me..but might be
-> >> worth explicitly initializing the sta variable just to make
-> >> it quiet.
-> >
-> > I disagree, doing that will only hide legitimate warnings if somebody
-> > changes the code. Initializing for compiler happiness is almost always
-> > the worst thing you can do.
-> >
-> what about
-> 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 6cb5361..96fc201 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -3094,7 +3094,6 @@ static int ieee80211_prep_connection(struct
-> ieee80211_sub_if_data *sdata,
->         struct ieee80211_local *local = sdata->local;
->         struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
->         struct ieee80211_bss *bss = (void *)cbss->priv;
-> -       struct sta_info *sta;
->         bool have_sta = false;
->         int err;
-> 
-> @@ -3107,12 +3106,6 @@ static int ieee80211_prep_connection(struct
-> ieee80211_sub_if_data *sdata,
->                 rcu_read_unlock();
->         }
-> 
-> -       if (!have_sta) {
-> -               sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
-> -               if (!sta)
-> -                       return -ENOMEM;
-> -       }
-> -
->         mutex_lock(&local->mtx);
->         ieee80211_recalc_idle(sdata->local);
->         mutex_unlock(&local->mtx);
-> @@ -3123,10 +3116,15 @@ static int ieee80211_prep_connection(struct
-> ieee80211_sub_if_data *sdata,
-> 
->         if (!have_sta) {
->                 struct ieee80211_supported_band *sband;
-> +               struct sta_info *sta;
->                 u32 rates = 0, basic_rates = 0;
->                 bool have_higher_than_11mbit;
->                 int min_rate = INT_MAX, min_rate_index = -1;
-> 
-> +               sta = sta_info_alloc(sdata, cbss->bssid, GFP_KERNEL);
-> +               if (!sta)
-> +                       return -ENOMEM;
-> +
->                 sband = sdata->local->hw.wiphy->bands[cbss->channel->band];
-> 
->                 ieee80211_get_rates(sband, bss->supp_rates,
-> 
-> 
-> it also makes the code more clear, imho.
+The following is seen during allmodconfig builds for MIPS:
 
-Yeah, I thought about that for a second, but I'm working on changes in
-this area that would essentially require me to revert this again ...
+drivers/bcma/driver_pci_host.c:518:2: error: implicit declaration
+of function 'pcibios_enable_device' [-Werror=implicit-function-declaration]
+cc1: some warnings being treated as errors
+make[3]: *** [drivers/bcma/driver_pci_host.o] Error 1
 
-I really want to do the allocation first so the failure path for that is
-easy. On the other hand, I'm adding channel type switching (see my RFC
-patchset) in the middle of this, and unwinding that would be a larger
-change that even touches the device.
+Most likey introduced by commit 49dc9577155576b10ff79f0c1486c816b01f58bf
 
-What may be possible instead is to replace the second have_sta in the
-second if with "if (sta)", which may make Ben's compiler a bit happier,
-but I have no way of even testing that since my compiler doesn't
-complain to start with.
+   "bcma: add PCIe host controller"
 
-johannes
+Add the header instead of implicitly assuming it will be present.
+Sounds like a good idea, but that alone doesn't fix anything.
 
+The real problem is that the Kconfig has settings related to whether
+PCI is possible, i.e.
+
+ config BCMA_HOST_PCI_POSSIBLE
+       bool
+       depends on BCMA && PCI = y
+       default y
+
+ config BCMA_HOST_PCI
+       bool "Support for BCMA on PCI-host bus"
+       depends on BCMA_HOST_PCI_POSSIBLE
+
+...but what is missing is that BCMA_DRIVER_PCI_HOSTMODE doesn't
+have any dependencies on the above.  Add one.
+
+CC: Hauke Mehrtens <hauke@hauke-m.de>
+CC: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+
+[ v2: depend on BCMA_HOST_PCI_POSSIBLE, not BCMA_HOST_PCI ]
+
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index c1172da..6a0082d 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -29,7 +29,7 @@ config BCMA_HOST_PCI
+ 
+ config BCMA_DRIVER_PCI_HOSTMODE
+ 	bool "Driver for PCI core working in hostmode"
+-	depends on BCMA && MIPS
++	depends on BCMA && MIPS && BCMA_HOST_PCI_POSSIBLE
+ 	help
+ 	  PCI core hostmode operation (external PCI bus).
+ 
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index 4e20bcf..d2097a1 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -10,6 +10,7 @@
+  */
+ 
+ #include "bcma_private.h"
++#include <linux/pci.h>
+ #include <linux/export.h>
+ #include <linux/bcma/bcma.h>
+ #include <asm/paccess.h>
+-- 
+1.7.9.1
