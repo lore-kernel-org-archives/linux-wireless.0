@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55304 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030350Ab2CAO2U (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38718 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757327Ab2CZNJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 09:28:20 -0500
-Subject: [PATCH] cfg80211: fix kernel-doc
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Randy Dunlap <randy.dunlap@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Mar 2012 15:28:19 +0100
-Message-ID: <1330612099.3623.8.camel@jlt3.sipsolutions.net> (sfid-20120301_152824_102778_67A11174)
-Mime-Version: 1.0
+	Mon, 26 Mar 2012 09:09:43 -0400
+Message-ID: <4F706A91.8010901@qca.qualcomm.com> (sfid-20120326_150946_730083_2B5A9C7A)
+Date: Mon, 26 Mar 2012 16:09:37 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 1/2] ath6kl: Isolate host sleep mode config part from
+ ath6kl_wow_suspend
+References: <1332322418-16572-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1332322418-16572-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/21/2012 11:33 AM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> The piece of code used in ath6kk_wow_suspend function
+> to configure the host sleep mode is needed in deep sleep
+> case also.
+> 
+> Moving that portion to a separate function called
+> ath6kl_update_host_mode() would be helpful to avoid
+> the duplication of the same code in deep sleep path.
+> 
+> There is no functional change.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-I forgot to update the kernel-doc in my patch
-to redesign AP mode APIs, fix that now.
+Thanks, both patches applied.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-Cc Randy, just in case you notice it too :)
+But I did small changes to the first patch. I noticed that the inline
+functions were only used in cfg80211.c so there was no need to have in
+core.h. Also I fixed one long line.
 
- include/net/cfg80211.h |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
---- a/include/net/cfg80211.h	2012-02-25 10:21:14.000000000 +0100
-+++ b/include/net/cfg80211.h	2012-03-01 15:26:54.000000000 +0100
-@@ -1356,12 +1356,10 @@ struct cfg80211_gtk_rekey_data {
-  *
-  * @set_rekey_data: give the data necessary for GTK rekeying to the driver
-  *
-- * @add_beacon: Add a beacon with given parameters, @head, @interval
-- *	and @dtim_period will be valid, @tail is optional.
-- * @set_beacon: Change the beacon parameters for an access point mode
-- *	interface. This should reject the call when no beacon has been
-- *	configured.
-- * @del_beacon: Remove beacon configuration and stop sending the beacon.
-+ * @start_ap: Start acting in AP mode defined by the parameters.
-+ * @change_beacon: Change the beacon parameters for an access point mode
-+ *	interface. This should reject the call when AP mode wasn't started.
-+ * @stop_ap: Stop being an AP, including stopping beaconing.
-  *
-  * @add_station: Add a new station.
-  * @del_station: Remove a station; @mac may be NULL to remove all stations.
-
-
+Kalle
