@@ -1,90 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37827 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751046Ab2CWK7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 06:59:30 -0400
-Date: Fri, 23 Mar 2012 12:07:33 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: Re: [PATCH] NFC: Fix next target_idx type and rename for clarity
-Message-ID: <20120323110733.GB7231@sortiz-mobl> (sfid-20120323_120001_207034_DCD04792)
-References: <4F6C547F.50402@linux.intel.com>
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:49154 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932598Ab2CZPNO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 11:13:14 -0400
+Message-ID: <4F708782.3000400@hartkopp.net> (sfid-20120326_171317_881103_F335568E)
+Date: Mon, 26 Mar 2012 17:13:06 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F6C547F.50402@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Amit Beka <amit.beka@intel.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	David Spinadel <david.spinadel@intel.com>,
+	linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: Re: 3.4-merge: iwlwifi needs more than 1 minute to connect
+References: <20120316180428.GD2563@tuxdriver.com>  <4F6CD1BC.4040703@hartkopp.net> <1332756333.7081.18.camel@jlt3.sipsolutions.net> <4F707AA7.5050401@hartkopp.net>
+In-Reply-To: <4F707AA7.5050401@hartkopp.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eric,
 
-On Fri, Mar 23, 2012 at 11:46:23AM +0100, Eric Lapuyade wrote:
-> There are many idx in this code, so make it clearer that this one is the base for the next target that will be discoved.
+On 26.03.2012 16:18, Oliver Hartkopp wrote:
+
+> On 26.03.2012 12:05, Johannes Berg wrote:
 > 
+>> Hi Oliver,
+>>
+>>> i'm using the *very* latest 3.4-merge tree from Linus and my Wifi now needs
+>>> more than one minute to connect to my access point.
+>>
+>>> [   16.288562] wlan0: authenticate with bc:05:43:94:1a:da
+>>> [   16.299644] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+>>> [   16.302060] wlan0: authenticated
+>>> [   16.302492] wlan0: waiting for beacon from bc:05:43:94:1a:da
+>>> [   16.432398] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
+>>
+>> This is an odd message. I need to figure out how that can even happen.
+>>
+>> What's the beacon interval on your AP? It seems more likely that this is
+>> a problem with RX though.
 
-John, I'm queuing this one to my nfc-next branch. It will be part of my next
-pull request (After wireless-next is open for business again), unless someone
-has some comments about it.
 
-Cheers,
-Samuel.
 
-> Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
-> Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-> ---
->  include/net/nfc/nfc.h |    2 +-
->  net/nfc/core.c        |    2 +-
->  net/nfc/rawsock.c     |    4 ++--
->  3 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-> index 45f0563..f4f6950 100644
-> --- a/include/net/nfc/nfc.h
-> +++ b/include/net/nfc/nfc.h
-> @@ -89,7 +89,7 @@ struct nfc_genl_data {
->  
->  struct nfc_dev {
->  	unsigned idx;
-> -	unsigned target_idx;
-> +	u32 target_next_idx;
->  	struct nfc_target *targets;
->  	int n_targets;
->  	int targets_generation;
-> diff --git a/net/nfc/core.c b/net/nfc/core.c
-> index 2818582..d3a2cfb 100644
-> --- a/net/nfc/core.c
-> +++ b/net/nfc/core.c
-> @@ -435,7 +435,7 @@ int nfc_targets_found(struct nfc_dev *dev,
->  	dev->polling = false;
->  
->  	for (i = 0; i < n_targets; i++)
-> -		targets[i].idx = dev->target_idx++;
-> +		targets[i].idx = dev->target_next_idx++;
->  
->  	spin_lock_bh(&dev->targets_lock);
->  
-> diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-> index b2825aa..ec1134c 100644
-> --- a/net/nfc/rawsock.c
-> +++ b/net/nfc/rawsock.c
-> @@ -92,8 +92,8 @@ static int rawsock_connect(struct socket *sock, struct sockaddr *_addr,
->  		goto error;
->  	}
->  
-> -	if (addr->target_idx > dev->target_idx - 1 ||
-> -	    addr->target_idx < dev->target_idx - dev->n_targets) {
-> +	if (addr->target_idx > dev->target_next_idx - 1 ||
-> +	    addr->target_idx < dev->target_next_idx - dev->n_targets) {
->  		rc = -EINVAL;
->  		goto error;
->  	}
-> -- 
-> 1.7.6.5
-> 
+Hi Johannes and Amit,
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+pointing to the RX path was a good idea!
+
+I checked the commits of the last three weeks and discovered that it turns
+out that the patches from Amit caused the regression:
+
+iwlwifi: add testmode command for rx forwarding
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=0aef8ddc8bedac1db4c96fddc9fb1b44b730cf4f
+
+
+iwlwifi: fixed testmode notifications length
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=8e81f65fdc7f5d292bb3c115b748767d921823c1
+
+I reverted them in the opposite order (of course) and now the issue is gone.
+
+Regards,
+Oliver
