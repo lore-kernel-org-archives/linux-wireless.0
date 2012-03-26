@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:55670 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032Ab2CCUYr (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38209 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933059Ab2CZSrT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2012 15:24:47 -0500
-Received: by eaaq12 with SMTP id q12so970782eaa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Mar 2012 12:24:46 -0800 (PST)
-Subject: [PATCH 1/2] p54: pass interface setup errors back to mac80211
-Cc: linux-wireless@vger.kernel.org
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 3 Mar 2012 21:24:43 +0100
-To: "John W. Linville" <linville@tuxdriver.com>
+	Mon, 26 Mar 2012 14:47:19 -0400
+Date: Mon, 26 Mar 2012 14:42:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: do not nulify ctx->vif on reset
+Message-ID: <20120326184209.GJ13806@tuxdriver.com> (sfid-20120326_204722_977161_5712D520)
+References: <1331651434-4370-1-git-send-email-sgruszka@redhat.com>
+ <1331651730.3329.6.camel@jlt3.sipsolutions.net>
+ <20120314062549.GA2788@redhat.com>
+ <1331708304.3376.0.camel@jlt3.sipsolutions.net>
+ <20120314070748.GB2788@redhat.com>
+ <20120314081424.GC2788@redhat.com>
+ <1332752906.7081.10.camel@jlt3.sipsolutions.net>
+ <1332772232.27767.14.camel@wwguy-huron>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201203032124.43228.chunkeey@googlemail.com> (sfid-20120303_212451_068194_EB0850F4)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1332772232.27767.14.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/p54/main.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+On Mon, Mar 26, 2012 at 07:30:32AM -0700, Guy, Wey-Yi wrote:
+> On Mon, 2012-03-26 at 11:08 +0200, Johannes Berg wrote:
+> > On Wed, 2012-03-14 at 09:14 +0100, Stanislaw Gruszka wrote:
+> > > On Wed, Mar 14, 2012 at 08:07:48AM +0100, Stanislaw Gruszka wrote:
+> > > > I'll update and recheck again.
+> > > 
+> > > On updated tree (head 035364916f75151b4b91ea53968c6beba7545317) devices
+> > > stop working here on any forced reset during TX as well. There are
+> > > messages like below in dmesg:
+> > > 
+> > > wlan3: dropped data frame to not associated station 00:00:00:00:00:00
+> > > 
+> > > And one time crash happened too, in:
+> > > 
+> > > (gdb) l *(iwl_remove_dynamic_key+0x1f0)
+> > > 0x15e20 is in iwl_remove_dynamic_key (drivers/net/wireless/iwlwifi/iwl-agn-sta.c:1105).
+> > > 1100		/*
+> > > 1101		 * The device expects GTKs for station interfaces to be
+> > > 1102		 * installed as GTKs for the AP station. If we have no
+> > > 1103		 * station ID, then use the ap_sta_id in that case.
+> > > 1104		 */
+> > > 1105		if (vif->type == NL80211_IFTYPE_STATION && vif_priv->ctx)
+> > > 1106			return vif_priv->ctx->ap_sta_id;
+> > > 1107	
+> > > 1108		return IWL_INVALID_STATION;
+> > > 1109	}
+> > > 
+> > > To reproduce problems, I'm doing "ping -f 192.168.1.1" on one console
+> > > and run script [1] on other console.
+> > 
+> > Ok so I finally got some time to look into this in some detail. It seems
+> > that the driver assumes a few calls from mac80211 like key settings can
+> > only happen while the vif pointers are valid, which is correct under
+> > normal circumstances but due to races with HW reset it's not really true
+> > there.
+> > 
+> > We could fix all of those, but it seems your patch is the better
+> > approach. Wey, can you pick it up?
+> 
+> yes
 
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index 9c2d3d1..765e098 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -227,6 +227,7 @@ static int p54_add_interface(struct ieee80211_hw *dev,
- 			     struct ieee80211_vif *vif)
- {
- 	struct p54_common *priv = dev->priv;
-+	int err;
- 
- 	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER;
- 
-@@ -251,9 +252,9 @@ static int p54_add_interface(struct ieee80211_hw *dev,
- 	}
- 
- 	memcpy(priv->mac_addr, vif->addr, ETH_ALEN);
--	p54_setup_mac(priv);
-+	err = p54_setup_mac(priv);
- 	mutex_unlock(&priv->conf_mutex);
--	return 0;
-+	return err;
- }
- 
- static void p54_remove_interface(struct ieee80211_hw *dev,
+Should I just take it and try to get it merged for -rc1?
+
+John
 -- 
-1.7.9.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
