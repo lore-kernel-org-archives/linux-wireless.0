@@ -1,90 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:58983 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S964791Ab2CSAbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 20:31:49 -0400
-From: Joe Perches <joe@perches.com>
-To: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Bob Copeland <me@bobcopeland.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH wireless-next 2/3] ath5k: Introduce _ath5k_printk to reduce code/text
-Date: Sun, 18 Mar 2012 17:30:53 -0700
-Message-Id: <b157e2d1a746733d1814b9726f326d52d36da2fc.1332116921.git.joe@perches.com> (sfid-20120319_013231_816172_0F9491B5)
-In-Reply-To: <cover.1332116921.git.joe@perches.com>
-References: <cover.1332116921.git.joe@perches.com>
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:25233 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932303Ab2CZPUz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 11:20:55 -0400
+Message-ID: <4F708953.1000301@hartkopp.net> (sfid-20120326_172059_375929_E1FF64F8)
+Date: Mon, 26 Mar 2012 17:20:51 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Amit Beka <amit.beka@intel.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	David Spinadel <david.spinadel@intel.com>,
+	linux-wireless@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: Re: 3.4-merge: iwlwifi needs more than 1 minute to connect
+References: <20120316180428.GD2563@tuxdriver.com>  <4F6CD1BC.4040703@hartkopp.net> <1332756333.7081.18.camel@jlt3.sipsolutions.net> <4F707AA7.5050401@hartkopp.net> <4F708782.3000400@hartkopp.net>
+In-Reply-To: <4F708782.3000400@hartkopp.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Macros can be converted to functions to reduce overall object size.
+Sorry - my assumption was too fast ...
 
-Convert the ATH5K_PRINTK macro to use _ath5k_printk.
 
-Allyesconfig size is reduced ~10%
+At the fourth reboot i got the problem even with the reverted patches from Amit.
 
-$ size drivers/net/wireless/ath/ath5k/built-in.o*
-   text	   data	    bss	    dec	    hex	filename
- 211557	   2032	  40672	 254261	  3e135	drivers/net/wireless/ath/ath5k/built-in.o.new
- 235412	   2032	  47296	 284740	  45844	drivers/net/wireless/ath/ath5k/built-in.o.old
+Sorry for the noise :-(
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h |    9 +++++----
- drivers/net/wireless/ath/ath5k/base.c  |   20 ++++++++++++++++++++
- 2 files changed, 25 insertions(+), 4 deletions(-)
+[   15.118888] wlan0: authenticate with bc:05:43:94:1a:da
+[   15.122519] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+[   15.160486] wlan0: authenticated
+[   15.160625] wlan0: waiting for beacon from bc:05:43:94:1a:da
+[   15.189007] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
+[   28.270782] wlan0: authenticate with bc:05:43:94:1a:da
+[   28.274505] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+[   28.277125] wlan0: authenticated
+[   28.277184] wlan0: waiting for beacon from bc:05:43:94:1a:da
+[   28.306245] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
+[   41.427670] wlan0: authenticate with bc:05:43:94:1a:da
+[   41.431301] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+[   41.434021] wlan0: authenticated
+[   41.434668] wlan0: associate with bc:05:43:94:1a:da (try 1/3)
+[   41.437357] wlan0: RX AssocResp from bc:05:43:94:1a:da (capab=0x431 status=0 aid=3)
+[   41.437363] wlan0: associated
+[   41.447928] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
 
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 954c373..55ef93d 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -79,11 +79,12 @@
- #define ATH5K_PRINTF(fmt, ...)						\
- 	pr_warn("%s: " fmt, __func__, ##__VA_ARGS__)
- 
-+void __printf(3, 4)
-+_ath5k_printk(const struct ath5k_hw *ah, const char *level,
-+	      const char *fmt, ...);
-+
- #define ATH5K_PRINTK(_sc, _level, _fmt, ...)				\
--	printk(_level pr_fmt("%s%s" _fmt),				\
--	       ((_sc) && (_sc)->hw) ? wiphy_name((_sc)->hw->wiphy) : "", \
--	       ((_sc) && (_sc)->hw) ? ": " : "",			\
--	       ##__VA_ARGS__)
-+	_ath5k_printk(_sc, _level, _fmt, ##__VA_ARGS__)
- 
- #define ATH5K_PRINTK_LIMIT(_sc, _level, _fmt, ...)			\
- do {									\
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index a9c0503..3007bba 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -3040,3 +3040,23 @@ ath5k_set_beacon_filter(struct ieee80211_hw *hw, bool enable)
- 	ath5k_hw_set_rx_filter(ah, rfilt);
- 	ah->filter_flags = rfilt;
- }
-+
-+void _ath5k_printk(const struct ath5k_hw *ah, const char *level,
-+		   const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	if (ah && ah->hw)
-+		printk("%s" pr_fmt("%s: %pV"),
-+		       level, wiphy_name(ah->hw->wiphy), &vaf);
-+	else
-+		printk("%s" pr_fmt("%pV"), level, &vaf);
-+
-+	va_end(args);
-+}
--- 
-1.7.8.111.gad25c.dirty
+Regards,
+Oliver
+
+On 26.03.2012 17:13, Oliver Hartkopp wrote:
+
+> 
+> On 26.03.2012 16:18, Oliver Hartkopp wrote:
+> 
+>> On 26.03.2012 12:05, Johannes Berg wrote:
+>>
+>>> Hi Oliver,
+>>>
+>>>> i'm using the *very* latest 3.4-merge tree from Linus and my Wifi now needs
+>>>> more than one minute to connect to my access point.
+>>>
+>>>> [   16.288562] wlan0: authenticate with bc:05:43:94:1a:da
+>>>> [   16.299644] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+>>>> [   16.302060] wlan0: authenticated
+>>>> [   16.302492] wlan0: waiting for beacon from bc:05:43:94:1a:da
+>>>> [   16.432398] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
+>>>
+>>> This is an odd message. I need to figure out how that can even happen.
+>>>
+>>> What's the beacon interval on your AP? It seems more likely that this is
+>>> a problem with RX though.
+> 
+> 
+> 
+> Hi Johannes and Amit,
+> 
+> pointing to the RX path was a good idea!
+> 
+> I checked the commits of the last three weeks and discovered that it turns
+> out that the patches from Amit caused the regression:
+> 
+> iwlwifi: add testmode command for rx forwarding
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=0aef8ddc8bedac1db4c96fddc9fb1b44b730cf4f
+> 
+> 
+> iwlwifi: fixed testmode notifications length
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=8e81f65fdc7f5d292bb3c115b748767d921823c1
+> 
+> I reverted them in the opposite order (of course) and now the issue is gone.
+> 
+> Regards,
+> Oliver
+
 
