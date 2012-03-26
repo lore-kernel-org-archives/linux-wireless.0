@@ -1,64 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54587 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754973Ab2CDUnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:00 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 016/101] iwlwifi: reduce IDI code ifdef
-Date: Sun,  4 Mar 2012 11:28:30 -0800
-Message-Id: <1330889395-533-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214335_925123_6A392288)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:46884 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932606Ab2CZQJR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 12:09:17 -0400
+Message-ID: <1332778151.5435.44.camel@jlt3.sipsolutions.net> (sfid-20120326_180920_983857_832570CF)
+Subject: Re: [PATCH 1/2] mac80211: inform the offchannel status to AP if no
+ powersave
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Mon, 26 Mar 2012 18:09:11 +0200
+In-Reply-To: <1332775418-16865-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1332775418-16865-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2012-03-26 at 20:53 +0530, Rajkumar Manoharan wrote:
+> The station has to inform the offchannel status to the assiociated AP
+> while switching b/w oper and off-channel. The station uses pspoll to
 
-The code in the two branches of the #ifdef
-is almost the same so move the common code
-outside the #ifdef.
+Gee, ok, I thought you meant "bandwidth", not "between". Might be worth
+not being so lazy in the commit log ...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-pci.c |   11 +----------
- 1 files changed, 1 insertions(+), 10 deletions(-)
+> fetch the buffered data from the AP and the pspoll frame can only be
+> used when the powersave is enabled. For non-PS case, the station has
+> to use nullfunc frame notification. Fix that.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> ---
+>  net/mac80211/offchannel.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+> index f054e94..f7aedfc 100644
+> --- a/net/mac80211/offchannel.c
+> +++ b/net/mac80211/offchannel.c
+> @@ -129,7 +129,7 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+>  
+>  		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
+>  			netif_tx_stop_all_queues(sdata->dev);
+> -			if (offchannel_ps_enable &&
+> +			if ((offchannel_ps_enable || !sdata->u.mgd.powersave) &&
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index d109b0f..c5e339e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -278,17 +278,9 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- #ifdef CONFIG_IWLWIFI_IDI
- 	iwl_trans = iwl_trans_idi_alloc(shrd, pdev, ent);
--	if (iwl_trans == NULL) {
--		err = -ENOMEM;
--		goto out_free_bus;
--	}
--
--	shrd->trans = iwl_trans;
--	pci_set_drvdata(pdev, iwl_trans);
--
--	err = iwl_drv_start(shrd, iwl_trans, cfg);
- #else
- 	iwl_trans = iwl_trans_pcie_alloc(shrd, pdev, ent);
-+#endif
- 	if (iwl_trans == NULL) {
- 		err = -ENOMEM;
- 		goto out_free_bus;
-@@ -298,7 +290,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	pci_set_drvdata(pdev, iwl_trans);
- 
- 	err = iwl_drv_start(shrd, iwl_trans, cfg);
--#endif
- 	if (err)
- 		goto out_free_trans;
- 
--- 
-1.7.0.4
+I'm not sure I like evaluating u.mgd.powersave before we even know it's
+a managed interface ... not a huge issue though.
+
+>  			    (sdata->vif.type == NL80211_IFTYPE_STATION) &&
+>  			    sdata->u.mgd.associated)
+>  				ieee80211_offchannel_ps_enable(sdata, true);
+> @@ -152,7 +152,7 @@ void ieee80211_offchannel_return(struct ieee80211_local *local,
+>  			continue;
+>  
+>  		/* Tell AP we're back */
+> -		if (offchannel_ps_disable &&
+> +		if ((offchannel_ps_disable || !sdata->u.mgd.powersave) &&
+>  		    sdata->vif.type == NL80211_IFTYPE_STATION) {
+>  			if (sdata->u.mgd.associated)
+>  				ieee80211_offchannel_ps_disable(sdata);
+
+
+Overall though I don't get it. u.mgd.powersave has nothing to do with
+the current powersave state at all, it's just whether cfg80211 requested
+powersave mode or not -- so NACK.
+
+johannes
 
