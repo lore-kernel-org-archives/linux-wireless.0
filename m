@@ -1,192 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:50321 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759715Ab2CGTGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:35 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Amit Beka <amit.beka@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 20/35] iwlwifi: add testmode command for rx forwarding
-Date: Wed,  7 Mar 2012 09:52:29 -0800
-Message-Id: <1331142764-5750-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200647_967947_C81CD194)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753911Ab2CZM3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 08:29:25 -0400
+Message-ID: <4F706122.6080107@tieto.com> (sfid-20120326_142927_641361_63873139)
+Date: Mon, 26 Mar 2012 14:29:22 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 00/12] multi-channel support
+References: <06edaf32-5a4f-4887-8b22-6bec31c2c7c6@FIVLA-EXHUB02.eu.tieto.com>		 (sfid-20120320_154008_038091_B257E507) <1332494945.3506.23.camel@jlt3.sipsolutions.net>	 <4F6C82A5.5080302@tieto.com> (sfid-20120323_150333_004349_1A5648D7) <1332514895.10384.40.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1332514895.10384.40.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amit Beka <amit.beka@intel.com>
+Johannes Berg wrote:
+> On Fri, 2012-03-23 at 15:03 +0100, Michał Kazior wrote:
+>
+>> What if we create a new structure that would be a channel
+>> stream/reservation? Driver could then report multiple such objects.
+>> Each such would have a tx queue and it's own locking. Let's assume
+>> something like:
+>>
+>>     struct ieee80211_channel_stream {
+>>       struct list_head vif; // list of vifs we're attached to
+>>       struct ieee80211_channel *ch;
+>>       struct sk_buff_head pending;
+>>       int stop_reasons[IEEE80211_MAX_QUEUES];
+>>       // .. other stuff
+>>       u8 *drv_priv[0] __attribute__((__aligned__((void *))));
+>>     };
+>
+> I'm not sure I see the need to have the driver register these, but it
+> seems useful to maintain this abstraction somehow in mac80211.
+>
+> Due to the interface combinations advertising, we already know (*) what
+> is supported by the driver, so there's no need for the driver to
+> register this again.
+>
+> Like I said earlier, I see basically two ways of handling this.
+>
+> The explicit way would essentially consist of something like this:
+>
+> struct ieee80211_channel_context {
+> 	struct ieee80211_channel *chan;
+> 	enum nl80211_channel_type type;
+> };
+>
+> with API to add/remove such contexts from/to the device:
+>
+> struct ieee80211_ops {
+> 	...
+> 	void (*add_channel_context)(hw, ctx),
+> 	void (*remove_channel_context)(hw, ctx),
+> 	void (*change_channel_type)(hw, ctx),
+> 	void (*assign_vif_channel_context)(hw, vif, ctx),
+> };
+>
+> The assign function would have rather strange semantics though -- it can
+> be called only when the interface is up (added to the driver), but it
+> can't be called while the interface is associated, active as an AP, etc.
+> EXCEPT ... maybe it can in CSA scenarios. But I said that before: CSA is
+> a bit of a mess to handle.
 
-Added a testmode command which tells iwl_rx_dispatch
-to send the RX both as a notification to nl80211 and
-with the registered RX handlers.
+Are we going to assume that "add_channel_context" always succeeds?
+So I understand you want to use interface combinations to control when 
+these functions are valid to be called.
 
-This is used for monitoring RX from userspace while preserving
-the regular flows in the driver.
+But can we express the "off-channel only" channel context through 
+interface combinations? Is it valid for a driver to say the following?
 
-Signed-off-by: Amit Beka <amit.beka@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c   |   20 +++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-testmode.c |   32 ++++++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-testmode.h |   13 +++++++++-
- 3 files changed, 56 insertions(+), 9 deletions(-)
+struct ieee80211_iface_limit limits[] = {
+    { .max = 1, .types = BIT(NL80211_IFTYPE_AP) },
+    { .max = 1, .types = BIT(NL80211_IFTYPE_STATION) },
+    { .max = 1, .types = 0 }
+};
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-index e504675..8e7cdfa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-@@ -1152,6 +1152,8 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
- {
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
-+	void (*pre_rx_handler)(struct iwl_priv *,
-+			       struct iwl_rx_cmd_buffer *);
- 	int err = 0;
- 
- 	/*
-@@ -1161,10 +1163,20 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
- 	 */
- 	iwl_notification_wait_notify(&priv->notif_wait, pkt);
- 
--	if (priv->pre_rx_handler &&
--	    priv->ucode_owner == IWL_OWNERSHIP_TM)
--		priv->pre_rx_handler(priv, rxb);
--	else {
-+	/* RX data may be forwarded to userspace (using pre_rx_handler) in one
-+	 * of two cases: the first, that the user owns the uCode through
-+	 * testmode - in such case the pre_rx_handler is set and no further
-+	 * processing takes place. The other case is when the user want to
-+	 * monitor the rx w/o affecting the regular flow - the pre_rx_handler
-+	 * will be set but the ownership flag != IWL_OWNERSHIP_TM and the flow
-+	 * continues.
-+	 * We need to use ACCESS_ONCE to prevent a case where the handler
-+	 * changes between the check and the call.
-+	 */
-+	pre_rx_handler = ACCESS_ONCE(priv->pre_rx_handler);
-+	if (pre_rx_handler)
-+		pre_rx_handler(priv, rxb);
-+	if (priv->ucode_owner != IWL_OWNERSHIP_TM) {
- 		/* Based on type of command response or notification,
- 		 *   handle those that need handling via function in
- 		 *   rx_handlers table.  See iwl_setup_rx_handlers() */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-index 1d73209..b8044bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-@@ -125,6 +125,8 @@ struct nla_policy iwl_testmode_gnl_msg_policy[IWL_TM_ATTR_MAX] = {
- 	[IWL_TM_ATTR_FW_TYPE] = { .type = NLA_U32, },
- 	[IWL_TM_ATTR_FW_INST_SIZE] = { .type = NLA_U32, },
- 	[IWL_TM_ATTR_FW_DATA_SIZE] = { .type = NLA_U32, },
-+
-+	[IWL_TM_ATTR_ENABLE_NOTIFICATION] = {.type = NLA_FLAG, },
- };
- 
- /*
-@@ -194,7 +196,7 @@ nla_put_failure:
- 
- void iwl_testmode_init(struct iwl_priv *priv)
- {
--	priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
-+	priv->pre_rx_handler = NULL;
- 	priv->testmode_trace.trace_enabled = false;
- 	priv->testmode_mem.read_in_progress = false;
- }
-@@ -770,9 +772,13 @@ static int iwl_testmode_ownership(struct ieee80211_hw *hw, struct nlattr **tb)
- 	}
- 
- 	owner = nla_get_u8(tb[IWL_TM_ATTR_UCODE_OWNER]);
--	if ((owner == IWL_OWNERSHIP_DRIVER) || (owner == IWL_OWNERSHIP_TM))
-+	if (owner == IWL_OWNERSHIP_DRIVER) {
- 		priv->ucode_owner = owner;
--	else {
-+		priv->pre_rx_handler = NULL;
-+	} else if (owner == IWL_OWNERSHIP_TM) {
-+		priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
-+		priv->ucode_owner = owner;
-+	} else {
- 		IWL_ERR(priv, "Invalid owner\n");
- 		return -EINVAL;
- 	}
-@@ -937,6 +943,20 @@ static int iwl_testmode_buffer_dump(struct ieee80211_hw *hw,
- 	return -ENOBUFS;
- }
- 
-+static int iwl_testmode_notifications(struct ieee80211_hw *hw,
-+	struct nlattr **tb)
-+{
-+	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
-+	bool enable;
-+
-+	enable = nla_get_flag(tb[IWL_TM_ATTR_ENABLE_NOTIFICATION]);
-+	if (enable)
-+		priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
-+	else
-+		priv->pre_rx_handler = NULL;
-+	return 0;
-+}
-+
- 
- /* The testmode gnl message handler that takes the gnl message from the
-  * user space and parses it per the policy iwl_testmode_gnl_msg_policy, then
-@@ -1022,6 +1042,12 @@ int iwlagn_mac_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
- 		result = iwl_testmode_indirect_mem(hw, tb);
- 		break;
- 
-+	case IWL_TM_CMD_APP2DEV_NOTIFICATIONS:
-+		IWL_DEBUG_INFO(priv, "testmode notifications cmd "
-+			"to driver\n");
-+		result = iwl_testmode_notifications(hw, tb);
-+		break;
-+
- 	default:
- 		IWL_ERR(priv, "Unknown testmode command\n");
- 		result = -ENOSYS;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
-index 69b2e80..6ba211b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
-@@ -122,6 +122,9 @@
-  *	Fore reading, a READ command is sent from the userspace and the data
-  *	is returned when the user calls a DUMP command.
-  *	For writing, only a WRITE command is used.
-+ * @IWL_TM_CMD_APP2DEV_NOTIFICATIONS:
-+ *	Command to enable/disable notifications (currently RX packets) from the
-+ *	driver to userspace.
-  */
- enum iwl_tm_cmd_t {
- 	IWL_TM_CMD_APP2DEV_UCODE		= 1,
-@@ -152,7 +155,8 @@ enum iwl_tm_cmd_t {
- 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_READ = 26,
- 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_DUMP = 27,
- 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_WRITE = 28,
--	IWL_TM_CMD_MAX				= 29,
-+	IWL_TM_CMD_APP2DEV_NOTIFICATIONS	= 29,
-+	IWL_TM_CMD_MAX				= 30,
- };
- 
- /*
-@@ -256,6 +260,10 @@ enum iwl_tm_cmd_t {
-  *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_UCODE this flag
-  *	indicates that the user wants to receive the response of the command
-  *	in a reply SKB. If it's not present, the response is not returned.
-+ * @IWL_TM_ATTR_ENABLE_NOTIFICATIONS:
-+ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_NOTIFICATIONS, this
-+ *	flag enables (if present) or disables (if not) the forwarding
-+ *	to userspace.
-  */
- enum iwl_tm_attr_t {
- 	IWL_TM_ATTR_NOT_APPLICABLE		= 0,
-@@ -282,7 +290,8 @@ enum iwl_tm_attr_t {
- 	IWL_TM_ATTR_FW_INST_SIZE		= 21,
- 	IWL_TM_ATTR_FW_DATA_SIZE		= 22,
- 	IWL_TM_ATTR_UCODE_CMD_SKB		= 23,
--	IWL_TM_ATTR_MAX				= 24,
-+	IWL_TM_ATTR_ENABLE_NOTIFICATION		= 24,
-+	IWL_TM_ATTR_MAX				= 25,
- };
- 
- /* uCode trace buffer */
--- 
-1.7.0.4
+struct ieee80211_iface_combination combination = {
+   .limits = limits,
+   .n_limits = 3,
+   .max_interfaces = 2,
+   .num_different_channels = 3,
+};
+
+
+You also assume that a driver can do a generic "add_channel_context" 
+that would allow it to prepare the device. This may not be true for all 
+devices. It is unknown whether this channel context is going to be used 
+for off-channel, STA or AP. Especially off-channel is broken this way 
+since it isn't bound to vif - in fact it can't be. The same goes for 
+CSA. Or maybe I didn't get the idea behind "add_channel_context"?
+
+
+How about:
+
+struct ieee80211_ops {
+   // ..
+   void (*changed_channel_type)(hw, ctx);
+   void (*detach_channel_context)(ctx);
+   void (*attach_channel_context_to_vif)(hw, vif, ctx);
+   void (*attach_channel_context_to_hw)(hw, ctx);
+};
+
+This way mac80211 immediately states it's intention - and we can use 
+"attach_channel_context_to_hw" to do off-channel, and 
+"attach_channel_context_to_vif" to do CSA as well as normal interface 
+start up. We could maybe split detach_* into two different functions if 
+necessary. The "attach_channel_context_to_vif" would be allowed even 
+when associated for the purpose of dealing with CSA.
+
+What do you think?
+
+
+The off-channel flow would be then:
+
+  * hw supports 1 interface on 1 channel
+  * we're connected as STA
+  1. scan request
+  2. stop sta
+  3. detach_channel_context(oper) without freeing it of course
+  4. create channel context "tmp"
+     5. set next scan channel in channel context "tmp"
+     6. attach_channel_context_to_hw(tmp)
+     7. work
+     8. detach_channel_context(tmp)
+     9. go to 5 if more work needed
+10. detach_channel_context(tmp)
+11. attach_channel_context(oper)
+
+Are we okay with this?
+
+Also if the device were to support at least 1 extra channel that can do 
+(offloaded) off-channel we wouldn't have to do steps: 2, 3, 11.
+
+
+> Now that I think about it, the implicit way I previously thought was
+> quite a separate mechanism is really very similar: you'd still have to
+> have the assign_vif_channel_context function, maybe as part of
+> bss_info_changed, but not have explicit add/remove. I think the
+> add/remove is useful so let's not consider implicit methods any more :)
+
+I'm unsure about the add/remove. See above. We can't just add a channel 
+context without stating the purpose of that channel context. A driver 
+might need to know of the purpose beforehand.
+
+
+> The internal handling in mac80211 might have a linked list of the
+> channel contexts, or just a static array of a handful of them, doesn't
+> really matter. It would, however, make sure that there aren't more than
+> the current interface combination advertised as supported (see (*)
+> again.)
+>
+> Of course mac80211 would also assign the interfaces to channel contexts
+> as needed -- if a given interface is already on channel 1, the next one
+> wouldn't need a new channel context if it also uses channel 1 and the
+> channel types are compatible. But that reminds me -- when we do that we
+> may have to update the channel context to change its channel type, so
+> add an operation for that.
+>
+>
+> Wrt. off-channel, I'm not sure I've understood you correctly. The
+> current off-channel is a very short-lived thing that doesn't really use
+> a "complete" channel context. In fact, in our implementation it is
+> completely separate since it's temporary (**).
+
+Maybe you're right, but how can we then express off-channel in a neat 
+clean way? If we use channel contexts we get software AND hardware 
+off-channel (as long as the device supports it) at the same time.
+
+If it's a concern that userspace may want to start a new interface on a 
+different channel while off-channel is taking up "a precious channel 
+context", we may either do -EBUSY or just sleep a few seconds/defer the 
+work if the off-channel is really short-lived.
+
+Also if we consider channel contexts that can't do normal operation at 
+all - there wouldn't be such problem since they would never be used for 
+anything but off-channel.
+
+
+>
+> As far as scanning is concerned, I'm not really sure. I haven't spent
+> much time thinking about it since we have hardware offload for it (and
+> also off-channel) -- I'm not sure what a good solution would be.
+>
+> johannes
+>
+>
+> (*) after we refactor cfg80211_can_change_interface() and export
+> cfg80211_get_current_combination() that returns the pointer to the
+> combination that's currently in use, or something like that. We'd have
+> to figure out if another combination is available that has more channels
+> though, if needed.
+
+Is there a lot of work to be done?
+
+
+> (**) However, we're thinking about implementing a P2P-device context
+> that would allow offloading things like periodic listen
+> (discoverability) or find (search + listen). That would probably use a
+> channel context then.
+
+But that wouldn't need a permanent channel context, would it? It'll 
+probably be cheap to attach/detach channel contexts.
+
+
+ >> Should we add capability
+ >> flags for each ieee80211_channel_stream? Or we could add new driver
+ >> callback, eg. "set_channel_try" and allow the driver to decide
+ >> whether it allows a certain hardware state or not.
+ >
+ > This is not a fully feasible "stream" anyway. Think of it more like a
+ > single scan dwell -- you wouldn't express that as a separate "stream"
+ > I think?
+
+Why not? Should we care what vif we're working with, or hw for that 
+matter? Off-channel, as well as other operation means we want to do 
+something on a certain channel. It shouldn't matter how long we use that 
+channel (except if we're borrowing time from another operational mode).
+
+
+Another question would be if we could do software multi-channel 
+operation. Do you think it's even possible and worth exploring?
+
+
+
+-- Pozdrawiam / Best regards, Michal Kazior.
 
