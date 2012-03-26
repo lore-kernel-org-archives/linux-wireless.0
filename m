@@ -1,214 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43704 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965108Ab2CEUiG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:38:06 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 13/33] iwlwifi: remove SKU from config
-Date: Mon,  5 Mar 2012 11:24:31 -0800
-Message-Id: <1330975491-19680-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213817_268418_06174EC8)
-In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:53625 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753666Ab2CZIva (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 04:51:30 -0400
+Message-ID: <1332751883.3511.5.camel@jlt3.sipsolutions.net> (sfid-20120326_105133_997759_B297BFF8)
+Subject: Re: Dell E6400 + Windows XP can not work on intel N-6205 AP mode
+ for compat-wireless-2012-03-18.tar.bz2 package
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Zhong Hongbo <hongbo.zhong@windriver.com>
+Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org,
+	"Cao, Qingtao (Harry)" <Qingtao.Cao@windriver.com>,
+	"Gao, Guijin" <Guijin.Gao@windriver.com>,
+	"'Cabuk, Yusuf'" <Yusuf.Cabuk@windriver.com>,
+	"'Foglia, Michael'" <Michael.Foglia@windriver.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Date: Mon, 26 Mar 2012 10:51:23 +0200
+In-Reply-To: <4F6B1D8B.8060306@windriver.com>
+References: <4F687667.1030605@windriver.com>
+	  <1332247526.3329.17.camel@jlt3.sipsolutions.net>
+	  <4F687D82.2010201@windriver.com>  <4F687F4E.4030203@windriver.com>
+	 <1332248855.3329.18.camel@jlt3.sipsolutions.net>
+	 <4F6B1D8B.8060306@windriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-There's no SKU override, we always just use
-it from EEPROM. As such, we can remove it
-from the config and use it in hw_param only.
-Since iwl_eeprom_check_sku() really needs
-to fill it in also rename that to
-iwl_eeprom_init_hw_params().
+Sorry for the delay.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    5 ++---
- drivers/net/wireless/iwlwifi/iwl-core.c     |    8 ++++----
- drivers/net/wireless/iwlwifi/iwl-eeprom.c   |   20 +++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-eeprom.h   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-shared.h   |    2 --
- 7 files changed, 19 insertions(+), 24 deletions(-)
+> Today, I test Intel Centrino N-6205 Taylor Peak on Linux 2.6.39, It work perfect on Windows XP. 
+> 'PS debugging in ma80211'?, Do you mean that I open the 'CONFIG_MAC80211_DEBUGFS=y' and See the log?
+> The detail step as following:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 2470ca7..79ac7cb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -235,7 +235,7 @@ int iwlagn_txfifo_flush(struct iwl_priv *priv, u16 flush_control)
- 				IWL_PAN_SCD_BK_MSK | IWL_PAN_SCD_MGMT_MSK |
- 				IWL_PAN_SCD_MULTICAST_MSK;
- 
--	if (cfg(priv)->sku & EEPROM_SKU_CAP_11N_ENABLE)
-+	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
- 		flush_cmd.fifo_control |= IWL_AGG_TX_QUEUE_MSK;
- 
- 	IWL_DEBUG_INFO(priv, "fifo queue control: 0X%x\n",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c14eda0..e1bf125 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1124,13 +1124,12 @@ static void iwl_set_hw_params(struct iwl_priv *priv)
- 			get_order(IWL_RX_BUF_SIZE_4K);
- 
- 	if (iwlagn_mod_params.disable_11n & IWL_DISABLE_HT_ALL)
--		cfg(priv)->sku &= ~EEPROM_SKU_CAP_11N_ENABLE;
-+		hw_params(priv).sku &= ~EEPROM_SKU_CAP_11N_ENABLE;
- 
- 	hw_params(priv).num_ampdu_queues =
- 		cfg(priv)->base_params->num_of_ampdu_queues;
- 	hw_params(priv).shadow_reg_enable =
- 		cfg(priv)->base_params->shadow_reg_enable;
--	hw_params(priv).sku = cfg(priv)->sku;
- 	hw_params(priv).wd_timeout = cfg(priv)->base_params->wd_timeout;
- 
- 	/* Device-specific setup */
-@@ -1257,7 +1256,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans)
- 	if (err)
- 		goto out_free_eeprom;
- 
--	err = iwl_eeprom_check_sku(priv);
-+	err = iwl_eeprom_init_hw_params(priv);
- 	if (err)
- 		goto out_free_eeprom;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 67c82a4..3c1b1e9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -137,7 +137,7 @@ int iwl_init_geos(struct iwl_priv *priv)
- 	sband->bitrates = &rates[IWL_FIRST_OFDM_RATE];
- 	sband->n_bitrates = IWL_RATE_COUNT_LEGACY - IWL_FIRST_OFDM_RATE;
- 
--	if (cfg(priv)->sku & EEPROM_SKU_CAP_11N_ENABLE)
-+	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
- 		iwl_init_ht_hw_capab(priv, &sband->ht_cap,
- 					 IEEE80211_BAND_5GHZ);
- 
-@@ -147,7 +147,7 @@ int iwl_init_geos(struct iwl_priv *priv)
- 	sband->bitrates = rates;
- 	sband->n_bitrates = IWL_RATE_COUNT_LEGACY;
- 
--	if (cfg(priv)->sku & EEPROM_SKU_CAP_11N_ENABLE)
-+	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
- 		iwl_init_ht_hw_capab(priv, &sband->ht_cap,
- 					 IEEE80211_BAND_2GHZ);
- 
-@@ -202,11 +202,11 @@ int iwl_init_geos(struct iwl_priv *priv)
- 	priv->tx_power_next = max_tx_power;
- 
- 	if ((priv->bands[IEEE80211_BAND_5GHZ].n_channels == 0) &&
--	     cfg(priv)->sku & EEPROM_SKU_CAP_BAND_52GHZ) {
-+	     hw_params(priv).sku & EEPROM_SKU_CAP_BAND_52GHZ) {
- 		IWL_INFO(priv, "Incorrectly detected BG card as ABG. "
- 			"Please send your %s to maintainer.\n",
- 			trans(priv)->hw_id_str);
--		cfg(priv)->sku &= ~EEPROM_SKU_CAP_BAND_52GHZ;
-+		hw_params(priv).sku &= ~EEPROM_SKU_CAP_BAND_52GHZ;
- 	}
- 
- 	IWL_INFO(priv, "Tunable channels: %d 802.11bg, %d 802.11a channels\n",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index 07e9378..d8668bc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -252,26 +252,24 @@ err:
- 
- }
- 
--int iwl_eeprom_check_sku(struct iwl_priv *priv)
-+int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
- {
- 	struct iwl_shared *shrd = priv->shrd;
- 	u16 radio_cfg;
- 
--	if (!cfg(priv)->sku) {
--		/* not using sku overwrite */
--		cfg(priv)->sku = iwl_eeprom_query16(shrd, EEPROM_SKU_CAP);
--		if (cfg(priv)->sku & EEPROM_SKU_CAP_11N_ENABLE &&
--		    !cfg(priv)->ht_params) {
--			IWL_ERR(priv, "Invalid 11n configuration\n");
--			return -EINVAL;
--		}
-+	hw_params(priv).sku = iwl_eeprom_query16(shrd, EEPROM_SKU_CAP);
-+	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE &&
-+	    !cfg(priv)->ht_params) {
-+		IWL_ERR(priv, "Invalid 11n configuration\n");
-+		return -EINVAL;
- 	}
--	if (!cfg(priv)->sku) {
-+
-+	if (!hw_params(priv).sku) {
- 		IWL_ERR(priv, "Invalid device sku\n");
- 		return -EINVAL;
- 	}
- 
--	IWL_INFO(priv, "Device SKU: 0x%X\n", cfg(priv)->sku);
-+	IWL_INFO(priv, "Device SKU: 0x%X\n", hw_params(priv).sku);
- 
- 	if (!cfg(priv)->valid_tx_ant && !cfg(priv)->valid_rx_ant) {
- 		/* not using .cfg overwrite */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index cbb8611..3b17056 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -309,7 +309,7 @@ struct iwl_eeprom_ops {
- int iwl_eeprom_init(struct iwl_trans *trans, u32 hw_rev);
- void iwl_eeprom_free(struct iwl_shared *shrd);
- int  iwl_eeprom_check_version(struct iwl_priv *priv);
--int  iwl_eeprom_check_sku(struct iwl_priv *priv);
-+int iwl_eeprom_init_hw_params(struct iwl_priv *priv);
- const u8 *iwl_eeprom_query_addr(const struct iwl_shared *shrd, size_t offset);
- u16 iwl_eeprom_query16(const struct iwl_shared *shrd, size_t offset);
- int iwl_init_channel_map(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 005763f..8b26f32 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -161,7 +161,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 	hw->flags |= IEEE80211_HW_SUPPORTS_PS |
- 		     IEEE80211_HW_SUPPORTS_DYNAMIC_PS;
- 
--	if (cfg(priv)->sku & EEPROM_SKU_CAP_11N_ENABLE)
-+	if (hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE)
- 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
- 			     IEEE80211_HW_SUPPORTS_STATIC_SMPS;
- 
-@@ -633,7 +633,7 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 	IWL_DEBUG_HT(priv, "A-MPDU action on addr %pM tid %d\n",
- 		     sta->addr, tid);
- 
--	if (!(cfg(priv)->sku & EEPROM_SKU_CAP_11N_ENABLE))
-+	if (!(hw_params(priv).sku & EEPROM_SKU_CAP_11N_ENABLE))
- 		return -EACCES;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 239dfbc..11184f1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -282,7 +282,6 @@ enum iwl_led_mode {
-  * @max_data_size: The maximal length of the fw data section
-  * @valid_tx_ant: valid transmit antenna
-  * @valid_rx_ant: valid receive antenna
-- * @sku: sku information from EEPROM
-  * @eeprom_ver: EEPROM version
-  * @eeprom_calib_ver: EEPROM calibration version
-  * @lib: pointer to the lib ops
-@@ -321,7 +320,6 @@ struct iwl_cfg {
- 	const u32 max_inst_size;
- 	u8   valid_tx_ant;
- 	u8   valid_rx_ant;
--	u16  sku;
- 	u16  eeprom_ver;
- 	u16  eeprom_calib_ver;
- 	const struct iwl_lib_ops *lib;
--- 
-1.7.0.4
+No, I meant CONFIG_MAC80211_VERBOSE_PS_DEBUG, but given that the iPhone
+works, I can't convince myself that powersave could be the issue.
+
+Maybe you could enable CONFIG_MAC80211_HT_DEBUG instead and see if it's
+related to aggregation?
+
+johannes
 
