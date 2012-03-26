@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:33516 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753595Ab2CRMIg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 08:08:36 -0400
-Received: by wejx9 with SMTP id x9so5136426wej.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Mar 2012 05:08:34 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: remove outdated comment
-Date: Sun, 18 Mar 2012 14:08:50 +0200
-Message-Id: <1332072530-15466-1-git-send-email-eliad@wizery.com> (sfid-20120318_130839_274017_1E216DD8)
+Received: from mms3.broadcom.com ([216.31.210.19]:1797 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932740Ab2CZRPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 13:15:54 -0400
+Message-ID: <4F70A435.7050906@broadcom.com> (sfid-20120326_191557_692246_6354C061)
+Date: Mon, 26 Mar 2012 19:15:33 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>,
+	"jrnieder@gmail.com" <jrnieder@gmail.com>
+Subject: Re: brcmsmac still woes, possible regression?
+References: <CAKprTDELdRWtJWpmn9RMuMUYXxuaR6Cf41+jot4_fZixHQtcMw@mail.gmail.com>
+ <4F6D939F.3030206@broadcom.com>
+ <CAKprTDHSyh2Sv2wyY0hg4cjzWobV-zA4stY19-vB_hOBVAq5KQ@mail.gmail.com>
+ <CAKprTDHpLtPu2+navGzJU9K8XX-h=Purw_q_Qs2mYn4QFEex+w@mail.gmail.com>
+ <4F7035AD.1080503@broadcom.com> <20120326143232.GA17126@thinkpad-t410>
+ <4F709F3E.1090405@broadcom.com> <20120326171301.GC17126@thinkpad-t410>
+In-Reply-To: <20120326171301.GC17126@thinkpad-t410>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The on-oper-channel optimization was reverted,
-so remove the outdated comment as well.
+On 03/26/2012 07:13 PM, Seth Forshee wrote:
+> On Mon, Mar 26, 2012 at 06:54:22PM +0200, Arend van Spriel wrote:
+>> I suspect the warning is caused because mac80211 flush callback is
+>> done after scanning on channels 12 and/or 13. I have a quick fix.
+>> The longer and preferred fix would be to cleanup channel.c and
+>> incorporate your regdom change. I plan to do that in separate
+>> patches.
+>
+> At this point I think the regdom patch I sent is incomplete. We can do a
+> lot better. I'll follow up on the other thread a little later today with
+> my thoughts.
+>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/main.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+Agree. And I will keep an eye on my email ;-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 7f99551..83233fd 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -102,9 +102,6 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
- 
- 	might_sleep();
- 
--	/* If this off-channel logic ever changes,  ieee80211_on_oper_channel
--	 * may need to change as well.
--	 */
- 	offchannel_flag = local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
- 	if (local->scan_channel) {
- 		chan = local->scan_channel;
--- 
-1.7.6.401.g6a319
+Gr. AvS
+
 
