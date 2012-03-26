@@ -1,122 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33696 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932583Ab2CPT7a (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:40584 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932473Ab2CZOci (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 15:59:30 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 2/4] mac80211:  Support getting sta_info stats via ethtool.
-Date: Fri, 16 Mar 2012 12:59:10 -0700
-Message-Id: <1331927952-8706-2-git-send-email-greearb@candelatech.com> (sfid-20120316_205945_542022_CB39D3A7)
-In-Reply-To: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
-References: <1331927952-8706-1-git-send-email-greearb@candelatech.com>
+	Mon, 26 Mar 2012 10:32:38 -0400
+Date: Mon, 26 Mar 2012 09:32:32 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>,
+	"jrnieder@gmail.com" <jrnieder@gmail.com>
+Subject: Re: brcmsmac still woes, possible regression?
+Message-ID: <20120326143232.GA17126@thinkpad-t410> (sfid-20120326_163243_779824_EAE65089)
+References: <CAKprTDELdRWtJWpmn9RMuMUYXxuaR6Cf41+jot4_fZixHQtcMw@mail.gmail.com>
+ <4F6D939F.3030206@broadcom.com>
+ <CAKprTDHSyh2Sv2wyY0hg4cjzWobV-zA4stY19-vB_hOBVAq5KQ@mail.gmail.com>
+ <CAKprTDHpLtPu2+navGzJU9K8XX-h=Purw_q_Qs2mYn4QFEex+w@mail.gmail.com>
+ <4F7035AD.1080503@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4F7035AD.1080503@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Mon, Mar 26, 2012 at 11:23:57AM +0200, Arend van Spriel wrote:
+> On 03/24/2012 12:21 PM, Camaleón wrote:
+> >2012/3/24 Camaleón<noelamac@gmail.com>:
+> >
+> >>I will keep and eye on this, bu all seems good and working fine now.
+> >
+> >Okay, I got another trace :-(
+> >
+> >NetworkManager asked for the password (which was already set and
+> >printed at the input box, I didn't have to type it again) and
+> >reconnected fine but it logged the trace at /var/log/messages.
+> >
+> >See attached files.
+> >
+> 
+> The WARNING message is preceded by a cfg80211 message regarding
+> world regulatory domain. I suspect there is a relatio, but not sure
+> what it is. Regarding channels 12 and 13 I will come up with a fix
+> today and send you the patch to try.
 
-This lets ethtool print out stats related to station
-interfaces.  Does not yet get stats from the underlying
-driver.
+The trace is related to handling a disconnection, which will also
+trigger a reprocessing of the regulatory rules. The warning and the
+regulatory message share a common cause, but I don't think there's a
+direct relationship between them.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-v2:  Minor changes to make next patch that adds calls
-     into the driver smaller/cleaner.
+This also seems to indicate that by the time either of these messages
+appears the connection with the AP is already in the process of being
+dropped. I don't think the regulatory messages give any cluse as to why
+the connection was dropped. I suppose the warning might but I don't
+know.
 
-:100644 100644 cf5b08a... bb834d7... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 71 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index cf5b08a..bb834d7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -112,6 +112,74 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
-+	"rx_packets", "rx_bytes", "wep_weak_iv_count",
-+	"rx_duplicates", "rx_fragments", "rx_dropped",
-+	"tx_packets", "tx_bytes", "tx_fragments",
-+	"tx_filtered", "tx_retry_failed", "tx_retries",
-+	"beacon_loss"
-+};
-+#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
-+
-+static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return STA_STATS_LEN;
-+
-+	return -EOPNOTSUPP;
-+}
-+
-+static void ieee80211_get_et_stats(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   struct ethtool_stats *stats,
-+				   u64 *data)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+	struct ieee80211_local *local = sdata->local;
-+
-+	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		int i = 0;
-+
-+		/* Make sure this station belongs to the proper dev */
-+		if (sta->sdata->dev != dev)
-+			continue;
-+
-+		data[i++] += sta->rx_packets;
-+		data[i++] += sta->rx_bytes;
-+		data[i++] += sta->wep_weak_iv_count;
-+		data[i++] += sta->num_duplicates;
-+		data[i++] += sta->rx_fragments;
-+		data[i++] += sta->rx_dropped;
-+
-+		data[i++] += sta->tx_packets;
-+		data[i++] += sta->tx_bytes;
-+		data[i++] += sta->tx_fragments;
-+		data[i++] += sta->tx_filtered_count;
-+		data[i++] += sta->tx_retry_failed;
-+		data[i++] += sta->tx_retry_count;
-+		data[i++] += sta->beacon_loss_count;
-+		BUG_ON(i != STA_STATS_LEN);
-+	}
-+	rcu_read_unlock();
-+}
-+
-+static void ieee80211_get_et_strings(struct wiphy *wiphy,
-+				     struct net_device *dev,
-+				     u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS) {
-+		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
-+		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
-+	}
-+}
-+
-+
- static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
- 			     struct key_params *params)
-@@ -2768,4 +2836,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.probe_client = ieee80211_probe_client,
- 	.get_channel = ieee80211_wiphy_get_channel,
- 	.set_noack_map = ieee80211_set_noack_map,
-+	.get_et_sset_count = ieee80211_get_et_sset_count,
-+	.get_et_stats = ieee80211_get_et_stats,
-+	.get_et_strings = ieee80211_get_et_strings,
- };
--- 
-1.7.3.4
+Seth
 
