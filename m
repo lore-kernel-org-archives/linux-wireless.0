@@ -1,212 +1,310 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20333 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759718Ab2CGTGg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:36 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51303 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933059Ab2CZSuQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 14:50:16 -0400
+Received: by mail-iy0-f174.google.com with SMTP id z16so8605045iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2012 11:50:16 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 23/35] iwlwifi: separate status to priv and trans
-Date: Wed,  7 Mar 2012 09:52:32 -0800
-Message-Id: <1331142764-5750-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200713_398678_EAE215F7)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/6] rtlwifi: Move dig_t and ps_t structs
+Date: Mon, 26 Mar 2012 13:49:52 -0500
+Message-Id: <1332787797-26475-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120326_205021_768460_115F3A50)
+In-Reply-To: <1332787797-26475-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1332787797-26475-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+Move struct definitions for dig_t and ps_t to the common header file.
 
-The shared status bits are a mixture of transport and op mode bits.
-Some are used just by one or the other, some are shared.  Begin the
-de-tangling of these bits.
+This move is needed to convert these structures from a "per-driver" to a
+"per-interface" basis.
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |   16 +++++++---------
- drivers/net/wireless/iwlwifi/iwl-agn.h            |    9 ++-------
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    6 +-----
- drivers/net/wireless/iwlwifi/iwl-dev.h            |    1 +
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 ++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    2 --
- 7 files changed, 14 insertions(+), 24 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h |   34 ------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.h       |   34 ------------
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.h       |   49 -----------------
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.h       |   42 ---------------
+ drivers/net/wireless/rtlwifi/wifi.h               |   59 +++++++++++++++++++++
+ 5 files changed, 59 insertions(+), 159 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 6d8a857..3fed4bb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1291,7 +1291,7 @@ int iwlagn_suspend(struct iwl_priv *priv, struct cfg80211_wowlan *wowlan)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
+index 2178e37..b3180ea 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
+@@ -91,40 +91,6 @@
+ #define TX_POWER_NEAR_FIELD_THRESH_LVL2		74
+ #define TX_POWER_NEAR_FIELD_THRESH_LVL1		67
  
- int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- {
--	if (iwl_is_rfkill(priv->shrd) || iwl_is_ctkill(priv->shrd)) {
-+	if (iwl_is_rfkill(priv->shrd) || iwl_is_ctkill(priv)) {
- 		IWL_WARN(priv, "Not sending command - %s KILL\n",
- 			 iwl_is_rfkill(priv->shrd) ? "RF" : "CT");
- 		return -EIO;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-index 9a12b70..fa94153 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
-@@ -233,7 +233,7 @@ static void iwl_tt_ready_for_ct_kill(unsigned long data)
- 		IWL_DEBUG_TEMP(priv, "entering CT_KILL state when "
- 				"temperature timer expired\n");
- 		tt->state = IWL_TI_CT_KILL;
--		set_bit(STATUS_CT_KILL, &priv->shrd->status);
-+		set_bit(STATUS_CT_KILL, &priv->status);
- 		iwl_perform_ct_kill_task(priv, true);
- 	}
- }
-@@ -313,22 +313,21 @@ static void iwl_legacy_tt_handler(struct iwl_priv *priv, s32 temp, bool force)
- 		}
- 		mutex_lock(&priv->mutex);
- 		if (old_state == IWL_TI_CT_KILL)
--			clear_bit(STATUS_CT_KILL, &priv->shrd->status);
-+			clear_bit(STATUS_CT_KILL, &priv->status);
- 		if (tt->state != IWL_TI_CT_KILL &&
- 		    iwl_power_update_mode(priv, true)) {
- 			/* TT state not updated
- 			 * try again during next temperature read
- 			 */
- 			if (old_state == IWL_TI_CT_KILL)
--				set_bit(STATUS_CT_KILL, &priv->shrd->status);
-+				set_bit(STATUS_CT_KILL, &priv->status);
- 			tt->state = old_state;
- 			IWL_ERR(priv, "Cannot update power mode, "
- 					"TT state not updated\n");
- 		} else {
- 			if (tt->state == IWL_TI_CT_KILL) {
- 				if (force) {
--					set_bit(STATUS_CT_KILL,
--						&priv->shrd->status);
-+					set_bit(STATUS_CT_KILL, &priv->status);
- 					iwl_perform_ct_kill_task(priv, true);
- 				} else {
- 					iwl_prepare_ct_kill_task(priv);
-@@ -454,7 +453,7 @@ static void iwl_advance_tt_handler(struct iwl_priv *priv, s32 temp, bool force)
- 		}
- 		mutex_lock(&priv->mutex);
- 		if (old_state == IWL_TI_CT_KILL)
--			clear_bit(STATUS_CT_KILL, &priv->shrd->status);
-+			clear_bit(STATUS_CT_KILL, &priv->status);
- 		if (tt->state != IWL_TI_CT_KILL &&
- 		    iwl_power_update_mode(priv, true)) {
- 			/* TT state not updated
-@@ -463,7 +462,7 @@ static void iwl_advance_tt_handler(struct iwl_priv *priv, s32 temp, bool force)
- 			IWL_ERR(priv, "Cannot update power mode, "
- 					"TT state not updated\n");
- 			if (old_state == IWL_TI_CT_KILL)
--				set_bit(STATUS_CT_KILL, &priv->shrd->status);
-+				set_bit(STATUS_CT_KILL, &priv->status);
- 			tt->state = old_state;
- 		} else {
- 			IWL_DEBUG_TEMP(priv,
-@@ -474,8 +473,7 @@ static void iwl_advance_tt_handler(struct iwl_priv *priv, s32 temp, bool force)
- 				if (force) {
- 					IWL_DEBUG_TEMP(priv,
- 						"Enter IWL_TI_CT_KILL\n");
--					set_bit(STATUS_CT_KILL,
--						&priv->shrd->status);
-+					set_bit(STATUS_CT_KILL, &priv->status);
- 					iwl_perform_ct_kill_task(priv, true);
- 				} else {
- 					iwl_prepare_ct_kill_task(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 6345ab0..ede1852 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -367,11 +367,6 @@ static inline int iwl_is_alive(struct iwl_shared *shrd)
- 	return test_bit(STATUS_ALIVE, &shrd->status);
- }
- 
--static inline int iwl_is_init(struct iwl_shared *shrd)
--{
--	return test_bit(STATUS_INIT, &shrd->status);
--}
+-struct ps_t {
+-	u8 pre_ccastate;
+-	u8 cur_ccasate;
+-	u8 pre_rfstate;
+-	u8 cur_rfstate;
+-	long rssi_val_min;
+-};
 -
- static inline int iwl_is_rfkill_hw(struct iwl_shared *shrd)
- {
- 	return test_bit(STATUS_RF_KILL_HW, &shrd->status);
-@@ -382,9 +377,9 @@ static inline int iwl_is_rfkill(struct iwl_shared *shrd)
- 	return iwl_is_rfkill_hw(shrd);
- }
+-struct dig_t {
+-	u8 dig_enable_flag;
+-	u8 dig_ext_port_stage;
+-	u32 rssi_lowthresh;
+-	u32 rssi_highthresh;
+-	u32 fa_lowthresh;
+-	u32 fa_highthresh;
+-	u8 cursta_connectctate;
+-	u8 presta_connectstate;
+-	u8 curmultista_connectstate;
+-	u8 pre_igvalue;
+-	u8 cur_igvalue;
+-	char backoff_val;
+-	char backoff_val_range_max;
+-	char backoff_val_range_min;
+-	u8 rx_gain_range_max;
+-	u8 rx_gain_range_min;
+-	u8 rssi_val_min;
+-	u8 pre_cck_pd_state;
+-	u8 cur_cck_pd_state;
+-	u8 pre_cck_fa_state;
+-	u8 cur_cck_fa_state;
+-	u8 pre_ccastate;
+-	u8 cur_ccasate;
+-};
+-
+ struct swat_t {
+ 	u8 failure_cnt;
+ 	u8 try_flag;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
+index 26747fa..56611d7 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
+@@ -86,40 +86,6 @@
+ #define TX_POWER_NEAR_FIELD_THRESH_LVL2		74
+ #define TX_POWER_NEAR_FIELD_THRESH_LVL1		67
  
--static inline int iwl_is_ctkill(struct iwl_shared *shrd)
-+static inline int iwl_is_ctkill(struct iwl_priv *priv)
- {
--	return test_bit(STATUS_CT_KILL, &shrd->status);
-+	return test_bit(STATUS_CT_KILL, &priv->status);
- }
+-struct ps_t {
+-	u8 pre_ccastate;
+-	u8 cur_ccasate;
+-	u8 pre_rfstate;
+-	u8 cur_rfstate;
+-	long rssi_val_min;
+-};
+-
+-struct dig_t {
+-	u8 dig_enable_flag;
+-	u8 dig_ext_port_stage;
+-	u32 rssi_lowthresh;
+-	u32 rssi_highthresh;
+-	u32 fa_lowthresh;
+-	u32 fa_highthresh;
+-	u8 cursta_connectctate;
+-	u8 presta_connectstate;
+-	u8 curmultista_connectstate;
+-	u8 pre_igvalue;
+-	u8 cur_igvalue;
+-	char backoff_val;
+-	char backoff_val_range_max;
+-	char backoff_val_range_min;
+-	u8 rx_gain_range_max;
+-	u8 rx_gain_range_min;
+-	u8 rssi_val_min;
+-	u8 pre_cck_pd_state;
+-	u8 cur_cck_pd_state;
+-	u8 pre_cck_fa_state;
+-	u8 cur_cck_fa_state;
+-	u8 pre_ccastate;
+-	u8 cur_ccasate;
+-};
+-
+ struct swat_t {
+ 	u8 failure_cnt;
+ 	u8 try_flag;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
+index 91030ec..7ede6a7 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
+@@ -87,55 +87,6 @@
+ #define TX_POWER_NEAR_FIELD_THRESH_LVL1		67
+ #define INDEX_MAPPING_NUM			13
  
- static inline int iwl_is_ready_rf(struct iwl_shared *shrd)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 5e1b078..71f8cc8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -530,15 +530,11 @@ static ssize_t iwl_dbgfs_status_read(struct file *file,
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_RF_KILL_HW:\t %d\n",
- 		test_bit(STATUS_RF_KILL_HW, &priv->shrd->status));
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_CT_KILL:\t\t %d\n",
--		test_bit(STATUS_CT_KILL, &priv->shrd->status));
--	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_INIT:\t\t %d\n",
--		test_bit(STATUS_INIT, &priv->shrd->status));
-+		test_bit(STATUS_CT_KILL, &priv->status));
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_ALIVE:\t\t %d\n",
- 		test_bit(STATUS_ALIVE, &priv->shrd->status));
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_READY:\t\t %d\n",
- 		test_bit(STATUS_READY, &priv->shrd->status));
--	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_TEMPERATURE:\t %d\n",
--		test_bit(STATUS_TEMPERATURE, &priv->shrd->status));
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_GEO_CONFIGURED:\t %d\n",
- 		test_bit(STATUS_GEO_CONFIGURED, &priv->shrd->status));
- 	pos += scnprintf(buf + pos, bufsz - pos, "STATUS_EXIT_PENDING:\t %d\n",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index c3f372e..1b05fae 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -713,6 +713,7 @@ struct iwl_priv {
- 	/*data shared among all the driver's layers */
- 	struct iwl_shared *shrd;
- 	const struct iwl_fw *fw;
-+	unsigned long status;
+-struct ps_t {
+-	u8 pre_ccastate;
+-	u8 cur_ccasate;
+-
+-	u8 pre_rfstate;
+-	u8 cur_rfstate;
+-
+-	long rssi_val_min;
+-};
+-
+-struct dig_t {
+-	u8 dig_enable_flag;
+-	u8 dig_ext_port_stage;
+-
+-	u32 rssi_lowthresh;
+-	u32 rssi_highthresh;
+-
+-	u32 fa_lowthresh;
+-	u32 fa_highthresh;
+-
+-	u8 cursta_connectctate;
+-	u8 presta_connectstate;
+-	u8 curmultista_connectstate;
+-
+-	u8 pre_igvalue;
+-	u8 cur_igvalue;
+-
+-	char backoff_val;
+-	char backoff_val_range_max;
+-	char backoff_val_range_min;
+-	u8 rx_gain_range_max;
+-	u8 rx_gain_range_min;
+-	u8 min_undecorated_pwdb_for_dm;
+-	long last_min_undecorated_pwdb_for_dm;
+-
+-	u8 pre_cck_pd_state;
+-	u8 cur_cck_pd_state;
+-
+-	u8 pre_cck_fa_state;
+-	u8 cur_cck_fa_state;
+-
+-	u8 pre_ccastate;
+-	u8 cur_ccasate;
+-
+-	u8 large_fa_hit;
+-	u8 forbidden_igi;
+-	u32 recover_cnt;
+-};
+-
+ struct swat {
+ 	u8 failure_cnt;
+ 	u8 try_flag;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
+index e1b19a6..f8ace73 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
+@@ -29,48 +29,6 @@
+ #ifndef	__RTL_92S_DM_H__
+ #define __RTL_92S_DM_H__
  
- 	spinlock_t sta_lock;
- 	struct mutex mutex;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 93d89a3..16a32ae 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -247,6 +247,7 @@ struct iwl_tx_queue {
-  * @hw_base: pci hardware address support
-  * @ucode_write_complete: indicates that the ucode has been copied.
-  * @ucode_write_waitq: wait queue for uCode load
-+ * @status - transport specific status flags
-  */
- struct iwl_trans_pcie {
- 	struct iwl_rx_queue rxq;
-@@ -287,6 +288,7 @@ struct iwl_trans_pcie {
- 
- 	bool ucode_write_complete;
- 	wait_queue_head_t ucode_write_waitq;
-+	unsigned long status;
+-struct dig_t {
+-	u8 dig_enable_flag;
+-	u8 dig_algorithm;
+-	u8 dig_twoport_algorithm;
+-	u8 dig_ext_port_stage;
+-	u8 dig_dbgmode;
+-	u8 dig_slgorithm_switch;
+-
+-	long rssi_lowthresh;
+-	long rssi_highthresh;
+-
+-	u32 fa_lowthresh;
+-	u32 fa_highthresh;
+-
+-	long rssi_highpower_lowthresh;
+-	long rssi_highpower_highthresh;
+-
+-	u8 dig_state;
+-	u8 dig_highpwrstate;
+-	u8 cur_sta_connectstate;
+-	u8 pre_sta_connectstate;
+-	u8 cur_ap_connectstate;
+-	u8 pre_ap_connectstate;
+-
+-	u8 cur_pd_thstate;
+-	u8 pre_pd_thstate;
+-	u8 cur_cs_ratiostate;
+-	u8 pre_cs_ratiostate;
+-
+-	u32 pre_igvalue;
+-	u32	cur_igvalue;
+-
+-	u8 backoff_enable_flag;
+-	char backoff_val;
+-	char backoffval_range_max;
+-	char backoffval_range_min;
+-	u8 rx_gain_range_max;
+-	u8 rx_gain_range_min;
+-
+-	long rssi_val;
+-};
+-
+ enum dm_dig_alg {
+ 	DIG_ALGO_BY_FALSE_ALARM = 0,
+ 	DIG_ALGO_BY_RSSI	= 1,
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index 28ebc69..46e7505 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1592,6 +1592,65 @@ struct rtl_debug {
+ 	char proc_name[20];
  };
  
- #define IWL_TRANS_GET_PCIE_TRANS(_iwl_trans) \
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 1d35d0e..4e56c3b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -840,8 +840,6 @@ static int iwl_nic_init(struct iwl_trans *trans)
- 			0x800FFFFF);
- 	}
- 
--	set_bit(STATUS_INIT, &trans->shrd->status);
--
- 	return 0;
- }
- 
++struct ps_t {
++	u8 pre_ccastate;
++	u8 cur_ccasate;
++	u8 pre_rfstate;
++	u8 cur_rfstate;
++	long rssi_val_min;
++};
++
++struct dig_t {
++	u32 rssi_lowthresh;
++	u32 rssi_highthresh;
++	u32 fa_lowthresh;
++	u32 fa_highthresh;
++	long last_min_undecorated_pwdb_for_dm;
++	long rssi_highpower_lowthresh;
++	long rssi_highpower_highthresh;
++	u32 recover_cnt;
++	u32 pre_igvalue;
++	u32 cur_igvalue;
++	long rssi_val;
++	u8 dig_enable_flag;
++	u8 dig_ext_port_stage;
++	u8 dig_algorithm;
++	u8 dig_twoport_algorithm;
++	u8 dig_dbgmode;
++	u8 dig_slgorithm_switch;
++	u8 cursta_connectctate;
++	u8 presta_connectstate;
++	u8 curmultista_connectstate;
++	char backoff_val;
++	char backoff_val_range_max;
++	char backoff_val_range_min;
++	u8 rx_gain_range_max;
++	u8 rx_gain_range_min;
++	u8 min_undecorated_pwdb_for_dm;
++	u8 rssi_val_min;
++	u8 pre_cck_pd_state;
++	u8 cur_cck_pd_state;
++	u8 pre_cck_fa_state;
++	u8 cur_cck_fa_state;
++	u8 pre_ccastate;
++	u8 cur_ccasate;
++	u8 large_fa_hit;
++	u8 forbidden_igi;
++	u8 dig_state;
++	u8 dig_highpwrstate;
++	u8 cur_sta_connectstate;
++	u8 pre_sta_connectstate;
++	u8 cur_ap_connectstate;
++	u8 pre_ap_connectstate;
++	u8 cur_pd_thstate;
++	u8 pre_pd_thstate;
++	u8 cur_cs_ratiostate;
++	u8 pre_cs_ratiostate;
++	u8 backoff_enable_flag;
++	char backoffval_range_max;
++	char backoffval_range_min;
++};
++
+ struct rtl_priv {
+ 	struct completion firmware_loading_complete;
+ 	struct rtl_locks locks;
 -- 
-1.7.0.4
+1.7.7
 
