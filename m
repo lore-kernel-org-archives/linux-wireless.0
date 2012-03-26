@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21225 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161445Ab2COU2E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 16:28:04 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/26] iwlwifi: remove scan_rx_antennas
-Date: Thu, 15 Mar 2012 13:26:50 -0700
-Message-Id: <1331843226-29860-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212849_580509_03F13FF9)
-In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:45311 "EHLO
+	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753251Ab2CZUKy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 16:10:54 -0400
+Received: by mail-lpp01m010-f42.google.com with SMTP id l5so9123788lah.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2012 13:10:53 -0700 (PDT)
+Message-ID: <1332792650.1347.27.camel@cumari> (sfid-20120326_221059_208544_C2B6BEA6)
+Subject: Re: [PATCH] mac80211: don't always advertise remain-on-channel
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>, Sujith <Sujith.Manoharan@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Mar 2012 23:10:50 +0300
+In-Reply-To: <1332780438.5435.53.camel@jlt3.sipsolutions.net>
+References: <1332780438.5435.53.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2012-03-26 at 18:47 +0200, Johannes Berg wrote: 
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Not all devices are really capable of implementing
+> remain-on-channel, even if it is implemented in SW,
+> as they can't necessarily deal with channel changes
+> while associated.
+> 
+> Remove the WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL and add
+> it only if either the driver has remain_on_channel
+> implemented in the driver/device.
+> 
+> Also add it to all drivers that advertise P2P right
+> now since those definitely have to have it working.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> I think e.g. wl1251 would completely get fucked up by this .. let's not
+> go there. Also iwlegacy wouldn't like offchannel much, and doesn't need
+> it since it'll never have P2P anyway.
 
-This is not (no longer?) used by any device
-so just remove it.
+Yes, I'm pretty sure it wouldn't work as is with wl1251.  So, let's
+leave it out.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c   |    3 ---
- drivers/net/wireless/iwlwifi/iwl-shared.h |    2 --
- 2 files changed, 0 insertions(+), 5 deletions(-)
+Otherwise, for the wl12xx part:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 902efe4..863ad0c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -793,9 +793,6 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 
- 	band = priv->scan_band;
- 
--	if (cfg(priv)->scan_rx_antennas[band])
--		rx_ant = cfg(priv)->scan_rx_antennas[band];
--
- 	if (band == IEEE80211_BAND_2GHZ &&
- 	    cfg(priv)->bt_params &&
- 	    cfg(priv)->bt_params->advanced_bt_coexist) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 229c4b9..f53feb8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -297,7 +297,6 @@ struct iwl_ht_params {
-  * @need_temp_offset_calib: need to perform temperature offset calibration
-  * @no_xtal_calib: some devices do not need crystal calibration data,
-  *	don't send it to those
-- * @scan_rx_antennas: available antenna for scan operation
-  * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
-  * @adv_pm: advance power management
-  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
-@@ -330,7 +329,6 @@ struct iwl_cfg {
- 	const struct iwl_bt_params *bt_params;
- 	const bool need_temp_offset_calib; /* if used set to true */
- 	const bool no_xtal_calib;
--	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
- 	enum iwl_led_mode led_mode;
- 	const bool adv_pm;
- 	const bool rx_with_siso_diversity;
+Acked-by: Luciano Coelho <coelho@ti.com>
+
 -- 
-1.7.0.4
+Cheers,
+Luca.
 
