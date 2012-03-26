@@ -1,40 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.mlbassoc.com ([64.234.241.98]:57509 "EHLO
-	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758958Ab2CAM2Q (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:55946 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751123Ab2CZANf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 07:28:16 -0500
-Message-ID: <4F4F6B5A.6060202@mlbassoc.com> (sfid-20120301_132820_468634_2732F6C9)
-Date: Thu, 01 Mar 2012 05:28:10 -0700
-From: Gary Thomas <gary@mlbassoc.com>
+	Sun, 25 Mar 2012 20:13:35 -0400
+Received: by eaaq12 with SMTP id q12so1382816eaa.19
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Mar 2012 17:13:34 -0700 (PDT)
 MIME-Version: 1.0
-To: Ohad Ben-Cohen <ohad@wizery.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: Problems with wl1271
-References: <4F4E903B.2030501@mlbassoc.com> <CAK=WgbbO2fv-hp6vJ8-rhRvzGgs26kd5UGWp_vWveXb_VmpsoA@mail.gmail.com>
-In-Reply-To: <CAK=WgbbO2fv-hp6vJ8-rhRvzGgs26kd5UGWp_vWveXb_VmpsoA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 26 Mar 2012 11:13:13 +1100
+Message-ID: <CAGRGNgVBwKppzMa7HZeWm+ZW1a7u0JKwxxFS2xCRv=bpxXnk+Q@mail.gmail.com> (sfid-20120326_021406_292924_8FBE6C68)
+Subject: Re: [PATCH] bcma: fix build error on MIPS; implicit pcibios_enable_device
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-01 05:13, Ohad Ben-Cohen wrote:
-> On Wed, Feb 29, 2012 at 10:53 PM, Gary Thomas<gary@mlbassoc.com>  wrote:
->> If I try to scan for an access point, I get nothing:
->>   # iw wlan0 scan
->>   --- Nothing prints
+Hi Paul,
+
+On Mon, Mar 26, 2012 at 11:02, Paul Gortmaker
+<paul.gortmaker@windriver.com> wrote:
+> The following is seen during allmodconfig builds for MIPS:
 >
-> You might be using a wrong reference clock value (see
-> include/linux/wl12xx.h for more info, look for 'clock').
+> drivers/bcma/driver_pci_host.c:518:2: error: implicit declaration
+> of function 'pcibios_enable_device' [-Werror=implicit-function-declaration]
+> cc1: some warnings being treated as errors
+> make[3]: *** [drivers/bcma/driver_pci_host.o] Error 1
+>
+> Most likey introduced by commit 49dc9577155576b10ff79f0c1486c816b01f58bf
+>
+>    "bcma: add PCIe host controller"
+>
+> Add the header instead of implicitly assuming it will be present.
+> Sounds like a good idea, but that alone doesn't fix anything.
+>
+> The real problem is that the Kconfig has settings related to whether
+> PCI is possible, i.e.
+>
+>  config BCMA_HOST_PCI_POSSIBLE
+>        bool
+>        depends on BCMA && PCI = y
+>        default y
+>
+>  config BCMA_HOST_PCI
+>        bool "Support for BCMA on PCI-host bus"
+>        depends on BCMA_HOST_PCI_POSSIBLE
+>
+> ...but what is missing is that BCMA_DRIVER_PCI_HOSTMODE doesn't
+> have any dependencies on the above.  Add one.
+>
+> CC: Hauke Mehrtens <hauke@hauke-m.de>
+> CC: John W. Linville <linville@tuxdriver.com>
+> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+>
+> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> index c1172da..fb7c80f 100644
+> --- a/drivers/bcma/Kconfig
+> +++ b/drivers/bcma/Kconfig
+> @@ -29,7 +29,7 @@ config BCMA_HOST_PCI
+>
+>  config BCMA_DRIVER_PCI_HOSTMODE
+>        bool "Driver for PCI core working in hostmode"
+> -       depends on BCMA && MIPS
+> +       depends on BCMA && MIPS && BCMA_HOST_PCI
 
-Yes, that was it :-)  I added the "board_ref_clock" to my
-platform parameters and now I'm getting something from the
-scan.
+I don't know the hardware, but I'm sure there'd be situations
+(probably for embedded devices) where hostmode would be wanted without
+the PCI host support - so shouldn't this depend on
+BCMA_HOST_PCI_POSSIBLE?
 
-Thanks for the help
+Thanks,
 
 -- 
-------------------------------------------------------------
-Gary Thomas                 |  Consulting for the
-MLB Associates              |    Embedded world
-------------------------------------------------------------
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
