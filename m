@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7349 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965134Ab2CEUiL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:38:11 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 27/33] iwlwifi: move IWL_MASK into file using it
-Date: Mon,  5 Mar 2012 11:24:45 -0800
-Message-Id: <1330975491-19680-28-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213839_635169_32702B2A)
-In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from senator.holtmann.net ([87.106.208.187]:59332 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932547Ab2CZPP5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 11:15:57 -0400
+Message-ID: <1332774906.1870.98.camel@aeonflux> (sfid-20120326_171602_495190_1A7D2863)
+Subject: Re: RFC/CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
+ 2012 (Barcelona?)
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Date: Mon, 26 Mar 2012 17:15:06 +0200
+In-Reply-To: <20120326145433.GE13806@tuxdriver.com>
+References: <20120322192406.GB2432@tuxdriver.com>
+	 <1332698585.1870.88.camel@aeonflux> <20120326145433.GE13806@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi John,
 
-Only used in two places in the same file,
-no need to be in iwl-shared.h.
+> > > Given the potential to expand this into a larger event, we would
+> > > likely need to be somewhat more formal about having proposals for
+> > > speaking slots.  In that case, we might require a program committee
+> > > for reviewing proposals, etc.  Anyone interested in participating in
+> > > speaking at the mini-summit or in reviewing speaking proposals should
+> > > contact me or reply in this thread.
+> > 
+> > When you and I talked originally about this, we discussed the format a
+> > little bit. In theory we have a bunch of options here. One of the
+> > original thoughts was 1-2 day mini-conference and 1 day break-out
+> > sessions. I assume 6 presentation per day is maximum. Is it enough to
+> > just do 1 day?
+> 
+> I don't think that 1 day is enough.  2 might not be enough, depending
+> on how we stage it.  Do you think that we would have more than one
+> "track" (e.g. separate Blueooth/802.11/NFC sessions)?  A single
+> "plenary" session?  Or some mix?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-shared.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 ++
- 2 files changed, 2 insertions(+), 1 deletions(-)
+so what about 2 days single track and 1 day with breakout sessions. So
+we could do 12 talks with morning and afternoon sessions on the 3rd day
+as needed.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 740a058..976e6c5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -444,7 +444,6 @@ iwl_remove_notification(struct iwl_shared *shrd,
- 			   struct iwl_notification_wait *wait_entry);
- 
- #define IWL_CMD(x) case x: return #x
--#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
- 
- #define IWL_TRAFFIC_ENTRIES	(256)
- #define IWL_TRAFFIC_ENTRY_SIZE  (64)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index bb8f2fd..3ae2fd7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -78,6 +78,8 @@
- #include "iwl-core.h"
- #include "iwl-ucode.h"
- 
-+#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
-+
- static int iwl_trans_rx_alloc(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie =
--- 
-1.7.0.4
+If we have many proposals for presentations, we can always go switch to
+2 tracks. If we require LinuxCon registration, then it should be no
+problem to get a second room. If not, I have to negotiate with Angela
+next week ;)
+
+Regards
+
+Marcel
+
 
