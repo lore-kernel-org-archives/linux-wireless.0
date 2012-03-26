@@ -1,60 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45398 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759862Ab2C3LLF (ORCPT
+Received: from mail.windriver.com ([147.11.1.11]:32985 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754510Ab2CZBVW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 07:11:05 -0400
-Message-ID: <1333105864.3908.12.camel@jlt3.sipsolutions.net> (sfid-20120330_131110_674965_CB758ECF)
-Subject: [PATCH 1/2] compat-wireless: include config.mk early
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 30 Mar 2012 13:11:04 +0200
-In-Reply-To: <1333105815.3908.11.camel@jlt3.sipsolutions.net> (sfid-20120330_131022_444171_B95DE05C)
-References: <1333105815.3908.11.camel@jlt3.sipsolutions.net>
-	 (sfid-20120330_131022_444171_B95DE05C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 25 Mar 2012 21:21:22 -0400
+Date: Sun, 25 Mar 2012 21:20:38 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: <zajec5@gmail.com>, <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] bcma: fix build error on MIPS; implicit
+ pcibios_enable_device
+Message-ID: <20120326012038.GA7722@windriver.com> (sfid-20120326_032129_182193_C77F5F85)
+References: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com>
+ <CAGRGNgVBwKppzMa7HZeWm+ZW1a7u0JKwxxFS2xCRv=bpxXnk+Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <CAGRGNgVBwKppzMa7HZeWm+ZW1a7u0JKwxxFS2xCRv=bpxXnk+Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+[Re: [PATCH] bcma: fix build error on MIPS; implicit pcibios_enable_device] On 26/03/2012 (Mon 11:13) Julian Calaby wrote:
 
-Not doing so can cause extreme build slowdowns,
-somehow that confuses the kernel's Makefiles into
-calculating the size of every single file all the
-time (the calculation code is part of compressing
-the kernel with bzip2 etc. so that's very strange.)
+> Hi Paul,
+> 
+> On Mon, Mar 26, 2012 at 11:02, Paul Gortmaker
+> <paul.gortmaker@windriver.com> wrote:
+> > The following is seen during allmodconfig builds for MIPS:
+> >
+> > drivers/bcma/driver_pci_host.c:518:2: error: implicit declaration
+> > of function 'pcibios_enable_device' [-Werror=implicit-function-declaration]
+> > cc1: some warnings being treated as errors
+> > make[3]: *** [drivers/bcma/driver_pci_host.o] Error 1
+> >
+> > Most likey introduced by commit 49dc9577155576b10ff79f0c1486c816b01f58bf
+> >
+> >    "bcma: add PCIe host controller"
+> >
+> > Add the header instead of implicitly assuming it will be present.
+> > Sounds like a good idea, but that alone doesn't fix anything.
+> >
+> > The real problem is that the Kconfig has settings related to whether
+> > PCI is possible, i.e.
+> >
+> >  config BCMA_HOST_PCI_POSSIBLE
+> >        bool
+> >        depends on BCMA && PCI = y
+> >        default y
+> >
+> >  config BCMA_HOST_PCI
+> >        bool "Support for BCMA on PCI-host bus"
+> >        depends on BCMA_HOST_PCI_POSSIBLE
+> >
+> > ...but what is missing is that BCMA_DRIVER_PCI_HOSTMODE doesn't
+> > have any dependencies on the above.  Add one.
+> >
+> > CC: Hauke Mehrtens <hauke@hauke-m.de>
+> > CC: John W. Linville <linville@tuxdriver.com>
+> > Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+> >
+> > diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> > index c1172da..fb7c80f 100644
+> > --- a/drivers/bcma/Kconfig
+> > +++ b/drivers/bcma/Kconfig
+> > @@ -29,7 +29,7 @@ config BCMA_HOST_PCI
+> >
+> >  config BCMA_DRIVER_PCI_HOSTMODE
+> >        bool "Driver for PCI core working in hostmode"
+> > -       depends on BCMA && MIPS
+> > +       depends on BCMA && MIPS && BCMA_HOST_PCI
+> 
+> I don't know the hardware, but I'm sure there'd be situations
+> (probably for embedded devices) where hostmode would be wanted without
+> the PCI host support - so shouldn't this depend on
+> BCMA_HOST_PCI_POSSIBLE?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Makefile |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+My reading of things is that BCMA_HOST_PCI is equivalent to, or
+at most a subset of BCMA_HOST_PCI_POSSIBLE.  But if the maintainers
+want to tweak things accordingly, then great -- I'm just reporting
+what I see in build failures.
 
-diff --git a/Makefile b/Makefile
-index 67f8e84..bbd77f7 100644
---- a/Makefile
-+++ b/Makefile
-@@ -12,7 +12,6 @@ DESTDIR?=
- 
- ifneq ($(KERNELRELEASE),)
- 
--include $(COMPAT_CONFIG_CW)
- include $(COMPAT_CONFIG)
- 
- NOSTDINC_FLAGS := -I$(M)/include/ \
-@@ -68,6 +67,8 @@ export COMPAT_AUTOCONF=include/linux/compat_autoconf.h
- export CREL_PRE:=.compat_autoconf_
- export CREL_CHECK:=$(PWD)/$(CREL_PRE)$(CREL)
- 
-+include $(COMPAT_CONFIG_CW)
-+
- all: modules
- 
- $(COMPAT_CONFIG): ;
--- 
-1.7.9.1
+Thanks,
+Paul.
+--
 
-
-
+> 
+> Thanks,
+> 
+> -- 
+> Julian Calaby
+> 
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
