@@ -1,141 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64658 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031480Ab2CFWng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:36 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 20/33] iwlwifi: put use_rts_for_aggregation into hw_params
-Date: Tue,  6 Mar 2012 13:30:55 -0800
-Message-Id: <1331069468-11074-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234341_464274_1D8CE89F)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:57652 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932809Ab2CZQNy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Mar 2012 12:13:54 -0400
+Message-ID: <1332778432.5435.50.camel@jlt3.sipsolutions.net> (sfid-20120326_181358_127750_61D0B7AB)
+Subject: Re: mac80211 queue handling in multi-channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Eliad Peller <eliad@wizery.com>, Jouni Malinen <j@w1.fi>,
+	Michal Kazior <michal.kazior@tieto.com>
+Date: Mon, 26 Mar 2012 18:13:52 +0200
+In-Reply-To: <1330343374.3483.46.camel@jlt3.sipsolutions.net> (sfid-20120227_124940_942920_32DA7DE7)
+References: <1330343374.3483.46.camel@jlt3.sipsolutions.net>
+	 (sfid-20120227_124940_942920_32DA7DE7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+So I've started to work on this a bit.
 
-The hardware config ht_params shouldn't be modified,
-so copy the use_rts_for_aggregation parameter into
-hw_params and use/modify it there.
+On Mon, 2012-02-27 at 12:49 +0100, Johannes Berg wrote:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    3 +--
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++++
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-shared.h   |    2 ++
- 6 files changed, 13 insertions(+), 9 deletions(-)
+> So what changes would this require?
+> 
+> First of all, of course the driver needs to advertise the number of
+> hardware queues it supports. We'll have to think about changing the
+> check "do we support QoS" from "hw.queues >= 4" to something else, but I
+> think >=4 will still be a good indication and it seems unlikely that
+> somebody will have a device with a lot of queues yet not support QoS.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 2c5e7ec..e191d39 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -436,8 +436,7 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	 * force CTS-to-self frames protection if RTS-CTS is not preferred
- 	 * one aggregation protection method
- 	 */
--	if (!(cfg(priv)->ht_params &&
--	      cfg(priv)->ht_params->use_rts_for_aggregation))
-+	if (!hw_params(priv).use_rts_for_aggregation)
- 		ctx->staging.flags |= RXON_FLG_SELF_CTS_EN;
- 
- 	if ((ctx->vif && ctx->vif->bss_conf.use_short_slot) ||
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index ab2221d..5734dbf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -594,8 +594,7 @@ int iwlagn_tx_agg_oper(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 	sta_priv->max_agg_bufsize =
- 		min(sta_priv->max_agg_bufsize, buf_size);
- 
--	if (cfg(priv)->ht_params &&
--	    cfg(priv)->ht_params->use_rts_for_aggregation) {
-+	if (hw_params(priv).use_rts_for_aggregation) {
- 		/*
- 		 * switch to RTS/CTS if it is the prefer protection
- 		 * method for HT traffic
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ac23aa3..ce62a2f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1119,6 +1119,10 @@ static void iwl_uninit_drv(struct iwl_priv *priv)
- 
- static void iwl_set_hw_params(struct iwl_priv *priv)
- {
-+	if (cfg(priv)->ht_params)
-+		hw_params(priv).use_rts_for_aggregation =
-+			cfg(priv)->ht_params->use_rts_for_aggregation;
-+
- 	if (iwlagn_mod_params.amsdu_size_8K)
- 		hw_params(priv).rx_page_order =
- 			get_order(IWL_RX_BUF_SIZE_8K);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index b729128..5e1b078 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -2431,7 +2431,7 @@ static ssize_t iwl_dbgfs_protection_mode_read(struct file *file,
- 	if (cfg(priv)->ht_params)
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 			 "use %s for aggregation\n",
--			 (cfg(priv)->ht_params->use_rts_for_aggregation) ?
-+			 (hw_params(priv).use_rts_for_aggregation) ?
- 				"rts/cts" : "cts-to-self");
- 	else
- 		pos += scnprintf(buf + pos, bufsz - pos, "N/A");
-@@ -2458,9 +2458,9 @@ static ssize_t iwl_dbgfs_protection_mode_write(struct file *file,
- 	if (sscanf(buf, "%d", &rts) != 1)
- 		return -EINVAL;
- 	if (rts)
--		cfg(priv)->ht_params->use_rts_for_aggregation = true;
-+		hw_params(priv).use_rts_for_aggregation = true;
- 	else
--		cfg(priv)->ht_params->use_rts_for_aggregation = false;
-+		hw_params(priv).use_rts_for_aggregation = false;
- 	return count;
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 3086176..d2c1d71 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -660,8 +660,8 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 			IWL_DEBUG_HT(priv, "priv->agg_tids_count = %u\n",
- 				     priv->agg_tids_count);
- 		}
--		if (!priv->agg_tids_count && cfg(priv)->ht_params &&
--		    cfg(priv)->ht_params->use_rts_for_aggregation) {
-+		if (!priv->agg_tids_count &&
-+		    hw_params(priv).use_rts_for_aggregation) {
- 			/*
- 			 * switch off RTS/CTS if it was previously enabled
- 			 */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 5fac263..ecb46dc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -173,6 +173,7 @@ struct iwl_mod_params {
-  *	relevant for 1000, 6000 and up
-  * @wd_timeout: TX queues watchdog timeout
-  * @struct iwl_sensitivity_ranges: range of sensitivity values
-+ * @use_rts_for_aggregation: use rts/cts protection for HT traffic
-  */
- struct iwl_hw_params {
- 	u8  num_ampdu_queues;
-@@ -181,6 +182,7 @@ struct iwl_hw_params {
- 	u8  valid_tx_ant;
- 	u8  valid_rx_ant;
- 	u8  ht40_channel;
-+	bool use_rts_for_aggregation;
- 	u16 sku;
- 	u32 rx_page_order;
- 	u32 ct_kill_threshold;
--- 
-1.7.0.4
+This is a non-issue really.
+
+> Then of course, the driver needs to tell mac80211 about queue mapping.
+> For this, there's one global queue:
+>  * off-channel TX queue
+> Additionally, there are per-interface queues:
+>  * 4 per AC
+>  * CAB for this interface
+
+This I haven't gotten to.
+
+One issue I noticed though is that the queue mapping might need to be
+changed during the lifetime of the virtual interface (ie. while it's
+UP).
+
+Over in the other thread, I'm discussing channel contexts with Michal,
+and it seems that when the channel context is changed the queue mapping
+might also change. This doesn't seem like a problem, but we definitely
+need to keep it in mind. The way to handle it would be to stop the
+netdev queues, sync_net(), drop everything we have queued up for this
+interface and then we have clean state to start from.
+
+
+The other thing this affects is monitor mode. When the hardware queues
+are only defined per interface, we can't just give a frame to the driver
+on an essentially random queue and hope it can transmit it. Therefore,
+we need more queues, for monitor mode, in some way.
+
+As I was also trying to figure out what a good way to handle monitor
+mode in cases like iwlwifi is where the device really wants to be in a
+special "monitor mode" -- not just different filter programming.
+
+So to address both of these things, I came up with this patch:
+http://p.sipsolutions.net/ad87702d716df6d5.txt
+
+This will allow drivers to be informed of monitor mode when that is the
+only thing active.
+
+Injection would work like this:
+ * when monitor is only active:
+  - use this pseudo monitor interface
+  - if that doesn't exist (driver doesn't have it): discard frame
+ * when something else is active:
+  - if the TA of the injected frame matches any vif: use that vif
+  - if the TA doesn't match: use a vif matching the monitor addr
+  - if that doesn't exist: discard frame
+
+
+I think this strikes a good balance between having injection and having
+to worry about it too much. Obviously, drivers not implementing this new
+monitor mode interface capability wouldn't have pure injection, but that
+seems OK -- it should be relatively easy to add this to drivers.
+
+As mentioned in the patch, the alternative would be to have new API for
+all of this, but that doesn't seem worthwhile.
+
+johannes
 
