@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36494 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab2CHTp0 (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:57771 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756509Ab2CZKEk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 14:45:26 -0500
-From: "Quan, David" <dquan@qca.qualcomm.com>
-To: "Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	"Green, Michael" <green@qca.qualcomm.com>,
+	Mon, 26 Mar 2012 06:04:40 -0400
+Message-ID: <1332756769.5884.17.camel@sortiz-mobl> (sfid-20120326_120444_927537_4B506E45)
+Subject: RE: [PATCH] NFC: Add Core support to generate tag lost event
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: "Elias, Ilan" <ilane@ti.com>
+Cc: Eric Lapuyade <eric.lapuyade@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: RE: Problems with regulatory domain support and BCM43224
-Date: Thu, 8 Mar 2012 19:45:25 +0000
-Message-ID: <4B96CD77D9161244899852B5F20DB5B70125BC94@nasanexd02d.na.qualcomm.com> (sfid-20120308_204531_309519_BCA685E9)
-References: <20120307194001.GA2506@ubuntu-macmini>
- <20120308174101.GB28133@ubuntu-macmini>
- <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com>
- <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
- <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
-In-Reply-To: <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Date: Mon, 26 Mar 2012 12:12:49 +0200
+In-Reply-To: <B30D1FD582D6484ABF57420512E5803516A9376C@DNCE03.ent.ti.com>
+References: <4F6C5C59.2060708@linux.intel.com>
+	 <B30D1FD582D6484ABF57420512E5803516A9376C@DNCE03.ent.ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SSB0aGluayB0aGVyZSBpcyB0byBpdCBtb3JlIHRoYW4gU1cuDQpXaGVyZSBldmVyIHlvdSBnZXQg
-dGhpcyBjYXJkLCBpcyB0aGUgY2FyZCB0ZXN0ZWQgYW5kIHJlZ3VsYXRvcnkgYXBwcm92ZWQgZm9y
-IHRob3NlIGNvdW50cmllcywgREZTIG9yIG5vdD8NCg0KSXQgaXMgcG9zc2libGUgdGhhdCB0aGlz
-IGNhcmQgaXMgb25seSByZWd1bGF0b3J5IHRlc3RlZCBmb3Igbm9uIERGUyBjaGFubmVscywgYnV0
-IG5vdyB5b3UgZW5hYmxlIHRoZW0gZm9yIHBhc3NpdmUuIFRoaXMgbWVhbnMgdGhhdCB5ZXMsIHlv
-dSBhcmUgc2F2ZSBhbmQgbm90IHZpb2xhdGUgREZTIHJ1bGVzIGJlY2F1c2UgeW91IGFyZSBpbiBw
-YXNzaXZlIG1vZGUuIEhvd2V2ZXIsIHlvdSBhcmUgaW4gY29tcGxldGUgdmlvbGF0aW9uIGlmIHRo
-ZSBTVEEgZmluZHMgYW4gQVAgb24gdGhhdCBERlMgY2hhbm5lbCBhbmQgdGhlbiBjb25uZWN0cyBh
-bmQgdHJhbnNtaXRzIGFzIHRoaXMgU1RBIGlzIG5vdCBhbGxvdyB0byB0cmFuc21pdCBvbiB0aGF0
-IGNoYW5uZWwgc2luY2UgaXQgaXMgbm90IGFwcHJvdmVkLg0KDQpEYXZpZA0KDQoNCi0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBtY2dyb2ZAZ21haWwuY29tIFttYWlsdG86bWNncm9m
-QGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mIEx1aXMgUi4gUm9kcmlndWV6DQpTZW50OiBUaHVyc2Rh
-eSwgTWFyY2ggMDgsIDIwMTIgMTE6MzYgQU0NClRvOiBRdWFuLCBEYXZpZA0KQ2M6IFNldGggRm9y
-c2hlZTsgR3JlZW4sIE1pY2hhZWw7IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgSm9o
-YW5uZXMgQmVyZw0KU3ViamVjdDogUmU6IFByb2JsZW1zIHdpdGggcmVndWxhdG9yeSBkb21haW4g
-c3VwcG9ydCBhbmQgQkNNNDMyMjQNCg0KT24gVGh1LCBNYXIgOCwgMjAxMiBhdCAxMTowNyBBTSwg
-UXVhbiwgRGF2aWQgPGRxdWFuQHFjYS5xdWFsY29tbS5jb20+IHdyb3RlOg0KPiAxKSBEZXBlbmRp
-bmcgb24gd2hpY2ggV1cgc2t1IG51bWJlciB5b3Ugc2VsZWN0ZWQsIGl0IG1heSBhbmQgbWF5IG5v
-dCBzdXBwb3J0IHRoZSBERlMgY2hhbm5lbHMuIFNvIHRoaXMgaXMgbm90IHRydWUgdGhhdCB3ZSBk
-byBub3Qgc3VwcG9ydCBERlMgY2hhbm5lbHMgaW4gV1cgbW9kZS4NCg0KRGF2aWQsIHNvcnJ5IEkg
-c2hvdWxkIGhhdmUgY2xhcmlmaWVkLCB0aGlzIGlzIG5vdCBmb3IgYXRoOWsuIFRoaXMgaXMgZm9y
-IG90aGVyIGRyaXZlcnMgd2hpY2ggZG8gbm90IGhhdmUgY3VzdG9tIHJlZ3VsYXRvcnkgZG9tYWlu
-cyBub3IgZG8gdGhleSBoYXZlIGFueSByZWd1bGF0b3J5IGhpbnQgb2J0YWluYWJsZSBmcm9tIHRo
-ZWlyIEVFUFJPTS4gRm9yIHRob3NlIGNhcmRzIHRoYXQgZG8gbm90IGhhdmUgYW55dGhpbmcgbGlr
-ZSB0aGlzIHdlIG1ha2UgdGhlbSB1c2UgdGhlIHdvcmxkIHJlZ3VsYXRvcnkgZG9tYWluIGJ5IGRl
-ZmF1bHQuDQoNCj4gMikgVG9kYXksIEkgZG8gbm90IGJlbGlldmUgYXRoOWsgY29kZSBzdXBwb3J0
-cyBERlMgZGV0ZWN0aW9uLiBJZiB0aGF0IGlzIHdoYXQgeW91IG1lYW4uIFRoZXJlZm9yZSBTVEEg
-bW9kZSB3aWxsIG5vdCBzdXBwb3J0IERGUyBkZXRlY3Rpb24uIEhvd2V2ZXIsIFNUQSBkb2VzIHN1
-cHBvcnQgREZTIGNoYW5uZWxzLiBERlMgY2hhbm5lbCBzdXBwb3J0IHZzIERGUyBkZXRlY3Rpb24g
-c3VwcG9ydCBpcyB0d28gZGlmZmVyZW50IHRoaW5ncy4gREZTIGNoYW5uZWwgc3VwcG9ydCBhcyBh
-IHNsYXZlIGRldmljZSwgb25seSBoYXMgdG8gZG8gcGFzc2l2ZSBzY2FubmluZy4NCj4NCj4gTGV0
-IG1lIGtub3cgaWYgdGhhdCBhbnN3ZXJzIHlvdXIgcXVlc3Rpb25zLg0KDQpJdCBkb2VzLCBidXQg
-d291bGQgbGlrZSB5b3VyIGFkdmljZSAvIHJldmlldyBvbiB0aGUgaWRlYSBvZiBlbmFibGluZyBE
-RlMgY2hhbm5lbHMgYXMgcGFzc2l2ZSBzY2FuLCBuby1pYnNzIChvciBhbnkgcmFkaWF0aW9uIGVu
-YWJsZWQpIGZvciBjYXJkcyB0aGF0IHVzZSB0aGUgc3RhdGljIGRlZmF1bHQgd29ybGQgcmVndWxh
-dG9yeSBkb21haW4gaW4gdGhlIGtlcm5lbC4gVGhpcyB3b3VsZCBub3QgaW4gYW55IHdheSBhZmZl
-Y3QgYXRoOWssIGF0aDZrbCwgb3IgYW55IG9mIG91ciBjYXJkcywgYnV0IGp1c3QgaGVscCBvdGhl
-ciBjYXJkcyB0aGF0IGRvIG5vdCBoYXZlIGFueXRoaW5nIGltcGxlbWVudGVkLg0KDQogIEx1aXMN
-Cg==
+Hi Ilan,
+
+On Mon, 2012-03-26 at 09:48 +0000, Elias, Ilan wrote:
+> Hi Eric, 
+> 
+> > +static void nfc_check_pres_work(struct work_struct *work)
+> > +{
+> > +	struct nfc_dev *dev = container_of(work, struct nfc_dev,
+> > +					   check_pres_work);
+> > +	int rc;
+> > +
+> > +	device_lock(&dev->dev);
+> > +
+> > +	if (dev->activated_target_idx != NFC_TARGET_IDX_NONE &&
+> > +	    timer_pending(&dev->check_pres_timer) == 0) {
+> > +		rc = dev->ops->check_presence(dev, 
+> > dev->activated_target_idx);
+> > +		if (!rc) {
+> > +			mod_timer(&dev->check_pres_timer, jiffies +
+> > +				  
+> > msecs_to_jiffies(NFC_CHECK_PRES_FREQ_MS));
+> > +		} else {
+> > +			nfc_target_lost(dev, dev->activated_target_idx);
+> I'm unable to find the definition of the function nfc_target_lost.
+This patch is based on my nfc-next branch, where nfc_target_lost is
+implemented. I'm waiting for John to take patches for the next merge
+window before sending him a pull request for that.
+
+Cheers,
+Samuel.
+
