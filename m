@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:44645 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756437Ab2CQVTn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2012 17:19:43 -0400
-Date: Sat, 17 Mar 2012 14:18:30 -0700 (PDT)
-Message-Id: <20120317.141830.1341064825746942134.davem@davemloft.net> (sfid-20120317_221948_022398_0F522B09)
-To: Larry.Finger@lwfinger.net
-Cc: joe@perches.com, chaoming_li@realsil.com.cn,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] rtlwifi: Use is_zero_ether_addr, remove line
- continuation
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4F64FECD.9000802@lwfinger.net>
-References: <1d738d4a4dd61978f969ed4a43f2dd3717f51a19.1332011552.git.joe@perches.com>
-	<4F64FECD.9000802@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mms2.broadcom.com ([216.31.210.18]:1414 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754604Ab2C0RIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 13:08:07 -0400
+Message-ID: <4F71F3E5.6030105@broadcom.com> (sfid-20120327_190811_297368_2E704237)
+Date: Tue, 27 Mar 2012 19:07:49 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Naveen Goswamy" <naveen.goswamy@polymtl.ca>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmsmac TCP problems and txop exceeded
+References: <1332866581.4f71ee152ce84@www.imp.polymtl.ca>
+In-Reply-To: <1332866581.4f71ee152ce84@www.imp.polymtl.ca>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Sat, 17 Mar 2012 16:14:53 -0500
+On 03/27/2012 06:43 PM, Naveen Goswamy wrote:
+> Hi, this thread should be a continuation of one I started about a month ago and
+> can be found here:
+>
+> http://comments.gmane.org/gmane.linux.kernel.wireless.general/86324
+>
+> (I lost the header to it and inadvertantly cross posted into another thread, my
+> apologies for that)
+>
+>
+>
+> So here goes:
+>
+> I have the BCM4313 [14e4:4727] (rev 01)
+>
+> When using wireshark, I see that I am getting many {TCP Retransmission,TCP Dup
+> ACK,TCP RST} with {TCP, HTTP, SSH} when using brcmsmac driver in the 3.2.1
+> kernel.  I've tried 3.3-rc5 kernel with similar results.
+>
+> I notice a lot of these popping up in /var/log/messages as well:
+>
+> ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 155/256 dur
+> 1746/1504
+> ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
+> 1546/1504
+> ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
+> 1546/1504
+>
+>
+> any ideas how to solve this?
+>
 
-> On 03/17/2012 02:13 PM, Joe Perches wrote:
->> Use the normal kernel facilities and use %pM
->> to print the all zero mac address.
->>
->> Remove unnecessary line continuation.
->>
->> Signed-off-by: Joe Perches<joe@perches.com>
->> ---
->>   drivers/net/wireless/rtlwifi/cam.c |    5 ++---
->>   1 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> ACKed-by: Larry.Finger@lwfinger.net
-> 
-> Is there a PATCH 2/2? I did not receive it.
+These messages are only indicating (possible) violation of the WMM txop
+parameter. So what problem are you looking into here beside the issues
+you observe in wireshark. I mean the problem that made you decide to run 
+wireshark.
 
-It went to netdev only and was only for non-wireless networking
-drivers.
+Gr. AvS
+
+
+
