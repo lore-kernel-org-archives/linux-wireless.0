@@ -1,79 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:34175 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753637Ab2CJNlx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 08:41:53 -0500
-Message-ID: <4F5B5A15.1000808@neratec.com> (sfid-20120310_144226_095817_C60D2D9C)
-Date: Sat, 10 Mar 2012 14:41:41 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Ashok Nagarajan <ashok@cozybit.com>,
-	linux-wireless@vger.kernel.org, javier@cozybit.com
-Subject: Re: [PATCH] ath9k: Fix mactime from being clobbered in rx_status
-References: <1331340008-1713-1-git-send-email-ashok@cozybit.com> <201203100206.46537.chunkeey@googlemail.com>
-In-Reply-To: <201203100206.46537.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:36832 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751903Ab2C0MUS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 08:20:18 -0400
+Message-Id: <20120327121921.444935239@sipsolutions.net> (sfid-20120327_142029_720349_6D10FE63)
+Date: Tue, 27 Mar 2012 14:18:38 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/5] mac80211: make ieee80211_downgrade_queue static
+References: <20120327121835.299635879@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the ping.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The patch that is reverted here was meant as pre-work for modifications 
-required to generate DFS events with correctly set mactime that are 
-still pending. It was obviously not as 'trivial' as claimed, since I 
-overlooked the memset() in ath9k_rx_skb_preprocess() that effectively 
-set the time to 0 for all fragments.
+There's no reason for it to not be static.
 
-Therefore full ACK to revert it. Just wondering why it was not noticed 
-for nearly 4 months now.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/wme.c |   40 ++++++++++++++++++++--------------------
+ net/mac80211/wme.h |    3 ---
+ 2 files changed, 20 insertions(+), 23 deletions(-)
 
-On 10.03.2012 02:06, Christian Lamparter wrote:
-> On Saturday 10 March 2012 01:40:08 Ashok Nagarajan wrote:
->> mactime was being overwritten by the function
->> ath9k_rx_skb_preprocess.  Fixed by calling the
->> function before setting the mactime.
->
-> This looks rather odd... In essence you're trying to revert
-> "ath9k: trivial: reorder rx_tasklet processing"
->
-> Anyway, I 'CC'ed the original author Zefir Kurtisi. So if
-> there are any open question, now is the time.
->
->> Signed-off-by: Ashok Nagarajan<ashok@cozybit.com>
->> Signed-off-by: Javier Cardona<javier@cozybit.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/recv.c |    5 +++--
->>   1 files changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->> index 1b1b279..52a0466 100644
->> --- a/drivers/net/wireless/ath/ath9k/recv.c
->> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->> @@ -1841,6 +1841,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->>   		if (sc->sc_flags&  SC_OP_RXFLUSH)
->>   			goto requeue_drop_frag;
->>
->> +		retval = ath9k_rx_skb_preprocess(common, hw, hdr,&rs,
->> +						 rxs,&decrypt_error);
->> +
->
-> Instead of moving ath9k_rx_skb_preprocess around, you could just
-> put the memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-> right here.
->
-> [Also, why leave the if (retval) check behind?]
->
->>   		rxs->mactime = (tsf&  ~0xffffffffULL) | rs.rs_tstamp;
->>   		if (rs.rs_tstamp>  tsf_lower&&
->>   		unlikely(rs.rs_tstamp - tsf_lower>  0x10000000))
->> @@ -1850,8 +1853,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
->>   		    unlikely(tsf_lower - rs.rs_tstamp>  0x10000000))
->>   			rxs->mactime += 0x100000000ULL;
->>
->> -		retval = ath9k_rx_skb_preprocess(common, hw, hdr,&rs,
->> -						 rxs,&decrypt_error);
->>   		if (retval)
->>   			goto requeue_drop_frag;
-> 		^^ that one
+--- a/net/mac80211/wme.c	2012-03-23 14:11:47.000000000 +0100
++++ b/net/mac80211/wme.c	2012-03-23 14:14:00.000000000 +0100
+@@ -52,6 +52,26 @@ static int wme_downgrade_ac(struct sk_bu
+ 	}
+ }
+ 
++static u16 ieee80211_downgrade_queue(struct ieee80211_local *local,
++				     struct sk_buff *skb)
++{
++	/* in case we are a client verify acm is not set for this ac */
++	while (unlikely(local->wmm_acm & BIT(skb->priority))) {
++		if (wme_downgrade_ac(skb)) {
++			/*
++			 * This should not really happen. The AP has marked all
++			 * lower ACs to require admission control which is not
++			 * a reasonable configuration. Allow the frame to be
++			 * transmitted using AC_BK as a workaround.
++			 */
++			break;
++		}
++	}
++
++	/* look up which queue to use for frames with this 1d tag */
++	return ieee802_1d_to_ac[skb->priority];
++}
++
+ /* Indicate which queue to use for this fully formed 802.11 frame */
+ u16 ieee80211_select_queue_80211(struct ieee80211_local *local,
+ 				 struct sk_buff *skb,
+@@ -139,26 +159,6 @@ u16 ieee80211_select_queue(struct ieee80
+ 	return ieee80211_downgrade_queue(local, skb);
+ }
+ 
+-u16 ieee80211_downgrade_queue(struct ieee80211_local *local,
+-			      struct sk_buff *skb)
+-{
+-	/* in case we are a client verify acm is not set for this ac */
+-	while (unlikely(local->wmm_acm & BIT(skb->priority))) {
+-		if (wme_downgrade_ac(skb)) {
+-			/*
+-			 * This should not really happen. The AP has marked all
+-			 * lower ACs to require admission control which is not
+-			 * a reasonable configuration. Allow the frame to be
+-			 * transmitted using AC_BK as a workaround.
+-			 */
+-			break;
+-		}
+-	}
+-
+-	/* look up which queue to use for frames with this 1d tag */
+-	return ieee802_1d_to_ac[skb->priority];
+-}
+-
+ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb)
+ {
+--- a/net/mac80211/wme.h	2012-03-15 14:31:56.000000000 +0100
++++ b/net/mac80211/wme.h	2012-03-23 14:14:03.000000000 +0100
+@@ -22,8 +22,5 @@ u16 ieee80211_select_queue(struct ieee80
+ 			   struct sk_buff *skb);
+ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ 			   struct sk_buff *skb);
+-u16 ieee80211_downgrade_queue(struct ieee80211_local *local,
+-                              struct sk_buff *skb);
+-
+ 
+ #endif /* _WME_H */
+
 
