@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:42385 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752060Ab2CJWdn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36828 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751524Ab2C0MUS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 17:33:43 -0500
-Received: by dajr28 with SMTP id r28so3160304daj.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Mar 2012 14:33:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1331364931.3348.0.camel@jlt3.sipsolutions.net>
-References: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
-	<CAGXE3d_58okToGOH146vDsgZ_Jf01iZAxDX0pxwBMGSo0BvZYg@mail.gmail.com>
-	<CAJ-Vmo=WLa6Lc7u4fjPNDjVP5MT9+OJ-qNP-zBL+T=ajOHSN7g@mail.gmail.com>
-	<1331364931.3348.0.camel@jlt3.sipsolutions.net>
-Date: Sat, 10 Mar 2012 14:33:42 -0800
-Message-ID: <CAJ-VmonFHC8svz0CADTvJcy76HYOhCQGquK4WTEBnpZTPQxi+w@mail.gmail.com> (sfid-20120310_233346_596559_D384C3AA)
-Subject: Re: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses
- static SMPS
-From: Adrian Chadd <adrian@freebsd.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 27 Mar 2012 08:20:18 -0400
+Message-Id: <20120327121921.180639599@sipsolutions.net> (sfid-20120327_142024_253382_83D54583)
+Date: Tue, 27 Mar 2012 14:18:36 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/5] mac80211: fix mesh TX coding style
+References: <20120327121835.299635879@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 March 2012 23:35, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2012-03-09 at 22:40 -0800, Adrian Chadd wrote:
->> .. hm, I was wondering about SMPS. Why not RTS? Wouldn't that
->> wake up the other RX chains?
->
-> (corrected to RTS)
->
-> That would be "dynamic SMPS", "static SMPS" means your chains are truly
-> turned off and can't even be revived by RTS.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Ok. I'll start tinkering with this soon in FreeBSD, so I'll do some
-interoperability testing with ath9k+FreeBSD and whatever else I can
-get my hands on.
+Fix bad indentation & pointless if nesting.
 
-I'll report back if things behave strangely.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+--- a/net/mac80211/tx.c	2012-03-23 16:51:10.000000000 +0100
++++ b/net/mac80211/tx.c	2012-03-23 17:03:05.000000000 +0100
+@@ -1468,12 +1468,12 @@ void ieee80211_xmit(struct ieee80211_sub
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif) &&
+ 	    ieee80211_is_data(hdr->frame_control) &&
+-		!is_multicast_ether_addr(hdr->addr1))
+-			if (mesh_nexthop_resolve(skb, sdata)) {
+-				/* skb queued: don't free */
+-				rcu_read_unlock();
+-				return;
+-			}
++	    !is_multicast_ether_addr(hdr->addr1) &&
++	    mesh_nexthop_resolve(skb, sdata)) {
++		/* skb queued: don't free */
++		rcu_read_unlock();
++		return;
++	}
+ 
+ 	ieee80211_set_qos_hdr(sdata, skb);
+ 	ieee80211_tx(sdata, skb, false);
 
 
-Adrian
