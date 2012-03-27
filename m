@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54849 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031252Ab2COPxx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46809 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756832Ab2C0Grm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 11:53:53 -0400
-Message-Id: <20120315155228.414054879@sipsolutions.net> (sfid-20120315_165400_634340_09667D15)
-Date: Thu, 15 Mar 2012 16:41:36 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Paul Stewart <pstew@chromium.org>
-Subject: [RFC 3/3] mac80211: remove queue stop on rate control update
-References: <20120315154133.312616639@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 27 Mar 2012 02:47:42 -0400
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Set background scan period.
+Date: Tue, 27 Mar 2012 12:17:32 +0530
+Message-ID: <1332830852-2348-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120327_084745_884930_B7AB7BDA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+After connect command, send scan params WMI command to
+set background scan period. If period value is zero
+send 0xffff as bg scan period to disable bg scan.
+Set default bg scan period to be 60 seconds if
+not specified.
 
-We currently stop the queue when changing the rate
-control between 20/40 MHz in the BSS. This seems to
-have been necessary when we actually changed the
-channel, but now that we just update the station it
-doesn't seem right any more. Remove it.
+This patch depends on below patch
+cfg80211: Add background scan period attribute.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 ---
- net/mac80211/ieee80211_i.h |    1 -
- net/mac80211/mlme.c        |   19 -------------------
- 2 files changed, 20 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
---- a/net/mac80211/ieee80211_i.h	2012-03-15 16:39:21.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2012-03-15 16:39:47.000000000 +0100
-@@ -743,7 +743,6 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
- 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
--	IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE,
- };
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index df95e0d..cf1e209 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -49,6 +49,8 @@
+ 	.max_power      = 30,                       \
+ }
  
- #ifdef CONFIG_MAC80211_LEDS
---- a/net/mac80211/mlme.c	2012-03-15 16:39:21.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-15 16:39:57.000000000 +0100
-@@ -212,21 +212,6 @@ static u32 ieee80211_config_ht_tx(struct
- 	if (sta && (!reconfig ||
- 		    (disable_40 != !!(sta->sta.ht_cap.cap &
- 		    			IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
--		if (reconfig) {
--			/*
--			 * Whenever the AP announces the HT mode changed
--			 * (e.g. 40 MHz intolerant) stop queues to avoid
--			 * sending out frames while the rate control is
--			 * reconfiguring.
--			 */
--			ieee80211_stop_queues_by_reason(&sdata->local->hw,
--				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
--
--			/* flush out all packets */
--			synchronize_net();
--
--			drv_flush(local, false);
--		}
++#define DEFAULT_BG_SCAN_PERIOD 60
++
+ static struct ieee80211_rate ath6kl_rates[] = {
+ 	RATETAB_ENT(10, 0x1, 0),
+ 	RATETAB_ENT(20, 0x2, 0),
+@@ -607,6 +609,17 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 					vif->req_bssid, vif->ch_hint,
+ 					ar->connect_ctrl_flags, nw_subtype);
  
- 		if (disable_40)
- 			sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-@@ -235,10 +220,6 @@ static u32 ieee80211_config_ht_tx(struct
++	/* disable background scan if period is 0 */
++	if (sme->bg_scan_period == 0)
++		sme->bg_scan_period = 0xffff;
++
++	/* configure default value if not specified */
++	if (sme->bg_scan_period == -1)
++		sme->bg_scan_period = DEFAULT_BG_SCAN_PERIOD;
++
++	ath6kl_wmi_scanparams_cmd(ar->wmi, vif->fw_vif_idx, 0, 0,
++		sme->bg_scan_period, 0, 0, 0, 3, 0, 0, 0);
++
+ 	up(&ar->sem);
  
- 		rate_control_rate_update(local, sband, sta,
- 					 IEEE80211_RC_HT_CHANGED);
--
--		if (reconfig)
--			ieee80211_wake_queues_by_reason(&sdata->local->hw,
--				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
- 	}
- 	mutex_unlock(&local->sta_mtx);
- 
-
+ 	if (status == -EINVAL) {
+-- 
+1.7.4.1
 
