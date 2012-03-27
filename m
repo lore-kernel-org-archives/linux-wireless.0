@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:42625 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932652Ab2CGUXe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 15:23:34 -0500
-Message-ID: <1331151811.2140.75.camel@joe2Laptop> (sfid-20120307_212340_628487_104067E1)
-Subject: [PATCH] iwlwifi: Add __printf verification
-From: Joe Perches <joe@perches.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Date: Wed, 07 Mar 2012 12:23:31 -0800
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.polymtl.ca ([132.207.4.11]:42646 "EHLO smtp.polymtl.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750784Ab2C0Oxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 10:53:50 -0400
+Received: from localhost (imp-4-2.polymtl.ca [132.207.4.77])
+	by smtp.polymtl.ca (8.14.3/8.14.3) with ESMTP id q2RErm8u029913
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2012 10:53:49 -0400
+Message-ID: <1332860028.4f71d47c7ec86@www.imp.polymtl.ca> (sfid-20120327_165353_225822_E1A133C0)
+Date: Tue, 27 Mar 2012 10:53:48 -0400
+From: Naveen Goswamy <naveen.goswamy@polymtl.ca>
+To: linux-wireless@vger.kernel.org
+Subject: brcmsmac not working well
+References: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com> <1332856558-5708-4-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1332856558-5708-4-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure that arguments match formats.
-All current uses do.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/iwlwifi/iwl-debug.h |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+I have the BCM4313 [14e4:4727] (rev 01)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 01b2330..42e6bbb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -34,10 +34,14 @@
- 
- struct iwl_priv;
- 
-+__printf(4, 5)
- void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
- 		const char *fmt, ...);
-+__printf(2, 3)
- void __iwl_warn(struct device *dev, const char *fmt, ...);
-+__printf(2, 3)
- void __iwl_info(struct device *dev, const char *fmt, ...);
-+__printf(2, 3)
- void __iwl_crit(struct device *dev, const char *fmt, ...);
- 
- /* No matter what is m (priv, bus, trans), this will work */
-@@ -47,10 +51,12 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
- #define IWL_CRIT(m, f, a...) __iwl_crit(trans(m)->dev, f, ## a)
- 
- #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
-+__printf(6, 7)
- void __iwl_dbg(struct iwl_shared *shared, struct device *dev,
- 	       u32 level, bool limit, const char *function,
- 	       const char *fmt, ...);
- #else
-+__printf(6, 7)
- static inline void
- __iwl_dbg(struct iwl_shared *shared, struct device *dev,
- 	  u32 level, bool limit, const char *function,
+When using wireshark, I see that I am getting many {TCP Retransmission,TCP Dup
+ACK,TCP RST} with {TCP, HTTP, SSH} when using brcmsmac driver in the 3.2.1
+kernel.  I've tried 3.3-rc5 kernel with similar results.
 
+I notice a lot of these popping up in /var/log/messages as well:
+
+ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 155/256 dur
+1746/1504
+ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
+1546/1504
+ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
+1546/1504
+
+
+any ideas how to solve this?
+
+Thanks,
+
+Naveen
 
