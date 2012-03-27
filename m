@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aldebaran.gro-tsen.net ([88.191.60.176]:35704 "EHLO
-	aldebaran.gro-tsen.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164Ab2CUWCo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50353 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753634Ab2C0PHD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2012 18:02:44 -0400
-Date: Wed, 21 Mar 2012 23:02:42 +0100
-From: David Madore <david+ml@madore.org>
-To: Adrian Chadd <adrian@freebsd.org>
+	Tue, 27 Mar 2012 11:07:03 -0400
+Message-ID: <1332860821.3501.6.camel@jlt3.sipsolutions.net> (sfid-20120327_170708_823983_516A7C1E)
+Subject: Re: [PATCH 2/3] mac80211: prepare ieee80211_sta_get_rates to per-vif
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: ath9k_htc fails with "Target is unresponsive"
-Message-ID: <20120321220242.GA26363@aldebaran.gro-tsen.net> (sfid-20120321_230314_873940_14D213DE)
-References: <20120321175800.GA28516@aldebaran.gro-tsen.net>
- <CAJ-Vmom2fPUuuT8mUa2fWrbBQGuDtd7nh7Tkn3Sa2_TmhjtJaA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ-Vmom2fPUuuT8mUa2fWrbBQGuDtd7nh7Tkn3Sa2_TmhjtJaA@mail.gmail.com>
+Date: Tue, 27 Mar 2012 17:07:01 +0200
+In-Reply-To: <1332856558-5708-3-git-send-email-michal.kazior@tieto.com>
+References: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com>
+	 <1332856558-5708-3-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 21, 2012 at 01:16:44PM -0700, Adrian Chadd wrote:
-> Are you sure this isn't partially a USB controller/initialisation problem?
+On Tue, 2012-03-27 at 15:55 +0200, Michal Kazior wrote:
 
-Could be.  I wish I knew how to be sure.  If it helps, I tried putting
-the dongle behind a USB switch, which made no difference whatsoever.
+> -u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
+> +u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
+>  			    struct ieee802_11_elems *elems,
+>  			    enum ieee80211_band band)
+>  {
+> +	struct ieee80211_local *local = sdata->local;
+>  	struct ieee80211_supported_band *sband;
+>  	struct ieee80211_rate *bitrates;
+>  	size_t num_rates;
 
-> What's the exact combination that works/fails?
-> 
-> * power on boot with the dongle plugged in;
+Ditto here, though I actually got confused even further ... we shouldn't
+remove the local/sdata arguments, we should only remove the use of
+local->hw.conf.channel! IOW simply something like this:
 
-Works.
+-       if (!sband) {
+-               WARN_ON(1);
+-               sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+-       }
++       if (WARN_ON(!sband))
++               return 1;
 
-> * reset pins shorted with the dongle plugged in;
+should be sufficient instead of doing all the prototype changes?
 
-The reset button on the box doesn't work.  If I reset through the JTAG
-interface, the Wifi dongle fails to work.
+johannes
 
-> * "reboot" from a running system with the dongle plugged in;
-
-Fails.
-
-> .. then repeat the above with the dongle unplugged during system
-> POST/boot, then plug it in once everything has initialised to
-> multi-user mode?
-
-Plugging the dongle always makes it work, no matter how the system was
-initialized.
-
-Or, to summarize all of this: the dongle works if and only if
-ath9k_htc is initializing it for the very first time since it was
-physically plugged in or powered on.  No reset, USB reset or software
-reset of any kind seems to help.
-
--- 
-     David A. Madore
-   ( http://www.madore.org/~david/ )
