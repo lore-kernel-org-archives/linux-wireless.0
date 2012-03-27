@@ -1,137 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54587 "EHLO mga09.intel.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:63884 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755122Ab2CDUnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:08 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 061/101] iwlwifi: virtualize nic_config
-Date: Sun,  4 Mar 2012 11:29:15 -0800
-Message-Id: <1330889395-533-62-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214538_324411_0DC3CB34)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1754497Ab2C0N4X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 09:56:23 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] mac80211: prepare ieee80211_mandatory_rates to per-vif
+Date: Tue, 27 Mar 2012 15:55:56 +0200
+Message-ID: <1332856558-5708-2-git-send-email-michal.kazior@tieto.com> (sfid-20120327_155627_286722_1493CB90)
+In-Reply-To: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com>
+References: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In preparation for multi-channel operation.
 
-The nic_config sets uCode dependent register
-bits, so it must be virtual in the op_mode.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c        |    8 ++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c       |    5 -----
- drivers/net/wireless/iwlwifi/iwl-op-mode.h    |    9 +++++++++
- drivers/net/wireless/iwlwifi/iwl-shared.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 +-
- 5 files changed, 18 insertions(+), 7 deletions(-)
+ net/mac80211/ibss.c        |    6 +++---
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/iface.c       |    2 +-
+ net/mac80211/util.c        |    3 ++-
+ 4 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index afded29..98f32e5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1422,6 +1422,13 @@ static void iwl_cmd_queue_full(struct iwl_op_mode *op_mode)
- 	}
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 33fd8d9..50ba1fa 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -332,7 +332,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* make sure mandatory rates are always added */
+ 	sta->sta.supp_rates[band] = supp_rates |
+-			ieee80211_mandatory_rates(local, band);
++			ieee80211_mandatory_rates(sdata, band);
+ 
+ 	return ieee80211_ibss_finish_sta(sta, auth);
+ }
+@@ -417,7 +417,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 				prev_rates = sta->sta.supp_rates[band];
+ 				/* make sure mandatory rates are always added */
+ 				sta->sta.supp_rates[band] = supp_rates |
+-					ieee80211_mandatory_rates(local, band);
++					ieee80211_mandatory_rates(sdata, band);
+ 
+ 				if (sta->sta.supp_rates[band] != prev_rates) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+@@ -604,7 +604,7 @@ void ieee80211_ibss_rx_no_sta(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* make sure mandatory rates are always added */
+ 	sta->sta.supp_rates[band] = supp_rates |
+-			ieee80211_mandatory_rates(local, band);
++			ieee80211_mandatory_rates(sdata, band);
+ 
+ 	spin_lock(&ifibss->incomplete_lock);
+ 	list_add(&sta->list, &ifibss->incomplete_stations);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d9798a3..de9346e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1406,7 +1406,7 @@ void ieee802_11_parse_elems(u8 *start, size_t len,
+ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+ 			       struct ieee802_11_elems *elems,
+ 			       u64 filter, u32 crc);
+-u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
++u32 ieee80211_mandatory_rates(struct ieee80211_sub_if_data *sdata,
+ 			      enum ieee80211_band band);
+ 
+ void ieee80211_dynamic_ps_enable_work(struct work_struct *work);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 401c01f..c7c60ce 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1005,7 +1005,7 @@ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* reset some values that shouldn't be kept across type changes */
+ 	sdata->vif.bss_conf.basic_rates =
+-		ieee80211_mandatory_rates(sdata->local,
++		ieee80211_mandatory_rates(sdata,
+ 			sdata->local->hw.conf.channel->band);
+ 	sdata->drop_unencrypted = 0;
+ 	if (type == NL80211_IFTYPE_STATION)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 32f7a3b..959b2c4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -868,9 +868,10 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_set_wmm_default(sdata, true);
  }
  
-+static void iwl_nic_config(struct iwl_op_mode *op_mode)
-+{
-+	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
-+
-+	cfg(priv)->lib->nic_config(priv);
-+}
-+
- const struct iwl_op_mode_ops iwl_dvm_ops = {
- 	.start = iwl_op_mode_dvm_start,
- 	.stop = iwl_op_mode_dvm_stop,
-@@ -1432,6 +1439,7 @@ const struct iwl_op_mode_ops iwl_dvm_ops = {
- 	.free_skb = iwl_free_skb,
- 	.nic_error = iwl_nic_error,
- 	.cmd_queue_full = iwl_cmd_queue_full,
-+	.nic_config = iwl_nic_config,
- };
- 
- /*****************************************************************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index c60c4a8..6648c1b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1479,11 +1479,6 @@ void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- 	wiphy_rfkill_set_hw_state(priv->hw->wiphy, state);
- }
- 
--void iwl_nic_config(struct iwl_priv *priv)
--{
--	cfg(priv)->lib->nic_config(priv);
--}
--
- void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
+-u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
++u32 ieee80211_mandatory_rates(struct ieee80211_sub_if_data *sdata,
+ 			      enum ieee80211_band band)
  {
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-index a4a4907..6ea4163 100644
---- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-@@ -123,6 +123,8 @@ struct iwl_fw;
-  *	Must be atomic
-  * @nic_error: error notification. Must be atomic
-  * @cmd_queue_full: Called when the command queue gets full. Must be atomic.
-+ * @nic_config: configure NIC, called before firmware is started.
-+ *	May sleep
-  */
- struct iwl_op_mode_ops {
- 	struct iwl_op_mode *(*start)(struct iwl_trans *trans,
-@@ -136,6 +138,7 @@ struct iwl_op_mode_ops {
- 	void (*free_skb)(struct iwl_op_mode *op_mode, struct sk_buff *skb);
- 	void (*nic_error)(struct iwl_op_mode *op_mode);
- 	void (*cmd_queue_full)(struct iwl_op_mode *op_mode);
-+	void (*nic_config)(struct iwl_op_mode *op_mode);
- };
- 
- /**
-@@ -199,6 +202,12 @@ static inline void iwl_op_mode_cmd_queue_full(struct iwl_op_mode *op_mode)
- 	op_mode->ops->cmd_queue_full(op_mode);
- }
- 
-+static inline void iwl_op_mode_nic_config(struct iwl_op_mode *op_mode)
-+{
-+	might_sleep();
-+	op_mode->ops->nic_config(op_mode);
-+}
-+
- /*****************************************************
- * Op mode layers implementations
- ******************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 4fc8967..a6c2539 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -416,7 +416,6 @@ enum iwl_rxon_context_id {
- };
- 
- int iwlagn_hw_valid_rtc_data_addr(u32 addr);
--void iwl_nic_config(struct iwl_priv *priv);
- const char *get_cmd_string(u8 cmd);
- 
- #define IWL_CMD(x) case x: return #x
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index d68dd65..836e067 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -823,7 +823,7 @@ static int iwl_nic_init(struct iwl_trans *trans)
- 
- 	iwl_set_pwr_vmain(trans);
- 
--	iwl_nic_config(priv(trans));
-+	iwl_op_mode_nic_config(trans->op_mode);
- 
- #ifndef CONFIG_IWLWIFI_IDI
- 	/* Allocate the RX queue, or reset if it is already allocated */
++	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rate *bitrates;
+ 	u32 mandatory_rates;
 -- 
 1.7.0.4
 
