@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754999Ab2CDUnB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:01 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 023/101] iwlwifi: transport's tx_agg_alloc must not sleep
-Date: Sun,  4 Mar 2012 11:28:37 -0800
-Message-Id: <1330889395-533-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214351_447407_31753188)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:34981 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754726Ab2C0RqK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 13:46:10 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 27 Mar 2012 10:42:42 -0700
+Subject: RE: [PATCH] mwifiex: don't use IEEE80211_MAX_QUEUES
+Message-ID: <477F20668A386D41ADCC57781B1F70430839D7BD7D@SC-VEXCH1.marvell.com> (sfid-20120327_194614_014810_4D403DFD)
+References: <1332850079.3938.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1332850079.3938.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The annotation/documentation is wrong, we call
-it in a context that can't sleep.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.h |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index e8ab8d8..0197f31 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -229,7 +229,7 @@ static inline void iwl_free_resp(struct iwl_host_cmd *cmd)
-  * @reclaim: free packet until ssn. Returns a list of freed packets.
-  *	Must be atomic
-  * @tx_agg_alloc: allocate resources for a TX BA session
-- *	May sleep
-+ *	Must be atomic
-  * @tx_agg_setup: setup a tx queue for AMPDU - will be called once the HW is
-  *	ready and a successful ADDBA response has been received.
-  *	May sleep
-@@ -474,8 +474,6 @@ static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
- static inline int iwl_trans_tx_agg_alloc(struct iwl_trans *trans,
- 					 int sta_id, int tid)
- {
--	might_sleep();
--
- 	if (trans->state != IWL_TRANS_FW_ALIVE)
- 		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
- 
--- 
-1.7.0.4
-
+SGkgSm9oYW5uZXMsDQoNClRoYW5rcyBmb3IgeW91ciBwYXRjaC4NCg0KPiBGcm9tOiBKb2hhbm5l
+cyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4gDQo+IElFRUU4MDIxMV9NQVhfUVVF
+VUVTIGlzIGFuIGludGVybmFsIG1hYzgwMjExIHZhbHVlLA0KPiBpdCBpcyBub3QgZ3VhcmFudGVl
+ZCB0byBiZSBhbHdheXMgNC4gVGhlIGZpcm13YXJlDQo+IEFQSSBpbiBtd2lmaWV4IGFsbW9zdCBj
+ZXJ0YWlubHkgZG9lc24ndCBjYXJlIGFib3V0DQo+IG1hYzgwMjExIGNoYW5naW5nIHRob3VnaCwg
+c28gbXdpZmlleCBzaG91bGRuJ3QgdXNlDQo+IHRoaXMgdmFsdWUuDQo+IA0KPiBNYXliZSBpdCBz
+aG91bGQgdXNlIElFRUU4MDIxMV9OVU1fQUNTIGluc3RlYWQgYW5kDQo+IHRoYXQgaXMgd2hhdCBJ
+J20gZG9pbmcgaGVyZSBhcyBhdCBsZWFzdCB0aGF0IHZhbHVlDQo+IHdpbGwgcHJvYmFibHkgbmV2
+ZXIgY2hhbmdlLCBidXQgbWF5YmUgaXQgc2hvdWxkDQo+IGhhdmUgaXRzIG93biBkZWZpbmUgaW5z
+dGVhZC4NCg0KSUVFRTgwMjExX05VTV9BQ1MgaXMganVzdCBmaW5lIGZvciBtd2lmaWV4Lg0KDQo+
+IA0KPiBTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNv
+bT4NCg0KQWNrZWQtYnk6IEJpbmcgWmhhbyA8YnpoYW9AbWFydmVsbC5jb20+DQoNClRoYW5rcywN
+CkJpbmcNCg0KPiAtLS0NCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvZncuaCAgIHwg
+ICAgNCArKy0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L21haW4uaCB8ICAgIDYg
+KysrLS0tDQo+ICAyIGZpbGVzIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMo
+LSkNCj4gDQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvZncuaAkyMDEyLTAz
+LTI2IDEyOjI1OjAwLjAwMDAwMDAwMCArMDIwMA0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9td2lmaWV4L2Z3LmgJMjAxMi0wMy0yNyAxNDowNTowMS4wMDAwMDAwMDAgKzAyMDANCj4gQEAg
+LTEwMDcsNyArMTAwNyw3IEBAIHN0cnVjdCBpZWVlX3R5cGVzX3dtbV9wYXJhbWV0ZXIgew0KPiAg
+CXN0cnVjdCBpZWVlX3R5cGVzX3ZlbmRvcl9oZWFkZXIgdmVuZF9oZHI7DQo+ICAJdTggcW9zX2lu
+Zm9fYml0bWFwOw0KPiAgCXU4IHJlc2VydmVkOw0KPiAtCXN0cnVjdCBpZWVlX3R5cGVzX3dtbV9h
+Y19wYXJhbWV0ZXJzIGFjX3BhcmFtc1tJRUVFODAyMTFfTUFYX1FVRVVFU107DQo+ICsJc3RydWN0
+IGllZWVfdHlwZXNfd21tX2FjX3BhcmFtZXRlcnMgYWNfcGFyYW1zW0lFRUU4MDIxMV9OVU1fQUNT
+XTsNCj4gIH0gX19wYWNrZWQ7DQo+IA0KPiAgc3RydWN0IGllZWVfdHlwZXNfd21tX2luZm8gew0K
+PiBAQCAtMTAyOCw3ICsxMDI4LDcgQEAgc3RydWN0IGllZWVfdHlwZXNfd21tX2luZm8gew0KPiAN
+Cj4gIHN0cnVjdCBob3N0X2NtZF9kc193bW1fZ2V0X3N0YXR1cyB7DQo+ICAJdTggcXVldWVfc3Rh
+dHVzX3RsdltzaXplb2Yoc3RydWN0IG13aWZpZXhfaWVfdHlwZXNfd21tX3F1ZXVlX3N0YXR1cykg
+Kg0KPiAtCQkJICAgICAgSUVFRTgwMjExX01BWF9RVUVVRVNdOw0KPiArCQkJICAgICAgSUVFRTgw
+MjExX05VTV9BQ1NdOw0KPiAgCXU4IHdtbV9wYXJhbV90bHZbc2l6ZW9mKHN0cnVjdCBpZWVlX3R5
+cGVzX3dtbV9wYXJhbWV0ZXIpICsgMl07DQo+ICB9IF9fcGFja2VkOw0KPiANCj4gLS0tIGEvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmgJMjAxMi0wMy0yNiAxMjoyNTowMC4wMDAw
+MDAwMDAgKzAyMDANCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9tYWluLmgJ
+MjAxMi0wMy0yNyAxNDowNTowMS4wMDAwMDAwMDAgKzAyMDANCj4gQEAgLTIwMSwxMCArMjAxLDEw
+IEBAIHN0cnVjdCBtd2lmaWV4X3dtbV9kZXNjIHsNCj4gIAl1MzIgcGFja2V0c19vdXRbTUFYX05V
+TV9USURdOw0KPiAgCS8qIHNwaW4gbG9jayB0byBwcm90ZWN0IHJhX2xpc3QgKi8NCj4gIAlzcGlu
+bG9ja190IHJhX2xpc3Rfc3BpbmxvY2s7DQo+IC0Jc3RydWN0IG13aWZpZXhfd21tX2FjX3N0YXR1
+cyBhY19zdGF0dXNbSUVFRTgwMjExX01BWF9RVUVVRVNdOw0KPiAtCWVudW0gbXdpZmlleF93bW1f
+YWNfZSBhY19kb3duX2dyYWRlZF92YWxzW0lFRUU4MDIxMV9NQVhfUVVFVUVTXTsNCj4gKwlzdHJ1
+Y3QgbXdpZmlleF93bW1fYWNfc3RhdHVzIGFjX3N0YXR1c1tJRUVFODAyMTFfTlVNX0FDU107DQo+
+ICsJZW51bSBtd2lmaWV4X3dtbV9hY19lIGFjX2Rvd25fZ3JhZGVkX3ZhbHNbSUVFRTgwMjExX05V
+TV9BQ1NdOw0KPiAgCXUzMiBkcnZfcGt0X2RlbGF5X21heDsNCj4gLQl1OCBxdWV1ZV9wcmlvcml0
+eVtJRUVFODAyMTFfTUFYX1FVRVVFU107DQo+ICsJdTggcXVldWVfcHJpb3JpdHlbSUVFRTgwMjEx
+X05VTV9BQ1NdOw0KPiAgCXUzMiB1c2VyX3ByaV9wa3RfdHhfY3RybFtXTU1fSElHSEVTVF9QUklP
+UklUWSArIDFdOwkvKiBVUDogMCB0byA3ICovDQo+ICAJLyogTnVtYmVyIG9mIHRyYW5zbWl0IHBh
+Y2tldHMgcXVldWVkICovDQo+ICAJYXRvbWljX3QgdHhfcGt0c19xdWV1ZWQ7DQo+IA0KDQo=
