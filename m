@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41996 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755018Ab2CZJIb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 05:08:31 -0400
-Message-ID: <1332752906.7081.10.camel@jlt3.sipsolutions.net> (sfid-20120326_110837_766582_17DEFDC6)
-Subject: Re: [PATCH] iwlwifi: do not nulify ctx->vif on reset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 26 Mar 2012 11:08:26 +0200
-In-Reply-To: <20120314081424.GC2788@redhat.com>
-References: <1331651434-4370-1-git-send-email-sgruszka@redhat.com>
-	 <1331651730.3329.6.camel@jlt3.sipsolutions.net>
-	 <20120314062549.GA2788@redhat.com>
-	 <1331708304.3376.0.camel@jlt3.sipsolutions.net>
-	 <20120314070748.GB2788@redhat.com> <20120314081424.GC2788@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx3.wp.pl ([212.77.101.7]:42572 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754786Ab2C0OvV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 10:51:21 -0400
+From: Jakub Kicinski <kubakici@wp.pl>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCH 4/4] rt2x00: zero registers of unused TX rings
+Date: Tue, 27 Mar 2012 16:51:07 +0200
+Message-Id: <1332859867-27921-5-git-send-email-kubakici@wp.pl> (sfid-20120327_165127_324513_CF46CD41)
+In-Reply-To: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
+References: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-03-14 at 09:14 +0100, Stanislaw Gruszka wrote:
-> On Wed, Mar 14, 2012 at 08:07:48AM +0100, Stanislaw Gruszka wrote:
-> > I'll update and recheck again.
-> 
-> On updated tree (head 035364916f75151b4b91ea53968c6beba7545317) devices
-> stop working here on any forced reset during TX as well. There are
-> messages like below in dmesg:
-> 
-> wlan3: dropped data frame to not associated station 00:00:00:00:00:00
-> 
-> And one time crash happened too, in:
-> 
-> (gdb) l *(iwl_remove_dynamic_key+0x1f0)
-> 0x15e20 is in iwl_remove_dynamic_key (drivers/net/wireless/iwlwifi/iwl-agn-sta.c:1105).
-> 1100		/*
-> 1101		 * The device expects GTKs for station interfaces to be
-> 1102		 * installed as GTKs for the AP station. If we have no
-> 1103		 * station ID, then use the ap_sta_id in that case.
-> 1104		 */
-> 1105		if (vif->type == NL80211_IFTYPE_STATION && vif_priv->ctx)
-> 1106			return vif_priv->ctx->ap_sta_id;
-> 1107	
-> 1108		return IWL_INVALID_STATION;
-> 1109	}
-> 
-> To reproduce problems, I'm doing "ping -f 192.168.1.1" on one console
-> and run script [1] on other console.
+This is needed if we take over after drivers which use those.
 
-Ok so I finally got some time to look into this in some detail. It seems
-that the driver assumes a few calls from mac80211 like key settings can
-only happen while the vif pointers are valid, which is correct under
-normal circumstances but due to races with HW reset it's not really true
-there.
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-We could fix all of those, but it seems your patch is the better
-approach. Wey, can you pick it up?
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index f39587b..1d24124 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -394,6 +394,16 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX3, 0);
+ 	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX3, 0);
+ 
++	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR4, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT4, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX4, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX4, 0);
++
++	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR5, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT5, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX5, 0);
++	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX5, 0);
++
+ 	entry_priv = rt2x00dev->rx->entries[0].priv_data;
+ 	rt2x00pci_register_write(rt2x00dev, RX_BASE_PTR, entry_priv->desc_dma);
+ 	rt2x00pci_register_write(rt2x00dev, RX_MAX_CNT,
+-- 
+1.7.7.6
 
