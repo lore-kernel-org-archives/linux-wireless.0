@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:59412 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1749667Ab2C1HFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 03:05:16 -0400
-Message-ID: <4F72B829.4040105@tieto.com> (sfid-20120328_090521_068454_6F0DC80C)
-Date: Wed, 28 Mar 2012 09:05:13 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/3] mac80211: prepare ieee80211_sta_get_rates to per-vif
-References: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com>	 <1332856558-5708-3-git-send-email-michal.kazior@tieto.com> <1332860821.3501.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1332860821.3501.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:36837 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752100Ab2C0MUT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 08:20:19 -0400
+Message-Id: <20120327121921.715465599@sipsolutions.net> (sfid-20120327_142028_274507_F2DAF893)
+Date: Tue, 27 Mar 2012 14:18:40 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5] mac80211: use AC constants
+References: <20120327121835.299635879@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Tue, 2012-03-27 at 15:55 +0200, Michal Kazior wrote:
->
->> -u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
->> +u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
->>   			    struct ieee802_11_elems *elems,
->>   			    enum ieee80211_band band)
->>   {
->> +	struct ieee80211_local *local = sdata->local;
->>   	struct ieee80211_supported_band *sband;
->>   	struct ieee80211_rate *bitrates;
->>   	size_t num_rates;
->
-> Ditto here, though I actually got confused even further ... we shouldn't
-> remove the local/sdata arguments, we should only remove the use of
-> local->hw.conf.channel! IOW simply something like this:
->
-> -       if (!sband) {
-> -               WARN_ON(1);
-> -               sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
-> -       }
-> +       if (WARN_ON(!sband))
-> +               return 1;
->
-> should be sufficient instead of doing all the prototype changes?
+From: Johannes Berg <johannes.berg@intel.com>
 
-You're right. I'll resend a new patchset.
+Use the AC constants instead of hard-coding
+the numbers with comments.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/util.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- a/net/mac80211/util.c	2012-03-23 17:45:09.000000000 +0100
++++ b/net/mac80211/util.c	2012-03-23 17:45:18.000000000 +0100
+@@ -790,20 +790,20 @@ void ieee80211_set_wmm_default(struct ie
+ 			aCWmin = 15;
+ 
+ 		switch (queue) {
+-		case 3: /* AC_BK */
++		case IEEE80211_AC_BK:
+ 			qparam.cw_max = aCWmax;
+ 			qparam.cw_min = aCWmin;
+ 			qparam.txop = 0;
+ 			qparam.aifs = 7;
+ 			break;
+ 		default: /* never happens but let's not leave undefined */
+-		case 2: /* AC_BE */
++		case IEEE80211_AC_BE:
+ 			qparam.cw_max = aCWmax;
+ 			qparam.cw_min = aCWmin;
+ 			qparam.txop = 0;
+ 			qparam.aifs = 3;
+ 			break;
+-		case 1: /* AC_VI */
++		case IEEE80211_AC_VI:
+ 			qparam.cw_max = aCWmin;
+ 			qparam.cw_min = (aCWmin + 1) / 2 - 1;
+ 			if (use_11b)
+@@ -812,7 +812,7 @@ void ieee80211_set_wmm_default(struct ie
+ 				qparam.txop = 3008/32;
+ 			qparam.aifs = 2;
+ 			break;
+-		case 0: /* AC_VO */
++		case IEEE80211_AC_VO:
+ 			qparam.cw_max = (aCWmin + 1) / 2 - 1;
+ 			qparam.cw_min = (aCWmin + 1) / 4 - 1;
+ 			if (use_11b)
 
 
--- Pozdrawiam / Best regards, Michal Kazior.
