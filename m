@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:54402 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756342Ab2CZJtJ convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:60291 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505Ab2C0OkZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 05:49:09 -0400
-From: "Elias, Ilan" <ilane@ti.com>
-To: Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Samuel Ortiz <sameo@linux.intel.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: RE: [PATCH] NFC: Add Core support to generate tag lost event
-Date: Mon, 26 Mar 2012 09:48:52 +0000
-Message-ID: <B30D1FD582D6484ABF57420512E5803516A9376C@DNCE03.ent.ti.com> (sfid-20120326_114913_527784_E3D99D57)
-References: <4F6C5C59.2060708@linux.intel.com>
-In-Reply-To: <4F6C5C59.2060708@linux.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 27 Mar 2012 10:40:25 -0400
+Received: by yhmm54 with SMTP id m54so4653306yhm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2012 07:40:23 -0700 (PDT)
+Message-ID: <4F71D154.3060103@lwfinger.net> (sfid-20120327_164032_470458_483DDEE2)
+Date: Tue, 27 Mar 2012 09:40:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/6] rtlwifi: Convert drivers away from global copies
+ of structures
+References: <1332787797-26475-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1332787797-26475-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eric, 
+On 03/26/2012 01:49 PM, Larry Finger wrote:
+> All the rtlwifi-family of drivers contain 1 or 2 tables that are defined
+> on a "per-driver" basis. For systems that contain more than one interface,
+> each instance will not have its own copy.
+>
+> This series of patches is to be applied to kernel 3.5.
+>
+> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
 
-> +static void nfc_check_pres_work(struct work_struct *work)
-> +{
-> +	struct nfc_dev *dev = container_of(work, struct nfc_dev,
-> +					   check_pres_work);
-> +	int rc;
-> +
-> +	device_lock(&dev->dev);
-> +
-> +	if (dev->activated_target_idx != NFC_TARGET_IDX_NONE &&
-> +	    timer_pending(&dev->check_pres_timer) == 0) {
-> +		rc = dev->ops->check_presence(dev, 
-> dev->activated_target_idx);
-> +		if (!rc) {
-> +			mod_timer(&dev->check_pres_timer, jiffies +
-> +				  
-> msecs_to_jiffies(NFC_CHECK_PRES_FREQ_MS));
-> +		} else {
-> +			nfc_target_lost(dev, dev->activated_target_idx);
-I'm unable to find the definition of the function nfc_target_lost.
+John,
 
-Thanks & BR,
-Ilan
+Please drop this series of patches. I think I messed something up and will 
+resubmit later.
+
+Sorry for the noise,
+
+Larry
+
+>
+> Larry Finger (6):
+>    rtlwifi: Move dig_t and ps_t structs
+>    rtlwifi: Add dm structs to private structure
+>    rtlwifi: rtl8192c: Convert driver to use private dm structs
+>    rtlwifi: rtl8192c: Convert driver to use private ps_t struct
+>    rtlwifi: rtl8192de: Convert driver to use private dm structs
+>    rtlwifi: rtl8192se: Convert driver to use private dm structs
+>
+>   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |   22 ++++++-
+>   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h  |   35 -----------
+>   drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    1 +
+>   drivers/net/wireless/rtlwifi/rtl8192ce/dm.h        |   35 -----------
+>   drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   11 +++-
+>   drivers/net/wireless/rtlwifi/rtl8192de/dm.h        |   51 ----------------
+>   drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |    1 +
+>   drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |    6 ++-
+>   drivers/net/wireless/rtlwifi/rtl8192se/dm.h        |   44 --------------
+>   drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |    1 +
+>   drivers/net/wireless/rtlwifi/wifi.h                |   63 ++++++++++++++++++++
+>   11 files changed, 99 insertions(+), 171 deletions(-)
+>
+
