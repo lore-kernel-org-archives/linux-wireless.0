@@ -1,54 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21182 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161435Ab2COU2D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 16:28:03 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/26] iwlwifi: clarify config struct comments
-Date: Thu, 15 Mar 2012 13:26:47 -0700
-Message-Id: <1331843226-29860-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212809_360866_32E99209)
-In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2687 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755541Ab2C0GIU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 02:08:20 -0400
+Message-ID: <4F71594F.4070907@qca.qualcomm.com> (sfid-20120327_080832_973251_5307465B)
+Date: Tue, 27 Mar 2012 09:08:15 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Joyce Chain <joycechien0306@gmail.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: ask AR6003 build for Linux Kernel 3.0.8 or newer
+References: <CA+eKVEmL83p8zrhbAE5WDLnO-svodEExTQpwcVJLhBLLixCf5g@mail.gmail.com>	<CA+eKVEnGQHZbtGVoz7BuDUf5QDWCmz7PwenU6E4RXNdVNBdi9A@mail.gmail.com>	<4F7152CE.7060500@qca.qualcomm.com> <CA+eKVEkOvuWoSeGtCsCV6uvKQy8tYY9w4CFOV9oRm9XZ7BVwKw@mail.gmail.com>
+In-Reply-To: <CA+eKVEkOvuWoSeGtCsCV6uvKQy8tYY9w4CFOV9oRm9XZ7BVwKw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/27/2012 09:00 AM, Joyce Chain wrote:
+> May I ask the other question -- Do you know the special team or body to
+> maintain AR6kSDK.build_3.1_RC.465?
+> Because the structures of the source code are too many different places
+> between AR6kSDK and ath6kl.
+> I can not build ath6kl source code(set CONFIG_ATH6K_LEGACY to y) on the
+> Linux kernel inside for our target.
 
-It talks about treating different uCode APIs
-as different pieces of hardware which really
-isn't how we handle things.
+The future is ath6kl and that's what I recommend to use. I don't have
+any knowledge about AR6kSDK, sorry.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-shared.h |   10 +++-------
- 1 files changed, 3 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index b515d65..94b16cc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -307,13 +307,9 @@ struct iwl_ht_params {
-  * @iq_invert: I/Q inversion
-  * @temp_offset_v2: support v2 of temperature offset calibration
-  *
-- * We enable the driver to be backward compatible wrt API version. The
-- * driver specifies which APIs it supports (with @ucode_api_max being the
-- * highest and @ucode_api_min the lowest). Firmware will only be loaded if
-- * it has a supported API version.
-- *
-- * The ideal usage of this infrastructure is to treat a new ucode API
-- * release as a new hardware revision.
-+ * We enable the driver to be backward compatible wrt. hardware features.
-+ * API differences in uCode shouldn't be handled here but through TLVs
-+ * and/or the uCode API version instead.
-  */
- struct iwl_cfg {
- 	/* params specific to an individual device within a device family */
--- 
-1.7.0.4
-
+Kalle
