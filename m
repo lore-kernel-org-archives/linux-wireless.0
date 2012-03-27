@@ -1,237 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35741 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:48046 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751456Ab2CEVSo (ORCPT
+	with ESMTP id S1751584Ab2C0MID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 16:18:44 -0500
-Subject: [PATCH v2] cfg80211/mac80211: report signal strength for mgmt
- frames
+	Tue, 27 Mar 2012 08:08:03 -0400
+Message-ID: <1332850079.3938.8.camel@jlt3.sipsolutions.net> (sfid-20120327_140808_814100_064A49EF)
+Subject: [PATCH] mwifiex: don't use IEEE80211_MAX_QUEUES
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20120305204251.GH18128@tuxdriver.com>
-References: <1330692035.8542.14.camel@jlt3.sipsolutions.net>
-	 <20120305204251.GH18128@tuxdriver.com>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bing Zhao <bzhao@marvell.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 27 Mar 2012 14:07:59 +0200
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 05 Mar 2012 22:18:41 +0100
-Message-ID: <1330982321.3545.13.camel@jlt3.sipsolutions.net> (sfid-20120305_221848_246519_06450402)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add the signal strength (in dBm only for now) to
-frames that are received via nl80211's various
-frame APIs.
+IEEE80211_MAX_QUEUES is an internal mac80211 value,
+it is not guaranteed to be always 4. The firmware
+API in mwifiex almost certainly doesn't care about
+mac80211 changing though, so mwifiex shouldn't use
+this value.
 
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Maybe it should use IEEE80211_NUM_ACS instead and
+that is what I'm doing here as at least that value
+will probably never change, but maybe it should
+have its own define instead.
+
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-v2: fix ath6kl -- it doesn't have this info in the WMI structs
+ drivers/net/wireless/mwifiex/fw.h   |    4 ++--
+ drivers/net/wireless/mwifiex/main.h |    6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/ath/ath6kl/wmi.c |    6 ++++--
- include/linux/nl80211.h               |    6 ++++++
- include/net/cfg80211.h                |    8 +++++---
- net/mac80211/rx.c                     |   13 +++++++++++--
- net/wireless/mlme.c                   |    7 ++++---
- net/wireless/nl80211.c                |    9 +++++++--
- net/wireless/nl80211.h                |    3 ++-
- 7 files changed, 39 insertions(+), 13 deletions(-)
-
---- a/include/linux/nl80211.h	2012-03-02 13:40:45.000000000 +0100
-+++ b/include/linux/nl80211.h	2012-03-05 22:15:41.000000000 +0100
-@@ -1197,6 +1197,10 @@ enum nl80211_commands {
-  * @NL80211_ATTR_NOACK_MAP: This u16 bitmap contains the No Ack Policy of
-  *      up to 16 TIDs.
-  *
-+ * @NL80211_ATTR_RX_SIGNAL_DBM: signal strength in dBm (as a 32-bit int);
-+ *	this attribute is (depending on the driver capabilities) added to
-+ *	received frames indicated with %NL80211_CMD_FRAME.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1442,6 +1446,8 @@ enum nl80211_attrs {
+--- a/drivers/net/wireless/mwifiex/fw.h	2012-03-26 12:25:00.000000000 +0200
++++ b/drivers/net/wireless/mwifiex/fw.h	2012-03-27 14:05:01.000000000 +0200
+@@ -1007,7 +1007,7 @@ struct ieee_types_wmm_parameter {
+ 	struct ieee_types_vendor_header vend_hdr;
+ 	u8 qos_info_bitmap;
+ 	u8 reserved;
+-	struct ieee_types_wmm_ac_parameters ac_params[IEEE80211_MAX_QUEUES];
++	struct ieee_types_wmm_ac_parameters ac_params[IEEE80211_NUM_ACS];
+ } __packed;
  
- 	NL80211_ATTR_NOACK_MAP,
+ struct ieee_types_wmm_info {
+@@ -1028,7 +1028,7 @@ struct ieee_types_wmm_info {
  
-+	NL80211_ATTR_RX_SIGNAL_DBM,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+ struct host_cmd_ds_wmm_get_status {
+ 	u8 queue_status_tlv[sizeof(struct mwifiex_ie_types_wmm_queue_status) *
+-			      IEEE80211_MAX_QUEUES];
++			      IEEE80211_NUM_ACS];
+ 	u8 wmm_param_tlv[sizeof(struct ieee_types_wmm_parameter) + 2];
+ } __packed;
  
- 	__NL80211_ATTR_AFTER_LAST,
---- a/include/net/cfg80211.h	2012-03-05 22:15:37.000000000 +0100
-+++ b/include/net/cfg80211.h	2012-03-05 22:15:41.000000000 +0100
-@@ -3186,6 +3186,7 @@ void cfg80211_del_sta(struct net_device
-  * cfg80211_rx_mgmt - notification of received, unprocessed management frame
-  * @dev: network device
-  * @freq: Frequency on which the frame was received in MHz
-+ * @sig_dbm: signal strength in mBm, or 0 if unknown
-  * @buf: Management frame (header + body)
-  * @len: length of the frame data
-  * @gfp: context flags
-@@ -3198,8 +3199,8 @@ void cfg80211_del_sta(struct net_device
-  * This function is called whenever an Action frame is received for a station
-  * mode interface, but is not processed in kernel.
-  */
--bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
--		      size_t len, gfp_t gfp);
-+bool cfg80211_rx_mgmt(struct net_device *dev, int freq, int sig_dbm,
-+		      const u8 *buf, size_t len, gfp_t gfp);
- 
- /**
-  * cfg80211_mgmt_tx_status - notification of TX status for management frame
-@@ -3312,6 +3313,7 @@ void cfg80211_probe_status(struct net_de
-  * @frame: the frame
-  * @len: length of the frame
-  * @freq: frequency the frame was received on
-+ * @sig_dbm: signal strength in mBm, or 0 if unknown
-  * @gfp: allocation flags
-  *
-  * Use this function to report to userspace when a beacon was
-@@ -3320,7 +3322,7 @@ void cfg80211_probe_status(struct net_de
-  */
- void cfg80211_report_obss_beacon(struct wiphy *wiphy,
- 				 const u8 *frame, size_t len,
--				 int freq, gfp_t gfp);
-+				 int freq, int sig_dbm, gfp_t gfp);
- 
- /*
-  * cfg80211_can_beacon_sec_chan - test if ht40 on extension channel can be used
---- a/net/wireless/nl80211.c	2012-03-02 13:40:45.000000000 +0100
-+++ b/net/wireless/nl80211.c	2012-03-05 22:15:41.000000000 +0100
-@@ -7673,7 +7673,8 @@ bool nl80211_unexpected_4addr_frame(stru
- 
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 		      struct net_device *netdev, u32 nlpid,
--		      int freq, const u8 *buf, size_t len, gfp_t gfp)
-+		      int freq, int sig_dbm,
-+		      const u8 *buf, size_t len, gfp_t gfp)
- {
- 	struct sk_buff *msg;
- 	void *hdr;
-@@ -7691,6 +7692,8 @@ int nl80211_send_mgmt(struct cfg80211_re
- 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
- 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
- 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
-+	if (sig_dbm)
-+		NLA_PUT_U32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm);
- 	NLA_PUT(msg, NL80211_ATTR_FRAME, len, buf);
- 
- 	genlmsg_end(msg, hdr);
-@@ -7952,7 +7955,7 @@ EXPORT_SYMBOL(cfg80211_probe_status);
- 
- void cfg80211_report_obss_beacon(struct wiphy *wiphy,
- 				 const u8 *frame, size_t len,
--				 int freq, gfp_t gfp)
-+				 int freq, int sig_dbm, gfp_t gfp)
- {
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
- 	struct sk_buff *msg;
-@@ -7975,6 +7978,8 @@ void cfg80211_report_obss_beacon(struct
- 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
- 	if (freq)
- 		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
-+	if (sig_dbm)
-+		NLA_PUT_U32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm);
- 	NLA_PUT(msg, NL80211_ATTR_FRAME, len, frame);
- 
- 	genlmsg_end(msg, hdr);
---- a/net/wireless/mlme.c	2012-03-02 13:40:45.000000000 +0100
-+++ b/net/wireless/mlme.c	2012-03-05 22:15:41.000000000 +0100
-@@ -814,8 +814,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
- 				  cookie);
- }
- 
--bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
--		      size_t len, gfp_t gfp)
-+bool cfg80211_rx_mgmt(struct net_device *dev, int freq, int sig_mbm,
-+		      const u8 *buf, size_t len, gfp_t gfp)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct wiphy *wiphy = wdev->wiphy;
-@@ -854,7 +854,8 @@ bool cfg80211_rx_mgmt(struct net_device
- 		/* found match! */
- 
- 		/* Indicate the received Action frame to user space */
--		if (nl80211_send_mgmt(rdev, dev, reg->nlpid, freq,
-+		if (nl80211_send_mgmt(rdev, dev, reg->nlpid,
-+				      freq, sig_mbm,
- 				      buf, len, gfp))
- 			continue;
- 
---- a/net/mac80211/rx.c	2012-03-05 22:15:39.000000000 +0100
-+++ b/net/mac80211/rx.c	2012-03-05 22:15:41.000000000 +0100
-@@ -2182,9 +2182,14 @@ ieee80211_rx_h_mgmt_check(struct ieee802
- 	if (rx->sdata->vif.type == NL80211_IFTYPE_AP &&
- 	    ieee80211_is_beacon(mgmt->frame_control) &&
- 	    !(rx->flags & IEEE80211_RX_BEACON_REPORTED)) {
-+	    	int sig = 0;
-+
-+		if (rx->local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
-+			sig = status->signal;
-+
- 		cfg80211_report_obss_beacon(rx->local->hw.wiphy,
- 					    rx->skb->data, rx->skb->len,
--					    status->freq, GFP_ATOMIC);
-+					    status->freq, sig, GFP_ATOMIC);
- 		rx->flags |= IEEE80211_RX_BEACON_REPORTED;
- 	}
- 
-@@ -2408,6 +2413,7 @@ static ieee80211_rx_result debug_noinlin
- ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
-+	int sig = 0;
- 
- 	/* skip known-bad action frames and return them in the next handler */
- 	if (status->rx_flags & IEEE80211_RX_MALFORMED_ACTION_FRM)
-@@ -2420,7 +2426,10 @@ ieee80211_rx_h_userspace_mgmt(struct iee
- 	 * it transmitted were processed or returned.
- 	 */
- 
--	if (cfg80211_rx_mgmt(rx->sdata->dev, status->freq,
-+	if (rx->local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
-+		sig = status->signal;
-+
-+	if (cfg80211_rx_mgmt(rx->sdata->dev, status->freq, sig,
- 			     rx->skb->data, rx->skb->len,
- 			     GFP_ATOMIC)) {
- 		if (rx->sta)
---- a/net/wireless/nl80211.h	2012-03-02 13:40:45.000000000 +0100
-+++ b/net/wireless/nl80211.h	2012-03-05 22:15:41.000000000 +0100
-@@ -92,7 +92,8 @@ void nl80211_send_sta_del_event(struct c
- 				gfp_t gfp);
- 
- int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
--		      struct net_device *netdev, u32 nlpid, int freq,
-+		      struct net_device *netdev, u32 nlpid,
-+		      int freq, int sig_dbm,
- 		      const u8 *buf, size_t len, gfp_t gfp);
- void nl80211_send_mgmt_tx_status(struct cfg80211_registered_device *rdev,
- 				 struct net_device *netdev, u64 cookie,
---- a/drivers/net/wireless/ath/ath6kl/wmi.c	2012-02-24 16:39:05.000000000 +0100
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c	2012-03-05 22:17:47.000000000 +0100
-@@ -556,7 +556,8 @@ static int ath6kl_wmi_rx_probe_req_event
- 		   dlen, freq, vif->probe_req_report);
- 
- 	if (vif->probe_req_report || vif->nw_type == AP_NETWORK)
--		cfg80211_rx_mgmt(vif->ndev, freq, ev->data, dlen, GFP_ATOMIC);
-+		cfg80211_rx_mgmt(vif->ndev, freq, 0,
-+				 ev->data, dlen, GFP_ATOMIC);
- 
- 	return 0;
- }
-@@ -595,7 +596,8 @@ static int ath6kl_wmi_rx_action_event_rx
- 		return -EINVAL;
- 	}
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
--	cfg80211_rx_mgmt(vif->ndev, freq, ev->data, dlen, GFP_ATOMIC);
-+	cfg80211_rx_mgmt(vif->ndev, freq, 0,
-+			 ev->data, dlen, GFP_ATOMIC);
- 
- 	return 0;
- }
+--- a/drivers/net/wireless/mwifiex/main.h	2012-03-26 12:25:00.000000000 +0200
++++ b/drivers/net/wireless/mwifiex/main.h	2012-03-27 14:05:01.000000000 +0200
+@@ -201,10 +201,10 @@ struct mwifiex_wmm_desc {
+ 	u32 packets_out[MAX_NUM_TID];
+ 	/* spin lock to protect ra_list */
+ 	spinlock_t ra_list_spinlock;
+-	struct mwifiex_wmm_ac_status ac_status[IEEE80211_MAX_QUEUES];
+-	enum mwifiex_wmm_ac_e ac_down_graded_vals[IEEE80211_MAX_QUEUES];
++	struct mwifiex_wmm_ac_status ac_status[IEEE80211_NUM_ACS];
++	enum mwifiex_wmm_ac_e ac_down_graded_vals[IEEE80211_NUM_ACS];
+ 	u32 drv_pkt_delay_max;
+-	u8 queue_priority[IEEE80211_MAX_QUEUES];
++	u8 queue_priority[IEEE80211_NUM_ACS];
+ 	u32 user_pri_pkt_tx_ctrl[WMM_HIGHEST_PRIORITY + 1];	/* UP: 0 to 7 */
+ 	/* Number of transmit packets queued */
+ 	atomic_t tx_pkts_queued;
 
 
