@@ -1,330 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:41680 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753559Ab2CMAFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 20:05:40 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: gregkh@linuxfoundation.org
-Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
-	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v4 2/7] USB: EHCI: Add a generic platform device driver
-Date: Tue, 13 Mar 2012 01:04:48 +0100
-Message-Id: <1331597093-425-3-git-send-email-hauke@hauke-m.de> (sfid-20120313_010544_451091_AD6DD29A)
-In-Reply-To: <1331597093-425-1-git-send-email-hauke@hauke-m.de>
-References: <1331597093-425-1-git-send-email-hauke@hauke-m.de>
+Received: from ebb06.tieto.com ([131.207.168.38]:61720 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752116Ab2C0OlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 10:41:06 -0400
+Message-ID: <4F71D17F.6090405@tieto.com> (sfid-20120327_164110_737361_9437160C)
+Date: Tue, 27 Mar 2012 16:41:03 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 00/12] multi-channel support
+References: <06edaf32-5a4f-4887-8b22-6bec31c2c7c6@FIVLA-EXHUB02.eu.tieto.com>			 (sfid-20120320_154008_038091_B257E507) <1332494945.3506.23.camel@jlt3.sipsolutions.net>		 <4F6C82A5.5080302@tieto.com>	 (sfid-20120323_150333_004349_1A5648D7) <1332514895.10384.40.camel@jlt3.sipsolutions.net>	 <4F706122.6080107@tieto.com> <1332767991.5435.34.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1332767991.5435.34.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a generic driver for platform devices. It works like the PCI
-driver and is based on it. This is for devices which do not have an own
-bus but their EHCI controller works like a PCI controller. It will be
-used for the Broadcom bcma and ssb USB EHCI controller.
+Johannes Berg wrote:
+> Ok, so ... I think we're getting to the bottom of our misunderstanding&
+> confusion. I've completely ignored scan/off-channel in this because I
+> don't have to handle it in software, our device handles it itself. It
+> seems from this that you do need it handled in software.
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/usb/host/Kconfig         |   10 ++
- drivers/usb/host/ehci-hcd.c      |    5 +
- drivers/usb/host/ehci-platform.c |  198 ++++++++++++++++++++++++++++++++++++++
- include/linux/usb/ehci_pdriver.h |   46 +++++++++
- 4 files changed, 259 insertions(+), 0 deletions(-)
- create mode 100644 drivers/usb/host/ehci-platform.c
- create mode 100644 include/linux/usb/ehci_pdriver.h
+No, not really. I was just worried as to not break things and maybe 
+improve them as a bonus.
 
-diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
-index fd521f3..5f46342 100644
---- a/drivers/usb/host/Kconfig
-+++ b/drivers/usb/host/Kconfig
-@@ -403,6 +403,16 @@ config USB_OHCI_HCD_PLATFORM
- 
- 	  If unsure, say N.
- 
-+config USB_EHCI_HCD_PLATFORM
-+	bool "Generic EHCI driver for a platform device"
-+	depends on USB_EHCI_HCD && EXPERIMENTAL
-+	default n
-+	---help---
-+	  Adds an EHCI host driver for a generic platform device, which
-+	  provieds a memory space and an irq.
-+
-+	  If unsure, say N.
-+
- config USB_OHCI_BIG_ENDIAN_DESC
- 	bool
- 	depends on USB_OHCI_HCD
-diff --git a/drivers/usb/host/ehci-hcd.c b/drivers/usb/host/ehci-hcd.c
-index a007a9f..afe0984 100644
---- a/drivers/usb/host/ehci-hcd.c
-+++ b/drivers/usb/host/ehci-hcd.c
-@@ -1376,6 +1376,11 @@ MODULE_LICENSE ("GPL");
- #define        PLATFORM_DRIVER         ehci_mv_driver
- #endif
- 
-+#ifdef CONFIG_USB_EHCI_HCD_PLATFORM
-+#include "ehci-platform.c"
-+#define PLATFORM_DRIVER		ehci_platform_driver
-+#endif
-+
- #if !defined(PCI_DRIVER) && !defined(PLATFORM_DRIVER) && \
-     !defined(PS3_SYSTEM_BUS_DRIVER) && !defined(OF_PLATFORM_DRIVER) && \
-     !defined(XILINX_OF_PLATFORM_DRIVER)
-diff --git a/drivers/usb/host/ehci-platform.c b/drivers/usb/host/ehci-platform.c
-new file mode 100644
-index 0000000..d238b4e2
---- /dev/null
-+++ b/drivers/usb/host/ehci-platform.c
-@@ -0,0 +1,198 @@
-+/*
-+ * Generic platform ehci driver
-+ *
-+ * Copyright 2007 Steven Brown <sbrown@cortland.com>
-+ * Copyright 2010-2012 Hauke Mehrtens <hauke@hauke-m.de>
-+ *
-+ * Derived from the ohci-ssb driver
-+ * Copyright 2007 Michael Buesch <m@bues.ch>
-+ *
-+ * Derived from the EHCI-PCI driver
-+ * Copyright (c) 2000-2004 by David Brownell
-+ *
-+ * Derived from the ohci-pci driver
-+ * Copyright 1999 Roman Weissgaerber
-+ * Copyright 2000-2002 David Brownell
-+ * Copyright 1999 Linus Torvalds
-+ * Copyright 1999 Gregory P. Smith
-+ *
-+ * Licensed under the GNU/GPL. See COPYING for details.
-+ */
-+#include <linux/platform_device.h>
-+#include <linux/usb/ehci_pdriver.h>
-+
-+static int ehci_platform_reset(struct usb_hcd *hcd)
-+{
-+	struct platform_device *pdev = to_platform_device(hcd->self.controller);
-+	struct usb_ehci_pdata *pdata = pdev->dev.platform_data;
-+	struct ehci_hcd *ehci = hcd_to_ehci(hcd);
-+	int retval;
-+
-+	hcd->has_tt = pdata->has_tt;
-+	ehci->has_synopsys_hc_bug = pdata->has_synopsys_hc_bug;
-+	ehci->big_endian_desc = pdata->big_endian_desc;
-+	ehci->big_endian_mmio = pdata->big_endian_mmio;
-+
-+	ehci->caps = hcd->regs + pdata->caps_offset;
-+	retval = ehci_setup(hcd);
-+	if (retval)
-+		return retval;
-+
-+	if (pdata->port_power_on)
-+		ehci_port_power(ehci, 1);
-+	if (pdata->port_power_off)
-+		ehci_port_power(ehci, 0);
-+
-+	return 0;
-+}
-+
-+static const struct hc_driver ehci_platform_hc_driver = {
-+	.description		= hcd_name,
-+	.product_desc		= "Generic Platform EHCI Controller",
-+	.hcd_priv_size		= sizeof(struct ehci_hcd),
-+
-+	.irq			= ehci_irq,
-+	.flags			= HCD_MEMORY | HCD_USB2,
-+
-+	.reset			= ehci_platform_reset,
-+	.start			= ehci_run,
-+	.stop			= ehci_stop,
-+	.shutdown		= ehci_shutdown,
-+
-+	.urb_enqueue		= ehci_urb_enqueue,
-+	.urb_dequeue		= ehci_urb_dequeue,
-+	.endpoint_disable	= ehci_endpoint_disable,
-+	.endpoint_reset		= ehci_endpoint_reset,
-+
-+	.get_frame_number	= ehci_get_frame,
-+
-+	.hub_status_data	= ehci_hub_status_data,
-+	.hub_control		= ehci_hub_control,
-+#if defined(CONFIG_PM)
-+	.bus_suspend		= ehci_bus_suspend,
-+	.bus_resume		= ehci_bus_resume,
-+#endif
-+	.relinquish_port	= ehci_relinquish_port,
-+	.port_handed_over	= ehci_port_handed_over,
-+
-+	.update_device		= ehci_update_device,
-+
-+	.clear_tt_buffer_complete = ehci_clear_tt_buffer_complete,
-+};
-+
-+static int __devinit ehci_platform_probe(struct platform_device *dev)
-+{
-+	struct usb_hcd *hcd;
-+	struct resource *res_mem;
-+	int irq;
-+	int err = -ENOMEM;
-+
-+	BUG_ON(!dev->dev.platform_data);
-+
-+	if (usb_disabled())
-+		return -ENODEV;
-+
-+	irq = platform_get_irq(dev, 0);
-+	if (irq < 0) {
-+		pr_err("no irq provieded");
-+		return irq;
-+	}
-+	res_mem = platform_get_resource(dev, IORESOURCE_MEM, 0);
-+	if (!res_mem) {
-+		pr_err("no memory recourse provieded");
-+		return -ENXIO;
-+	}
-+
-+	hcd = usb_create_hcd(&ehci_platform_hc_driver, &dev->dev,
-+			     dev_name(&dev->dev));
-+	if (!hcd)
-+		return -ENOMEM;
-+
-+	hcd->rsrc_start = res_mem->start;
-+	hcd->rsrc_len = resource_size(res_mem);
-+
-+	if (!request_mem_region(hcd->rsrc_start, hcd->rsrc_len, hcd_name)) {
-+		pr_err("controller already in use");
-+		err = -EBUSY;
-+		goto err_put_hcd;
-+	}
-+
-+	hcd->regs = ioremap_nocache(hcd->rsrc_start, hcd->rsrc_len);
-+	if (!hcd->regs)
-+		goto err_release_region;
-+	err = usb_add_hcd(hcd, irq, IRQF_SHARED);
-+	if (err)
-+		goto err_iounmap;
-+
-+	platform_set_drvdata(dev, hcd);
-+
-+	return err;
-+
-+err_iounmap:
-+	iounmap(hcd->regs);
-+err_release_region:
-+	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
-+err_put_hcd:
-+	usb_put_hcd(hcd);
-+	return err;
-+}
-+
-+static int __devexit ehci_platform_remove(struct platform_device *dev)
-+{
-+	struct usb_hcd *hcd = platform_get_drvdata(dev);
-+
-+	usb_remove_hcd(hcd);
-+	iounmap(hcd->regs);
-+	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
-+	usb_put_hcd(hcd);
-+	platform_set_drvdata(dev, NULL);
-+
-+	return 0;
-+}
-+
-+#ifdef CONFIG_PM
-+
-+static int ehci_platform_suspend(struct device *dev)
-+{
-+	struct usb_hcd *hcd = dev_get_drvdata(dev);
-+	bool wakeup = device_may_wakeup(dev);
-+
-+	ehci_prepare_ports_for_controller_suspend(hcd_to_ehci(hcd), wakeup);
-+	return 0;
-+}
-+
-+static int ehci_platform_resume(struct device *dev)
-+{
-+	struct usb_hcd *hcd = dev_get_drvdata(dev);
-+
-+	ehci_prepare_ports_for_controller_resume(hcd_to_ehci(hcd));
-+	return 0;
-+}
-+
-+#else /* !CONFIG_PM */
-+#define ehci_platform_suspend	NULL
-+#define ehci_platform_resume	NULL
-+#endif /* CONFIG_PM */
-+
-+static const struct platform_device_id ehci_platform_table[] = {
-+	{ "ehci-platform", 0 },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(platform, ehci_platform_table);
-+
-+static const struct dev_pm_ops ehci_platform_pm_ops = {
-+	.suspend	= ehci_platform_suspend,
-+	.resume		= ehci_platform_resume,
-+};
-+
-+static struct platform_driver ehci_platform_driver = {
-+	.id_table	= ehci_platform_table,
-+	.probe		= ehci_platform_probe,
-+	.remove		= __devexit_p(ehci_platform_remove),
-+	.shutdown	= usb_hcd_platform_shutdown,
-+	.driver		= {
-+		.owner	= THIS_MODULE,
-+		.name	= "ehci-platform",
-+		.pm	= &ehci_platform_pm_ops,
-+	}
-+};
-diff --git a/include/linux/usb/ehci_pdriver.h b/include/linux/usb/ehci_pdriver.h
-new file mode 100644
-index 0000000..1894f42
---- /dev/null
-+++ b/include/linux/usb/ehci_pdriver.h
-@@ -0,0 +1,46 @@
-+/*
-+ * Copyright (C) 2012 Hauke Mehrtens <hauke@hauke-m.de>
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License as published by the
-+ * Free Software Foundation; either version 2 of the License, or (at your
-+ * option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-+ * for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software Foundation,
-+ * Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+ */
-+
-+#ifndef __USB_CORE_EHCI_PDRIVER_H
-+#define __USB_CORE_EHCI_PDRIVER_H
-+
-+/**
-+ * struct usb_ehci_pdata - platform_data for generic ehci driver
-+ *
-+ * @caps_offset:	offset of the EHCI Capability Registers to the start of
-+ *			the io memory region provided to the driver.
-+ * @has_tt:		set to 1 if TT is integrated in root hub.
-+ * @port_power_on:	set to 1 if the controller needs a power up after
-+ *			initialization.
-+ * @port_power_off:	set to 1 if the controller needs to be powered down
-+ *			after initialization.
-+ *
-+ * These are general configuration options for the EHCI controller. All of
-+ * these options are activating more or less workarounds for some hardware.
-+ */
-+struct usb_ehci_pdata {
-+	int		caps_offset;
-+	unsigned	has_tt:1;
-+	unsigned	has_synopsys_hc_bug:1;
-+	unsigned	big_endian_desc:1;
-+	unsigned	big_endian_mmio:1;
-+	unsigned	port_power_on:1;
-+	unsigned	port_power_off:1;
-+};
-+
-+#endif /* __USB_CORE_EHCI_PDRIVER_H */
+
+>>> Wrt. off-channel, I'm not sure I've understood you correctly. The
+>>> current off-channel is a very short-lived thing that doesn't really use
+>>> a "complete" channel context. In fact, in our implementation it is
+>>> completely separate since it's temporary (**).
+>>
+>> Maybe you're right, but how can we then express off-channel in a neat
+>> clean way? If we use channel contexts we get software AND hardware
+>> off-channel (as long as the device supports it) at the same time.
+>
+> I'm not sure. The detach logic etc. you proposed above will really not
+> be implementable in our device's context handling.
+
+Right. I was trying to compensate for the sw off-channel channel 
+contexts. I think I'm just going overboard and forget about practical 
+usage of things sometimes, silly me.
+
+
+>>   >>  Should we add capability
+>>   >>  flags for each ieee80211_channel_stream? Or we could add new driver
+>>   >>  callback, eg. "set_channel_try" and allow the driver to decide
+>>   >>  whether it allows a certain hardware state or not.
+>>   >
+>>   >  This is not a fully feasible "stream" anyway. Think of it more like a
+>>   >  single scan dwell -- you wouldn't express that as a separate "stream"
+>>   >  I think?
+>>
+>> Why not? Should we care what vif we're working with, or hw for that
+>> matter? Off-channel, as well as other operation means we want to do
+>> something on a certain channel. It shouldn't matter how long we use that
+>> channel (except if we're borrowing time from another operational mode).
+>
+> I'm not sure how your device works, but it seems that the device would
+> require binding vifs to a channel context so that it knows which is
+> active where? When to synchronise with beacons, for example?
+
+I was thinking in general "what if".
+
+
+>> Another question would be if we could do software multi-channel
+>> operation. Do you think it's even possible and worth exploring?
+>
+> I don't think it's feasible to implement in mac80211 because of timing
+> constraints. With devices like ath9k it can probably be done by relying
+> on hardware timers, interrupts and queue blocking/opening, but because
+> mac80211 has to deal with USB and SDIO chips too which can be really
+> slow it can't really do this. So no, I wouldn't think it's worth
+> exploring at least not directly in mac80211 -- maybe as a separate
+> helper library or something.
+
+I see. But then again - one should not expect software multi-channel to 
+yield great performance, in fact I would expect it to be very slow.
+
+
+> Now let's go back to the question of off-channel/scan -- this seems to
+> be the fundamental difference in how we look at things. First, the same
+> thing applies here. SW scanning in mac80211 right now is very
+> inefficient when you try to do background scanning, since it doesn't
+> synchronise with beacons etc. With multiple virtual interfaces, this
+> will only get worse. With multiple channels, probably more so.
+>
+> Then also I'm in a bit of a luxurious position -- our device implements
+> scanning and off-channel all by itself. For this reason, but also
+> because of the timing, I've always wanted to ignore off-channel and
+> scanning in the multi-channel code as much as possible.
+>
+> Your proposal to add temporary channel contexts might be feasible, but I
+> wonder how complex it would become and how much of it can really be
+> shared? I expect that ath9k will implement multi-channel completely in
+> software, and any scheduler there would probably also roll in
+> scanning/off-channel. (Not that I know, I don't work for QCA :) )
+
+It would be nice if someone from Atheros camp could give us a hint on that.
+
+
+> Also, I'm a bit afraid that doing so would make the channel context API
+> even more complex, and it's not really easy anyway.
+>
+> I think I need to know more about how you would need to use those
+> temporary channel contexts, but I have a feeling that we might be better
+> off by splitting it into a separate helper library. I'm thinking this
+> would essentially sit between mac80211 and the driver, and offer
+> "translation services", i.e. it would have a "remain_on_channel"
+> function that the driver could call for mac80211's remain_on_channel
+> callback, and then this separate code could do something like your
+> temporary channel context detach/attach etc.
+>
+> Would that seem okay to you? I'd rather leave this complexity out of
+> mac80211, not just for complexity reasons but also to make the API have
+> easier semantics.
+
+I get the general idea but I can't imagine any detailed examples. I'm 
+yet to fully understand mac80211 and other drivers/devices.
+
+
 -- 
-1.7.5.4
-
+Pozdrawiam / Best regards, Michal Kazior.
