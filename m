@@ -1,139 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:63694 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758387Ab2CMSE0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 14:04:26 -0400
-Received: by wejx9 with SMTP id x9so810246wej.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Mar 2012 11:04:25 -0700 (PDT)
-From: Eyal Shapira <eyal@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: fix race between suspend/resume and recovery
-Date: Tue, 13 Mar 2012 20:03:21 +0200
-Message-Id: <1331661801-17000-1-git-send-email-eyal@wizery.com> (sfid-20120313_190430_125938_641829F6)
+Received: from mx3.wp.pl ([212.77.101.7]:42564 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754797Ab2C0OvT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Mar 2012 10:51:19 -0400
+From: Jakub Kicinski <kubakici@wp.pl>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCH 3/4] rt2x00: initialize queues before giving up due to DMA error
+Date: Tue, 27 Mar 2012 16:51:06 +0200
+Message-Id: <1332859867-27921-4-git-send-email-kubakici@wp.pl> (sfid-20120327_165123_696247_1CEFC7BC)
+In-Reply-To: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
+References: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The iteration on the wlvif list in wl1271_op_resume/suspend was
-perfomed before locking wl->mutex which would lead to a kernel
-panic in case a recovery was queued at the same time
-and would delete the wlvifs from the list.
+Don't immediately abort .start if DMA is busy before we
+initialize the queues. Some drivers do not deinitialize
+queues properly and we would fail to take over after them.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
+This behaviour is consistent with legacy driver.
+
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
 ---
- drivers/net/wireless/wl12xx/main.c |   29 ++++++++++++-----------------
- 1 files changed, 12 insertions(+), 17 deletions(-)
+2011_0406_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO
+common/rtmp_init.c:2007
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ drivers/net/wireless/rt2x00/rt2800pci.c |    6 ++++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 3900236..791cdcc 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1652,14 +1652,12 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index c872ba6..de975ef 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -290,7 +290,7 @@ int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
+ 		msleep(10);
+ 	}
+ 
+-	ERROR(rt2x00dev, "WPDMA TX/RX busy, aborting.\n");
++	ERROR(rt2x00dev, "WPDMA TX/RX busy [0x%08x].\n", reg);
+ 	return -EACCES;
+ }
+ EXPORT_SYMBOL_GPL(rt2800_wait_wpdma_ready);
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 5a2f68f..f39587b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -501,8 +501,10 @@ static int rt2800pci_enable_radio(struct rt2x00_dev *rt2x00dev)
  {
- 	int ret = 0;
+ 	int retval;
  
--	mutex_lock(&wl->mutex);
--
- 	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
--		goto out_unlock;
-+		goto out;
- 
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
--		goto out_unlock;
-+		goto out;
- 
- 	ret = wl1271_acx_wake_up_conditions(wl, wlvif,
- 				    wl->conf.conn.suspend_wake_up_event,
-@@ -1668,11 +1666,9 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
- 	if (ret < 0)
- 		wl1271_error("suspend: set wake up conditions failed: %d", ret);
- 
--
- 	wl1271_ps_elp_sleep(wl);
- 
--out_unlock:
--	mutex_unlock(&wl->mutex);
-+out:
- 	return ret;
- 
- }
-@@ -1682,20 +1678,17 @@ static int wl1271_configure_suspend_ap(struct wl1271 *wl,
- {
- 	int ret = 0;
- 
--	mutex_lock(&wl->mutex);
--
- 	if (!test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags))
--		goto out_unlock;
-+		goto out;
- 
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
--		goto out_unlock;
-+		goto out;
- 
- 	ret = wl1271_acx_beacon_filter_opt(wl, wlvif, true);
- 
- 	wl1271_ps_elp_sleep(wl);
--out_unlock:
--	mutex_unlock(&wl->mutex);
-+out:
- 	return ret;
- 
- }
-@@ -1720,10 +1713,9 @@ static void wl1271_configure_resume(struct wl1271 *wl,
- 	if ((!is_ap) && (!is_sta))
- 		return;
- 
--	mutex_lock(&wl->mutex);
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
--		goto out;
-+		return;
- 
- 	if (is_sta) {
- 		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
-@@ -1739,8 +1731,6 @@ static void wl1271_configure_resume(struct wl1271 *wl,
- 	}
- 
- 	wl1271_ps_elp_sleep(wl);
--out:
--	mutex_unlock(&wl->mutex);
- }
- 
- static int wl1271_op_suspend(struct ieee80211_hw *hw,
-@@ -1755,6 +1745,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 
- 	wl1271_tx_flush(wl);
- 
-+	mutex_lock(&wl->mutex);
- 	wl->wow_enabled = true;
- 	wl12xx_for_each_wlvif(wl, wlvif) {
- 		ret = wl1271_configure_suspend(wl, wlvif);
-@@ -1763,6 +1754,7 @@ static int wl1271_op_suspend(struct ieee80211_hw *hw,
- 			return ret;
- 		}
- 	}
-+	mutex_unlock(&wl->mutex);
- 	/* flush any remaining work */
- 	wl1271_debug(DEBUG_MAC80211, "flushing remaining works");
- 
-@@ -1812,10 +1804,13 @@ static int wl1271_op_resume(struct ieee80211_hw *hw)
- 		wl1271_irq(0, wl);
- 		wl1271_enable_interrupts(wl);
- 	}
+-	if (unlikely(rt2800_wait_wpdma_ready(rt2x00dev) ||
+-		     rt2800pci_init_queues(rt2x00dev)))
++	/* Wait for DMA, ignore error until we initialize queues. */
++	rt2800_wait_wpdma_ready(rt2x00dev);
 +
-+	mutex_lock(&wl->mutex);
- 	wl12xx_for_each_wlvif(wl, wlvif) {
- 		wl1271_configure_resume(wl, wlvif);
- 	}
- 	wl->wow_enabled = false;
-+	mutex_unlock(&wl->mutex);
++	if (unlikely(rt2800pci_init_queues(rt2x00dev)))
+ 		return -EIO;
  
- 	return 0;
- }
+ 	retval = rt2800_enable_radio(rt2x00dev);
 -- 
-1.7.4.1
+1.7.7.6
 
