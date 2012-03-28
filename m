@@ -1,254 +1,255 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754964Ab2CDUm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:42:59 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 014/101] iwlwifi: use valid TX/RX antenna from hw_params
-Date: Sun,  4 Mar 2012 11:28:28 -0800
-Message-Id: <1330889395-533-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214339_242365_99500D14)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:49748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757744Ab2C1JS4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 05:18:56 -0400
+Message-Id: <20120328091811.108837459@sipsolutions.net> (sfid-20120328_111900_662868_94048B5D)
+Date: Wed, 28 Mar 2012 11:13:47 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 1/2] mac80211: add explicit monitor interface if needed
+References: <20120328091346.442543219@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-It's not really a good idea to write to the
-global static configuration. Use the valid
-TX/RX antenna information only from the HW
-params struct except in the case where the
-values from the config are used to override
-the values from the EEPROM.
+The queue mapping redesign that I'm planning to do
+will break pure injection unless we handle monitor
+interfaces explicitly. One possible option would
+be to have the driver tell mac80211 about monitor
+mode queues etc., but that would duplicate the API
+since we already need to have queue assignments
+handled per virtual interface.
+
+So in order to solve this, have a virtual monitor
+interface that is added whenever all active vifs
+are monitors. We could also use the state of one
+of the monitor interfaces, but managing that would
+be complicated, so allocate separate state.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c      |    7 ++---
- drivers/net/wireless/iwlwifi/iwl-2000.c      |    7 ++---
- drivers/net/wireless/iwlwifi/iwl-5000.c      |   16 +++++-----
- drivers/net/wireless/iwlwifi/iwl-6000.c      |    7 ++---
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c   |    9 ++++--
- drivers/net/wireless/iwlwifi/iwl-eeprom.c    |   38 +++++++++++++------------
- 8 files changed, 46 insertions(+), 44 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |    3 +
+ include/net/mac80211.h                |    6 ++-
+ net/mac80211/driver-ops.h             |    3 -
+ net/mac80211/ieee80211_i.h            |    3 +
+ net/mac80211/iface.c                  |   65 ++++++++++++++++++++++++++++++++++
+ net/mac80211/pm.c                     |    4 ++
+ net/mac80211/tx.c                     |    7 ++-
+ net/mac80211/util.c                   |   10 +++++
+ 8 files changed, 95 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 605ee3d..22eb062 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -131,14 +131,13 @@ static void iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+--- a/net/mac80211/ieee80211_i.h	2012-03-28 10:29:13.000000000 +0200
++++ b/net/mac80211/ieee80211_i.h	2012-03-28 10:39:22.000000000 +0200
+@@ -1077,6 +1077,9 @@ struct ieee80211_local {
+ 	struct net_device napi_dev;
  
- 	hw_params(priv).ht40_channel =  BIT(IEEE80211_BAND_2GHZ);
- 
--	hw_params(priv).tx_chains_num = num_of_ant(cfg(priv)->valid_tx_ant);
-+	hw_params(priv).tx_chains_num =
-+		num_of_ant(hw_params(priv).valid_tx_ant);
- 	if (cfg(priv)->rx_with_siso_diversity)
- 		hw_params(priv).rx_chains_num = 1;
- 	else
- 		hw_params(priv).rx_chains_num =
--			num_of_ant(cfg(priv)->valid_rx_ant);
--	hw_params(priv).valid_tx_ant = cfg(priv)->valid_tx_ant;
--	hw_params(priv).valid_rx_ant = cfg(priv)->valid_rx_ant;
-+			num_of_ant(hw_params(priv).valid_rx_ant);
- 
- 	iwl1000_set_ct_threshold(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index e6e8c79..43d17a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -127,14 +127,13 @@ static void iwl2000_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	hw_params(priv).ht40_channel =  BIT(IEEE80211_BAND_2GHZ);
- 
--	hw_params(priv).tx_chains_num = num_of_ant(cfg(priv)->valid_tx_ant);
-+	hw_params(priv).tx_chains_num =
-+		num_of_ant(hw_params(priv).valid_tx_ant);
- 	if (cfg(priv)->rx_with_siso_diversity)
- 		hw_params(priv).rx_chains_num = 1;
- 	else
- 		hw_params(priv).rx_chains_num =
--			num_of_ant(cfg(priv)->valid_rx_ant);
--	hw_params(priv).valid_tx_ant = cfg(priv)->valid_tx_ant;
--	hw_params(priv).valid_rx_ant = cfg(priv)->valid_rx_ant;
-+			num_of_ant(hw_params(priv).valid_rx_ant);
- 
- 	iwl2000_set_ct_threshold(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index ccaeead..8cdc4a3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -167,10 +167,10 @@ static void iwl5000_hw_set_hw_params(struct iwl_priv *priv)
- 	hw_params(priv).ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
- 
--	hw_params(priv).tx_chains_num = num_of_ant(cfg(priv)->valid_tx_ant);
--	hw_params(priv).rx_chains_num = num_of_ant(cfg(priv)->valid_rx_ant);
--	hw_params(priv).valid_tx_ant = cfg(priv)->valid_tx_ant;
--	hw_params(priv).valid_rx_ant = cfg(priv)->valid_rx_ant;
-+	hw_params(priv).tx_chains_num =
-+		num_of_ant(hw_params(priv).valid_tx_ant);
-+	hw_params(priv).rx_chains_num =
-+		num_of_ant(hw_params(priv).valid_rx_ant);
- 
- 	iwl5000_set_ct_threshold(priv);
- 
-@@ -190,10 +190,10 @@ static void iwl5150_hw_set_hw_params(struct iwl_priv *priv)
- 	hw_params(priv).ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
- 
--	hw_params(priv).tx_chains_num = num_of_ant(cfg(priv)->valid_tx_ant);
--	hw_params(priv).rx_chains_num = num_of_ant(cfg(priv)->valid_rx_ant);
--	hw_params(priv).valid_tx_ant = cfg(priv)->valid_tx_ant;
--	hw_params(priv).valid_rx_ant = cfg(priv)->valid_rx_ant;
-+	hw_params(priv).tx_chains_num =
-+		num_of_ant(hw_params(priv).valid_tx_ant);
-+	hw_params(priv).rx_chains_num =
-+		num_of_ant(hw_params(priv).valid_rx_ant);
- 
- 	iwl5150_set_ct_threshold(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 223e60a..720e8e6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -149,14 +149,13 @@ static void iwl6000_hw_set_hw_params(struct iwl_priv *priv)
- 	hw_params(priv).ht40_channel =  BIT(IEEE80211_BAND_2GHZ) |
- 					BIT(IEEE80211_BAND_5GHZ);
- 
--	hw_params(priv).tx_chains_num = num_of_ant(cfg(priv)->valid_tx_ant);
-+	hw_params(priv).tx_chains_num =
-+		num_of_ant(hw_params(priv).valid_tx_ant);
- 	if (cfg(priv)->rx_with_siso_diversity)
- 		hw_params(priv).rx_chains_num = 1;
- 	else
- 		hw_params(priv).rx_chains_num =
--			num_of_ant(cfg(priv)->valid_rx_ant);
--	hw_params(priv).valid_tx_ant = cfg(priv)->valid_tx_ant;
--	hw_params(priv).valid_rx_ant = cfg(priv)->valid_rx_ant;
-+			num_of_ant(hw_params(priv).valid_rx_ant);
- 
- 	iwl6000_set_ct_threshold(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-index 12acc81..84fc5ce 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-@@ -848,7 +848,7 @@ static void iwl_find_disconn_antenna(struct iwl_priv *priv, u32* average_sig,
- 			 * connect the first valid tx chain
- 			 */
- 			first_chain =
--				find_first_chain(cfg(priv)->valid_tx_ant);
-+				find_first_chain(hw_params(priv).valid_tx_ant);
- 			data->disconn_array[first_chain] = 0;
- 			active_chains |= BIT(first_chain);
- 			IWL_DEBUG_CALIB(priv,
-@@ -1082,7 +1082,7 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
- 
- 	iwlagn_gain_computation(priv, average_noise,
- 				min_average_noise_antenna_i, min_average_noise,
--				find_first_chain(cfg(priv)->valid_rx_ant));
-+				find_first_chain(hw_params(priv).valid_rx_ant));
- 
- 	/* Some power changes may have been made during the calibration.
- 	 * Update and commit the RXON
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e1bf125..6cec7e6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -699,7 +699,7 @@ int iwl_alive_start(struct iwl_priv *priv)
- 	priv->active_rate = IWL_RATES_MASK;
- 
- 	/* Configure Tx antenna selection based on H/W config */
--	iwlagn_send_tx_ant_config(priv, cfg(priv)->valid_tx_ant);
-+	iwlagn_send_tx_ant_config(priv, hw_params(priv).valid_tx_ant);
- 
- 	if (iwl_is_associated_ctx(ctx) && !priv->shrd->wowlan) {
- 		struct iwl_rxon_cmd *active_rxon =
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index dd502e8..b6740c3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -1546,15 +1546,18 @@ static ssize_t iwl_dbgfs_ucode_tx_stats_read(struct file *file,
- 	if (tx->tx_power.ant_a || tx->tx_power.ant_b || tx->tx_power.ant_c) {
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 			"tx power: (1/2 dB step)\n");
--		if ((cfg(priv)->valid_tx_ant & ANT_A) && tx->tx_power.ant_a)
-+		if ((hw_params(priv).valid_tx_ant & ANT_A) &&
-+		    tx->tx_power.ant_a)
- 			pos += scnprintf(buf + pos, bufsz - pos,
- 					fmt_hex, "antenna A:",
- 					tx->tx_power.ant_a);
--		if ((cfg(priv)->valid_tx_ant & ANT_B) && tx->tx_power.ant_b)
-+		if ((hw_params(priv).valid_tx_ant & ANT_B) &&
-+		    tx->tx_power.ant_b)
- 			pos += scnprintf(buf + pos, bufsz - pos,
- 					fmt_hex, "antenna B:",
- 					tx->tx_power.ant_b);
--		if ((cfg(priv)->valid_tx_ant & ANT_C) && tx->tx_power.ant_c)
-+		if ((hw_params(priv).valid_tx_ant & ANT_C) &&
-+		    tx->tx_power.ant_c)
- 			pos += scnprintf(buf + pos, bufsz - pos,
- 					fmt_hex, "antenna C:",
- 					tx->tx_power.ant_c);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index d8668bc..6915b33 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -271,25 +271,27 @@ int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
- 
- 	IWL_INFO(priv, "Device SKU: 0x%X\n", hw_params(priv).sku);
- 
--	if (!cfg(priv)->valid_tx_ant && !cfg(priv)->valid_rx_ant) {
--		/* not using .cfg overwrite */
--		radio_cfg = iwl_eeprom_query16(shrd, EEPROM_RADIO_CONFIG);
--		cfg(priv)->valid_tx_ant = EEPROM_RF_CFG_TX_ANT_MSK(radio_cfg);
--		cfg(priv)->valid_rx_ant = EEPROM_RF_CFG_RX_ANT_MSK(radio_cfg);
--		if (!cfg(priv)->valid_tx_ant || !cfg(priv)->valid_rx_ant) {
--			IWL_ERR(priv, "Invalid chain (0x%X, 0x%X)\n",
--				cfg(priv)->valid_tx_ant,
--				cfg(priv)->valid_rx_ant);
--			return -EINVAL;
--		}
--		IWL_INFO(priv, "Valid Tx ant: 0x%X, Valid Rx ant: 0x%X\n",
--			 cfg(priv)->valid_tx_ant, cfg(priv)->valid_rx_ant);
-+	radio_cfg = iwl_eeprom_query16(shrd, EEPROM_RADIO_CONFIG);
+ 	struct napi_struct napi;
 +
-+	hw_params(priv).valid_tx_ant = EEPROM_RF_CFG_TX_ANT_MSK(radio_cfg);
-+	hw_params(priv).valid_rx_ant = EEPROM_RF_CFG_RX_ANT_MSK(radio_cfg);
-+
-+	/* check overrides (some devices have wrong EEPROM) */
-+	if (cfg(priv)->valid_tx_ant)
-+		hw_params(priv).valid_tx_ant = cfg(priv)->valid_tx_ant;
-+	if (cfg(priv)->valid_rx_ant)
-+		hw_params(priv).valid_rx_ant = cfg(priv)->valid_rx_ant;
-+
-+	if (!hw_params(priv).valid_tx_ant || !hw_params(priv).valid_rx_ant) {
-+		IWL_ERR(priv, "Invalid chain (0x%X, 0x%X)\n",
-+			hw_params(priv).valid_tx_ant,
-+			hw_params(priv).valid_rx_ant);
-+		return -EINVAL;
++	/* virtual monitor interface */
++	struct ieee80211_sub_if_data __rcu *monitor_sdata;
+ };
+ 
+ static inline struct ieee80211_sub_if_data *
+--- a/net/mac80211/pm.c	2012-03-28 10:29:13.000000000 +0200
++++ b/net/mac80211/pm.c	2012-03-28 10:29:13.000000000 +0200
+@@ -127,6 +127,10 @@ int __ieee80211_suspend(struct ieee80211
+ 		drv_remove_interface(local, sdata);
  	}
--	/*
--	 * for some special cases,
--	 * EEPROM did not reflect the correct antenna setting
--	 * so overwrite the valid tx/rx antenna from .cfg
--	 */
+ 
++	sdata = rtnl_dereference(local->monitor_sdata);
++	if (sdata)
++		drv_remove_interface(local, sdata);
 +
-+	IWL_INFO(priv, "Valid Tx ant: 0x%X, Valid Rx ant: 0x%X\n",
-+		 hw_params(priv).valid_tx_ant, hw_params(priv).valid_rx_ant);
-+
- 	return 0;
+ 	/* stop hardware - this must stop RX */
+ 	if (local->open_count)
+ 		ieee80211_stop_device(local);
+--- a/include/net/mac80211.h	2012-03-28 10:29:13.000000000 +0200
++++ b/include/net/mac80211.h	2012-03-28 10:39:22.000000000 +0200
+@@ -1173,6 +1173,10 @@ enum sta_notify_cmd {
+  * @IEEE80211_HW_SCAN_WHILE_IDLE: The device can do hw scan while
+  *	being idle (i.e. mac80211 doesn't have to go idle-off during the
+  *	the scan).
++ *
++ * @IEEE80211_HW_WANT_MONITOR_VIF: The driver would like to be informed of
++ *	a virtual monitor interface when monitor interfaces are the only
++ *	active interfaces.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1189,7 +1193,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_PS_NULLFUNC_STACK			= 1<<11,
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_PS		= 1<<12,
+ 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
+-	/* reuse bit 14 */
++	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
+ 	IEEE80211_HW_SUPPORTS_STATIC_SMPS		= 1<<15,
+ 	IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS		= 1<<16,
+ 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+--- a/net/mac80211/iface.c	2012-03-28 10:29:13.000000000 +0200
++++ b/net/mac80211/iface.c	2012-03-28 10:39:38.000000000 +0200
+@@ -169,6 +169,59 @@ void ieee80211_adjust_monitor_flags(stru
+ #undef ADJUST
  }
  
--- 
-1.7.0.4
++static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++	int ret;
++
++	if (!(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))
++		return 0;
++
++	if (local->monitor_sdata)
++		return 0;
++
++	sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);
++	if (!sdata)
++		return -ENOMEM;
++
++	/* set up data */
++	sdata->local = local;
++	sdata->vif.type = NL80211_IFTYPE_MONITOR;
++	snprintf(sdata->name, IFNAMSIZ, "%s-monitor",
++		 wiphy_name(local->hw.wiphy));
++
++	ret = drv_add_interface(local, sdata);
++	if (WARN_ON(ret)) {
++		/* ok .. stupid driver, it asked for this! */
++		kfree(sdata);
++		return ret;
++	}
++
++	rcu_assign_pointer(local->monitor_sdata, sdata);
++
++	return 0;
++}
++
++static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
++{
++	struct ieee80211_sub_if_data *sdata;
++
++	if (!(local->hw.flags & IEEE80211_HW_WANT_MONITOR_VIF))
++		return;
++
++	sdata = rtnl_dereference(local->monitor_sdata);
++
++	if (WARN_ON(!sdata))
++		return;
++
++	rcu_assign_pointer(local->monitor_sdata, NULL);
++	synchronize_net();
++
++	drv_remove_interface(local, sdata);
++
++	kfree(sdata);
++}
++
+ /*
+  * NOTE: Be very careful when changing this function, it must NOT return
+  * an error on interface type changes that have been pre-checked, so most
+@@ -266,6 +319,12 @@ static int ieee80211_do_open(struct net_
+ 			break;
+ 		}
+ 
++		if (local->monitors == 0 && local->open_count == 0) {
++			res = ieee80211_add_virtual_monitor(local);
++			if (res)
++				return res;
++		}
++
+ 		/* must be before the call to ieee80211_configure_filter */
+ 		local->monitors++;
+ 		if (local->monitors == 1) {
+@@ -280,6 +339,8 @@ static int ieee80211_do_open(struct net_
+ 		break;
+ 	default:
+ 		if (coming_up) {
++			ieee80211_del_virtual_monitor(local);
++
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
+@@ -511,6 +572,7 @@ static void ieee80211_do_stop(struct iee
+ 		if (local->monitors == 0) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
++			ieee80211_del_virtual_monitor(local);
+ 		}
+ 
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+@@ -584,6 +646,9 @@ static void ieee80211_do_stop(struct iee
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++
++	if (local->monitors == local->open_count && local->monitors > 0)
++		ieee80211_add_virtual_monitor(local);
+ }
+ 
+ static int ieee80211_stop(struct net_device *dev)
+--- a/net/mac80211/util.c	2012-03-28 10:29:13.000000000 +0200
++++ b/net/mac80211/util.c	2012-03-28 10:39:22.000000000 +0200
+@@ -1213,6 +1213,16 @@ int ieee80211_reconfig(struct ieee80211_
+ 				   IEEE80211_TPT_LEDTRIG_FL_RADIO, 0);
+ 
+ 	/* add interfaces */
++	sdata = rtnl_dereference(local->monitor_sdata);
++	if (sdata) {
++		res = drv_add_interface(local, sdata);
++		if (WARN_ON(res)) {
++			rcu_assign_pointer(local->monitor_sdata, NULL);
++			synchronize_net();
++			kfree(sdata);
++		}
++	}
++
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+--- a/net/mac80211/tx.c	2012-03-28 10:29:13.000000000 +0200
++++ b/net/mac80211/tx.c	2012-03-28 10:39:22.000000000 +0200
+@@ -1284,8 +1284,11 @@ static bool __ieee80211_tx(struct ieee80
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MONITOR:
+-		sdata = NULL;
+-		vif = NULL;
++		sdata = rcu_dereference(local->monitor_sdata);
++		if (sdata)
++			vif = &sdata->vif;
++		else
++			vif = NULL;
+ 		break;
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 		sdata = container_of(sdata->bss,
+--- a/drivers/net/wireless/mac80211_hwsim.c	2012-03-28 10:29:13.000000000 +0200
++++ b/drivers/net/wireless/mac80211_hwsim.c	2012-03-28 10:29:13.000000000 +0200
+@@ -1789,7 +1789,8 @@ static int __init init_mac80211_hwsim(vo
+ 			    IEEE80211_HW_SIGNAL_DBM |
+ 			    IEEE80211_HW_SUPPORTS_STATIC_SMPS |
+ 			    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+-			    IEEE80211_HW_AMPDU_AGGREGATION;
++			    IEEE80211_HW_AMPDU_AGGREGATION |
++			    IEEE80211_HW_WANT_MONITOR_VIF;
+ 
+ 		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
+ 				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+--- a/net/mac80211/driver-ops.h	2012-03-28 10:29:13.000000000 +0200
++++ b/net/mac80211/driver-ops.h	2012-03-28 10:29:13.000000000 +0200
+@@ -98,8 +98,7 @@ static inline int drv_add_interface(stru
+ 
+ 	might_sleep();
+ 
+-	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+-		    sdata->vif.type == NL80211_IFTYPE_MONITOR))
++	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
+ 		return -EINVAL;
+ 
+ 	trace_drv_add_interface(local, sdata);
+
 
