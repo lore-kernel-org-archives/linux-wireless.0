@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:42537 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753634Ab2C0OvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 10:51:14 -0400
-From: Jakub Kicinski <kubakici@wp.pl>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH 0/4] rt2x00: fix initialization after legacy driver
-Date: Tue, 27 Mar 2012 16:51:03 +0200
-Message-Id: <1332859867-27921-1-git-send-email-kubakici@wp.pl> (sfid-20120327_165119_432167_AA4F8945)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:44058 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627Ab2C1Hn5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 03:43:57 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F72BB7F.8080704@gmail.com>
+References: <CAB=NE6WgTMdDtU4_ZgYVr2XzSuiicT5o=q2RvV24jeQj0rZfFw@mail.gmail.com>
+ <4F72BB7F.8080704@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Wed, 28 Mar 2012 00:43:36 -0700
+Message-ID: <CAB=NE6WFM-BPQ41kPaod-7qkHnT5MXCUc2hdKXDVzrdPq2brjA@mail.gmail.com> (sfid-20120328_094420_525677_5B321D40)
+Subject: Re: compat-wireless releases based on v3.3
+To: Richard Farina <sidhayn@gmail.com>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Mar 28, 2012 at 12:19 AM, Richard Farina <sidhayn@gmail.com> wrote:
+> /var/tmp/portage/net-wireless/compat-wireless-3.3/work/compat-wireless-3.3-1-n/drivers/net/wireless/ath/carl9170/tx.c:
+> In function 'carl9170_tx_ps_drop':
+> /var/tmp/portage/net-wireless/compat-wireless-3.3/work/compat-wireless-3.3-1-n/drivers/net/wireless/ath/carl9170/tx.c:1248:26:
+> error: 'IEEE80211_TX_CTL_POLL_RESPONSE' undeclared (first use in this
+> function)
 
-I've been testing these patches for a few weeks and I think it's about 
-the time to post them.
+linux-next-cherry-picks/0007-mac80211-handle-non-bufferable-MMPDUs-correctly.patch
 
-The main purpose of this set is to make it possible to switch between
-rt2800pci and legacy driver w/o rebooting or suspending whole machine.
-Today rt2800pci will fail to bring the interface up if it was earlier
-operated by legacy drv. I'm sure it happens with rt3090, rt2860 seems
-to work fine.
+is to be blamed for. This is fixed, new tarball:
 
-First two patches are just random fixes, third and fourth actually 
-fix the issue.
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.3/compat-wireless-3.3-2-n.tar.bz2
+sha1sum: dd18cfabbe705a75440fd7fbe50a09d5fe34bb70
 
-Jakub Kicinski (4):
-  rt2x00: broaden PCIE L1-state wakeup configuration
-  rt2x00: move disabling of DMA before loading firmware
-  rt2x00: initialize queues before giving up due to DMA error
-  rt2x00: zero registers of unused TX rings
+Thanks for reporting this. Just FYI -- I am working to use ckmake on
+compat-wireless.git to build test against all supported kernels prior
+to release just as I am doing now for compat.git, but the current
+development cycle still a few items which require a bit of work to
+backport to fix compilation against older kernels. That is the goal
+though, so that future releases area always guaranteed to compile
+against all supported stable kernel releases listed on kernel.org.
 
- drivers/net/wireless/rt2x00/rt2800lib.c |   23 ++++++++++-------------
- drivers/net/wireless/rt2x00/rt2800pci.c |   21 +++++++++++++++------
- 2 files changed, 25 insertions(+), 19 deletions(-)
-
--- 
-1.7.7.6
-
+  Luis
