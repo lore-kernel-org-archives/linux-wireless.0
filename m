@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:61129 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754131Ab2CNH44 (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.8]:53926 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932231Ab2C1J3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2012 03:56:56 -0400
-Received: by wibhj6 with SMTP id hj6so6694447wib.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Mar 2012 00:56:55 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, IvDoorn@gmail.com, gwingerde@gmail.com,
-	sgruszka@redhat.com, Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] rt2x00: Set IEEE80211_HW_REPORTS_TX_ACK_STATUS in rt2800
-Date: Wed, 14 Mar 2012 08:56:47 +0100
-Message-Id: <1331711807-32680-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120314_085701_129884_58408164)
+	Wed, 28 Mar 2012 05:29:16 -0400
+From: Timo Lindhorst <tlnd@online.de>
+To: Timo Lindhorst <tlnd@online.de>
+Subject: Re: [PATCH] mac80211_hwsim: Report rate info in tx status
+Date: Wed, 28 Mar 2012 11:28:27 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"Johannes Berg" <johannes@sipsolutions.net>,
+	"Jouni Malinen" <j@w1.fi>
+References: <201203281117.53033.tlnd@online.de>
+In-Reply-To: <201203281117.53033.tlnd@online.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201203281128.27956.tlnd@online.de> (sfid-20120328_112918_379850_4BB01E9D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2800 already reports the tx ack status of each frame back to mac80211.
-Advertise this by setting IEEE80211_HW_REPORTS_TX_ACK_STATUS for rt2800.
-This allows some mac80211 features like frame loss notifications to work
-with rt2800.
+Hey,
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
+> +     if (!ack)
+> +             for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
+> +                     tx_count[i] = txi->control.rates[i].count;
+> +
+>       ieee80211_tx_info_clear_status(txi);
+>       if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
+>               txi->flags |= IEEE80211_TX_STAT_ACK;
+> +
+> +     if (ack) {
+> +             txi->status.rates[0].count = 1;
+> +             txi->status.rates[1].idx = -1;
+> +     } else {
+> +             for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
+> +                     txi->control.rates[i].count = tx_count[i];
+> +     }
+> +
+>       ieee80211_tx_status_irqsafe(hw, skb);
+>  }
 
-I don't see a problem with enabling this for rt2800pci.
-Ivo, Gertjan, Stanislaw, any objection against enabling for rt2800usb?
+I know: backing up the count values, clearing the status, and restoring the
+values if necessary is kind of ugly. Would it be better to partly clear the 
+status manually instead of using ieee80211_tx_info_clear_status() ?
 
-Thanks,
-Helmut
-
- drivers/net/wireless/rt2x00/rt2800lib.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 79a9eeb..4d7dc7b 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -4504,7 +4504,9 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HW_SIGNAL_DBM |
- 	    IEEE80211_HW_SUPPORTS_PS |
- 	    IEEE80211_HW_PS_NULLFUNC_STACK |
--	    IEEE80211_HW_AMPDU_AGGREGATION;
-+	    IEEE80211_HW_AMPDU_AGGREGATION |
-+	    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
-+
- 	/*
- 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
- 	 * unless we are capable of sending the buffered frames out after the
--- 
-1.7.7
-
+Regards
+Timo
