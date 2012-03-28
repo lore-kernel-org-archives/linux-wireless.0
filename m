@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:42483 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752456Ab2CTDsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 23:48:03 -0400
-Message-ID: <1332215281.7847.54.camel@joe2Laptop> (sfid-20120320_044917_101312_D04E0032)
-Subject: Re: [PATCH wireless-next 2/3] ath5k: Introduce _ath5k_printk to
- reduce code/text
-From: Joe Perches <joe@perches.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 19 Mar 2012 20:48:01 -0700
-In-Reply-To: <CAJ-Vmom4n7Sk5P=HMb+Z-FNyfyk87Xbf5Q1kPA4i2eXwQ72kXQ@mail.gmail.com>
-References: <cover.1332116921.git.joe@perches.com>
-	 <b157e2d1a746733d1814b9726f326d52d36da2fc.1332116921.git.joe@perches.com>
-	 <CAJ-Vmo=ceSV38vQGfs8cKJScWjYF4kbQdK3+JJvQLCmnURaEwA@mail.gmail.com>
-	 <1332134336.23125.60.camel@joe2Laptop>
-	 <CAJ-Vmom4n7Sk5P=HMb+Z-FNyfyk87Xbf5Q1kPA4i2eXwQ72kXQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx3.wp.pl ([212.77.101.7]:24130 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752627Ab2C1MyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 08:54:13 -0400
+Date: Wed, 28 Mar 2012 14:53:59 +0200
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 2/4] rt2x00: move disabling of DMA before
+ loading firmware
+Message-ID: <20120328145359.4bd5d098@north> (sfid-20120328_145428_281080_C595118C)
+In-Reply-To: <20120328121428.GA3333@redhat.com>
+References: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
+	<1332859867-27921-3-git-send-email-kubakici@wp.pl>
+	<4F7202BB.4000904@gmail.com>
+	<20120328121428.GA3333@redhat.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 20:39 -0700, Adrian Chadd wrote:
-> On 18 March 2012 22:18, Joe Perches <joe@perches.com> wrote:
-> >> Otherwise compiling in debugging will cause a _lot_ of spurious
-> >> register reads to occur that are then tossed. This was one of the big
-> >> reasons for instability and slow performance when AH_DEBUG was
-> >> enabled.
-> > That doesn't make any sense in this case.
-> >
-> > It's either a call to printk or _ath5_printk
-> > but it's still a call to a function.
+On Wed, 28 Mar 2012 14:14:29 +0200
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+
+> Hello,
 > 
-> The FreeBSD HAL used to be like this. I changed it so it didn't
-> evaluate the arguments before it figured out whether or not to do the
-> (k)printf().
+> On Tue, Mar 27, 2012 at 08:11:07PM +0200, Gertjan van Wingerde wrote:
+> > >  	/*
+> > > -	 * Disable DMA, will be reenabled later when enabling
+> > > -	 * the radio.
+> > > -	 */
+> > > -	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+> > > -	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
+> > > -	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
+> > > -	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+> > > -
+> > > -	/*
+> > >  	 * Initialize firmware.
+> > >  	 */
+> > >  	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
+> > 
+> > This basically seems to be a revert of commit
+> > 4ed1dd2a7ec880b301beb61cbc1e08811ec340e4 in the wireless-testing tree.
+> > That commit was submitted by Stanislaw, which basically does the reverse
+> > of what you are doing here.
+> > 
+> > I leave it up to you and Stanislaw to decide on what the state is that
+> > we need to be in.
 > 
-> I'm just pointing it out as you're (currently) knee deep in the
-> debugging code and it may be useful for you to also think about
-> implementing.
+> When DMA was disabled before FW load, I observed frame receives before
+> ->enable_radio, so looks like WPDMA_GLO_CFG register is overwritten by
+> F/W load. Although received frames did not make any damage, I prefer
+> not to allow hw to send data to driver, before driver will be really
+> ready to receive them.
 
-I see, thanks for the heads-up.
+Hm. I obviously did check whether FW load does overwrite WPDMA_GLO_CFG
+and it didn't. Maybe it's device dependent? What bothers me is that now
+we have a (very) short window between FW load and disabling DMA.
 
-The no_printk function could/does eval args
-and can cause those sorts of issues.
-
-So care does need to be used.
-
-cheers, Joe
-
+  -- Kuba
