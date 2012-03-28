@@ -1,257 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:51510 "HELO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752720Ab2CMCf4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37323 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757594Ab2C1JGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 22:35:56 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 02/15] mwifiex: rearrange switch statement
-Date: Mon, 12 Mar 2012 19:35:09 -0700
-Message-Id: <1331606116-32745-3-git-send-email-bzhao@marvell.com> (sfid-20120313_033559_644603_3D149B2B)
-In-Reply-To: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
-References: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
+	Wed, 28 Mar 2012 05:06:15 -0400
+Message-Id: <20120328090432.574661500@sipsolutions.net> (sfid-20120328_110626_625020_DAD8B9E5)
+Date: Wed, 28 Mar 2012 11:04:25 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/7] mac80211: refuse TX queue configuration on non-QoS HW
+References: <20120328090422.367469100@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fixing coding style by rearranging the switch statement
+Drivers that don't support QoS also don't support
+setting up their ACs, catch that early. While at
+it, remove the input check since cfg80211 does it
+now.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Also fix up the restart code to not try to set up
+the queues in this case.
+
+Finally also change the tx_conf array to have
+IEEE80211_NUM_ACS entries instead of # of queues
+since that's what it really needs.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/mwifiex/sta_cmdresp.c |  198 ++++++++++++----------------
- 1 files changed, 87 insertions(+), 111 deletions(-)
+ net/mac80211/cfg.c         |    6 +++---
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/util.c        |   32 +++++++++++++++++++-------------
+ 3 files changed, 23 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 0d8618a..3f13ff0 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -420,38 +420,34 @@ static int mwifiex_ret_tx_power_cfg(struct mwifiex_private *priv,
+--- a/net/mac80211/cfg.c	2012-03-27 14:10:27.000000000 +0200
++++ b/net/mac80211/cfg.c	2012-03-27 14:10:27.000000000 +0200
+@@ -1437,6 +1437,9 @@ static int ieee80211_set_txq_params(stru
+ 	if (!local->ops->conf_tx)
+ 		return -EOPNOTSUPP;
  
- 	switch (action) {
- 	case HostCmd_ACT_GEN_GET:
--		{
--			pg_tlv_hdr =
--				(struct mwifiex_types_power_group *) ((u8 *)
--						txp_cfg +
--						sizeof
--						(struct
--						 host_cmd_ds_txpwr_cfg));
--			pg = (struct mwifiex_power_group *) ((u8 *)
--						pg_tlv_hdr +
--						sizeof(struct
--						mwifiex_types_power_group));
--			if (adapter->hw_status ==
--			    MWIFIEX_HW_STATUS_INITIALIZING)
--				mwifiex_get_power_level(priv, txp_cfg);
--			priv->tx_power_level = (u16) pg->power_min;
--			break;
--		}
-+		pg_tlv_hdr = (struct mwifiex_types_power_group *)
-+			((u8 *) txp_cfg +
-+			 sizeof(struct host_cmd_ds_txpwr_cfg));
++	if (local->hw.queues < IEEE80211_NUM_ACS)
++		return -EOPNOTSUPP;
 +
-+		pg = (struct mwifiex_power_group *)
-+			((u8 *) pg_tlv_hdr +
-+			 sizeof(struct mwifiex_types_power_group));
-+
-+		if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
-+			mwifiex_get_power_level(priv, txp_cfg);
-+
-+		priv->tx_power_level = (u16) pg->power_min;
-+		break;
-+
- 	case HostCmd_ACT_GEN_SET:
--		if (le32_to_cpu(txp_cfg->mode)) {
--			pg_tlv_hdr =
--				(struct mwifiex_types_power_group *) ((u8 *)
--						txp_cfg +
--						sizeof
--						(struct
--						 host_cmd_ds_txpwr_cfg));
--			pg = (struct mwifiex_power_group *) ((u8 *) pg_tlv_hdr
--						+
--						sizeof(struct
--						mwifiex_types_power_group));
--			if (pg->power_max == pg->power_min)
--				priv->tx_power_level = (u16) pg->power_min;
--		}
-+		if (!le32_to_cpu(txp_cfg->mode))
-+			break;
-+
-+		pg_tlv_hdr = (struct mwifiex_types_power_group *)
-+			((u8 *) txp_cfg +
-+			 sizeof(struct host_cmd_ds_txpwr_cfg));
-+
-+		pg = (struct mwifiex_power_group *)
-+			((u8 *) pg_tlv_hdr +
-+			 sizeof(struct mwifiex_types_power_group));
-+
-+		if (pg->power_max == pg->power_min)
-+			priv->tx_power_level = (u16) pg->power_min;
- 		break;
- 	default:
- 		dev_err(adapter->dev, "CMD_RESP: unknown cmd action %d\n",
-@@ -679,90 +675,70 @@ static int mwifiex_ret_reg_access(u16 type, struct host_cmd_ds_command *resp,
- {
- 	struct mwifiex_ds_reg_rw *reg_rw;
- 	struct mwifiex_ds_read_eeprom *eeprom;
-+	union reg {
-+		struct host_cmd_ds_mac_reg_access *mac;
-+		struct host_cmd_ds_bbp_reg_access *bbp;
-+		struct host_cmd_ds_rf_reg_access *rf;
-+		struct host_cmd_ds_pmic_reg_access *pmic;
-+		struct host_cmd_ds_802_11_eeprom_access *eeprom;
-+	} r;
-+
-+	if (!data_buf)
-+		return 0;
+ 	memset(&p, 0, sizeof(p));
+ 	p.aifs = params->aifs;
+ 	p.cw_max = params->cwmax;
+@@ -1449,9 +1452,6 @@ static int ieee80211_set_txq_params(stru
+ 	 */
+ 	p.uapsd = false;
  
--	if (data_buf) {
--		reg_rw = data_buf;
--		eeprom = data_buf;
--		switch (type) {
--		case HostCmd_CMD_MAC_REG_ACCESS:
--			{
--				struct host_cmd_ds_mac_reg_access *reg;
--				reg = (struct host_cmd_ds_mac_reg_access *)
--					&resp->params.mac_reg;
--				reg_rw->offset = cpu_to_le32(
--					(u32) le16_to_cpu(reg->offset));
--				reg_rw->value = reg->value;
--				break;
--			}
--		case HostCmd_CMD_BBP_REG_ACCESS:
--			{
--				struct host_cmd_ds_bbp_reg_access *reg;
--				reg = (struct host_cmd_ds_bbp_reg_access *)
--					&resp->params.bbp_reg;
--				reg_rw->offset = cpu_to_le32(
--					(u32) le16_to_cpu(reg->offset));
--				reg_rw->value = cpu_to_le32((u32) reg->value);
--				break;
--			}
-+	reg_rw = data_buf;
-+	eeprom = data_buf;
-+	switch (type) {
-+	case HostCmd_CMD_MAC_REG_ACCESS:
-+		r.mac = (struct host_cmd_ds_mac_reg_access *)
-+			&resp->params.mac_reg;
-+		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.mac->offset));
-+		reg_rw->value = r.mac->value;
-+		break;
-+	case HostCmd_CMD_BBP_REG_ACCESS:
-+		r.bbp = (struct host_cmd_ds_bbp_reg_access *)
-+			&resp->params.bbp_reg;
-+		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.bbp->offset));
-+		reg_rw->value = cpu_to_le32((u32) r.bbp->value);
-+		break;
- 
--		case HostCmd_CMD_RF_REG_ACCESS:
--			{
--				struct host_cmd_ds_rf_reg_access *reg;
--				reg = (struct host_cmd_ds_rf_reg_access *)
--					&resp->params.rf_reg;
--				reg_rw->offset = cpu_to_le32(
--					(u32) le16_to_cpu(reg->offset));
--				reg_rw->value = cpu_to_le32((u32) reg->value);
--				break;
--			}
--		case HostCmd_CMD_PMIC_REG_ACCESS:
--			{
--				struct host_cmd_ds_pmic_reg_access *reg;
--				reg = (struct host_cmd_ds_pmic_reg_access *)
--					&resp->params.pmic_reg;
--				reg_rw->offset = cpu_to_le32(
--					(u32) le16_to_cpu(reg->offset));
--				reg_rw->value = cpu_to_le32((u32) reg->value);
--				break;
--			}
--		case HostCmd_CMD_CAU_REG_ACCESS:
--			{
--				struct host_cmd_ds_rf_reg_access *reg;
--				reg = (struct host_cmd_ds_rf_reg_access *)
--					&resp->params.rf_reg;
--				reg_rw->offset = cpu_to_le32(
--					(u32) le16_to_cpu(reg->offset));
--				reg_rw->value = cpu_to_le32((u32) reg->value);
--				break;
--			}
--		case HostCmd_CMD_802_11_EEPROM_ACCESS:
--			{
--				struct host_cmd_ds_802_11_eeprom_access
--					*cmd_eeprom =
--					(struct host_cmd_ds_802_11_eeprom_access
--					 *) &resp->params.eeprom;
--				pr_debug("info: EEPROM read len=%x\n",
--				       cmd_eeprom->byte_count);
--				if (le16_to_cpu(eeprom->byte_count) <
--						le16_to_cpu(
--						cmd_eeprom->byte_count)) {
--					eeprom->byte_count = cpu_to_le16(0);
--					pr_debug("info: EEPROM read "
--							"length is too big\n");
--					return -1;
--				}
--				eeprom->offset = cmd_eeprom->offset;
--				eeprom->byte_count = cmd_eeprom->byte_count;
--				if (le16_to_cpu(eeprom->byte_count) > 0)
--					memcpy(&eeprom->value,
--					       &cmd_eeprom->value,
--					       le16_to_cpu(eeprom->byte_count));
+-	if (params->ac >= local->hw.queues)
+-		return -EINVAL;
 -
--				break;
--			}
--		default:
-+	case HostCmd_CMD_RF_REG_ACCESS:
-+		r.rf = (struct host_cmd_ds_rf_reg_access *)
-+		       &resp->params.rf_reg;
-+		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.rf->offset));
-+		reg_rw->value = cpu_to_le32((u32) r.bbp->value);
-+		break;
-+	case HostCmd_CMD_PMIC_REG_ACCESS:
-+		r.pmic = (struct host_cmd_ds_pmic_reg_access *)
-+			 &resp->params.pmic_reg;
-+		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.pmic->offset));
-+		reg_rw->value = cpu_to_le32((u32) r.pmic->value);
-+		break;
-+	case HostCmd_CMD_CAU_REG_ACCESS:
-+		r.rf = (struct host_cmd_ds_rf_reg_access *)
-+		       &resp->params.rf_reg;
-+		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.rf->offset));
-+		reg_rw->value = cpu_to_le32((u32) r.rf->value);
-+		break;
-+	case HostCmd_CMD_802_11_EEPROM_ACCESS:
-+		r.eeprom = (struct host_cmd_ds_802_11_eeprom_access *)
-+			   &resp->params.eeprom;
-+		pr_debug("info: EEPROM read len=%x\n", r.eeprom->byte_count);
-+		if (le16_to_cpu(eeprom->byte_count) <
-+		    le16_to_cpu(r.eeprom->byte_count)) {
-+			eeprom->byte_count = cpu_to_le16(0);
-+			pr_debug("info: EEPROM read length is too big\n");
- 			return -1;
- 		}
-+		eeprom->offset = r.eeprom->offset;
-+		eeprom->byte_count = r.eeprom->byte_count;
-+		if (le16_to_cpu(eeprom->byte_count) > 0)
-+			memcpy(&eeprom->value, &r.eeprom->value,
-+			       le16_to_cpu(r.eeprom->byte_count));
+ 	sdata->tx_conf[params->ac] = p;
+ 	if (drv_conf_tx(local, sdata, params->ac, &p)) {
+ 		wiphy_debug(local->hw.wiphy,
+--- a/net/mac80211/util.c	2012-03-27 14:09:46.000000000 +0200
++++ b/net/mac80211/util.c	2012-03-27 14:10:27.000000000 +0200
+@@ -769,19 +769,22 @@ void ieee80211_set_wmm_default(struct ie
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_tx_queue_params qparam;
+-	int queue;
++	int ac;
+ 	bool use_11b;
+ 	int aCWmin, aCWmax;
+ 
+ 	if (!local->ops->conf_tx)
+ 		return;
+ 
++	if (local->hw.queues < IEEE80211_NUM_ACS)
++		return;
 +
-+		break;
-+	default:
-+		return -1;
+ 	memset(&qparam, 0, sizeof(qparam));
+ 
+ 	use_11b = (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ) &&
+ 		 !(sdata->flags & IEEE80211_SDATA_OPERATING_GMODE);
+ 
+-	for (queue = 0; queue < local->hw.queues; queue++) {
++	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
+ 		/* Set defaults according to 802.11-2007 Table 7-37 */
+ 		aCWmax = 1023;
+ 		if (use_11b)
+@@ -789,7 +792,7 @@ void ieee80211_set_wmm_default(struct ie
+ 		else
+ 			aCWmin = 15;
+ 
+-		switch (queue) {
++		switch (ac) {
+ 		case IEEE80211_AC_BK:
+ 			qparam.cw_max = aCWmax;
+ 			qparam.cw_min = aCWmin;
+@@ -825,8 +828,8 @@ void ieee80211_set_wmm_default(struct ie
+ 
+ 		qparam.uapsd = false;
+ 
+-		sdata->tx_conf[queue] = qparam;
+-		drv_conf_tx(local, sdata, queue, &qparam);
++		sdata->tx_conf[ac] = qparam;
++		drv_conf_tx(local, sdata, ac, &qparam);
  	}
- 	return 0;
- }
--- 
-1.7.0.2
+ 
+ 	/* after reinitialize QoS TX queues setting to default,
+@@ -1226,14 +1229,17 @@ int ieee80211_reconfig(struct ieee80211_
+ 	mutex_unlock(&local->sta_mtx);
+ 
+ 	/* reconfigure tx conf */
+-	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+-		    sdata->vif.type == NL80211_IFTYPE_MONITOR ||
+-		    !ieee80211_sdata_running(sdata))
+-			continue;
+-
+-		for (i = 0; i < hw->queues; i++)
+-			drv_conf_tx(local, sdata, i, &sdata->tx_conf[i]);
++	if (hw->queues >= IEEE80211_NUM_ACS) {
++		list_for_each_entry(sdata, &local->interfaces, list) {
++			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++			    sdata->vif.type == NL80211_IFTYPE_MONITOR ||
++			    !ieee80211_sdata_running(sdata))
++				continue;
++
++			for (i = 0; i < IEEE80211_NUM_ACS; i++)
++				drv_conf_tx(local, sdata, i,
++					    &sdata->tx_conf[i]);
++		}
+ 	}
+ 
+ 	/* reconfigure hardware */
+--- a/net/mac80211/ieee80211_i.h	2012-03-27 14:10:27.000000000 +0200
++++ b/net/mac80211/ieee80211_i.h	2012-03-27 14:10:34.000000000 +0200
+@@ -687,7 +687,7 @@ struct ieee80211_sub_if_data {
+ 	__be16 control_port_protocol;
+ 	bool control_port_no_encrypt;
+ 
+-	struct ieee80211_tx_queue_params tx_conf[IEEE80211_MAX_QUEUES];
++	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
+ 
+ 	struct work_struct work;
+ 	struct sk_buff_head skb_queue;
+
 
