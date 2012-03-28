@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48790 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932176Ab2CGP30 (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:1059 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932361Ab2C1LUG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 10:29:26 -0500
-Received: by iagz16 with SMTP id z16so8765602iag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2012 07:29:26 -0800 (PST)
+	Wed, 28 Mar 2012 07:20:06 -0400
+Message-ID: <4F72F3D4.50409@broadcom.com> (sfid-20120328_132022_255264_E46DF2EB)
+Date: Wed, 28 Mar 2012 13:19:48 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1331131853.3519.17.camel@jlt3.sipsolutions.net>
-References: <CAEFj984b_Aihd9hc-dMArPxZPod8eKsxzekLwO74XbTUKGX9LQ@mail.gmail.com>
-	<CAEFj984gKDRtjP9NJYqjvWCZ=HxwW3DQ036guVY6Vbj=yx1H6g@mail.gmail.com>
-	<1331105902.3519.2.camel@jlt3.sipsolutions.net>
-	<CAEFj985EYVeAYef1-G3uVPOxZqwjose9Ge7=MRsbmFWrLNz_RQ@mail.gmail.com>
-	<CAEFj984tNRXvBL4cCdJAq2VL7_AgeFYDB=w1b=aLy89pCM5UdA@mail.gmail.com>
-	<1331130686.3519.14.camel@jlt3.sipsolutions.net>
-	<1331130810.3519.16.camel@jlt3.sipsolutions.net>
-	<CAEFj984W5PEwJ4ruXbwn0PwZV2s+fXkL=PzFX0DZm1gAyiGA3g@mail.gmail.com>
-	<1331131853.3519.17.camel@jlt3.sipsolutions.net>
-Date: Wed, 7 Mar 2012 23:29:26 +0800
-Message-ID: <CAEFj98638JoG8cuU1bjtn-cOLP_L0=Gud1HDROCQ4srQXxO8Dg@mail.gmail.com> (sfid-20120307_162934_673937_6CD9E695)
-Subject: Re: Hw Accel in Secured Mesh No Longer Work
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>,
+	"jrnieder@gmail.com" <jrnieder@gmail.com>,
+	"Seth Forshee" <seth.forshee@canonical.com>
+Subject: Re: brcmsmac still woes, possible regression?
+References: <CAKprTDELdRWtJWpmn9RMuMUYXxuaR6Cf41+jot4_fZixHQtcMw@mail.gmail.com>
+ <4F6D939F.3030206@broadcom.com>
+ <CAKprTDHSyh2Sv2wyY0hg4cjzWobV-zA4stY19-vB_hOBVAq5KQ@mail.gmail.com>
+ <CAKprTDHpLtPu2+navGzJU9K8XX-h=Purw_q_Qs2mYn4QFEex+w@mail.gmail.com>
+ <4F7035AD.1080503@broadcom.com>
+ <20120326094331.GA4856@stt008.linux.site>
+ <4F70409E.3090203@broadcom.com>
+ <CAKprTDGdbUnXtbfmck9rtYfKeD71xSXjShW6HnxyZJ8uRZEfnQ@mail.gmail.com>
+ <4F717EA1.4060805@broadcom.com>
+In-Reply-To: <4F717EA1.4060805@broadcom.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes
+On 03/27/2012 10:47 AM, Arend van Spriel wrote:
+> On 03/26/2012 11:28 PM, Camaleón wrote:
+>> 2012/3/26 Arend van Spriel<arend@broadcom.com>:
+>>> On 03/26/2012 11:43 AM, Camaleón wrote:
+>>>>
+>>>> Based on a user advice, I have set the regulatory domain to ES (Spain)
+>>>> and I had not experienced another trace since that (the netbook was
+>>>> running yesterday all day long).
+>>>
+>>>
+>>> It all depends what channels are allowed for the ES domain. However, I am a
+>>> bit surprised.
+>>>
+>>>
+>>>> Still, I will keep my "three" eyes over it and test any pacth you
+>>>> consider convenient. Will comment back as soon as I get another trace
+>>>> or there's something worth to add :-)
+>>>
+>>>
+>>> Thanks.
+>>
+>> Well, I got a new trace today, I'm attaching the usual logs (dmesg and
+>> messages).
+>>
+>> Should I try the aforementioned patch?
+>>
+>
+> I would appreciate it, yes.
+>
 
-> Does it work if you turn it around? Are there any problems with doing
-> so?
+Hi Camaleón,
 
-Nope. Unfortunately, not working.
+Did you have any opportunity to test the patch?
 
-Regards,
-Chun-Yeow
+Gr. AvS
+
