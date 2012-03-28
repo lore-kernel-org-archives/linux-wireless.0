@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.solarflare.com ([216.237.3.220]:52420 "EHLO
-	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753776Ab2CUQLI (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41632 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752294Ab2C1S46 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2012 12:11:08 -0400
-Message-ID: <1332346257.3500.9.camel@deadeye> (sfid-20120321_171117_840956_1C9E56E8)
-Subject: Re: [PATCH v3 4/4] ath9k:  Support ethtool getstats api.
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Date: Wed, 21 Mar 2012 16:10:57 +0000
-In-Reply-To: <20329.32334.162938.169995@gargle.gargle.HOWL>
-References: <1332183105-4447-1-git-send-email-greearb@candelatech.com>
-	 <1332183105-4447-4-git-send-email-greearb@candelatech.com>
-	 <4F684301.9040006@openwrt.org> <4F68B4AA.3070306@candelatech.com>
-	 <20329.32334.162938.169995@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 28 Mar 2012 14:56:58 -0400
+Message-ID: <4F735EF5.3010708@candelatech.com> (sfid-20120328_205702_172419_F47B1F95)
+Date: Wed, 28 Mar 2012 11:56:53 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+References: <4F57B7E6.1050103@candelatech.com> <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>
+In-Reply-To: <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-03-21 at 12:37 +0530, Sujith Manoharan wrote:
-> Ben Greear wrote:
-> > I'd like to gather at least most stats always, so ethtool can work regardless
-> > of debugfs.  But, that can be follow on patches in my opinion.  If it turns
-> > out that we need another config option for this, then that is fine too.
-> 
-> It would be good to have an option to compile this out. The information is
-> available via the debugfs interface, so this is basically duplicating things.
-> On APs using OpenWRT, debugfs is enabled by default, so we can just read
-> the debugfs files.
+On 03/07/2012 11:45 AM, Bryan Phillippe wrote:
+>
+> Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
 
-ethtool is the normal way to expose extended network stats, so the
-debugfs interface should be dropped in favour of this.
+I'm still seeing this and related warnings on 3.3.0.  At least some
+of them comes from calls the 'hostapd' process makes (I printed
+current->comm in the warning).
 
-Ben.
+I am not having luck writing a simple script that reproduce this,
+but my application that creates a VAP and bunch of virtual station
+hits it every time on startup.
+
+Bryan:  Do you have a simple script that reproduces this problem?
+
+Johannes:  Any ideas on likely causes of this problem?  Might help
+me zero in on the problem quicker...
+
+Thanks,
+Ben
 
 -- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
