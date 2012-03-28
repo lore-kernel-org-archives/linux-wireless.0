@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4834 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755343Ab2CZJYL convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49746 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757737Ab2C1JS4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 05:24:11 -0400
-Message-ID: <4F7035AD.1080503@broadcom.com> (sfid-20120326_112414_820620_48B7EDEE)
-Date: Mon, 26 Mar 2012 11:23:57 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>,
-	"jrnieder@gmail.com" <jrnieder@gmail.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: Re: brcmsmac still woes, possible regression?
-References: <CAKprTDELdRWtJWpmn9RMuMUYXxuaR6Cf41+jot4_fZixHQtcMw@mail.gmail.com>
- <4F6D939F.3030206@broadcom.com>
- <CAKprTDHSyh2Sv2wyY0hg4cjzWobV-zA4stY19-vB_hOBVAq5KQ@mail.gmail.com>
- <CAKprTDHpLtPu2+navGzJU9K8XX-h=Purw_q_Qs2mYn4QFEex+w@mail.gmail.com>
-In-Reply-To: <CAKprTDHpLtPu2+navGzJU9K8XX-h=Purw_q_Qs2mYn4QFEex+w@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	Wed, 28 Mar 2012 05:18:56 -0400
+Message-Id: <20120328091346.442543219@sipsolutions.net> (sfid-20120328_111858_724256_2CFB2788)
+Date: Wed, 28 Mar 2012 11:13:46 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 0/2] mac80211 queue redesign
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/2012 12:21 PM, Camaleón wrote:
-> 2012/3/24 Camaleón<noelamac@gmail.com>:
->
->> I will keep and eye on this, bu all seems good and working fine now.
->
-> Okay, I got another trace :-(
->
-> NetworkManager asked for the password (which was already set and
-> printed at the input box, I didn't have to type it again) and
-> reconnected fine but it logged the trace at /var/log/messages.
->
-> See attached files.
->
+Here's the queue redesign we've been talking about.
 
-The WARNING message is preceded by a cfg80211 message regarding world 
-regulatory domain. I suspect there is a relatio, but not sure what it 
-is. Regarding channels 12 and 13 I will come up with a fix today and 
-send you the patch to try.
+The monitor patch is needed because when a driver actually
+uses the new queue feature there isn't any queue to TX
+frames on for purely virtual interfaces. This only affects
+monitor (AP_VLAN are tied to AP) and only when injecting
+frames that don't have a TA matching another interface (as
+we bind the frames to that interface then). That, however
+is probably the biggest use case (now that monitor-for-AP
+is dying). As a consequence, drivers wanting to support
+"pure" injection and using the new queue features need to
+support the pure monitor interface feature as well. Also,
+the pure monitor feature will help implement monitor mode
+on devices where that is mutually exclusive with other
+modes (like iwlwifi.)
 
-Gr. AvS
+The monitor feature I've tested in hwsim, it works. The
+queue feature isn't tested at all, I haven't even done
+any kind of regression tests for drivers not using it.
+
+Thanks goes out to everybody I discussed this with (on
+IRC or elsewhere), and also Michal for reviewing a first
+version of this patch :-)
+
+johannes
 
