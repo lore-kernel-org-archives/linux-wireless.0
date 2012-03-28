@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:32941 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751079Ab2CJGip (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55202 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752530Ab2C1Mte (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 01:38:45 -0500
-Received: by dajr28 with SMTP id r28so2358493daj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 22:38:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1331292513.3491.1.camel@jlt3.sipsolutions.net>
-References: <1331137230-12430-1-git-send-email-helmut.schaa@googlemail.com>
-	<1331139615.3519.18.camel@jlt3.sipsolutions.net>
-	<CAGXE3d_fMnjyHJ7zkz53Dvv0eL+MKC6sDJwpvOQQrK+R=f2iBw@mail.gmail.com>
-	<CAJ-Vmomm9NKr6T_PczQ_eOq-so1b-=z1dSEPyjJr35ZNcag2XA@mail.gmail.com>
-	<1331292513.3491.1.camel@jlt3.sipsolutions.net>
-Date: Fri, 9 Mar 2012 22:38:44 -0800
-Message-ID: <CAJ-Vmom3-V5OXhcOxJJSnSfgC79_Pasa7tjXD+YR_cdwca1NEg@mail.gmail.com> (sfid-20120310_073912_010669_B962086D)
-Subject: Re: [PATCH] mac80211: Limit TID buffering during BA session setup/teardown
-From: Adrian Chadd <adrian@freebsd.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 28 Mar 2012 08:49:34 -0400
+Message-ID: <1332938972.3479.34.camel@jlt3.sipsolutions.net> (sfid-20120328_144949_654989_A27CC6DF)
+Subject: Re: [RFC 0/2] mac80211 queue redesign
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Date: Wed, 28 Mar 2012 14:49:32 +0200
+In-Reply-To: <1332936021.3479.33.camel@jlt3.sipsolutions.net> (sfid-20120328_140031_911935_3F0F935C)
+References: <20120328091346.442543219@sipsolutions.net>
+	 (sfid-20120328_111858_724256_2CFB2788) <1332936021.3479.33.camel@jlt3.sipsolutions.net>
+	 (sfid-20120328_140031_911935_3F0F935C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 March 2012 03:28, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Wed, 2012-03-28 at 14:00 +0200, Johannes Berg wrote:
+> On Wed, 2012-03-28 at 11:13 +0200, Johannes Berg wrote:
+> 
+> > The monitor feature I've tested in hwsim, it works. The
+> > queue feature isn't tested at all, I haven't even done
+> > any kind of regression tests for drivers not using it.
+> 
+> I ran some regression testing now and it seems to work. Haven't tested
+> the new features yet though.
 
->> (That said, what may be nice is applying backpressure to the source
->> interface of the frame(s), eg by sending PAUSE frames to the ethernet
->> port(s), but that's just me..)
->
-> That would happen from the bridging code when the interface queues are
-> stopped & get full, right?
+Woot. I started testing now with a modified iwlwifi and found no bugs so
+far :-)
 
-Sure, as long as the queues aren't too full. I haven't looked into
-whether openwrt sends PAUSE frames - Felix?
+I did add three minor improvements, but those just aid debugging...
 
+johannes
 
-Adrian
