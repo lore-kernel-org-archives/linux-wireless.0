@@ -1,49 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52296 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753810Ab2CGIQ0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 03:16:26 -0500
-Subject: Re: WARNING: driver-ops.h:10 -- how do I fix this?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <42A9DDDF-0364-49F2-AACE-FBB8B72D573C@watchguard.com>
-References: <461155E6-5B2C-48C3-AD1C-4D07B6EECE4B@watchguard.com>
-	 (sfid-20120306_014028_944755_47BCD942) <1331022766.3447.4.camel@jlt3.sipsolutions.net>
-	 <42A9DDDF-0364-49F2-AACE-FBB8B72D573C@watchguard.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Mar 2012 09:16:23 +0100
-Message-ID: <1331108183.3519.6.camel@jlt3.sipsolutions.net> (sfid-20120307_091629_704937_EAEF19B2)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:3703 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755707Ab2C1OSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 10:18:02 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/2] mac80211: do not scan and monitor connection in parallel
+Date: Wed, 28 Mar 2012 16:01:19 +0200
+Message-Id: <1332943280-4693-1-git-send-email-sgruszka@redhat.com> (sfid-20120328_161805_923099_1B489741)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-03-07 at 01:01 +0000, Bryan Phillippe wrote:
+Before we send probes in connection monitoring we check if scan is not
+pending. But we do that check without locking. Fix that and also do not
+start scan if connection monitoring is in progress.
 
-> Feb 13 05:29:48 2012 mybox local0.emerg kernel: [  266.700780] ------------[ cut here ]------------
-> Feb 13 05:29:48 2012 mybox local0.err kernel: [  266.705424] Badness at net/mac80211/driver-ops.h:10
-...
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705650] NIP [f2bd32b0] ieee80211_bss_info_change_notify+0x11c/0x308 [mac80211]
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705674] LR [f2bd32a4] ieee80211_bss_info_change_notify+0x110/0x308 [mac80211]
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705684] Call Trace:
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705704] [cfa31b30] [f2bd32a4] ieee80211_bss_info_change_notify+0x110/0x308 [mac80211] (unreliable)
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705738] [cfa31b50] [f2bec174] ieee80211_aes_cmac+0x1678/0x4758 [mac80211]
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705775] [cfa31b70] [f2b5ab20] nl80211_init+0x6a8/0x4f94 [cfg80211]
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705799] [cfa31ba0] [f2b10450] compat_vzalloc+0x1a4/0x284 [compat]
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705824] [cfa31be0] [a0334a4c] genl_rcv_msg+0x1f8/0x21c
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705840] [cfa31c30] [a0332ae0] netlink_rcv_skb+0xe0/0x108
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705856] [cfa31c50] [a0334844] genl_rcv+0x24/0x34
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705872] [cfa31c60] [a03325d0] netlink_unicast+0x380/0x3cc
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705888] [cfa31ca0] [a0333160] netlink_sendmsg+0x250/0x398
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705914] [cfa31cf0] [a02f9e28] sock_sendmsg+0x90/0xc8
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705931] [cfa31dc0] [a02fa668] sys_sendmsg+0x234/0x2d8
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705950] [cfa31f10] [a02fc03c] sys_socketcall+0x144/0x258
-> Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705973] [cfa31f40] [a0012000] ret_from_syscall+0x0/0x3c
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+I hope those 2 patches could mitigate some WARNING at rate_control_send_low
+so I prefer to have apply them to 3.4.
 
-Umm, unfortunately that makes no sense at all and isn't really helpful.
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |   35 +++++++++++++++++++++++------------
+ net/mac80211/scan.c        |   29 ++++++++++++++++++++++++++++-
+ net/mac80211/work.c        |    7 +------
+ 4 files changed, 53 insertions(+), 19 deletions(-)
 
-Do you have CONFIG_FRAME_POINTER=y set in your kernel (not compat)?
-
-johannes
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d9798a3..d8f9e41 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1239,6 +1239,7 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 			   struct cfg80211_scan_request *req);
+ void ieee80211_scan_cancel(struct ieee80211_local *local);
++void ieee80211_run_deferred_scan(struct ieee80211_local *local);
+ ieee80211_rx_result
+ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 576fb25..e586a51 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1496,19 +1496,24 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct ieee80211_local *local = sdata->local;
+ 
++	mutex_lock(&local->mtx);
+ 	if (!(ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
+-			      IEEE80211_STA_CONNECTION_POLL)))
+-	    return;
++			      IEEE80211_STA_CONNECTION_POLL))) {
++		mutex_unlock(&local->mtx);
++		return;
++	}
+ 
+ 	ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 			  IEEE80211_STA_BEACON_POLL);
+-	mutex_lock(&sdata->local->iflist_mtx);
+-	ieee80211_recalc_ps(sdata->local, -1);
+-	mutex_unlock(&sdata->local->iflist_mtx);
++
++	mutex_lock(&local->iflist_mtx);
++	ieee80211_recalc_ps(local, -1);
++	mutex_unlock(&local->iflist_mtx);
+ 
+ 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+-		return;
++		goto out;
+ 
+ 	/*
+ 	 * We've received a probe response, but are not sure whether
+@@ -1520,6 +1525,9 @@ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
+ 	mod_timer(&ifmgd->conn_mon_timer,
+ 		  round_jiffies_up(jiffies +
+ 				   IEEE80211_CONNECTION_IDLE_TIME));
++out:
++	ieee80211_run_deferred_scan(local);
++	mutex_unlock(&local->mtx);
+ }
+ 
+ void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
+@@ -1586,17 +1594,18 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+ 
+-	if (sdata->local->scanning)
+-		return;
+-
+-	if (sdata->local->tmp_channel)
+-		return;
+-
+ 	mutex_lock(&ifmgd->mtx);
+ 
+ 	if (!ifmgd->associated)
+ 		goto out;
+ 
++	mutex_lock(&sdata->local->mtx);
++
++	if (sdata->local->tmp_channel || sdata->local->scanning) {
++		mutex_unlock(&sdata->local->mtx);
++		goto out;
++	}
++
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+ 	if (beacon && net_ratelimit())
+ 		printk(KERN_DEBUG "%s: detected beacon loss from AP "
+@@ -1623,6 +1632,8 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
+ 	else
+ 		ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
+ 
++	mutex_unlock(&sdata->local->mtx);
++
+ 	if (already)
+ 		goto out;
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 33cd169..1b90f97 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -387,6 +387,33 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+ 	return 0;
+ }
+ 
++static bool ieee80211_can_scan(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata)
++{
++	if (!list_empty(&local->work_list))
++		return false;
++
++	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++	    sdata->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
++				  IEEE80211_STA_CONNECTION_POLL))
++		return false;
++
++	return true;
++}
++
++void ieee80211_run_deferred_scan(struct ieee80211_local *local)
++{
++	lockdep_assert_held(&local->mtx);
++
++	if (!local->scan_req || local->scanning)
++		return;
++
++	if (!ieee80211_can_scan(local, local->scan_sdata))
++		return;
++
++	ieee80211_queue_delayed_work(&local->hw, &local->scan_work,
++				     round_jiffies_relative(0));
++}
+ 
+ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 				  struct cfg80211_scan_request *req)
+@@ -399,7 +426,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	if (local->scan_req)
+ 		return -EBUSY;
+ 
+-	if (!list_empty(&local->work_list)) {
++	if (!ieee80211_can_scan(local, sdata)) {
+ 		/* wait for the work to finish/time out */
+ 		local->scan_req = req;
+ 		local->scan_sdata = sdata;
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index c6e230e..1f74af3 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -226,13 +226,8 @@ static void ieee80211_work_work(struct work_struct *work)
+ 		run_again(local, jiffies + HZ/2);
+ 	}
+ 
+-	if (list_empty(&local->work_list) && local->scan_req &&
+-	    !local->scanning)
+-		ieee80211_queue_delayed_work(&local->hw,
+-					     &local->scan_work,
+-					     round_jiffies_relative(0));
+-
+ 	ieee80211_recalc_idle(local);
++	ieee80211_run_deferred_scan(local);
+ 
+ 	mutex_unlock(&local->mtx);
+ 
+-- 
+1.7.1
 
