@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:54864 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751342Ab2CaUcW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2012 16:32:22 -0400
-Received: by obbtb18 with SMTP id tb18so473268obb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 13:32:21 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
-	devel@lists.open80211s.org, linville@tuxdriver.com,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [[PATCH v2 1/4] mac80211: Use mandatory rates as basic rates when starting mesh
-Date: Sat, 31 Mar 2012 13:32:07 -0700
-Message-Id: <1333225930-320-1-git-send-email-ashok@cozybit.com> (sfid-20120331_223226_585678_8C0BDF25)
+Received: from ebb06.tieto.com ([131.207.168.38]:59412 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1749667Ab2C1HFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 03:05:16 -0400
+Message-ID: <4F72B829.4040105@tieto.com> (sfid-20120328_090521_068454_6F0DC80C)
+Date: Wed, 28 Mar 2012 09:05:13 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] mac80211: prepare ieee80211_sta_get_rates to per-vif
+References: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com>	 <1332856558-5708-3-git-send-email-michal.kazior@tieto.com> <1332860821.3501.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1332860821.3501.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Johannes Berg wrote:
+> On Tue, 2012-03-27 at 15:55 +0200, Michal Kazior wrote:
+>
+>> -u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
+>> +u32 ieee80211_sta_get_rates(struct ieee80211_sub_if_data *sdata,
+>>   			    struct ieee802_11_elems *elems,
+>>   			    enum ieee80211_band band)
+>>   {
+>> +	struct ieee80211_local *local = sdata->local;
+>>   	struct ieee80211_supported_band *sband;
+>>   	struct ieee80211_rate *bitrates;
+>>   	size_t num_rates;
+>
+> Ditto here, though I actually got confused even further ... we shouldn't
+> remove the local/sdata arguments, we should only remove the use of
+> local->hw.conf.channel! IOW simply something like this:
+>
+> -       if (!sband) {
+> -               WARN_ON(1);
+> -               sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+> -       }
+> +       if (WARN_ON(!sband))
+> +               return 1;
+>
+> should be sufficient instead of doing all the prototype changes?
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 1f82c61..56ec79d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -579,8 +579,12 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	ieee80211_mesh_root_setup(ifmsh);
- 	ieee80211_queue_work(&local->hw, &sdata->work);
- 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
-+	sdata->vif.bss_conf.basic_rates =
-+		ieee80211_mandatory_rates(sdata->local,
-+					  sdata->local->hw.conf.channel->band);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
- 						BSS_CHANGED_BEACON_ENABLED |
-+						BSS_CHANGED_BASIC_RATES |
- 						BSS_CHANGED_BEACON_INT);
- }
- 
--- 
-1.7.5.4
+You're right. I'll resend a new patchset.
 
+
+-- Pozdrawiam / Best regards, Michal Kazior.
