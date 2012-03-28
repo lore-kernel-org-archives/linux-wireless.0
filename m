@@ -1,58 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56574 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758741Ab2CSPdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 11:33:09 -0400
-Message-ID: <4F6751B2.1030809@openwrt.org> (sfid-20120319_163329_645722_009BE4C6)
-Date: Mon, 19 Mar 2012 16:33:06 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	Linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Linux-netdev <netdev@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com>
-In-Reply-To: <4F674FF5.2060406@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:52824 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757524Ab2C1JHE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 05:07:04 -0400
+Message-Id: <20120328090433.095113620@sipsolutions.net> (sfid-20120328_110709_116799_97D436D1)
+Date: Wed, 28 Mar 2012 11:04:29 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 7/7] mac80211: use IEEE80211_NUM_ACS
+References: <20120328090422.367469100@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-19 4:25 PM, Justin P. Mattock wrote:
-> On 03/19/2012 08:20 AM, Mohammed Shafi wrote:
->> Hi Justin,
->>
->>> seems I got this when waking up from suspend, was trying to connect with NM
->>> then all of a sudden Xorg shut off and this appeared on the screen(image
->>> links below I could not save dmesg only pic)
->>> http://flic.kr/p/bEhf2K
->>> http://flic.kr/p/bEhf2x
->>> http://flic.kr/p/bEhf2n
->>> http://flic.kr/p/bEhf26
->>>
->>> I see ath9k in the image, but am unsure if its related.
->>> kernel is: 3.3.0-rc7-next-20120316
->>
->> this looks like some new issue  in ath9k, lets try to recreate it here
->>
->>>
->>> Justin P. Mattock
->>>
->>>
->>>
->>
->>
->>
-> 
-> would be nice to recreate, then bisecting will be more accurate to do.. 
-> I am trying userspace tweaks here and there but no luck(hostapd etc..) 
-> keep in mind this is for the RX DMA, the above just occured..
-> as for writing a small app I still need to try, but my C skills only go 
-> so far(anything to trigger!).
-Was your kernel compiled with debug info? If so, please run gdb on the
-ath9k.ko module and enter this:
-l *ath9k_tx+start+0x284
-Then send me the output of that.
+From: Johannes Berg <johannes.berg@intel.com>
 
-- Felix
+When comparing hw->queues to determine if the
+device is QoS capable, use IEEE80211_NUM_ACS
+instead of just 4.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ibss.c  |    2 +-
+ net/mac80211/iface.c |    2 +-
+ net/mac80211/mlme.c  |    7 ++++---
+ net/mac80211/tx.c    |    2 +-
+ net/mac80211/wme.c   |    4 ++--
+ 5 files changed, 9 insertions(+), 8 deletions(-)
+
+--- a/net/mac80211/ibss.c	2012-03-23 17:46:30.000000000 +0100
++++ b/net/mac80211/ibss.c	2012-03-23 17:47:04.000000000 +0100
+@@ -167,7 +167,7 @@ static void __ieee80211_sta_join_ibss(st
+ 						 chan, channel_type);
+ 	}
+ 
+-	if (local->hw.queues >= 4) {
++	if (local->hw.queues >= IEEE80211_NUM_ACS) {
+ 		pos = skb_put(skb, 9);
+ 		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
+ 		*pos++ = 7; /* len */
+--- a/net/mac80211/iface.c	2012-03-23 17:46:30.000000000 +0100
++++ b/net/mac80211/iface.c	2012-03-23 17:47:04.000000000 +0100
+@@ -676,7 +676,7 @@ static u16 ieee80211_monitor_select_queu
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_radiotap_header *rtap = (void *)skb->data;
+ 
+-	if (local->hw.queues < 4)
++	if (local->hw.queues < IEEE80211_NUM_ACS)
+ 		return 0;
+ 
+ 	if (skb->len < 4 ||
+--- a/net/mac80211/mlme.c	2012-03-23 17:46:30.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-03-23 17:47:04.000000000 +0100
+@@ -1125,7 +1125,7 @@ static void ieee80211_sta_wmm_params(str
+ 	if (!local->ops->conf_tx)
+ 		return;
+ 
+-	if (local->hw.queues < 4)
++	if (local->hw.queues < IEEE80211_NUM_ACS)
+ 		return;
+ 
+ 	if (!wmm_param)
+@@ -3299,7 +3299,7 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
+ 	sband = local->hw.wiphy->bands[req->bss->channel->band];
+ 	if (!sband->ht_cap.ht_supported ||
+-	    local->hw.queues < 4 || !bss->wmm_used)
++	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used)
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
+ 
+ 	memcpy(&ifmgd->ht_capa, &req->ht_capa, sizeof(ifmgd->ht_capa));
+@@ -3322,7 +3322,8 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 		ifmgd->ap_smps = ifmgd->req_smps;
+ 
+ 	assoc_data->capability = req->bss->capability;
+-	assoc_data->wmm = bss->wmm_used && (local->hw.queues >= 4);
++	assoc_data->wmm = bss->wmm_used &&
++			  (local->hw.queues >= IEEE80211_NUM_ACS);
+ 	assoc_data->supp_rates = bss->supp_rates;
+ 	assoc_data->supp_rates_len = bss->supp_rates_len;
+ 
+--- a/net/mac80211/tx.c	2012-03-23 17:46:30.000000000 +0100
++++ b/net/mac80211/tx.c	2012-03-23 17:47:04.000000000 +0100
+@@ -1929,7 +1929,7 @@ netdev_tx_t ieee80211_subif_start_xmit(s
+ 		wme_sta = true;
+ 
+ 	/* receiver and we are QoS enabled, use a QoS type frame */
+-	if (wme_sta && local->hw.queues >= 4) {
++	if (wme_sta && local->hw.queues >= IEEE80211_NUM_ACS) {
+ 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+ 		hdrlen += 2;
+ 	}
+--- a/net/mac80211/wme.c	2012-03-23 17:46:30.000000000 +0100
++++ b/net/mac80211/wme.c	2012-03-23 17:47:04.000000000 +0100
+@@ -79,7 +79,7 @@ u16 ieee80211_select_queue_80211(struct
+ {
+ 	u8 *p;
+ 
+-	if (local->hw.queues < 4)
++	if (local->hw.queues < IEEE80211_NUM_ACS)
+ 		return 0;
+ 
+ 	if (!ieee80211_is_data(hdr->frame_control)) {
+@@ -106,7 +106,7 @@ u16 ieee80211_select_queue(struct ieee80
+ 	const u8 *ra = NULL;
+ 	bool qos = false;
+ 
+-	if (local->hw.queues < 4 || skb->len < 6) {
++	if (local->hw.queues < IEEE80211_NUM_ACS || skb->len < 6) {
+ 		skb->priority = 0; /* required for correct WPA/11i MIC */
+ 		return 0;
+ 	}
+
+
