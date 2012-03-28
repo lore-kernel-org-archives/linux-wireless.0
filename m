@@ -1,78 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44746 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754590Ab2CSHwn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 03:52:43 -0400
-Date: Mon, 19 Mar 2012 08:52:24 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jakub Kicinski <moorray@wp.pl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 3/5] rt2x00: rt2800usb: rework txstatus
- code
-Message-ID: <20120319075223.GC2251@redhat.com> (sfid-20120319_085247_643595_E15E13BA)
-References: <1331720181-18564-1-git-send-email-sgruszka@redhat.com>
- <1331720181-18564-3-git-send-email-sgruszka@redhat.com>
- <20120317175311.1cf09433@north>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120317175311.1cf09433@north>
+Received: from he.sipsolutions.net ([78.46.109.217]:37315 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757671Ab2C1JGO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 05:06:14 -0400
+Message-Id: <20120328085901.436280820@sipsolutions.net> (sfid-20120328_110625_255736_B56EFA9F)
+Date: Wed, 28 Mar 2012 10:58:39 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/4] mac80211: notify driver of rate control updates
+References: <20120328085835.902687300@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 17, 2012 at 05:53:11PM +0100, Jakub Kicinski wrote:
-> I feel a bit guilty to comment on a patch you have first posted more
-> than a week ago and that have already been merged but to jump in with
-No problems, it's never too late for code review :-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > Make changes on txdone work. Schedule it from
-> > rt2800usb_tx_sta_fifo_read_completed() callback when first valid status
-> > show up. Check in callback if tx status timeout happens, and schedule
-> > work on that condition too. That make possible to remove tx status
-> > timeout from generic watchdog. I moved that to rt2800usb.
-> 
-> Does above mean that you want to check for timeouts in
-> rt2800usb_tx_sta_fifo_read_completed? You don't seem to be doing so.
-Good catch, I'll post fix shortly.
+Devices that have internal rate control need to be
+notified when the bandwidth or SMPS state changes
+just like external rate control algorithms get a
+notification now.
 
-> > +	if (rt2800usb_txstatus_pending(rt2x00dev) &&
-> > +	    test_and_set_bit(TX_STATUS_READING, &rt2x00dev->flags))
-> 
-> I would put a bang before that test_and...
-I don't understand what you mean, perhaps you could post a patch
-or provide code snipset here, so I could comment.
+Add this notification and clarify the change bits
+while at it, the HT_CHANGED bit really meant only
+bandwidth changed.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/DocBook/80211.tmpl    |    2 -
+ drivers/net/wireless/ath/ath9k/rc.c |    2 -
+ include/net/mac80211.h              |   37 +++++++++++++++++++++++-------------
+ net/mac80211/driver-ops.h           |   17 ++++++++++++++++
+ net/mac80211/driver-trace.h         |   28 +++++++++++++++++++++++++++
+ net/mac80211/mlme.c                 |    2 -
+ net/mac80211/rate.h                 |    2 +
+ 7 files changed, 74 insertions(+), 16 deletions(-)
+
+--- a/Documentation/DocBook/80211.tmpl	2012-03-16 14:13:10.000000000 +0100
++++ b/Documentation/DocBook/80211.tmpl	2012-03-16 14:25:57.000000000 +0100
+@@ -533,7 +533,7 @@ MISSING
+ !Finclude/net/mac80211.h ieee80211_start_tx_ba_cb_irqsafe
+ !Finclude/net/mac80211.h ieee80211_stop_tx_ba_session
+ !Finclude/net/mac80211.h ieee80211_stop_tx_ba_cb_irqsafe
+-!Finclude/net/mac80211.h rate_control_changed
++!Finclude/net/mac80211.h ieee80211_rate_control_changed
+ !Finclude/net/mac80211.h ieee80211_tx_rate_control
+ !Finclude/net/mac80211.h rate_control_send_low
+       </chapter>
+--- a/include/net/mac80211.h	2012-03-16 14:14:31.000000000 +0100
++++ b/include/net/mac80211.h	2012-03-16 14:36:25.000000000 +0100
+@@ -1778,6 +1778,18 @@ enum ieee80211_frame_release_type {
+ };
  
-> > +	while (!kfifo_is_empty(&rt2x00dev->txstatus_fifo) ||
-> > +	       rt2800usb_txstatus_timeout(rt2x00dev)) {
-> >  
-> > -	rt2800usb_txdone_nostatus(rt2x00dev);
-> > +		rt2800usb_txdone(rt2x00dev);
-> >  
-> > -	/*
-> > -	 * The hw may delay sending the packet after DMA complete
-> > -	 * if the medium is busy, thus the TX_STA_FIFO entry is
-> > -	 * also delayed -> use a timer to retrieve it.
-> > -	 */
-> > -	if (rt2800usb_txstatus_pending(rt2x00dev))
-> > -		mod_timer(&rt2x00dev->txstatus_timer, jiffies + msecs_to_jiffies(2));
-> > +		rt2800usb_txdone_nostatus(rt2x00dev);
-> > +
-> > +		/*
-> > +		 * The hw may delay sending the packet after DMA complete
-> > +		 * if the medium is busy, thus the TX_STA_FIFO entry is
-> > +		 * also delayed -> use a timer to retrieve it.
-> > +		 */
-> > +		if (rt2800usb_txstatus_pending(rt2x00dev))
-> > +			rt2800usb_async_read_tx_status(rt2x00dev);
-> 
-> How is it possible that this call will ever start the timer? The
-> reading "thread" won't exit if rt2800usb_txstatus_pending returns true
-> and every dma_done will schedule reading itself.
+ /**
++ * enum ieee80211_rate_control_changed - flags to indicate what changed
++ *
++ * @IEEE80211_RC_BW_CHANGED: The bandwidth that can be used to transmit
++ *	to this station changed.
++ * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed.
++ */
++enum ieee80211_rate_control_changed {
++	IEEE80211_RC_BW_CHANGED		= BIT(0),
++	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
++};
++
++/**
+  * struct ieee80211_ops - callbacks from mac80211 to the driver
+  *
+  * This structure contains various callbacks that the driver may
+@@ -1978,6 +1990,14 @@ enum ieee80211_frame_release_type {
+  *	up the list of states.
+  *	The callback can sleep.
+  *
++ * @sta_rc_update: Notifies the driver of changes to the bitrates that can be
++ *	used to transmit to the station. The changes are advertised with bits
++ *	from &enum ieee80211_rate_control_changed and the values are reflected
++ *	in the station data. This callback should only be used when the driver
++ *	uses hardware rate control (%IEEE80211_HW_HAS_RATE_CONTROL) since
++ *	otherwise the rate control algorithm is notified directly.
++ *	Must be atomic.
++ *
+  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+  *	bursting) for a hardware TX queue.
+  *	Returns a negative error code on failure.
+@@ -2194,6 +2214,10 @@ struct ieee80211_ops {
+ 			 struct ieee80211_sta *sta,
+ 			 enum ieee80211_sta_state old_state,
+ 			 enum ieee80211_sta_state new_state);
++	void (*sta_rc_update)(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct ieee80211_sta *sta,
++			      u32 changed);
+ 	int (*conf_tx)(struct ieee80211_hw *hw,
+ 		       struct ieee80211_vif *vif, u16 queue,
+ 		       const struct ieee80211_tx_queue_params *params);
+@@ -3510,19 +3534,6 @@ void ieee80211_send_bar(struct ieee80211
+ /* Rate control API */
+ 
+ /**
+- * enum rate_control_changed - flags to indicate which parameter changed
+- *
+- * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
+- *	changed, rate control algorithm can update its internal state if needed.
+- * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed, the rate
+- *	control algorithm needs to adjust accordingly.
+- */
+-enum rate_control_changed {
+-	IEEE80211_RC_HT_CHANGED		= BIT(0),
+-	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
+-};
+-
+-/**
+  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
+  *
+  * @hw: The hardware the algorithm is invoked for.
+--- a/drivers/net/wireless/ath/ath9k/rc.c	2012-03-16 14:14:31.000000000 +0100
++++ b/drivers/net/wireless/ath/ath9k/rc.c	2012-03-16 14:28:34.000000000 +0100
+@@ -1447,7 +1447,7 @@ static void ath_rate_update(void *priv,
+ 
+ 	/* FIXME: Handle AP mode later when we support CWM */
+ 
+-	if (changed & IEEE80211_RC_HT_CHANGED) {
++	if (changed & IEEE80211_RC_BW_CHANGED) {
+ 		if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
+ 			return;
+ 
+--- a/net/mac80211/mlme.c	2012-03-16 14:23:40.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-03-16 14:28:30.000000000 +0100
+@@ -219,7 +219,7 @@ static u32 ieee80211_config_ht_tx(struct
+ 			sta->sta.ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 
+ 		rate_control_rate_update(local, sband, sta,
+-					 IEEE80211_RC_HT_CHANGED);
++					 IEEE80211_RC_BW_CHANGED);
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+--- a/net/mac80211/driver-trace.h	2012-03-15 20:43:13.000000000 +0100
++++ b/net/mac80211/driver-trace.h	2012-03-16 14:37:24.000000000 +0100
+@@ -624,6 +624,34 @@ TRACE_EVENT(drv_sta_state,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_sta_rc_update,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta,
++		 u32 changed),
++
++	TP_ARGS(local, sdata, sta, changed),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(u32, changed)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->changed = changed;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " changed: 0x%x",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->changed
++	)
++);
++
+ TRACE_EVENT(drv_sta_add,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
+--- a/net/mac80211/driver-ops.h	2012-03-15 20:43:13.000000000 +0100
++++ b/net/mac80211/driver-ops.h	2012-03-16 14:35:54.000000000 +0100
+@@ -474,6 +474,23 @@ int drv_sta_state(struct ieee80211_local
+ 	return ret;
+ }
+ 
++static inline void drv_sta_rc_update(struct ieee80211_local *local,
++				     struct ieee80211_sub_if_data *sdata,
++				     struct ieee80211_sta *sta, u32 changed)
++{
++	might_sleep();
++
++	sdata = get_bss_sdata(sdata);
++	check_sdata_in_driver(sdata);
++
++	trace_drv_sta_rc_update(local, sdata, sta, changed);
++	if (local->ops->sta_rc_update)
++		local->ops->sta_rc_update(&local->hw, &sdata->vif,
++					  sta, changed);
++
++	trace_drv_return_void(local);
++}
++
+ static inline int drv_conf_tx(struct ieee80211_local *local,
+ 			      struct ieee80211_sub_if_data *sdata, u16 queue,
+ 			      const struct ieee80211_tx_queue_params *params)
+--- a/net/mac80211/rate.h	2012-03-16 14:14:31.000000000 +0100
++++ b/net/mac80211/rate.h	2012-03-16 14:38:20.000000000 +0100
+@@ -17,6 +17,7 @@
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ #include "sta_info.h"
++#include "driver-ops.h"
+ 
+ struct rate_control_ref {
+ 	struct ieee80211_local *local;
+@@ -72,6 +73,7 @@ static inline void rate_control_rate_upd
+ 	if (ref && ref->ops->rate_update)
+ 		ref->ops->rate_update(ref->priv, sband, ista,
+ 				      priv_sta, changed);
++	drv_sta_rc_update(local, sta->sdata, &sta->sta, changed);
+ }
+ 
+ static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
 
-I do not understand your objection here too. If rt2800usb_txstatus_pending()
-will return true and if TX_STATUS_READING bit is not set, we will run hrtimer
-to read status after 500 micro seconds. We exit the loop if kfifo is empty
-and no entry timed out waiting to get corresponding TX status.
 
-Thanks
-Stanislaw
