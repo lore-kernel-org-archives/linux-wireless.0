@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:56757 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757934Ab2CFI2e (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:54060 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758300Ab2C1TtV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 03:28:34 -0500
-Date: Tue, 6 Mar 2012 09:28:30 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-cc: Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Sven Joachim <svenjoac@gmx.de>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
-In-Reply-To: <CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com>
-Message-ID: <alpine.LFD.2.02.1203060927190.2742@ionos> (sfid-20120306_092838_180979_CB27BBCC)
-References: <20120228010511.GA8453@kroah.com> <20120228010434.412979550@linuxfoundation.org> <87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de> <CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com>
+	Wed, 28 Mar 2012 15:49:21 -0400
+Message-ID: <4F736B3D.5050408@hartkopp.net> (sfid-20120328_214924_699537_A8E2997B)
+Date: Wed, 28 Mar 2012 21:49:17 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Johannes Berg <johannes@sipsolutions.net>,
+	John Linville <linville@tuxdriver.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3.4] mac80211: fix association beacon wait timeout
+References: <1332961366.3479.41.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1332961366.3479.41.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 5 Mar 2012, Linus Torvalds wrote:
+On 28.03.2012 21:02, Johannes Berg wrote:
 
-> Thomas, should we just plan on reverting that commit from mainline? It
-> clearly causes regressions.
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The TU_TO_EXP_TIME() macro already includes the
+> "jiffies +" piece of the calculation, so don't
+> add jiffies again.
+> 
+> Reported-by: Oliver Hartkopp <socketcan@hartkopp.net>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Give me a day or two to figure out why it breaks stuff. I have no idea
-why it should wreckage anything.
 
-Thanks,
 
-	tglx
+Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
+
+three times :-)
+
+Thanks Johannes!
+
+> ---
+>  net/mac80211/mlme.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> --- a/net/mac80211/mlme.c	2012-03-28 20:55:35.000000000 +0200
+> +++ b/net/mac80211/mlme.c	2012-03-28 20:56:14.000000000 +0200
+> @@ -3387,8 +3387,7 @@ int ieee80211_mgd_assoc(struct ieee80211
+>  		 */
+>  		printk(KERN_DEBUG "%s: waiting for beacon from %pM\n",
+>  		       sdata->name, ifmgd->bssid);
+> -		assoc_data->timeout = jiffies +
+> -				TU_TO_EXP_TIME(req->bss->beacon_interval);
+> +		assoc_data->timeout = TU_TO_EXP_TIME(req->bss->beacon_interval);
+>  	} else {
+>  		assoc_data->have_beacon = true;
+>  		assoc_data->sent_assoc = false;
+> 
+> 
+
+
