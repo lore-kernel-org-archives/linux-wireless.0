@@ -1,523 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog103.obsmtp.com ([207.126.144.115]:53383 "EHLO
-	eu1sys200aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030568Ab2CBU1F (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37319 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757727Ab2C1JGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 15:27:05 -0500
-Received: from zeta.dmz-eu.st.com (zeta.dmz-eu.st.com [164.129.230.9])
-	by beta.dmz-eu.st.com (STMicroelectronics) with ESMTP id C91301B4
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:27:02 +0000 (GMT)
-Received: from relay1.stm.gmessaging.net (unknown [10.230.100.17])
-	by zeta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 6F68B2A01
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:27:02 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay1.stm.gmessaging.net (Postfix) with ESMTPS id 613D224C2C0
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:52 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCHv2 17/21] cw1200: pm.*, power management code.
-Date: Fri, 2 Mar 2012 21:26:39 +0100
-Message-ID: <1330720003-15866-18-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212722_793862_73513E57)
-In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
- <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 28 Mar 2012 05:06:15 -0400
+Message-Id: <20120328090432.294221300@sipsolutions.net> (sfid-20120328_110622_832370_A11AA521)
+Date: Wed, 28 Mar 2012 11:04:23 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/7] mac80211: remove antenna_sel_tx TX info field
+References: <20120328090422.367469100@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code implements WoW mac80211 callbacks. The suspend strategy
-is taken more form Android world, where reject of an ongoing suspend
-is something quite normal. I understand that it is not a right
-approach for vanilla Linux, where there is no retry in suspend.
+From: Johannes Berg <johannes.berg@intel.com>
 
-TODO for differentiating suspend startegy is written. To be done
-when bh is converted to a workqueue.
+This field is never set to anything non-zero in
+mac80211, so we should be able to remove it.
+Unfortunately though, the iwlwifi and iwlegacy
+drivers use it for their internal TX status
+processing (which shouldn't be using the rate
+control API to start with), so add a new field
+"status.antenna" for them, at least for now.
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+In the future, I plan to use the new field to
+hold the hardware queue, while the SKB's queue
+mapping holds the AC.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/cw1200/pm.c |  421 ++++++++++++++++++++++++++++++++++++++
- drivers/net/wireless/cw1200/pm.h |   41 ++++
- 2 files changed, 462 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/cw1200/pm.c
- create mode 100644 drivers/net/wireless/cw1200/pm.h
+ drivers/net/wireless/b43/xmit.c           |    2 +-
+ drivers/net/wireless/b43legacy/xmit.c     |   14 +-------------
+ drivers/net/wireless/iwlegacy/4965-mac.c  |    4 ++--
+ drivers/net/wireless/iwlegacy/4965-rs.c   |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    4 ++--
+ drivers/net/wireless/p54/txrx.c           |    3 +--
+ include/net/mac80211.h                    |    7 ++++---
+ 8 files changed, 13 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/cw1200/pm.c b/drivers/net/wireless/cw1200/pm.c
-new file mode 100644
-index 0000000..1613efa
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/pm.c
-@@ -0,0 +1,421 @@
-+/*
-+ * Mac80211 power management API for ST-Ericsson CW1200 drivers
-+ *
-+ * Copyright (c) 2011-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/platform_device.h>
-+#include <linux/if_ether.h>
-+#include "cw1200.h"
-+#include "pm.h"
-+#include "sta.h"
-+#include "bh.h"
-+#include "sbus.h"
-+
-+#define CW1200_BEACON_SKIPPING_MULTIPLIER 3
-+
-+struct cw1200_udp_port_filter {
-+	struct wsm_udp_port_filter_hdr hdr;
-+	struct wsm_udp_port_filter dhcp;
-+	struct wsm_udp_port_filter upnp;
-+} __packed;
-+
-+struct cw1200_ether_type_filter {
-+	struct wsm_ether_type_filter_hdr hdr;
-+	struct wsm_ether_type_filter ip;
-+	struct wsm_ether_type_filter pae;
-+	struct wsm_ether_type_filter wapi;
-+} __packed;
-+
-+static struct cw1200_udp_port_filter cw1200_udp_port_filter_on = {
-+	.hdr.nrFilters = 2,
-+	.dhcp = {
-+		.filterAction = WSM_FILTER_ACTION_FILTER_OUT,
-+		.portType = WSM_FILTER_PORT_TYPE_DST,
-+		.udpPort = __cpu_to_le16(67),
-+	},
-+	.upnp = {
-+		.filterAction = WSM_FILTER_ACTION_FILTER_OUT,
-+		.portType = WSM_FILTER_PORT_TYPE_DST,
-+		.udpPort = __cpu_to_le16(1900),
-+	},
-+	/* Please add other known ports to be filtered out here and
-+	 * update nrFilters field in the header.
-+	 * Up to 4 filters are allowed. */
-+};
-+
-+static struct wsm_udp_port_filter_hdr cw1200_udp_port_filter_off = {
-+	.nrFilters = 0,
-+};
-+
-+#ifndef ETH_P_WAPI
-+#define ETH_P_WAPI     0x88B4
-+#endif
-+
-+static struct cw1200_ether_type_filter cw1200_ether_type_filter_on = {
-+	.hdr.nrFilters = 3,
-+	.ip = {
-+		.filterAction = WSM_FILTER_ACTION_FILTER_IN,
-+		.etherType = __cpu_to_le16(ETH_P_IP),
-+	},
-+	.pae = {
-+		.filterAction = WSM_FILTER_ACTION_FILTER_IN,
-+		.etherType = __cpu_to_le16(ETH_P_PAE),
-+	},
-+	.wapi = {
-+		.filterAction = WSM_FILTER_ACTION_FILTER_IN,
-+		.etherType = __cpu_to_le16(ETH_P_WAPI),
-+	},
-+	/* Please add other known ether types to be filtered out here and
-+	 * update nrFilters field in the header.
-+	 * Up to 4 filters are allowed. */
-+};
-+
-+static struct wsm_ether_type_filter_hdr cw1200_ether_type_filter_off = {
-+	.nrFilters = 0,
-+};
-+
-+static int cw1200_suspend_late(struct device *dev);
-+static void cw1200_pm_release(struct device *dev);
-+static int cw1200_pm_probe(struct platform_device *pdev);
-+
-+/* private */
-+struct cw1200_suspend_state {
-+	unsigned long bss_loss_tmo;
-+	unsigned long connection_loss_tmo;
-+	unsigned long join_tmo;
-+	unsigned long direct_probe;
-+	unsigned long link_id_gc;
-+	bool beacon_skipping;
-+};
-+
-+static const struct dev_pm_ops cw1200_pm_ops = {
-+	.suspend_noirq = cw1200_suspend_late,
-+};
-+
-+static struct platform_driver cw1200_power_driver = {
-+	.probe = cw1200_pm_probe,
-+	.driver = {
-+		.name = "cw1200_power",
-+		.pm = &cw1200_pm_ops,
-+	},
-+};
-+
-+static int cw1200_pm_init_common(struct cw1200_pm_state *pm,
-+				  struct cw1200_common *priv)
-+{
-+	int ret;
-+
-+	spin_lock_init(&pm->lock);
-+	ret = platform_driver_register(&cw1200_power_driver);
-+	if (ret)
-+		return ret;
-+	pm->pm_dev = platform_device_alloc("cw1200_power", 0);
-+	if (!pm->pm_dev) {
-+		platform_driver_unregister(&cw1200_power_driver);
-+		return -ENOMEM;
-+	}
-+
-+	pm->pm_dev->dev.platform_data = priv;
-+	ret = platform_device_add(pm->pm_dev);
-+	if (ret) {
-+		kfree(pm->pm_dev);
-+		pm->pm_dev = NULL;
-+	}
-+
-+	return ret;
-+}
-+
-+static void cw1200_pm_deinit_common(struct cw1200_pm_state *pm)
-+{
-+	platform_driver_unregister(&cw1200_power_driver);
-+	if (pm->pm_dev) {
-+		pm->pm_dev->dev.platform_data = NULL;
-+		platform_device_unregister(pm->pm_dev);
-+		pm->pm_dev = NULL;
-+	}
-+}
-+
-+static void cw1200_pm_stay_awake_tmo(unsigned long arg)
-+{
-+}
-+
-+int cw1200_pm_init(struct cw1200_pm_state *pm,
-+		   struct cw1200_common *priv)
-+{
-+	int ret = cw1200_pm_init_common(pm, priv);
-+	if (!ret) {
-+		init_timer(&pm->stay_awake);
-+		pm->stay_awake.data = (unsigned long)pm;
-+		pm->stay_awake.function = cw1200_pm_stay_awake_tmo;
-+	}
-+	return ret;
-+}
-+
-+void cw1200_pm_deinit(struct cw1200_pm_state *pm)
-+{
-+	del_timer_sync(&pm->stay_awake);
-+	cw1200_pm_deinit_common(pm);
-+}
-+
-+void cw1200_pm_stay_awake(struct cw1200_pm_state *pm,
-+			  unsigned long tmo)
-+{
-+	long cur_tmo;
-+	spin_lock_bh(&pm->lock);
-+	cur_tmo = pm->stay_awake.expires - jiffies;
-+	if (!timer_pending(&pm->stay_awake) ||
-+			cur_tmo < (long)tmo)
-+		mod_timer(&pm->stay_awake, jiffies + tmo);
-+	spin_unlock_bh(&pm->lock);
-+}
-+
-+static long cw1200_suspend_work(struct delayed_work *work)
-+{
-+	int ret = cancel_delayed_work(work);
-+	long tmo;
-+	if (ret > 0) {
-+		/* Timer is pending */
-+		tmo = work->timer.expires - jiffies;
-+		if (tmo < 0)
-+			tmo = 0;
-+	} else {
-+		tmo = -1;
-+	}
-+	return tmo;
-+}
-+
-+static int cw1200_resume_work(struct cw1200_common *priv,
-+			       struct delayed_work *work,
-+			       unsigned long tmo)
-+{
-+	if ((long)tmo < 0)
-+		return 1;
-+
-+	return queue_delayed_work(priv->workqueue, work, tmo);
-+}
-+
-+static int cw1200_suspend_late(struct device *dev)
-+{
-+	struct cw1200_common *priv = dev->platform_data;
-+	if (atomic_read(&priv->bh_rx)) {
-+		wiphy_dbg(priv->hw->wiphy,
-+			"%s: Suspend interrupted.\n",
-+			__func__);
-+		return -EAGAIN;
-+	}
-+	return 0;
-+}
-+
-+static void cw1200_pm_release(struct device *dev)
-+{
-+}
-+
-+static int cw1200_pm_probe(struct platform_device *pdev)
-+{
-+	pdev->dev.release = cw1200_pm_release;
-+	return 0;
-+}
-+
-+int cw1200_wow_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
-+{
-+	struct cw1200_common *priv = hw->priv;
-+	struct cw1200_pm_state *pm_state = &priv->pm_state;
-+	struct cw1200_suspend_state *state;
-+	int ret;
-+
-+	spin_lock_bh(&pm_state->lock);
-+	ret = timer_pending(&pm_state->stay_awake);
-+	spin_unlock_bh(&pm_state->lock);
-+	if (ret)
-+		return -EAGAIN;
-+
-+	/* Do not suspend when datapath is not idle */
-+	if (priv->tx_queue_stats.num_queued)
-+		return -EBUSY;
-+
-+	/* Make sure there is no configuration requests in progress. */
-+	if (!mutex_trylock(&priv->conf_mutex))
-+		return -EBUSY;
-+
-+	/* Ensure pending operations are done.
-+	 * Note also that wow_suspend must return in ~2.5sec, before
-+	 * watchdog is triggered. */
-+	if (priv->channel_switch_in_progress)
-+		goto revert1;
-+
-+	/* Do not suspend when join work is scheduled */
-+	if (work_pending(&priv->join_work))
-+		goto revert1;
-+
-+	/* Do not suspend when scanning */
-+	if (down_trylock(&priv->scan.lock))
-+		goto revert1;
-+
-+	/* Lock TX. */
-+	wsm_lock_tx_async(priv);
-+
-+	/* Wait to avoid possible race with bh code.
-+	 * But do not wait too long... */
-+	if (wait_event_timeout(priv->bh_evt_wq,
-+			!priv->hw_bufs_used, HZ / 10) <= 0)
-+		goto revert2;
-+
-+	/* Set UDP filter */
-+	wsm_set_udp_port_filter(priv, &cw1200_udp_port_filter_on.hdr);
-+
-+	/* Set ethernet frame type filter */
-+	wsm_set_ether_type_filter(priv, &cw1200_ether_type_filter_on.hdr);
-+
-+	/* Allocate state */
-+	state = kzalloc(sizeof(struct cw1200_suspend_state), GFP_KERNEL);
-+	if (!state)
-+		goto revert3;
-+
-+	/* Store delayed work states. */
-+	state->bss_loss_tmo =
-+		cw1200_suspend_work(&priv->bss_loss_work);
-+	state->connection_loss_tmo =
-+		cw1200_suspend_work(&priv->connection_loss_work);
-+	state->join_tmo =
-+		cw1200_suspend_work(&priv->join_timeout);
-+	state->direct_probe =
-+		cw1200_suspend_work(&priv->scan.probe_work);
-+	state->link_id_gc =
-+		cw1200_suspend_work(&priv->link_id_gc_work);
-+
-+	/* Enable beacon skipping */
-+	if (priv->join_status == CW1200_JOIN_STATUS_STA
-+			&& priv->join_dtim_period
-+			&& !priv->has_multicast_subscription) {
-+		state->beacon_skipping = true;
-+		wsm_set_beacon_wakeup_period(priv,
-+				priv->join_dtim_period,
-+				CW1200_BEACON_SKIPPING_MULTIPLIER *
-+				 priv->join_dtim_period);
-+	}
-+
-+	/* Stop serving thread */
-+	if (cw1200_bh_suspend(priv))
-+		goto revert4;
-+
-+	ret = timer_pending(&priv->mcast_timeout);
-+	if (ret)
-+		goto revert5;
-+
-+	/* Cancel block ack stat timer */
-+	del_timer_sync(&priv->ba_timer);
-+
-+	/* Store suspend state */
-+	pm_state->suspend_state = state;
-+
-+	/* Enable IRQ wake */
-+	ret = priv->sbus_ops->power_mgmt(priv->sbus_priv, true);
-+	if (ret) {
-+		wiphy_err(priv->hw->wiphy,
-+			"%s: PM request failed: %d. WoW is disabled.\n",
-+			__func__, ret);
-+		cw1200_wow_resume(hw);
-+		return -EBUSY;
-+	}
-+
-+	/* Force resume if event is coming from the device. */
-+	if (atomic_read(&priv->bh_rx)) {
-+		cw1200_wow_resume(hw);
-+		return -EAGAIN;
-+	}
-+
-+	return 0;
-+
-+revert5:
-+	WARN_ON(cw1200_bh_resume(priv));
-+revert4:
-+	cw1200_resume_work(priv, &priv->bss_loss_work,
-+			state->bss_loss_tmo);
-+	cw1200_resume_work(priv, &priv->connection_loss_work,
-+			state->connection_loss_tmo);
-+	cw1200_resume_work(priv, &priv->join_timeout,
-+			state->join_tmo);
-+	cw1200_resume_work(priv, &priv->scan.probe_work,
-+			state->direct_probe);
-+	cw1200_resume_work(priv, &priv->link_id_gc_work,
-+			state->link_id_gc);
-+	kfree(state);
-+revert3:
-+	wsm_set_udp_port_filter(priv, &cw1200_udp_port_filter_off);
-+	wsm_set_ether_type_filter(priv, &cw1200_ether_type_filter_off);
-+revert2:
-+	wsm_unlock_tx(priv);
-+	up(&priv->scan.lock);
-+revert1:
-+	mutex_unlock(&priv->conf_mutex);
-+	return -EBUSY;
-+}
-+
-+int cw1200_wow_resume(struct ieee80211_hw *hw)
-+{
-+	struct cw1200_common *priv = hw->priv;
-+	struct cw1200_pm_state *pm_state = &priv->pm_state;
-+	struct cw1200_suspend_state *state;
-+
-+	state = pm_state->suspend_state;
-+	pm_state->suspend_state = NULL;
-+
-+	/* Disable IRQ wake */
-+	priv->sbus_ops->power_mgmt(priv->sbus_priv, false);
-+
-+	/* Resume BH thread */
-+	WARN_ON(cw1200_bh_resume(priv));
-+
-+	if (state->beacon_skipping) {
-+		wsm_set_beacon_wakeup_period(priv, priv->beacon_int *
-+				priv->join_dtim_period >
-+				MAX_BEACON_SKIP_TIME_MS ? 1 :
-+				priv->join_dtim_period, 0);
-+		state->beacon_skipping = false;
-+	}
-+
-+	/* Resume delayed work */
-+	cw1200_resume_work(priv, &priv->bss_loss_work,
-+			state->bss_loss_tmo);
-+	cw1200_resume_work(priv, &priv->connection_loss_work,
-+			state->connection_loss_tmo);
-+	cw1200_resume_work(priv, &priv->join_timeout,
-+			state->join_tmo);
-+	cw1200_resume_work(priv, &priv->scan.probe_work,
-+			state->direct_probe);
-+	cw1200_resume_work(priv, &priv->link_id_gc_work,
-+			state->link_id_gc);
-+
-+	/* Restart block ack stat */
-+	spin_lock_bh(&priv->ba_lock);
-+	if (priv->ba_cnt)
-+		mod_timer(&priv->ba_timer,
-+			jiffies + CW1200_BLOCK_ACK_INTERVAL);
-+	spin_unlock_bh(&priv->ba_lock);
-+
-+	/* Remove UDP port filter */
-+	wsm_set_udp_port_filter(priv, &cw1200_udp_port_filter_off);
-+
-+	/* Remove ethernet frame type filter */
-+	wsm_set_ether_type_filter(priv, &cw1200_ether_type_filter_off);
-+
-+	/* Unlock datapath */
-+	wsm_unlock_tx(priv);
-+
-+	/* Unlock scan */
-+	up(&priv->scan.lock);
-+
-+	/* Unlock configuration mutex */
-+	mutex_unlock(&priv->conf_mutex);
-+
-+	/* Free memory */
-+	kfree(state);
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/cw1200/pm.h b/drivers/net/wireless/cw1200/pm.h
-new file mode 100644
-index 0000000..36afe63
---- /dev/null
-+++ b/drivers/net/wireless/cw1200/pm.h
-@@ -0,0 +1,41 @@
-+/*
-+ * Mac80211 power management interface for ST-Ericsson CW1200 mac80211 drivers
-+ *
-+ * Copyright (c) 2011-2012, ST-Ericsson AB
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef PM_H_INCLUDED
-+#define PM_H_INCLUDED
-+
-+/* ******************************************************************** */
-+/* mac80211 API								*/
-+
-+#ifdef CONFIG_PM
-+
-+/* extern */  struct cw1200_common;
-+/* private */ struct cw1200_suspend_state;
-+
-+struct cw1200_pm_state {
-+	struct cw1200_suspend_state *suspend_state;
-+	struct timer_list stay_awake;
-+	struct platform_device *pm_dev;
-+	spinlock_t lock;
-+};
-+
-+int cw1200_pm_init(struct cw1200_pm_state *pm,
-+		    struct cw1200_common *priv);
-+void cw1200_pm_deinit(struct cw1200_pm_state *pm);
-+void cw1200_pm_stay_awake(struct cw1200_pm_state *pm,
-+			  unsigned long tmo);
-+int cw1200_wow_suspend(struct ieee80211_hw *hw,
-+		       struct cfg80211_wowlan *wowlan);
-+int cw1200_wow_resume(struct ieee80211_hw *hw);
-+
-+#endif /* CONFIG_PM */
-+
-+#endif
--- 
-1.7.9
+--- a/drivers/net/wireless/b43/xmit.c	2012-03-23 14:58:31.000000000 +0100
++++ b/drivers/net/wireless/b43/xmit.c	2012-03-23 14:59:06.000000000 +0100
+@@ -378,7 +378,7 @@ int b43_generate_txhdr(struct b43_wldev
+ 	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+ 		phy_ctl |= B43_TXH_PHY_SHORTPRMBL;
+ 
+-	switch (b43_ieee80211_antenna_sanitize(dev, info->antenna_sel_tx)) {
++	switch (b43_ieee80211_antenna_sanitize(dev, 0)) {
+ 	case 0: /* Default */
+ 		phy_ctl |= B43_TXH_PHY_ANT01AUTO;
+ 		break;
+--- a/drivers/net/wireless/b43legacy/xmit.c	2012-03-23 14:58:31.000000000 +0100
++++ b/drivers/net/wireless/b43legacy/xmit.c	2012-03-23 14:59:06.000000000 +0100
+@@ -277,19 +277,7 @@ static int generate_txhdr_fw3(struct b43
+ 		phy_ctl |= B43legacy_TX4_PHY_ENC_OFDM;
+ 	if (info->control.rates[0].flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+ 		phy_ctl |= B43legacy_TX4_PHY_SHORTPRMBL;
+-	switch (info->antenna_sel_tx) {
+-	case 0:
+-		phy_ctl |= B43legacy_TX4_PHY_ANTLAST;
+-		break;
+-	case 1:
+-		phy_ctl |= B43legacy_TX4_PHY_ANT0;
+-		break;
+-	case 2:
+-		phy_ctl |= B43legacy_TX4_PHY_ANT1;
+-		break;
+-	default:
+-		B43legacy_BUG_ON(1);
+-	}
++	phy_ctl |= B43legacy_TX4_PHY_ANTLAST;
+ 
+ 	/* MAC control */
+ 	rates = info->control.rates;
+--- a/drivers/net/wireless/p54/txrx.c	2012-03-23 14:58:31.000000000 +0100
++++ b/drivers/net/wireless/p54/txrx.c	2012-03-23 14:59:06.000000000 +0100
+@@ -914,8 +914,7 @@ void p54_tx_80211(struct ieee80211_hw *d
+ 	txhdr->hw_queue = queue;
+ 	txhdr->backlog = priv->tx_stats[queue].len - 1;
+ 	memset(txhdr->durations, 0, sizeof(txhdr->durations));
+-	txhdr->tx_antenna = ((info->antenna_sel_tx == 0) ?
+-		2 : info->antenna_sel_tx - 1) & priv->tx_diversity_mask;
++	txhdr->tx_antenna = 2 & priv->tx_diversity_mask;
+ 	if (priv->rxhw == 5) {
+ 		txhdr->longbow.cts_rate = cts_rate;
+ 		txhdr->longbow.output_power = cpu_to_le16(priv->output_power);
+--- a/include/net/mac80211.h	2012-03-23 14:58:31.000000000 +0100
++++ b/include/net/mac80211.h	2012-03-23 14:59:06.000000000 +0100
+@@ -520,7 +520,7 @@ struct ieee80211_tx_rate {
+  *
+  * @flags: transmit info flags, defined above
+  * @band: the band to transmit on (use for checking for races)
+- * @antenna_sel_tx: antenna to use, 0 for automatic diversity
++ * @reserved: reserved for future use
+  * @ack_frame_id: internal frame ID for TX status, used internally
+  * @control: union for control data
+  * @status: union for status data
+@@ -536,7 +536,7 @@ struct ieee80211_tx_info {
+ 	u32 flags;
+ 	u8 band;
+ 
+-	u8 antenna_sel_tx;
++	u8 reserved;
+ 
+ 	u16 ack_frame_id;
+ 
+@@ -562,7 +562,8 @@ struct ieee80211_tx_info {
+ 			u8 ampdu_ack_len;
+ 			int ack_signal;
+ 			u8 ampdu_len;
+-			/* 15 bytes free */
++			u8 antenna;
++			/* 14 bytes free */
+ 		} status;
+ 		struct {
+ 			struct ieee80211_tx_rate driver_rates[
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c	2012-03-23 14:58:31.000000000 +0100
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c	2012-03-23 14:59:06.000000000 +0100
+@@ -2849,9 +2849,9 @@ void
+ il4965_hwrate_to_tx_control(struct il_priv *il, u32 rate_n_flags,
+ 			    struct ieee80211_tx_info *info)
+ {
+-	struct ieee80211_tx_rate *r = &info->control.rates[0];
++	struct ieee80211_tx_rate *r = &info->status.rates[0];
+ 
+-	info->antenna_sel_tx =
++	info->status.antenna =
+ 	    ((rate_n_flags & RATE_MCS_ANT_ABC_MSK) >> RATE_MCS_ANT_POS);
+ 	if (rate_n_flags & RATE_MCS_HT_MSK)
+ 		r->flags |= IEEE80211_TX_RC_MCS;
+--- a/drivers/net/wireless/iwlegacy/4965-rs.c	2012-03-23 14:58:31.000000000 +0100
++++ b/drivers/net/wireless/iwlegacy/4965-rs.c	2012-03-23 14:59:06.000000000 +0100
+@@ -873,7 +873,7 @@ il4965_rs_tx_status(void *il_r, struct i
+ 	    tbl_type.is_SGI != !!(mac_flags & IEEE80211_TX_RC_SHORT_GI) ||
+ 	    tbl_type.is_ht40 != !!(mac_flags & IEEE80211_TX_RC_40_MHZ_WIDTH) ||
+ 	    tbl_type.is_dup != !!(mac_flags & IEEE80211_TX_RC_DUP_DATA) ||
+-	    tbl_type.ant_type != info->antenna_sel_tx ||
++	    tbl_type.ant_type != info->status.antenna ||
+ 	    !!(tx_rate & RATE_MCS_HT_MSK) != !!(mac_flags & IEEE80211_TX_RC_MCS)
+ 	    || !!(tx_rate & RATE_MCS_GF_MSK) !=
+ 	    !!(mac_flags & IEEE80211_TX_RC_GREEN_FIELD) || rs_idx != mac_idx) {
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2012-03-23 14:58:31.000000000 +0100
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2012-03-23 14:59:06.000000000 +0100
+@@ -969,7 +969,7 @@ static void rs_tx_status(void *priv_r, s
+ 	    (tbl_type.is_SGI != !!(mac_flags & IEEE80211_TX_RC_SHORT_GI)) ||
+ 	    (tbl_type.is_ht40 != !!(mac_flags & IEEE80211_TX_RC_40_MHZ_WIDTH)) ||
+ 	    (tbl_type.is_dup != !!(mac_flags & IEEE80211_TX_RC_DUP_DATA)) ||
+-	    (tbl_type.ant_type != info->antenna_sel_tx) ||
++	    (tbl_type.ant_type != info->status.antenna) ||
+ 	    (!!(tx_rate & RATE_MCS_HT_MSK) != !!(mac_flags & IEEE80211_TX_RC_MCS)) ||
+ 	    (!!(tx_rate & RATE_MCS_GF_MSK) != !!(mac_flags & IEEE80211_TX_RC_GREEN_FIELD)) ||
+ 	    (rs_index != mac_index)) {
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2012-03-23 14:58:31.000000000 +0100
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2012-03-23 14:59:06.000000000 +0100
+@@ -779,9 +779,9 @@ static void iwlagn_non_agg_tx_status(str
+ static void iwlagn_hwrate_to_tx_control(struct iwl_priv *priv, u32 rate_n_flags,
+ 				  struct ieee80211_tx_info *info)
+ {
+-	struct ieee80211_tx_rate *r = &info->control.rates[0];
++	struct ieee80211_tx_rate *r = &info->status.rates[0];
+ 
+-	info->antenna_sel_tx =
++	info->status.antenna =
+ 		((rate_n_flags & RATE_MCS_ANT_ABC_MSK) >> RATE_MCS_ANT_POS);
+ 	if (rate_n_flags & RATE_MCS_HT_MSK)
+ 		r->flags |= IEEE80211_TX_RC_MCS;
+
 
