@@ -1,89 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:58905 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab2CDIz7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58271 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941Ab2C1TN2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 03:55:59 -0500
-Received: by mail-we0-f174.google.com with SMTP id x9so1794100wej.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 00:55:59 -0800 (PST)
-MIME-Version: 1.0
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/11] wl12xx: don't handle change_channel while associated
-Date: Sun,  4 Mar 2012 10:55:51 +0200
-Message-Id: <1330851355-24459-8-git-send-email-eliad@wizery.com> (sfid-20120304_095635_725669_BA6B4E18)
-In-Reply-To: <1330851355-24459-1-git-send-email-eliad@wizery.com>
-References: <1330851355-24459-1-git-send-email-eliad@wizery.com>
+	Wed, 28 Mar 2012 15:13:28 -0400
+Message-ID: <1332962004.3479.42.camel@jlt3.sipsolutions.net> (sfid-20120328_211331_640646_2506EA30)
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Bryan Phillippe <Bryan.Phillippe@watchguard.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 28 Mar 2012 21:13:24 +0200
+In-Reply-To: <4F73620D.507@candelatech.com>
+References: <4F57B7E6.1050103@candelatech.com>
+	  <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>
+	  <4F735EF5.3010708@candelatech.com>
+	 <1332961193.3479.40.camel@jlt3.sipsolutions.net>
+	 <4F73620D.507@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, CHANGE_CHANNEL indication while
-associated is considered as roaming attempt.
+On Wed, 2012-03-28 at 12:10 -0700, Ben Greear wrote:
+> On 03/28/2012 11:59 AM, Johannes Berg wrote:
+> > On Wed, 2012-03-28 at 11:56 -0700, Ben Greear wrote:
+> >> On 03/07/2012 11:45 AM, Bryan Phillippe wrote:
+> >>>
+> >>> Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
+> >>
+> >> I'm still seeing this and related warnings on 3.3.0.  At least some
+> >> of them comes from calls the 'hostapd' process makes (I printed
+> >> current->comm in the warning).
+> >>
+> >> I am not having luck writing a simple script that reproduce this,
+> >> but my application that creates a VAP and bunch of virtual station
+> >> hits it every time on startup.
+> >>
+> >> Bryan:  Do you have a simple script that reproduces this problem?
+> >>
+> >> Johannes:  Any ideas on likely causes of this problem?  Might help
+> >> me zero in on the problem quicker...
+> >
+> > Hm. Maybe this is the problem?
+> >
+> > http://p.sipsolutions.net/d432de678ae3ff17.txt
+> 
+> I don't see any code that matches that in 3.3.0 (nothing with nl80211_start_ap, for instance)
 
-However, with the new auth/assoc redesign,
-we no longer have to handle this case,
-so remove it.
+ah, well, it's set_beacon there or so
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   43 ++++++++++++-----------------------
- 1 files changed, 15 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 65f91d7..85bbe7f 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2515,35 +2515,22 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 				wl1271_warning("rate policy for channel "
- 					       "failed %d", ret);
- 
--			if (test_bit(WLVIF_FLAG_STA_ASSOCIATED,
--				     &wlvif->flags)) {
--				if (wl12xx_dev_role_started(wlvif)) {
--					/* roaming */
--					ret = wl12xx_croc(wl,
--							  wlvif->dev_role_id);
--					if (ret < 0)
--						return ret;
--				}
--				ret = wl1271_join(wl, wlvif, false);
-+			/*
-+			 * change the ROC channel. do it only if we are
-+			 * not idle. otherwise, CROC will be called
-+			 * anyway.
-+			 */
-+			if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED,
-+				      &wlvif->flags) &&
-+			    wl12xx_dev_role_started(wlvif) &&
-+			    !(conf->flags & IEEE80211_CONF_IDLE)) {
-+				ret = wl12xx_stop_dev(wl, wlvif);
- 				if (ret < 0)
--					wl1271_warning("cmd join on channel "
--						       "failed %d", ret);
--			} else {
--				/*
--				 * change the ROC channel. do it only if we are
--				 * not idle. otherwise, CROC will be called
--				 * anyway.
--				 */
--				if (wl12xx_dev_role_started(wlvif) &&
--				    !(conf->flags & IEEE80211_CONF_IDLE)) {
--					ret = wl12xx_stop_dev(wl, wlvif);
--					if (ret < 0)
--						return ret;
-+					return ret;
- 
--					ret = wl12xx_start_dev(wl, wlvif);
--					if (ret < 0)
--						return ret;
--				}
-+				ret = wl12xx_start_dev(wl, wlvif);
-+				if (ret < 0)
-+					return ret;
- 			}
- 		}
- 	}
--- 
-1.7.6.401.g6a319
+johannes
 
