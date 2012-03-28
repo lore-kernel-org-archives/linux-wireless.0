@@ -1,78 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54432 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754569Ab2CDSCp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 13:02:45 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	stable@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3.3] iwlwifi: always monitor for stuck queues
-Date: Sun,  4 Mar 2012 08:50:46 -0800
-Message-Id: <1330879846-30311-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_190308_302989_01515C45)
+Received: from mail.candelatech.com ([208.74.158.172]:53686 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755259Ab2C1TKN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 15:10:13 -0400
+Message-ID: <4F73620D.507@candelatech.com> (sfid-20120328_211018_039571_C9F11B1E)
+Date: Wed, 28 Mar 2012 12:10:05 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Bryan Phillippe <Bryan.Phillippe@watchguard.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+References: <4F57B7E6.1050103@candelatech.com>  <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>  <4F735EF5.3010708@candelatech.com> <1332961193.3479.40.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1332961193.3479.40.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 03/28/2012 11:59 AM, Johannes Berg wrote:
+> On Wed, 2012-03-28 at 11:56 -0700, Ben Greear wrote:
+>> On 03/07/2012 11:45 AM, Bryan Phillippe wrote:
+>>>
+>>> Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
+>>
+>> I'm still seeing this and related warnings on 3.3.0.  At least some
+>> of them comes from calls the 'hostapd' process makes (I printed
+>> current->comm in the warning).
+>>
+>> I am not having luck writing a simple script that reproduce this,
+>> but my application that creates a VAP and bunch of virtual station
+>> hits it every time on startup.
+>>
+>> Bryan:  Do you have a simple script that reproduces this problem?
+>>
+>> Johannes:  Any ideas on likely causes of this problem?  Might help
+>> me zero in on the problem quicker...
+>
+> Hm. Maybe this is the problem?
+>
+> http://p.sipsolutions.net/d432de678ae3ff17.txt
 
-If we only monitor while associated, the following
-can happen:
- - we're associated, and the queue stuck check
-   runs, setting the queue "touch" time to X
- - we disassociate, stopping the monitoring,
-   which leaves the time set to X
- - almost 2s later, we associate, and enqueue
-   a frame
- - before the frame is transmitted, we monitor
-   for stuck queues, and find the time set to
-   X, although it is now later than X + 2000ms,
-   so we decide that the queue is stuck and
-   erroneously restart the device
+I don't see any code that matches that in 3.3.0 (nothing with nl80211_start_ap, for instance)
 
-It happens more with P2P because there we can
-go between associated/unassociated frequently.
+Thanks,
+Ben
 
-Cc: stable@vger.kernel.org
-Reported-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-this patch will be also available from wireless branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+>
+> johannes
 
- drivers/net/wireless/iwlwifi/iwl-core.c |   18 ++++--------------
- 1 files changed, 4 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 7bcfa78..3abe9ed 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1465,20 +1465,10 @@ void iwl_bg_watchdog(unsigned long data)
- 	if (timeout == 0)
- 		return;
- 
--	/* monitor and check for stuck cmd queue */
--	if (iwl_check_stuck_queue(priv, priv->shrd->cmd_queue))
--		return;
--
--	/* monitor and check for other stuck queues */
--	if (iwl_is_any_associated(priv)) {
--		for (cnt = 0; cnt < hw_params(priv).max_txq_num; cnt++) {
--			/* skip as we already checked the command queue */
--			if (cnt == priv->shrd->cmd_queue)
--				continue;
--			if (iwl_check_stuck_queue(priv, cnt))
--				return;
--		}
--	}
-+	/* monitor and check for stuck queues */
-+	for (cnt = 0; cnt < hw_params(priv).max_txq_num; cnt++)
-+		if (iwl_check_stuck_queue(priv, cnt))
-+			return;
- 
- 	mod_timer(&priv->watchdog, jiffies +
- 		  msecs_to_jiffies(IWL_WD_TICK(timeout)));
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
