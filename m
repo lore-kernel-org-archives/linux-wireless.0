@@ -1,77 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20333 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758088Ab2CGTGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:30 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 06/35] iwlwifi: remove unused argument from iwlagn_suspend
-Date: Wed,  7 Mar 2012 09:52:15 -0800
-Message-Id: <1331142764-5750-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200637_446075_F028DFD8)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:50872 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757910Ab2C1T0I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Mar 2012 15:26:08 -0400
+Date: Wed, 28 Mar 2012 20:28:35 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Subject: Ath6K crashes on boot in next-20120328
+Message-ID: <20120328202835.46d82df6@pyramind.ukuu.org.uk> (sfid-20120328_212635_684251_2A525021)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-There's not much point in passing priv and
-hw pointers since they can be derived from
-each other, and the function doesn't use
-the hw pointer anyway. Remove it.
+ASUS UX31E - boots happily without this driver, enable the driver and it
+goes boom with an error in ..start_tx.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 +--
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    3 +--
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    2 +-
- 3 files changed, 3 insertions(+), 5 deletions(-)
+Is this a known problem or should I try and grab a full trace ?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index b2ee1f9..6d8a857 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1120,8 +1120,7 @@ int iwlagn_send_patterns(struct iwl_priv *priv,
- 	return err;
- }
- 
--int iwlagn_suspend(struct iwl_priv *priv,
--		struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
-+int iwlagn_suspend(struct iwl_priv *priv, struct cfg80211_wowlan *wowlan)
- {
- 	struct iwlagn_wowlan_wakeup_filter_cmd wakeup_filter_cmd;
- 	struct iwl_rxon_cmd rxon;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 8384c05..82930ef 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -141,8 +141,7 @@ int iwlagn_send_beacon_cmd(struct iwl_priv *priv);
- #ifdef CONFIG_PM_SLEEP
- int iwlagn_send_patterns(struct iwl_priv *priv,
- 			 struct cfg80211_wowlan *wowlan);
--int iwlagn_suspend(struct iwl_priv *priv,
--		   struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan);
-+int iwlagn_suspend(struct iwl_priv *priv, struct cfg80211_wowlan *wowlan);
- #endif
- 
- /* rx */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index d2c1d71..bdcbbd0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -405,7 +405,7 @@ static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
--	ret = iwlagn_suspend(priv, hw, wowlan);
-+	ret = iwlagn_suspend(priv, wowlan);
- 	if (ret)
- 		goto error;
- 
--- 
-1.7.0.4
-
+Alan
