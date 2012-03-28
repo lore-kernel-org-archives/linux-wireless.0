@@ -1,55 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:59332 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932547Ab2CZPP5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37313 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757669Ab2C1JGO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 11:15:57 -0400
-Message-ID: <1332774906.1870.98.camel@aeonflux> (sfid-20120326_171602_495190_1A7D2863)
-Subject: Re: RFC/CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona?)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Date: Mon, 26 Mar 2012 17:15:06 +0200
-In-Reply-To: <20120326145433.GE13806@tuxdriver.com>
-References: <20120322192406.GB2432@tuxdriver.com>
-	 <1332698585.1870.88.camel@aeonflux> <20120326145433.GE13806@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 28 Mar 2012 05:06:14 -0400
+Message-Id: <20120328085901.307857420@sipsolutions.net> (sfid-20120328_110619_243292_1BF7F7AC)
+Date: Wed, 28 Mar 2012 10:58:38 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] mac80211: remove queue stop on rate control update
+References: <20120328085835.902687300@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > > Given the potential to expand this into a larger event, we would
-> > > likely need to be somewhat more formal about having proposals for
-> > > speaking slots.  In that case, we might require a program committee
-> > > for reviewing proposals, etc.  Anyone interested in participating in
-> > > speaking at the mini-summit or in reviewing speaking proposals should
-> > > contact me or reply in this thread.
-> > 
-> > When you and I talked originally about this, we discussed the format a
-> > little bit. In theory we have a bunch of options here. One of the
-> > original thoughts was 1-2 day mini-conference and 1 day break-out
-> > sessions. I assume 6 presentation per day is maximum. Is it enough to
-> > just do 1 day?
-> 
-> I don't think that 1 day is enough.  2 might not be enough, depending
-> on how we stage it.  Do you think that we would have more than one
-> "track" (e.g. separate Blueooth/802.11/NFC sessions)?  A single
-> "plenary" session?  Or some mix?
+We currently stop the queue when changing the rate
+control between 20/40 MHz in the BSS. This seems to
+have been necessary when we actually changed the
+channel, but now that we just update the station it
+doesn't seem right any more. Remove it.
 
-so what about 2 days single track and 1 day with breakout sessions. So
-we could do 12 talks with morning and afternoon sessions on the 3rd day
-as needed.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    1 -
+ net/mac80211/mlme.c        |   19 -------------------
+ 2 files changed, 20 deletions(-)
 
-If we have many proposals for presentations, we can always go switch to
-2 tracks. If we require LinuxCon registration, then it should be no
-problem to get a second room. If not, I have to negotiate with Angela
-next week ;)
-
-Regards
-
-Marcel
+--- a/net/mac80211/ieee80211_i.h	2012-03-16 14:14:19.000000000 +0100
++++ b/net/mac80211/ieee80211_i.h	2012-03-16 14:14:20.000000000 +0100
+@@ -757,7 +757,6 @@ enum queue_stop_reason {
+ 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
+ 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
+ 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
+-	IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE,
+ };
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+--- a/net/mac80211/mlme.c	2012-03-16 14:14:19.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-03-16 14:14:20.000000000 +0100
+@@ -212,21 +212,6 @@ static u32 ieee80211_config_ht_tx(struct
+ 	if (sta && (!reconfig ||
+ 		    (disable_40 != !!(sta->sta.ht_cap.cap &
+ 					IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
+-		if (reconfig) {
+-			/*
+-			 * Whenever the AP announces the HT mode changed
+-			 * (e.g. 40 MHz intolerant) stop queues to avoid
+-			 * sending out frames while the rate control is
+-			 * reconfiguring.
+-			 */
+-			ieee80211_stop_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
+-
+-			/* flush out all packets */
+-			synchronize_net();
+-
+-			drv_flush(local, false);
+-		}
+ 
+ 		if (disable_40)
+ 			sta->sta.ht_cap.cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+@@ -235,10 +220,6 @@ static u32 ieee80211_config_ht_tx(struct
+ 
+ 		rate_control_rate_update(local, sband, sta,
+ 					 IEEE80211_RC_HT_CHANGED);
+-
+-		if (reconfig)
+-			ieee80211_wake_queues_by_reason(&sdata->local->hw,
+-				IEEE80211_QUEUE_STOP_REASON_CHTYPE_CHANGE);
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
 
 
