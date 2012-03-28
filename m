@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43597 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751882Ab2CQTXI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54886 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722Ab2C1S77 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2012 15:23:08 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Ronald Wahl <ronald.wahl@raritan.com>
-Subject: [PATCH] rtlwifi: rtl8192c: Prevent sleeping from invalid context in rtl8192cu
-Date: Sat, 17 Mar 2012 14:22:50 -0500
-Message-Id: <1332012170-5480-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120317_202313_299940_0A3AB636)
+	Wed, 28 Mar 2012 14:59:59 -0400
+Message-ID: <1332961193.3479.40.camel@jlt3.sipsolutions.net> (sfid-20120328_210003_042979_B20854B8)
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Bryan Phillippe <Bryan.Phillippe@watchguard.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 28 Mar 2012 20:59:53 +0200
+In-Reply-To: <4F735EF5.3010708@candelatech.com>
+References: <4F57B7E6.1050103@candelatech.com>
+	 <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>
+	 <4F735EF5.3010708@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When driver rtl8192cu is used with the debug level set to 3 or greater,
-the result is "sleeping function called from invalid context" due to
-an rcu_read_lock() call in the DM refresh routine in driver rtl8192c.
-This lock is not necessary as the USB driver does not use the struct
-being protected, thus the lock is set only when a PCI interface is
-active.
+On Wed, 2012-03-28 at 11:56 -0700, Ben Greear wrote:
+> On 03/07/2012 11:45 AM, Bryan Phillippe wrote:
+> >
+> > Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
+> 
+> I'm still seeing this and related warnings on 3.3.0.  At least some
+> of them comes from calls the 'hostapd' process makes (I printed
+> current->comm in the warning).
+> 
+> I am not having luck writing a simple script that reproduce this,
+> but my application that creates a VAP and bunch of virtual station
+> hits it every time on startup.
+> 
+> Bryan:  Do you have a simple script that reproduces this problem?
+> 
+> Johannes:  Any ideas on likely causes of this problem?  Might help
+> me zero in on the problem quicker...
 
-This bug is reported in https://bugzilla.kernel.org/show_bug.cgi?id=42775.
+Hm. Maybe this is the problem?
 
-Reported-by: Ronald Wahl <ronald.wahl@raritan.com>
-Tested-by: Ronald Wahl <ronald.wahl@raritan.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
-Cc: Ronald Wahl <ronald.wahl@raritan.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
+http://p.sipsolutions.net/d432de678ae3ff17.txt
 
-John,
-
-This patch was tested, and the entry at b.k.o has been marked "resolved with code fix".
-
-Larry
----
-
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index cb5535c..8646ff2 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -1201,13 +1201,18 @@ static void rtl92c_dm_refresh_rate_adaptive_mask(struct ieee80211_hw *hw)
- 				 "PreState = %d, CurState = %d\n",
- 				 p_ra->pre_ratr_state, p_ra->ratr_state);
- 
--			rcu_read_lock();
--			sta = ieee80211_find_sta(mac->vif, mac->bssid);
-+			/* Only the PCI card uses sta in the update rate table
-+			 * callback routine */
-+			if (rtlhal->interface == INTF_PCI) {
-+				rcu_read_lock();
-+				sta = ieee80211_find_sta(mac->vif, mac->bssid);
-+			}
- 			rtlpriv->cfg->ops->update_rate_tbl(hw, sta,
- 					p_ra->ratr_state);
- 
- 			p_ra->pre_ratr_state = p_ra->ratr_state;
--			rcu_read_unlock();
-+			if (rtlhal->interface == INTF_PCI)
-+				rcu_read_unlock();
- 		}
- 	}
- }
--- 
-1.7.7
+johannes
 
