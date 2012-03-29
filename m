@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:60976 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932341Ab2CSUUF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 16:20:05 -0400
-Received: by wejx9 with SMTP id x9so6180754wej.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 13:20:04 -0700 (PDT)
-References: <4F673690.40302@raritan.com>
-In-Reply-To: <4F673690.40302@raritan.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <9D564AC6-306B-4E75-A235-AC3DDF54F7D3@gmail.com> (sfid-20120319_212010_761508_E33818A0)
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	RT2x00 Users <users@rt2x00.serialmonkey.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] mac80211: when receiving DTIM disable power-save mode only if it was enabled
-Date: Mon, 19 Mar 2012 21:20:02 +0100
-To: Ronald Wahl <ronald.wahl@raritan.com>
+Received: from victor.provo.novell.com ([137.65.250.26]:44801 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932529Ab2C2KUW (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Thu, 29 Mar 2012 06:20:22 -0400
+From: "Chen, Chien-Chia" <machen@suse.com>
+To: IvDoorn@gmail.com, users@rt2x00.serialmonkey.com,
+	linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] Fix rfkill_polling register function.
+Date: Thu, 29 Mar 2012 18:21:47 +0800
+Message-Id: <1333016507-15241-1-git-send-email-machen@suse.com> (sfid-20120329_122026_710065_300C49B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 mrt. 2012, at 14:37, Ronald Wahl <ronald.wahl@raritan.com> wrote:
+  Move rt2x00rfkill_register(rt2x00dev) to rt2x00lib_probe_dev
+  function. It fixes of starting rfkill_poll function at the
+  right time if sets hard rfkill block and reboot. rt2x00mac_rfkill_poll
+  should be starting before bringing up the wireless interface.
 
-> When receiving DTIM we currently disable power save mode in the
-> hardware unconditionally, i.e. also when the hardware was not sleeping.
-> This causes trouble with at least one wireless chipset (Ralink RT3572).
-> When the hardware is not sleeping and we send a wakeup command (e.g.
-> this happens after a scan) then a significant decrease of the link
-> quality or a disconnect may occur.
-> Disabling power save mode only when it was enabled prevents this issue.
-> 
-> Signed-off-by: Ronald Wahl <ronald.wahl@raritan.com>
+Signed-off-by: Chen, Chien-Chia <machen@suse.com>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Kevin Chou <kevin.chou@mediatek.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-Reviewed-by: Gertjan van Wingerde <gwingerde@gmail.com>
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index fc9901e..90cc5e7 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1062,11 +1062,6 @@ static int rt2x00lib_initialize(struct rt2x00_dev *rt2x00dev)
+ 
+ 	set_bit(DEVICE_STATE_INITIALIZED, &rt2x00dev->flags);
+ 
+-	/*
+-	 * Register the extra components.
+-	 */
+-	rt2x00rfkill_register(rt2x00dev);
+-
+ 	return 0;
+ }
+ 
+@@ -1210,6 +1205,7 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00link_register(rt2x00dev);
+ 	rt2x00leds_register(rt2x00dev);
+ 	rt2x00debug_register(rt2x00dev);
++	rt2x00rfkill_register(rt2x00dev);
+ 
+ 	return 0;
+ 
+-- 
+1.7.3.4
 
-Obviously rt2x00 is the only one that seems to need this, but simply replicating maintaining the PS state inside rt2x00 while mac80211 already does this doesn't seem right to me.
-
-> ---
-> Index: linux/net/mac80211/mlme.c
-> ===================================================================
-> --- linux/net/mac80211/mlme.c    (revision 213137)
-> +++ linux/net/mac80211/mlme.c    (working copy)
-> @@ -1922,9 +1922,11 @@
->    if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) {
->        if (directed_tim) {
->            if (local->hw.conf.dynamic_ps_timeout > 0) {
-> -                local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-> -                ieee80211_hw_config(local,
-> -                            IEEE80211_CONF_CHANGE_PS);
-> +                if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-> +                    local->hw.conf.flags &= ~IEEE80211_CONF_PS;
-> +                    ieee80211_hw_config(local,
-> +                                IEEE80211_CONF_CHANGE_PS);
-> +                }
->                ieee80211_send_nullfunc(local, sdata, 0);
->            } else {
->                local->pspolling = true;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
