@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:63700 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758115Ab2CLXr4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 19:47:56 -0400
-Received: by dajr28 with SMTP id r28so5850181daj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Mar 2012 16:47:56 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH] iw: Show Toffset on station dump
-Date: Mon, 12 Mar 2012 16:47:51 -0700
-Message-Id: <1331596071-29747-1-git-send-email-ashok@cozybit.com> (sfid-20120313_004809_501605_701F8081)
+Received: from victor.provo.novell.com ([137.65.250.26]:49494 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757282Ab2C2KVx convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Thu, 29 Mar 2012 06:21:53 -0400
+Received: by bkcik5 with SMTP id ik5so1780290bkc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2012 03:21:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120329094055.GC2351@redhat.com>
+References: <1332829680-32457-1-git-send-email-machen@suse.com>
+	<20120327123822.GA2565@redhat.com>
+	<CALx5=V-aouK2ge3f2EQa07n2oJZRBXQGf15pXUdbsk6BjE+cdg@mail.gmail.com>
+	<CALx5=V9++V8c-=Nu5X6rigkMcU5Lv6tgn9wn7DS4pwn4P0Yr-A@mail.gmail.com>
+	<20120329094055.GC2351@redhat.com>
+Date: Thu, 29 Mar 2012 18:21:34 +0800
+Message-ID: <CALx5=V-LOs_a0f=cNF68Xjf+G8JtLDHxHJwQnWwzmkMHQOw8hQ@mail.gmail.com> (sfid-20120329_122155_870219_D46FD031)
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2x00dev: move rfkill_polling
+ register to proper place
+From: Matt Chen <machen@suse.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=Big5
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
----
- station.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Hi Stanislaw,
 
-diff --git a/station.c b/station.c
-index ef69ea5..75e2369 100644
---- a/station.c
-+++ b/station.c
-@@ -45,6 +45,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
-+		[NL80211_STA_INFO_T_OFFSET] = { .type = NLA_U64 },
- 		[NL80211_STA_INFO_TX_BITRATE] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_LLID] = { .type = NLA_U16 },
- 		[NL80211_STA_INFO_PLID] = { .type = NLA_U16 },
-@@ -113,6 +114,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 	if (sinfo[NL80211_STA_INFO_SIGNAL_AVG])
- 		printf("\n\tsignal avg:\t%d dBm",
- 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL_AVG]));
-+	if (sinfo[NL80211_STA_INFO_T_OFFSET])
-+		printf("\n\tToffset:\t%lld us",
-+			(int64_t)nla_get_u64(sinfo[NL80211_STA_INFO_T_OFFSET]));
- 
- 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
- 		if (nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
+2012/3/29 Stanislaw Gruszka <sgruszka@redhat.com>:
+> On Thu, Mar 29, 2012 at 10:50:25AM +0800, Matt Chen wrote:
+>> Hi John,
+>>
+>> Would it be possible to merge my patch to v3.4 merging ¡H
+>> It would be great if this patch got merged. This patch fixes an
+>> initialization of probing pci device. Since a lot users reported the
+>> issue is making no sense after rebooting the machine and got No
+>> wireless device working due to rfkill is not yet started to work.
+>>
+>> Thank you for your kindly help. :)
+>>
+>> Would it be possible to merge this patch into v3.4 tree before the
+>> merging window closed ?
+> Since patch is a fix, it could be applied after merge window. But first
+> you should fix sign-off's and repost.
+OK, repost and also mail to John.
+Thanks for your reminding. :)
+> Stanislaw
+>
+
+
+
 -- 
-1.7.5.4
-
+Thank you.
