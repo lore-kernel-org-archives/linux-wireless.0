@@ -1,93 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:41653 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754352Ab2CMAFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 20:05:25 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: gregkh@linuxfoundation.org
-Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
-	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v4 0/7] USB: OHCI/EHCI: generic platform driver
-Date: Tue, 13 Mar 2012 01:04:46 +0100
-Message-Id: <1331597093-425-1-git-send-email-hauke@hauke-m.de> (sfid-20120313_010531_697493_8552F95F)
+Received: from smtp.polymtl.ca ([132.207.4.11]:33831 "EHLO smtp.polymtl.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759181Ab2C2M1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Mar 2012 08:27:16 -0400
+Received: from localhost (imp-4-2.polymtl.ca [132.207.4.77])
+	by smtp.polymtl.ca (8.14.3/8.14.3) with ESMTP id q2TCREL8005478
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2012 08:27:15 -0400
+Message-ID: <1333024034.4f74552250426@www.imp.polymtl.ca> (sfid-20120329_142726_310989_63B6D955)
+Date: Thu, 29 Mar 2012 08:27:14 -0400
+From: Naveen Goswamy <naveen.goswamy@polymtl.ca>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmsmac TCP problems and txop exceeded
+References: <1332866581.4f71ee152ce84@www.imp.polymtl.ca> <4F71F3E5.6030105@broadcom.com> <1332870459.4f71fd3bb7453@www.imp.polymtl.ca> <4F74509A.3060103@broadcom.com>
+In-Reply-To: <4F74509A.3060103@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This EHCI/OHCI platform driver should replace the simple EHCI and OHCI 
-platform drivers. It was developed to be used for the USB core of the 
-Broadcom SoCs supported by ssb and bcma, but it should also work for 
-other devices.
+For the router, it is a trendnet tew-652brp which uses ath9k drivers.
 
-Drivers like ehci-ath79.c, ehci-xls.c and ehci-ixp4xx.c should be 
-relative easy be ported to this EHCI driver.
-And drivers like ohci-ath79.c, ohci-ppc-soc.c, ohci-sh.c and ohci-xls.c 
-should be easy be ported to the this OHCI driver.
+I can use wireshark.  Do you know what we are looking for, so I can try to
+filter for that?
 
-I am unable to test the suspend and resume part, as my SoC does not 
-support this, but most of the platform driver do not support 
-suspend/resume too. The code here should work, but was never runtime 
-tested.
+Cheers,
 
-This also contains patches adding USB support for the SoCs based on ssb 
-and bcma and converts the ath79 code to use the generic usb driver.
+ng
 
-This patch series is based on the usb tree and should go through it to Linus.
+Quoting Arend van Spriel <arend@broadcom.com>:
 
-v4:
-   * handle error when searching for a bridge on bcma
-   * leave old Kconfig options and mark them deprecated and select the
-     new driver
+> On 03/27/2012 07:47 PM, Naveen Goswamy wrote:
+> > Hi,
+> >
+> > The reason I am trying to use wireshark is to try and figure out what is
+> going
+> > on.  I have strange issues with things like SSH, sshfs, and dynamic
+> webpages
+> > that involve bidirectional data transfer, like google maps, or even trying
+> to
+> > send an email through a web-based client.  I also wonder if it might be a
+> > setting I am using on my openwrt router, since the behaviour of the driver
+> was
+> > significantly better the other day when I was on the road and using a
+> different
+> > network's wireless router.  Disabling WMI modules seemed to help too, but
+> not
+> > always.  I guess I should try playing with my router again, I did try
+> switching
+> > channels and using different WPA/WPA2 encryption methods but that didn't
+> help.
+> > But other wireless clients on the network using different drivers seem to
+> work
+> > fine.
+> >
+>
+> what hardware are you running the openwrt router firmware on? Can you
+> use wireshark to capture what is going over the air.
+>
+> Gr. AvS
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-v3:
-   * add patches for bcma and ssb usb driver again
-   * add patch to convert ath79 to use the generic platform driver
 
-v2:
-   * split include/linux/usb/hci_driver.h into include/linux
-     /usb/ehci_pdriver.h and include/linux/usb/ohci_pdriver.h
-   * remove flags from include/linux/usb/{e,o}ehci_pdriver.h
-   * add kernel doc
-   * add some more options into the structs to activate hardware quirks.
-
-Hauke Mehrtens (7):
-  USB: OHCI: Add a generic platform device driver
-  USB: EHCI: Add a generic platform device driver
-  bcma: scan for extra address space
-  USB: Add driver for the bcma bus
-  USB: Add driver for the ssb bus
-  USB: OHCI: remove old SSB OHCI driver
-  USB: use generic platform driver on ath79
-
- arch/mips/ath79/dev-usb.c        |   31 +++-
- drivers/bcma/scan.c              |   19 ++-
- drivers/usb/host/Kconfig         |   63 +++++++-
- drivers/usb/host/Makefile        |    2 +
- drivers/usb/host/bcma-hcd.c      |  334 ++++++++++++++++++++++++++++++++++++++
- drivers/usb/host/ehci-ath79.c    |  208 ------------------------
- drivers/usb/host/ehci-hcd.c      |   10 +-
- drivers/usb/host/ehci-platform.c |  198 ++++++++++++++++++++++
- drivers/usb/host/ohci-ath79.c    |  151 -----------------
- drivers/usb/host/ohci-hcd.c      |   31 +---
- drivers/usb/host/ohci-platform.c |  194 ++++++++++++++++++++++
- drivers/usb/host/ohci-ssb.c      |  260 -----------------------------
- drivers/usb/host/ssb-hcd.c       |  279 +++++++++++++++++++++++++++++++
- include/linux/bcma/bcma.h        |    1 +
- include/linux/usb/ehci_pdriver.h |   46 ++++++
- include/linux/usb/ohci_pdriver.h |   38 +++++
- 16 files changed, 1206 insertions(+), 659 deletions(-)
- create mode 100644 drivers/usb/host/bcma-hcd.c
- delete mode 100644 drivers/usb/host/ehci-ath79.c
- create mode 100644 drivers/usb/host/ehci-platform.c
- delete mode 100644 drivers/usb/host/ohci-ath79.c
- create mode 100644 drivers/usb/host/ohci-platform.c
- delete mode 100644 drivers/usb/host/ohci-ssb.c
- create mode 100644 drivers/usb/host/ssb-hcd.c
- create mode 100644 include/linux/usb/ehci_pdriver.h
- create mode 100644 include/linux/usb/ohci_pdriver.h
-
--- 
-1.7.5.4
 
