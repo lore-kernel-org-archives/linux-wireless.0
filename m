@@ -1,47 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:35230 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752572Ab2CSPwD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54591 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751630Ab2C2QR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 11:52:03 -0400
-Received: by eaaq12 with SMTP id q12so2739401eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 08:52:02 -0700 (PDT)
-Message-ID: <4F67561F.4030902@gmail.com> (sfid-20120319_165208_911555_4D775FAB)
-Date: Mon, 19 Mar 2012 16:51:59 +0100
-From: Till Kamppeter <till.kamppeter@gmail.com>
-MIME-Version: 1.0
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>
-Subject: Google Summer of Code 2012 - Please register as mentor
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 29 Mar 2012 12:17:58 -0400
+Message-ID: <1333037874.3575.10.camel@jlt3.sipsolutions.net> (sfid-20120329_181801_971994_3BDA202D)
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Bryan Phillippe <Bryan.Phillippe@watchguard.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 29 Mar 2012 18:17:54 +0200
+In-Reply-To: <4F748937.1070203@candelatech.com>
+References: <4F57B7E6.1050103@candelatech.com>
+	    <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>
+	    <4F735EF5.3010708@candelatech.com>
+	   <1332961193.3479.40.camel@jlt3.sipsolutions.net>
+	   <4F73620D.507@candelatech.com>
+	  <1332962004.3479.42.camel@jlt3.sipsolutions.net>
+	  <4F736A5A.4030408@candelatech.com>
+	 <1333003130.3611.0.camel@jlt3.sipsolutions.net>
+	 <4F748937.1070203@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2012-03-29 at 09:09 -0700, Ben Greear wrote:
+> On 03/28/2012 11:38 PM, Johannes Berg wrote:
+> > On Wed, 2012-03-28 at 12:45 -0700, Ben Greear wrote:
+> >> On 03/28/2012 12:13 PM, Johannes Berg wrote:
+> >>> On Wed, 2012-03-28 at 12:10 -0700, Ben Greear wrote:
+> >>>> On 03/28/2012 11:59 AM, Johannes Berg wrote:
+> >>
+> >>>>> Hm. Maybe this is the problem?
+> >>>>>
+> >>>>> http://p.sipsolutions.net/d432de678ae3ff17.txt
+> >>>>
+> >>>> I don't see any code that matches that in 3.3.0 (nothing with nl80211_start_ap, for instance)
+> >>>
+> >>> ah, well, it's set_beacon there or so
+> >>>
+> >>> johannes
+> >>
+> >>
+> >> I tried this patch, but it still spews (see below)
+> >
+> >> WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:12 check_sdata_in_driver+0x26/0x2b [mac80211]()
+> >
+> >>    [<c04263d1>] warn_slowpath_common+0x65/0x7a
+> >>    [<f96a28d1>] ? check_sdata_in_driver+0x26/0x2b [mac80211]
+> >>    [<c042644a>] warn_slowpath_fmt+0x26/0x2a
+> >>    [<f96a28d1>] check_sdata_in_driver+0x26/0x2b [mac80211]
+> >>    [<f96a3438>] ieee80211_set_txq_params+0x97/0xec [mac80211]
+> >
+> > but now it's coming from elsewhere, see this patch?
+> >
+> > http://p.sipsolutions.net/b8506c9d7ce8a119.txt
+> 
+> That fixes the problem for me, or at least the easily-reproducible part.
+> 
+> I did have to modify the patch to work on 3.3.0 since it has no start_ap
+> and the beacon method is named a bit differently.
+> 
+> I'm going to apply this to my patch set and will let you know if
+> I see anything else strange.
 
-please register as mentor if you want to mentor or co-mentor a student. 
-If you did not do so yet, please reghister as follows:
+Ok, I'll send all of this upstream too. I'll add Cc: stable, and when I
+need a patch to apply to stable I might ask you for yours then :)
 
-1. If you do not have a Google account yet, get one. The processing of 
-your request is fully automatic, you do not need to wait for anyone to 
-approve.
-
-2. Go to
-
-http://www.google-melange.com/
-
-log in, and click on the "Apply" button under "Mentors: Apply now!". 
-Select "The Linux Foundation" (LF) as your desired mentoring 
-organization and follow the further steps.
-
-3. I will approve your mentorship request shortly.
-
-Jeff, as you are the backup admin, please request mentorship also if you 
-do not intend to mentor.
-
-    Till
+johannes
 
