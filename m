@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:30379 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399Ab2CHGn4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52370 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856Ab2C2Giz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 01:43:56 -0500
-Date: Thu, 8 Mar 2012 09:46:18 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: NFC: Fragment LLCP I frames
-Message-ID: <20120308064617.GI674@mwanda> (sfid-20120308_074359_539172_DF3463C2)
-References: <20120307095142.GA24805@elgon.mountain>
- <20120308024952.GA9008@sortiz-mobl>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="VkVuOCYP9O7H3CXI"
-In-Reply-To: <20120308024952.GA9008@sortiz-mobl>
+	Thu, 29 Mar 2012 02:38:55 -0400
+Message-ID: <1333003130.3611.0.camel@jlt3.sipsolutions.net> (sfid-20120329_083859_430782_E553B7B4)
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Bryan Phillippe <Bryan.Phillippe@watchguard.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 29 Mar 2012 08:38:50 +0200
+In-Reply-To: <4F736A5A.4030408@candelatech.com>
+References: <4F57B7E6.1050103@candelatech.com>
+	   <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>
+	   <4F735EF5.3010708@candelatech.com>
+	  <1332961193.3479.40.camel@jlt3.sipsolutions.net>
+	  <4F73620D.507@candelatech.com>
+	 <1332962004.3479.42.camel@jlt3.sipsolutions.net>
+	 <4F736A5A.4030408@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2012-03-28 at 12:45 -0700, Ben Greear wrote:
+> On 03/28/2012 12:13 PM, Johannes Berg wrote:
+> > On Wed, 2012-03-28 at 12:10 -0700, Ben Greear wrote:
+> >> On 03/28/2012 11:59 AM, Johannes Berg wrote:
+> 
+> >>> Hm. Maybe this is the problem?
+> >>>
+> >>> http://p.sipsolutions.net/d432de678ae3ff17.txt
+> >>
+> >> I don't see any code that matches that in 3.3.0 (nothing with nl80211_start_ap, for instance)
+> >
+> > ah, well, it's set_beacon there or so
+> >
+> > johannes
+> 
+> 
+> I tried this patch, but it still spews (see below)
 
---VkVuOCYP9O7H3CXI
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:12 check_sdata_in_driver+0x26/0x2b [mac80211]()
 
-On Thu, Mar 08, 2012 at 03:49:52AM +0100, Samuel Ortiz wrote:
-> > Shouldn't this be msg_ptr +=3D frag_len?
-> Right as well.
-> I'll send an patch to John for fixing that. Do you mind me adding a:
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
->=20
-> to it ?
+>   [<c04263d1>] warn_slowpath_common+0x65/0x7a
+>   [<f96a28d1>] ? check_sdata_in_driver+0x26/0x2b [mac80211]
+>   [<c042644a>] warn_slowpath_fmt+0x26/0x2a
+>   [<f96a28d1>] check_sdata_in_driver+0x26/0x2b [mac80211]
+>   [<f96a3438>] ieee80211_set_txq_params+0x97/0xec [mac80211]
 
-That would be great.
+but now it's coming from elsewhere, see this patch?
 
-regards,
-dan carpenter
+http://p.sipsolutions.net/b8506c9d7ce8a119.txt
 
+johannes
 
-
---VkVuOCYP9O7H3CXI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPWFW5AAoJEOnZkXI/YHqRh0cP/jRSYOzAmQlWEvLf5Ui+8oVn
-tT4/jIl1nz0dvphqpZVR4fiWDQmpqq3lCAa+PLTnh1iLL6UZna0kNyBAsmBmbjtg
-39Ys81NAn16WvOtujYky8pPVlyagrJv70YnuwQ33PDsQoUX7C+xT6hZIc0LaByi0
-K/yQ3OOIJ0TaUNgYiY8NQHCUaZxIY3EfhKEPm6h2L+J7tXfqf94hxsitblh4exZY
-yBHX0DdUAO7j0Hu6lsmJYhNYYYdjvRiQQ0y1LEaX8i2AQqisb9GGsMb7tkopqZr6
-FfJNSttns9nBRfpQzOXo8inBPl7/TOm6WW9wev4VnaFiRm6Zg08vBLYe1amc3dkc
-cP9PlSfR+FEWsnuYt649PFt3V2o/q6f6dt8Oy7wxwg8V9R1mhIdJ6ph7gKoeKF9Z
-K0fnwOfIf8zggVHv91uIubDsNrUFjeAuqsEbywzuKgJvPbIjpckevQcE90ZXofrr
-g8g/vHalKUX4c9zaJP90dtfymBQ29xYsLhDd/IhpEHFVPwVZTT0/aylmiSKLn/QR
-4o4Bekp/+R68nAGfJC257fcWTwGAIck2PUat81NaN3i5vo9sar7ixPQQq3GUeW8d
-86uRMR8NgrzYWxZn6O3HrW74yDh3E7DgaLiVAVX6wCAtD+FLe3isk5yV8oN0/sFx
-CK3816hXotnF5n6y/zHM
-=ogmM
------END PGP SIGNATURE-----
-
---VkVuOCYP9O7H3CXI--
