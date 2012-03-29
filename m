@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43429 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752480Ab2CSNt4 (ORCPT
+Received: from exchange.solarflare.com ([216.237.3.220]:53693 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758417Ab2C2SJm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 09:49:56 -0400
-Subject: Re: [RFC] mac80211: fix possible tid_rx->reorder_timer use after
- free
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20120319134259.GD6169@redhat.com>
-References: <1332161442-7315-1-git-send-email-sgruszka@redhat.com>
-	 <1332162188.3359.33.camel@jlt3.sipsolutions.net>
-	 <1332162477.3359.34.camel@jlt3.sipsolutions.net>
-	 <20120319134259.GD6169@redhat.com>
+	Thu, 29 Mar 2012 14:09:42 -0400
+Message-ID: <1333044575.2656.1.camel@bwh-desktop.uk.solarflarecom.com> (sfid-20120329_200956_791607_1448C7F8)
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big
+ network copies (page allocation failure)
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Marc MERLIN <marc@merlins.org>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Date: Thu, 29 Mar 2012 19:09:35 +0100
+In-Reply-To: <20120329163800.GH24933@merlins.org>
+References: <20120329163800.GH24933@merlins.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Mar 2012 14:49:54 +0100
-Message-ID: <1332164994.3359.36.camel@jlt3.sipsolutions.net> (sfid-20120319_145002_162698_72B4F3B3)
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 14:43 +0100, Stanislaw Gruszka wrote:
-> On Mon, Mar 19, 2012 at 02:07:57PM +0100, Johannes Berg wrote:
-> > I was actually thinking of using just del_timer(), but now that I think
-> > about it, should anything prevent us from using del_timer_sync() inside
-> > ieee80211_free_tid_rx?
-> 
-> Yes, call_rcu() callback can not sleep. Depending of RCU implementation
-> callback can run with bottom half disabled.
+On Thu, 2012-03-29 at 09:38 -0700, Marc MERLIN wrote:
+[...]
+> Below are some sysreq dumps I took (syslog to local disk was still
+> working fine). I know I have Tainted 'G', and I have no idea where that
+> came from, sorry :-/
+[...]
 
-del_timer_sync() doesn't really *sleep* though, even if it waits, so it
-should be fine?
+'G' isn't a taint flag, but the following 'O' is; it means you have one
+or more out-of-tree modules loaded.  Care to tell us what they are?
 
-johannes
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
