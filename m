@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3254 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759347Ab2CAOMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 09:12:44 -0500
-Message-ID: <4F4F83D2.8030101@broadcom.com> (sfid-20120301_151248_503566_08DEC6B0)
-Date: Thu, 1 Mar 2012 15:12:34 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from magic.merlins.org ([209.81.13.136]:60027 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759474Ab2C2VTc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Mar 2012 17:19:32 -0400
+Date: Thu, 29 Mar 2012 14:19:31 -0700
+From: Marc MERLIN <marc@merlins.org>
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big network copies (page allocation failure)
+Message-ID: <20120329211931.GH29342@merlins.org> (sfid-20120329_231936_865871_8FC69D67)
+References: <20120329163800.GH24933@merlins.org> <1333044575.2656.1.camel@bwh-desktop.uk.solarflarecom.com>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Saul St. John" <saul.stjohn@gmail.com>,
-	"Rafal Milecki" <zajec5@gmail.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for
- SPROM storage
-References: <1330033977-5741-1-git-send-email-arend@broadcom.com>
- <4F48D997.1060400@hauke-m.de> <4F4B571E.7040704@broadcom.com>
- <4F4D34FA.8070800@hauke-m.de>
-In-Reply-To: <4F4D34FA.8070800@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1333044575.2656.1.camel@bwh-desktop.uk.solarflarecom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/28/2012 09:11 PM, Hauke Mehrtens wrote:
-> On 02/27/2012 11:12 AM, Arend van Spriel wrote:
->> On 02/25/2012 01:52 PM, Hauke Mehrtens wrote:
->>> I will test you patch on my device soon and will report if something is
->>> wrong. If you are sending a non RFC patch in the next days I would
->>> rebase my patch onto yours. The code searching in the SoCs flash chip
->>> will be added to run if bcma_sprom_onchip_available() returns false.
->>
->> Appreciate any testing on SoCs. I think I will need some time to modify
->> brcmsmac so let your patch go first.
->
-> The sprom part of my SoC is working with this patch on top of my sprom
-> patches, but it uses the sprom from flash/nvram for both wifi devices
-> (one integrated in the bCM4716 and the other a BCM43224 connected to the
-> PCIe host controller of the BCM4716).
-> For my BCM4716 bcma_sprom_ext_available() and
-> bcma_sprom_onchip_available() are returning false and for the BCM43224
-> bcma_sprom_ext_available() is returning false and
-> bcma_sprom_onchip_offset() 0.
+On Thu, Mar 29, 2012 at 07:09:35PM +0100, Ben Hutchings wrote:
+> On Thu, 2012-03-29 at 09:38 -0700, Marc MERLIN wrote:
+> [...]
+> > Below are some sysreq dumps I took (syslog to local disk was still
+> > working fine). I know I have Tainted 'G', and I have no idea where that
+> > came from, sorry :-/
+> [...]
+> 
+> 'G' isn't a taint flag, but the following 'O' is; it means you have one
+> or more out-of-tree modules loaded.  Care to tell us what they are?
 
-Thanks, Hauke
+All I can think of is virtualbox, but I'm almost certain I did not have
+virtualbox loaded (i.e. modules disabled so they wouldn't load) for my first
+test with wired ethernet (yes, I know that virtualbox modules are known 
+for causing problems).
 
-Did the BCM43224 come with the router. If so I am assuming the onchip is 
-not used and the system relies on flash/nvram completely. I will inform 
-whether my assumption is correct.
+Ah, yes, I had another out of tree module:
+http://www.thinkwiki.org/wiki/Tp_smapi
+(on thinkpad W500)
 
-Gr. AvS
+Module                  Size  Used by
+hdaps                  13616  1 
+tp_smapi               23531  0 
+thinkpad_ec            12857  2 hdaps,tp_smapi
 
+So, I suppose the next step is to reproduce without those modules loaded,
+which I'll do next.
+
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
