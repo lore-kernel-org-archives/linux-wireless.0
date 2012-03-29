@@ -1,72 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:46335 "HELO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1161299Ab2CPDw0 (ORCPT
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:49191 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932713Ab2C2UiO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 23:52:26 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/5] mwifiex: add cfg80211 dump_station handler
-Date: Thu, 15 Mar 2012 20:51:48 -0700
-Message-Id: <1331869911-10624-3-git-send-email-bzhao@marvell.com> (sfid-20120316_045229_374682_B894834C)
-In-Reply-To: <1331869911-10624-1-git-send-email-bzhao@marvell.com>
-References: <1331869911-10624-1-git-send-email-bzhao@marvell.com>
+	Thu, 29 Mar 2012 16:38:14 -0400
+Received: from mail87-tx2 (localhost [127.0.0.1])	by mail87-tx2-R.bigfish.com
+ (Postfix) with ESMTP id 2514C1E0311	for <linux-wireless@vger.kernel.org>;
+ Thu, 29 Mar 2012 20:38:13 +0000 (UTC)
+Received: from TX2EHSMHS012.bigfish.com (unknown [10.9.14.239])	by
+ mail87-tx2.bigfish.com (Postfix) with ESMTP id 25330180066	for
+ <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2012 20:38:11 +0000 (UTC)
+From: "Bouterse, Robert" <robert.bouterse@dmh-global.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 29 Mar 2012 13:35:14 -0700
+Subject: compat-wireless-2012-03-12, unknown symbols
+Message-ID: <110B6C33195F5F4790292BDD9E7DED401ABB0F5307@VA3DIAXVS371.RED001.local> (sfid-20120329_223818_055769_7950D251)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
-
-This enables user to dump station information using
-"iw dev <devname> station dump" command.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 6505038..4f65419 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -604,6 +604,23 @@ mwifiex_cfg80211_get_station(struct wiphy *wiphy, struct net_device *dev,
- 	return mwifiex_dump_station_info(priv, sinfo);
- }
- 
-+/*
-+ * CFG802.11 operation handler to dump station information.
-+ */
-+static int
-+mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
-+			      int idx, u8 *mac, struct station_info *sinfo)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+
-+	if (!priv->media_connected || idx)
-+		return -ENOENT;
-+
-+	memcpy(mac, priv->cfg_bssid, ETH_ALEN);
-+
-+	return mwifiex_dump_station_info(priv, sinfo);
-+}
-+
- /* Supported rates to be advertised to the cfg80211 */
- 
- static struct ieee80211_rate mwifiex_rates[] = {
-@@ -1340,6 +1357,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.connect = mwifiex_cfg80211_connect,
- 	.disconnect = mwifiex_cfg80211_disconnect,
- 	.get_station = mwifiex_cfg80211_get_station,
-+	.dump_station = mwifiex_cfg80211_dump_station,
- 	.set_wiphy_params = mwifiex_cfg80211_set_wiphy_params,
- 	.set_channel = mwifiex_cfg80211_set_channel,
- 	.join_ibss = mwifiex_cfg80211_join_ibss,
--- 
-1.7.0.2
+SSBhbSBidWlsZGluZyBjb21wYXQtd2lyZWxlc3MtMjAxMi0wMy0xMiBvbiBhbiBhcm0gMi42LjM1
+IGtlcm5lbCBhbmQgZ2V0dGluZyB0aGUgZm9sbG93aW5nIHdhcm5pbmdzOg0KV0FSTklORzogL2hv
+bWUvYmJvdXRlcnNlL3Byb2plY3RzL2J1aWxkcm9vdC9vdXRwdXQvdGFyZ2V0L2xpYi9tb2R1bGVz
+LzIuNi4zNS4zKy91cGRhdGVzL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9hdGg1ay5r
+byBuZWVkcyB1bmtub3duIHN5bWJvbCBhdGg1a19od19yZWFkX3NyZXYNCldBUk5JTkc6IC9ob21l
+L2Jib3V0ZXJzZS9wcm9qZWN0cy9idWlsZHJvb3Qvb3V0cHV0L3RhcmdldC9saWIvbW9kdWxlcy8y
+LjYuMzUuMysvdXBkYXRlcy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyeDAwbGliLmtv
+IG5lZWRzIHVua25vd24gc3ltYm9sIF9fa2ZpZm9fZnJlZQ0KV0FSTklORzogL2hvbWUvYmJvdXRl
+cnNlL3Byb2plY3RzL2J1aWxkcm9vdC9vdXRwdXQvdGFyZ2V0L2xpYi9tb2R1bGVzLzIuNi4zNS4z
+Ky91cGRhdGVzL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDJ4MDBsaWIua28gbmVlZHMg
+dW5rbm93biBzeW1ib2wgX19rZmlmb19hbGxvYw0KV0FSTklORzogL2hvbWUvYmJvdXRlcnNlL3By
+b2plY3RzL2J1aWxkcm9vdC9vdXRwdXQvdGFyZ2V0L2xpYi9tb2R1bGVzLzIuNi4zNS4zKy91cGRh
+dGVzL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2xpYmVydGFzL2xpYmVydGFzLmtvIG5lZWRzIHVua25v
+d24gc3ltYm9sIF9fa2ZpZm9faW4NCldBUk5JTkc6IC9ob21lL2Jib3V0ZXJzZS9wcm9qZWN0cy9i
+dWlsZHJvb3Qvb3V0cHV0L3RhcmdldC9saWIvbW9kdWxlcy8yLjYuMzUuMysvdXBkYXRlcy9kcml2
+ZXJzL25ldC93aXJlbGVzcy9saWJlcnRhcy9saWJlcnRhcy5rbyBuZWVkcyB1bmtub3duIHN5bWJv
+bCBfX2tmaWZvX2ZyZWUNCldBUk5JTkc6IC9ob21lL2Jib3V0ZXJzZS9wcm9qZWN0cy9idWlsZHJv
+b3Qvb3V0cHV0L3RhcmdldC9saWIvbW9kdWxlcy8yLjYuMzUuMysvdXBkYXRlcy9kcml2ZXJzL25l
+dC93aXJlbGVzcy9saWJlcnRhcy9saWJlcnRhcy5rbyBuZWVkcyB1bmtub3duIHN5bWJvbCBfX2tm
+aWZvX2FsbG9jDQpXQVJOSU5HOiAvaG9tZS9iYm91dGVyc2UvcHJvamVjdHMvYnVpbGRyb290L291
+dHB1dC90YXJnZXQvbGliL21vZHVsZXMvMi42LjM1LjMrL3VwZGF0ZXMvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvbGliZXJ0YXMvbGliZXJ0YXMua28gbmVlZHMgdW5rbm93biBzeW1ib2wgX19rZmlmb19v
+dXQNCg0KSWYgSSB1c2UgY29tYXB0LXdpcmVsZXNzLTIwMTItMDItMjYgSSBkbyBub3Qgc2VlIHRo
+ZXNlLg0KDQpBbnlvbmUgaGF2ZSBhbiBpZGVhIHdoZXJlIEkgc2hvdWxkIGxvb2sgdG8gZml4IHRo
+aXM/DQoNCi8qLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSovDQpCb2Ig
+Qm91dGVyc2UNClNlbmlvciBTb2Z0d2FyZSBFbmdpbmVlcg0KTXVsdGltZWRpYSBEZXZlbG9wbWVu
+dCBDZW50ZXINCkQmTSBIb2xkaW5ncyBJbmMuDQpodHRwOi8vd3d3LmRtLWhvbGRpbmdzLmNvbQ==
 
