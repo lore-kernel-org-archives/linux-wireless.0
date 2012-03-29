@@ -1,11 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1059 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1703 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932361Ab2C1LUG convert rfc822-to-8bit (ORCPT
+	id S1753846Ab2C2L4g convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 07:20:06 -0400
-Message-ID: <4F72F3D4.50409@broadcom.com> (sfid-20120328_132022_255264_E46DF2EB)
-Date: Wed, 28 Mar 2012 13:19:48 +0200
+	Thu, 29 Mar 2012 07:56:36 -0400
+Message-ID: <4F744DD8.8010004@broadcom.com> (sfid-20120329_135640_520056_D961812B)
+Date: Thu, 29 Mar 2012 13:56:08 +0200
 From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
 To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
@@ -22,47 +22,46 @@ References: <CAKprTDELdRWtJWpmn9RMuMUYXxuaR6Cf41+jot4_fZixHQtcMw@mail.gmail.com>
  <20120326094331.GA4856@stt008.linux.site>
  <4F70409E.3090203@broadcom.com>
  <CAKprTDGdbUnXtbfmck9rtYfKeD71xSXjShW6HnxyZJ8uRZEfnQ@mail.gmail.com>
- <4F717EA1.4060805@broadcom.com>
-In-Reply-To: <4F717EA1.4060805@broadcom.com>
+ <4F717EA1.4060805@broadcom.com> <4F72F3D4.50409@broadcom.com>
+ <20120328112657.GA6114@stt008.linux.site>
+ <4F7302D9.8070009@broadcom.com>
+ <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
+In-Reply-To: <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
 Content-Type: text/plain;
  charset=iso-8859-1;
  format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/27/2012 10:47 AM, Arend van Spriel wrote:
-> On 03/26/2012 11:28 PM, Camaleón wrote:
->> 2012/3/26 Arend van Spriel<arend@broadcom.com>:
->>> On 03/26/2012 11:43 AM, Camaleón wrote:
->>>>
->>>> Based on a user advice, I have set the regulatory domain to ES (Spain)
->>>> and I had not experienced another trace since that (the netbook was
->>>> running yesterday all day long).
->>>
->>>
->>> It all depends what channels are allowed for the ES domain. However, I am a
->>> bit surprised.
->>>
->>>
->>>> Still, I will keep my "three" eyes over it and test any pacth you
->>>> consider convenient. Will comment back as soon as I get another trace
->>>> or there's something worth to add :-)
->>>
->>>
->>> Thanks.
->>
->> Well, I got a new trace today, I'm attaching the usual logs (dmesg and
->> messages).
->>
->> Should I try the aforementioned patch?
->>
+On 03/28/2012 11:59 PM, Camaleón wrote:
+> 2012/3/28 Arend van Spriel<arend@broadcom.com>:
+>> On 03/28/2012 01:26 PM, Camaleón wrote:
 >
-> I would appreciate it, yes.
+>>>> Did you have any opportunity to test the patch?
+>>>
+>>>
+>>> I did manage to compile and install the full 3.3 kernel sources with
+>>> the patch applied last night but until a couple a hours or so I cannot
+>>> start the netbook because is located in a different place :-)
+>>>
+>>> Will provide any feedback as soon as I got news.
+>>>
+>>> Greetings,
+>>>
+>>
+>> Thanks.
+>
+> Here it goes.
+>
+> There's another trace, so now I doubt that I have applied the patches
+> correctly... Mmm, how could check if the brcmsmac module which I have
+> compiled and loaded has the patch applied? :-?
+>
+> Greetings,
 >
 
-Hi Camaleón,
-
-Did you have any opportunity to test the patch?
+So you have 3.3 kernel sources. Is that from a tarball or are you using 
+git? For git it would be pretty easy to verify you have the patch.
 
 Gr. AvS
 
