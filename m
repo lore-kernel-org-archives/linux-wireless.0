@@ -1,77 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36622 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755906Ab2CTHNz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 03:13:55 -0400
-Received: by iagz16 with SMTP id z16so10603577iag.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 00:13:55 -0700 (PDT)
+Received: from victor.provo.novell.com ([137.65.250.26]:39855 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933001Ab2C2Cuj convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Wed, 28 Mar 2012 22:50:39 -0400
+Received: by bkcik5 with SMTP id ik5so1533117bkc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Mar 2012 19:50:25 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1332227307.3329.2.camel@jlt3.sipsolutions.net>
-References: <1332192901-2500-1-git-send-email-mcgrof@frijolero.org>
- <1332223323.3329.0.camel@jlt3.sipsolutions.net> <CAB=NE6WGdK0YJfi8hrWTqYr2zdUc5yEhV9VUbidi36fd==nEig@mail.gmail.com>
- <1332227307.3329.2.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 20 Mar 2012 00:13:34 -0700
-Message-ID: <CAB=NE6UFLKvozoTX89k=XP1JoKCYdip_eSx-5FVRGje=6vnRvQ@mail.gmail.com> (sfid-20120320_081359_266484_350E2461)
-Subject: Re: [PATCH] cfg80211: warn if db.txt is empty with CONFIG_CFG80211_INTERNAL_REGDB
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: sfr@canb.auug.org.au, linux-wireless@vger.kernel.org,
-	Youngsin Lee <youngsin@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>,
-	Senthil Kumar Balasubramanian <senthilb@qca.qualcomm.com>,
-	Vipin Mehta <vipimeht@qca.qualcomm.com>,
-	yahuan@qca.qualcomm.com, jjan@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, henrykim@qualcomm.com,
-	jouni@qca.qualcomm.com, athiruve@qca.qualcomm.com,
-	cjkim@qualcomm.com, philipk@qca.qualcomm.com,
-	sunnykim@qualcomm.com, sskwak@qualcomm.com, kkim@qualcomm.com,
-	mattbyun@qualcomm.com, ryanlee@qualcomm.com, simbap@qualcomm.com,
-	krislee@qualcomm.com, conner@qualcomm.com, hojinkim@qualcomm.com,
-	honglee@qualcomm.com, johnwkim@qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CALx5=V-aouK2ge3f2EQa07n2oJZRBXQGf15pXUdbsk6BjE+cdg@mail.gmail.com>
+References: <1332829680-32457-1-git-send-email-machen@suse.com>
+	<20120327123822.GA2565@redhat.com>
+	<CALx5=V-aouK2ge3f2EQa07n2oJZRBXQGf15pXUdbsk6BjE+cdg@mail.gmail.com>
+Date: Thu, 29 Mar 2012 10:50:25 +0800
+Message-ID: <CALx5=V9++V8c-=Nu5X6rigkMcU5Lv6tgn9wn7DS4pwn4P0Yr-A@mail.gmail.com> (sfid-20120329_045043_037026_E83ED4BD)
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2x00dev: move rfkill_polling
+ register to proper place
+From: Matt Chen <machen@suse.com>
+To: linville@tuxdriver.com
+Cc: users@rt2x00.serialmonkey.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset=Big5
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2012 at 12:08 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2012-03-20 at 00:00 -0700, Luis R. Rodriguez wrote:
+Hi John,
+
+Would it be possible to merge my patch to v3.4 merging �H
+It would be great if this patch got merged. This patch fixes an
+initialization of probing pci device. Since a lot users reported the
+issue is making no sense after rebooting the machine and got No
+wireless device working due to rfkill is not yet started to work.
+
+Thank you for your kindly help. :)
+
+Would it be possible to merge this patch into v3.4 tree before the
+merging window closed ?
+
+2012/3/28 Matt Chen <machen@suse.com>:
+> Hi all,
 >
->> >>  net/wireless/reg.c |   12 ++++++++++++
->> >>  1 file changed, 12 insertions(+)
->> >>
->> >> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->> >> index e9a0ac8..85f51b3 100644
->> >> --- a/net/wireless/reg.c
->> >> +++ b/net/wireless/reg.c
->> >> @@ -388,7 +388,18 @@ static void reg_regdb_query(const char *alpha2)
->> >>
->> >>       schedule_work(&reg_regdb_work);
->> >>  }
->> >> +
->> >> +/* Feel free to add any other sanity checks here */
->> >> +static void reg_regdb_size_check(void)
->> >> +{
->> >> +#ifdef CONFIG_CFG80211_REG_DEBUG
->> >> +     BUILD_BUG_ON(!reg_regdb_size);
->> >> +#else
->> >> +     WARN_ONCE(!reg_regdb_size, "db.txt is empty, you should update it...");
->> >> +#endif
->> >
->> > That ifdef seems a bit pointless? If anything I would have expected it
->> > the other way around since the BUILD_BUG_ON compiles to nothing?
+> 2012/3/27 Stanislaw Gruszka <sgruszka@redhat.com>:
+>> On Tue, Mar 27, 2012 at 02:28:00PM +0800, Chen, Chien-Chia wrote:
+>>> Move rt2x00rfkill_register(rt2x00dev) to rt2x00lib_probe_dev().
+>>> It fixes of starting rfkill_poll function at the right time if
+>>> sets hard rfkill block and reboot. rt2x00mac_rfkill_poll should
+>>> be starting before bringing up the wireless interface.
+>>>
+>>> Signed-off-by: Kevin Chou <kevin.chou@mediatek.com>
+>> You should sign off the patch, and probably add "From:" to mark real
+>> author of the patch, and CC Kevin as well.
+> Yes, thank you for information of patch format. :)
+>> Stanislaw
 >>
->> As I tested it, the BUILD_BUG_ON() forces a compile failure.
+>> _______________________________________________
+>> users mailing list
+>> users@rt2x00.serialmonkey.com
+>> http://rt2x00.serialmonkey.com/mailman/listinfo/users_rt2x00.serialmonkey.com
+>>
 >
-> Right. Why would you not want that always?
+>
+>
+> --
+> Thank you.
 
-Ah well that is a question for you, John and Stephen. I didn't use
-that *always* given that it would break random build testing whenever
-CFG80211_INTERNAL_REGDB was enabled, given that it requires a manual
-cp of db.txt from wireless-regdb. With this it would only break build
-testing with debugging cfg80211 regulatory, both
-CFG80211_INTERNAL_REGDB and CONFIG_CFG80211_REG_DEBUG enabled. If you
-guys are happy with it then so am I -- I prefer it, just didn't want
-any surprises or anyone reporting an unexpected build breakage later.
 
-  Luis
+
+-- 
+Thank you.
