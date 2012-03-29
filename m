@@ -1,39 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44539 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755237Ab2CMHyp (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:20570 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712Ab2C2Eyp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 03:54:45 -0400
-Subject: Re: [PATCH 2/3] cfg80211: Fill Toffset for each station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com
-In-Reply-To: <1331596020-29695-2-git-send-email-ashok@cozybit.com> (sfid-20120313_004712_885361_3D1FA6DB)
-References: <1331596020-29695-1-git-send-email-ashok@cozybit.com>
-	 <1331596020-29695-2-git-send-email-ashok@cozybit.com>
-	 (sfid-20120313_004712_885361_3D1FA6DB)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 13 Mar 2012 08:54:40 +0100
-Message-ID: <1331625280.3329.0.camel@jlt3.sipsolutions.net> (sfid-20120313_085449_235245_8C032381)
-Mime-Version: 1.0
+	Thu, 29 Mar 2012 00:54:45 -0400
+Message-ID: <4F73EB10.4040705@hartkopp.net> (sfid-20120329_065453_047145_78D5B13E)
+Date: Thu, 29 Mar 2012 06:54:40 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Amit Beka <amit.beka@intel.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	David Spinadel <david.spinadel@intel.com>,
+	linux-wireless@vger.kernel.org,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: Re: 3.4-merge: iwlwifi needs more than 1 minute to connect
+References: <20120316180428.GD2563@tuxdriver.com>  <4F6CD1BC.4040703@hartkopp.net> <1332756333.7081.18.camel@jlt3.sipsolutions.net> <4F707AA7.5050401@hartkopp.net> <4F708782.3000400@hartkopp.net> <4F708953.1000301@hartkopp.net>
+In-Reply-To: <4F708953.1000301@hartkopp.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-12 at 16:46 -0700, Ashok Nagarajan wrote:
->  		sinfo->filled |= STATION_INFO_LLID |
->  				 STATION_INFO_PLID |
-> -				 STATION_INFO_PLINK_STATE;
-> +				 STATION_INFO_PLINK_STATE |
-> +				 STATION_INFO_T_OFFSET;
->  
->  		sinfo->llid = le16_to_cpu(sta->llid);
->  		sinfo->plid = le16_to_cpu(sta->plid);
->  		sinfo->plink_state = sta->plink_state;
-> +		sinfo->t_offset = sta->t_offset;
+Just to close this thread ...
 
-I don't think this is a good idea. sta->t_offset is invalid when
-RX_FLAG_MACTIME_MPDU was never set, so I don't think you should report
-it to userspace in that case.
+the problem has been fixed with this patch from Johannes Berg:
 
-johannes
+http://marc.info/?l=linux-wireless&m=133296144416566&w=2
+
+Regards,
+Oliver
+
+On 26.03.2012 17:20, Oliver Hartkopp wrote:
+
+> Sorry - my assumption was too fast ...
+> 
+> 
+> At the fourth reboot i got the problem even with the reverted patches from Amit.
+> 
+> Sorry for the noise :-(
+> 
+> [   15.118888] wlan0: authenticate with bc:05:43:94:1a:da
+> [   15.122519] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+> [   15.160486] wlan0: authenticated
+> [   15.160625] wlan0: waiting for beacon from bc:05:43:94:1a:da
+> [   15.189007] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
+> [   28.270782] wlan0: authenticate with bc:05:43:94:1a:da
+> [   28.274505] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+> [   28.277125] wlan0: authenticated
+> [   28.277184] wlan0: waiting for beacon from bc:05:43:94:1a:da
+> [   28.306245] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
+> [   41.427670] wlan0: authenticate with bc:05:43:94:1a:da
+> [   41.431301] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+> [   41.434021] wlan0: authenticated
+> [   41.434668] wlan0: associate with bc:05:43:94:1a:da (try 1/3)
+> [   41.437357] wlan0: RX AssocResp from bc:05:43:94:1a:da (capab=0x431 status=0 aid=3)
+> [   41.437363] wlan0: associated
+> [   41.447928] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> 
+> Regards,
+> Oliver
+> 
+> On 26.03.2012 17:13, Oliver Hartkopp wrote:
+> 
+>>
+>> On 26.03.2012 16:18, Oliver Hartkopp wrote:
+>>
+>>> On 26.03.2012 12:05, Johannes Berg wrote:
+>>>
+>>>> Hi Oliver,
+>>>>
+>>>>> i'm using the *very* latest 3.4-merge tree from Linus and my Wifi now needs
+>>>>> more than one minute to connect to my access point.
+>>>>
+>>>>> [   16.288562] wlan0: authenticate with bc:05:43:94:1a:da
+>>>>> [   16.299644] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
+>>>>> [   16.302060] wlan0: authenticated
+>>>>> [   16.302492] wlan0: waiting for beacon from bc:05:43:94:1a:da
+>>>>> [   16.432398] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
+>>>>
+>>>> This is an odd message. I need to figure out how that can even happen.
+>>>>
+>>>> What's the beacon interval on your AP? It seems more likely that this is
+>>>> a problem with RX though.
+>>
+>>
+>>
+>> Hi Johannes and Amit,
+>>
+>> pointing to the RX path was a good idea!
+>>
+>> I checked the commits of the last three weeks and discovered that it turns
+>> out that the patches from Amit caused the regression:
+>>
+>> iwlwifi: add testmode command for rx forwarding
+>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=0aef8ddc8bedac1db4c96fddc9fb1b44b730cf4f
+>>
+>>
+>> iwlwifi: fixed testmode notifications length
+>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=8e81f65fdc7f5d292bb3c115b748767d921823c1
+>>
+>> I reverted them in the opposite order (of course) and now the issue is gone.
+>>
+>> Regards,
+>> Oliver
+> 
+> 
+
 
