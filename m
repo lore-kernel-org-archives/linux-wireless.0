@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39914 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932304Ab2COVgR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 17:36:17 -0400
-From: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: add debug log for AP MLME operations
-Date: Thu, 15 Mar 2012 14:36:11 -0700
-Message-ID: <1331847371-2213-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> (sfid-20120315_223620_532511_C663FC3A)
+Received: from mx1.redhat.com ([209.132.183.28]:3557 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751796Ab2C2Jl5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Mar 2012 05:41:57 -0400
+Date: Thu, 29 Mar 2012 11:40:57 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Matt Chen <machen@suse.com>
+Cc: linville@tuxdriver.com, users@rt2x00.serialmonkey.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] [PATCH] rt2x00: rt2x00dev: move rfkill_polling
+ register to proper place
+Message-ID: <20120329094055.GC2351@redhat.com> (sfid-20120329_114200_777747_FAB534C9)
+References: <1332829680-32457-1-git-send-email-machen@suse.com>
+ <20120327123822.GA2565@redhat.com>
+ <CALx5=V-aouK2ge3f2EQa07n2oJZRBXQGf15pXUdbsk6BjE+cdg@mail.gmail.com>
+ <CALx5=V9++V8c-=Nu5X6rigkMcU5Lv6tgn9wn7DS4pwn4P0Yr-A@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CALx5=V9++V8c-=Nu5X6rigkMcU5Lv6tgn9wn7DS4pwn4P0Yr-A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is useful during debugging to check if disconnect commands were issued by
-the host.
+On Thu, Mar 29, 2012 at 10:50:25AM +0800, Matt Chen wrote:
+> Hi John,
+> 
+> Would it be possible to merge my patch to v3.4 merging ？
+> It would be great if this patch got merged. This patch fixes an
+> initialization of probing pci device. Since a lot users reported the
+> issue is making no sense after rebooting the machine and got No
+> wireless device working due to rfkill is not yet started to work.
+> 
+> Thank you for your kindly help. :)
+> 
+> Would it be possible to merge this patch into v3.4 tree before the
+> merging window closed ?
+Since patch is a fix, it could be applied after merge window. But first
+you should fix sign-off's and repost.
 
-Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 79aa90b..2ed0a7d 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -3030,6 +3030,8 @@ int ath6kl_wmi_ap_set_mlme(struct wmi *wmip, u8 if_idx, u8 cmd, const u8 *mac,
- 	cm->reason = cpu_to_le16(reason);
- 	cm->cmd = cmd;
- 
-+	ath6kl_dbg(ATH6KL_DBG_WMI, "ap_set_mlme: cmd=%d reason=%d\n", cm->cmd,
-+		   cm->reason);
-+
- 	return ath6kl_wmi_cmd_send(wmip, if_idx, skb, WMI_AP_SET_MLME_CMDID,
- 				   NO_SYNC_WMIFLAG);
- }
--- 
-1.7.0.4
-
+Stanislaw
