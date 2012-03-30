@@ -1,113 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37495 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753951Ab2CSSvx (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:58596 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934780Ab2C3VEz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 14:51:53 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v3 1/4] cfg80211:  Add framework to support ethtool stats.
-Date: Mon, 19 Mar 2012 11:51:42 -0700
-Message-Id: <1332183105-4447-1-git-send-email-greearb@candelatech.com> (sfid-20120319_195158_676843_E730DA09)
+	Fri, 30 Mar 2012 17:04:55 -0400
+Received: by wgbdr13 with SMTP id dr13so942409wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Mar 2012 14:04:53 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 30 Mar 2012 16:04:53 -0500
+Message-ID: <CAJ8GFOihCt_JBPoawk2xKOO6wan_03F9LLwhsOAbmAKXSs0ygg@mail.gmail.com> (sfid-20120331_010503_460038_1BE7BA9D)
+Subject: Dual-band support for AP mode for AR9280?
+From: Harshal Chhaya <harshal@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hello,
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+The 'ath9k' project page
+(http://linuxwireless.org/en/users/Drivers/ath9k) mentions that '2x2
+DB 11n' operation is supported for AR9280. A later section says that
+'AP mode' is supported.
 
-v3:  Add reference to ethtool_ops in comments.
-   This doesn't actually make kdoc generate links,
-   but hopefully a human can figure it out.
+Does the AP mode support full 11n features in a dual-band
+configuration? Is there a hard limit to the number of clients when the
+AR9280 is used as an AP? I am currently using an AR9170 (using
+carl9170 - thanks, Christian) as an AP and found that I had to switch
+to software encryption to scale beyond 32 clients because of the
+number of key slots on the chip.
 
-:100644 100644 9ed8021... c60b180... M	include/net/cfg80211.h
-:100644 100644 9bde4d1... 7eecdf4... M	net/wireless/ethtool.c
- include/net/cfg80211.h |   17 +++++++++++++++++
- net/wireless/ethtool.c |   29 +++++++++++++++++++++++++++++
- 2 files changed, 46 insertions(+), 0 deletions(-)
+And are the numbers in the 'power consumption' analysis
+(http://linuxwireless.org/en/users/Drivers/ath9k/power-consumption)
+for STA mode or AP mode? The 'PS On' configuration implies that this
+is for an STA mode but I wanted to confirm.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9ed8021..c60b180 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1491,6 +1491,16 @@ struct cfg80211_gtk_rekey_data {
-  *	later passes to cfg80211_probe_status().
-  *
-  * @set_noack_map: Set the NoAck Map for the TIDs.
-+ *
-+ * @get_et_sset_count:  Ethtool API to get string-set count.
-+ *	See @ethtool_ops.get_sset_count
-+ *
-+ * @get_et_stats:  Ethtool API to get a set of u64 stats.
-+ *	See @ethtool_ops.get_ethtool_stats
-+ *
-+ * @get_et_strings:  Ethtool API to get a set of strings to describe stats
-+ *	and perhaps other supported types of ethtool data-sets.
-+ *	See @ethtool_ops.get_strings
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -1689,6 +1699,13 @@ struct cfg80211_ops {
- 				  u16 noack_map);
- 
- 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
-+
-+	int	(*get_et_sset_count)(struct wiphy *wiphy,
-+				     struct net_device *dev, int sset);
-+	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device *dev,
-+				struct ethtool_stats *stats, u64 *data);
-+	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
-+				  u32 sset, u8 *data);
- };
- 
- /*
-diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
-index 9bde4d1..7eecdf4 100644
---- a/net/wireless/ethtool.c
-+++ b/net/wireless/ethtool.c
-@@ -68,6 +68,32 @@ static int cfg80211_set_ringparam(struct net_device *dev,
- 	return -ENOTSUPP;
- }
- 
-+static int cfg80211_get_sset_count(struct net_device *dev, int sset)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	if (rdev->ops->get_et_sset_count)
-+		return rdev->ops->get_et_sset_count(wdev->wiphy, dev, sset);
-+	return -EOPNOTSUPP;
-+}
-+
-+static void cfg80211_get_stats(struct net_device *dev,
-+			       struct ethtool_stats *stats, u64 *data)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	if (rdev->ops->get_et_stats)
-+		rdev->ops->get_et_stats(wdev->wiphy, dev, stats, data);
-+}
-+
-+static void cfg80211_get_strings(struct net_device *dev, u32 sset, u8 *data)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	if (rdev->ops->get_et_strings)
-+		rdev->ops->get_et_strings(wdev->wiphy, dev, sset, data);
-+}
-+
- const struct ethtool_ops cfg80211_ethtool_ops = {
- 	.get_drvinfo = cfg80211_get_drvinfo,
- 	.get_regs_len = cfg80211_get_regs_len,
-@@ -75,4 +101,7 @@ const struct ethtool_ops cfg80211_ethtool_ops = {
- 	.get_link = ethtool_op_get_link,
- 	.get_ringparam = cfg80211_get_ringparam,
- 	.set_ringparam = cfg80211_set_ringparam,
-+	.get_strings = cfg80211_get_strings,
-+	.get_ethtool_stats = cfg80211_get_stats,
-+	.get_sset_count = cfg80211_get_sset_count,
- };
--- 
-1.7.3.4
-
+Thanks,
+- Harshal
