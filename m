@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173017pub.verizon.net ([206.46.173.17]:36114 "EHLO
-	vms173017pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406Ab2CKT54 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45398 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759862Ab2C3LLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 15:57:56 -0400
-Received: from vms170029 ([unknown] [192.168.1.3]) by vms173017.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0M0Q00AXOKSHLJ80@vms173017.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Sun, 11 Mar 2012 14:57:53 -0500 (CDT)
-Date: Sun, 11 Mar 2012 14:57:53 -0500 (CDT)
-From: alupu@verizon.net
-To: linux-wireless@vger.kernel.org
-Message-id: <13558318.560745.1331495873638.JavaMail.root@vms170029> (sfid-20120311_205827_784603_3B52E03C)
-Subject: Re: r8712u staging in kernel 3.2.9
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+	Fri, 30 Mar 2012 07:11:05 -0400
+Message-ID: <1333105864.3908.12.camel@jlt3.sipsolutions.net> (sfid-20120330_131110_674965_CB758ECF)
+Subject: [PATCH 1/2] compat-wireless: include config.mk early
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 30 Mar 2012 13:11:04 +0200
+In-Reply-To: <1333105815.3908.11.camel@jlt3.sipsolutions.net> (sfid-20120330_131022_444171_B95DE05C)
+References: <1333105815.3908.11.camel@jlt3.sipsolutions.net>
+	 (sfid-20120330_131022_444171_B95DE05C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/10/12 11:23 PM, Larry Finger wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> I have a Rosewill RNX-N180UBE. The chip is a RTL8191RU, but appears to be 
-> programmed the same as the RTL8191SU. Mine works with the standard r8712u driver.
+Not doing so can cause extreme build slowdowns,
+somehow that confuses the kernel's Makefiles into
+calculating the size of every single file all the
+time (the calculation code is part of compressing
+the kernel with bzip2 etc. so that's very strange.)
 
-In WinXP, the driver is identified as 'RTL8192su.sys', so
-for the heck of it, I enabled two additional modules,
-RTL8192U and RTL8192E.
-Not surprisingly, Rosewill wants to work with r8712u only.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Makefile |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> The two possible firmware files have the following md5sum:
-> 200fd952db3cc9259b1fd05e3e51966f /lib/firmware/rtlwifi/rtl8712u.bin_122328
-> 8e6396b5844a3e279ae8679555dec3f0 /lib/firmware/rtlwifi/rtl8712u.bin_129304
+diff --git a/Makefile b/Makefile
+index 67f8e84..bbd77f7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -12,7 +12,6 @@ DESTDIR?=
+ 
+ ifneq ($(KERNELRELEASE),)
+ 
+-include $(COMPAT_CONFIG_CW)
+ include $(COMPAT_CONFIG)
+ 
+ NOSTDINC_FLAGS := -I$(M)/include/ \
+@@ -68,6 +67,8 @@ export COMPAT_AUTOCONF=include/linux/compat_autoconf.h
+ export CREL_PRE:=.compat_autoconf_
+ export CREL_CHECK:=$(PWD)/$(CREL_PRE)$(CREL)
+ 
++include $(COMPAT_CONFIG_CW)
++
+ all: modules
+ 
+ $(COMPAT_CONFIG): ;
+-- 
+1.7.9.1
 
-Both check out OK.
 
-> Could you please download a Live KDE CD from ...
 
-Working on that.
-
-Thanks,
--- Alex
