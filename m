@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53905 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:46277 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753718Ab2CTMp3 (ORCPT
+	with ESMTP id S1754582Ab2C3GjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 08:45:29 -0400
-Subject: Re: Dell E6400 + Windows XP can not work on intel N-6205 AP mode
- for compat-wireless-2012-03-18.tar.bz2 package
+	Fri, 30 Mar 2012 02:39:17 -0400
+Message-ID: <1333089555.3908.0.camel@jlt3.sipsolutions.net> (sfid-20120330_083937_807379_7F4DEADD)
+Subject: Re: [RFC 1/2] mac80211: add explicit monitor interface if needed
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Zhong Hongbo <hongbo.zhong@windriver.com>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org,
-	"Cao, Qingtao (Harry)" <Qingtao.Cao@windriver.com>,
-	"Gao, Guijin" <Guijin.Gao@windriver.com>,
-	"'Cabuk, Yusuf'" <Yusuf.Cabuk@windriver.com>
-In-Reply-To: <4F687667.1030605@windriver.com>
-References: <4F687667.1030605@windriver.com>
+	Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 30 Mar 2012 08:39:15 +0200
+In-Reply-To: <CAB3XZEdx6=58pyiEFWAiLGvtJ9eSTacyKD3Y-jKaR-7iDrF3zg@mail.gmail.com> (sfid-20120329_220943_880343_818A1AF7)
+References: <20120328091346.442543219@sipsolutions.net>
+	 <20120328091811.108837459@sipsolutions.net>
+	 <CAB3XZEdx6=58pyiEFWAiLGvtJ9eSTacyKD3Y-jKaR-7iDrF3zg@mail.gmail.com>
+	 (sfid-20120329_220943_880343_818A1AF7)
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Mar 2012 13:45:26 +0100
-Message-ID: <1332247526.3329.17.camel@jlt3.sipsolutions.net> (sfid-20120320_134533_086058_EB0A585F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-03-20 at 20:21 +0800, Zhong Hongbo wrote:
-> I try the latest compat-wireless package to test Intel Centrino N-6205
-> Taylor Peak Wi-Fi card  AP mode.
-> 
-> 1. Test enviroment
-> My Wi-Fi client:
-> Dell Latitude E6400 desktop + Ubuntu 10.04,
-> Dell Latitude E6400 desktop + Windows XP.
-> 
-> Compat-wireless package: compat-wireless-2012-03-18.tar.bz2
-> 
-> Wi-Fi AP: Intel Centrino N-6205 Taylor Peak
-> 
-> 2. issue describe
-> When I use E6400 + Ubuntu 10.04 connect to intel N-6205 Taylor PeaK
-> AP， I can go to internet to browse web. E6400 + Windows XP can
-> connect to intel N-6205 AP, But I can not go to internet.
-> Is it interactions issue for the compat-wirelss package? Welcome any
-> suggestion.
+On Thu, 2012-03-29 at 22:09 +0200, Eliad Peller wrote:
 
-That's a bit confusing. Are you running DHCP etc. correctly?
+> > +       if (WARN_ON(!sdata))
+> > +               return;
+> > +
+> ...
+> 
+> > @@ -280,6 +339,8 @@ static int ieee80211_do_open(struct net_
+> >                break;
+> >        default:
+> >                if (coming_up) {
+> > +                       ieee80211_del_virtual_monitor(local);
+> > +
+> 
+> i think this will always trigger the warning?
+
+Yeah, somehow I didn't see this in my first round of testing. I
+distinctly remember thinking "I need to remove the warning then" but
+clearly never did :-)
+
+> > -       if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+> > -                   sdata->vif.type == NL80211_IFTYPE_MONITOR))
+> > +       if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN))
+> >                return -EINVAL;
+> >
+> maybe check for IEEE80211_HW_WANT_MONITOR_VIF instead?
+
+Good point, should do that.
 
 johannes
 
