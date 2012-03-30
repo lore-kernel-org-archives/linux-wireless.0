@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:65328 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756459Ab2CEXbz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 18:31:55 -0500
-Received: by pbcun15 with SMTP id un15so3341146pbc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 15:31:55 -0800 (PST)
+Received: from mms3.broadcom.com ([216.31.210.19]:2672 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753983Ab2C3MPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Mar 2012 08:15:00 -0400
+Message-ID: <4F75A3B8.7040501@broadcom.com> (sfid-20120330_141504_340499_48FEF360)
+Date: Fri, 30 Mar 2012 14:14:48 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH v4 1/2] cfg80211: expose cfg80211_calculate_bitrate()
-Date: Mon,  5 Mar 2012 15:31:47 -0800
-Message-Id: <1330990308-15077-1-git-send-email-thomas@cozybit.com> (sfid-20120306_003200_027558_BAE3564A)
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] compat: crc8: undef pr_fmt
+References: <1333105980.3908.14.camel@jlt3.sipsolutions.net>
+ <4F759DE4.6070201@broadcom.com>
+ <1333108491.12545.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1333108491.12545.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- include/net/cfg80211.h |    8 ++++++++
- net/wireless/util.c    |    1 +
- 2 files changed, 9 insertions(+), 0 deletions(-)
+On 03/30/2012 01:54 PM, Johannes Berg wrote:
+> On Fri, 2012-03-30 at 13:49 +0200, Arend van Spriel wrote:
+>> On 03/30/2012 01:13 PM, Johannes Berg wrote:
+>>>
+>>> +#ifdef pr_fmt
+>>> +#undef pr_fmt
+>>> +#endif
+>>>    #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+>>>
+>>>    #include<linux/module.h>
+>>
+>> Trivial remark. Not really necessary to do the #ifdef. #undef works fine
+>> if pr_fmt has not been defined.
+>
+> Really? I thought it would give a warning then, but couldn't test it
+> since it was defined for me.
+>
+> johannes
+>
+>
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0178c74..64f6181 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3334,6 +3334,14 @@ int cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
- 				 struct ieee80211_channel *chan,
- 				 enum nl80211_channel_type channel_type);
- 
-+/*
-+ * cfg80211_calculate_bitrate - calculate actual bitrate (in 100Kbps units)
-+ * @rate: given rate_info to calculate bitrate from
-+ *
-+ * return 0 if MCS index >= 32
-+ */
-+u16 cfg80211_calculate_bitrate(struct rate_info *rate);
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 9aa9db6..1b7a08d 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -904,6 +904,7 @@ u16 cfg80211_calculate_bitrate(struct rate_info *rate)
- 	/* do NOT round down here */
- 	return (bitrate + 50000) / 100000;
- }
-+EXPORT_SYMBOL(cfg80211_calculate_bitrate);
- 
- int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 				 u32 beacon_int)
--- 
-1.7.5.4
+I made a little test program to confirm my thought, before sending my 
+previous email. Retried compiling with '-W -Wall -ansi -pedantic' and no 
+complaints about the #undef.
+
+Gr. AvS
 
