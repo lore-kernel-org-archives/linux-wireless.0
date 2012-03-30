@@ -1,272 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.mlbassoc.com ([64.234.241.98]:56621 "EHLO
-	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751201Ab2CALf0 (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.160]:45000 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752520Ab2C3SG2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 06:35:26 -0500
-Message-ID: <4F4F5EFB.3020400@mlbassoc.com> (sfid-20120301_123530_177787_72DC0AF7)
-Date: Thu, 01 Mar 2012 04:35:23 -0700
-From: Gary Thomas <gary@mlbassoc.com>
+	Fri, 30 Mar 2012 14:06:28 -0400
+Message-ID: <4F75F620.9030101@hartkopp.net> (sfid-20120330_200710_296494_066F569C)
+Date: Fri, 30 Mar 2012 20:06:24 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Luciano Coelho <coelho@ti.com>
-Subject: Re: Problems with wl1271
-References: <4F4E903B.2030501@mlbassoc.com>
-In-Reply-To: <4F4E903B.2030501@mlbassoc.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-03-30
+References: <20120330175533.GC8273@tuxdriver.com>
+In-Reply-To: <20120330175533.GC8273@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-29 13:53, Gary Thomas wrote:
-> I'm trying to bring up a new hardware platform which includes
-> the TiWi-r02 (wl1271). Since the kernel for my target device
-> (AM3874) is stuck in the dark ages, Luciano suggested that I
-> try compat-wireless + iw. I've managed to build these now
-> (after encountering many problems that I'll help iron out later)
-> and now have the system ready to start using the device. Note:
-> I'm using compat-wireless-2012-02-28 and iw-3.2
->
-> The kernel modules load and initialize now, with these messages:
->
-> cfg80211: Updating information on frequency 5200 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Updating information on frequency 5210 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Updating information on frequency 5220 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Updating information on frequency 5230 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Updating information on frequency 5240 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Disabling freq 5260 MHz
-> cfg80211: Disabling freq 5280 MHz
-> cfg80211: Disabling freq 5300 MHz
-> cfg80211: Disabling freq 5320 MHz
-> cfg80211: Disabling freq 5500 MHz
-> cfg80211: Disabling freq 5520 MHz
-> cfg80211: Disabling freq 5540 MHz
-> cfg80211: Disabling freq 5560 MHz
-> cfg80211: Disabling freq 5580 MHz
-> cfg80211: Disabling freq 5600 MHz
-> cfg80211: Disabling freq 5620 MHz
-> cfg80211: Disabling freq 5640 MHz
-> cfg80211: Disabling freq 5660 MHz
-> cfg80211: Disabling freq 5680 MHz
-> cfg80211: Disabling freq 5700 MHz
-> cfg80211: Updating information on frequency 5745 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Updating information on frequency 5765 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Updating information on frequency 5785 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Updating information on frequency 5805 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-> cfg80211: Updating information on frequency 5825 MHz for a 20 MHz width channel with regulatory rule:
-> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
->
-> wl12xx: loaded
->
-> When I try to bring up the device, I get this:
-> # ifconfig wlan0 hw ether 2a:00:24:01:02:03
-> # ifconfig wlan0 up
-> wl12xx: firmware booted (Rev 6.3.5.0.98)
-> ADDRCONF(NETDEV_UP): wlan0: link is not ready
->
-> If I try to scan for an access point, I get nothing:
-> # iw wlan0 scan
-> --- Nothing prints
-> #
-> I also see no additional messages in dmesg.
->
-> Further checking of the device:
-> # iw wlan0 list
-> Wiphy phy0
-> Band 1:
-> Capabilities: 0x130
-> HT20
-> Static SM Power Save
-> RX Greenfield
-> RX HT20 SGI
-> RX STBC 1-stream
-> Max AMSDU length: 3839 bytes
-> No DSSS/CCK HT40
-> Maximum RX AMPDU length 8191 bytes (exponent: 0x000)
-> Minimum RX AMPDU time spacing: 8 usec (0x06)
-> HT TX/RX MCS rate indexes supported: 0-7
-> Frequencies:
-> * 2412 MHz [1] (20.0 dBm)
-> * 2417 MHz [2] (20.0 dBm)
-> * 2422 MHz [3] (20.0 dBm)
-> * 2427 MHz [4] (20.0 dBm)
-> * 2432 MHz [5] (20.0 dBm)
-> * 2437 MHz [6] (20.0 dBm)
-> * 2442 MHz [7] (20.0 dBm)
-> * 2447 MHz [8] (20.0 dBm)
-> * 2452 MHz [9] (20.0 dBm)
-> * 2457 MHz [10] (20.0 dBm)
-> * 2462 MHz [11] (20.0 dBm)
-> * 2467 MHz [12] (20.0 dBm) (passive scanning, no IBSS)
-> * 2472 MHz [13] (20.0 dBm) (passive scanning, no IBSS)
-> * 2484 MHz [14] (20.0 dBm) (passive scanning, no IBSS)
-> Bitrates (non-HT):
-> * 1.0 Mbps
-> * 2.0 Mbps (short preamble supported)
-> * 5.5 Mbps (short preamble supported)
-> * 11.0 Mbps (short preamble supported)
-> * 6.0 Mbps
-> * 9.0 Mbps
-> * 12.0 Mbps
-> * 18.0 Mbps
-> * 24.0 Mbps
-> * 36.0 Mbps
-> * 48.0 Mbps
-> * 54.0 Mbps
-> Band 2:
-> Capabilities: 0x130
-> HT20
-> Static SM Power Save
-> RX Greenfield
-> RX HT20 SGI
-> RX STBC 1-stream
-> Max AMSDU length: 3839 bytes
-> No DSSS/CCK HT40
-> Maximum RX AMPDU length 8191 bytes (exponent: 0x000)
-> Minimum RX AMPDU time spacing: 8 usec (0x06)
-> HT TX/RX MCS rate indexes supported: 0-7
-> Frequencies:
-> * 5035 MHz [7] (disabled)
-> * 5040 MHz [8] (disabled)
-> * 5045 MHz [9] (disabled)
-> * 5055 MHz [11] (disabled)
-> * 5060 MHz [12] (disabled)
-> * 5080 MHz [16] (disabled)
-> * 5170 MHz [34] (disabled)
-> * 5180 MHz [36] (20.0 dBm) (passive scanning, no IBSS)
-> * 5190 MHz [38] (20.0 dBm) (passive scanning, no IBSS)
-> * 5200 MHz [40] (20.0 dBm) (passive scanning, no IBSS)
-> * 5210 MHz [42] (20.0 dBm) (passive scanning, no IBSS)
-> * 5220 MHz [44] (20.0 dBm) (passive scanning, no IBSS)
-> * 5230 MHz [46] (20.0 dBm) (passive scanning, no IBSS)
-> * 5240 MHz [48] (20.0 dBm) (passive scanning, no IBSS)
-> * 5260 MHz [52] (disabled)
-> * 5280 MHz [56] (disabled)
-> * 5300 MHz [60] (disabled)
-> * 5320 MHz [64] (disabled)
-> * 5500 MHz [100] (disabled)
-> * 5520 MHz [104] (disabled)
-> * 5540 MHz [108] (disabled)
-> * 5560 MHz [112] (disabled)
-> * 5580 MHz [116] (disabled)
-> * 5600 MHz [120] (disabled)
-> * 5620 MHz [124] (disabled)
-> * 5640 MHz [128] (disabled)
-> * 5660 MHz [132] (disabled)
-> * 5680 MHz [136] (disabled)
-> * 5700 MHz [140] (disabled)
-> * 5745 MHz [149] (20.0 dBm) (passive scanning, no IBSS)
-> * 5765 MHz [153] (20.0 dBm) (passive scanning, no IBSS)
-> * 5785 MHz [157] (20.0 dBm) (passive scanning, no IBSS)
-> * 5805 MHz [161] (20.0 dBm) (passive scanning, no IBSS)
-> * 5825 MHz [165] (20.0 dBm) (passive scanning, no IBSS)
-> Bitrates (non-HT):
-> * 6.0 Mbps
-> * 9.0 Mbps
-> * 12.0 Mbps
-> * 18.0 Mbps
-> * 24.0 Mbps
-> * 36.0 Mbps
-> * 48.0 Mbps
-> * 54.0 Mbps
-> max # scan SSIDs: 1
-> max scan IEs length: 441 bytes
-> Coverage class: 0 (up to 0m)
-> Supported Ciphers:
-> * WEP40 (00-0f-ac:1)
-> * WEP104 (00-0f-ac:5)
-> * TKIP (00-0f-ac:2)
-> * CCMP (00-0f-ac:4)
-> * WPI-SMS4 (00-14-72:1)
-> Available Antennas: TX 0 RX 0
-> Supported interface modes:
-> * IBSS
-> * managed
-> * AP
-> * AP/VLAN
-> * monitor
-> * P2P-client
-> * P2P-GO
-> software interface modes (can always be added):
-> * AP/VLAN
-> * monitor
-> interface combinations are not supported
-> Supported commands:
-> * new_interface
-> * set_interface
-> * new_key
-> * new_beacon
-> * new_station
-> * new_mpath
-> * set_mesh_params
-> * set_bss
-> * authenticate
-> * associate
-> * deauthenticate
-> * disassociate
-> * join_ibss
-> * join_mesh
-> * remain_on_channel
-> * set_tx_bitrate_mask
-> * action
-> * frame_wait_cancel
-> * set_wiphy_netns
-> * set_channel
-> * set_wds_peer
-> * Unknown command (75)
-> * Unknown command (84)
-> * Unknown command (87)
-> * Unknown command (85)
-> * testmode
-> * connect
-> * disconnect
-> Supported TX frame types:
-> * IBSS: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-> * managed: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-> * AP: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-> * AP/VLAN: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-> * mesh point: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-> * P2P-client: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-> * P2P-GO: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-> Supported RX frame types:
-> * IBSS: 0x00d0
-> * managed: 0x0040 0x00d0
-> * AP: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
-> * AP/VLAN: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
-> * mesh point: 0x00b0 0x00c0 0x00d0
-> * P2P-client: 0x0040 0x00d0
-> * P2P-GO: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
-> WoWLAN support:
-> * wake up on anything (device continues operating normally)
-> Device supports AP-side u-APSD.
->
-> I don't know enough about this device to understand why it's not working.
-> Perhaps the line
-> Available Antennas: TX 0 RX 0
-> is a clue?
->
-> Any ideas what's not working & how I need to do to move forward?
->
-> Thanks in advance for all the help
->
+Hello John,
 
-Any ideas at all?  Is there some debug info I can get to find
-out what's going on?
+there are at least two patches that i know from that fix issues in the current
+3.4-merge tree.
 
-Note: I compared the output of 'iw list' from my non-functional system
-to that of a working one (OMAP4430 PandaBoard) and they are virtually
-identical, even the line about the antenna...
+[PATCH] iwlwifi: fix unused variable warning
+http://marc.info/?l=linux-wireless&m=133266148006409&w=2
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+http://marc.info/?l=linux-wireless&m=133272671523532&w=2
 
--- 
-------------------------------------------------------------
-Gary Thomas                 |  Consulting for the
-MLB Associates              |    Embedded world
-------------------------------------------------------------
+[PATCH 3.4] mac80211: fix association beacon wait timeout
+http://marc.info/?l=linux-wireless&m=133296144416566&w=2
+Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
+http://marc.info/?l=linux-wireless&m=133296423617914&w=2
+
+Did you miss them?
+
+Regards,
+Oliver
+
+On 30.03.2012 19:55, John W. Linville wrote:
+
+> commit de312db345f9770b64ff39ef5a7f86f6358e93cc
+> 
+> Dave,
+> 
+> I have a few more small fixes, hopefully still in time for 3.4-rc1...
+> 
+> Rajkukmar provides us with a one-line timestamp correction related to
+> scanning in mac80211.  Sujith gives us a small fixup for a regression
+> in the handling of HT capability bits for ath9k.  Stanislav Yakovlev
+> is stepping-up as maintainer for the ipw2x00 drivers, so we'll add
+> him to MAINTAINERS.  Stanislav also gives us a fix for a thinko
+> that registers the wrong band information for ipw2200 and 802.11a.
+> Finally, Santosh Nayak adds some simple error checking to orinoco to
+> avoid some potential NULL pointer dereferences.
+> 
+> Please let me know if there are problems!
+> 
+> Thanks,
+> 
+> John
+> 
+> ---
+> 
+> The following changes since commit 643c61e119459e9d750087b7b34be94491efebf9:
+> 
+>   rtlwifi: rtl8192ce: rtl8192cu: rtl8192de: Fix low-gain setting when scanning (2012-03-26 15:07:30 -0400)
+> 
+> are available in the git repository at:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git master
+> 
+> Rajkumar Manoharan (1):
+>       mac80211: fix oper channel timestamp updation
+> 
+> Santosh Nayak (1):
+>       net: orinoco: add error handling for failed kmalloc().
+> 
+> Stanislav Yakovlev (2):
+>       net/wireless: ipw2x00: fix a typo in wiphy struct initilization
+>       MAINTAINERS: adding maintainer for ipw2x00
+> 
+> Sujith Manoharan (1):
+>       ath9k: Use HW HT capabilites properly
+> 
+>  MAINTAINERS                            |   12 ++++--------
+>  drivers/net/wireless/ath/ath9k/main.c  |    4 ++--
+>  drivers/net/wireless/ipw2x00/ipw2200.c |    4 ++--
+>  drivers/net/wireless/orinoco/main.c    |    8 ++++++++
+>  net/mac80211/scan.c                    |    2 +-
+>  5 files changed, 17 insertions(+), 13 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 0ddc77fe..09a79f9 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -3519,17 +3519,13 @@ L:	linux-pm@vger.kernel.org
+>  S:	Supported
+>  F:	arch/x86/platform/mrst/pmu.*
+>  
+> -INTEL PRO/WIRELESS 2100 NETWORK CONNECTION SUPPORT
+> +INTEL PRO/WIRELESS 2100, 2200BG, 2915ABG NETWORK CONNECTION SUPPORT
+> +M:	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+>  L:	linux-wireless@vger.kernel.org
+> -S:	Orphan
+> +S:	Maintained
+>  F:	Documentation/networking/README.ipw2100
+> -F:	drivers/net/wireless/ipw2x00/ipw2100.*
+> -
+> -INTEL PRO/WIRELESS 2915ABG NETWORK CONNECTION SUPPORT
+> -L:	linux-wireless@vger.kernel.org
+> -S:	Orphan
+>  F:	Documentation/networking/README.ipw2200
+> -F:	drivers/net/wireless/ipw2x00/ipw2200.*
+> +F:	drivers/net/wireless/ipw2x00/
+>  
+>  INTEL(R) TRUSTED EXECUTION TECHNOLOGY (TXT)
+>  M:	Joseph Cihula <joseph.cihula@intel.com>
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 3879485..215eb25 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -640,7 +640,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+>  	an->sta = sta;
+>  	an->vif = vif;
+>  
+> -	if (sta->ht_cap.ht_supported) {
+> +	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
+>  		ath_tx_node_init(sc, an);
+>  		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
+>  				     sta->ht_cap.ampdu_factor);
+> @@ -659,7 +659,7 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
+>  	an->sta = NULL;
+>  #endif
+>  
+> -	if (sta->ht_cap.ht_supported)
+> +	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+>  		ath_tx_node_cleanup(sc, an);
+>  }
+>  
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+> index 4fcdac6..2b02257 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
+> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+> @@ -11507,9 +11507,9 @@ static int ipw_wdev_init(struct net_device *dev)
+>  			rc = -ENOMEM;
+>  			goto out;
+>  		}
+> -		/* translate geo->bg to a_band.channels */
+> +		/* translate geo->a to a_band.channels */
+>  		for (i = 0; i < geo->a_channels; i++) {
+> -			a_band->channels[i].band = IEEE80211_BAND_2GHZ;
+> +			a_band->channels[i].band = IEEE80211_BAND_5GHZ;
+>  			a_band->channels[i].center_freq = geo->a[i].freq;
+>  			a_band->channels[i].hw_value = geo->a[i].channel;
+>  			a_band->channels[i].max_power = geo->a[i].max_power;
+> diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+> index dd6c64a..88e3ad2 100644
+> --- a/drivers/net/wireless/orinoco/main.c
+> +++ b/drivers/net/wireless/orinoco/main.c
+> @@ -1336,6 +1336,10 @@ static void qbuf_scan(struct orinoco_private *priv, void *buf,
+>  	unsigned long flags;
+>  
+>  	sd = kmalloc(sizeof(*sd), GFP_ATOMIC);
+> +	if (!sd) {
+> +		printk(KERN_ERR "%s: failed to alloc memory\n", __func__);
+> +		return;
+> +	}
+>  	sd->buf = buf;
+>  	sd->len = len;
+>  	sd->type = type;
+> @@ -1353,6 +1357,10 @@ static void qabort_scan(struct orinoco_private *priv)
+>  	unsigned long flags;
+>  
+>  	sd = kmalloc(sizeof(*sd), GFP_ATOMIC);
+> +	if (!sd) {
+> +		printk(KERN_ERR "%s: failed to alloc memory\n", __func__);
+> +		return;
+> +	}
+>  	sd->len = -1; /* Abort */
+>  
+>  	spin_lock_irqsave(&priv->scan_lock, flags);
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 33cd169..c70e176 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -370,7 +370,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
+>  	 */
+>  	drv_sw_scan_start(local);
+>  
+> -	local->leave_oper_channel_time = 0;
+> +	local->leave_oper_channel_time = jiffies;
+>  	local->next_scan_state = SCAN_DECISION;
+>  	local->scan_channel_idx = 0;
+>  
+
+
