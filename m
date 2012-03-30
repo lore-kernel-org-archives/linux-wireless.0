@@ -1,87 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36720 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751530Ab2CKUJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 16:09:01 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: gregkh@linuxfoundation.org
-Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
-	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 3/7] bcma: scan for extra address space
-Date: Sun, 11 Mar 2012 21:08:21 +0100
-Message-Id: <1331496505-18697-4-git-send-email-hauke@hauke-m.de> (sfid-20120311_210912_614359_02D9900C)
-In-Reply-To: <1331496505-18697-1-git-send-email-hauke@hauke-m.de>
-References: <1331496505-18697-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.neratec.ch ([80.75.119.105]:56769 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759611Ab2C3IqW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Mar 2012 04:46:22 -0400
+Message-ID: <4F7572DB.909@neratec.com> (sfid-20120330_104626_884047_E37E9378)
+Date: Fri, 30 Mar 2012 10:46:19 +0200
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Adrian Chadd <adrian@freebsd.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	nbd@openwrt.org, rodrigue@qca.qualcomm.com
+Subject: Re: [RFCv2 1/3] ath9k: add DFS pattern detector
+References: <1332516842-27522-1-git-send-email-zefir.kurtisi@neratec.com> <1332516842-27522-2-git-send-email-zefir.kurtisi@neratec.com> <CAJ-VmokdXbi5BKxqWB5+cwUqPj_iGG+dhKzuxnSKk1y-E9PxSg@mail.gmail.com>
+In-Reply-To: <CAJ-VmokdXbi5BKxqWB5+cwUqPj_iGG+dhKzuxnSKk1y-E9PxSg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some cores like the USB core have two address spaces. In the USB host
-controller one address space is used for the OHCI and the other for the
-EHCI controller interface. The USB controller is the only core I found
-with two address spaces. This code is based on the AI scan function
-ai_scan() in shared/aiutils.c i the Broadcom SDK.
+Hi Adrian,
 
-CC: Rafał Miłecki <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/scan.c       |   18 +++++++++++++++++-
- include/linux/bcma/bcma.h |    1 +
- 2 files changed, 18 insertions(+), 1 deletions(-)
+thanks for having a look.
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 3a2f672..3c2eeed 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -286,6 +286,22 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 			return -EILSEQ;
- 	}
- 
-+
-+	/* First Slave Address Descriptor should be port 0:
-+	 * the main register space for the core
-+	 */
-+	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
-+	if (tmp <= 0) {
-+		/* Try again to see if it is a bridge */
-+		tmp = bcma_erom_get_addr_desc(bus, eromptr,
-+					      SCAN_ADDR_TYPE_BRIDGE, 0);
-+		if (tmp > 0) {
-+			pr_info("found bridge");
-+			return -ENXIO;
-+		}
-+	}
-+	core->addr = tmp;
-+
- 	/* get & parse slave ports */
- 	for (i = 0; i < ports[1]; i++) {
- 		for (j = 0; ; j++) {
-@@ -298,7 +314,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 				break;
- 			} else {
- 				if (i == 0 && j == 0)
--					core->addr = tmp;
-+					core->addr1 = tmp;
- 			}
- 		}
- 	}
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 83c209f..7fe41e1 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -138,6 +138,7 @@ struct bcma_device {
- 	u8 core_index;
- 
- 	u32 addr;
-+	u32 addr1;
- 	u32 wrap;
- 
- 	void __iomem *io_addr;
--- 
-1.7.5.4
+No, if you look into dfs_pri_detector.c, you'll find some words on the
+pulse and sequence pools (see DOC below).
+
+Actually, ETSI pulses even have a PRF of up to 4000 pulses per second,
+you'd go crazy allocating and freeing them continuously.
+
+With the pools every instance is allocated once during a detector's
+lifetime and is then provided to all pri_detectors commonly. The amount
+of allocated memory grows up to the maximum simultaneously used
+instances. This is limited by numerous means (sliding window, max
+tolerated PRF, max pulses per window, etc.).
+
+I did intensive memory allocation tracing when evaluating the detectors
+in user-space with valgrind and the absolute maximum memory load in
+worst-case (i.e. all DFS channels being flooded with pulse noise
+superposed with radar patterns) had an instance count for pulses and
+sequences of less than 1.5k, the maximum memory allocated does not
+exceed 30kB. While that last number might differ based on the used slab
+allocator, it is proven that the pool has a limited growth.
+
+I planned to add some allocation statistics in the debugfs later.
+
+
+Thanks,
+Zefir
+
+On 03/30/2012 08:04 AM, Adrian Chadd wrote:
+> Hiya,
+> 
+> I know this is late, but I've been a bit busy elsewhere. :)
+> 
+> Does pulse_queue_enqueue() always allocate a new entry? What situation
+> are pulse entries reused?
+> 
+> You likely don't want to be allocating a new pulse entry via malloc()
+> for each pulse; it's going to be quite silly when you potentially
+> handle > 1,000 false positives a second.
+> 
+> 
+> Adrian
+> 
+> 
+> On 23 March 2012 08:34, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+>> [...]
+>> +
+>> +/**
+>> + * DOC: Singleton Pulse and Sequence Pools
+>> + *
+>> + * Instances of pri_sequence and pulse_elem are kept in singleton pools to
+>> + * reduce the number of dynamic allocations. They are shared between all
+>> + * instances and grow up to the peak number of simultaneously used objects.
+>> + *
+>> + * Memory is freed after all references to the pools are released.
+>> + */
+>> +static int singleton_pool_references;
+>> +static LIST_HEAD(pulse_pool);
+>> +static LIST_HEAD(pseq_pool);
+>> +
+>> [...]
 
