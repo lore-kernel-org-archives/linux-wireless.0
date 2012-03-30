@@ -1,57 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42986 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030838Ab2CSPCQ (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:64930 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761419Ab2C3Ui0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 11:02:16 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1S9e69-0005ru-A8
-	for linux-wireless@vger.kernel.org; Mon, 19 Mar 2012 11:02:13 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id q2JEwRp1029673
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 10:58:28 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id q2JEwRIv029671
-	for linux-wireless@vger.kernel.org; Mon, 19 Mar 2012 10:58:27 -0400
-Date: Mon, 19 Mar 2012 10:58:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: Only fixes for 3.4 -- Re: new stuff for 3.4 needs to be posted _now_
-Message-ID: <20120319145826.GA19742@tuxdriver.com> (sfid-20120319_160219_484767_70797797)
-References: <20120305190508.GD18128@tuxdriver.com>
+	Fri, 30 Mar 2012 16:38:26 -0400
+Received: by iagz16 with SMTP id z16so1443124iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Mar 2012 13:38:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120305190508.GD18128@tuxdriver.com>
+In-Reply-To: <1333139642.7679.7.camel@jlt3.sipsolutions.net>
+References: <1333105815.3908.11.camel@jlt3.sipsolutions.net>
+ <1333105904.3908.13.camel@jlt3.sipsolutions.net> <CAB=NE6XXzwKjFCbV=zi7DaPtpa4aqttB4EMTqaKSzhPMHwJd1A@mail.gmail.com>
+ <1333139642.7679.7.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 30 Mar 2012 13:38:06 -0700
+Message-ID: <CAB=NE6W0C3v4vBJrXntDEhDLK-AiAH3oGGrkdM4wNk_XvZdQsg@mail.gmail.com> (sfid-20120330_223833_160335_2B2F7C13)
+Subject: Re: [PATCH 2/2] compat: explicitly export generated variables
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 05, 2012 at 02:05:08PM -0500, John W. Linville wrote:
-> You may have noticed that Linus has released 3.3-rc6, and doesn't
-> necessarily plan to go beyond -rc7.  So, the merge window is around
-> the corner!
-> 
-> For those that need a reminder, the opening of the merge window is a
-> _deadline_ for new features.  Once the merge window opens, only fixes
-> will be accepted for 3.4.  In fact, any non-fix patches need to
-> already be in wireless-next when the merge window opens if you want
-> them in 3.4.  That means you need to get them posted _now_, so they
-> can be reviewed and I can find time to merge them before the deadline.
-> 
-> You have been warned...this means you!
+On Fri, Mar 30, 2012 at 1:34 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2012-03-30 at 13:30 -0700, Luis R. Rodriguez wrote:
+>> On Fri, Mar 30, 2012 at 4:11 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > From: Johannes Berg <johannes.berg@intel.com>
+>> >
+>> > Doing the blanket "export" statement at the beginning
+>> > of the generated file confuses the kernel's Makefiles
+>> > and causes extreme build slowdowns.
+>> >
+>> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>> > ---
+>>
+>> Nice, how did you figure this out BTW!?
+>
+> Random monkey approach ;-)
+>
+> I noticed it was slow and saw that it was due to some weird shit from
+> the kernel Makefile.lib being executed when it shouldn't be.
+>
+> Since I have the compat *result* in git, I could easily see the diff
+> between the old compat.git/compat-wireless.git and the new versions. And
+> then I basically tried to identify the changes that caused this problem,
+> my best guess was that it had to be the Makefile so I gradually changed
+> that back to the previous version until the problem went away ... and
+> then identified which changes were responsible.
 
-Linus released 3.3 yesterday (Sunday, 3/18).  The merge window for
-the mainline kernel is open.
+Wow, nice find.. so we should be able to make compat-wireless builds
+just as fast too there. There config.mk does the same wide export
+hackery. Looks like the 3.4 stable releases will have huge
+improvements, now to just address 2.6.31 and below for
+compat-wireless:
 
-Anything not already merged in wireless-next (or wireless-testing)
-will not be merged for 3.4 unless it is a fix.  If you have already
-posted a fix that is not clearly marked as such, then you might send
-me a reminder about it.  Otherwise, patches will have to wait for 3.5.
+Trying kernel                  2.6.31-02063113-generic  [FAILED]
+Trying kernel                  2.6.30-02063010-generic  [FAILED]
+Trying kernel                  2.6.29-02062906-generic  [FAILED]
+Trying kernel                  2.6.28-02062810-generic  [FAILED]
+Trying kernel                    2.6.27-020627-generic  [FAILED]
+Trying kernel                    2.6.26-020626-generic  [FAILED]
+Trying kernel                    2.6.25-020625-generic  [FAILED]
+Trying kernel                    2.6.24-020624-generic  [FAILED]
 
-Merging for 3.5 will not occur after the close of the merge window
-(~2 weeks from now).  Please plan accordingly.
+PS. Please Cc: lf_driver_backport@lists.linux-foundation.org on future patches.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
