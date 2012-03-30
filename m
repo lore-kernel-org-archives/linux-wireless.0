@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59677 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755552Ab2CPIuv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26355 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755250Ab2C3HMq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 04:50:51 -0400
-Subject: Re: [PATCH 1/4] cfg80211:  Add framework to support ethtool stats.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1331853606-28434-1-git-send-email-greearb@candelatech.com> (sfid-20120316_002021_164291_232D4D9B)
-References: <1331853606-28434-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20120316_002021_164291_232D4D9B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Mar 2012 09:50:48 +0100
-Message-ID: <1331887848.3435.0.camel@jlt3.sipsolutions.net> (sfid-20120316_095101_788120_810812B5)
-Mime-Version: 1.0
+	Fri, 30 Mar 2012 03:12:46 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20341.23754.784161.403908@gargle.gargle.HOWL> (sfid-20120330_091249_873646_9E787448)
+Date: Fri, 30 Mar 2012 12:42:10 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/4] mac80211: remove channel type argument from rate_update
+In-Reply-To: <1333089999.3908.4.camel@jlt3.sipsolutions.net>
+References: <20120328085835.902687300@sipsolutions.net>
+	<20120328085901.175434140@sipsolutions.net>
+	<20341.14488.303053.16407@gargle.gargle.HOWL>
+	<1333089999.3908.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-15 at 16:20 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> :100644 100644 9ed8021... d97c9da... M	include/net/cfg80211.h
-> :100644 100644 9bde4d1... 7eecdf4... M	net/wireless/ethtool.c
->  include/net/cfg80211.h |    7 +++++++
->  net/wireless/ethtool.c |   29 +++++++++++++++++++++++++++++
->  2 files changed, 36 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 9ed8021..d97c9da 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -1689,6 +1689,13 @@ struct cfg80211_ops {
->  				  u16 noack_map);
->  
->  	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
-> +
-> +	int	(*get_et_sset_count)(struct wiphy *wiphy,
-> +				     struct net_device* dev, int sset);
+Johannes Berg wrote:
+> Yes, that's true. However, we use the sta.ht_cap field more of a current
+> operating set database. For example, we also update it when the station
+> changes SMPS configuration. Also, we never keep it at just the station's
+> capabilities -- we always restrict it by our own TX capabilities (so if
+> for example we aren't 40 MHz capable, we already don't leave 40 MHz in).
 
-Do I really have to point out that the space should be before the
-asterisk? ;-)
+Ah, that's true.
 
-johannes
+> Overall, I don't really see a problem with this. I suppose we could
+> rename the field to make that a bit clearer, but I see little value in
+> using some other struct or so?
 
+Yeah, the current approach seems reasonable enough. Thanks for clarifying.
 
+Sujith
