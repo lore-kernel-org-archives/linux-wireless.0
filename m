@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:48923 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965097Ab2CFN12 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 08:27:28 -0500
-Received: by wgbdr13 with SMTP id dr13so4525089wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 05:27:27 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:3948 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934146Ab2C3LuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Mar 2012 07:50:17 -0400
+Message-ID: <4F759DE4.6070201@broadcom.com> (sfid-20120330_135021_877689_1664469C)
+Date: Fri, 30 Mar 2012 13:49:56 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1331036818-9240-1-git-send-email-arend@broadcom.com>
-References: <1331036818-9240-1-git-send-email-arend@broadcom.com>
-Date: Tue, 6 Mar 2012 14:27:27 +0100
-Message-ID: <CACna6rx5_wds1gMA+9Yg4hMS1NCankwEqN3ixMUaktLAhw9ERw@mail.gmail.com> (sfid-20120306_142732_759166_8A54A913)
-Subject: Re: [RFC] bcma: replace ssb_sprom structure with bcma_sprom structure
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	b43-dev-list <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] compat: crc8: undef pr_fmt
+References: <1333105980.3908.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1333105980.3908.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/3/6 Arend van Spriel <arend@broadcom.com>:
-> BCMA shared a structure with SSB in which sprom data was stored. This
-> could have been appropriate but with upcoming srom revisions that are
-> of no interest to SSB it is better to have own definitions with BCMA.
+On 03/30/2012 01:13 PM, Johannes Berg wrote:
 >
-> This patch adds support for srom revisions 8 and 9.
+> +#ifdef pr_fmt
+> +#undef pr_fmt
+> +#endif
+>   #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+>
+>   #include<linux/module.h>
 
-Does b43 even compile with that?
+Trivial remark. Not really necessary to do the #ifdef. #undef works fine 
+if pr_fmt has not been defined.
 
--- 
-Rafał
+Gr. AvS
+
