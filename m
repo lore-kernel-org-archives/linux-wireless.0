@@ -1,123 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:42059 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932152Ab2CVMkR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31205 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754042Ab2C3GYi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2012 08:40:17 -0400
-Message-ID: <4F6B1D8B.8060306@windriver.com> (sfid-20120322_134022_585592_90BB120E)
-Date: Thu, 22 Mar 2012 20:39:39 +0800
-From: Zhong Hongbo <hongbo.zhong@windriver.com>
+	Fri, 30 Mar 2012 02:24:38 -0400
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <jouni@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH] wpa-supplicant: Send background scan period.
+Date: Fri, 30 Mar 2012 11:54:29 +0530
+Message-ID: <1333088669-2669-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120330_082500_984339_1CF4397A)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>, <wey-yi.w.guy@intel.com>
-CC: <linux-wireless@vger.kernel.org>,
-	"Cao, Qingtao (Harry)" <Qingtao.Cao@windriver.com>,
-	"Gao, Guijin" <Guijin.Gao@windriver.com>,
-	"'Cabuk, Yusuf'" <Yusuf.Cabuk@windriver.com>,
-	"'Foglia, Michael'" <Michael.Foglia@windriver.com>,
-	<johannes.berg@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: Re: Dell E6400 + Windows XP can not work on intel N-6205 AP mode
- for compat-wireless-2012-03-18.tar.bz2 package
-References: <4F687667.1030605@windriver.com>  <1332247526.3329.17.camel@jlt3.sipsolutions.net>  <4F687D82.2010201@windriver.com>  <4F687F4E.4030203@windriver.com> <1332248855.3329.18.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1332248855.3329.18.camel@jlt3.sipsolutions.net>
-Content-Type: multipart/mixed;
-	boundary="------------070708080601030100060008"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------070708080601030100060008
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Send background scan period as part of connect and
+associate command. Background scan will be
+disabled if period value is zero.
 
-> Ok. Maybe Windows is using (more agressive) powersaving? Can you enable
-> PS debugging in ma80211?
-Hi Johannes,
+This patch depends on below kernel patch
+cfg80211: Add background scan period attribute.
 
-Today, I test Intel Centrino N-6205 Taylor Peak on Linux 2.6.39, It work perfect on Windows XP. 
-'PS debugging in ma80211'?, Do you mean that I open the 'CONFIG_MAC80211_DEBUGFS=y' and See the log?
-The detail step as following:
+Signed-hostap: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+ src/drivers/driver.h            |    5 +++++
+ src/drivers/driver_nl80211.c    |   13 +++++++++++++
+ wpa_supplicant/config.c         |    2 ++
+ wpa_supplicant/config_file.c    |    1 +
+ wpa_supplicant/config_ssid.h    |    6 ++++++
+ wpa_supplicant/sme.c            |    1 +
+ wpa_supplicant/wpa_supplicant.c |    1 +
+ 7 files changed, 29 insertions(+), 0 deletions(-)
+
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 04aedcf..ecd3d87 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -333,6 +333,11 @@ struct wpa_driver_associate_params {
+ 	int freq;
  
-1. Test enviroment:
-Wi-Fi client OS enviroment:
+ 	/**
++	 * bg_scan_period - Background scan period
++	 */
++	int bg_scan_period;
++
++	/**
+ 	 * wpa_ie - WPA information element for (Re)Association Request
+ 	 * WPA information element to be included in (Re)Association
+ 	 * Request (including information element id and length). Use
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index 74865f3..ca96a73 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -6567,6 +6567,12 @@ static int wpa_driver_nl80211_connect(
+ 		wpa_printf(MSG_DEBUG, "  * freq=%d", params->freq);
+ 		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, params->freq);
+ 	}
++	if (params->bg_scan_period >= 0) {
++		wpa_printf(MSG_DEBUG, "  * bg scan period=%d",
++				params->bg_scan_period);
++		NLA_PUT_U16(msg, NL80211_ATTR_BG_SCAN_PERIOD,
++				params->bg_scan_period);
++	}
+ 	if (params->ssid) {
+ 		wpa_hexdump_ascii(MSG_DEBUG, "  * SSID",
+ 				  params->ssid, params->ssid_len);
+@@ -6779,6 +6785,13 @@ static int wpa_driver_nl80211_associate(
+ 		NLA_PUT(msg, NL80211_ATTR_IE, params->wpa_ie_len,
+ 			params->wpa_ie);
+ 
++	if (params->bg_scan_period >= 0) {
++		wpa_printf(MSG_DEBUG, "  * bg scan period=%d",
++				params->bg_scan_period);
++		NLA_PUT_U16(msg, NL80211_ATTR_BG_SCAN_PERIOD,
++				params->bg_scan_period);
++	}
++
+ 	if (params->pairwise_suite != CIPHER_NONE) {
+ 		int cipher;
+ 
+diff --git a/wpa_supplicant/config.c b/wpa_supplicant/config.c
+index a90e9d3..c57c1b9 100644
+--- a/wpa_supplicant/config.c
++++ b/wpa_supplicant/config.c
+@@ -1524,6 +1524,7 @@ static const struct parse_data ssid_fields[] = {
+ 	{ FUNC_KEY(psk) },
+ 	{ FUNC(proto) },
+ 	{ FUNC(key_mgmt) },
++	{ INT(bg_scan_period) },
+ 	{ FUNC(pairwise) },
+ 	{ FUNC(group) },
+ 	{ FUNC(auth_alg) },
+@@ -1975,6 +1976,7 @@ void wpa_config_set_network_defaults(struct wpa_ssid *ssid)
+ 	ssid->pairwise_cipher = DEFAULT_PAIRWISE;
+ 	ssid->group_cipher = DEFAULT_GROUP;
+ 	ssid->key_mgmt = DEFAULT_KEY_MGMT;
++	ssid->bg_scan_period = DEFAULT_BG_SCAN_PERIOD;
+ #ifdef IEEE8021X_EAPOL
+ 	ssid->eapol_flags = DEFAULT_EAPOL_FLAGS;
+ 	ssid->eap_workaround = DEFAULT_EAP_WORKAROUND;
+diff --git a/wpa_supplicant/config_file.c b/wpa_supplicant/config_file.c
+index b3dd40e..40a70de 100644
+--- a/wpa_supplicant/config_file.c
++++ b/wpa_supplicant/config_file.c
+@@ -587,6 +587,7 @@ static void wpa_config_write_network(FILE *f, struct wpa_ssid *ssid)
+ 	write_psk(f, ssid);
+ 	write_proto(f, ssid);
+ 	write_key_mgmt(f, ssid);
++	INT(bg_scan_period);
+ 	write_pairwise(f, ssid);
+ 	write_group(f, ssid);
+ 	write_auth_alg(f, ssid);
+diff --git a/wpa_supplicant/config_ssid.h b/wpa_supplicant/config_ssid.h
+index f2bb597..3236091 100644
+--- a/wpa_supplicant/config_ssid.h
++++ b/wpa_supplicant/config_ssid.h
+@@ -25,6 +25,7 @@
+ 		       WPA_CIPHER_WEP104 | WPA_CIPHER_WEP40)
+ #define DEFAULT_FRAGMENT_SIZE 1398
+ 
++#define DEFAULT_BG_SCAN_PERIOD -1
+ #define DEFAULT_DISABLE_HT 0
+ #define DEFAULT_DISABLE_HT40 0
+ #define DEFAULT_DISABLE_MAX_AMSDU -1 /* no change */
+@@ -157,6 +158,11 @@ struct wpa_ssid {
+ 	int key_mgmt;
+ 
+ 	/**
++	 * bg_scan_period - Background scan period
++	 */
++	int bg_scan_period;
++
++	/**
+ 	 * proto - Bitfield of allowed protocols, WPA_PROTO_*
+ 	 */
+ 	int proto;
+diff --git a/wpa_supplicant/sme.c b/wpa_supplicant/sme.c
+index 690f395..8e7ca04 100644
+--- a/wpa_supplicant/sme.c
++++ b/wpa_supplicant/sme.c
+@@ -371,6 +371,7 @@ void sme_associate(struct wpa_supplicant *wpa_s, enum wpas_mode mode,
+ 	params.ssid = wpa_s->sme.ssid;
+ 	params.ssid_len = wpa_s->sme.ssid_len;
+ 	params.freq = wpa_s->sme.freq;
++	params.bg_scan_period = wpa_s->current_ssid->bg_scan_period;
+ 	params.wpa_ie = wpa_s->sme.assoc_req_ie_len ?
+ 		wpa_s->sme.assoc_req_ie : NULL;
+ 	params.wpa_ie_len = wpa_s->sme.assoc_req_ie_len;
+diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
+index 36074d5..71542f0 100644
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -1355,6 +1355,7 @@ void wpa_supplicant_associate(struct wpa_supplicant *wpa_s,
+ 	params.wpa_proto = wpa_s->wpa_proto;
+ 	params.auth_alg = algs;
+ 	params.mode = ssid->mode;
++	params.bg_scan_period = ssid->bg_scan_period;
+ 	for (i = 0; i < NUM_WEP_KEYS; i++) {
+ 		if (ssid->wep_key_len[i])
+ 			params.wep_key[i] = ssid->wep_key[i];
+-- 
+1.7.4.1
 
- Dell E6400 desktop + Windows xp, 
- Dell E6400 desktop + Ubuntu 11.10,
- Iphone4 + Apple MAC.
-
-Wi-Fi AP card: Intel Centrino N-6205 Taylor Peak
-Wi-Fi AP kernel driver version: Linux 2.6.39, compat-wireless-2012-03-18
-
-2. Test command and step:
-> hostapd -B /etc/hostapd.conf
-> ifconfig br0 192.168.0.1
-> ifconfig wlan0 0.0.0.0
-> dhcpd -cf /etc/dhcpd/dhcpd.conf
-> echo "1">  /proc/sys/net/ipv4/ip_forward
-> iptables -t nat -A POSTROUTING -s 192.168.0.0/16 -o eth0 -j MASQUERADE
-> route add default gw 128.224.162.1
-
-
-3. Test result:
-Test 1: mainline Linux 2.6.39, Three Wi-Fi client connect the Wi-Fi AP(Intel Centrino N-6205 Taylor Peak) at the same time. I can see film and do any thing in the internet.
-Dell E6400 desktop + Ubuntu 11.10 work perfect
-Dell E6400 desktop + Windows xp work perfect
-Iphone4S work perfect
-
-Test 2: compat-wireless-2012-03-18 package
- Dell E6400 desktop + Windows xp can not connect to internet. 
- Dell E6400 desktop + Ubuntu 11.10 and Iphone4 + Apple MAC work normal.
-
-4. The hostapd.conf and dhcpd.conf are in the attachment.
-
-
-Thanks,
-hongbo 
-
->
-> johannes
->
->
-
-
---------------070708080601030100060008
-Content-Type: text/plain; name="hostapd.conf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="hostapd.conf"
-
-IyMjIyMgaG9zdGFwZCBjb25maWd1cmF0aW9uIGZpbGUgIyMjIyMjIyMjIyMjIyMjIyMjIyMj
-IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIwppbnRlcmZhY2U9d2xhbjEKZHJpdmVyPW5sODAy
-MTEKYnJpZGdlPWJyMApsb2dnZXJfc3lzbG9nPS0xCmxvZ2dlcl9zeXNsb2dfbGV2ZWw9Mgps
-b2dnZXJfc3Rkb3V0PS0xCmxvZ2dlcl9zdGRvdXRfbGV2ZWw9MgpkdW1wX2ZpbGU9L3RtcC9o
-b3N0YXBkLmR1bXAKY3RybF9pbnRlcmZhY2U9L3Zhci9ydW4vaG9zdGFwZApjdHJsX2ludGVy
-ZmFjZV9ncm91cD0wCnNzaWQ9SU5URUxNV0MyMDExCmNvdW50cnlfY29kZT1VUwpod19tb2Rl
-PWcKY2hhbm5lbD0xMQpiZWFjb25faW50PTEwMApkdGltX3BlcmlvZD0yCm1heF9udW1fc3Rh
-PTI1NQpydHNfdGhyZXNob2xkPTIzNDcKZnJhZ21fdGhyZXNob2xkPTIzNDYKbWFjYWRkcl9h
-Y2w9MAphdXRoX2FsZ3M9MwppZ25vcmVfYnJvYWRjYXN0X3NzaWQ9MAp3bW1fZW5hYmxlZD0x
-CndtbV9hY19ia19jd21pbj00CndtbV9hY19ia19jd21heD0xMAp3bW1fYWNfYmtfYWlmcz03
-CndtbV9hY19ia190eG9wX2xpbWl0PTAKd21tX2FjX2JrX2FjbT0wCndtbV9hY19iZV9haWZz
-PTMKd21tX2FjX2JlX2N3bWluPTQKd21tX2FjX2JlX2N3bWF4PTEwCndtbV9hY19iZV90eG9w
-X2xpbWl0PTAKd21tX2FjX2JlX2FjbT0wCndtbV9hY192aV9haWZzPTIKd21tX2FjX3ZpX2N3
-bWluPTMKd21tX2FjX3ZpX2N3bWF4PTQKd21tX2FjX3ZpX3R4b3BfbGltaXQ9OTQKd21tX2Fj
-X3ZpX2FjbT0wCndtbV9hY192b19haWZzPTIKd21tX2FjX3ZvX2N3bWluPTIKd21tX2FjX3Zv
-X2N3bWF4PTMKd21tX2FjX3ZvX3R4b3BfbGltaXQ9NDcKd21tX2FjX3ZvX2FjbT0wCmVhcF9z
-ZXJ2ZXI9MAp3cGE9Mgp3cGFfcGFzc3BocmFzZT1pbnRlbGZyaQp3cGFfa2V5X21nbXQ9V1BB
-LVBTSwp3cGFfcGFpcndpc2U9VEtJUCBDQ01QCndwYV9ncm91cF9yZWtleT02MDAKd3BhX2dt
-a19yZWtleT04NjQwMAo=
---------------070708080601030100060008
-Content-Type: text/plain; name="dhcpd.conf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="dhcpd.conf"
-
-IwojIERIQ1AgU2VydmVyIENvbmZpZ3VyYXRpb24gZmlsZS4KIyAgIHNlZSAvdXNyL3NoYXJl
-L2RvYy9kaGNwKi9kaGNwZC5jb25mLnNhbXBsZQojICAgc2VlICdtYW4gNSBkaGNwZC5jb25m
-JwojIGdsb2JhbCBvcHRpb25zCmRkbnMtdXBkYXRlLXN0eWxlIG5vbmU7ICAgIyBEeW5hbWlj
-IEROUyB1cGRhdGVzIGFyZSB0dXJuZWQgb2ZmCm1heC1sZWFzZS10aW1lIDE3MjgwMDsgICAj
-IG1heGltdW0gbGVhc2UgdGltZSAtIDIgZGF5cwpkZWZhdWx0LWxlYXNlLXRpbWUgODY0MDA7
-ICAgIyBzZWNvbmRzIHRpbGwgbGVhc2UgZXhwaXJlIC0gMSBkYXkKCnN1Ym5ldCAxOTIuMTY4
-LjAuMCBuZXRtYXNrIDI1NS4yNTUuMjU1LjAgewpvcHRpb24gcm91dGVycyAxOTIuMTY4LjAu
-MTsgICAjIGRlZmF1bHQgZ2F0ZXdheQpvcHRpb24gZG9tYWluLW5hbWUtc2VydmVycyAxMjgu
-MjI0LjE2MC4xMTsgICAjIElQIGFkZHJlc3Mgb2YgdGhlIEROUyBzZXJ2ZXIKb3B0aW9uIHN1
-Ym5ldC1tYXNrIDI1NS4yNTUuMjU1LjA7ICAgIyBuZXRtYXNrIGFzc2lnbmVkIHRvIGNsaWVu
-dHMKcmFuZ2UgMTkyLjE2OC4wLjUwIDE5Mi4xNjguMC4xNDk7ICAgIyBwb29sIG9mIHRoZSBh
-ZGRyZXNzZXMgdG8gbGVhc2UKfQojCgo=
---------------070708080601030100060008--
