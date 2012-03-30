@@ -1,163 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755104Ab2CDUnH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:07 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 057/101] iwlwifi: move ucode_owner to priv
-Date: Sun,  4 Mar 2012 11:29:11 -0800
-Message-Id: <1330889395-533-58-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214547_458970_1925403F)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:45336 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755422Ab2C3Gnf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Mar 2012 02:43:35 -0400
+Message-ID: <1333089812.3908.1.camel@jlt3.sipsolutions.net> (sfid-20120330_084341_582252_79EDF93A)
+Subject: [PATCH 4/4 v2] mac80211: notify driver of rate control updates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 30 Mar 2012 08:43:32 +0200
+In-Reply-To: <20120328085901.436280820@sipsolutions.net> (sfid-20120328_110625_255736_B56EFA9F)
+References: <20120328085835.902687300@sipsolutions.net>
+	 <20120328085901.436280820@sipsolutions.net>
+	 (sfid-20120328_110625_255736_B56EFA9F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The transport doesn't really need to know as
-we can enforce it in the command wrapper.
-Move the ucode_owner variable into priv and
-do all enforcing there.
+Devices that have internal rate control need to be
+notified when the bandwidth or SMPS state changes
+just like external rate control algorithms get a
+notification now.
+
+Add this notification and clarify the change bits
+while at it, the HT_CHANGED bit really meant only
+bandwidth changed.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c           |    2 ++
- drivers/net/wireless/iwlwifi/iwl-dev.h           |    4 ++++
- drivers/net/wireless/iwlwifi/iwl-shared.h        |    4 ----
- drivers/net/wireless/iwlwifi/iwl-testmode.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    6 ------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    1 -
- 8 files changed, 14 insertions(+), 13 deletions(-)
+v2: fix might_sleep() pointed out by Eliad
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 90f1f8a..dec2693 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1306,6 +1306,12 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 	if (cmd->flags & CMD_SYNC)
- 		lockdep_assert_held(&priv->mutex);
+ Documentation/DocBook/80211.tmpl    |    2 -
+ drivers/net/wireless/ath/ath9k/rc.c |    2 -
+ include/net/mac80211.h              |   37 +++++++++++++++++++++++-------------
+ net/mac80211/driver-ops.h           |   15 ++++++++++++++
+ net/mac80211/driver-trace.h         |   28 +++++++++++++++++++++++++++
+ net/mac80211/mlme.c                 |    2 -
+ net/mac80211/rate.h                 |    2 +
+ 7 files changed, 72 insertions(+), 16 deletions(-)
+
+--- a/Documentation/DocBook/80211.tmpl	2012-03-29 10:03:59.000000000 +0200
++++ b/Documentation/DocBook/80211.tmpl	2012-03-30 08:40:31.000000000 +0200
+@@ -533,7 +533,7 @@ MISSING
+ !Finclude/net/mac80211.h ieee80211_start_tx_ba_cb_irqsafe
+ !Finclude/net/mac80211.h ieee80211_stop_tx_ba_session
+ !Finclude/net/mac80211.h ieee80211_stop_tx_ba_cb_irqsafe
+-!Finclude/net/mac80211.h rate_control_changed
++!Finclude/net/mac80211.h ieee80211_rate_control_changed
+ !Finclude/net/mac80211.h ieee80211_tx_rate_control
+ !Finclude/net/mac80211.h rate_control_send_low
+       </chapter>
+--- a/include/net/mac80211.h	2012-03-30 08:40:31.000000000 +0200
++++ b/include/net/mac80211.h	2012-03-30 08:42:16.000000000 +0200
+@@ -1778,6 +1778,18 @@ enum ieee80211_frame_release_type {
+ };
  
-+	if (priv->ucode_owner == IWL_OWNERSHIP_TM &&
-+	    !(cmd->flags & CMD_ON_DEMAND)) {
-+		IWL_DEBUG_HC(priv, "tm own the uCode, no regular hcmd send\n");
-+		return -EIO;
-+	}
+ /**
++ * enum ieee80211_rate_control_changed - flags to indicate what changed
++ *
++ * @IEEE80211_RC_BW_CHANGED: The bandwidth that can be used to transmit
++ *	to this station changed.
++ * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed.
++ */
++enum ieee80211_rate_control_changed {
++	IEEE80211_RC_BW_CHANGED		= BIT(0),
++	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
++};
 +
- 	return iwl_trans_send_cmd(trans(priv), cmd);
++/**
+  * struct ieee80211_ops - callbacks from mac80211 to the driver
+  *
+  * This structure contains various callbacks that the driver may
+@@ -1978,6 +1990,14 @@ enum ieee80211_frame_release_type {
+  *	up the list of states.
+  *	The callback can sleep.
+  *
++ * @sta_rc_update: Notifies the driver of changes to the bitrates that can be
++ *	used to transmit to the station. The changes are advertised with bits
++ *	from &enum ieee80211_rate_control_changed and the values are reflected
++ *	in the station data. This callback should only be used when the driver
++ *	uses hardware rate control (%IEEE80211_HW_HAS_RATE_CONTROL) since
++ *	otherwise the rate control algorithm is notified directly.
++ *	Must be atomic.
++ *
+  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
+  *	bursting) for a hardware TX queue.
+  *	Returns a negative error code on failure.
+@@ -2194,6 +2214,10 @@ struct ieee80211_ops {
+ 			 struct ieee80211_sta *sta,
+ 			 enum ieee80211_sta_state old_state,
+ 			 enum ieee80211_sta_state new_state);
++	void (*sta_rc_update)(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct ieee80211_sta *sta,
++			      u32 changed);
+ 	int (*conf_tx)(struct ieee80211_hw *hw,
+ 		       struct ieee80211_vif *vif, u16 queue,
+ 		       const struct ieee80211_tx_queue_params *params);
+@@ -3510,19 +3534,6 @@ void ieee80211_send_bar(struct ieee80211
+ /* Rate control API */
+ 
+ /**
+- * enum rate_control_changed - flags to indicate which parameter changed
+- *
+- * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
+- *	changed, rate control algorithm can update its internal state if needed.
+- * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed, the rate
+- *	control algorithm needs to adjust accordingly.
+- */
+-enum rate_control_changed {
+-	IEEE80211_RC_HT_CHANGED		= BIT(0),
+-	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
+-};
+-
+-/**
+  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
+  *
+  * @hw: The hardware the algorithm is invoked for.
+--- a/drivers/net/wireless/ath/ath9k/rc.c	2012-03-30 08:40:31.000000000 +0200
++++ b/drivers/net/wireless/ath/ath9k/rc.c	2012-03-30 08:40:31.000000000 +0200
+@@ -1447,7 +1447,7 @@ static void ath_rate_update(void *priv,
+ 
+ 	/* FIXME: Handle AP mode later when we support CWM */
+ 
+-	if (changed & IEEE80211_RC_HT_CHANGED) {
++	if (changed & IEEE80211_RC_BW_CHANGED) {
+ 		if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
+ 			return;
+ 
+--- a/net/mac80211/mlme.c	2012-03-30 08:40:31.000000000 +0200
++++ b/net/mac80211/mlme.c	2012-03-30 08:42:16.000000000 +0200
+@@ -219,7 +219,7 @@ static u32 ieee80211_config_ht_tx(struct
+ 			sta->sta.ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 
+ 		rate_control_rate_update(local, sband, sta,
+-					 IEEE80211_RC_HT_CHANGED);
++					 IEEE80211_RC_BW_CHANGED);
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
+--- a/net/mac80211/driver-trace.h	2012-03-29 10:00:40.000000000 +0200
++++ b/net/mac80211/driver-trace.h	2012-03-30 08:42:16.000000000 +0200
+@@ -624,6 +624,34 @@ TRACE_EVENT(drv_sta_state,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_sta_rc_update,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta,
++		 u32 changed),
++
++	TP_ARGS(local, sdata, sta, changed),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(u32, changed)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->changed = changed;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " changed: 0x%x",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->changed
++	)
++);
++
+ TRACE_EVENT(drv_sta_add,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
+--- a/net/mac80211/driver-ops.h	2012-03-29 10:00:40.000000000 +0200
++++ b/net/mac80211/driver-ops.h	2012-03-30 08:42:34.000000000 +0200
+@@ -474,6 +474,21 @@ int drv_sta_state(struct ieee80211_local
+ 	return ret;
  }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-index f17142b..08de306 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-@@ -1165,7 +1165,7 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
- 	iwl_notification_wait_notify(&priv->notif_wait, pkt);
- 
- 	if (priv->pre_rx_handler &&
--	    priv->shrd->ucode_owner == IWL_OWNERSHIP_TM)
-+	    priv->ucode_owner == IWL_OWNERSHIP_TM)
- 		priv->pre_rx_handler(priv, rxb);
- 	else {
- 		/* Based on type of command response or notification,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ce62a2f..afded29 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1053,6 +1053,8 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
- 	priv->agg_tids_count = 0;
- 
-+	priv->ucode_owner = IWL_OWNERSHIP_DRIVER;
++static inline void drv_sta_rc_update(struct ieee80211_local *local,
++				     struct ieee80211_sub_if_data *sdata,
++				     struct ieee80211_sta *sta, u32 changed)
++{
++	sdata = get_bss_sdata(sdata);
++	check_sdata_in_driver(sdata);
 +
- 	/* initialize force reset */
- 	priv->force_reset[IWL_RF_RESET].reset_duration =
- 		IWL_DELAY_NEXT_FORCE_RF_RESET;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index c57e605..a301daf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -748,6 +748,10 @@ struct iwl_priv {
- 	struct iwl_spectrum_notification measure_report;
- 	u8 measurement_status;
- 
-+#define IWL_OWNERSHIP_DRIVER	0
-+#define IWL_OWNERSHIP_TM	1
-+	u8 ucode_owner;
++	trace_drv_sta_rc_update(local, sdata, sta, changed);
++	if (local->ops->sta_rc_update)
++		local->ops->sta_rc_update(&local->hw, &sdata->vif,
++					  sta, changed);
 +
- 	/* ucode beacon time */
- 	u32 ucode_beacon_time;
- 	int missed_beacon_threshold;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 1ec5a22..ca090d2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -354,7 +354,6 @@ struct iwl_cfg {
- /**
-  * struct iwl_shared - shared fields for all the layers of the driver
-  *
-- * @ucode_owner: IWL_OWNERSHIP_*
-  * @cmd_queue: command queue number
-  * @status: STATUS_*
-  * @wowlan: are we running wowlan uCode
-@@ -372,9 +371,6 @@ struct iwl_cfg {
-  * @device_pointers: pointers to ucode event tables
-  */
- struct iwl_shared {
--#define IWL_OWNERSHIP_DRIVER	0
--#define IWL_OWNERSHIP_TM	1
--	u8 ucode_owner;
- 	u8 cmd_queue;
- 	unsigned long status;
- 	u8 valid_contexts;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-index cc049d2..63868df 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-@@ -770,7 +770,7 @@ static int iwl_testmode_ownership(struct ieee80211_hw *hw, struct nlattr **tb)
++	trace_drv_return_void(local);
++}
++
+ static inline int drv_conf_tx(struct ieee80211_local *local,
+ 			      struct ieee80211_sub_if_data *sdata, u16 queue,
+ 			      const struct ieee80211_tx_queue_params *params)
+--- a/net/mac80211/rate.h	2012-03-30 08:40:31.000000000 +0200
++++ b/net/mac80211/rate.h	2012-03-30 08:40:31.000000000 +0200
+@@ -17,6 +17,7 @@
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ #include "sta_info.h"
++#include "driver-ops.h"
  
- 	owner = nla_get_u8(tb[IWL_TM_ATTR_UCODE_OWNER]);
- 	if ((owner == IWL_OWNERSHIP_DRIVER) || (owner == IWL_OWNERSHIP_TM))
--		priv->shrd->ucode_owner = owner;
-+		priv->ucode_owner = owner;
- 	else {
- 		IWL_ERR(priv, "Invalid owner\n");
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 9af5c8f..8d13362 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -686,12 +686,6 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 		return -EIO;
- 	}
+ struct rate_control_ref {
+ 	struct ieee80211_local *local;
+@@ -72,6 +73,7 @@ static inline void rate_control_rate_upd
+ 	if (ref && ref->ops->rate_update)
+ 		ref->ops->rate_update(ref->priv, sband, ista,
+ 				      priv_sta, changed);
++	drv_sta_rc_update(local, sta->sdata, &sta->sta, changed);
+ }
  
--	if ((trans->shrd->ucode_owner == IWL_OWNERSHIP_TM) &&
--	    !(cmd->flags & CMD_ON_DEMAND)) {
--		IWL_DEBUG_HC(trans, "tm own the uCode, no regular hcmd send\n");
--		return -EIO;
--	}
--
- 	copy_size = sizeof(out_cmd->hdr);
- 	cmd_size = sizeof(out_cmd->hdr);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 6da9972..7a2e65f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1029,7 +1029,6 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
- 	bool hw_rfkill;
- 
--	trans->shrd->ucode_owner = IWL_OWNERSHIP_DRIVER;
- 	trans_pcie->ac_to_queue[IWL_RXON_CTX_BSS] = iwlagn_bss_ac_to_queue;
- 	trans_pcie->ac_to_queue[IWL_RXON_CTX_PAN] = iwlagn_pan_ac_to_queue;
- 
--- 
-1.7.0.4
+ static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
+
 
