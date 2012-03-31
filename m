@@ -1,288 +1,905 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:40350 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753987Ab2CHVSP (ORCPT
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:38731
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755046Ab2CaJYv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 16:18:15 -0500
-Message-ID: <4F592210.1030003@gmail.com> (sfid-20120308_221820_734337_CB7500C0)
-Date: Thu, 08 Mar 2012 13:18:08 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Sat, 31 Mar 2012 05:24:51 -0400
+Date: Sat, 31 Mar 2012 05:24:39 -0400
+From: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Richard Farina <sidhayn@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	lf_driver_backport@lists.linux-foundation.org
+Subject: Re: [PATCH 0/2] compat: fix extreme build slowdowns
+Message-ID: <20120331092439.GE11929@bombadil.infradead.org> (sfid-20120331_112457_407390_35429F31)
+References: <1333105815.3908.11.camel@jlt3.sipsolutions.net>
+ <20341.39041.645223.592030@gargle.gargle.HOWL>
+ <1333107022.3908.16.camel@jlt3.sipsolutions.net>
+ <4F75C634.1010400@gmail.com>
+ <CAB=NE6XbYMo=or0QLKw3-w5rbnMkwvxRntaRPK6O=LeYT-nkeA@mail.gmail.com>
+ <20120330212442.GC11929@bombadil.infradead.org>
+ <20120330214848.GD11929@bombadil.infradead.org>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	Linux-netdev <netdev@vger.kernel.org>,
-	Linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org>
-In-Reply-To: <4F579A88.6030503@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20120330214848.GD11929@bombadil.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/2012 09:27 AM, Felix Fietkau wrote:
-> On 2012-03-07 4:24 PM, Justin P. Mattock wrote:
->> On 03/07/2012 07:19 AM, Mohammed Shafi wrote:
->>> On Wed, Mar 7, 2012 at 7:55 PM, Justin P. Mattock
->>> <justinmattock@gmail.com>   wrote:
->>>> ath9k craps out from time to time(more annoying if anything)
->>>>
->>>> [44309.840830] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44309.858246] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44309.858255] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44309.932801] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44309.950352] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44309.950361] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44310.024301] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44310.041641] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44310.041646] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44310.116316] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44310.133909] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44310.133918] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44310.208021] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44310.225752] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44310.225761] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44310.299922] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44310.317579] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
->>>> [44310.317587] ath: Could not stop RX, we could be confusing the DMA engine
->>>> whe
->>>
->>> this is has become a know issue but less harmful, please try to see if
->>> the workaround of disabling power save helps
->>>
->>> iw dev wlanX set power_save off
->>>
->>
->> ok! I have set that on the machine.. will see if I get this message in
->> the upcoming weeks.
-> Also, please try this patch with powersave enabled:
-> http://nbd.name/ps-fix.patch
->
-> - Felix
->
+> > > >>> Before:
+> > > >>>
+> > > >>> real    1m18.689s
+> > > >>> user    3m1.382s
+> > > >>> sys     0m6.833s
+> > > >>>
+> > > >>> After:
+> > > >>>
+> > > >>> real    0m42.091s
+> > > >>> user    1m30.024s
+> > > >>> sys     0m5.700s
 
+So for compat-wireless we with similar patch we shafe off more
+than half of the compile time :)
 
-probably to early to tell if this patch is working or not(since this bug 
-is shows up randomly), but I have applied this to the current Mainline 
-and am so far not seeing the DMA failed to stop
-as for any issues: waking up from suspend I get no 
-connection(rmmod/modprobe recovers this) then after a few suspends the 
-connection is real crappy(on and offline).
+>From db133a867d4c0ee31211c62205b5c5287acb30a9 Mon Sep 17 00:00:00 2001
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Fri, 30 Mar 2012 19:53:32 -0700
+Subject: [PATCH] compat-wireless: do not use broad export on makefiles
 
-dmesg with debug gives me this:
+This inspired by Johannes' patch on compat which does the
+same thing.
 
-[ 8804.908128] ath: PDADC (0,   0): a2f0 68686868
-[ 8804.908132] ath: PDADC: Chain 0 | PDADC 112 Value 104 | PDADC 113 
-Value 104 | PDADC 114 Value 104 | PDADC 115 Value 104 |
-[ 8804.908137] ath: PDADC (0,   0): a2f4 68686868
-[ 8804.908141] ath: PDADC: Chain 0 | PDADC 116 Value 104 | PDADC 117 
-Value 104 | PDADC 118 Value 104 | PDADC 119 Value 104 |
-[ 8804.908145] ath: PDADC (0,   0): a2f8 68686868
-[ 8804.908149] ath: PDADC: Chain 0 | PDADC 120 Value 104 | PDADC 121 
-Value 104 | PDADC 122 Value 104 | PDADC 123 Value 104 |
-[ 8804.908154] ath: PDADC (0,   0): a2fc 68686868
-[ 8804.908158] ath: PDADC: Chain 0 | PDADC 124 Value 104 | PDADC 125 
-Value 104 | PDADC 126 Value 104 | PDADC 127 Value 104 |
-[ 8804.908506] ath: Getting spur idx:0 is2Ghz:1 val:8000
-[ 8804.908609] ath: Enable MIB counters
-[ 8804.908632] ath: ANI parameters:
-[ 8804.908635] ath: noiseImmunityLevel=0, spurImmunityLevel=7, 
-ofdmWeakSigDetectOff=1
-[ 8804.908638] ath: cckWeakSigThreshold=0, firstepLevel=0, listenTime=0
-[ 8804.908641] ath: ofdmPhyErrCount=0, cckPhyErrCount=0
-[ 8804.908643]
-[ 8804.908646] ath: Writing ofdmbase=12582412   cckbase=12582712
-[ 8804.908669] ath: New interrupt mask 0xf4041071
-[ 8804.908672] ath: new IMR 0x918414b0
-[ 8804.908679] ath: enable IER
-[ 8804.908690] ath: AR_IMR 0x918414b0 IER 0x1
-[ 8804.945518] ath: disable IER
-[ 8804.945554] ath: enable IER
-[ 8804.945565] ath: AR_IMR 0x918414b0 IER 0x1
-[ 8805.031114] ath: Set channel: 2422 MHz type: 0
-[ 8805.031243] ath: disable IER
-[ 8805.031380] ath: Disable MIB counters
-[ 8805.031425] ath: Reset to 2422 MHz, HT40: 0 fastcc: 0
-[ 8805.031441] ath: NF calibrated [ctl] [chain 0] is -114
-[ 8805.033988] ath: PDADC (0,   0): a280 04030201
-[ 8805.033995] ath: PDADC: Chain 0 | PDADC   0 Value   1 | PDADC   1 
-Value   2 | PDADC   2 Value   3 | PDADC   3 Value   4 |
-[ 8805.034002] ath: PDADC (0,   0): a284 08070605
-[ 8805.034007] ath: PDADC: Chain 0 | PDADC   4 Value   5 | PDADC   5 
-Value   6 | PDADC   6 Value   7 | PDADC   7 Value   8 |
-[ 8805.034013] ath: PDADC (0,   0): a288 0c0b0a09
-[ 8805.034019] ath: PDADC: Chain 0 | PDADC   8 Value   9 | PDADC   9 
-Value  10 | PDADC  10 Value  11 | PDADC  11 Value  12 |
-[ 8805.034025] ath: PDADC (0,   0): a28c 100f0e0d
-[ 8805.034030] ath: PDADC: Chain 0 | PDADC  12 Value  13 | PDADC  13 
-Value  14 | PDADC  14 Value  15 | PDADC  15 Value  16 |
-[ 8805.034037] ath: PDADC (0,   0): a290 18161412
-[ 8805.034042] ath: PDADC: Chain 0 | PDADC  16 Value  18 | PDADC  17 
-Value  20 | PDADC  18 Value  22 | PDADC  19 Value  24 |
-[ 8805.034048] ath: PDADC (0,   0): a294 23201d1a
-[ 8805.034053] ath: PDADC: Chain 0 | PDADC  20 Value  26 | PDADC  21 
-Value  29 | PDADC  22 Value  32 | PDADC  23 Value  35 |
-[ 8805.034059] ath: PDADC (0,   0): a298 302b2825
-[ 8805.034064] ath: PDADC: Chain 0 | PDADC  24 Value  37 | PDADC  25 
-Value  40 | PDADC  26 Value  43 | PDADC  27 Value  48 |
-[ 8805.034070] ath: PDADC (0,   0): a29c 45403b36
-[ 8805.034075] ath: PDADC: Chain 0 | PDADC  28 Value  54 | PDADC  29 
-Value  59 | PDADC  30 Value  64 | PDADC  31 Value  69 |
-[ 8805.034081] ath: PDADC (0,   0): a2a0 5a544f4a
-[ 8805.034086] ath: PDADC: Chain 0 | PDADC  32 Value  74 | PDADC  33 
-Value  79 | PDADC  34 Value  84 | PDADC  35 Value  90 |
-[ 8805.034092] ath: PDADC (0,   0): a2a4 726c6660
-[ 8805.034098] ath: PDADC: Chain 0 | PDADC  36 Value  96 | PDADC  37 
-Value 102 | PDADC  38 Value 108 | PDADC  39 Value 114 |
-[ 8805.034104] ath: PDADC (0,   0): a2a8 0f0d0b09
-[ 8805.034110] ath: PDADC: Chain 0 | PDADC  40 Value   9 | PDADC  41 
-Value  11 | PDADC  42 Value  13 | PDADC  43 Value  15 |
-[ 8805.034116] ath: PDADC (0,   0): a2ac 17151311
-[ 8805.034121] ath: PDADC: Chain 0 | PDADC  44 Value  17 | PDADC  45 
-Value  19 | PDADC  46 Value  21 | PDADC  47 Value  23 |
-[ 8805.034127] ath: PDADC (0,   0): a2b0 201d1b19
-[ 8805.034133] ath: PDADC: Chain 0 | PDADC  48 Value  25 | PDADC  49 
-Value  27 | PDADC  50 Value  29 | PDADC  51 Value  32 |
-[ 8805.034139] ath: PDADC (0,   0): a2b4 2b282522
-[ 8805.034145] ath: PDADC: Chain 0 | PDADC  52 Value  34 | PDADC  53 
-Value  37 | PDADC  54 Value  40 | PDADC  55 Value  43 |
-[ 8805.034151] ath: PDADC (0,   0): a2b8 3935312e
-[ 8805.034156] ath: PDADC: Chain 0 | PDADC  56 Value  46 | PDADC  57 
-Value  49 | PDADC  58 Value  53 | PDADC  59 Value  57 |
-[ 8805.034163] ath: PDADC (0,   0): a2bc 4b44403c
-[ 8805.034168] ath: PDADC: Chain 0 | PDADC  60 Value  60 | PDADC  61 
-Value  64 | PDADC  62 Value  68 | PDADC  63 Value  75 |
-[ 8805.034174] ath: PDADC (0,   0): a2c0 67605952
-[ 8805.034179] ath: PDADC: Chain 0 | PDADC  64 Value  82 | PDADC  65 
-Value  89 | PDADC  66 Value  96 | PDADC  67 Value 103 |
-[ 8805.034185] ath: PDADC (0,   0): a2c4 7575756e
-[ 8805.034190] ath: PDADC: Chain 0 | PDADC  68 Value 110 | PDADC  69 
-Value 117 | PDADC  70 Value 117 | PDADC  71 Value 117 |
-[ 8805.034196] ath: PDADC (0,   0): a2c8 75757575
-[ 8805.034202] ath: PDADC: Chain 0 | PDADC  72 Value 117 | PDADC  73 
-Value 117 | PDADC  74 Value 117 | PDADC  75 Value 117 |
-[ 8805.034208] ath: PDADC (0,   0): a2cc 75757575
-[ 8805.034213] ath: PDADC: Chain 0 | PDADC  76 Value 117 | PDADC  77 
-Value 117 | PDADC  78 Value 117 | PDADC  79 Value 117 |
-[ 8805.034219] ath: PDADC (0,   0): a2d0 75757575
-[ 8805.034224] ath: PDADC: Chain 0 | PDADC  80 Value 117 | PDADC  81 
-Value 117 | PDADC  82 Value 117 | PDADC  83 Value 117 |
-[ 8805.034230] ath: PDADC (0,   0): a2d4 75757575
-[ 8805.034236] ath: PDADC: Chain 0 | PDADC  84 Value 117 | PDADC  85 
-Value 117 | PDADC  86 Value 117 | PDADC  87 Value 117 |
-[ 8805.034241] ath: PDADC (0,   0): a2d8 75757575
-[ 8805.034246] ath: PDADC: Chain 0 | PDADC  88 Value 117 | PDADC  89 
-Value 117 | PDADC  90 Value 117 | PDADC  91 Value 117 |
-[ 8805.034252] ath: PDADC (0,   0): a2dc 75757575
-[ 8805.034257] ath: PDADC: Chain 0 | PDADC  92 Value 117 | PDADC  93 
-Value 117 | PDADC  94 Value 117 | PDADC  95 Value 117 |
-[ 8805.034264] ath: PDADC (0,   0): a2e0 75757575
-[ 8805.034269] ath: PDADC: Chain 0 | PDADC  96 Value 117 | PDADC  97 
-Value 117 | PDADC  98 Value 117 | PDADC  99 Value 117 |
-[ 8805.034275] ath: PDADC (0,   0): a2e4 75757575
-[ 8805.034281] ath: PDADC: Chain 0 | PDADC 100 Value 117 | PDADC 101 
-Value 117 | PDADC 102 Value 117 | PDADC 103 Value 117 |
-[ 8805.034286] ath: PDADC (0,   0): a2e8 75757575
-[ 8805.034292] ath: PDADC: Chain 0 | PDADC 104 Value 117 | PDADC 105 
-Value 117 | PDADC 106 Value 117 | PDADC 107 Value 117 |
-[ 8805.034298] ath: PDADC (0,   0): a2ec 75757575
-[ 8805.034303] ath: PDADC: Chain 0 | PDADC 108 Value 117 | PDADC 109 
-Value 117 | PDADC 110 Value 117 | PDADC 111 Value 117 |
-[ 8805.034310] ath: PDADC (0,   0): a2f0 75757575
-[ 8805.034315] ath: PDADC: Chain 0 | PDADC 112 Value 117 | PDADC 113 
-Value 117 | PDADC 114 Value 117 | PDADC 115 Value 117 |
-[ 8805.034321] ath: PDADC (0,   0): a2f4 75757575
-[ 8805.034326] ath: PDADC: Chain 0 | PDADC 116 Value 117 | PDADC 117 
-Value 117 | PDADC 118 Value 117 | PDADC 119 Value 117 |
-[ 8805.034332] ath: PDADC (0,   0): a2f8 75757575
-[ 8805.034338] ath: PDADC: Chain 0 | PDADC 120 Value 117 | PDADC 121 
-Value 117 | PDADC 122 Value 117 | PDADC 123 Value 117 |
-[ 8805.034344] ath: PDADC (0,   0): a2fc 75757575
-[ 8805.034349] ath: PDADC: Chain 0 | PDADC 124 Value 117 | PDADC 125 
-Value 117 | PDADC 126 Value 117 | PDADC 127 Value 117 |
-[ 8805.034377] ath: Getting spur idx:0 is2Ghz:1 val:8000
-[ 8805.036119] ath: Reset TX queue: 0
-[ 8805.036125] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
-[ 8805.036130] ath: Reset TX queue: 1
-[ 8805.036135] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
-[ 8805.036140] ath: Reset TX queue: 2
-[ 8805.036146] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
-[ 8805.036151] ath: Reset TX queue: 3
-[ 8805.036157] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
-[ 8805.036163] ath: Reset TXQ, inactive queue: 4
-[ 8805.036167] ath: Reset TXQ, inactive queue: 5
-[ 8805.036171] ath: Reset TXQ, inactive queue: 6
-[ 8805.036175] ath: Reset TXQ, inactive queue: 7
-[ 8805.036180] ath: Reset TX queue: 8
-[ 8805.036195] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
-[ 8805.036201] ath: Reset TX queue: 9
-[ 8805.036216] ath: tx ok 0x0 err 0x0 desc 0x10f eol 0x10f urn 0x0
-[ 8805.036230] ath: ah->misc_mode 0x4
-[ 8805.037647] ath: Running PA Calibration
-[ 8805.038316] ath: enabling ADC Gain Calibration
-[ 8805.038320] ath: enabling ADC DC Calibration
-[ 8805.038324] ath: enabling IQ Calibration
-[ 8805.038333] ath: starting ADC Gain Calibration
-[ 8805.038471] ath: Enable MIB counters
-[ 8805.038496] ath: ANI parameters:
-[ 8805.038501] ath: noiseImmunityLevel=0, spurImmunityLevel=7, 
-ofdmWeakSigDetectOff=1
-[ 8805.038507] ath: cckWeakSigThreshold=0, firstepLevel=2, listenTime=0
-[ 8805.038511] ath: ofdmPhyErrCount=0, cckPhyErrCount=0
-[ 8805.038513]
-[ 8805.038521] ath: ANI parameters:
-[ 8805.038525] ath: noiseImmunityLevel=0, spurImmunityLevel=7, 
-ofdmWeakSigDetectOff=1
-[ 8805.038531] ath: cckWeakSigThreshold=0, firstepLevel=2, listenTime=0
-[ 8805.038536] ath: ofdmPhyErrCount=0, cckPhyErrCount=0
-[ 8805.038538]
-[ 8805.038543] ath: Writing ofdmbase=12582412   cckbase=12582712
-[ 8805.038578] ath: New interrupt mask 0xf4041071
-[ 8805.038583] ath: new IMR 0x918414b0
-[ 8805.038592] ath: enable IER
-[ 8805.038604] ath: AR_IMR 0x918414b0 IER 0x1
-[ 8805.038695] ath: Set HW RX filter: 0x207
-[ 8805.038724] ieee80211 phy5: device now idle
-[ 8805.038826] ath: AWAKE -> FULL-SLEEP
-[ 8805.038911] ath: FULL-SLEEP -> AWAKE
-[ 8805.041787] ath: AWAKE -> FULL-SLEEP
-[ 8805.041808] ieee80211 phy5: device no longer idle - working
-[ 8805.041817] ath: FULL-SLEEP -> AWAKE
-[ 8805.044666] wlan0: authenticate with 00:1e:2a:62:6b:1e (try 1)
-[ 8805.044679] ath: transmitting packet, skb: f6b88c00
-[ 8805.044688] ath: qnum: 0, txq depth: 0
-[ 8805.044690] ath: TXDP[0] = 2ecd6e8c (eecd6e8c)
-[ 8805.044692] ath: Enable TXE on queue: 0
-[ 8805.242495] wlan0: authenticate with 00:1e:2a:62:6b:1e (try 2)
-[ 8805.242511] ath: transmitting packet, skb: f71309c0
-[ 8805.242521] ath: qnum: 0, txq depth: 1
-[ 8805.242525] ath: link[0] (eecd6e8c)=2ecd6ef0 (eecd6ef0)
-[ 8805.242528] ath: Enable TXE on queue: 0
-[ 8805.441878] wlan0: authenticate with 00:1e:2a:62:6b:1e (try 3)
-[ 8805.441893] ath: transmitting packet, skb: f6b88b40
-[ 8805.441903] ath: qnum: 0, txq depth: 2
-[ 8805.441907] ath: link[0] (eecd6ef0)=2ecd6f54 (eecd6f54)
-[ 8805.441911] ath: Enable TXE on queue: 0
-[ 8805.641298] wlan0: authentication with 00:1e:2a:62:6b:1e timed out
-[ 8805.641445] ieee80211 phy5: device now idle
+perl -pi -ne 's|^(\s*)CONFIG|$1export CONFIG|' config.mk
 
+And then we also address the autoconf generation.
 
-will continue running the system to see if I get anymore leads on this 
-issue.
+We shave off compile time by more than 1/2:
 
-Justin P. Mattock
+Before:
+real	0m34.034s
+user	0m33.760s
+sys	0m10.580s
 
+After:
+real	0m16.617s
+user	0m22.290s
+sys	0m6.180s
 
+This was against 2.6.38.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+---
+ config.mk                      |  450 ++++++++++++++++++++--------------------
+ scripts/gen-compat-autoconf.sh |    4 +-
+ 2 files changed, 225 insertions(+), 229 deletions(-)
+
+diff --git a/config.mk b/config.mk
+index 965dc56..f02d52b 100644
+--- a/config.mk
++++ b/config.mk
+@@ -1,15 +1,9 @@
+-export
+-
+-## NOTE
+-## Make sure to have each variable declaration start
+-## in the first column, no whitespace allowed.
+-
+ ifeq ($(wildcard $(KLIB_BUILD)/.config),)
+ # These will be ignored by compat autoconf
+- CONFIG_PCI=y
+- CONFIG_USB=y
+- CONFIG_PCMCIA=y
+- CONFIG_SSB=m
++ export CONFIG_PCI=y
++ export CONFIG_USB=y
++ export CONFIG_PCMCIA=y
++ export CONFIG_SSB=m
+ else
+ include $(KLIB_BUILD)/.config
+ endif
+@@ -83,21 +77,21 @@ endif # build check
+ endif # kernel Makefile check
+ 
+ # These both are needed by compat-wireless || compat-bluetooth so enable them
+- CONFIG_COMPAT_RFKILL=y
++ export CONFIG_COMPAT_RFKILL=y
+ 
+ ifeq ($(CONFIG_MAC80211),y)
+ $(error "ERROR: you have MAC80211 compiled into the kernel, CONFIG_MAC80211=y, as such you cannot replace its mac80211 driver. You need this set to CONFIG_MAC80211=m. If you are using Fedora upgrade your kernel as later version should this set as modular. For further information on Fedora see https://bugzilla.redhat.com/show_bug.cgi?id=470143. If you are using your own kernel recompile it and make mac80211 modular")
+ else
+- CONFIG_COMPAT_WIRELESS=y
+- CONFIG_COMPAT_WIRELESS_MODULES=m
+- CONFIG_COMPAT_VAR_MODULES=m
++ export CONFIG_COMPAT_WIRELESS=y
++ export CONFIG_COMPAT_WIRELESS_MODULES=m
++ export CONFIG_COMPAT_VAR_MODULES=m
+ # We could technically separate these but not yet, we only have b44
+ # Note that we don't intend on backporting network drivers that
+ # use Multiqueue as that was a pain to backport to kernels older than
+ # 2.6.27. But -- we could just disable those drivers from kernels
+ # older than 2.6.27
+- CONFIG_COMPAT_NETWORK_MODULES=m
+- CONFIG_COMPAT_NET_USB_MODULES=m
++ export CONFIG_COMPAT_NETWORK_MODULES=m
++ export CONFIG_COMPAT_NET_USB_MODULES=m
+ endif
+ 
+ # The Bluetooth compatibility only builds on kernels >= 2.6.27 for now
+@@ -105,8 +99,8 @@ ifndef CONFIG_COMPAT_KERNEL_2_6_27
+ ifeq ($(CONFIG_BT),y)
+ # we'll ignore compiling bluetooth
+ else
+- CONFIG_COMPAT_BLUETOOTH=y
+- CONFIG_COMPAT_BLUETOOTH_MODULES=m
++ export CONFIG_COMPAT_BLUETOOTH=y
++ export CONFIG_COMPAT_BLUETOOTH_MODULES=m
+ endif
+ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
+@@ -117,14 +111,14 @@ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ ifdef CONFIG_COMPAT_KERNEL_2_6_33
+ ifndef CONFIG_COMPAT_RHEL_6_1
+ ifdef CONFIG_FW_LOADER
+-CONFIG_COMPAT_FIRMWARE_CLASS=m
++export CONFIG_COMPAT_FIRMWARE_CLASS=m
+ endif #CONFIG_FW_LOADER
+ endif #CONFIG_COMPAT_RHEL_6_1
+ endif #CONFIG_COMPAT_KERNEL_2_6_33
+ 
+ ifdef CONFIG_COMPAT_KERNEL_2_6_36
+ ifndef CONFIG_COMPAT_RHEL_6_1
+- CONFIG_COMPAT_KFIFO=y
++ export CONFIG_COMPAT_KFIFO=y
+ endif #CONFIG_COMPAT_RHEL_6_1
+ endif #CONFIG_COMPAT_KERNEL_2_6_36
+ 
+@@ -133,10 +127,10 @@ endif #CONFIG_COMPAT_KERNEL_2_6_36
+ # whitespace, because they get passed-on through compat_autoconf.h.
+ #
+ ifndef CONFIG_COMPAT_KERNEL_2_6_33
+-CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN=y
++export CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_33
+ ifdef CONFIG_COMPAT_RHEL_6_0
+-CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN=y
++export CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN=y
+ endif #CONFIG_COMPAT_RHEL_6_0
+ 
+ #
+@@ -144,14 +138,14 @@ endif #CONFIG_COMPAT_RHEL_6_0
+ # whitespace, because it gets passed-on through compat_autoconf.h.
+ #
+ ifdef CONFIG_COMPAT_RHEL_6_0
+-CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP=y
++export CONFIG_COMPAT_FIRMWARE_DATA_RW_NEEDS_FILP=y
+ endif #CONFIG_COMPAT_RHEL_6_0
+ 
+ # Wireless subsystem stuff
+-CONFIG_MAC80211=m
++export CONFIG_MAC80211=m
+ 
+ ifndef CONFIG_COMPAT_KERNEL_2_6_33
+-CONFIG_COMPAT_MAC80211_DRIVER_API_TRACER=y
++export CONFIG_COMPAT_MAC80211_DRIVER_API_TRACER=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_33
+ 
+ # CONFIG_MAC80211_DEBUGFS=y
+@@ -167,24 +161,24 @@ endif #CONFIG_COMPAT_KERNEL_2_6_33
+ # CONFIG_MAC80211_DEBUG_COUNTERS=y
+ 
+ # choose between pid and minstrel as default rate control algorithm
+-CONFIG_MAC80211_RC_DEFAULT=minstrel_ht
+-CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
++export CONFIG_MAC80211_RC_DEFAULT=minstrel_ht
++export CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+ # CONFIG_MAC80211_RC_DEFAULT_PID=y
+ # This is the one used by our compat-wireless net/mac80211/rate.c
+ # in case you have and old kernel which is overriding this to pid.
+-CONFIG_COMPAT_MAC80211_RC_DEFAULT=minstrel_ht
+-CONFIG_MAC80211_RC_PID=y
+-CONFIG_MAC80211_RC_MINSTREL=y
+-CONFIG_MAC80211_RC_MINSTREL_HT=y
++export CONFIG_COMPAT_MAC80211_RC_DEFAULT=minstrel_ht
++export CONFIG_MAC80211_RC_PID=y
++export CONFIG_MAC80211_RC_MINSTREL=y
++export CONFIG_MAC80211_RC_MINSTREL_HT=y
+ ifdef CONFIG_LEDS_TRIGGERS
+-CONFIG_MAC80211_LEDS=y
++export CONFIG_MAC80211_LEDS=y
+ endif #CONFIG_LEDS_TRIGGERS
+ 
+ # enable mesh networking too
+-CONFIG_MAC80211_MESH=y
++export CONFIG_MAC80211_MESH=y
+ 
+-CONFIG_CFG80211=m
+-CONFIG_CFG80211_DEFAULT_PS=y
++export CONFIG_CFG80211=m
++export CONFIG_CFG80211_DEFAULT_PS=y
+ # CONFIG_CFG80211_DEBUGFS=y
+ # CONFIG_NL80211_TESTMODE=y
+ # CONFIG_CFG80211_DEVELOPER_WARNINGS=y
+@@ -192,40 +186,40 @@ CONFIG_CFG80211_DEFAULT_PS=y
+ # CONFIG_CFG80211_INTERNAL_REGDB=y
+ # See below for wext stuff
+ 
+-CONFIG_LIB80211=m
+-CONFIG_LIB80211_CRYPT_WEP=m
+-CONFIG_LIB80211_CRYPT_CCMP=m
+-CONFIG_LIB80211_CRYPT_TKIP=m
++export CONFIG_LIB80211=m
++export CONFIG_LIB80211_CRYPT_WEP=m
++export CONFIG_LIB80211_CRYPT_CCMP=m
++export CONFIG_LIB80211_CRYPT_TKIP=m
+ # CONFIG_LIB80211_DEBUG=y
+ 
+-CONFIG_BT=m
+-CONFIG_BT_RFCOMM=m
+-CONFIG_BT_RFCOMM_TTY=y
+-CONFIG_BT_BNEP=m
+-CONFIG_BT_BNEP_MC_FILTER=y
+-CONFIG_BT_BNEP_PROTO_FILTER=y
++export CONFIG_BT=m
++export CONFIG_BT_RFCOMM=m
++export CONFIG_BT_RFCOMM_TTY=y
++export CONFIG_BT_BNEP=m
++export CONFIG_BT_BNEP_MC_FILTER=y
++export CONFIG_BT_BNEP_PROTO_FILTER=y
+ # CONFIG_BT_CMTP depends on ISDN_CAPI
+ ifdef CONFIG_ISDN_CAPI
+-CONFIG_BT_CMTP=m
++export CONFIG_BT_CMTP=m
+ endif #CONFIG_ISDN_CAPI
+ ifndef CONFIG_COMPAT_KERNEL_2_6_28
+-CONFIG_COMPAT_BT_HIDP=m
++export CONFIG_COMPAT_BT_HIDP=m
+ endif #CONFIG_COMPAT_KERNEL_2_6_28
+ 
+-CONFIG_BT_HCIUART=M
+-CONFIG_BT_HCIUART_H4=y
+-CONFIG_BT_HCIUART_BCSP=y
+-CONFIG_BT_HCIUART_ATH3K=y
+-CONFIG_BT_HCIUART_LL=y
++export CONFIG_BT_HCIUART=M
++export CONFIG_BT_HCIUART_H4=y
++export CONFIG_BT_HCIUART_BCSP=y
++export CONFIG_BT_HCIUART_ATH3K=y
++export CONFIG_BT_HCIUART_LL=y
+ 
+-CONFIG_BT_HCIVHCI=m
+-CONFIG_BT_MRVL=m
++export CONFIG_BT_HCIVHCI=m
++export CONFIG_BT_MRVL=m
+ 
+ ifdef CONFIG_PCMCIA
+-CONFIG_BT_HCIDTL1=m
+-CONFIG_BT_HCIBT3C=m
+-CONFIG_BT_HCIBLUECARD=m
+-CONFIG_BT_HCIBTUART=m
++export CONFIG_BT_HCIDTL1=m
++export CONFIG_BT_HCIBT3C=m
++export CONFIG_BT_HCIBLUECARD=m
++export CONFIG_BT_HCIBTUART=m
+ endif #CONFIG_PCMCIA
+ 
+ 
+@@ -237,26 +231,26 @@ endif #CONFIG_PCMCIA
+ # wireless_handlers attribute which will be activated by 
+ # CONFIG_WIRELESS_EXT. 
+ ifdef CONFIG_WIRELESS_EXT
+-CONFIG_CFG80211_WEXT=y
++export CONFIG_CFG80211_WEXT=y
+ else #CONFIG_CFG80211_WEXT
+ $(warning "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m.")
+ endif #CONFIG_WIRELESS_EXT
+ 
+ ifdef CONFIG_STAGING
+-CONFIG_COMPAT_STAGING=m
++export CONFIG_COMPAT_STAGING=m
+ endif #CONFIG_STAGING
+ 
+ # mac80211 test driver
+-CONFIG_MAC80211_HWSIM=m
++export CONFIG_MAC80211_HWSIM=m
+ 
+-CONFIG_ATH5K=m
++export CONFIG_ATH5K=m
+ # CONFIG_ATH5K_DEBUG=y
+ # CONFIG_ATH5K_TRACER=y
+ # CONFIG_ATH5K_AHB=y
+ 
+-CONFIG_ATH9K=m
+-CONFIG_ATH9K_HW=m
+-CONFIG_ATH9K_COMMON=m
++export CONFIG_ATH9K=m
++export CONFIG_ATH9K_HW=m
++export CONFIG_ATH9K_COMMON=m
+ # CONFIG_ATH9K_DEBUGFS=y
+ # CONFIG_ATH9K_AHB=y
+ # CONFIG_ATH9K_PKTLOG=y
+@@ -267,68 +261,68 @@ CONFIG_ATH9K_COMMON=m
+ # as default once we get minstrel properly tested and blessed by
+ # our systems engineering team. CCK rates also need to be used
+ # for long range considerations.
+-CONFIG_COMPAT_ATH9K_RATE_CONTROL=y
++export CONFIG_COMPAT_ATH9K_RATE_CONTROL=y
+ 
+-CONFIG_ATH9K_BTCOEX_SUPPORT=y
++export CONFIG_ATH9K_BTCOEX_SUPPORT=y
+ 
+ # PCI Drivers
+ ifdef CONFIG_PCI
+ 
+-CONFIG_ATH5K_PCI=y
+-CONFIG_ATH9K_PCI=y
++export CONFIG_ATH5K_PCI=y
++export CONFIG_ATH9K_PCI=y
+ 
+-CONFIG_IWLWIFI=m
+-CONFIG_IWLWIFI_P2P=y
++export CONFIG_IWLWIFI=m
++export CONFIG_IWLWIFI_P2P=y
+ # CONFIG_IWLWIFI_DEBUG=y
+ # CONFIG_IWLWIFI_DEBUGFS=y
+ # CONFIG_IWLWIFI_DEVICE_TRACING=y
+ # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
+ 
+-CONFIG_IWLEGACY=m
+-CONFIG_COMPAT_IWL4965=m
+-CONFIG_IWL3945=m
++export CONFIG_IWLEGACY=m
++export CONFIG_COMPAT_IWL4965=m
++export CONFIG_IWL3945=m
+ # CONFIG_IWLEGACY_DEBUG=y
+ # CONFIG_IWLEGACY_DEBUGFS=y
+ 
+ 
+-CONFIG_B43=m
+-CONFIG_B43_HWRNG=y
+-CONFIG_B43_PCI_AUTOSELECT=y
++export CONFIG_B43=m
++export CONFIG_B43_HWRNG=y
++export CONFIG_B43_PCI_AUTOSELECT=y
+ ifdef CONFIG_PCMCIA
+-CONFIG_B43_PCMCIA=y
++export CONFIG_B43_PCMCIA=y
+ endif #CONFIG_PCMCIA
+ ifdef CONFIG_MAC80211_LEDS
+-CONFIG_B43_LEDS=y
++export CONFIG_B43_LEDS=y
+ endif #CONFIG_MAC80211_LEDS
+-CONFIG_B43_PHY_LP=y
+-CONFIG_B43_PHY_N=y
+-CONFIG_B43_PHY_HT=y
++export CONFIG_B43_PHY_LP=y
++export CONFIG_B43_PHY_N=y
++export CONFIG_B43_PHY_HT=y
+ # CONFIG_B43_PHY_LCN=y
+ # CONFIG_B43_DEBUG=y
+ 
+-CONFIG_B43LEGACY=m
+-CONFIG_B43LEGACY_HWRNG=y
+-CONFIG_B43LEGACY_PCI_AUTOSELECT=y
++export CONFIG_B43LEGACY=m
++export CONFIG_B43LEGACY_HWRNG=y
++export CONFIG_B43LEGACY_PCI_AUTOSELECT=y
+ ifdef CONFIG_MAC80211_LEDS
+-CONFIG_B43LEGACY_LEDS=y
++export CONFIG_B43LEGACY_LEDS=y
+ endif #CONFIG_MAC80211_LEDS
+ # CONFIG_B43LEGACY_DEBUG=y
+-CONFIG_B43LEGACY_DMA=y
+-CONFIG_B43LEGACY_PIO=y
++export CONFIG_B43LEGACY_DMA=y
++export CONFIG_B43LEGACY_PIO=y
+ 
+ ifdef CONFIG_WIRELESS_EXT
+ # The Intel ipws
+-CONFIG_LIBIPW=m
++export CONFIG_LIBIPW=m
+ # CONFIG_LIBIPW_DEBUG=y
+ 
+-CONFIG_IPW2100=m
+-CONFIG_IPW2100_MONITOR=y
++export CONFIG_IPW2100=m
++export CONFIG_IPW2100_MONITOR=y
+ # CONFIG_IPW2100_DEBUG=y
+-CONFIG_IPW2200=m
+-CONFIG_IPW2200_MONITOR=y
+-CONFIG_IPW2200_RADIOTAP=y
+-CONFIG_IPW2200_PROMISCUOUS=y
+-CONFIG_IPW2200_QOS=y
++export CONFIG_IPW2200=m
++export CONFIG_IPW2200_MONITOR=y
++export CONFIG_IPW2200_RADIOTAP=y
++export CONFIG_IPW2200_PROMISCUOUS=y
++export CONFIG_IPW2200_QOS=y
+ # CONFIG_IPW2200_DEBUG=y
+ # The above enables use a second interface prefixed 'rtap'.
+ #           Example usage:
+@@ -346,43 +340,43 @@ endif #CONFIG_WIRELESS_EXT
+ 
+ ifdef CONFIG_SSB
+ # Sonics Silicon Backplane
+-CONFIG_SSB_SPROM=y
++export CONFIG_SSB_SPROM=y
+ 
+-CONFIG_SSB_BLOCKIO=y
+-CONFIG_SSB_PCIHOST=y
+-CONFIG_SSB_B43_PCI_BRIDGE=y
++export CONFIG_SSB_BLOCKIO=y
++export CONFIG_SSB_PCIHOST=y
++export CONFIG_SSB_B43_PCI_BRIDGE=y
+ ifdef CONFIG_PCMCIA
+-CONFIG_SSB_PCMCIAHOST=y
++export CONFIG_SSB_PCMCIAHOST=y
+ endif #CONFIG_PCMCIA
+ # CONFIG_SSB_DEBUG=y
+-CONFIG_SSB_DRIVER_PCICORE=y
+-CONFIG_B43_SSB=y
++export CONFIG_SSB_DRIVER_PCICORE=y
++export CONFIG_B43_SSB=y
+ endif #CONFIG_SSB
+ 
+-CONFIG_BCMA=m
+-CONFIG_BCMA_BLOCKIO=y
+-CONFIG_BCMA_HOST_PCI=y
++export CONFIG_BCMA=m
++export CONFIG_BCMA_BLOCKIO=y
++export CONFIG_BCMA_HOST_PCI=y
+ # CONFIG_BCMA_DEBUG=y
+-CONFIG_B43_BCMA=y
+-CONFIG_B43_BCMA_EXTRA=y
++export CONFIG_B43_BCMA=y
++export CONFIG_B43_BCMA_EXTRA=y
+ 
+-CONFIG_P54_PCI=m
++export CONFIG_P54_PCI=m
+ 
+-CONFIG_B44=m
+-CONFIG_B44_PCI=y
++export CONFIG_B44=m
++export CONFIG_B44_PCI=y
+ 
+-CONFIG_RTL8180=m
++export CONFIG_RTL8180=m
+ 
+-CONFIG_ADM8211=m
++export CONFIG_ADM8211=m
+ 
+-CONFIG_RT2X00_LIB_PCI=m
+-CONFIG_RT2400PCI=m
+-CONFIG_RT2500PCI=m
++export CONFIG_RT2X00_LIB_PCI=m
++export CONFIG_RT2400PCI=m
++export CONFIG_RT2500PCI=m
+ ifdef CONFIG_CRC_CCITT
+-CONFIG_RT2800PCI=m
+-CONFIG_RT2800PCI_RT33XX=y
+-CONFIG_RT2800PCI_RT35XX=y
+-CONFIG_RT2800PCI_RT53XX=y
++export CONFIG_RT2800PCI=m
++export CONFIG_RT2800PCI_RT33XX=y
++export CONFIG_RT2800PCI_RT35XX=y
++export CONFIG_RT2800PCI_RT53XX=y
+ endif #CONFIG_CRC_CCITT
+ NEED_RT2X00=y
+ 
+@@ -390,46 +384,46 @@ NEED_RT2X00=y
+ # CRC to check the firmware. We check here first for the PCI
+ # driver as we're in the PCI section.
+ ifdef CONFIG_CRC_ITU_T
+-CONFIG_RT61PCI=m
++export CONFIG_RT61PCI=m
+ endif #CONFIG_CRC_ITU_T
+ 
+-CONFIG_MWL8K=m
++export CONFIG_MWL8K=m
+ 
+ # Ethernet drivers go here
+-CONFIG_ATL1=m
+-CONFIG_ATL2=m
+-CONFIG_ATL1E=m
++export CONFIG_ATL1=m
++export CONFIG_ATL2=m
++export CONFIG_ATL1E=m
+ ifdef CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_ATL1C=n
+-CONFIG_ALX=m
++export CONFIG_ATL1C=n
++export CONFIG_ALX=m
+ else #CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_ATL1C=n
+-CONFIG_ALX=m
++export CONFIG_ATL1C=n
++export CONFIG_ALX=m
+ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
+ ifdef CONFIG_WIRELESS_EXT
+-CONFIG_HERMES=m
+-CONFIG_HERMES_CACHE_FW_ON_INIT=y
++export CONFIG_HERMES=m
++export CONFIG_HERMES_CACHE_FW_ON_INIT=y
+ ifdef CONFIG_PPC_PMAC
+-CONFIG_APPLE_AIRPORT=m
++export CONFIG_APPLE_AIRPORT=m
+ endif #CONFIG_PPC_PMAC
+-CONFIG_PLX_HERMES=m
+-CONFIG_TMD_HERMES=m
+-CONFIG_NORTEL_HERMES=m
+-CONFIG_PCI_HERMES=m
++export CONFIG_PLX_HERMES=m
++export CONFIG_TMD_HERMES=m
++export CONFIG_NORTEL_HERMES=m
++export CONFIG_PCI_HERMES=m
+ ifdef CONFIG_PCMCIA
+-CONFIG_PCMCIA_HERMES=m
+-CONFIG_PCMCIA_SPECTRUM=m
++export CONFIG_PCMCIA_HERMES=m
++export CONFIG_PCMCIA_SPECTRUM=m
+ endif #CONFIG_PCMCIA
+ endif #CONFIG_WIRELESS_EXT
+ 
+-CONFIG_RTL8192CE=m
+-CONFIG_RTL8192SE=m
+-CONFIG_RTL8192DE=m
++export CONFIG_RTL8192CE=m
++export CONFIG_RTL8192SE=m
++export CONFIG_RTL8192DE=m
+ 
+-CONFIG_BRCMSMAC=m
++export CONFIG_BRCMSMAC=m
+ 
+-CONFIG_MWIFIEX_PCIE=m
++export CONFIG_MWIFIEX_PCIE=m
+ 
+ endif #CONFIG_PCI
+ ## end of PCI
+@@ -437,10 +431,10 @@ endif #CONFIG_PCI
+ ifdef CONFIG_PCMCIA
+ 
+ ifdef CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS=n
+-CONFIG_LIBERTAS_CS=n
++export CONFIG_LIBERTAS=n
++export CONFIG_LIBERTAS_CS=n
+ else #CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS_CS=m
++export CONFIG_LIBERTAS_CS=m
+ NEED_LIBERTAS=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
+@@ -448,12 +442,12 @@ endif #CONFIG_PCMCIA
+ ## end of PCMCIA
+ 
+ # This is required for some cards
+-CONFIG_EEPROM_93CX6=m
++export CONFIG_EEPROM_93CX6=m
+ 
+ # USB Drivers
+ ifdef CONFIG_USB
+ ifndef CONFIG_COMPAT_KERNEL_2_6_29
+-CONFIG_COMPAT_ZD1211RW=m
++export CONFIG_COMPAT_ZD1211RW=m
+ # CONFIG_ZD1211RW_DEBUG=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_29
+ 
+@@ -465,84 +459,84 @@ endif #CONFIG_COMPAT_KERNEL_2_6_29
+ # Note: this depends on CONFIG_USB_NET_RNDIS_HOST and CONFIG_USB_NET_CDCETHER
+ # it also requires new RNDIS_HOST and CDC_ETHER modules which we add
+ ifdef CONFIG_COMPAT_KERNEL_2_6_29
+-CONFIG_USB_COMPAT_USBNET=n
+-CONFIG_USB_NET_COMPAT_RNDIS_HOST=n
+-CONFIG_USB_NET_COMPAT_RNDIS_WLAN=n
+-CONFIG_USB_NET_COMPAT_CDCETHER=n
++export CONFIG_USB_COMPAT_USBNET=n
++export CONFIG_USB_NET_COMPAT_RNDIS_HOST=n
++export CONFIG_USB_NET_COMPAT_RNDIS_WLAN=n
++export CONFIG_USB_NET_COMPAT_CDCETHER=n
+ else #CONFIG_COMPAT_KERNEL_2_6_29
+-CONFIG_USB_COMPAT_USBNET=m
++export CONFIG_USB_COMPAT_USBNET=m
+ ifdef CONFIG_USB_NET_CDCETHER
+-CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
+-CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
++export CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
++export CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
+ endif #CONFIG_USB_NET_CDCETHER
+ ifdef CONFIG_USB_NET_CDCETHER_MODULE
+-CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
+-CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
++export CONFIG_USB_NET_COMPAT_RNDIS_HOST=m
++export CONFIG_USB_NET_COMPAT_RNDIS_WLAN=m
+ endif #CONFIG_USB_NET_CDCETHER
+-CONFIG_USB_NET_COMPAT_CDCETHER=m
++export CONFIG_USB_NET_COMPAT_CDCETHER=m
+ endif #CONFIG_COMPAT_KERNEL_2_6_29
+ 
+ 
+-CONFIG_P54_USB=m
+-CONFIG_RTL8187=m
++export CONFIG_P54_USB=m
++export CONFIG_RTL8187=m
+ ifdef CONFIG_MAC80211_LEDS
+-CONFIG_RTL8187_LEDS=y
++export CONFIG_RTL8187_LEDS=y
+ endif #CONFIG_MAC80211_LEDS
+ 
+-CONFIG_AT76C50X_USB=m
++export CONFIG_AT76C50X_USB=m
+ 
+ ifndef CONFIG_COMPAT_KERNEL_2_6_29
+-CONFIG_CARL9170=m
++export CONFIG_CARL9170=m
+ ifdef CONFIG_MAC80211_LEDS
+-CONFIG_CARL9170_LEDS=y
++export CONFIG_CARL9170_LEDS=y
+ endif #CONFIG_MAC80211_LEDS
+ # CONFIG_CARL9170_DEBUGFS=y
+-CONFIG_CARL9170_WPC=y
++export CONFIG_CARL9170_WPC=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_29
+ 
+ # This activates a threading fix for usb urb.
+ # this is mainline commit: b3e670443b7fb8a2d29831b62b44a039c283e351
+ # This fix will be included in some stable releases.
+-CONFIG_COMPAT_USB_URB_THREAD_FIX=y
++export CONFIG_COMPAT_USB_URB_THREAD_FIX=y
+ 
+-CONFIG_ATH9K_HTC=m
++export CONFIG_ATH9K_HTC=m
+ # CONFIG_ATH9K_HTC_DEBUGFS=y
+ 
+ # RT2500USB does not require firmware
+-CONFIG_RT2500USB=m
++export CONFIG_RT2500USB=m
+ ifdef CONFIG_CRC_CCITT
+-CONFIG_RT2800USB=m
+-CONFIG_RT2800USB_RT33XX=y
+-CONFIG_RT2800USB_RT35XX=y
+-CONFIG_RT2800USB_RT53XX=y
+-CONFIG_RT2800USB_UNKNOWN=y
++export CONFIG_RT2800USB=m
++export CONFIG_RT2800USB_RT33XX=y
++export CONFIG_RT2800USB_RT35XX=y
++export CONFIG_RT2800USB_RT53XX=y
++export CONFIG_RT2800USB_UNKNOWN=y
+ endif #CONFIG_CRC_CCITT
+-CONFIG_RT2X00_LIB_USB=m
++export CONFIG_RT2X00_LIB_USB=m
+ NEED_RT2X00=y
+ # RT73USB requires firmware
+ ifdef CONFIG_CRC_ITU_T
+-CONFIG_RT73USB=m
++export CONFIG_RT73USB=m
+ endif #CONFIG_CRC_ITU_T
+ 
+ ifdef CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS_THINFIRM_USB=n
+-CONFIG_LIBERTAS_USB=n
++export CONFIG_LIBERTAS_THINFIRM_USB=n
++export CONFIG_LIBERTAS_USB=n
+ NEED_LIBERTAS=n
+ else #CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS_THINFIRM_USB=m
+-CONFIG_LIBERTAS_USB=m
++export CONFIG_LIBERTAS_THINFIRM_USB=m
++export CONFIG_LIBERTAS_USB=m
+ NEED_LIBERTAS=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
+-CONFIG_ORINOCO_USB=m
++export CONFIG_ORINOCO_USB=m
+ 
+-CONFIG_BT_HCIBTUSB=m
+-CONFIG_BT_HCIBCM203X=m
+-CONFIG_BT_HCIBPA10X=m
+-CONFIG_BT_HCIBFUSB=m
+-CONFIG_BT_ATH3K=m
++export CONFIG_BT_HCIBTUSB=m
++export CONFIG_BT_HCIBCM203X=m
++export CONFIG_BT_HCIBPA10X=m
++export CONFIG_BT_HCIBFUSB=m
++export CONFIG_BT_ATH3K=m
+ 
+-CONFIG_RTL8192CU=m
++export CONFIG_RTL8192CU=m
+ 
+ endif #CONFIG_USB end of USB driver list
+ 
+@@ -550,16 +544,16 @@ ifdef CONFIG_SPI_MASTER
+ ifndef CONFIG_COMPAT_KERNEL_2_6_25
+ 
+ ifdef CONFIG_CRC7
+-CONFIG_WL1251_SPI=m
+-CONFIG_WL12XX_SPI=m
++export CONFIG_WL1251_SPI=m
++export CONFIG_WL12XX_SPI=m
+ endif #CONFIG_CRC7
+-CONFIG_P54_SPI=m
++export CONFIG_P54_SPI=m
+ 
+ ifdef CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS_SPI=n
++export CONFIG_LIBERTAS_SPI=n
+ NEED_LIBERTAS=n
+ else #CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS_SPI=m
++export CONFIG_LIBERTAS_SPI=m
+ NEED_LIBERTAS=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
+@@ -568,64 +562,64 @@ endif #CONFIG_SPI_MASTER end of SPI driver list
+ 
+ ifdef CONFIG_MMC
+ 
+-CONFIG_SSB_SDIOHOST=y
+-CONFIG_B43_SDIO=y
++export CONFIG_SSB_SDIOHOST=y
++export CONFIG_B43_SDIO=y
+ 
+ ifdef CONFIG_CRC7
+ ifdef CONFIG_WL12XX_PLATFORM_DATA
+-CONFIG_COMPAT_WL1251_SDIO=m
++export CONFIG_COMPAT_WL1251_SDIO=m
+ endif #CONFIG_WL12XX_PLATFORM_DATA
+ 
+ ifndef CONFIG_COMPAT_KERNEL_2_6_32
+ ifdef CONFIG_WL12XX_PLATFORM_DATA
+-CONFIG_COMPAT_WL12XX_SDIO=m
++export CONFIG_COMPAT_WL12XX_SDIO=m
+ endif #CONFIG_WL12XX_PLATFORM_DATA
+ endif #CONFIG_COMPAT_KERNEL_2_6_32
+ 
+ endif #CONFIG_CRC7
+ 
+-CONFIG_MWIFIEX_SDIO=m
++export CONFIG_MWIFIEX_SDIO=m
+ 
+ ifndef CONFIG_COMPAT_KERNEL_2_6_32
+-CONFIG_COMPAT_LIBERTAS_SDIO=m
++export CONFIG_COMPAT_LIBERTAS_SDIO=m
+ NEED_LIBERTAS=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_32
+ 
+-CONFIG_IWM=m
++export CONFIG_IWM=m
+ # CONFIG_IWM_DEBUG=y
+ # CONFIG_IWM_TRACING=y
+ 
+-CONFIG_BT_HCIBTSDIO=m
+-CONFIG_BT_MRVL_SDIO=m
++export CONFIG_BT_HCIBTSDIO=m
++export CONFIG_BT_MRVL_SDIO=m
+ 
+ ifndef CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_ATH6KL=m
++export CONFIG_ATH6KL=m
+ # CONFIG_ATH6KL_DEBUG=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ 
+ ifndef CONFIG_COMPAT_KERNEL_2_6_29
+-CONFIG_BRCMFMAC=m
+-CONFIG_BRCMFMAC_SDIO=y
++export CONFIG_BRCMFMAC=m
++export CONFIG_BRCMFMAC_SDIO=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_29
+ 
+ endif #CONFIG_MMC
+ 
+-CONFIG_RTLWIFI=m
+-CONFIG_RTL8192C_COMMON=m
++export CONFIG_RTLWIFI=m
++export CONFIG_RTL8192C_COMMON=m
+ 
+ # Common rt2x00 requirements
+ ifeq ($(NEED_RT2X00),y)
+-CONFIG_RT2X00=y
+-CONFIG_RT2X00_LIB=m
+-CONFIG_RT2800_LIB=m
+-CONFIG_RT2X00_LIB_FIRMWARE=y
+-CONFIG_RT2X00_LIB_CRYPTO=y
++export CONFIG_RT2X00=y
++export CONFIG_RT2X00_LIB=m
++export CONFIG_RT2800_LIB=m
++export CONFIG_RT2X00_LIB_FIRMWARE=y
++export CONFIG_RT2X00_LIB_CRYPTO=y
+ # CONFIG_RT2X00_LIB_SOC=y
+ ifdef CONFIG_COMPAT_KERNEL_2_6_25
+-CONFIG_RT2X00_LIB_LEDS=n
++export CONFIG_RT2X00_LIB_LEDS=n
+ else #CONFIG_COMPAT_KERNEL_2_6_25
+ ifdef CONFIG_LEDS_CLASS
+-CONFIG_RT2X00_LIB_LEDS=y
++export CONFIG_RT2X00_LIB_LEDS=y
+ endif #CONFIG_LEDS_CLASS
+ endif #CONFIG_COMPAT_KERNEL_2_6_25
+ # CONFIG_RT2X00_DEBUG=y
+@@ -633,40 +627,40 @@ endif #CONFIG_COMPAT_KERNEL_2_6_25
+ endif
+ 
+ # p54
+-CONFIG_P54_COMMON=m
++export CONFIG_P54_COMMON=m
+ ifdef CONFIG_MAC80211_LEDS
+-CONFIG_P54_LEDS=y
++export CONFIG_P54_LEDS=y
+ endif #CONFIG_MAC80211_LEDS
+ 
+ # Atheros
+-CONFIG_ATH_COMMON=m
++export CONFIG_ATH_COMMON=m
+ # CONFIG_ATH_DEBUG=y
+ 
+-CONFIG_BRCMUTIL=m
++export CONFIG_BRCMUTIL=m
+ # CONFIG_BRCMDBG=y
+ 
+ ifdef CONFIG_CRC7
+-CONFIG_WL1251=m
+-CONFIG_WL12XX=m
++export CONFIG_WL1251=m
++export CONFIG_WL12XX=m
+ endif #CONFIG_CRC7
+ 
+-CONFIG_MWIFIEX=m
++export CONFIG_MWIFIEX=m
+ 
+ ifndef CONFIG_CORDIC
+-CONFIG_COMPAT_CORDIC=y
++export CONFIG_COMPAT_CORDIC=y
+ endif #CONFIG_CORDIC
+ 
+ ifndef CONFIG_CRC8
+-CONFIG_COMPAT_CRC8=y
++export CONFIG_COMPAT_CRC8=y
+ endif #CONFIG_CRC8
+ 
+ ifdef CONFIG_COMPAT_KERNEL_2_6_27
+-CONFIG_LIBERTAS=n
++export CONFIG_LIBERTAS=n
+ else #CONFIG_COMPAT_KERNEL_2_6_27
+ ifeq ($(NEED_LIBERTAS),y)
+-CONFIG_LIBERTAS_THINFIRM=m
+-CONFIG_LIBERTAS=m
+-CONFIG_LIBERTAS_MESH=y
++export CONFIG_LIBERTAS_THINFIRM=m
++export CONFIG_LIBERTAS=m
++export CONFIG_LIBERTAS_MESH=y
+ # CONFIG_LIBERTAS_DEBUG=y
+ endif
+ endif #CONFIG_COMPAT_KERNEL_2_6_27
+@@ -674,10 +668,10 @@ endif #CONFIG_COMPAT_KERNEL_2_6_27
+ # We need the backported rfkill module on kernel < 2.6.31.
+ # In more recent kernel versions use the in kernel rfkill module.
+ ifdef CONFIG_COMPAT_KERNEL_2_6_31
+-CONFIG_RFKILL_BACKPORT=m
++export CONFIG_RFKILL_BACKPORT=m
+ ifdef CONFIG_LEDS_TRIGGERS
+-CONFIG_RFKILL_BACKPORT_LEDS=y
++export CONFIG_RFKILL_BACKPORT_LEDS=y
+ endif #CONFIG_LEDS_TRIGGERS
+-CONFIG_RFKILL_BACKPORT_INPUT=y
++export CONFIG_RFKILL_BACKPORT_INPUT=y
+ endif #CONFIG_COMPAT_KERNEL_2_6_31
+ 
+diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
+index 87257c6..c7bdd38 100755
+--- a/scripts/gen-compat-autoconf.sh
++++ b/scripts/gen-compat-autoconf.sh
+@@ -146,7 +146,9 @@ EOF
+ kernel_version_req $OLDEST_KERNEL_SUPPORTED
+ 
+ # For each CONFIG_FOO=x option
+-for i in $(egrep -h '^CONFIG_|^ifdef CONFIG_|^ifndef CONFIG_|^endif #CONFIG_|^else #CONFIG_' $COMPAT_CONFIG_1 $COMPAT_CONFIG_2 | sed 's/ /+/'); do
++for i in $(egrep -h '^export CONFIG_|^ifdef CONFIG_|^ifndef CONFIG_|^endif #CONFIG_|^else #CONFIG_' $COMPAT_CONFIG_1 $COMPAT_CONFIG_2 | \
++	sed 's/export //' | \
++	sed 's/ /+/'); do
+ 	case $i in
+ 	'ifdef+CONFIG_'* )
+ 		echo "#$i" | sed -e 's/+/ /' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_3_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(3,\2,0))/' -e 's/\(ifdef CONFIG_COMPAT_KERNEL_2_6_\)\([0-9]*\)/if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,\2))/' -e 's/\(ifdef CONFIG_COMPAT_RHEL_\)\([0-9]*\)_\([0-9]*\)/if (defined(RHEL_MAJOR) \&\& RHEL_MAJOR == \2 \&\& RHEL_MINOR >= \3)/' -e 's/\(#ifdef \)\(CONFIG_[^:space:]*\)/#if defined(\2) || defined(\2_MODULE)/'
+-- 
+1.7.10.rc1.22.gf5241
 
