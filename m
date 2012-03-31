@@ -1,81 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:51869 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756625Ab2CGRhS (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:41367 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713Ab2CaSbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 12:37:18 -0500
-Message-ID: <4F579CCA.2060907@gmail.com> (sfid-20120307_183739_600888_C08659E6)
-Date: Wed, 07 Mar 2012 09:37:14 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	Linux-netdev <netdev@vger.kernel.org>,
-	Linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org>
-In-Reply-To: <4F579A88.6030503@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 31 Mar 2012 14:31:49 -0400
+Received: by mail-pb0-f46.google.com with SMTP id un15so3022823pbc.19
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 11:31:48 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>,
+	Pavel Zubarev <pavel.zubarev@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org, ashok@cozybit.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/4] mac80211: Allow tsf increments via debugfs
+Date: Sat, 31 Mar 2012 11:31:31 -0700
+Message-Id: <1333218693-30093-3-git-send-email-javier@cozybit.com> (sfid-20120331_203151_728689_C74BE0AF)
+In-Reply-To: <1333218693-30093-1-git-send-email-javier@cozybit.com>
+References: <1333218693-30093-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/07/2012 09:27 AM, Felix Fietkau wrote:
-> On 2012-03-07 4:24 PM, Justin P. Mattock wrote:
->> On 03/07/2012 07:19 AM, Mohammed Shafi wrote:
->>> On Wed, Mar 7, 2012 at 7:55 PM, Justin P. Mattock
->>> <justinmattock@gmail.com>   wrote:
->>>> ath9k craps out from time to time(more annoying if anything)
->>>>
->>>> [44309.840830] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44309.858246] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44309.858255] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44309.932801] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44309.950352] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44309.950361] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44310.024301] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44310.041641] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44310.041646] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44310.116316] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44310.133909] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44310.133918] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44310.208021] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44310.225752] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>>> [44310.225761] ath: Could not stop RX, we could be confusing the DMA engine
->>>> when we start RX up
->>>> [44310.299922] ath: Failed to stop TX DMA, queues=0x001!
->>>> [44310.317579] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
->>>> [44310.317587] ath: Could not stop RX, we could be confusing the DMA engine
->>>> whe
->>>
->>> this is has become a know issue but less harmful, please try to see if
->>> the workaround of disabling power save helps
->>>
->>> iw dev wlanX set power_save off
->>>
->>
->> ok! I have set that on the machine.. will see if I get this message in
->> the upcoming weeks.
-> Also, please try this patch with powersave enabled:
-> http://nbd.name/ps-fix.patch
->
-> - Felix
->
+Reading and writing back the tsf value via tsf is too slow if one wants
+to make small increments to this timer.  With this change you can use
+the syntax "+=<some value>" or "-=<some value>" to add or substract a
+value from the tsf counter.
 
-I will give that a try as well..
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/debugfs_netdev.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-Thanks!
-
-Justin P. Mattock
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index a32eeda..a2ba9bf 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -424,6 +424,7 @@ static ssize_t ieee80211_if_parse_tsf(
+ 	struct ieee80211_local *local = sdata->local;
+ 	unsigned long long tsf;
+ 	int ret;
++	int tsf_is_delta = 0;
+ 
+ 	if (strncmp(buf, "reset", 5) == 0) {
+ 		if (local->ops->reset_tsf) {
+@@ -431,9 +432,20 @@ static ssize_t ieee80211_if_parse_tsf(
+ 			wiphy_info(local->hw.wiphy, "debugfs reset TSF\n");
+ 		}
+ 	} else {
++		if (buflen > 10 && buf[1] == '=') {
++			if (buf[0] == '+')
++				tsf_is_delta = 1;
++			else if (buf[0] == '-')
++				tsf_is_delta = -1;
++			else
++				return -EINVAL;
++			buf += 2;
++		}
+ 		ret = kstrtoull(buf, 10, &tsf);
+ 		if (ret < 0)
+ 			return -EINVAL;
++		if (tsf_is_delta)
++			tsf = drv_get_tsf(local, sdata) + tsf_is_delta * tsf;
+ 		if (local->ops->set_tsf) {
+ 			drv_set_tsf(local, sdata, tsf);
+ 			wiphy_info(local->hw.wiphy,
+-- 
+1.7.5.4
 
