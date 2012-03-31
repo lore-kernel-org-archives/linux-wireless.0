@@ -1,84 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:64522 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754885Ab2CHLdG convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36291 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753506Ab2CaAYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 06:33:06 -0500
-Received: by bkcik5 with SMTP id ik5so243702bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 03:33:04 -0800 (PST)
+	Fri, 30 Mar 2012 20:24:07 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAO1ZyKkpZy38vNc8iCOODnuVeJJPPb-DOH=+HFPvgGGjj+hDMA@mail.gmail.com>
-References: <CAO1ZyKkpZy38vNc8iCOODnuVeJJPPb-DOH=+HFPvgGGjj+hDMA@mail.gmail.com>
-Date: Thu, 8 Mar 2012 17:03:04 +0530
-Message-ID: <CAD2nsn08oU9MCEnYoFpHPmUfo+7bXrnOP2k1P7PH4P_1NH59Vg@mail.gmail.com> (sfid-20120308_123311_327468_09B18652)
-Subject: Re: Accessing PROTOCOL TYPE FILES from rx.c in mac80211
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Claudio Rossi <rossi.claudio.82@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAB=NE6UNHufTggg0ka-+q7ri_X6ENx4nO5DfMCAxxrKLrERPWg@mail.gmail.com>
+References: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org>
+ <20120206160727.GA21048@tuxdriver.com> <20120207041958.GA32377@bombadil.infradead.org>
+ <CAB=NE6VS79S4R6wQddQCqPfoYPyRbPzSdAYN2Mxfi-4G_sfCvg@mail.gmail.com>
+ <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com>
+ <CAB=NE6URWAgUgF+6bOsRBeeXnQ4VjYf1tWuUkkvMviCLOCxeqA@mail.gmail.com> <CAB=NE6UNHufTggg0ka-+q7ri_X6ENx4nO5DfMCAxxrKLrERPWg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Fri, 30 Mar 2012 17:23:46 -0700
+Message-ID: <CAB=NE6U_Sq88ro7onChn8U4tkkqt7Z9YN9wMyZjx+78j+M=_uA@mail.gmail.com> (sfid-20120331_022454_060844_231E9889)
+Subject: Re: [PATCH] compat: add compat kernel checker and downloader
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Andy Whitcroft <apw@canonical.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>, hauke@hauke-m.de,
+	kernel-team@lists.ubuntu.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 8, 2012 at 3:54 PM, Claudio Rossi
-<rossi.claudio.82@gmail.com> wrote:
-> Dear all,
->  I would like to inspect the protocol type field from mac802.11, and
-> specifically in rx.c in the function
->
-> static ieee80211_rx_result debug_noinline
-> ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+Andy, so I just noticed that on all Ubuntu PPA (and generic) kernels
+you guys have a broken symlink >= 2.6.33.
 
-may be you should do this stuff after ieee80211_deliver_skb in 1740, rx.c
+/lib/modules/2.6.33-02063305-generic/build/include/asm
 
-if (skb) {
-			/* deliver to local stack */
-			skb->protocol = eth_type_trans(skb, dev);
-			memset(skb->cb, 0, sizeof(skb->cb));
-			netif_receive_skb(skb);
-		}
-	}
+points to asm-x86 and that is no longer present after 2.6.33 so any
+module requiring those header files will break now on Ubuntu. I just
+spotted this as some file from asm is now included in the modules were
+are building. I guess not many external kernel modules include asm dir
+otherwise you guys would have noticed this a long time ago.
 
-
->
-> I was trying to do:
->
-> struct iphdr * network_header;
-> skb_set_network_header(skb,ieee80211_get_hdrlen_from_skb(skb));
-> network_header = (struct iphdr *)skb_network_header(skb);
->
->  if (network_header->protocol==IPPROTO_TCP){
-> ...
-> }
-> but it does not seams to work....
->
-> In status.c everything works fine when I do:
->
-> struct iphdr * network_header;
->
-> network_header = (struct iphdr *)skb_network_header(skb);
->
->  if (network_header->protocol==IPPROTO_TCP){
-> ...
-> }
->
-> the problem is how to correctly set the network header pointer in the
-> skb in rx.c
-> can somebody give me an hint?
->
->
-> Thank you
->
-> --
-> Claudio Rossi
-> -------------------
-> Office @ PoliTO: +39 011 5644194
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-thanks,
-shafi
+  Luis
