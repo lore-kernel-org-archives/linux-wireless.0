@@ -1,130 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17699 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755112Ab2CDUnH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:07 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 059/101] iwlwifi: move irq to PCIe
-Date: Sun,  4 Mar 2012 11:29:13 -0800
-Message-Id: <1330889395-533-60-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214532_769962_414E0F0C)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:63924 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713Ab2CaSbo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Mar 2012 14:31:44 -0400
+Received: by dake40 with SMTP id e40so816411dak.11
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 11:31:43 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>,
+	Pavel Zubarev <pavel.zubarev@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org, ashok@cozybit.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/4] mac80211_hwsim: Fill timestamp beacon at the time it is transmitted
+Date: Sat, 31 Mar 2012 11:31:30 -0700
+Message-Id: <1333218693-30093-2-git-send-email-javier@cozybit.com> (sfid-20120331_203146_999361_523571F8)
+In-Reply-To: <1333218693-30093-1-git-send-email-javier@cozybit.com>
+References: <1333218693-30093-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Generate more acurate tsf values in hwsim by setting the tsf value on
+trasmitted beacons immediately before they are moved to the rx path.
+Also, adjust the beacon timestamp to be the time at which the first byte
+of the timestamp is transmitted.
 
-Even if the variable might also be used by other
-transports, there's no need for anything outside
-of the transport itself to access it, so move it
-into the private area.
+With these changes the observed tsf offset between two hwsim/mesh peers
+is 0 (unless the offset is modified via debugfs)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 ++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-trans.h          |    2 --
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |   26 +++++++++++++-------------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 93f49ac..d13b8d1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -231,6 +231,7 @@ struct iwl_tx_queue {
-  * @rxq: all the RX queue data
-  * @rx_replenish: work that will be called when buffers need to be allocated
-  * @trans: pointer to the generic transport area
-+ * @irq - the irq number for the device
-  * @irq_requested: true when the irq has been requested
-  * @scd_base_addr: scheduler sram base address in SRAM
-  * @scd_bc_tbls: pointer to the byte count table of the scheduler
-@@ -262,6 +263,7 @@ struct iwl_trans_pcie {
- 	struct tasklet_struct irq_tasklet;
- 	struct isr_statistics isr_stats;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index b7ce6a6..9ef0de6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -632,6 +632,7 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_rx_status rx_status;
++	struct ieee80211_rate *txrate = ieee80211_get_tx_rate(hw, info);
  
-+	unsigned int irq;
- 	spinlock_t irq_lock;
- 	u32 inta_mask;
- 	u32 scd_base_addr;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 83143d8..d68dd65 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1303,7 +1303,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 	if (data->idle) {
+ 		wiphy_debug(hw->wiphy, "Trying to TX when idle - reject\n");
+@@ -666,6 +667,7 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
+ 	spin_lock(&hwsim_radio_lock);
+ 	list_for_each_entry(data2, &hwsim_radios, list) {
+ 		struct sk_buff *nskb;
++		struct ieee80211_mgmt *mgmt;
  
- 	/* wait to make sure we flush pending tasklet*/
--	synchronize_irq(trans->irq);
-+	synchronize_irq(trans_pcie->irq);
- 	tasklet_kill(&trans_pcie->irq_tasklet);
+ 		if (data == data2)
+ 			continue;
+@@ -683,8 +685,17 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
  
- 	cancel_work_sync(&trans_pcie->rx_replenish);
-@@ -1522,11 +1522,11 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 
- 		iwl_alloc_isr_ict(trans);
- 
--		err = request_irq(trans->irq, iwl_isr_ict, IRQF_SHARED,
-+		err = request_irq(trans_pcie->irq, iwl_isr_ict, IRQF_SHARED,
- 			DRV_NAME, trans);
- 		if (err) {
- 			IWL_ERR(trans, "Error allocating IRQ %d\n",
--				trans->irq);
-+				trans_pcie->irq);
- 			goto error;
- 		}
- 
-@@ -1549,7 +1549,7 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 	return err;
- 
- err_free_irq:
--	free_irq(trans->irq, trans);
-+	free_irq(trans_pcie->irq, trans);
- error:
- 	iwl_free_isr_ict(trans);
- 	tasklet_kill(&trans_pcie->irq_tasklet);
-@@ -1638,7 +1638,7 @@ static void iwl_trans_pcie_free(struct iwl_trans *trans)
- 	iwl_trans_pcie_rx_free(trans);
- #endif
- 	if (trans_pcie->irq_requested == true) {
--		free_irq(trans->irq, trans);
-+		free_irq(trans_pcie->irq, trans);
- 		iwl_free_isr_ict(trans);
+ 		if (mac80211_hwsim_addr_match(data2, hdr->addr1))
+ 			ack = true;
++
++		/* set bcn timestamp relative to receiver mactime */
+ 		rx_status.mactime =
+-			le64_to_cpu(__mac80211_hwsim_get_tsf(data2));
++				le64_to_cpu(__mac80211_hwsim_get_tsf(data2));
++		mgmt = (struct ieee80211_mgmt *) nskb->data;
++		if (ieee80211_is_beacon(mgmt->frame_control) ||
++		    ieee80211_is_probe_resp(mgmt->frame_control))
++			mgmt->u.beacon.timestamp = cpu_to_le64(
++				rx_status.mactime +
++				24 * 8 * 10 / txrate->bitrate);
++
+ 		memcpy(IEEE80211_SKB_RXCB(nskb), &rx_status, sizeof(rx_status));
+ 		ieee80211_rx_irqsafe(data2->hw, nskb);
  	}
+@@ -698,12 +709,6 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	bool ack;
+ 	struct ieee80211_tx_info *txi;
+ 	u32 _pid;
+-	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
+-	struct mac80211_hwsim_data *data = hw->priv;
+-
+-	if (ieee80211_is_beacon(mgmt->frame_control) ||
+-	    ieee80211_is_probe_resp(mgmt->frame_control))
+-		mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
  
-@@ -2329,7 +2329,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
- 			"pci_enable_msi failed(0X%x)", err);
+ 	mac80211_hwsim_monitor_rx(hw, skb);
  
- 	trans->dev = &pdev->dev;
--	trans->irq = pdev->irq;
-+	trans_pcie->irq = pdev->irq;
- 	trans_pcie->pci_dev = pdev;
- 	trans->hw_rev = iwl_read32(trans, CSR_HW_REV);
- 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index dcad694..a4a9efc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -334,7 +334,6 @@ enum iwl_trans_state {
-  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
-  * @reg_lock - protect hw register access
-  * @dev - pointer to struct device * that represents the device
-- * @irq - the irq number for the device
-  * @hw_id: a u32 with the ID of the device / subdevice.
-  *	Set during transport allocation.
-  * @hw_id_str: a string with info about HW ID. Set during transport allocation.
-@@ -349,7 +348,6 @@ struct iwl_trans {
- 	spinlock_t reg_lock;
+@@ -800,11 +805,9 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+ 				     struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_hw *hw = arg;
+-	struct mac80211_hwsim_data *data = hw->priv;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_info *info;
+ 	u32 _pid;
+-	struct ieee80211_mgmt *mgmt;
  
- 	struct device *dev;
--	unsigned int irq;
- 	u32 hw_rev;
- 	u32 hw_id;
- 	char hw_id_str[52];
+ 	hwsim_check_magic(vif);
+ 
+@@ -818,9 +821,6 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+ 		return;
+ 	info = IEEE80211_SKB_CB(skb);
+ 
+-	mgmt = (struct ieee80211_mgmt *) skb->data;
+-	mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
+-
+ 	mac80211_hwsim_monitor_rx(hw, skb);
+ 
+ 	/* wmediumd mode check */
+@@ -1444,7 +1444,7 @@ DEFINE_SIMPLE_ATTRIBUTE(hwsim_fops_group,
+ 			hwsim_fops_group_read, hwsim_fops_group_write,
+ 			"%llx\n");
+ 
+-struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(
++static struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(
+ 			     struct mac_address *addr)
+ {
+ 	struct mac80211_hwsim_data *data;
 -- 
-1.7.0.4
+1.7.5.4
 
