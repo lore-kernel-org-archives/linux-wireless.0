@@ -1,75 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41485 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759520Ab2C2QJd (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45767 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752694Ab2CaUcZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2012 12:09:33 -0400
-Message-ID: <4F748937.1070203@candelatech.com> (sfid-20120329_180943_351472_6B3F1AF6)
-Date: Thu, 29 Mar 2012 09:09:27 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Bryan Phillippe <Bryan.Phillippe@watchguard.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
-References: <4F57B7E6.1050103@candelatech.com>    <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>    <4F735EF5.3010708@candelatech.com>   <1332961193.3479.40.camel@jlt3.sipsolutions.net>   <4F73620D.507@candelatech.com>  <1332962004.3479.42.camel@jlt3.sipsolutions.net>  <4F736A5A.4030408@candelatech.com> <1333003130.3611.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1333003130.3611.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sat, 31 Mar 2012 16:32:25 -0400
+Received: by obbtb18 with SMTP id tb18so473315obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 13:32:25 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
+	devel@lists.open80211s.org, linville@tuxdriver.com,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [[PATCH v2 4/4] mac80211: Check basic rates when peering
+Date: Sat, 31 Mar 2012 13:32:10 -0700
+Message-Id: <1333225930-320-4-git-send-email-ashok@cozybit.com> (sfid-20120331_223230_832782_D18C067C)
+In-Reply-To: <1333225930-320-1-git-send-email-ashok@cozybit.com>
+References: <1333225930-320-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/2012 11:38 PM, Johannes Berg wrote:
-> On Wed, 2012-03-28 at 12:45 -0700, Ben Greear wrote:
->> On 03/28/2012 12:13 PM, Johannes Berg wrote:
->>> On Wed, 2012-03-28 at 12:10 -0700, Ben Greear wrote:
->>>> On 03/28/2012 11:59 AM, Johannes Berg wrote:
->>
->>>>> Hm. Maybe this is the problem?
->>>>>
->>>>> http://p.sipsolutions.net/d432de678ae3ff17.txt
->>>>
->>>> I don't see any code that matches that in 3.3.0 (nothing with nl80211_start_ap, for instance)
->>>
->>> ah, well, it's set_beacon there or so
->>>
->>> johannes
->>
->>
->> I tried this patch, but it still spews (see below)
->
->> WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:12 check_sdata_in_driver+0x26/0x2b [mac80211]()
->
->>    [<c04263d1>] warn_slowpath_common+0x65/0x7a
->>    [<f96a28d1>] ? check_sdata_in_driver+0x26/0x2b [mac80211]
->>    [<c042644a>] warn_slowpath_fmt+0x26/0x2a
->>    [<f96a28d1>] check_sdata_in_driver+0x26/0x2b [mac80211]
->>    [<f96a3438>] ieee80211_set_txq_params+0x97/0xec [mac80211]
->
-> but now it's coming from elsewhere, see this patch?
->
-> http://p.sipsolutions.net/b8506c9d7ce8a119.txt
+Section 13.2.3 of IEEE 80211s standard requires BSSBasicRateSet of mesh nodes
+to be identical to establish peer link.
 
-That fixes the problem for me, or at least the easily-reproducible part.
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh.c       |   15 ++++++++++-----
+ net/mac80211/mesh.h       |    2 +-
+ net/mac80211/mesh_plink.c |    2 +-
+ 3 files changed, 12 insertions(+), 7 deletions(-)
 
-I did have to modify the patch to work on 3.3.0 since it has no start_ap
-and the beacon method is named a bit differently.
-
-I'm going to apply this to my patch set and will let you know if
-I see anything else strange.
-
-Thanks!
-Ben
-
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 964d8a9..a67b24e 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -69,11 +69,13 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
+  *
+  * @ie: information elements of a management frame from the mesh peer
+  * @sdata: local mesh subif
++ * @basic_rates: BSSBasicRateSet of the peer candidate
+  *
+  * This function checks if the mesh configuration of a mesh point matches the
+  * local mesh configuration, i.e. if both nodes belong to the same mesh network.
+  */
+-bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_data *sdata)
++bool mesh_matches_local(struct ieee802_11_elems *ie,
++			struct ieee80211_sub_if_data *sdata, u32 basic_rates)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -97,6 +99,9 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
+ 	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
+ 		goto mismatch;
+ 
++	if (sdata->vif.bss_conf.basic_rates != basic_rates)
++		goto mismatch;
++
+ 	/* disallow peering with mismatched channel types for now */
+ 	/*if (ie->ht_info_elem &&
+ 	    (local->_oper_channel_type !=
+@@ -653,13 +658,13 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+ 		return;
+ 
++	supp_rates = ieee80211_sta_get_rates(local, &elems,
++					     band, &basic_rates);
++
+ 	if (elems.mesh_id && elems.mesh_config &&
+-	    mesh_matches_local(&elems, sdata)) {
+-		supp_rates = ieee80211_sta_get_rates(local, &elems,
+-						     band, &basic_rates);
++	    mesh_matches_local(&elems, sdata, basic_rates))
+ 		mesh_neighbour_update(mgmt, supp_rates, sdata, &elems,
+ 					rx_status);
+-	}
+ }
+ 
+ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 7d5d34b..0e40c8a 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -204,7 +204,7 @@ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
+ int mesh_rmc_check(u8 *addr, struct ieee80211s_hdr *mesh_hdr,
+ 		struct ieee80211_sub_if_data *sdata);
+ bool mesh_matches_local(struct ieee802_11_elems *ie,
+-		struct ieee80211_sub_if_data *sdata);
++			struct ieee80211_sub_if_data *sdata, u32 basic_rates);
+ void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
+ void mesh_mgmt_ies_add(struct sk_buff *skb,
+ 		struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 133f267..d742355 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -573,7 +573,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 					rx_status->band, &basic_rates);
+ 
+ 	if (ftype != WLAN_SP_MESH_PEERING_CLOSE &&
+-	    (!mesh_matches_local(&elems, sdata))) {
++	    (!mesh_matches_local(&elems, sdata, basic_rates))) {
+ 		matches_local = false;
+ 		switch (ftype) {
+ 		case WLAN_SP_MESH_PEERING_OPEN:
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.5.4
 
