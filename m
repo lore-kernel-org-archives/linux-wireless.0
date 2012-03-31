@@ -1,101 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:41706 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750795Ab2CGFf3 convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:54864 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342Ab2CaUcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 00:35:29 -0500
-Received: by vcqp1 with SMTP id p1so5133594vcq.19
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 21:35:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4F569512.4000109@gmail.com>
-References: <4F569512.4000109@gmail.com>
-Date: Wed, 7 Mar 2012 11:05:29 +0530
-Message-ID: <CAD2nsn0e6zGbquTf7DG4_hM6rr+q0GgYwpDuX+jQyGOHWHrdSg@mail.gmail.com> (sfid-20120307_063533_203355_B37F86C6)
-Subject: Re: Slow wifi connection AR9287 with ath9k 3.x kernel
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: kuba <kuba.g4@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 31 Mar 2012 16:32:22 -0400
+Received: by obbtb18 with SMTP id tb18so473268obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 13:32:21 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
+	devel@lists.open80211s.org, linville@tuxdriver.com,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [[PATCH v2 1/4] mac80211: Use mandatory rates as basic rates when starting mesh
+Date: Sat, 31 Mar 2012 13:32:07 -0700
+Message-Id: <1333225930-320-1-git-send-email-ashok@cozybit.com> (sfid-20120331_223226_585678_8C0BDF25)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 7, 2012 at 4:22 AM, kuba <kuba.g4@gmail.com> wrote:
-> Hello,
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-hi,
-
->
-> I have submitted bug on Kernel bug tracker and provide info, but it seems
-> that no one there is interested in this topic. I discovered that since
-> 2.6.38 kernel version there is bug in ath9k driver (using AR9287 chipset).
-> I've posted some additional info at this adress:
-> https://bugzilla.kernel.org/show_bug.cgi?id=42352
-
-please provide as much info as possible, in which mode you are
-operating, how noisy is the environment, distance between STA and AP.
-anything specific etc.
-i just tried  compat-wireless-2012-02-04, distance between STA and AP
-at least 5ms, a bit of noisy environment, channel 6 HT40 plus, AES
-ping RTT is good only. i  may be missing something
-
-
->
-> The last working version is 2.6.37.6.
-
-if we are very clear about the working one and non-working doing the
-following things will make our work very easier
-lets say 2.6.37.6 is working fine and 2.6.38 is broken for you
-
-we can work with our wireless-testing tree kernel
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-
-then please do git tag
-
-*git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep AR9287
-07422063d43612762d53fac8b6df213c96f4b1f6 ath9k_hw: Fix calibration for
-AR9287 devices
-f7ec8fb4d6f8f3ecb8b11e9e46ece95aa66139cc ath9k_hw: Fix eeprom offset
-for AR9287 devices (PCI/USB)
-
-*even with 3.3-rc5 we got less commits
-
-6321eb0977b011ac61dfca36e7c69b2c4325b104 ath9k_hw: Fix number of GPIO
-pins for AR9287/9300
-a7be039d347743c289b7280d5de82abf7bbdf1d8 ath9k: Fix eifs/usec timeout
-for AR9287 v1.3+
-49c99520f3b15300156830904f9ffcf51cb1160e ath9k_hw: Add dump_eeprom
-support for AR9287
-087b6ff682ff62c49c9a36ddfd24fc781367b1d1 ath9k_hw: fix MAC clock rate
-for AR9287 v1.3+
-1df85ecec36ad5da3f0165760704310d6c03f65f ath9k: Fix AR9287 calibration
-2d05a0c2b4ac614cb5e0eba75d39a37205d129e8 ath9k_hw: Remove unused code
-in AR9287 eeprom
-81544026e4cecb85a8b727d5f64cb3c8a8cb64a3 ath9k_hw: Fix throughput
-drops in HT40 mode for AR9287 chips
-6d64ab7f9240e3201fde3fd16ce4227bd795d2ab ath9k_htc: Fix LED pin for
-AR9287 HTC device
-07422063d43612762d53fac8b6df213c96f4b1f6 ath9k_hw: Fix calibration for
-AR9287 devices
-f7ec8fb4d6f8f3ecb8b11e9e46ece95aa66139cc ath9k_hw: Fix eeprom offset
-for AR9287 devices (PCI/USB)
-
-
-*git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep ath9k_hw
-
-*git log --pretty=oneline v2.6.37-rc6..v2.6.38 | grep ath9k
-
-
-
-> I can provide more data if anyone is interested.
-> Cheers,
-> Kuba
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 1f82c61..56ec79d 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -579,8 +579,12 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
+ 	ieee80211_mesh_root_setup(ifmsh);
+ 	ieee80211_queue_work(&local->hw, &sdata->work);
+ 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
++	sdata->vif.bss_conf.basic_rates =
++		ieee80211_mandatory_rates(sdata->local,
++					  sdata->local->hw.conf.channel->band);
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
+ 						BSS_CHANGED_BEACON_ENABLED |
++						BSS_CHANGED_BASIC_RATES |
+ 						BSS_CHANGED_BEACON_INT);
+ }
+ 
 -- 
-thanks,
-shafi
+1.7.5.4
+
