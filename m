@@ -1,109 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.162]:54821 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932429Ab2CZOSY (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:54864 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752686Ab2CaUcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 10:18:24 -0400
-Message-ID: <4F707AA7.5050401@hartkopp.net> (sfid-20120326_161828_800301_C4C8B3FE)
-Date: Mon, 26 Mar 2012 16:18:15 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	David Spinadel <david.spinadel@intel.com>,
-	linux-wireless@vger.kernel.org, David Miller <davem@davemloft.net>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: Re: 3.4-merge: iwlwifi needs more than 1 minute to connect
-References: <20120316180428.GD2563@tuxdriver.com>  <4F6CD1BC.4040703@hartkopp.net> <1332756333.7081.18.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1332756333.7081.18.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 31 Mar 2012 16:32:24 -0400
+Received: by mail-ob0-f174.google.com with SMTP id tb18so473268obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 13:32:24 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
+	devel@lists.open80211s.org, linville@tuxdriver.com,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [[PATCH v2 3/4] mac80211: Modify sta_get_rates to give basic rates
+Date: Sat, 31 Mar 2012 13:32:09 -0700
+Message-Id: <1333225930-320-3-git-send-email-ashok@cozybit.com> (sfid-20120331_223229_995420_003DA8CB)
+In-Reply-To: <1333225930-320-1-git-send-email-ashok@cozybit.com>
+References: <1333225930-320-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26.03.2012 12:05, Johannes Berg wrote:
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/ibss.c        |    4 ++--
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/mesh.c        |    5 +++--
+ net/mac80211/mesh_plink.c  |    7 ++++---
+ net/mac80211/util.c        |   16 +++++++++++++---
+ 5 files changed, 23 insertions(+), 11 deletions(-)
 
-> Hi Oliver,
-> 
->> i'm using the *very* latest 3.4-merge tree from Linus and my Wifi now needs
->> more than one minute to connect to my access point.
-> 
->> [   16.288562] wlan0: authenticate with bc:05:43:94:1a:da
->> [   16.299644] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
->> [   16.302060] wlan0: authenticated
->> [   16.302492] wlan0: waiting for beacon from bc:05:43:94:1a:da
->> [   16.432398] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
-> 
-> This is an odd message. I need to figure out how that can even happen.
-> 
-> What's the beacon interval on your AP? It seems more likely that this is
-> a problem with RX though.
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 33fd8d9..17bfb3a 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -410,7 +410,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 
+ 		if (elems->supp_rates) {
+ 			supp_rates = ieee80211_sta_get_rates(local, elems,
+-							     band);
++							     band, NULL);
+ 			if (sta) {
+ 				u32 prev_rates;
+ 
+@@ -560,7 +560,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		       sdata->name, mgmt->bssid);
+ #endif
+ 		ieee80211_sta_join_ibss(sdata, bss);
+-		supp_rates = ieee80211_sta_get_rates(local, elems, band);
++		supp_rates = ieee80211_sta_get_rates(local, elems, band, NULL);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+ 				       supp_rates, true);
+ 		rcu_read_unlock();
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d9798a3..1cf5c03 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1460,7 +1460,7 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ 				  const u8 *supp_rates);
+ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
+ 			    struct ieee802_11_elems *elems,
+-			    enum ieee80211_band band);
++			    enum ieee80211_band band, u32 *basic_rates);
+ int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
+ 			     enum ieee80211_smps_mode smps_mode);
+ void ieee80211_recalc_smps(struct ieee80211_local *local);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 56ec79d..964d8a9 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -622,7 +622,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee802_11_elems elems;
+ 	struct ieee80211_channel *channel;
+-	u32 supp_rates = 0;
++	u32 supp_rates = 0, basic_rates = 0;
+ 	size_t baselen;
+ 	int freq;
+ 	enum ieee80211_band band = rx_status->band;
+@@ -655,7 +655,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (elems.mesh_id && elems.mesh_config &&
+ 	    mesh_matches_local(&elems, sdata)) {
+-		supp_rates = ieee80211_sta_get_rates(local, &elems, band);
++		supp_rates = ieee80211_sta_get_rates(local, &elems,
++						     band, &basic_rates);
+ 		mesh_neighbour_update(mgmt, supp_rates, sdata, &elems,
+ 					rx_status);
+ 	}
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index e1a5fc4..133f267 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -474,6 +474,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	bool deactivated, matches_local = true;
+ 	u8 ie_len;
+ 	u8 *baseaddr;
++	u32 rates, basic_rates = 0;
+ 	__le16 plid, llid, reason;
+ #ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
+ 	static const char *mplstates[] = {
+@@ -568,6 +569,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 
+ 	/* Now we will figure out the appropriate event... */
+ 	event = PLINK_UNDEFINED;
++	rates = ieee80211_sta_get_rates(local, &elems,
++					rx_status->band, &basic_rates);
++
+ 	if (ftype != WLAN_SP_MESH_PEERING_CLOSE &&
+ 	    (!mesh_matches_local(&elems, sdata))) {
+ 		matches_local = false;
+@@ -592,7 +596,6 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		return;
+ 	} else if (!sta) {
+ 		/* ftype == WLAN_SP_MESH_PEERING_OPEN */
+-		u32 rates;
+ 
+ 		rcu_read_unlock();
+ 
+@@ -600,8 +603,6 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			mpl_dbg("Mesh plink error: no more free plinks\n");
+ 			return;
+ 		}
+-
+-		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
+ 		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, &elems);
+ 		if (!sta) {
+ 			mpl_dbg("Mesh plink error: plink table full\n");
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index ca5aa32..8ae0363 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1106,7 +1106,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 
+ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
+ 			    struct ieee802_11_elems *elems,
+-			    enum ieee80211_band band)
++			    enum ieee80211_band band, u32 *basic_rates)
+ {
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_rate *bitrates;
+@@ -1127,15 +1127,25 @@ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
+ 		     elems->ext_supp_rates_len; i++) {
+ 		u8 rate = 0;
+ 		int own_rate;
++		bool is_basic;
+ 		if (i < elems->supp_rates_len)
+ 			rate = elems->supp_rates[i];
+ 		else if (elems->ext_supp_rates)
+ 			rate = elems->ext_supp_rates
+ 				[i - elems->supp_rates_len];
+ 		own_rate = 5 * (rate & 0x7f);
+-		for (j = 0; j < num_rates; j++)
+-			if (bitrates[j].bitrate == own_rate)
++		is_basic = !!(rate & 0x80);
++
++		if (is_basic && (rate & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
++			continue;
++
++		for (j = 0; j < num_rates; j++) {
++			if (bitrates[j].bitrate == own_rate) {
+ 				supp_rates |= BIT(j);
++				if (basic_rates && is_basic)
++					*basic_rates |= BIT(j);
++			}
++		}
+ 	}
+ 	return supp_rates;
+ }
+-- 
+1.7.5.4
 
-
-Hm - but i definitely didn't change my setup or AP.
-
-It's only a difference in the kernel.
-
-> 
->> [   29.434897] wlan0: authenticate with bc:05:43:94:1a:da
->> [   29.445634] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
->> [   29.448168] wlan0: authenticated
->> [   29.448229] wlan0: waiting for beacon from bc:05:43:94:1a:da
->> [   29.473633] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr bc:05:43:94:1a:da
-> 
-> So this repeats, I suspect the 15 second retry timer is in
-> wpa_supplicant.
-
-
-ok.
-
-> 
->> [   55.773770] wlan0: authenticate with bc:05:43:94:1a:da
->> [   55.784316] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
->> [   55.786758] wlan0: authenticated
->> [   55.787407] wlan0: associate with bc:05:43:94:1a:da (try 1/3)
->> [   55.791114] wlan0: RX AssocResp from bc:05:43:94:1a:da (capab=0x431 status=0 aid=4)
->> [   55.791121] wlan0: associated
-> 
-> So when it succeeds it basically doesn't do the beacon wait thing. I
-> guess that is the problem then.
-> 
-> 
-> Do you think you could collect some tracing info?
-> 
-> trace-cmd record -e mac80211 -e iwlwifi
-> 
-> would be useful.
-
-
-No, i can't %-)
-
-But step by step:
-
-1. I downloaded trace-cmd with git
-2. trace-cmd told me to enable debugfs
-
-With debugfs enabled the problem is gone :-]
-
-[   15.821526] wlan0: authenticate with bc:05:43:94:1a:da
-[   15.825722] wlan0: send auth to bc:05:43:94:1a:da (try 1/3)
-[   16.028772] wlan0: send auth to bc:05:43:94:1a:da (try 2/3)
-[   16.030738] wlan0: authenticated
-[   16.032812] wlan0: associate with bc:05:43:94:1a:da (try 1/3)
-[   16.036512] wlan0: RX AssocResp from bc:05:43:94:1a:da (capab=0x431
-status=0 aid=3)
-[   16.036519] wlan0: associated
-[   16.046018] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[   26.610520] wlan0: no IPv6 routers present
-
-Oh, well.
-
-Maybe some other information might help:
-
-I always run Daves net-next tree on my machine.
-Until the release of 3.3 on march 18th i had no problem with net-next.
-But this problem appeared first, when i used Linus' merge tree.
-Not the first day when the net-next was pulled into Linus' tree but some time
-later.
-
-Regards,
-Oliver
