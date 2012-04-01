@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3968 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750705Ab2DYGil (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:44345 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093Ab2DAULi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 02:38:41 -0400
-Message-ID: <4F979BEC.1020204@qca.qualcomm.com> (sfid-20120425_083845_275547_0134A0C4)
-Date: Wed, 25 Apr 2012 09:38:36 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: check for sband existence when creating scan
- cmd
-References: <1335297041-4328-1-git-send-email-c_tpeder@qca.qualcomm.com>
-In-Reply-To: <1335297041-4328-1-git-send-email-c_tpeder@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Sun, 1 Apr 2012 16:11:38 -0400
+Date: Sun, 01 Apr 2012 16:10:31 -0400 (EDT)
+Message-Id: <20120401.161031.886756026206260043.davem@davemloft.net> (sfid-20120401_221218_107013_7FB94228)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-03-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120330175533.GC8273@tuxdriver.com>
+References: <20120330175533.GC8273@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2012 10:50 PM, Thomas Pedersen wrote:
-> The patch "ath6kl: support fw reporting phy capabilities" gave the
-> firmware the ability to disable certain wiphy supported bands. Check if
-> this is the case in ath6kl_wmi_beginscan_cmd to avoid dereferencing a
-> NULL pointer.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 30 Mar 2012 13:55:34 -0400
+
+> I have a few more small fixes, hopefully still in time for 3.4-rc1...
 > 
-> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+> Rajkukmar provides us with a one-line timestamp correction related to
+> scanning in mac80211.  Sujith gives us a small fixup for a regression
+> in the handling of HT capability bits for ath9k.  Stanislav Yakovlev
+> is stepping-up as maintainer for the ipw2x00 drivers, so we'll add
+> him to MAINTAINERS.  Stanislav also gives us a fix for a thinko
+> that registers the wrong band information for ipw2200 and 802.11a.
+> Finally, Santosh Nayak adds some simple error checking to orinoco to
+> avoid some potential NULL pointer dereferences.
 
-Thanks, applied with changes. I really didn't like mixing code and
-declarations so I changed the code a bit and added few empty lines for
-readibility. There shouldn't be any functional changes but please do
-check my changes.
-
-Kalle
+Pulled, thanks John.
