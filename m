@@ -1,96 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49804 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751341Ab2DUUec (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 16:34:32 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH 1/2] mac80211: rename AP variable num_sta_authorized to num_mcast_sta
-Date: Sat, 21 Apr 2012 22:34:16 +0200
-Message-Id: <1335040457-11252-1-git-send-email-nbd@openwrt.org> (sfid-20120421_223436_441208_56E133AC)
+Received: from mail.candelatech.com ([208.74.158.172]:34924 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369Ab2DAVZ2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Apr 2012 17:25:28 -0400
+Message-ID: <4F78C7C4.8040303@candelatech.com> (sfid-20120401_232533_113044_BC968B99)
+Date: Sun, 01 Apr 2012 14:25:24 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211:  Support on-channel scan option.
+References: <1333233041-3246-1-git-send-email-greearb@candelatech.com>    (sfid-20120401_003057_469452_61057064) <1333305916.3703.2.camel@jlt3.sipsolutions.net>   <4F78BE67.8090609@candelatech.com>  <1333313357.22977.0.camel@jlt3.sipsolutions.net>  <4F78C056.4080307@candelatech.com> <1333314713.22977.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1333314713.22977.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is only used to test for BSS multicast receivers.
+On 04/01/2012 02:11 PM, Johannes Berg wrote:
+> On Sun, 2012-04-01 at 13:53 -0700, Ben Greear wrote:
+>> On 04/01/2012 01:49 PM, Johannes Berg wrote:
+>>> On Sun, 2012-04-01 at 13:45 -0700, Ben Greear wrote:
+>>>> On 04/01/2012 11:45 AM, Johannes Berg wrote:
+>>>>> On Sat, 2012-03-31 at 15:30 -0700, greearb@candelatech.com wrote:
+>>>>>
+>>>>>
+>>>>>>     static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+>>>>>>     				  struct cfg80211_scan_request *req)
+>>>>>> @@ -438,6 +461,33 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+>>>>>>     	local->scan_req = req;
+>>>>>>     	local->scan_sdata = sdata;
+>>>>>>
+>>>>>> +	/* If we are scanning only on the current channel, then
+>>>>>> +	 * we do not need to stop normal activities
+>>>>>> +	 */
+>>>>>> +	if ((req->n_channels == 1)&&
+>>>>>> +	    (req->channels[0]->center_freq ==
+>>>>>> +	     local->hw.conf.channel->center_freq)) {
+>>>>> ...
+>>>>>> +		return 0;
+>>>>>> +	}
+>>>>>> +
+>>>>>>     	if (local->ops->hw_scan)
+>>>>>>     		__set_bit(SCAN_HW_SCANNING,&local->scanning);
+>>>>>
+>>>>> Clearly, you're joking.
+>>>>
+>>>> That is worthless feedback and gives me no idea what you
+>>>> think should be fixed about it.
+>>>>
+>>>> If you hate the entire idea of optimizing scanning on channel,
+>>>> just say so plainly.
+>>>
+>>> I did quote only the relevant pieces -- you're completely ignoring hw
+>>> scan. Why should I care about this patch then?
+>>
+>> Well, I was hoping that a simple scan-on-channel wouldn't need to
+>> care about the hw-scan logic.
+>
+> So you thought about it, but didn't document it? This bothers me quite a
+> bit -- why should I have to always do the thinking again?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/debugfs_netdev.c |    4 ++--
- net/mac80211/ieee80211_i.h    |    2 +-
- net/mac80211/sta_info.c       |    4 ++--
- net/mac80211/tx.c             |    2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
+You know more about this stuff than I do.  You could have replaced the
+original snide response with a 2-line note that I need to
+do this only for sw-scan NICs and saved us all some trouble.
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index e7af522..ea0122d 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -394,7 +394,7 @@ static ssize_t ieee80211_if_parse_uapsd_max_sp_len(
- __IEEE80211_IF_FILE_W(uapsd_max_sp_len);
- 
- /* AP attributes */
--IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
-+IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
- IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
- IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
- 
-@@ -540,7 +540,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
- 
- static void add_ap_files(struct ieee80211_sub_if_data *sdata)
- {
--	DEBUGFS_ADD(num_sta_authorized);
-+	DEBUGFS_ADD(num_mcast_sta);
- 	DEBUGFS_ADD(num_sta_ps);
- 	DEBUGFS_ADD(dtim_count);
- 	DEBUGFS_ADD(num_buffered_multicast);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index bd7a451..4404753 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -282,7 +282,7 @@ struct ieee80211_if_ap {
- 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
- 	struct sk_buff_head ps_bc_buf;
- 	atomic_t num_sta_ps; /* number of stations in PS mode */
--	atomic_t num_sta_authorized; /* number of authorized stations */
-+	atomic_t num_mcast_sta; /* number of stations receiving multicast */
- 	int dtim_count;
- 	bool dtim_bc_mc;
- };
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 7fd7ac4..4c04eb5 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1418,14 +1418,14 @@ int sta_info_move_state(struct sta_info *sta,
- 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
- 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
- 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
--				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
-+				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
- 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
- 		}
- 		break;
- 	case IEEE80211_STA_AUTHORIZED:
- 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
- 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
--				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
-+				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
- 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
- 		}
- 		break;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0abbef95..44001c7 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -306,7 +306,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 		}
- 	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
- 			    ieee80211_is_data(hdr->frame_control) &&
--			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
-+			    !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
- 		/*
- 		 * No associated STAs - no need to send multicast
- 		 * frames.
+If you had added another 2 lines to explain why, as you did below,
+then maybe I and anyone else reading the email would have learned
+something as well.
+
+>> But, I can change it so that the optimized scan-on-channel only
+>> is supported on NICs that do software-scan?
+>
+> In any case, yes, you'll have to do that. Think about how scanning
+> works, and consider that devices may very well chose to filter by BSSID
+> when associated etc.
+
+OK, it's easy enough to only enable this for sw-scan NICs.  I'll
+fix up the patch and repost when I get a chance to test it more
+thoroughly.
+
+Thanks,
+Ben
+
 -- 
-1.7.3.2
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
