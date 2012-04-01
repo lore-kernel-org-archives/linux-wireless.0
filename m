@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:42641 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150Ab2D3Fb6 convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56201 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753373Ab2DBAC1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 01:31:58 -0400
-Received: by wibhj6 with SMTP id hj6so2486997wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2012 22:31:56 -0700 (PDT)
+	Sun, 1 Apr 2012 20:02:27 -0400
+Date: Sun, 1 Apr 2012 19:24:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: sgruszka@redhat.com, linux@dominikbrodowski.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: 3945ABG fails to connect (3.4-rc1)
+Message-ID: <20120401232407.GA7962@tuxdriver.com> (sfid-20120402_020231_728613_43A110C0)
+References: <20120401080419.GA5207@comet.dominikbrodowski.net>
+ <20120401165230.GA2399@redhat.com>
+ <20120401.172452.1589857453193260701.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P2r9ifuj6fVmkfgfX21PMa1Cf_NpYXXup1YVdRLX+bH6w@mail.gmail.com>
-References: <CANUX_P2r9ifuj6fVmkfgfX21PMa1Cf_NpYXXup1YVdRLX+bH6w@mail.gmail.com>
-Date: Mon, 30 Apr 2012 08:31:56 +0300
-Message-ID: <CANUX_P164q91DVQHd=Rf_672Q-U93wv0r7rgHRJLc-TMnjFC3A@mail.gmail.com> (sfid-20120430_073201_383073_3ACA0723)
-Subject: Re: bss table corruption
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120401.172452.1589857453193260701.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> For quite a while now (not sure I can tell exactly for how long) we
-> see issues in association and scan list.
-> We send probe before authentication, get the probe response but never
-> send the authentication.
-> Moreover a lot of entries in the BSS list are duplicated.
->
-> I began to look at it and ended up to understand that these 2 issues
-> are related: we just can't find an existing BSS in the BSS table.
-> Obviously this causes the second issue. The reason was it breaks the
-> association is that ieee80211_probe_auth will never be able to find
-> the IEs of the probe response since we couldn't fetch the BSS when we
-> parsed the probe response. In short:
->
->        if (auth_data->bss->proberesp_ies) {
-> always return false.... and we fall back to send yet another probe request.
->
-> As you probably know, the BSS table is implemented with an Red Black
-> Tree which requires its elements to be comparable. The compare
-> function compares the BSSID which is not always unique (there can be
-> several SSIDs on the same BSSID), so all the IEs are also compared.
-> But is this a good idea ?
-> It seems that since the IEs of an BSS may change from time to time
-> this compare function is not consistent...
+On Sun, Apr 01, 2012 at 05:24:52PM -0400, David Miller wrote:
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date: Sun, 1 Apr 2012 18:52:31 +0200
+> 
+> > On Sun, Apr 01, 2012 at 10:04:19AM +0200, Dominik Brodowski wrote:
+> >> Somewhere in between 3.3.0 and 3.4-rc1 my notebook fails to connect to my
+> >> local AP:
+> >> 
+> >> 02:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] Network Connection (rev 02)
+> >> 
+> >> Snippets from dmesg:
+> > [snip]
+> >> [   59.605953] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+> >> [   69.607344] wlan0: disassociating from $INSERT_MAC_HERE by local choice (reason=3)
+> >> [   69.609931] cfg80211: Calling CRDA to update world regulatory domain
+> >> [   69.612438] wlan0: deauthenticating from $INSERT_MAC_HERE by local choice (reason=3)
+> > Most likely this is fixed by: 
+> > http://marc.info/?l=linux-wireless&m=133180823427374&w=2
+> > 
+> > Plese test, thanks.
+> 
+> John, please make sure this gets to me after proper testing.
 
-Oops. Stupid me. Just noticed that we compare the SSID only...
-So how come ?
+In fact, you already have it! :-)
 
->
-> Just for playing I always return a positive value in cmp_bss (to have
-> all the nodes serialized and avoid the possibility to miss a existing
-> node) and don't rebalance the tree after insertion... the bug
-> disappeared.
->
-> Thought ?
->
-> Emmanuel Grumbach
-> egrumbach@gmail.com
+commit e92109be7a6a04808c3ed586475ba1e5ea56ecbd
+Author: Stanislaw Gruszka <sgruszka@redhat.com>
+Date:   Thu Mar 15 11:42:49 2012 +0100
+
+    iwlegacy: fix BSSID setting
+
+...
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
