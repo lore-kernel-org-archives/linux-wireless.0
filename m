@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5563 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757114Ab2DZOzY (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42033 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343Ab2DAUpd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 10:55:24 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 1/2] ath6kl: Update netstats for some of the tx failrues in ath6kl_data_tx()
-Date: Thu, 26 Apr 2012 20:26:13 +0530
-Message-ID: <1335452174-7093-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120426_165806_023143_741854DD)
+	Sun, 1 Apr 2012 16:45:33 -0400
+Message-ID: <4F78BE67.8090609@candelatech.com> (sfid-20120401_224537_404373_6FD8146E)
+Date: Sun, 01 Apr 2012 13:45:27 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211:  Support on-channel scan option.
+References: <1333233041-3246-1-git-send-email-greearb@candelatech.com>  (sfid-20120401_003057_469452_61057064) <1333305916.3703.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1333305916.3703.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are few cases where the tx skb is dropped but netstats is
-not updated, fix this.
+On 04/01/2012 11:45 AM, Johannes Berg wrote:
+> On Sat, 2012-03-31 at 15:30 -0700, greearb@candelatech.com wrote:
+>
+>
+>>   static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+>>   				  struct cfg80211_scan_request *req)
+>> @@ -438,6 +461,33 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+>>   	local->scan_req = req;
+>>   	local->scan_sdata = sdata;
+>>
+>> +	/* If we are scanning only on the current channel, then
+>> +	 * we do not need to stop normal activities
+>> +	 */
+>> +	if ((req->n_channels == 1)&&
+>> +	    (req->channels[0]->center_freq ==
+>> +	     local->hw.conf.channel->center_freq)) {
+> ...
+>> +		return 0;
+>> +	}
+>> +
+>>   	if (local->ops->hw_scan)
+>>   		__set_bit(SCAN_HW_SCANNING,&local->scanning);
+>
+> Clearly, you're joking.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+That is worthless feedback and gives me no idea what you
+think should be fixed about it.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 82f2f5c..67206ae 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -362,15 +362,11 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 		   skb, skb->data, skb->len);
- 
- 	/* If target is not associated */
--	if (!test_bit(CONNECTED, &vif->flags)) {
--		dev_kfree_skb(skb);
--		return 0;
--	}
-+	if (!test_bit(CONNECTED, &vif->flags))
-+		goto fail_tx;
- 
--	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON)) {
--		dev_kfree_skb(skb);
--		return 0;
--	}
-+	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON))
-+		goto fail_tx;
- 
- 	if (!test_bit(WMI_READY, &ar->flag))
- 		goto fail_tx;
+If you hate the entire idea of optimizing scanning on channel,
+just say so plainly.
+
+Ben
+
+>
+> johannes
+
+
 -- 
-1.7.0.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
