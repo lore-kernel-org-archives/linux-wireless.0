@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:50297 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590Ab2DSCYT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42101 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753093Ab2DAUtT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 22:24:19 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so9656149pbc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 19:24:19 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 2/2] mac80211: fix STA channel width field
-Date: Wed, 18 Apr 2012 19:24:14 -0700
-Message-Id: <1334802254-4704-2-git-send-email-thomas@cozybit.com> (sfid-20120419_042430_563375_A3E38B58)
-In-Reply-To: <1334802254-4704-1-git-send-email-thomas@cozybit.com>
-References: <1334802254-4704-1-git-send-email-thomas@cozybit.com>
+	Sun, 1 Apr 2012 16:49:19 -0400
+Message-ID: <1333313357.22977.0.camel@jlt3.sipsolutions.net> (sfid-20120401_224922_642240_CB3D83A3)
+Subject: Re: [RFC] mac80211:  Support on-channel scan option.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 01 Apr 2012 22:49:17 +0200
+In-Reply-To: <4F78BE67.8090609@candelatech.com>
+References: <1333233041-3246-1-git-send-email-greearb@candelatech.com>
+	  (sfid-20120401_003057_469452_61057064) <1333305916.3703.2.camel@jlt3.sipsolutions.net>
+	 <4F78BE67.8090609@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to IEEE 802.11 8.4.2.59, set the "STA channel width" bit to 0
-if transmitting STA is using a 20mhz channel.
+On Sun, 2012-04-01 at 13:45 -0700, Ben Greear wrote:
+> On 04/01/2012 11:45 AM, Johannes Berg wrote:
+> > On Sat, 2012-03-31 at 15:30 -0700, greearb@candelatech.com wrote:
+> >
+> >
+> >>   static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+> >>   				  struct cfg80211_scan_request *req)
+> >> @@ -438,6 +461,33 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+> >>   	local->scan_req = req;
+> >>   	local->scan_sdata = sdata;
+> >>
+> >> +	/* If we are scanning only on the current channel, then
+> >> +	 * we do not need to stop normal activities
+> >> +	 */
+> >> +	if ((req->n_channels == 1)&&
+> >> +	    (req->channels[0]->center_freq ==
+> >> +	     local->hw.conf.channel->center_freq)) {
+> > ...
+> >> +		return 0;
+> >> +	}
+> >> +
+> >>   	if (local->ops->hw_scan)
+> >>   		__set_bit(SCAN_HW_SCANNING,&local->scanning);
+> >
+> > Clearly, you're joking.
+> 
+> That is worthless feedback and gives me no idea what you
+> think should be fixed about it.
+> 
+> If you hate the entire idea of optimizing scanning on channel,
+> just say so plainly.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/util.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+I did quote only the relevant pieces -- you're completely ignoring hw
+scan. Why should I care about this patch then?
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 89c1e5b..577942b 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1684,7 +1684,9 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 		ht_oper->ht_param = IEEE80211_HT_PARAM_CHA_SEC_NONE;
- 		break;
- 	}
--	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
-+	if (ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 &&
-+	    channel_type != NL80211_CHAN_NO_HT &&
-+	    channel_type != NL80211_CHAN_HT20)
- 		ht_oper->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
- 
- 	/*
--- 
-1.7.5.4
+johannes
 
