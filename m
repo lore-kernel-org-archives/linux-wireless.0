@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7490 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752768Ab2DMGXA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 02:23:00 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: Validate legacy rateset.
-Date: Fri, 13 Apr 2012 11:52:53 +0530
-Message-ID: <1334298173-4132-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120413_082304_815922_B50E6F19)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:50449 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752671Ab2DBQxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2012 12:53:40 -0400
+Message-ID: <1333385618.15422.17.camel@joe2Laptop> (sfid-20120402_185357_911076_96B0A5DB)
+Subject: Re: CONFIG_RTLWIFI_DEBUG default y
+From: Joe Perches <joe@perches.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Date: Mon, 02 Apr 2012 09:53:38 -0700
+In-Reply-To: <20120402164920.GA13264@x1.osrc.amd.com>
+References: <20120402164920.GA13264@x1.osrc.amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Legacy rates are not validated while configuring
-tx rateset using iw. So below cmd is accepted by nl80211.
-sudo iw wlan2 set bitrates legacy-2.4 3
+On Mon, 2012-04-02 at 18:49 +0200, Borislav Petkov wrote:
+> Err,
 
-Validate legacy rates and return
-error while configuring improper rates.
+Not Err...
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
- net/wireless/nl80211.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> why is RTLWIFI_DEBUG default to y? This is an option for driver
+> developers only AFAICT and should be default n.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e49da27..cc7bef7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5540,6 +5540,8 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 				sband,
- 				nla_data(tb[NL80211_TXRATE_LEGACY]),
- 				nla_len(tb[NL80211_TXRATE_LEGACY]));
-+			if (mask.control[band].legacy == 0)
-+				return -EINVAL;
- 		}
- 		if (tb[NL80211_TXRATE_MCS]) {
- 			if (!ht_rateset_to_mask(
--- 
-1.7.4.1
+To keep all the "printk(KERN_DEBUG" to "pr_debug(" conversion
+output the same as the it was prior to the patch.
+
+Larry can default it to off if he wants.
+
+cheers, Joe
 
