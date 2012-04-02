@@ -1,134 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:50476 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753769Ab2DMNnM convert rfc822-to-8bit (ORCPT
+Received: from storm.alittletooquiet.net ([67.23.28.199]:41345 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753596Ab2DBR5q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 09:43:12 -0400
-Date: Fri, 13 Apr 2012 15:42:16 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120413154216.476a02ac@stein> (sfid-20120413_154328_795836_7AB8EA6E)
-In-Reply-To: <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 2 Apr 2012 13:57:46 -0400
+Date: Mon, 2 Apr 2012 13:57:45 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH 1/2] rtl8192de: Clean up and fix 92D cut version
+ constants and macros.
+Message-ID: <20120402175745.GE20611@alittletooquiet.net> (sfid-20120402_195750_381877_D1D172F9)
+References: <20120402142525.GA20611@alittletooquiet.net>
+ <4F79E7B9.7060504@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="eRtJSFbw+EEWtPj3"
+In-Reply-To: <4F79E7B9.7060504@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Apr 13 Felipe Contreras wrote:
-> On Fri, Apr 13, 2012 at 11:57 AM, Stefan Richter
-> <stefanr@s5r6.in-berlin.de> wrote:
-> > On Apr 12 Felipe Contreras wrote:
-> >> But this is exactly the opposite; the patch that broke things is in
-> >> the 'release branch' (3.3.1); it's not in upstream (3.3). Sure, it's
-> >> also on a later upstream, which is also broken.
-> >            ^^^^^
-> > No, upstream /earlier/ than 3.3.1 contains the defect.
-> 
-> Time is not relevant for the point being made, but fine:
 
-Time of occurrence of a regression in mainline and stable is indeed
-irrelevant, as there can only be two kinds of regressions in stable:
+--eRtJSFbw+EEWtPj3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-  A) First the regression was introduced into mainline, and accidentally it
-     was carried over from there into stable.
+Hi Larry,
 
-  B) The regression only happened in stable because a backport from
-     mainline to stable went wrong, e.g. a prerequisite to the backport
-     was forgotten to be backported beforehand.
+On Mon, Apr 02, 2012 at 12:54:01PM -0500, Larry Finger wrote:
+> On 04/02/2012 09:25 AM, Forest Bond wrote:
+> >From: Forest Bond<forest.bond@rapidrollout.com>
+> >
+> >The previous definitions included both {B,C,D,E}_CUT_VERSION and
+> >CHIP_92D_{C,D}_CUT with conflicting values for the C and D cut versions,
+> >and literal hex values were used in the IS_92D_{C,D,E}_CUT macros.  So
+> >we clean all this up and in doing so enable cut-specific code paths for
+> >cuts C and D, which would not have been executed because the
+> >CHIP_92D_{C,D}_CUT constants were wrong and the cut version was thus
+> >recorded incorrectly.
+> >
+> >Signed-off-by: Forest Bond<forest.bond@rapidrollout.com>
+>=20
+> This patch does not apply to the wireless-testing tree. That is the
+> one you are supposed to use.
+>=20
+> Patch #2 also fails to apply. In addition, your mailer mangled a line.
 
-AFAIU we are talking about a regression of type A.
+Sorry for the trouble.  I'll resend a little later this afternoon.
 
-It seems you are arguing that stable candidate patches which fix
-regressions of type A should be treated differently from other stable
-candidate patches.
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.rapidrollout.com
 
-> But this is exactly the opposite; the patch that broke things is in
-> the 'release branch' (3.3.1); it's not in the upstream release from
-> where stable began (3.3). Sure, it's also on upstream, which is also
-> broken.
+--eRtJSFbw+EEWtPj3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-(To what is this the opposite?)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-So the defect is present in two kernel branches:  Linus'es and Greg's.
-The fix needs eventually go into both branches.  For reasons which have
-been enumerated many times in this thread already, Greg takes the fix from
-Linus, not the other way around.
+iEYEARECAAYFAk956JkACgkQRO4fQQdv5Ax73QCePaoFzvXsL+NWvrySivLkSJcB
+7YwAoL7RAaObpYya1x1F7+DRm+BWgQ6j
+=nBIX
+-----END PGP SIGNATURE-----
 
-If you do not like to wait for Linus and Greg, you simply have to derive
-an own kernel which additionally contains your preferred fixes.
-
-The reasons for the Linus->Greg order of maintaining the stable series 100%
-apply to fixes for type A regressions as well.
-
-> > Furthermore, consider this:  You as user of the 3.3.y series are using a
-> > temporary, dead-end side branch.  Its maintenance will stop at some point,
-> > and you will be left looking for a different, maintained series to migrate
-> > to.  You will be most interested in that series /not/ containing any
-> > regressions that you suffered already through the 3.3.y lifetime.
-> 
-> Of course, I will be interested in that, although most likely I would
-> be switching to another stable release (v3.4.1), not the upstream
-> release (v3.4), and most distros would do the same.
-
-Indeed.
-
-> Even in the unlikely event that v3.4 is broken, most likely v3.4.1
-> would contain the fix.
-
-That would only happen if the upstream fix was published after v3.4 but
-before Greg finished cherry-picking from Linus' post-3.4 git head.
-
-> But I'm also interested in v3.3.2 working.
-
-It's obviously a bit late for that, but v3.3.3 seems likely to bring the
-fix.
-
-> So you are saying that:
-> 
-> a) v3.3.1 (bad), v3.3.2 (bad), v3.4 (good)
-> b) v3.3.1 (bad), v3.3.2 (good), v3.4 (bad)
-> c) v3.3.1 (bad), v3.3.2 (good), v3.4 (good)
-[...]
-
-Not exactly.
-
-I and others are saying that procedures must ensure that if e.g. v3.3.3
-was "good", then v3.4 and hence v3.4.y must be "good" too.  ("Good" here
-meaning "contains fix xyzabc".)
-
-Furthermore I was saying that due to the time-based instead of
-feature-based release schedule, the procedure which gives above guarantee
-is a time-based procedure:  Greg takes fixes *if* they were published by
-Linus == *after* they were published by Linus.
-
-I add:  The second reason for this procedure is that v3.x.y is a successor
-of v3.x but not of v3.x-1.y.  Forward-porting from v3.x-1.y to v3.x.y is
-not in scope of the stable series.  The reasons why there is no
-forward-porting done in stable series, again, have been mentioned several
-times in this thread.
--- 
-Stefan Richter
--=====-===-- -=-- -==-=
-http://arcgraph.de/sr/
+--eRtJSFbw+EEWtPj3--
