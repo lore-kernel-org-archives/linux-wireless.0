@@ -1,153 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:40820 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750950Ab2DCGHj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 02:07:39 -0400
-Received: by lahj13 with SMTP id j13so3800277lah.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 23:07:37 -0700 (PDT)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:34607 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807Ab2DBOeP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2012 10:34:15 -0400
+Received: by mail-bk0-f46.google.com with SMTP id ik5so2546913bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 07:34:14 -0700 (PDT)
+Message-ID: <4F79B8E1.6030701@openvz.org> (sfid-20120402_163419_441006_A80E2A5B)
+Date: Mon, 02 Apr 2012 18:34:09 +0400
+From: Konstantin Khlebnikov <khlebnikov@openvz.org>
 MIME-Version: 1.0
-In-Reply-To: <1333417250-24560-2-git-send-email-kubakici@wp.pl>
-References: <1333417250-24560-1-git-send-email-kubakici@wp.pl>
-	<1333417250-24560-2-git-send-email-kubakici@wp.pl>
-Date: Tue, 3 Apr 2012 08:07:37 +0200
-Message-ID: <CAL1gcdOnvgFhiPnBLxzQJMH3qrsO-s_TKN8u9MocNxdKOxVyTQ@mail.gmail.com> (sfid-20120403_080743_236976_EBB2C667)
-Subject: Re: [PATCH v2 1/4] rt2800: introduce wpdma_disable function
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Jakub Kicinski <kubakici@wp.pl>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: rtl8192ce: periodical kernel warning on v3.4-rc1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 3, 2012 at 3:40 AM, Jakub Kicinski <kubakici@wp.pl> wrote:
-> Introduce wpdma_disable function to simplify the code.
->
-> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-> Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
+[17174.389689] ------------[ cut here ]------------
+[17174.389711] WARNING: at net/wireless/mlme.c:490 cfg80211_mlme_disassoc+0x114/0x120()
+[17174.389716] Hardware name: 4291QY6
+[17174.389719] Modules linked in: fuse nfsd bridge stp llc kvm_intel kvm snd_hda_codec_hdmi snd_hda_codec_conexant snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc snd_seq_dummy snd_seq_oss snd_seq_midi thinkpad_acpi snd_rawmidi cdc_ncm usbnet mii cdc_acm cdc_wdm coretemp snd_seq_midi_event snd_seq uvcvideo videobuf2_vmalloc videobuf2_memops videobuf2_core videodev snd_seq_device snd_timer rtl8192ce rtlwifi iTCO_wdt rtl8192c_common i915 snd wmi drm_kms_helper soundcore hid_logitech_dj sdhci_pci sdhci e1000e [last unloaded: scsi_wait_scan]
+[17174.389807] Pid: 3663, comm: wpa_supplicant Not tainted 3.4.0-rc1-zurg-00013-g36b9175 #369
+[17174.389812] Call Trace:
+[17174.389824]  [<ffffffff8104548f>] warn_slowpath_common+0x7f/0xc0
+[17174.389833]  [<ffffffff810454ea>] warn_slowpath_null+0x1a/0x20
+[17174.389841]  [<ffffffff81625224>] cfg80211_mlme_disassoc+0x114/0x120
+[17174.389852]  [<ffffffff8169e28d>] ? mutex_lock+0x1d/0x50
+[17174.389859]  [<ffffffff81616a2e>] nl80211_disassociate+0xbe/0xf0
+[17174.389868]  [<ffffffff8152bd1a>] genl_rcv_msg+0x21a/0x2b0
+[17174.389875]  [<ffffffff8152bb00>] ? genl_rcv+0x40/0x40
+[17174.389882]  [<ffffffff8152b4c9>] netlink_rcv_skb+0xa9/0xd0
+[17174.389888]  [<ffffffff8152bae5>] genl_rcv+0x25/0x40
+[17174.389894]  [<ffffffff8152aeee>] netlink_unicast+0x1ae/0x1f0
+[17174.389901]  [<ffffffff8152b1dd>] netlink_sendmsg+0x2ad/0x310
+[17174.389910]  [<ffffffff8106e038>] ? __wake_up_common+0x58/0x90
+[17174.389922]  [<ffffffff814ecbf9>] sock_sendmsg+0xb9/0xe0
+[17174.389929]  [<ffffffff814f2c5e>] ? sock_def_readable+0x3e/0x70
+[17174.389937]  [<ffffffff814ef2d4>] ? move_addr_to_kernel+0x44/0x60
+[17174.389946]  [<ffffffff814fa3c6>] ? verify_iovec+0x56/0xd0
+[17174.389952]  [<ffffffff814ee496>] __sys_sendmsg+0x376/0x380
+[17174.389962]  [<ffffffff81695275>] ? __bad_area_nosemaphore+0x96/0x1ea
+[17174.389971]  [<ffffffff814ecca9>] ? sockfd_lookup_light+0x29/0x90
+[17174.389977]  [<ffffffff814efabe>] ? sys_sendto+0xfe/0x130
+[17174.389987]  [<ffffffff811319d2>] ? poll_select_copy_remaining+0xf2/0x140
+[17174.389994]  [<ffffffff814efea9>] sys_sendmsg+0x49/0x90
+[17174.390003]  [<ffffffff816a7e52>] system_call_fastpath+0x16/0x1b
+[17174.390009] ---[ end trace 64a2442cf6dc929d ]---
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Hardware: thinkpad x220, rfkill is on, AP not associated.
+Probably network managed tries to connect to some AP.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |   32 ++++++++++++++++--------------
->  drivers/net/wireless/rt2x00/rt2800lib.h |    1 +
->  drivers/net/wireless/rt2x00/rt2800pci.c |   10 +--------
->  3 files changed, 19 insertions(+), 24 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 6c0a12e..8aee6d4 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -295,6 +295,20 @@ int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
->  }
->  EXPORT_SYMBOL_GPL(rt2800_wait_wpdma_ready);
->
-> +void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev)
-> +{
-> +       u32 reg;
-> +
-> +       rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
-> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
-> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
-> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
-> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
-> +       rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
-> +}
-> +EXPORT_SYMBOL_GPL(rt2800_disable_wpdma);
-> +
->  static bool rt2800_check_firmware_crc(const u8 *data, const size_t len)
->  {
->        u16 fw_crc;
-> @@ -436,10 +450,7 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
->         * Disable DMA, will be reenabled later when enabling
->         * the radio.
->         */
-> -       rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
-> -       rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
-> +       rt2800_disable_wpdma(rt2x00dev);
->
->        /*
->         * Initialize firmware.
-> @@ -2717,13 +2728,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
->        unsigned int i;
->        int ret;
->
-> -       rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
-> -       rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
-> +       rt2800_disable_wpdma(rt2x00dev);
->
->        ret = rt2800_drv_init_registers(rt2x00dev);
->        if (ret)
-> @@ -3997,10 +4002,7 @@ void rt2800_disable_radio(struct rt2x00_dev *rt2x00dev)
->  {
->        u32 reg;
->
-> -       rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
-> -       rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
-> +       rt2800_disable_wpdma(rt2x00dev);
->
->        /* Wait for DMA, ignore error */
->        rt2800_wait_wpdma_ready(rt2x00dev);
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-> index 419e36c..18a0b67 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-> @@ -208,5 +208,6 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->                        u8 buf_size);
->  int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
->                      struct survey_info *survey);
-> +void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
->
->  #endif /* RT2800LIB_H */
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 0397bbf..e499389 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -361,7 +361,6 @@ static void rt2800pci_clear_entry(struct queue_entry *entry)
->  static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
->  {
->        struct queue_entry_priv_pci *entry_priv;
-> -       u32 reg;
->
->        /*
->         * Initialize registers.
-> @@ -402,14 +401,7 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
->                                 rt2x00dev->rx[0].limit - 1);
->        rt2x00pci_register_write(rt2x00dev, RX_DRX_IDX, 0);
->
-> -       /*
-> -        * Enable global DMA configuration
-> -        */
-> -       rt2x00pci_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
-> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
-> -       rt2x00pci_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
-> +       rt2800_disable_wpdma(rt2x00dev);
->
->        rt2x00pci_register_write(rt2x00dev, DELAY_INT_CFG, 0);
->
-> --
-> 1.7.7.6
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# iwconfig
+br0       no wireless extensions.
+
+usb0      no wireless extensions.
+
+eth0      no wireless extensions.
+
+lo        no wireless extensions.
+
+sit0      no wireless extensions.
+
+wlan0     IEEE 802.11bgn  ESSID:off/any
+           Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm
+           Retry  long limit:7   RTS thr=2347 B   Fragment thr:off
+           Encryption key:off
+           Power Management:off
 
 
+# lspci
+00:00.0 Host bridge: Intel Corporation 2nd Generation Core Processor Family DRAM Controller (rev 09)
+00:02.0 VGA compatible controller: Intel Corporation 2nd Generation Core Processor Family Integrated Graphics Controller (rev 09)
+00:16.0 Communication controller: Intel Corporation 6 Series/C200 Series Chipset Family MEI Controller #1 (rev 04)
+00:19.0 Ethernet controller: Intel Corporation 82579LM Gigabit Network Connection (rev 04)
+00:1a.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #2 (rev 04)
+00:1b.0 Audio device: Intel Corporation 6 Series/C200 Series Chipset Family High Definition Audio Controller (rev 04)
+00:1c.0 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 1 (rev b4)
+00:1c.1 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 2 (rev b4)
+00:1c.3 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 4 (rev b4)
+00:1c.4 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 5 (rev b4)
+00:1c.6 PCI bridge: Intel Corporation 6 Series/C200 Series Chipset Family PCI Express Root Port 7 (rev b4)
+00:1d.0 USB controller: Intel Corporation 6 Series/C200 Series Chipset Family USB Enhanced Host Controller #1 (rev 04)
+00:1f.0 ISA bridge: Intel Corporation QM67 Express Chipset Family LPC Controller (rev 04)
+00:1f.2 SATA controller: Intel Corporation 6 Series/C200 Series Chipset Family 6 port SATA AHCI Controller (rev 04)
+00:1f.3 SMBus: Intel Corporation 6 Series/C200 Series Chipset Family SMBus Controller (rev 04)
+03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter (rev 01)
+0d:00.0 System peripheral: Ricoh Co Ltd Device e823 (rev 07)
+0e:00.0 USB controller: NEC Corporation uPD720200 USB 3.0 Host Controller (rev 04)
 
--- 
----
-Gertjan
+
+[17097.544478] wlan0: authenticate with 20:37:06:f7:37:70
+[17097.554989] wlan0: direct probe to 20:37:06:f7:37:70 (try 1/3)
+[17097.755693] wlan0: direct probe to 20:37:06:f7:37:70 (try 2/3)
+[17097.956437] wlan0: direct probe to 20:37:06:f7:37:70 (try 3/3)
+[17098.157122] wlan0: authentication with 20:37:06:f7:37:70 timed out
+[17104.408682] wlan0: authenticate with 20:37:06:f6:7d:70
+[17104.425788] wlan0: send auth to 20:37:06:f6:7d:70 (try 1/3)
+[17104.432094] wlan0: authenticated
+[17104.447964] wlan0: associate with 20:37:06:f6:7d:70 (try 1/3)
+[17104.467974] wlan0: RX AssocResp from 20:37:06:f6:7d:70 (capab=0x431 status=0 aid=81)
+[17104.467982] wlan0: associated
+[17174.389689] ------------[ cut here ]------------
+[17174.389711] WARNING: at net/wireless/mlme.c:490 cfg80211_mlme_disassoc+0x114/0x120()
+[17174.389716] Hardware name: 4291QY6
+[17174.389719] Modules linked in: fuse nfsd bridge stp llc kvm_intel kvm snd_hda_codec_hdmi snd_hda_codec_conexant snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc snd_seq_dummy snd_seq_oss snd_seq_midi thinkpad_acpi snd_rawmidi cdc_ncm usbnet mii cdc_acm cdc_wdm coretemp snd_seq_midi_event snd_seq uvcvideo videobuf2_vmalloc videobuf2_memops videobuf2_core videodev snd_seq_device snd_timer rtl8192ce rtlwifi iTCO_wdt rtl8192c_common i915 snd wmi drm_kms_helper soundcore hid_logitech_dj sdhci_pci sdhci e1000e [last unloaded: scsi_wait_scan]
+[17174.389807] Pid: 3663, comm: wpa_supplicant Not tainted 3.4.0-rc1-zurg-00013-g36b9175 #369
+[17174.389812] Call Trace:
+[17174.389824]  [<ffffffff8104548f>] warn_slowpath_common+0x7f/0xc0
+[17174.389833]  [<ffffffff810454ea>] warn_slowpath_null+0x1a/0x20
+[17174.389841]  [<ffffffff81625224>] cfg80211_mlme_disassoc+0x114/0x120
+[17174.389852]  [<ffffffff8169e28d>] ? mutex_lock+0x1d/0x50
+[17174.389859]  [<ffffffff81616a2e>] nl80211_disassociate+0xbe/0xf0
+[17174.389868]  [<ffffffff8152bd1a>] genl_rcv_msg+0x21a/0x2b0
+[17174.389875]  [<ffffffff8152bb00>] ? genl_rcv+0x40/0x40
+[17174.389882]  [<ffffffff8152b4c9>] netlink_rcv_skb+0xa9/0xd0
+[17174.389888]  [<ffffffff8152bae5>] genl_rcv+0x25/0x40
+[17174.389894]  [<ffffffff8152aeee>] netlink_unicast+0x1ae/0x1f0
+[17174.389901]  [<ffffffff8152b1dd>] netlink_sendmsg+0x2ad/0x310
+[17174.389910]  [<ffffffff8106e038>] ? __wake_up_common+0x58/0x90
+[17174.389922]  [<ffffffff814ecbf9>] sock_sendmsg+0xb9/0xe0
+[17174.389929]  [<ffffffff814f2c5e>] ? sock_def_readable+0x3e/0x70
+[17174.389937]  [<ffffffff814ef2d4>] ? move_addr_to_kernel+0x44/0x60
+[17174.389946]  [<ffffffff814fa3c6>] ? verify_iovec+0x56/0xd0
+[17174.389952]  [<ffffffff814ee496>] __sys_sendmsg+0x376/0x380
+[17174.389962]  [<ffffffff81695275>] ? __bad_area_nosemaphore+0x96/0x1ea
+[17174.389971]  [<ffffffff814ecca9>] ? sockfd_lookup_light+0x29/0x90
+[17174.389977]  [<ffffffff814efabe>] ? sys_sendto+0xfe/0x130
+[17174.389987]  [<ffffffff811319d2>] ? poll_select_copy_remaining+0xf2/0x140
+[17174.389994]  [<ffffffff814efea9>] sys_sendmsg+0x49/0x90
+[17174.390003]  [<ffffffff816a7e52>] system_call_fastpath+0x16/0x1b
+[17174.390009] ---[ end trace 64a2442cf6dc929d ]---
+[17175.587561] wlan0: authenticate with 20:37:06:f6:7d:50
+[17175.598023] wlan0: send auth to 20:37:06:f6:7d:50 (try 1/3)
+[17175.611084] wlan0: authenticated
+[17175.627938] wlan0: associate with 20:37:06:f6:7d:50 (try 1/3)
+[17175.664120] wlan0: RX AssocResp from 20:37:06:f6:7d:50 (capab=0x431 status=0 aid=171)
+[17175.664132] wlan0: associated
+[17177.652905] wlan0: deauthenticated from 20:37:06:f6:7d:50 (Reason: 7)
+[17179.019189] wlan0: authenticate with b8:be:bf:68:94:70
+[17179.034583] wlan0: direct probe to b8:be:bf:68:94:70 (try 1/3)
+[17179.235344] wlan0: direct probe to b8:be:bf:68:94:70 (try 2/3)
+[17179.436077] wlan0: direct probe to b8:be:bf:68:94:70 (try 3/3)
+[17179.636810] wlan0: authentication with b8:be:bf:68:94:70 timed out
+[17186.091097] wlan0: authenticate with 20:37:06:f6:7d:50
+[17186.104400] wlan0: send auth to 20:37:06:f6:7d:50 (try 1/3)
+[17186.108917] wlan0: authenticated
+[17186.130357] wlan0: associate with 20:37:06:f6:7d:50 (try 1/3)
+[17186.140499] wlan0: RX AssocResp from 20:37:06:f6:7d:50 (capab=0x431 status=0 aid=171)
+[17186.140511] wlan0: associated
+[17193.186198] wlan0: deauthenticating from 20:37:06:f6:7d:50 by local choice (reason=3)
+[17194.151397] wlan0: authenticate with 20:37:06:f7:36:e0
+[17194.169820] wlan0: send auth to 20:37:06:f7:36:e0 (try 1/3)
+[17194.172992] wlan0: authenticated
+[17194.190936] wlan0: associate with 20:37:06:f7:36:e0 (try 1/3)
+[17194.206369] wlan0: RX AssocResp from 20:37:06:f7:36:e0 (capab=0x431 status=0 aid=81)
+[17194.206379] wlan0: associated
+[17196.289713] ------------[ cut here ]------------
+[17196.289736] WARNING: at net/wireless/mlme.c:490 cfg80211_mlme_disassoc+0x114/0x120()
+[17196.289742] Hardware name: 4291QY6
+[17196.289746] Modules linked in: fuse nfsd bridge stp llc kvm_intel kvm snd_hda_codec_hdmi snd_hda_codec_conexant snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss snd_mixer_oss snd_pcm snd_page_alloc snd_seq_dummy snd_seq_oss snd_seq_midi thinkpad_acpi snd_rawmidi cdc_ncm usbnet mii cdc_acm cdc_wdm coretemp snd_seq_midi_event snd_seq uvcvideo videobuf2_vmalloc videobuf2_memops videobuf2_core videodev snd_seq_device snd_timer rtl8192ce rtlwifi iTCO_wdt rtl8192c_common i915 snd wmi drm_kms_helper soundcore hid_logitech_dj sdhci_pci sdhci e1000e [last unloaded: scsi_wait_scan]
+[17196.289914] Pid: 3663, comm: wpa_supplicant Tainted: G        W    3.4.0-rc1-zurg-00013-g36b9175 #369
+[17196.289920] Call Trace:
+[17196.289932]  [<ffffffff8104548f>] warn_slowpath_common+0x7f/0xc0
+[17196.289941]  [<ffffffff810454ea>] warn_slowpath_null+0x1a/0x20
+[17196.289949]  [<ffffffff81625224>] cfg80211_mlme_disassoc+0x114/0x120
+[17196.289960]  [<ffffffff8169e28d>] ? mutex_lock+0x1d/0x50
+[17196.289967]  [<ffffffff81616a2e>] nl80211_disassociate+0xbe/0xf0
+[17196.289976]  [<ffffffff8152bd1a>] genl_rcv_msg+0x21a/0x2b0
+[17196.289983]  [<ffffffff8152bb00>] ? genl_rcv+0x40/0x40
+[17196.289990]  [<ffffffff8152b4c9>] netlink_rcv_skb+0xa9/0xd0
+[17196.289996]  [<ffffffff8152bae5>] genl_rcv+0x25/0x40
+[17196.290002]  [<ffffffff8152aeee>] netlink_unicast+0x1ae/0x1f0
+[17196.290009]  [<ffffffff8152b1dd>] netlink_sendmsg+0x2ad/0x310
+[17196.290018]  [<ffffffff8106e038>] ? __wake_up_common+0x58/0x90
+[17196.290029]  [<ffffffff814ecbf9>] sock_sendmsg+0xb9/0xe0
+[17196.290037]  [<ffffffff814f2c5e>] ? sock_def_readable+0x3e/0x70
+[17196.290045]  [<ffffffff814ef2d4>] ? move_addr_to_kernel+0x44/0x60
+[17196.290053]  [<ffffffff814fa3c6>] ? verify_iovec+0x56/0xd0
+[17196.290059]  [<ffffffff814ee496>] __sys_sendmsg+0x376/0x380
+[17196.290069]  [<ffffffff81695275>] ? __bad_area_nosemaphore+0x96/0x1ea
+[17196.290078]  [<ffffffff814ecca9>] ? sockfd_lookup_light+0x29/0x90
+[17196.290084]  [<ffffffff814efabe>] ? sys_sendto+0xfe/0x130
+[17196.290094]  [<ffffffff811319d2>] ? poll_select_copy_remaining+0xf2/0x140
+[17196.290101]  [<ffffffff814efea9>] sys_sendmsg+0x49/0x90
+[17196.290110]  [<ffffffff816a7e52>] system_call_fastpath+0x16/0x1b
+[17196.290115] ---[ end trace 64a2442cf6dc929e ]---
+[17197.480213] wlan0: authenticate with 20:37:06:f6:7d:50
+[17197.490631] wlan0: send auth to 20:37:06:f6:7d:50 (try 1/3)
+[17197.492900] wlan0: authenticated
+[17197.505655] wlan0: associate with 20:37:06:f6:7d:50 (try 1/3)
+[17197.512257] wlan0: RX AssocResp from 20:37:06:f6:7d:50 (capab=0x431 status=0 aid=169)
+[17197.512263] wlan0: associated
+[17218.954237] wlan0: deauthenticating from 20:37:06:f6:7d:50 by local choice (reason=3)
+[17546.563663] wlan0: authenticate with 20:37:06:f6:7d:70
+[17546.577750] wlan0: direct probe to 20:37:06:f6:7d:70 (try 1/3)
+[17546.778108] wlan0: direct probe to 20:37:06:f6:7d:70 (try 2/3)
+[17546.978801] wlan0: direct probe to 20:37:06:f6:7d:70 (try 3/3)
+[17547.179547] wlan0: authentication with 20:37:06:f6:7d:70 timed out
+[17553.436659] wlan0: authenticate with 20:37:06:f6:7d:50
+[17553.450363] wlan0: send auth to 20:37:06:f6:7d:50 (try 1/3)
+[17553.453441] wlan0: authenticated
+[17553.472400] wlan0: associate with 20:37:06:f6:7d:50 (try 1/3)
+[17553.492820] wlan0: RX AssocResp from 20:37:06:f6:7d:50 (capab=0x431 status=0 aid=173)
+[17553.492831] wlan0: associated
