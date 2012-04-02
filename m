@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:55422 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743Ab2DHQA3 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13073 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753857Ab2DBCfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2012 12:00:29 -0400
-Received: by vbbff1 with SMTP id ff1so1884693vbb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2012 09:00:28 -0700 (PDT)
+	Sun, 1 Apr 2012 22:35:04 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Date: Sun, 8 Apr 2012 18:00:28 +0200
-Message-ID: <CAA2SeN+7FsyQKmCK62tzEzrHLVi6-H21wZ+bdTjS2rLDDdauCA@mail.gmail.com> (sfid-20120408_180032_758288_C0921866)
-Subject: [PATCH] rtlwifi: ID for Belkin Surf N300 XR
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20345.4134.204942.124914@gargle.gargle.HOWL> (sfid-20120402_043546_307028_E7FAF52A)
+Date: Mon, 2 Apr 2012 08:04:14 +0530
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Kernel Panics from ath9k
+In-Reply-To: <4F789C57.2090903@lwfinger.net>
+References: <4F789C57.2090903@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Larry Finger wrote:
+> A few weeks ago, I was trying to help an inexperienced user on the openSUSE 
+> Wireless Forum who was having "crashes" caused by his AR9285 device. The crash 
+> turned out to be a kernel panic. As expected, I was not able to help him, and I 
+> ordered one of these cards through E-bay. It just arrived, and I am able to 
+> duplicate the panics. For me, they occur when changing from a WPA2-encrypted AP 
+> to one with WPA encryption. When switching from WPA2 to WEP, the NULL 
+> dereference does not occur; however, the connection fails.
+> 
+> I captured enough info from the debugging console to know that the panic results 
+> from "BUG: unable to handle kernel NULL pointer dereference at (null)" that 
+> originates at ath_tx_start+0x2c0/0x4b0. The kernel is x86_64 and I am currently 
+> testing kernel v3.4-rc1-214-g1ac7a92 from Linus's tree. I have not yet tested 
+> the wireless-testing tree, but I do not see any commits there that appear to 
+> address this issue.
 
-I added ID for Belkin Surf N300 XR wireless usb adapter to rtlwifi driver.
+Should be fixed by this patch: http://marc.info/?l=linux-wireless&m=133282325727326&w=2
 
-Regards
-
-Lorenzo
-
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
----
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -340,6 +340,7 @@
- 	/****** 8192CU ********/
- 	{RTL_USB_DEVICE(0x050d, 0x2102, rtl92cu_hal_cfg)}, /*Belcom-Sercomm*/
- 	{RTL_USB_DEVICE(0x050d, 0x2103, rtl92cu_hal_cfg)}, /*Belcom-Edimax*/
-+	{RTL_USB_DEVICE(0x050d, 0x1004, rtl92cu_hal_cfg)}, /*Belkin-SurfN300*/
- 	{RTL_USB_DEVICE(0x0586, 0x341f, rtl92cu_hal_cfg)}, /*Zyxel -Abocom*/
- 	{RTL_USB_DEVICE(0x07aa, 0x0056, rtl92cu_hal_cfg)}, /*ATKK-Gemtek*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8178, rtl92cu_hal_cfg)}, /*Funai -Abocom*/
-
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+Sujith
