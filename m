@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:59711 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750816Ab2DSEW3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 00:22:29 -0400
-Received: by lahc1 with SMTP id c1so6406201lah.26
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 21:22:26 -0700 (PDT)
-Message-ID: <1334809343.4965.40.camel@cumari> (sfid-20120419_062233_315076_0BF08016)
-Subject: Re: wl12xx: fix DMA-API-related warnings
-From: Luciano Coelho <coelho@ti.com>
-To: Mircea Gherzan <mgherzan@gmail.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 19 Apr 2012 07:22:23 +0300
-In-Reply-To: <4F8F476B.3040800@gmail.com>
-References: <20120416104858.GA24159@elgon.mountain>
-	 <4F8F476B.3040800@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:62839 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752219Ab2DBMgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2012 08:36:45 -0400
+Date: Mon, 2 Apr 2012 14:35:43 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [PATCH 1/2] rt2x00: configure different txdesc parameters for
+ non HT channel
+Message-ID: <20120402123542.GA4567@redhat.com> (sfid-20120402_143648_498158_2E0DCE91)
+References: <1333365666-4413-1-git-send-email-sgruszka@redhat.com>
+ <CAGXE3d8C61rnWPgRU565n_FjjKTqk4pi9ncmdjxyAmEvVM-uvA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAGXE3d8C61rnWPgRU565n_FjjKTqk4pi9ncmdjxyAmEvVM-uvA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mircea,
+Hello
 
-On Thu, 2012-04-19 at 00:59 +0200, Mircea Gherzan wrote: 
-> Hi Luciano,
+On Mon, Apr 02, 2012 at 02:09:14PM +0200, Helmut Schaa wrote:
+> Why should we use PIFS for the beacon? Is that what the ralink drivers
+> are doing?
+Hmm, seems that is my own invention. I thought that should be used for
+beacons, but currently I can only find in docs, that this is only needed
+for entering PCF.
+ 
+> > +               else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
+> > +                       txdesc->u.ht.txop = TXOP_SIFS;
+> > +               else
+> > +                       txdesc->u.ht.txop = TXOP_BACKOFF;
+> > +
+> > +               txdesc->u.ht.mcs = txrate->idx;
+> > +
 > 
-> Am 16.04.2012 12:48, schrieb Dan Carpenter:
-> > Hello Mircea Gherzan,
-> > 
-> > The patch 690142e98826: "wl12xx: fix DMA-API-related warnings" from
-> > Mar 17, 2012, leads to the following Smatch warning:
-> > drivers/net/wireless/ti/wlcore/cmd.c:126 wl1271_cmd_wait_for_event_or_timeout()
-> > 	 error: no modifiers for allocation.
+> This lacks short preamble handling. Something like:
 > 
-> How would you prefer my fix for this issue: as a new version of the
-> original patch or as a separate new patch?
+> if (txrate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+>   txdesc->u.ht.mcs |= 0x08;
+> 
+> Actually, you could just shuffle the code a bit such that the rate setup
+> happens before all the HT stuff, no?
+Make sense.
 
-I have already applied and pushed your patch, so send a separate new
-patch on top of it, please.
-
-Actually, Dan already sent one fix, but it only fixes one place, I think
-we need to fix a couple more places too:
-
-http://www.spinics.net/lists/linux-wireless/msg88626.html
-
--- 
-Cheers,
-Luca.
-
+Stanislaw
