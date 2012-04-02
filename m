@@ -1,60 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:51188 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755694Ab2DORmb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 13:42:31 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/2] ath9k: fix tx power settings for AR9287
-Date: Sun, 15 Apr 2012 20:38:06 +0200
-Message-Id: <1334515086-16150-2-git-send-email-juhosg@openwrt.org> (sfid-20120415_194305_535947_F1CCF976)
-In-Reply-To: <1334515086-16150-1-git-send-email-juhosg@openwrt.org>
-References: <1334515086-16150-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:56644 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047Ab2DBN0x convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2012 09:26:53 -0400
+Received: by dake40 with SMTP id e40so2446596dak.11
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 06:26:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1333365666-4413-2-git-send-email-sgruszka@redhat.com>
+References: <1333365666-4413-1-git-send-email-sgruszka@redhat.com>
+	<1333365666-4413-2-git-send-email-sgruszka@redhat.com>
+Date: Mon, 2 Apr 2012 15:26:52 +0200
+Message-ID: <CAGXE3d9HHCYHmJu6-GUTD=9KZxs3vYq9c-qnRa=pHWabYyWuWQ@mail.gmail.com> (sfid-20120402_152656_489934_9D32ABAA)
+Subject: Re: [PATCH 2/2] rt2x00: do not generate seqno in h/w if QOS is disabled
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'ath9k_hw_update_regulatory_maxpower'
-helper function has been introduced by
-commit a55f858852e4345d0a31af593c46738ca8614bff
-(ath9k_hw: Cleanup TX power calculation for AR9287).
+On Mon, Apr 2, 2012 at 1:21 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> This is workaround H/W or F/W bug, see in code comments. Without the fix
+> ping can receive duplicated ICMP frames while associated with legacy AP.
+>
+> Reported-by: Walter Goldens <goldenstranger@yahoo.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Updating of the max_power_level value has been moved
-into the helper function in that change, however the
-removed code from 'ath9k_hw_ar9287_set_txpower' has
-not been replaced with a call of the new helper
-function.
+I don't have a better idea right now :) so this workaround looks suitable to me.
 
-Due to that missing call, retrieving tx power for 2x2
-and 3x3 chainmask is not handled properly. During the
-calculation of the tx power for 2x2 and 3x3 chainmasks
-the values are reduced. Those reductions must be
-compensated during retrieving.
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Fix this by adding the missing call of the helper
-function.
+Thanks for tracking this down Stanislaw!
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Acked-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/eeprom_9287.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index f272236..b34e8b2 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -824,6 +824,8 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 			regulatory->max_power_level = ratesArray[i];
- 	}
- 
-+	ath9k_hw_update_regulatory_maxpower(ah);
-+
- 	if (test)
- 		return;
- 
--- 
-1.7.2.1
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00.h      |    1 +
+>  drivers/net/wireless/rt2x00/rt2x00mac.c   |   10 ++++++++++
+>  drivers/net/wireless/rt2x00/rt2x00queue.c |   15 +++++++++++++--
+>  3 files changed, 24 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 8de9bfc..5583214 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -693,6 +693,7 @@ enum rt2x00_state_flags {
+>        CONFIG_CHANNEL_HT40,
+>        CONFIG_POWERSAVING,
+>        CONFIG_HT_DISABLED,
+> +       CONFIG_QOS_DISABLED,
+>
+>        /*
+>         * Mark we currently are sequentially reading TX_STA_FIFO register
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> index 2df2eb6..b49773e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+> @@ -709,9 +709,19 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+>                        rt2x00dev->intf_associated--;
+>
+>                rt2x00leds_led_assoc(rt2x00dev, !!rt2x00dev->intf_associated);
+> +
+> +               clear_bit(CONFIG_QOS_DISABLED, &rt2x00dev->flags);
+>        }
+>
+>        /*
+> +        * Check for access point which do not support 802.11e . We have to
+> +        * generate data frames sequence number in S/W for such AP, because
+> +        * of H/W bug.
+> +        */
+> +       if (changes & BSS_CHANGED_QOS && !bss_conf->qos)
+> +               set_bit(CONFIG_QOS_DISABLED, &rt2x00dev->flags);
+> +
+> +       /*
+>         * When the erp information has changed, we should perform
+>         * additional configuration steps. For all other changes we are done.
+>         */
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index f7403cf..5019a3e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -213,8 +213,19 @@ static void rt2x00queue_create_tx_descriptor_seq(struct rt2x00_dev *rt2x00dev,
+>
+>        __set_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags);
+>
+> -       if (!test_bit(REQUIRE_SW_SEQNO, &rt2x00dev->cap_flags))
+> -               return;
+> +       if (!test_bit(REQUIRE_SW_SEQNO, &rt2x00dev->cap_flags)) {
+> +               /*
+> +                * rt2800 has a H/W (or F/W) bug, device incorrectly increase
+> +                * seqno on retransmited data (non-QOS) frames. To workaround
+> +                * the problem let's generate seqno in software if QOS is
+> +                * disabled.
+> +                */
+> +               if (test_bit(CONFIG_QOS_DISABLED, &rt2x00dev->flags))
+> +                       __clear_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags);
+> +               else
+> +                       /* H/W will generate sequence number */
+> +                       return;
+> +       }
+>
+>        /*
+>         * The hardware is not able to insert a sequence number. Assign a
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
