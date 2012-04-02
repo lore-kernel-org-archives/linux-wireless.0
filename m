@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s23.blu0.hotmail.com ([65.55.111.98]:52228 "EHLO
-	blu0-omc2-s23.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751919Ab2DZEYe (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:47851 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751878Ab2DBNUD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 00:24:34 -0400
-Message-ID: <BLU0-SMTP458C69159D873B590212AF5AC240@phx.gbl> (sfid-20120426_062438_847876_9890051E)
-From: Nathan Hintz <nlhintz@hotmail.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
-	Nathan Hintz <nlhintz@hotmail.com>
-Subject: [PATCH v2 6/6] bcma: Add flush for BCMA_RESET_CTL write
-Date: Wed, 25 Apr 2012 21:23:54 -0700
-In-Reply-To: <1335414234-11424-1-git-send-email-nlhintz@hotmail.com>
-References: <1335414234-11424-1-git-send-email-nlhintz@hotmail.com>
+	Mon, 2 Apr 2012 09:20:03 -0400
+Received: by dake40 with SMTP id e40so2438845dak.11
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 06:20:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20120402123542.GA4567@redhat.com>
+References: <1333365666-4413-1-git-send-email-sgruszka@redhat.com>
+	<CAGXE3d8C61rnWPgRU565n_FjjKTqk4pi9ncmdjxyAmEvVM-uvA@mail.gmail.com>
+	<20120402123542.GA4567@redhat.com>
+Date: Mon, 2 Apr 2012 15:20:02 +0200
+Message-ID: <CAGXE3d_7ONx0=scmicYkvgjYM7ROYuHHNfNbO4xMJfmwM+rbrA@mail.gmail.com> (sfid-20120402_152013_358314_AE962168)
+Subject: Re: [PATCH 1/2] rt2x00: configure different txdesc parameters for non
+ HT channel
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Apr 2, 2012 at 2:35 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Mon, Apr 02, 2012 at 02:09:14PM +0200, Helmut Schaa wrote:
+>> Why should we use PIFS for the beacon? Is that what the ralink drivers
+>> are doing?
+> Hmm, seems that is my own invention. I thought that should be used for
+> beacons, but currently I can only find in docs, that this is only needed
+> for entering PCF.
 
-Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
----
- drivers/bcma/core.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Ok, so if we're running in non-HT mode we could just always stick to
+TXOP_BACKOFF and only use SIFS for bursts? Makes sense I guess.
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 893f6e0..c4e6deb 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
- 	udelay(10);
- 
- 	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
-+	bcma_aread32(core, BCMA_RESET_CTL);
- 	udelay(1);
- }
- EXPORT_SYMBOL_GPL(bcma_core_disable);
--- 
-1.7.7.6
-
+Thanks,
+Helmut
