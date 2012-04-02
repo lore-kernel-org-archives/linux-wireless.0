@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3445 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754467Ab2DKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:53:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 4/9] brcm80211: fmac: add frame header extension support
-Date: Wed, 11 Apr 2012 11:52:46 +0200
-Message-ID: <1334137971-3972-5-git-send-email-arend@broadcom.com> (sfid-20120411_115336_858660_CF6F51E3)
-In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+Received: from mail-qa0-f42.google.com ([209.85.216.42]:55551 "EHLO
+	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707Ab2DBAK0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Apr 2012 20:10:26 -0400
+Received: by qafi31 with SMTP id i31so2246804qaf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2012 17:10:25 -0700 (PDT)
+From: Ben Gamari <bgamari.foss@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: wl1271 NVS file loading
+In-Reply-To: <877gxz6n9i.fsf@gmail.com>
+References: <877gxz6n9i.fsf@gmail.com>User-Agent: Notmuch/0.12+70~g9ceacb2 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
+Date: Sun, 01 Apr 2012 20:10:23 -0400
+Message-ID: <87pqbrj8nk.fsf@gmail.com> (sfid-20120402_021029_290191_10DF7FD8)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+Ben Gamari <bgamari.foss@gmail.com> writes:
 
-A header extension is introduced in the received frame to provide
-extra space for dongle information. This won't affect current
-supported chipset since the data_offset is 0. But it's necessary for
-adding support for future chipset.
+> Hello all,
+>
+> I'm running a PandaBoard with Linaro 12.03 and a patched 3.3
+> kernel. While wl1271 works perfectly with the Linaro kernel, it fails to
+> load in the case of my patched kernel with,
+>
+>      wl12xx: ERROR could not get nvs file ti-connectivity/wl1271-nvs.bin: -2
+>
+> What is even more perplexing is the fact that the file in question
+> clearly exists,
+>
+>         $ ls /lib/firmware/ti-connectivity/*-nvs.bin -l
+>         -rw-r--r-- 1 root root  912 2012-03-24 16:28 /lib/firmware/ti-connectivity/wl1271-nvs.bin
+>         -rw-r--r-- 1 root root  912 2012-03-24 16:28 /lib/firmware/ti-connectivity/wl127x-nvs.bin
+>         -rw-r--r-- 1 root root 1113 2012-03-24 16:28 /lib/firmware/ti-connectivity/wl128x-nvs.bin
+>         lrwxrwxrwx 1 root root   14 2012-01-24 13:10 /lib/firmware/ti-connectivity/wl12xx-nvs.bin -> wl127x-nvs.bin
+>
+> It seems that there is no easy way to troubleshoot udev's
+> /lib/udev/firmware script, so I have really no way of tracking this down
+> any further. Any ideas what might be going on here?
+>
+It turns out I had neglected to compile wl1271 as a module and the
+firmware hadn't made it into the initrd.  I apologize for the noise.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Cheers,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-index b3e3b7f..a5c15ca 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-@@ -421,6 +421,7 @@ int brcmf_proto_hdrpull(struct device *dev, int *ifidx,
- 	pktbuf->priority = h->priority & BDC_PRIORITY_MASK;
- 
- 	skb_pull(pktbuf, BDC_HEADER_LEN);
-+	skb_pull(pktbuf, h->data_offset << 2);
- 
- 	return 0;
- }
--- 
-1.7.5.4
-
+- Ben
 
