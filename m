@@ -1,115 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:48686 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756427Ab2DNWJ1 convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45929 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751741Ab2DBPqq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 18:09:27 -0400
+	Mon, 2 Apr 2012 11:46:46 -0400
+Received: by yhmm54 with SMTP id m54so1264431yhm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 08:46:46 -0700 (PDT)
+Message-ID: <4F79C9E2.5000109@lwfinger.net> (sfid-20120402_174650_331918_512C8080)
+Date: Mon, 02 Apr 2012 10:46:42 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20120414232124.1ffd7ac9@stein>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-	<20120413154216.476a02ac@stein>
-	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
-	<20120414094137.54a7f213@stein>
-	<CAMP44s2Un-M2OCmuRQGpGsHR21gH=S7oJKx4Ci8tvYVCCSitUw@mail.gmail.com>
-	<20120414195559.3d5ab944@stein>
-	<CAMP44s0ngzwkbQapTip=oW1b5m2uO5zCzbXHVqHXwT2+Wpgo_A@mail.gmail.com>
-	<20120414232124.1ffd7ac9@stein>
-Date: Sun, 15 Apr 2012 01:09:25 +0300
-Message-ID: <CAMP44s05k3YkXSLGdYjJ42d+uEM+bLS9uZ+2ztUBWqcO6kyUtA@mail.gmail.com> (sfid-20120415_000942_778178_BB8A756D)
-Subject: Re: [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: Forest Bond <forest@alittletooquiet.net>
+CC: linux-wireless@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Jingjun Wu <jingjun_wu@realsil.com.cn>
+Subject: Re: [PATCH 1/2] rtl8192de: Clean up and fix 92D cut version constants
+ and macros.
+References: <20120402142525.GA20611@alittletooquiet.net>
+In-Reply-To: <20120402142525.GA20611@alittletooquiet.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 15, 2012 at 12:21 AM, Stefan Richter
-<stefanr@s5r6.in-berlin.de> wrote:
-> On Apr 14 Felipe Contreras wrote:
->> On Sat, Apr 14, 2012 at 8:55 PM, Stefan Richter
->> <stefanr@s5r6.in-berlin.de> wrote:
->> > Generally, "commit + push out" makes it undroppable.  In case of -stable,
->> > commit/ push out/ tag are close and virtually identical.
->> >
->> > After a change was pushed out, the choice narrows down to add a reverting
->> > change for a subsequent release or to rebase to a point before the
->> > defective commit.  The latter is not done to -stable, obviously.  (3.3.2
->> > is not being restarted from 3.3 if a regression from 3.3 to 3.3.1 was
->> > discovered.)
->>
->> That's irrelevant; whether you rebase and drop the patch, or you
->> revert it, the resulting code is *exactly* the same. It's also the
->> same if Greg drops it from his quilt queue before pushing (assuming
->> that's what he uses).
+On 04/02/2012 09:25 AM, Forest Bond wrote:
+> From: Forest Bond<forest.bond@rapidrollout.com>
 >
-> The result may be the same (sometimes it actually isn't),
-
-If the result is not the same, then that's a different situation; I'm
-talking about true reverts/drops in which the result is *exactly* the
-same. OK?
-
->> Let's avoid this semantic red herring, by undroppable I mean
->> unrevertable, or undiscardable, or anything that effectively makes the
->> patch not be there.
+> The previous definitions included both {B,C,D,E}_CUT_VERSION and
+> CHIP_92D_{C,D}_CUT with conflicting values for the C and D cut versions,
+> and literal hex values were used in the IS_92D_{C,D,E}_CUT macros.  So
+> we clean all this up and in doing so enable cut-specific code paths for
+> cuts C and D, which would not have been executed because the
+> CHIP_92D_{C,D}_CUT constants were wrong and the cut version was thus
+> recorded incorrectly.
 >
-> How do you "make it not be there"?  By adding a reverting patch.
+> Signed-off-by: Forest Bond<forest.bond@rapidrollout.com>
+
+Thanks for working on this driver. As there has been no traffic regarding its 
+usage, I have not done much with it. I am in possession of two models, 
+RTL8192DE-VC and RTL8192DE-VS. My recollection is that the VS did not work, but 
+I need to test again. Perhaps your changes are what was needed.
+
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192de/def.h |   17 ++++++++---------
+>   1 files changed, 8 insertions(+), 9 deletions(-)
 >
-> The reverting patch needs to come from somewhere, and the only
-> disagreement is basically through which channels the patch should be
-> allowed to come, or which qualifications this reverting patch should
-> fulfill.
-
-If the patch was tagged in a release, yes, but if the patch was in the
-queue, but never tagged, it can be dropped.
-
-The question that has not been answered is what makes them different, and why.
-
->> >> But *why*? You say you *really* need to problem to fixed in mainline,
->> >> that's why it cannot be dropped, but that applies also to patches in
->> >> the queue *before* the tag is made, doesn't it? If you find a patch in
->> >> the stable review queue causes problems, why don't you leave it there?
->> >
->> > As Willy wrote, that's actually what is done sometimes.  I didn't know
->> > that.
->>
->> Don't avoid the question.
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+> index eafdf76..260ac7e 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+> @@ -151,9 +151,6 @@ enum version_8192d {
 >
-> Willy answered that, hence I didn't think I have to.  The patch can in
-> fact be kept in the stable queue as a reminder, it just should not be
-> applied to stable as long as there is no resolution for mainline.
-
->> I don't mean just leave it in the queue, I mean leave it so it gets
->> tagged in the release.
+>   /* for 92D */
+>   #define CHIP_92D_SINGLEPHY		BIT(9)
+> -#define C_CUT_VERSION			BIT(13)
+> -#define D_CUT_VERSION			((BIT(12)|BIT(13)))
+> -#define E_CUT_VERSION			BIT(14)
 >
-> That would be even sillier than the discussion which we are having.
+>   /* Chip specific */
+>   #define CHIP_BONDING_IDENTIFIER(_value)	(((_value)>>22)&0x3)
+> @@ -173,7 +170,11 @@ enum version_8192d {
+>   #define RF_TYPE_1T2R			BIT(4)
+>   #define RF_TYPE_2T2R			BIT(5)
+>   #define CHIP_VENDOR_UMC			BIT(7)
+> -#define B_CUT_VERSION			BIT(12)
+> +#define CHIP_92D_A_CUT			(0<<12)
+> +#define CHIP_92D_B_CUT			(1<<12)
+> +#define CHIP_92D_C_CUT			(2<<12)
+> +#define CHIP_92D_D_CUT			(3<<12)
+> +#define CHIP_92D_E_CUT			(4<<12)
 
-Exactly!
+Please keep the BIT(X) notation here to make it consistent.
 
-I'm glad you see it's silly to put bad patches in the stable release
-just so they get properly tracked for mainline, but that's exactly
-what you arguing for.
+>
+>   /* MASK */
+>   #define IC_TYPE_MASK			(BIT(0)|BIT(1)|BIT(2))
+> @@ -205,15 +206,13 @@ enum version_8192d {
+>   					 CHIP_92D) ? true : false)
+>   #define IS_92D_C_CUT(version)		((IS_92D(version)) ?		\
+>   				 ((GET_CVID_CUT_VERSION(version) ==	\
+> -				 0x2000) ? true : false) : false)
+> +				 CHIP_92D_C_CUT) ? true : false) : false)
+>   #define IS_92D_D_CUT(version)			((IS_92D(version)) ?	\
+>   				 ((GET_CVID_CUT_VERSION(version) ==	\
+> -				 0x3000) ? true : false) : false)
+> +				 CHIP_92D_D_CUT) ? true : false) : false)
+>   #define IS_92D_E_CUT(version)		((IS_92D(version)) ?		\
+>   				 ((GET_CVID_CUT_VERSION(version) ==	\
+> -				 0x4000) ? true : false) : false)
+> -#define CHIP_92D_C_CUT			BIT(10)
+> -#define CHIP_92D_D_CUT			BIT(11)
+> +				 CHIP_92D_E_CUT) ? true : false) : false)
+>
+>   enum rf_optype {
+>   	RF_OP_BY_SW_3WIRE = 0,
 
-Now all you have to do is explain why it's silly before the tag, but not after.
+These IS_92D_X_CUT macros are ugly, but I don't see any way to improve them. I 
+guess we are stuck with them.
 
--- 
-Felipe Contreras
+Larry
