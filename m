@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57140 "EHLO mga01.intel.com"
+Received: from mail.skyhub.de ([78.46.96.112]:59703 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755573Ab2DPWBa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:01:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 09/16] iwlwifi: set size of ucode section
-Date: Mon, 16 Apr 2012 14:57:03 -0700
-Message-Id: <1334613430-30720-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120417_000157_488697_7CFCCC84)
-In-Reply-To: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751333Ab2DBUx0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2012 16:53:26 -0400
+Date: Mon, 2 Apr 2012 22:53:22 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Joe Perches <joe@perches.com>
+Subject: Re: CONFIG_RTLWIFI_DEBUG default y
+Message-ID: <20120402205322.GA31126@liondog.tnic> (sfid-20120402_225347_740534_57F992E1)
+References: <20120402164920.GA13264@x1.osrc.amd.com>
+ <1333385618.15422.17.camel@joe2Laptop>
+ <20120402171733.GB13264@x1.osrc.amd.com>
+ <4F79E5A5.9000004@lwfinger.net>
+ <20120402203211.GA27889@liondog.tnic>
+ <4F7A103E.90007@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4F7A103E.90007@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+On Mon, Apr 02, 2012 at 03:46:54PM -0500, Larry Finger wrote:
+> Users will see nothing more than before!
+> 
+> Before CONFIG_RTLWIFI_DEBUG was allowed to be set, the driver always
+> compiled in the debug code, but only those messages with the
+> DBG_EMERG code were actually output. With the parameter set to Y,
+> nothing changed. If the module is loaded with the "debug=X" option,
+> where X is greater than 0, then other messages will be seen. That
+> dynamic setting of the level is enough.
+> 
+> The only change when the configuration parameter is set to N is that
+> the entire debug setup compiles away. The driver is a lot smaller,
+> but there is no debugging.
 
-Set size of firmware section in mvm bundle format.
+Yes, yes, I knew there should be some sane default there,
+rtlpriv->dbg.global_debuglevel remains 0 which is DBG_EMERG. I stand
+corrected, thanks.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-drv.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index fa12f73..da4d85a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -284,6 +284,7 @@ static int iwl_store_ucode_sec(struct iwl_firmware_pieces *pieces,
- 
- 	sec->offset = le32_to_cpu(sec_parse->offset);
- 	sec->data = sec_parse->data;
-+	sec->size = size - sizeof(sec_parse->offset);
- 
- 	++img->sec_counter;
- 
 -- 
-1.7.0.4
-
+Regards/Gruss,
+    Boris.
