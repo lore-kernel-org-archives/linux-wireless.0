@@ -1,691 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38795 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754349Ab2DCO2w (ORCPT
+Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:51001 "EHLO
+	na3sys009amx257.postini.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751333Ab2DBIjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 10:28:52 -0400
-Message-ID: <1333463330.3574.22.camel@jlt3.sipsolutions.net> (sfid-20120403_162858_213945_8C96DC06)
-Subject: [PATCH v3 2/2] mac80211: add improved HW queue control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 03 Apr 2012 16:28:50 +0200
-In-Reply-To: <1333441784.3574.4.camel@jlt3.sipsolutions.net> (sfid-20120403_102952_948276_9E4FF728)
-References: <20120403082416.559209159@sipsolutions.net>
-	 (sfid-20120403_102724_757636_B390B8A7) <1333441784.3574.4.camel@jlt3.sipsolutions.net>
-	 (sfid-20120403_102952_948276_9E4FF728)
+	Mon, 2 Apr 2012 04:39:08 -0400
+Received: by bkwj5 with SMTP id j5so2221200bkw.30
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 01:39:05 -0700 (PDT)
+Message-ID: <1333355941.16990.23.camel@cumari> (sfid-20120402_103913_801161_D730198C)
+Subject: Re: wl1271 watchdog interrupt
+From: Luciano Coelho <coelho@ti.com>
+To: Gary Thomas <gary@mlbassoc.com>
+Cc: Troy Kisky <troy.kisky@boundarydevices.com>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 02 Apr 2012 11:39:01 +0300
+In-Reply-To: <4F71CDC7.2010207@mlbassoc.com>
+References: <4F6A7FD0.8090404@boundarydevices.com>
+	 <4F71CDC7.2010207@mlbassoc.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-mac80211 currently only supports one hardware queue
-per AC. This is already problematic for off-channel
-uses since if we go off channel while the BE queue
-is full and then try to send an off-channel frame
-the frame will never go out. This will become worse
-when we support multi-channel since then a queue on
-one channel might be full, but we have to stop the
-software queue for all channels. That is obviously
-not desirable.
+On Tue, 2012-03-27 at 08:25 -0600, Gary Thomas wrote: 
+> On 2012-03-21 19:26, Troy Kisky wrote:
+> > Hi all
+> >
+> > We have a new board using the wl1271. As long as I keep it busy,
+> > everything is fine. But once it becomes idle I get,
+> > "wl12xx: ERROR watchdog interrupt received! starting recovery."
+> >
+> > Has this been seen by others?
+> 
+> I'm getting very similar problems and my messages to this list (and the
+> wl12xx maintainer) are now waiting for nearly two weeks for an answer.
+> 
+> Can someone help with these wl12xx issues?
 
-To address this problem allow drivers to register
-more hardware queues, and allow them to map them to
-virtual interfaces. When they stop a hardware queue
-the corresponding AC software queues on the correct
-interfaces will be stopped as well. Additionally,
-there's an off-channel queue to solve that problem
-and a per-interface after-DTIM beacon queue. This
-allows drivers to manage software queues closer to
-how the hardware works.
+Sorry for the delay, I've been busy traveling and on vacations in the
+past weeks.
 
-Currently, there's a limit of 16 hardware queues.
-This may or may not be sufficient, we can adjust it
-as needed.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-v2: fix aggregation TX queue number
-v3: fix error goto in ieee80211_do_open (thanks Eliad)
+> > I'm using compat-wireless-2012-01-26 and my kernel is based on 3.0
+> >
+> > Other relevant log messages:
+> > cfg80211: Calling CRDA to update world regulatory domain
+> > add wake up source irq 108
+> > wl12xx: loaded
+> > wl12xx: firmware booted (Rev 6.3.0.0.77)
+> > wlan0: authenticate with 00:12:17:31:67:e7 (try 1)
+> > wlan0: authenticated
+> > wlan0: associate with 00:12:17:31:67:e7 (try 1)
+> > wlan0: RX AssocResp from 00:12:17:31:67:e7 (capab=0x411 status=0 aid=3)
+> > wlan0: associated
+> > wlan0: moving STA 00:12:17:31:67:e7 to state 1
+> > wlan0: moving STA 00:12:17:31:67:e7 to state 2
+> > wlan0: moving STA 00:12:17:31:67:e7 to state 3
+> > wl12xx: Association completed.
+> >
+> > .......
+> > wl12xx: ERROR watchdog interrupt received! starting recovery.
+> > wl12xx: Reading FW panic log
+> > wl12xx: ERROR command complete timeout
 
- include/net/mac80211.h     |   81 ++++++++++++++++++++++++++++++++++++++++++---
- net/mac80211/agg-tx.c      |   39 +++++++++++----------
- net/mac80211/cfg.c         |    6 +++
- net/mac80211/ieee80211_i.h |    1 
- net/mac80211/iface.c       |   62 ++++++++++++++++++++++++++++++++++
- net/mac80211/main.c        |    6 +++
- net/mac80211/tx.c          |   38 ++++++++++++++++-----
- net/mac80211/util.c        |   48 +++++++++++++++++++++-----
- 8 files changed, 239 insertions(+), 42 deletions(-)
+This is a firmware bug.  Can you please take the contents
+of /sys/bus/platform/drivers/wl12xx_driver/wl12xx/fwlog and send it to
+us so we can take a look at what's going on?
 
---- a/include/net/mac80211.h	2012-04-03 10:21:49.000000000 +0200
-+++ b/include/net/mac80211.h	2012-04-03 14:36:03.000000000 +0200
-@@ -93,9 +93,11 @@
-  * @IEEE80211_MAX_QUEUES: Maximum number of regular device queues.
-  */
- enum ieee80211_max_queues {
--	IEEE80211_MAX_QUEUES =		4,
-+	IEEE80211_MAX_QUEUES =		16,
- };
- 
-+#define IEEE80211_INVAL_HW_QUEUE	0xff
-+
- /**
-  * enum ieee80211_ac_numbers - AC numbers as used in mac80211
-  * @IEEE80211_AC_VO: voice
-@@ -520,7 +522,7 @@ struct ieee80211_tx_rate {
-  *
-  * @flags: transmit info flags, defined above
-  * @band: the band to transmit on (use for checking for races)
-- * @reserved: reserved for future use
-+ * @hw_queue: HW queue to put the frame on, skb_get_queue_mapping() gives the AC
-  * @ack_frame_id: internal frame ID for TX status, used internally
-  * @control: union for control data
-  * @status: union for status data
-@@ -536,7 +538,7 @@ struct ieee80211_tx_info {
- 	u32 flags;
- 	u8 band;
- 
--	u8 reserved;
-+	u8 hw_queue;
- 
- 	u16 ack_frame_id;
- 
-@@ -887,6 +889,8 @@ enum ieee80211_vif_flags {
-  *	these need to be set (or cleared) when the interface is added
-  *	or, if supported by the driver, the interface type is changed
-  *	at runtime, mac80211 will never touch this field
-+ * @hw_queue: hardware queue for each AC
-+ * @cab_queue: content-after-beacon (DTIM beacon really) queue, AP mode only
-  * @drv_priv: data area for driver use, will always be aligned to
-  *	sizeof(void *).
-  */
-@@ -895,7 +899,12 @@ struct ieee80211_vif {
- 	struct ieee80211_bss_conf bss_conf;
- 	u8 addr[ETH_ALEN];
- 	bool p2p;
-+
-+	u8 cab_queue;
-+	u8 hw_queue[IEEE80211_NUM_ACS];
-+
- 	u32 driver_flags;
-+
- 	/* must be last */
- 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
- };
-@@ -1177,6 +1186,11 @@ enum sta_notify_cmd {
-  * @IEEE80211_HW_WANT_MONITOR_VIF: The driver would like to be informed of
-  *	a virtual monitor interface when monitor interfaces are the only
-  *	active interfaces.
-+ *
-+ * @IEEE80211_HW_QUEUE_CONTROL: The driver wants to control per-interface
-+ *	queue mapping in order to use different queues (not just one per AC)
-+ *	for different virtual interfaces. See the doc section on HW queue
-+ *	control for more details.
-  */
- enum ieee80211_hw_flags {
- 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
-@@ -1199,7 +1213,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
- 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
- 	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
--	/* reuse bit 20 */
-+	IEEE80211_HW_QUEUE_CONTROL			= 1<<20,
- 	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
- 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
- 	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
-@@ -1269,6 +1283,9 @@ enum ieee80211_hw_flags {
-  * @max_tx_aggregation_subframes: maximum number of subframes in an
-  *	aggregate an HT driver will transmit, used by the peer as a
-  *	hint to size its reorder buffer.
-+ *
-+ * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
-+ *	(if %IEEE80211_HW_QUEUE_CONTROL is set)
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -1289,6 +1306,7 @@ struct ieee80211_hw {
- 	u8 max_rate_tries;
- 	u8 max_rx_aggregation_subframes;
- 	u8 max_tx_aggregation_subframes;
-+	u8 offchannel_tx_hw_queue;
- };
- 
- /**
-@@ -1697,6 +1715,61 @@ void ieee80211_free_txskb(struct ieee802
-  */
- 
- /**
-+ * DOC: HW queue control
-+ *
-+ * Before HW queue control was introduced, mac80211 only had a single static
-+ * assignment of per-interface AC software queues to hardware queues. This
-+ * was problematic for a few reasons:
-+ * 1) off-channel transmissions might get stuck behind other frames
-+ * 2) multiple virtual interfaces couldn't be handled correctly
-+ * 3) after-DTIM frames could get stuck behind other frames
-+ *
-+ * To solve this, hardware typically uses multiple different queues for all
-+ * the different usages, and this needs to be propagated into mac80211 so it
-+ * won't have the same problem with the software queues.
-+ *
-+ * Therefore, mac80211 now offers the %IEEE80211_HW_QUEUE_CONTROL capability
-+ * flag that tells it that the driver implements its own queue control. To do
-+ * so, the driver will set up the various queues in each &struct ieee80211_vif
-+ * and the offchannel queue in &struct ieee80211_hw. In response, mac80211 will
-+ * use those queue IDs in the hw_queue field of &struct ieee80211_tx_info and
-+ * if necessary will queue the frame on the right software queue that mirrors
-+ * the hardware queue.
-+ * Additionally, the driver has to then use these HW queue IDs for the queue
-+ * management functions (ieee80211_stop_queue() et al.)
-+ *
-+ * The driver is free to set up the queue mappings as needed, multiple virtual
-+ * interfaces may map to the same hardware queues if needed. The setup has to
-+ * happen during add_interface or change_interface callbacks. For example, a
-+ * driver supporting station+station and station+AP modes might decide to have
-+ * 10 hardware queues to handle different scenarios:
-+ *
-+ * 4 AC HW queues for 1st vif: 0, 1, 2, 3
-+ * 4 AC HW queues for 2nd vif: 4, 5, 6, 7
-+ * after-DTIM queue for AP:   8
-+ * off-channel queue:         9
-+ *
-+ * It would then set up the hardware like this:
-+ *   hw.offchannel_tx_hw_queue = 9
-+ *
-+ * and the first virtual interface that is added as follows:
-+ *   vif.hw_queue[IEEE80211_AC_VO] = 0
-+ *   vif.hw_queue[IEEE80211_AC_VI] = 1
-+ *   vif.hw_queue[IEEE80211_AC_BE] = 2
-+ *   vif.hw_queue[IEEE80211_AC_BK] = 3
-+ *   vif.cab_queue = 8 // if AP mode, otherwise %IEEE80211_INVAL_HW_QUEUE
-+ * and the second virtual interface with 4-7.
-+ *
-+ * If queue 6 gets full, for example, mac80211 would only stop the second
-+ * virtual interface's BE queue since virtual interface queues are per AC.
-+ *
-+ * Note that the vif.cab_queue value should be set to %IEEE80211_INVAL_HW_QUEUE
-+ * whenever the queue is not used (i.e. the interface is not in AP mode) if the
-+ * queue could potentially be shared since mac80211 will look at cab_queue when
-+ * a queue is stopped/woken even if the interface is not in AP mode.
-+ */
-+
-+/**
-  * enum ieee80211_filter_flags - hardware filter flags
-  *
-  * These flags determine what the filter in hardware should be
---- a/net/mac80211/iface.c	2012-04-03 14:34:55.000000000 +0200
-+++ b/net/mac80211/iface.c	2012-04-03 16:26:18.000000000 +0200
-@@ -149,6 +149,34 @@ static int ieee80211_check_concurrent_if
- 	return 0;
- }
- 
-+static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata)
-+{
-+	int n_queues = sdata->local->hw.queues;
-+	int i;
-+
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+		if (WARN_ON_ONCE(sdata->vif.hw_queue[i] ==
-+				 IEEE80211_INVAL_HW_QUEUE))
-+			return -EINVAL;
-+		if (WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
-+				 n_queues))
-+			return -EINVAL;
-+	}
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_AP) {
-+		sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
-+		return 0;
-+	}
-+
-+	if (WARN_ON_ONCE(sdata->vif.cab_queue == IEEE80211_INVAL_HW_QUEUE))
-+		return -EINVAL;
-+
-+	if (WARN_ON_ONCE(sdata->vif.cab_queue >= n_queues))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
- void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
- 				    const int offset)
- {
-@@ -169,6 +197,20 @@ void ieee80211_adjust_monitor_flags(stru
- #undef ADJUST
- }
- 
-+static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	int i;
-+
-+	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-+		if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
-+			sdata->vif.hw_queue[i] = IEEE80211_INVAL_HW_QUEUE;
-+		else
-+			sdata->vif.hw_queue[i] = i;
-+	}
-+	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
-+}
-+
- static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
-@@ -190,6 +232,8 @@ static int ieee80211_add_virtual_monitor
- 	snprintf(sdata->name, IFNAMSIZ, "%s-monitor",
- 		 wiphy_name(local->hw.wiphy));
- 
-+	ieee80211_set_default_queues(sdata);
-+
- 	ret = drv_add_interface(local, sdata);
- 	if (WARN_ON(ret)) {
- 		/* ok .. stupid driver, it asked for this! */
-@@ -197,6 +241,12 @@ static int ieee80211_add_virtual_monitor
- 		return ret;
- 	}
- 
-+	ret = ieee80211_check_queues(sdata);
-+	if (ret) {
-+		kfree(sdata);
-+		return ret;
-+	}
-+
- 	rcu_assign_pointer(local->monitor_sdata, sdata);
- 
- 	return 0;
-@@ -344,6 +394,9 @@ static int ieee80211_do_open(struct net_
- 			res = drv_add_interface(local, sdata);
- 			if (res)
- 				goto err_stop;
-+			res = ieee80211_check_queues(sdata);
-+			if (res)
-+				goto err_del_interface;
- 		}
- 
- 		if (sdata->vif.type == NL80211_IFTYPE_AP) {
-@@ -1040,6 +1093,13 @@ static int ieee80211_runtime_change_ifty
- 	if (ret)
- 		type = sdata->vif.type;
- 
-+	/*
-+	 * Ignore return value here, there's not much we can do since
-+	 * the driver changed the interface type internally already.
-+	 * The warnings will hopefully make driver authors fix it :-)
-+	 */
-+	ieee80211_check_queues(sdata);
-+
- 	ieee80211_setup_sdata(sdata, type);
- 
- 	err = ieee80211_do_open(sdata->dev, false);
-@@ -1266,6 +1326,8 @@ int ieee80211_if_add(struct ieee80211_lo
- 			       sizeof(sdata->rc_rateidx_mcs_mask[i]));
- 	}
- 
-+	ieee80211_set_default_queues(sdata);
-+
- 	/* setup type-dependent data */
- 	ieee80211_setup_sdata(sdata, type);
- 
---- a/net/mac80211/util.c	2012-04-03 10:21:49.000000000 +0200
-+++ b/net/mac80211/util.c	2012-04-03 14:36:03.000000000 +0200
-@@ -265,11 +265,36 @@ __le16 ieee80211_ctstoself_duration(stru
- }
- EXPORT_SYMBOL(ieee80211_ctstoself_duration);
- 
-+void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		int ac;
-+
-+		if (test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
-+			continue;
-+
-+		if (sdata->vif.cab_queue != IEEE80211_INVAL_HW_QUEUE &&
-+		    local->queue_stop_reasons[sdata->vif.cab_queue] != 0)
-+			continue;
-+
-+		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-+			int ac_queue = sdata->vif.hw_queue[ac];
-+
-+			if (ac_queue == queue ||
-+			    (sdata->vif.cab_queue == queue &&
-+			     local->queue_stop_reasons[ac_queue] == 0 &&
-+			     skb_queue_empty(&local->pending[ac_queue])))
-+				netif_wake_subqueue(sdata->dev, ac);
-+		}
-+	}
-+}
-+
- static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
- 				   enum queue_stop_reason reason)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	struct ieee80211_sub_if_data *sdata;
- 
- 	trace_wake_queue(local, queue, reason);
- 
-@@ -287,11 +312,7 @@ static void __ieee80211_wake_queue(struc
- 
- 	if (skb_queue_empty(&local->pending[queue])) {
- 		rcu_read_lock();
--		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--			if (test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
--				continue;
--			netif_wake_subqueue(sdata->dev, queue);
--		}
-+		ieee80211_propagate_queue_wake(local, queue);
- 		rcu_read_unlock();
- 	} else
- 		tasklet_schedule(&local->tx_pending_tasklet);
-@@ -332,8 +353,15 @@ static void __ieee80211_stop_queue(struc
- 	__set_bit(reason, &local->queue_stop_reasons[queue]);
- 
- 	rcu_read_lock();
--	list_for_each_entry_rcu(sdata, &local->interfaces, list)
--		netif_stop_subqueue(sdata->dev, queue);
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		int ac;
-+
-+		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-+			if (sdata->vif.hw_queue[ac] == queue ||
-+			    sdata->vif.cab_queue == queue)
-+				netif_stop_subqueue(sdata->dev, ac);
-+		}
-+	}
- 	rcu_read_unlock();
- }
- 
-@@ -360,8 +388,8 @@ void ieee80211_add_pending_skb(struct ie
- {
- 	struct ieee80211_hw *hw = &local->hw;
- 	unsigned long flags;
--	int queue = skb_get_queue_mapping(skb);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	int queue = info->hw_queue;
- 
- 	if (WARN_ON(!info->control.vif)) {
- 		kfree_skb(skb);
-@@ -393,7 +421,7 @@ void ieee80211_add_pending_skbs_fn(struc
- 			continue;
- 		}
- 
--		queue = skb_get_queue_mapping(skb);
-+		queue = info->hw_queue;
- 
- 		__ieee80211_stop_queue(hw, queue,
- 				IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
---- a/net/mac80211/tx.c	2012-04-03 10:21:49.000000000 +0200
-+++ b/net/mac80211/tx.c	2012-04-03 14:36:03.000000000 +0200
-@@ -400,6 +400,8 @@ ieee80211_tx_h_multicast_ps_buf(struct i
- 		return TX_CONTINUE;
- 
- 	info->flags |= IEEE80211_TX_CTL_SEND_AFTER_DTIM;
-+	if (tx->local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
-+		info->hw_queue = tx->sdata->vif.cab_queue;
- 
- 	/* device releases frame after DTIM beacon */
- 	if (!(tx->local->hw.flags & IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING))
-@@ -1215,11 +1217,19 @@ static bool ieee80211_tx_frags(struct ie
- 			       bool txpending)
- {
- 	struct sk_buff *skb, *tmp;
--	struct ieee80211_tx_info *info;
- 	unsigned long flags;
- 
- 	skb_queue_walk_safe(skbs, skb, tmp) {
--		int q = skb_get_queue_mapping(skb);
-+		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+		int q = info->hw_queue;
-+
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
-+		if (WARN_ON_ONCE(q >= local->hw.queues)) {
-+			__skb_unlink(skb, skbs);
-+			dev_kfree_skb(skb);
-+			continue;
-+		}
-+#endif
- 
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
- 		if (local->queue_stop_reasons[q] ||
-@@ -1241,7 +1251,6 @@ static bool ieee80211_tx_frags(struct ie
- 		}
- 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
--		info = IEEE80211_SKB_CB(skb);
- 		info->control.vif = vif;
- 		info->control.sta = sta;
- 
-@@ -1285,9 +1294,14 @@ static bool __ieee80211_tx(struct ieee80
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_MONITOR:
- 		sdata = rcu_dereference(local->monitor_sdata);
--		if (sdata)
-+		if (sdata) {
- 			vif = &sdata->vif;
--		else
-+			info->hw_queue =
-+				vif->hw_queue[skb_get_queue_mapping(skb)];
-+		} else if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL) {
-+			dev_kfree_skb(skb);
-+			return true;
-+		} else
- 			vif = NULL;
- 		break;
- 	case NL80211_IFTYPE_AP_VLAN:
-@@ -1403,6 +1417,12 @@ static bool ieee80211_tx(struct ieee8021
- 	tx.channel = local->hw.conf.channel;
- 	info->band = tx.channel->band;
- 
-+	/* set up hw_queue value early */
-+	if (!(info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) ||
-+	    !(local->hw.flags & IEEE80211_HW_QUEUE_CONTROL))
-+		info->hw_queue =
-+			sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
-+
- 	if (!invoke_tx_handlers(&tx))
- 		result = __ieee80211_tx(local, &tx.skbs, led_len,
- 					tx.sta, txpending);
-@@ -2173,7 +2193,6 @@ static bool ieee80211_tx_pending_skb(str
- void ieee80211_tx_pending(unsigned long data)
- {
- 	struct ieee80211_local *local = (struct ieee80211_local *)data;
--	struct ieee80211_sub_if_data *sdata;
- 	unsigned long flags;
- 	int i;
- 	bool txok;
-@@ -2210,8 +2229,7 @@ void ieee80211_tx_pending(unsigned long
- 		}
- 
- 		if (skb_queue_empty(&local->pending[i]))
--			list_for_each_entry_rcu(sdata, &local->interfaces, list)
--				netif_wake_subqueue(sdata->dev, i);
-+			ieee80211_propagate_queue_wake(local, i);
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
-@@ -2713,11 +2731,13 @@ EXPORT_SYMBOL(ieee80211_get_buffered_bc)
- void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
- 			  struct sk_buff *skb, int tid)
- {
-+	int ac = ieee802_1d_to_ac[tid];
-+
- 	skb_set_mac_header(skb, 0);
- 	skb_set_network_header(skb, 0);
- 	skb_set_transport_header(skb, 0);
- 
--	skb_set_queue_mapping(skb, ieee802_1d_to_ac[tid]);
-+	skb_set_queue_mapping(skb, ac);
- 	skb->priority = tid;
- 
- 	/*
---- a/net/mac80211/agg-tx.c	2012-04-03 10:21:49.000000000 +0200
-+++ b/net/mac80211/agg-tx.c	2012-04-03 14:36:03.000000000 +0200
-@@ -286,25 +286,25 @@ static inline int ieee80211_ac_from_tid(
-  * a global "agg_queue_stop" refcount.
-  */
- static void __acquires(agg_queue)
--ieee80211_stop_queue_agg(struct ieee80211_local *local, int tid)
-+ieee80211_stop_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
- {
--	int queue = ieee80211_ac_from_tid(tid);
-+	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
- 
--	if (atomic_inc_return(&local->agg_queue_stop[queue]) == 1)
-+	if (atomic_inc_return(&sdata->local->agg_queue_stop[queue]) == 1)
- 		ieee80211_stop_queue_by_reason(
--			&local->hw, queue,
-+			&sdata->local->hw, queue,
- 			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
- 	__acquire(agg_queue);
- }
- 
- static void __releases(agg_queue)
--ieee80211_wake_queue_agg(struct ieee80211_local *local, int tid)
-+ieee80211_wake_queue_agg(struct ieee80211_sub_if_data *sdata, int tid)
- {
--	int queue = ieee80211_ac_from_tid(tid);
-+	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
- 
--	if (atomic_dec_return(&local->agg_queue_stop[queue]) == 0)
-+	if (atomic_dec_return(&sdata->local->agg_queue_stop[queue]) == 0)
- 		ieee80211_wake_queue_by_reason(
--			&local->hw, queue,
-+			&sdata->local->hw, queue,
- 			IEEE80211_QUEUE_STOP_REASON_AGGREGATION);
- 	__release(agg_queue);
- }
-@@ -314,13 +314,14 @@ ieee80211_wake_queue_agg(struct ieee8021
-  * requires a call to ieee80211_agg_splice_finish later
-  */
- static void __acquires(agg_queue)
--ieee80211_agg_splice_packets(struct ieee80211_local *local,
-+ieee80211_agg_splice_packets(struct ieee80211_sub_if_data *sdata,
- 			     struct tid_ampdu_tx *tid_tx, u16 tid)
- {
--	int queue = ieee80211_ac_from_tid(tid);
-+	struct ieee80211_local *local = sdata->local;
-+	int queue = sdata->vif.hw_queue[ieee80211_ac_from_tid(tid)];
- 	unsigned long flags;
- 
--	ieee80211_stop_queue_agg(local, tid);
-+	ieee80211_stop_queue_agg(sdata, tid);
- 
- 	if (WARN(!tid_tx, "TID %d gone but expected when splicing aggregates"
- 			  " from the pending queue\n", tid))
-@@ -336,9 +337,9 @@ ieee80211_agg_splice_packets(struct ieee
- }
- 
- static void __releases(agg_queue)
--ieee80211_agg_splice_finish(struct ieee80211_local *local, u16 tid)
-+ieee80211_agg_splice_finish(struct ieee80211_sub_if_data *sdata, u16 tid)
- {
--	ieee80211_wake_queue_agg(local, tid);
-+	ieee80211_wake_queue_agg(sdata, tid);
- }
- 
- void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
-@@ -376,9 +377,9 @@ void ieee80211_tx_ba_session_handle_star
- 					" tid %d\n", tid);
- #endif
- 		spin_lock_bh(&sta->lock);
--		ieee80211_agg_splice_packets(local, tid_tx, tid);
-+		ieee80211_agg_splice_packets(sdata, tid_tx, tid);
- 		ieee80211_assign_tid_tx(sta, tid, NULL);
--		ieee80211_agg_splice_finish(local, tid);
-+		ieee80211_agg_splice_finish(sdata, tid);
- 		spin_unlock_bh(&sta->lock);
- 
- 		kfree_rcu(tid_tx, rcu_head);
-@@ -586,14 +587,14 @@ static void ieee80211_agg_tx_operational
- 	 */
- 	spin_lock_bh(&sta->lock);
- 
--	ieee80211_agg_splice_packets(local, tid_tx, tid);
-+	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
- 	/*
- 	 * Now mark as operational. This will be visible
- 	 * in the TX path, and lets it go lock-free in
- 	 * the common case.
- 	 */
- 	set_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state);
--	ieee80211_agg_splice_finish(local, tid);
-+	ieee80211_agg_splice_finish(sta->sdata, tid);
- 
- 	spin_unlock_bh(&sta->lock);
- }
-@@ -778,12 +779,12 @@ void ieee80211_stop_tx_ba_cb(struct ieee
- 	 * more.
- 	 */
- 
--	ieee80211_agg_splice_packets(local, tid_tx, tid);
-+	ieee80211_agg_splice_packets(sta->sdata, tid_tx, tid);
- 
- 	/* future packets must not find the tid_tx struct any more */
- 	ieee80211_assign_tid_tx(sta, tid, NULL);
- 
--	ieee80211_agg_splice_finish(local, tid);
-+	ieee80211_agg_splice_finish(sta->sdata, tid);
- 
- 	kfree_rcu(tid_tx, rcu_head);
- 
---- a/net/mac80211/cfg.c	2012-04-03 10:21:49.000000000 +0200
-+++ b/net/mac80211/cfg.c	2012-04-03 14:36:03.000000000 +0200
-@@ -2098,6 +2098,10 @@ static int ieee80211_mgmt_tx(struct wiph
- 
- 	IEEE80211_SKB_CB(skb)->flags = flags;
- 
-+	if (flags & IEEE80211_TX_CTL_TX_OFFCHAN)
-+		IEEE80211_SKB_CB(skb)->hw_queue =
-+			local->hw.offchannel_tx_hw_queue;
-+
- 	skb->dev = sdata->dev;
- 
- 	*cookie = (unsigned long) skb;
-@@ -2139,6 +2143,8 @@ static int ieee80211_mgmt_tx(struct wiph
- 		/* modify cookie to prevent API mismatches */
- 		*cookie ^= 2;
- 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
-+		IEEE80211_SKB_CB(skb)->hw_queue =
-+			local->hw.offchannel_tx_hw_queue;
- 		local->hw_roc_skb = skb;
- 		local->hw_roc_skb_for_status = skb;
- 		mutex_unlock(&local->mtx);
---- a/net/mac80211/ieee80211_i.h	2012-04-03 10:21:49.000000000 +0200
-+++ b/net/mac80211/ieee80211_i.h	2012-04-03 14:36:03.000000000 +0200
-@@ -1426,6 +1426,7 @@ void ieee80211_wake_queue_by_reason(stru
- 				    enum queue_stop_reason reason);
- void ieee80211_stop_queue_by_reason(struct ieee80211_hw *hw, int queue,
- 				    enum queue_stop_reason reason);
-+void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue);
- void ieee80211_add_pending_skb(struct ieee80211_local *local,
- 			       struct sk_buff *skb);
- void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
---- a/net/mac80211/main.c	2012-04-03 10:21:49.000000000 +0200
-+++ b/net/mac80211/main.c	2012-04-03 14:36:03.000000000 +0200
-@@ -591,6 +591,7 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 	local->hw.max_report_rates = 0;
- 	local->hw.max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
- 	local->hw.max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
-+	local->hw.offchannel_tx_hw_queue = IEEE80211_INVAL_HW_QUEUE;
- 	local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
- 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
- 	local->user_power_level = -1;
-@@ -687,6 +688,11 @@ int ieee80211_register_hw(struct ieee802
- 		WLAN_CIPHER_SUITE_AES_CMAC
- 	};
- 
-+	if (hw->flags & IEEE80211_HW_QUEUE_CONTROL &&
-+	    (local->hw.offchannel_tx_hw_queue == IEEE80211_INVAL_HW_QUEUE ||
-+	     local->hw.offchannel_tx_hw_queue >= local->hw.queues))
-+		return -EINVAL;
-+
- 	if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns)
- #ifdef CONFIG_PM
- 	    && (!local->ops->suspend || !local->ops->resume)
 
+> > ------------[ cut here ]------------
+> > WARNING: at /home/tkisky/compat-wireless-2012-01-26/drivers/net/wireless/wl12xx/cmd.c:108 wl1271_cmd_send+0x378/0x3d0 [wl12xx]()
+> > Modules linked in: wl12xx mac80211 cfg80211 wl12xx_sdio ov5642_camera
+> > [<800416f8>] (unwind_backtrace+0x0/0xfc) from [<80064074>] (warn_slowpath_common+0x54/0x64)
+> > [<80064074>] (warn_slowpath_common+0x54/0x64) from [<800640a0>] (warn_slowpath_null+0x1c/0x24)
+> > [<800640a0>] (warn_slowpath_null+0x1c/0x24) from [<7f09e080>] (wl1271_cmd_send+0x378/0x3d0 [wl12xx])
+> > [<7f09e080>] (wl1271_cmd_send+0x378/0x3d0 [wl12xx]) from [<7f09e720>] (wl12xx_cmd_stop_fwlog+0x54/0x80 [wl12xx])
+> > [<7f09e720>] (wl12xx_cmd_stop_fwlog+0x54/0x80 [wl12xx]) from [<7f09ce18>] (wl1271_recovery_work+0x220/0x314 [wl12xx])
+> > [<7f09ce18>] (wl1271_recovery_work+0x220/0x314 [wl12xx]) from [<80079b90>] (process_one_work+0x10c/0x408)
+> > [<80079b90>] (process_one_work+0x10c/0x408) from [<8007a228>] (worker_thread+0x19c/0x470)
+> > [<8007a228>] (worker_thread+0x19c/0x470) from [<8008071c>] (kthread+0x8c/0x90)
+> > [<8008071c>] (kthread+0x8c/0x90) from [<8003c474>] (kernel_thread_exit+0x0/0x8)
+> > ---[ end trace b6d18e2d5294f64d ]---
+> > wl12xx: ERROR failed to send stop firmware logger command
+> > wl12xx: Hardware recovery in progress. FW ver: Rev 6.3.0.0.77 pc: 0x23923
+
+This tells us where the PC was when the crash happened.  I'll ask our
+firmware team to analyze this.
+
+
+-- 
+Cheers,
+Luca.
 
