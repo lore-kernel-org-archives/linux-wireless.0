@@ -1,61 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46354 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754181Ab2DNPtV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 11:49:21 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Subject: [RFC 2/2] ath9k: fix tx power settings for AR9287
-Date: Sat, 14 Apr 2012 17:32:19 +0200
-Message-Id: <1334417539-6498-2-git-send-email-juhosg@openwrt.org> (sfid-20120414_174946_183121_0D02F992)
-In-Reply-To: <1334417539-6498-1-git-send-email-juhosg@openwrt.org>
-References: <1334417539-6498-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:38528 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728Ab2DBVuV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2012 17:50:21 -0400
+Received: by ghrr11 with SMTP id r11so1522669ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 14:50:21 -0700 (PDT)
+Date: Mon, 2 Apr 2012 16:50:06 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: brcmsmac still woes, possible regression?
+Message-ID: <20120402215005.GA13969@burratino> (sfid-20120402_235030_686771_311B5512)
+References: <4F70409E.3090203@broadcom.com>
+ <CAKprTDGdbUnXtbfmck9rtYfKeD71xSXjShW6HnxyZJ8uRZEfnQ@mail.gmail.com>
+ <4F717EA1.4060805@broadcom.com>
+ <4F72F3D4.50409@broadcom.com>
+ <20120328112657.GA6114@stt008.linux.site>
+ <4F7302D9.8070009@broadcom.com>
+ <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
+ <4F744DD8.8010004@broadcom.com>
+ <20120329133835.GA5196@stt008.linux.site>
+ <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'ath9k_hw_update_regulatory_maxpower'
-helper function has been introduced by
-commit a55f858852e4345d0a31af593c46738ca8614bff
-(ath9k_hw: Cleanup TX power calculation for AR9287).
+Camaleón wrote:
 
-Updating of the max_power_level value has been moved
-into the helper function in that change, however the
-removed code from 'ath9k_hw_ar9287_set_txpower' has
-not been replaced with a call of the new helper
-function.
+> Were the patches applied to the mainline?
 
-Due to that missing call, retrieving tx power for 2x2
-and 3x3 chainmask is not handled properly. During the
-calculation of the tx power for 2x2 and 3x3 chainmasks
-the values are reduced. Those reductions must be
-compensated during retrieving.
+I doubt it.  Where can one find the patches you were testing, by the
+way?
 
-Fix this by adding the missing call of the helper
-function.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/eeprom_9287.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index f272236..b34e8b2 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -824,6 +824,8 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 			regulatory->max_power_level = ratesArray[i];
- 	}
- 
-+	ath9k_hw_update_regulatory_maxpower(ah);
-+
- 	if (test)
- 		return;
- 
--- 
-1.7.2.1
-
+Curious,
+Jonathan
