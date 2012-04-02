@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:42287 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751071Ab2DRQhv (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36442 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097Ab2DBDyt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 12:37:51 -0400
-Received: by wgbdr13 with SMTP id dr13so7711464wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 09:37:50 -0700 (PDT)
+	Sun, 1 Apr 2012 23:54:49 -0400
+Received: by iagz16 with SMTP id z16so3575311iag.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2012 20:54:49 -0700 (PDT)
+Message-ID: <4F7922FD.60105@lwfinger.net> (sfid-20120402_055452_910993_3BAACAB5)
+Date: Sun, 01 Apr 2012 22:54:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com>
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
-	<4F8DC25E.9090702@broadcom.com>
-	<B9AA983D-A169-497D-9C8E-BDBEF2348BB6@gmail.com>
-	<4F8E0CBE.6010103@sipsolutions.net>
-	<0FC1AE2B-7E32-466B-AC33-F969F4E72B98@gmail.com>
-	<CANUX_P38YDFtL-KzKnFHd0+Ca29SUXoY+mGKaDUjConXaf3c9A@mail.gmail.com>
-	<4B048FDE-C784-4401-9FEC-16F8CC0B8D59@gmail.com>
-	<CANUX_P0FO-P6ZFow15shNpZg6Z8FAPP7AovJH=xUKPyVEMtoBw@mail.gmail.com>
-	<FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com>
-Date: Wed, 18 Apr 2012 19:37:50 +0300
-Message-ID: <CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com> (sfid-20120418_183804_424343_D6F5E11A)
-Subject: Re: wlan0 not present
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Dominik Feser <dominik.feser@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	John Linville <linville@tuxdriver.com>
+CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel Panics from ath9k
+References: <4F789C57.2090903@lwfinger.net> <20345.4134.204942.124914@gargle.gargle.HOWL>
+In-Reply-To: <20345.4134.204942.124914@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 18, 2012 at 17:39, Dominik Feser
-<dominik.feser@googlemail.com> wrote:
-> There it is:
->
-> # lspci -x -s 02:00
-> 02:00.0 Network controller: Intel Corporation Centrino Advanced-N 6205 (rev 34)
-> 00: 86 80 82 00 02 00 10 00 34 00 80 02 10 00 00 00
-> 10: 04 00 d0 e2 00 00 00 00 00 00 00 00 00 00 00 00
-> 20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 21 13
-> 30: 00 00 00 00 c8 00 00 00 00 00 00 00 0a 01 00 00
->
+On 04/01/2012 09:34 PM, Sujith Manoharan wrote:
 
-Ok, you need a fw whose name is iwlwifi-6000g2a-*
+> Should be fixed by this patch: http://marc.info/?l=linux-wireless&m=133282325727326&w=2
 
-can you send the output of
+Yes, that patch does fix the problem.
 
-ls /lib/firmware iwlwifi-6000g2a-*
+BTW, that patch should be pushed to 3.4, and it should have a Cc: Stable, at 
+least for 3.3. Make certain that stable gets an E-mail with the commit ID when 
+the patch gets into mainline.
+
+I wonder what the problem was with kernels as far back as 3.1. It must have a 
+different cause that I still need to explore.
+
+Thanks,
+
+Larry
 
 
-thanks
