@@ -1,72 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:44037 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753314Ab2DQVHz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 17:07:55 -0400
-Message-ID: <4F8DDB9F.8030302@openwrt.org> (sfid-20120417_230804_249476_89B7865B)
-Date: Tue, 17 Apr 2012 23:07:43 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43086 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab2DBMJO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Apr 2012 08:09:14 -0400
+Received: by pbcun15 with SMTP id un15so4460505pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 05:09:14 -0700 (PDT)
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath9k: Gather and report IRQ sync_cause errors.
-References: <1334250240-21038-1-git-send-email-greearb@candelatech.com> <1334250240-21038-2-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1334250240-21038-2-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1333365666-4413-1-git-send-email-sgruszka@redhat.com>
+References: <1333365666-4413-1-git-send-email-sgruszka@redhat.com>
+Date: Mon, 2 Apr 2012 14:09:14 +0200
+Message-ID: <CAGXE3d8C61rnWPgRU565n_FjjKTqk4pi9ncmdjxyAmEvVM-uvA@mail.gmail.com> (sfid-20120402_140924_073073_6A48420C)
+Subject: Re: [PATCH 1/2] rt2x00: configure different txdesc parameters for non
+ HT channel
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Report all defined sync_cause errors in debugfs
-> to aid with debugging.
-> 
-> Use a macro to print out the interrupts file contents
-> to decrease code duplication.
+Hi Stanislaw,
 
-Now, that the patch is in wireless-testing, I have noticed a minor problem with it.
-
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+On Mon, Apr 2, 2012 at 1:21 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> This is needed when we are concted to non 11n AP.
+>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 > ---
+>  drivers/net/wireless/rt2x00/rt2x00.h       |    1 +
+>  drivers/net/wireless/rt2x00/rt2x00config.c |    5 +++++
+>  drivers/net/wireless/rt2x00/rt2x00queue.c  |   14 ++++++++++++++
+>  3 files changed, 20 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 471f87c..8de9bfc 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -692,6 +692,7 @@ enum rt2x00_state_flags {
+>         */
+>        CONFIG_CHANNEL_HT40,
+>        CONFIG_POWERSAVING,
+> +       CONFIG_HT_DISABLED,
+>
+>        /*
+>         * Mark we currently are sequentially reading TX_STA_FIFO register
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+> index 293676b..e7361d9 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00config.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+> @@ -217,6 +217,11 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+>        libconf.conf = conf;
+>
+>        if (ieee80211_flags & IEEE80211_CONF_CHANGE_CHANNEL) {
+> +               if (!conf_is_ht(conf))
+> +                       set_bit(CONFIG_HT_DISABLED, &rt2x00dev->flags);
+> +               else
+> +                       clear_bit(CONFIG_HT_DISABLED, &rt2x00dev->flags);
+> +
+>                if (conf_is_ht40(conf)) {
+>                        set_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
+>                        hw_value = rt2x00ht_center_channel(rt2x00dev, conf);
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index 9b1b2b7..f7403cf 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -320,6 +320,20 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+>                txdesc->u.ht.wcid = sta_priv->wcid;
+>        }
+>
+> +       if (test_bit(CONFIG_HT_DISABLED, &rt2x00dev->flags)) {
+> +               if (ieee80211_is_beacon(hdr->frame_control))
+> +                       txdesc->u.ht.txop = TXOP_PIFS;
 
+Why should we use PIFS for the beacon? Is that what the ralink drivers
+are doing?
 
-<...>
+> +               else if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
+> +                       txdesc->u.ht.txop = TXOP_SIFS;
+> +               else
+> +                       txdesc->u.ht.txop = TXOP_BACKOFF;
+> +
+> +               txdesc->u.ht.mcs = txrate->idx;
+> +
 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-> index aa1680a..fba99ef 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.h
-> +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> @@ -965,6 +965,12 @@ bool ath9k_hw_check_alive(struct ath_hw *ah);
->  
->  bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode);
->  
-> +#ifdef CONFIG_ATH9K_DEBUGFS
-> +void ath9k_debug_sync_cause(struct ath_common *common, u32 sync_cause);
-> +#else
-> +static void ath9k_debug_sync_cause(struct ath_common *common, u32 sync_cause) {}
+This lacks short preamble handling. Something like:
 
-Due to a missing 'inline' keyword, this causes a bunch of warnings if
-CONFIG_ATH9K_DEBUGFS is not enabled:
+if (txrate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
+  txdesc->u.ht.mcs |= 0x08;
 
-   CC [M]  drivers/net/wireless/ath/main.o
-   CC [M]  drivers/net/wireless/ath/regd.o
-   CC [M]  drivers/net/wireless/ath/hw.o
-   CC [M]  drivers/net/wireless/ath/key.o
-   LD [M]  drivers/net/wireless/ath/ath.o
-   CC [M]  drivers/net/wireless/ath/ath9k/beacon.o
- drivers/net/wireless/ath/ath9k/hw.h:962: warning: â€˜ath9k_debug_sync_causeâ€™
-defined but not used
-   CC [M]  drivers/net/wireless/ath/ath9k/gpio.o
- drivers/net/wireless/ath/ath9k/hw.h:962: warning: â€˜ath9k_debug_sync_causeâ€™
-defined but not used
-   CC [M]  drivers/net/wireless/ath/ath9k/init.o
- drivers/net/wireless/ath/ath9k/hw.h:962: warning: â€˜ath9k_debug_sync_causeâ€™
-defined but not used
-   CC [M]  drivers/net/wireless/ath/ath9k/main.o
- drivers/net/wireless/ath/ath9k/hw.h:962: warning: â€˜ath9k_debug_sync_causeâ€™
-defined but not used
-   CC [M]  drivers/net/wireless/ath/ath9k/recv.o
+Actually, you could just shuffle the code a bit such that the rate setup
+happens before all the HT stuff, no?
 
--Gabor
-
+Helmut
