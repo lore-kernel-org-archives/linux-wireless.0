@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:39040 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754719Ab2DNCs5 (ORCPT
+Received: from mx1.watchguard.com ([206.191.171.101]:21935 "EHLO
+	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750992Ab2DBV6R convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 22:48:57 -0400
+	Mon, 2 Apr 2012 17:58:17 -0400
+From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
+Date: Mon, 2 Apr 2012 21:58:16 +0000
+Message-ID: <82DC76E2-7235-4EF5-BB23-CDFC4B61CBA8@watchguard.com> (sfid-20120402_235821_002212_42290C6E)
+References: <4F57B7E6.1050103@candelatech.com>
+ <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>
+ <4F735EF5.3010708@candelatech.com>
+In-Reply-To: <4F735EF5.3010708@candelatech.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1334371116.17649.1.camel@phoenix>
-References: <1334371116.17649.1.camel@phoenix>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Fri, 13 Apr 2012 19:48:36 -0700
-Message-ID: <CAB=NE6UgiZ6qqJ2W-Pb-g-BMv71-kYSLzJxbyV-XDEzNkCeffQ@mail.gmail.com> (sfid-20120414_044907_497568_9613DCC9)
-Subject: Re: [PATCH] net/wireless: use module_pci_driver
-To: Axel Lin <axel.lin@gmail.com>
-Cc: netdev@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Simon Kelley <simon@thekelleys.org.uk>,
-	Jouni Malinen <j@w1.fi>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 13, 2012 at 7:38 PM, Axel Lin <axel.lin@gmail.com> wrote:
-> module_pci_driver
 
-Neat, any chance you can you send me a respective patch to add
-module_pci_driver() to compat so that when we backport all this is
-done automatically?
+On Mar 28, 2012, at 11:56 AM, Ben Greear wrote:
 
-git://github.com/mcgrof/compat.git
+> On 03/07/2012 11:45 AM, Bryan Phillippe wrote:
+>> 
+>> Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
+> 
+> I'm still seeing this and related warnings on 3.3.0.  At least some
+> of them comes from calls the 'hostapd' process makes (I printed
+> current->comm in the warning).
+> 
+> I am not having luck writing a simple script that reproduce this,
+> but my application that creates a VAP and bunch of virtual station
+> hits it every time on startup.
+> 
+> Bryan:  Do you have a simple script that reproduces this problem?
 
- Luis
+Hi Ben.  I apologize for the delay in responding; I was out of town
+for a week.  No, I do not.  Which is frustrating, because it was
+happening pretty reliably for me before, but it's much more
+difficult to force to happen now.  In the past, it was switching
+back and forth between AP and client mode (kill hostapd, start
+wpa_supplicant, for example).  Or restarting hostapd frequently
+in different radio modes.
+
+> Johannes:  Any ideas on likely causes of this problem?  Might help
+> me zero in on the problem quicker...
+
+If I've been following the thread accurately, it looks like some
+headway has been made on this and some fixes checked in?  I'd like
+to retest, if that is the case.  I'm using compat-wireless trees
+downloaded as tarballs - do you have a version you recommend I test
+with?
+
+Thanks,
+--
+-bp
+
+
