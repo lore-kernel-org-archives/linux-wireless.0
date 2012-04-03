@@ -1,84 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8196 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758590Ab2DXXva (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 19:51:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/11] iwlwifi: add option to disable 5GHz band
-Date: Tue, 24 Apr 2012 16:46:03 -0700
-Message-Id: <1335311164-10252-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015156_263977_0F4EEE13)
-In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:10757 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751656Ab2DCQCZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 12:02:25 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Subject: [RFC 3/4] libertas: add asynchronous firmware loading capability
+Message-Id: <20120403160221.8DE229D401E@zog.reactivated.net> (sfid-20120403_180228_716036_C3D8B0B3)
+Date: Tue,  3 Apr 2012 17:02:19 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+As described at
+http://article.gmane.org/gmane.linux.kernel.wireless.general/86084
+libertas is taking a long time to load because it loads firmware
+during module loading.
 
-There are various problems happened on 5GHz band not observed on
-2.4 GHz (microcode errors, queue stuck, etc... ) . Also roaming
-between 5GHz AP and 2GHz does not work very well. To workaround
-the problems add option to disable 5GHz support. This will help
-on environments where APs are dual-band, and devices will not try
-to associate on band where issues happen.
+Add a new API for interface drivers to load their firmware
+asynchronously. The same semantics of the firmware table are followed
+like before.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Interface drivers will be converted in follow-up patches, then we can
+remove the old, synchronous firmware loading function.
+
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c       |    3 +++
- drivers/net/wireless/iwlwifi/iwl-drv.c       |    4 ++++
- drivers/net/wireless/iwlwifi/iwl-modparams.h |    2 ++
- 3 files changed, 9 insertions(+), 0 deletions(-)
+ drivers/net/wireless/libertas/decl.h     |    8 ++
+ drivers/net/wireless/libertas/dev.h      |   10 ++
+ drivers/net/wireless/libertas/firmware.c |  143 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/libertas/main.c     |    3 +
+ 4 files changed, 164 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 8f60f28..2023dd1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1310,6 +1310,9 @@ static int iwl_init_geos(struct iwl_priv *priv)
- 		priv->hw_params.sku &= ~EEPROM_SKU_CAP_BAND_52GHZ;
- 	}
- 
-+	if (iwlwifi_mod_params.disable_5ghz)
-+		priv->bands[IEEE80211_BAND_5GHZ].n_channels = 0;
-+
- 	IWL_INFO(priv, "Tunable channels: %d 802.11bg, %d 802.11a channels\n",
- 		   priv->bands[IEEE80211_BAND_2GHZ].n_channels,
- 		   priv->bands[IEEE80211_BAND_5GHZ].n_channels);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 430cca5..3c72bad 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -1012,3 +1012,7 @@ module_param_named(auto_agg, iwlwifi_mod_params.auto_agg,
- 		bool, S_IRUGO);
- MODULE_PARM_DESC(auto_agg,
- 		 "enable agg w/o check traffic load (default: enable)");
-+
-+module_param_named(5ghz_disable, iwlwifi_mod_params.disable_5ghz,
-+		bool, S_IRUGO);
-+MODULE_PARM_DESC(5ghz_disable, "disable 5GHz band (default: 0 [enabled])");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-index 558b2e6..ca15d9a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-@@ -103,6 +103,7 @@ enum iwl_power_level {
-  * @ant_coupling: antenna coupling in dB, default = 0
-  * @bt_ch_announce: BT channel inhibition, default = enable
-  * @auto_agg: enable agg. without check, default = true
-+ * @disable_5ghz: disable 5GHz capability, default = false
-  */
- struct iwl_mod_params {
- 	int sw_crypto;
-@@ -119,6 +120,7 @@ struct iwl_mod_params {
- 	int ant_coupling;
- 	bool bt_ch_announce;
- 	bool auto_agg;
-+	bool disable_5ghz;
+diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+index 2fb2e31..84a3aa7 100644
+--- a/drivers/net/wireless/libertas/decl.h
++++ b/drivers/net/wireless/libertas/decl.h
+@@ -19,6 +19,10 @@ struct lbs_fw_table {
  };
  
- #endif /* #__iwl_shared_h__ */
+ struct lbs_private;
++typedef void (*lbs_fw_cb)(struct lbs_private *priv, int ret,
++		const struct firmware *helper, const struct firmware *mainfw);
++
++struct lbs_private;
+ struct sk_buff;
+ struct net_device;
+ struct cmd_ds_command;
+@@ -70,5 +74,9 @@ int lbs_get_firmware(struct device *dev, u32 card_model,
+ 			const struct lbs_fw_table *fw_table,
+ 			const struct firmware **helper,
+ 			const struct firmware **mainfw);
++int lbs_get_firmware_async(struct lbs_private *priv, struct device *device,
++			   u32 card_model, const struct lbs_fw_table *fw_table,
++			   lbs_fw_cb callback);
++void lbs_wait_for_firmware_load(struct lbs_private *priv);
+ 
+ #endif
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index f3fd447..6720054 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -7,6 +7,7 @@
+ #define _LBS_DEV_H_
+ 
+ #include "defs.h"
++#include "decl.h"
+ #include "host.h"
+ 
+ #include <linux/kfifo.h>
+@@ -180,6 +181,15 @@ struct lbs_private {
+ 	wait_queue_head_t scan_q;
+ 	/* Whether the scan was initiated internally and not by cfg80211 */
+ 	bool internal_scan;
++
++	/* Firmware load */
++	u32 fw_model;
++	wait_queue_head_t fw_waitq;
++	struct device *fw_device;
++	const struct firmware *helper_fw;
++	const struct lbs_fw_table *fw_table;
++	const struct lbs_fw_table *fw_iter;
++	lbs_fw_cb fw_callback;
+ };
+ 
+ extern struct cmd_confirm_sleep confirm_sleep;
+diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
+index 7ec0063..8c21b83 100644
+--- a/drivers/net/wireless/libertas/firmware.c
++++ b/drivers/net/wireless/libertas/firmware.c
+@@ -3,10 +3,151 @@
+  */
+ 
+ #include <linux/firmware.h>
++#include <linux/firmware.h>
+ #include <linux/module.h>
+ 
++#include "dev.h"
+ #include "decl.h"
+ 
++static void load_next_firmware_from_table(struct lbs_private *private);
++
++static void lbs_fw_loaded(struct lbs_private *priv, int ret,
++	const struct firmware *helper, const struct firmware *mainfw)
++{
++	unsigned long flags;
++
++	lbs_deb_fw("firmware load complete, code %d\n", ret);
++
++	/* User must free helper/mainfw */
++	priv->fw_callback(priv, ret, helper, mainfw);
++
++	spin_lock_irqsave(&priv->driver_lock, flags);
++	priv->fw_callback = NULL;
++	wake_up(&priv->fw_waitq);
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
++}
++
++static void do_load_firmware(struct lbs_private *priv, const char *name,
++	void (*cb)(const struct firmware *fw, void *context))
++{
++	int ret;
++
++	lbs_deb_fw("Requesting %s\n", name);
++	ret = request_firmware_nowait(THIS_MODULE, true, name,
++			priv->fw_device, GFP_KERNEL, priv, cb);
++	if (ret) {
++		lbs_deb_fw("request_firmware_nowait error %d\n", ret);
++		lbs_fw_loaded(priv, ret, NULL, NULL);
++	}
++}
++
++static void main_firmware_cb(const struct firmware *firmware, void *context)
++{
++	struct lbs_private *priv = context;
++
++	if (!firmware) {
++		/* Failed to find firmware: try next table entry */
++		load_next_firmware_from_table(priv);
++		return;
++	}
++
++	/* Firmware found! */
++	lbs_fw_loaded(priv, 0, priv->helper_fw, firmware);
++}
++
++static void helper_firmware_cb(const struct firmware *firmware, void *context)
++{
++	struct lbs_private *priv = context;
++
++	if (!firmware) {
++		/* Failed to find firmware: try next table entry */
++		load_next_firmware_from_table(priv);
++		return;
++	}
++
++	/* Firmware found! */
++	if (priv->fw_iter->fwname) {
++		priv->helper_fw = firmware;
++		do_load_firmware(priv, priv->fw_iter->fwname, main_firmware_cb);
++	} else {
++		/* No main firmware needed for this helper --> success! */
++		lbs_fw_loaded(priv, 0, firmware, NULL);
++	}
++}
++
++static void load_next_firmware_from_table(struct lbs_private *priv)
++{
++	const struct lbs_fw_table *iter;
++
++	if (!priv->fw_iter)
++		iter = priv->fw_table;
++	else
++		iter = ++priv->fw_iter;
++
++	if (priv->helper_fw) {
++		release_firmware(priv->helper_fw);
++		priv->helper_fw = NULL;
++	}
++
++next:
++	if (!iter->helper) {
++		/* End of table hit. */
++		lbs_fw_loaded(priv, -ENOENT, NULL, NULL);
++		return;
++	}
++
++	if (iter->model != priv->fw_model) {
++		iter++;
++		goto next;
++	}
++
++	priv->fw_iter = iter;
++	do_load_firmware(priv, iter->helper, helper_firmware_cb);
++}
++
++void lbs_wait_for_firmware_load(struct lbs_private *priv)
++{
++	wait_event(priv->fw_waitq, priv->fw_callback == NULL);
++}
++
++/**
++ *  lbs_get_firmware_async - Retrieves firmware asynchronously. Can load
++ *  either a helper firmware and a main firmware (2-stage), or just the helper.
++ *
++ *  @priv:      Pointer to lbs_private instance
++ *  @dev:     	A pointer to &device structure
++ *  @card_model: Bus-specific card model ID used to filter firmware table
++ *		elements
++ *  @fw_table:	Table of firmware file names and device model numbers
++ *		terminated by an entry with a NULL helper name
++ *	@callback: User callback to invoke when firmware load succeeds or fails.
++ */
++int lbs_get_firmware_async(struct lbs_private *priv, struct device *device,
++			    u32 card_model, const struct lbs_fw_table *fw_table,
++			    lbs_fw_cb callback)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&priv->driver_lock, flags);
++	if (priv->fw_callback) {
++		lbs_deb_fw("firmware load already in progress\n");
++		spin_unlock_irqrestore(&priv->driver_lock, flags);
++		return -EBUSY;
++	}
++
++	priv->fw_device = device;
++	priv->fw_callback = callback;
++	priv->fw_table = fw_table;
++	priv->fw_iter = NULL;
++	priv->fw_model = card_model;
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
++
++	lbs_deb_fw("Starting async firmware load\n");
++	load_next_firmware_from_table(priv);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(lbs_get_firmware_async);
++
+ /**
+  *  lbs_get_firmware - Retrieves two-stage firmware
+  *
+@@ -18,6 +159,8 @@
+  *  @helper:	On success, the helper firmware; caller must free
+  *  @mainfw:	On success, the main firmware; caller must free
+  *
++ * Deprecated: use lbs_get_firmware_async() instead.
++ *
+  *  returns:		0 on success, non-zero on failure
+  */
+ int lbs_get_firmware(struct device *dev, u32 card_model,
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 7eaf992..e96ee0a 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -878,6 +878,7 @@ static int lbs_init_adapter(struct lbs_private *priv)
+ 	priv->is_host_sleep_configured = 0;
+ 	priv->is_host_sleep_activated = 0;
+ 	init_waitqueue_head(&priv->host_sleep_q);
++	init_waitqueue_head(&priv->fw_waitq);
+ 	mutex_init(&priv->lock);
+ 
+ 	setup_timer(&priv->command_timer, lbs_cmd_timeout_handler,
+@@ -1037,6 +1038,8 @@ void lbs_remove_card(struct lbs_private *priv)
+ 	if (priv->wiphy_registered)
+ 		lbs_scan_deinit(priv);
+ 
++	lbs_wait_for_firmware_load(priv);
++
+ 	/* worker thread destruction blocks on the in-flight command which
+ 	 * should have been cleared already in lbs_stop_card().
+ 	 */
 -- 
-1.7.0.4
+1.7.7.6
 
