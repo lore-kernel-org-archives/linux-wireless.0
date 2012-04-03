@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32825 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755829Ab2DWVw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 17:52:57 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 18/29] iwlwifi: remove duplicate iwlagn_mod_params declaration
-Date: Mon, 23 Apr 2012 14:47:29 -0700
-Message-Id: <1335217660-21950-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235325_500072_F2670847)
-In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:57118 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752602Ab2DCGZ1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 02:25:27 -0400
+Received: by wibhj6 with SMTP id hj6so3307813wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 23:25:26 -0700 (PDT)
+Date: Tue, 3 Apr 2012 08:25:15 +0200
+From: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>,
+	Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: brcmsmac still woes, possible regression?
+Message-ID: <20120403062515.GA3552@stt008.linux.site> (sfid-20120403_082534_685490_9053CAA9)
+References: <CAKprTDGdbUnXtbfmck9rtYfKeD71xSXjShW6HnxyZJ8uRZEfnQ@mail.gmail.com> <4F717EA1.4060805@broadcom.com> <4F72F3D4.50409@broadcom.com> <20120328112657.GA6114@stt008.linux.site> <4F7302D9.8070009@broadcom.com> <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com> <4F744DD8.8010004@broadcom.com> <20120329133835.GA5196@stt008.linux.site> <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com> <20120402215005.GA13969@burratino>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120402215005.GA13969@burratino>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+El 2012-04-02 a las 16:50 -0500, Jonathan Nieder escribió:
 
-We only need one declaration, not multiple.
-Keep the one in iwl-shared.h, which will
-probably be renamed to iwl-modparams.h at
-some point in the future.
+> Camaleón wrote:
+> 
+> > Were the patches applied to the mainline?
+> 
+> I doubt it.  
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Ouch. I'm out of luck then.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 67e3b40..6853fc7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1019,7 +1019,6 @@ struct iwl_priv {
- }; /*iwl_priv */
- 
- extern struct kmem_cache *iwl_tx_cmd_pool;
--extern struct iwl_mod_params iwlagn_mod_params;
- 
- static inline struct iwl_rxon_context *
- iwl_rxon_ctx_from_vif(struct ieee80211_vif *vif)
+> Where can one find the patches you were testing, by the way?
+>
+> Curious,
+> Jonathan
+
+I received the patch by e-mail ("[PATCH] brcm80211: smac: do not mute tx
+in driver for restricted channels"), but I don't know if it was uploaded
+elsewhere.
+                
+Greetings,    
+
 -- 
-1.7.0.4
-
+Camaleón 
