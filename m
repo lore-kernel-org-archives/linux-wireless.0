@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:40093 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755784Ab2DSPvu convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36160 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413Ab2DCOo6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 11:51:50 -0400
-Received: by pbcun15 with SMTP id un15so10393029pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 08:51:50 -0700 (PDT)
+	Tue, 3 Apr 2012 10:44:58 -0400
+Message-ID: <4F7B0CE6.9020300@candelatech.com> (sfid-20120403_164502_215873_7DBA99CB)
+Date: Tue, 03 Apr 2012 07:44:54 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1334849651.1980.6.camel@dcbw.foobar.com>
-References: <20120409202402.8523E9D401E@zog.reactivated.net>
-	<1334849651.1980.6.camel@dcbw.foobar.com>
-Date: Thu, 19 Apr 2012 09:51:49 -0600
-Message-ID: <CAMLZHHRRCCkm7CybYx=2Mp+boS=-vsfL+6UOJ=RjTy6t1F5UXg@mail.gmail.com> (sfid-20120419_175204_446573_F23FBFF7)
-Subject: Re: [RFT] libertas SPI: convert to asynchronous firmware loading
-From: Daniel Drake <dsd@laptop.org>
-To: Dan Williams <dcbw@redhat.com>, anarsoul@gmail.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k:  Don't delete key from hw if using sw-crypt.
+References: <1333399292-23231-1-git-send-email-greearb@candelatech.com> <4F7AF81F.30903@openwrt.org>
+In-Reply-To: <4F7AF81F.30903@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vasily,
-
-On Thu, Apr 19, 2012 at 9:34 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Mon, 2012-04-09 at 21:24 +0100, Daniel Drake wrote:
->> Signed-off-by: Daniel Drake <dsd@laptop.org>
->> ---
->>  drivers/net/wireless/libertas/if_spi.c |  137 +++++++++++++++++++------------
->>  1 files changed, 84 insertions(+), 53 deletions(-)
+On 04/03/2012 06:16 AM, Felix Fietkau wrote:
+> On 2012-04-02 10:41 PM, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
 >>
->> Request for testing.
+>> This spams logs if we are using large numbers of stations,
+>> for instance:
+>>
+>> ath: wiphy0: keyreset: keycache entry 228 out of range
+>> ath: wiphy0: keyreset: keycache entry 228 out of range
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>> :100644 100644 917032a... 65e7281... M	drivers/net/wireless/ath/ath9k/main.c
+>>   drivers/net/wireless/ath/ath9k/main.c |    3 +++
+>>   1 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+>> index 917032a..65e7281 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -1771,6 +1771,9 @@ static void ath9k_del_ps_key(struct ath_softc *sc,
+>>   	if (!an->ps_key)
+>>   	    return;
+>>
+>> +	if (ath9k_modparam_nohwcrypt)
+>> +		return;
+>> +
+> This looks wrong to me. ps_key is used for better powersave handling of
+> both unencrypted and encrypted stations (using the keycache only for tx
+> filtering on unencrypted stations).
+
+Ok..should we just remove the spammy printk when the keycache entry
+is out of range then?
+
+THanks,
+Ben
+
 >
-> It looks sane to me from a quick review.  so unless somebody can
-> actually test this we'll probably have to push the patch...
+> - Felix
 
-Can you please test this patch for us?
 
-Thanks
-Daniel
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
