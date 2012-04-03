@@ -1,60 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48024 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753911Ab2DGCYW (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:51581 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751426Ab2DCEVg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 22:24:22 -0400
-Received: by mail-iy0-f174.google.com with SMTP id z16so3783788iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 19:24:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1333746081.5577.11.camel@jlt3.sipsolutions.net>
-References: <1333746081.5577.11.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 6 Apr 2012 19:24:02 -0700
-Message-ID: <CAB=NE6UOGLB8tGM4Z3CN4io3y3UcP0CedPnrDErNvHEO_YTX0g@mail.gmail.com> (sfid-20120407_042434_091072_94CF308F)
-Subject: Re: [PATCH] compat-wireless: simplify mac80211 queue backport
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 3 Apr 2012 00:21:36 -0400
+Received: by mail-ob0-f174.google.com with SMTP id tb18so3046594obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 21:21:36 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
+	devel@lists.open80211s.org, linville@tuxdriver.com,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH v3 4/4] mac80211: Check basic rates when peering
+Date: Mon,  2 Apr 2012 21:21:22 -0700
+Message-Id: <1333426882-22948-4-git-send-email-ashok@cozybit.com> (sfid-20120403_062158_378041_527A2530)
+In-Reply-To: <1333426882-22948-1-git-send-email-ashok@cozybit.com>
+References: <1333426882-22948-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 6, 2012 at 2:01 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> With compat now having a define for netif_wake_subqueue
-> for kernels 2.6.23 and higher we can remove most of the
-> backport patch for multiqueue. This does give up on
-> kernels 2.6.22 and older though.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Section 13.2.3 of IEEE 80211s standard requires BSSBasicRateSet of mesh nodes
+to be identical to establish peer link.
 
-Tested with ckmake, applied and pushed, thanks!
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ v2:
+        indicate basic_rates conditionally (Johannes)
+ v3:
+ 	Avoid possible conflicts
 
+ net/mac80211/mesh.c       |   15 ++++++++++-----
+ net/mac80211/mesh.h       |    2 +-
+ net/mac80211/mesh_plink.c |    2 +-
+ 3 files changed, 12 insertions(+), 7 deletions(-)
 
-    mcgrof@flash ~/devel/compat-wireless (git::master)$ time ckmake
-    Trying kernel                     3.2.2-030202-generic  [OK]
-    Trying kernel                    3.1.10-030110-generic  [OK]
-    Trying kernel                    3.0.18-030018-generic  [OK]
-    Trying kernel                  2.6.39-02063904-generic  [OK]
-    Trying kernel                  2.6.38-02063808-generic  [OK]
-    Trying kernel                  2.6.37-02063706-generic  [OK]
-    Trying kernel                  2.6.36-02063604-generic  [OK]
-    Trying kernel                  2.6.35-02063512-generic  [OK]
-    Trying kernel                  2.6.34-02063410-generic  [OK]
-    Trying kernel                  2.6.33-02063305-generic  [OK]
-    Trying kernel                  2.6.32-02063255-generic  [OK]
-    Trying kernel                  2.6.31-02063113-generic  [OK]
-    Trying kernel                  2.6.30-02063010-generic  [OK]
-    Trying kernel                  2.6.29-02062906-generic  [OK]
-    Trying kernel                  2.6.28-02062810-generic  [OK]
-    Trying kernel                    2.6.27-020627-generic  [OK]
-    Trying kernel                    2.6.26-020626-generic  [OK]
-    Trying kernel                    2.6.25-020625-generic  [OK]
-    Trying kernel                    2.6.24-020624-generic  [OK]
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index e9362e4..c43026e 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -69,11 +69,13 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
+  *
+  * @ie: information elements of a management frame from the mesh peer
+  * @sdata: local mesh subif
++ * @basic_rates: BSSBasicRateSet of the peer candidate
+  *
+  * This function checks if the mesh configuration of a mesh point matches the
+  * local mesh configuration, i.e. if both nodes belong to the same mesh network.
+  */
+-bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_data *sdata)
++bool mesh_matches_local(struct ieee802_11_elems *ie,
++			struct ieee80211_sub_if_data *sdata, u32 basic_rates)
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -97,6 +99,9 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
+ 	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
+ 		goto mismatch;
+ 
++	if (sdata->vif.bss_conf.basic_rates != basic_rates)
++		goto mismatch;
++
+ 	/* disallow peering with mismatched channel types for now */
+ 	if (ie->ht_info_elem &&
+ 	    (local->_oper_channel_type !=
+@@ -653,12 +658,12 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
+ 		return;
+ 
++	supp_rates = ieee80211_sta_get_rates(local, &elems,
++					     band, &basic_rates);
++
+ 	if (elems.mesh_id && elems.mesh_config &&
+-	    mesh_matches_local(&elems, sdata)) {
+-		supp_rates = ieee80211_sta_get_rates(local, &elems,
+-						     band, &basic_rates);
++	    mesh_matches_local(&elems, sdata, basic_rates))
+ 		mesh_neighbour_update(mgmt->sa, supp_rates, sdata, &elems);
+-	}
+ }
+ 
+ static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 8d53b71..48b00b6 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -204,7 +204,7 @@ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
+ int mesh_rmc_check(u8 *addr, struct ieee80211s_hdr *mesh_hdr,
+ 		struct ieee80211_sub_if_data *sdata);
+ bool mesh_matches_local(struct ieee802_11_elems *ie,
+-		struct ieee80211_sub_if_data *sdata);
++			struct ieee80211_sub_if_data *sdata, u32 basic_rates);
+ void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
+ void mesh_mgmt_ies_add(struct sk_buff *skb,
+ 		struct ieee80211_sub_if_data *sdata);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 58bdb57..5fd136d 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -564,7 +564,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 					rx_status->band, &basic_rates);
+ 
+ 	if (ftype != WLAN_SP_MESH_PEERING_CLOSE &&
+-	    (!mesh_matches_local(&elems, sdata))) {
++	    (!mesh_matches_local(&elems, sdata, basic_rates))) {
+ 		matches_local = false;
+ 		switch (ftype) {
+ 		case WLAN_SP_MESH_PEERING_OPEN:
+-- 
+1.7.5.4
 
-    real    27m43.716s
-    user    69m9.115s
-    sys     13m8.241s
-
-  Luis
