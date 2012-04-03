@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:60661 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021Ab2DSP5U (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:33974 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751948Ab2DCG0N convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 11:57:20 -0400
-Message-ID: <1334851014.16897.297.camel@aeonflux> (sfid-20120419_175724_248624_8CE4E5AF)
-Subject: Re: [PATCH] iwlwifi: add option to disable 5GHz band
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 19 Apr 2012 17:56:54 +0200
-In-Reply-To: <4F901F51.3000704@sipsolutions.net>
-References: <1334830280-3019-1-git-send-email-sgruszka@redhat.com>
-	 <4F901F51.3000704@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 3 Apr 2012 02:26:13 -0400
+MIME-Version: 1.0
+In-Reply-To: <4F7A923D.5000002@candelatech.com>
+References: <4F7A8EB7.4060200@silka.with-linux.com>
+	<4F7A923D.5000002@candelatech.com>
+Date: Tue, 3 Apr 2012 11:56:12 +0530
+Message-ID: <CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com> (sfid-20120403_082629_116591_D12ACB39)
+Subject: Re: [ath9k-devel] 3.3.1 ath9k regression
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Kelly Anderson <kelly@silka.with-linux.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi Kelly,
 
-> > There are various problems happened on 5GHz band not observed on
-> > 2.4 GHz (microcode errors, queue stuck, etc... ) . Also roaming
-> > between 5GHz AP and 2GHz does not work very well. To workaround
-> > the problems add option to disable 5GHz support. This will help
-> > on environments where APs are dual-band, and devices will not try
-> > to associate on band where issues happen.
-> 
-> Would it make sense to somehow do this in cfg80211? Today, our driver 
-> may be the only one having this problem (which I've never really heard 
-> about?), but is it always going to be?
+please provide us as much details, about the card and pls provide
+lspci -vvvvvvxxx output to see if the ASPM is enabled or not. cced
+Felix also
 
-honestly I have seen 5GHz problems with our driver multiple times. I
-always ended up disabling 5GHz support in the AP since I rarely have
-time to debug this. It only happens after long time of operation for me,
-but was like super annoying all the time.
+PS: Ben thanks!
 
-And I had similar issues with N support.
+On Tue, Apr 3, 2012 at 11:31 AM, Ben Greear <greearb@candelatech.com> wrote:
+> Ath9k list should be interested in this...
+>
+> Ben
+>
+> On 04/02/2012 10:46 PM, Kelly Anderson wrote:
+>> This patch in 3.3.1 is causing ath9k device not to show/work on bootup.
+>> ifconfig does not show the device unless I revert this patch. With the patch
+>> reverted the device works as expected. This is verified on two different
+>> machines that are both using ath9k mini-pcie wifi cards.
+>>
+>>>> ath9k: fix going to full-sleep on PS idle
+>>
+>>>> commit c1afdaff90538ef085b756454f12b29575411214 upstream.
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at http://www.tux.org/lkml/
+>
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
 
-I would personally be fine with a global debugfs option within cfg80211
-to disable it.
-
-Regards
-
-Marcel
 
 
+-- 
+thanks,
+shafi
