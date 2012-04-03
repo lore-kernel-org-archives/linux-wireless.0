@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28648 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932570Ab2DDUAM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2012 16:00:12 -0400
-Date: Wed, 4 Apr 2012 13:00:09 -0700
-From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: handle concurrent AP-STA channel switches
-Message-ID: <20120404200008.GA19758@pista> (sfid-20120404_220017_635291_235661FC)
-References: <1333565817-18816-1-git-send-email-c_tpeder@qca.qualcomm.com>
- <1333565817-18816-2-git-send-email-c_tpeder@qca.qualcomm.com>
- <1333566178.16978.29.camel@joe2Laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1333566178.16978.29.camel@joe2Laptop>
+Received: from mail.neratec.com ([80.75.119.105]:37774 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752210Ab2DCPQE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 11:16:04 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linville@tuxdriver.com
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com, achadd@qca.qualcomm.com,
+	nbd@openwrt.org, Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH 2/3] ath9k: add DFS pattern detector instance to ath_softc
+Date: Tue,  3 Apr 2012 17:15:50 +0200
+Message-Id: <1333466151-6570-3-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120403_171616_257826_BE94D22B)
+In-Reply-To: <1333466151-6570-1-git-send-email-zefir.kurtisi@neratec.com>
+References: <1333466151-6570-1-git-send-email-zefir.kurtisi@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 ++
+ drivers/net/wireless/ath/ath9k/init.c  |    4 ++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-On Wed, Apr 04, 2012 at 12:02:58PM -0700, Joe Perches wrote:
-> On Wed, 2012-04-04 at 11:56 -0700, Thomas Pedersen wrote:
-> > If an ath6kl AP vif is beaconing on one channel, and a STA vif
-> > associates on a different channel, a WMI_DISCONNECT event will be sent
-> > to the AP vif. Make the AP vif follow the STA interface, and notify
-> > userspace.
-> 
-> trivia:
-> 
-> > diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> []
-> > @@ -1015,6 +1015,19 @@ out:
-> >  	vif->scan_req = NULL;
-> >  }
-> >  
-> > +void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int channel,
-> > +				      enum wmi_phy_mode mode)
-> > +{
-> > +	enum nl80211_channel_type type;
-> > +
-> > +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "channel switch notify nw_type %d"
-> > +		   "freq %d mode %d", vif->nw_type, channel, mode);
-> 
-> Please coalesce formats.
-> If you had, you'd've seen a problem with this format.
-> Add a newline "\n" terminator to it too.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 8c84049..f2ade45 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -26,6 +26,7 @@
+ #include "debug.h"
+ #include "common.h"
+ #include "mci.h"
++#include "dfs.h"
+ 
+ /*
+  * Header for the ath9k.ko driver core *only* -- hw code nor any other driver
+@@ -680,6 +681,7 @@ struct ath_softc {
+ 
+ 	struct ath_ant_comb ant_comb;
+ 	u8 ant_tx, ant_rx;
++	struct dfs_pattern_detector *dfs_detector;
+ };
+ 
+ void ath9k_tasklet(unsigned long data);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index ad1be7d..f9130f7 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -519,6 +519,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	atomic_set(&ah->intr_ref_cnt, -1);
+ 	sc->sc_ah = ah;
+ 
++	sc->dfs_detector = dfs_pattern_detector_init(NL80211_DFS_UNSET);
++
+ 	if (!pdata) {
+ 		ah->ah_flags |= AH_USE_EEPROM;
+ 		sc->sc_ah->led_pin = -1;
+@@ -821,6 +823,8 @@ static void ath9k_deinit_softc(struct ath_softc *sc)
+ 			ath_tx_cleanupq(sc, &sc->tx.txq[i]);
+ 
+ 	ath9k_hw_deinit(sc->sc_ah);
++	if (sc->dfs_detector != NULL)
++		sc->dfs_detector->exit(sc->dfs_detector);
+ 
+ 	kfree(sc->sc_ah);
+ 	sc->sc_ah = NULL;
+-- 
+1.7.4.1
 
-I'm not sure what you mean by "coalesce formats". The freq / channel
-semantic mismatch? I'll change that and add a newline as well.
-
-Thanks for looking.
-Thomas
