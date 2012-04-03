@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:58525 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab2DXIpt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53973 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753789Ab2DCMLz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 04:45:49 -0400
-Received: by vcqp1 with SMTP id p1so315280vcq.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 01:45:49 -0700 (PDT)
-Message-ID: <4F96683B.80106@gmail.com> (sfid-20120424_104553_665451_E9A02B24)
-Date: Tue, 24 Apr 2012 04:45:47 -0400
-From: Jonathan Bither <jonbither@gmail.com>
-MIME-Version: 1.0
-To: Florian Fainelli <florian@openwrt.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath5k: add missing iounmap to AHB probe removal
-References: <4F96647F.9060803@gmail.com> <4F96677C.40901@openwrt.org>
-In-Reply-To: <4F96677C.40901@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 3 Apr 2012 08:11:55 -0400
+Message-ID: <1333455114.3574.15.camel@jlt3.sipsolutions.net> (sfid-20120403_141159_401224_41050604)
+Subject: Re: 802.11ac support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh <maheshp@posedge.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Chakra Parvathaneni <chakra@posedge.com>
+Date: Tue, 03 Apr 2012 14:11:54 +0200
+In-Reply-To: <1333454805.3574.14.camel@jlt3.sipsolutions.net> (sfid-20120403_140651_648547_5B4897F9)
+References: <f17c700977012ada368da4f339b9c639@posedge.com>
+	 <1329933458.4657.2.camel@jlt3.sipsolutions.net>
+	 <1329937072.4657.4.camel@jlt3.sipsolutions.net>
+	 <4F471F40.8060503@posedge.com>
+	 <1330070145.3426.8.camel@jlt3.sipsolutions.net>
+	 <4F4772AB.9000305@posedge.com>
+	 <CAJ-VmomfVCc0oQMjfwsrheC+Z2k3+-czo4F9GeeO=upHiHnQxg@mail.gmail.com>
+	 (sfid-20120225_202329_108179_7C3BAD32) <1330205424.3509.5.camel@jlt3.sipsolutions.net>
+	 <eab3dfdc8ebc87ec08ca64db9f237d90@posedge.com>
+	 (sfid-20120402_104501_564453_6BF9F70F) <1333454805.3574.14.camel@jlt3.sipsolutions.net>
+	 (sfid-20120403_140651_648547_5B4897F9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alright, thanks for the reviewal. I'll submit a V2
+On Tue, 2012-04-03 at 14:06 +0200, Johannes Berg wrote:
 
-On 04/24/2012 04:42 AM, Florian Fainelli wrote:
-> Hi Jonathan,
-> 
-> Le 04/24/12 10:29, Jonathan Bither a écrit :
->> When our driver device is removed on the AHB bus, our IO memory is never unmapped.
->>
->> Signed-off-by: Jonathan Bither<jonbither@gmail.com>
->>
->> diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
->> index 8c50d9d..eebf439 100644
->> --- a/drivers/net/wireless/ath/ath5k/ahb.c
->> +++ b/drivers/net/wireless/ath/ath5k/ahb.c
->> @@ -197,12 +197,14 @@ static int ath_ahb_remove(struct platform_device *pdev)
->>       struct ar231x_board_config *bcfg = pdev->dev.platform_data;
->>       struct ieee80211_hw *hw = platform_get_drvdata(pdev);
->>       struct ath5k_hw *ah;
->> +    void __iomem *mem;
->>       u32 reg;
->>
->>       if (!hw)
->>           return 0;
->>
->>       ah = hw->priv;
->> +    mem = ah->iobase;
->>
->>       if (bcfg->devid>= AR5K_SREV_AR2315_R6) {
->>           /* Disable WMAC AHB arbitration */
->> @@ -222,6 +224,7 @@ static int ath_ahb_remove(struct platform_device *pdev)
->>       ath5k_deinit_ah(ah);
->>       platform_set_drvdata(pdev, NULL);
->>       ieee80211_free_hw(hw);
->> +    iounmap(mem);
-> 
-> You don't need this temporary variable, just use iounmap(ah->iobase) after ath5k_deinit_ah(ah) just like how it is done in the PCI case.
-> -- 
-> Florian
+> In any case, here's my list of things I think will/may need to be done
+> for 11ac in the stack:
+[...]
+
+It'd also be nice to have iw parse the VHT IEs properly, completely
+forgot about that (but it's really easy)
+
+johannes
+
