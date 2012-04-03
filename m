@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33631 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751858Ab2DRWyN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 18:54:13 -0400
-Message-ID: <4F8F4610.6050908@candelatech.com> (sfid-20120419_005434_999576_4743AB6C)
-Date: Wed, 18 Apr 2012 15:54:08 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 5/6] mac80211: Add more ethtools stats: survey, rates,
- etc
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>   <1334684807-14026-6-git-send-email-greearb@candelatech.com>   (sfid-20120417_194713_443684_C3723CAF) <1334713300.3725.18.camel@jlt3.sipsolutions.net>  <4F8E358F.1020501@candelatech.com> <1334721939.3672.4.camel@jlt3.sipsolutions.net> <4F8EE995.9010701@candelatech.com> <4F8F42D2.60808@sipsolutions.net>
-In-Reply-To: <4F8F42D2.60808@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from perches-mx.perches.com ([206.117.179.246]:49070 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754544Ab2DCSll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 14:41:41 -0400
+Message-ID: <1333478499.26079.67.camel@joe2Laptop> (sfid-20120403_204144_290287_D8B8CED3)
+Subject: Re: [PATCH 1/2] ath6kl: Use vmalloc instead of kmalloc for fw
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org,
+	PingYang Zhang <pingzhan@qca.qualcomm.com>
+Date: Tue, 03 Apr 2012 11:41:39 -0700
+In-Reply-To: <4F7B411D.5070903@qca.qualcomm.com>
+References: <1332942686-6965-1-git-send-email-nataraja@qca.qualcomm.com>
+	 <4F7B411D.5070903@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/18/2012 03:40 PM, Johannes Berg wrote:
-> On 4/18/2012 9:19 AM, Ben Greear wrote:
->> Can I add a new API that takes a channel object and returns the
->> survey results for that? If channel is null, then the API should
->> return the survey for the current channel if possible.
->> I'll implement it on ath9k.
->
-> I don't think you should. It's not nasty anyway since it's built to return all info.
+On Tue, 2012-04-03 at 21:27 +0300, Kalle Valo wrote:
+> On 03/28/2012 04:51 PM, Vivek Natarajan wrote:
+> > Sometimes it has been observed that allocating a contiguous memory
+> > of more than 100K fails with kmalloc. This has been modified to
+> > use vmalloc instead.
+> > 
+> > Signed-off-by: PingYang Zhang <pingzhan@qca.qualcomm.com>
+> > Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+> 
+> Thanks, both patches applied.
 
-So, for ethtool stats, I can iterate through all available surveys,
-and just report the value that matches the current channel (if any)?
+Because the vmalloc space is limited, this should try
+kmalloc first and only on failure try vmalloc.
 
-Thanks,
-Ben
-
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Andrew, more reasons for a real helper/API.
+Care to rap any knuckles?
 
