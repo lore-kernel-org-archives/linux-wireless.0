@@ -1,118 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:32996 "HELO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758489Ab2DJDHQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 23:07:16 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 2/5] mwifiex: set default regulatory domain
-Date: Mon,  9 Apr 2012 20:06:54 -0700
-Message-Id: <1334027217-23724-3-git-send-email-bzhao@marvell.com> (sfid-20120410_050722_012066_764A303B)
-In-Reply-To: <1334027217-23724-1-git-send-email-bzhao@marvell.com>
-References: <1334027217-23724-1-git-send-email-bzhao@marvell.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:40820 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750950Ab2DCGHj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 02:07:39 -0400
+Received: by lahj13 with SMTP id j13so3800277lah.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 23:07:37 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1333417250-24560-2-git-send-email-kubakici@wp.pl>
+References: <1333417250-24560-1-git-send-email-kubakici@wp.pl>
+	<1333417250-24560-2-git-send-email-kubakici@wp.pl>
+Date: Tue, 3 Apr 2012 08:07:37 +0200
+Message-ID: <CAL1gcdOnvgFhiPnBLxzQJMH3qrsO-s_TKN8u9MocNxdKOxVyTQ@mail.gmail.com> (sfid-20120403_080743_236976_EBB2C667)
+Subject: Re: [PATCH v2 1/4] rt2800: introduce wpdma_disable function
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Jakub Kicinski <kubakici@wp.pl>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Tue, Apr 3, 2012 at 3:40 AM, Jakub Kicinski <kubakici@wp.pl> wrote:
+> Introduce wpdma_disable function to simplify the code.
+>
+> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+> Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Driver gets region code from FW during initialisation. This patch
-makes use of it for settting default regulatory domain using
-regulatory_hint() API.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    6 ++++++
- drivers/net/wireless/mwifiex/cfp.c      |   31 +++++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/main.h     |    1 +
- 3 files changed, 38 insertions(+), 0 deletions(-)
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |   32 ++++++++++++++++--------------
+>  drivers/net/wireless/rt2x00/rt2800lib.h |    1 +
+>  drivers/net/wireless/rt2x00/rt2800pci.c |   10 +--------
+>  3 files changed, 19 insertions(+), 24 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 6c0a12e..8aee6d4 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -295,6 +295,20 @@ int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
+>  }
+>  EXPORT_SYMBOL_GPL(rt2800_wait_wpdma_ready);
+>
+> +void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev)
+> +{
+> +       u32 reg;
+> +
+> +       rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
+> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
+> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
+> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
+> +       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
+> +       rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+> +}
+> +EXPORT_SYMBOL_GPL(rt2800_disable_wpdma);
+> +
+>  static bool rt2800_check_firmware_crc(const u8 *data, const size_t len)
+>  {
+>        u16 fw_crc;
+> @@ -436,10 +450,7 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+>         * Disable DMA, will be reenabled later when enabling
+>         * the radio.
+>         */
+> -       rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
+> -       rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+> +       rt2800_disable_wpdma(rt2x00dev);
+>
+>        /*
+>         * Initialize firmware.
+> @@ -2717,13 +2728,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>        unsigned int i;
+>        int ret;
+>
+> -       rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
+> -       rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+> +       rt2800_disable_wpdma(rt2x00dev);
+>
+>        ret = rt2800_drv_init_registers(rt2x00dev);
+>        if (ret)
+> @@ -3997,10 +4002,7 @@ void rt2800_disable_radio(struct rt2x00_dev *rt2x00dev)
+>  {
+>        u32 reg;
+>
+> -       rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
+> -       rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+> +       rt2800_disable_wpdma(rt2x00dev);
+>
+>        /* Wait for DMA, ignore error */
+>        rt2800_wait_wpdma_ready(rt2x00dev);
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+> index 419e36c..18a0b67 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+> @@ -208,5 +208,6 @@ int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>                        u8 buf_size);
+>  int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
+>                      struct survey_info *survey);
+> +void rt2800_disable_wpdma(struct rt2x00_dev *rt2x00dev);
+>
+>  #endif /* RT2800LIB_H */
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 0397bbf..e499389 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -361,7 +361,6 @@ static void rt2800pci_clear_entry(struct queue_entry *entry)
+>  static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
+>  {
+>        struct queue_entry_priv_pci *entry_priv;
+> -       u32 reg;
+>
+>        /*
+>         * Initialize registers.
+> @@ -402,14 +401,7 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
+>                                 rt2x00dev->rx[0].limit - 1);
+>        rt2x00pci_register_write(rt2x00dev, RX_DRX_IDX, 0);
+>
+> -       /*
+> -        * Enable global DMA configuration
+> -        */
+> -       rt2x00pci_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
+> -       rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
+> -       rt2x00pci_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+> +       rt2800_disable_wpdma(rt2x00dev);
+>
+>        rt2x00pci_register_write(rt2x00dev, DELAY_INT_CFG, 0);
+>
+> --
+> 1.7.7.6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index c7e8918..bd07030 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1422,6 +1422,7 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
- 	void *wdev_priv;
- 	struct wireless_dev *wdev;
- 	struct ieee80211_sta_ht_cap *ht_info;
-+	u8 *country_code;
- 
- 	wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
- 	if (!wdev) {
-@@ -1484,6 +1485,11 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
- 			"info: successfully registered wiphy device\n");
- 	}
- 
-+	country_code = mwifiex_11d_code_2_region(priv->adapter->region_code);
-+	if (country_code && regulatory_hint(wdev->wiphy, country_code))
-+		dev_err(priv->adapter->dev,
-+			"%s: regulatory_hint failed\n", __func__);
-+
- 	priv->wdev = wdev;
- 
- 	return ret;
-diff --git a/drivers/net/wireless/mwifiex/cfp.c b/drivers/net/wireless/mwifiex/cfp.c
-index 2fe1c33..560871b 100644
---- a/drivers/net/wireless/mwifiex/cfp.c
-+++ b/drivers/net/wireless/mwifiex/cfp.c
-@@ -71,6 +71,37 @@ u16 region_code_index[MWIFIEX_MAX_REGION_CODE] = { 0x10, 0x20, 0x30,
- 
- static u8 supported_rates_n[N_SUPPORTED_RATES] = { 0x02, 0x04, 0 };
- 
-+struct region_code_mapping {
-+	u8 code;
-+	u8 region[IEEE80211_COUNTRY_STRING_LEN];
-+};
-+
-+static struct region_code_mapping region_code_mapping_t[] = {
-+	{ 0x10, "US " }, /* US FCC */
-+	{ 0x20, "CA " }, /* IC Canada */
-+	{ 0x30, "EU " }, /* ETSI */
-+	{ 0x31, "ES " }, /* Spain */
-+	{ 0x32, "FR " }, /* France */
-+	{ 0x40, "JP " }, /* Japan */
-+	{ 0x41, "JP " }, /* Japan */
-+	{ 0x50, "CN " }, /* China */
-+};
-+
-+/* This function converts integer code to region string */
-+u8 *mwifiex_11d_code_2_region(u8 code)
-+{
-+	u8 i;
-+	u8 size = sizeof(region_code_mapping_t)/
-+				sizeof(struct region_code_mapping);
-+
-+	/* Look for code in mapping table */
-+	for (i = 0; i < size; i++)
-+		if (region_code_mapping_t[i].code == code)
-+			return region_code_mapping_t[i].region;
-+
-+	return NULL;
-+}
-+
- /*
-  * This function maps an index in supported rates table into
-  * the corresponding data rate.
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index fcccf6b..e601c46 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -965,6 +965,7 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 					u32 *flags, struct vif_params *params);
- int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct net_device *dev);
- 
-+u8 *mwifiex_11d_code_2_region(u8 code);
- 
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
+
+
 -- 
-1.7.0.2
-
+---
+Gertjan
