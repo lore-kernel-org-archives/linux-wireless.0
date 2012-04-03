@@ -1,185 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40897 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932416Ab2DKRxH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 13:53:07 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 04/10] ath9k: Support ethtool getstats api.
-Date: Wed, 11 Apr 2012 10:52:12 -0700
-Message-Id: <1334166738-28243-5-git-send-email-greearb@candelatech.com> (sfid-20120411_195315_675673_B230B72D)
-In-Reply-To: <1334166738-28243-1-git-send-email-greearb@candelatech.com>
-References: <1334166738-28243-1-git-send-email-greearb@candelatech.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:40820 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751212Ab2DCGIJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 02:08:09 -0400
+Received: by mail-lpp01m010-f46.google.com with SMTP id j13so3800277lah.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 23:08:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1333417250-24560-3-git-send-email-kubakici@wp.pl>
+References: <1333417250-24560-1-git-send-email-kubakici@wp.pl>
+	<1333417250-24560-3-git-send-email-kubakici@wp.pl>
+Date: Tue, 3 Apr 2012 08:08:08 +0200
+Message-ID: <CAL1gcdMS_oM03Je=imAVKC97SAk09q5dgLOUa9MJni-VUWvQ_Q@mail.gmail.com> (sfid-20120403_080812_358067_70FD9BAB)
+Subject: Re: [PATCH v2 2/4] rt2800: add disabling of DMA before loading firmware
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Jakub Kicinski <kubakici@wp.pl>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Tue, Apr 3, 2012 at 3:40 AM, Jakub Kicinski <kubakici@wp.pl> wrote:
+> Legacy driver disables DMA before loading firmware.
+>
+> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+> Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-This returns many of the values that formerly could
-only be obtained from debugfs.  This should be an
-improvement when trying to access these counters
-programatically.  Currently this support is only
-enabled when DEBUGFS is enabled because otherwise
-these stats are not accumulated.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 ba5af8e... 39f8f7c... M	drivers/net/wireless/ath/ath9k/main.c
- drivers/net/wireless/ath/ath9k/main.c |  134 +++++++++++++++++++++++++++++++++
- 1 files changed, 134 insertions(+), 0 deletions(-)
+> ---
+> 2011_0406_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO
+> rtmp_init_inf.c:186
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 8aee6d4..cc6ca18 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -426,6 +426,8 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+>                rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000002);
+>        }
+>
+> +       rt2800_disable_wpdma(rt2x00dev);
+> +
+>        /*
+>         * Write firmware to the device.
+>         */
+> --
+> 1.7.7.6
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ba5af8e..39f8f7c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2404,6 +2404,134 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
- 	return 0;
- }
- 
-+#ifdef CONFIG_ATH9K_DEBUGFS
-+
-+/* Ethtool support for get-stats */
-+
-+#define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
-+static const char ath9k_gstrings_stats[][ETH_GSTRING_LEN] = {
-+	"tx_pkts_nic",
-+	"tx_bytes_nic",
-+	"rx_pkts_nic",
-+	"rx_bytes_nic",
-+	AMKSTR(d_tx_pkts),
-+	AMKSTR(d_tx_bytes),
-+	AMKSTR(d_tx_mpdus_queued),
-+	AMKSTR(d_tx_mpdus_completed),
-+	AMKSTR(d_tx_mpdu_xretries),
-+	AMKSTR(d_tx_aggregates),
-+	AMKSTR(d_tx_ampdus_queued_hw),
-+	AMKSTR(d_tx_ampdus_queued_sw),
-+	AMKSTR(d_tx_ampdus_completed),
-+	AMKSTR(d_tx_ampdu_retries),
-+	AMKSTR(d_tx_ampdu_xretries),
-+	AMKSTR(d_tx_fifo_underrun),
-+	AMKSTR(d_tx_op_exceeded),
-+	AMKSTR(d_tx_timer_expiry),
-+	AMKSTR(d_tx_desc_cfg_err),
-+	AMKSTR(d_tx_data_underrun),
-+	AMKSTR(d_tx_delim_underrun),
-+
-+	"d_rx_decrypt_crc_err",
-+	"d_rx_phy_err",
-+	"d_rx_mic_err",
-+	"d_rx_pre_delim_crc_err",
-+	"d_rx_post_delim_crc_err",
-+	"d_rx_decrypt_busy_err",
-+
-+	"d_rx_phyerr_radar",
-+	"d_rx_phyerr_ofdm_timing",
-+	"d_rx_phyerr_cck_timing",
-+
-+};
-+#define ATH9K_SSTATS_LEN ARRAY_SIZE(ath9k_gstrings_stats)
-+
-+static void ath9k_get_et_strings(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS)
-+		memcpy(data, *ath9k_gstrings_stats,
-+		       sizeof(ath9k_gstrings_stats));
-+}
-+
-+static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif, int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return ATH9K_SSTATS_LEN;
-+	return 0;
-+}
-+
-+#define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
-+#define AWDATA(elem)							\
-+	do {								\
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
-+		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
-+	} while (0)
-+
-+#define AWDATA_RX(elem)						\
-+	do {							\
-+		data[i++] = sc->debug.stats.rxstats.elem;	\
-+	} while (0)
-+
-+static void ath9k_get_et_stats(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       struct ethtool_stats *stats, u64 *data)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	int i = 0;
-+
-+	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_pkts_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_pkts_all);
-+	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_bytes_all +
-+		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_bytes_all);
-+	AWDATA_RX(rx_pkts_all);
-+	AWDATA_RX(rx_bytes_all);
-+
-+	AWDATA(tx_pkts_all);
-+	AWDATA(tx_bytes_all);
-+	AWDATA(queued);
-+	AWDATA(completed);
-+	AWDATA(xretries);
-+	AWDATA(a_aggr);
-+	AWDATA(a_queued_hw);
-+	AWDATA(a_queued_sw);
-+	AWDATA(a_completed);
-+	AWDATA(a_retries);
-+	AWDATA(a_xretries);
-+	AWDATA(fifo_underrun);
-+	AWDATA(xtxop);
-+	AWDATA(timer_exp);
-+	AWDATA(desc_cfg_err);
-+	AWDATA(data_underrun);
-+	AWDATA(delim_underrun);
-+
-+	AWDATA_RX(decrypt_crc_err);
-+	AWDATA_RX(phy_err);
-+	AWDATA_RX(mic_err);
-+	AWDATA_RX(pre_delim_crc_err);
-+	AWDATA_RX(post_delim_crc_err);
-+	AWDATA_RX(decrypt_busy_err);
-+
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_RADAR]);
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_OFDM_TIMING]);
-+	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_CCK_TIMING]);
-+
-+	BUG_ON(i != ATH9K_SSTATS_LEN);
-+}
-+
-+/* End of ethtool get-stats functions */
-+
-+#endif
-+
-+
- struct ieee80211_ops ath9k_ops = {
- 	.tx 		    = ath9k_tx,
- 	.start 		    = ath9k_start,
-@@ -2432,4 +2560,10 @@ struct ieee80211_ops ath9k_ops = {
- 	.get_stats	    = ath9k_get_stats,
- 	.set_antenna	    = ath9k_set_antenna,
- 	.get_antenna	    = ath9k_get_antenna,
-+
-+#ifdef CONFIG_ATH9K_DEBUGFS
-+	.get_et_sset_count  = ath9k_get_et_sset_count,
-+	.get_et_stats  = ath9k_get_et_stats,
-+	.get_et_strings  = ath9k_get_et_strings,
-+#endif
- };
+
+
 -- 
-1.7.3.4
-
+---
+Gertjan
