@@ -1,84 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46218 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751617Ab2D2NWD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2012 09:22:03 -0400
-Message-ID: <4F9D4073.200@hauke-m.de> (sfid-20120429_152207_253421_1E9AB011)
-Date: Sun, 29 Apr 2012 15:21:55 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de> <4F9CF839.1040401@broadcom.com>
-In-Reply-To: <4F9CF839.1040401@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:26933 "EHLO
+	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753001Ab2DCQB7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 12:01:59 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: dcbw@redhat.com
+Cc: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org
+Subject: [RFC 2/4] libertas: harden-up exit paths
+Message-Id: <20120403160154.401D39D401E@zog.reactivated.net> (sfid-20120403_180202_254867_36E4BFB9)
+Date: Tue,  3 Apr 2012 17:01:52 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/29/2012 10:13 AM, Arend van Spriel wrote:
-> On 04/29/2012 02:50 AM, Hauke Mehrtens wrote:
->> I have not completely runtime tested these patches as I do not have a
->> PCI(e) devices currently supported by brcmsmac. My SoC (BCM4718) and
->> the PCI devices connected to my SoC (BCM43224) are currently not
->> working with brcmsmac, but they are failing much later that without
->> these patches.
-> 
-> I will test this patch series as well on PCI(e) devices. So you do have
-> a bcm43224 card, but no laptop to fit it in? Just wondering. I will send
-> the results.
-> 
-> Gr. AvS
-> 
-Hi Arend,
+These simple sanity check avoids extra complexity in error paths when
+moving to asynchronous firmware loading (which means the device may fail to
+init some time after its creation).
 
-Thanks for testing these patches. My bcm43224 is directly soldered on
-the main board where also the bcm4718 is on, there is no connector or
-something like that between the bcm4718 and the bcm43224, it is
-impossible to remove the bcm43224 and plug it into a laptop. The bcm4718
-has some problems with the PCIe bus see comment on bcma_wflush16() in
-drivers/net/wireless/brcm80211/brcmsmac/dma.h.
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+---
+ drivers/net/wireless/libertas/main.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-I now finally got the bcm43224 a little bit working, I was able to scan
-for networks, but I was unable to connect to one, I just saw 2 networks
-form devices on my desk, not the other ~15 my Intel card sees. The
-bcm43224 should just be used for 5GHz on my device and the sprom is also
-just configuration for 5GHz operation and I have only some 2.4 GHz
-access points laying around here, so that could be the problem.
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index fa09585..7eaf992 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1033,7 +1033,9 @@ void lbs_remove_card(struct lbs_private *priv)
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
+ 	lbs_remove_mesh(priv);
+-	lbs_scan_deinit(priv);
++
++	if (priv->wiphy_registered)
++		lbs_scan_deinit(priv);
+ 
+ 	/* worker thread destruction blocks on the in-flight command which
+ 	 * should have been cleared already in lbs_stop_card().
+@@ -1128,6 +1130,11 @@ void lbs_stop_card(struct lbs_private *priv)
+ 		goto out;
+ 	dev = priv->dev;
+ 
++	/* If the netdev isn't registered, it means that lbs_start_card() was
++	 * never called so we have nothing to do here. */
++	if (dev->reg_state != NETREG_REGISTERED)
++		goto out;
++
+ 	netif_stop_queue(dev);
+ 	netif_carrier_off(dev);
+ 
+-- 
+1.7.7.6
 
-The Wifi of the bcm4718 is still not working for me. The wifi core has a
-core rev of 17, I handled it the same as core rev 23, but I am getting
-the following errors and after that the system freezes.
-
-[   80.232000] ieee80211 phy1: wl1: wlc_coreinit: ucode did not
-self-suspend!
-[   80.240000] ieee80211 phy1: wlc_coreinit: txfifo mismatch: ucode size
-111 driver size 28518 index 5
-[   80.380000] ieee80211 phy1: wl1: wlc_suspend_mac_and_wait: waited
-83000 uS and MI_MACSSPNDD is still not on.
-[   80.388000] ieee80211 phy1: wl1: psmdebug 0x00ff8cd4, phydebug
-0x00000000, psm_brc 0x0000
-... (~6 times the same 2 lines)
-[   81.132000] ieee80211 phy1: wl1: wlc_suspend_mac_and_wait: waited
-83000 uS and MI_MACSSPNDD is still not on.
-[   81.144000] ieee80211 phy1: wl1: psmdebug 0x00ff8cd4, phydebug
-0x00000000, psm_brc 0x0000
-[   81.156000] ieee80211 phy1: brcms_ops_bss_info_changed: qos enabled:
-false (implement)
-[   81.164000] ieee80211 phy1: brcms_ops_config: change power-save mode:
-false (implement)
-[   81.256000] ieee80211 phy1: wl1: wlc_suspend_mac_and_wait: waited
-83000 uS and MI_MACSSPNDD is still not on.
-[   81.268000] ieee80211 phy1: wl1: psmdebug 0x00ff8cd4, phydebug
-0x00000000, psm_brc 0x0000
-... (~3 times the same 2 lines)
-[   81.708000] ieee80211 phy1: wl1: wlc_suspend_mac_and_wait: waited
-83000 uS and MI_MACSSPNDD is still not on.
-[   81.720000] ieee80211 phy1: wl1: psmdebug 0x00ff8cd4, phydebug
-0x00000000, psm_brc 0x0000
-[   81.732000] ieee80211 phy1: wl1: fifo 0: descriptor error
-[   81.736000] ieee80211 phy1: wl1: fatal error, reinitializing
-
-b43 is working in access pint mode with the wifi core of the bcm4718.
-
-Hauke
