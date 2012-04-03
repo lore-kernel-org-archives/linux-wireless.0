@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:40958 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762823Ab2DLVcm (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43615 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984Ab2DCDxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:32:42 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so2840406pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 14:32:42 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>,
-	Pavel Zubarev <pavel.zubarev@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org, ashok@cozybit.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] mac80211_hwsim: fixup for tsf setting
-Date: Thu, 12 Apr 2012 14:32:21 -0700
-Message-Id: <1334266343-3970-3-git-send-email-javier@cozybit.com> (sfid-20120412_233245_475407_54FA8374)
-In-Reply-To: <1334266343-3970-1-git-send-email-javier@cozybit.com>
-References: <1334266343-3970-1-git-send-email-javier@cozybit.com>
+	Mon, 2 Apr 2012 23:53:45 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20346.29723.444267.19298@gargle.gargle.HOWL> (sfid-20120403_055349_380623_F6BD72CD)
+Date: Tue, 3 Apr 2012 09:22:59 +0530
+To: Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: deadlock in ath9k, 3.3.0+ kernel.
+In-Reply-To: <4F79DAAC.6080705@candelatech.com>
+References: <4F79D0C5.6090601@candelatech.com>
+	<506697F5827BD842B7CB80D046EBE618929925@aphydexd01b>
+	<4F79DAAC.6080705@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Last patch I sent failed to take into account the offset of each phy.
+Ben Greear wrote:
+> On 04/02/2012 09:34 AM, Manoharan, Sujith wrote:
+> > Patch sent:  http://marc.info/?l=linux-wireless&m=133282325727326&w=2
+> 
+> My 3.3.0 ath9k code doesn't look like that patch at all.  Is some
+> extra back-porting needed for 3.3.0???
+> 
+> 
+> static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+> 			    struct ieee80211_vif *vif)
+> {
+> 	struct ath_node *an;
+> 	an = (struct ath_node *)sta->drv_priv;
+> 
+> #ifdef CONFIG_ATH9K_DEBUGFS
+> 	spin_lock(&sc->nodes_lock);
+> 	list_add(&an->list, &sc->nodes);
+> 	spin_unlock(&sc->nodes_lock);
+> #endif
+> 	an->sta = sta;
+> 	an->vif = vif;
+> 	if (sc->sc_flags & SC_OP_TXAGGR) {
+> 		ath_tx_node_init(sc, an);
+> 		an->maxampdu = 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
+> 				     sta->ht_cap.ampdu_factor);
+> 		an->mpdudensity = parse_mpdudensity(sta->ht_cap.ampdu_density);
+> 	}
+> }
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Yeah, this looks like a different issue. What does decodecode (in scripts/ in the kernel
+source tree) show ?
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 2d2bfce..3edd473 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -694,6 +694,7 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 		    ieee80211_is_probe_resp(mgmt->frame_control))
- 			mgmt->u.beacon.timestamp = cpu_to_le64(
- 				rx_status.mactime +
-+				(data->tsf_offset - data2->tsf_offset) +
- 				24 * 8 * 10 / txrate->bitrate);
- 
- 		memcpy(IEEE80211_SKB_RXCB(nskb), &rx_status, sizeof(rx_status));
--- 
-1.7.5.4
-
+Sujith
