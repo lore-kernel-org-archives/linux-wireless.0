@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48393 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751488Ab2DMLH6 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37083 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879Ab2DCQRG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 07:07:58 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] cfg80211: increse bss expire time
-Date: Fri, 13 Apr 2012 16:38:40 +0530
-Message-ID: <1334315320-4913-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120413_130801_478464_4B59ACFC)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 3 Apr 2012 12:17:06 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/3] ath9k: Add tx-failed counter.
+Date: Tue,  3 Apr 2012 09:16:55 -0700
+Message-Id: <1333469815-26146-1-git-send-email-greearb@candelatech.com> (sfid-20120403_181711_164301_0B173FA5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The background scan completion takes more time when the station is
-having heavy uplink traffic. The scan state machine decides to fall
-back to home channel on every off-channel visit when there are pending
-frames in tx queue. bgscan completion took ~30sec on dual band US
-regulatory card.
+From: Ben Greear <greearb@candelatech.com>
 
-scan period = (20 active channels * probe timeout) +
-              (12 passive channels * passive probe timeout) +
-              (32 * timeout on home channel) +
-              (32 * flush timeout)
+This counts any failure during getting packets into
+the DMA buffers, including out-of-memory, etc.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/wireless/scan.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+:100644 100644 35d1c8e... 9078279... M	drivers/net/wireless/ath/ath9k/debug.c
+:100644 100644 64fcfad... d1c132f... M	drivers/net/wireless/ath/ath9k/debug.h
+:100644 100644 215eb25... 2e49a43... M	drivers/net/wireless/ath/ath9k/main.c
+ drivers/net/wireless/ath/ath9k/debug.c |    1 +
+ drivers/net/wireless/ath/ath9k/debug.h |    2 ++
+ drivers/net/wireless/ath/ath9k/main.c  |    1 +
+ 3 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index fdbcfe6..1442bb6 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -18,7 +18,7 @@
- #include "nl80211.h"
- #include "wext-compat.h"
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 35d1c8e..9078279 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -529,6 +529,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("hw-put-tx-buf:   ", puttxbuf);
+ 	PR("hw-tx-start:     ", txstart);
+ 	PR("hw-tx-proc-desc: ", txprocdesc);
++	PR("TX-Failed:       ", txfailed);
+ 	len += snprintf(buf + len, size - len,
+ 			"%s%11p%11p%10p%10p\n", "txq-memory-address:",
+ 			sc->tx.txq_map[WME_AC_BE],
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 64fcfad..d1c132f 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -113,6 +113,7 @@ struct ath_interrupt_stats {
+  * @puttxbuf: Number of times hardware was given txbuf to write.
+  * @txstart:  Number of times hardware was told to start tx.
+  * @txprocdesc:  Number of times tx descriptor was processed
++ * @txfailed:  Out-of-memory or other errors in xmit path.
+  */
+ struct ath_tx_stats {
+ 	u32 tx_pkts_all;
+@@ -135,6 +136,7 @@ struct ath_tx_stats {
+ 	u32 puttxbuf;
+ 	u32 txstart;
+ 	u32 txprocdesc;
++	u32 txfailed;
+ };
  
--#define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
-+#define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
+ /**
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 215eb25..2e49a43 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1135,6 +1135,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  
- void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev, bool leak)
- {
+ 	if (ath_tx_start(hw, skb, &txctl) != 0) {
+ 		ath_dbg(common, XMIT, "TX failed\n");
++		TX_STAT_INC(txctl.txq->axq_qnum, txfailed);
+ 		goto exit;
+ 	}
+ 
 -- 
-1.7.10
+1.7.3.4
 
