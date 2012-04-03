@@ -1,278 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout02-winn.ispmail.ntl.com ([81.103.221.48]:10757 "EHLO
-	mtaout02-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751656Ab2DCQCZ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21351 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750756Ab2DCEGt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 12:02:25 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-Subject: [RFC 3/4] libertas: add asynchronous firmware loading capability
-Message-Id: <20120403160221.8DE229D401E@zog.reactivated.net> (sfid-20120403_180228_716036_C3D8B0B3)
-Date: Tue,  3 Apr 2012 17:02:19 +0100 (BST)
+	Tue, 3 Apr 2012 00:06:49 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20346.30507.409225.235675@gargle.gargle.HOWL> (sfid-20120403_060652_367027_AD57F495)
+Date: Tue, 3 Apr 2012 09:36:03 +0530
+To: Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: deadlock in ath9k, 3.3.0+ kernel.
+In-Reply-To: <4F7A760C.90002@candelatech.com>
+References: <4F79D0C5.6090601@candelatech.com>
+	<506697F5827BD842B7CB80D046EBE618929925@aphydexd01b>
+	<4F79DAAC.6080705@candelatech.com>
+	<20346.29723.444267.19298@gargle.gargle.HOWL>
+	<4F7A760C.90002@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As described at
-http://article.gmane.org/gmane.linux.kernel.wireless.general/86084
-libertas is taking a long time to load because it loads firmware
-during module loading.
+Ben Greear wrote:
+> On 04/02/2012 08:52 PM, Sujith Manoharan wrote:
+> > Ben Greear wrote:
+> >> On 04/02/2012 09:34 AM, Manoharan, Sujith wrote:
+> >>> Patch sent:  http://marc.info/?l=linux-wireless&m=133282325727326&w=2
+> >>
+> >> My 3.3.0 ath9k code doesn't look like that patch at all.  Is some
+> >> extra back-porting needed for 3.3.0???
+> >>
+> >>
+> >> static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
+> >> 			    struct ieee80211_vif *vif)
+> >> {
+> >> 	struct ath_node *an;
+> >> 	an = (struct ath_node *)sta->drv_priv;
+> >>
+> >> #ifdef CONFIG_ATH9K_DEBUGFS
+> >> 	spin_lock(&sc->nodes_lock);
+> >> 	list_add(&an->list,&sc->nodes);
+> >> 	spin_unlock(&sc->nodes_lock);
+> >> #endif
+> >> 	an->sta = sta;
+> >> 	an->vif = vif;
+> >> 	if (sc->sc_flags&  SC_OP_TXAGGR) {
+> >> 		ath_tx_node_init(sc, an);
+> >> 		an->maxampdu = 1<<  (IEEE80211_HT_MAX_AMPDU_FACTOR +
+> >> 				     sta->ht_cap.ampdu_factor);
+> >> 		an->mpdudensity = parse_mpdudensity(sta->ht_cap.ampdu_density);
+> >> 	}
+> >> }
+> >
+> > Yeah, this looks like a different issue. What does decodecode (in scripts/ in the kernel
+> > source tree) show ?
+> 
+> I'm updating to 3.3.1 and will see if I can reproduce the problem.  It could
+> well be that there was some initial condition that caused this..but nothing
+> was logged to /var/log/messages, and my serial console buffer didn't show
+> the start of the problem, so I have no way to tell.
 
-Add a new API for interface drivers to load their firmware
-asynchronously. The same semantics of the firmware table are followed
-like before.
+minicom has a capture/logging option, which might be useful.
 
-Interface drivers will be converted in follow-up patches, then we can
-remove the old, synchronous firmware loading function.
-
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/libertas/decl.h     |    8 ++
- drivers/net/wireless/libertas/dev.h      |   10 ++
- drivers/net/wireless/libertas/firmware.c |  143 ++++++++++++++++++++++++++++++
- drivers/net/wireless/libertas/main.c     |    3 +
- 4 files changed, 164 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-index 2fb2e31..84a3aa7 100644
---- a/drivers/net/wireless/libertas/decl.h
-+++ b/drivers/net/wireless/libertas/decl.h
-@@ -19,6 +19,10 @@ struct lbs_fw_table {
- };
- 
- struct lbs_private;
-+typedef void (*lbs_fw_cb)(struct lbs_private *priv, int ret,
-+		const struct firmware *helper, const struct firmware *mainfw);
-+
-+struct lbs_private;
- struct sk_buff;
- struct net_device;
- struct cmd_ds_command;
-@@ -70,5 +74,9 @@ int lbs_get_firmware(struct device *dev, u32 card_model,
- 			const struct lbs_fw_table *fw_table,
- 			const struct firmware **helper,
- 			const struct firmware **mainfw);
-+int lbs_get_firmware_async(struct lbs_private *priv, struct device *device,
-+			   u32 card_model, const struct lbs_fw_table *fw_table,
-+			   lbs_fw_cb callback);
-+void lbs_wait_for_firmware_load(struct lbs_private *priv);
- 
- #endif
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index f3fd447..6720054 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -7,6 +7,7 @@
- #define _LBS_DEV_H_
- 
- #include "defs.h"
-+#include "decl.h"
- #include "host.h"
- 
- #include <linux/kfifo.h>
-@@ -180,6 +181,15 @@ struct lbs_private {
- 	wait_queue_head_t scan_q;
- 	/* Whether the scan was initiated internally and not by cfg80211 */
- 	bool internal_scan;
-+
-+	/* Firmware load */
-+	u32 fw_model;
-+	wait_queue_head_t fw_waitq;
-+	struct device *fw_device;
-+	const struct firmware *helper_fw;
-+	const struct lbs_fw_table *fw_table;
-+	const struct lbs_fw_table *fw_iter;
-+	lbs_fw_cb fw_callback;
- };
- 
- extern struct cmd_confirm_sleep confirm_sleep;
-diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
-index 7ec0063..8c21b83 100644
---- a/drivers/net/wireless/libertas/firmware.c
-+++ b/drivers/net/wireless/libertas/firmware.c
-@@ -3,10 +3,151 @@
-  */
- 
- #include <linux/firmware.h>
-+#include <linux/firmware.h>
- #include <linux/module.h>
- 
-+#include "dev.h"
- #include "decl.h"
- 
-+static void load_next_firmware_from_table(struct lbs_private *private);
-+
-+static void lbs_fw_loaded(struct lbs_private *priv, int ret,
-+	const struct firmware *helper, const struct firmware *mainfw)
-+{
-+	unsigned long flags;
-+
-+	lbs_deb_fw("firmware load complete, code %d\n", ret);
-+
-+	/* User must free helper/mainfw */
-+	priv->fw_callback(priv, ret, helper, mainfw);
-+
-+	spin_lock_irqsave(&priv->driver_lock, flags);
-+	priv->fw_callback = NULL;
-+	wake_up(&priv->fw_waitq);
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
-+}
-+
-+static void do_load_firmware(struct lbs_private *priv, const char *name,
-+	void (*cb)(const struct firmware *fw, void *context))
-+{
-+	int ret;
-+
-+	lbs_deb_fw("Requesting %s\n", name);
-+	ret = request_firmware_nowait(THIS_MODULE, true, name,
-+			priv->fw_device, GFP_KERNEL, priv, cb);
-+	if (ret) {
-+		lbs_deb_fw("request_firmware_nowait error %d\n", ret);
-+		lbs_fw_loaded(priv, ret, NULL, NULL);
-+	}
-+}
-+
-+static void main_firmware_cb(const struct firmware *firmware, void *context)
-+{
-+	struct lbs_private *priv = context;
-+
-+	if (!firmware) {
-+		/* Failed to find firmware: try next table entry */
-+		load_next_firmware_from_table(priv);
-+		return;
-+	}
-+
-+	/* Firmware found! */
-+	lbs_fw_loaded(priv, 0, priv->helper_fw, firmware);
-+}
-+
-+static void helper_firmware_cb(const struct firmware *firmware, void *context)
-+{
-+	struct lbs_private *priv = context;
-+
-+	if (!firmware) {
-+		/* Failed to find firmware: try next table entry */
-+		load_next_firmware_from_table(priv);
-+		return;
-+	}
-+
-+	/* Firmware found! */
-+	if (priv->fw_iter->fwname) {
-+		priv->helper_fw = firmware;
-+		do_load_firmware(priv, priv->fw_iter->fwname, main_firmware_cb);
-+	} else {
-+		/* No main firmware needed for this helper --> success! */
-+		lbs_fw_loaded(priv, 0, firmware, NULL);
-+	}
-+}
-+
-+static void load_next_firmware_from_table(struct lbs_private *priv)
-+{
-+	const struct lbs_fw_table *iter;
-+
-+	if (!priv->fw_iter)
-+		iter = priv->fw_table;
-+	else
-+		iter = ++priv->fw_iter;
-+
-+	if (priv->helper_fw) {
-+		release_firmware(priv->helper_fw);
-+		priv->helper_fw = NULL;
-+	}
-+
-+next:
-+	if (!iter->helper) {
-+		/* End of table hit. */
-+		lbs_fw_loaded(priv, -ENOENT, NULL, NULL);
-+		return;
-+	}
-+
-+	if (iter->model != priv->fw_model) {
-+		iter++;
-+		goto next;
-+	}
-+
-+	priv->fw_iter = iter;
-+	do_load_firmware(priv, iter->helper, helper_firmware_cb);
-+}
-+
-+void lbs_wait_for_firmware_load(struct lbs_private *priv)
-+{
-+	wait_event(priv->fw_waitq, priv->fw_callback == NULL);
-+}
-+
-+/**
-+ *  lbs_get_firmware_async - Retrieves firmware asynchronously. Can load
-+ *  either a helper firmware and a main firmware (2-stage), or just the helper.
-+ *
-+ *  @priv:      Pointer to lbs_private instance
-+ *  @dev:     	A pointer to &device structure
-+ *  @card_model: Bus-specific card model ID used to filter firmware table
-+ *		elements
-+ *  @fw_table:	Table of firmware file names and device model numbers
-+ *		terminated by an entry with a NULL helper name
-+ *	@callback: User callback to invoke when firmware load succeeds or fails.
-+ */
-+int lbs_get_firmware_async(struct lbs_private *priv, struct device *device,
-+			    u32 card_model, const struct lbs_fw_table *fw_table,
-+			    lbs_fw_cb callback)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&priv->driver_lock, flags);
-+	if (priv->fw_callback) {
-+		lbs_deb_fw("firmware load already in progress\n");
-+		spin_unlock_irqrestore(&priv->driver_lock, flags);
-+		return -EBUSY;
-+	}
-+
-+	priv->fw_device = device;
-+	priv->fw_callback = callback;
-+	priv->fw_table = fw_table;
-+	priv->fw_iter = NULL;
-+	priv->fw_model = card_model;
-+	spin_unlock_irqrestore(&priv->driver_lock, flags);
-+
-+	lbs_deb_fw("Starting async firmware load\n");
-+	load_next_firmware_from_table(priv);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(lbs_get_firmware_async);
-+
- /**
-  *  lbs_get_firmware - Retrieves two-stage firmware
-  *
-@@ -18,6 +159,8 @@
-  *  @helper:	On success, the helper firmware; caller must free
-  *  @mainfw:	On success, the main firmware; caller must free
-  *
-+ * Deprecated: use lbs_get_firmware_async() instead.
-+ *
-  *  returns:		0 on success, non-zero on failure
-  */
- int lbs_get_firmware(struct device *dev, u32 card_model,
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 7eaf992..e96ee0a 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -878,6 +878,7 @@ static int lbs_init_adapter(struct lbs_private *priv)
- 	priv->is_host_sleep_configured = 0;
- 	priv->is_host_sleep_activated = 0;
- 	init_waitqueue_head(&priv->host_sleep_q);
-+	init_waitqueue_head(&priv->fw_waitq);
- 	mutex_init(&priv->lock);
- 
- 	setup_timer(&priv->command_timer, lbs_cmd_timeout_handler,
-@@ -1037,6 +1038,8 @@ void lbs_remove_card(struct lbs_private *priv)
- 	if (priv->wiphy_registered)
- 		lbs_scan_deinit(priv);
- 
-+	lbs_wait_for_firmware_load(priv);
-+
- 	/* worker thread destruction blocks on the in-flight command which
- 	 * should have been cleared already in lbs_stop_card().
- 	 */
--- 
-1.7.7.6
-
+Sujith
