@@ -1,122 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.smtpout.orange.fr ([80.12.242.123]:53032 "EHLO
-	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757023Ab2DMVuY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 17:50:24 -0400
-Date: Fri, 13 Apr 2012 23:50:20 +0200 (CEST)
-From: =?UTF-8?Q?C=C3=A9dric_MARTIN?= <policenauts@wanadoo.fr>
-Reply-To: =?UTF-8?Q?C=C3=A9dric_MARTIN?= <policenauts@wanadoo.fr>
-To: linux-wireless@vger.kernel.org
-Message-ID: <1203704238.58649.1334353820674.JavaMail.www@wwinf1k14> (sfid-20120413_235032_823753_0990828B)
-Subject: tr: Re: info about D-link USB wlan with realtek RTL8192SU
+Received: from mail.kapsi.fi ([217.30.184.167]:49667 "EHLO mail.kapsi.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753684Ab2DCWsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 18:48:54 -0400
+Message-ID: <4F7B75DF.2040008@iki.fi> (sfid-20120404_004857_506388_E7C2C051)
+Date: Wed, 04 Apr 2012 01:12:47 +0300
+From: Antti Palosaari <crope@iki.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+CC: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: GSoC: open firmware for ath9k_htc
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all, M Finger gave me this email adress for support.
-Below my little problem.
-Thanks in advance for help.
-Best regards.
+Hello!
+I am information engineering student of University of Oulu, Department 
+of Computer Science and Engineering, from Finland EU.
 
-c.martin
+I have applied GSoC project called open firmware for ath9k_htc. It was 
+the really only somehow interesting topic as I would like to do 
+something Kernel related.
+http://wireless.kernel.org/en/developers/GSoC/2012/ath9k_htc_open_firmware
 
+I am active developer of the Linux-Media subsystem. My main 
+contributions are big amount of digital television chip and device 
+drivers. More about that can be found from my personal project page.
+http://palosaari.fi/linux/
 
-> Message du 13/04/12 16:39
-> De : "Larry Finger" 
-> A : "Cédric MARTIN" 
-
-> Copie à : 
-> Objet : Re: info about D-link USB wlan with realtek RTL8192SU
-> 
-> On 04/11/2012 07:07 AM, Cédric MARTIN wrote:
-> > M Finger,
-> >
-> >
-> > I'm sorry ton contact you, because I think you have hundred of email like this,
-> > but I think you're the right person to give me some advices.
-> > I'm beginner in Gnu/linux world as User.
-> >
-> > I use a PC with openelec distri (home theater distribution, *OpenELEC 1.0
-> > (stable)* - 1.0.2
-> >  Intel x86_64
-> > (90 MB)) and I have problem with my wlan.
-> > I have aleatory connection.
-> >
-> > a lsusb give me this:
-> >
-> > "...
-> > Bus 002 Device 006: ID 07d1:3303 D-Link System DWA-131 802.11n Wireless N Nano
-> > Adapter(rev.A1) [Realtek RTL8192SU]"
-> >
-> > It seem ok.
-> >
-> > a lsmod give me this:
-> >
-> > "
-> > root ~ # lsmod
-> > Module Size Used by
-> > snd_hda_codec_hdmi 22001 1
-> > snd_hda_codec_realtek 274159 1
-> > snd_hda_intel 21531 3
-> > snd_hda_codec 73098 3 snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_intel
-> > snd_hwdep 5108 1 snd_hda_codec
-> > snd_pcm 59142 4 snd_hda_codec_hdmi,snd_hda_intel,snd_hda_codec
-> > snd_timer 17314 2 snd_pcm
-> > snd 44263 11
-> > snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_intel,snd_hda_codec,snd_hwdep,snd_pcm,snd_timer
-> > ftdi_sio 32206 1
-> > r8712u 156717 0
-> > snd_page_alloc 6753 2 snd_hda_intel,snd_pcm
-> > usbserial 28127 3 ftdi_sio
-> > coretemp 5979 0
-> > "
-> > a dmesg give me this:
-> >
-> > "
-> > ...[ 5.745226] r8712u: module is from the staging directory, the quality is
-> > unknown, you have been warned.
-> > [ 5.745750] r8712u: DriverVersion: v7_0.20100831
-> > [ 5.745761] r8712u: register rtl8712_netdev_ops to netdev_ops
-> > [ 5.745763] r8712u: USB_SPEED_HIGH with 4 endpoints
-> > [ 5.746286] r8712u: Boot from EFUSE: Autoload OK
-> > [ 5.746449] USB Serial support registered for FTDI USB Serial Device
-> > [ 5.746490] ftdi_sio 2-1.4.1:1.0: FTDI USB Serial Device converter detected
-> > [ 5.746532] usb 2-1.4.1: Detected FT232RL
-> > [ 5.746535] usb 2-1.4.1: Number of endpoints 2
-> > [ 5.746536] usb 2-1.4.1: Endpoint 1 MaxPacketSize 64
-> > [ 5.746538] usb 2-1.4.1: Endpoint 2 MaxPacketSize 64
-> > [ 5.746539] usb 2-1.4.1: Setting MaxPacketSize 64
-> > [ 5.747002] usb 2-1.4.1: FTDI USB Serial Device converter now attached to ttyUSB0
-> > [ 5.747021] usbcore: registered new interface driver ftdi_sio
-> > [ 5.747023] ftdi_sio: v1.6.0:USB FTDI Serial Converters Driver
-> > [ 6.104736] snd_hda_intel 0000:00:1b.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
-> > [ 6.104787] snd_hda_intel 0000:00:1b.0: irq 42 for MSI/MSI-X
-> > [ 6.104831] snd_hda_intel 0000:00:1b.0: setting latency timer to 64
-> > [ 6.327161] r8712u: CustomerID = 0x0000
-> > [ 6.327164] r8712u: MAC Address from efuse = fc:75:16:6d:f3:b1
-> > [ 6.327420] usbcore: registered new interface driver r8712u
-> > ...
-> > [ 22.465242] r8712u: Loading firmware from "rtlwifi/rtl8712u.bin"
-> > [ 23.150858] r8712u: 1 RCR=0x153f00e
-> > [ 23.151818] r8712u: 2 RCR=0x553f00e
-> > [ 23.260743] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> > "
-> > I also try the *OpenELEC 2.0 (Beta 1)* - 1.95.1
-> >  Intel x86_64
-> > (94 MB) release (with the 3.2.14 kernel) and my wlan still don't work
+As I see that GSoC project needs some embedded skills and many are 
+surely interested to known if I have enough experience. Unfortunately I 
+don't have embedded experience as much as Kernel driver development 
+experience, but I think I still have rather good understanding which 
+should be enough for success project. Also I think it is worth to 
+mention I have rather much protocol reverse-engineering expertise, 
+especially USB and I2C, coming from the Linux DVB hacking.
 
 
+Here is a list of embedded projects I quickly remember, not all, but 
+likely the biggest ones still.
 
 
-> 
-> I only do private consulting when I have a contract.
-> 
-> If you want free help from kernel developers, it is essential that you Cc the 
-> appropriate mailing list for that driver. In this case, that is 
-> linux-wireless@vger.kernel.org.
-> 
-> Larry
-> 
->
+Embedded thermometer. School project. Own made PCB, Philips 89C52 MCU 
+(Intel 8052 clone), two I2C controllable temperature sensors, two relays 
+and LCD display. Programming language C.
+
+
+Learning remote controller. School project. Own made PCB, Atmel ATmega32 
+MCU, LCD display, JTAG, IR receiver, IR sender, few buttons. Programming 
+language C.
+http://palosaari.fi/img_1305.jpg
+
+
+SIP phone. School project. Hardware was Atmel ATmega128 MCU based board 
+called Ethernut2.1. Only some very limited SIP stack and ethernet 
+networking was implemented. RTP, meaning voice codecs, was not done. 
+Programming language C.
+http://www.ethernut.de/en/hardware.html
+
+
+"Egg-timer". School project. Atmel ATmega128 MCU based development board 
+called Olimex AVR-MT-128. LCD display, buzzer, relay, few buttons. I 
+coded running Pacman for the LCD screen top of all required 
+functionality :) Programming language C.
+http://www.olimex.com/dev/avr-mt128.html
+
+
+Test firmware for one Cypress EZ-USB FX2LP based DVB USB device. Cypress 
+FX2 is general and very common USB -interface chip. Firmware I did was 
+based of open Termini design. Due to that relative small amount changes 
+was needed.
+http://www.cypress.com/?id=193
+http://linuxtv.org/cgi-bin/viewvc.cgi/dvb-hw/dvbusb-fx2/
+
+
+Electric meter. School project. FPGA. Hardware was Altera DE2 
+development board, featuring an Altera Cyclone II 2C35 FPGA. [6]
+http://www.altera.com/education/univ/materials/boards/de2/unv-de2-board.html
+
+
+After all I haven't got too many answers about that project. It sounds 
+like something overkill to make WLAN firmware from the scratch, but in 
+my understanding here is somehow working skeleton that can be use as a 
+example which reduces of course workload.
+
+regards
+Antti
+-- 
+http://palosaari.fi/
