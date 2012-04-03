@@ -1,231 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:37244 "EHLO
-	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933005Ab2DKTxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 15:53:55 -0400
-Received: by lbbgf7 with SMTP id gf7so1044140lbb.29
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:53:51 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
+Received: from mail.candelatech.com ([208.74.158.172]:37091 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754703Ab2DCQTS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 12:19:18 -0400
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, coelho@ti.com
-Subject: [PATCH 03/24] wlcore/wl12xx: add hw op for calculating hw block count per packet
-Date: Wed, 11 Apr 2012 22:53:19 +0300
-Message-Id: <1334174020-18957-4-git-send-email-coelho@ti.com> (sfid-20120411_215456_539378_EA36CA2D)
-In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
-References: <1334174020-18957-1-git-send-email-coelho@ti.com>
+Cc: ath9k-devel@venema.h4ckr.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/2] ath9k:  Add more recv stats.
+Date: Tue,  3 Apr 2012 09:18:59 -0700
+Message-Id: <1333469939-26213-1-git-send-email-greearb@candelatech.com> (sfid-20120403_181921_768166_B05FE4E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Each chip family has a different block size and calculates the total
-number of HW blocks differently, with respect to alignment.
+This adds counters in various places that can drop packets on
+rx without otherwise incrementing a counter.  It also counts
+some non-error cases, such as becons and fragments received.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+Should help with figuring out where packets are (and are not)
+dropped.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ti/wl12xx/main.c   |   11 +++++++++
- drivers/net/wireless/ti/wlcore/hw_ops.h |   37 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wlcore/tx.c     |   18 ++++++---------
- drivers/net/wireless/ti/wlcore/tx.h     |    4 +-
- drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
- 5 files changed, 58 insertions(+), 13 deletions(-)
- create mode 100644 drivers/net/wireless/ti/wlcore/hw_ops.h
+:100644 100644 9078279... 244723a... M	drivers/net/wireless/ath/ath9k/debug.c
+:100644 100644 d1c132f... 56a7053... M	drivers/net/wireless/ath/ath9k/debug.h
+:100644 100644 1c4583c... ad2b2b6... M	drivers/net/wireless/ath/ath9k/recv.c
+ drivers/net/wireless/ath/ath9k/debug.c |   23 +++++++++++++++++++-
+ drivers/net/wireless/ath/ath9k/debug.h |   18 ++++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c  |   35 +++++++++++++++++++++++--------
+ 3 files changed, 65 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 3447cef..e1bdeae 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -30,12 +30,14 @@
- #include "../wlcore/debug.h"
- #include "../wlcore/io.h"
- #include "../wlcore/acx.h"
-+#include "../wlcore/tx.h"
- #include "../wlcore/boot.h"
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 9078279..244723a 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -916,6 +916,21 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	len += snprintf(buf + len, size - len,
+ 			"%22s : %10u\n", "DECRYPT BUSY ERR",
+ 			sc->debug.stats.rxstats.decrypt_busy_err);
++	len += snprintf(buf + len, size - len,
++			"%22s : %10u\n", "RX-LENGTH-ERR",
++			sc->debug.stats.rxstats.rx_len_err);
++	len += snprintf(buf + len, size - len,
++			"%22s : %10u\n", "RX-OOM-ERR",
++			sc->debug.stats.rxstats.rx_oom_err);
++	len += snprintf(buf + len, size - len,
++			"%22s : %10u\n", "RX-RATE-ERR",
++			sc->debug.stats.rxstats.rx_rate_err);
++	len += snprintf(buf + len, size - len,
++			"%22s : %10u\n", "RX-DROP-RXFLUSH",
++			sc->debug.stats.rxstats.rx_drop_rxflush);
++	len += snprintf(buf + len, size - len,
++			"%22s : %10u\n", "RX-TOO-MANY-FRAGS",
++			sc->debug.stats.rxstats.rx_too_many_frags_err);
  
- #include "reg.h"
+ 	PHY_ERR("UNDERRUN ERR", ATH9K_PHYERR_UNDERRUN);
+ 	PHY_ERR("TIMING ERR", ATH9K_PHYERR_TIMING);
+@@ -950,6 +965,12 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	len += snprintf(buf + len, size - len,
+ 			"%22s : %10u\n", "RX-Bytes-All",
+ 			sc->debug.stats.rxstats.rx_bytes_all);
++	len += snprintf(buf + len, size - len,
++			"%22s : %10u\n", "RX-Beacons",
++			sc->debug.stats.rxstats.rx_beacons);
++	len += snprintf(buf + len, size - len,
++			"%22s : %10u\n", "RX-Frags",
++			sc->debug.stats.rxstats.rx_frags);
  
- #define WL12XX_TX_HW_BLOCK_SPARE_DEFAULT        1
- #define WL12XX_TX_HW_BLOCK_GEM_SPARE            2
-+#define WL12XX_TX_HW_BLOCK_SIZE                 252
+ 	if (len > size)
+ 		len = size;
+@@ -964,7 +985,6 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
  
- 
- static struct wlcore_partition_set wl12xx_ptable[PART_TABLE_LEN] = {
-@@ -587,6 +589,14 @@ static void wl12xx_ack_event(struct wl1271 *wl)
- 	wlcore_write_reg(wl, REG_INTERRUPT_TRIG, WL12XX_INTR_TRIG_EVENT_ACK);
- }
- 
-+static u32 wl12xx_calc_tx_blocks(struct wl1271 *wl, u32 len, u32 spare_blks)
-+{
-+	u32 blk_size = WL12XX_TX_HW_BLOCK_SIZE;
-+	u32 align_len = wlcore_calc_packet_alignment(wl, len);
-+
-+	return (align_len + blk_size - 1) / blk_size + spare_blks;
-+}
-+
- static bool wl12xx_mac_in_fuse(struct wl1271 *wl)
+ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
  {
- 	bool supported = false;
-@@ -655,6 +665,7 @@ static struct wlcore_ops wl12xx_ops = {
- 	.boot		= wl12xx_boot,
- 	.trigger_cmd	= wl12xx_trigger_cmd,
- 	.ack_event	= wl12xx_ack_event,
-+	.calc_tx_blocks = wl12xx_calc_tx_blocks,
- 	.get_pg_ver	= wl12xx_get_pg_ver,
- 	.get_mac	= wl12xx_get_mac,
+-#define RX_STAT_INC(c) sc->debug.stats.rxstats.c++
+ #define RX_PHY_ERR_INC(c) sc->debug.stats.rxstats.phy_err_stats[c]++
+ #define RX_SAMP_DBG(c) (sc->debug.bb_mac_samp[sc->debug.sampidx].rs\
+ 			[sc->debug.rsidx].c)
+@@ -1010,7 +1030,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ 
+ #endif
+ 
+-#undef RX_STAT_INC
+ #undef RX_PHY_ERR_INC
+ #undef RX_SAMP_DBG
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index d1c132f..56a7053 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -139,6 +139,8 @@ struct ath_tx_stats {
+ 	u32 txfailed;
  };
-diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
-new file mode 100644
-index 0000000..904897c
---- /dev/null
-+++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
-@@ -0,0 +1,37 @@
-+/*
-+ * This file is part of wlcore
-+ *
-+ * Copyright (C) 2011 Texas Instruments Inc.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
-+ */
+ 
++#define RX_STAT_INC(c) (sc->debug.stats.rxstats.c++)
 +
-+#ifndef __WLCORE_HW_OPS_H__
-+#define __WLCORE_HW_OPS_H__
-+
-+#include "wlcore.h"
-+
-+static inline u32
-+wlcore_hw_calc_tx_blocks(struct wl1271 *wl, u32 len, u32 spare_blks)
-+{
-+	if (!wl->ops->calc_tx_blocks)
-+		BUG_ON(1);
-+
-+	return wl->ops->calc_tx_blocks(wl, len, spare_blks);
-+}
-+
-+#endif
-+
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 3306990..3891f96 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -31,6 +31,7 @@
- #include "ps.h"
- #include "tx.h"
- #include "event.h"
-+#include "hw_ops.h"
- 
- /*
-  * TODO: this is here just for now, it must be removed when the data
-@@ -172,14 +173,15 @@ u8 wl12xx_tx_get_hlid(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		return wlvif->dev_hlid;
- }
- 
--static unsigned int wl12xx_calc_packet_alignment(struct wl1271 *wl,
--						unsigned int packet_length)
-+unsigned int wlcore_calc_packet_alignment(struct wl1271 *wl,
-+					  unsigned int packet_length)
- {
- 	if (wl->quirks & WLCORE_QUIRK_NO_BLOCKSIZE_ALIGNMENT)
- 		return ALIGN(packet_length, WL1271_TX_ALIGN_TO);
- 	else
- 		return ALIGN(packet_length, WL12XX_BUS_BLOCK_SIZE);
- }
-+EXPORT_SYMBOL(wlcore_calc_packet_alignment);
- 
- static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			      struct sk_buff *skb, u32 extra, u32 buf_offset,
-@@ -187,7 +189,6 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- {
- 	struct wl1271_tx_hw_descr *desc;
- 	u32 total_len = skb->len + sizeof(struct wl1271_tx_hw_descr) + extra;
--	u32 len;
- 	u32 total_blocks;
- 	int id, ret = -EBUSY, ac;
- 	u32 spare_blocks = wl->normal_tx_spare;
-@@ -201,17 +202,12 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	if (id < 0)
- 		return id;
- 
--	/* approximate the number of blocks required for this packet
--	   in the firmware */
--	len = wl12xx_calc_packet_alignment(wl, total_len);
--
- 	if (unlikely(wl12xx_is_dummy_packet(wl, skb)))
- 		is_dummy = true;
- 	else if (wlvif->is_gem)
- 		spare_blocks = wl->gem_tx_spare;
- 
--	total_blocks = (len + TX_HW_BLOCK_SIZE - 1) / TX_HW_BLOCK_SIZE +
--		spare_blocks;
-+	total_blocks = wlcore_hw_calc_tx_blocks(wl, total_len, spare_blocks);
- 
- 	if (total_blocks <= wl->tx_blocks_available) {
- 		desc = (struct wl1271_tx_hw_descr *)skb_push(
-@@ -335,7 +331,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	tx_attr |= rate_idx << TX_HW_ATTR_OFST_RATE_POLICY;
- 	desc->reserved = 0;
- 
--	aligned_len = wl12xx_calc_packet_alignment(wl, skb->len);
-+	aligned_len = wlcore_calc_packet_alignment(wl, skb->len);
- 
- 	if (wl->chip.id == CHIP_ID_1283_PG20) {
- 		desc->wl128x_mem.extra_bytes = aligned_len - skb->len;
-@@ -436,7 +432,7 @@ static int wl1271_prepare_tx_frame(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	 * In special cases, we want to align to a specific block size
- 	 * (eg. for wl128x with SDIO we align to 256).
- 	 */
--	total_len = wl12xx_calc_packet_alignment(wl, skb->len);
-+	total_len = wlcore_calc_packet_alignment(wl, skb->len);
- 
- 	memcpy(wl->aggr_buf + buf_offset, skb->data, skb->len);
- 	memset(wl->aggr_buf + buf_offset + skb->len, 0, total_len - skb->len);
-diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
-index 2ad7705..4b01c87 100644
---- a/drivers/net/wireless/ti/wlcore/tx.h
-+++ b/drivers/net/wireless/ti/wlcore/tx.h
-@@ -25,8 +25,6 @@
- #ifndef __TX_H__
- #define __TX_H__
- 
--#define TX_HW_BLOCK_SIZE                 252
--
- #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
- #define TX_HW_AP_MODE_PKT_LIFETIME_TU    8000
- 
-@@ -223,6 +221,8 @@ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid);
- void wl1271_handle_tx_low_watermark(struct wl1271 *wl);
- bool wl12xx_is_dummy_packet(struct wl1271 *wl, struct sk_buff *skb);
- void wl12xx_rearm_rx_streaming(struct wl1271 *wl, unsigned long *active_hlids);
-+unsigned int wlcore_calc_packet_alignment(struct wl1271 *wl,
-+					  unsigned int packet_length);
- 
- /* from main.c */
- void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid);
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 2fb713a..e3d5d73 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -35,6 +35,7 @@ struct wlcore_ops {
- 	int (*boot)(struct wl1271 *wl);
- 	void (*trigger_cmd)(struct wl1271 *wl);
- 	void (*ack_event)(struct wl1271 *wl);
-+	u32 (*calc_tx_blocks)(struct wl1271 *wl, u32 len, u32 spare_blks);
- 	s8 (*get_pg_ver)(struct wl1271 *wl);
- 	void (*get_mac)(struct wl1271 *wl);
+ /**
+  * struct ath_rx_stats - RX Statistics
+  * @rx_pkts_all:  No. of total frames received, including ones that
+@@ -155,6 +157,13 @@ struct ath_tx_stats {
+  * @post_delim_crc_err: Post-Frame delimiter CRC error detections
+  * @decrypt_busy_err: Decryption interruptions counter
+  * @phy_err_stats: Individual PHY error statistics
++ * @rx_len_err:  No. of frames discarded due to bad length.
++ * @rx_oom_err:  No. of frames dropped due to OOM issues.
++ * @rx_rate_err:  No. of frames dropped due to rate errors.
++ * @rx_too_many_frags_err:  Frames dropped due to too-many-frags received.
++ * @rx_drop_rxflush: No. of frames dropped due to RX-FLUSH.
++ * @rx_beacons:  No. of beacons received.
++ * @rx_frags:  No. of rx-fragements received.
+  */
+ struct ath_rx_stats {
+ 	u32 rx_pkts_all;
+@@ -167,6 +176,13 @@ struct ath_rx_stats {
+ 	u32 post_delim_crc_err;
+ 	u32 decrypt_busy_err;
+ 	u32 phy_err_stats[ATH9K_PHYERR_MAX];
++	u32 rx_len_err;
++	u32 rx_oom_err;
++	u32 rx_rate_err;
++	u32 rx_too_many_frags_err;
++	u32 rx_drop_rxflush;
++	u32 rx_beacons;
++	u32 rx_frags;
  };
+ 
+ enum ath_reset_type {
+@@ -249,6 +265,8 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs);
+ 
+ #else
+ 
++#define RX_STAT_INC(c) /* NOP */
++
+ static inline int ath9k_init_debug(struct ath_hw *ah)
+ {
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 1c4583c..ad2b2b6 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -824,15 +824,20 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ 	if (rx_stats->rs_keyix == ATH9K_RXKEYIX_INVALID)
+ 		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
+ 
+-	if (!rx_stats->rs_datalen)
++	if (!rx_stats->rs_datalen) {
++		RX_STAT_INC(rx_len_err);
+ 		return false;
++	}
++
+         /*
+          * rs_status follows rs_datalen so if rs_datalen is too large
+          * we can take a hint that hardware corrupted it, so ignore
+          * those frames.
+          */
+-	if (rx_stats->rs_datalen > (common->rx_bufsize - rx_status_len))
++	if (rx_stats->rs_datalen > (common->rx_bufsize - rx_status_len)) {
++		RX_STAT_INC(rx_len_err);
+ 		return false;
++	}
+ 
+ 	/* Only use error bits from the last fragment */
+ 	if (rx_stats->rs_more)
+@@ -902,6 +907,7 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	struct ieee80211_supported_band *sband;
+ 	enum ieee80211_band band;
+ 	unsigned int i = 0;
++	struct ath_softc *sc = (struct ath_softc *) common->priv;
+ 
+ 	band = hw->conf.channel->band;
+ 	sband = hw->wiphy->bands[band];
+@@ -936,7 +942,7 @@ static int ath9k_process_rate(struct ath_common *common,
+ 	ath_dbg(common, ANY,
+ 		"unsupported hw bitrate detected 0x%02x using 1 Mbit\n",
+ 		rx_stats->rs_rate);
+-
++	RX_STAT_INC(rx_rate_err);
+ 	return -EINVAL;
+ }
+ 
+@@ -1823,10 +1829,14 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 
+ 		hdr = (struct ieee80211_hdr *) (hdr_skb->data + rx_status_len);
+ 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
+-		if (ieee80211_is_beacon(hdr->frame_control) &&
+-		    !is_zero_ether_addr(common->curbssid) &&
+-		    !compare_ether_addr(hdr->addr3, common->curbssid))
+-			rs.is_mybeacon = true;
++		if (ieee80211_is_beacon(hdr->frame_control)) {
++			RX_STAT_INC(rx_beacons);
++			if (!is_zero_ether_addr(common->curbssid) &&
++			    !compare_ether_addr(hdr->addr3, common->curbssid))
++				rs.is_mybeacon = true;
++			else
++				rs.is_mybeacon = false;
++		}
+ 		else
+ 			rs.is_mybeacon = false;
+ 
+@@ -1836,8 +1846,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		 * If we're asked to flush receive queue, directly
+ 		 * chain it back at the queue without processing it.
+ 		 */
+-		if (sc->sc_flags & SC_OP_RXFLUSH)
++		if (sc->sc_flags & SC_OP_RXFLUSH) {
++			RX_STAT_INC(rx_drop_rxflush);
+ 			goto requeue_drop_frag;
++		}
+ 
+ 		memset(rxs, 0, sizeof(struct ieee80211_rx_status));
+ 
+@@ -1863,8 +1875,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		 * tell hardware it can give us a new frame using the old
+ 		 * skb and put it at the tail of the sc->rx.rxbuf list for
+ 		 * processing. */
+-		if (!requeue_skb)
++		if (!requeue_skb) {
++			RX_STAT_INC(rx_oom_err);
+ 			goto requeue_drop_frag;
++		}
+ 
+ 		/* Unmap the frame */
+ 		dma_unmap_single(sc->dev, bf->bf_buf_addr,
+@@ -1895,6 +1909,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		}
+ 
+ 		if (rs.rs_more) {
++			RX_STAT_INC(rx_frags);
+ 			/*
+ 			 * rs_more indicates chained descriptors which can be
+ 			 * used to link buffers together for a sort of
+@@ -1904,6 +1919,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 				/* too many fragments - cannot handle frame */
+ 				dev_kfree_skb_any(sc->rx.frag);
+ 				dev_kfree_skb_any(skb);
++				RX_STAT_INC(rx_too_many_frags_err);
+ 				skb = NULL;
+ 			}
+ 			sc->rx.frag = skb;
+@@ -1915,6 +1931,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 
+ 			if (pskb_expand_head(hdr_skb, 0, space, GFP_ATOMIC) < 0) {
+ 				dev_kfree_skb(skb);
++				RX_STAT_INC(rx_oom_err);
+ 				goto requeue_drop_frag;
+ 			}
+ 
 -- 
-1.7.5.4
+1.7.3.4
 
