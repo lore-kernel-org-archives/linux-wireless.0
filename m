@@ -1,38 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39524 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758511Ab2DXXv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 19:51:28 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/11] iwlwifi: add reduced tx power threshold define
-Date: Tue, 24 Apr 2012 16:45:57 -0700
-Message-Id: <1335311164-10252-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015205_415972_0A9EFB10)
-In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:51581 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751295Ab2DCEVc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 00:21:32 -0400
+Received: by mail-ob0-f174.google.com with SMTP id tb18so3046594obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 21:21:32 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
+	devel@lists.open80211s.org, linville@tuxdriver.com,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH v3 2/4] mac80211: Indicate basic rates when adding rate IEs
+Date: Mon,  2 Apr 2012 21:21:20 -0700
+Message-Id: <1333426882-22948-2-git-send-email-ashok@cozybit.com> (sfid-20120403_062200_806850_8AADC982)
+In-Reply-To: <1333426882-22948-1-git-send-email-ashok@cozybit.com>
+References: <1333426882-22948-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Basic rates are added with supported rates IE and extended supported
+rates IE.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index c212e53..5e02b4f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3634,6 +3634,9 @@ enum iwl_bt_coex_profile_traffic_load {
- 		(0x3<<BT_UART_MSG_2_FRAME7RESERVED_POS)
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ include/net/mac80211.h    |    5 +++--
+ net/mac80211/cfg.c        |   12 ++++++------
+ net/mac80211/mesh_plink.c |    4 ++--
+ net/mac80211/tx.c         |    4 ++--
+ net/mac80211/util.c       |   18 ++++++++++++++----
+ 5 files changed, 27 insertions(+), 16 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 9a012be..60f4cf4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3704,8 +3704,9 @@ void ieee80211_enable_rssi_reports(struct ieee80211_vif *vif,
  
+ void ieee80211_disable_rssi_reports(struct ieee80211_vif *vif);
  
-+#define BT_ENABLE_REDUCED_TXPOWER_THRESHOLD	(-62)
-+#define BT_DISABLE_REDUCED_TXPOWER_THRESHOLD	(-65)
-+
- struct iwl_bt_uart_msg {
- 	u8 header;
- 	u8 frame1;
+-int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb);
++int ieee80211_add_srates_ie(struct ieee80211_vif *vif,
++			    struct sk_buff *skb, bool need_basic);
+ 
+ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
+-				struct sk_buff *skb);
++				struct sk_buff *skb, bool need_basic);
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 677d659..cc80e96 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2350,8 +2350,8 @@ ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
+ 		tf->u.setup_req.capability =
+ 			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
+ 
+-		ieee80211_add_srates_ie(&sdata->vif, skb);
+-		ieee80211_add_ext_srates_ie(&sdata->vif, skb);
++		ieee80211_add_srates_ie(&sdata->vif, skb, false);
++		ieee80211_add_ext_srates_ie(&sdata->vif, skb, false);
+ 		ieee80211_tdls_add_ext_capab(skb);
+ 		break;
+ 	case WLAN_TDLS_SETUP_RESPONSE:
+@@ -2364,8 +2364,8 @@ ieee80211_prep_tdls_encap_data(struct wiphy *wiphy, struct net_device *dev,
+ 		tf->u.setup_resp.capability =
+ 			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
+ 
+-		ieee80211_add_srates_ie(&sdata->vif, skb);
+-		ieee80211_add_ext_srates_ie(&sdata->vif, skb);
++		ieee80211_add_srates_ie(&sdata->vif, skb, false);
++		ieee80211_add_ext_srates_ie(&sdata->vif, skb, false);
+ 		ieee80211_tdls_add_ext_capab(skb);
+ 		break;
+ 	case WLAN_TDLS_SETUP_CONFIRM:
+@@ -2425,8 +2425,8 @@ ieee80211_prep_tdls_direct(struct wiphy *wiphy, struct net_device *dev,
+ 		mgmt->u.action.u.tdls_discover_resp.capability =
+ 			cpu_to_le16(ieee80211_get_tdls_sta_capab(sdata));
+ 
+-		ieee80211_add_srates_ie(&sdata->vif, skb);
+-		ieee80211_add_ext_srates_ie(&sdata->vif, skb);
++		ieee80211_add_srates_ie(&sdata->vif, skb, false);
++		ieee80211_add_ext_srates_ie(&sdata->vif, skb, false);
+ 		ieee80211_tdls_add_ext_capab(skb);
+ 		break;
+ 	default:
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 4e53c4c..ece8750 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -212,8 +212,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			pos = skb_put(skb, 2);
+ 			memcpy(pos + 2, &plid, 2);
+ 		}
+-		if (ieee80211_add_srates_ie(&sdata->vif, skb) ||
+-		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
++		if (ieee80211_add_srates_ie(&sdata->vif, skb, true) ||
++		    ieee80211_add_ext_srates_ie(&sdata->vif, skb, true) ||
+ 		    mesh_add_rsn_ie(skb, sdata) ||
+ 		    mesh_add_meshid_ie(skb, sdata) ||
+ 		    mesh_add_meshconf_ie(skb, sdata))
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 782a601..196cc58 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2414,9 +2414,9 @@ struct sk_buff *ieee80211_beacon_get_tim(struct ieee80211_hw *hw,
+ 		*pos++ = WLAN_EID_SSID;
+ 		*pos++ = 0x0;
+ 
+-		if (ieee80211_add_srates_ie(&sdata->vif, skb) ||
++		if (ieee80211_add_srates_ie(&sdata->vif, skb, true) ||
+ 		    mesh_add_ds_params_ie(skb, sdata) ||
+-		    ieee80211_add_ext_srates_ie(&sdata->vif, skb) ||
++		    ieee80211_add_ext_srates_ie(&sdata->vif, skb, true) ||
+ 		    mesh_add_rsn_ie(skb, sdata) ||
+ 		    mesh_add_ht_cap_ie(skb, sdata) ||
+ 		    mesh_add_ht_info_ie(skb, sdata) ||
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 32f7a3b..ca5aa32 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1678,13 +1678,15 @@ ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info *ht_info)
+ 	return channel_type;
+ }
+ 
+-int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
++int ieee80211_add_srates_ie(struct ieee80211_vif *vif,
++			    struct sk_buff *skb, bool need_basic)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+ 	int rate;
+ 	u8 i, rates, *pos;
++	u32 basic_rates = vif->bss_conf.basic_rates;
+ 
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 	rates = sband->n_bitrates;
+@@ -1698,20 +1700,25 @@ int ieee80211_add_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
+ 	*pos++ = WLAN_EID_SUPP_RATES;
+ 	*pos++ = rates;
+ 	for (i = 0; i < rates; i++) {
++		u8 basic = 0;
++		if (need_basic && basic_rates & BIT(i))
++			basic = 0x80;
+ 		rate = sband->bitrates[i].bitrate;
+-		*pos++ = (u8) (rate / 5);
++		*pos++ = basic | (u8) (rate / 5);
+ 	}
+ 
+ 	return 0;
+ }
+ 
+-int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
++int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
++				struct sk_buff *skb, bool need_basic)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_supported_band *sband;
+ 	int rate;
+ 	u8 i, exrates, *pos;
++	u32 basic_rates = vif->bss_conf.basic_rates;
+ 
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 	exrates = sband->n_bitrates;
+@@ -1728,8 +1735,11 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif, struct sk_buff *skb)
+ 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
+ 		*pos++ = exrates;
+ 		for (i = 8; i < sband->n_bitrates; i++) {
++			u8 basic = 0;
++			if (need_basic && basic_rates & BIT(i))
++				basic = 0x80;
+ 			rate = sband->bitrates[i].bitrate;
+-			*pos++ = (u8) (rate / 5);
++			*pos++ = basic | (u8) (rate / 5);
+ 		}
+ 	}
+ 	return 0;
 -- 
-1.7.0.4
+1.7.5.4
 
