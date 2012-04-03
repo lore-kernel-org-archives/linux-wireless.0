@@ -1,82 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:45778 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755965Ab2DKChw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 22:37:52 -0400
-Date: Wed, 11 Apr 2012 11:37:47 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: 3.4-rc2, ilwagn still most of the time completely unusable
-Message-ID: <20120411023747.GA10126@gamma.logic.tuwien.ac.at> (sfid-20120411_043859_887493_466B09E9)
-References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <20120330011734.GH6277@gamma.logic.tuwien.ac.at>
+Received: from perches-mx.perches.com ([206.117.179.246]:35883 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755206Ab2DCVDB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Apr 2012 17:03:01 -0400
+Message-ID: <1333486979.2695.8.camel@joe2Laptop> (sfid-20120403_230319_040383_BF1D5EA4)
+Subject: Re: [PATCH] ath9k:  Gather and report bus-timeout errors.
+From: Joe Perches <joe@perches.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Date: Tue, 03 Apr 2012 14:02:59 -0700
+In-Reply-To: <1333484545-14273-1-git-send-email-greearb@candelatech.com>
+References: <1333484545-14273-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
-
-I am now having problems with the iwlagn driver since about 4 kernel
-revisions, without any tendency that things are getting better.
-
-I already have reported that with 3.3-wl there are hundreds and thousands
-of lines
-	delba from 00:0a:79:eb:56:10 (initiator) tid 0 reason code 39
-	Rx BA session stop requested for ...
-*IF* it is connected.
-
-On the contrary, it sometimes not even connects, after reloading the module,
-retrying many times, today my log was smarmed with messages:
-	[ 9457.156030] wlan0: authentication with 00:24:c4:ab:bd:e0 timed out
-	[ 9457.176828] iwlwifi 0000:06:00.0: ACTIVATE a non DRIVER active station id 0 addr 00:24:c4:ab:bd:e0
-
-Above is all on the University network, which is rather new and
-in good shape.
-
-But I want to report *SOME* progress: Formerly I had *BIG* problems 
-with my home network (some strange Corega WL router AFAIR, Japanese only,
-but it was working without a click before 2.6.38 or 39 or so).
-Now, when I *DISABLE* 11n (11n_disable=1) then all the problems are
-gone *AT*HOME*, no warnings anymore, no complains, no hickups.
-On the university it is still a pain.
-
-As I have already sent debug output etc etc as requested here, I will
-not repeat that unless asked for it.
-
-Well, hope that in another 20 kernel revisions that might get fixed,
-we are not talking about a brand new wlan adapter anymore ... that
-was some years ago ... especially the regression from 2.6.38 where it
-was working without any problem to the current very sad state of affair
-is frustrating.
-
-
-On Fr, 30 Mär 2012, Norbert Preining wrote:
-> I am now running 3.3.0-wl, and I was now travelling quite some time
-> without having *any*problems with wlan. But as soon as I come
-> home or to the university the horror starts. Here at home I am 
-> now, after fresh reboot, no suspend involved, swamped with dmesg
-> lines:
-> [ 8206.158741] delba from 00:0a:79:eb:56:10 (initiator) tid 0 reason code 39
-> [ 8206.158744] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 inititator reason: 0
-> [ 8206.430282] Rx A-MPDU request on tid 0 result 0
+On Tue, 2012-04-03 at 13:22 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> So around 4000+ in 2 hours ... I guess you can evaluate how flaky the
-> connection is ...
+> Seems like a useful stat to report (when debugfs
+> is enabled).
+[]
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+[]
+> @@ -385,57 +385,61 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+>  				   size_t count, loff_t *ppos)
+>  {
+>  	struct ath_softc *sc = file->private_data;
+> -	char buf[512];
+> +	char buf[800];
 
-Best wishes
+800 seems excessive.
+Maybe it's better to kmalloc this.
 
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-GOLANT (adj.)
-Blank, sly and faintly embarrassed. Pertaining to the expression seen
-on the face of someone who has clearly forgotten your name.
-			--- Douglas Adams, The Meaning of Liff
+>  	unsigned int len = 0;
+>  
+>  	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+>  		len += snprintf(buf + len, sizeof(buf) - len,
+> -			"%8s: %10u\n", "RXLP", sc->debug.stats.istats.rxlp);
+> +			"%11s: %10u\n", "RXLP", sc->debug.stats.istats.rxlp);
+
+why change the size from 8 to 11?
+
+>  		len += snprintf(buf + len, sizeof(buf) - len,
+> -			"%8s: %10u\n", "RXHP", sc->debug.stats.istats.rxhp);
+> +			"%11s: %10u\n", "RXHP", sc->debug.stats.istats.rxhp);
+>  		len += snprintf(buf + len, sizeof(buf) - len,
+> -			"%8s: %10u\n", "WATCHDOG",
+> +			"%11s: %10u\n", "WATCHDOG",
+>  			sc->debug.stats.istats.bb_watchdog);
+
+[]
+
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+[]
+> @@ -85,8 +86,15 @@ struct ath_interrupt_stats {
+>  	u32 dtim;
+>  	u32 bb_watchdog;
+>  	u32 tsfoor;
+> +	u32 sync_local_timeout;
+>  };
+>  
+> +#define ATH_INCR_IRQ_STAT_COMMON(c, s)					\
+> +	do {								\
+> +		struct ath_softc *sc = (struct ath_softc *) (c)->priv;	\
+
+Isn't priv void *?
+I think you don't need the cast.
+
+> +		sc->debug.stats.istats.s++;				\
+> +	} while (0);
+
+sb: "while (0)" without the ;
+
+
