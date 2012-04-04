@@ -1,155 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39567 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756169Ab2DSTSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 15:18:36 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 5/8] ath9k_hw: fix and clean up PHY activation delay
-Date: Thu, 19 Apr 2012 21:18:26 +0200
-Message-Id: <1334863109-95726-5-git-send-email-nbd@openwrt.org> (sfid-20120419_211842_234523_37F9024A)
-In-Reply-To: <1334863109-95726-4-git-send-email-nbd@openwrt.org>
-References: <1334863109-95726-1-git-send-email-nbd@openwrt.org>
- <1334863109-95726-2-git-send-email-nbd@openwrt.org>
- <1334863109-95726-3-git-send-email-nbd@openwrt.org>
- <1334863109-95726-4-git-send-email-nbd@openwrt.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14031 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757089Ab2DDWbt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2012 18:31:49 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH v2 2/2] ath6kl: handle concurrent AP-STA channel switches
+Date: Wed, 4 Apr 2012 15:31:36 -0700
+Message-ID: <1333578696-22636-2-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120405_003151_771979_73FC7BD7)
+In-Reply-To: <1333578696-22636-1-git-send-email-c_tpeder@qca.qualcomm.com>
+References: <1333578696-22636-1-git-send-email-c_tpeder@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The delay calculation is the same for all chips, however some parts of the
-code missed the extra delay factor for half/quarter.
-Clean up the code and move the delay calculation to a common place.
+If an ath6kl AP vif is beaconing on one channel, and a STA vif
+associates on a different channel, a WMI_DISCONNECT event will be sent
+to the AP vif. Make the AP vif follow the STA interface, and notify
+userspace.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   17 ++---------------
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   20 ++------------------
- drivers/net/wireless/ath/ath9k/hw.c         |   16 ++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h         |    2 ++
- 4 files changed, 22 insertions(+), 33 deletions(-)
+v2: coalesce formats (Joe)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index de30cb3..f554bff 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -618,19 +618,10 @@ static void ar5008_hw_init_bb(struct ath_hw *ah,
- 	u32 synthDelay;
- 
- 	synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
--	if (IS_CHAN_B(chan))
--		synthDelay = (4 * synthDelay) / 22;
--	else
--		synthDelay /= 10;
--
--	if (IS_CHAN_HALF_RATE(chan))
--		synthDelay *= 2;
--	else if (IS_CHAN_QUARTER_RATE(chan))
--		synthDelay *= 4;
- 
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
- 
--	udelay(synthDelay + BASE_ACTIVATE_DELAY);
-+	ath9k_hw_synth_delay(ah, chan, synthDelay);
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   15 ++++++++
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +
+ drivers/net/wireless/ath/ath6kl/core.h     |    2 +
+ drivers/net/wireless/ath/ath6kl/main.c     |   55 +++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   12 ++++++
+ 5 files changed, 85 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 1272508..76c9401 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1015,6 +1015,20 @@ out:
+ 	vif->scan_req = NULL;
  }
  
- static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
-@@ -948,12 +939,8 @@ static bool ar5008_hw_rfbus_req(struct ath_hw *ah)
- static void ar5008_hw_rfbus_done(struct ath_hw *ah)
- {
- 	u32 synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
--	if (IS_CHAN_B(ah->curchan))
--		synthDelay = (4 * synthDelay) / 22;
--	else
--		synthDelay /= 10;
- 
--	udelay(synthDelay + BASE_ACTIVATE_DELAY);
-+	ath9k_hw_synth_delay(ah, ah->curchan, synthDelay);
- 
- 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 4c8d0d7..a1c0879 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -526,22 +526,10 @@ static void ar9003_hw_init_bb(struct ath_hw *ah,
- 	 * Value is in 100ns increments.
- 	 */
- 	synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
--	if (IS_CHAN_B(chan))
--		synthDelay = (4 * synthDelay) / 22;
--	else
--		synthDelay /= 10;
- 
- 	/* Activate the PHY (includes baseband activate + synthesizer on) */
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
--
--	/*
--	 * There is an issue if the AP starts the calibration before
--	 * the base band timeout completes.  This could result in the
--	 * rx_clear false triggering.  As a workaround we add delay an
--	 * extra BASE_ACTIVATE_DELAY usecs to ensure this condition
--	 * does not happen.
--	 */
--	udelay(synthDelay + BASE_ACTIVATE_DELAY);
-+	ath9k_hw_synth_delay(ah, chan, synthDelay);
- }
- 
- static void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
-@@ -801,12 +789,8 @@ static bool ar9003_hw_rfbus_req(struct ath_hw *ah)
- static void ar9003_hw_rfbus_done(struct ath_hw *ah)
- {
- 	u32 synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
--	if (IS_CHAN_B(ah->curchan))
--		synthDelay = (4 * synthDelay) / 22;
--	else
--		synthDelay /= 10;
- 
--	udelay(synthDelay + BASE_ACTIVATE_DELAY);
-+	ath9k_hw_synth_delay(ah, ah->curchan, synthDelay);
- 
- 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4dddffd..e576a92 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -191,6 +191,22 @@ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout)
- }
- EXPORT_SYMBOL(ath9k_hw_wait);
- 
-+void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
-+			  int hw_delay)
++void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
++				      enum wmi_phy_mode mode)
 +{
-+	if (IS_CHAN_B(chan))
-+		hw_delay = (4 * hw_delay) / 22;
-+	else
-+		hw_delay /= 10;
++	enum nl80211_channel_type type;
 +
-+	if (IS_CHAN_HALF_RATE(chan))
-+		hw_delay *= 2;
-+	else if (IS_CHAN_QUARTER_RATE(chan))
-+		hw_delay *= 4;
++	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
++		   "channel switch notify nw_type %d freq %d mode %d\n",
++		   vif->nw_type, freq, mode);
 +
-+	udelay(hw_delay + BASE_ACTIVATE_DELAY);
++	type = (mode == WMI_11G_HT20) ? NL80211_CHAN_HT20 : NL80211_CHAN_NO_HT;
++
++	cfg80211_ch_switch_notify(vif->ndev, freq, type, GFP_KERNEL);
 +}
 +
- void ath9k_hw_write_array(struct ath_hw *ah, struct ar5416IniArray *array,
- 			  int column, unsigned int *writecnt)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index dd4b8f4..2b01e75 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -923,6 +923,8 @@ void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val);
- void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna);
+ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 				   u8 key_index, bool pairwise,
+ 				   const u8 *mac_addr,
+@@ -2643,6 +2657,7 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 			return res;
+ 	}
  
- /* General Operation */
-+void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
-+			  int hw_delay);
- bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
- void ath9k_hw_write_array(struct ath_hw *ah, struct ar5416IniArray *array,
- 			  int column, unsigned int *writecnt);
++	memcpy(&vif->profile, &p, sizeof(p));
+ 	res = ath6kl_wmi_ap_profile_commit(ar->wmi, vif->fw_vif_idx, &p);
+ 	if (res < 0)
+ 		return res;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index c5def43..5ea8cbb 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -28,6 +28,8 @@ enum ath6kl_cfg_suspend_mode {
+ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+ 					enum nl80211_iftype type,
+ 					u8 fw_vif_idx, u8 nw_type);
++void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
++				      enum wmi_phy_mode mode);
+ void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, bool aborted);
+ 
+ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 75b1d86..0b4078d 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -540,6 +540,7 @@ struct ath6kl_vif {
+ 	u8 assoc_bss_dtim_period;
+ 	struct net_device_stats net_stats;
+ 	struct target_stats target_stats;
++	struct wmi_connect_cmd profile;
+ 
+ 	struct list_head mc_filter;
+ };
+@@ -628,6 +629,7 @@ struct ath6kl {
+ 	u8 sta_list_index;
+ 	struct ath6kl_req_key ap_mode_bkey;
+ 	struct sk_buff_head mcastpsq;
++	u32 want_ch_switch;
+ 
+ 	/*
+ 	 * FIXME: protects access to mcastpsq but is actually useless as
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 7f3addd..58468e0 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -434,6 +434,13 @@ void ath6kl_connect_ap_mode_bss(struct ath6kl_vif *vif, u16 channel)
+ 		break;
+ 	}
+ 
++	if (ar->want_ch_switch & (1 << vif->fw_vif_idx)) {
++		ar->want_ch_switch &= ~(1 << vif->fw_vif_idx);
++		/* we actually don't know the phymode, default to HT20 */
++		ath6kl_cfg80211_ch_switch_notify(vif, channel,
++						 WMI_11G_HT20);
++	}
++
+ 	ath6kl_wmi_bssfilter_cmd(ar->wmi, vif->fw_vif_idx, NONE_BSS_FILTER, 0);
+ 	set_bit(CONNECTED, &vif->flags);
+ 	netif_carrier_on(vif->ndev);
+@@ -582,6 +589,45 @@ void ath6kl_scan_complete_evt(struct ath6kl_vif *vif, int status)
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "scan complete: %d\n", status);
+ }
+ 
++static int ath6kl_commit_ch_switch(struct ath6kl_vif *vif, u16 channel)
++{
++
++	struct ath6kl *ar = vif->ar;
++
++	vif->next_chan = cpu_to_le16(channel);
++	vif->profile.ch = cpu_to_le16(channel);
++
++	switch (vif->nw_type) {
++	case AP_NETWORK:
++		return ath6kl_wmi_ap_profile_commit(ar->wmi, vif->fw_vif_idx,
++						    &vif->profile);
++	default:
++		ath6kl_err("won't switch channels nw_type=%d\n", vif->nw_type);
++		return -ENOTSUPP;
++	}
++}
++
++static void ath6kl_check_ch_switch(struct ath6kl *ar, u16 channel)
++{
++
++	struct ath6kl_vif *vif;
++	int res = 0;
++
++	if (!ar->want_ch_switch)
++		return;
++
++	spin_lock_bh(&ar->list_lock);
++	list_for_each_entry(vif, &ar->vif_list, list) {
++		if (ar->want_ch_switch & (1 << vif->fw_vif_idx))
++			res = ath6kl_commit_ch_switch(vif, channel);
++
++		if (res)
++			ath6kl_err("channel switch failed nw_type %d res %d\n",
++				   vif->nw_type, res);
++	}
++	spin_unlock_bh(&ar->list_lock);
++}
++
+ void ath6kl_connect_event(struct ath6kl_vif *vif, u16 channel, u8 *bssid,
+ 			  u16 listen_int, u16 beacon_int,
+ 			  enum network_type net_type, u8 beacon_ie_len,
+@@ -599,9 +645,11 @@ void ath6kl_connect_event(struct ath6kl_vif *vif, u16 channel, u8 *bssid,
+ 	memcpy(vif->bssid, bssid, sizeof(vif->bssid));
+ 	vif->bss_ch = channel;
+ 
+-	if ((vif->nw_type == INFRA_NETWORK))
++	if ((vif->nw_type == INFRA_NETWORK)) {
+ 		ath6kl_wmi_listeninterval_cmd(ar->wmi, vif->fw_vif_idx,
+ 					      vif->listen_intvl_t, 0);
++		ath6kl_check_ch_switch(ar, channel);
++	}
+ 
+ 	netif_wake_queue(vif->ndev);
+ 
+@@ -924,6 +972,11 @@ void ath6kl_disconnect_event(struct ath6kl_vif *vif, u8 reason, u8 *bssid,
+ 	struct ath6kl *ar = vif->ar;
+ 
+ 	if (vif->nw_type == AP_NETWORK) {
++		/* disconnect due to other STA vif switching channels */
++		if (reason == BSS_DISCONNECTED &&
++		    prot_reason_status == WMI_AP_REASON_STA_ROAM)
++			ar->want_ch_switch |= 1 << vif->fw_vif_idx;
++
+ 		if (!ath6kl_remove_sta(ar, bssid, prot_reason_status))
+ 			return;
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index b99e9bd..88a1603 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1145,6 +1145,7 @@ enum wmi_phy_mode {
+ 	WMI_11AG_MODE = 0x3,
+ 	WMI_11B_MODE = 0x4,
+ 	WMI_11GONLY_MODE = 0x5,
++	WMI_11G_HT20	= 0x6,
+ };
+ 
+ #define WMI_MAX_CHANNELS        32
+@@ -1452,6 +1453,17 @@ enum wmi_disconnect_reason {
+ 	IBSS_MERGE = 0xe,
+ };
+ 
++/* AP mode disconnect proto_reasons */
++enum ap_disconnect_reason {
++	WMI_AP_REASON_STA_LEFT		= 101,
++	WMI_AP_REASON_FROM_HOST		= 102,
++	WMI_AP_REASON_COMM_TIMEOUT	= 103,
++	WMI_AP_REASON_MAX_STA		= 104,
++	WMI_AP_REASON_ACL		= 105,
++	WMI_AP_REASON_STA_ROAM		= 106,
++	WMI_AP_REASON_DFS_CHANNEL	= 107,
++};
++
+ #define ATH6KL_COUNTRY_RD_SHIFT        16
+ 
+ struct ath6kl_wmi_regdomain {
 -- 
-1.7.3.2
+1.7.4.1
 
