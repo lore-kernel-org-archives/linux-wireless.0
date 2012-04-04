@@ -1,332 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:15297 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753890Ab2DCQDX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 12:03:23 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: dcbw@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Cc: libertas-dev@lists.infradead.org
-Subject: [RFC 4/4] libertas SDIO: convert to asynchronous firmware loading
-Message-Id: <20120403160319.B26CF9D401E@zog.reactivated.net> (sfid-20120403_180327_272036_8719BD69)
-Date: Tue,  3 Apr 2012 17:03:17 +0100 (BST)
+Received: from nbd.name ([46.4.11.11]:58737 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756037Ab2DDMBF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2012 08:01:05 -0400
+Message-ID: <4F7C3815.8060902@openwrt.org> (sfid-20120404_140109_886510_501F61B6)
+Date: Wed, 04 Apr 2012 14:01:25 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: greearb@candelatech.com
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH 2/2] ath9k:  Add more recv stats.
+References: <1333469939-26213-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1333469939-26213-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/libertas/if_sdio.c |  210 ++++++++++++++++++-------------
- 1 files changed, 123 insertions(+), 87 deletions(-)
+On 2012-04-03 6:18 PM, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> This adds counters in various places that can drop packets on
+> rx without otherwise incrementing a counter.  It also counts
+> some non-error cases, such as becons and fragments received.
+> 
+> Should help with figuring out where packets are (and are not)
+> dropped.
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> :100644 100644 9078279... 244723a... M	drivers/net/wireless/ath/ath9k/debug.c
+> :100644 100644 d1c132f... 56a7053... M	drivers/net/wireless/ath/ath9k/debug.h
+> :100644 100644 1c4583c... ad2b2b6... M	drivers/net/wireless/ath/ath9k/recv.c
+>  drivers/net/wireless/ath/ath9k/debug.c |   23 +++++++++++++++++++-
+>  drivers/net/wireless/ath/ath9k/debug.h |   18 ++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/recv.c  |   35 +++++++++++++++++++++++--------
+>  3 files changed, 65 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+> index 9078279..244723a 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/debug.c
+> @@ -916,6 +916,21 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+>  	len += snprintf(buf + len, size - len,
+>  			"%22s : %10u\n", "DECRYPT BUSY ERR",
+>  			sc->debug.stats.rxstats.decrypt_busy_err);
+> +	len += snprintf(buf + len, size - len,
+> +			"%22s : %10u\n", "RX-LENGTH-ERR",
+> +			sc->debug.stats.rxstats.rx_len_err);
+> +	len += snprintf(buf + len, size - len,
+> +			"%22s : %10u\n", "RX-OOM-ERR",
+> +			sc->debug.stats.rxstats.rx_oom_err);
+> +	len += snprintf(buf + len, size - len,
+> +			"%22s : %10u\n", "RX-RATE-ERR",
+> +			sc->debug.stats.rxstats.rx_rate_err);
+> +	len += snprintf(buf + len, size - len,
+> +			"%22s : %10u\n", "RX-DROP-RXFLUSH",
+> +			sc->debug.stats.rxstats.rx_drop_rxflush);
+> +	len += snprintf(buf + len, size - len,
+> +			"%22s : %10u\n", "RX-TOO-MANY-FRAGS",
+> +			sc->debug.stats.rxstats.rx_too_many_frags_err);
+>  
+>  	PHY_ERR("UNDERRUN ERR", ATH9K_PHYERR_UNDERRUN);
+>  	PHY_ERR("TIMING ERR", ATH9K_PHYERR_TIMING);
+> @@ -950,6 +965,12 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+>  	len += snprintf(buf + len, size - len,
+>  			"%22s : %10u\n", "RX-Bytes-All",
+>  			sc->debug.stats.rxstats.rx_bytes_all);
+> +	len += snprintf(buf + len, size - len,
+> +			"%22s : %10u\n", "RX-Beacons",
+> +			sc->debug.stats.rxstats.rx_beacons);
+> +	len += snprintf(buf + len, size - len,
+> +			"%22s : %10u\n", "RX-Frags",
+> +			sc->debug.stats.rxstats.rx_frags);
+>  
+>  	if (len > size)
+>  		len = size;
+> @@ -964,7 +985,6 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+>  
+>  void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+>  {
+> -#define RX_STAT_INC(c) sc->debug.stats.rxstats.c++
+>  #define RX_PHY_ERR_INC(c) sc->debug.stats.rxstats.phy_err_stats[c]++
+>  #define RX_SAMP_DBG(c) (sc->debug.bb_mac_samp[sc->debug.sampidx].rs\
+>  			[sc->debug.rsidx].c)
+> @@ -1010,7 +1030,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+>  
+>  #endif
+>  
+> -#undef RX_STAT_INC
+>  #undef RX_PHY_ERR_INC
+>  #undef RX_SAMP_DBG
+>  }
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+> index d1c132f..56a7053 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.h
+> +++ b/drivers/net/wireless/ath/ath9k/debug.h
+> @@ -139,6 +139,8 @@ struct ath_tx_stats {
+>  	u32 txfailed;
+>  };
+>  
+> +#define RX_STAT_INC(c) (sc->debug.stats.rxstats.c++)
+> +
+>  /**
+>   * struct ath_rx_stats - RX Statistics
+>   * @rx_pkts_all:  No. of total frames received, including ones that
+> @@ -155,6 +157,13 @@ struct ath_tx_stats {
+>   * @post_delim_crc_err: Post-Frame delimiter CRC error detections
+>   * @decrypt_busy_err: Decryption interruptions counter
+>   * @phy_err_stats: Individual PHY error statistics
+> + * @rx_len_err:  No. of frames discarded due to bad length.
+> + * @rx_oom_err:  No. of frames dropped due to OOM issues.
+> + * @rx_rate_err:  No. of frames dropped due to rate errors.
+> + * @rx_too_many_frags_err:  Frames dropped due to too-many-frags received.
+> + * @rx_drop_rxflush: No. of frames dropped due to RX-FLUSH.
+> + * @rx_beacons:  No. of beacons received.
+> + * @rx_frags:  No. of rx-fragements received.
+Why should the driver keep track of those last two?
 
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 26c7235..0e0fb2b 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -117,6 +117,8 @@ struct if_sdio_card {
- 	int			model;
- 	unsigned long		ioport;
- 	unsigned int		scratch_reg;
-+	bool			started;
-+	wait_queue_head_t	pwron_waitq;
- 
- 	u8			buffer[65536] __attribute__((aligned(4)));
- 
-@@ -129,6 +131,9 @@ struct if_sdio_card {
- 	u8			rx_unit;
- };
- 
-+static void if_sdio_finish_power_on(struct if_sdio_card *card);
-+static int if_sdio_power_off(struct if_sdio_card *card);
-+
- /********************************************************************/
- /* I/O                                                              */
- /********************************************************************/
-@@ -669,12 +674,41 @@ out:
- 	return ret;
- }
- 
-+static void if_sdio_do_prog_firmware(struct lbs_private *priv, int ret,
-+				     const struct firmware *helper,
-+				     const struct firmware *mainfw)
-+{
-+	struct if_sdio_card *card = priv->card;
-+
-+	if (ret) {
-+		pr_err("failed to find firmware (%d)\n", ret);
-+		return;
-+	}
-+
-+	ret = if_sdio_prog_helper(card, helper);
-+	if (ret)
-+		goto out;
-+
-+	lbs_deb_sdio("Helper firmware loaded\n");
-+
-+	ret = if_sdio_prog_real(card, mainfw);
-+	if (ret)
-+		goto out;
-+
-+	lbs_deb_sdio("Firmware loaded\n");
-+	if_sdio_finish_power_on(card);
-+
-+out:
-+	if (helper)
-+		release_firmware(helper);
-+	if (mainfw)
-+		release_firmware(mainfw);
-+}
-+
- static int if_sdio_prog_firmware(struct if_sdio_card *card)
- {
- 	int ret;
- 	u16 scratch;
--	const struct firmware *helper = NULL;
--	const struct firmware *mainfw = NULL;
- 
- 	lbs_deb_enter(LBS_DEB_SDIO);
- 
-@@ -708,43 +742,18 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
- 	 */
- 	if (scratch == IF_SDIO_FIRMWARE_OK) {
- 		lbs_deb_sdio("firmware already loaded\n");
--		goto success;
-+		if_sdio_finish_power_on(card);
-+		return 0;
- 	} else if ((card->model == MODEL_8686) && (scratch & 0x7fff)) {
- 		lbs_deb_sdio("firmware may be running\n");
--		goto success;
-+		if_sdio_finish_power_on(card);
-+		return 0;
- 	}
- 
--	ret = lbs_get_firmware(&card->func->dev, card->model, &fw_table[0],
--				&helper, &mainfw);
--	if (ret) {
--		pr_err("failed to find firmware (%d)\n", ret);
--		goto out;
--	}
--
--	ret = if_sdio_prog_helper(card, helper);
--	if (ret)
--		goto out;
--
--	lbs_deb_sdio("Helper firmware loaded\n");
--
--	ret = if_sdio_prog_real(card, mainfw);
--	if (ret)
--		goto out;
--
--	lbs_deb_sdio("Firmware loaded\n");
--
--success:
--	sdio_claim_host(card->func);
--	sdio_set_block_size(card->func, IF_SDIO_BLOCK_SIZE);
--	sdio_release_host(card->func);
--	ret = 0;
-+	ret = lbs_get_firmware_async(card->priv, &card->func->dev, card->model,
-+				     fw_table, if_sdio_do_prog_firmware);
- 
- out:
--	if (helper)
--		release_firmware(helper);
--	if (mainfw)
--		release_firmware(mainfw);
--
- 	lbs_deb_leave_args(LBS_DEB_SDIO, "ret %d", ret);
- 	return ret;
- }
-@@ -753,55 +762,15 @@ out:
- /* Power management                                                 */
- /********************************************************************/
- 
--static int if_sdio_power_on(struct if_sdio_card *card)
-+/* Finish power on sequence (after firmware is loaded) */
-+static void if_sdio_finish_power_on(struct if_sdio_card *card)
- {
- 	struct sdio_func *func = card->func;
- 	struct lbs_private *priv = card->priv;
--	struct mmc_host *host = func->card->host;
- 	int ret;
- 
- 	sdio_claim_host(func);
--
--	ret = sdio_enable_func(func);
--	if (ret)
--		goto release;
--
--	/* For 1-bit transfers to the 8686 model, we need to enable the
--	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
--	 * bit to allow access to non-vendor registers. */
--	if ((card->model == MODEL_8686) &&
--	    (host->caps & MMC_CAP_SDIO_IRQ) &&
--	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
--		u8 reg;
--
--		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
--		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
--		if (ret)
--			goto disable;
--
--		reg |= SDIO_BUS_ECSI;
--		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
--		if (ret)
--			goto disable;
--	}
--
--	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
--	if (ret)
--		goto disable;
--
--	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 1, &ret) << 8;
--	if (ret)
--		goto disable;
--
--	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 2, &ret) << 16;
--	if (ret)
--		goto disable;
--
--	sdio_release_host(func);
--	ret = if_sdio_prog_firmware(card);
--	sdio_claim_host(func);
--	if (ret)
--		goto disable;
-+	sdio_set_block_size(card->func, IF_SDIO_BLOCK_SIZE);
- 
- 	/*
- 	 * Get rx_unit if the chip is SD8688 or newer.
-@@ -826,7 +795,7 @@ static int if_sdio_power_on(struct if_sdio_card *card)
- 	 */
- 	ret = sdio_claim_irq(func, if_sdio_interrupt);
- 	if (ret)
--		goto disable;
-+		goto release;
- 
- 	/*
- 	 * Enable interrupts now that everything is set up
-@@ -852,11 +821,79 @@ static int if_sdio_power_on(struct if_sdio_card *card)
- 	}
- 
- 	priv->fw_ready = 1;
-+	wake_up(&card->pwron_waitq);
- 
--	return 0;
-+	if (!card->started) {
-+		ret = lbs_start_card(priv);
-+		if_sdio_power_off(card);
-+		if (ret == 0) {
-+			card->started = true;
-+			/* Tell PM core that we don't need the card to be
-+			 * powered now */
-+			pm_runtime_put_noidle(&func->dev);
-+		}
-+	}
-+
-+	return;
- 
- release_irq:
- 	sdio_release_irq(func);
-+release:
-+	sdio_release_host(func);
-+}
-+
-+static int if_sdio_power_on(struct if_sdio_card *card)
-+{
-+	struct sdio_func *func = card->func;
-+	struct mmc_host *host = func->card->host;
-+	int ret;
-+
-+	sdio_claim_host(func);
-+
-+	ret = sdio_enable_func(func);
-+	if (ret)
-+		goto release;
-+
-+	/* For 1-bit transfers to the 8686 model, we need to enable the
-+	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
-+	 * bit to allow access to non-vendor registers. */
-+	if ((card->model == MODEL_8686) &&
-+	    (host->caps & MMC_CAP_SDIO_IRQ) &&
-+	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-+		u8 reg;
-+
-+		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-+		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
-+		if (ret)
-+			goto disable;
-+
-+		reg |= SDIO_BUS_ECSI;
-+		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
-+		if (ret)
-+			goto disable;
-+	}
-+
-+	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
-+	if (ret)
-+		goto disable;
-+
-+	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 1, &ret) << 8;
-+	if (ret)
-+		goto disable;
-+
-+	card->ioport |= sdio_readb(func, IF_SDIO_IOPORT + 2, &ret) << 16;
-+	if (ret)
-+		goto disable;
-+
-+	sdio_release_host(func);
-+	ret = if_sdio_prog_firmware(card);
-+	if (ret) {
-+		sdio_disable_func(func);
-+		return ret;
-+	}
-+
-+	return 0;
-+
- disable:
- 	sdio_disable_func(func);
- release:
-@@ -1063,11 +1100,17 @@ static int if_sdio_power_save(struct lbs_private *priv)
- static int if_sdio_power_restore(struct lbs_private *priv)
- {
- 	struct if_sdio_card *card = priv->card;
-+	int r;
- 
- 	/* Make sure the card will not be powered off by runtime PM */
- 	pm_runtime_get_sync(&card->func->dev);
- 
--	return if_sdio_power_on(card);
-+	r = if_sdio_power_on(card);
-+	if (r)
-+		return r;
-+
-+	wait_event(card->pwron_waitq, priv->fw_ready);
-+	return 0;
- }
- 
- 
-@@ -1168,6 +1211,7 @@ static int if_sdio_probe(struct sdio_func *func,
- 	spin_lock_init(&card->lock);
- 	card->workqueue = create_workqueue("libertas_sdio");
- 	INIT_WORK(&card->packet_worker, if_sdio_host_to_card_worker);
-+	init_waitqueue_head(&card->pwron_waitq);
- 
- 	/* Check if we support this card */
- 	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
-@@ -1209,14 +1253,6 @@ static int if_sdio_probe(struct sdio_func *func,
- 	if (ret)
- 		goto err_activate_card;
- 
--	ret = lbs_start_card(priv);
--	if_sdio_power_off(card);
--	if (ret)
--		goto err_activate_card;
--
--	/* Tell PM core that we don't need the card to be powered now */
--	pm_runtime_put_noidle(&func->dev);
--
- out:
- 	lbs_deb_leave_args(LBS_DEB_SDIO, "ret %d", ret);
- 
--- 
-1.7.7.6
-
+- Felix
