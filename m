@@ -1,60 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:34570 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755870Ab2DNVBF (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:60511 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753421Ab2DDH3L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 17:01:05 -0400
-Received: by wgbdr13 with SMTP id dr13so4039035wgb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Apr 2012 14:01:03 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: xose.vazquez@gmail.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com, IvDoorn@gmail.com,
-	linville@tuxdriver.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com
-Subject: [PATCH] wireless: rt2x00: rt{2500,73}usb.c put back duplicate id
-Date: Sat, 14 Apr 2012 23:00:01 +0200
-Message-Id: <1334437201-12737-1-git-send-email-xose.vazquez@gmail.com> (sfid-20120414_230140_649525_72C751B5)
+	Wed, 4 Apr 2012 03:29:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120403200306.0afbb48b@xenia.leun.net>
+References: <4F7A8EB7.4060200@silka.with-linux.com>
+	<4F7A923D.5000002@candelatech.com>
+	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
+	<4F7A9D5C.8040402@silka.with-linux.com>
+	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
+	<4F7AAAD9.2040307@silka.with-linux.com>
+	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
+	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
+	<4F7AB6FE.3080009@silka.with-linux.com>
+	<20120403200306.0afbb48b@xenia.leun.net>
+Date: Wed, 4 Apr 2012 12:59:09 +0530
+Message-ID: <CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com> (sfid-20120404_092927_472494_DAAB5983)
+Subject: Re: [ath9k-devel] 3.3.1 ath9k regression
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Michael Leun <lkml20120218@newton.leun.net>,
+	casteyde.christian@free.fr
+Cc: Kelly Anderson <kelly@silka.with-linux.com>,
+	Ben Greear <greearb@candelatech.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-put back 0x050d,0x7050 to rt73usb, same usb_id for two chips:
+On Tue, Apr 3, 2012 at 11:33 PM, Michael Leun
+<lkml20120218@newton.leun.net> wrote:
+> On Tue, 03 Apr 2012 02:38:22 -0600
+> Kelly Anderson <kelly@silka.with-linux.com> wrote:
+> [...]
+>
+> I've trouble with db6a6a78d8602964c9dfb1d8ce18daefd92da0a7 /
+> c1afdaff90538ef085b756454f12b29575411214 ath9k: fix going to full-sleep
+> on PS idle also.
+>
+> On my machine the card is detected as usual, connecting to an ap with
+> wpa2 the first time after driver was loaded does work, but after an
+> ifconfig wlan0 down / ifconfig wlan0 up it is not able to reconnect again:
+>
+> Apr  3 19:34:35 jill kernel: [  986.012989] wlan0: authenticate with xx:xx:xx:xx:xx:xx (try 1)
+> Apr  3 19:34:35 jill kernel: [  986.213059] wlan0: authenticate with xx:xx:xx:xx:xx:xx (try 2)
+> Apr  3 19:34:35 jill kernel: [  986.413151] wlan0: authenticate with xx:xx:xx:xx:xx:xx (try 3)
+> Apr  3 19:34:35 jill kernel: [  986.613135] wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
+> Apr  3 19:34:43 jill kernel: [  994.188209] wlan0: authenticate with xx:xx:xx:xx:xx:xx (try 1)
+> Apr  3 19:34:43 jill kernel: [  994.388148] wlan0: authenticate with xx:xx:xx:xx:xx:xx (try 2)
+> Apr  3 19:34:43 jill kernel: [  994.588132] wlan0: authenticate with xx:xx:xx:xx:xx:xx (try 3)
+> Apr  3 19:34:43 jill kernel: [  994.788044] wlan0: authentication with xx:xx:xx:xx:xx:xx timed out
 
-K7SF5D7050A ver 2xxx is rt2500
-K7SF5D7050B ver 3xxx is rt73
 
-<http://en-us-support.belkin.com/app/answers/detail/a_id/297/kw/K7SF5D7050>
+did a prelim check with my wireless testing and could not see the
+issue, will spend some time to recreate it.
 
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
- drivers/net/wireless/rt2x00/rt73usb.c   |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 1de9c75..c88fd3e 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1912,7 +1912,7 @@ static struct usb_device_id rt2500usb_device_table[] = {
- 	{ USB_DEVICE(0x0b05, 0x1706) },
- 	{ USB_DEVICE(0x0b05, 0x1707) },
- 	/* Belkin */
--	{ USB_DEVICE(0x050d, 0x7050) },
-+	{ USB_DEVICE(0x050d, 0x7050) },	/* FCC ID: K7SF5D7050A ver. 2.x */
- 	{ USB_DEVICE(0x050d, 0x7051) },
- 	/* Cisco Systems */
- 	{ USB_DEVICE(0x13b1, 0x000d) },
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index e477a96..1551366 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -2412,6 +2412,7 @@ static struct usb_device_id rt73usb_device_table[] = {
- 	{ USB_DEVICE(0x0b05, 0x1723) },
- 	{ USB_DEVICE(0x0b05, 0x1724) },
- 	/* Belkin */
-+	{ USB_DEVICE(0x050d, 0x7050) },	/* FCC ID: K7SF5D7050B ver. 3.x */
- 	{ USB_DEVICE(0x050d, 0x705a) },
- 	{ USB_DEVICE(0x050d, 0x905b) },
- 	{ USB_DEVICE(0x050d, 0x905c) },
+> [...]
+>
+> rmmod ath9k
+> modprobe ath9k
+>
+> Fixes that, after reloading the module it connects (once) again.
+>
+> modprobe -v ath9k debug=0xe01 does not yield more information than above.
+>
+> jill:/home/ml # lspci -vvvvvvxxx
+> [...]
+> 02:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+>        Subsystem: Hewlett-Packard Company Device 3042
+>        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>        Latency: 0, Cache Line Size: 64 bytes
+>        Interrupt: pin A routed to IRQ 19
+>        Region 0: Memory at d2500000 (64-bit, non-prefetchable) [size=64K]
+>        Capabilities: [40] Power Management version 2
+>                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+>                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
+>                Address: 00000000  Data: 0000
+>        Capabilities: [60] Express (v1) Legacy Endpoint, MSI 00
+>                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+>                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+>                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+>                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+>                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L1, Latency L0 <512ns, L1 <64us
+>                        ClockPM- Surprise- LLActRep- BwNot-
+>                LnkCtl: ASPM Disabled; RCB 128 bytes Disabled- Retrain- CommClk+
+>                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>        Capabilities: [90] MSI-X: Enable- Count=1 Masked-
+>                Vector table: BAR=0 offset=00000000
+>                PBA: BAR=0 offset=00000000
+>        Capabilities: [100 v1] Advanced Error Reporting
+>                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+>                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+>        Capabilities: [140 v1] Virtual Channel
+>                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+>                Arb:    Fixed- WRR32- WRR64- WRR128-
+>                Ctrl:   ArbSelect=Fixed
+>                Status: InProgress-
+>                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+>                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+>                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=01
+>                        Status: NegoPending- InProgress-
+>        Capabilities: [160 v1] Device Serial Number 00-00-00-00-00-00-00-00
+>        Kernel driver in use: ath9k
+> 00: 8c 16 2a 00 07 00 10 00 01 00 80 02 10 00 00 00
+> 10: 04 00 50 d2 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 3c 10 42 30
+> 30: 00 00 00 00 40 00 00 00 00 00 00 00 0b 01 00 00
+> 40: 01 50 c2 5b 00 00 00 00 00 00 00 00 00 00 00 00
+> 50: 05 60 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 60: 10 90 11 00 c0 0c 04 05 10 20 0a 00 11 38 03 00
+> 70: 48 00 11 10 00 00 00 00 c0 03 00 00 00 00 00 00
+> 80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 90: 11 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>
+>
+> After reverting db6a6a78d8602964c9dfb1d8ce18daefd92da0a7 in 3.3.1 it
+> works again as expected.
+>
+>
+> --
+> MfG,
+>
+> Michael Leun
+>
+
+
+
 -- 
-1.7.6.5
-
+thanks,
+shafi
