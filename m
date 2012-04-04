@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35794 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990Ab2DPReO (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:51178 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756037Ab2DDLKU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 13:34:14 -0400
-Message-ID: <4F8C5816.8070402@sipsolutions.net> (sfid-20120416_193417_729714_402FC428)
-Date: Mon, 16 Apr 2012 10:34:14 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 4 Apr 2012 07:10:20 -0400
+Date: Wed, 4 Apr 2012 12:10:14 +0100
+From: Andy Whitcroft <apw@canonical.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	hauke@hauke-m.de, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com,
+	lf_driver_backport@lists.linux-foundation.org
+Subject: Re: [PATCH] compat: add compat kernel checker and downloader
+Message-ID: <20120404111014.GB3378@shadowen.org> (sfid-20120404_131036_738758_B47C087F)
+References: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org>
+ <20120206160727.GA21048@tuxdriver.com>
+ <20120207041958.GA32377@bombadil.infradead.org>
+ <CAB=NE6VS79S4R6wQddQCqPfoYPyRbPzSdAYN2Mxfi-4G_sfCvg@mail.gmail.com>
+ <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com>
+ <CAB=NE6URWAgUgF+6bOsRBeeXnQ4VjYf1tWuUkkvMviCLOCxeqA@mail.gmail.com>
+ <CAB=NE6UNHufTggg0ka-+q7ri_X6ENx4nO5DfMCAxxrKLrERPWg@mail.gmail.com>
+ <CAB=NE6U_Sq88ro7onChn8U4tkkqt7Z9YN9wMyZjx+78j+M=_uA@mail.gmail.com>
 MIME-Version: 1.0
-To: Matt Chen <machen@suse.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, ath9k-devel@lists.ath9k.org,
-	Takashi Iwai <tiwai@suse.de>
-Subject: Re: About rfkill racing issue.
-References: <CALx5=V_5XzAqddWRGzS4d-9MoHLV=abN2DOA-X7EtQ+78DBdzg@mail.gmail.com> (sfid-20120412_081533_107871_65FBA849)
-In-Reply-To: <CALx5=V_5XzAqddWRGzS4d-9MoHLV=abN2DOA-X7EtQ+78DBdzg@mail.gmail.com> (sfid-20120412_081533_107871_65FBA849)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6U_Sq88ro7onChn8U4tkkqt7Z9YN9wMyZjx+78j+M=_uA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/11/2012 11:15 PM, Matt Chen wrote:
-> Hi list,
-> It is found by notebook that rfkill doesn't work very right. I don't
-> know where to post this discussion, so I choose here to start the
-> talk.
-> Basically we found the input handler in net/rfkill/input.c , because
-> the nature of stateless key events, it can only toggle the saved
-> state.  This screws up when started as blocked at
-> boot, as already suspected.
-> Now we thought Synchronizing to the
-> hard block state looks as if working, but it's also dangerous because
-> the operation is racy. The hard block check on ath9k driver is done
-> in a poll basis, for example. Thus, the polling might happen just
-> before the key event is handled, and it might happen after the key
-> event.
-> Another option would be to get synchronize the soft block state at the
-> driver initialization time.  But, this doesn't work always because we
-> never know whether ther rfkill key event is generated.  The rfkill key
-> event depends on BIOS. Thus, if we set the soft block as same as the
-> hard block at the init time (and set as blocked), the soft block will
-> be never unblocked if some BIOS version doesn't emit a key event.
->
-> So we would like to discuss with the all experts here for this issue.
-> Do you have a good idea to fix the rfkill for the issue ?
+On Fri, Mar 30, 2012 at 05:23:46PM -0700, Luis R. Rodriguez wrote:
+> Andy, so I just noticed that on all Ubuntu PPA (and generic) kernels
+> you guys have a broken symlink >= 2.6.33.
+> 
+> /lib/modules/2.6.33-02063305-generic/build/include/asm
+> 
+> points to asm-x86 and that is no longer present after 2.6.33 so any
+> module requiring those header files will break now on Ubuntu. I just
+> spotted this as some file from asm is now included in the modules were
+> are building. I guess not many external kernel modules include asm dir
+> otherwise you guys would have noticed this a long time ago.
 
-How is hard rfkill related to input handling? It shouldn't be.
+Luis, I concur that the link is now broken.  However that link is actually
+simply superfulous now.  Anything correctly using kernel 'external
+module' support will be using the -I path from the kernel Makefiles.
+They will therefore be including from /usr/src/<version>/include _and_
+/usr/src/<version>/arch/x86/include.  I presume this is why we have not
+noticed it.
 
-I don't understand what you're saying I think.
+I will get that link removed however as it is simply bogus.
 
-johannes
+-apw
