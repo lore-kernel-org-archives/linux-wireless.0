@@ -1,53 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:55715 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751266Ab2DTI5W convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 04:57:22 -0400
+Received: from mail.candelatech.com ([208.74.158.172]:32876 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932261Ab2DDSZ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2012 14:25:59 -0400
+Message-ID: <4F7C922F.7060201@candelatech.com> (sfid-20120404_202602_478696_D7EC0C74)
+Date: Wed, 04 Apr 2012 11:25:51 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <20120420064705.GE22649@elgon.mountain>
-References: <20120420064705.GE22649@elgon.mountain>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 20 Apr 2012 18:57:00 +1000
-Message-ID: <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com> (sfid-20120420_105728_184194_96D3E4E7)
-Subject: Re: [patch] wireless: at76c50x: allocating too much data
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Joe Perches <joe@perches.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH v2] ath9k:  Gather and report IRQ sync_cause errors.
+References: <1333513250-30478-1-git-send-email-greearb@candelatech.com> <1333556182.16978.9.camel@joe2Laptop>
+In-Reply-To: <1333556182.16978.9.camel@joe2Laptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On 04/04/2012 09:16 AM, Joe Perches wrote:
+> On Tue, 2012-04-03 at 21:20 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> Report all defined sync_cause errors in debugfs
+>> to aid with debugging.
+>
+> just trivia:
+>
+>> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+> []
+>> @@ -385,63 +385,130 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+>>   				   size_t count, loff_t *ppos)
+>>   {
+>>   	struct ath_softc *sc = file->private_data;
+> []
+>>   	if (sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_EDMA) {
+> []
+>> +		len += snprintf(buf + len, mxlen - len,
+>> +			"%21s: %10u\n", "RXLP", sc->debug.stats.istats.rxlp);
+>
+> Alignment is overrated.
+>
+> I wouldn't change any of the original block
+> though perhaps changing the sc pointer to an
+> istats pointer so these dereferences become
+> similar to istats->rxlp;
 
-On Fri, Apr 20, 2012 at 16:47, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> This is a cut and paste mistake, sizeof(struct mib_local) was intended
-> instead of sizeof(struct mib_phy).  The call to at76_get_mib() uses
-> sizeof(struct mib_local) correctly.
->
-> The current code works fine because mib_phy structs are larger than
-> mib_local structs.  But we may as well clean it up.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
-> index faa8bcb..0bba5ea 100644
-> --- a/drivers/net/wireless/at76c50x-usb.c
-> +++ b/drivers/net/wireless/at76c50x-usb.c
-> @@ -1122,7 +1122,7 @@ exit:
->  static void at76_dump_mib_local(struct at76_priv *priv)
->  {
->        int ret;
-> -       struct mib_local *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
-> +       struct mib_local *m = kmalloc(sizeof(struct mib_local), GFP_KERNEL);
+Other files in this driver are aligned, so it seems
+nice to continue the tradition.  debugfs files are
+for human consumption, so making them readable is
+a virtue.
 
-Would it be better practice to use sizeof(*m)?
+If someone wants more efficient access to this data,
+then we can use ethtool stats (I'll add ethtool stats
+support for these counters if/when my first ethtool
+patches make it in...)
+
+>> +void ath9k_debug_sync_cause(struct ath_common *common, u32 sync_cause)
+>> +{
+>> +	struct ath_softc *sc = common->priv;
+>> +	if (sync_cause)
+>> +		sc->debug.stats.istats.sync_cause_all++;
+>> +	if (sync_cause&  AR_INTR_SYNC_RTC_IRQ)
+>> +		sc->debug.stats.istats.sync_rtc_irq++;
+>
+> And nicer here to use a pointer to istats too.
+
+Hopefully the compiler is smart enough that this
+doesn't really matter.
+
+If the maintainers care, I'll respin the patch, but
+otherwise I'm not sure it's worth the effort.
 
 Thanks,
+Ben
 
 -- 
-Julian Calaby
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
