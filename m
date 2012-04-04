@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57140 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755495Ab2DPWB0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:01:26 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/16] update for 3.5: iwlwifi 2012-04-16
-Date: Mon, 16 Apr 2012 14:56:54 -0700
-Message-Id: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120417_000249_736654_FB42B96A)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62896 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756106Ab2DDMcb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2012 08:32:31 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Wed, 4 Apr 2012 05:32:10 -0700
+Message-ID: <CAB=NE6XO3+36C3yxd+Tw-zBd86Fd3=xOgtto86+SsG4kw1LLYw@mail.gmail.com> (sfid-20120404_143250_915380_0C4DD294)
+Subject: compat-wireless release based on v3.4-rc1
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Another batch of the cleanup and refactor work to prepare our up-coming
-new architecture. Still more to come, but we are almost there.
+v3.4-rc1 is out and we now have a respective backport of that release
+[0] for ethernet, bluetooth and wireless. This release has been
+compile tested with ckmake against all supported kernel versions,
+v2.6.24 - v3.3 and verified to have compiled on each one of them.
+Moving forward every single compat-wireless release will have been
+tested with ckmake to ensure that it builds on all supported kernels.
+For details of the changes involved in this release check the
+ChangeLog-3.4-rc1 [1], for details of the build you can check the
+ckmake-3.4-rc1-2.log.bz2 [2].
 
-Amit Beka (1):
-  iwlwifi: added HBUS_TARG_TEST_REG
+compat-wireless code metrics
 
-David Spinadel (4):
-  iwlwifi: set size of ucode section
-  iwlwifi: remove double verification of ucode sections
-  iwlwifi: phy db channel to tx power channel group
-  iwlwifi: expose static methods for MVM use
+    829306 - Total upstream lines of code being pulled
+      2748 - backport code changes
+      2333 - backport code additions
+       415 - backport code deletions
+      9551 - backport from compat module
+     12299 - total backport code
+    1.4830 - % of code consists of backport work
 
-Don Fry (3):
-  iwlwifi: complete STATUS_READY refactoring
-  iwlwifi: move HCMD_ACTIVE to trans
-  iwlwifi: move status definitions from iwl-shared
+Base tree: linux-stable.git
+Base tree version: v3.4-rc1
+compat-wireless release: compat-wireless-v3.4-rc1-2
+Code metrics archive: http://bit.ly/H6BTF7
 
-Dor Shaish (1):
-  iwlwifi: Disabling calibrations variable
+mcgrof@flash ~/compat-wireless-3.4-rc1-2 $ time ckmake
 
-Emmanuel Grumbach (1):
-  iwlwifi: remove uneeded include from iwl-pci.c
+Trying kernel                     3.2.2-030202-generic  [OK]
+Trying kernel                    3.1.10-030110-generic  [OK]
+Trying kernel                    3.0.18-030018-generic  [OK]
+Trying kernel                  2.6.39-02063904-generic  [OK]
+Trying kernel                  2.6.38-02063808-generic  [OK]
+Trying kernel                  2.6.37-02063706-generic  [OK]
+Trying kernel                  2.6.36-02063604-generic  [OK]
+Trying kernel                  2.6.35-02063512-generic  [OK]
+Trying kernel                  2.6.34-02063410-generic  [OK]
+Trying kernel                  2.6.33-02063305-generic  [OK]
+Trying kernel                  2.6.32-02063255-generic  [OK]
+Trying kernel                  2.6.31-02063113-generic  [OK]
+Trying kernel                  2.6.30-02063010-generic  [OK]
+Trying kernel                  2.6.29-02062906-generic  [OK]
+Trying kernel                  2.6.28-02062810-generic  [OK]
+Trying kernel                    2.6.27-020627-generic  [OK]
+Trying kernel                    2.6.26-020626-generic  [OK]
+Trying kernel                    2.6.25-020625-generic  [OK]
+Trying kernel                    2.6.24-020624-generic  [OK]
 
-Johannes Berg (6):
-  iwlwifi: remove no_sleep_autoadjust
-  iwlwifi: remove uCode alternatives mechanism
-  iwlwifi: remove antenna from mod params struct
-  iwlwifi: remove iwl_tx_queue declaration
-  iwlwifi: optimize struct iwl_cmd_meta layout
-  iwlwifi: remove get_cmd_string
+real    78m2.934s
+user    234m29.807s
+sys     21m29.209s
 
-these patches are also available from wireless-next branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+[0] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/compat-wireless-3.4-rc1-2.tar.bz2
+[1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/ChangeLog-3.4-rc1
+[2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/ckmake-3.4-rc1-2.log.bz2
 
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |    6 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |  175 ++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   28 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.c            |   63 +++-----
- drivers/net/wireless/iwlwifi/iwl-agn.h            |  109 +++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c           |    4 +
- drivers/net/wireless/iwlwifi/iwl-csr.h            |    3 +
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |   39 ++++-
- drivers/net/wireless/iwlwifi/iwl-dev.h            |   13 +-
- drivers/net/wireless/iwlwifi/iwl-drv.c            |   70 +--------
- drivers/net/wireless/iwlwifi/iwl-fw-file.h        |   15 +--
- drivers/net/wireless/iwlwifi/iwl-mac80211.c       |  100 ++++++------
- drivers/net/wireless/iwlwifi/iwl-op-mode.h        |    7 +
- drivers/net/wireless/iwlwifi/iwl-pci.c            |    2 -
- drivers/net/wireless/iwlwifi/iwl-phy-db.c         |   20 ++-
- drivers/net/wireless/iwlwifi/iwl-phy-db.h         |    6 +
- drivers/net/wireless/iwlwifi/iwl-power.c          |   62 +-------
- drivers/net/wireless/iwlwifi/iwl-shared.h         |   37 -----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   21 +++-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |   19 +--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   54 ++++---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   16 ++-
- drivers/net/wireless/iwlwifi/iwl-trans.h          |    3 +
- drivers/net/wireless/iwlwifi/iwl-ucode.c          |    2 +-
- 25 files changed, 451 insertions(+), 427 deletions(-)
-
+  Luis
