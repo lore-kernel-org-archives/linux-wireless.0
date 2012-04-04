@@ -1,86 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from storm.alittletooquiet.net ([67.23.28.199]:55783 "EHLO
-	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882Ab2DESGe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 14:06:34 -0400
-Date: Thu, 5 Apr 2012 14:06:33 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: Re: [PATCH 1/2] rtl8192de: Clean up and fix 92D cut version
- constants and macros.
-Message-ID: <20120405180633.GG21869@alittletooquiet.net> (sfid-20120405_200638_003429_1A34A9EA)
-References: <20120402142525.GA20611@alittletooquiet.net>
- <4F79E7B9.7060504@lwfinger.net>
- <20120402175745.GE20611@alittletooquiet.net>
- <4F79EA18.9060502@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kVXhAStRUZ/+rrGn"
-In-Reply-To: <4F79EA18.9060502@lwfinger.net>
+Received: from perches-mx.perches.com ([206.117.179.246]:39845 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756854Ab2DDQQY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2012 12:16:24 -0400
+Message-ID: <1333556182.16978.9.camel@joe2Laptop> (sfid-20120404_181627_510288_FFF87D5A)
+Subject: Re: [PATCH v2] ath9k:  Gather and report IRQ sync_cause errors.
+From: Joe Perches <joe@perches.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Date: Wed, 04 Apr 2012 09:16:22 -0700
+In-Reply-To: <1333513250-30478-1-git-send-email-greearb@candelatech.com>
+References: <1333513250-30478-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2012-04-03 at 21:20 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> Report all defined sync_cause errors in debugfs
+> to aid with debugging.
 
---kVXhAStRUZ/+rrGn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+just trivia:
 
-Hi Larry,
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+[]
+> @@ -385,63 +385,130 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+>  				   size_t count, loff_t *ppos)
+>  {
+>  	struct ath_softc *sc = file->private_data;
+[]
+>  	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+[]
+> +		len += snprintf(buf + len, mxlen - len,
+> +			"%21s: %10u\n", "RXLP", sc->debug.stats.istats.rxlp);
 
-On Mon, Apr 02, 2012 at 01:04:08PM -0500, Larry Finger wrote:
-> On 04/02/2012 12:57 PM, Forest Bond wrote:
-> >On Mon, Apr 02, 2012 at 12:54:01PM -0500, Larry Finger wrote:
-> >>On 04/02/2012 09:25 AM, Forest Bond wrote:
-> >>>From: Forest Bond<forest.bond@rapidrollout.com>
-> >>>
-> >>>The previous definitions included both {B,C,D,E}_CUT_VERSION and
-> >>>CHIP_92D_{C,D}_CUT with conflicting values for the C and D cut version=
-s,
-> >>>and literal hex values were used in the IS_92D_{C,D,E}_CUT macros.  So
-> >>>we clean all this up and in doing so enable cut-specific code paths for
-> >>>cuts C and D, which would not have been executed because the
-> >>>CHIP_92D_{C,D}_CUT constants were wrong and the cut version was thus
-> >>>recorded incorrectly.
-> >>>
-> >>>Signed-off-by: Forest Bond<forest.bond@rapidrollout.com>
-> >>
-> >>This patch does not apply to the wireless-testing tree. That is the
-> >>one you are supposed to use.
-> >>
-> >>Patch #2 also fails to apply. In addition, your mailer mangled a line.
-> >
-> >Sorry for the trouble.  I'll resend a little later this afternoon.
->=20
-> No problem for me. I was able to fix everything but the mangling with wig=
-gle.
+Alignment is overrated.
 
-I just resent both patches, including the changes you requested to the first
-one.  Turns out GPG was causing all of the issues above, so I didn't sign t=
-he
-resent patches.
+I wouldn't change any of the original block
+though perhaps changing the sc pointer to an
+istats pointer so these dereferences become
+similar to istats->rxlp;
 
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.rapidrollout.com
+[]
 
---kVXhAStRUZ/+rrGn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+> +	len += snprintf(buf + len, mxlen - len,
+> +			"SYNC_CAUSE stats:\n");
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+But _might_ add the %21s here for the new entries.
 
-iEYEARECAAYFAk993ykACgkQRO4fQQdv5Ayw3ACdFU5m0Q3nLJzGfJt5RgZy2lt0
-bIIAn3zbATBdpFRTrlgW+28EglZPLfnq
-=bKOh
------END PGP SIGNATURE-----
+> +	len += snprintf(buf + len, mxlen - len,
+> +			"%21s: %10u\n", "Sync-All",
+> +			sc->debug.stats.istats.sync_cause_all);
 
---kVXhAStRUZ/+rrGn--
+[]
+
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+[]
+> @@ -82,6 +84,53 @@ static void ath9k_hw_ani_cache_ini_regs(struct ath_hw *ah)
+>  /* Helper Functions */
+>  /********************/
+>  
+> +#ifdef CONFIG_ATH9K_DEBUGFS
+> +
+> +void ath9k_debug_sync_cause(struct ath_common *common, u32 sync_cause)
+> +{
+> +	struct ath_softc *sc = common->priv;
+> +	if (sync_cause)
+> +		sc->debug.stats.istats.sync_cause_all++;
+> +	if (sync_cause & AR_INTR_SYNC_RTC_IRQ)
+> +		sc->debug.stats.istats.sync_rtc_irq++;
+
+And nicer here to use a pointer to istats too.
+
+		istats->sync_rtc_irq++;
+
+> +	if (sync_cause & AR_INTR_SYNC_MAC_IRQ)
+> +		sc->debug.stats.istats.sync_mac_irq++;
+
+		istats->sync_mac_irq++;
+
+etc.
+
