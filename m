@@ -1,59 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51799 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756078Ab2DQOAA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 10:00:00 -0400
-Message-ID: <4F8D7758.6040304@sipsolutions.net> (sfid-20120417_160015_548886_9264F57E)
-Date: Tue, 17 Apr 2012 06:59:52 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:13886 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756545Ab2DDOQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2012 10:16:40 -0400
+Date: Wed, 4 Apr 2012 16:15:33 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 1/2 v2] rt2x00: configure different txdesc parameters for non
+ HT channel
+Message-ID: <20120404141532.GA14078@redhat.com> (sfid-20120404_161644_065160_BC686933)
+References: <1333365666-4413-1-git-send-email-sgruszka@redhat.com>
+ <CAGXE3d8C61rnWPgRU565n_FjjKTqk4pi9ncmdjxyAmEvVM-uvA@mail.gmail.com>
+ <20120402123542.GA4567@redhat.com>
+ <CAGXE3d_7ONx0=scmicYkvgjYM7ROYuHHNfNbO4xMJfmwM+rbrA@mail.gmail.com>
 MIME-Version: 1.0
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: Validate legacy rateset.
-References: <1334298173-4132-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120413_082304_815922_B50E6F19) <4F8C5776.6060209@sipsolutions.net> <4F8D24CC.5030205@qca.qualcomm.com>
-In-Reply-To: <4F8D24CC.5030205@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d_7ONx0=scmicYkvgjYM7ROYuHHNfNbO4xMJfmwM+rbrA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/17/2012 1:07 AM, Bala Shanmugam wrote:
-> On 04/16/2012 11:01 PM, Johannes Berg wrote:
->> On 4/12/2012 11:22 PM, Bala Shanmugam wrote:
->>> Legacy rates are not validated while configuring
->>> tx rateset using iw. So below cmd is accepted by nl80211.
->>> sudo iw wlan2 set bitrates legacy-2.4 3
->>>
->>> Validate legacy rates and return
->>> error while configuring improper rates.
->>>
->>> Signed-off-by: Bala Shanmugam<bkamatch@qca.qualcomm.com>
->>> ---
->>> net/wireless/nl80211.c | 2 ++
->>> 1 files changed, 2 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->>> index e49da27..cc7bef7 100644
->>> --- a/net/wireless/nl80211.c
->>> +++ b/net/wireless/nl80211.c
->>> @@ -5540,6 +5540,8 @@ static int nl80211_set_tx_bitrate_mask(struct
->>> sk_buff *skb,
->>> sband,
->>> nla_data(tb[NL80211_TXRATE_LEGACY]),
->>> nla_len(tb[NL80211_TXRATE_LEGACY]));
->>> + if (mask.control[band].legacy == 0)
->>> + return -EINVAL;
->>
->> I don't think this is right since it would also reject an
->> intentionally empty set.
+This is needed when we are concted to non 11n AP.
 
-> This check comes into picture only when legacy rates are configured.
-> For intentionally empty set "if (tb[NL80211_TXRATE_LEGACY])" condition
-> will fail and control will not come here. I tested the same.
-> With this patch
-> "sudo iw wlan0 set bitrates mcs-5 6" executes without any error message.
+v1 -> v2: set correctly txdesc->u.ht.txop and txdesc->u.ht.mcs
 
-However, that means "don't change legacy settings", not "empty legacy 
-rateset".
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h       |    1 +
+ drivers/net/wireless/rt2x00/rt2x00config.c |    5 +++++
+ drivers/net/wireless/rt2x00/rt2x00queue.c  |   26 ++++++++++++++++++--------
+ 3 files changed, 24 insertions(+), 8 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 471f87c..8de9bfc 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -692,6 +692,7 @@ enum rt2x00_state_flags {
+ 	 */
+ 	CONFIG_CHANNEL_HT40,
+ 	CONFIG_POWERSAVING,
++	CONFIG_HT_DISABLED,
+ 
+ 	/*
+ 	 * Mark we currently are sequentially reading TX_STA_FIFO register
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 293676b..e7361d9 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -217,6 +217,11 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 	libconf.conf = conf;
+ 
+ 	if (ieee80211_flags & IEEE80211_CONF_CHANGE_CHANNEL) {
++		if (!conf_is_ht(conf))
++			set_bit(CONFIG_HT_DISABLED, &rt2x00dev->flags);
++		else
++			clear_bit(CONFIG_HT_DISABLED, &rt2x00dev->flags);
++
+ 		if (conf_is_ht40(conf)) {
+ 			set_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
+ 			hw_value = rt2x00ht_center_channel(rt2x00dev, conf);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
+index 9b1b2b7..acd0133 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+@@ -320,14 +320,6 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 		txdesc->u.ht.wcid = sta_priv->wcid;
+ 	}
+ 
+-	txdesc->u.ht.ba_size = 7;	/* FIXME: What value is needed? */
+-
+-	/*
+-	 * Only one STBC stream is supported for now.
+-	 */
+-	if (tx_info->flags & IEEE80211_TX_CTL_STBC)
+-		txdesc->u.ht.stbc = 1;
+-
+ 	/*
+ 	 * If IEEE80211_TX_RC_MCS is set txrate->idx just contains the
+ 	 * mcs rate to be used
+@@ -351,6 +343,24 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 			txdesc->u.ht.mcs |= 0x08;
+ 	}
+ 
++	if (test_bit(CONFIG_HT_DISABLED, &rt2x00dev->flags)) {
++		if (!(tx_info->flags & IEEE80211_TX_CTL_FIRST_FRAGMENT))
++			txdesc->u.ht.txop = TXOP_SIFS;
++		else
++			txdesc->u.ht.txop = TXOP_BACKOFF;
++
++		/* Left zero on all other settings. */
++		return;
++	}
++
++	txdesc->u.ht.ba_size = 7;	/* FIXME: What value is needed? */
++
++	/*
++	 * Only one STBC stream is supported for now.
++	 */
++	if (tx_info->flags & IEEE80211_TX_CTL_STBC)
++		txdesc->u.ht.stbc = 1;
++
+ 	/*
+ 	 * This frame is eligible for an AMPDU, however, don't aggregate
+ 	 * frames that are intended to probe a specific tx rate.
+-- 
+1.7.1
+
