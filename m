@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:63657 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759871Ab2D0Jqk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 05:46:40 -0400
-Date: Fri, 27 Apr 2012 11:46:38 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: sedat.dilek@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-Message-ID: <20120427094637.GV3157@wantstofly.org> (sfid-20120427_114658_450956_64728538)
-References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
- <20120427091405.GS3157@wantstofly.org>
- <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
- <20120427094007.GU3157@wantstofly.org>
- <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:33333 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750756Ab2DDUJK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2012 16:09:10 -0400
+Message-ID: <1333570148.23520.18.camel@joe2Laptop> (sfid-20120404_220914_088463_A9DE7FDF)
+Subject: Re: [PATCH 2/2] ath6kl: handle concurrent AP-STA channel switches
+From: Joe Perches <joe@perches.com>
+To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Date: Wed, 04 Apr 2012 13:09:08 -0700
+In-Reply-To: <20120404200008.GA19758@pista>
+References: <1333565817-18816-1-git-send-email-c_tpeder@qca.qualcomm.com>
+	 <1333565817-18816-2-git-send-email-c_tpeder@qca.qualcomm.com>
+	 <1333566178.16978.29.camel@joe2Laptop> <20120404200008.GA19758@pista>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:42:54AM +0200, Sedat Dilek wrote:
-
-> >> Are you planning to or even working on support (for) 8361 devices?
-> >
-> > I don't have any such plans, and I don't know of anyone who does.
+On Wed, 2012-04-04 at 13:00 -0700, Pedersen, Thomas wrote:
+> > > +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "channel switch notify nw_type %d"
+> > > +		   "freq %d mode %d", vif->nw_type, channel, mode);
+> > 
+> > Please coalesce formats.
+> > If you had, you'd've seen a problem with this format.
+> > Add a newline "\n" terminator to it too.
 > 
-> Does 8361 require firmware support?
+> I'm not sure what you mean by "coalesce formats". The freq / channel
+> semantic mismatch? I'll change that and add a newline as well.
 
-What do you mean by that?
+There's currently no space between a "%d" and "freq".
+There should be one.  It'd be better and less error
+prone like this:
 
+	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+		   "channel switch notify nw_type %d freq %d mode %d\n",
+vif->nw_type, channel, mode);
 
-> Does a firmware file exist (name?)?
+cheers, Joe
 
-There's firmware for the 8361 out there, however, that version of
-the firmware implements a firmware API that is different from the
-one that mwl8k currently implements.
-
-You could add 8361 support to mwl8k, but then you'd have to go over
-all the firmware command invocations in mwl8k and make sure that they
-will work on the 8361 firmware that you're trying to support as well.
