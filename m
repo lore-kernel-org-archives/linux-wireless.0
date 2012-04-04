@@ -1,37 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37108 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752586Ab2DPXpC (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:58554 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750985Ab2DDUhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 19:45:02 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q3GNj1Xa021152
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 16:45:01 -0700
-Message-ID: <4F8CAEFD.7060005@candelatech.com> (sfid-20120417_014544_780018_5A6A1D08)
-Date: Mon, 16 Apr 2012 16:45:01 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 4 Apr 2012 16:37:19 -0400
+Received: by vbbff1 with SMTP id ff1so550001vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2012 13:37:18 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Cannot rmmod ath9k in 3.4.0-rc3+ (wireless-testing)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Wed, 4 Apr 2012 15:37:18 -0500
+Message-ID: <CABUK1ajPrNoGoMm7N_XFGyO9tcnzRj5Ms3-_hLR04xa4yoxhkw@mail.gmail.com> (sfid-20120404_223723_017238_3BE41689)
+Subject: userspace for nfc
+From: Pavan Savoy <pavan_savoy@sify.com>
+To: linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath9k module has refcnt of 1, but
-nothing in /sys/modules/ath9k/holders/
+Hi,
 
-[root@ct520-6157 lanforge]# rmmod ath9k
-ERROR: Module ath9k is in use
+Where are the user-space tools to kick start NFC (NCI in kernel) hosted ?
+Any Documentation on it ?
 
-I don't recall having this issue in -rc2...will bisect
-in a day or two if no one beats me to it.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Thanks & Regards,
+Pavan Savoy.
