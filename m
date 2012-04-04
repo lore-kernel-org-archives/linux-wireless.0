@@ -1,58 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:60382 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755890Ab2DYR2g convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49024 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754319Ab2DDHeu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 13:28:36 -0400
-Received: by bkuw12 with SMTP id w12so286580bku.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 10:28:35 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Subject: Re: carl9170 - monitor mode TP drop
-Date: Wed, 25 Apr 2012 19:28:21 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com> <201204231945.05113.chunkeey@googlemail.com> <CAFED-j=4NWR2mjnooQs4V_T23cV9iPAUi65J-FZ7JjC28aZ=Gw@mail.gmail.com>
-In-Reply-To: <CAFED-j=4NWR2mjnooQs4V_T23cV9iPAUi65J-FZ7JjC28aZ=Gw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201204251928.21559.chunkeey@googlemail.com> (sfid-20120425_192840_070867_199F0B3E)
+	Wed, 4 Apr 2012 03:34:50 -0400
+Message-ID: <1333524885.3912.2.camel@jlt3.sipsolutions.net> (sfid-20120404_093453_296775_604EE07E)
+Subject: Re: [PATCH] cfg80211: Add channel information to
+ NL80211_CMD_GET_INTERFACE
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Wed, 04 Apr 2012 09:34:45 +0200
+In-Reply-To: <1333463998-19329-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20120403_164012_468794_1452235E)
+References: <1333463998-19329-1-git-send-email-pontus.fuchs@gmail.com>
+	 (sfid-20120403_164012_468794_1452235E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, April 25, 2012 07:28:18 AM Janusz Dziedzic wrote:
-> W dniu 23 kwietnia 2012 19:45 u¿ytkownik Christian Lamparter
-> <chunkeey@googlemail.com> napisa³:
-> >> This is what I can see on STA1:
-> >> # iperf -c 192.168.254.1 -t 100 -i 5
-> >> [ 3] 10.0-15.0 sec  20.4 MBytes  34.2 Mbits/sec
-> >>
-> >> =====> here I setup carl monitor on second PC, like this:
-> >> =====> iw dev wlan0 set type monitor
-> >> =====> iw dev wlan0 set freq 2437
-> >> =====> ifconfig wlan0 up
-> >>
-> >> [  3] 40.0-45.0 sec  2.38 MBytes  3.98 Mbits/sec
-> > Well, there's the "AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER = bit (30)"
-> > in "AR9170_MAC_REG_RX_CONTROL = (0x1c3c40)".
-> I disabled this in code.
+On Tue, 2012-04-03 at 16:39 +0200, Pontus Fuchs wrote:
+> If the current channel is known, add frequency and channel type to
+> NL80211_CMD_GET_INTERFACE.
 > 
-> -               rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
-> +//             rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
+> Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+> ---
+>  include/net/cfg80211.h     |    3 ++-
+>  net/mac80211/cfg.c         |    4 +++-
+>  net/wireless/nl80211.c     |   13 +++++++++++++
+>  net/wireless/wext-compat.c |    3 ++-
+>  4 files changed, 20 insertions(+), 3 deletions(-)
 > 
-> After that I don't see any TP drop and can see all packets in
-> wireshark (as expected).
-> 
-> Why carl try to ACK rx packets in monitor mode?
-> Is that a correct behaviour?
-Well, it depends.
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 83d800c..a1b202c 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1698,7 +1698,8 @@ struct cfg80211_ops {
+>  				  struct net_device *dev,
+>  				  u16 noack_map);
+>  
+> -	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
+> +	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
+> +					       enum nl80211_channel_type *type);
 
-You see without the BIT set, the hardware won't sent any ACKs
-(Not even those which are directed at this interface - which of
-course is also bad, or even worse?) and with the BIT set (and if
-the HW is in Sniffer Mode) then the hardware acks every frames,
-even if they are for a different stations.
-So your fix might break someone else's setup.
+If you're adding it to GET_INTERFACE, maybe you should also get it per
+interface so we can do something smarter when we add multi-channel?
 
-Regards,
-	Chr
+johannes
+
