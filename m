@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:33974 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948Ab2DCG0N convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 02:26:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <4F7A923D.5000002@candelatech.com>
-References: <4F7A8EB7.4060200@silka.with-linux.com>
-	<4F7A923D.5000002@candelatech.com>
-Date: Tue, 3 Apr 2012 11:56:12 +0530
-Message-ID: <CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com> (sfid-20120403_082629_116591_D12ACB39)
-Subject: Re: [ath9k-devel] 3.3.1 ath9k regression
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Kelly Anderson <kelly@silka.with-linux.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:41006 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932386Ab2DDTDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Apr 2012 15:03:00 -0400
+Message-ID: <1333566178.16978.29.camel@joe2Laptop> (sfid-20120404_210303_797472_1C83BC7B)
+Subject: Re: [PATCH 2/2] ath6kl: handle concurrent AP-STA channel switches
+From: Joe Perches <joe@perches.com>
+To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Date: Wed, 04 Apr 2012 12:02:58 -0700
+In-Reply-To: <1333565817-18816-2-git-send-email-c_tpeder@qca.qualcomm.com>
+References: <1333565817-18816-1-git-send-email-c_tpeder@qca.qualcomm.com>
+	 <1333565817-18816-2-git-send-email-c_tpeder@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kelly,
+On Wed, 2012-04-04 at 11:56 -0700, Thomas Pedersen wrote:
+> If an ath6kl AP vif is beaconing on one channel, and a STA vif
+> associates on a different channel, a WMI_DISCONNECT event will be sent
+> to the AP vif. Make the AP vif follow the STA interface, and notify
+> userspace.
 
-please provide us as much details, about the card and pls provide
-lspci -vvvvvvxxx output to see if the ASPM is enabled or not. cced
-Felix also
+trivia:
 
-PS: Ben thanks!
+> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+[]
+> @@ -1015,6 +1015,19 @@ out:
+>  	vif->scan_req = NULL;
+>  }
+>  
+> +void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int channel,
+> +				      enum wmi_phy_mode mode)
+> +{
+> +	enum nl80211_channel_type type;
+> +
+> +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "channel switch notify nw_type %d"
+> +		   "freq %d mode %d", vif->nw_type, channel, mode);
 
-On Tue, Apr 3, 2012 at 11:31 AM, Ben Greear <greearb@candelatech.com> wrote:
-> Ath9k list should be interested in this...
->
-> Ben
->
-> On 04/02/2012 10:46 PM, Kelly Anderson wrote:
->> This patch in 3.3.1 is causing ath9k device not to show/work on bootup.
->> ifconfig does not show the device unless I revert this patch. With the patch
->> reverted the device works as expected. This is verified on two different
->> machines that are both using ath9k mini-pcie wifi cards.
->>
->>>> ath9k: fix going to full-sleep on PS idle
->>
->>>> commit c1afdaff90538ef085b756454f12b29575411214 upstream.
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at http://www.tux.org/lkml/
->
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+Please coalesce formats.
+If you had, you'd've seen a problem with this format.
+Add a newline "\n" terminator to it too.
 
-
-
--- 
-thanks,
-shafi
