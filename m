@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24729 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757809Ab2DITNU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 15:13:20 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from mail.tpi.com ([70.99.223.143]:2324 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754547Ab2DEUTy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 16:19:54 -0400
+Message-ID: <4F7DFE49.9040004@canonical.com> (sfid-20120405_222038_248782_06A14542)
+Date: Thu, 05 Apr 2012 14:19:21 -0600
+From: Tim Gardner <tim.gardner@canonical.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20355.13473.382563.281929@gargle.gargle.HOWL> (sfid-20120409_211325_137409_888112E1)
-Date: Tue, 10 Apr 2012 00:42:33 +0530
-To: Michael Leun <lkml20120218@newton.leun.net>
-CC: Ben Greear <greearb@candelatech.com>,
-	Kelly Anderson <kelly@silka.with-linux.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	<casteyde.christian@free.fr>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: [ath9k-devel] 3.4-rc ath9k regression (Re: 3.3.1 ath9k regression)
-In-Reply-To: <20120409010816.36244f17@xenia.leun.net>
-References: <4F7A8EB7.4060200@silka.with-linux.com>
-	<4F7A923D.5000002@candelatech.com>
-	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
-	<4F7A9D5C.8040402@silka.with-linux.com>
-	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
-	<4F7AAAD9.2040307@silka.with-linux.com>
-	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
-	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
-	<4F7AB6FE.3080009@silka.with-linux.com>
-	<20120403200306.0afbb48b@xenia.leun.net>
-	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
-	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
-	<20120404235104.682cfad3@xenia.leun.net>
-	<4F7DE3A4.1040705@candelatech.com>
-	<CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
-	<4F7F52BD.7060906@candelatech.com>
-	<20120409010816.36244f17@xenia.leun.net>
+To: Andy Whitcroft <apw@canonical.com>
+CC: "Luis R. Rodriguez" <mcgrof@frijolero.org>, hauke@hauke-m.de,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-team@lists.ubuntu.com,
+	lf_driver_backport@lists.linux-foundation.org,
+	tim.gardner@canonical.com
+Subject: Re: [PATCH] compat: add compat kernel checker and downloader
+References: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org> <20120206160727.GA21048@tuxdriver.com> <20120207041958.GA32377@bombadil.infradead.org> <CAB=NE6VS79S4R6wQddQCqPfoYPyRbPzSdAYN2Mxfi-4G_sfCvg@mail.gmail.com> <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com> <CAB=NE6URWAgUgF+6bOsRBeeXnQ4VjYf1tWuUkkvMviCLOCxeqA@mail.gmail.com> <CAB=NE6UNHufTggg0ka-+q7ri_X6ENx4nO5DfMCAxxrKLrERPWg@mail.gmail.com> <CAB=NE6U_Sq88ro7onChn8U4tkkqt7Z9YN9wMyZjx+78j+M=_uA@mail.gmail.com> <20120404111014.GB3378@shadowen.org>
+In-Reply-To: <20120404111014.GB3378@shadowen.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Leun wrote:
-> After an suspend to disk / resume cycle (in kernel suspend to disk,
-> openSuSE) with 3.4-rc2 my ath9k wireless does not ping
-> anymore.
+On 04/04/2012 05:10 AM, Andy Whitcroft wrote:
+> On Fri, Mar 30, 2012 at 05:23:46PM -0700, Luis R. Rodriguez wrote:
+>> Andy, so I just noticed that on all Ubuntu PPA (and generic) kernels
+>> you guys have a broken symlink >= 2.6.33.
+>>
+>> /lib/modules/2.6.33-02063305-generic/build/include/asm
+>>
+>> points to asm-x86 and that is no longer present after 2.6.33 so any
+>> module requiring those header files will break now on Ubuntu. I just
+>> spotted this as some file from asm is now included in the modules were
+>> are building. I guess not many external kernel modules include asm dir
+>> otherwise you guys would have noticed this a long time ago.
 > 
-> Output of iwconfig wlan0 looks just as usual (associated to AP).
+> Luis, I concur that the link is now broken.  However that link is actually
+> simply superfulous now.  Anything correctly using kernel 'external
+> module' support will be using the -I path from the kernel Makefiles.
+> They will therefore be including from /usr/src/<version>/include _and_
+> /usr/src/<version>/arch/x86/include.  I presume this is why we have not
+> noticed it.
 > 
-> iwconfig wlan0 essid <myssid> fixes this (causes an
-> deauthenticate/authenticate with AP) - then connectivity is there again.
+> I will get that link removed however as it is simply bogus.
 > 
-> Guess what: "Of course" does not happen when reverting
-> c1afdaff90538ef085b756454f12b29575411214 ath9k: fix going to full-sleep
-> on PS idle.
+> -apw
 > 
-> So, in my opinion it should be seriously considered to revert that patch
-> until it is fully understood what is going on and why.
-> 
-> It may look theoretically correct (I've no knowledge that would enable
-> me assess that), but it seems to have caused 3 more or less different
-> problems to various people.
 
-The patch in question should just be reverted for 3.3.1-stable. It would mean
-that power-saving would take a hit on that kernel - but it's impact would be
-much lesser than a broken driver, one that fails in basic connection.
-I'll send a patch reverting c1afdaff90538ef085b756454f12b29575411214.
+I just corrected the invalid link so that it points at asm-generic.
 
-For 3.4, can you build the driver with debugging enabled [1] , load the driver
-with debug=0x801 and post the log here (before/after resume) ?
+http://bugs.launchpad.net/bugs/974403
 
-Thanks.
-
-[1] : http://linuxwireless.org/en/users/Drivers/ath9k/debug
-
-Sujith
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
