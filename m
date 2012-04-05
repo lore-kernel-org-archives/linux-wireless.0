@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41077 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:44193 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754137Ab2DMTGs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 15:06:48 -0400
-From: <wey-yi.w.guy@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 1/1] mac80211: add function retrieve average rssi
-Date: Fri, 13 Apr 2012 12:02:57 -0700
-Message-Id: <1334343777-20798-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120413_210651_693608_C98CB9A3)
+	id S1753373Ab2DEKeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 06:34:14 -0400
+Date: Thu, 5 Apr 2012 12:32:54 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>, maciej.rutecki@gmail.com
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [3.4-rc1][Regression][network wireless] 'task xxxx blocked for
+ more than 120 seconds' after resume
+Message-ID: <20120405103254.GE2378@redhat.com> (sfid-20120405_123434_230363_63041A25)
+References: <201204022157.05598.maciej.rutecki@gmail.com>
+ <1333440469.3574.0.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1333440469.3574.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Tue, Apr 03, 2012 at 10:07:49AM +0200, Johannes Berg wrote:
+> -ilw
+> +netdev
+> 
+> I have no idea what this could be, but I'm almost certain it's not
+> caused by our wireless driver. Looks more like rtl8169 is to blame.
 
-Add utility function to provide the average rssi per vif
+I'm not sure. Looks like there is deadlock or infinite loop in process
+that holds rtnl lock. This can be wireless driver, wired driver or
+generic network code bug.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- include/net/mac80211.h |    3 +++
- net/mac80211/util.c    |    8 ++++++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
+Maciej, please recompile with CONFIG_LOCKDEP and check if it will not
+find any deadlock. If not, when problem will happen please do
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 32cd517..20a2ddd 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3800,4 +3800,7 @@ int ieee80211_add_srates_ie(struct ieee80211_vif *vif,
- 
- int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
- 				struct sk_buff *skb, bool need_basic);
-+
-+int ieee80211_ave_rssi(struct ieee80211_vif *vif);
-+
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index e67fe5c..f426fec 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1797,3 +1797,11 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
- 	}
- 	return 0;
- }
-+
-+int ieee80211_ave_rssi(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+
-+	return ifmgd->ave_beacon_signal;
-+}
--- 
-1.7.0.4
+echo w > /proc/sysrq-trigger
+dmesg -c > dmesg1.txt
+echo t > /proc/sysrq-trigger
+dmesg > dmesg2.txt
+
+and provide those files.
+
+Additionally there are also lot in dmesg:
+
+ netlink: 140 bytes leftover after parsing attributes.
+
+This need to be investigated as well. Perhaps you could modify error
+message, to show what netlink messages/attributes are processed.
+
+Thanks
+Stanislaw
 
