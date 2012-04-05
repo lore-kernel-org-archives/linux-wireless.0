@@ -1,109 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:56614 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754795Ab2DKJib (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:34726 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754308Ab2DEShm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:38:31 -0400
-Received: by lbbge1 with SMTP id ge1so618456lbb.23
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 02:38:28 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, linville@tuxdriver.com, coelho@ti.com
-Subject: [PATCH 15/16] wlcore: add quirk to disable ELP
-Date: Wed, 11 Apr 2012 12:38:02 +0300
-Message-Id: <1334137083-13490-16-git-send-email-coelho@ti.com> (sfid-20120411_113847_503626_3A2C7F66)
-In-Reply-To: <1334137083-13490-1-git-send-email-coelho@ti.com>
-References: <1334137083-13490-1-git-send-email-coelho@ti.com>
+	Thu, 5 Apr 2012 14:37:42 -0400
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+Reply-To: maciej.rutecki@gmail.com
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [3.4-rc1][Regression][network wireless] 'task xxxx blocked for more than 120 seconds' after resume
+Date: Thu, 5 Apr 2012 20:37:37 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+References: <201204022157.05598.maciej.rutecki@gmail.com> <1333440469.3574.0.camel@jlt3.sipsolutions.net> <20120405103254.GE2378@redhat.com>
+In-Reply-To: <20120405103254.GE2378@redhat.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201204052037.37497.maciej.rutecki@gmail.com> (sfid-20120405_203757_524461_1D21CAB9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ELP is a very complicated process in the firmware.  Due to its
-complexity, in some early firmware revisions, the ELP feature is
-disabled.  To support this cases, this patch adds a quirk that
-disables ELP mode.
+On czwartek, 5 kwietnia 2012 o 12:32:54 Stanislaw Gruszka wrote:
+> On Tue, Apr 03, 2012 at 10:07:49AM +0200, Johannes Berg wrote:
+> > -ilw
+> > +netdev
+> > 
+> > I have no idea what this could be, but I'm almost certain it's not
+> > caused by our wireless driver. Looks more like rtl8169 is to blame.
+> 
+> I'm not sure. Looks like there is deadlock or infinite loop in process
+> that holds rtnl lock. This can be wireless driver, wired driver or
+> generic network code bug.
+> 
+> Maciej, please recompile with CONFIG_LOCKDEP and check if it will not
+> find any deadlock. If not, when problem will happen please do
 
-When ELP is not supported, do not attempt to enter ELP when requested by
-the driver.
+Did you mean "CONFIG_LOCKDEP_SUPPORT"?
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/boot.c   |    5 -----
- drivers/net/wireless/ti/wlcore/init.c   |   15 +++++++++++----
- drivers/net/wireless/ti/wlcore/ps.c     |    3 +++
- drivers/net/wireless/ti/wlcore/wlcore.h |    3 +++
- 4 files changed, 17 insertions(+), 9 deletions(-)
+$ cat /boot/config-3.4.0-rc1 | grep CONFIG_LOCKDEP
+CONFIG_LOCKDEP_SUPPORT=y
 
-diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
-index 3cb75db..2aae201 100644
---- a/drivers/net/wireless/ti/wlcore/boot.c
-+++ b/drivers/net/wireless/ti/wlcore/boot.c
-@@ -408,11 +408,6 @@ int wlcore_boot_run_firmware(struct wl1271 *wl)
- 	wl1271_debug(DEBUG_MAILBOX, "MBOX ptrs: 0x%x 0x%x",
- 		     wl->mbox_ptr[0], wl->mbox_ptr[1]);
- 
--	/*
--	 * TODO: wl12xx used to set the partition here, but it seems
--	 * that it can be done later.  Make sure this is okay.
--	 */
--
- 	wl1271_boot_fw_version(wl);
- 
- 	/*
-diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
-index c146d8e..d8c2235 100644
---- a/drivers/net/wireless/ti/wlcore/init.c
-+++ b/drivers/net/wireless/ti/wlcore/init.c
-@@ -581,10 +581,17 @@ int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
- 			if (ret < 0)
- 				return ret;
- 		} else if (!wl->sta_count) {
--			/* Configure for ELP power saving */
--			ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
--			if (ret < 0)
--				return ret;
-+			if (wl->quirks & WLCORE_QUIRK_NO_ELP) {
-+				/* Configure for power always on */
-+				ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_CAM);
-+				if (ret < 0)
-+					return ret;
-+			} else {
-+				/* Configure for ELP power saving */
-+				ret = wl1271_acx_sleep_auth(wl, WL1271_PSM_ELP);
-+				if (ret < 0)
-+					return ret;
-+			}
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ti/wlcore/ps.c b/drivers/net/wireless/ti/wlcore/ps.c
-index cfeb114..756eee2 100644
---- a/drivers/net/wireless/ti/wlcore/ps.c
-+++ b/drivers/net/wireless/ti/wlcore/ps.c
-@@ -73,6 +73,9 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
- {
- 	struct wl12xx_vif *wlvif;
- 
-+	if (wl->quirks & WLCORE_QUIRK_NO_ELP)
-+		return;
-+
- 	/* we shouldn't get consecutive sleep requests */
- 	if (WARN_ON(test_and_set_bit(WL1271_FLAG_ELP_REQUESTED, &wl->flags)))
- 		return;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 984dda7..66c33b8 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -324,6 +324,9 @@ int wlcore_free_hw(struct wl1271 *wl);
- /* Older firmwares use an old NVS format */
- #define WLCORE_QUIRK_LEGACY_NVS			BIT(5)
- 
-+/* Some firmwares may not support ELP */
-+#define WLCORE_QUIRK_NO_ELP			BIT(6)
-+
- /* TODO: move to the lower drivers when all usages are abstracted */
- #define CHIP_ID_1271_PG10              (0x4030101)
- #define CHIP_ID_1271_PG20              (0x4030111)
+> 
+> echo w > /proc/sysrq-trigger
+> dmesg -c > dmesg1.txt
+
+http://mrutecki.pl/download/kernel/3.4-rc1/netdev_resume/dmesg1.txt
+
+> echo t > /proc/sysrq-trigger
+> dmesg > dmesg2.txt
+
+http://mrutecki.pl/download/kernel/3.4-rc1/netdev_resume/dmesg2.txt
+
+> 
+> and provide those files.
+> 
+> Additionally there are also lot in dmesg:
+> 
+>  netlink: 140 bytes leftover after parsing attributes.
+> 
+> This need to be investigated as well. Perhaps you could modify error
+> message, to show what netlink messages/attributes are processed.
+> 
+> Thanks
+> Stanislaw
+
+BTW. From tomorrow till Tuesday I'll be on vacation, so until then I could 
+respond to the e-mails.
+
+Regards
 -- 
-1.7.5.4
-
+Maciej Rutecki
+http://www.mrutecki.pl
