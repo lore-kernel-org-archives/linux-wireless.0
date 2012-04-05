@@ -1,46 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.ust.hk ([143.89.13.11]:50648 "EHLO mx3.ust.hk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752012Ab2DBSqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 14:46:35 -0400
-Received: from sqmail.ust.hk (sqmail3.ust.hk [143.89.15.19])
-	by mx3.ust.hk (8.13.8/8.13.8) with ESMTP id q32IkU6Q090636
-	for <linux-wireless@vger.kernel.org>; Tue, 3 Apr 2012 02:46:31 +0800 (HKT)
-Message-ID: <50291.14.198.51.63.1333392391.squirrel@sqmail.ust.hk> (sfid-20120402_204639_860184_F51FABA2)
-Date: Tue, 3 Apr 2012 02:46:31 +0800 (HKT)
-Subject: About sending frame with mac80211
-From: "Cheung Hiu Fung" <phjay@ust.hk>
+Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:48575 "HELO
+	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755518Ab2DESTR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 14:19:17 -0400
+Received: from 173-161-179-205-philadelphia.hfc.comcastbusiness.net ([173.161.179.205] helo=[10.10.62.54])
+	by host200.hostmonster.com with esmtpa (Exim 4.76)
+	(envelope-from <dhlii@dlasys.net>)
+	id 1SFrHA-00057c-1W
+	for linux-wireless@vger.kernel.org; Thu, 05 Apr 2012 12:19:17 -0600
+Subject: N device with open source firmware
+From: "David Lynch Jr." <dhlii@dlasys.net>
 To: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 05 Apr 2012 14:15:07 -0400
+Message-ID: <1333649707.4108.46.camel@hp-dhlii> (sfid-20120405_201921_406580_83D78B64)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I am looking for recommendations for an 802.11N device that is well
+documented and has opensource firmware for a project.  I do nto care
+whether it is mPCI, USB, .... so long as there is good documentation on
+the chipset and good open source firmware as I will be making extensive
+firmware changes for testing purposes. 
 
-  I am new to mac80211 and I try frame injections with ar5418 chipset right
-now. I used raw socket programming,libpcap,netlink library and
-successfuly do some injection. we expect 802.11g to be 54mbps and we
-only get about 1-2mbps. The speed is quiet low and we could like to take
-care some features (i.e no ack, rate control as well) for research
-purpose in order to improve low layer transmission speed. Basically I
-learn how to ride the ack features by modifying the
-mac80211 layer.
 
-  May I ask is that possible to access mac80211 kernel function to do some
-frame injection? I want the datalink layer packet (no tcp/udp and ip
-protocol)to be transmitted in wireless ad-hoc network. The closest one i
-got is to use libpcap for radiotap injection but it can only be done in
-monitor mode and the speed is the worst among all injection tools. I
-read the following link and still not quiet sure how it works (tx and rx
-process are blank for this doc).
-
-http://docs.blackfin.uclinux.org/kernel/generated/mac80211/index.html
-
-  I want to try the mac80211 tracer but I just cannot run it in my ubuntu
-computer. I search the related information in internet and it seems not
-many people work for this injection. Any hints will be appreciated.
-
-Jay
-
+Thanks 
 
