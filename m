@@ -1,123 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:64070 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700Ab2DZORj (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:47656 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753609Ab2DEQXW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 10:17:39 -0400
-Received: by qadc11 with SMTP id c11so1444831qad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2012 07:17:39 -0700 (PDT)
+	Thu, 5 Apr 2012 12:23:22 -0400
+Received: by ghrr11 with SMTP id r11so786910ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2012 09:23:21 -0700 (PDT)
+Message-ID: <4F7DC6F1.50304@lwfinger.net> (sfid-20120405_182334_562823_4B16538C)
+Date: Thu, 05 Apr 2012 11:23:13 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4F994791.8020801@hauke-m.de>
-References: <1335234998-31547-1-git-send-email-mcgrof@frijolero.org> <4F994791.8020801@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 26 Apr 2012 06:15:27 -0700
-Message-ID: <CAB=NE6WKtdMiCfrisBtXskG1r7uP7V3OSwVwQO+NcUTx63Fqww@mail.gmail.com> (sfid-20120426_161758_428916_B07DD068)
-Subject: Re: [PATCH 1/2] wireless: properly use pr_fmt()
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+CC: Joshua Roys <Joshua.Roys@gtri.gatech.edu>,
+	Nicu Pavel <npavel@mini-box.com>
+Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
+References: <4F0EEA1B.3040501@wut.de> <4F0FA4DD.5020601@lwfinger.net> <loom.20120405T091556-756@post.gmane.org> <4F7D90AF.2040109@gtri.gatech.edu>
+In-Reply-To: <4F7D90AF.2040109@gtri.gatech.edu>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCBBcHIgMjYsIDIwMTIgYXQgNjowMyBBTSwgSGF1a2UgTWVocnRlbnMgPGhhdWtlQGhh
-dWtlLW0uZGU+IHdyb3RlOgo+IE9uIDA0LzI0LzIwMTIgMDQ6MzYgQU0sIEx1aXMgUi4gUm9kcmln
-dWV6IHdyb3RlOgo+PiBGcm9tOiAiTHVpcyBSLiBSb2RyaWd1ZXoiIDxtY2dyb2ZAZnJpam9sZXJv
-Lm9yZz4KPj4KPj4gcHJfZm10KCkgaXMgZWl0aGVyIGRlZmluZWQgb3Igd2UgcmVkZWZpbmUgaXQu
-IFR5cGljYWxseQo+PiBkcml2ZXJzIGRlZmluZSBpdCBwcmlvciB0byBpbmNsdWRpbmcgcHJpbnRr
-LmggYnV0IHRoaXMKPj4gaXMgZG9uZSB1bmRlciB0aGUgYXNzdW1wdGlvbiB0aGF0IG5vIG90aGVy
-IHN1YnN5c3RlbQo+PiBpdCB1c2VzIGhhcyBhbHJlYWR5IGRlZmluZWQgcHJfZm10KCkuIEluIHN1
-Y2ggY2FzZXMKPj4gcHJfZm10KCkgc2hvdWxkIGJlIHVuZGVmaW5lZCBhbmQgcmVkZWZpbmVkLgo+
-Pgo+PiBEb2luZyB0aGlzIHByb3Blcmx5IHNoYXZlcyBkb3duIGNvbXBpbGF0aW9uIHRpbWUgcXVp
-dGUKPj4gY29uc2lkZXJhYmx5Lgo+Pgo+PiBTaWduZWQtb2ZmLWJ5OiBMdWlzIFIuIFJvZHJpZ3Vl
-eiA8bWNncm9mQGZyaWpvbGVyby5vcmc+Cj4+IC0tLQo+Pgo+PiBJIGxlZnQgb3V0IG9ubHkgYXRo
-NmtsIGFzIGF0aDZrbCBmb2xrcyBnZXQgZ3JvZ2d5IGl0IHNlZW1zCj4+IGlmIHlvdSBkbyBub3Qg
-Z28gdGhyb3VnaCB0aGVpciB0cmVlLiBCbGVoLgo+Pgo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNz
-L2F0aC9hdGg1ay9hbmkuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIMKgMyArKysK
-Pj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNWsvYXR0YWNoLmMgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqB8IMKgIMKgMiArKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1
-ay9iYXNlLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB8IMKgIMKgMiArKwo+PiDCoGRyaXZl
-cnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9kZXNjLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqB8IMKgIMKgMyArKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNWsvZG1hLmMg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfCDCoCDCoDMgKysrCj4+IMKgZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYXRoL2F0aDVrL2VlcHJvbS5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCDC
-oDIgKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNWsvaW5pdHZhbHMuYyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoHwgwqAgwqAzICsrKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0
-aC9hdGg1ay9sZWQuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIMKgMiArKwo+PiDC
-oGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9tYWM4MDIxMS1vcHMuYyDCoCDCoCDCoCDC
-oCDCoHwgwqAgwqAzICsrKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9wY2ku
-YyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIMKgMiArKwo+PiDCoGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2F0aC9hdGg1ay9waHkuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKg
-IMKgMiArKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9xY3UuYyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIMKgMyArKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVz
-cy9hdGgvYXRoNWsvcmVzZXQuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIMKgMiArKwo+
-PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9zeXNmcy5jIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlr
-L2h0Y19kcnZfaW5pdC5jIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDMgKysrCj4+IMKgZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2h0Y19oc3QuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKg
-IMKgMyArKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaW5pdC5jIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDIgKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVz
-cy9hdGgvYXRoOWsvcGNpLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfCDCoCDCoDIgKysK
-Pj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvbWFpbi5jIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgfCDCoCDCoDIgKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgv
-cmVnZC5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDIgKysKPj4g
-wqBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbWZtYWMvYmNtc2RoLmMgwqAgwqAg
-wqAgfCDCoCDCoDIgKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbWZt
-YWMvYmNtc2RoX3NkbW1jLmMgfCDCoCDCoDIgKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9i
-cmNtODAyMTEvYnJjbWZtYWMvZGhkX2NkYy5jIMKgIMKgIMKgfCDCoCDCoDIgKysKPj4gwqBkcml2
-ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbWZtYWMvZGhkX2NvbW1vbi5jIMKgIHwgwqAg
-wqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY21mbWFjL2RoZF9s
-aW51eC5jIMKgIMKgfCDCoCDCoDIgKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAy
-MTEvYnJjbWZtYWMvZGhkX3NkaW8uYyDCoCDCoCB8IMKgIMKgMSArCj4+IMKgZHJpdmVycy9uZXQv
-d2lyZWxlc3MvYnJjbTgwMjExL2JyY21mbWFjL3NkaW9fY2hpcC5jIMKgIMKgfCDCoCDCoDIgKysK
-Pj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9icmNtODAyMTEvYnJjbWZtYWMvd2xfY2ZnODAyMTEu
-YyDCoHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY21z
-bWFjL2FpdXRpbHMuYyDCoCDCoCDCoHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxl
-c3MvYnJjbTgwMjExL2JyY21zbWFjL2RtYS5jIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDMgKystCj4+
-IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY21zbWFjL21hYzgwMjExX2lmLmMg
-wqB8IMKgIMKgMiArKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNtc21h
-Yy9tYWluLmMgwqAgwqAgwqAgwqAgfCDCoCDCoDIgKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVz
-cy9icmNtODAyMTEvYnJjbXNtYWMvcGh5L3BoeV9uLmMgwqAgwqB8IMKgIMKgMiArKwo+PiDCoGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNtdXRpbC91dGlscy5jIMKgIMKgIMKgIMKg
-fCDCoCDCoDIgKysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2xlZ2FjeS8zOTQ1LW1hYy5j
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaXdsZWdhY3kvNDk2NS1tYWMuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKgIMKgMiArKwo+
-PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi5jIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9p
-d2wtcGNpLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfCDCoCDCoDIgKysKPj4gwqBkcml2ZXJz
-L25ldC93aXJlbGVzcy9saWJlcnRhcy9jZmcuYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0YXMvaWZfY3MuYyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvbGliZXJ0YXMvaWZfc2Rpby5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDIg
-KysKPj4gwqBkcml2ZXJzL25ldC93aXJlbGVzcy9saWJlcnRhcy9pZl9zcGkuYyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCB8IMKgIMKgMiArKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2xpYmVy
-dGFzL2lmX3VzYi5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwgwqAgwqAyICsrCj4+IMKgZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0YXMvbWFpbi5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0YXMvbWVzaC5j
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQv
-d2lyZWxlc3MvbGliZXJ0YXMvcnguYyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB8IMKg
-IMKgMiArKwo+PiDCoGRyaXZlcnMvbmV0L3dpcmVsZXNzL2xpYmVydGFzX3RmL2NtZC5jIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bGliZXJ0YXNfdGYvaWZfdXNiLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqB8IMKgIMKgMiArKwo+PiDC
-oGRyaXZlcnMvbmV0L3dpcmVsZXNzL2xpYmVydGFzX3RmL21haW4uYyDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoHwgwqAgwqAyICsrCj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvcnRsd2lmaS93aWZp
-LmggwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqB8IMKgIMKgMiArKwo+PiDCoG5ldC93aXJl
-bGVzcy9jb3JlLmMgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqB8IMKgIMKgMiArKwo+PiDCoG5ldC93aXJlbGVzcy9saWI4MDIxMS5jIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCDCoDIgKysKPj4gwqBu
-ZXQvd2lyZWxlc3MvbGliODAyMTFfY3J5cHRfdGtpcC5jIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIHwgwqAgwqAyICsrCj4+IMKgbmV0L3dpcmVsZXNzL3JlZy5jIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHwgwqAgwqAyICsrCj4+IMKg
-NTQgZmlsZXMgY2hhbmdlZCwgMTE1IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkKPj4KPgo+
-IEhpIEx1aXMsCj4KPiB0aGUgcHJvYmxlbSBoZXJlIGlzIHRoYXQgY29tcGF0LXdpcmVsZXNzIGds
-b2JhbGx5IGluY2x1ZGVzIGxvdHMgb2YKPiBoZWFkZXIgZmlsZXMgZnJvbSB0aGUga2VybmVsIGFu
-ZCB0aGF0IGFsc28gaW5jbHVkZXMgcHJpbnRrLmguIEkgbWFkZSBhCj4gcGF0Y2ggc29tZSB0aW1l
-IGFnbyB0byByZXN0cnVjdHVyZSBjb21wYXQgc28gdGhhdCB3ZSBkbyBub3QgaGF2ZSB0bwo+IGlu
-Y2x1ZGUgYWxsIHRoZXNlIGhlYWRlcnMgZmlsZXMgZ2xvYmFsbHkuIEkgd2lsbCB3b3JrIG9uIHRo
-YXQgYWdhaW4gYW5kCj4gd2lsbCB0cnkgdG8gc2VuZCDCoGEgUkZDIHBhdGNoZXMgc29tZXRpbWUg
-dG9kYXkuIFRoaXMgYWxzbyBmaXhlZCB0aGUKPiBwcl9mbXQoKSBwcm9ibGVtIHdpdGhvdXQgdGhl
-IG5lZWQgb2YgYW55IHBhdGNoZXMgaW4KPiBjb21wYXQtd2lyZWxlc3MvcGF0Y2hlcyBhbmQgbWFk
-ZSBpdCBwb3NzaWJsZSB0byByZW1vdmUgc29tZSBvdGhlcgo+IHBhdGNoZXMgYXMgd2VsbC4KPgo+
-IE15IHBsYW4gd2FzIHRvIHBsYWNlIHRoZSBjb21wYXQgaGVhZGVyIGNvZGUgd2hpY2ggaXMgbm93
-IGluCj4gY29tcGF0L2luY2x1ZGUvbGludXgvY29tcGF0LSouaCBpbnRvIHRoZSBoZWFkZXJzIHdo
-ZXJlIGl0IGlzIGluIHRoZQo+IG1haW5saW5lIGtlcm5lbCBhbmQgaW5jbHVkZSB0aGUgb3JpZ2lu
-YWwgZmlsZSB3aXRoIGlubGN1ZGVfbmV4dC4KCkdyZWF0IHRoYW5rcyBIYXVrZSEKCiAgTHVpcwo=
+On 04/05/2012 07:31 AM, Joshua Roys wrote:
+> On 04/05/2012 03:27 AM, Nicu Pavel wrote:
+>> After mode debugging with DBG_LOUD I found out that the difference when the
+>> driver is loaded/modprobed and ifdown/ifup to be a receive configuration
+>> register (RCR) value.
+>>
+>> On bootup/modprobe: ### Set RCR(0xf0002a0e) ###
+>> On ifdown/ifup: ### Set RCR(0xf0002ace) ###
+>>
+>> If I force RCR value to 0x2a0e in rtl92cu_set_hw_reg()inside HW_VAR_RCR case
+>> everything works ok.
+>>
+>> This seems to work with 3 different vendors USB sticks based on 8192cu chipset
+>> (Edimax, EDUP and some unknown vendor).
+>>
+>> I tried looking up the bit values meanings from that register but couldn't find
+>> a proper spec.
+>
+> Hello,
+>
+> I found a header file that seems to have better definitions and comments than
+> what is currently in-tree (I think it's a copy of the Realtek sources). It says
+> that the "8192C (RCR) Receive Configuration Register" BIT 6 and 7 are,
+> respectively: RCR_CBSSID_DATA [Accept BSSID match packet (Data)] and
+> RCR_CBSSID_BCN [Accept BSSID match packet (Rx beacon, probe rsp)].
+> These bits are set/cleared in _rtl92cu_set_check_bssid (it calls set_hw_reg
+> w/HW_VAR_RCR) which is called by rtl92cu_set_network_type. The set/clear choice
+> is made based on the rtlphy->current_io_type which is set in
+> rtl8192c/phy_common.c:rtl92c_phy_scan_operation_backup which in turn is called
+> from core.c:rtl_op_sw_scan_start/_complete.
+> It would be interesting to see the output from rtl8192c/phy_common.c functions
+> rtl92c_phy_set_io_cmd and rtl92c_phy_set_io to see if the current_io_type
+> perhaps isn't being updated properly.
+
+I have a low-priority patch that will add the definitions of the bits in the 
+Receive Control Register. Bits 6 & 7 should be set when the interface is 
+associated with an AP. That will let the hardware filter out any traffic not 
+coming from the AP and reduce the driver's work load. When the interface is not 
+associated, those bits should be clear. Forcing them off will work at the 
+expense of extra overhead.
+
+When NetworkManager controls the interface, I think these bits are set correctly 
+- it is when manual ifup/ifdown is used that the wrong settings result. I will 
+need to switch my system into manual mode to see if I can find the place where 
+it goes wrong.
+
+Larry
