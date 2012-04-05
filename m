@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:29687 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752566Ab2DRNVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 09:21:43 -0400
-Date: Wed, 18 Apr 2012 16:22:26 +0300
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-Message-ID: <20120418132224.GG19228@aemeltch-MOBL1> (sfid-20120418_152148_776186_2B8A7176)
-References: <4F84A422.3030900@sipsolutions.net>
- <1334093378.16897.62.camel@aeonflux>
- <20120411070514.GB17779@aemeltch-MOBL1>
- <1334714841.3725.37.camel@jlt3.sipsolutions.net>
- <20120418112017.GC19228@aemeltch-MOBL1>
- <1334749879.16897.221.camel@aeonflux>
- <20120418121014.GD19228@aemeltch-MOBL1>
- <1334751359.16897.225.camel@aeonflux>
- <20120418123326.GF19228@aemeltch-MOBL1>
- <1334754717.16897.228.camel@aeonflux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1334754717.16897.228.camel@aeonflux>
+Received: from he.sipsolutions.net ([78.46.109.217]:48504 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752935Ab2DEOGa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 10:06:30 -0400
+Message-ID: <1333634786.3494.19.camel@jlt3.sipsolutions.net> (sfid-20120405_160643_993464_3069B793)
+Subject: Re: 802.11ac support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh <maheshp@posedge.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Chakra Parvathaneni <chakra@posedge.com>
+Date: Thu, 05 Apr 2012 16:06:26 +0200
+In-Reply-To: <4F7D1DE4.5000000@posedge.com>
+References: <f17c700977012ada368da4f339b9c639@posedge.com>
+	  <1329933458.4657.2.camel@jlt3.sipsolutions.net>
+	  <1329937072.4657.4.camel@jlt3.sipsolutions.net>
+	  <4F471F40.8060503@posedge.com>
+	  <1330070145.3426.8.camel@jlt3.sipsolutions.net>
+	  <4F4772AB.9000305@posedge.com>
+	  <CAJ-VmomfVCc0oQMjfwsrheC+Z2k3+-czo4F9GeeO=upHiHnQxg@mail.gmail.com>
+	  (sfid-20120225_202329_108179_7C3BAD32) <1330205424.3509.5.camel@jlt3.sipsolutions.net>
+	  <eab3dfdc8ebc87ec08ca64db9f237d90@posedge.com>
+	  (sfid-20120402_104501_564453_6BF9F70F) <1333454805.3574.14.camel@jlt3.sipsolutions.net>
+	 <4F7D1DE4.5000000@posedge.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+On Thu, 2012-04-05 at 09:51 +0530, Mahesh wrote:
 
-On Wed, Apr 18, 2012 at 03:11:57PM +0200, Marcel Holtmann wrote:
-> > > > > This is also a little bit of confusing since FullMac cards will not
-> > > > > create an AMP virtual interface. With them you just see the HCI AMP
-> > > > > controller on the Bluetooth side. Can an AMP virtual interface be just
-> > > > > virtual inside mac80211 or does it have to have a netdev attached to it?
-> > > > 
-> > > > If we create virtual interface then netdev is allocated and we can handle
-> > > > it with common tools.
-> > > 
-> > > what common tools do you wanna use here. We actually do not wanna have
-> > > them show up as netdev devices at all. AMP connections don't have IP
-> > > addresses or anything else for that matter.
-> > 
-> > I might want to set up MAC address. Otherwise I might not need netdev. I
-> > feel that I need it for interface separation.
-> 
-> what MAC address? And where do you get this MAC address from? AMP
-> controllers do not have MAC addresses.
+> > In any case, here's my list of things I think will/may need to be done
+> > for 11ac in the stack:
+> >   * extend regulatory framework (cfg80211)
+> >   * advertise VHT capabilities (nl80211/cfg80211/mac80211&  each driver)
+> >   * advertise VHT in scan (mac80211)
+> >   * advertise VHT in assoc req (mac80211)
+> >   * advertise VHT in P2P probe responses (wpa_supplicant)
+> >   * advertise VHT in AP/GO mode beacons/probe responses
+> >     (wpa_supplicant/hostapd)
+> >   * handle per-station VHT capa (mac80211, wpa_s)
+> >   * extended CSA (mac80211)
+> >   * VHT transmit power envelope/extended power constraint (mac80211)
+> >   * quiet channels?
+> >   * HT/VHT basic rate handling?
+> >   * neighbor reports?
+> >   * beamforming action frame support? (mac80211)
 
-I assume I need some address to send/receive data over wireless.
+> Thanks for listing the 11ac requirements. will work on those and post my 
+> updates.
 
-Best regards 
-Andrei Emeltchenko 
+When you start working on them, I suggest roughly the list in the order
+above. Regulatory might not be the first thing though.
+
+If you do though, please don't do everything and then post all patches
+at once -- each of those items should be self-contained enough to post
+separately. This helps synchronise with others who might be working on
+it and also helps since we can review the code and suggest corrections
+if needed.
+
+Let me know if you need more info!
+
+Thanks,
+johannes
 
