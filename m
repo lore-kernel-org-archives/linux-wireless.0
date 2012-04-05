@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37414 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932508Ab2DSUe3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 16:34:29 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/15] iwlwifi: Remove inconsistent and redundant declaration
-Date: Thu, 19 Apr 2012 13:29:49 -0700
-Message-Id: <1334867389-845-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120419_223442_401423_359BA776)
+Received: from he.sipsolutions.net ([78.46.109.217]:36786 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751591Ab2DEMMj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 08:12:39 -0400
+Message-ID: <1333627956.3494.8.camel@jlt3.sipsolutions.net> (sfid-20120405_141241_975986_DFA5A6A5)
+Subject: warnings/errors compiling compat
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Date: Thu, 05 Apr 2012 14:12:36 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+I'm on 3.1.0 on this machine.
 
-Remove declaration of iwl_alloc_traffic_mem from iwl-agn.h,
-from methods that was exposed to support MVM.
+First I get this:
 
-MVM doesn't have to use this declaration.
+/tmp/compat-wireless-2012-04-04/config.mk:73: "WARNING: You are running a kernel >= 2.6.23, you should enable in it CONFIG_NET_SCHED for 802.11[ne] support"
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+which doesn't make a lot of sense? We don't need CONFIG_NET_SCHED I
+believe since we always have the FIFO qdisc?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 67cd123..3d6f3e2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -510,7 +510,6 @@ void iwl_setup_deferred_work(struct iwl_priv *priv);
- int iwl_send_wimax_coex(struct iwl_priv *priv);
- int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
- void iwl_debug_config(struct iwl_priv *priv);
--int iwl_alloc_traffic_mem(struct iwl_priv *priv);
- void iwl_set_hw_params(struct iwl_priv *priv);
- void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
- int iwl_init_drv(struct iwl_priv *priv);
--- 
-1.7.0.4
+Then a few warnings:
+
+/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:47:1: warning: "__enabled_CONFIG_IP_VS" is not defined [-Wundef]
+/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:47:1: warning: "__enabled_CONFIG_IP_VS_MODULE" is not defined [-Wundef]
+/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:56:1: warning: "__enabled_CONFIG_NETFILTER_XT_TARGET_TRACE" is not defined [-Wundef]
+/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:56:1: warning: "__enabled_CONFIG_NETFILTER_XT_TARGET_TRACE_MODULE" is not defined [-Wundef]
+/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:47:1: warning: "__enabled_CONFIG_IP_VS" is not defined [-Wundef]
+/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:47:1: warning: "__enabled_CONFIG_IP_VS_MODULE" is not defined [-Wundef]
+/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:56:1: warning: "__enabled_CONFIG_NETFILTER_XT_TARGET_TRACE" is not defined [-Wundef]
+/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:56:1: warning: "__enabled_CONFIG_NETFILTER_XT_TARGET_TRACE_MODULE" is not defined [-Wundef]
+
+
+b44 fails to compile for reasons I don't understand -- shouldn't SSB be
+part of compat? I don't have SSB in the base kernel.
+
+/tmp/compat-wireless-2012-04-04/drivers/net/ethernet/broadcom/b44.c: In function ‘b44_pci_init’:
+/tmp/compat-wireless-2012-04-04/drivers/net/ethernet/broadcom/b44.c:2342:2: error: implicit declaration of function ‘ssb_pcihost_register’ [-Werror=implicit-function-declaration]
+
+johannes
 
