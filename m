@@ -1,114 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64046 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966089Ab2DLV6K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:58:10 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/24] iwlwifi: move iwl_chswitch_done to iwl-mac80211.c
-Date: Thu, 12 Apr 2012 14:54:10 -0700
-Message-Id: <1334267661-14654-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235903_780929_96727B14)
-In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from fep33.mx.upcmail.net ([62.179.121.51]:41302 "EHLO
+	fep33.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753640Ab2DESlu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 14:41:50 -0400
+Received: from edge03.upcmail.net ([192.168.13.238])
+          by viefep14-int.chello.at
+          (InterMail vM.8.01.05.04 201-2260-151-105-20111014) with ESMTP
+          id <20120405182408.TBYX8105.viefep14-int.chello.at@edge03.upcmail.net>
+          for <linux-wireless@vger.kernel.org>;
+          Thu, 5 Apr 2012 20:24:08 +0200
+Received: from [192.168.111.10] (mithril.odi.ch [192.168.111.10])
+	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by gandalf.odi.ch (Postfix) with ESMTPSA id 63A4346002D
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Apr 2012 20:24:07 +0200 (CEST)
+Message-ID: <4F7DE399.4000304@odi.ch> (sfid-20120405_204154_413597_E79227DD)
+Date: Thu, 05 Apr 2012 20:25:29 +0200
+From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: 3.3.1 ath9k regression
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+I am seeing similar symptoms as Michael Leun, using NetworkManager and ath9k 
+built-in (not as a module):
 
-Move this as part of iwl-core.c cleanup.
+Apr  5 20:09:14 mithril NetworkManager[2575]: <info> (wlan0): supplicant 
+connection state:
+   scanning -> associating
+Apr  5 20:09:15 mithril kernel: wlan0: authenticate with xxx (try 1)
+Apr  5 20:09:15 mithril kernel: wlan0: authenticate with xxx (try 2)
+Apr  5 20:09:15 mithril kernel: wlan0: authenticate with xxx (try 3)
+Apr  5 20:09:15 mithril kernel: wlan0: authentication with xxx timed out
+Apr  5 20:09:17 mithril NetworkManager[2575]: <warn> (wlan0): link timed out.
+Apr  5 20:09:25 mithril NetworkManager[2575]: <info> (wlan0): supplicant 
+connection state:
+   associating -> disconnected
+Apr  5 20:09:25 mithril NetworkManager[2575]: <info> (wlan0): supplicant 
+connection state:
+   disconnected -> scanning
+Apr  5 20:09:25 mithril kernel: ath: Failed to stop TX DMA, queues=0x001!
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl-core.c     |   15 ---------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |    5 -----
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |   15 +++++++++++++++
- 4 files changed, 16 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 3588d3c..ac0e8ba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -169,6 +169,7 @@ int iwlagn_suspend(struct iwl_priv *priv, struct cfg80211_wowlan *wowlan);
- /* rx */
- int iwlagn_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band);
- void iwl_setup_rx_handlers(struct iwl_priv *priv);
-+void iwl_chswitch_done(struct iwl_priv *priv, bool is_success);
- 
- 
- /* tx */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 40eb91a..f43a1e5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -43,21 +43,6 @@
- 
- const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
- 
--void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
--{
--	/*
--	 * MULTI-FIXME
--	 * See iwlagn_mac_channel_switch.
--	 */
--	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
--
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		return;
--
--	if (test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status))
--		ieee80211_chswitch_done(ctx->vif, is_success);
--}
--
- #ifdef CONFIG_IWLWIFI_DEBUG
- void iwl_print_rx_config_cmd(struct iwl_priv *priv,
- 			     enum iwl_rxon_context_id ctxid)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 9cf1a94..81c287c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -119,11 +119,6 @@ static inline void iwl_update_stats(struct iwl_priv *priv, bool is_tx,
- #endif
- 
- /*****************************************************
--* RX
--******************************************************/
--void iwl_chswitch_done(struct iwl_priv *priv, bool is_success);
--
--/*****************************************************
-  * TX power
-  ****************************************************/
- int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index a3aa5a4..d982493 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -914,6 +914,21 @@ out:
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
- 
-+void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
-+{
-+	/*
-+	 * MULTI-FIXME
-+	 * See iwlagn_mac_channel_switch.
-+	 */
-+	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
-+
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return;
-+
-+	if (test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status))
-+		ieee80211_chswitch_done(ctx->vif, is_success);
-+}
-+
- static void iwlagn_configure_filter(struct ieee80211_hw *hw,
- 				    unsigned int changed_flags,
- 				    unsigned int *total_flags,
--- 
-1.7.0.4
+Reproducible 100% of the time. Reverting 
+db6a6a78d8602964c9dfb1d8ce18daefd92da0a7 fixes the problem.
 
+Hope that helps,
+
+Ortwin
