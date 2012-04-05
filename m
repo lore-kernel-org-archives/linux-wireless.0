@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:44955 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751078Ab2DJKzU (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:48970 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754547Ab2DEUI1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 06:55:20 -0400
-Date: Tue, 10 Apr 2012 13:57:25 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	ath9k-devel@venema.h4ckr.net, kernel-janitors@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [ath9k-devel] [RFC] ath9k_hw: precedence bug in
- ath9k_hw_set_ofdm_nil()
-Message-ID: <20120410105725.GA5589@mwanda> (sfid-20120410_125524_765056_6C00F7FD)
-References: <20120410090445.GB26832@elgon.mountain>
- <4F840442.5060706@openwrt.org>
+	Thu, 5 Apr 2012 16:08:27 -0400
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+Reply-To: maciej.rutecki@gmail.com
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [3.4-rc1][Regression][network wireless] 'task xxxx blocked for more than 120 seconds' after resume
+Date: Thu, 5 Apr 2012 22:08:21 +0200
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+References: <201204022157.05598.maciej.rutecki@gmail.com> <201204052037.37497.maciej.rutecki@gmail.com> <1333652183.3494.21.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1333652183.3494.21.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F840442.5060706@openwrt.org>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201204052208.21270.maciej.rutecki@gmail.com> (sfid-20120405_220934_953327_A35A3C2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 10, 2012 at 11:58:26AM +0200, Felix Fietkau wrote:
-> >  	if ((aniState->noiseFloor >= aniState->rssiThrHigh) &&
-> > -	    (!aniState->ofdmWeakSigDetectOff !=
-> > +	    (aniState->ofdmWeakSigDetectOff !=
-> Looking at other Atheros code, I think this patch is wrong, it should
-> be: aniState->ofdmWeakSigDetectOff == entry_ofdm->ofdm_weak_signal_on
+On czwartek, 5 kwietnia 2012 o 20:56:23 Johannes Berg wrote:
+> On Thu, 2012-04-05 at 20:37 +0200, Maciej Rutecki wrote:
+> > On czwartek, 5 kwietnia 2012 o 12:32:54 Stanislaw Gruszka wrote:
+> > > On Tue, Apr 03, 2012 at 10:07:49AM +0200, Johannes Berg wrote:
+> > > > -ilw
+> > > > +netdev
+> > > > 
+> > > > I have no idea what this could be, but I'm almost certain it's not
+> > > > caused by our wireless driver. Looks more like rtl8169 is to blame.
+> > > 
+> > > I'm not sure. Looks like there is deadlock or infinite loop in process
+> > > that holds rtnl lock. This can be wireless driver, wired driver or
+> > > generic network code bug.
+> > > 
+> > > Maciej, please recompile with CONFIG_LOCKDEP and check if it will not
+> > > find any deadlock. If not, when problem will happen please do
+> > 
+> > Did you mean "CONFIG_LOCKDEP_SUPPORT"?
 > 
-> While a bit confusing, the behavior of the original code was correct,
-> aniState->ofdmWeakSigDetectOff is used as a boolean.
+> No, _SUPPORT means you could enable CONFIG_LOCKDEP, but we would like to
+> see this with CONFIG_LOCKDEP enabled.
 > 
-> This code badly needs a cleanup, the whole mess with *on vs *off
-> variables is quite confusing.
-> 
+> johannes
 
-Yep.  It's bad to name variables xxx_off because it leads triple
-negatives like we see here.
+Dmesg when CONFIG_LOCKDEP is set:
 
-I guess that "if (!off != on) { ..." might be more readable than
-"if (off == on) { ...".  There are a couple ways to silence this
-warning in Smatch.
+http://mrutecki.pl/download/kernel/3.4-rc1/netdev_resume/dmesg-lockdep.txt
 
-The first way would be to add parenthesis like,
-"((!off) != on) {...".  I think it helps because it makes the negate
-stand out and you don't have to think about how the precedence
-rules works.  Other people think it's a needless parenthesis for
-something that is obvious.
+Regards
 
-The other way would be to make either ->ofdmWeakSigDetectOff or
-->ofdm_weak_signal_on be type bool.  I think this would make the
-code clearer.
-
-regards,
-dan carpenter
+-- 
+Maciej Rutecki
+http://www.mrutecki.pl
