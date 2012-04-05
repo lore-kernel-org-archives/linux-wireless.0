@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51178 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756037Ab2DDLKU (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:37366 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751890Ab2DEGvo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2012 07:10:20 -0400
-Date: Wed, 4 Apr 2012 12:10:14 +0100
-From: Andy Whitcroft <apw@canonical.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	hauke@hauke-m.de, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-team@lists.ubuntu.com,
-	lf_driver_backport@lists.linux-foundation.org
-Subject: Re: [PATCH] compat: add compat kernel checker and downloader
-Message-ID: <20120404111014.GB3378@shadowen.org> (sfid-20120404_131036_738758_B47C087F)
-References: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org>
- <20120206160727.GA21048@tuxdriver.com>
- <20120207041958.GA32377@bombadil.infradead.org>
- <CAB=NE6VS79S4R6wQddQCqPfoYPyRbPzSdAYN2Mxfi-4G_sfCvg@mail.gmail.com>
- <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com>
- <CAB=NE6URWAgUgF+6bOsRBeeXnQ4VjYf1tWuUkkvMviCLOCxeqA@mail.gmail.com>
- <CAB=NE6UNHufTggg0ka-+q7ri_X6ENx4nO5DfMCAxxrKLrERPWg@mail.gmail.com>
- <CAB=NE6U_Sq88ro7onChn8U4tkkqt7Z9YN9wMyZjx+78j+M=_uA@mail.gmail.com>
+	Thu, 5 Apr 2012 02:51:44 -0400
+Received: by vbbff1 with SMTP id ff1so815394vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2012 23:51:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6U_Sq88ro7onChn8U4tkkqt7Z9YN9wMyZjx+78j+M=_uA@mail.gmail.com>
+In-Reply-To: <1333607947.27729.70.camel@cumari>
+References: <CAHPDcRuZyS_ibSBGgzDvREHcVCQOw=roia1RRrJUU3TtQOYGSA@mail.gmail.com>
+	<1333607947.27729.70.camel@cumari>
+Date: Thu, 5 Apr 2012 14:51:43 +0800
+Message-ID: <CAHPDcRt3rqq4qcfSjMEq9=5AnM6rdXNAgsZPfrhxkVcoEgxZmQ@mail.gmail.com> (sfid-20120405_085147_674418_19C86666)
+Subject: Re: wl1271 acx bet
+From: Yingang Fu <yingang.fu@gmail.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 30, 2012 at 05:23:46PM -0700, Luis R. Rodriguez wrote:
-> Andy, so I just noticed that on all Ubuntu PPA (and generic) kernels
-> you guys have a broken symlink >= 2.6.33.
-> 
-> /lib/modules/2.6.33-02063305-generic/build/include/asm
-> 
-> points to asm-x86 and that is no longer present after 2.6.33 so any
-> module requiring those header files will break now on Ubuntu. I just
-> spotted this as some file from asm is now included in the modules were
-> are building. I guess not many external kernel modules include asm dir
-> otherwise you guys would have noticed this a long time ago.
+hi, Luca
 
-Luis, I concur that the link is now broken.  However that link is actually
-simply superfulous now.  Anything correctly using kernel 'external
-module' support will be using the -I path from the kernel Makefiles.
-They will therefore be including from /usr/src/<version>/include _and_
-/usr/src/<version>/arch/x86/include.  I presume this is why we have not
-noticed it.
 
-I will get that link removed however as it is simply bogus.
+Thank you very much.
 
--apw
+Yingang
+
+在 2012年4月5日 下午2:39，Luciano Coelho <coelho@ti.com> 写道：
+> On Thu, 2012-04-05 at 11:41 +0800, Yingang Fu wrote:
+>> hi, all
+>
+> Hi Yingang,
+>
+>
+>> Does anybody could help me out of the meaning/function of the wl1271 acx bet?
+>
+> BET means Beacon Early Termination.  What it does is to stop processing
+> a beacon when it realizes that there are not frames advertised by the AP
+> (and thus, the beacon is not useful to us).  This helps minimize power
+> consumption in PS mode.
+>
+> --
+> Cheers,
+> Luca.
+>
