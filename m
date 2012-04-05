@@ -1,55 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:12241 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046Ab2DQXT0 (ORCPT
+Received: from storm.alittletooquiet.net ([67.23.28.199]:55783 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882Ab2DESGe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 19:19:26 -0400
-Date: Tue, 17 Apr 2012 18:19:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: ilw@linux.intel.com, wey-yi.w.guy@intel.com,
-	johannes.berg@intel.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] iwlwifi: Fix compile when CONFIG_IWLWIFI_DEBUG is not
- defined
-Message-ID: <4f8dfa7b.3JI0H3iulrLPUzPs%Larry.Finger@lwfinger.net> (sfid-20120418_011958_143805_CDD81257)
+	Thu, 5 Apr 2012 14:06:34 -0400
+Date: Thu, 5 Apr 2012 14:06:33 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH 1/2] rtl8192de: Clean up and fix 92D cut version
+ constants and macros.
+Message-ID: <20120405180633.GG21869@alittletooquiet.net> (sfid-20120405_200638_003429_1A34A9EA)
+References: <20120402142525.GA20611@alittletooquiet.net>
+ <4F79E7B9.7060504@lwfinger.net>
+ <20120402175745.GE20611@alittletooquiet.net>
+ <4F79EA18.9060502@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="kVXhAStRUZ/+rrGn"
+In-Reply-To: <4F79EA18.9060502@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If CONFIG_IWLWIFI_DEBUG is not defined, the following error results when
-compiling iwlwifi:
 
-  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-tt.o
-In file included from drivers/net/wireless/iwlwifi/iwl-agn-tt.c:40:0:
-drivers/net/wireless/iwlwifi/iwl-core.h:97:19: error: static declaration of ‘iwl_alloc_traffic_mem’ follows non-static declaration
-drivers/net/wireless/iwlwifi/iwl-agn.h:513:5: note: previous declaration of ‘iwl_alloc_traffic_mem’ was here
-make[4]: *** [drivers/net/wireless/iwlwifi/iwl-agn-tt.o] Error 1
-make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
-make[2]: *** [drivers/net/wireless] Error 2
-make[1]: *** [drivers/net] Error 2
-make: *** [drivers] Error 2
+--kVXhAStRUZ/+rrGn
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Hi Larry,
 
-Index: wireless-testing-new/drivers/net/wireless/iwlwifi/iwl-agn.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ wireless-testing-new/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -425,6 +425,7 @@ void iwl_testmode_cleanup(struct iwl_pri
- #ifdef CONFIG_IWLWIFI_DEBUG
- void iwl_print_rx_config_cmd(struct iwl_priv *priv,
- 			     enum iwl_rxon_context_id ctxid);
-+int iwl_alloc_traffic_mem(struct iwl_priv *priv);
- #else
- static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv,
- 					   enum iwl_rxon_context_id ctxid)
-@@ -510,7 +511,6 @@ void iwl_setup_deferred_work(struct iwl_
- int iwl_send_wimax_coex(struct iwl_priv *priv);
- int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
- void iwl_debug_config(struct iwl_priv *priv);
--int iwl_alloc_traffic_mem(struct iwl_priv *priv);
- void iwl_set_hw_params(struct iwl_priv *priv);
- void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
- int iwl_init_drv(struct iwl_priv *priv);
+On Mon, Apr 02, 2012 at 01:04:08PM -0500, Larry Finger wrote:
+> On 04/02/2012 12:57 PM, Forest Bond wrote:
+> >On Mon, Apr 02, 2012 at 12:54:01PM -0500, Larry Finger wrote:
+> >>On 04/02/2012 09:25 AM, Forest Bond wrote:
+> >>>From: Forest Bond<forest.bond@rapidrollout.com>
+> >>>
+> >>>The previous definitions included both {B,C,D,E}_CUT_VERSION and
+> >>>CHIP_92D_{C,D}_CUT with conflicting values for the C and D cut version=
+s,
+> >>>and literal hex values were used in the IS_92D_{C,D,E}_CUT macros.  So
+> >>>we clean all this up and in doing so enable cut-specific code paths for
+> >>>cuts C and D, which would not have been executed because the
+> >>>CHIP_92D_{C,D}_CUT constants were wrong and the cut version was thus
+> >>>recorded incorrectly.
+> >>>
+> >>>Signed-off-by: Forest Bond<forest.bond@rapidrollout.com>
+> >>
+> >>This patch does not apply to the wireless-testing tree. That is the
+> >>one you are supposed to use.
+> >>
+> >>Patch #2 also fails to apply. In addition, your mailer mangled a line.
+> >
+> >Sorry for the trouble.  I'll resend a little later this afternoon.
+>=20
+> No problem for me. I was able to fix everything but the mangling with wig=
+gle.
+
+I just resent both patches, including the changes you requested to the first
+one.  Turns out GPG was causing all of the issues above, so I didn't sign t=
+he
+resent patches.
+
+Thanks,
+Forest
+--=20
+Forest Bond
+http://www.alittletooquiet.net
+http://www.rapidrollout.com
+
+--kVXhAStRUZ/+rrGn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk993ykACgkQRO4fQQdv5Ayw3ACdFU5m0Q3nLJzGfJt5RgZy2lt0
+bIIAn3zbATBdpFRTrlgW+28EglZPLfnq
+=bKOh
+-----END PGP SIGNATURE-----
+
+--kVXhAStRUZ/+rrGn--
