@@ -1,87 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41427 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754504Ab2DMK3r convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40841 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026Ab2DEMdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 06:29:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120413105746.10ffb120@stein>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-Date: Fri, 13 Apr 2012 13:29:46 +0300
-Message-ID: <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com> (sfid-20120413_122952_214820_0F330435)
-Subject: Re: [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 5 Apr 2012 08:33:10 -0400
+Message-ID: <1333629184.3494.12.camel@jlt3.sipsolutions.net> (sfid-20120405_143328_054146_12D888BC)
+Subject: Re: [PATCH 4/4] compat: add some tracing backport work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org
+Date: Thu, 05 Apr 2012 14:33:04 +0200
+In-Reply-To: <20120328100027.GA4420@bombadil.infradead.org> (sfid-20120328_120100_045553_52796B2A)
+References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
+	 <1332214021-9716-5-git-send-email-mcgrof@frijolero.org>
+	 <1332245766.3329.14.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6XyDDfzu71K-1ecMQ+F-0Z1iTN4OKCUjJ+E3yxvydks0Q@mail.gmail.com>
+	 <CAB=NE6XXd-T5B37Cc_eCwnWHRk-_UVn0JY0mQjzMQcK+ZcLuWQ@mail.gmail.com>
+	 <1332751768.3511.3.camel@jlt3.sipsolutions.net>
+	 <20120326125822.GA11929@bombadil.infradead.org>
+	 <20120328100027.GA4420@bombadil.infradead.org>
+	 (sfid-20120328_120100_045553_52796B2A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 13, 2012 at 11:57 AM, Stefan Richter
-<stefanr@s5r6.in-berlin.de> wrote:
-> On Apr 12 Felipe Contreras wrote:
->> But this is exactly the opposite; the patch that broke things is in
->> the 'release branch' (3.3.1); it's not in upstream (3.3). Sure, it's
->> also on a later upstream, which is also broken.
->            ^^^^^
-> No, upstream /earlier/ than 3.3.1 contains the defect.
+On Wed, 2012-03-28 at 06:00 -0400, Luis R. Rodriguez wrote:
 
-Time is not relevant for the point being made, but fine:
+> I've managed to backport tracing it seems, even when CONFIG_TRACEPOINTS
+> is enabled.
 
-But this is exactly the opposite; the patch that broke things is in
-the 'release branch' (3.3.1); it's not in the upstream release from
-where stable began (3.3). Sure, it's also on upstream, which is also
-broken.
+Nope, you've managed to completely kill tracing.
 
-> Furthermore, consider this:  You as user of the 3.3.y series are using a
-> temporary, dead-end side branch.  Its maintenance will stop at some point,
-> and you will be left looking for a different, maintained series to migrate
-> to.  You will be most interested in that series /not/ containing any
-> regressions that you suffered already through the 3.3.y lifetime.
 
-Of course, I will be interested in that, although most likely I would
-be switching to another stable release (v3.4.1), not the upstream
-release (v3.4), and most distros would do the same. Even in the
-unlikely event that v3.4 is broken, most likely v3.4.1 would contain
-the fix. But I'm also interested in v3.3.2 working.
+> +#undef __DECLARE_TRACE
+> +#define __DECLARE_TRACE(name, proto, args, cond, data_proto, data_args) \
+> +	static inline void trace_##name(proto)				\
+> +	{ }								\
+> +	static inline void trace_##name##_rcuidle(proto)		\
+> +	{ }								\
+> +	static inline int						\
+> +	register_trace_##name(void (*probe)(proto))			\
+> +	{								\
+> +		return -ENOSYS;						\
+> +	}								\
+> +	static inline void						\
+> +	unregister_trace_##name(void (*probe)(proto))			\
+> +	{								\
+> +		return -ENOSYS;						\
+> +	}								\
+> +	static inline void check_trace_callback_type_##name(void (*cb)(data_proto)) \
+> +	{								\
+> +	}
 
-So you are saying that:
+All of this simply completely kills tracing. Worse, the tracepoints get
+registered, but their trace_##name functions do nothing, so you can
+think that they're there, but they never record data ...
 
-a) v3.3.1 (bad), v3.3.2 (bad), v3.4 (good)
-b) v3.3.1 (bad), v3.3.2 (good), v3.4 (bad)
-c) v3.3.1 (bad), v3.3.2 (good), v3.4 (good)
+The old way was much better. Can we just let 2.6.24 and the other
+ancients die in peace?
 
-b) is clearly better than a). Well, I don't see how; both situations
-have the same number of releases broken, plus b) is very unlikely
-anyway and we would end up with c). Plus, in all situation v3.4.1
-would most likely contain the fix anyway.
+johannes
 
-> The rule is there to protect you, as a user of the stable series, from
-> repeated regressions.
-
-So in order to avoid b), you would rather go into a), than c)? Sorry,
-I most definitely don't *need* that "protection". I guess I should
-avoid the "stable" series then.
-
-Cheers.
-
--- 
-Felipe Contreras
