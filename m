@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serv04.lahn.de ([213.239.197.57]:32818 "EHLO serv04.lahn.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753659Ab2DEODO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 10:03:14 -0400
-Date: Thu, 5 Apr 2012 15:53:05 +0200
-From: Michael Leun <lkml20120218@newton.leun.net>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: casteyde.christian@free.fr,
-	Kelly Anderson <kelly@silka.with-linux.com>,
-	Ben Greear <greearb@candelatech.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+Received: from he.sipsolutions.net ([78.46.109.217]:58074 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755638Ab2DES41 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 14:56:27 -0400
+Message-ID: <1333652183.3494.21.camel@jlt3.sipsolutions.net> (sfid-20120405_205631_681235_62603AA1)
+Subject: Re: [3.4-rc1][Regression][network wireless] 'task xxxx blocked for
+ more than 120 seconds' after resume
+From: Johannes Berg <johannes@sipsolutions.net>
+To: maciej.rutecki@gmail.com
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] 3.3.1 ath9k regression
-Message-ID: <20120405155305.06f80bb0@xenia.leun.net> (sfid-20120405_160333_410355_AA3F86BB)
-In-Reply-To: <CAD2nsn0iRjxgY=EFoX2t5fFQ2_7X71WAax2M-spO=b+kBF15Fg@mail.gmail.com>
-References: <4F7A8EB7.4060200@silka.with-linux.com>
-	<4F7A923D.5000002@candelatech.com>
-	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
-	<4F7A9D5C.8040402@silka.with-linux.com>
-	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
-	<4F7AAAD9.2040307@silka.with-linux.com>
-	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
-	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
-	<4F7AB6FE.3080009@silka.with-linux.com>
-	<20120403200306.0afbb48b@xenia.leun.net>
-	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
-	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
-	<20120404235104.682cfad3@xenia.leun.net>
-	<CAD2nsn0iRjxgY=EFoX2t5fFQ2_7X71WAax2M-spO=b+kBF15Fg@mail.gmail.com>
+	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
+	netdev <netdev@vger.kernel.org>
+Date: Thu, 05 Apr 2012 20:56:23 +0200
+In-Reply-To: <201204052037.37497.maciej.rutecki@gmail.com> (sfid-20120405_203812_209408_5261E33E)
+References: <201204022157.05598.maciej.rutecki@gmail.com>
+	 <1333440469.3574.0.camel@jlt3.sipsolutions.net>
+	 <20120405103254.GE2378@redhat.com>
+	 <201204052037.37497.maciej.rutecki@gmail.com>
+	 (sfid-20120405_203812_209408_5261E33E)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 5 Apr 2012 11:46:36 +0530
-Mohammed Shafi <shafi.wireless@gmail.com> wrote:
-
-> > Surprise, surprise: This (what I saw) really only happens in 3.3.1 -
-> > 3.4-rc1 works also when the patch is in place.
+On Thu, 2012-04-05 at 20:37 +0200, Maciej Rutecki wrote:
+> On czwartek, 5 kwietnia 2012 o 12:32:54 Stanislaw Gruszka wrote:
+> > On Tue, Apr 03, 2012 at 10:07:49AM +0200, Johannes Berg wrote:
+> > > -ilw
+> > > +netdev
+> > > 
+> > > I have no idea what this could be, but I'm almost certain it's not
+> > > caused by our wireless driver. Looks more like rtl8169 is to blame.
+> > 
+> > I'm not sure. Looks like there is deadlock or infinite loop in process
+> > that holds rtnl lock. This can be wireless driver, wired driver or
+> > generic network code bug.
+> > 
+> > Maciej, please recompile with CONFIG_LOCKDEP and check if it will not
+> > find any deadlock. If not, when problem will happen please do
 > 
-> thanks, if the other users can confirm it the issue is resolved, we
-> can close the thread, otherwise i would spend time to recreate and fix
-> it.
+> Did you mean "CONFIG_LOCKDEP_SUPPORT"?
 
-I agree that we then can close the issue regarding 3.4 development, but
-we still have an issue in the stabile kernel 3.3.1 - either needs to be
-fixed or reverted there in my opinion.
+No, _SUPPORT means you could enable CONFIG_LOCKDEP, but we would like to
+see this with CONFIG_LOCKDEP enabled.
 
-
--- 
-MfG,
-
-Michael Leun
+johannes
 
