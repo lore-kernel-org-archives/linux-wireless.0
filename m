@@ -1,86 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:34794 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757889Ab2DFTy7 (ORCPT
+Received: from storm.alittletooquiet.net ([67.23.28.199]:36258 "EHLO
+	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753714Ab2DESCe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 15:54:59 -0400
-Received: by iagz16 with SMTP id z16so3496127iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 12:54:59 -0700 (PDT)
-Message-ID: <4F7F4A0F.2050300@lwfinger.net> (sfid-20120406_215504_189392_4C5954E4)
-Date: Fri, 06 Apr 2012 14:54:55 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 5 Apr 2012 14:02:34 -0400
+Date: Thu, 5 Apr 2012 14:02:33 -0400
+From: Forest Bond <forest@alittletooquiet.net>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Jingjun Wu <jingjun_wu@realsil.com.cn>
+Subject: [PATCH v2 1/2] rtl8192de: Clean up and fix 92D cut version
+ constants and macros.
+Message-ID: <20120405180233.GE21869@alittletooquiet.net> (sfid-20120405_200238_580789_AD06948A)
 MIME-Version: 1.0
-To: Nicu Pavel <npavel@mini-box.com>
-CC: linux-wireless@vger.kernel.org,
-	Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
-References: <4F0EEA1B.3040501@wut.de> <4F0FA4DD.5020601@lwfinger.net> <loom.20120405T091556-756@post.gmane.org> <4F7D90AF.2040109@gtri.gatech.edu> <4F7E4F2A.1030404@lwfinger.net> <CAL9MRr=U+CCzjP-cSOkPJpvw=AQuHX23grj1atfkT9uxLzEM4w@mail.gmail.com>
-In-Reply-To: <CAL9MRr=U+CCzjP-cSOkPJpvw=AQuHX23grj1atfkT9uxLzEM4w@mail.gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------080205070301040300080503"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------080205070301040300080503
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+The previous definitions included both {B,C,D,E}_CUT_VERSION and
+CHIP_92D_{C,D}_CUT with conflicting values for the C and D cut versions,
+and literal hex values were used in the IS_92D_{C,D,E}_CUT macros.  So
+we clean all this up and in doing so enable cut-specific code paths for
+cuts C and D, which would not have been executed because the
+CHIP_92D_{C,D}_CUT constants were wrong and the cut version was thus
+recorded incorrectly.
 
-On 04/06/2012 03:48 AM, Nicu Pavel wrote:
-> ---->  ifdown/ifup no scanning results.
->
-> <6>rtl8192cu: MAC auto ON okay!
-> <6>rtl8192cu: Tx queue select: 0x05
-> <7>rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0>  FALSE driver sleep or unload
-> <6>rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
-> <7>rtl8192cu:rtl92cu_set_hw_reg():<0-0>  ### Set RCR(0xf0002ace) ###
-> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
-> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
-> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
-> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
-> <7>rtl8192cu:rtl92cu_set_hw_reg():<0-0>  ### Set RCR(0xf0002a0e) ###
->
-> ---->  ifdown/ifup no scanning results.
+Signed-off-by: Forest Bond <forest.bond@rapidrollout.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/def.h |   16 +++++++---------
+ 1 files changed, 7 insertions(+), 9 deletions(-)
 
-Please try the attached patch. After looking at the backtraces for the calls 
-that set the BSSID filters, I could see no reason for the driver to fail, yet it 
-did. Once I kept those bits clear you did in the beginning, then it works. The 
-amount of extra overhead will be minimal as the bits were only set for a short time.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+index eafdf76..939c905 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+@@ -151,9 +151,6 @@ enum version_8192d {
+ 
+ /* for 92D */
+ #define CHIP_92D_SINGLEPHY		BIT(9)
+-#define C_CUT_VERSION			BIT(13)
+-#define D_CUT_VERSION			((BIT(12)|BIT(13)))
+-#define E_CUT_VERSION			BIT(14)
+ 
+ /* Chip specific */
+ #define CHIP_BONDING_IDENTIFIER(_value)	(((_value)>>22)&0x3)
+@@ -173,7 +170,10 @@ enum version_8192d {
+ #define RF_TYPE_1T2R			BIT(4)
+ #define RF_TYPE_2T2R			BIT(5)
+ #define CHIP_VENDOR_UMC			BIT(7)
+-#define B_CUT_VERSION			BIT(12)
++#define CHIP_92D_B_CUT			BIT(12)
++#define CHIP_92D_C_CUT			BIT(13)
++#define CHIP_92D_D_CUT			(BIT(13)|BIT(12))
++#define CHIP_92D_E_CUT			BIT(14)
+ 
+ /* MASK */
+ #define IC_TYPE_MASK			(BIT(0)|BIT(1)|BIT(2))
+@@ -205,15 +205,13 @@ enum version_8192d {
+ 					 CHIP_92D) ? true : false)
+ #define IS_92D_C_CUT(version)		((IS_92D(version)) ?		\
+ 				 ((GET_CVID_CUT_VERSION(version) ==	\
+-				 0x2000) ? true : false) : false)
++				 CHIP_92D_C_CUT) ? true : false) : false)
+ #define IS_92D_D_CUT(version)			((IS_92D(version)) ?	\
+ 				 ((GET_CVID_CUT_VERSION(version) ==	\
+-				 0x3000) ? true : false) : false)
++				 CHIP_92D_D_CUT) ? true : false) : false)
+ #define IS_92D_E_CUT(version)		((IS_92D(version)) ?		\
+ 				 ((GET_CVID_CUT_VERSION(version) ==	\
+-				 0x4000) ? true : false) : false)
+-#define CHIP_92D_C_CUT			BIT(10)
+-#define CHIP_92D_D_CUT			BIT(11)
++				 CHIP_92D_E_CUT) ? true : false) : false)
+ 
+ enum rf_optype {
+ 	RF_OP_BY_SW_3WIRE = 0,
+-- 
+1.7.0.4
 
-If this patch works for you, then I will send it upstream for mainline and 
-stable. The best place to keep the bits clear would be in the calling routine, 
-not in rtl92cu_set_hw_reg(); however, that patch will be much more intrusive and 
-would not be accepted for 3.4.
-
-Larry
-
-
---------------080205070301040300080503
-Content-Type: text/plain; charset=UTF-8;
- name="rtl8192cu_set_check_bssid"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="rtl8192cu_set_check_bssid"
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1867,8 +1867,14 @@ void rtl92cu_set_hw_reg(struct ieee80211
- 			break;
- 		}
- 	case HW_VAR_RCR:{
--			rtl_write_dword(rtlpriv, REG_RCR, ((u32 *) (val))[0]);
- 			mac->rx_conf = ((u32 *) (val))[0];
-+			/* whenever the driver sets bits enabling only a
-+			 * specific BSSID for beacons or data, a failure
-+			 * occurs. Thus we do not allow those bits to be set */
-+			if (mac->rx_conf & (RCR_CBSSID_BCN | RCR_CBSSID_DATA))
-+				mac->rx_conf &= ~(RCR_CBSSID_BCN |
-+						  RCR_CBSSID_DATA);
-+			rtl_write_dword(rtlpriv, REG_RCR, ((u32 *) (val))[0]);
- 			RT_TRACE(rtlpriv, COMP_RECV, DBG_DMESG,
- 				 "### Set RCR(0x%08x) ###\n", mac->rx_conf);
- 			break;
-
---------------080205070301040300080503--
+-- 
+Forest Bond
+http://www.alittletooquiet.net
+http://www.rapidrollout.com
