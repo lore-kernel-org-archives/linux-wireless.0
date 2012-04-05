@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:51906 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab2DJEcJ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55051 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751591Ab2DENBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 00:32:09 -0400
-Received: by pbcun15 with SMTP id un15so5737057pbc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2012 21:32:09 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] mac80211: fix the assignment of PREQ's MAC address for Proactive RANN
-Date: Tue, 10 Apr 2012 12:31:56 +0800
-Message-Id: <1334032316-7011-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120410_063214_304540_40277907)
+	Thu, 5 Apr 2012 09:01:24 -0400
+Message-ID: <1333630881.3494.15.camel@jlt3.sipsolutions.net> (sfid-20120405_150136_924671_F1E2D32D)
+Subject: Re: compat-wireless-2012-04-04 - rmmod mac80211 and PC freeze
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 05 Apr 2012 15:01:21 +0200
+In-Reply-To: <CAFED-jmkmF=9egOvvRK49=2HYMg_jiAUdW=5XQ2SyFwYXDb1OQ@mail.gmail.com> (sfid-20120405_143524_201944_133524A9)
+References: <CAFED-jmkmF=9egOvvRK49=2HYMg_jiAUdW=5XQ2SyFwYXDb1OQ@mail.gmail.com>
+	 (sfid-20120405_143524_201944_133524A9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Record the RANN sender's address only for RANNs that meet the acceptance
-criteria (per sections 13.10.12.4.2).
+On Thu, 2012-04-05 at 14:35 +0200, Janusz Dziedzic wrote:
+> Hello,
+> 
+> I am using: compat-wireless-2012-04-04
+> 
+> I am doing such test:
+> - insmod compat.ko
+> - insmod cfg80211.ko
+> - insmod mac80211.ko
+> 
+> After that:
+> - rmmod mac80211
+> 
+> And have PC freeze.
+> Linux uw000950 2.6.35-32-generic #67~lucid1-Ubuntu SMP Tue Mar 6
+> 17:48:20 UTC 2012 x86_64 GNU/Linux
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
-v2: reword description (Javier)
-    initialize is_root and rann_snd_addr
+Works for me, but on 3.1.0.
 
- net/mac80211/mesh_hwmp.c    |    5 +++--
- net/mac80211/mesh_pathtbl.c |    2 ++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+> Any idea what could be wrong, how to debug in case of such freeze?
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index a80da37..8130e5f 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -800,10 +800,11 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 				       0, sdata);
- 		mpath->sn = orig_sn;
- 		mpath->rann_metric = metric + metric_txsta;
-+		/* Recording RANNs sender address to send individually
-+		 * addressed PREQs destined for root mesh STA */
-+		memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
- 	}
+Not really. You could try the same thing from a console, rather than an
+X terminal window (that I'm guessing you're using since you saw no
+further info) and you may see some more details?
 
--	/* Using individually addressed PREQ for root node */
--	memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
- 	mpath->is_root = true;
-
- 	if (root_is_gate)
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 49aaefd..baa6096 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -538,6 +538,8 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
-
- 	read_lock_bh(&pathtbl_resize_lock);
- 	memcpy(new_mpath->dst, dst, ETH_ALEN);
-+	memset(new_mpath->rann_snd_addr, 0xff, ETH_ALEN);
-+	new_mpath->is_root = false;
- 	new_mpath->sdata = sdata;
- 	new_mpath->flags = 0;
- 	skb_queue_head_init(&new_mpath->frame_queue);
---
-1.7.0.4
+johannes
 
