@@ -1,119 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51531 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965558Ab2DLQdr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 12:33:47 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/5] mac80211: Support getting sta_info stats via ethtool.
-Date: Thu, 12 Apr 2012 09:32:52 -0700
-Message-Id: <1334248375-22967-3-git-send-email-greearb@candelatech.com> (sfid-20120412_183352_601421_B7B7C2EA)
-In-Reply-To: <1334248375-22967-1-git-send-email-greearb@candelatech.com>
-References: <1334248375-22967-1-git-send-email-greearb@candelatech.com>
+Received: from serv04.lahn.de ([213.239.197.57]:32818 "EHLO serv04.lahn.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753659Ab2DEODO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 10:03:14 -0400
+Date: Thu, 5 Apr 2012 15:53:05 +0200
+From: Michael Leun <lkml20120218@newton.leun.net>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: casteyde.christian@free.fr,
+	Kelly Anderson <kelly@silka.with-linux.com>,
+	Ben Greear <greearb@candelatech.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] 3.3.1 ath9k regression
+Message-ID: <20120405155305.06f80bb0@xenia.leun.net> (sfid-20120405_160333_410355_AA3F86BB)
+In-Reply-To: <CAD2nsn0iRjxgY=EFoX2t5fFQ2_7X71WAax2M-spO=b+kBF15Fg@mail.gmail.com>
+References: <4F7A8EB7.4060200@silka.with-linux.com>
+	<4F7A923D.5000002@candelatech.com>
+	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
+	<4F7A9D5C.8040402@silka.with-linux.com>
+	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
+	<4F7AAAD9.2040307@silka.with-linux.com>
+	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
+	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
+	<4F7AB6FE.3080009@silka.with-linux.com>
+	<20120403200306.0afbb48b@xenia.leun.net>
+	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
+	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
+	<20120404235104.682cfad3@xenia.leun.net>
+	<CAD2nsn0iRjxgY=EFoX2t5fFQ2_7X71WAax2M-spO=b+kBF15Fg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thu, 5 Apr 2012 11:46:36 +0530
+Mohammed Shafi <shafi.wireless@gmail.com> wrote:
 
-This lets ethtool print out stats related to stations
-connected to the interface.  Does not yet get stats
-from the underlying driver.
+> > Surprise, surprise: This (what I saw) really only happens in 3.3.1 -
+> > 3.4-rc1 works also when the patch is in place.
+> 
+> thanks, if the other users can confirm it the issue is resolved, we
+> can close the thread, otherwise i would spend time to recreate and fix
+> it.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 3557354... 420b6eb... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 71 insertions(+), 0 deletions(-)
+I agree that we then can close the issue regarding 3.4 development, but
+we still have an issue in the stabile kernel 3.3.1 - either needs to be
+fixed or reverted there in my opinion.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 3557354..420b6eb 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -112,6 +112,74 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
-+	"rx_packets", "rx_bytes", "wep_weak_iv_count",
-+	"rx_duplicates", "rx_fragments", "rx_dropped",
-+	"tx_packets", "tx_bytes", "tx_fragments",
-+	"tx_filtered", "tx_retry_failed", "tx_retries",
-+	"beacon_loss"
-+};
-+#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
-+
-+static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return STA_STATS_LEN;
-+
-+	return -EOPNOTSUPP;
-+}
-+
-+static void ieee80211_get_et_stats(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   struct ethtool_stats *stats,
-+				   u64 *data)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+	struct ieee80211_local *local = sdata->local;
-+
-+	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		int i = 0;
-+
-+		/* Make sure this station belongs to the proper dev */
-+		if (sta->sdata->dev != dev)
-+			continue;
-+
-+		data[i++] += sta->rx_packets;
-+		data[i++] += sta->rx_bytes;
-+		data[i++] += sta->wep_weak_iv_count;
-+		data[i++] += sta->num_duplicates;
-+		data[i++] += sta->rx_fragments;
-+		data[i++] += sta->rx_dropped;
-+
-+		data[i++] += sta->tx_packets;
-+		data[i++] += sta->tx_bytes;
-+		data[i++] += sta->tx_fragments;
-+		data[i++] += sta->tx_filtered_count;
-+		data[i++] += sta->tx_retry_failed;
-+		data[i++] += sta->tx_retry_count;
-+		data[i++] += sta->beacon_loss_count;
-+		BUG_ON(i != STA_STATS_LEN);
-+	}
-+	rcu_read_unlock();
-+}
-+
-+static void ieee80211_get_et_strings(struct wiphy *wiphy,
-+				     struct net_device *dev,
-+				     u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS) {
-+		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
-+		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
-+	}
-+}
-+
-+
- static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
- 			     struct key_params *params)
-@@ -2773,4 +2841,7 @@ struct cfg80211_ops mac80211_config_ops = {
- #ifdef CONFIG_PM
- 	.set_wakeup = ieee80211_set_wakeup,
- #endif
-+	.get_et_sset_count = ieee80211_get_et_sset_count,
-+	.get_et_stats = ieee80211_get_et_stats,
-+	.get_et_strings = ieee80211_get_et_strings,
- };
+
 -- 
-1.7.3.4
+MfG,
+
+Michael Leun
 
