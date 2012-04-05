@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:41881 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756600Ab2DXJUS (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:64550 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932335Ab2DEDhm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 05:20:18 -0400
-Received: by vbbff1 with SMTP id ff1so325248vbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 02:20:17 -0700 (PDT)
-Message-ID: <4F96704F.8050406@gmail.com> (sfid-20120424_112025_520221_11818D1B)
-Date: Tue, 24 Apr 2012 05:20:15 -0400
-From: Jonathan Bither <jonbither@gmail.com>
+	Wed, 4 Apr 2012 23:37:42 -0400
+Received: by iagz16 with SMTP id z16so1197657iag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2012 20:37:42 -0700 (PDT)
+Message-ID: <4F7D1382.2080708@lwfinger.net> (sfid-20120405_053746_070477_584F52C2)
+Date: Wed, 04 Apr 2012 22:37:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH V2] ath5k: add missing iounmap to AHB probe removal
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Question about setup error in mac80211
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When our driver device is removed on the AHB bus, our IO memory is never unmapped.
+In https://bugzilla.kernel.org/show_bug.cgi?id=43044, driver rtl8192ce is 
+getting an oops due to a NULL pointer dereference due to NULL being returned by 
+ieee80211_get_tx_rate. For reference, the code in question is
 
-Signed-off-by: Jonathan Bither <jonbither@gmail.com>
+static inline struct ieee80211_rate *
+ieee80211_get_tx_rate(const struct ieee80211_hw *hw,
+                       const struct ieee80211_tx_info *c)
+{
+         if (WARN_ON(c->control.rates[0].idx < 0))
+                 return NULL;
+         return &hw->wiphy->bands[c->band]->bitrates[c->control.rates[0].idx];
+}
 
-diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-index 8c50d9d..aec33cc 100644
---- a/drivers/net/wireless/ath/ath5k/ahb.c
-+++ b/drivers/net/wireless/ath/ath5k/ahb.c
-@@ -220,6 +220,7 @@ static int ath_ahb_remove(struct platform_device *pdev)
- 	}
- 
- 	ath5k_deinit_ah(ah);
-+	iounmap(ah->iobase);
- 	platform_set_drvdata(pdev, NULL);
- 	ieee80211_free_hw(hw);
+Any thoughts regarding what might be causing this? I don't have the full log, 
+but I assume that the WARN_ON must have been in the logs.
+
+I can easily protect rtlwifi, but I would like to know the cause.
+
+Thanks,
+
+Larry
