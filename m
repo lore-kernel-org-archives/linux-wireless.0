@@ -1,63 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:47872 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757126Ab2DLBEB convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8968 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab2DEGpf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 21:04:01 -0400
+	Thu, 5 Apr 2012 02:45:35 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Fix target assert in p2p bringup with multi vif
+Date: Thu, 5 Apr 2012 12:16:09 +0530
+Message-ID: <1333608369-18301-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120405_084540_039147_E2071D0A)
 MIME-Version: 1.0
-In-Reply-To: <20120412002927.GA23167@kroah.com>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-Date: Thu, 12 Apr 2012 04:03:59 +0300
-Message-ID: <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com> (sfid-20120412_030443_742072_F0DDF531)
-Subject: Re: [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 3:29 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Wed, Apr 11, 2012 at 07:59:14PM -0400, Sergio Correia wrote:
->> Hello Greg,
->>
->>
->> On Wed, Apr 11, 2012 at 7:11 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
->> > This is the start of the stable review cycle for the 3.3.2 release.
->> > There are 78 patches in this series, all will be posted as a response
->> > to this one.  If anyone has any issues with these being applied, please
->> > let me know.
->> >
->> > Responses should be made by Fri Apr 13 23:10:16 UTC 2012.
->> > Anything received after that time might be too late.
->> >
->>
->> is there any chance for this one to be included in this review cycle?
->>
->> http://www.spinics.net/lists/linux-wireless/msg87999.html
+Using interface 0 for p2p causes target assert. This is because
+interface 0 is always initialized to non-p2p operations. Fix this
+issue by initializing all the interfaces for p2p when fw is capable
+of dynamic interface switching. When fw is not capable of dynamic
+switching, make sure p2p is not brought up on interface which is
+not initialized for this purpose.
 
-I was going to ask for exactly the same thing. My system is completely
-unusable without this patch; not only does the network doesn't work,
-but quite often the kernel is stuck consuming 100% of the CPU.
+Reported-by: Naveen Singh navesing@qca.qualcomm.com
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   26 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/init.c     |   31 ++++++++++++++++++----------
+ 2 files changed, 46 insertions(+), 11 deletions(-)
 
-> Have you read Documentation/stable_kernel_rules.txt?  Based on that, I
-> don't think it can, yet, right?
-
-Why not? This patch makes the code go back to a previous state, it is
-obviously more stable than the current state, and the code already
-exists in Linus's tree (in previous releases).
-
-But hey, I guess it's OK that 3.3.x is stuck in and endless loop right
-after booting, because rules are more important than fixing obvious
-breakage.
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 1272508..26fb3d7 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1451,9 +1451,35 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
+ 					struct vif_params *params)
+ {
+ 	struct ath6kl_vif *vif = netdev_priv(ndev);
++	int i;
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type %u\n", __func__, type);
+ 
++	/*
++	 * Don't bring up p2p on an interface which is not initialized
++	 * for p2p operation where fw does not have capability to switch
++	 * dynamically between non-p2p and p2p type interface.
++	 */
++	if (!test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
++		      vif->ar->fw_capabilities)) {
++		if (type == NL80211_IFTYPE_P2P_CLIENT ||
++		    type == NL80211_IFTYPE_P2P_GO) {
++			if (vif->ar->vif_max > 1) {
++				for (i = vif->ar->max_norm_iface;
++				     i < vif->ar->vif_max; i++) {
++					if (i == vif->fw_vif_idx)
++						break;
++				}
++				if (i == vif->ar->vif_max) {
++					ath6kl_err("Invalid interface to bring up P2P\n");
++					return -EINVAL;
++				}
++			} else
++				if (vif->fw_vif_idx != 0)
++					return -EINVAL;
++		}
++	}
++
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		vif->next_mode = INFRA_NETWORK;
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 5949ab5..edd7788 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -488,22 +488,31 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 		fw_mode |= fw_iftype << (i * HI_OPTION_FW_MODE_BITS);
+ 
+ 	/*
+-	 * By default, submodes :
++	 * Submodes when fw does not support dynamic interface
++	 * switching:
+ 	 *		vif[0] - AP/STA/IBSS
+ 	 *		vif[1] - "P2P dev"/"P2P GO"/"P2P Client"
+ 	 *		vif[2] - "P2P dev"/"P2P GO"/"P2P Client"
++	 * Otherwise, All the interface are initialized to p2p dev.
+ 	 */
+ 
+-	for (i = 0; i < ar->max_norm_iface; i++)
+-		fw_submode |= HI_OPTION_FW_SUBMODE_NONE <<
+-			      (i * HI_OPTION_FW_SUBMODE_BITS);
++	if (test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
++		     ar->fw_capabilities)) {
++		for (i = 0; i < ar->vif_max; i++)
++			fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
++				(i * HI_OPTION_FW_SUBMODE_BITS);
++	} else {
++		for (i = 0; i < ar->max_norm_iface; i++)
++			fw_submode |= HI_OPTION_FW_SUBMODE_NONE <<
++				(i * HI_OPTION_FW_SUBMODE_BITS);
+ 
+-	for (i = ar->max_norm_iface; i < ar->vif_max; i++)
+-		fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
+-			      (i * HI_OPTION_FW_SUBMODE_BITS);
++		for (i = ar->max_norm_iface; i < ar->vif_max; i++)
++			fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
++				(i * HI_OPTION_FW_SUBMODE_BITS);
+ 
+-	if (ar->p2p && ar->vif_max == 1)
+-		fw_submode = HI_OPTION_FW_SUBMODE_P2PDEV;
++		if (ar->p2p && ar->vif_max == 1)
++			fw_submode = HI_OPTION_FW_SUBMODE_P2PDEV;
++	}
+ 
+ 	if (ath6kl_bmi_write_hi32(ar, hi_app_host_interest,
+ 				  HTC_PROTOCOL_VERSION) != 0) {
 -- 
-Felipe Contreras
+1.7.0.4
+
