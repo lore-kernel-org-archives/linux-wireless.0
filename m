@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:52635 "EHLO arrakis.dune.hu"
+Received: from nbd.name ([46.4.11.11]:46509 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754727Ab2DORVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 13:21:42 -0400
-Message-ID: <4F8B03A3.6030804@openwrt.org> (sfid-20120415_192214_760913_9D38ED18)
-Date: Sun, 15 Apr 2012 19:21:39 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+	id S1756543Ab2DFQ4V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Apr 2012 12:56:21 -0400
+Message-ID: <4F7F2033.4000005@openwrt.org> (sfid-20120406_185639_607540_83BAB4A3)
+Date: Fri, 06 Apr 2012 18:56:19 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH 1/3] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
-References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org> <4F8AA38E.1040702@openwrt.org>
-In-Reply-To: <4F8AA38E.1040702@openwrt.org>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	Linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Linux-netdev <netdev@vger.kernel.org>
+Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
+ DMADBG_7=0x00008040
+References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org> <4F681B78.9000207@gmail.com> <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com> <4F68235C.5090701@gmail.com> <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com> <4F682555.3020502@gmail.com> <20328.16366.166909.255035@gargle.gargle.HOWL> <4F6FA388.9080408@gmail.com> <20337.9030.686697.228453@gargle.gargle.HOWL> <4F7F1C74.7080009@gmail.com>
+In-Reply-To: <4F7F1C74.7080009@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
-
-Thank you for the comments.
-
-> On 2012-04-14 10:01 PM, Gabor Juhos wrote:
->> The REDUCE_SCALED_POWER_BY_THREE_CHAIN symbol is
->> defined in different eeprom files, and the value
->> varies between the different files.
+On 2012-04-06 6:40 PM, Justin P. Mattock wrote:
+> On 03/26/2012 07:17 PM, Sujith Manoharan wrote:
+>> Justin P. Mattock wrote:
+>>> I would have to say this patch above does get rid of this crash I was
+>>> seeing. as a quick test I simply connect to a WPA network, then connect
+>>> to an open network going back and forth triggers this freeze for me
+>>> after applying this I am able to toggle back and forth without a freeze.
 >>
->> In eeprom_def.c and in ar9003_eeprom.c the value
->> of the symbol is 9, however the comments in these
->> files indicates the value should be 10*log10(3)*2
->> which is 9.54242509439325. Replace the the value
->> to 10 in these files.
+>> Thanks for verifying.
 >>
->> Also add comments to eeprom_9287.c.
+>> Sujith
 >>
->> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> I think we should keep the value 9.
-> If I understand the logic behind the power increase through chain
-> combining properly, this value only describes the worst-case (wrt.
-> regulatory compliance) upper limit of tx power, whereas in practice the
-> measured combined power output will be much lower than that due to
-> signal/phase differences.
-> Regulatory compliance is already properly tested on all devices with the
-> truncated value 9, so I don't think that we need to be even more
-> conservative and round up here.
+> 
+> 
+>  From going through the warning message I was playing around and am 
+> looking at: AH_UNPLUGGED .. seems if I remove this from the code I have 
+> not seen this warning message.
+> is there something wrong with AH_UNPLUGGED = 0x2 ?
+> is this the wrong address(0x2)?
+> 
+> the patch that I was using is:
+> 
+>  From ea8a7d6ecf8b0706f3f0521cd22cc359b20b9373 Mon Sep 17 00:00:00 2001
+> From: "Justin P. Mattock" <justinmattock@gmail.com>
+> Date: Sun, 25 Mar 2012 21:53:31 -0700
+> Subject: [PATCH] ath_test
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>   drivers/net/wireless/ath/ath9k/recv.c |    3 +--
+>   1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c 
+> b/drivers/net/wireless/ath/ath9k/recv.c
+> index f4ae3ba..d887cee 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -523,8 +523,7 @@ bool ath_stoprecv(struct ath_softc *sc)
+>   		sc->rx.rxlink = NULL;
+>   	spin_unlock_bh(&sc->rx.rxbuflock);
+> 
+> -	if (!(ah->ah_flags & AH_UNPLUGGED) &&
+> -	    unlikely(!stopped)) {
+> +	if (!(ah->ah_flags) && unlikely(!stopped)) {
+That patch is completely messed up - before showing the warning, it
+checks if ah_flags is set to 0, which will never happen with most
+devices. You're simply making the warning impossible to trigger.
 
-Ok, I will rework the patch.
-
-Apart from the inconsistency between the REDUCE_SCALED_POWER_BY_THREE_CHAIN
-values, there is another thing which confuses me.
-
-In the 'ath9k_hw_set_*_power_cal_table' functions the driver uses the
-REDUCE_SCALED_POWER_BY_THREE_CHAIN constant to reduce the power values.
-In the 'ath9k_hw_update_regulatory_maxpower' function it uses the
-INCREASE_MAXPOW_BY_THREE_CHAIN constant to compensate the reduction. However the
-two constants are different. I might be wrong, but in my opinion the driver
-should use the same constant in both functions.
-
--Gabor
+- Felix
