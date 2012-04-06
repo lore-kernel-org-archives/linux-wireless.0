@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:63888 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756156Ab2D3Qid (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53063 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753363Ab2DFQ64 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 12:38:33 -0400
-Received: by wibhj6 with SMTP id hj6so3007101wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 09:38:32 -0700 (PDT)
-From: Anisse Astier <anisse@astier.eu>
-To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Cc: Ivo van Doorn <IvDoorn@gmail.com>, linville@tuxdriver.com,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Anisse Astier <anisse@astier.eu>
-Subject: [PATCH v5 0/3] rt2800 debug improvements
-Date: Mon, 30 Apr 2012 18:33:30 +0200
-Message-Id: <1335803613-1253-1-git-send-email-anisse@astier.eu> (sfid-20120430_183837_659104_7FF20E0B)
+	Fri, 6 Apr 2012 12:58:56 -0400
+Message-ID: <4F7F20C1.208@candelatech.com> (sfid-20120406_185859_360109_F72CB86D)
+Date: Fri, 06 Apr 2012 09:58:41 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH 2/2] ath9k:  Add more recv stats.
+References: <1333469939-26213-1-git-send-email-greearb@candelatech.com> <4F7C3815.8060902@openwrt.org> <4F7C652D.5050702@candelatech.com> <4F7F1F13.8060003@openwrt.org>
+In-Reply-To: <4F7F1F13.8060003@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In there are all the debug facilites I would have liked to have while I was
-trying to understand why chipset revision RT5390R wasn't working (see:
-http://article.gmane.org/gmane.linux.kernel.wireless.general/89561 ).
+On 04/06/2012 09:51 AM, Felix Fietkau wrote:
+> On 2012-04-04 5:13 PM, Ben Greear wrote:
+>> On 04/04/2012 05:01 AM, Felix Fietkau wrote:
+>>
+>>>> + * @rx_beacons:  No. of beacons received.
+>>>> + * @rx_frags:  No. of rx-fragements received.
+>>> Why should the driver keep track of those last two?
+>>
+>> Well, for instance, I often see around 5Mbps of total rx bytes
+>> (as counted by the NIC), but much less transmitted.  And this is
+>> with stations sending to stations.
+>>
+>> I was trying to figure out where the extra packets come from.  It
+>> seems beacons is a lot of it so it seemed worth counting.  And maybe
+>> fragments count towards that too since there would be more overhead???
+>>
+>> As for rx-frags, just seemed useful to know how many frags
+>> were received.  My understanding is that this is like receiving
+>> 1/2 of a packet at a time...so if we wanted to know how many
+>> real packets the NIC received, we'd need to take frags v/s non-frags
+>> into account.  The current logic that counts 'all-packets' for
+>> the rx path is counting individual fragments, I think.
+>>
+>> At least for beacons, as long as they are always passed up
+>> the stack, I can count them in the mac80211 layer instead if
+>> you prefer.
+> When you only need the packet type based counters for debugging stuff,
+> why not just create a monitor mode interface and count in user space?
+> I think that would make more sense, since these counters are irrelevant
+> for most users, and avoiding unnecessary work in the rx path is useful
+> for performance reasons.
 
-Changes since v4:
- - re-add BBP size patch (first one) in the series
- - add Ivo's Acked-bys
-Changes since v3:
- - Don't print a debug message when register type isn't registered
-Changes since v2:
- - split the second patch in two to incorporate changes suggested by Ivo
-van Doorn (thanks for the review!) :
- - first part (second patch) is now only a small rewrite of the code to
-   initialize only the supported register. Any unsupported register wouldn't
-   have its files created.
- - second patch best viewed ignoring spaces ((git) diff -w)
- - third patch is effectively adding RFCSR support.
- - we allocate more data for sprintf since we add a new register.
-Changes since v1:
- - removed initialization in chipsets other than rt2800, we now rely on
-  default initialization.
- - added comments to make this explicit
- - fix rfcsr size (64)
- - fix pre-review bug thanks to Ivo Van Doorn
+I always want to be calculating stats.  I will poll many of them in user-space
+every few seconds to generate reports.  It is way easier and more efficient to get
+some numbers out of ethtool (or have a user cat a debugfs file)
+than it is to set up a sniffer and parse it's output.
 
-Anisse Astier (3):
-  rt2800: debugfs register access: BBP is 256 bytes big
-  rt2x00: debugfs support - allow a register to be empty
-  rt2x00: Add debugfs access for rfcsr register
+If you want me to create another compile-time option for the
+extra stats, I can do that?
 
- drivers/net/wireless/rt2x00/rt2800.h      |    4 +-
- drivers/net/wireless/rt2x00/rt2800lib.c   |    7 +++
- drivers/net/wireless/rt2x00/rt2x00debug.c |   82 ++++++++++++++++-------------
- drivers/net/wireless/rt2x00/rt2x00debug.h |    1 +
- 4 files changed, 57 insertions(+), 37 deletions(-)
+Thanks,
+Ben
 
 -- 
-1.7.9.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
