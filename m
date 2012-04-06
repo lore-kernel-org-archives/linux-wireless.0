@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:38921 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752329Ab2DEG6C (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34016 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753954Ab2DFRsb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 02:58:02 -0400
-Message-ID: <1333609592.19476.1.camel@sortiz-mobl> (sfid-20120405_085806_738549_DFFD9C4F)
-Subject: Re: userspace for nfc
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: Pavan Savoy <pavan_savoy@sify.com>
-Cc: linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Date: Thu, 05 Apr 2012 09:06:32 +0200
-In-Reply-To: <CABUK1ajPrNoGoMm7N_XFGyO9tcnzRj5Ms3-_hLR04xa4yoxhkw@mail.gmail.com>
-References: <CABUK1ajPrNoGoMm7N_XFGyO9tcnzRj5Ms3-_hLR04xa4yoxhkw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 6 Apr 2012 13:48:31 -0400
+Received: by iagz16 with SMTP id z16so3368963iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 10:48:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1333627753.3494.5.camel@jlt3.sipsolutions.net>
+References: <1333627753.3494.5.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 6 Apr 2012 10:48:10 -0700
+Message-ID: <CAB=NE6W78hG+uCTFqey14LCqQX-2TAThnoamvH1CUYQ-EZbUNg@mail.gmail.com> (sfid-20120406_194834_482734_BA323BDF)
+Subject: Re: [PATCH] compat-wireless: add export to commented out config vars
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pavan,
+On Thu, Apr 5, 2012 at 5:09 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> This makes it easier to enable config items correctly.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
+Thanks, applied!
 
-On Wed, 2012-04-04 at 15:37 -0500, Pavan Savoy wrote:
-> Hi,
-> 
-> Where are the user-space tools to kick start NFC (NCI in kernel) hosted ?
-The user space stack is here:
-
-git://git.kernel.org/pub/scm/network/nfc/neard.git
-
-
-> Any Documentation on it ?
-The doc/ directory documents the D-Bus APIs.
-
-Cheers,
-Samuel.
-
+  Luis
