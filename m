@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:49635 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752440Ab2DSGfL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 02:35:11 -0400
-Date: Thu, 19 Apr 2012 09:36:00 +0300
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-Message-ID: <20120419063558.GA16002@aemeltch-MOBL1> (sfid-20120419_083525_128930_4284C6B5)
-References: <4F846257.1060807@sipsolutions.net>
- <1334092668.16897.54.camel@aeonflux>
- <4F84A422.3030900@sipsolutions.net>
- <4F84A52A.7050905@sipsolutions.net>
- <20120411071119.GC17779@aemeltch-MOBL1>
- <1334714611.3725.34.camel@jlt3.sipsolutions.net>
- <20120418121551.GE19228@aemeltch-MOBL1>
- <4F8ED1D0.1070401@sipsolutions.net>
- <20120418145202.GH19228@aemeltch-MOBL1>
- <4F8ED913.4040807@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F8ED913.4040807@sipsolutions.net>
+Received: from ip-relay-002.utdallas.edu ([129.110.20.112]:50564 "EHLO
+	ip-relay-002.utdallas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755368Ab2DEWhY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 18:37:24 -0400
+From: Qasim Javed <qasimj@gmail.com>
+To: linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Qasim Javed <qasimj@gmail.com>
+Subject: [PATCH] ath5k: Remove extraneous statements from ath5k_hw_proc_4word_tx_status and ath5k_hw_proc_2word_status.
+Date: Thu,  5 Apr 2012 20:40:15 -0500
+Message-Id: <1333676415-17329-1-git-send-email-qasimj@gmail.com> (sfid-20120406_003744_305227_479C815D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Signed-off-by: Qasim Javed <qasimj@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/desc.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-On Wed, Apr 18, 2012 at 08:09:07AM -0700, Johannes Berg wrote:
-> Hi Andrei,
-> 
-> >>No, this is incorrect. If one device wants to connect on one
-> >>channel, the other typically has to use the same channel. If one
-> >>device wants to scan, the other will be affected. Some hardware may
-> >>support switching around between two channels, but might also
-> >>support more than 2 virtual interfaces, so again they won't be
-> >>independent.
-> >
-> >BTW: which devices can switch channels?
-> 
-> None today, I'm working on it.
-
-If this is not possible how people setup wireless hotspot using virtual
-interfaces and run wpa_supplicant and hostapd on each separately.
-Like here:
-
-http://linuxalfi.wordpress.com/2011/11/08/connectify-for-linux-with-single-wireless-interface/
-
-Best regards 
-Andrei Emeltchenko 
+diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
+index f8bfa3a..97b92c3 100644
+--- a/drivers/net/wireless/ath/ath5k/desc.c
++++ b/drivers/net/wireless/ath/ath5k/desc.c
+@@ -441,10 +441,8 @@ ath5k_hw_proc_2word_tx_status(struct ath5k_hw *ah,
+ 				struct ath5k_desc *desc,
+ 				struct ath5k_tx_status *ts)
+ {
+-	struct ath5k_hw_2w_tx_ctl *tx_ctl;
+ 	struct ath5k_hw_tx_status *tx_status;
+ 
+-	tx_ctl = &desc->ud.ds_tx5210.tx_ctl;
+ 	tx_status = &desc->ud.ds_tx5210.tx_stat;
+ 
+ 	/* No frame has been send or error */
+@@ -495,11 +493,9 @@ ath5k_hw_proc_4word_tx_status(struct ath5k_hw *ah,
+ 				struct ath5k_desc *desc,
+ 				struct ath5k_tx_status *ts)
+ {
+-	struct ath5k_hw_4w_tx_ctl *tx_ctl;
+ 	struct ath5k_hw_tx_status *tx_status;
+ 	u32 txstat0, txstat1;
+ 
+-	tx_ctl = &desc->ud.ds_tx5212.tx_ctl;
+ 	tx_status = &desc->ud.ds_tx5212.tx_stat;
+ 
+ 	txstat1 = ACCESS_ONCE(tx_status->tx_status_1);
+-- 
+1.7.8.2
 
