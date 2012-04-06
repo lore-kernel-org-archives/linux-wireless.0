@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:36435 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057Ab2DMFjG (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:60508 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754168Ab2DFPvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 01:39:06 -0400
-Date: Fri, 13 Apr 2012 14:38:58 +0900
-From: Norbert Preining <preining@logic.at>
-To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: 3.4-rc2, ilwagn still most of the time completely unusable
-Message-ID: <20120413053858.GA4057@gamma.logic.tuwien.ac.at> (sfid-20120413_073926_691099_E1C2A575)
-References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at> <20120411023747.GA10126@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com> <20120412000202.GA15286@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com>
+	Fri, 6 Apr 2012 11:51:19 -0400
+Received: by wejx9 with SMTP id x9so1526965wej.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 08:51:18 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: carl9170: not able to add P2P_GO - add_interface fail with -EBUSY
+Date: Fri, 6 Apr 2012 17:51:13 +0200
+Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <CAFED-jno-531+5TPOjDJ598jAO1zMmFpe6UJOsRt4SfbCU9zDQ@mail.gmail.com> <201204061322.26832.chunkeey@googlemail.com> <1333725089.5577.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1333725089.5577.0.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201204061751.13708.chunkeey@googlemail.com> (sfid-20120406_175132_142920_68484ACD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Meenakshi,
+On Friday 06 April 2012 17:11:29 Johannes Berg wrote:
+> On Fri, 2012-04-06 at 13:22 +0200, Christian Lamparter wrote:
+> 
+> > > Is that chipset limitation we could add only new STA interface when
+> > > main_vif is also STA?
+> > <http://wireless.kernel.org/en/users/Drivers/carl9170#Multiple_Interfaces>
+> > no, it's not. But you'll have to go through several hoops to extend
+> > the driver to switch the "main" interface while the device is up and
+> > running.
+> 
+> So the driver has a concept of the order in which interfaces are added?
+> That's something I never considered when writing the interface type
+> combinations support.
+Actually, it's more of a master/slave situation. 
 
-On Fr, 13 Apr 2012, Venkataraman, Meenakshi wrote:
-> In your logs I also see missed beacon notifications from the firmware ~every 500 milliseconds. My thought is that it is probably due to turning on power save. I'm not sure if it is affecting the performance of your system overall. Are you using the power save option? And if so, what is the behaviour when power save is turned off?
+The MAC only has one security engine "mode" which can be either AP/IBSS/WDS.
+[So, this setting will be shared with all virtual interfaces]
+Next, the MAC only has one TSF counter, [beacon/tbtt timer, etc...] which
+is also shared between the virtual interfaces [note: the TSF sync depends
+on the mode as well, you see if the main interface is a station/ibss then
+the TSF is automatically updated [by the hardware in fact] and there is
+nothing a slave interface [e.g.: AP] can do!]. And then there is of
+course the shared ERP, basic rates, slot time, multicast, QOS/WME, ... stuff.
 
-Good point. I have now changed iwlwifi to load with power_save=0
-because as I found someone (don't ask me who!, nm? gnome? acpi?)
-turns on power saving.
-
-WIth that turned off I *believe* I have better results, but I will tet
-it a bi tmore.
-
-> I don't see the invalid station activation error in the log you sent me, so I'm guessing it appears only on the other network. Do send us logs for that. 
-
-Now I got one ....
-	http://www.logic.at/people/preining/syslog-debug.bz2
-take care, unpacked it is big!
-
-One more thing, I believe that this happens most of the times
-(but not necessarily exclusively, but I don't have statistics)
-after resume (from suspend to ram).
-
-So saying, it seems that with power_save=0 even if I get several of
-these:
-[ 1601.552069] tx session timer expired on tid 0
-[ 1601.552116] Tx BA session stop requested for 00:24:c4:ab:bd:e0 tid 0
-[ 1601.576292] Stopping Tx BA session for 00:24:c4:ab:bd:e0 tid 0
-[ 1603.470312] Open BA session requested for 00:24:c4:ab:bd:e0 tid 0
-[ 1603.480274] activated addBA response timer on tid 0
-[ 1603.483479] switched off addBA timer for tid 0
-[ 1603.483485] Aggregation is on for tid 0
-the connection does not break down, as before. Well, I am not sure whether
-it is a consequence or coincidence.
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-GWEEK (n.)
-A coat hanger recycled as a car aerial.
-			--- Douglas Adams, The Meaning of Liff
+Regards,
+	Christian
