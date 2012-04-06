@@ -1,70 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:52563 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752475Ab2DBQJr (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:59953 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645Ab2DFFQa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 12:09:47 -0400
-Received: by obbtb18 with SMTP id tb18so2249780obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 09:09:47 -0700 (PDT)
-Message-ID: <4F79CF47.5000804@lwfinger.net> (sfid-20120402_180951_314894_B21D0963)
-Date: Mon, 02 Apr 2012 11:09:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 6 Apr 2012 01:16:30 -0400
+Received: by qcro28 with SMTP id o28so1278467qcr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2012 22:16:30 -0700 (PDT)
 MIME-Version: 1.0
-To: Forest Bond <forest@alittletooquiet.net>
-CC: linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Jingjun Wu <jingjun_wu@realsil.com.cn>
-Subject: Re: [PATCH 2/2] rtl8192de: Recognize 92D E-CUT version.
-References: <20120402142537.GB20611@alittletooquiet.net>
-In-Reply-To: <20120402142537.GB20611@alittletooquiet.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAFED-j=jReYjht2TazFmYnqzJHkS-=My-_4MDRmbtBfvGz_Txw@mail.gmail.com>
+References: <CAFED-jmkmF=9egOvvRK49=2HYMg_jiAUdW=5XQ2SyFwYXDb1OQ@mail.gmail.com>
+	<1333630881.3494.15.camel@jlt3.sipsolutions.net>
+	<CAFED-j=jReYjht2TazFmYnqzJHkS-=My-_4MDRmbtBfvGz_Txw@mail.gmail.com>
+Date: Fri, 6 Apr 2012 07:16:29 +0200
+Message-ID: <CAFED-jnO235WRNT34DN6OAUKPgeT6t0eWdHK+9_gz7dTvdMTgQ@mail.gmail.com> (sfid-20120406_071634_284138_BC746D8D)
+Subject: Re: compat-wireless-2012-04-04 - rmmod mac80211 and PC freeze
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/02/2012 09:25 AM, Forest Bond wrote:
-> From: Forest Bond<forest.bond@rapidrollout.com>
+W dniu 6 kwietnia 2012 07:00 u¿ytkownik Janusz Dziedzic
+<janusz.dziedzic@gmail.com> napisa³:
+> W dniu 5 kwietnia 2012 15:01 u¿ytkownik Johannes Berg
+> <johannes@sipsolutions.net> napisa³:
+>> On Thu, 2012-04-05 at 14:35 +0200, Janusz Dziedzic wrote:
+>>> Hello,
+>>>
+>>> I am using: compat-wireless-2012-04-04
+>>>
+>>> I am doing such test:
+>>> - insmod compat.ko
+>>> - insmod cfg80211.ko
+>>> - insmod mac80211.ko
+>>>
+>>> After that:
+>>> - rmmod mac80211
+>>>
+>>> And have PC freeze.
+>>> Linux uw000950 2.6.35-32-generic #67~lucid1-Ubuntu SMP Tue Mar 6
+>>> 17:48:20 UTC 2012 x86_64 GNU/Linux
+>>
+>> Works for me, but on 3.1.0.
+>>
+>>> Any idea what could be wrong, how to debug in case of such freeze?
+>>
+>> Not really. You could try the same thing from a console, rather than an
+>> X terminal window (that I'm guessing you're using since you saw no
+>> further info) and you may see some more details?
+>>
+>> johannes
+>>
 >
-> The chip version constant (0xCC33) was taken from version 0001.0105.2011
-> of the GPL vendor driver.  Note that this driver version also ships a
-> firmware update, but I am unsure if it is required for E-CUT chips to
-> function properly.
-
-There is also a new version of the RTL8192SE firmware in that driver. Too bad 
-that Realtek doesn't communicate these changes with me, I will test and submit 
-the updated firmware if the changes make a difference.
-
+> Seems when run from console I see:
+> Kernel panic - not syncing: Fatal exception in interrupt
+> BUG: scheduling while atomic: rmmod/15474/0x10008803
 >
-> A nearby spelling error was also corrected.
+> Next a lot of information connected with dump.
 >
-> Signed-off-by: Forest Bond<forest.bond@rapidrollout.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    6 +++++-
->   1 files changed, 5 insertions(+), 1 deletions(-)
 >
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> index 509f5af..b338d52 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> @@ -1743,9 +1743,13 @@ static void _rtl92de_efuse_update_chip_version(struct ieee80211_hw *hw)
->   		chipver |= CHIP_92D_D_CUT;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "D-CUT!!!\n");
->   		break;
-> +	case 0xCC33:
-> +		chipver |= CHIP_92D_E_CUT;
-> +		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "E-CUT!!!\n");
-> +		break;
 
-This comment is a note to myself, not a criticism of your patch. These magic 
-numbers need to be replaced by defined constants.
+After second try:
+BUG: unable to handle kernel paging request at ffffffff98d60d20
+IP: update_curr+0x134/0x1e0
+Thread overran stack, or stack corrupted
+Process rmmod
 
->   	default:
->   		chipver |= CHIP_92D_D_CUT;
-> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unkown CUT!\n");
-> +		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown CUT!\n");
->   		break;
->   	}
->   	rtlpriv->rtlhal.version = chipver;
+BR
+Janusz
 
-Thanks,
 
-Larry
+-- 
+Janusz Dziedzic
