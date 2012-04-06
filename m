@@ -1,81 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:54310 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752430Ab2DPT1V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 15:27:21 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 4/5] ath9k: merge power correction constants
-Date: Mon, 16 Apr 2012 22:22:49 +0200
-Message-Id: <1334607770-26090-4-git-send-email-juhosg@openwrt.org> (sfid-20120416_212724_667094_8317B9B9)
-In-Reply-To: <1334607770-26090-1-git-send-email-juhosg@openwrt.org>
-References: <1334607770-26090-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:40593 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752703Ab2DFDAc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Apr 2012 23:00:32 -0400
+Received: by eaaq12 with SMTP id q12so584611eaa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2012 20:00:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1333649707.4108.46.camel@hp-dhlii>
+References: <1333649707.4108.46.camel@hp-dhlii>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 6 Apr 2012 13:00:10 +1000
+Message-ID: <CAGRGNgUZqvgtuEfJk7vZ0Y4mEzadTBj4G3VQwmTykvy0R9dp8g@mail.gmail.com> (sfid-20120406_050036_566827_BE7C7B24)
+Subject: Re: N device with open source firmware
+To: "David Lynch Jr." <dhlii@dlasys.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The existing constants are used for reduction/increase
-tx power level on devices with 2x2 and 3x3 chainmask.
+Hi David,
 
-Both reduction and increase must use the same value, so
-it makes no sense to use separate constants for them.
+On Fri, Apr 6, 2012 at 04:15, David Lynch Jr. <dhlii@dlasys.net> wrote:
+> I am looking for recommendations for an 802.11N device that is well
+> documented and has opensource firmware for a project.  I do nto care
+> whether it is mPCI, USB, .... so long as there is good documentation on
+> the chipset and good open source firmware as I will be making extensive
+> firmware changes for testing purposes.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/eeprom.c |    8 ++++----
- drivers/net/wireless/ath/ath9k/eeprom.h |    7 ++-----
- 2 files changed, 6 insertions(+), 9 deletions(-)
+If I recall correctly, the ar9170 devices with the carl9170 driver use
+an open source firmware and are 802.11n capable.
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index 6a64dec..9457825 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -303,10 +303,10 @@ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
- 	case 1:
- 		break;
- 	case 2:
--		reduction += REDUCE_SCALED_POWER_BY_TWO_CHAIN;
-+		reduction += POWER_CORRECTION_FOR_TWO_CHAIN;
- 		break;
- 	case 3:
--		reduction += REDUCE_SCALED_POWER_BY_THREE_CHAIN;
-+		reduction += POWER_CORRECTION_FOR_THREE_CHAIN;
- 		break;
- 	}
- 
-@@ -327,10 +327,10 @@ void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
- 	case 1:
- 		break;
- 	case 2:
--		regulatory->max_power_level += INCREASE_MAXPOW_BY_TWO_CHAIN;
-+		regulatory->max_power_level += POWER_CORRECTION_FOR_TWO_CHAIN;
- 		break;
- 	case 3:
--		regulatory->max_power_level += INCREASE_MAXPOW_BY_THREE_CHAIN;
-+		regulatory->max_power_level += POWER_CORRECTION_FOR_THREE_CHAIN;
- 		break;
- 	default:
- 		ath_dbg(common, EEPROM, "Invalid chainmask configuration\n");
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 8d779b4..689f0d0 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -79,11 +79,8 @@
- #define SUB_NUM_CTL_MODES_AT_5G_40 2
- #define SUB_NUM_CTL_MODES_AT_2G_40 3
- 
--#define INCREASE_MAXPOW_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
--#define INCREASE_MAXPOW_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
--
--#define REDUCE_SCALED_POWER_BY_TWO_CHAIN	6  /* 10*log10(2)*2 */
--#define REDUCE_SCALED_POWER_BY_THREE_CHAIN	10 /* 10*log10(3)*2 */
-+#define POWER_CORRECTION_FOR_TWO_CHAIN		6  /* 10*log10(2)*2 */
-+#define POWER_CORRECTION_FOR_THREE_CHAIN	10 /* 10*log10(3)*2 */
- 
- /*
-  * For AR9285 and later chipsets, the following bits are not being programmed
+There was also an effort to produce a open source firmware for
+broadcom devices, but I'm not sure what it's status is and what
+progress they made.
+
+Also, there's a GSoC project to open source the firmware for the USB
+ath9k devices, (ath9k_htc) but I don't think any progress has been
+made.
+
+Thanks,
+
 -- 
-1.7.2.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
