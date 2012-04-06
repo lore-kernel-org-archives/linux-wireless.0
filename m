@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:42502 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757166Ab2DLWOc (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:59305 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753887Ab2DFWa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 18:14:32 -0400
-Date: Thu, 12 Apr 2012 18:12:56 -0400 (EDT)
-Message-Id: <20120412.181256.1267592727086214582.davem@davemloft.net> (sfid-20120413_001448_349012_962E920F)
-To: felipe.contreras@gmail.com
-Cc: torvalds@linux-foundation.org, gregkh@linuxfoundation.org,
-	lists@uece.net, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, linux-wireless@vger.kernel.org,
-	c_manoha@qca.qualcomm.com, ath9k-devel@venema.h4ckr.net,
-	linville@tuxdriver.com
-Subject: Re: [ 00/78] 3.3.2-stable review
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
-References: <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
-	<CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
-	<CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 6 Apr 2012 18:30:28 -0400
+Received: by dake40 with SMTP id e40so3159495dak.11
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 15:30:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4F7F20C1.208@candelatech.com>
+References: <1333469939-26213-1-git-send-email-greearb@candelatech.com>
+	<4F7C3815.8060902@openwrt.org>
+	<4F7C652D.5050702@candelatech.com>
+	<4F7F1F13.8060003@openwrt.org>
+	<4F7F20C1.208@candelatech.com>
+Date: Fri, 6 Apr 2012 15:30:27 -0700
+Message-ID: <CAJ-VmonpczF+wAkhJKx1=o9bnMAsUyUfjiSBreT-FeJp4pEnHA@mail.gmail.com> (sfid-20120407_003032_154243_A164A016)
+Subject: Re: [PATCH 2/2] ath9k: Add more recv stats.
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felipe Contreras <felipe.contreras@gmail.com>
-Date: Fri, 13 Apr 2012 01:04:42 +0300
+Hi,
 
-> Wrong is wrong, before or after the 3.3.1 tag, this patch is not
-> 'stable' material, and removing it does not affect upstream at all.
+I've thought about doing exactly that with the BSD ath/hal statistics code.
 
-What you don't understand is that bug fixes will get lost if you only
-fix them in -stable, it doesn't matter HOW THEY GOT into -stable.
+It's useful having all those fine grained counters, but I do think
+some users will want to compile them out for whatever the performance
+reason is. Especially in the net80211 case where it may have to do a
+hashtable lookup just to add some error counters.
 
-In fact IT HAS FUCKING HAPPENED that we didn't fix something upstream
-that got fixed in -stable a time long ago when we didn't have the
-policy we're using now which you're going so unreasonably ape-shit
-about.
+I'd do it with some kind of macro which does the statistics
+incrementing, then compile that macro to a null statement if stats
+aren't being kept.
 
-And we didn't notice the discrepency until much later.
 
-So the issues are real, there's proven precendence, and you're just
-so wrong it's not even funny.
-
+Adrian
