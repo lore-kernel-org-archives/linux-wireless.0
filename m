@@ -1,57 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3737 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752799Ab2DRP36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 11:29:58 -0400
-Message-ID: <4F8EDDE6.9080802@broadcom.com> (sfid-20120418_173001_446558_5B228B03)
-Date: Wed, 18 Apr 2012 17:29:42 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Matthew Garrett" <mjg59@srcf.ucam.org>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Subject: Re: brcmsmac hangs machine if loaded after busmastering
- disabled
-References: <20120319215154.GA18508@srcf.ucam.org>
- <4F856EE9.2040407@broadcom.com> <20120411115118.GA3791@srcf.ucam.org>
- <4F8EA657.7020006@broadcom.com> <20120418123449.GB26953@srcf.ucam.org>
-In-Reply-To: <20120418123449.GB26953@srcf.ucam.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:52410 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755217Ab2DFVBW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Apr 2012 17:01:22 -0400
+Message-ID: <1333746081.5577.11.camel@jlt3.sipsolutions.net> (sfid-20120406_230125_204328_57E806B3)
+Subject: [PATCH] compat-wireless: simplify mac80211 queue backport
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 06 Apr 2012 23:01:21 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/18/2012 02:34 PM, Matthew Garrett wrote:
-> On Wed, Apr 18, 2012 at 01:32:39PM +0200, Arend van Spriel wrote:
->> I discussed this with hardware designer and here is his quote "You
->> would need to disable the DMA engines before disable PCIe master
->> mode. If you didn't do that, and the DMA engines were active, the
->> MAC would almost certainly hang."
->>
->> So disabling the master mode solved your memory corruption, but the
->> chip will hang. The DMA engines mentioned are the on-chip engines.
->> As you indicated you can only use common PCI operations so I do not
->> expect disabling BAR decoding will solve the hang in the chip.
->
-> Yeah, I can get away with putting generic PCI operations in the
-> bootloader, but a specific Broadcom driver is probably going a bit
-> far...
->
->> Only as an experiment you could try to reset the device toggling the
->> pci power state.
->
-> Should putting the PCI device in D3 be sufficient for this, or would I
-> also need to touch any state in the 802.11 core?
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-I am not sure, but D3 is a good guess. It is all a workaround as the 
-real fix should be in Apple's UEFI implementation. I think it is 
-unlikely we can make them do that although we probably supplied them the 
-wireless part.
+With compat now having a define for netif_wake_subqueue
+for kernels 2.6.23 and higher we can remove most of the
+backport patch for multiqueue. This does give up on
+kernels 2.6.22 and older though.
 
-Gr. AvS
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ patches/22-multiqueue.patch |   95 +++---------------------------------------
+ 1 files changed, 7 insertions(+), 88 deletions(-)
+
+diff --git a/patches/22-multiqueue.patch b/patches/22-multiqueue.patch
+index 54926d9..0c7940c 100644
+--- a/patches/22-multiqueue.patch
++++ b/patches/22-multiqueue.patch
+@@ -1,4 +1,4 @@
+-Backport multiqueue support for kernels < 2.6.27
++Backport multiqueue support for kernels 2.6.23-27
+ 
+ The 2.6.23 kernel added some initial multiqueue support.
+ That release relied on the on the notion of struct
+@@ -18,82 +18,16 @@ here is just that all these queues share a common lock
+ so stateful operations on one queue would imply a delay
+ on other queues.
+ 
+-For older kernels than 2.6.23 we can only stop all the
+-queues then and wake them up only if no other queue had
+-been stopped previously. This means for kernels older
+-than 2.6.23 there is a performance penalty and congestion
+-on one queue would imply propagating the same congestion
+-impact on all the other queues.
+-
+ The select_queue callback was only added as of 2.6.27 via
+-commit eae792b7 so for kernels older than 2.6.23 and up
+-to 2.6.27 we must ensure we do the selection of the queue
+-once the core networking calls mac80211's dev_hard_start_xmit()
++commit eae792b7 so for kernels 2.6.23 up to 2.6.27 we must
++ensure we do the selection of the queue once the core
++networking calls mac80211's dev_hard_start_xmit()
+ (ndo_start_xmit() callback on newer kernels).
+ 
+-This patch then consists of three parts:
+-
+-  1) Addresses the lack of select_queue on older kernels than 2.6.27
+-  2) Extends the backport of net_device_ops for select_queue for kernels >= 2.6.27
+-  3) Backporting wake/stop queue for older kernels:
+-	- Handle with net_device_subqueue for >= 2.6.23
+-	- Treat each queue operation as an aggregate for all queues
++This patch thus only addresses the lack of select_queue on
++kernels older than 2.6.27, naming differences are handled
++in compat.
+ 
+-Monitor interfaces have their own select_queue -- monitor interfaces
+-are used for injecting frames so they have their own respective queue
+-handling, but mac80211 just always sends management frames on VO
+-queue by using skb_set_queue_mapping(skb, 0) through ieee80211_tx_skb()
+-
+---- a/net/mac80211/util.c
+-+++ b/net/mac80211/util.c
+-@@ -265,6 +265,18 @@ __le16 ieee80211_ctstoself_duration(stru
+- }
+- EXPORT_SYMBOL(ieee80211_ctstoself_duration);
+- 
+-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,23))
+-+static bool ieee80211_all_queues_started(struct ieee80211_hw *hw)
+-+{
+-+	unsigned int queue;
+-+
+-+	for (queue = 0; queue < hw->queues; queue++)
+-+		if (ieee80211_queue_stopped(hw, queue))
+-+			return false;
+-+	return true;
+-+}
+-+#endif
+-+
+- static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+- 				   enum queue_stop_reason reason)
+- {
+-@@ -287,7 +299,14 @@ static void __ieee80211_wake_queue(struc
+- 		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+- 			if (test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
+- 				continue;
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+- 			netif_wake_subqueue(sdata->dev, queue);
+-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+-+			netif_start_subqueue(sdata->dev, queue);
+-+#else
+-+			if (ieee80211_all_queues_started(hw))
+-+				netif_wake_queue(sdata->dev);
+-+#endif
+- 		}
+- 		rcu_read_unlock();
+- 	} else
+-@@ -327,7 +346,13 @@ static void __ieee80211_stop_queue(struc
+- 
+- 	rcu_read_lock();
+- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+-+		netif_stop_subqueue(sdata->dev, queue);
+-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+- 		netif_stop_subqueue(sdata->dev, queue);
+-+#else
+-+		netif_stop_queue(sdata->dev);
+-+#endif
+- 	rcu_read_unlock();
+- }
+- 
+ --- a/net/mac80211/tx.c
+ +++ b/net/mac80211/tx.c
+ @@ -1475,6 +1475,10 @@ void ieee80211_xmit(struct ieee80211_sub
+@@ -107,18 +41,3 @@ queue by using skb_set_queue_mapping(skb, 0) through ieee80211_tx_skb()
+  	ieee80211_set_qos_hdr(sdata, skb);
+  	ieee80211_tx(sdata, skb, false);
+  	rcu_read_unlock();
+-@@ -2210,7 +2214,14 @@ void ieee80211_tx_pending(unsigned long
+- 
+- 		if (skb_queue_empty(&local->pending[i]))
+- 			list_for_each_entry_rcu(sdata, &local->interfaces, list)
+-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+- 				netif_wake_subqueue(sdata->dev, i);
+-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,23))
+-+				netif_start_subqueue(sdata->dev, i);
+-+#else
+-+				if (ieee80211_all_queues_started(hw))
+-+					netif_wake_queue(sdata->dev);
+-+#endif
+- 	}
+- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+- 
+-- 
+1.7.9.1
+
+
 
