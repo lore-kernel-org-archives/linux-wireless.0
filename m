@@ -1,84 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:47360 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869Ab2DPVSP convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34794 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757889Ab2DFTy7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:18:15 -0400
+	Fri, 6 Apr 2012 15:54:59 -0400
+Received: by iagz16 with SMTP id z16so3496127iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 12:54:59 -0700 (PDT)
+Message-ID: <4F7F4A0F.2050300@lwfinger.net> (sfid-20120406_215504_189392_4C5954E4)
+Date: Fri, 06 Apr 2012 14:54:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20120416205856.GA22298@kroah.com>
-References: <20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-	<20120413190819.9469.qmail@stuge.se>
-	<CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
-	<20120416162710.GA24100@kroah.com>
-	<CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com>
-	<20120416205856.GA22298@kroah.com>
-Date: Tue, 17 Apr 2012 00:18:13 +0300
-Message-ID: <CAMP44s2OdH+1RG2O6+QXkik8Ww_ZSHN=yzEKwD1KvRAcceNSRA@mail.gmail.com> (sfid-20120416_231834_470855_FF610B10)
-Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk
-Content-Type: text/plain; charset=UTF-8
+To: Nicu Pavel <npavel@mini-box.com>
+CC: linux-wireless@vger.kernel.org,
+	Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
+References: <4F0EEA1B.3040501@wut.de> <4F0FA4DD.5020601@lwfinger.net> <loom.20120405T091556-756@post.gmane.org> <4F7D90AF.2040109@gtri.gatech.edu> <4F7E4F2A.1030404@lwfinger.net> <CAL9MRr=U+CCzjP-cSOkPJpvw=AQuHX23grj1atfkT9uxLzEM4w@mail.gmail.com>
+In-Reply-To: <CAL9MRr=U+CCzjP-cSOkPJpvw=AQuHX23grj1atfkT9uxLzEM4w@mail.gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------080205070301040300080503"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 16, 2012 at 11:58 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Mon, Apr 16, 2012 at 11:11:05PM +0300, Felipe Contreras wrote:
->> On Mon, Apr 16, 2012 at 7:27 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
->> > Just one minor correction in this looney email thread:
->> >
->> > On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
->> >> v3.3.x on the other hand are *not* stable. They contain patches
->> >> backported from v3.4, but nobody guarantees they will work. There was
->> >> no v3.3.1-rc1, so the first time the patches compromising v3.3.1 were
->> >> generally tested together is in v3.3.1, at which point if somebody
->> >> finds issues, it's too late; bad patches are *not* going to be removed
->> >> in v3.3.2.
->> >
->> > Of course there was a 3.3.1-rc1, see the linux-kernel archives for the
->> > announcemen and the individual patches.  kernel.org has the large patch
->> > itself if you like that format instead.
->>
->> I don't see it here:
->> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=tags
->>
->> If you really want people to try it, why not tag it?
+This is a multi-part message in MIME format.
+--------------080205070301040300080503
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+
+On 04/06/2012 03:48 AM, Nicu Pavel wrote:
+> ---->  ifdown/ifup no scanning results.
 >
-> That would be because I don't keep it in that tree.  It is in a quilt
-> tree you can find in the stable-queue.git repo, and I have never tagged
-> -rc1 releases there.  No one has ever asked for it before, so in the
-> past 6 years of stable releases, I guess no one ever needed it.
+> <6>rtl8192cu: MAC auto ON okay!
+> <6>rtl8192cu: Tx queue select: 0x05
+> <7>rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0>  FALSE driver sleep or unload
+> <6>rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+> <7>rtl8192cu:rtl92cu_set_hw_reg():<0-0>  ### Set RCR(0xf0002ace) ###
+> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
+> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
+> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
+> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
+> <7>rtl8192cu:rtl92cu_set_hw_reg():<0-0>  ### Set RCR(0xf0002a0e) ###
 >
-> ketchup and tarballs seem to work well for others, perhaps you can use
-> that as well (hint, ketchup on top of the linux-stable tree works just
-> fine for testing this.)
+> ---->  ifdown/ifup no scanning results.
 
-Perhaps the current process will be continue to be OK, but I do
-believe a tagged v3.3.1-rc1 would have catched the ath9k issue.
-Hopefully that would mean it could have been dropped/reverted for
-v3.3.1.
+Please try the attached patch. After looking at the backtraces for the calls 
+that set the BSSID filters, I could see no reason for the driver to fail, yet it 
+did. Once I kept those bits clear you did in the beginning, then it works. The 
+amount of extra overhead will be minimal as the bits were only set for a short time.
 
-I used to compile my own kernels and use your stable tree, but this a
-new laptop and I was using Arch Linux which automatically updated to
-v3.3.1, and with no network I had no way to revert to v3.2.x.
-Fortunately I had the kernel sources available, but I wonder how many
-people were completely stuck.
+If this patch works for you, then I will send it upstream for mainline and 
+stable. The best place to keep the bits clear would be in the calling routine, 
+not in rtl92cu_set_hw_reg(); however, that patch will be much more intrusive and 
+would not be accepted for 3.4.
 
-If some other 3.x.1 release get broken this way, I would seriously
-consider tagging v3.x.1-rc1 as well. It works for Linus' tree.
+Larry
 
-Cheers.
 
--- 
-Felipe Contreras
+--------------080205070301040300080503
+Content-Type: text/plain; charset=UTF-8;
+ name="rtl8192cu_set_check_bssid"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="rtl8192cu_set_check_bssid"
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1867,8 +1867,14 @@ void rtl92cu_set_hw_reg(struct ieee80211
+ 			break;
+ 		}
+ 	case HW_VAR_RCR:{
+-			rtl_write_dword(rtlpriv, REG_RCR, ((u32 *) (val))[0]);
+ 			mac->rx_conf = ((u32 *) (val))[0];
++			/* whenever the driver sets bits enabling only a
++			 * specific BSSID for beacons or data, a failure
++			 * occurs. Thus we do not allow those bits to be set */
++			if (mac->rx_conf & (RCR_CBSSID_BCN | RCR_CBSSID_DATA))
++				mac->rx_conf &= ~(RCR_CBSSID_BCN |
++						  RCR_CBSSID_DATA);
++			rtl_write_dword(rtlpriv, REG_RCR, ((u32 *) (val))[0]);
+ 			RT_TRACE(rtlpriv, COMP_RECV, DBG_DMESG,
+ 				 "### Set RCR(0x%08x) ###\n", mac->rx_conf);
+ 			break;
+
+--------------080205070301040300080503--
