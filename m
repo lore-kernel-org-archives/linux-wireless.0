@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41446 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756205Ab2DDLzt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2012 07:55:49 -0400
-Message-ID: <4F7C36D6.1040202@openwrt.org> (sfid-20120404_135553_231605_671DCE32)
-Date: Wed, 04 Apr 2012 13:56:06 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:65487 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659Ab2DFFAc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Apr 2012 01:00:32 -0400
+Received: by qadc11 with SMTP id c11so186366qad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Apr 2012 22:00:31 -0700 (PDT)
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Felix Fietkau <nbd@nbd.name>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k:  Don't delete key from hw if using sw-crypt.
-References: <1333399292-23231-1-git-send-email-greearb@candelatech.com> <4F7AF81F.30903@openwrt.org> <4F7B0CE6.9020300@candelatech.com> <298BE6B2-A128-4CA7-BAD1-56E1073A2847@nbd.name> <4F7B20B0.6030107@candelatech.com>
-In-Reply-To: <4F7B20B0.6030107@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1333630881.3494.15.camel@jlt3.sipsolutions.net>
+References: <CAFED-jmkmF=9egOvvRK49=2HYMg_jiAUdW=5XQ2SyFwYXDb1OQ@mail.gmail.com>
+	<1333630881.3494.15.camel@jlt3.sipsolutions.net>
+Date: Fri, 6 Apr 2012 07:00:31 +0200
+Message-ID: <CAFED-j=jReYjht2TazFmYnqzJHkS-=My-_4MDRmbtBfvGz_Txw@mail.gmail.com> (sfid-20120406_070103_460631_F7BB6E4E)
+Subject: Re: compat-wireless-2012-04-04 - rmmod mac80211 and PC freeze
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-04-03 6:09 PM, Ben Greear wrote:
-> On 04/03/2012 09:05 AM, Felix Fietkau wrote:
+W dniu 5 kwietnia 2012 15:01 u¿ytkownik Johannes Berg
+<johannes@sipsolutions.net> napisa³:
+> On Thu, 2012-04-05 at 14:35 +0200, Janusz Dziedzic wrote:
+>> Hello,
 >>
->> On 03.04.2012, at 16:44, Ben Greear<greearb@candelatech.com>  wrote:
+>> I am using: compat-wireless-2012-04-04
 >>
->>> On 04/03/2012 06:16 AM, Felix Fietkau wrote:
->>>> On 2012-04-02 10:41 PM, greearb@candelatech.com wrote:
->>>>> From: Ben Greear<greearb@candelatech.com>
->>>>>
->>>>> This spams logs if we are using large numbers of stations,
->>>>> for instance:
->>>>>
->>>>> ath: wiphy0: keyreset: keycache entry 228 out of range
->>>>> ath: wiphy0: keyreset: keycache entry 228 out of range
->>>>>
->>>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
->>>>> ---
->>>>> :100644 100644 917032a... 65e7281... M    drivers/net/wireless/ath/ath9k/main.c
->>>>>   drivers/net/wireless/ath/ath9k/main.c |    3 +++
->>>>>   1 files changed, 3 insertions(+), 0 deletions(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->>>>> index 917032a..65e7281 100644
->>>>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>>>> @@ -1771,6 +1771,9 @@ static void ath9k_del_ps_key(struct ath_softc *sc,
->>>>>       if (!an->ps_key)
->>>>>           return;
->>>>>
->>>>> +    if (ath9k_modparam_nohwcrypt)
->>>>> +        return;
->>>>> +
->>>> This looks wrong to me. ps_key is used for better powersave handling of
->>>> both unencrypted and encrypted stations (using the keycache only for tx
->>>> filtering on unencrypted stations).
->>>
->>> Ok..should we just remove the spammy printk when the keycache entry
->>> is out of range then?
->> I'd say we should figure out why it triggers at all.
-> 
-> I have more than 200 stations associating, and that is more than there
-> are key-indexes it appears.  I can add a WARN_ON if you'd like to see
-> a backtrace or any other info...
-In that case key index allocation should simply fail instead of
-returning something that it refuses to delete later.
+>> I am doing such test:
+>> - insmod compat.ko
+>> - insmod cfg80211.ko
+>> - insmod mac80211.ko
+>>
+>> After that:
+>> - rmmod mac80211
+>>
+>> And have PC freeze.
+>> Linux uw000950 2.6.35-32-generic #67~lucid1-Ubuntu SMP Tue Mar 6
+>> 17:48:20 UTC 2012 x86_64 GNU/Linux
+>
+> Works for me, but on 3.1.0.
+>
+>> Any idea what could be wrong, how to debug in case of such freeze?
+>
+> Not really. You could try the same thing from a console, rather than an
+> X terminal window (that I'm guessing you're using since you saw no
+> further info) and you may see some more details?
+>
+> johannes
+>
 
-- Felix
+Seems when run from console I see:
+Kernel panic - not syncing: Fatal exception in interrupt
+BUG: scheduling while atomic: rmmod/15474/0x10008803
 
+Next a lot of information connected with dump.
+
+
+BR
+Janusz
