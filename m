@@ -1,49 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:37712 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752894Ab2DXMaA convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46056 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778Ab2DFKDf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 08:30:00 -0400
-Received: by bkuw12 with SMTP id w12so392194bku.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 05:29:59 -0700 (PDT)
-Subject: Re: wlan0 not present
-Mime-Version: 1.0 (Apple Message framework v1257)
-Content-Type: text/plain; charset=us-ascii
-From: Dominik Feser <dominik.feser@googlemail.com>
-In-Reply-To: <CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
-Date: Tue, 24 Apr 2012 14:29:55 +0200
-Cc: Pat Erley <pat-lkml@erley.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Dominik Feser <dominik.feser@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Message-Id: <D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com> (sfid-20120424_143005_356489_39966A55)
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com> <CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com> <9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com> <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com> <8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com> <CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com> <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> <4F901224.1040508@sipsolutions.net> <EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com> <4F901F16.6080007@sipsolutions.net> <CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com> <CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com> <CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com> <CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com> <04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com> <CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com> <4F96939B.5030204@erley.org> <CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
-To: sedat.dilek@gmail.com
+	Fri, 6 Apr 2012 06:03:35 -0400
+Message-ID: <4F7EBF71.7070802@qca.qualcomm.com> (sfid-20120406_120338_750321_8293E446)
+Date: Fri, 6 Apr 2012 13:03:29 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Fix target assert in p2p bringup with multi vif
+References: <1333608369-18301-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1333608369-18301-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-What does that mean?
-
-
-Am 24.04.2012 um 14:07 schrieb Sedat Dilek:
-
-> On Tue, Apr 24, 2012 at 1:50 PM, Pat Erley <pat-lkml@erley.org> wrote:
->> Try a newer compat-wireless.  I saw mention of a patch on this ML
->> that iwlwifi was looking for firmwares that aren't available yet.
->> 
->> Specifically, it wants a -6 ucode, where you have -5.  I'm not
->> sure if this has been merged upstream yet.
->> 
+On 04/05/2012 09:46 AM, Vasanthakumar Thiagarajan wrote:
+> Using interface 0 for p2p causes target assert. This is because
+> interface 0 is always initialized to non-p2p operations. Fix this
+> issue by initializing all the interfaces for p2p when fw is capable
+> of dynamic interface switching. When fw is not capable of dynamic
+> switching, make sure p2p is not brought up on interface which is
+> not initialized for this purpose.
 > 
-> No, pending for upstream and linux-stable GIT, see [1] and especially
-> "iwlwifi: use correct released ucode version" [2].
+> Reported-by: Naveen Singh navesing@qca.qualcomm.com
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/cfg80211.c |   26 +++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath6kl/init.c     |   31 ++++++++++++++++++----------
+>  2 files changed, 46 insertions(+), 11 deletions(-)
 > 
-> - Sedat -
-> 
-> [1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=shortlog;h=refs/heads/wireless
-> [2] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=patch;h=462156fac4d69483c1d54c6218d019681da8ad74
+> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> index 1272508..26fb3d7 100644
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -1451,9 +1451,35 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
+>  					struct vif_params *params)
+>  {
+>  	struct ath6kl_vif *vif = netdev_priv(ndev);
+> +	int i;
+>  
+>  	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type %u\n", __func__, type);
+>  
+> +	/*
+> +	 * Don't bring up p2p on an interface which is not initialized
+> +	 * for p2p operation where fw does not have capability to switch
+> +	 * dynamically between non-p2p and p2p type interface.
+> +	 */
+> +	if (!test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
+> +		      vif->ar->fw_capabilities)) {
+> +		if (type == NL80211_IFTYPE_P2P_CLIENT ||
+> +		    type == NL80211_IFTYPE_P2P_GO) {
+> +			if (vif->ar->vif_max > 1) {
+> +				for (i = vif->ar->max_norm_iface;
+> +				     i < vif->ar->vif_max; i++) {
+> +					if (i == vif->fw_vif_idx)
+> +						break;
+> +				}
+> +				if (i == vif->ar->vif_max) {
+> +					ath6kl_err("Invalid interface to bring up P2P\n");
+> +					return -EINVAL;
+> +				}
+> +			} else
+> +				if (vif->fw_vif_idx != 0)
+> +					return -EINVAL;
+> +		}
+> +	}
 
+IMHO this is difficult to read. Could it be simplified by reducing the
+unnecessary indentation:
+
+	if (!test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
+		      vif->ar->fw_capabilities) &&
+            (type == NL80211_IFTYPE_P2P_CLIENT ||
+	     type == NL80211_IFTYPE_P2P_GO)) {
+
+		if (vif->ar->vif_max == 0) {
+			if (vif->fw_vif_idx != 0)
+				return -EINVAL;
+			else
+				goto foo;
+		}
+
+		for (i = vif->ar->max_norm_iface;
+		     i < vif->ar->vif_max; i++) {
+			if (i == vif->fw_vif_idx)
+				break;
+			}
+		}
+
+		if (i == vif->ar->vif_max) {
+			ath6kl_err("Invalid interface to bring up P2P\n");
+			return -EINVAL;
+		}
+	}
+
+foo:
+
+I'm sure I added bugs above but hopefully it still shows my idea. At
+least you can combine the first two if statements and get rid of one
+indentation level.
+
+Kalle
