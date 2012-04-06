@@ -1,224 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34556 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753106Ab2DEQzs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14723 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757943Ab2DFUfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 12:55:48 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+	Fri, 6 Apr 2012 16:35:53 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Subramania Sharma <sharmat@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Fix 4-way handshake failure in AP and P2P GO mode
-Date: Thu, 5 Apr 2012 22:26:21 +0530
-Message-ID: <1333644981-3721-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120405_185552_191383_02094A1E)
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH v3 1/2] cfg80211: add channel switch notify event
+Date: Fri, 6 Apr 2012 13:35:47 -0700
+Message-ID: <1333744548-18028-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120406_223557_026604_A9DD14C6)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RSN capability field of RSN IE which is generated (which is what really
-advertised in beacon/probe response) differs from the one generated in
-wpa_supplicant. This inconsistency in rsn IE results in 4-way handshake
-failure. To fix this, configure rsn capability used in wpa_supplicant
-in firmware using a new wmi command, WMI_SET_IE_CMDID. There is a bit
-(ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE) in fw_capabilities to advertise
-this support to driver.
+The firmware may decide to switch channels while already beaconing, e.g.
+in response to a cfg80211 connect request on a different vif. Add this
+event to notify userspace when an AP or GO interface has successfully
+migrated to a new channel, so it can update its configuration
+accordingly.
 
-Signed-off-by: Subramania Sharma <sharmat@qca.qualcomm.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   64 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    3 +
- drivers/net/wireless/ath/ath6kl/wmi.c      |   23 ++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |   17 +++++++
- 4 files changed, 107 insertions(+), 0 deletions(-)
+v2: update wdev->channel (Johannes)
+    enforce AP or GO interface type
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 26fb3d7..097be01 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2521,6 +2521,52 @@ static int ath6kl_set_ies(struct ath6kl_vif *vif,
- 	return 0;
+v3: only support GFP_KERNEL context (Johannes)
+
+ include/linux/nl80211.h |    7 +++++++
+ include/net/cfg80211.h  |   11 +++++++++++
+ net/wireless/mlme.c     |   27 +++++++++++++++++++++++++++
+ net/wireless/nl80211.c  |   32 ++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.h  |    4 ++++
+ 5 files changed, 81 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index e474f6e..49f2bbe 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -548,6 +548,11 @@
+  * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs whether
+  *      No Acknowledgement Policy should be applied.
+  *
++ * @NL80211_CMD_CH_SWITCH_NOTIFY: An AP or GO may decide to switch channels
++ *	independently of the userspace SME, send this event indicating
++ *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
++ *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -689,6 +694,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_NOACK_MAP,
+ 
++	NL80211_CMD_CH_SWITCH_NOTIFY,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 69b7ad3..0f246b6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3340,6 +3340,17 @@ int cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
+ 				 enum nl80211_channel_type channel_type);
+ 
+ /*
++ * cfg80211_ch_switch_notify - update wdev channel and notify userspace
++ * @dev: the device which switched channels
++ * @freq: new channel frequency (in MHz)
++ * @type: channel type
++ *
++ * Acquires wdev_lock, so must only be called from sleepable driver context!
++ */
++void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
++			       enum nl80211_channel_type type);
++
++/*
+  * cfg80211_calculate_bitrate - calculate actual bitrate (in 100Kbps units)
+  * @rate: given rate_info to calculate bitrate from
+  *
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index f5a7ac3..50da120 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -928,6 +928,33 @@ void cfg80211_pmksa_candidate_notify(struct net_device *dev, int index,
+ }
+ EXPORT_SYMBOL(cfg80211_pmksa_candidate_notify);
+ 
++void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
++			       enum nl80211_channel_type type)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++	struct ieee80211_channel *chan;
++
++	wdev_lock(wdev);
++
++	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_AP &&
++		    wdev->iftype != NL80211_IFTYPE_P2P_GO))
++		goto out;
++
++	chan = rdev_freq_to_chan(rdev, freq, type);
++	if (WARN_ON(!chan))
++		goto out;
++
++	wdev->channel = chan;
++
++	nl80211_ch_switch_notify(rdev, dev, freq, type, GFP_KERNEL);
++out:
++	wdev_unlock(wdev);
++	return;
++}
++EXPORT_SYMBOL(cfg80211_ch_switch_notify);
++
+ bool cfg80211_rx_spurious_frame(struct net_device *dev,
+ 				const u8 *addr, gfp_t gfp)
+ {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4c1eb94..d5d489f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7890,6 +7890,38 @@ void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
+ 	nlmsg_free(msg);
  }
  
-+static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
-+				u16 *rsn_capab)
++void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
++			      struct net_device *netdev, int freq,
++			      enum nl80211_channel_type type, gfp_t gfp)
 +{
-+	const u8 *rsn_ie;
-+	size_t rsn_ie_len;
-+	u16 cnt;
++	struct sk_buff *msg;
++	void *hdr;
 +
-+	if (!beacon->tail)
-+		return -EINVAL;
++	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
++	if (!msg)
++		return;
 +
-+	rsn_ie = cfg80211_find_ie(WLAN_EID_RSN, beacon->tail, beacon->tail_len);
-+	if (!rsn_ie)
-+		return -EINVAL;
-+
-+	rsn_ie_len = *(rsn_ie + 1);
-+	/* skip element id and length */
-+	rsn_ie += 2;
-+
-+	/* skip version, group cipher */
-+	if (rsn_ie_len < 6)
-+		return -EINVAL;
-+	rsn_ie +=  6;
-+	rsn_ie_len -= 6;
-+
-+	/* skip pairwise cipher suite */
-+	if (rsn_ie_len < 2)
-+		return -EINVAL;
-+	cnt = *((u16 *) rsn_ie);
-+	rsn_ie += (2 + cnt * 4);
-+	rsn_ie_len -= (2 + cnt * 4);
-+
-+	/* skip akm suite */
-+	if (rsn_ie_len < 2)
-+		return -EINVAL;
-+	cnt = *((u16 *) rsn_ie);
-+	rsn_ie += (2 + cnt * 4);
-+	rsn_ie_len -= (2 + cnt * 4);
-+
-+	if (rsn_ie_len < 2)
-+		return -EINVAL;
-+
-+	*rsn_capab = cpu_to_le16(*((u16 *) rsn_ie));
-+
-+	return 0;
-+}
-+
- static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			   struct cfg80211_ap_settings *info)
- {
-@@ -2533,6 +2579,7 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	struct wmi_connect_cmd p;
- 	int res;
- 	int i, ret;
-+	u16 rsn_capab = 0;
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s:\n", __func__);
- 
-@@ -2669,6 +2716,23 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			return res;
- 	}
- 
-+	/*
-+	 * Get the PTKSA replay counter in the RSN IE. Supplicant
-+	 * will use the RSN IE in M3 message and firmware has to
-+	 * advertise the same in beacon/probe response. Send
-+	 * the complete RSN IE capability field to firmware
-+	 */
-+	if (!ath6kl_get_rsn_capab(&info->beacon, &rsn_capab) &&
-+	    test_bit(ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
-+		     ar->fw_capabilities)) {
-+		res = ath6kl_wmi_set_ie_cmd(ar->wmi, vif->fw_vif_idx,
-+					    WLAN_EID_RSN, WMI_RSN_IE_CAPB,
-+					    (const u8 *) &rsn_capab,
-+					    sizeof(rsn_capab));
-+		if (res < 0)
-+			return res;
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CH_SWITCH_NOTIFY);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
 +	}
 +
- 	res = ath6kl_wmi_ap_profile_commit(ar->wmi, vif->fw_vif_idx, &p);
- 	if (res < 0)
- 		return res;
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 75b1d86..72e6a94 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -97,6 +97,9 @@ enum ath6kl_fw_capability {
- 	 */
- 	ATH6KL_FW_CAPABILITY_INACTIVITY_TIMEOUT,
- 
-+	/* Firmware has support to override rsn cap of rsn ie */
-+	ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE, type);
 +
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index b1b1f34..7cd1d96 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -3184,6 +3184,29 @@ int ath6kl_wmi_set_appie_cmd(struct wmi *wmi, u8 if_idx, u8 mgmt_frm_type,
- 				   NO_SYNC_WMIFLAG);
- }
- 
-+int ath6kl_wmi_set_ie_cmd(struct wmi *wmi, u8 if_idx, u8 ie_id, u8 ie_field,
-+			  const u8 *ie_info, u8 ie_len)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_set_ie_cmd *p;
++	genlmsg_end(msg, hdr);
 +
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*p) + ie_len);
-+	if (!skb)
-+		return -ENOMEM;
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
 +
-+	ath6kl_dbg(ATH6KL_DBG_WMI, "set_ie_cmd: ie_id=%u ie_ie_field=%u ie_len=%u\n",
-+		   ie_id, ie_field, ie_len);
-+	p = (struct wmi_set_ie_cmd *) skb->data;
-+	p->ie_id = ie_id;
-+	p->ie_field = ie_field;
-+	p->ie_len = ie_len;
-+	if (ie_info && ie_len > 0)
-+		memcpy(p->ie_info, ie_info, ie_len);
-+
-+	return ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_IE_CMDID,
-+				   NO_SYNC_WMIFLAG);
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
 +}
 +
- int ath6kl_wmi_disable_11b_rates_cmd(struct wmi *wmi, bool disable)
- {
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index b99e9bd..25aa6b8 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -426,6 +426,7 @@ enum wmi_cmd_id {
- 	WMI_SET_FRAMERATES_CMDID,
- 	WMI_SET_AP_PS_CMDID,
- 	WMI_SET_QOS_SUPP_CMDID,
-+	WMI_SET_IE_CMDID,
+ void
+ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev, const u8 *peer,
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 4ffe50d..01a1122 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -118,6 +118,10 @@ void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
+ 				    struct net_device *netdev, int index,
+ 				    const u8 *bssid, bool preauth, gfp_t gfp);
  
- 	/* WMI_THIN_RESERVED_... mark the start and end
- 	 * values for WMI_THIN_RESERVED command IDs. These
-@@ -632,6 +633,11 @@ enum wmi_mgmt_frame_type {
- 	WMI_NUM_MGMT_FRAME
- };
- 
-+enum wmi_ie_field_type {
-+	WMI_RSN_IE_CAPB	= 0x1,
-+	WMI_IE_FULL	= 0xFF,  /* indicats full IE */
-+};
++void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
++			      struct net_device *dev, int freq,
++			      enum nl80211_channel_type type, gfp_t gfp);
 +
- /* WMI_CONNECT_CMDID  */
- enum network_type {
- 	INFRA_NETWORK = 0x01,
-@@ -1916,6 +1922,14 @@ struct wmi_set_appie_cmd {
- 	u8 ie_info[0];
- } __packed;
- 
-+struct wmi_set_ie_cmd {
-+	u8 ie_id;
-+	u8 ie_field;	/* enum wmi_ie_field_type */
-+	u8 ie_len;
-+	u8 reserved;
-+	u8 ie_info[0];
-+} __packed;
-+
- /* Notify the WSC registration status to the target */
- #define WSC_REG_ACTIVE     1
- #define WSC_REG_INACTIVE   0
-@@ -2523,6 +2537,9 @@ int ath6kl_wmi_set_rx_frame_format_cmd(struct wmi *wmi, u8 if_idx,
- int ath6kl_wmi_set_appie_cmd(struct wmi *wmi, u8 if_idx, u8 mgmt_frm_type,
- 			     const u8 *ie, u8 ie_len);
- 
-+int ath6kl_wmi_set_ie_cmd(struct wmi *wmi, u8 if_idx, u8 ie_id, u8 ie_field,
-+			  const u8 *ie_info, u8 ie_len);
-+
- /* P2P */
- int ath6kl_wmi_disable_11b_rates_cmd(struct wmi *wmi, bool disable);
- 
+ bool nl80211_unexpected_frame(struct net_device *dev,
+ 			      const u8 *addr, gfp_t gfp);
+ bool nl80211_unexpected_4addr_frame(struct net_device *dev,
 -- 
-1.7.0.4
+1.7.4.1
 
