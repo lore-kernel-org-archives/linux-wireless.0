@@ -1,98 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:65096 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751790Ab2DMFez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 01:34:55 -0400
-Date: Fri, 13 Apr 2012 07:34:16 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: David Miller <davem@davemloft.net>, torvalds@linux-foundation.org,
-	gregkh@linuxfoundation.org, lists@uece.net,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless@vger.kernel.org, c_manoha@qca.qualcomm.com,
-	ath9k-devel@venema.h4ckr.net, linville@tuxdriver.com
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120413053416.GC12807@1wt.eu> (sfid-20120413_073519_238611_A95EC8B8)
-References: <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com> <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com> <20120412.181256.1267592727086214582.davem@davemloft.net> <CAMP44s26eJ6mFHt=C+_AJCkGiDAcMq1O1HsCXPZd5-FRYkZoXQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s26eJ6mFHt=C+_AJCkGiDAcMq1O1HsCXPZd5-FRYkZoXQ@mail.gmail.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:47144 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754571Ab2DFIs6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Apr 2012 04:48:58 -0400
+Received: by iagz16 with SMTP id z16so2845300iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 01:48:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4F7E4F2A.1030404@lwfinger.net>
+References: <4F0EEA1B.3040501@wut.de>
+	<4F0FA4DD.5020601@lwfinger.net>
+	<loom.20120405T091556-756@post.gmane.org>
+	<4F7D90AF.2040109@gtri.gatech.edu>
+	<4F7E4F2A.1030404@lwfinger.net>
+Date: Fri, 6 Apr 2012 11:48:57 +0300
+Message-ID: <CAL9MRr=U+CCzjP-cSOkPJpvw=AQuHX23grj1atfkT9uxLzEM4w@mail.gmail.com> (sfid-20120406_104902_976250_C13C17BE)
+Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
+From: Nicu Pavel <npavel@mini-box.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 13, 2012 at 01:58:10AM +0300, Felipe Contreras wrote:
-> On Fri, Apr 13, 2012 at 1:12 AM, David Miller <davem@davemloft.net> wrote:
-> > From: Felipe Contreras <felipe.contreras@gmail.com>
-> > Date: Fri, 13 Apr 2012 01:04:42 +0300
-> >
-> >> Wrong is wrong, before or after the 3.3.1 tag, this patch is not
-> >> 'stable' material, and removing it does not affect upstream at all.
-> >
-> > What you don't understand is that bug fixes will get lost if you only
-> > fix them in -stable, it doesn't matter HOW THEY GOT into -stable.
-> 
-> Let's suppose that c1afdaf was never back-ported from v3.4-rc1, how
-> would you have fond out there was an issue with it? There's 10000
-> patches in v3.4-rc2, how do you expect to find issues in them?
-> 
-> People found out this issue on v3.4-rc1, so the fix would not have
-> been lost, but lets assume it would, v3.3.1 had the issue, the patch
-> as reverted in v3.3.2, and v3.4 still had the issue. So what? There's
-> already 10000 patches that would never make it to 3.3.x, and many will
-> have issues, which is why there would be v3.4.x.
-> 
-> > In fact IT HAS FUCKING HAPPENED that we didn't fix something upstream
-> > that got fixed in -stable a time long ago when we didn't have the
-> > policy we're using now which you're going so unreasonably ape-shit
-> > about.
-> 
-> I see how a *fix* on stable could get lost, but this is not a fix.
+> On 04/05/2012 07:31 AM, Joshua Roys wrote:
+>>
+>> On 04/05/2012 03:27 AM, Nicu Pavel wrote:
+>>>
+>>> After mode debugging with DBG_LOUD I found out that the difference when
+>>> the
+>>> driver is loaded/modprobed and ifdown/ifup to be a receive configuration
+>>> register (RCR) value.
+>>>
+>>> On bootup/modprobe: ### Set RCR(0xf0002a0e) ###
+>>> On ifdown/ifup: ### Set RCR(0xf0002ace) ###
+>>>
+>>> If I force RCR value to 0x2a0e in rtl92cu_set_hw_reg()inside HW_VAR_RCR
+>>> case
+>>> everything works ok.
+>>>
+>>> This seems to work with 3 different vendors USB sticks based on 8192cu
+>>> chipset
+>>> (Edimax, EDUP and some unknown vendor).
+>>>
+>>> I tried looking up the bit values meanings from that register but
+>>> couldn't find
+>>> a proper spec.
+>>
+>>
+>> Hello,
+>>
+>> I found a header file that seems to have better definitions and comments
+>> than
+>> what is currently in-tree (I think it's a copy of the Realtek sources). It
+>> says
+>> that the "8192C (RCR) Receive Configuration Register" BIT 6 and 7 are,
+>> respectively: RCR_CBSSID_DATA [Accept BSSID match packet (Data)] and
+>> RCR_CBSSID_BCN [Accept BSSID match packet (Rx beacon, probe rsp)].
+>> These bits are set/cleared in _rtl92cu_set_check_bssid (it calls
+>> set_hw_reg
+>> w/HW_VAR_RCR) which is called by rtl92cu_set_network_type. The set/clear
+>> choice
+>> is made based on the rtlphy->current_io_type which is set in
+>> rtl8192c/phy_common.c:rtl92c_phy_scan_operation_backup which in turn is
+>> called
+>> from core.c:rtl_op_sw_scan_start/_complete.
+>> It would be interesting to see the output from rtl8192c/phy_common.c
+>> functions
+>> rtl92c_phy_set_io_cmd and rtl92c_phy_set_io to see if the current_io_type
+>> perhaps isn't being updated properly.
+>
+>
+> Attached is a patch that I think will help. The main thing it changes is
+> that routine rtl92cu_set_check_bssid() has been coded to update RCR. The
+> other thing that was changed is to make the RCR setting always log even with
+> the default debug option of 0. That will be temporary and that change will
+> be deleted once we get this problem fixed.
+>
+> Let me know if the patch helps.
+[..]
 
-Felipe, you don't seem to get it : there are many bugs in each new release.
-Given the number of fixes Greg merges into a longterm branch, I'd say that
-there are around 1500 bugs waiting to be discovered and fixed in a new
-release. Does this mean we need to fix them all at once ? No, because we
-don't know about them yet.
+Tried the patch, but didn't help:
 
-The process you're criticizing consists in ensuring that once a bug is known,
-it gets fixed in mainline so that it never appears there again. The way the
-bug is discovered doesn't matter, even if it's discovered that a fix caused
-the bug and that it must be reverted. The fact is mainline is buggy and we
-know this because stable is too. So mainline must be fixed first. This
-process works because stable users are pressuring developers to push their
-fixes to Linus in order to get them. What happened with this bug prooved
-the process is working fine.
+<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
 
-Another point is that you don't want stable to merge, revert, merge again,
-revert again etc... This happened a little bit during 2.6.32 because some
-fixes were not really obvious. It's common for some fixes to have to be
-adapted for stable branches, and to have side effects, hence the review
-cycle. We need to limit these random issues as much as possible if we
-don't want users to lose trust in the stable branches. This is extremely
-important. So picking random fixes that have not been qualified by all
-interested parties in stable is inappropriate. Reverting without evaluating
-impacts is one form of picking a random fix.
+----> Driver loaded scanning gets results ok.
 
-What you should have done would have been to reply to Greg saying "wait a
-minute, we still have an issue with patch XX, I'm trying to get it reverted
-in upstream and will send you the commit ID, it would be nice to have it in
-3.3.2". It wastes less time for everyone and achieves the same result.
+<6>rtl8192cu: MAC auto ON okay!
+<6>rtl8192cu: Tx queue select: 0x05
+<7>rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver sleep or unload
+<6>rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002ace) ###
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
 
-Once again, if you think that the stable branch you're using is not stable
-enough for you, pick another one. Greg maintains multiple branches so that
-everyone is satisfied. The risk of bugs over time probably looks like
-(cos(t)+1)/t. Find an older branch with a much smaller risk of regressions
-and be done with it.
+----> ifdown/ifup no scanning results.
 
-Last point, you should note that you're the only one here who doesn't
-understand the process. That doesn't make you a fool, but it should tell you
-that you probably need to think a bit further before telling people how they
-should work, especially when all other ones agree on the benefits of the
-process, including Arnd explaining that FreeBSD had been facing the exact
-same trouble and now applies the same process. It is not just a small band
-of nerds doing this for fun right here, but seems to be more generalized.
+<6>rtl8192cu: MAC auto ON okay!
+<6>rtl8192cu: Tx queue select: 0x05
+<7>rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver sleep or unload
+<6>rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002ace) ###
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
+<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
 
-Regards
-Willy
+----> ifdown/ifup no scanning results.
 
+Nicu
