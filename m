@@ -1,106 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46056 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752778Ab2DFKDf (ORCPT
+Received: from oproxy9.bluehost.com ([69.89.24.6]:32953 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753585Ab2DFPeC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 06:03:35 -0400
-Message-ID: <4F7EBF71.7070802@qca.qualcomm.com> (sfid-20120406_120338_750321_8293E446)
-Date: Fri, 6 Apr 2012 13:03:29 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Fix target assert in p2p bringup with multi vif
-References: <1333608369-18301-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1333608369-18301-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 6 Apr 2012 11:34:02 -0400
+Subject: Re: N device with open source firmware
+From: "David Lynch Jr." <dhlii@dlasys.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201204061326.32294.chunkeey@googlemail.com>
+References: <1333649707.4108.46.camel@hp-dhlii>
+	 <CAGRGNgUZqvgtuEfJk7vZ0Y4mEzadTBj4G3VQwmTykvy0R9dp8g@mail.gmail.com>
+	 <1333681744.4108.150.camel@hp-dhlii>
+	 <201204061326.32294.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 06 Apr 2012 11:30:44 -0400
+Message-ID: <1333726244.11080.5.camel@hp-dhlii> (sfid-20120406_173407_986741_18300CAB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/05/2012 09:46 AM, Vasanthakumar Thiagarajan wrote:
-> Using interface 0 for p2p causes target assert. This is because
-> interface 0 is always initialized to non-p2p operations. Fix this
-> issue by initializing all the interfaces for p2p when fw is capable
-> of dynamic interface switching. When fw is not capable of dynamic
-> switching, make sure p2p is not brought up on interface which is
-> not initialized for this purpose.
+I was not seeking to impugn the linux-wireless AR9170 support, just
+looking to see what additional alternatives exist before starting a
+major project that will require substantial firmware work. 
+
+My complaints with respect to its "openness" regard Atheros.
+
+I was hoping for a mini-PCI device. 
+The AR9170 has open source firmware - but the hardware documentation is
+proprietary.
+
+I am not looking to spark a debate, just determine what options exist. 
+And more options is better. 
+
+
+
+ 
+On Fri, 2012-04-06 at 13:26 +0200, Christian Lamparter wrote:
+> On Friday 06 April 2012 05:09:03 David Lynch Jr. wrote:
+> > On Fri, 2012-04-06 at 13:00 +1000, Julian Calaby wrote:
+> > > If I recall correctly, the ar9170 devices with the carl9170 driver use
+> > > an open source firmware and are 802.11n capable.
+> > 
+> > I have a fair amount of experience with the ar9170 and the carl9170
+> > firmware. I was hoping something was better documented and supported. 
+> why? is there anything wrong with AR9170 support? If so, please tell me.
 > 
-> Reported-by: Naveen Singh navesing@qca.qualcomm.com
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/cfg80211.c |   26 +++++++++++++++++++++++
->  drivers/net/wireless/ath/ath6kl/init.c     |   31 ++++++++++++++++++----------
->  2 files changed, 46 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> index 1272508..26fb3d7 100644
-> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> @@ -1451,9 +1451,35 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
->  					struct vif_params *params)
->  {
->  	struct ath6kl_vif *vif = netdev_priv(ndev);
-> +	int i;
->  
->  	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type %u\n", __func__, type);
->  
-> +	/*
-> +	 * Don't bring up p2p on an interface which is not initialized
-> +	 * for p2p operation where fw does not have capability to switch
-> +	 * dynamically between non-p2p and p2p type interface.
-> +	 */
-> +	if (!test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
-> +		      vif->ar->fw_capabilities)) {
-> +		if (type == NL80211_IFTYPE_P2P_CLIENT ||
-> +		    type == NL80211_IFTYPE_P2P_GO) {
-> +			if (vif->ar->vif_max > 1) {
-> +				for (i = vif->ar->max_norm_iface;
-> +				     i < vif->ar->vif_max; i++) {
-> +					if (i == vif->fw_vif_idx)
-> +						break;
-> +				}
-> +				if (i == vif->ar->vif_max) {
-> +					ath6kl_err("Invalid interface to bring up P2P\n");
-> +					return -EINVAL;
-> +				}
-> +			} else
-> +				if (vif->fw_vif_idx != 0)
-> +					return -EINVAL;
-> +		}
-> +	}
+> Regards,
+> 	Chr
 
-IMHO this is difficult to read. Could it be simplified by reducing the
-unnecessary indentation:
 
-	if (!test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
-		      vif->ar->fw_capabilities) &&
-            (type == NL80211_IFTYPE_P2P_CLIENT ||
-	     type == NL80211_IFTYPE_P2P_GO)) {
-
-		if (vif->ar->vif_max == 0) {
-			if (vif->fw_vif_idx != 0)
-				return -EINVAL;
-			else
-				goto foo;
-		}
-
-		for (i = vif->ar->max_norm_iface;
-		     i < vif->ar->vif_max; i++) {
-			if (i == vif->fw_vif_idx)
-				break;
-			}
-		}
-
-		if (i == vif->ar->vif_max) {
-			ath6kl_err("Invalid interface to bring up P2P\n");
-			return -EINVAL;
-		}
-	}
-
-foo:
-
-I'm sure I added bugs above but hopefully it still shows my idea. At
-least you can combine the first two if statements and get rid of one
-indentation level.
-
-Kalle
