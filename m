@@ -1,64 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from serv04.lahn.de ([213.239.197.57]:57193 "EHLO serv04.lahn.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756154Ab2DHXKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2012 19:10:11 -0400
-Date: Mon, 9 Apr 2012 01:08:16 +0200
-From: Michael Leun <lkml20120218@newton.leun.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	casteyde.christian@free.fr,
-	Kelly Anderson <kelly@silka.with-linux.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: 3.4-rc ath9k regression (Re: [ath9k-devel] 3.3.1 ath9k regression)
-Message-ID: <20120409010816.36244f17@xenia.leun.net> (sfid-20120409_011116_373177_5FD1A295)
-In-Reply-To: <4F7F52BD.7060906@candelatech.com>
-References: <4F7A8EB7.4060200@silka.with-linux.com>
-	<4F7A923D.5000002@candelatech.com>
-	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
-	<4F7A9D5C.8040402@silka.with-linux.com>
-	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
-	<4F7AAAD9.2040307@silka.with-linux.com>
-	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
-	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
-	<4F7AB6FE.3080009@silka.with-linux.com>
-	<20120403200306.0afbb48b@xenia.leun.net>
-	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
-	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
-	<20120404235104.682cfad3@xenia.leun.net>
-	<4F7DE3A4.1040705@candelatech.com>
-	<CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
-	<4F7F52BD.7060906@candelatech.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48024 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752888Ab2DGCXy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Apr 2012 22:23:54 -0400
+Received: by iagz16 with SMTP id z16so3783788iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 19:23:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1333746034.5577.10.camel@jlt3.sipsolutions.net>
+References: <1333746034.5577.10.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 6 Apr 2012 19:23:33 -0700
+Message-ID: <CAB=NE6XMuaAPFPfKGunrGuqnYLKfem35Q3nXiEpc7u23FM14ng@mail.gmail.com> (sfid-20120407_042429_824592_0256491A)
+Subject: Re: [PATCH] compat: backport netif_wake_subqueue
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	lf_driver_backport@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After an suspend to disk / resume cycle (in kernel suspend to disk,
-openSuSE) with 3.4-rc2 my ath9k wireless does not ping
-anymore.
+On Fri, Apr 6, 2012 at 2:00 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Kernels 2.6.23 - 2.6.27 had some multiqueue support,
+> but called netif_wake_subqueue netif_start_subqueue.
+> So to backport, just add a define.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Output of iwconfig wlan0 looks just as usual (associated to AP).
+Applied and pushed, and tested with ckmake, thanks!
 
-iwconfig wlan0 essid <myssid> fixes this (causes an
-deauthenticate/authenticate with AP) - then connectivity is there again.
-
-Guess what: "Of course" does not happen when reverting
-c1afdaff90538ef085b756454f12b29575411214 ath9k: fix going to full-sleep
-on PS idle.
-
-So, in my opinion it should be seriously considered to revert that patch
-until it is fully understood what is going on and why.
-
-It may look theoretically correct (I've no knowledge that would enable
-me assess that), but it seems to have caused 3 more or less different
-problems to various people.
-
--- 
-MfG,
-
-Michael Leun
-
+  Luis
