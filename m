@@ -1,33 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56946 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751532Ab2DRTQ7 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:49789 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752367Ab2DGIku (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 15:16:59 -0400
-Received: by iagz16 with SMTP id z16so10806822iag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 12:16:59 -0700 (PDT)
-Message-ID: <4F8F1328.6070400@lwfinger.net> (sfid-20120418_211703_094719_27A40AF1)
-Date: Wed, 18 Apr 2012 14:16:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?Q8OpZHJpYyBNQVJUSU4=?= <policenauts@wanadoo.fr>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: tr: Re: info about D-link USB wlan with realtek RTL8192SU
-References: <1203704238.58649.1334353820674.JavaMail.www@wwinf1k14> <4F8F0556.3020605@lwfinger.net> <1567521979.30115.1334775489631.JavaMail.www@wwinf1m21>
-In-Reply-To: <1567521979.30115.1334775489631.JavaMail.www@wwinf1m21>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sat, 7 Apr 2012 04:40:50 -0400
+Received: by obbtb18 with SMTP id tb18so3974137obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Apr 2012 01:40:49 -0700 (PDT)
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Subject: [PATCH] net/wireless: ipw2x00: remove unused libipw_measurement_report struct
+Date: Sat,  7 Apr 2012 04:44:40 -0400
+Message-Id: <1333788280-5091-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20120407_104112_655500_CC645C63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/18/2012 01:58 PM, Cédric MARTIN wrote:
-> Thanks for your help, I still trying it works.
->
-> for info the last release I did try with no functional device was with kernel 3.2.14
->
-> http://openelec.tv/forum/88-wlan/30485-dwa-131-issue#31420
+and all referenced structs and corresponding enums because the driver
+does not use it.
 
-The patches in question are in 3.2.15.
+Note: keep libipw_info_element struct since it is still in use.
 
-Larry
+Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+---
+ drivers/net/wireless/ipw2x00/libipw.h |   55 ---------------------------------
+ 1 files changed, 0 insertions(+), 55 deletions(-)
 
+diff --git a/drivers/net/wireless/ipw2x00/libipw.h b/drivers/net/wireless/ipw2x00/libipw.h
+index 8874588..0b22fb4 100644
+--- a/drivers/net/wireless/ipw2x00/libipw.h
++++ b/drivers/net/wireless/ipw2x00/libipw.h
+@@ -584,61 +584,6 @@ struct libipw_tim_parameters {
+ 
+ /*******************************************************/
+ 
+-enum {				/* libipw_basic_report.map */
+-	LIBIPW_BASIC_MAP_BSS = (1 << 0),
+-	LIBIPW_BASIC_MAP_OFDM = (1 << 1),
+-	LIBIPW_BASIC_MAP_UNIDENTIFIED = (1 << 2),
+-	LIBIPW_BASIC_MAP_RADAR = (1 << 3),
+-	LIBIPW_BASIC_MAP_UNMEASURED = (1 << 4),
+-	/* Bits 5-7 are reserved */
+-
+-};
+-struct libipw_basic_report {
+-	u8 channel;
+-	__le64 start_time;
+-	__le16 duration;
+-	u8 map;
+-} __packed;
+-
+-enum {				/* libipw_measurement_request.mode */
+-	/* Bit 0 is reserved */
+-	LIBIPW_MEASUREMENT_ENABLE = (1 << 1),
+-	LIBIPW_MEASUREMENT_REQUEST = (1 << 2),
+-	LIBIPW_MEASUREMENT_REPORT = (1 << 3),
+-	/* Bits 4-7 are reserved */
+-};
+-
+-enum {
+-	LIBIPW_REPORT_BASIC = 0,	/* required */
+-	LIBIPW_REPORT_CCA = 1,	/* optional */
+-	LIBIPW_REPORT_RPI = 2,	/* optional */
+-	/* 3-255 reserved */
+-};
+-
+-struct libipw_measurement_params {
+-	u8 channel;
+-	__le64 start_time;
+-	__le16 duration;
+-} __packed;
+-
+-struct libipw_measurement_request {
+-	struct libipw_info_element ie;
+-	u8 token;
+-	u8 mode;
+-	u8 type;
+-	struct libipw_measurement_params params[0];
+-} __packed;
+-
+-struct libipw_measurement_report {
+-	struct libipw_info_element ie;
+-	u8 token;
+-	u8 mode;
+-	u8 type;
+-	union {
+-		struct libipw_basic_report basic[0];
+-	} u;
+-} __packed;
+-
+ struct libipw_tpc_report {
+ 	u8 transmit_power;
+ 	u8 link_margin;
+-- 
+1.7.2.5
 
