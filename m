@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39964 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751315Ab2DTM0X (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48024 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753911Ab2DGCYW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 08:26:23 -0400
-Message-ID: <1334924774.3446.0.camel@jlt3.sipsolutions.net> (sfid-20120420_142627_036812_C8F23282)
-Subject: Re: [PATCH v2] cfg80211: Validate legacy rateset.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Fri, 20 Apr 2012 14:26:14 +0200
-In-Reply-To: <1334924001-8584-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120420_141349_224433_434B8225)
-References: <1334924001-8584-1-git-send-email-bkamatch@qca.qualcomm.com>
-	 (sfid-20120420_141349_224433_434B8225)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 6 Apr 2012 22:24:22 -0400
+Received: by mail-iy0-f174.google.com with SMTP id z16so3783788iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 19:24:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1333746081.5577.11.camel@jlt3.sipsolutions.net>
+References: <1333746081.5577.11.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 6 Apr 2012 19:24:02 -0700
+Message-ID: <CAB=NE6UOGLB8tGM4Z3CN4io3y3UcP0CedPnrDErNvHEO_YTX0g@mail.gmail.com> (sfid-20120407_042434_091072_94CF308F)
+Subject: Re: [PATCH] compat-wireless: simplify mac80211 queue backport
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-04-20 at 17:43 +0530, Bala Shanmugam wrote:
-> Legacy rates are not validated while configuring
-> tx rateset using iw. So below cmd is accepted by nl80211.
-> sudo iw wlan2 set bitrates legacy-2.4 1 2 3
-> 
-> Validate legacy rates and return
-> error if any rate in the rateset is not valid.
-> 
-> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-> ---
->  net/wireless/nl80211.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index bcf6f70..f822e7c 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -5577,6 +5577,9 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
->  				sband,
->  				nla_data(tb[NL80211_TXRATE_LEGACY]),
->  				nla_len(tb[NL80211_TXRATE_LEGACY]));
-> +			if (mask.control[band].legacy == 0 &&
-> +				nla_len(tb[NL80211_TXRATE_LEGACY]))
-> +				return -EINVAL;
+On Fri, Apr 6, 2012 at 2:01 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> With compat now having a define for netif_wake_subqueue
+> for kernels 2.6.23 and higher we can remove most of the
+> backport patch for multiqueue. This does give up on
+> kernels 2.6.22 and older though.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Please use proper indentation.
+Tested with ckmake, applied and pushed, thanks!
 
-johannes
 
+    mcgrof@flash ~/devel/compat-wireless (git::master)$ time ckmake
+    Trying kernel                     3.2.2-030202-generic  [OK]
+    Trying kernel                    3.1.10-030110-generic  [OK]
+    Trying kernel                    3.0.18-030018-generic  [OK]
+    Trying kernel                  2.6.39-02063904-generic  [OK]
+    Trying kernel                  2.6.38-02063808-generic  [OK]
+    Trying kernel                  2.6.37-02063706-generic  [OK]
+    Trying kernel                  2.6.36-02063604-generic  [OK]
+    Trying kernel                  2.6.35-02063512-generic  [OK]
+    Trying kernel                  2.6.34-02063410-generic  [OK]
+    Trying kernel                  2.6.33-02063305-generic  [OK]
+    Trying kernel                  2.6.32-02063255-generic  [OK]
+    Trying kernel                  2.6.31-02063113-generic  [OK]
+    Trying kernel                  2.6.30-02063010-generic  [OK]
+    Trying kernel                  2.6.29-02062906-generic  [OK]
+    Trying kernel                  2.6.28-02062810-generic  [OK]
+    Trying kernel                    2.6.27-020627-generic  [OK]
+    Trying kernel                    2.6.26-020626-generic  [OK]
+    Trying kernel                    2.6.25-020625-generic  [OK]
+    Trying kernel                    2.6.24-020624-generic  [OK]
+
+    real    27m43.716s
+    user    69m9.115s
+    sys     13m8.241s
+
+  Luis
