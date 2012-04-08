@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:45237 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753913Ab2D0Jmz (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:64460 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754450Ab2DHTyd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 05:42:55 -0400
+	Sun, 8 Apr 2012 15:54:33 -0400
+Received: by wibhj6 with SMTP id hj6so1836331wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2012 12:54:32 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20120427094007.GU3157@wantstofly.org>
-References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
-	<20120427091405.GS3157@wantstofly.org>
-	<CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
-	<20120427094007.GU3157@wantstofly.org>
-Date: Fri, 27 Apr 2012 11:42:54 +0200
-Message-ID: <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com> (sfid-20120427_114317_337013_07ADD4EE)
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <4F815181.6030007@broadcom.com>
+References: <4F7F71A2.40105@hauke-m.de>
+	<4F815181.6030007@broadcom.com>
+Date: Sun, 8 Apr 2012 21:54:31 +0200
+Message-ID: <CACna6rzSsQXxyMTX+-UJ-BuJ671avs8dVPOnOc1kSRW-3URvQg@mail.gmail.com> (sfid-20120408_215447_695007_E1E1B953)
+Subject: Re: brcmsmac on BCM47XX SoCs
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:40 AM, Lennert Buytenhek
-<buytenh@wantstofly.org> wrote:
-> On Fri, Apr 27, 2012 at 11:22:49AM +0200, Sedat Dilek wrote:
+2012/4/8 Arend van Spriel <arend@broadcom.com>:
+> On 04/06/2012 11:43 PM, Hauke Mehrtens wrote:
+>> What are your plans to support phy_ht in brcmsmac, for now it is just
+>> supported by b43?
 >
->> Are you planning to or even working on support (for) 8361 devices?
 >
-> I don't have any such plans, and I don't know of anyone who does.
+> I have not been paying good attention to community feedback on b43 phy_ht
+> support. As b43 support bcm4331 with that phy we decided to stay clear from
+> that device. We are to add new phy code for new devices. Not sure if that
+> includes the phy_ht.
 
-Does 8361 require firmware support? Does a firmware file exist (name?)?
-Asking just out of curiosity?
+Whoops, that's extremely too bad. HT support is really wanted for a
+lot of routers. What we have in b43 is support coming from watching
+mmio ops only, there is no way for it to be complete. I believe you
+really should think and releasing HT PHY code, a lot of ppl will be
+interested in that.
 
-- Sedat -
+-- 
+Rafał
