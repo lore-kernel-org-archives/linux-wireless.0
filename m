@@ -1,72 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:44876 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757441Ab2DYSYY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 14:24:24 -0400
-Received: by qatm19 with SMTP id m19so3699457qat.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 11:24:23 -0700 (PDT)
+Received: from s87.loopia.se ([194.9.95.110]:26836 "EHLO s87.loopia.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751439Ab2DHLcq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Apr 2012 07:32:46 -0400
+Received: from s87.loopia.se (localhost [127.0.0.1])
+	by s87.loopia.se (Postfix) with ESMTP id 79F381E17167
+	for <linux-wireless@vger.kernel.org>; Sun,  8 Apr 2012 13:16:47 +0200 (CEST)
+Received: from s87.loopia.se ([127.0.0.1])
+	by s87.loopia.se (s87.loopia.se [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id 6Ih8CtWsXqFp for <linux-wireless@vger.kernel.org>;
+	Sun,  8 Apr 2012 13:16:47 +0200 (CEST)
+Received: from s328.loopia.se (s34.loopia.se [194.9.94.70])
+	by s87.loopia.se (Postfix) with ESMTP id 2CE3F1DE4D9B
+	for <linux-wireless@vger.kernel.org>; Sun,  8 Apr 2012 13:16:47 +0200 (CEST)
+Received: from 78-69-68-166-no170.tbcn.telia.com (HELO ymer.localnet) (jan@simonson.se@[78.69.68.166])
+          (envelope-sender <jan@simonson.se>)
+          by s328.loopia.se (qmail-ldap-1.03) with SMTP
+          for <linux-wireless@vger.kernel.org>; 8 Apr 2012 11:16:47 -0000
+From: Jan Simonson <jan@simonson.se>
+To: linux-wireless@vger.kernel.org
+Reply-To: jan@simonson.se
+Subject: RTL8192e-pci NIC
+Date: Sun, 08 Apr 2012 13:16:46 +0200
+Message-ID: <1502184.lhzNHmlX61@ymer> (sfid-20120408_133321_708517_65475ACC)
 MIME-Version: 1.0
-In-Reply-To: <201204251928.21559.chunkeey@googlemail.com>
-References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com>
-	<201204231945.05113.chunkeey@googlemail.com>
-	<CAFED-j=4NWR2mjnooQs4V_T23cV9iPAUi65J-FZ7JjC28aZ=Gw@mail.gmail.com>
-	<201204251928.21559.chunkeey@googlemail.com>
-Date: Wed, 25 Apr 2012 20:24:23 +0200
-Message-ID: <CAFED-j=_kPNmj-OyhFAdi_LM+rqbW6JLHC64BzdTKPyQ3iAMYg@mail.gmail.com> (sfid-20120425_202429_499066_69C40BF1)
-Subject: Re: carl9170 - monitor mode TP drop
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 25 kwietnia 2012 19:28 u¿ytkownik Christian Lamparter
-<chunkeey@googlemail.com> napisa³:
-> On Wednesday, April 25, 2012 07:28:18 AM Janusz Dziedzic wrote:
->> W dniu 23 kwietnia 2012 19:45 u¿ytkownik Christian Lamparter
->> <chunkeey@googlemail.com> napisa³:
->> >> This is what I can see on STA1:
->> >> # iperf -c 192.168.254.1 -t 100 -i 5
->> >> [ 3] 10.0-15.0 sec  20.4 MBytes  34.2 Mbits/sec
->> >>
->> >> =====> here I setup carl monitor on second PC, like this:
->> >> =====> iw dev wlan0 set type monitor
->> >> =====> iw dev wlan0 set freq 2437
->> >> =====> ifconfig wlan0 up
->> >>
->> >> [  3] 40.0-45.0 sec  2.38 MBytes  3.98 Mbits/sec
->> > Well, there's the "AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER = bit (30)"
->> > in "AR9170_MAC_REG_RX_CONTROL = (0x1c3c40)".
->> I disabled this in code.
->>
->> -               rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
->> +//             rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
->>
->> After that I don't see any TP drop and can see all packets in
->> wireshark (as expected).
->>
->> Why carl try to ACK rx packets in monitor mode?
->> Is that a correct behaviour?
-> Well, it depends.
->
-> You see without the BIT set, the hardware won't sent any ACKs
-> (Not even those which are directed at this interface - which of
-> course is also bad, or even worse?) and with the BIT set (and if
-> the HW is in Sniffer Mode) then the hardware acks every frames,
-> even if they are for a different stations.
-> So your fix might break someone else's setup.
->
+Hello,
 
-As I understand, some time ago we had wpa_supplicant AP (GO) mode as a
-two interfaces: AP + MONITOR.
-But now MONITOR is not used.
-Do you know other setup?
+I'm using a Samsung R720 laptop with a RTL8192e-pci NIC and Fedora 16. The 
+driver has been in kmod-staging from fusion until recently. Now it is removed 
+from staging and instead a driver is included in the kernel pack from Fedora. 
+After booting with this new kernel the relevant modules are loaded (see below)
+but the wireless connection is not available. Using the module earlier from 
+Fusion worked most of the time and better and better over time.
 
-So, maybe firmware should ACK  frames with correct destination address
-only (if AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER)?
-Or that is not possible because of HW limitation?
+[root@ymer ~]# uname -r
+3.3.0-8.fc16.x86_64
+[root@ymer ~]# lsmod|grep rtl
+rtl8192se              93742  0 
+rtlwifi               104513  1 rtl8192se
+mac80211              496450  2 rtl8192se,rtlwifi
+cfg80211              195558  2 rtlwifi,mac80211
+[root@ymer ~]# modinfo rtl8192se
+filename:       
+/lib/modules/3.3.0-8.fc16.x86_64/kernel/drivers/net/wireless/rtlwifi/rtl8192se/rtl8192se.ko
+firmware:       rtlwifi/rtl8192sefw.bin
+description:    Realtek 8192S/8191S 802.11n PCI wireless
+license:        GPL
+author:         Larry Finger    <Larry.Finger@lwfinger.net>
+author:         Realtek WlanFAE <wlanfae@realtek.com>
+author:         lizhaoming      <chaoming_li@realsil.com.cn>
+alias:          pci:v000010ECd00008174sv*sd*bc*sc*i*
+alias:          pci:v000010ECd00008173sv*sd*bc*sc*i*
+alias:          pci:v000010ECd00008172sv*sd*bc*sc*i*
+alias:          pci:v000010ECd00008171sv*sd*bc*sc*i*
+alias:          pci:v000010ECd00008192sv*sd*bc*sc*i*
+depends:        rtlwifi,mac80211
+intree:         Y
+vermagic:       3.3.0-8.fc16.x86_64 SMP mod_unload 
+parm:           swenc:Set to 1 for software crypto (default 0)
+ (bool)
+parm:           ips:Set to 0 to not use link power save (default 1)
+ (bool)
+parm:           swlps:Set to 1 to use SW control power save (default 0)
+ (bool)
+parm:           fwlps:Set to 1 to use FW control power save (default 1)
+ (bool)
+parm:           debug:Set debug level (0-5) (default 0) (int)
+[root@ymer ~]# lspci -nnv
+snip---
+02:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. 
+RTL8192E/RTL8192SE Wireless LAN Controller [10ec:8192] (rev 01)
+        Subsystem: Askey Computer Corp. Device [144f:7160]
+        Flags: fast devsel, IRQ 16
+        I/O ports at 3000 [size=256]
+        Memory at f6000000 (32-bit, non-prefetchable) [size=16K]
+        Capabilities: [40] Power Management version 3
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [70] Express Legacy Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Virtual Channel
+        Capabilities: [160] Device Serial Number 93-8a-a9-fe-ff-d2-24-00
+        Kernel modules: rtl8192se
+snip---
+[root@ymer ~]#
 
-BR
-Janusz
+What is wrong and what shall I do to make the NIC function?
+
+Best regards
+Jan Simonson
