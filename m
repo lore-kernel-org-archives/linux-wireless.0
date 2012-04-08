@@ -1,133 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48168 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004Ab2DLREH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 13:04:07 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] ath9k: Use macro to decrease code when priting recv stats.
-Date: Thu, 12 Apr 2012 10:03:59 -0700
-Message-Id: <1334250240-21038-1-git-send-email-greearb@candelatech.com> (sfid-20120412_190414_087994_9B2B0E12)
+Received: from serv04.lahn.de ([213.239.197.57]:57193 "EHLO serv04.lahn.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756154Ab2DHXKL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Apr 2012 19:10:11 -0400
+Date: Mon, 9 Apr 2012 01:08:16 +0200
+From: Michael Leun <lkml20120218@newton.leun.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	casteyde.christian@free.fr,
+	Kelly Anderson <kelly@silka.with-linux.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: 3.4-rc ath9k regression (Re: [ath9k-devel] 3.3.1 ath9k regression)
+Message-ID: <20120409010816.36244f17@xenia.leun.net> (sfid-20120409_011116_373177_5FD1A295)
+In-Reply-To: <4F7F52BD.7060906@candelatech.com>
+References: <4F7A8EB7.4060200@silka.with-linux.com>
+	<4F7A923D.5000002@candelatech.com>
+	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
+	<4F7A9D5C.8040402@silka.with-linux.com>
+	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
+	<4F7AAAD9.2040307@silka.with-linux.com>
+	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
+	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
+	<4F7AB6FE.3080009@silka.with-linux.com>
+	<20120403200306.0afbb48b@xenia.leun.net>
+	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
+	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
+	<20120404235104.682cfad3@xenia.leun.net>
+	<4F7DE3A4.1040705@candelatech.com>
+	<CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
+	<4F7F52BD.7060906@candelatech.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+After an suspend to disk / resume cycle (in kernel suspend to disk,
+openSuSE) with 3.4-rc2 my ath9k wireless does not ping
+anymore.
 
-This hides some repetitive code, and will help if the
-column widths ever need to change.
+Output of iwconfig wlan0 looks just as usual (associated to AP).
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 04edce9... 78f2962... M	drivers/net/wireless/ath/ath9k/debug.c
- drivers/net/wireless/ath/ath9k/debug.c |   72 +++++++++++---------------------
- 1 files changed, 24 insertions(+), 48 deletions(-)
+iwconfig wlan0 essid <myssid> fixes this (causes an
+deauthenticate/authenticate with AP) - then connectivity is there again.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 04edce9..78f2962 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -881,6 +881,13 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 	len += snprintf(buf + len, size - len, "%22s : %10u\n", s, \
- 			sc->debug.stats.rxstats.phy_err_stats[p]);
- 
-+#define RXS_ERR(s, e)					    \
-+	do {						    \
-+		len += snprintf(buf + len, size - len,	    \
-+				"%22s : %10u\n", s,	    \
-+				sc->debug.stats.rxstats.e); \
-+	} while (0)
-+
- 	struct ath_softc *sc = file->private_data;
- 	char *buf;
- 	unsigned int len = 0, size = 1600;
-@@ -890,42 +897,18 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 	if (buf == NULL)
- 		return -ENOMEM;
- 
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "CRC ERR",
--			sc->debug.stats.rxstats.crc_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "DECRYPT CRC ERR",
--			sc->debug.stats.rxstats.decrypt_crc_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "PHY ERR",
--			sc->debug.stats.rxstats.phy_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "MIC ERR",
--			sc->debug.stats.rxstats.mic_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "PRE-DELIM CRC ERR",
--			sc->debug.stats.rxstats.pre_delim_crc_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "POST-DELIM CRC ERR",
--			sc->debug.stats.rxstats.post_delim_crc_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "DECRYPT BUSY ERR",
--			sc->debug.stats.rxstats.decrypt_busy_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-LENGTH-ERR",
--			sc->debug.stats.rxstats.rx_len_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-OOM-ERR",
--			sc->debug.stats.rxstats.rx_oom_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-RATE-ERR",
--			sc->debug.stats.rxstats.rx_rate_err);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-DROP-RXFLUSH",
--			sc->debug.stats.rxstats.rx_drop_rxflush);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-TOO-MANY-FRAGS",
--			sc->debug.stats.rxstats.rx_too_many_frags_err);
-+	RXS_ERR("CRC ERR", crc_err);
-+	RXS_ERR("DECRYPT CRC ERR", decrypt_crc_err);
-+	RXS_ERR("PHY ERR", phy_err);
-+	RXS_ERR("MIC ERR", mic_err);
-+	RXS_ERR("PRE-DELIM CRC ERR", pre_delim_crc_err);
-+	RXS_ERR("POST-DELIM CRC ERR", post_delim_crc_err);
-+	RXS_ERR("DECRYPT BUSY ERR", decrypt_busy_err);
-+	RXS_ERR("RX-LENGTH-ERR", rx_len_err);
-+	RXS_ERR("RX-OOM-ERR", rx_oom_err);
-+	RXS_ERR("RX-RATE-ERR", rx_rate_err);
-+	RXS_ERR("RX-DROP-RXFLUSH", rx_drop_rxflush);
-+	RXS_ERR("RX-TOO-MANY-FRAGS", rx_too_many_frags_err);
- 
- 	PHY_ERR("UNDERRUN ERR", ATH9K_PHYERR_UNDERRUN);
- 	PHY_ERR("TIMING ERR", ATH9K_PHYERR_TIMING);
-@@ -954,18 +937,10 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 	PHY_ERR("HT-LENGTH ERR", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
- 	PHY_ERR("HT-RATE ERR", ATH9K_PHYERR_HT_RATE_ILLEGAL);
- 
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-Pkts-All",
--			sc->debug.stats.rxstats.rx_pkts_all);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-Bytes-All",
--			sc->debug.stats.rxstats.rx_bytes_all);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-Beacons",
--			sc->debug.stats.rxstats.rx_beacons);
--	len += snprintf(buf + len, size - len,
--			"%22s : %10u\n", "RX-Frags",
--			sc->debug.stats.rxstats.rx_frags);
-+	RXS_ERR("RX-Pkts-All", rx_pkts_all);
-+	RXS_ERR("RX-Bytes-All", rx_bytes_all);
-+	RXS_ERR("RX-Beacons", rx_beacons);
-+	RXS_ERR("RX-Frags", rx_frags);
- 
- 	if (len > size)
- 		len = size;
-@@ -975,6 +950,7 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 
- 	return retval;
- 
-+#undef RXS_ERR
- #undef PHY_ERR
- }
- 
+Guess what: "Of course" does not happen when reverting
+c1afdaff90538ef085b756454f12b29575411214 ath9k: fix going to full-sleep
+on PS idle.
+
+So, in my opinion it should be seriously considered to revert that patch
+until it is fully understood what is going on and why.
+
+It may look theoretically correct (I've no knowledge that would enable
+me assess that), but it seems to have caused 3 more or less different
+problems to various people.
+
 -- 
-1.7.3.4
+MfG,
+
+Michael Leun
 
