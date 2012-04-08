@@ -1,155 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44679 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752335Ab2DOKPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 06:15:52 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 5/9] ath9k_hw: fix and clean up PHY activation delay
-Date: Sun, 15 Apr 2012 12:15:37 +0200
-Message-Id: <1334484941-27673-5-git-send-email-nbd@openwrt.org> (sfid-20120415_121559_133362_D2F4696B)
-In-Reply-To: <1334484941-27673-4-git-send-email-nbd@openwrt.org>
-References: <1334484941-27673-1-git-send-email-nbd@openwrt.org>
- <1334484941-27673-2-git-send-email-nbd@openwrt.org>
- <1334484941-27673-3-git-send-email-nbd@openwrt.org>
- <1334484941-27673-4-git-send-email-nbd@openwrt.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43994 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752999Ab2DHRww (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Apr 2012 13:52:52 -0400
+Received: by iagz16 with SMTP id z16so5047243iag.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2012 10:52:52 -0700 (PDT)
+Message-ID: <4F81D06E.4010205@lwfinger.net> (sfid-20120408_195322_992552_08AC8354)
+Date: Sun, 08 Apr 2012 12:52:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] rtlwifi: ID for Belkin Surf N300 XR
+References: <CAA2SeN+7FsyQKmCK62tzEzrHLVi6-H21wZ+bdTjS2rLDDdauCA@mail.gmail.com> <4F81C0D4.2090004@lwfinger.net> <CAA2SeNKEFDtciKU29Lwi5kJYy5eaVeFb6cJg33T4QKP2=oCdSA@mail.gmail.com>
+In-Reply-To: <CAA2SeNKEFDtciKU29Lwi5kJYy5eaVeFb6cJg33T4QKP2=oCdSA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The delay calculation is the same for all chips, however some parts of the
-code missed the extra delay factor for half/quarter.
-Clean up the code and move the delay calculation to a common place.
+On 04/08/2012 12:37 PM, Lorenzo Bianconi wrote:
+>
+> My device is F9L1004az. lsusb reports just Vendor and Product ID. I
+> suppose the device is 8192CU because Windows driver is rtl8192cu.
+>
+> I will rewrite the patch respecting the numerical order
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   17 ++---------------
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   20 ++------------------
- drivers/net/wireless/ath/ath9k/hw.c         |   16 ++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h         |    2 ++
- 4 files changed, 22 insertions(+), 33 deletions(-)
+Driver rtl8192cu is used for both RTL8192CU and RTL8188CU; however, in the 
+absence of any other info, putting the new device in the 8192CU table will be OK.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index de30cb3..f554bff 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -618,19 +618,10 @@ static void ar5008_hw_init_bb(struct ath_hw *ah,
- 	u32 synthDelay;
- 
- 	synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
--	if (IS_CHAN_B(chan))
--		synthDelay = (4 * synthDelay) / 22;
--	else
--		synthDelay /= 10;
--
--	if (IS_CHAN_HALF_RATE(chan))
--		synthDelay *= 2;
--	else if (IS_CHAN_QUARTER_RATE(chan))
--		synthDelay *= 4;
- 
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
- 
--	udelay(synthDelay + BASE_ACTIVATE_DELAY);
-+	ath9k_hw_synth_delay(ah, chan, synthDelay);
- }
- 
- static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
-@@ -948,12 +939,8 @@ static bool ar5008_hw_rfbus_req(struct ath_hw *ah)
- static void ar5008_hw_rfbus_done(struct ath_hw *ah)
- {
- 	u32 synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
--	if (IS_CHAN_B(ah->curchan))
--		synthDelay = (4 * synthDelay) / 22;
--	else
--		synthDelay /= 10;
- 
--	udelay(synthDelay + BASE_ACTIVATE_DELAY);
-+	ath9k_hw_synth_delay(ah, ah->curchan, synthDelay);
- 
- 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 5bc09a1..00afab5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -524,22 +524,10 @@ static void ar9003_hw_init_bb(struct ath_hw *ah,
- 	 * Value is in 100ns increments.
- 	 */
- 	synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
--	if (IS_CHAN_B(chan))
--		synthDelay = (4 * synthDelay) / 22;
--	else
--		synthDelay /= 10;
- 
- 	/* Activate the PHY (includes baseband activate + synthesizer on) */
- 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
--
--	/*
--	 * There is an issue if the AP starts the calibration before
--	 * the base band timeout completes.  This could result in the
--	 * rx_clear false triggering.  As a workaround we add delay an
--	 * extra BASE_ACTIVATE_DELAY usecs to ensure this condition
--	 * does not happen.
--	 */
--	udelay(synthDelay + BASE_ACTIVATE_DELAY);
-+	ath9k_hw_synth_delay(ah, chan, synthDelay);
- }
- 
- static void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
-@@ -799,12 +787,8 @@ static bool ar9003_hw_rfbus_req(struct ath_hw *ah)
- static void ar9003_hw_rfbus_done(struct ath_hw *ah)
- {
- 	u32 synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
--	if (IS_CHAN_B(ah->curchan))
--		synthDelay = (4 * synthDelay) / 22;
--	else
--		synthDelay /= 10;
- 
--	udelay(synthDelay + BASE_ACTIVATE_DELAY);
-+	ath9k_hw_synth_delay(ah, ah->curchan, synthDelay);
- 
- 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index e408aaf..5df42ab 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -142,6 +142,22 @@ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout)
- }
- EXPORT_SYMBOL(ath9k_hw_wait);
- 
-+void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
-+			  int hw_delay)
-+{
-+	if (IS_CHAN_B(chan))
-+		hw_delay = (4 * hw_delay) / 22;
-+	else
-+		hw_delay /= 10;
-+
-+	if (IS_CHAN_HALF_RATE(chan))
-+		hw_delay *= 2;
-+	else if (IS_CHAN_QUARTER_RATE(chan))
-+		hw_delay *= 4;
-+
-+	udelay(hw_delay + BASE_ACTIVATE_DELAY);
-+}
-+
- void ath9k_hw_write_array(struct ath_hw *ah, struct ar5416IniArray *array,
- 			  int column, unsigned int *writecnt)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 1d4b983..a411646 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -923,6 +923,8 @@ void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val);
- void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna);
- 
- /* General Operation */
-+void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
-+			  int hw_delay);
- bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
- void ath9k_hw_write_array(struct ath_hw *ah, struct ar5416IniArray *array,
- 			  int column, unsigned int *writecnt);
--- 
-1.7.3.2
+Thanks,
+
+Larry
 
