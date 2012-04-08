@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:54414 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754054Ab2DKOMQ (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41860 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755957Ab2DHTNL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 10:12:16 -0400
-Date: Wed, 11 Apr 2012 10:12:01 -0400 (EDT)
-Message-Id: <20120411.101201.40584059095994801.davem@davemloft.net> (sfid-20120411_161223_540190_5D2FCAFE)
-To: eric.dumazet@gmail.com
-Cc: marc@merlins.org, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] tcp: avoid order-1 allocations on wifi and tx path
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1334129882.5300.2539.camel@edumazet-glaptop>
-References: <1334122980.5300.2154.camel@edumazet-glaptop>
-	<1334125848.5300.2330.camel@edumazet-glaptop>
-	<1334129882.5300.2539.camel@edumazet-glaptop>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 8 Apr 2012 15:13:11 -0400
+Received: by mail-iy0-f174.google.com with SMTP id z16so5092406iag.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2012 12:13:11 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Forest Bond <forest.bond@rapidrollout.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 2/2 V3] rtl8192de: Recognize 92D E-CUT version.
+Date: Sun,  8 Apr 2012 14:12:34 -0500
+Message-Id: <1333912354-16983-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120408_211340_712180_823B2AD2)
+In-Reply-To: <1333912354-16983-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1333912354-16983-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Date: Wed, 11 Apr 2012 09:38:02 +0200
+From: Forest Bond <forest.bond@rapidrollout.com>
 
-> David, I forgot to say this should be backported to 3.2 & 3.3
+The chip version constant (0xCC33) was taken from version 0001.0105.2011
+of the GPL vendor driver.  Note that this driver version also ships a
+firmware update, but I am unsure if it is required for E-CUT chips to
+function properly.
 
-Yep.
+A nearby spelling error was also corrected.
 
-> commit 87fb4b7b533073 (net: more accurate skb truesize) did the
-> placement of skb_shared_info at the end of skb head, so
-> sk_stream_alloc_skb() had to reserve more room so that tailroom stayed
-> at MSS
+Signed-off-by: Forest Bond <forest.bond@rapidrollout.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Will keep that in mind, thanks.
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+index 7d87712..2655448 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+@@ -1743,9 +1743,13 @@ static void _rtl92de_efuse_update_chip_version(struct ieee80211_hw *hw)
+ 		chipver |= CHIP_92D_D_CUT;
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "D-CUT!!!\n");
+ 		break;
++	case 0xCC33:
++		chipver |= CHIP_92D_E_CUT;
++		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "E-CUT!!!\n");
++		break;
+ 	default:
+ 		chipver |= CHIP_92D_D_CUT;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unkown CUT!\n");
++		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown CUT!\n");
+ 		break;
+ 	}
+ 	rtlpriv->rtlhal.version = chipver;
+-- 
+1.7.10
+
