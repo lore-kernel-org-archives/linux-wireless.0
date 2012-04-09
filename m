@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:21415 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753197Ab2DIUwf (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37785 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932239Ab2DITcY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 16:52:35 -0400
-Date: Mon, 9 Apr 2012 22:52:34 +0200 (CEST)
-From: Jesper Juhl <jj@chaosbits.net>
-To: linux-kernel@vger.kernel.org
-cc: trivial@kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH 26/26] ipw2100: remove a redundant NULL check before calling
- release_firmware()
-In-Reply-To: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
-Message-ID: <alpine.LNX.2.00.1204092247240.14420@swampdragon.chaosbits.net> (sfid-20120409_225259_142050_A4E03DD3)
-References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
+	Mon, 9 Apr 2012 15:32:24 -0400
+Date: Mon, 9 Apr 2012 15:26:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jan Simonson <jan@simonson.se>, linux-wireless@vger.kernel.org
+Subject: Re: RTL8192e-pci NIC
+Message-ID: <20120409192630.GB26994@tuxdriver.com> (sfid-20120409_213308_691547_35C1DF3B)
+References: <1502184.lhzNHmlX61@ymer>
+ <4F81B9C4.1010901@lwfinger.net>
+ <2210309.p6dWLepooK@ymer>
+ <4F8306CF.4040503@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F8306CF.4040503@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The release_firmware() function does its own NULL test so a test
-before calling it is rather redundant.
+On Mon, Apr 09, 2012 at 10:57:03AM -0500, Larry Finger wrote:
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- drivers/net/wireless/ipw2x00/ipw2100.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> As I do not use Fedora, I was not aware of Fusion. Perhaps you could
+> get them to reinstate this driver in their package. In addition, you
+> might post a bug at Redhat in hopes that they will change their
+> standard configuration. As a last resort, you could switch to a
+> distro that includes this driver in their standard kernels.
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index f0551f8..d8d804e 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -8508,8 +8508,7 @@ static void ipw2100_release_firmware(struct ipw2100_priv *priv,
- 				     struct ipw2100_fw *fw)
- {
- 	fw->version = 0;
--	if (fw->fw_entry)
--		release_firmware(fw->fw_entry);
-+	release_firmware(fw->fw_entry);
- 	fw->fw_entry = NULL;
- }
- 
+Yeah, this is reasonable advice.  I don't know why Fusion droped this
+package, but it might have been due to me making their life harder by
+integrating compat-wireless directly into the Fedora kernels.  Since I
+am no longer doing that, they may be willing to reverse that decision.
+
+I don't really see including a staging driver in Fedora unless it is
+clearly on the path to the "normal" part of the kernel.  Any chance
+of that?
+
+John
 -- 
-1.7.10
-
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
