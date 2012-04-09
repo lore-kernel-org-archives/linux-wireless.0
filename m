@@ -1,195 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:52573 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933050Ab2DKTyA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 15:54:00 -0400
-Received: by lbbge1 with SMTP id ge1so963961lbb.9
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:53:56 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, coelho@ti.com
-Subject: [PATCH 09/24] wlcore/wl12xx: add prepare_read hw op for Rx data
-Date: Wed, 11 Apr 2012 22:53:25 +0300
-Message-Id: <1334174020-18957-10-git-send-email-coelho@ti.com> (sfid-20120411_215411_133198_338C665A)
-In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
-References: <1334174020-18957-1-git-send-email-coelho@ti.com>
+Received: from serv04.lahn.de ([213.239.197.57]:49926 "EHLO serv04.lahn.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757387Ab2DIPdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 11:33:08 -0400
+Date: Mon, 9 Apr 2012 17:29:33 +0200
+From: Michael Leun <lkml20120218@newton.leun.net>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>, casteyde.christian@free.fr,
+	Kelly Anderson <kelly@silka.with-linux.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sergio Correia <lists@uece.net>
+Subject: Re: 3.4-rc ath9k regression (Re: [ath9k-devel] 3.3.1 ath9k
+ regression)
+Message-ID: <20120409172933.4ca4775a@xenia.leun.net> (sfid-20120409_173326_722171_452347B6)
+In-Reply-To: <CAD2nsn0n-VQ8ZOm69BNrbFv5HK3cdm+22yKrYprwoeFz-E2Uew@mail.gmail.com>
+References: <4F7A8EB7.4060200@silka.with-linux.com>
+	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
+	<4F7AAAD9.2040307@silka.with-linux.com>
+	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
+	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
+	<4F7AB6FE.3080009@silka.with-linux.com>
+	<20120403200306.0afbb48b@xenia.leun.net>
+	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
+	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
+	<20120404235104.682cfad3@xenia.leun.net>
+	<4F7DE3A4.1040705@candelatech.com>
+	<CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
+	<4F7F52BD.7060906@candelatech.com>
+	<20120409010816.36244f17@xenia.leun.net>
+	<CAD2nsn3-C8ZLmUpTDeA6HuPr-+=V5KkPJb6h5e7ZJsGi4v9p0g@mail.gmail.com>
+	<20120409122549.7469543a@xenia.leun.net>
+	<20120409160322.6b7b8c67@xenia.leun.net>
+	<CAD2nsn0n-VQ8ZOm69BNrbFv5HK3cdm+22yKrYprwoeFz-E2Uew@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The only difference in the read_data operations is that some chips
-need to prepare the data to be read before reading.  So instead of
-having a mandatory read_data operation, we now have an option
-prepare_data operation that only needs to be implemented for chips
-that require it.
+On Mon, 9 Apr 2012 19:52:45 +0530
+Mohammed Shafi <shafi.wireless@gmail.com> wrote:
 
-In the wl12xx lower driver, we only set the prepare_data operation for
-wl127x chips.
+> On Mon, Apr 9, 2012 at 7:33 PM, Michael Leun
+> <lkml20120218@newton.leun.net> wrote:
+> > On Mon, 9 Apr 2012 12:25:49 +0200
+> > Michael Leun <lkml20120218@newton.leun.net> wrote:
+> >
+> >> On Mon, 9 Apr 2012 11:58:06 +0530
+> >> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+> >>
+> >> > On Mon, Apr 9, 2012 at 4:38 AM, Michael Leun
+> >> > <lkml20120218@newton.leun.net> wrote:
+> >> > > After an suspend to disk / resume cycle (in kernel suspend to
+> >> > > disk, openSuSE) with 3.4-rc2 my ath9k wireless does not ping
+> >> > > anymore.
+> >> > >
+> >> > > Output of iwconfig wlan0 looks just as usual (associated to
+> >> > > AP).
+> >> > >
+> >> > > iwconfig wlan0 essid <myssid> fixes this (causes an
+> >> > > deauthenticate/authenticate with AP) - then connectivity is
+> >> > > there again.
+> >> > >
+> >> > > Guess what: "Of course" does not happen when reverting
+> >> > > c1afdaff90538ef085b756454f12b29575411214 ath9k: fix going to
+> >> > > full-sleep on PS idle.
+> >> > >
+> >> > > So, in my opinion it should be seriously considered to revert
+> >> > > that patch until it is fully understood what is going on and
+> >> > > why.
+> >> >
+> >> > please try with the attached patch to see if it helps.
+> >>
+> >> Yes, this patch helps with the issue I see in 3.4-rc2 described
+> >> above.
+> >
+> > Sorry, but I have to partially rectify that:
+> >
+> > It works, if the time the machine was suspended is short, as it was
+> > when I did that testing.
+> >
+> > But I noticed it failing, when the machine was hibernated for some
+> > hours.
+> >
+> > I easily can reproduce that, when I reboot the AP while the
+> > notebook is down (btw: AP is TP-LINK TL-WR1043ND running OpenWRT
+> > backfire 10.03.1, also using ath9k).
+> >
+> > When I do this (hibernate notebook, reboot AP, resume notebook check
+> > connectivity) with 3.4-rc2 and your test.patch it fails in 100% of
+> > cases.
+> 
+> the test.patch is nothing but it reverts back to the code something
+> back 3.1.1 and there is something else is also there
+> , where we need to fix. unfortunately i cannot reproduce the issue in
+> 3.4-rc2 which you guys can easily recreate it.  i should try with
+> 3.3.1 tomorrow. i will go home today and see if i can find some thing
+> with my analysis.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl12xx/main.c   |   32 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wlcore/hw_ops.h |    7 ++++++
- drivers/net/wireless/ti/wlcore/rx.c     |   31 +----------------------------
- drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
- 4 files changed, 42 insertions(+), 29 deletions(-)
+Please do not mix up things. What I described above I see in 3.4-rc2,
+the thing in 3.3.1 looks different (altough it may (or may not) have the
+same root cause).
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 43c2c7f..e4fab26 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -32,6 +32,7 @@
- #include "../wlcore/acx.h"
- #include "../wlcore/tx.h"
- #include "../wlcore/rx.h"
-+#include "../wlcore/io.h"
- #include "../wlcore/boot.h"
+Between your test.patch and reverting
+c1afdaff90538ef085b756454f12b29575411214 is this diff:
+
+@@ -118,13 +118,13 @@
+        if (--sc->ps_usecount != 0)
+                goto unlock;
  
- #include "reg.h"
-@@ -239,6 +240,29 @@ static const int wl12xx_rtable[REG_TABLE_LEN] = {
- #define WL128X_FW_NAME_SINGLE	"ti-connectivity/wl128x-fw-4-sr.bin"
- #define WL128X_PLT_FW_NAME	"ti-connectivity/wl128x-fw-4-plt.bin"
- 
-+static void wl127x_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
-+{
-+	if (wl->chip.id != CHIP_ID_1283_PG20) {
-+		struct wl1271_acx_mem_map *wl_mem_map = wl->target_mem_map;
-+		struct wl1271_rx_mem_pool_addr rx_mem_addr;
-+
-+		/*
-+		 * Choose the block we want to read
-+		 * For aggregated packets, only the first memory block
-+		 * should be retrieved. The FW takes care of the rest.
-+		 */
-+		u32 mem_block = rx_desc & RX_MEM_BLOCK_MASK;
-+
-+		rx_mem_addr.addr = (mem_block << 8) +
-+			le32_to_cpu(wl_mem_map->packet_memory_pool_start);
-+
-+		rx_mem_addr.addr_extra = rx_mem_addr.addr + 4;
-+
-+		wl1271_write(wl, WL1271_SLV_REG_DATA,
-+			     &rx_mem_addr, sizeof(rx_mem_addr), false);
-+	}
-+}
-+
- static int wl12xx_identify_chip(struct wl1271 *wl)
- {
- 	int ret = 0;
-@@ -253,6 +277,10 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
- 		wl->plt_fw_name = WL127X_PLT_FW_NAME;
- 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
- 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
-+
-+		/* read data preparation is only needed by wl127x */
-+		wl->ops->prepare_read = wl127x_prepare_read;
-+
- 		break;
- 
- 	case CHIP_ID_1271_PG20:
-@@ -264,6 +292,10 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
- 		wl->plt_fw_name = WL127X_PLT_FW_NAME;
- 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
- 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
-+
-+		/* read data preparation is only needed by wl127x */
-+		wl->ops->prepare_read = wl127x_prepare_read;
-+
- 		break;
- 
- 	case CHIP_ID_1283_PG20:
-diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
-index ddb439d..eeed297 100644
---- a/drivers/net/wireless/ti/wlcore/hw_ops.h
-+++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
-@@ -65,5 +65,12 @@ wlcore_hw_get_rx_buf_align(struct wl1271 *wl, u32 rx_desc)
- 	return wl->ops->get_rx_buf_align(wl, rx_desc);
- }
- 
-+static inline void
-+wlcore_hw_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
-+{
-+	if (wl->ops->prepare_read)
-+		wl->ops->prepare_read(wl, rx_desc, len);
-+}
-+
- #endif
- 
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index d1e4206..3f504d1 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -38,13 +38,6 @@
-  */
- #include "../wl12xx/reg.h"
- 
--static u8 wl12xx_rx_get_mem_block(struct wl12xx_fw_status *status,
--				  u32 drv_rx_counter)
--{
--	return le32_to_cpu(status->rx_pkt_descs[drv_rx_counter]) &
--		RX_MEM_BLOCK_MASK;
--}
--
- static u32 wlcore_rx_get_buf_size(struct wl1271 *wl,
- 				  u32 rx_pkt_desc)
- {
-@@ -202,13 +195,11 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 
- void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status)
- {
--	struct wl1271_acx_mem_map *wl_mem_map = wl->target_mem_map;
- 	unsigned long active_hlids[BITS_TO_LONGS(WL12XX_MAX_LINKS)] = {0};
- 	u32 buf_size;
- 	u32 fw_rx_counter  = status->fw_rx_counter & NUM_RX_PKT_DESC_MOD_MASK;
- 	u32 drv_rx_counter = wl->rx_counter & NUM_RX_PKT_DESC_MOD_MASK;
- 	u32 rx_counter;
--	u32 mem_block;
- 	u32 pkt_len, align_pkt_len;
- 	u32 pkt_offset, des;
- 	u8 hlid;
-@@ -234,27 +225,9 @@ void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status)
- 			break;
- 		}
- 
--		if (wl->chip.id != CHIP_ID_1283_PG20) {
--			/*
--			 * Choose the block we want to read
--			 * For aggregated packets, only the first memory block
--			 * should be retrieved. The FW takes care of the rest.
--			 */
--			mem_block = wl12xx_rx_get_mem_block(status,
--							    drv_rx_counter);
--
--			wl->rx_mem_pool_addr.addr = (mem_block << 8) +
--			   le32_to_cpu(wl_mem_map->packet_memory_pool_start);
--
--			wl->rx_mem_pool_addr.addr_extra =
--				wl->rx_mem_pool_addr.addr + 4;
--
--			wlcore_write_data(wl, REG_SLV_REG_DATA,
--					  &wl->rx_mem_pool_addr,
--					  sizeof(wl->rx_mem_pool_addr), false);
--		}
--
- 		/* Read all available packets at once */
-+		des = le32_to_cpu(status->rx_pkt_descs[drv_rx_counter]);
-+		wlcore_hw_prepare_read(wl, des, buf_size);
- 		wlcore_read_data(wl, REG_SLV_MEM_DATA, wl->aggr_buf,
- 				 buf_size, true);
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 3c2ded5..79ab84e 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -47,6 +47,7 @@ struct wlcore_ops {
- 				     struct sk_buff *skb);
- 	enum wl_rx_buf_align (*get_rx_buf_align)(struct wl1271 *wl,
- 						 u32 rx_desc);
-+	void (*prepare_read)(struct wl1271 *wl, u32 rx_desc, u32 len);
- 	s8 (*get_pg_ver)(struct wl1271 *wl);
- 	void (*get_mac)(struct wl1271 *wl);
- };
+-       if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
++       if (sc->ps_idle)
+                mode = ATH9K_PM_FULL_SLEEP;
+        else if (sc->ps_enabled &&
+                 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
+                              PS_WAIT_FOR_CAB |
+-                             PS_WAIT_FOR_PSPOLL_DATA |
+-                             PS_WAIT_FOR_TX_ACK)))
++                             PS_WAIT_FOR_TX_ACK |
++                             PS_WAIT_FOR_PSPOLL_DATA)))
+                mode = ATH9K_PM_NETWORK_SLEEP;
+        else
+                goto unlock;
+
+
+Seems obvious to me, that this line
+
+if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
+
+makes the real difference.
+
+
+> 
+> i was also thinking about the code, when the chip goes to FULL_SLEEP
+> then in ath9k_tx we might need to chip reset to actually tx. my guess
+> is there is something dependent there. i think i can add a patch with
+> some of our debug messages which helps us what is happening for you
+> 
+> reverting breaks unassociated power save case :(
+> 
+> >
+> > With 3.4-rc2 and c1afdaff90538ef085b756454f12b29575411214 reverted
+> > the same works in 100% of cases.
+> >
+> >> But I agree with Ben and Sergio that it does NOT help with the
+> >> issue in 3.3.1 we all see.
+> >
+> > I mixed up some mails and actually thought Ben had already answered
+> > regarding your patch, but that is not true.
+> >
+> > --
+> > MfG,
+> >
+> > Michael Leun
+> >
+> 
+> 
+> 
+> -- 
+> thanks,
+> shafi
+> 
+
+
 -- 
-1.7.5.4
+MfG,
+
+Michael Leun
 
