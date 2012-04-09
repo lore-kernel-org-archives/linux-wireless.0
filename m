@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63316 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751465Ab2DTQnS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 12:43:18 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH v3 1/1] mac80211: declare ieee80211_ave_rssi as EXPORT
-Date: Fri, 20 Apr 2012 09:38:33 -0700
-Message-Id: <1334939913-9787-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120420_184322_245950_94B6B16E)
+Received: from shards.monkeyblade.net ([198.137.202.13]:35278 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757579Ab2DIShU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 14:37:20 -0400
+Date: Mon, 09 Apr 2012 14:37:10 -0400 (EDT)
+Message-Id: <20120409.143710.879746943062854492.davem@davemloft.net> (sfid-20120409_203729_444890_DD56A464)
+To: marc@merlins.org
+Cc: bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big
+ network copies (page allocation failure)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120409183632.GO29342@merlins.org>
+References: <20120409172051.GR32290@merlins.org>
+	<20120409.141241.1216091936509309354.davem@davemloft.net>
+	<20120409183632.GO29342@merlins.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_ave_rssi need to be declare as export for driver to use it.
+From: Marc MERLIN <marc@merlins.org>
+Date: Mon, 9 Apr 2012 11:36:32 -0700
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- net/mac80211/util.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+> On Mon, Apr 09, 2012 at 02:12:41PM -0400, David Miller wrote:
+>> From: Marc MERLIN <marc@merlins.org>
+>> Date: Mon, 9 Apr 2012 10:20:51 -0700
+>> 
+>> > Any idea what's going on, what bucket of RAM is an issue for the driver
+>> > (total RAM is more than plenty), and where I should go from there?
+>> 
+>> The wireless layer is allocating high-order pages, so it's
+>> not the amount of ram, it's the fragmentation of it leading
+>> to a lack of those high-order pages.
+> 
+> I figured it was something of the sort, thanks for the professional
+> confirmation :)
+> 
+> What's my next step, file a bug with a specific team?
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 89c1e5b..4a8cd29 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1794,6 +1794,14 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
- 	return 0;
- }
- 
-+/**
-+ * ieee80211_ave_rssi - report the average rssi for the specified interface
-+ *
-+ * @vif: the specified virtual interface
-+ *
-+ * This function return the average rssi value for the requested interface.
-+ * It assumes that the given vif is valid.
-+ */
- int ieee80211_ave_rssi(struct ieee80211_vif *vif)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-@@ -1801,3 +1809,4 @@ int ieee80211_ave_rssi(struct ieee80211_vif *vif)
- 
- 	return ifmgd->ave_beacon_signal;
- }
-+EXPORT_SYMBOL_GPL(ieee80211_ave_rssi);
--- 
-1.7.0.4
-
+Wait patiently for a wireless developer to look into your bug.
