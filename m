@@ -1,129 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41199 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255Ab2DPUR5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 16:17:57 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: [RFC PATCH 5/8] brcm80211: smac: enable/disable radio on regulatory updates
-Date: Mon, 16 Apr 2012 15:17:39 -0500
-Message-Id: <1334607462-5387-6-git-send-email-seth.forshee@canonical.com> (sfid-20120416_221759_788339_CF61E436)
-In-Reply-To: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
+Received: from serv04.lahn.de ([213.239.197.57]:48781 "EHLO serv04.lahn.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753051Ab2DIK0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 06:26:22 -0400
+Date: Mon, 9 Apr 2012 12:25:49 +0200
+From: Michael Leun <lkml20120218@newton.leun.net>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>, casteyde.christian@free.fr,
+	Kelly Anderson <kelly@silka.with-linux.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sergio Correia <lists@uece.net>
+Subject: Re: 3.4-rc ath9k regression (Re: [ath9k-devel] 3.3.1 ath9k
+ regression)
+Message-ID: <20120409122549.7469543a@xenia.leun.net> (sfid-20120409_122639_178997_F0BA567E)
+In-Reply-To: <CAD2nsn3-C8ZLmUpTDeA6HuPr-+=V5KkPJb6h5e7ZJsGi4v9p0g@mail.gmail.com>
+References: <4F7A8EB7.4060200@silka.with-linux.com>
+	<4F7A923D.5000002@candelatech.com>
+	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
+	<4F7A9D5C.8040402@silka.with-linux.com>
+	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
+	<4F7AAAD9.2040307@silka.with-linux.com>
+	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
+	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
+	<4F7AB6FE.3080009@silka.with-linux.com>
+	<20120403200306.0afbb48b@xenia.leun.net>
+	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
+	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
+	<20120404235104.682cfad3@xenia.leun.net>
+	<4F7DE3A4.1040705@candelatech.com>
+	<CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
+	<4F7F52BD.7060906@candelatech.com>
+	<20120409010816.36244f17@xenia.leun.net>
+	<CAD2nsn3-C8ZLmUpTDeA6HuPr-+=V5KkPJb6h5e7ZJsGi4v9p0g@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the radio disable state is only updated during initialization,
-and it's only checked against the internal world domain. This is
-unnecessary, as there are always valid channels against this domain.
-Instead, check whether any channels are enabled in the regulatory
-notifier and update the radio state accordingly.
+On Mon, 9 Apr 2012 11:58:06 +0530
+Mohammed Shafi <shafi.wireless@gmail.com> wrote:
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |   66 ++++++++-------------
- 1 file changed, 25 insertions(+), 41 deletions(-)
+> On Mon, Apr 9, 2012 at 4:38 AM, Michael Leun
+> <lkml20120218@newton.leun.net> wrote:
+> > After an suspend to disk / resume cycle (in kernel suspend to disk,
+> > openSuSE) with 3.4-rc2 my ath9k wireless does not ping
+> > anymore.
+> >
+> > Output of iwconfig wlan0 looks just as usual (associated to AP).
+> >
+> > iwconfig wlan0 essid <myssid> fixes this (causes an
+> > deauthenticate/authenticate with AP) - then connectivity is there
+> > again.
+> >
+> > Guess what: "Of course" does not happen when reverting
+> > c1afdaff90538ef085b756454f12b29575411214 ath9k: fix going to
+> > full-sleep on PS idle.
+> >
+> > So, in my opinion it should be seriously considered to revert that
+> > patch until it is fully understood what is going on and why.
+> 
+> please try with the attached patch to see if it helps.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index fd5b807..590e8c1 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -681,46 +681,6 @@ brcms_c_channel_min_txpower_limits_with_local_constraint(
- 
- }
- 
--/* Update the radio state (enable/disable) and tx power targets
-- * based on a new set of channel/regulatory information
-- */
--static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
--{
--	struct brcms_c_info *wlc = wlc_cm->wlc;
--	uint chan;
--
--	/* search for the existence of any valid channel */
--	for (chan = 0; chan < MAXCHANNEL; chan++) {
--		if (brcms_c_valid_channel20_db(wlc->cmi, chan))
--			break;
--	}
--	if (chan == MAXCHANNEL)
--		chan = INVCHANNEL;
--
--	/*
--	 * based on the channel search above, set or
--	 * clear WL_RADIO_COUNTRY_DISABLE.
--	 */
--	if (chan == INVCHANNEL) {
--		/*
--		 * country/locale with no valid channels, set
--		 * the radio disable bit
--		 */
--		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
--		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\" "
--			  "nbands %d bandlocked %d\n", wlc->pub->unit,
--			  __func__, wlc_cm->world_regd->regdomain->alpha2,
--			  wlc->pub->_nbands, wlc->bandlocked);
--	} else if (mboolisset(wlc->pub->radio_disabled,
--			      WL_RADIO_COUNTRY_DISABLE)) {
--		/*
--		 * country/locale with valid channel, clear
--		 * the radio disable bit
--		 */
--		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
--	}
--}
--
- static int
- brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
- 		      const struct country_info *country)
-@@ -766,7 +726,6 @@ brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
- 	}
- 
- 	brcms_c_quiet_channels_reset(wlc_cm);
--	brcms_c_channels_commit(wlc_cm);
- 
- 	return 0;
- }
-@@ -1240,12 +1199,37 @@ static int brcms_reg_notifier(struct wiphy *wiphy,
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct brcms_info *wl = hw->priv;
- 	struct brcms_c_info *wlc = wl->wlc;
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_channel *ch;
-+	int band, i, n_channels = 0;
- 
- 	brcms_reg_apply_radar_flags(wiphy);
- 
- 	if (request && request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
- 		brcms_reg_apply_beaconing_flags(wiphy, request->initiator);
- 
-+	/* Disable radio if all channels disallowed by regulatory */
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		sband = wiphy->bands[band];
-+		if (!sband)
-+			continue;
-+
-+		for (i = 0; i < sband->n_channels; i++) {
-+			ch = &sband->channels[i];
-+
-+			if (!(ch->flags & IEEE80211_CHAN_DISABLED))
-+				n_channels++;
-+		}
-+	}
-+
-+	if (n_channels == 0) {
-+		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-+		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\"\n",
-+			  wlc->pub->unit, __func__, request->alpha2);
-+	} else {
-+		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-+	}
-+
- 	if (wlc->pub->_nbands > 1 || wlc->band->bandtype == BRCM_BAND_2G)
- 		wlc_phy_chanspec_ch14_widefilter_set(wlc->band->pi,
- 					brcms_c_japan_ccode(request->alpha2));
+Yes, this patch helps with the issue I see in 3.4-rc2 described above.
+
+But I agree with Ben and Sergio that it does NOT help with the issue in
+3.3.1 we all see.
+
 -- 
-1.7.9.5
+MfG,
+
+Michael Leun
 
