@@ -1,93 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57946 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429Ab2DCIYF (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:17224 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756339Ab2DIUYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 04:24:05 -0400
-Message-ID: <1333441440.3574.2.camel@jlt3.sipsolutions.net> (sfid-20120403_102420_268928_0D4F4CF6)
-Subject: [PATCH] mac80211: manage AP netdev carrier state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Javier Cardona <javier@cozybit.com>,
-	Thomas Pedersen <thomas@cozybit.com>
-Date: Tue, 03 Apr 2012 10:24:00 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 9 Apr 2012 16:24:07 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: dcbw@redhat.com
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFT] libertas SPI: convert to asynchronous firmware loading
+Message-Id: <20120409202402.8523E9D401E@zog.reactivated.net> (sfid-20120409_222412_724644_3290D23C)
+Date: Mon,  9 Apr 2012 21:24:02 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The AP netdev is really only active when beaconing, so
-manage the carrier state accordingly. Also do that for
-VLAN interfaces enslaved to a given AP interface.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
-Javier, Thomas, I think this would also be useful for mesh to do.
+ drivers/net/wireless/libertas/if_spi.c |  137 +++++++++++++++++++------------
+ 1 files changed, 84 insertions(+), 53 deletions(-)
 
- net/mac80211/cfg.c   |   10 +++++++++-
- net/mac80211/iface.c |    9 +++++++--
- 2 files changed, 16 insertions(+), 3 deletions(-)
+Request for testing.
 
---- a/net/mac80211/cfg.c	2012-03-28 12:29:31.000000000 +0200
-+++ b/net/mac80211/cfg.c	2012-03-28 12:29:32.000000000 +0200
-@@ -640,6 +640,10 @@ static int ieee80211_start_ap(struct wip
+Requires these patches first:
+
+[RFC 1/4] libertas: Firmware loading simplifications
+[RFC 2/4] libertas: harden-up exit paths
+[RFC 3/4] libertas: add asynchronous firmware loading capability
+
+Compile tested only - I don't have the hardware.
+
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 3a05b58..b948ea78 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -76,8 +76,13 @@ struct if_spi_card {
  
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
-+	netif_carrier_on(dev);
-+	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+		netif_carrier_on(vlan->dev);
+ 	/* True is card suspended */
+ 	u8				suspended;
 +
- 	return 0;
++	/* True when card is started */
++	u8				started;
+ };
+ 
++static void if_spi_finish_init(struct if_spi_card *card);
++
+ static void free_if_spi_card(struct if_spi_card *card)
+ {
+ 	struct list_head *cursor, *next;
+@@ -671,6 +676,47 @@ out:
+ 	return err;
  }
  
-@@ -665,7 +669,7 @@ static int ieee80211_change_beacon(struc
- 
- static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata, *vlan;
- 	struct beacon_data *old;
- 
- 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-@@ -674,6 +678,10 @@ static int ieee80211_stop_ap(struct wiph
- 	if (!old)
- 		return -ENOENT;
- 
-+	list_for_each_entry(vlan, &sdata->u.ap.vlans, u.vlan.list)
-+		netif_carrier_off(vlan->dev);
-+	netif_carrier_off(dev);
++static void if_spi_prog_firmware(struct lbs_private *priv, int err,
++				 const struct firmware *helper,
++				 const struct firmware *mainfw)
++{
++	struct if_spi_card *card = priv->card;
 +
- 	RCU_INIT_POINTER(sdata->u.ap.beacon, NULL);
++	if (err) {
++		netdev_err(priv->dev, "failed to find firmware (%d)\n", err);
++		return;
++	}
++
++	lbs_deb_spi("Initializing FW for Marvell WLAN 802.11 adapter "
++			"(chip_id = 0x%04x, chip_rev = 0x%02x) "
++			"attached to SPI bus_num %d, chip_select %d. "
++			"spi->max_speed_hz=%d\n",
++			card->card_id, card->card_rev,
++			card->spi->master->bus_num,
++			card->spi->chip_select,
++			card->spi->max_speed_hz);
++	err = if_spi_prog_helper_firmware(card, helper);
++	if (err)
++		goto out;
++	err = if_spi_prog_main_firmware(card, mainfw);
++	if (err)
++		goto out;
++	lbs_deb_spi("loaded FW for Marvell WLAN 802.11 adapter\n");
++
++	err = spu_set_interrupt_mode(card, 0, 1);
++	if (err)
++		goto out;
++
++	if (!card->started)
++		if_spi_finish_init(card);
++
++out:
++	if (helper)
++		release_firmware(helper);
++	if (mainfw)
++		release_firmware(mainfw);
++}
++
+ /*
+  * SPI Transfer Thread
+  *
+@@ -1033,8 +1079,6 @@ static int if_spi_init_card(struct if_spi_card *card)
+ 	struct lbs_private *priv = card->priv;
+ 	int err, i;
+ 	u32 scratch;
+-	const struct firmware *helper = NULL;
+-	const struct firmware *mainfw = NULL;
  
- 	kfree_rcu(old, rcu_head);
---- a/net/mac80211/iface.c	2012-03-28 12:29:32.000000000 +0200
-+++ b/net/mac80211/iface.c	2012-03-28 12:29:32.000000000 +0200
-@@ -254,7 +254,11 @@ static int ieee80211_do_open(struct net_
+ 	lbs_deb_enter(LBS_DEB_SPI);
  
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
--		/* no need to tell driver */
-+		/* no need to tell driver, but set carrier */
-+		if (rtnl_dereference(sdata->bss->beacon))
-+			netif_carrier_on(dev);
-+		else
-+			netif_carrier_off(dev);
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
- 		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) {
-@@ -294,7 +298,8 @@ static int ieee80211_do_open(struct net_
- 		ieee80211_bss_info_change_notify(sdata, changed);
+@@ -1051,6 +1095,11 @@ static int if_spi_init_card(struct if_spi_card *card)
+ 	if (scratch == SUCCESSFUL_FW_DOWNLOAD_MAGIC)
+ 		lbs_deb_spi("Firmware is already loaded for "
+ 			    "Marvell WLAN 802.11 adapter\n");
++		err = spu_set_interrupt_mode(card, 0, 1);
++		if (err)
++			goto out;
++		if (!card->started)
++			if_spi_finish_init(card);
+ 	else {
+ 		/* Check if we support this card */
+ 		for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
+@@ -1064,41 +1113,17 @@ static int if_spi_init_card(struct if_spi_card *card)
+ 			goto out;
+ 		}
  
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
--		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
-+		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+		    sdata->vif.type == NL80211_IFTYPE_AP)
- 			netif_carrier_off(dev);
- 		else
- 			netif_carrier_on(dev);
-
+-		err = lbs_get_firmware(&card->spi->dev, card->card_id,
+-					&fw_table[0], &helper, &mainfw);
++		err = lbs_get_firmware_async(priv, &card->spi->dev,
++					     card->card_id, fw_table,
++					     if_spi_prog_firmware);
+ 		if (err) {
+-			netdev_err(priv->dev, "failed to find firmware (%d)\n",
++			netdev_err(priv->dev, "failed to request firmware (%d)\n",
+ 				   err);
+ 			goto out;
+ 		}
+-
+-		lbs_deb_spi("Initializing FW for Marvell WLAN 802.11 adapter "
+-				"(chip_id = 0x%04x, chip_rev = 0x%02x) "
+-				"attached to SPI bus_num %d, chip_select %d. "
+-				"spi->max_speed_hz=%d\n",
+-				card->card_id, card->card_rev,
+-				card->spi->master->bus_num,
+-				card->spi->chip_select,
+-				card->spi->max_speed_hz);
+-		err = if_spi_prog_helper_firmware(card, helper);
+-		if (err)
+-			goto out;
+-		err = if_spi_prog_main_firmware(card, mainfw);
+-		if (err)
+-			goto out;
+-		lbs_deb_spi("loaded FW for Marvell WLAN 802.11 adapter\n");
+ 	}
+ 
+-	err = spu_set_interrupt_mode(card, 0, 1);
+-	if (err)
+-		goto out;
+-
+ out:
+-	if (helper)
+-		release_firmware(helper);
+-	if (mainfw)
+-		release_firmware(mainfw);
+-
+ 	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
+ 
+ 	return err;
+@@ -1126,6 +1151,32 @@ static void if_spi_resume_worker(struct work_struct *work)
+ 	}
+ }
+ 
++static void if_spi_finish_init(struct if_spi_card *card)
++{
++	int err = request_irq(card->spi->irq, if_spi_host_interrupt,
++			      IRQF_TRIGGER_FALLING, "libertas_spi", card);
++	if (err) {
++		pr_err("can't get host irq line-- request_irq failed\n");
++		return;
++	}
++
++	/*
++	 * Start the card.
++	 * This will call register_netdev, and we'll start
++	 * getting interrupts...
++	 */
++	err = lbs_start_card(card->priv);
++	if (err)
++		goto release_irq;
++
++	card->started = true;
++	lbs_deb_spi("Finished initializing WLAN module.\n");
++	return;
++
++release_irq:
++	free_irq(card->spi->irq, card);
++}
++
+ static int __devinit if_spi_probe(struct spi_device *spi)
+ {
+ 	struct if_spi_card *card;
+@@ -1163,11 +1214,6 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 
+ 	/* Initialize the SPI Interface Unit */
+ 
+-	/* Firmware load */
+-	err = if_spi_init_card(card);
+-	if (err)
+-		goto free_card;
+-
+ 	/*
+ 	 * Register our card with libertas.
+ 	 * This will call alloc_etherdev.
+@@ -1191,29 +1237,14 @@ static int __devinit if_spi_probe(struct spi_device *spi)
+ 	INIT_WORK(&card->packet_work, if_spi_host_to_card_worker);
+ 	INIT_WORK(&card->resume_work, if_spi_resume_worker);
+ 
+-	err = request_irq(spi->irq, if_spi_host_interrupt,
+-			IRQF_TRIGGER_FALLING, "libertas_spi", card);
+-	if (err) {
+-		pr_err("can't get host irq line-- request_irq failed\n");
+-		goto terminate_workqueue;
+-	}
+-
+-	/*
+-	 * Start the card.
+-	 * This will call register_netdev, and we'll start
+-	 * getting interrupts...
+-	 */
+-	err = lbs_start_card(priv);
++	/* Firmware load */
++	err = if_spi_init_card(card);
+ 	if (err)
+-		goto release_irq;
+-
+-	lbs_deb_spi("Finished initializing WLAN module.\n");
++		goto terminate_workqueue;
+ 
+ 	/* successful exit */
+ 	goto out;
+ 
+-release_irq:
+-	free_irq(spi->irq, card);
+ terminate_workqueue:
+ 	flush_workqueue(card->workqueue);
+ 	destroy_workqueue(card->workqueue);
+-- 
+1.7.7.6
 
