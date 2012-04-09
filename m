@@ -1,85 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:58981 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755112Ab2DXPee convert rfc822-to-8bit (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:61267 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757647Ab2DITLT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 11:34:34 -0400
-Received: by wibhj6 with SMTP id hj6so4055288wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 08:34:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com>
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
-	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
-	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
-	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
-	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
-	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
-	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
-	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
-	<4F901224.1040508@sipsolutions.net>
-	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
-	<4F901F16.6080007@sipsolutions.net>
-	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
-	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
-	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
-	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
-	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
-	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
-	<4F96939B.5030204@erley.org>
-	<CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
-	<D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com>
-	<CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com>
-Date: Tue, 24 Apr 2012 18:34:33 +0300
-Message-ID: <CANUX_P1HQVUFcxFLtWoL+wvEXbNTk0qEJVM+4yJKBbGuhWvZbw@mail.gmail.com> (sfid-20120424_173438_302236_9B90544B)
-Subject: Re: wlan0 not present
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: Dominik Feser <dominik.feser@googlemail.com>,
-	Pat Erley <pat-lkml@erley.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Apr 2012 15:11:19 -0400
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big
+ network copies (page allocation failure)
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: marc@merlins.org, David Miller <davem@davemloft.net>,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <4F83316F.20504@lwfinger.net>
+References: <20120409172051.GR32290@merlins.org>
+	 <20120409.141241.1216091936509309354.davem@davemloft.net>
+	 <20120409183632.GO29342@merlins.org>
+	 <20120409.143710.879746943062854492.davem@davemloft.net>
+	 <4F83316F.20504@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 Apr 2012 21:11:12 +0200
+Message-ID: <1333998672.3007.245.camel@edumazet-glaptop> (sfid-20120409_211128_515567_A06FAC94)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 24, 2012 at 15:45, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
-> On Tue, Apr 24, 2012 at 2:29 PM, Dominik Feser
-> <dominik.feser@googlemail.com> wrote:
->> What does that mean?
->>
->
-> Pickup the patch from [2], apply it against a recent compat-wireless
-> version, build and test.
-> Report here again.
->
+On Mon, 2012-04-09 at 13:58 -0500, Larry Finger wrote:
 
-Pretty sure it won't help. True, we were trying to request the wrong
-fw, but then we requested (and got) the good one, so that the only
-effect was that load time was longer that it could be. But here, we
-can't even get anything working. And the prints don't made it to
-kernel log properly
+> As it happens with both iwlwifi and e1000e, it seems to be a problem further up 
+> the food chain.
+> 
+> I don't know much about iwlwifi, but loading it with the module parameter 
+> "amsdu_size_8K=0" seems to select 4K rather than 8K buffers. That will hurt 
+> performance, but it should fix the memory fragmentation. There have also been 
+> some problems with aggregation that are fixed by setting the option "11n_disable=3".
 
-> - Sedat -
->
->>
->> Am 24.04.2012 um 14:07 schrieb Sedat Dilek:
->>
->>> On Tue, Apr 24, 2012 at 1:50 PM, Pat Erley <pat-lkml@erley.org> wrote:
->>>> Try a newer compat-wireless.  I saw mention of a patch on this ML
->>>> that iwlwifi was looking for firmwares that aren't available yet.
->>>>
->>>> Specifically, it wants a -6 ucode, where you have -5.  I'm not
->>>> sure if this has been merged upstream yet.
->>>>
->>>
->>> No, pending for upstream and linux-stable GIT, see [1] and especially
->>> "iwlwifi: use correct released ucode version" [2].
->>>
->>> - Sedat -
->>>
->>> [1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=shortlog;h=refs/heads/wireless
->>> [2] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=patch;h=462156fac4d69483c1d54c6218d019681da8ad74
->>
+I think Marc posted stack traces showing problem on transmit side.
+
+09:44:12   [<ffffffff810ba394>] ? __alloc_pages_nodemask+0x6b2/0x726
+09:44:12   [<ffffffff810e9081>] ? kmem_getpages+0x4c/0xd9
+09:44:12   [<ffffffff810e9081>] ? kmem_getpages+0x4c/0xd9
+09:44:12   [<ffffffff810ea421>] ? fallback_alloc+0x123/0x1c2
+09:44:12   [<ffffffff8127daae>] ? pskb_expand_head+0xe0/0x24a
+09:44:12   [<ffffffff810ea923>] ? __kmalloc+0xba/0x112
+09:44:12   [<ffffffff8127daae>] ? pskb_expand_head+0xe0/0x24a
+09:44:12   [<ffffffffa07a81c0>] ? ieee80211_skb_resize+0x64/0x9d [mac80211]
+09:44:12   [<ffffffffa07aa087>] ? ieee80211_subif_start_xmit+0x68e/0x80c [mac80211]
+09:44:12   [<ffffffffa07922c8>] ? ieee80211_tx_status_irqsafe+0x2e/0x7f [mac80211]
+09:44:12   [<ffffffff812877f3>] ? dev_hard_start_xmit+0x3fc/0x543
+09:44:12   [<ffffffff81070551>] ? arch_local_irq_save+0x11/0x17
+09:44:12   [<ffffffff8129da01>] ? sch_direct_xmit+0x5e/0x12f
+09:44:12   [<ffffffff8129dbc9>] ? __qdisc_run+0xf7/0x10f
+
+I dont really understand how it can happen, with MTU=1500
+
+
+
