@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25786 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971Ab2DYOxc (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:65378 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757498Ab2DIS7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 10:53:32 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] mac80211: fix rate control update on 2040 bss change
-Date: Wed, 25 Apr 2012 20:24:24 +0530
-Message-ID: <1335365664-2299-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120425_165336_202304_5A48C549)
+	Mon, 9 Apr 2012 14:59:00 -0400
+Message-ID: <4F83316F.20504@lwfinger.net> (sfid-20120409_205911_294255_6500AC77)
+Date: Mon, 09 Apr 2012 13:58:55 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: marc@merlins.org
+CC: David Miller <davem@davemloft.net>, bhutchings@solarflare.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big network
+ copies (page allocation failure)
+References: <20120409172051.GR32290@merlins.org> <20120409.141241.1216091936509309354.davem@davemloft.net> <20120409183632.GO29342@merlins.org> <20120409.143710.879746943062854492.davem@davemloft.net>
+In-Reply-To: <20120409.143710.879746943062854492.davem@davemloft.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rate control updation never be called on 2040 BSS change.
-The station should update its rate control on receiving beacon
-with different HT mode in the HT operation IE. Not doing so,
-leads to sending frames with higher(ht40) rates whereas AP is
-operating in lower mode (ht20).
+On 04/09/2012 01:37 PM, David Miller wrote:
+> From: Marc MERLIN<marc@merlins.org>
+> Date: Mon, 9 Apr 2012 11:36:32 -0700
+>
+>> On Mon, Apr 09, 2012 at 02:12:41PM -0400, David Miller wrote:
+>>> From: Marc MERLIN<marc@merlins.org>
+>>> Date: Mon, 9 Apr 2012 10:20:51 -0700
+>>>
+>>>> Any idea what's going on, what bucket of RAM is an issue for the driver
+>>>> (total RAM is more than plenty), and where I should go from there?
+>>>
+>>> The wireless layer is allocating high-order pages, so it's
+>>> not the amount of ram, it's the fragmentation of it leading
+>>> to a lack of those high-order pages.
+>>
+>> I figured it was something of the sort, thanks for the professional
+>> confirmation :)
+>>
+>> What's my next step, file a bug with a specific team?
+>
+> Wait patiently for a wireless developer to look into your bug.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+As it happens with both iwlwifi and e1000e, it seems to be a problem further up 
+the food chain.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c8836fa..5a1b06e 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -210,7 +210,7 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
- 		disable_40 = true;
- 
- 	if (sta && (!reconfig ||
--		    (disable_40 != !!(sta->sta.ht_cap.cap &
-+		    (disable_40 != !(sta->sta.ht_cap.cap &
- 					IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
- 
- 		if (disable_40)
--- 
-1.7.10
+I don't know much about iwlwifi, but loading it with the module parameter 
+"amsdu_size_8K=0" seems to select 4K rather than 8K buffers. That will hurt 
+performance, but it should fix the memory fragmentation. There have also been 
+some problems with aggregation that are fixed by setting the option "11n_disable=3".
 
+Larry
