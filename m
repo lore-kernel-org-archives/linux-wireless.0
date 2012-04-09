@@ -1,55 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:2584 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751797Ab2DOMXT (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:16817 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752324Ab2DIUXn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 08:23:19 -0400
-Message-ID: <4F8ABDB5.6090102@gmail.com> (sfid-20120415_142355_176939_B3496E40)
-Date: Sun, 15 Apr 2012 14:23:17 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	IvDoorn@gmail.com, linville@tuxdriver.com,
-	helmut.schaa@googlemail.com
-Subject: Re: [PATCH] wireless: rt2x00: rt2800pci add more RT539x ids
-References: <1334439201-13424-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1334439201-13424-1-git-send-email-xose.vazquez@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Apr 2012 16:23:43 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: dcbw@redhat.com
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC 5/4] libertas USB: convert to asynchronous firmware loading
+Message-Id: <20120409202338.B857C9D401E@zog.reactivated.net> (sfid-20120409_222347_957242_C1E52682)
+Date: Mon,  9 Apr 2012 21:23:38 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/14/12 23:33, Xose Vazquez Perez wrote:
-> RT539x devices:
-> (0x1814, 0x5362)
-> (0x1814, 0x5392)
-> 
-> Taken from ralink driver 2011_0406_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO
-> 
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 0397bbf..7968f45 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -1184,7 +1184,9 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
->  	{ PCI_DEVICE(0x1814, 0x3593) },
->  #endif
->  #ifdef CONFIG_RT2800PCI_RT53XX
-> +	{ PCI_DEVICE(0x1814, 0x5362) },
->  	{ PCI_DEVICE(0x1814, 0x5390) },
-> +	{ PCI_DEVICE(0x1814, 0x5392) },
->  	{ PCI_DEVICE(0x1814, 0x539a) },
->  	{ PCI_DEVICE(0x1814, 0x539f) },
->  #endif
-
-
--- 
+Signed-off-by: Daniel Drake <dsd@laptop.org>
 ---
-Gertjan
+ drivers/net/wireless/libertas/if_usb.c |  102 +++++++++++++------------------
+ 1 files changed, 43 insertions(+), 59 deletions(-)
+
+Continuing the patch series from last week:
+
+[RFC 1/4] libertas: Firmware loading simplifications
+[RFC 2/4] libertas: harden-up exit paths
+[RFC 3/4] libertas: add asynchronous firmware loading capability
+[RFC 4/4] libertas SDIO: convert to asynchronous firmware loading
+
+This patch moves the USB driver to async firmware loading.
+
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 3dde3e0..d5c02a7 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -41,6 +41,16 @@ enum {
+ 	MODEL_8682 = 0x2
+ };
+ 
++/* table of firmware file names */
++static const struct lbs_fw_table fw_table[] = {
++	{ MODEL_8388, "libertas/usb8388_olpc.bin", NULL },
++	{ MODEL_8388, "libertas/usb8388_v9.bin", NULL },
++	{ MODEL_8388, "libertas/usb8388_v5.bin", NULL },
++	{ MODEL_8388, "libertas/usb8388.bin", NULL },
++	{ MODEL_8388, "usb8388.bin", NULL },
++	{ MODEL_8682, "libertas/usb8682.bin", NULL }
++};
++
+ static struct usb_device_id if_usb_table[] = {
+ 	/* Enter the device signature inside */
+ 	{ USB_DEVICE(0x1286, 0x2001), .driver_info = MODEL_8388 },
+@@ -52,7 +62,9 @@ MODULE_DEVICE_TABLE(usb, if_usb_table);
+ 
+ static void if_usb_receive(struct urb *urb);
+ static void if_usb_receive_fwload(struct urb *urb);
+-static int if_usb_prog_firmware(struct if_usb_card *cardp);
++static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
++				 const struct firmware *fw,
++				 const struct firmware *unused);
+ static int if_usb_host_to_card(struct lbs_private *priv, uint8_t type,
+ 			       uint8_t *payload, uint16_t nb);
+ static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload,
+@@ -187,6 +199,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	struct usb_endpoint_descriptor *endpoint;
+ 	struct lbs_private *priv;
+ 	struct if_usb_card *cardp;
++	int r = -ENOMEM;
+ 	int i;
+ 
+ 	udev = interface_to_usbdev(intf);
+@@ -244,17 +257,10 @@ static int if_usb_probe(struct usb_interface *intf,
+ 		goto dealloc;
+ 	}
+ 
+-	/* Upload firmware */
+-	if (if_usb_prog_firmware(cardp)) {
+-		lbs_deb_usbd(&udev->dev, "FW upload failed\n");
+-		goto err_prog_firmware;
+-	}
+-
+ 	if (!(priv = lbs_add_card(cardp, &intf->dev)))
+-		goto err_prog_firmware;
++		goto err_add_card;
+ 
+ 	cardp->priv = priv;
+-	cardp->priv->fw_ready = 1;
+ 
+ 	priv->hw_host_to_card = if_usb_host_to_card;
+ 	priv->enter_deep_sleep = NULL;
+@@ -267,34 +273,25 @@ static int if_usb_probe(struct usb_interface *intf,
+ 
+ 	cardp->boot2_version = udev->descriptor.bcdDevice;
+ 
+-	if_usb_submit_rx_urb(cardp);
+-
+-	if (lbs_start_card(priv))
+-		goto err_start_card;
+-
+-	if_usb_setup_firmware(priv);
+-
+ 	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
+ 
+-	/*
+-	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
+-	 */
+-	priv->wol_criteria = EHS_REMOVE_WAKEUP;
+-	if (lbs_host_sleep_cfg(priv, priv->wol_criteria, NULL))
+-		priv->ehs_remove_supported = false;
++	r = lbs_get_firmware_async(priv, &udev->dev, cardp->model,
++				   fw_table, if_usb_prog_firmware);
++	if (r)
++		goto err_get_fw;
+ 
+ 	return 0;
+ 
+-err_start_card:
++err_get_fw:
+ 	lbs_remove_card(priv);
+-err_prog_firmware:
++err_add_card:
+ 	if_usb_reset_device(cardp);
+ dealloc:
+ 	if_usb_free(cardp);
+ 
+ error:
+-	return -ENOMEM;
++	return r;
+ }
+ 
+ /**
+@@ -829,49 +826,22 @@ static int check_fwfile_format(const uint8_t *data, uint32_t totlen)
+ 	return ret;
+ }
+ 
+-/* table of firmware file names */
+-static const struct {
+-	u32 model;
+-	const char *fwname;
+-} fw_table[] = {
+-	{ MODEL_8388, "libertas/usb8388_olpc.bin" },
+-	{ MODEL_8388, "libertas/usb8388_v9.bin" },
+-	{ MODEL_8388, "libertas/usb8388_v5.bin" },
+-	{ MODEL_8388, "libertas/usb8388.bin" },
+-	{ MODEL_8388, "usb8388.bin" },
+-	{ MODEL_8682, "libertas/usb8682.bin" }
+-};
+-
+-static int get_fw(struct if_usb_card *cardp)
+-{
+-	int i;
+-
+-	/* Otherwise search for firmware to use */
+-	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
+-		if (fw_table[i].model != cardp->model)
+-			continue;
+-		if (request_firmware(&cardp->fw, fw_table[i].fwname,
+-					&cardp->udev->dev) == 0)
+-			return 0;
+-	}
+-
+-	return -ENOENT;
+-}
+-
+-static int if_usb_prog_firmware(struct if_usb_card *cardp)
++static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
++				 const struct firmware *fw,
++				 const struct firmware *unused)
+ {
++	struct if_usb_card *cardp = priv->card;
+ 	int i = 0;
+ 	static int reset_count = 10;
+-	int ret = 0;
+ 
+ 	lbs_deb_enter(LBS_DEB_USB);
+ 
+-	ret = get_fw(cardp);
+ 	if (ret) {
+ 		pr_err("failed to find firmware (%d)\n", ret);
+ 		goto done;
+ 	}
+ 
++	cardp->fw = fw;
+ 	if (check_fwfile_format(cardp->fw->data, cardp->fw->size)) {
+ 		ret = -EINVAL;
+ 		goto release_fw;
+@@ -954,13 +924,27 @@ restart:
+ 		goto release_fw;
+ 	}
+ 
++	cardp->priv->fw_ready = 1;
++	if_usb_submit_rx_urb(cardp);
++
++	if (lbs_start_card(priv))
++		goto release_fw;
++
++	if_usb_setup_firmware(priv);
++
++	/*
++	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
++	 */
++	priv->wol_criteria = EHS_REMOVE_WAKEUP;
++	if (lbs_host_sleep_cfg(priv, priv->wol_criteria, NULL))
++		priv->ehs_remove_supported = false;
++
+  release_fw:
+ 	release_firmware(cardp->fw);
+ 	cardp->fw = NULL;
+ 
+  done:
+-	lbs_deb_leave_args(LBS_DEB_USB, "ret %d", ret);
+-	return ret;
++	lbs_deb_leave(LBS_DEB_USB);
+ }
+ 
+ 
+-- 
+1.7.7.6
+
