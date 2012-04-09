@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:44683 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755958Ab2DXIuo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 04:50:44 -0400
-Message-ID: <4F966960.20700@neratec.com> (sfid-20120424_105048_136459_8C6164BD)
-Date: Tue, 24 Apr 2012 10:50:40 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:39181 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701Ab2DINca (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 09:32:30 -0400
+Date: Mon, 9 Apr 2012 08:32:19 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Subject: Re: brcmsmac on BCM47XX SoCs
+Message-ID: <20120409133219.GB20916@thinkpad-t410> (sfid-20120409_153234_202599_D5F2A29D)
+References: <4F7F71A2.40105@hauke-m.de>
+ <4F815181.6030007@broadcom.com>
+ <CACna6rzSsQXxyMTX+-UJ-BuJ671avs8dVPOnOc1kSRW-3URvQg@mail.gmail.com>
 MIME-Version: 1.0
-To: Jonathan Bither <jonbither@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: New DFS pattern detector
-References: <4F965B47.1080000@gmail.com>
-In-Reply-To: <4F965B47.1080000@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rzSsQXxyMTX+-UJ-BuJ671avs8dVPOnOc1kSRW-3URvQg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jonathan,
+On Sun, Apr 08, 2012 at 09:54:31PM +0200, Rafał Miłecki wrote:
+> 2012/4/8 Arend van Spriel <arend@broadcom.com>:
+> > On 04/06/2012 11:43 PM, Hauke Mehrtens wrote:
+> >> What are your plans to support phy_ht in brcmsmac, for now it is just
+> >> supported by b43?
+> >
+> >
+> > I have not been paying good attention to community feedback on b43 phy_ht
+> > support. As b43 support bcm4331 with that phy we decided to stay clear from
+> > that device. We are to add new phy code for new devices. Not sure if that
+> > includes the phy_ht.
+> 
+> Whoops, that's extremely too bad. HT support is really wanted for a
+> lot of routers. What we have in b43 is support coming from watching
+> mmio ops only, there is no way for it to be complete. I believe you
+> really should think and releasing HT PHY code, a lot of ppl will be
+> interested in that.
 
-an earlier proposal for the DFS pattern detector posted at [1] was in 
-fact located in the common ath layer and meant to be used by all DFS 
-capable Atheros devices.
+I second this. Besides routers, some recent MacBooks use bcm4331 and
+lack support for HT or for the 5 GHz band. Plus on the model I'm working
+with at least (MacBook Pro 8,2) Tx stops working completely after S3
+unless b43 and bcma are reloaded, and I haven't had any luck finding a
+fix for it.
 
-For the sake of simplicity and based on assumptions that ath9k will be 
-the first driver to use it, the detector was finally moved into ath9k. 
-So far, it is independent of the underlying HW and if there was a 
-consensus that it could be used by ath5k or other drivers, I'll take 
-care to move it back to the ath layer.
-
-FYI, the initial plans were even to have the detector fully abstracted 
-from the underlying driver and provide it as part of mac80211. With no 
-further feedback from other chip-manufacturers the generic approach was 
-dropped and became Atheros specific.
-
-
-Feel free to ask for further details, though I'm out of office right now 
-and will respond delayed.
-
-HTH, Zefir
-
-[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/84402
-
-On 24.04.2012 09:50, Jonathan Bither wrote:
-> Hey List,
-> 	With the new DFS pattern detector that was added for ath9k, I was curious if this would be beneficial for the ath5k and possibly other drivers as well. Was there any interest in perhaps making this a common API?
->
-> Thanks,
-> Jonathan Bither
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Seth
 
