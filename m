@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:54241 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131Ab2D3HL2 convert rfc822-to-8bit (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:20965 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757770Ab2DIUuy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 03:11:28 -0400
-Received: by eaaq12 with SMTP id q12so589905eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 00:11:27 -0700 (PDT)
+	Mon, 9 Apr 2012 16:50:54 -0400
+Date: Mon, 9 Apr 2012 22:50:53 +0200 (CEST)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-kernel@vger.kernel.org
+cc: trivial@kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Simon Kelley <simon@thekelleys.org.uk>
+Subject: [PATCH 11/26] wireless, atmel: remove pointless test for NULL before
+ release_firmware() call
+In-Reply-To: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
+Message-ID: <alpine.LNX.2.00.1204092219310.13925@swampdragon.chaosbits.net> (sfid-20120409_225640_193420_0A64C6CC)
+References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
 MIME-Version: 1.0
-In-Reply-To: <1335768826-12529-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1335768826-12529-1-git-send-email-emmanuel.grumbach@intel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 30 Apr 2012 17:11:06 +1000
-Message-ID: <CAGRGNgWiyNUzL=Y11r-ZLyNm0dx9KqC33bN7PjMz1TiXrB0u8Q@mail.gmail.com> (sfid-20120430_091159_639127_A47C8417)
-Subject: Re: [PATCH] cfg80211: fix BSS comparison
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
+release_firmware() does its own test. Explicitly checking before the
+call is redundant.
 
-On Mon, Apr 30, 2012 at 16:53, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> Since the BSS table is organized in a RB tree, the BSSs need to be
-> comparable. This means that we must define a < and > operator to
-> the BSS object.
-> compare_ethr_addr isn't enough since it returns only a binary value.
-[snip]
-> ---
->  net/wireless/scan.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> index bd6a0ee..8c8b550 100644
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
-> @@ -378,7 +378,7 @@ static int cmp_bss_core(struct cfg80211_bss *a,
->                               b->len_information_elements);
->        }
->
-> -       return compare_ether_addr(a->bssid, b->bssid);
-> +       return memcmp(a->bssid, b->bssid, sizeof(a->bssid));
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/net/wireless/atmel.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-You should probably add a comment here to remind people that
-compare_ether_addr() will cause issues or someone will change it
-again.
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index 6c87a82..d07c030 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -3989,8 +3989,7 @@ static int reset_atmel_card(struct net_device *dev)
+ 			atmel_copy_to_card(priv->dev, 0x8000, &fw[0x6000], len - 0x6000);
+ 		}
+ 
+-		if (fw_entry)
+-			release_firmware(fw_entry);
++		release_firmware(fw_entry);
+ 	}
+ 
+ 	err = atmel_wakeup_firmware(priv);
+-- 
+1.7.10
 
-Thanks,
 
 -- 
-Julian Calaby
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
