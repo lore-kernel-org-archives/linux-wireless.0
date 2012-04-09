@@ -1,37 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58673 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751643Ab2DVTyZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 15:54:25 -0400
-Message-ID: <4F9461E9.2050504@openwrt.org> (sfid-20120422_215445_686596_B841687F)
-Date: Sun, 22 Apr 2012 21:54:17 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16019 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756578Ab2DIPFQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 11:05:16 -0400
+Message-ID: <4F82FAA6.509@qca.qualcomm.com> (sfid-20120409_170521_604379_C5F3BCD1)
+Date: Mon, 9 Apr 2012 18:05:10 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH v3 2/2] mac80211: fix num_mcast_sta counting issues
-References: <1335044533-37359-1-git-send-email-nbd@openwrt.org>  <1335044533-37359-2-git-send-email-nbd@openwrt.org> <1335045079.6516.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1335045079.6516.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
+	<ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 2/2] ath6kl: handle concurrent AP-STA channel switches
+References: <1333744548-18028-1-git-send-email-c_tpeder@qca.qualcomm.com> <1333744548-18028-2-git-send-email-c_tpeder@qca.qualcomm.com>
+In-Reply-To: <1333744548-18028-2-git-send-email-c_tpeder@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-04-21 11:51 PM, Johannes Berg wrote:
-> On Sat, 2012-04-21 at 23:42 +0200, Felix Fietkau wrote:
+On 04/06/2012 11:35 PM, Thomas Pedersen wrote:
+> If an ath6kl AP vif is beaconing on one channel, and a STA vif
+> associates on a different channel, a WMI_DISCONNECT event will be sent
+> to the AP vif. Make the AP vif follow the STA interface, and notify
+> userspace.
 > 
->>  			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
->> +			new_4addr = true;
->>  		}
->>  
->> +		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
->> +		    sta->sdata->u.vlan.sta)
->> +			prev_4addr = true;
-> 
-> Doesn't that have to be before the assignment or something, otherwise
-> it's always just true unless it was moved back to the AP iface, but
-> still true if it was just assigned to an AP_VLAN iface?
-This is just before the 'sta->sdata = vlansdata;' line, so it should be
-OK. Or am I missing something here?
+> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 
-- Felix
+John, if it's ok for you I can take this patch ath6kl.git once you have
+applied the cfg80211 patch.
 
+Kalle
