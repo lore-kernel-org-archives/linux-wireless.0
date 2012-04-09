@@ -1,213 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51543 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965553Ab2DLQe0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 12:34:26 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 4/5] mac80211: Add more ethtools stats: survey, rates, etc
-Date: Thu, 12 Apr 2012 09:32:54 -0700
-Message-Id: <1334248375-22967-5-git-send-email-greearb@candelatech.com> (sfid-20120412_183431_845082_662DF9ED)
-In-Reply-To: <1334248375-22967-1-git-send-email-greearb@candelatech.com>
-References: <1334248375-22967-1-git-send-email-greearb@candelatech.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:36018 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754540Ab2DIQAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 12:00:39 -0400
+Message-ID: <1333987238.2152.5.camel@joe2Laptop> (sfid-20120409_180042_954499_9198047B)
+Subject: Re: [PATCH V2] ath6kl: Fix 4-way handshake failure in AP and P2P GO
+ mode
+From: Joe Perches <joe@perches.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath6kl-devel@qualcomm.com,
+	Subramania Sharma <sharmat@qca.qualcomm.com>
+Date: Mon, 09 Apr 2012 09:00:38 -0700
+In-Reply-To: <1333984880-4328-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <\> <1333984880-4328-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Mon, 2012-04-09 at 20:51 +0530, Vasanthakumar Thiagarajan wrote:
+> RSN capability field of RSN IE which is generated (which is what really
+> advertised in beacon/probe response) differs from the one generated in
+> wpa_supplicant. This inconsistency in rsn IE results in 4-way handshake
+> failure. To fix this, configure rsn capability used in wpa_supplicant
+> in firmware using a new wmi command, WMI_SET_IE_CMDID. There is a bit
+> (ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE) in fw_capabilities to advertise
+> this support to driver.
+> 
+> Signed-off-by: Subramania Sharma <sharmat@qca.qualcomm.com>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> ---
+> 
+> V2 - Fix sparse warning due to the way rsn_cap is used
+>      to store le16 (Reported by Kalle).
+> 
+>  drivers/net/wireless/ath/ath6kl/cfg80211.c |   64 ++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath6kl/core.h     |    3 +
+>  drivers/net/wireless/ath/ath6kl/wmi.c      |   23 ++++++++++
+>  drivers/net/wireless/ath/ath6kl/wmi.h      |   17 +++++++
+>  4 files changed, 107 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> index 06f12da..98a0046 100644
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -2524,6 +2524,52 @@ static int ath6kl_set_ies(struct ath6kl_vif *vif,
+>  	return 0;
+>  }
+>  
+> +static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
+> +				u8 *rsn_capab)
+> +{
+> +	const u8 *rsn_ie;
+> +	size_t rsn_ie_len;
+> +	u16 cnt;
+> +
+> +	if (!beacon->tail)
+> +		return -EINVAL;
+> +
+> +	rsn_ie = cfg80211_find_ie(WLAN_EID_RSN, beacon->tail, beacon->tail_len);
+> +	if (!rsn_ie)
+> +		return -EINVAL;
+> +
+> +	rsn_ie_len = *(rsn_ie + 1);
+> +	/* skip element id and length */
+> +	rsn_ie += 2;
+> +
+> +	/* skip version, group cipher */
+> +	if (rsn_ie_len < 6)
+> +		return -EINVAL;
+> +	rsn_ie +=  6;
+> +	rsn_ie_len -= 6;
+> +
+> +	/* skip pairwise cipher suite */
+> +	if (rsn_ie_len < 2)
+> +		return -EINVAL;
+> +	cnt = *((u16 *) rsn_ie);
 
-The signal and noise are forced to be positive since ethtool
-deals in unsigned 64-bit values and this number should be human
-readable.  This gives easy access to some of the data formerly
-exposed in the deprecated /proc/net/wireless file.
+Any endian or alignment issues?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 b37fb0d... 99e3597... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |  155 ++++++++++++++++++++++++++++++++++++++--------------
- 1 files changed, 114 insertions(+), 41 deletions(-)
+> +	rsn_ie += (2 + cnt * 4);
+> +	rsn_ie_len -= (2 + cnt * 4);
+> +
+> +	/* skip akm suite */
+> +	if (rsn_ie_len < 2)
+> +		return -EINVAL;
+> +	cnt = *((u16 *) rsn_ie);
+> +	rsn_ie += (2 + cnt * 4);
+> +	rsn_ie_len -= (2 + cnt * 4);
+> +
+> +	if (rsn_ie_len < 2)
+> +		return -EINVAL;
+> +
+> +	memcpy(rsn_capab, rsn_ie, 2);
+> +
+> +	return 0;
+> +}
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index b37fb0d..99e3597 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -117,7 +117,9 @@ static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
- 	"rx_duplicates", "rx_fragments", "rx_dropped",
- 	"tx_packets", "tx_bytes", "tx_fragments",
- 	"tx_filtered", "tx_retry_failed", "tx_retries",
--	"beacon_loss"
-+	"beacon_loss", "txrate", "rxrate", "signal",
-+	"channel", "noise", "ch_time", "ch_time_busy",
-+	"ch_time_ext_busy", "ch_time_rx", "ch_time_tx"
- };
- #define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
- 
-@@ -138,46 +140,6 @@ static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
- 	return rv;
- }
- 
--static void ieee80211_get_et_stats(struct wiphy *wiphy,
--				   struct net_device *dev,
--				   struct ethtool_stats *stats,
--				   u64 *data)
--{
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct sta_info *sta;
--	struct ieee80211_local *local = sdata->local;
--
--	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
--
--	rcu_read_lock();
--	list_for_each_entry_rcu(sta, &local->sta_list, list) {
--		int i = 0;
--
--		/* Make sure this station belongs to the proper dev */
--		if (sta->sdata->dev != dev)
--			continue;
--
--		data[i++] += sta->rx_packets;
--		data[i++] += sta->rx_bytes;
--		data[i++] += sta->wep_weak_iv_count;
--		data[i++] += sta->num_duplicates;
--		data[i++] += sta->rx_fragments;
--		data[i++] += sta->rx_dropped;
--
--		data[i++] += sta->tx_packets;
--		data[i++] += sta->tx_bytes;
--		data[i++] += sta->tx_fragments;
--		data[i++] += sta->tx_filtered_count;
--		data[i++] += sta->tx_retry_failed;
--		data[i++] += sta->tx_retry_count;
--		data[i++] += sta->beacon_loss_count;
--		BUG_ON(i != STA_STATS_LEN);
--	}
--	rcu_read_unlock();
--
--	drv_get_et_stats(sdata, stats, &(data[STA_STATS_LEN]));
--}
--
- static void ieee80211_get_et_strings(struct wiphy *wiphy,
- 				     struct net_device *dev,
- 				     u32 sset, u8 *data)
-@@ -531,6 +493,117 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
- }
- 
-+static void ieee80211_get_et_stats(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   struct ethtool_stats *stats,
-+				   u64 *data)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+	struct ieee80211_local *local = sdata->local;
-+	struct station_info sinfo;
-+	struct survey_info survey;
-+	bool do_once = true;
-+	int i;
-+#define STA_STATS_SURVEY_LEN 7
-+
-+	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		i = 0;
-+
-+		/* Make sure this station belongs to the proper dev */
-+		if (sta->sdata->dev != dev)
-+			continue;
-+
-+		data[i++] += sta->rx_packets;
-+		data[i++] += sta->rx_bytes;
-+		data[i++] += sta->wep_weak_iv_count;
-+		data[i++] += sta->num_duplicates;
-+		data[i++] += sta->rx_fragments;
-+		data[i++] += sta->rx_dropped;
-+
-+		data[i++] += sta->tx_packets;
-+		data[i++] += sta->tx_bytes;
-+		data[i++] += sta->tx_fragments;
-+		data[i++] += sta->tx_filtered_count;
-+		data[i++] += sta->tx_retry_failed;
-+		data[i++] += sta->tx_retry_count;
-+		data[i++] += sta->beacon_loss_count;
-+
-+		if (!do_once) {
-+			i += 3;
-+			goto after_once;
-+		}
-+
-+		do_once = false;
-+		sinfo.filled = 0;
-+		sta_set_sinfo(sta, &sinfo);
-+
-+		if (sinfo.filled | STATION_INFO_TX_BITRATE)
-+			data[i] = 100000 *
-+				cfg80211_calculate_bitrate(&sinfo.txrate);
-+		i++;
-+		if (sinfo.filled | STATION_INFO_RX_BITRATE)
-+			data[i] = 100000 *
-+				cfg80211_calculate_bitrate(&sinfo.rxrate);
-+		i++;
-+
-+		if (sinfo.filled | STATION_INFO_SIGNAL_AVG)
-+			data[i] = abs(sinfo.signal_avg);
-+		i++;
-+
-+after_once:
-+		if (WARN_ON(i != (STA_STATS_LEN - STA_STATS_SURVEY_LEN))) {
-+			rcu_read_unlock();
-+			return;
-+		}
-+	}
-+
-+	i = STA_STATS_LEN - STA_STATS_SURVEY_LEN;
-+	/* Get survey stats for current channel only */
-+	survey.filled = 0;
-+	if (drv_get_survey(local, 0, &survey) != 0) {
-+		survey.filled = 0;
-+		data[i++] = 0;
-+	} else {
-+		data[i++] = survey.channel->center_freq;
-+	}
-+
-+	if (survey.filled & SURVEY_INFO_NOISE_DBM)
-+		data[i++] = abs(survey.noise);
-+	else
-+		data[i++] = -1LL;
-+	if (survey.filled & SURVEY_INFO_CHANNEL_TIME)
-+		data[i++] = survey.channel_time;
-+	else
-+		data[i++] = -1LL;
-+	if (survey.filled & SURVEY_INFO_CHANNEL_TIME_BUSY)
-+		data[i++] = survey.channel_time_busy;
-+	else
-+		data[i++] = -1LL;
-+	if (survey.filled & SURVEY_INFO_CHANNEL_TIME_EXT_BUSY)
-+		data[i++] = survey.channel_time_ext_busy;
-+	else
-+		data[i++] = -1LL;
-+	if (survey.filled & SURVEY_INFO_CHANNEL_TIME_RX)
-+		data[i++] = survey.channel_time_rx;
-+	else
-+		data[i++] = -1LL;
-+	if (survey.filled & SURVEY_INFO_CHANNEL_TIME_TX)
-+		data[i++] = survey.channel_time_tx;
-+	else
-+		data[i++] = -1LL;
-+
-+	rcu_read_unlock();
-+
-+	if (WARN_ON(i != STA_STATS_LEN))
-+		return;
-+
-+	drv_get_et_stats(sdata, stats, &(data[STA_STATS_LEN]));
-+}
-+
- 
- static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 				 int idx, u8 *mac, struct station_info *sinfo)
--- 
-1.7.3.4
+Maybe 
 
