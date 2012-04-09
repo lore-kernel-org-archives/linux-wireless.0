@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:65086 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966099Ab2DLVoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:44:06 -0400
-Date: Thu, 12 Apr 2012 23:43:36 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120412214336.GB12807@1wt.eu> (sfid-20120412_234426_692652_6A617828)
-References: <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com> <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com> <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com> <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com> <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com> <20120412185622.GB2904@burratino> <CAMP44s2M_srvKKaicOpr+TF6hw=dxFMVRwMs2K9E_P_ooPMCXw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s2M_srvKKaicOpr+TF6hw=dxFMVRwMs2K9E_P_ooPMCXw@mail.gmail.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22292 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755462Ab2DIO7f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 10:59:35 -0400
+Message-ID: <4F82F950.3020006@qca.qualcomm.com> (sfid-20120409_170011_355523_19D9B214)
+Date: Mon, 9 Apr 2012 20:29:28 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Subramania Sharma <sharmat@qca.qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Fix 4-way handshake failure in AP and P2P GO
+ mode
+References: <1333644981-3721-1-git-send-email-vthiagar@qca.qualcomm.com> <4F82F66E.8000800@qca.qualcomm.com>
+In-Reply-To: <4F82F66E.8000800@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 13, 2012 at 12:34:59AM +0300, Felipe Contreras wrote:
-> Now what happens when:
-> 
->  - you realize the fix made matters worst, in fact, so worst that the
-> whole thing is unusable in some systems
-> 
-> Presumably we are now in the next round of:
-> 
->  - fix upstream
-> 
-> But v.3.3.2 is due Friday, which makes it very likely that the fix
-> won't get in. And what did we gain? If you simplify the situation to
-> what you explained above, it seems very reasonable, but that's not the
-> whole picture.
 
-BTW, if you're so in need for critical fixes, why do you jump to the latest
-version ? It's known and accepted that stable versions stabilize over time
-with a few random hiccups during their early stage. You could have chosen
-3.0 instead which generally holds some fixes that cooked longer before being
-merged.
 
-There's a cost at living on the bleeding edge. It's fun and sometimes it
-hurts but that should not be that dramatic that you spend so many emails
-telling how stable releases should be maintained.
+On Monday 09 April 2012 08:17 PM, Kalle Valo wrote:
+> On 04/05/2012 07:56 PM, Vasanthakumar Thiagarajan wrote:
+>> RSN capability field of RSN IE which is generated (which is what really
+>> advertised in beacon/probe response) differs from the one generated in
+>> wpa_supplicant. This inconsistency in rsn IE results in 4-way handshake
+>> failure. To fix this, configure rsn capability used in wpa_supplicant
+>> in firmware using a new wmi command, WMI_SET_IE_CMDID. There is a bit
+>> (ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE) in fw_capabilities to advertise
+>> this support to driver.
+>>
+>> Signed-off-by: Subramania Sharma<sharmat@qca.qualcomm.com>
+>> Signed-off-by: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
+>
+> Otherwise looks good but there's a sparse warning:
+>
+> drivers/net/wireless/ath/ath6kl/cfg80211.c:2539:20: warning: incorrect
+> type in assignment (different base types)
+> drivers/net/wireless/ath/ath6kl/cfg80211.c:2539:20:    expected unsigned
+> short [unsigned] [short] [usertype]<noident>
+> drivers/net/wireless/ath/ath6kl/cfg80211.c:2539:20:    got restricted
+> __le16 [usertype]<noident>
 
-Willy
+grr, for some reason my sparse does not report this. How about the 
+change like the following over this patch so that we need not worry 
+about endianness in accessing rsn-cap?. Thanks!.
 
+
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2520,7 +2520,7 @@ static int ath6kl_set_ies(struct ath6kl_vif *vif,
+  }
+
+  static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
+-                               u16 *rsn_capab)
++                               u8 *rsn_capab)
+  {
+         const u8 *rsn_ie;
+         size_t rsn_ie_len;
+@@ -2560,7 +2560,7 @@ static int ath6kl_get_rsn_capab(struct 
+cfg80211_beacon_data *beacon,
+         if (rsn_ie_len < 2)
+                 return -EINVAL;
+
+-       *rsn_capab = cpu_to_le16(*((u16 *) rsn_ie));
++       memcpy(rsn_capab, rsn_ie, 2);
+
+         return 0;
+  }
+@@ -2749,7 +2749,7 @@ static int ath6kl_start_ap(struct wiphy *wiphy, 
+struct net_device *dev,
+          * advertise the same in beacon/probe response. Send
+          * the complete RSN IE capability field to firmware
+          */
+-       if (!ath6kl_get_rsn_capab(&info->beacon, &rsn_capab) &&
++       if (!ath6kl_get_rsn_capab(&info->beacon, (u8 *) &rsn_capab) &&
+             test_bit(ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
+                      ar->fw_capabilities)) {
+                 res = ath6kl_wmi_set_ie_cmd(ar->wmi, vif->fw_vif_idx,
+
+Vasanth
