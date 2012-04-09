@@ -1,30 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:58255 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751628Ab2DBQtK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 12:49:10 -0400
-Date: Mon, 2 Apr 2012 18:49:20 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Joe Perches <joe@perches.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:21039 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758032Ab2DIUvN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 16:51:13 -0400
+Date: Mon, 9 Apr 2012 22:51:12 +0200 (CEST)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-kernel@vger.kernel.org
+cc: trivial@kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: CONFIG_RTLWIFI_DEBUG default y
-Message-ID: <20120402164920.GA13264@x1.osrc.amd.com> (sfid-20120402_184929_596428_9CB86711)
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 14/26] wireless, mwifiex: drop redundant NULL test before
+ call to release_firmware()
+In-Reply-To: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
+Message-ID: <alpine.LNX.2.00.1204092224080.13925@swampdragon.chaosbits.net> (sfid-20120409_225549_843397_73A6D459)
+References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Err,
+Since release_firmware() does its own test for NULL it is redundant to
+do so before calling it.
 
-why is RTLWIFI_DEBUG default to y? This is an option for driver
-developers only AFAICT and should be default n.
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/net/wireless/mwifiex/main.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Btw, I'm looking at 481b9606ec727 which introduced it.
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 9d1b3ca..2ee6162 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -342,8 +342,7 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter)
+ 	ret = 0;
+ 
+ done:
+-	if (adapter->firmware)
+-		release_firmware(adapter->firmware);
++	release_firmware(adapter->firmware);
+ 	if (ret)
+ 		ret = -1;
+ 	return ret;
+-- 
+1.7.10
 
-Thanks.
 
 -- 
-Regards/Gruss,
-Boris.
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
+
