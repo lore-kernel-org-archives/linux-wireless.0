@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:45857 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753172Ab2DPKtF (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:20945 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757605Ab2DIUus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 06:49:05 -0400
-Date: Mon, 16 Apr 2012 13:48:58 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: mgherzan@gmail.com
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Subject: re: wl12xx: fix DMA-API-related warnings
-Message-ID: <20120416104858.GA24159@elgon.mountain> (sfid-20120416_124911_729622_DCD3B1EA)
+	Mon, 9 Apr 2012 16:50:48 -0400
+Date: Mon, 9 Apr 2012 22:50:47 +0200 (CEST)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-kernel@vger.kernel.org
+cc: trivial@kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 10/26] wireless, at76c50x:: Don't needlessly test for NULL
+ before calling release_firmware()
+In-Reply-To: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
+Message-ID: <alpine.LNX.2.00.1204092218300.13925@swampdragon.chaosbits.net> (sfid-20120409_225652_715791_95A6A0D3)
+References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Mircea Gherzan,
+The release_firmware() function deals gracefully with being passed a
+NULL pointer, so explicit tests before the call are rather pointless.
 
-The patch 690142e98826: "wl12xx: fix DMA-API-related warnings" from
-Mar 17, 2012, leads to the following Smatch warning:
-drivers/net/wireless/ti/wlcore/cmd.c:126 wl1271_cmd_wait_for_event_or_timeout()
-	 error: no modifiers for allocation.
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/net/wireless/at76c50x-usb.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
- static void wl1271_boot_fw_version(struct wl1271 *wl)
- {
--       struct wl1271_static_data static_data;
-+       struct wl1271_static_data *static_data;
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index 4045e5a..faa8bcb 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -2512,10 +2512,8 @@ static void __exit at76_mod_exit(void)
  
--       wl1271_read(wl, wl->cmd_box_addr, &static_data, sizeof(static_data),
-+       static_data = kmalloc(sizeof(*static_data), GFP_DMA);
-                                                    ^^^^^^^
-You can't use GFP_DMA by itself like that, it needs to ORed with
-GFP_KERNEL or GFP_ATOMIC or something like that:
+ 	printk(KERN_INFO DRIVER_DESC " " DRIVER_VERSION " unloading\n");
+ 	usb_deregister(&at76_driver);
+-	for (i = 0; i < ARRAY_SIZE(firmwares); i++) {
+-		if (firmwares[i].fw)
+-			release_firmware(firmwares[i].fw);
+-	}
++	for (i = 0; i < ARRAY_SIZE(firmwares); i++)
++		release_firmware(firmwares[i].fw);
+ 	led_trigger_unregister_simple(ledtrig_tx);
+ }
+ 
+-- 
+1.7.10
 
-	static_data = kmalloc(sizeof(*static_data), GFP_KERNEL | GFP_DMA);
 
-+       if (!static_data) {
-+               __WARN();
-+               return;
-
-There are a couple other places in this patch which do the same thing.
-Could you fix it, please?
-
-regards,
-dan carpenter
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
