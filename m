@@ -1,73 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:46024 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754254Ab2D0JWu convert rfc822-to-8bit (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:42090 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753548Ab2DIIpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 05:22:50 -0400
+	Mon, 9 Apr 2012 04:45:40 -0400
+Received: by vbbff1 with SMTP id ff1so2130140vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2012 01:45:39 -0700 (PDT)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20120427091405.GS3157@wantstofly.org>
-References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
-	<20120427091405.GS3157@wantstofly.org>
-Date: Fri, 27 Apr 2012 11:22:49 +0200
-Message-ID: <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com> (sfid-20120427_112314_216829_9A9044ED)
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAD2nsn3-C8ZLmUpTDeA6HuPr-+=V5KkPJb6h5e7ZJsGi4v9p0g@mail.gmail.com>
+References: <4F7A8EB7.4060200@silka.with-linux.com> <4F7A923D.5000002@candelatech.com>
+ <CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
+ <4F7A9D5C.8040402@silka.with-linux.com> <CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
+ <4F7AAAD9.2040307@silka.with-linux.com> <CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
+ <CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
+ <4F7AB6FE.3080009@silka.with-linux.com> <20120403200306.0afbb48b@xenia.leun.net>
+ <CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
+ <CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
+ <20120404235104.682cfad3@xenia.leun.net> <4F7DE3A4.1040705@candelatech.com>
+ <CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
+ <4F7F52BD.7060906@candelatech.com> <20120409010816.36244f17@xenia.leun.net> <CAD2nsn3-C8ZLmUpTDeA6HuPr-+=V5KkPJb6h5e7ZJsGi4v9p0g@mail.gmail.com>
+From: Sergio Correia <lists@uece.net>
+Date: Mon, 9 Apr 2012 04:45:19 -0400
+Message-ID: <CAJyhjX0jCjRyorUYEf=FXzo=AfjMy3anONSdnZctFWfQ0J1NUQ@mail.gmail.com> (sfid-20120409_104554_668952_24944CE0)
+Subject: Re: 3.4-rc ath9k regression (Re: [ath9k-devel] 3.3.1 ath9k regression)
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Michael Leun <lkml20120218@newton.leun.net>,
+	Ben Greear <greearb@candelatech.com>,
+	casteyde.christian@free.fr,
+	Kelly Anderson <kelly@silka.with-linux.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:14 AM, Lennert Buytenhek
-<buytenh@wantstofly.org> wrote:
-> On Fri, Apr 27, 2012 at 11:08:31AM +0200, Sedat Dilek wrote:
->
->> User lautriv asked for belkin N-1 WLAN device support on IRC.
->>
->> Further informations from lautriv:
->> * marvell 80W8031, card-id 11ab:2a02
->> * Debian/sid 3.2.x
->>
->> On [1] I found a report by Jim Cromie concerning same PCI device-id:
->>
->> 00:0e.0 Ethernet controller [0200]: Marvell Technology Group Ltd.
->> 88W8361 [TopDog] 802.11n Wireless [11ab:2a02] (rev 03)
->>       Subsystem: Marvell Technology Group Ltd. 88W8361 [TopDog] 802.11n Wireless [11ab:2a02]
->>
->> So, let's add 0x2a02 to PCI device table.
->
-> Let's not.  There's no firmware for the 8361 that implements the
-> firmware interface currently implemented by the mwl8k driver, so
-> this is pretty useless.
->
->
->> [1] http://www.spinics.net/lists/newbies/msg46601.html
->
-> From that link:
->
-> | I have a card which modprobes, despite a PCI-ID mismatch
-> |
-> | [...]
-> |
-> | Given the pci-id mismatch shouldnt this just fail to modprobe ?
->
-> No.  That's not a bug -- you are free to load drivers for hardware
-> not currently in your system.
->
->
->>  static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
->> +     { PCI_VDEVICE(MARVELL, 0x2a02), .driver_data = MWL8363, },
->>       { PCI_VDEVICE(MARVELL, 0x2a0a), .driver_data = MWL8363, },
->
-> A 8361 is certainly not a 8363.
+Hello Mohammed,
 
-Damn, I got confused by all the numbers. More coffee.
-Thanks for the clarification. I will inform the user on IRC.
-Sorry, for the noise.
+On Mon, Apr 9, 2012 at 2:28 AM, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+> On Mon, Apr 9, 2012 at 4:38 AM, Michael Leun
+> <lkml20120218@newton.leun.net> wrote:
+>> After an suspend to disk / resume cycle (in kernel suspend to disk,
+>> openSuSE) with 3.4-rc2 my ath9k wireless does not ping
+>> anymore.
+>>
+>> Output of iwconfig wlan0 looks just as usual (associated to AP).
+>>
+>> iwconfig wlan0 essid <myssid> fixes this (causes an
+>> deauthenticate/authenticate with AP) - then connectivity is there again.
+>>
+>> Guess what: "Of course" does not happen when reverting
+>> c1afdaff90538ef085b756454f12b29575411214 ath9k: fix going to full-sleep
+>> on PS idle.
+>>
+>> So, in my opinion it should be seriously considered to revert that patch
+>> until it is fully understood what is going on and why.
+>
+> please try with the attached patch to see if it helps.
+>
 
-Are you planning to or even working on support (for) 8361 devices?
+with your patch applied on a 3.3 kernel, nothing seems to change here
+(AR9285 PCI express): if the card goes through the suspend/resume
+cycle, or if I disable/re-enabled the wireless networking on the
+network manager, I get the following messages:
 
-- Sedat -
+[   62.931045] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   65.770425] wlan0: authenticate with 00:26:44:68:e0:6f (try 1)
+[   65.967949] wlan0: authenticate with 00:26:44:68:e0:6f (try 2)
+[   66.167722] wlan0: authenticate with 00:26:44:68:e0:6f (try 3)
+[   66.367504] wlan0: authentication with 00:26:44:68:e0:6f timed out
+
+if I unload/reload the ath9k module, it works again, though:
+
+[   88.657560] ath9k: Driver unloaded
+[   88.714713] ath: EEPROM regdomain: 0x60
+[   88.714715] ath: EEPROM indicates we should expect a direct regpair map
+[   88.714718] ath: Country alpha2 being used: 00
+[   88.714720] ath: Regpair used: 0x60
+[   88.716415] ieee80211 phy1: Selected rate control algorithm
+'ath9k_rate_control'
+[   88.716933] Registered led device: ath9k-phy1
+[   88.716948] ieee80211 phy1: Atheros AR9285 Rev:2
+mem=0xffffc90005960000, irq=17
+[   88.735253] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   91.568727] wlan0: authenticate with 00:26:44:68:e0:6f (try 1)
+[   91.572181] wlan0: authenticated
+[   91.593796] wlan0: associate with 00:26:44:68:e0:6f (try 1)
+[   91.598115] wlan0: RX AssocResp from 00:26:44:68:e0:6f (capab=0x411
+status=0 aid=2)
+[   91.598119] wlan0: associated
+[   91.598122] wlan0: moving STA 00:26:44:68:e0:6f to state 1
+[   91.598124] wlan0: moving STA 00:26:44:68:e0:6f to state 2
+[   91.598775] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   91.611432] wlan0: moving STA 00:26:44:68:e0:6f to state 3
+
+thanks,
+sergio
+
+>>
+>> It may look theoretically correct (I've no knowledge that would enable
+>> me assess that), but it seems to have caused 3 more or less different
+>> problems to various people.
+>>
+>> --
+>> MfG,
+>>
+>> Michael Leun
+>>
+>
+>
+>
+> --
+> thanks,
+> shafi
