@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50507 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755645Ab2DQRrY (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:45088 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757343Ab2DIUvC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 13:47:24 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 4/6] wireless: Add util method to get channel index from frequency.
-Date: Tue, 17 Apr 2012 10:46:45 -0700
-Message-Id: <1334684807-14026-5-git-send-email-greearb@candelatech.com> (sfid-20120417_194726_924640_2523B282)
-In-Reply-To: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+	Mon, 9 Apr 2012 16:51:02 -0400
+Date: Mon, 9 Apr 2012 22:51:01 +0200 (CEST)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-kernel@vger.kernel.org
+cc: trivial@kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Subject: [PATCH 12/26] ipw2200: remove a redundant NULL check before calling
+ release_firmware()
+In-Reply-To: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
+Message-ID: <alpine.LNX.2.00.1204092220360.13925@swampdragon.chaosbits.net> (sfid-20120409_225614_586222_6DE6F69B)
+References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+The release_firmware() function does its own NULL test, so testing
+before calling it is rather redundant.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 ---
-:100644 100644 27f9561... be6fb62... M	include/net/cfg80211.h
-:100644 100644 6cba001... 2fd0e97... M	net/wireless/util.c
- include/net/cfg80211.h |    7 +++++++
- net/wireless/util.c    |   24 ++++++++++++++++++++++++
- 2 files changed, 31 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ipw2x00/ipw2200.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 27f9561..be6fb62 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2388,6 +2388,13 @@ ieee80211_get_channel(struct wiphy *wiphy, int freq)
- }
- 
- /**
-+ * ieee80211_get_channel_idx - get channel index from wiphy for specified freq
-+ * @wiphy: the struct wiphy to get the channel for
-+ * @freq: the center frequency of the channel
-+ */
-+extern int ieee80211_get_channel_idx(struct wiphy *wiphy, int freq);
-+
-+/**
-  * ieee80211_get_response_rate - get basic rate for a given rate
-  *
-  * @sband: the band to look for rates in
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 6cba001..2fd0e97 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -88,6 +88,30 @@ struct ieee80211_channel *__ieee80211_get_channel(struct wiphy *wiphy,
- }
- EXPORT_SYMBOL(__ieee80211_get_channel);
- 
-+int ieee80211_get_channel_idx(struct wiphy *wiphy, int freq)
-+{
-+	enum ieee80211_band band;
-+	struct ieee80211_supported_band *sband;
-+	int i;
-+	int rv = 0;
-+
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		sband = wiphy->bands[band];
-+
-+		if (!sband)
-+			continue;
-+
-+		for (i = 0; i < sband->n_channels; i++) {
-+			if (sband->channels[i].center_freq == freq)
-+				return rv;
-+			rv++;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(ieee80211_get_channel_idx);
-+
- static void set_mandatory_flags_band(struct ieee80211_supported_band *sband,
- 				     enum ieee80211_band band)
- {
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 2b02257..77c5d2f 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -3657,8 +3657,7 @@ static int ipw_load(struct ipw_priv *priv)
+ 		priv->rxq = NULL;
+ 	}
+ 	ipw_tx_queue_free(priv);
+-	if (raw)
+-		release_firmware(raw);
++	release_firmware(raw);
+ #ifdef CONFIG_PM
+ 	fw_loaded = 0;
+ 	raw = NULL;
 -- 
-1.7.3.4
+1.7.10
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
