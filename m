@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49839 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752698Ab2DWQfo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 12:35:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH v2 1/1] mac80211: check for non-managed interface
-Date: Mon, 23 Apr 2012 09:30:32 -0700
-Message-Id: <1335198632-27102-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_183547_725531_461E5FAA)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23729 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752544Ab2DIOue (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 10:50:34 -0400
+Message-ID: <4F82F735.1070505@qca.qualcomm.com> (sfid-20120409_165037_871326_B77D8D45)
+Date: Mon, 9 Apr 2012 17:50:29 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH V2] ath6kl: Fix target assert in p2p bringup with multi
+ vif
+References: <1333724070-17603-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1333724070-17603-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Average beacon signal only keep tracked by managed interface,
-give warning and return 0 for the others.
+On 04/06/2012 05:54 PM, Vasanthakumar Thiagarajan wrote:
+> Using interface 0 for p2p causes target assert. This is because
+> interface 0 is always initialized to non-p2p operations. Fix this
+> issue by initializing all the interfaces for p2p when fw is capable
+> of dynamic interface switching. When fw is not capable of dynamic
+> switching, make sure p2p is not brought up on interface which is
+> not initialized for this purpose.
+> 
+> Reported-by: Naveen Singh navesing@qca.qualcomm.com
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- net/mac80211/util.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Thanks, applied.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 89c1e5b..d0c979e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1799,5 +1799,9 @@ int ieee80211_ave_rssi(struct ieee80211_vif *vif)
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
-+	if (WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION)) {
-+		/* non-managed type inferfaces */
-+		return 0;
-+	}
- 	return ifmgd->ave_beacon_signal;
- }
--- 
-1.7.0.4
-
+Kalle
