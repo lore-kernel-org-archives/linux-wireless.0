@@ -1,104 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39524 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758296Ab2DXXv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 19:51:27 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/11] iwlwifi: remove unused macros
-Date: Tue, 24 Apr 2012 16:45:54 -0700
-Message-Id: <1335311164-10252-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015154_657822_84191929)
-In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:21017 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757343Ab2DIUvI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 16:51:08 -0400
+Date: Mon, 9 Apr 2012 22:51:07 +0200 (CEST)
+From: Jesper Juhl <jj@chaosbits.net>
+To: linux-kernel@vger.kernel.org
+cc: trivial@kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Dan Williams <dcbw@redhat.com>
+Subject: [PATCH 13/26] wireless, libertas: remove redundant NULL tests before
+ calling release_firmware()
+In-Reply-To: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
+Message-ID: <alpine.LNX.2.00.1204092221470.13925@swampdragon.chaosbits.net> (sfid-20120409_225601_026155_B83994ED)
+References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   69 ----------------------------
- 1 files changed, 0 insertions(+), 69 deletions(-)
+release_firmware() tests for, and deals gracefully with, NULL
+pointers. Remove redundant explicit tests before calling the function.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index e1c2bb8..0642186 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -186,75 +186,6 @@ done:
- /*
-  * BT coex
-  */
--/*
-- * Macros to access the lookup table.
-- *
-- * The lookup table has 7 inputs: bt3_prio, bt3_txrx, bt_rf_act, wifi_req,
--* wifi_prio, wifi_txrx and wifi_sh_ant_req.
-- *
-- * It has three outputs: WLAN_ACTIVE, WLAN_KILL and ANT_SWITCH
-- *
-- * The format is that "registers" 8 through 11 contain the WLAN_ACTIVE bits
-- * one after another in 32-bit registers, and "registers" 0 through 7 contain
-- * the WLAN_KILL and ANT_SWITCH bits interleaved (in that order).
-- *
-- * These macros encode that format.
-- */
--#define LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, wifi_req, wifi_prio, \
--		  wifi_txrx, wifi_sh_ant_req) \
--	(bt3_prio | (bt3_txrx << 1) | (bt_rf_act << 2) | (wifi_req << 3) | \
--	(wifi_prio << 4) | (wifi_txrx << 5) | (wifi_sh_ant_req << 6))
--
--#define LUT_PTA_WLAN_ACTIVE_OP(lut, op, val) \
--	lut[8 + ((val) >> 5)] op (cpu_to_le32(BIT((val) & 0x1f)))
--#define LUT_TEST_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--				 wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	(!!(LUT_PTA_WLAN_ACTIVE_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, \
--				   bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
--				   wifi_sh_ant_req))))
--#define LUT_SET_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--				wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_PTA_WLAN_ACTIVE_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, \
--			       bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
--			       wifi_sh_ant_req))
--#define LUT_CLEAR_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
--				  wifi_req, wifi_prio, wifi_txrx, \
--				  wifi_sh_ant_req) \
--	LUT_PTA_WLAN_ACTIVE_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, \
--			       bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
--			       wifi_sh_ant_req))
--
--#define LUT_WLAN_KILL_OP(lut, op, val) \
--	lut[(val) >> 4] op (cpu_to_le32(BIT(((val) << 1) & 0x1e)))
--#define LUT_TEST_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--			   wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	(!!(LUT_WLAN_KILL_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--			     wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
--#define LUT_SET_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--			  wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_WLAN_KILL_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--			 wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--#define LUT_CLEAR_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--			    wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_WLAN_KILL_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--			 wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--
--#define LUT_ANT_SWITCH_OP(lut, op, val) \
--	lut[(val) >> 4] op (cpu_to_le32(BIT((((val) << 1) & 0x1e) + 1)))
--#define LUT_TEST_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--			    wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	(!!(LUT_ANT_SWITCH_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--			      wifi_req, wifi_prio, wifi_txrx, \
--			      wifi_sh_ant_req))))
--#define LUT_SET_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--			   wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_ANT_SWITCH_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--			  wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--#define LUT_CLEAR_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--			     wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_ANT_SWITCH_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--			  wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--
- static const __le32 iwlagn_def_3w_lookup[12] = {
- 	cpu_to_le32(0xaaaaaaaa),
- 	cpu_to_le32(0xaaaaaaaa),
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/net/wireless/libertas/if_cs.c   |    6 ++----
+ drivers/net/wireless/libertas/if_sdio.c |    6 ++----
+ drivers/net/wireless/libertas/if_spi.c  |    6 ++----
+ drivers/net/wireless/libertas/main.c    |   12 ++++--------
+ 4 files changed, 10 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index 234ee88..171a06b 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -951,10 +951,8 @@ out2:
+ out1:
+ 	pcmcia_disable_device(p_dev);
+ out:
+-	if (helper)
+-		release_firmware(helper);
+-	if (mainfw)
+-		release_firmware(mainfw);
++	release_firmware(helper);
++	release_firmware(mainfw);
+ 
+ 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
+ 	return ret;
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 9804ebc..15bfe2f 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -751,10 +751,8 @@ success:
+ 	ret = 0;
+ 
+ out:
+-	if (helper)
+-		release_firmware(helper);
+-	if (mainfw)
+-		release_firmware(mainfw);
++	release_firmware(helper);
++	release_firmware(mainfw);
+ 
+ 	lbs_deb_leave_args(LBS_DEB_SDIO, "ret %d", ret);
+ 	return ret;
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 50b1ee7..7a5df4f 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -1095,10 +1095,8 @@ static int if_spi_init_card(struct if_spi_card *card)
+ 		goto out;
+ 
+ out:
+-	if (helper)
+-		release_firmware(helper);
+-	if (mainfw)
+-		release_firmware(mainfw);
++	release_firmware(helper);
++	release_firmware(mainfw);
+ 
+ 	lbs_deb_leave_args(LBS_DEB_SPI, "err %d\n", err);
+ 
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 957681d..3b81b70 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1269,14 +1269,10 @@ int lbs_get_firmware(struct device *dev, const char *user_helper,
+ 
+   fail:
+ 	/* Failed */
+-	if (*helper) {
+-		release_firmware(*helper);
+-		*helper = NULL;
+-	}
+-	if (*mainfw) {
+-		release_firmware(*mainfw);
+-		*mainfw = NULL;
+-	}
++	release_firmware(*helper);
++	*helper = NULL;
++	release_firmware(*mainfw);
++	*mainfw = NULL;
+ 
+ 	return -ENOENT;
+ }
 -- 
-1.7.0.4
+1.7.10
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
