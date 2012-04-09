@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:46110 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472Ab2DPTul (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:35085 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103Ab2DISM4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 15:50:41 -0400
-Received: by wibhj6 with SMTP id hj6so9021968wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 12:50:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4F469ADF.5040806@broadcom.com>
-References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com>
- <4F356004.9090409@broadcom.com> <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com>
- <4F469ADF.5040806@broadcom.com>
-From: Kiss Robert <kepten@gmail.com>
-Date: Mon, 16 Apr 2012 21:50:20 +0200
-Message-ID: <CAN+AqrXDTLVZqP_jdbWTm-=FFmj2RqY6sD+B-GiUR6OL_SU2xQ@mail.gmail.com> (sfid-20120416_215044_896813_D33EC3D3)
-Subject: Re: Broadcom brcm80211 monitor mode
-To: Franky Lin <frankyl@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 9 Apr 2012 14:12:56 -0400
+Date: Mon, 09 Apr 2012 14:12:41 -0400 (EDT)
+Message-Id: <20120409.141241.1216091936509309354.davem@davemloft.net> (sfid-20120409_201304_873110_1D633BBA)
+To: marc@merlins.org
+Cc: bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big
+ network copies (page allocation failure)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120409172051.GR32290@merlins.org>
+References: <20120329163800.GH24933@merlins.org>
+	<1333044575.2656.1.camel@bwh-desktop.uk.solarflarecom.com>
+	<20120409172051.GR32290@merlins.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Marc MERLIN <marc@merlins.org>
+Date: Mon, 9 Apr 2012 10:20:51 -0700
 
-Is there any hope in the near future for a brcm80211 firmware which
-supports monitor mode? If I got it right, it is either Broadcom who
-could release such a firmware or someone else who has infinite free
-time to reverse engineer the blob firmware, right? Is there any
-initiative for that? Maybe some progress on it? I ask it because I'd
-like to contribute to such a project if it already exists.
+> Any idea what's going on, what bucket of RAM is an issue for the driver
+> (total RAM is more than plenty), and where I should go from there?
 
-Cheers,
-
-Robert
-
-On 23 February 2012 21:00, Franky Lin <frankyl@broadcom.com> wrote:
-> On 02/23/2012 08:00 AM, Kiss Robert wrote:
->>
->> I have read somewhere that the Broadcom 4330 chipset on Samsung Galaxy
->> S II cannot be put to monitor mode because of some hardware
->> limitation. Is that true? Can someone confirm that?
->
->
-> Hi Robert,
->
-> It's a firmware limitation instead of hardware to be more precise. There is
-> no firmware out there support monitor mode so the support can not be done by
-> changing the host driver only.
->
-> Regards,
-> Franky
->
+The wireless layer is allocating high-order pages, so it's
+not the amount of ram, it's the fragmentation of it leading
+to a lack of those high-order pages.
