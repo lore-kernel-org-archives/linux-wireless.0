@@ -1,76 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:36365 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754488Ab2DNSJY convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21743 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752827Ab2DJG44 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 14:09:24 -0400
-Date: Sat, 14 Apr 2012 20:08:55 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120414200855.7be0b212@stein> (sfid-20120414_201007_651070_ABE3B2D1)
-In-Reply-To: <CAMP44s2jLv=VPgjiocmzzyUqzUYp4b7nFEU_XV6nT=n+OZ3RNw@mail.gmail.com>
-References: <20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-	<20120413154216.476a02ac@stein>
-	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
-	<20120413230525.GA13995@burratino>
-	<CAMP44s0OdVBTwVtCoru-xvB=LVtO56jgku7X-0a7mUz1=iVCzw@mail.gmail.com>
-	<20120414111044.4930a5f3@stein>
-	<CAMP44s2jLv=VPgjiocmzzyUqzUYp4b7nFEU_XV6nT=n+OZ3RNw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 10 Apr 2012 02:56:56 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20355.55691.874038.636662@gargle.gargle.HOWL> (sfid-20120410_085700_576680_06B3E9C3)
+Date: Tue, 10 Apr 2012 12:26:11 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] Revert "ath9k: fix going to full-sleep on PS idle"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Apr 14 Felipe Contreras wrote:
-> On Sat, Apr 14, 2012 at 12:10 PM, Stefan Richter
-> <stefanr@s5r6.in-berlin.de> wrote:
-> > On Apr 14 Felipe Contreras wrote:
-> 
-> >> Of course, although the difference with the stable kernel would be
-> >> very small if the only thing added is an extra rule for acceptance:
-> >> "It reverts an earlier patch to 'stable'."
-> >
-> > It looks like a small difference on the surface, but it isn't.  It would
-> > mean "yes, we /do/ forward ports in -stable too in some cases".
-> 
-> How? There's a lot reverts in mainline, where do they come from? Are
-> they forward ports from some ghost trees?
+This reverts commit c1afdaff90538ef085b756454f12b29575411214.
 
-Indeed, reverts that go into mainline can often be called forward-ports:
-A subsystem developer applied the revert to his subsystem tree, Linus
-merges that tree, and the merge result is technically a forward-port
-(except if the pull resulted in a fast-forward instead of a merge).
+Users have reported connection failures in 3.3.1 and suspend/resume
+failures in 3.4-rcX. Revert this commit for now - PS IDLE can be
+fixed in a clean manner later on.
 
-However, "fix it in stable before mainline" requires to allow forward-ports
-in stable for a different reason:  If the fix in mainline gets delayed
-until after stable's next branch point, the stable fix needs to be
-forward-ported from 3.M.y to 3.N.y.
+Cc: stable@vger.kernel.org
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-> If you drop a patch from the stable review queue before it gets into a
-> stable release, and then that patch is reverted from mainline, is that
-> also a "forward port"?
-
-There is just one fix of one bug, not a fix plus a port of the fix to a
-similarly buggy tree.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 5697dee..ba5af8e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -118,15 +118,13 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 	if (--sc->ps_usecount != 0)
+ 		goto unlock;
+ 
+-	if (sc->ps_flags & PS_WAIT_FOR_TX_ACK)
+-		goto unlock;
+-
+-	if (sc->ps_idle)
++	if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
+ 		mode = ATH9K_PM_FULL_SLEEP;
+ 	else if (sc->ps_enabled &&
+ 		 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
+ 			      PS_WAIT_FOR_CAB |
+-			      PS_WAIT_FOR_PSPOLL_DATA)))
++			      PS_WAIT_FOR_PSPOLL_DATA |
++			      PS_WAIT_FOR_TX_ACK)))
+ 		mode = ATH9K_PM_NETWORK_SLEEP;
+ 	else
+ 		goto unlock;
 -- 
-Stefan Richter
--=====-===-- -=-- -===-
-http://arcgraph.de/sr/
+1.7.10
+
