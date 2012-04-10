@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:1270 "EHLO mail.tpi.com"
+Received: from nbd.name ([46.4.11.11]:42269 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753944Ab2DPQne (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 12:43:34 -0400
-Message-ID: <4F8C4C06.1070307@canonical.com> (sfid-20120416_184354_091050_37F04C57)
-Date: Mon, 16 Apr 2012 10:42:46 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
+	id S1753568Ab2DJJ6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 05:58:36 -0400
+Message-ID: <4F840442.5060706@openwrt.org> (sfid-20120410_115840_686120_6580A48C)
+Date: Tue, 10 Apr 2012 11:58:26 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-kernel@vger.kernel.org,
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	ath9k-devel@venema.h4ckr.net, kernel-janitors@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH linux-next 1/1] ath6k: Normalize use of FW_DIR
-References: <1334337448-26270-1-git-send-email-tim.gardner@canonical.com> <1334337448-26270-2-git-send-email-tim.gardner@canonical.com> <4F8BBEAD.40305@qca.qualcomm.com>
-In-Reply-To: <4F8BBEAD.40305@qca.qualcomm.com>
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k_hw: precedence bug in ath9k_hw_set_ofdm_nil()
+References: <20120410090445.GB26832@elgon.mountain>
+In-Reply-To: <20120410090445.GB26832@elgon.mountain>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 12:39 AM, Kalle Valo wrote:
-> On 04/13/2012 08:17 PM, Tim Gardner wrote:
->> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
->> Cc: "John W. Linville" <linville@tuxdriver.com>
->> Cc: linux-wireless@vger.kernel.org
->> Cc: netdev@vger.kernel.org
->> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+On 2012-04-10 11:04 AM, Dan Carpenter wrote:
+> This was introduced in 54da20d83f "ath9k_hw: improve ANI processing and
+> rx desensitizing parameters".  It triggers a Smatch complaint because
+> the "if (!x != y) { ..." formation is a common precedence error.
 > 
-> Thanks, applied to ath6kl.git. But ar6004 hw1.2 supports wasn't in
-> linux-next yet so I changed it as well. If you can, please check my changes:
+> In this case, maybe the code was intended to be as it is.  The
+> "->ofdmWeakSigDetectOff" and "->ofdm_weak_signal_on" variables are both
+> boolean.
 > 
-> https://github.com/kvalo/ath6kl/commit/2023dbb8310ab39ac1119a32ef52405f7a73f51f
+> Or perhaps based we could change the != to an == and remove the negate?
 > 
-> Kalle
+> But normally when I see this formation it is a precedence bug so that's
+> the patch I've sent.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+> index 47a9fb4..8304e27 100644
+> --- a/drivers/net/wireless/ath/ath9k/ani.c
+> +++ b/drivers/net/wireless/ath/ath9k/ani.c
+> @@ -291,7 +291,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
+>  				     entry_ofdm->fir_step_level);
+>  
+>  	if ((aniState->noiseFloor >= aniState->rssiThrHigh) &&
+> -	    (!aniState->ofdmWeakSigDetectOff !=
+> +	    (aniState->ofdmWeakSigDetectOff !=
+Looking at other Atheros code, I think this patch is wrong, it should
+be: aniState->ofdmWeakSigDetectOff == entry_ofdm->ofdm_weak_signal_on
 
-Looks good to me.
+While a bit confusing, the behavior of the original code was correct,
+aniState->ofdmWeakSigDetectOff is used as a boolean.
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+This code badly needs a cleanup, the whole mess with *on vs *off
+variables is quite confusing.
+
+- Felix
