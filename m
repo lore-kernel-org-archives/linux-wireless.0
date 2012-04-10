@@ -1,72 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43187 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577Ab2DRDbe (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:59964 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759279Ab2DJPOm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 23:31:34 -0400
-Message-ID: <4F8E358F.1020501@candelatech.com> (sfid-20120418_053137_868151_FE76D99D)
-Date: Tue, 17 Apr 2012 20:31:27 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 10 Apr 2012 11:14:42 -0400
+Cc: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [WIP 03/11] ath9k_hw: Add WoW hardware capability flags
+Date: Tue, 10 Apr 2012 20:43:13 +0530
+Message-ID: <1334070801-21708-4-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120410_171446_656374_50BBE51A)
+In-Reply-To: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 5/6] mac80211: Add more ethtools stats: survey, rates,
- etc
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>  <1334684807-14026-6-git-send-email-greearb@candelatech.com>  (sfid-20120417_194713_443684_C3723CAF) <1334713300.3725.18.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1334713300.3725.18.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/17/2012 06:41 PM, Johannes Berg wrote:
-> On Tue, 2012-04-17 at 10:46 -0700, greearb@candelatech.com wrote:
->> +	/* Get survey stats for current channel */
->> +	survey.filled = 0;
->> +	if (drv_get_survey(local, 0,&survey) != 0) {
->> +		survey.filled = 0;
->> +		data[i++] = 0;
->> +	} else {
->> +		/* ath9k (and maybe others??) only updates internal stats
->> +		 * when you get channel index 0, so if
->> +		 * we are NOT on channel zero, get the real stats
->> +		 * now.
->> +		 */
->> +		int ch_idx = ieee80211_get_channel_idx(local->hw.wiphy,
->> +			local->oper_channel->center_freq);
->> +		if (ch_idx == 0) {
->> +			data[i++] = survey.channel->center_freq;
->> +		} else {
->> +			survey.filled = 0;
->> +			if (drv_get_survey(local, ch_idx,&survey) != 0) {
->> +				survey.filled = 0;
->> +				data[i++] = 0;
->> +			} else {
->> +				data[i++] = survey.channel->center_freq;
->> +			}
->> +		}
->> +	}
->
-> This is completely incomprehensible to me. I don't think the channel
-> index is what you think it is?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-It is ugly, but as far as I can tell it works.  The survey method
-wants an index, not channel number or frequency, from what I can tell
-(I just looked at and tested ath9k).
+have seperate wow capability flags for
+*basic wow support
+*device capable of matching exact user defined pattern
+or de-authentication/disassoc pattern
+*device such AR9280 requires first four bytest for
+all sort of patterns
 
-Based on the freq returned as part of the survey results, the logic
-above appears to function as I would hope.
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.h |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-That said, a new get-survey() method that took a channel object instead of an
-index would make this code cleaner.  Or, we could store the channel
-index in the channel object for fast lookup, but I was afraid storing the
-index would be too risky in case channels are ever moved around for some reason
-or another.
-
-And, I could be missing something yet....
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index c061070..ce97b1e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -231,6 +231,23 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_DFS			= BIT(16),
+ };
+ 
++/*
++ * enum ath9k_hw_wow_caps - WoW device capabilities
++ * @ATH9K_HW_WOW_DEVICE_CAPABLE: device revision is capable of WoW.
++ * @ATH9K_HW_WOW_PATTERN_MATCH_EXACT: device is capable of matching
++ * an exact user defined pattern or de-authentication/disassoc pattern.
++ * @ATH9K_HW_WOW_PATTERN_MATCH_DWORD: device requires the first four
++ * bytes of the pattern for user defined pattern, de-authentication and
++ * disassociation patterns for all types of possible frames recieved
++ * of those types.
++ */
++
++enum ath9k_hw_wow_caps {
++	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(0),
++	ATH9K_HW_WOW_PATTERN_MATCH_EXACT	= BIT(1),
++	ATH9K_HW_WOW_PATTERN_MATCH_DWORD	= BIT(2),
++};
++
+ struct ath9k_hw_capabilities {
+ 	u32 hw_caps; /* ATH9K_HW_CAP_* from ath9k_hw_caps */
+ 	u16 rts_aggr_limit;
+@@ -246,6 +263,7 @@ struct ath9k_hw_capabilities {
+ 	u8 txs_len;
+ 	u16 pcie_lcr_offset;
+ 	bool pcie_lcr_extsync_en;
++	enum ath9k_hw_wow_caps wow_caps;
+ };
+ 
+ struct ath9k_ops_config {
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
+
