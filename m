@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53436 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753927Ab2DXNCp (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6741 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758630Ab2DJMte (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 09:02:45 -0400
-Date: Tue, 24 Apr 2012 08:54:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: Andrew Chant <andrew.chant@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: AP mode my ath9k broke between 3.3 and 3.4-rc2
-Message-ID: <20120424125429.GB3770@tuxdriver.com> (sfid-20120424_150249_597065_05D48655)
-References: <CANugF37WSOdHODRXOb6nnBCh5HMTTUqf0VpyPuTDdNK80-LkAQ@mail.gmail.com>
- <CANugF37wdS3=u7grT3H6WAJM=XxTukZoWdj70SXLL8k_6t1b6A@mail.gmail.com>
- <4F9679AB.6010103@01019freenet.de>
+	Tue, 10 Apr 2012 08:49:34 -0400
+Date: Tue, 10 Apr 2012 18:20:18 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	<ath9k-devel@venema.h4ckr.net>, <kernel-janitors@vger.kernel.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k_hw: precedence bug in
+ ath9k_hw_set_ofdm_nil()
+Message-ID: <20120410125015.GA7543@vmraj-lnx.users.atheros.com> (sfid-20120410_144948_962908_CDD86C5F)
+References: <20120410090445.GB26832@elgon.mountain>
+ <4F840442.5060706@openwrt.org>
+ <20120410105725.GA5589@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F9679AB.6010103@01019freenet.de>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20120410105725.GA5589@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 24, 2012 at 12:00:11PM +0200, Andreas Hartmann wrote:
-> Andrew Chant wrote:
-> > 3.4-rc4 doesn't work either.
-> > If I revert the patch on 3.4-rc4, the Intel card is able to associate again.
-> > -Andrew
+On Tue, Apr 10, 2012 at 01:57:25PM +0300, Dan Carpenter wrote:
+> On Tue, Apr 10, 2012 at 11:58:26AM +0200, Felix Fietkau wrote:
+> > >  	if ((aniState->noiseFloor >= aniState->rssiThrHigh) &&
+> > > -	    (!aniState->ofdmWeakSigDetectOff !=
+> > > +	    (aniState->ofdmWeakSigDetectOff !=
+> > Looking at other Atheros code, I think this patch is wrong, it should
+> > be: aniState->ofdmWeakSigDetectOff == entry_ofdm->ofdm_weak_signal_on
 > > 
-> > On Tue, Apr 24, 2012 at 12:11 AM, Andrew Chant <andrew.chant@gmail.com> wrote:
-> >> Hello,
-> >>  my Atheros AR9300 PCIe card (168c:0030) stopped working as an AP on
-> >> the 5GHz band between 3.3 and 3.4-rc2.
-> >> After 14 git bisects, I believe I have narrowed it down to the following patch:
-> >>
-> >> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=293702a3fb75832613e2af097bdc3ac8ef775b33
-> >>
-> >> mac80211: use common radiotap code for cooked monitors
+> > While a bit confusing, the behavior of the original code was correct,
+> > aniState->ofdmWeakSigDetectOff is used as a boolean.
+> > 
+> > This code badly needs a cleanup, the whole mess with *on vs *off
+> > variables is quite confusing.
+> > 
 > 
-> Same problem here with ar9285 / 2.4GHz / eap-tls / 802.11n / hostapd
-> 0.7.3 / compat-wireless-3.4-rc3-1.tar.bz2
+> Yep.  It's bad to name variables xxx_off because it leads triple
+> negatives like we see here.
 > 
-> Removing "mac80211: use common radiotap code for cooked monitors" solves
-> the problem here, too.
+> I guess that "if (!off != on) { ..." might be more readable than
+> "if (off == on) { ...".  There are a couple ways to silence this
+> warning in Smatch.
 > 
-> Using rt2860 as AP seems not to be a problem.
+> The first way would be to add parenthesis like,
+> "((!off) != on) {...".  I think it helps because it makes the negate
+> stand out and you don't have to think about how the precedence
+> rules works.  Other people think it's a needless parenthesis for
+> something that is obvious.
+> 
+> The other way would be to make either ->ofdmWeakSigDetectOff or
+> ->ofdm_weak_signal_on be type bool.  I think this would make the
+> code clearer.
+>
+Declare them as bool type and rename one of them to common (either *_off or *_on).
 
-Sounds like we may need to revert it upstream.  Johannes, any comments?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+-Rajkumar
