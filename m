@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:56580 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752916Ab2DNW4g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 18:56:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120415004714.4d729bef@stein>
-References: <20120411231102.GA6404@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-	<20120413154216.476a02ac@stein>
-	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
-	<20120414094137.54a7f213@stein>
-	<CAMP44s2Un-M2OCmuRQGpGsHR21gH=S7oJKx4Ci8tvYVCCSitUw@mail.gmail.com>
-	<20120414195559.3d5ab944@stein>
-	<CAMP44s0ngzwkbQapTip=oW1b5m2uO5zCzbXHVqHXwT2+Wpgo_A@mail.gmail.com>
-	<20120414232124.1ffd7ac9@stein>
-	<CAMP44s05k3YkXSLGdYjJ42d+uEM+bLS9uZ+2ztUBWqcO6kyUtA@mail.gmail.com>
-	<20120415004714.4d729bef@stein>
-Date: Sun, 15 Apr 2012 01:56:34 +0300
-Message-ID: <CAMP44s1aVEDO7TKrVuXoMXP70qAUX-fT-mZOBU92yfn6h3fEQw@mail.gmail.com> (sfid-20120415_005652_234996_C8827A78)
-Subject: Re: [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:4804 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756489Ab2DJRfv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 13:35:51 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>,
+	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 12/18] NFC: No need to apply twice the modulo op to LLCP's recv_n
+Date: Tue, 10 Apr 2012 19:43:14 +0200
+Message-Id: <1334079800-10671-13-git-send-email-sameo@linux.intel.com> (sfid-20120410_193554_675792_05605CEF)
+In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 15, 2012 at 1:47 AM, Stefan Richter
-<stefanr@s5r6.in-berlin.de> wrote:
-> On Apr 15 Felipe Contreras wrote:
->> The question that has not been answered is what makes them different,
->
-> It was answered in the grandparent post and in posts before it.
+recv_n is set properly when receiving an HDLC frame.
 
-Nope.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/llcp/commands.c |    2 +-
+ net/nfc/llcp/llcp.c     |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
->> I'm glad you see it's silly to put bad patches in the stable release
->> just so they get properly tracked for mainline, but that's exactly
->> what you arguing for.
->
-> I am not arguing for anything remotely like that.
-
-Please, do explain why that is silly then.
-
+diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
+index ef10ffc..4aa52b8 100644
+--- a/net/nfc/llcp/commands.c
++++ b/net/nfc/llcp/commands.c
+@@ -522,7 +522,7 @@ int nfc_llcp_send_rr(struct nfc_llcp_sock *sock)
+ 
+ 	skb_put(skb, LLCP_SEQUENCE_SIZE);
+ 
+-	skb->data[2] = sock->recv_n % 16;
++	skb->data[2] = sock->recv_n;
+ 
+ 	skb_queue_head(&local->tx_queue, skb);
+ 
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index d5e87c3..2cf01e6 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -428,7 +428,7 @@ static u8 nfc_llcp_nr(struct sk_buff *pdu)
+ 
+ static void nfc_llcp_set_nrns(struct nfc_llcp_sock *sock, struct sk_buff *pdu)
+ {
+-	pdu->data[2] = (sock->send_n << 4) | (sock->recv_n % 16);
++	pdu->data[2] = (sock->send_n << 4) | (sock->recv_n);
+ 	sock->send_n = (sock->send_n + 1) % 16;
+ 	sock->recv_ack_n = (sock->recv_n - 1) % 16;
+ }
 -- 
-Felipe Contreras
+1.7.9.1
+
