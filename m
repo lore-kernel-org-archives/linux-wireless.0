@@ -1,196 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog128.obsmtp.com ([74.125.149.141]:45660 "EHLO
-	na3sys009amx257.postini.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754394Ab2DKTyO (ORCPT
+Received: from hermes.mlbassoc.com ([64.234.241.98]:38789 "EHLO
+	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755689Ab2DJMFM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 15:54:14 -0400
-Received: by laap9 with SMTP id p9so957484laa.38
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:54:10 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, coelho@ti.com
-Subject: [PATCH 22/24] wlcore/wl12xx: move identify firmware function to a lower driver op
-Date: Wed, 11 Apr 2012 22:53:38 +0300
-Message-Id: <1334174020-18957-23-git-send-email-coelho@ti.com> (sfid-20120411_215444_228714_BFFDC5BA)
-In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
-References: <1334174020-18957-1-git-send-email-coelho@ti.com>
+	Tue, 10 Apr 2012 08:05:12 -0400
+Message-ID: <4F8421F6.2060004@mlbassoc.com> (sfid-20120410_140518_516391_5502543F)
+Date: Tue, 10 Apr 2012 06:05:10 -0600
+From: Gary Thomas <gary@mlbassoc.com>
+MIME-Version: 1.0
+To: Luciano Coelho <coelho@ti.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: wl1271 watchdog interrupt
+References: <4F6A7FD0.8090404@boundarydevices.com>    <4F71CDC7.2010207@mlbassoc.com> <1333355941.16990.23.camel@cumari>   <4F7BA34C.2030001@boundarydevices.com> <1333508285.24637.2.camel@cumari>  <4F7C2E85.4050902@mlbassoc.com> <1334039054.27729.116.camel@cumari>
+In-Reply-To: <1334039054.27729.116.camel@cumari>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Different chip families have different firmware versions, so we need
-to identify the firmware to enable quirks, reject the used version
-etc. in the lower drivers.  This commit turns the fw_ver_quirks
-function into an identify_fw operation.
+On 2012-04-10 00:24, Luciano Coelho wrote:
+> On Wed, 2012-04-04 at 05:20 -0600, Gary Thomas wrote:
+>> On 2012-04-03 20:58, Luciano Coelho wrote:
+>>> On Tue, 2012-04-03 at 18:26 -0700, Troy Kisky wrote:
+>>>> On 4/2/2012 1:39 AM, Luciano Coelho wrote:
+>
+> [...]
+>
+>>> Cool!
+>>>
+>>> Now, Gary, do you still have the same (or a similar) problem with your
+>>> setup?
+>>>
+>>
+>> Yes, I still have issues.  One problem is that the wlan interface will
+>> not come up unless I manually perform a scan.  If I just do this to
+>> bring it up (my AP uses WPA2)
+>
+> This is pretty weird.  Something to do with the interrupts, apparently.
+>
+>
+>> # ifconfig wlan0 hw ether D4:94:A1:8E:1E:17
+>> # ifconfig wlan0 up
+>> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> # ifup wlan0
+>> udhcpc (v1.19.3) started
+>> Sending discover...
+>> Read error: Network is down, reopening socket
+>> wl1271: ERROR timeout waiting for the hardware to complete initialization
+>> Sending discover...
+>> udhcpc: sendto: Network is down
+>> Read error: Network is down, reopening socket
+>> Sending discover...
+>> udhcpc: sendto: Network is down
+>> Read error: Network is down, reopening socket
+>> No lease, failing
+>> root@cobra8148p81:~# wl1271: ERROR sdio read failed (-110)
+>> wl1271: ERROR sdio write failed (-110)
+>> wl1271: ERROR sdio read failed (-110)
+>> wl1271: ERROR chip id doesn't match after firmware boot
+>> wl1271: ERROR firmware boot failed despite 3 retries
+>
+> Hard to tell what's happening here.  What do you have in
+> your /etc/network/interfaces file?
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl12xx/main.c   |   17 +++++++++++
- drivers/net/wireless/ti/wlcore/boot.c   |   48 ++++++++++++++----------------
- drivers/net/wireless/ti/wlcore/hw_ops.h |    8 +++++
- drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
- 4 files changed, 48 insertions(+), 26 deletions(-)
+Here are the relevant parts.
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index ec94ad6..be48c47 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1198,6 +1198,22 @@ static u32 wl12xx_sta_get_ap_rate_mask(struct wl1271 *wl,
- 	return wlvif->rate_set;
- }
- 
-+static int wl12xx_identify_fw(struct wl1271 *wl)
-+{
-+	unsigned int *fw_ver = wl->chip.fw_ver;
-+
-+	/* Only new station firmwares support routing fw logs to the host */
-+	if ((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_STA) &&
-+	    (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_FWLOG_STA_MIN))
-+		wl->quirks |= WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED;
-+
-+	/* This feature is not yet supported for AP mode */
-+	if (fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_AP)
-+		wl->quirks |= WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED;
-+
-+	return 0;
-+}
-+
- static void wl12xx_conf_init(struct wl1271 *wl)
- {
- 	struct wl12xx_priv *priv = wl->priv;
-@@ -1274,6 +1290,7 @@ static void wl12xx_get_mac(struct wl1271 *wl)
- 
- static struct wlcore_ops wl12xx_ops = {
- 	.identify_chip		= wl12xx_identify_chip,
-+	.identify_fw		= wl12xx_identify_fw,
- 	.boot			= wl12xx_boot,
- 	.trigger_cmd		= wl12xx_trigger_cmd,
- 	.ack_event		= wl12xx_ack_event,
-diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
-index 2aae201..3a2207d 100644
---- a/drivers/net/wireless/ti/wlcore/boot.c
-+++ b/drivers/net/wireless/ti/wlcore/boot.c
-@@ -31,6 +31,7 @@
- #include "io.h"
- #include "event.h"
- #include "rx.h"
-+#include "hw_ops.h"
- 
- static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
- {
-@@ -44,24 +45,7 @@ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
- 	wlcore_write_reg(wl, REG_ECPU_CONTROL, cpu_ctrl);
- }
- 
--static unsigned int wl12xx_get_fw_ver_quirks(struct wl1271 *wl)
--{
--	unsigned int quirks = 0;
--	unsigned int *fw_ver = wl->chip.fw_ver;
--
--	/* Only new station firmwares support routing fw logs to the host */
--	if ((fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_STA) &&
--	    (fw_ver[FW_VER_MINOR] < FW_VER_MINOR_FWLOG_STA_MIN))
--		quirks |= WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED;
--
--	/* This feature is not yet supported for AP mode */
--	if (fw_ver[FW_VER_IF_TYPE] == FW_VER_IF_TYPE_AP)
--		quirks |= WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED;
--
--	return quirks;
--}
--
--static void wl1271_parse_fw_ver(struct wl1271 *wl)
-+static int wlcore_parse_fw_ver(struct wl1271 *wl)
- {
- 	int ret;
- 
-@@ -73,21 +57,25 @@ static void wl1271_parse_fw_ver(struct wl1271 *wl)
- 	if (ret != 5) {
- 		wl1271_warning("fw version incorrect value");
- 		memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
--		return;
-+		return -EINVAL;
- 	}
- 
--	/* Check if any quirks are needed with older fw versions */
--	wl->quirks |= wl12xx_get_fw_ver_quirks(wl);
-+	ret = wlcore_identify_fw(wl);
-+	if (ret < 0)
-+		return ret;
-+
-+	return 0;
- }
- 
--static void wl1271_boot_fw_version(struct wl1271 *wl)
-+static int wlcore_boot_fw_version(struct wl1271 *wl)
- {
- 	struct wl1271_static_data *static_data;
-+	int ret;
- 
- 	static_data = kmalloc(sizeof(*static_data), GFP_DMA);
- 	if (!static_data) {
--		__WARN();
--		return;
-+		wl1271_error("Couldn't allocate memory for static data!");
-+		return -ENOMEM;
- 	}
- 
- 	wl1271_read(wl, wl->cmd_box_addr, static_data, sizeof(*static_data),
-@@ -101,7 +89,11 @@ static void wl1271_boot_fw_version(struct wl1271 *wl)
- 	/* make sure the string is NULL-terminated */
- 	wl->chip.fw_ver_str[sizeof(wl->chip.fw_ver_str) - 1] = '\0';
- 
--	wl1271_parse_fw_ver(wl);
-+	ret = wlcore_parse_fw_ver(wl);
-+	if (ret < 0)
-+		return ret;
-+
-+	return 0;
- }
- 
- static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
-@@ -408,7 +400,11 @@ int wlcore_boot_run_firmware(struct wl1271 *wl)
- 	wl1271_debug(DEBUG_MAILBOX, "MBOX ptrs: 0x%x 0x%x",
- 		     wl->mbox_ptr[0], wl->mbox_ptr[1]);
- 
--	wl1271_boot_fw_version(wl);
-+	ret = wlcore_boot_fw_version(wl);
-+	if (ret < 0) {
-+		wl1271_error("couldn't boot firmware");
-+		return ret;
-+	}
- 
- 	/*
- 	 * in case of full asynchronous mode the firmware event must be
-diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
-index 25b20ff..d9b1a46 100644
---- a/drivers/net/wireless/ti/wlcore/hw_ops.h
-+++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
-@@ -111,5 +111,13 @@ wlcore_hw_sta_get_ap_rate_mask(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	return wl->ops->sta_get_ap_rate_mask(wl, wlvif);
- }
- 
-+static inline int wlcore_identify_fw(struct wl1271 *wl)
-+{
-+	if (wl->ops->identify_fw)
-+		return wl->ops->identify_fw(wl);
-+
-+	return 0;
-+}
-+
- #endif
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 1c2d81f..960aefb 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -36,6 +36,7 @@ enum wl_rx_buf_align;
- 
- struct wlcore_ops {
- 	int (*identify_chip)(struct wl1271 *wl);
-+	int (*identify_fw)(struct wl1271 *wl);
- 	int (*boot)(struct wl1271 *wl);
- 	void (*trigger_cmd)(struct wl1271 *wl, int cmd_box_addr,
- 			    void *buf, size_t len);
+=================== /etc/network/interfaces (partial) ======================
+# Wireless interfaces
+iface wlan0 inet dhcp
+         wireless_mode managed
+         wireless_essid any
+         wpa-driver wext
+         wpa-conf /etc/wpa_supplicant.conf
+============================================================================
+
+================== /etc/wpa_supplicant.conf (partial) ======================
+network={
+     ssid="LeManegeEnchante"
+     scan_ssid=1
+     key_mgmt=WPA-PSK
+     psk="SOMEPASSWORD"
+   }
+============================================================================
+
+>
+>> However, if I bring it up with this sequence, it works:
+>>
+>> # ifconfig wlan0 hw ether D4:94:A1:8E:1E:17
+>> # ifconfig wlan0 up
+>> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> # iw wlan0 scan
+>>     ... many AP shown
+>> # ifup wlan0
+>> udhcpc (v1.19.3) started
+>> Sending discover...
+>> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+>> Sending discover...
+>> Sending select for 192.168.12.184...
+>> Lease of 192.168.12.184 obtained, lease time 600
+>> adding dns 192.168.12.1
+>
+> Pretty weird.  Somehow triggering the scan is making things go more
+> smoothly.  When booting the chip, we don't really wait for an interrupt,
+> but poll the chip for completion.
+
+Perhaps there's a stray interrupt laying around which the scan path handles
+better than the other way.  I'll look into this.
+
+> [...]
+>
+>> However, if I ever shut down the wlan0, it hangs up and the only
+>> way to get it back is to reboot.
+>>
+>> # ifdown wlan0
+>> cfg80211: Calling CRDA to update world regulatory domain
+>> # ifup wlan0
+>> wl1271: ERROR timeout waiting for the hardware to complete initialization
+>> wl1271: ERROR timeout waiting for the hardware to complete initialization
+>> wl1271: ERROR sdio read failed (-110)
+>
+> This looks like your MMC setup is not able to power on and off
+> correctly.  Are you sure you have all the settings necessary in your
+> board file? Especially the clock frequencies and the caps flag in the
+> hsmmc_info configuration?
+>
+> Make sure you have MMC_CAP_POWER_OFF_CARD in the .caps field of your mmc
+> info struct.
+
+Is this absolutely necessary?  My device can't be powered off (it's soldered
+on and the power supply is fixed, not regulated).  I do have control over the
+RESET pin.  If power control is essential for this device we'll have to fix
+the design.
+
+>
+>> # dmesg | tail -n2wl1271: ERROR sdio read failed (-110)
+>> wl1271: ERROR chip id doesn't match after firmware boot
+>> wl1271: ERROR firmware boot failed despite 3 retries
+>> 0
+>> ieee80211 phy0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94 uapsd=1
+>> ieee80211 phy0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47 uapsd=1
+>> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+>> wl1271: Association completed.
+>> wlan0: no IPv6 routers present
+>> wlan0: deauthenticating from 00:24:b2:49:ef:12 by local choice (reason=3)
+>> ieee80211 phy0: Removed STA 00:24:b2:49:ef:12
+>> ieee80211 phy0: Destroyed STA 00:24:b2:49:ef:12
+>> ieee80211 phy0: device now idle
+>> cfg80211: All devices are disconnected, going to restore regulatory settings
+>> cfg80211: Restoring regulatory settings
+>> cfg80211: Calling CRDA to update world regulatory domain
+>> wl1271: down
+>> wl1271: ERROR timeout waiting for the hardware to complete initialization
+>> wl1271: ERROR timeout waiting for the hardware to complete initialization
+>> wl1271: ERROR sdio read failed (-110)
+>> wl1271: ERROR sdio write failed (-110)
+>> wl1271: ERROR sdio read failed (-110)
+>> wl1271: ERROR chip id doesn't match after firmware boot
+>> wl1271: ERROR firmware boot failed despite 3 retries
+>>
+>> I'm using the 2012-02-28 snapshot of compat-wireless, my kernel is 2.6.37
+>>
+>> Ideas?
+>
+> I'm running out of ideas.  And 2.6.37 is quite ancient, but AFAIK it
+> should work as it is the first version that supports powering the MMC
+> card on and off.  Any chance you could try a newer kernel? Just to find
+> out it everything is working fine with newer kernels.  If it works, then
+> we should focus on why 2.6.37 doesn't work.  Maybe we will have to
+> cherry-pick some patches for the MMC subsystem.
+>
+
+Sadly, I'm stuck with this one.  The processor is DM8148/AM3874 which
+TI only has 2.6.37
+
+Thanks for your time
+
 -- 
-1.7.5.4
-
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
