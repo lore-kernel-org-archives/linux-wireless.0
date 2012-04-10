@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13895 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250Ab2DFPK6 (ORCPT
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:52899 "HELO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758486Ab2DJDHW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 11:10:58 -0400
-Message-ID: <4F7F077C.1060409@qca.qualcomm.com> (sfid-20120406_171102_575955_60AA4236)
-Date: Fri, 6 Apr 2012 20:40:52 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: Configure htcap in fw based on the channel
- type in AP mode
-References: <1333721235-16025-1-git-send-email-vthiagar@qca.qualcomm.com>  <1333721235-16025-2-git-send-email-vthiagar@qca.qualcomm.com> <1333724066.8565.6.camel@joe2Laptop>
-In-Reply-To: <1333724066.8565.6.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Mon, 9 Apr 2012 23:07:22 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/5] mwifiex: fix typo in RSSI_HIGH event handling
+Date: Mon,  9 Apr 2012 20:06:53 -0700
+Message-Id: <1334027217-23724-2-git-send-email-bzhao@marvell.com> (sfid-20120410_050727_469704_080525B5)
+In-Reply-To: <1334027217-23724-1-git-send-email-bzhao@marvell.com>
+References: <1334027217-23724-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a copy-n-paste error introduced in recent patch
+"mwifiex: add set_cqm_rssi_config handler support".
 
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_cmd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Friday 06 April 2012 08:24 PM, Joe Perches wrote:
-> On Fri, 2012-04-06 at 19:37 +0530, Vasanthakumar Thiagarajan wrote:
->> This patch disables HT in start_ap if the type of the channel on
->> which the AP mode is going to be operating is non-HT. HT is enabled
->> with default ht cap setting if the operating channel is going to be
->> 11n.
-> []
->> diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-> []
->> @@ -477,6 +477,12 @@ struct ath6kl_mc_filter {
->>   	char hw_addr[ATH6KL_MCAST_FILTER_MAC_ADDR_SIZE];
->>   };
->>
->> +struct ath6kl_htcap {
->> +	bool ht_enable;
->> +	unsigned short cap_info;
->> +	u8 ampdu_factor;
->> +};
->
-> Probably better to rearrange this as:
->
-> struct ath6kl_htcap {
-> 	unsigned short cap_info;
-> 	u8 ampdu_factor;
-> 	bool ht_enable;
-> };
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index e90c34d..1f71105 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -988,7 +988,7 @@ mwifiex_cmd_802_11_subsc_evt(struct mwifiex_private *priv,
+ 		rssi_tlv->abs_value = subsc_evt_cfg->bcn_h_rssi_cfg.abs_value;
+ 		rssi_tlv->evt_freq = subsc_evt_cfg->bcn_h_rssi_cfg.evt_freq;
+ 
+-		dev_dbg(priv->adapter->dev, "Cfg Beacon Low Rssi event, "
++		dev_dbg(priv->adapter->dev, "Cfg Beacon High Rssi event, "
+ 			"RSSI:-%d dBm, Freq:%d\n",
+ 			subsc_evt_cfg->bcn_h_rssi_cfg.abs_value,
+ 			subsc_evt_cfg->bcn_h_rssi_cfg.evt_freq);
+-- 
+1.7.0.2
 
-You are right, there are couple bytes getting padded, i'll address this. 
-Thanks for reviewing!
-
-Vasanth
