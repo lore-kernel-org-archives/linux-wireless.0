@@ -1,107 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58877 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966089Ab2DLV6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:58:08 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/24] iwlwifi: move iwl_set_rate to iwl-agn-rxon.c
-Date: Thu, 12 Apr 2012 14:54:09 -0700
-Message-Id: <1334267661-14654-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235813_258565_EEDEB438)
-In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:58488 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752958Ab2DJGLJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 02:11:09 -0400
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big
+ network copies (page allocation failure)
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Marc MERLIN <marc@merlins.org>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20120410051127.GA32048@merlins.org>
+References: <20120409.143710.879746943062854492.davem@davemloft.net>
+	 <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 10 Apr 2012 08:11:03 +0200
+Message-ID: <1334038263.2907.1.camel@edumazet-glaptop> (sfid-20120410_081121_229763_8911741E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+On Mon, 2012-04-09 at 22:11 -0700, Marc MERLIN wrote:
+> On Tue, Apr 10, 2012 at 05:56:20AM +0200, Eric Dumazet wrote:
+> > > What wireless device are we dealing with again?
+> > 
+> > Problem seems related to tailroom needed by mac80211
+> > (IEEE80211_ENCRYPT_TAILROOM = 18 bytes)
+> > 
+> > So we must reallocate skb->head, thats impressive nobody cares.
+> > 
+> > [ 3007.249687] ieee80211_skb_resize(skb=ffff8802329846e8) cloned=1 head_need=0 tail_need=18 skb->len=1494 ksize=4096 tailroom=0 headroom=2282
+> > [ 3007.249693] ieee80211_skb_resize(skb=ffff8802329846e8) cloned=0 head_need=0 tail_need=0 skb->len=1526 ksize=8192 tailroom=64 headroom=2250
+> > 
+> > Ouch... skb_tailroom() seems wrong ... it seems pskb_expand_head() is really suboptimal.
+> > 
+> > It appears tcp_sendmsg() tries to fill skb completely, with no available tailroom :
+> > 
+> >                         if (skb_tailroom(skb) > 0) {
+> >                                 /* We have some space in skb head. Superb! */
+> >                                 if (copy > skb_tailroom(skb))
+> >                                         copy = skb_tailroom(skb);
+> >                                 err = skb_add_data_nocache(sk, skb, from, copy);
+> >                                 if (err)
+> >                                         goto do_fault;
+> >                         } else {
+> > 
+> > Shouldnt we take into account dev->needed_tailroom ?
+> > 
+> > I'll submit a pskb_expand_head() fix asap.
+> 
+> Thanks for finding this.
+> 
+> To answer an earlier question, I tried the non wireless case too.
+> 
+> The problem is harder to reproduce over e1000e though, I just got two short
+> hangs where my mouse cursor was hung for 5-10 seconds, but nothing in
+> syslog/dmesg this time.
+> 
+> I'm pretty sure this older log below did happen on e1000e with wireless disabled
+> though (but it had a taint 'O'):
+> 
+> If that helps, my earlier message had the traces below.
+> 
+> I can report back when you have a patch you'd like me to try out.
 
-Move this as part of  iwl-core.c cleanup.
+Hi Marc
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   13 +++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 ++
- drivers/net/wireless/iwlwifi/iwl-core.c     |   13 -------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |    1 -
- 4 files changed, 15 insertions(+), 14 deletions(-)
+Please try following patch, as it solved the problem for me (no more
+order-1 allocations in tx path)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 994fb21..18776ab 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -715,6 +715,19 @@ void iwl_set_flags_for_band(struct iwl_priv *priv,
- 	}
+Thanks !
+
+diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+index 3337027..70a3f8d 100644
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h
+@@ -481,6 +481,7 @@ struct sk_buff {
+ 	union {
+ 		__u32		mark;
+ 		__u32		dropcount;
++		__u32		avail_size;
+ 	};
+ 
+ 	sk_buff_data_t		transport_header;
+@@ -1366,6 +1367,18 @@ static inline int skb_tailroom(const struct sk_buff *skb)
  }
  
-+void iwl_set_rate(struct iwl_priv *priv)
+ /**
++ *	skb_availroom - bytes at buffer end
++ *	@skb: buffer to check
++ *
++ *	Return the number of bytes of free space at the tail of an sk_buff
++ *	allocated by sk_stream_alloc()
++ */
++static inline int skb_availroom(const struct sk_buff *skb)
 +{
-+	struct iwl_rxon_context *ctx;
-+
-+	for_each_context(priv, ctx) {
-+		ctx->staging.cck_basic_rates =
-+		    (IWL_CCK_BASIC_RATES_MASK >> IWL_FIRST_CCK_RATE) & 0xF;
-+
-+		ctx->staging.ofdm_basic_rates =
-+		   (IWL_OFDM_BASIC_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
-+	}
++	return skb_is_nonlinear(skb) ? 0 : skb->avail_size - skb->len;
 +}
 +
- static void iwl_set_rxon_hwcrypto(struct iwl_priv *priv,
- 				  struct iwl_rxon_context *ctx, int hw_decrypt)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 8f9ea33..3588d3c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -136,6 +136,8 @@ void iwl_set_flags_for_band(struct iwl_priv *priv,
- 			    struct iwl_rxon_context *ctx,
- 			    enum ieee80211_band band,
- 			    struct ieee80211_vif *vif);
-+void iwl_set_rate(struct iwl_priv *priv);
-+
- /* uCode */
- int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
- void iwl_send_prio_tbl(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 942cbdb..40eb91a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -43,19 +43,6 @@
++/**
+  *	skb_reserve - adjust headroom
+  *	@skb: buffer to alter
+  *	@len: bytes to move
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index baf8d28..1887454 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -952,9 +952,11 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
+ 		goto adjust_others;
+ 	}
  
- const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+-	data = kmalloc(size + sizeof(struct skb_shared_info), gfp_mask);
++	data = kmalloc(size + SKB_DATA_ALIGN(sizeof(struct skb_shared_info)),
++		       gfp_mask);
+ 	if (!data)
+ 		goto nodata;
++	size = ksize(data) - SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
  
--void iwl_set_rate(struct iwl_priv *priv)
--{
--	struct iwl_rxon_context *ctx;
--
--	for_each_context(priv, ctx) {
--		ctx->staging.cck_basic_rates =
--		    (IWL_CCK_BASIC_RATES_MASK >> IWL_FIRST_CCK_RATE) & 0xF;
--
--		ctx->staging.ofdm_basic_rates =
--		   (IWL_OFDM_BASIC_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
--	}
--}
--
- void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
- {
- 	/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 8f6b16b..9cf1a94 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -78,7 +78,6 @@ struct iwl_cmd;
-  *   L i b                 *
-  ***************************/
+ 	/* Copy only real data... and, alas, header. This should be
+ 	 * optimized for the cases when header is void.
+diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
+index 5d54ed3..87f497f 100644
+--- a/net/ipv4/tcp.c
++++ b/net/ipv4/tcp.c
+@@ -701,11 +701,12 @@ struct sk_buff *sk_stream_alloc_skb(struct sock *sk, int size, gfp_t gfp)
+ 	skb = alloc_skb_fclone(size + sk->sk_prot->max_header, gfp);
+ 	if (skb) {
+ 		if (sk_wmem_schedule(sk, skb->truesize)) {
++			skb_reserve(skb, sk->sk_prot->max_header);
+ 			/*
+ 			 * Make sure that we have exactly size bytes
+ 			 * available to the caller, no more, no less.
+ 			 */
+-			skb_reserve(skb, skb_tailroom(skb) - size);
++			skb->avail_size = size;		
+ 			return skb;
+ 		}
+ 		__kfree_skb(skb);
+@@ -995,10 +996,9 @@ new_segment:
+ 				copy = seglen;
  
--void iwl_set_rate(struct iwl_priv *priv);
- int iwl_cmd_echo_test(struct iwl_priv *priv);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_alloc_traffic_mem(struct iwl_priv *priv);
--- 
-1.7.0.4
+ 			/* Where to copy to? */
+-			if (skb_tailroom(skb) > 0) {
++			if (skb_availroom(skb) > 0) {
+ 				/* We have some space in skb head. Superb! */
+-				if (copy > skb_tailroom(skb))
+-					copy = skb_tailroom(skb);
++				copy = min_t(int, copy, skb_availroom(skb));
+ 				err = skb_add_data_nocache(sk, skb, from, copy);
+ 				if (err)
+ 					goto do_fault;
+diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
+index 364784a..376b2cf 100644
+--- a/net/ipv4/tcp_output.c
++++ b/net/ipv4/tcp_output.c
+@@ -2060,7 +2060,7 @@ static void tcp_retrans_try_collapse(struct sock *sk, struct sk_buff *to,
+ 		/* Punt if not enough space exists in the first SKB for
+ 		 * the data in the second
+ 		 */
+-		if (skb->len > skb_tailroom(to))
++		if (skb->len > skb_availroom(to))
+ 			break;
+ 
+ 		if (after(TCP_SKB_CB(skb)->end_seq, tcp_wnd_end(tp)))
+
 
