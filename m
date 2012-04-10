@@ -1,173 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:43672 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752324Ab2DEMsM (ORCPT
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:52546 "HELO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758467Ab2DJDH0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 08:48:12 -0400
-Message-ID: <4F7D90AF.2040109@gtri.gatech.edu> (sfid-20120405_144816_248023_0545A008)
-Date: Thu, 5 Apr 2012 08:31:43 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Reply-To: <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-CC: Nicu Pavel <npavel@mini-box.com>
-Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
-References: <4F0EEA1B.3040501@wut.de> <4F0FA4DD.5020601@lwfinger.net> <loom.20120405T091556-756@post.gmane.org>
-In-Reply-To: <loom.20120405T091556-756@post.gmane.org>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature";
-	micalg=sha1; boundary="------------ms060005010106030707000206"
+	Mon, 9 Apr 2012 23:07:26 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/5] mwifiex: display correct country information in debugfs "info"
+Date: Mon,  9 Apr 2012 20:06:55 -0700
+Message-Id: <1334027217-23724-4-git-send-email-bzhao@marvell.com> (sfid-20120410_050730_506401_06DFFDD0)
+In-Reply-To: <1334027217-23724-1-git-send-email-bzhao@marvell.com>
+References: <1334027217-23724-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------ms060005010106030707000206
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: quoted-printable
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-On 04/05/2012 03:27 AM, Nicu Pavel wrote:
-> After mode debugging with DBG_LOUD I found out that the difference when=
- the
-> driver is loaded/modprobed and ifdown/ifup to be a receive configuratio=
-n
-> register (RCR) value.
->
-> On bootup/modprobe:  ### Set RCR(0xf0002a0e) ###
-> On ifdown/ifup: ### Set RCR(0xf0002ace) ###
->
-> If I force RCR value to 0x2a0e in rtl92cu_set_hw_reg()inside HW_VAR_RCR=
- case
-> everything works ok.
->
-> This seems to work with 3 different vendors USB sticks based on 8192cu =
-chipset
-> (Edimax, EDUP and some unknown vendor).
->
-> I tried looking up the bit values meanings from that register but could=
-n't find
-> a proper spec.
+Use "priv->country_code" string to display country information in
+debugfs command "info" instead of "adapter->region_code".
 
-Hello,
+"adapter->region_code" contains default region code got from FW while
+initialization, whereas "priv->country_code" is updated in reg_notifier
+handler whenever there is a change in regulatory domain.
 
-I found a header file that seems to have better definitions and comments =
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/debugfs.c   |    2 +-
+ drivers/net/wireless/mwifiex/ioctl.h     |    2 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c |    3 ++-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
 
-than what is currently in-tree (I think it's a copy of the Realtek=20
-sources).  It says that the "8192C (RCR) Receive Configuration Register" =
+diff --git a/drivers/net/wireless/mwifiex/debugfs.c b/drivers/net/wireless/mwifiex/debugfs.c
+index 1a84507..a870b58 100644
+--- a/drivers/net/wireless/mwifiex/debugfs.c
++++ b/drivers/net/wireless/mwifiex/debugfs.c
+@@ -212,7 +212,7 @@ mwifiex_info_read(struct file *file, char __user *ubuf,
+ 		p += sprintf(p, "essid=\"%s\"\n", info.ssid.ssid);
+ 		p += sprintf(p, "bssid=\"%pM\"\n", info.bssid);
+ 		p += sprintf(p, "channel=\"%d\"\n", (int) info.bss_chan);
+-		p += sprintf(p, "region_code = \"%02x\"\n", info.region_code);
++		p += sprintf(p, "country_code = \"%s\"\n", info.country_code);
+ 
+ 		netdev_for_each_mc_addr(ha, netdev)
+ 			p += sprintf(p, "multicast_address[%d]=\"%pM\"\n",
+diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
+index 99c0664..887a7d9 100644
+--- a/drivers/net/wireless/mwifiex/ioctl.h
++++ b/drivers/net/wireless/mwifiex/ioctl.h
+@@ -96,7 +96,7 @@ struct mwifiex_bss_info {
+ 	u32 bss_mode;
+ 	struct cfg80211_ssid ssid;
+ 	u32 bss_chan;
+-	u32 region_code;
++	u8 country_code[3];
+ 	u32 media_connected;
+ 	u32 max_power_level;
+ 	u32 min_power_level;
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 8ba58d9..3bdef07 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -468,7 +468,8 @@ int mwifiex_get_bss_info(struct mwifiex_private *priv,
+ 
+ 	info->bss_chan = bss_desc->channel;
+ 
+-	info->region_code = adapter->region_code;
++	memcpy(info->country_code, priv->country_code,
++	       IEEE80211_COUNTRY_STRING_LEN);
+ 
+ 	info->media_connected = priv->media_connected;
+ 
+-- 
+1.7.0.2
 
-BIT 6 and 7 are, respectively: RCR_CBSSID_DATA [Accept BSSID match=20
-packet (Data)] and RCR_CBSSID_BCN [Accept BSSID match packet (Rx beacon, =
-
-probe rsp)].
-These bits are set/cleared in _rtl92cu_set_check_bssid (it calls=20
-set_hw_reg w/HW_VAR_RCR) which is called by rtl92cu_set_network_type.=20
-The set/clear choice is made based on the rtlphy->current_io_type which=20
-is set in rtl8192c/phy_common.c:rtl92c_phy_scan_operation_backup which=20
-in turn is called from core.c:rtl_op_sw_scan_start/_complete.
-It would be interesting to see the output from rtl8192c/phy_common.c=20
-functions rtl92c_phy_set_io_cmd and rtl92c_phy_set_io to see if the=20
-current_io_type perhaps isn't being updated properly.
-
-Hope to help,
-
-Josh
-
-
---------------ms060005010106030707000206
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-KEnMdnoBO+1oAbFWrB3R3mUAAAAAAAA=
---------------ms060005010106030707000206--
