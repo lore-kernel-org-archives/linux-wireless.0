@@ -1,83 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:52217 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220Ab2DZMXe convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36821 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758892Ab2DJPPp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 08:23:34 -0400
+	Tue, 10 Apr 2012 11:15:45 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [WIP 09/11] ath: Add Wake-on-Wireless debug mask
+Date: Tue, 10 Apr 2012 20:43:19 +0530
+Message-ID: <1334070801-21708-10-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120410_171548_169446_14990765)
+In-Reply-To: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20120424.004745.1479792296922367681.davem@davemloft.net>
-References: <1335235603-32420-1-git-send-email-mcgrof@do-not-panic.com> <20120424.004745.1479792296922367681.davem@davemloft.net>
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 26 Apr 2012 05:23:13 -0700
-Message-ID: <CAB=NE6WBw3aJrch0JvxZ7jGb_rFW5Z4XWvYc1KqsBqBu+G8mjw@mail.gmail.com> (sfid-20120426_142339_636631_A9B95351)
-Subject: Re: [PATCH] b44: properly use pr_fmt()
-To: David Miller <davem@davemloft.net>
-Cc: zambrano@broadcom.com, netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 23, 2012 at 9:47 PM, David Miller <davem@davemloft.net> wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> Date: Mon, 23 Apr 2012 19:46:43 -0700
->
->> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
->>
->> pr_fmt() is either defined or we redefine it. Typically
->> drivers define it prior to including printk.h but this
->> is done under the assumption that no other subsystem
->> it uses has already defined pr_fmt(). In such cases
->> pr_fmt() should be undefined and redefined.
->>
->> Doing this properly shaves down compilation time quite
->> considerably.
->>
->> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
->
-> Every driver defines pr_fmt then includes the headers.  I do not
-> see any other place which performs the initial undef of pr_fmt
-> like you want to start doing here.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-One example is, and that is where I got the hint:
+to help the developers and users to debug/know
+whats happening with WoW
 
-drivers/net/wireless/mwifiex/decl.h
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> If there is a reason we should start doing this, it would appear
-> to be a universal reason, not one specific to this driver.
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index c54b7d3..9bd0248 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -215,6 +215,7 @@ void ath_printk(const char *level, const struct ath_common *common,
+  *	used exclusively for WLAN-BT coexistence starting from
+  *	AR9462.
+  * @ATH_DBG_DFS: radar datection
++ * @ATH_DBG_WOW: Wake on Wireless
+  * @ATH_DBG_ANY: enable all debugging
+  *
+  * The debug level is used to control the amount and type of debugging output
+@@ -242,6 +243,7 @@ enum ATH_DEBUG {
+ 	ATH_DBG_BSTUCK		= 0x00008000,
+ 	ATH_DBG_MCI		= 0x00010000,
+ 	ATH_DBG_DFS		= 0x00020000,
++	ATH_DBG_WOW		= 0x00040000,
+ 	ATH_DBG_ANY		= 0xffffffff
+ };
+ 
+-- 
+1.7.0.4
 
-Sure.
-
-> If that's the case, we should formally agree to this and then work
-> on gradually converting all the drivers in reasonably sized chunks.
-
-Understood.
-
-> Either way I can't apply this patch as-is, sorry Luis.
-
-So the issue can occur if any parent header ends up defining this,
-this could happen if a subsystem wants to define the pr_fmt in their
-own header and a driver for example wants to override this. In theory
-this does not occur but in practice this may vary and if we want to
-ensure this does not happen perhaps the thing to do is to document
-this as such.
-
-I just tested allmodconfig though and checked compilation for V=1
-against drivers/net/wireless/ and found no issues against linux-next
-though so in practice at least for wireless networking it seems we are
-squeaky clean in its usage. I'll test across the kernel though next to
-see if there are any real violators of the assumption. Unfortunately
-I've hit an issue with compiling allmodconfig already with linux-next
-that is already reported so my homework will be to find a shiny
-linux-next to compile test against allmodconfig.
-
-An area that this does clearly happen but that likely does not merit
-and upstream change for is in the backport work compat that defines
-this for older kernels and later we have to also backport users of
-pr_fmt such as pr_emerg_once. Ultimately drivers will want to actually
-then override this and in that case the undef is necessary as
-otherwise you get the redefinition warning which incurs in practice a
-considerable CPU performance hit at compilation time.
-
-  Luis
