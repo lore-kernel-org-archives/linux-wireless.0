@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:48477 "EHLO mail.neratec.com"
+Received: from mga14.intel.com ([143.182.124.37]:61220 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753585Ab2DWJMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 05:12:44 -0400
-Message-ID: <4F951D01.60509@neratec.com> (sfid-20120423_111247_844670_01AB963A)
-Date: Mon, 23 Apr 2012 11:12:33 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Zefir Kurtisi <zefir.kurtisi@gmail.com>, linville@tuxdriver.com,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	rodrigue@qca.qualcomm.com, achadd@qca.qualcomm.com,
-	chunkeey@googlemail.com
-Subject: Re: [PATCH 2/4] ath9k: set PHYRADAR in RX filter when on DFS channel
-References: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com> <1335124223-15439-3-git-send-email-zefir.kurtisi@gmail.com> <4F946340.3020700@openwrt.org>
-In-Reply-To: <4F946340.3020700@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1756690Ab2DJRgD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 13:36:03 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>,
+	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 14/18] NFC: Call llcp_add_header properly when sending LLCP DM or DISC
+Date: Tue, 10 Apr 2012 19:43:16 +0200
+Message-Id: <1334079800-10671-15-git-send-email-sameo@linux.intel.com> (sfid-20120410_193607_691540_3D1111C8)
+In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22.04.2012 22:00, Felix Fietkau wrote:
-> On 2012-04-22 9:50 PM, Zefir Kurtisi wrote:
->> From: Zefir Kurtisi<zefir.kurtisi@neratec.com>
->>
->>
->> Signed-off-by: Zefir Kurtisi<zefir.kurtisi@neratec.com>
->> ---
->>   drivers/net/wireless/ath/ath9k/recv.c |    6 ++++++
->>   1 files changed, 6 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->> index f4ae3ba..ef45c0c 100644
->> --- a/drivers/net/wireless/ath/ath9k/recv.c
->> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->> @@ -17,6 +17,7 @@
->>   #include<linux/dma-mapping.h>
->>   #include "ath9k.h"
->>   #include "ar9003_mac.h"
->> +#include "dfs.h"
->>
->>   #define SKB_CB_ATHBUF(__skb)	(*((struct ath_buf **)__skb->cb))
->>
->> @@ -467,6 +468,11 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
->>   		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
->>   	}
->>
->> +	if (sc->sc_ah->curchan->chan->flags&  IEEE80211_CHAN_RADAR)
->> +		rfilt |= ATH9K_RX_FILTER_PHYRADAR;
->> +	else
->> +		rfilt&= ~ATH9K_RX_FILTER_PHYRADAR;
-> This should only be done in AP mode, maybe mac80211 should have a
-> separate flag to tell the driver to enable this. Same comment also
-> applies to patch 4/4.
->
-> - Felix
->
-Are you aware of any issues enabling DFS in client modes? My thinking 
-was that it won't hurt to detect radars in any mode and let the DFS 
-management component decide what to do with that events.
+dsap and ssap were swapped when sending DN or DISC.
 
-I'll be out of office for some time and update the patches then.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/llcp/commands.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-John, please ignore this series for now.
+diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
+index 34ee684..11a3b7d 100644
+--- a/net/nfc/llcp/commands.c
++++ b/net/nfc/llcp/commands.c
+@@ -248,7 +248,7 @@ int nfc_llcp_disconnect(struct nfc_llcp_sock *sock)
+ 
+ 	skb_reserve(skb, dev->tx_headroom + NFC_HEADER_SIZE);
+ 
+-	skb = llcp_add_header(skb, sock->ssap, sock->dsap, LLCP_PDU_DISC);
++	skb = llcp_add_header(skb, sock->dsap, sock->ssap, LLCP_PDU_DISC);
+ 
+ 	skb_queue_tail(&local->tx_queue, skb);
+ 
+@@ -416,7 +416,7 @@ int nfc_llcp_send_dm(struct nfc_llcp_local *local, u8 ssap, u8 dsap, u8 reason)
+ 
+ 	skb_reserve(skb, dev->tx_headroom + NFC_HEADER_SIZE);
+ 
+-	skb = llcp_add_header(skb, ssap, dsap, LLCP_PDU_DM);
++	skb = llcp_add_header(skb, dsap, ssap, LLCP_PDU_DM);
+ 
+ 	memcpy(skb_put(skb, 1), &reason, 1);
+ 
+-- 
+1.7.9.1
 
-
-Thanks,
-Zefir
