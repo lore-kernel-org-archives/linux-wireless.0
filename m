@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50505 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755645Ab2DQRrV (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17857 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758998Ab2DJPQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 13:47:21 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 6/6] mac80211: Add sta_state to ethtool stats.
-Date: Tue, 17 Apr 2012 10:46:47 -0700
-Message-Id: <1334684807-14026-7-git-send-email-greearb@candelatech.com> (sfid-20120417_194724_045118_B502EAFF)
-In-Reply-To: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+	Tue, 10 Apr 2012 11:16:11 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [WIP 11/11] ath9k: do not disable hardware while wow is enabled
+Date: Tue, 10 Apr 2012 20:43:21 +0530
+Message-ID: <1334070801-21708-12-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120410_171621_118201_1D906F18)
+In-Reply-To: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Helps to know how the station is doing in it's association
-attempt.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-:100644 100644 94a340b... a7c62c4... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 94a340b..a7c62c4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -117,7 +117,7 @@ static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
- 	"rx_duplicates", "rx_fragments", "rx_dropped",
- 	"tx_packets", "tx_bytes", "tx_fragments",
- 	"tx_filtered", "tx_retry_failed", "tx_retries",
--	"beacon_loss", "txrate", "rxrate", "signal",
-+	"beacon_loss", "sta_state", "txrate", "rxrate", "signal",
- 	"channel", "noise", "ch_time", "ch_time_busy",
- 	"ch_time_ext_busy", "ch_time_rx", "ch_time_tx"
- };
-@@ -533,10 +533,12 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 		data[i++] += sta->beacon_loss_count;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 9b25299..32608ea 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -310,6 +310,9 @@ static int ath_pci_suspend(struct device *device)
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct ath_softc *sc = hw->priv;
  
- 		if (!do_once) {
--			i += 3;
-+			i += 4;
- 			goto after_once;
- 		}
- 
-+		data[i++] = sta->sta_state;
++	if (sc->wow_enabled)
++		return 0;
 +
- 		do_once = false;
- 		sinfo.filled = 0;
- 		sta_set_sinfo(sta, &sinfo);
+ 	/* The device has to be moved to FULLSLEEP forcibly.
+ 	 * Otherwise the chip never moved to full sleep,
+ 	 * when no interface is up.
 -- 
-1.7.3.4
+1.7.0.4
 
