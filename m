@@ -1,45 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28179 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757095Ab2DMHps (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:63105 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755783Ab2DJM0d convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 03:45:48 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/2] ath9k: fix ibss fair beacon distribution for AR9462
-Date: Fri, 13 Apr 2012 13:16:33 +0530
-Message-ID: <1334303194-7626-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120413_094552_915314_7A41EFFB)
+	Tue, 10 Apr 2012 08:26:33 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 10 Apr 2012 22:26:11 +1000
+Message-ID: <CAGRGNgX+R0CrtF2tBJ1AASBqkhHjmEfcqVnJiTd_1mXFL2rVUw@mail.gmail.com> (sfid-20120410_142638_424218_863FF2AF)
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update AR9462 initval to fix unbalance beacon distribution
-in Ad-Hoc network.
+Hi Andrei,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+A couple of minor nits:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index b39870c..1d6658e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -1115,9 +1115,9 @@ static const u32 ar9462_2p0_mac_core[][2] = {
- 	{0x000081f8, 0x00000000},
- 	{0x000081fc, 0x00000000},
- 	{0x00008240, 0x00100000},
--	{0x00008244, 0x0010f400},
-+	{0x00008244, 0x0010f424},
- 	{0x00008248, 0x00000800},
--	{0x0000824c, 0x0001e800},
-+	{0x0000824c, 0x0001e848},
- 	{0x00008250, 0x00000000},
- 	{0x00008254, 0x00000000},
- 	{0x00008258, 0x00000000},
+On Tue, Apr 10, 2012 at 22:11, Andrei Emeltchenko
+<Andrei.Emeltchenko.news@gmail.com> wrote:
+> From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+>
+> Add new interface type VIRTUAL_AMP80211 which emulates Bluetooth AMP
+> Controller. AMP is Alternate MAC/PHYs Controller for Bluetooth sybsystem.
+> When an AMP is common between the two devices, the Bluetooth system
+> provides mechanisms for moving data traffic from BR/EDR Controller to
+> an AMP Controller.
+>
+> Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+> ---
+> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> index 401c01f..0718cc4 100644
+> --- a/net/mac80211/iface.c
+> +++ b/net/mac80211/iface.c
+> @@ -898,6 +900,11 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+>        case NL80211_IFTYPE_WDS:
+>        case NL80211_IFTYPE_AP_VLAN:
+>                break;
+> +       case NL80211_IFTYPE_VIRTUAL_AMP80211:
+> +#ifdef CONFIG_MAC80211_VIRTUAL_AMP
+> +               ieee80211_vamp_setup_sdata(sdata);
+> +               break;
+> +#endif
+>        case NL80211_IFTYPE_UNSPECIFIED:
+>        case NUM_NL80211_IFTYPES:
+>                BUG();
+
+Should this really BUG() if VAMP is not enabled? Maybe print a warning
+and return an error instead.
+
+> diff --git a/net/mac80211/virtual_amp.h b/net/mac80211/virtual_amp.h
+> new file mode 100644
+> index 0000000..5b7d219
+> --- /dev/null
+> +++ b/net/mac80211/virtual_amp.h
+> @@ -0,0 +1,29 @@
+> +/*
+> + * Virtual / Software AMP 80211 BT Controller header
+> + *
+> + * Copyright 2012 Intel Corp.
+> + *
+> + * Written by andrei.emeltchenko@intel.com
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +
+> +#include "ieee80211_i.h"
+> +
+> +#ifdef CONFIG_MAC80211_VIRTUAL_AMP
+> +
+> +void ieee80211_vamp_setup_sdata(struct ieee80211_sub_if_data *sdata);
+> +void ieee80211_vamp_clean_sdata(struct ieee80211_sub_if_data *sdata);
+> +
+> +struct vamp_data {
+> +       struct hci_dev *hdev;
+> +
+> +       unsigned long flags;
+> +
+> +       struct work_struct work;
+> +       struct sk_buff_head txq;
+> +};
+> +
+> +#endif /* CONFIG_MAC80211_VIRTUAL_AMP */
+
+A cleaner way of doing this is to have the function prototypes
+specified as empty inline functions when CONFIG_MAC80211_VIRTUAL_AMP
+is not defined and remove the #ifdefs in the main code. GCC's smart
+enough to compile away all the empty functions.
+
+Thanks,
+
 -- 
-1.7.10
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
