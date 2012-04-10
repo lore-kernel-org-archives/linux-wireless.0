@@ -1,66 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42043 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762681Ab2DLUgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 16:36:08 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 4/4] ath9k: optimize the hardware hang check
-Date: Thu, 12 Apr 2012 22:35:58 +0200
-Message-Id: <1334262958-90777-4-git-send-email-nbd@openwrt.org> (sfid-20120412_223616_942951_9E5B0866)
-In-Reply-To: <1334262958-90777-3-git-send-email-nbd@openwrt.org>
-References: <1334262958-90777-1-git-send-email-nbd@openwrt.org>
- <1334262958-90777-2-git-send-email-nbd@openwrt.org>
- <1334262958-90777-3-git-send-email-nbd@openwrt.org>
+Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:43651 "EHLO
+	na3sys009amx259.postini.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753566Ab2DJKPs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 06:15:48 -0400
+Received: by lbao2 with SMTP id o2so2773371lba.0
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2012 03:15:45 -0700 (PDT)
+Message-ID: <1334052882.10268.2.camel@cumari> (sfid-20120410_121552_229397_1C68F9D4)
+Subject: Re: [PATCH] wl12xx: fix race between suspend/resume and recovery
+From: Luciano Coelho <coelho@ti.com>
+To: Eyal Shapira <eyal@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 10 Apr 2012 13:14:42 +0300
+In-Reply-To: <1331661801-17000-1-git-send-email-eyal@wizery.com>
+References: <1331661801-17000-1-git-send-email-eyal@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since it's only called when beacons are stuck, move it to the SWBA handler
-tasklet, to avoid doing redundant checks on every single interrupt.
+On Tue, 2012-03-13 at 20:03 +0200, Eyal Shapira wrote: 
+> The iteration on the wlvif list in wl1271_op_resume/suspend was
+> perfomed before locking wl->mutex which would lead to a kernel
+> panic in case a recovery was queued at the same time
+> and would delete the wlvifs from the list.
+> 
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> ---
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    3 +++
- drivers/net/wireless/ath/ath9k/main.c   |   11 -----------
- 2 files changed, 3 insertions(+), 11 deletions(-)
+Applied and pushed, thanks Eyal!
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 6264182..df5b6ac 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -369,6 +369,9 @@ void ath_beacon_tasklet(unsigned long data)
- 	if (ath9k_hw_numtxpending(ah, sc->beacon.beaconq) != 0) {
- 		sc->beacon.bmisscnt++;
- 
-+		if (!ath9k_hw_check_alive(ah))
-+			ieee80211_queue_work(sc->hw, &sc->hw_check_work);
-+
- 		if (sc->beacon.bmisscnt < BSTUCK_THRESH * sc->nbcnvifs) {
- 			ath_dbg(common, BSTUCK,
- 				"missed %u consecutive beacons\n",
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index fcb13e3..95dc62e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -692,17 +692,6 @@ void ath9k_tasklet(unsigned long data)
- 		goto out;
- 	}
- 
--	/*
--	 * Only run the baseband hang check if beacons stop working in AP or
--	 * IBSS mode, because it has a high false positive rate. For station
--	 * mode it should not be necessary, since the upper layers will detect
--	 * this through a beacon miss automatically and the following channel
--	 * change will trigger a hardware reset anyway
--	 */
--	if (ath9k_hw_numtxpending(ah, sc->beacon.beaconq) != 0 &&
--	    !ath9k_hw_check_alive(ah))
--		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
--
- 	if ((status & ATH9K_INT_TSFOOR) && sc->ps_enabled) {
- 		/*
- 		 * TSF sync does not look correct; remain awake to sync with
 -- 
-1.7.3.2
+Cheers,
+Luca.
 
