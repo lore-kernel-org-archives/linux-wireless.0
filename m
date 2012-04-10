@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:55027 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750705Ab2DYGly (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:44955 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751078Ab2DJKzU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 02:41:54 -0400
-Message-ID: <1335336081.16897.407.camel@aeonflux> (sfid-20120425_084159_253629_E1EC6523)
-Subject: Re: [PATCH RESEND 1/2] Bluetooth: btmrvl: configure default host
- sleep parameters
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Date: Wed, 25 Apr 2012 08:41:21 +0200
-In-Reply-To: <1335310301-11600-1-git-send-email-bzhao@marvell.com>
-References: <1335310301-11600-1-git-send-email-bzhao@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 10 Apr 2012 06:55:20 -0400
+Date: Tue, 10 Apr 2012 13:57:25 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	ath9k-devel@venema.h4ckr.net, kernel-janitors@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k_hw: precedence bug in
+ ath9k_hw_set_ofdm_nil()
+Message-ID: <20120410105725.GA5589@mwanda> (sfid-20120410_125524_765056_6C00F7FD)
+References: <20120410090445.GB26832@elgon.mountain>
+ <4F840442.5060706@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F840442.5060706@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
-
-> Currently debugfs commands "hscfgcmd" and "gpiogap" are provided
-> for host sleep configuration. But if user doesn't configure host
-> sleep parameters using these commands, host sleep activation is
-> failed during suspend (support for suspend and resume handlers is
-> added in next patch).
+On Tue, Apr 10, 2012 at 11:58:26AM +0200, Felix Fietkau wrote:
+> >  	if ((aniState->noiseFloor >= aniState->rssiThrHigh) &&
+> > -	    (!aniState->ofdmWeakSigDetectOff !=
+> > +	    (aniState->ofdmWeakSigDetectOff !=
+> Looking at other Atheros code, I think this patch is wrong, it should
+> be: aniState->ofdmWeakSigDetectOff == entry_ofdm->ofdm_weak_signal_on
 > 
-> Default host sleep configuration is done during driver initialisation
-> in this patch.
+> While a bit confusing, the behavior of the original code was correct,
+> aniState->ofdmWeakSigDetectOff is used as a boolean.
 > 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
-
-> ---
-> Last 2 patches were sent to Gustavo's old e-mail address.
-> Resending...
+> This code badly needs a cleanup, the whole mess with *on vs *off
+> variables is quite confusing.
 > 
->  drivers/bluetooth/btmrvl_drv.h  |    1 +
->  drivers/bluetooth/btmrvl_main.c |   53 ++++++++++++++++++++++----------------
->  drivers/bluetooth/btmrvl_sdio.c |    3 ++
->  3 files changed, 35 insertions(+), 22 deletions(-)
 
-Regards
+Yep.  It's bad to name variables xxx_off because it leads triple
+negatives like we see here.
 
-Marcel
+I guess that "if (!off != on) { ..." might be more readable than
+"if (off == on) { ...".  There are a couple ways to silence this
+warning in Smatch.
 
+The first way would be to add parenthesis like,
+"((!off) != on) {...".  I think it helps because it makes the negate
+stand out and you don't have to think about how the precedence
+rules works.  Other people think it's a needless parenthesis for
+something that is obvious.
 
+The other way would be to make either ->ofdmWeakSigDetectOff or
+->ofdm_weak_signal_on be type bool.  I think this would make the
+code clearer.
+
+regards,
+dan carpenter
