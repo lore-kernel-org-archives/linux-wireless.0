@@ -1,143 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:54465 "EHLO
-	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756169Ab2DLKTt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 06:19:49 -0400
-Received: by lahl5 with SMTP id l5so2980923lah.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 03:19:46 -0700 (PDT)
-Message-ID: <1334225984.10398.36.camel@cumari> (sfid-20120412_121954_838519_FCFC688D)
-Subject: Re: [PATCH v3 2/2] mac80211: add improved HW queue control
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 12 Apr 2012 13:19:44 +0300
-In-Reply-To: <1333463330.3574.22.camel@jlt3.sipsolutions.net>
-References: <20120403082416.559209159@sipsolutions.net>
-	 (sfid-20120403_102724_757636_B390B8A7) <1333441784.3574.4.camel@jlt3.sipsolutions.net>
-	 (sfid-20120403_102952_948276_9E4FF728) <1333463330.3574.22.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:30044 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756489Ab2DJRgD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 13:36:03 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>,
+	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 15/18] NFC: Convert pn533 from tasklet to workqueues
+Date: Tue, 10 Apr 2012 19:43:17 +0200
+Message-Id: <1334079800-10671-16-git-send-email-sameo@linux.intel.com> (sfid-20120410_193607_092891_7E634A51)
+In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+There is no need for soft IRQ contexts, and workqueues are more flexible.
 
-On Tue, 2012-04-03 at 16:28 +0200, Johannes Berg wrote: 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> mac80211 currently only supports one hardware queue
-> per AC. This is already problematic for off-channel
-> uses since if we go off channel while the BE queue
-> is full and then try to send an off-channel frame
-> the frame will never go out. This will become worse
-> when we support multi-channel since then a queue on
-> one channel might be full, but we have to stop the
-> software queue for all channels. That is obviously
-> not desirable.
-> 
-> To address this problem allow drivers to register
-> more hardware queues, and allow them to map them to
-> virtual interfaces. When they stop a hardware queue
-> the corresponding AC software queues on the correct
-> interfaces will be stopped as well. Additionally,
-> there's an off-channel queue to solve that problem
-> and a per-interface after-DTIM beacon queue. This
-> allows drivers to manage software queues closer to
-> how the hardware works.
-> 
-> Currently, there's a limit of 16 hardware queues.
-> This may or may not be sufficient, we can adjust it
-> as needed.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> v2: fix aggregation TX queue number
-> v3: fix error goto in ieee80211_do_open (thanks Eliad)
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn533.c |   86 ++++++++++++++++++++++++++++----------------------
+ 1 files changed, 48 insertions(+), 38 deletions(-)
 
-John has applied this patch yesterday and now I'm getting a WARNING with
-wl12xx, when I try to start AP-mode:
-
-[  162.963806] wl12xx: loaded
-[  166.137451] wl12xx: firmware booted (Rev 7.3.5.0.98)
-[  166.165344] ------------[ cut here ]------------
-[  166.170593] WARNING: at net/mac80211/iface.c:171 ieee80211_check_queues+0x164/0x174 [mac80211]()
-[  166.180023] Modules linked in: wl12xx mac80211 cfg80211 rfkill wl12xx_sdio [last unloaded: rfkill]
-[  166.189666] [<c001deb0>] (unwind_backtrace+0x0/0x148) from [<c04fe264>] (dump_stack+0x20/0x24)
-[  166.198852] [<c04fe264>] (dump_stack+0x20/0x24) from [<c0040320>] (warn_slowpath_common+0x64/0x74)
-[  166.208374] [<c0040320>] (warn_slowpath_common+0x64/0x74) from [<c004035c>] (warn_slowpath_null+0x2c/0x34)
-[  166.218780] [<c004035c>] (warn_slowpath_null+0x2c/0x34) from [<bf1961fc>] (ieee80211_check_queues+0x164/0x174 [mac80211])
-[  166.230712] [<bf1961fc>] (ieee80211_check_queues+0x164/0x174 [mac80211]) from [<bf19855c>] (ieee80211_do_open+0x590/0xc74 [mac80211])
-[  166.243713] [<bf19855c>] (ieee80211_do_open+0x590/0xc74 [mac80211]) from [<bf198cb4>] (ieee80211_open+0x74/0x80 [mac80211])
-[  166.255737] [<bf198cb4>] (ieee80211_open+0x74/0x80 [mac80211]) from [<c0433228>] (__dev_open+0xac/0xf8)
-[  166.265716] [<c0433228>] (__dev_open+0xac/0xf8) from [<c042f0fc>] (__dev_change_flags+0x8c/0x138)
-[  166.275177] [<c042f0fc>] (__dev_change_flags+0x8c/0x138) from [<c0433144>] (dev_change_flags+0x20/0x58)
-[  166.285217] [<c0433144>] (dev_change_flags+0x20/0x58) from [<c048e660>] (devinet_ioctl+0x6d4/0x7a4)
-[  166.294860] [<c048e660>] (devinet_ioctl+0x6d4/0x7a4) from [<c048ff84>] (inet_ioctl+0x1d0/0x1d4)
-[  166.304107] [<c048ff84>] (inet_ioctl+0x1d0/0x1d4) from [<c041a558>] (sock_ioctl+0x7c/0x284)
-[  166.313018] [<c041a558>] (sock_ioctl+0x7c/0x284) from [<c013ab0c>] (do_vfs_ioctl+0x90/0x598)
-[  166.321990] [<c013ab0c>] (do_vfs_ioctl+0x90/0x598) from [<c013b098>] (sys_ioctl+0x84/0x8c)
-[  166.330810] [<c013b098>] (sys_ioctl+0x84/0x8c) from [<c00151e0>] (ret_fast_syscall+0x0/0x3c)
-[  166.339782] ---[ end trace bb957f3ebaf8b8ed ]---
-[  166.344757] wl12xx: down
-
-
-> +static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata)
-> +{
-> +	int n_queues = sdata->local->hw.queues;
-> +	int i;
-> +
-> +	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-> +		if (WARN_ON_ONCE(sdata->vif.hw_queue[i] ==
-> +				 IEEE80211_INVAL_HW_QUEUE))
-> +			return -EINVAL;
-> +		if (WARN_ON_ONCE(sdata->vif.hw_queue[i] >=
-> +				 n_queues))
-> +			return -EINVAL;
-> +	}
-> +
-> +	if (sdata->vif.type != NL80211_IFTYPE_AP) {
-> +		sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
-> +		return 0;
-> +	}
-> +
-> +	if (WARN_ON_ONCE(sdata->vif.cab_queue == IEEE80211_INVAL_HW_QUEUE))
-> +		return -EINVAL;
-> +
-> +	if (WARN_ON_ONCE(sdata->vif.cab_queue >= n_queues))
-> +		return -EINVAL;
-> +
-> +	return 0;
-> +}
-> +
-
-I'm hitting the "sdata->vif.cab_queue == IEEE80211_INVAL_HW_QUEUE".
-
-I think the problem is that we should check whether the
-IEEE80211_HW_QUEUE_CONTROL flag is set and skip the cab_queue checks,
-like we do if it's not NL80211_IFTYPE_AP.
-
-It seems that this fixes the problem:
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6e85fae..23d1da3 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -163,7 +163,8 @@ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata)
-                        return -EINVAL;
-        }
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index cb6204f..f2ee06f 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -266,9 +266,10 @@ struct pn533 {
+ 	int in_maxlen;
+ 	struct pn533_frame *in_frame;
  
--       if (sdata->vif.type != NL80211_IFTYPE_AP) {
-+       if ((sdata->vif.type != NL80211_IFTYPE_AP) ||
-+           !(sdata->local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)) {
-                sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
-                return 0;
-        }
-
-What do you think?
-
-
+-	struct tasklet_struct tasklet;
+-	struct pn533_frame *tklt_in_frame;
+-	int tklt_in_error;
++	struct workqueue_struct	*wq;
++	struct work_struct cmd_work;
++	struct pn533_frame *wq_in_frame;
++	int wq_in_error;
+ 
+ 	pn533_cmd_complete_t cmd_complete;
+ 	void *cmd_complete_arg;
+@@ -383,15 +384,21 @@ static bool pn533_rx_frame_is_cmd_response(struct pn533_frame *frame, u8 cmd)
+ 	return (PN533_FRAME_CMD(frame) == PN533_CMD_RESPONSE(cmd));
+ }
+ 
+-static void pn533_tasklet_cmd_complete(unsigned long arg)
++
++static void pn533_wq_cmd_complete(struct work_struct *work)
+ {
+-	struct pn533 *dev = (struct pn533 *) arg;
+-	struct pn533_frame *in_frame = dev->tklt_in_frame;
++	struct pn533 *dev = container_of(work, struct pn533, cmd_work);
++	struct pn533_frame *in_frame;
+ 	int rc;
+ 
+-	if (dev->tklt_in_error)
++	if (dev == NULL)
++		return;
++
++	in_frame = dev->wq_in_frame;
++
++	if (dev->wq_in_error)
+ 		rc = dev->cmd_complete(dev, dev->cmd_complete_arg, NULL,
+-							dev->tklt_in_error);
++							dev->wq_in_error);
+ 	else
+ 		rc = dev->cmd_complete(dev, dev->cmd_complete_arg,
+ 					PN533_FRAME_CMD_PARAMS_PTR(in_frame),
+@@ -406,7 +413,7 @@ static void pn533_recv_response(struct urb *urb)
+ 	struct pn533 *dev = urb->context;
+ 	struct pn533_frame *in_frame;
+ 
+-	dev->tklt_in_frame = NULL;
++	dev->wq_in_frame = NULL;
+ 
+ 	switch (urb->status) {
+ 	case 0:
+@@ -417,36 +424,36 @@ static void pn533_recv_response(struct urb *urb)
+ 	case -ESHUTDOWN:
+ 		nfc_dev_dbg(&dev->interface->dev, "Urb shutting down with"
+ 						" status: %d", urb->status);
+-		dev->tklt_in_error = urb->status;
+-		goto sched_tasklet;
++		dev->wq_in_error = urb->status;
++		goto sched_wq;
+ 	default:
+ 		nfc_dev_err(&dev->interface->dev, "Nonzero urb status received:"
+ 							" %d", urb->status);
+-		dev->tklt_in_error = urb->status;
+-		goto sched_tasklet;
++		dev->wq_in_error = urb->status;
++		goto sched_wq;
+ 	}
+ 
+ 	in_frame = dev->in_urb->transfer_buffer;
+ 
+ 	if (!pn533_rx_frame_is_valid(in_frame)) {
+ 		nfc_dev_err(&dev->interface->dev, "Received an invalid frame");
+-		dev->tklt_in_error = -EIO;
+-		goto sched_tasklet;
++		dev->wq_in_error = -EIO;
++		goto sched_wq;
+ 	}
+ 
+ 	if (!pn533_rx_frame_is_cmd_response(in_frame, dev->cmd)) {
+ 		nfc_dev_err(&dev->interface->dev, "The received frame is not "
+ 						"response to the last command");
+-		dev->tklt_in_error = -EIO;
+-		goto sched_tasklet;
++		dev->wq_in_error = -EIO;
++		goto sched_wq;
+ 	}
+ 
+ 	nfc_dev_dbg(&dev->interface->dev, "Received a valid frame");
+-	dev->tklt_in_error = 0;
+-	dev->tklt_in_frame = in_frame;
++	dev->wq_in_error = 0;
++	dev->wq_in_frame = in_frame;
+ 
+-sched_tasklet:
+-	tasklet_schedule(&dev->tasklet);
++sched_wq:
++	queue_work(dev->wq, &dev->cmd_work);
+ }
+ 
+ static int pn533_submit_urb_for_response(struct pn533 *dev, gfp_t flags)
+@@ -471,21 +478,21 @@ static void pn533_recv_ack(struct urb *urb)
+ 	case -ESHUTDOWN:
+ 		nfc_dev_dbg(&dev->interface->dev, "Urb shutting down with"
+ 						" status: %d", urb->status);
+-		dev->tklt_in_error = urb->status;
+-		goto sched_tasklet;
++		dev->wq_in_error = urb->status;
++		goto sched_wq;
+ 	default:
+ 		nfc_dev_err(&dev->interface->dev, "Nonzero urb status received:"
+ 							" %d", urb->status);
+-		dev->tklt_in_error = urb->status;
+-		goto sched_tasklet;
++		dev->wq_in_error = urb->status;
++		goto sched_wq;
+ 	}
+ 
+ 	in_frame = dev->in_urb->transfer_buffer;
+ 
+ 	if (!pn533_rx_frame_is_ack(in_frame)) {
+ 		nfc_dev_err(&dev->interface->dev, "Received an invalid ack");
+-		dev->tklt_in_error = -EIO;
+-		goto sched_tasklet;
++		dev->wq_in_error = -EIO;
++		goto sched_wq;
+ 	}
+ 
+ 	nfc_dev_dbg(&dev->interface->dev, "Received a valid ack");
+@@ -494,15 +501,15 @@ static void pn533_recv_ack(struct urb *urb)
+ 	if (rc) {
+ 		nfc_dev_err(&dev->interface->dev, "usb_submit_urb failed with"
+ 							" result %d", rc);
+-		dev->tklt_in_error = rc;
+-		goto sched_tasklet;
++		dev->wq_in_error = rc;
++		goto sched_wq;
+ 	}
+ 
+ 	return;
+ 
+-sched_tasklet:
+-	dev->tklt_in_frame = NULL;
+-	tasklet_schedule(&dev->tasklet);
++sched_wq:
++	dev->wq_in_frame = NULL;
++	queue_work(dev->wq, &dev->cmd_work);
+ }
+ 
+ static int pn533_submit_urb_for_ack(struct pn533 *dev, gfp_t flags)
+@@ -1668,7 +1675,10 @@ static int pn533_probe(struct usb_interface *interface,
+ 			NULL, 0,
+ 			pn533_send_complete, dev);
+ 
+-	tasklet_init(&dev->tasklet, pn533_tasklet_cmd_complete, (ulong)dev);
++	INIT_WORK(&dev->cmd_work, pn533_wq_cmd_complete);
++	dev->wq = create_singlethread_workqueue("pn533");
++	if (dev->wq == NULL)
++		goto error;
+ 
+ 	usb_set_intfdata(interface, dev);
+ 
+@@ -1678,7 +1688,7 @@ static int pn533_probe(struct usb_interface *interface,
+ 	rc = pn533_send_cmd_frame_sync(dev, dev->out_frame, dev->in_frame,
+ 								dev->in_maxlen);
+ 	if (rc)
+-		goto kill_tasklet;
++		goto destroy_wq;
+ 
+ 	fw_ver = (struct pn533_fw_version *)
+ 				PN533_FRAME_CMD_PARAMS_PTR(dev->in_frame);
+@@ -1694,7 +1704,7 @@ static int pn533_probe(struct usb_interface *interface,
+ 					   PN533_CMD_DATAEXCH_HEAD_LEN,
+ 					   PN533_FRAME_TAIL_SIZE);
+ 	if (!dev->nfc_dev)
+-		goto kill_tasklet;
++		goto destroy_wq;
+ 
+ 	nfc_set_parent_dev(dev->nfc_dev, &interface->dev);
+ 	nfc_set_drvdata(dev->nfc_dev, dev);
+@@ -1720,8 +1730,8 @@ static int pn533_probe(struct usb_interface *interface,
+ 
+ free_nfc_dev:
+ 	nfc_free_device(dev->nfc_dev);
+-kill_tasklet:
+-	tasklet_kill(&dev->tasklet);
++destroy_wq:
++	destroy_workqueue(dev->wq);
+ error:
+ 	kfree(dev->in_frame);
+ 	usb_free_urb(dev->in_urb);
+@@ -1744,7 +1754,7 @@ static void pn533_disconnect(struct usb_interface *interface)
+ 	usb_kill_urb(dev->in_urb);
+ 	usb_kill_urb(dev->out_urb);
+ 
+-	tasklet_kill(&dev->tasklet);
++	destroy_workqueue(dev->wq);
+ 
+ 	kfree(dev->in_frame);
+ 	usb_free_urb(dev->in_urb);
 -- 
-Cheers,
-Luca.
+1.7.9.1
 
