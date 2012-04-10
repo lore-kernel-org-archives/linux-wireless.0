@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40401 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945Ab2DWHOA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 03:14:00 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Message-ID: <20373.271.262245.296570@gargle.gargle.HOWL> (sfid-20120423_091406_739553_8B80C150)
-Date: Mon, 23 Apr 2012 12:43:19 +0530
-To: George Nychis <gnychis@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: how to configure compat-wireless to force manual firmware load?
-In-Reply-To: <CA+7oygft-wqhnkk5wwondb57WuN2hLkVDKMXwKoaK+p9sZwAcw@mail.gmail.com>
-References: <CA+7oygft-wqhnkk5wwondb57WuN2hLkVDKMXwKoaK+p9sZwAcw@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:46978 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754688Ab2DJMLN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 08:11:13 -0400
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [RFCv1] Draft Software/Virtual AMP80211
+Date: Tue, 10 Apr 2012 15:11:48 +0300
+Message-Id: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20120410_141119_714069_FCEFE186)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-George Nychis wrote:
-> I was using an older version of compat-wireless, specifically a build
-> from May 2011.  In that release of compat-wireless, the firmware was
-> loaded manually using a filesystem mounted in /sys.
-> 
-> I recently downloaded a newer version of compat-wireless:
-> compat-wireless-3.0.9-1.  In this version, it appears to spawn a
-> kernel thread to check /lib/firmware for the firmware and load it.  If
-> it is present, it loads the firmware, otherwise it fails saying that
-> it cannot be found.
-> 
-> I am having trouble with the automatic load:
-> <3>[  178.957584] otg_err: in s5pc110_otghcd_urb_dequeue()::00508
-> <3>[  178.958650] => fail to cancel_transfer()
-> <7>[  178.959879] usb 1-1.2: hcd_unlink_urb d13aa200 fail -1
-> <7>[  178.962510] usb 1-1.2: khubd timed out on ep0out len=0/4096
-> <3>[  178.963274] usb 1-1.2: ath9k_htc: Firmware - htc_7010.fw download failed
-> <4>[  178.971658] ath9k_htc: probe of 1-1.2:1.0 failed with error -22
+From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 
-The FW is found, but transferring it to the device fails for some reason.
-Can you give more details about the platform ?
+RFC for Software / Virtual _DRAFT_ implementation of Bluetooth High Speed
+by using wireless driver.
 
-Sujith
+Currently it can be used for testing Bluetooth A2MP protocol.
+
+Please comment is this right way of implementing things like: using virtual
+interface to enable AMP. Shall I use module instead? Shall I put files to
+mac80211 or use other location? Is name "vamp" OK? Other variants are:
+softamp, soft_amp, soft_amp80211, etc.
+
+Main ideas:
+ - Use existing wireless infrastructure nl80211, mac80211.
+ - Use virtual interface of type NL80211_IFTYPE_VIRTUAL_AMP80211. Then all
+drivers supporting virtual interface should work.
+
+After modifying iw it will be enabled by adding new virtual interface.
+
+# iw phy <physical device> interface add vamp type vamp
+# iw dev
+phy#0
+	Interface vamp
+		ifindex 6
+		type Virtual AMP
+...
+# hciconfig 
+hci1:	Type: AMP  Bus: VIRTUAL
+	BD Address: 00:00:00:00:00:00  ACL MTU: 0:0  SCO MTU: 0:0
+	DOWN 
+	RX bytes:0 acl:0 sco:0 events:0 errors:0
+	TX bytes:0 acl:0 sco:0 commands:0 errors:0
+...
+
+
+Andrei Emeltchenko (1):
+  mac80211: Adds Software / Virtual AMP 80211
+
+ drivers/net/wireless/mac80211_hwsim.c |    3 +-
+ include/linux/nl80211.h               |    1 +
+ net/mac80211/Kconfig                  |    8 ++
+ net/mac80211/Makefile                 |    2 +
+ net/mac80211/ieee80211_i.h            |    4 +
+ net/mac80211/iface.c                  |   25 ++++
+ net/mac80211/util.c                   |    1 +
+ net/mac80211/virtual_amp.c            |  205 +++++++++++++++++++++++++++++++++
+ net/mac80211/virtual_amp.h            |   29 +++++
+ 9 files changed, 277 insertions(+), 1 deletions(-)
+ create mode 100644 net/mac80211/virtual_amp.c
+ create mode 100644 net/mac80211/virtual_amp.h
+
+-- 
+1.7.9.1
+
