@@ -1,140 +1,427 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64046 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:63195 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966065Ab2DLV6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:58:08 -0400
+	id S1753854Ab2DJAuZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Apr 2012 20:50:25 -0400
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 09/24] iwlwifi: move iwl_set_rxon_channel to iwl-agn-rxon.c
-Date: Thu, 12 Apr 2012 14:54:06 -0700
-Message-Id: <1334267661-14654-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235904_130829_CBED38FD)
-In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/11] iwlwifi: create device configuration header file
+Date: Mon,  9 Apr 2012 17:46:59 -0700
+Message-Id: <1334018821-30416-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120410_025035_806338_FBAA01D7)
+In-Reply-To: <1334018821-30416-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334018821-30416-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Moving this as part of iwl-core.c cleanup.
+The iwl-shared.h header file will be going away
+soon. There isn't much left in it that we keep,
+other than the device configuration declarations.
+Move those out now to a new iwl-config.h header.
+iwl-cfg.h seemed like a possible alternative but
+those declarations will later live in the PCIe
+transport code.
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   29 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +
- drivers/net/wireless/iwlwifi/iwl-core.c     |   29 ---------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 -
- 4 files changed, 31 insertions(+), 31 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-config.h |  214 +++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-shared.h |  143 +-------------------
+ 2 files changed, 215 insertions(+), 142 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-config.h
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 944ad73..2fcc50c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -591,6 +591,35 @@ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf)
- 		_iwl_set_rxon_ht(priv, ht_conf, ctx);
- }
- 
-+/**
-+ * iwl_set_rxon_channel - Set the band and channel values in staging RXON
-+ * @ch: requested channel as a pointer to struct ieee80211_channel
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+new file mode 100644
+index 0000000..c50b428
+--- /dev/null
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -0,0 +1,214 @@
++/******************************************************************************
++ *
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2007 - 2012 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110,
++ * USA
++ *
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * Contact Information:
++ *  Intel Linux Wireless <ilw@linux.intel.com>
++ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2005 - 2012 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *  * Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ *  * Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in
++ *    the documentation and/or other materials provided with the
++ *    distribution.
++ *  * Neither the name Intel Corporation nor the names of its
++ *    contributors may be used to endorse or promote products derived
++ *    from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ *
++ *****************************************************************************/
++#ifndef __IWL_CONFIG_H__
++#define __IWL_CONFIG_H__
 +
-+ * NOTE:  Does not commit to the hardware; it sets appropriate bit fields
-+ * in the staging RXON flag structure based on the ch->band
++#include <linux/types.h>
++#include <net/mac80211.h>
++
++struct iwl_priv;
++struct iwl_lib_ops;
++
++
++/*
++ * LED mode
++ *    IWL_LED_DEFAULT:  use device default
++ *    IWL_LED_RF_STATE: turn LED on/off based on RF state
++ *			LED ON  = RF ON
++ *			LED OFF = RF OFF
++ *    IWL_LED_BLINK:    adjust led blink rate based on blink table
++ *    IWL_LED_DISABLE:	led disabled
 + */
-+void iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch,
-+			 struct iwl_rxon_context *ctx)
-+{
-+	enum ieee80211_band band = ch->band;
-+	u16 channel = ch->hw_value;
++enum iwl_led_mode {
++	IWL_LED_DEFAULT,
++	IWL_LED_RF_STATE,
++	IWL_LED_BLINK,
++	IWL_LED_DISABLE,
++};
 +
-+	if ((le16_to_cpu(ctx->staging.channel) == channel) &&
-+	    (priv->band == band))
-+		return;
++/*
++ * @max_ll_items: max number of OTP blocks
++ * @shadow_ram_support: shadow support for OTP memory
++ * @led_compensation: compensate on the led on/off time per HW according
++ *	to the deviation to achieve the desired led frequency.
++ *	The detail algorithm is described in iwl-led.c
++ * @chain_noise_num_beacons: number of beacons used to compute chain noise
++ * @adv_thermal_throttle: support advance thermal throttle
++ * @support_ct_kill_exit: support ct kill exit condition
++ * @plcp_delta_threshold: plcp error rate threshold used to trigger
++ *	radio tuning when there is a high receiving plcp error rate
++ * @chain_noise_scale: default chain noise scale used for gain computation
++ * @wd_timeout: TX queues watchdog timeout
++ * @max_event_log_size: size of event log buffer size for ucode event logging
++ * @shadow_reg_enable: HW shadhow register bit
++ * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
++ * @no_idle_support: do not support idle mode
++ */
++struct iwl_base_params {
++	int eeprom_size;
++	int num_of_queues;	/* def: HW dependent */
++	/* for iwl_apm_init() */
++	u32 pll_cfg_val;
 +
-+	ctx->staging.channel = cpu_to_le16(channel);
-+	if (band == IEEE80211_BAND_5GHZ)
-+		ctx->staging.flags &= ~RXON_FLG_BAND_24G_MSK;
-+	else
-+		ctx->staging.flags |= RXON_FLG_BAND_24G_MSK;
++	const u16 max_ll_items;
++	const bool shadow_ram_support;
++	u16 led_compensation;
++	bool adv_thermal_throttle;
++	bool support_ct_kill_exit;
++	u8 plcp_delta_threshold;
++	s32 chain_noise_scale;
++	unsigned int wd_timeout;
++	u32 max_event_log_size;
++	const bool shadow_reg_enable;
++	const bool hd_v2;
++	const bool no_idle_support;
++};
 +
-+	priv->band = band;
++/*
++ * @advanced_bt_coexist: support advanced bt coexist
++ * @bt_init_traffic_load: specify initial bt traffic load
++ * @bt_prio_boost: default bt priority boost value
++ * @agg_time_limit: maximum number of uSec in aggregation
++ * @bt_sco_disable: uCode should not response to BT in SCO/ESCO mode
++ */
++struct iwl_bt_params {
++	bool advanced_bt_coexist;
++	u8 bt_init_traffic_load;
++	u8 bt_prio_boost;
++	u16 agg_time_limit;
++	bool bt_sco_disable;
++	bool bt_session_2;
++};
++/*
++ * @use_rts_for_aggregation: use rts/cts protection for HT traffic
++ */
++struct iwl_ht_params {
++	const bool ht_greenfield_support; /* if used set to true */
++	bool use_rts_for_aggregation;
++	enum ieee80211_smps_mode smps_mode;
++};
 +
-+	IWL_DEBUG_INFO(priv, "Staging channel set to %d [%d]\n", channel, band);
++/**
++ * struct iwl_cfg
++ * @name: Offical name of the device
++ * @fw_name_pre: Firmware filename prefix. The api version and extension
++ *	(.ucode) will be added to filename before loading from disk. The
++ *	filename is constructed as fw_name_pre<api>.ucode.
++ * @ucode_api_max: Highest version of uCode API supported by driver.
++ * @ucode_api_ok: oldest version of the uCode API that is OK to load
++ *	without a warning, for use in transitions
++ * @ucode_api_min: Lowest version of uCode API supported by driver.
++ * @max_inst_size: The maximal length of the fw inst section
++ * @max_data_size: The maximal length of the fw data section
++ * @valid_tx_ant: valid transmit antenna
++ * @valid_rx_ant: valid receive antenna
++ * @eeprom_ver: EEPROM version
++ * @eeprom_calib_ver: EEPROM calibration version
++ * @lib: pointer to the lib ops
++ * @additional_nic_config: additional nic configuration
++ * @base_params: pointer to basic parameters
++ * @ht_params: point to ht patameters
++ * @bt_params: pointer to bt parameters
++ * @need_temp_offset_calib: need to perform temperature offset calibration
++ * @no_xtal_calib: some devices do not need crystal calibration data,
++ *	don't send it to those
++ * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
++ * @adv_pm: advance power management
++ * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
++ * @internal_wimax_coex: internal wifi/wimax combo device
++ * @temp_offset_v2: support v2 of temperature offset calibration
++ *
++ * We enable the driver to be backward compatible wrt. hardware features.
++ * API differences in uCode shouldn't be handled here but through TLVs
++ * and/or the uCode API version instead.
++ */
++struct iwl_cfg {
++	/* params specific to an individual device within a device family */
++	const char *name;
++	const char *fw_name_pre;
++	const unsigned int ucode_api_max;
++	const unsigned int ucode_api_ok;
++	const unsigned int ucode_api_min;
++	const u32 max_data_size;
++	const u32 max_inst_size;
++	u8   valid_tx_ant;
++	u8   valid_rx_ant;
++	u16  eeprom_ver;
++	u16  eeprom_calib_ver;
++	const struct iwl_lib_ops *lib;
++	void (*additional_nic_config)(struct iwl_priv *priv);
++	/* params not likely to change within a device family */
++	const struct iwl_base_params *base_params;
++	/* params likely to change within a device family */
++	const struct iwl_ht_params *ht_params;
++	const struct iwl_bt_params *bt_params;
++	const bool need_temp_offset_calib; /* if used set to true */
++	const bool no_xtal_calib;
++	enum iwl_led_mode led_mode;
++	const bool adv_pm;
++	const bool rx_with_siso_diversity;
++	const bool internal_wimax_coex;
++	const bool temp_offset_v2;
++};
 +
-+}
-+
- static void iwl_set_rxon_hwcrypto(struct iwl_priv *priv,
- 				  struct iwl_rxon_context *ctx, int hw_decrypt)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index d7b1bd8..9eec4e6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -128,6 +128,8 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
- void iwlagn_config_ht40(struct ieee80211_conf *conf,
- 			struct iwl_rxon_context *ctx);
- void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf);
-+void iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch,
-+			 struct iwl_rxon_context *ctx);
++#endif /* __IWL_CONFIG_H__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index ee155e9..68f452d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -70,6 +70,7 @@
  
- /* uCode */
- int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index ab5db2e..f65f989 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -43,35 +43,6 @@
+ #include "iwl-commands.h"
+ #include "iwl-fw.h"
++#include "iwl-config.h"
  
- const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ /**
+  * DOC: shared area - role and goal
+@@ -95,7 +96,6 @@
  
--/**
-- * iwl_set_rxon_channel - Set the band and channel values in staging RXON
-- * @ch: requested channel as a pointer to struct ieee80211_channel
--
-- * NOTE:  Does not commit to the hardware; it sets appropriate bit fields
-- * in the staging RXON flag structure based on the ch->band
+ struct iwl_priv;
+ struct iwl_trans;
+-struct iwl_sensitivity_ranges;
+ struct iwl_trans_ops;
+ 
+ #define DRV_NAME        "iwlwifi"
+@@ -153,147 +153,6 @@ struct iwl_mod_params {
+ 	bool auto_agg;
+ };
+ 
+-/*
+- * LED mode
+- *    IWL_LED_DEFAULT:  use device default
+- *    IWL_LED_RF_STATE: turn LED on/off based on RF state
+- *			LED ON  = RF ON
+- *			LED OFF = RF OFF
+- *    IWL_LED_BLINK:    adjust led blink rate based on blink table
+- *    IWL_LED_DISABLE:	led disabled
 - */
--void iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch,
--			 struct iwl_rxon_context *ctx)
--{
--	enum ieee80211_band band = ch->band;
--	u16 channel = ch->hw_value;
+-enum iwl_led_mode {
+-	IWL_LED_DEFAULT,
+-	IWL_LED_RF_STATE,
+-	IWL_LED_BLINK,
+-	IWL_LED_DISABLE,
+-};
 -
--	if ((le16_to_cpu(ctx->staging.channel) == channel) &&
--	    (priv->band == band))
--		return;
+-/*
+- * @max_ll_items: max number of OTP blocks
+- * @shadow_ram_support: shadow support for OTP memory
+- * @led_compensation: compensate on the led on/off time per HW according
+- *	to the deviation to achieve the desired led frequency.
+- *	The detail algorithm is described in iwl-led.c
+- * @chain_noise_num_beacons: number of beacons used to compute chain noise
+- * @adv_thermal_throttle: support advance thermal throttle
+- * @support_ct_kill_exit: support ct kill exit condition
+- * @plcp_delta_threshold: plcp error rate threshold used to trigger
+- *	radio tuning when there is a high receiving plcp error rate
+- * @chain_noise_scale: default chain noise scale used for gain computation
+- * @wd_timeout: TX queues watchdog timeout
+- * @max_event_log_size: size of event log buffer size for ucode event logging
+- * @shadow_reg_enable: HW shadhow register bit
+- * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
+- * @no_idle_support: do not support idle mode
+- */
+-struct iwl_base_params {
+-	int eeprom_size;
+-	int num_of_queues;	/* def: HW dependent */
+-	/* for iwl_apm_init() */
+-	u32 pll_cfg_val;
 -
--	ctx->staging.channel = cpu_to_le16(channel);
--	if (band == IEEE80211_BAND_5GHZ)
--		ctx->staging.flags &= ~RXON_FLG_BAND_24G_MSK;
--	else
--		ctx->staging.flags |= RXON_FLG_BAND_24G_MSK;
+-	const u16 max_ll_items;
+-	const bool shadow_ram_support;
+-	u16 led_compensation;
+-	bool adv_thermal_throttle;
+-	bool support_ct_kill_exit;
+-	u8 plcp_delta_threshold;
+-	s32 chain_noise_scale;
+-	unsigned int wd_timeout;
+-	u32 max_event_log_size;
+-	const bool shadow_reg_enable;
+-	const bool hd_v2;
+-	const bool no_idle_support;
+-};
 -
--	priv->band = band;
+-/*
+- * @advanced_bt_coexist: support advanced bt coexist
+- * @bt_init_traffic_load: specify initial bt traffic load
+- * @bt_prio_boost: default bt priority boost value
+- * @agg_time_limit: maximum number of uSec in aggregation
+- * @bt_sco_disable: uCode should not response to BT in SCO/ESCO mode
+- */
+-struct iwl_bt_params {
+-	bool advanced_bt_coexist;
+-	u8 bt_init_traffic_load;
+-	u8 bt_prio_boost;
+-	u16 agg_time_limit;
+-	bool bt_sco_disable;
+-	bool bt_session_2;
+-};
+-/*
+- * @use_rts_for_aggregation: use rts/cts protection for HT traffic
+- */
+-struct iwl_ht_params {
+-	const bool ht_greenfield_support; /* if used set to true */
+-	bool use_rts_for_aggregation;
+-	enum ieee80211_smps_mode smps_mode;
+-};
 -
--	IWL_DEBUG_INFO(priv, "Staging channel set to %d [%d]\n", channel, band);
+-/**
+- * struct iwl_cfg
+- * @name: Offical name of the device
+- * @fw_name_pre: Firmware filename prefix. The api version and extension
+- *	(.ucode) will be added to filename before loading from disk. The
+- *	filename is constructed as fw_name_pre<api>.ucode.
+- * @ucode_api_max: Highest version of uCode API supported by driver.
+- * @ucode_api_ok: oldest version of the uCode API that is OK to load
+- *	without a warning, for use in transitions
+- * @ucode_api_min: Lowest version of uCode API supported by driver.
+- * @max_inst_size: The maximal length of the fw inst section
+- * @max_data_size: The maximal length of the fw data section
+- * @valid_tx_ant: valid transmit antenna
+- * @valid_rx_ant: valid receive antenna
+- * @eeprom_ver: EEPROM version
+- * @eeprom_calib_ver: EEPROM calibration version
+- * @lib: pointer to the lib ops
+- * @additional_nic_config: additional nic configuration
+- * @base_params: pointer to basic parameters
+- * @ht_params: point to ht patameters
+- * @bt_params: pointer to bt parameters
+- * @need_temp_offset_calib: need to perform temperature offset calibration
+- * @no_xtal_calib: some devices do not need crystal calibration data,
+- *	don't send it to those
+- * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
+- * @adv_pm: advance power management
+- * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
+- * @internal_wimax_coex: internal wifi/wimax combo device
+- * @temp_offset_v2: support v2 of temperature offset calibration
+- *
+- * We enable the driver to be backward compatible wrt. hardware features.
+- * API differences in uCode shouldn't be handled here but through TLVs
+- * and/or the uCode API version instead.
+- */
+-struct iwl_cfg {
+-	/* params specific to an individual device within a device family */
+-	const char *name;
+-	const char *fw_name_pre;
+-	const unsigned int ucode_api_max;
+-	const unsigned int ucode_api_ok;
+-	const unsigned int ucode_api_min;
+-	const u32 max_data_size;
+-	const u32 max_inst_size;
+-	u8   valid_tx_ant;
+-	u8   valid_rx_ant;
+-	u16  eeprom_ver;
+-	u16  eeprom_calib_ver;
+-	const struct iwl_lib_ops *lib;
+-	void (*additional_nic_config)(struct iwl_priv *priv);
+-	/* params not likely to change within a device family */
+-	const struct iwl_base_params *base_params;
+-	/* params likely to change within a device family */
+-	const struct iwl_ht_params *ht_params;
+-	const struct iwl_bt_params *bt_params;
+-	const bool need_temp_offset_calib; /* if used set to true */
+-	const bool no_xtal_calib;
+-	enum iwl_led_mode led_mode;
+-	const bool adv_pm;
+-	const bool rx_with_siso_diversity;
+-	const bool internal_wimax_coex;
+-	const bool temp_offset_v2;
+-};
 -
--}
--
- void iwl_set_flags_for_band(struct iwl_priv *priv,
- 			    struct iwl_rxon_context *ctx,
- 			    enum ieee80211_band band,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e793b16..b3cbeb2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -78,8 +78,6 @@ struct iwl_cmd;
-  *   L i b                 *
-  ***************************/
- 
--void iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch,
--			 struct iwl_rxon_context *ctx);
- void iwl_set_flags_for_band(struct iwl_priv *priv,
- 			    struct iwl_rxon_context *ctx,
- 			    enum ieee80211_band band,
+ /**
+  * struct iwl_shared - shared fields for all the layers of the driver
+  *
 -- 
 1.7.0.4
 
