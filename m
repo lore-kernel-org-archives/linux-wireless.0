@@ -1,89 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:34432 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757619Ab2DLOqa (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:60278 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754732Ab2DJVSD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 10:46:30 -0400
-Received: by dake40 with SMTP id e40so2591139dak.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 07:46:30 -0700 (PDT)
-Date: Thu, 12 Apr 2012 07:46:26 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120412144626.GA14868@kroah.com> (sfid-20120412_164707_633702_10D7914F)
-References: <20120411231102.GA6404@kroah.com>
- <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
- <20120412002927.GA23167@kroah.com>
- <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
- <20120412011313.GA23764@kroah.com>
- <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	Tue, 10 Apr 2012 17:18:03 -0400
+Message-ID: <1334092668.16897.54.camel@aeonflux> (sfid-20120410_231809_721709_353585BE)
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Tue, 10 Apr 2012 23:17:48 +0200
+In-Reply-To: <4F846257.1060807@sipsolutions.net>
+References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 (sfid-20120410_141120_556160_FD038CE7) <4F846257.1060807@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 04:32:40PM +0300, Felipe Contreras wrote:
-> On Thu, Apr 12, 2012 at 4:13 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > On Thu, Apr 12, 2012 at 04:03:59AM +0300, Felipe Contreras wrote:
-> >> On Thu, Apr 12, 2012 at 3:29 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> >> > On Wed, Apr 11, 2012 at 07:59:14PM -0400, Sergio Correia wrote:
-> >> >> Hello Greg,
-> >> >>
-> >> >>
-> >> >> On Wed, Apr 11, 2012 at 7:11 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> >> >> > This is the start of the stable review cycle for the 3.3.2 release.
-> >> >> > There are 78 patches in this series, all will be posted as a response
-> >> >> > to this one.  If anyone has any issues with these being applied, please
-> >> >> > let me know.
-> >> >> >
-> >> >> > Responses should be made by Fri Apr 13 23:10:16 UTC 2012.
-> >> >> > Anything received after that time might be too late.
-> >> >> >
-> >> >>
-> >> >> is there any chance for this one to be included in this review cycle?
-> >> >>
-> >> >> http://www.spinics.net/lists/linux-wireless/msg87999.html
-> >>
-> >> I was going to ask for exactly the same thing. My system is completely
-> >> unusable without this patch; not only does the network doesn't work,
-> >> but quite often the kernel is stuck consuming 100% of the CPU.
-> >>
-> >> > Have you read Documentation/stable_kernel_rules.txt?  Based on that, I
-> >> > don't think it can, yet, right?
-> >>
-> >> Why not? This patch makes the code go back to a previous state, it is
-> >> obviously more stable than the current state, and the code already
-> >> exists in Linus's tree (in previous releases).
-> >
-> > It does?  What is the git commit id of the patch?  Based in the email
-> > above, I assumed it had not made it to Linus's tree already.
-> 
-> It's a revert of c1afdaff90538ef085b756454f12b29575411214, so so just
-> take a look at the code in c1afdaff90538ef085b756454f12b29575411214^.
-> 
-> >> But hey, I guess it's OK that 3.3.x is stuck in and endless loop right
-> >> after booting, because rules are more important than fixing obvious
-> >> breakage.
-> >
-> > What rule did you think I was saying this was not acceptable for?
-> 
-> The fact that the patch as not been applied/reviewed/accepted upstream.
-> 
-> Personally I don't see what is the problem with reverts; we already
-> know the previous code was working. Sure, in theory it might behave
-> different due to other changes, but that doesn't seem to be the case
-> here, plus, it can't be worst than the current situation of staying in
-> an endless loop.
+Hi Johannes,
 
-A revert is the same as a patch.  It needs to be in Linus's tree before
-I can add it to the stable releases.
+<snip>
 
-greg k-h
+> Anyway.
+> 
+> I don't get this patch at all. Why am I reviewing some very very basic 
+> skeleton code when we should be discussing userspace APIs (we have 
+> already discussed them with a few people years ago), how the AMP is 
+> going to be managed, how the security handshake is going to work, etc.
+
+adding AMP (meaning Bluetooth Alternate MAC/PHY in case anybody cares)
+for SoftMac WiFi cards should be done solely in kernel space between
+Bluetooth core and mac80211. All the FullMac cards will expose the HCI
+AMP directly via the Bluetooth core. See Marvell solution for example.
+
+If we require a userspace interaction, I think we are doing something
+wrong here. And as far as I can tell, the only tricky part is the WPA2
+PSK 4-way handshake. We would need a kernel implementation for that.
+Especially since the key material is actually derived from the Bluetooth
+link key that we have available in kernel space already.
+
+Regards
+
+Marcel
+
+
