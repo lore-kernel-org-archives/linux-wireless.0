@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:58569 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754399Ab2DXHpQ convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16586 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075Ab2DJHus (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 03:45:16 -0400
-Received: by iadi9 with SMTP id i9so626125iad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 00:45:16 -0700 (PDT)
+	Tue, 10 Apr 2012 03:50:48 -0400
+Message-ID: <4F83E64D.4010102@qca.qualcomm.com> (sfid-20120410_095052_045796_5283FAB9)
+Date: Tue, 10 Apr 2012 13:20:37 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CANugF37WSOdHODRXOb6nnBCh5HMTTUqf0VpyPuTDdNK80-LkAQ@mail.gmail.com>
-References: <CANugF37WSOdHODRXOb6nnBCh5HMTTUqf0VpyPuTDdNK80-LkAQ@mail.gmail.com>
-From: Andrew Chant <andrew.chant@gmail.com>
-Date: Tue, 24 Apr 2012 00:44:35 -0700
-Message-ID: <CANugF37wdS3=u7grT3H6WAJM=XxTukZoWdj70SXLL8k_6t1b6A@mail.gmail.com> (sfid-20120424_094521_941676_101C3212)
-Subject: Re: AP mode my ath9k broke between 3.3 and 3.4-rc2
-To: Johannes Berg <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Joe Perches <joe@perches.com>
+CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>,
+	Subramania Sharma <sharmat@qca.qualcomm.com>
+Subject: Re: [PATCH V2] ath6kl: Fix 4-way handshake failure in AP and P2P
+ GO mode
+References: <\> <1333984880-4328-1-git-send-email-vthiagar@qca.qualcomm.com> <1333987238.2152.5.camel@joe2Laptop>
+In-Reply-To: <1333987238.2152.5.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-3.4-rc4 doesn't work either.
-If I revert the patch on 3.4-rc4, the Intel card is able to associate again.
--Andrew
+>> +static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
+>> +				u8 *rsn_capab)
+>> +{
+>> +	const u8 *rsn_ie;
+>> +	size_t rsn_ie_len;
+>> +	u16 cnt;
+>> +
+>> +	if (!beacon->tail)
+>> +		return -EINVAL;
+>> +
+>> +	rsn_ie = cfg80211_find_ie(WLAN_EID_RSN, beacon->tail, beacon->tail_len);
+>> +	if (!rsn_ie)
+>> +		return -EINVAL;
+>> +
+>> +	rsn_ie_len = *(rsn_ie + 1);
+>> +	/* skip element id and length */
+>> +	rsn_ie += 2;
+>> +
+>> +	/* skip version, group cipher */
+>> +	if (rsn_ie_len<  6)
+>> +		return -EINVAL;
+>> +	rsn_ie +=  6;
+>> +	rsn_ie_len -= 6;
+>> +
+>> +	/* skip pairwise cipher suite */
+>> +	if (rsn_ie_len<  2)
+>> +		return -EINVAL;
+>> +	cnt = *((u16 *) rsn_ie);
+>
+> Any endian or alignment issues?
 
-On Tue, Apr 24, 2012 at 12:11 AM, Andrew Chant <andrew.chant@gmail.com> wrote:
-> Hello,
->  my Atheros AR9300 PCIe card (168c:0030) stopped working as an AP on
-> the 5GHz band between 3.3 and 3.4-rc2.
-> After 14 git bisects, I believe I have narrowed it down to the following patch:
+Indeed this can pretty much result in unaligned memory access.
+I'll fix that. Thanks for pointing this out.
 >
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=293702a3fb75832613e2af097bdc3ac8ef775b33
->
-> mac80211: use common radiotap code for cooked monitors
->
-> Prior to this change, everything works.  After this change, an Intel
-> Corporation Centrino Advanced-N 6205 is able to see the AP using
-> "iwlist wlan0 scan", but the following shows up in dmesg when trying
-> to associate (on the intel side):
->
-> [ 7636.834579] wlan0: direct probe to 90:f6:52:0d:0a:5e timed out
-> [ 7644.201671] wlan0: direct probe to 90:f6:52:0d:0a:5e (try 1/3)
-> [ 7644.400767] wlan0: direct probe to 90:f6:52:0d:0a:5e (try 2/3)
-> [ 7644.600323] wlan0: direct probe to 90:f6:52:0d:0a:5e (try 3/3)
->
-> -Andrew
+>> +	rsn_ie += (2 + cnt * 4);
+>> +	rsn_ie_len -= (2 + cnt * 4);
+>> +
+>> +	/* skip akm suite */
+>> +	if (rsn_ie_len<  2)
+>> +		return -EINVAL;
+>> +	cnt = *((u16 *) rsn_ie);
+
+This too.
+
+Vasanth
