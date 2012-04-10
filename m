@@ -1,76 +1,262 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ppa01.Princeton.EDU ([128.112.128.213]:60790 "EHLO
-	ppa01.Princeton.EDU" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757928Ab2DYB6K convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 21:58:10 -0400
-Received: from csgsmtp201l.Princeton.EDU (csgsmtp201l.Princeton.EDU [128.112.134.60])
-	by ppa01.Princeton.EDU (8.14.4/8.14.4) with ESMTP id q3P1w9Qr012305
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 21:58:09 -0400
-Received: from mail-lb0-f174.google.com (mail-lb0-f174.google.com [209.85.217.174])
-	(authenticated bits=0)
-	by csgsmtp201l.Princeton.EDU (8.13.8/8.12.9) with ESMTP id q3P1w8uX017112
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 21:58:09 -0400
-Received: by lbbgf7 with SMTP id gf7so1172967lbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 18:58:08 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: dchyan@princeton.edu
-Date: Tue, 24 Apr 2012 21:58:08 -0400
-Message-ID: <CAOvK7nAOHqKC8rpFDqGnW7NLCX-G2+syRGih_rv7N5O5rfOUdA@mail.gmail.com> (sfid-20120425_035847_191764_5CE7484F)
-Subject: iwlwifi bug
-From: Daniel Chyan <dchyan@princeton.edu>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:64712 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758062Ab2DJRgZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 13:36:25 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>,
+	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 16/18] NFC: pn533 Rx chaining support
+Date: Tue, 10 Apr 2012 19:43:18 +0200
+Message-Id: <1334079800-10671-17-git-send-email-sameo@linux.intel.com> (sfid-20120410_193647_436828_76590911)
+In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Linux Wireless,
+When buffers on the receiption path exceed 262 bytes, the pn533 uses
+a chaining mechanism where the initiator has to send NULL data frames
+to fetch the remaining frames.
+We do that from a workqueue context while holding the cmd lock. Once the
+MI bit is gone, we aggregate the queued received skbs.
 
-I believe there is a bug within iwlwifi aggregation. I am on the
-latest build (2012-04-23). Here is the dmesg output:
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn533.c |  144 +++++++++++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 128 insertions(+), 16 deletions(-)
 
-[  272.093668] ------------[ cut here ]------------
-[  272.093711] WARNING: at
-/home/foo/bar/compat-wireless-2012-04-23/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c:493
-iwl_trans_pcie_tx_agg_disable+0x101/0x110 [iwlwifi]()
-[  272.093719] Hardware name: 4177CTO
-[  272.093722] queue 11 not used
-[  272.093725] Modules linked in: parport_pc ppdev bnep rfcomm
-bluetooth snd_hda_codec_hdmi snd_hda_codec_conexant speedstep_lib
-binfmt_misc i915 uvcvideo psmouse snd_hda_intel snd_hda_codec arc4
-snd_hwdep snd_pcm snd_seq_midi drm_kms_helper snd_rawmidi drm videodev
-v4l2_compat_ioctl32 i2c_algo_bit serio_raw snd_seq_midi_event mei(C)
-iwlwifi wmi snd_seq thinkpad_acpi snd_timer snd_seq_device tpm_tis
-nvram lp video parport snd mac80211 cfg80211 compat soundcore
-snd_page_alloc firewire_ohci sdhci_pci sdhci firewire_core crc_itu_t
-ahci libahci e1000e
-[  272.093803] Pid: 252, comm: kworker/u:4 Tainted: G         C
-3.0.0-17-generic #30-Ubuntu
-[  272.093808] Call Trace:
-[  272.093823]  [<ffffffff8105e8ff>] warn_slowpath_common+0x7f/0xc0
-[  272.093831]  [<ffffffff8105e9f6>] warn_slowpath_fmt+0x46/0x50
-[  272.093855]  [<ffffffffa02127c1>]
-iwl_trans_pcie_tx_agg_disable+0x101/0x110 [iwlwifi]
-[  272.093874]  [<ffffffffa01f37a3>] iwlagn_tx_agg_stop+0x243/0x320 [iwlwifi]
-[  272.093893]  [<ffffffffa01efd9b>]
-iwlagn_mac_ampdu_action+0x15b/0x330 [iwlwifi]
-[  272.093902]  [<ffffffff815f0f6d>] ? wait_for_completion+0x1d/0x20
-[  272.093931]  [<ffffffffa00db31b>]
-___ieee80211_stop_tx_ba_session+0x12b/0x2b0 [mac80211]
-[  272.093956]  [<ffffffffa00da2bf>]
-ieee80211_ba_session_work+0x10f/0x180 [mac80211]
-[  272.093980]  [<ffffffffa00da1b0>] ?
-ieee80211_sta_tear_down_BA_sessions+0x70/0x70 [mac80211]
-[  272.093988]  [<ffffffff8107c10a>] process_one_work+0x11a/0x480
-[  272.093995]  [<ffffffff8107ceb5>] worker_thread+0x165/0x370
-[  272.094002]  [<ffffffff8107cd50>] ? manage_workers.isra.30+0x130/0x130
-[  272.094010]  [<ffffffff8108135c>] kthread+0x8c/0xa0
-[  272.094019]  [<ffffffff815fc464>] kernel_thread_helper+0x4/0x10
-[  272.094027]  [<ffffffff810812d0>] ? flush_kthread_worker+0xa0/0xa0
-[  272.094035]  [<ffffffff815fc460>] ? gs_change+0x13/0x13
-[  272.094040] ---[ end trace 64687a3e121543d5 ]---
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index f2ee06f..e6ec16d 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -266,8 +266,11 @@ struct pn533 {
+ 	int in_maxlen;
+ 	struct pn533_frame *in_frame;
+ 
++	struct sk_buff_head resp_q;
++
+ 	struct workqueue_struct	*wq;
+ 	struct work_struct cmd_work;
++	struct work_struct mi_work;
+ 	struct pn533_frame *wq_in_frame;
+ 	int wq_in_error;
+ 
+@@ -1256,6 +1259,8 @@ static void pn533_deactivate_target(struct nfc_dev *nfc_dev, u32 target_idx)
+ 
+ 	dev->tgt_active_prot = 0;
+ 
++	skb_queue_purge(&dev->resp_q);
++
+ 	pn533_tx_frame_init(dev->out_frame, PN533_CMD_IN_RELEASE);
+ 
+ 	tg = 1;
+@@ -1454,11 +1459,49 @@ struct pn533_data_exchange_arg {
+ 	void *cb_context;
+ };
+ 
++static struct sk_buff *pn533_build_response(struct pn533 *dev)
++{
++	struct sk_buff *skb, *tmp, *t;
++	unsigned int skb_len = 0, tmp_len = 0;
++
++	nfc_dev_dbg(&dev->interface->dev, "%s\n", __func__);
++
++	if (skb_queue_empty(&dev->resp_q))
++		return NULL;
++
++	if (skb_queue_len(&dev->resp_q) == 1) {
++		skb = skb_dequeue(&dev->resp_q);
++		goto out;
++	}
++
++	skb_queue_walk_safe(&dev->resp_q, tmp, t)
++		skb_len += tmp->len;
++
++	nfc_dev_dbg(&dev->interface->dev, "%s total length %d\n",
++		    __func__, skb_len);
++
++	skb = alloc_skb(skb_len, GFP_KERNEL);
++	if (skb == NULL)
++		goto out;
++
++	skb_put(skb, skb_len);
++
++	skb_queue_walk_safe(&dev->resp_q, tmp, t) {
++		memcpy(skb->data + tmp_len, tmp->data, tmp->len);
++		tmp_len += tmp->len;
++	}
++
++out:
++	skb_queue_purge(&dev->resp_q);
++
++	return skb;
++}
++
+ static int pn533_data_exchange_complete(struct pn533 *dev, void *_arg,
+ 						u8 *params, int params_len)
+ {
+ 	struct pn533_data_exchange_arg *arg = _arg;
+-	struct sk_buff *skb_resp = arg->skb_resp;
++	struct sk_buff *skb = NULL, *skb_resp = arg->skb_resp;
+ 	struct pn533_frame *in_frame = (struct pn533_frame *) skb_resp->data;
+ 	int err = 0;
+ 	u8 status;
+@@ -1466,15 +1509,13 @@ static int pn533_data_exchange_complete(struct pn533 *dev, void *_arg,
+ 
+ 	nfc_dev_dbg(&dev->interface->dev, "%s", __func__);
+ 
+-	dev_kfree_skb_irq(arg->skb_out);
++	dev_kfree_skb(arg->skb_out);
+ 
+ 	if (params_len < 0) { /* error */
+ 		err = params_len;
+ 		goto error;
+ 	}
+ 
+-	skb_put(skb_resp, PN533_FRAME_SIZE(in_frame));
+-
+ 	status = params[0];
+ 
+ 	cmd_ret = status & PN533_CMD_RET_MASK;
+@@ -1485,25 +1526,27 @@ static int pn533_data_exchange_complete(struct pn533 *dev, void *_arg,
+ 		goto error;
+ 	}
+ 
++	skb_put(skb_resp, PN533_FRAME_SIZE(in_frame));
++	skb_pull(skb_resp, PN533_CMD_DATAEXCH_HEAD_LEN);
++	skb_trim(skb_resp, skb_resp->len - PN533_FRAME_TAIL_SIZE);
++	skb_queue_tail(&dev->resp_q, skb_resp);
++
+ 	if (status & PN533_CMD_MI_MASK) {
+-		/* TODO: Implement support to multi-part data exchange */
+-		nfc_dev_err(&dev->interface->dev, "Multi-part message not yet"
+-								" supported");
+-		/* Prevent the other messages from controller */
+-		pn533_send_ack(dev, GFP_ATOMIC);
+-		err = -ENOSYS;
+-		goto error;
++		queue_work(dev->wq, &dev->mi_work);
++		return -EINPROGRESS;
+ 	}
+ 
+-	skb_pull(skb_resp, PN533_CMD_DATAEXCH_HEAD_LEN);
+-	skb_trim(skb_resp, skb_resp->len - PN533_FRAME_TAIL_SIZE);
++	skb = pn533_build_response(dev);
++	if (skb == NULL)
++		goto error;
+ 
+-	arg->cb(arg->cb_context, skb_resp, 0);
++	arg->cb(arg->cb_context, skb, 0);
+ 	kfree(arg);
+ 	return 0;
+ 
+ error:
+-	dev_kfree_skb_irq(skb_resp);
++	skb_queue_purge(&dev->resp_q);
++	dev_kfree_skb(skb_resp);
+ 	arg->cb(arg->cb_context, NULL, err);
+ 	kfree(arg);
+ 	return 0;
+@@ -1578,6 +1621,68 @@ error:
+ 	return rc;
+ }
+ 
++static void pn533_wq_mi_recv(struct work_struct *work)
++{
++	struct pn533 *dev = container_of(work, struct pn533, mi_work);
++	struct sk_buff *skb_cmd;
++	struct pn533_data_exchange_arg *arg = dev->cmd_complete_arg;
++	struct pn533_frame *out_frame, *in_frame;
++	struct sk_buff *skb_resp;
++	int skb_resp_len;
++	int rc;
++
++	nfc_dev_dbg(&dev->interface->dev, "%s", __func__);
++
++	/* This is a zero payload size skb */
++	skb_cmd = alloc_skb(PN533_CMD_DATAEXCH_HEAD_LEN + PN533_FRAME_TAIL_SIZE,
++			    GFP_KERNEL);
++	if (skb_cmd == NULL)
++		goto error_cmd;
++
++	skb_reserve(skb_cmd, PN533_CMD_DATAEXCH_HEAD_LEN);
++
++	rc = pn533_data_exchange_tx_frame(dev, skb_cmd);
++	if (rc)
++		goto error_frame;
++
++	skb_resp_len = PN533_CMD_DATAEXCH_HEAD_LEN +
++			PN533_CMD_DATAEXCH_DATA_MAXLEN +
++			PN533_FRAME_TAIL_SIZE;
++	skb_resp = alloc_skb(skb_resp_len, GFP_KERNEL);
++	if (!skb_resp) {
++		rc = -ENOMEM;
++		goto error_frame;
++	}
++
++	in_frame = (struct pn533_frame *) skb_resp->data;
++	out_frame = (struct pn533_frame *) skb_cmd->data;
++
++	arg->skb_resp = skb_resp;
++	arg->skb_out = skb_cmd;
++
++	rc = __pn533_send_cmd_frame_async(dev, out_frame, in_frame,
++					  skb_resp_len,
++					  pn533_data_exchange_complete,
++					  dev->cmd_complete_arg, GFP_KERNEL);
++	if (!rc)
++		return;
++
++	nfc_dev_err(&dev->interface->dev, "Error %d when trying to"
++						" perform data_exchange", rc);
++
++	kfree_skb(skb_resp);
++
++error_frame:
++	kfree_skb(skb_cmd);
++
++error_cmd:
++	pn533_send_ack(dev, GFP_KERNEL);
++
++	kfree(arg);
++
++	up(&dev->cmd_lock);
++}
++
+ static int pn533_set_configuration(struct pn533 *dev, u8 cfgitem, u8 *cfgdata,
+ 								u8 cfgdata_len)
+ {
+@@ -1676,10 +1781,15 @@ static int pn533_probe(struct usb_interface *interface,
+ 			pn533_send_complete, dev);
+ 
+ 	INIT_WORK(&dev->cmd_work, pn533_wq_cmd_complete);
+-	dev->wq = create_singlethread_workqueue("pn533");
++	INIT_WORK(&dev->mi_work, pn533_wq_mi_recv);
++	dev->wq = alloc_workqueue("pn533",
++				  WQ_NON_REENTRANT | WQ_UNBOUND | WQ_MEM_RECLAIM,
++				  1);
+ 	if (dev->wq == NULL)
+ 		goto error;
+ 
++	skb_queue_head_init(&dev->resp_q);
++
+ 	usb_set_intfdata(interface, dev);
+ 
+ 	pn533_tx_frame_init(dev->out_frame, PN533_CMD_GET_FIRMWARE_VERSION);
+@@ -1756,6 +1866,8 @@ static void pn533_disconnect(struct usb_interface *interface)
+ 
+ 	destroy_workqueue(dev->wq);
+ 
++	skb_queue_purge(&dev->resp_q);
++
+ 	kfree(dev->in_frame);
+ 	usb_free_urb(dev->in_urb);
+ 	kfree(dev->out_frame);
+-- 
+1.7.9.1
 
-Thanks,
-Daniel
