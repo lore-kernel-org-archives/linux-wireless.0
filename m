@@ -1,225 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43816 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758033Ab2DFUgA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 16:36:00 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [PATCH v3 2/2] ath6kl: handle concurrent AP-STA channel switches
-Date: Fri, 6 Apr 2012 13:35:48 -0700
-Message-ID: <1333744548-18028-2-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120406_223604_420397_1B40332D)
-In-Reply-To: <1333744548-18028-1-git-send-email-c_tpeder@qca.qualcomm.com>
-References: <1333744548-18028-1-git-send-email-c_tpeder@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:10333 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753544Ab2DJRf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 13:35:27 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>,
+	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Eric Lapuyade <eric.lapuyade@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 06/18] NFC: Add HCI documentation
+Date: Tue, 10 Apr 2012 19:43:08 +0200
+Message-Id: <1334079800-10671-7-git-send-email-sameo@linux.intel.com> (sfid-20120410_193530_987436_54E7E10D)
+In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If an ath6kl AP vif is beaconing on one channel, and a STA vif
-associates on a different channel, a WMI_DISCONNECT event will be sent
-to the AP vif. Make the AP vif follow the STA interface, and notify
-userspace.
+From: Eric Lapuyade <eric.lapuyade@intel.com>
 
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
-v2: coalesce formats (Joe)
-v3: cfg80211 API changed
+ Documentation/nfc/nfc-hci.txt |  155 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 155 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/nfc/nfc-hci.txt
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   15 ++++++++
- drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +
- drivers/net/wireless/ath/ath6kl/core.h     |    2 +
- drivers/net/wireless/ath/ath6kl/main.c     |   55 +++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath6kl/wmi.h      |   12 ++++++
- 5 files changed, 85 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 1272508..1079bf1 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1015,6 +1015,20 @@ out:
- 	vif->scan_req = NULL;
- }
- 
-+void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
-+				      enum wmi_phy_mode mode)
-+{
-+	enum nl80211_channel_type type;
+diff --git a/Documentation/nfc/nfc-hci.txt b/Documentation/nfc/nfc-hci.txt
+new file mode 100644
+index 0000000..216b725
+--- /dev/null
++++ b/Documentation/nfc/nfc-hci.txt
+@@ -0,0 +1,155 @@
++HCI backend for NFC Core
 +
-+	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
-+		   "channel switch notify nw_type %d freq %d mode %d\n",
-+		   vif->nw_type, freq, mode);
++Author: Eric Lapuyade, Samuel Ortiz
++Contact: eric.lapuyade@intel.com, samuel.ortiz@intel.com
 +
-+	type = (mode == WMI_11G_HT20) ? NL80211_CHAN_HT20 : NL80211_CHAN_NO_HT;
++General
++-------
 +
-+	cfg80211_ch_switch_notify(vif->ndev, freq, type);
-+}
++The HCI layer implements much of the ETSI TS 102 622 V10.2.0 specification. It
++enables easy writing of HCI-based NFC drivers. The HCI layer runs as an NFC Core
++backend, implementing an abstract nfc device and translating NFC Core API
++to HCI commands and events.
 +
- static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 				   u8 key_index, bool pairwise,
- 				   const u8 *mac_addr,
-@@ -2643,6 +2657,7 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			return res;
- 	}
- 
-+	memcpy(&vif->profile, &p, sizeof(p));
- 	res = ath6kl_wmi_ap_profile_commit(ar->wmi, vif->fw_vif_idx, &p);
- 	if (res < 0)
- 		return res;
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-index c5def43..5ea8cbb 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-@@ -28,6 +28,8 @@ enum ath6kl_cfg_suspend_mode {
- struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 					enum nl80211_iftype type,
- 					u8 fw_vif_idx, u8 nw_type);
-+void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
-+				      enum wmi_phy_mode mode);
- void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, bool aborted);
- 
- void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 75b1d86..0b4078d 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -540,6 +540,7 @@ struct ath6kl_vif {
- 	u8 assoc_bss_dtim_period;
- 	struct net_device_stats net_stats;
- 	struct target_stats target_stats;
-+	struct wmi_connect_cmd profile;
- 
- 	struct list_head mc_filter;
- };
-@@ -628,6 +629,7 @@ struct ath6kl {
- 	u8 sta_list_index;
- 	struct ath6kl_req_key ap_mode_bkey;
- 	struct sk_buff_head mcastpsq;
-+	u32 want_ch_switch;
- 
- 	/*
- 	 * FIXME: protects access to mcastpsq but is actually useless as
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 7f3addd..58468e0 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -434,6 +434,13 @@ void ath6kl_connect_ap_mode_bss(struct ath6kl_vif *vif, u16 channel)
- 		break;
- 	}
- 
-+	if (ar->want_ch_switch & (1 << vif->fw_vif_idx)) {
-+		ar->want_ch_switch &= ~(1 << vif->fw_vif_idx);
-+		/* we actually don't know the phymode, default to HT20 */
-+		ath6kl_cfg80211_ch_switch_notify(vif, channel,
-+						 WMI_11G_HT20);
-+	}
++HCI
++---
 +
- 	ath6kl_wmi_bssfilter_cmd(ar->wmi, vif->fw_vif_idx, NONE_BSS_FILTER, 0);
- 	set_bit(CONNECTED, &vif->flags);
- 	netif_carrier_on(vif->ndev);
-@@ -582,6 +589,45 @@ void ath6kl_scan_complete_evt(struct ath6kl_vif *vif, int status)
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "scan complete: %d\n", status);
- }
- 
-+static int ath6kl_commit_ch_switch(struct ath6kl_vif *vif, u16 channel)
-+{
++HCI registers as an nfc device with NFC Core. Requests coming from userspace are
++routed through netlink sockets to NFC Core and then to HCI. From this point,
++they are translated in a sequence of HCI commands sent to the HCI layer in the
++host controller (the chip). The sending context blocks while waiting for the
++response to arrive.
++HCI events can also be received from the host controller. They will be handled
++and a translation will be forwarded to NFC Core as needed.
++HCI uses 2 execution contexts:
++- one if for executing commands : nfc_hci_msg_tx_work(). Only one command
++can be executing at any given moment.
++- one if for dispatching received events and responses : nfc_hci_msg_rx_work()
 +
-+	struct ath6kl *ar = vif->ar;
++HCI Session initialization:
++---------------------------
 +
-+	vif->next_chan = cpu_to_le16(channel);
-+	vif->profile.ch = cpu_to_le16(channel);
++The Session initialization is an HCI standard which must unfortunately
++support proprietary gates. This is the reason why the driver will pass a list
++of proprietary gates that must be part of the session. HCI will ensure all
++those gates have pipes connected when the hci device is set up.
 +
-+	switch (vif->nw_type) {
-+	case AP_NETWORK:
-+		return ath6kl_wmi_ap_profile_commit(ar->wmi, vif->fw_vif_idx,
-+						    &vif->profile);
-+	default:
-+		ath6kl_err("won't switch channels nw_type=%d\n", vif->nw_type);
-+		return -ENOTSUPP;
-+	}
-+}
++HCI Gates and Pipes
++-------------------
 +
-+static void ath6kl_check_ch_switch(struct ath6kl *ar, u16 channel)
-+{
++A gate defines the 'port' where some service can be found. In order to access
++a service, one must create a pipe to that gate and open it. In this
++implementation, pipes are totally hidden. The public API only knows gates.
++This is consistent with the driver need to send commands to proprietary gates
++without knowing the pipe connected to it.
 +
-+	struct ath6kl_vif *vif;
-+	int res = 0;
++Driver interface
++----------------
 +
-+	if (!ar->want_ch_switch)
-+		return;
++A driver would normally register itself with HCI and provide the following
++entry points:
 +
-+	spin_lock_bh(&ar->list_lock);
-+	list_for_each_entry(vif, &ar->vif_list, list) {
-+		if (ar->want_ch_switch & (1 << vif->fw_vif_idx))
-+			res = ath6kl_commit_ch_switch(vif, channel);
-+
-+		if (res)
-+			ath6kl_err("channel switch failed nw_type %d res %d\n",
-+				   vif->nw_type, res);
-+	}
-+	spin_unlock_bh(&ar->list_lock);
-+}
-+
- void ath6kl_connect_event(struct ath6kl_vif *vif, u16 channel, u8 *bssid,
- 			  u16 listen_int, u16 beacon_int,
- 			  enum network_type net_type, u8 beacon_ie_len,
-@@ -599,9 +645,11 @@ void ath6kl_connect_event(struct ath6kl_vif *vif, u16 channel, u8 *bssid,
- 	memcpy(vif->bssid, bssid, sizeof(vif->bssid));
- 	vif->bss_ch = channel;
- 
--	if ((vif->nw_type == INFRA_NETWORK))
-+	if ((vif->nw_type == INFRA_NETWORK)) {
- 		ath6kl_wmi_listeninterval_cmd(ar->wmi, vif->fw_vif_idx,
- 					      vif->listen_intvl_t, 0);
-+		ath6kl_check_ch_switch(ar, channel);
-+	}
- 
- 	netif_wake_queue(vif->ndev);
- 
-@@ -924,6 +972,11 @@ void ath6kl_disconnect_event(struct ath6kl_vif *vif, u8 reason, u8 *bssid,
- 	struct ath6kl *ar = vif->ar;
- 
- 	if (vif->nw_type == AP_NETWORK) {
-+		/* disconnect due to other STA vif switching channels */
-+		if (reason == BSS_DISCONNECTED &&
-+		    prot_reason_status == WMI_AP_REASON_STA_ROAM)
-+			ar->want_ch_switch |= 1 << vif->fw_vif_idx;
-+
- 		if (!ath6kl_remove_sta(ar, bssid, prot_reason_status))
- 			return;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index b99e9bd..88a1603 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1145,6 +1145,7 @@ enum wmi_phy_mode {
- 	WMI_11AG_MODE = 0x3,
- 	WMI_11B_MODE = 0x4,
- 	WMI_11GONLY_MODE = 0x5,
-+	WMI_11G_HT20	= 0x6,
- };
- 
- #define WMI_MAX_CHANNELS        32
-@@ -1452,6 +1453,17 @@ enum wmi_disconnect_reason {
- 	IBSS_MERGE = 0xe,
- };
- 
-+/* AP mode disconnect proto_reasons */
-+enum ap_disconnect_reason {
-+	WMI_AP_REASON_STA_LEFT		= 101,
-+	WMI_AP_REASON_FROM_HOST		= 102,
-+	WMI_AP_REASON_COMM_TIMEOUT	= 103,
-+	WMI_AP_REASON_MAX_STA		= 104,
-+	WMI_AP_REASON_ACL		= 105,
-+	WMI_AP_REASON_STA_ROAM		= 106,
-+	WMI_AP_REASON_DFS_CHANNEL	= 107,
++struct nfc_hci_ops {
++	int (*open)(struct nfc_hci_dev *hdev);
++	void (*close)(struct nfc_hci_dev *hdev);
++	int (*xmit)(struct nfc_hci_dev *hdev, struct sk_buff *skb);
++	int (*start_poll)(struct nfc_hci_dev *hdev, u32 protocols);
++	int (*target_from_gate)(struct nfc_hci_dev *hdev, u8 gate,
++				struct nfc_target *target);
 +};
 +
- #define ATH6KL_COUNTRY_RD_SHIFT        16
- 
- struct ath6kl_wmi_regdomain {
++open() and close() shall turn the hardware on and off. xmit() shall simply
++write a frame to the chip. start_poll() is an optional entrypoint that shall
++set the hardware in polling mode. This must be implemented only if the hardware
++uses proprietary gates or a mechanism slightly different from the HCI standard.
++target_from_gate() is another optional entrypoint to return the protocols
++corresponding to a proprietary gate.
++
++On the rx path, the driver is responsible to push incoming HCP frames to HCI
++using nfc_hci_recv_frame(). HCI will take care of re-aggregation and handling
++This must be done from a context that can sleep.
++
++SHDLC
++-----
++
++Most chips use shdlc to ensure integrity and delivery ordering of the HCP
++frames between the host controller (the chip) and hosts (entities connected
++to the chip, like the cpu). In order to simplify writing the driver, an shdlc
++layer is available for use by the driver.
++When used, the driver actually registers with shdlc, and shdlc will register
++with HCI. HCI sees shdlc as the driver and thus send its HCP frames
++through shdlc->xmit.
++SHDLC adds a new execution context (nfc_shdlc_sm_work()) to run its state
++machine and handle both its rx and tx path.
++
++Included Drivers
++----------------
++
++An HCI based driver for an NXP PN544, connected through I2C bus, and using
++shdlc is included.
++
++Execution Contexts
++------------------
++
++The execution contexts are the following:
++- IRQ handler (IRQH):
++fast, cannot sleep. stores incoming frames into an shdlc rx queue
++
++- SHDLC State Machine worker (SMW)
++handles shdlc rx & tx queues. Dispatches HCI cmd responses.
++
++- HCI Tx Cmd worker (MSGTXWQ)
++Serialize execution of HCI commands. Complete execution in case of resp timeout.
++
++- HCI Rx worker (MSGRXWQ)
++Dispatches incoming HCI commands or events.
++
++- Syscall context from a userspace call (SYSCALL)
++Any entrypoint in HCI called from NFC Core
++
++Workflow executing an HCI command (using shdlc)
++-----------------------------------------------
++
++Executing an HCI command can easily be performed synchronously using the
++following API:
++
++int nfc_hci_send_cmd (struct nfc_hci_dev *hdev, u8 gate, u8 cmd,
++			const u8 *param, size_t param_len, struct sk_buff **skb)
++
++The API must be invoked from a context that can sleep. Most of the time, this
++will be the syscall context. skb will return the result that was received in
++the response.
++
++Internally, execution is asynchronous. So all this API does is to enqueue the
++HCI command, setup a local wait queue on stack, and wait_event() for completion.
++The wait is not interruptible because it is guaranteed that the command will
++complete after some short timeout anyway.
++
++MSGTXWQ context will then be scheduled and invoke nfc_hci_msg_tx_work().
++This function will dequeue the next pending command and send its HCP fragments
++to the lower layer which happens to be shdlc. It will then start a timer to be
++able to complete the command with a timeout error if no response arrive.
++
++SMW context gets scheduled and invokes nfc_shdlc_sm_work(). This function
++handles shdlc framing in and out. It uses the driver xmit to send frames and
++receives incoming frames in an skb queue filled from the driver IRQ handler.
++SHDLC I(nformation) frames payload are HCP fragments. They are agregated to
++form complete HCI frames, which can be a response, command, or event.
++
++HCI Responses are dispatched immediately from this context to unblock
++waiting command execution. Reponse processing involves invoking the completion
++callback that was provided by nfc_hci_msg_tx_work() when it sent the command.
++The completion callback will then wake the syscall context.
++
++Workflow receiving an HCI event or command
++------------------------------------------
++
++HCI commands or events are not dispatched from SMW context. Instead, they are
++queued to HCI rx_queue and will be dispatched from HCI rx worker
++context (MSGRXWQ). This is done this way to allow a cmd or event handler
++to also execute other commands (for example, handling the
++NFC_HCI_EVT_TARGET_DISCOVERED event from PN544 requires to issue an
++ANY_GET_PARAMETER to the reader A gate to get information on the target
++that was discovered).
++
++Typically, such an event will be propagated to NFC Core from MSGRXWQ context.
 -- 
-1.7.4.1
+1.7.9.1
 
