@@ -1,65 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2382 "EHLO mms2.broadcom.com"
+Received: from mga09.intel.com ([134.134.136.24]:15842 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754586Ab2DJOTC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 10:19:02 -0400
-Message-ID: <4F844148.2010701@broadcom.com> (sfid-20120410_161917_654461_DE480086)
-Date: Tue, 10 Apr 2012 16:18:48 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Subject: Re: brcmsmac on BCM47XX SoCs
-References: <4F7F71A2.40105@hauke-m.de> <4F815181.6030007@broadcom.com>
- <CACna6rzSsQXxyMTX+-UJ-BuJ671avs8dVPOnOc1kSRW-3URvQg@mail.gmail.com>
- <4F82CE7B.8010803@hauke-m.de>
-In-Reply-To: <4F82CE7B.8010803@hauke-m.de>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	id S1753544Ab2DJRfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 13:35:31 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>,
+	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 07/18] NFC: The core part should generate the target index
+Date: Tue, 10 Apr 2012 19:43:09 +0200
+Message-Id: <1334079800-10671-8-git-send-email-sameo@linux.intel.com> (sfid-20120410_193533_566396_54874D27)
+In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/2012 01:56 PM, Hauke Mehrtens wrote:
-> On 04/08/2012 09:54 PM, Rafał Miłecki wrote:
->> 2012/4/8 Arend van Spriel<arend@broadcom.com>:
->>> On 04/06/2012 11:43 PM, Hauke Mehrtens wrote:
->>>> What are your plans to support phy_ht in brcmsmac, for now it is just
->>>> supported by b43?
->>>
->>>
->>> I have not been paying good attention to community feedback on b43 phy_ht
->>> support. As b43 support bcm4331 with that phy we decided to stay clear from
->>> that device. We are to add new phy code for new devices. Not sure if that
->>> includes the phy_ht.
->>
->> Whoops, that's extremely too bad. HT support is really wanted for a
->> lot of routers. What we have in b43 is support coming from watching
->> mmio ops only, there is no way for it to be complete. I believe you
->> really should think and releasing HT PHY code, a lot of ppl will be
->> interested in that.
->>
-> The TODO list for brcmsmac in the wireless wiki [0] says "Add support
-> for more chips, including (near term) BCM43227, BCM43228, and BCM4331."
-> The BCM4331 uses a HT-Phy, but b43 does not support 802.11n speed (the
-> chip supports up to 450MBit/s) and 5GHz wifi and I do not think b43 will
-> support these features in the near future, if it will ever support these
-> features.
+The target index can be used by userspace to uniquely identify a target
+and thus should be kept unique, per NFC adapter. Moreover, some protocols
+do not provide a logical index when discovering new targets, so we have to
+generate one for them.
+For NCI or pn533 to fetch their logical index, we added a logical_idx field
+to the target structure.
 
-Yes. bcm4331 was/is on our TODO list, but when b43 added support for it 
-we were unsure how to move forward.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ include/net/nfc/nfc.h |    2 ++
+ net/nfc/core.c        |    5 +++++
+ net/nfc/nci/core.c    |    2 +-
+ net/nfc/nci/ntf.c     |   11 ++++++-----
+ net/nfc/rawsock.c     |    6 ++++++
+ 5 files changed, 20 insertions(+), 6 deletions(-)
 
-> I do not think it is a big problem if brcmsmac supports some chips b43
-> also supports as b43 misses some important features, for now some
-> devices IDs for devices supported by brcmsmac and b43 they are
-> deactivated in b43 by default so brcmsmac is used every time. I would
-> like to see brcmsmac supporting all wifi chips using bcma (ai bus).
-
-I am 100% with you and counting the votes I think we should add bcm4331 
-as well ;-)
-
-Gr. AvS
+diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
+index 431a6c5..45f0563 100644
+--- a/include/net/nfc/nfc.h
++++ b/include/net/nfc/nfc.h
+@@ -79,6 +79,7 @@ struct nfc_target {
+ 	u8 sensf_res_len;
+ 	u8 sensf_res[NFC_SENSF_RES_MAXSIZE];
+ 	u8 hci_reader_gate;
++	u8 logical_idx;
+ };
+ 
+ struct nfc_genl_data {
+@@ -88,6 +89,7 @@ struct nfc_genl_data {
+ 
+ struct nfc_dev {
+ 	unsigned idx;
++	unsigned target_idx;
+ 	struct nfc_target *targets;
+ 	int n_targets;
+ 	int targets_generation;
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index deb4721..d924000 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -428,10 +428,15 @@ EXPORT_SYMBOL(nfc_alloc_recv_skb);
+ int nfc_targets_found(struct nfc_dev *dev,
+ 		      struct nfc_target *targets, int n_targets)
+ {
++	int i;
++
+ 	pr_debug("dev_name=%s n_targets=%d\n", dev_name(&dev->dev), n_targets);
+ 
+ 	dev->polling = false;
+ 
++	for (i = 0; i < n_targets; i++)
++		targets[i].idx = dev->target_idx++;
++
+ 	spin_lock_bh(&dev->targets_lock);
+ 
+ 	dev->targets_generation++;
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 9ec065b..8737c20 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -477,7 +477,7 @@ static int nci_activate_target(struct nfc_dev *nfc_dev, __u32 target_idx,
+ 	}
+ 
+ 	if (atomic_read(&ndev->state) == NCI_W4_HOST_SELECT) {
+-		param.rf_discovery_id = target->idx;
++		param.rf_discovery_id = target->logical_idx;
+ 
+ 		if (protocol == NFC_PROTO_JEWEL)
+ 			param.rf_protocol = NCI_RF_PROTOCOL_T1T;
+diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
+index 2e3dee4..99e1632 100644
+--- a/net/nfc/nci/ntf.c
++++ b/net/nfc/nci/ntf.c
+@@ -227,7 +227,7 @@ static void nci_add_new_target(struct nci_dev *ndev,
+ 
+ 	for (i = 0; i < ndev->n_targets; i++) {
+ 		target = &ndev->targets[i];
+-		if (target->idx == ntf->rf_discovery_id) {
++		if (target->logical_idx == ntf->rf_discovery_id) {
+ 			/* This target already exists, add the new protocol */
+ 			nci_add_new_protocol(ndev, target, ntf->rf_protocol,
+ 					     ntf->rf_tech_and_mode,
+@@ -248,10 +248,10 @@ static void nci_add_new_target(struct nci_dev *ndev,
+ 				  ntf->rf_tech_and_mode,
+ 				  &ntf->rf_tech_specific_params);
+ 	if (!rc) {
+-		target->idx = ntf->rf_discovery_id;
++		target->logical_idx = ntf->rf_discovery_id;
+ 		ndev->n_targets++;
+ 
+-		pr_debug("target_idx %d, n_targets %d\n", target->idx,
++		pr_debug("logical idx %d, n_targets %d\n", target->logical_idx,
+ 			 ndev->n_targets);
+ 	}
+ }
+@@ -372,10 +372,11 @@ static void nci_target_auto_activated(struct nci_dev *ndev,
+ 	if (rc)
+ 		return;
+ 
+-	target->idx = ntf->rf_discovery_id;
++	target->logical_idx = ntf->rf_discovery_id;
+ 	ndev->n_targets++;
+ 
+-	pr_debug("target_idx %d, n_targets %d\n", target->idx, ndev->n_targets);
++	pr_debug("logical idx %d, n_targets %d\n",
++		 target->logical_idx, ndev->n_targets);
+ 
+ 	nfc_targets_found(ndev->nfc_dev, ndev->targets, ndev->n_targets);
+ }
+diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
+index 5a839ce..b2825aa 100644
+--- a/net/nfc/rawsock.c
++++ b/net/nfc/rawsock.c
+@@ -92,6 +92,12 @@ static int rawsock_connect(struct socket *sock, struct sockaddr *_addr,
+ 		goto error;
+ 	}
+ 
++	if (addr->target_idx > dev->target_idx - 1 ||
++	    addr->target_idx < dev->target_idx - dev->n_targets) {
++		rc = -EINVAL;
++		goto error;
++	}
++
+ 	rc = nfc_activate_target(dev, addr->target_idx, addr->nfc_protocol);
+ 	if (rc)
+ 		goto put_dev;
+-- 
+1.7.9.1
 
