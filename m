@@ -1,54 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43493 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491Ab2DROa7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:30:59 -0400
-Message-ID: <4F8ED023.2050605@sipsolutions.net> (sfid-20120418_163103_972865_08E014B2)
-Date: Wed, 18 Apr 2012 07:30:59 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com> <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux> <4F84A422.3030900@sipsolutions.net> <1334093378.16897.62.camel@aeonflux> <20120411070514.GB17779@aemeltch-MOBL1> <1334714841.3725.37.camel@jlt3.sipsolutions.net> <20120418112017.GC19228@aemeltch-MOBL1>
-In-Reply-To: <20120418112017.GC19228@aemeltch-MOBL1>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:9579 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753438Ab2DJRfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 13:35:09 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>,
+	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 02/18] NFC: Add a target lost netlink event
+Date: Tue, 10 Apr 2012 19:43:04 +0200
+Message-Id: <1334079800-10671-3-git-send-email-sameo@linux.intel.com> (sfid-20120410_193513_021781_32245113)
+In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/18/2012 4:20 AM, Andrei Emeltchenko wrote:
-> Hi Johannes,
->
-> On Tue, Apr 17, 2012 at 07:07:21PM -0700, Johannes Berg wrote:
->>>>>>> I don't get this patch at all. Why am I reviewing some very very basic
->>>>>>> skeleton code when we should be discussing userspace APIs (we have
->>>>>>> already discussed them with a few people years ago), how the AMP is
->>>>>>> going to be managed, how the security handshake is going to work, etc.
->>>
->>> Do we have some outcome from that discussion?
->>
->> This API-defining patch is probably the best we have:
->> http://johannes.sipsolutions.net/patches/kernel/all/2010-10-13-15%
->> 3a24/035-bt3-amp.patch
->
-> Thanks for the link. After looking to the patches I think that there are
-> some similarities with respect to interface type. As I understood the
-> basic idea is the same: create virtual interface. But in your case the
-> implementation is really difficult.
->
-> Why do we need netlink commands like NL80211_CMD_HCI_AMP_ADD and
-> NL80211_CMD_HCI_AMP_DELETE if what we need is to create/delete virtual
-> interface which can be done with standard tools with a several lines
-> patch to iw:
+Some chips are capable of detecting when a tag is out of the field, so
+they could send a netlink event about it to userspace.
 
-[...]
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ include/linux/nfc.h |    1 +
+ net/nfc/netlink.c   |   30 ++++++++++++++++++++++++++++++
+ net/nfc/nfc.h       |    1 +
+ 3 files changed, 32 insertions(+), 0 deletions(-)
 
-That would work, but the plan was to have separate commands because 
-those commands create a virtual netdev, which we don't want in this case.
+diff --git a/include/linux/nfc.h b/include/linux/nfc.h
+index 39c1fcf..0ae9b58 100644
+--- a/include/linux/nfc.h
++++ b/include/linux/nfc.h
+@@ -70,6 +70,7 @@ enum nfc_commands {
+ 	NFC_EVENT_TARGETS_FOUND,
+ 	NFC_EVENT_DEVICE_ADDED,
+ 	NFC_EVENT_DEVICE_REMOVED,
++	NFC_EVENT_TARGET_LOST,
+ /* private: internal use only */
+ 	__NFC_CMD_AFTER_LAST
+ };
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index 6404052..ebdb605 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -183,6 +183,36 @@ free_msg:
+ 	return -EMSGSIZE;
+ }
+ 
++int nfc_genl_target_lost(struct nfc_dev *dev, u32 target_idx)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
++	if (!msg)
++		return -ENOMEM;
++
++	hdr = genlmsg_put(msg, 0, 0, &nfc_genl_family, 0,
++			  NFC_EVENT_TARGET_LOST);
++	if (!hdr)
++		goto free_msg;
++
++	NLA_PUT_STRING(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev));
++	NLA_PUT_U32(msg, NFC_ATTR_TARGET_INDEX, target_idx);
++
++	genlmsg_end(msg, hdr);
++
++	genlmsg_multicast(msg, 0, nfc_genl_event_mcgrp.id, GFP_KERNEL);
++
++	return 0;
++
++nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++free_msg:
++	nlmsg_free(msg);
++	return -EMSGSIZE;
++}
++
+ int nfc_genl_device_added(struct nfc_dev *dev)
+ {
+ 	struct sk_buff *msg;
+diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+index ec8794c..2c868d2 100644
+--- a/net/nfc/nfc.h
++++ b/net/nfc/nfc.h
+@@ -119,6 +119,7 @@ void nfc_genl_data_init(struct nfc_genl_data *genl_data);
+ void nfc_genl_data_exit(struct nfc_genl_data *genl_data);
+ 
+ int nfc_genl_targets_found(struct nfc_dev *dev);
++int nfc_genl_target_lost(struct nfc_dev *dev, u32 target_idx);
+ 
+ int nfc_genl_device_added(struct nfc_dev *dev);
+ int nfc_genl_device_removed(struct nfc_dev *dev);
+-- 
+1.7.9.1
 
-And no, given the lack of userspace tools we never tested these patches. 
-I was more of a "write down API thoughts in code" thing.
-
-johannes
