@@ -1,54 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:49938 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965946Ab2DLUGL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 16:06:11 -0400
-Received: by dake40 with SMTP id e40so2924442dak.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 13:06:11 -0700 (PDT)
-Date: Thu, 12 Apr 2012 13:06:06 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Alexander Holler <holler@ahsoftware.de>
-Cc: Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120412200606.GA23764@kroah.com> (sfid-20120412_220633_218369_B3EF61F5)
-References: <20120411231102.GA6404@kroah.com>
- <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
- <20120412002927.GA23167@kroah.com>
- <4F8733C1.7020305@ahsoftware.de>
+Received: from mga03.intel.com ([143.182.124.21]:41863 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755741Ab2DJMrI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Apr 2012 08:47:08 -0400
+Date: Tue, 10 Apr 2012 15:47:44 +0300
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+Message-ID: <20120410124742.GA17779@aemeltch-MOBL1> (sfid-20120410_144714_641139_44CC76DA)
+References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <CAGRGNgX+R0CrtF2tBJ1AASBqkhHjmEfcqVnJiTd_1mXFL2rVUw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F8733C1.7020305@ahsoftware.de>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAGRGNgX+R0CrtF2tBJ1AASBqkhHjmEfcqVnJiTd_1mXFL2rVUw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 09:57:53PM +0200, Alexander Holler wrote:
-> Hello,
-> 
-> Am 12.04.2012 02:29, schrieb Greg KH:
-> 
-> >>is there any chance for this one to be included in this review cycle?
-> >>
-> >>http://www.spinics.net/lists/linux-wireless/msg87999.html
-> >
-> >Have you read Documentation/stable_kernel_rules.txt?  Based on that, I
-> >don't think it can, yet, right?
-> 
-> Hmm, after reading that, I think the text could need an update about
-> how to submit patches written by others (which can already be found
-> in the upstream tree).
-> 
-> At least for me the text reads like only the authors can request
-> inclusion of a patch into the stable tree.
+Hi Julian,
 
-Patches are always welcome, but I think you will find the file already
-describes this (hint, the first '-' line for the Procedure section
-handles it).
+Thanks for review,
 
-greg k-h
+On Tue, Apr 10, 2012 at 10:26:11PM +1000, Julian Calaby wrote:
+> > --- a/net/mac80211/iface.c
+> > +++ b/net/mac80211/iface.c
+> > @@ -898,6 +900,11 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+> >        case NL80211_IFTYPE_WDS:
+> >        case NL80211_IFTYPE_AP_VLAN:
+> >                break;
+> > +       case NL80211_IFTYPE_VIRTUAL_AMP80211:
+> > +#ifdef CONFIG_MAC80211_VIRTUAL_AMP
+> > +               ieee80211_vamp_setup_sdata(sdata);
+> > +               break;
+> > +#endif
+> >        case NL80211_IFTYPE_UNSPECIFIED:
+> >        case NUM_NL80211_IFTYPES:
+> >                BUG();
+> 
+> Should this really BUG() if VAMP is not enabled? Maybe print a warning
+> and return an error instead.
+
+I will make it empty inline function.
+
+> > diff --git a/net/mac80211/virtual_amp.h b/net/mac80211/virtual_amp.h
+> > new file mode 100644
+> > index 0000000..5b7d219
+> > --- /dev/null
+> > +++ b/net/mac80211/virtual_amp.h
+> > @@ -0,0 +1,29 @@
+> > +/*
+> > + * Virtual / Software AMP 80211 BT Controller header
+> > + *
+> > + * Copyright 2012 Intel Corp.
+> > + *
+> > + * Written by andrei.emeltchenko@intel.com
+> > + *
+> > + * This program is free software; you can redistribute it and/or modify
+> > + * it under the terms of the GNU General Public License version 2 as
+> > + * published by the Free Software Foundation.
+> > + */
+> > +
+> > +#include "ieee80211_i.h"
+> > +
+> > +#ifdef CONFIG_MAC80211_VIRTUAL_AMP
+> > +
+> > +void ieee80211_vamp_setup_sdata(struct ieee80211_sub_if_data *sdata);
+> > +void ieee80211_vamp_clean_sdata(struct ieee80211_sub_if_data *sdata);
+> > +
+> > +struct vamp_data {
+> > +       struct hci_dev *hdev;
+> > +
+> > +       unsigned long flags;
+> > +
+> > +       struct work_struct work;
+> > +       struct sk_buff_head txq;
+> > +};
+> > +
+> > +#endif /* CONFIG_MAC80211_VIRTUAL_AMP */
+> 
+> A cleaner way of doing this is to have the function prototypes
+> specified as empty inline functions when CONFIG_MAC80211_VIRTUAL_AMP
+> is not defined and remove the #ifdefs in the main code. GCC's smart
+> enough to compile away all the empty functions.
+
+Will do this way.
+
+Best regards 
+Andrei Emeltchenko 
+
