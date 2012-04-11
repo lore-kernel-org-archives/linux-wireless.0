@@ -1,167 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:58764 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751807Ab2DBLfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 07:35:09 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1SEfXQ-0003vz-6W
-	for linux-wireless@vger.kernel.org; Mon, 02 Apr 2012 13:35:08 +0200
-Received: from linuxconsulting.iasi.rdsnet.ro ([86.124.39.167])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 13:35:08 +0200
-Received: from npavel by linuxconsulting.iasi.rdsnet.ro with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 13:35:08 +0200
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:40918 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751844Ab2DKJiQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 05:38:16 -0400
+Received: by lahe6 with SMTP id e6so651997lah.32
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 02:38:13 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-From: Nicu Pavel <npavel@mini-box.com>
-Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
-Date: Mon, 2 Apr 2012 11:32:57 +0000 (UTC)
-Message-ID: <loom.20120402T132942-864@post.gmane.org> (sfid-20120402_133516_101526_CE2B56DA)
-References: <4F0EEA1B.3040501@wut.de> <4F0FA4DD.5020601@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Cc: arik@wizery.com, linville@tuxdriver.com, coelho@ti.com
+Subject: [PATCH 00/16] wl12xx/wl1251/wlcore: reorganize drivers part 1
+Date: Wed, 11 Apr 2012 12:37:47 +0300
+Message-Id: <1334137083-13490-1-git-send-email-coelho@ti.com> (sfid-20120411_113820_185918_ACED94CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
-> On 01/12/2012 08:11 AM, Markus Königshaus wrote:
-> > Hello,
-> >
-> > I am using a USB WLAN - Stick with Realtek 8192 kernel driver. After 
-plugging it
-> > works fine, connecting to a WPA - network works. After ifdown wlan0, ifup 
-wlan0
-> > the stick no longer works , it stucks on scanning. Only a modprobe -r 
-rtl8192cu;
-> > modprobe rtl8192cu fixes the problem. The problem only appear if more than 
-one
-> > wireless - network is in range.The problem appear only in connection with 
-the
-> > rtl8192cu driver, other USB - sticks (with different Chipset) and other PCIE 
--
-> > boards operate properly.
-> > In order to reproduce the behavior repeat the sequenceifdown wlan0, ifup 
-wlan0 a
-> > few times.
-> >
-> > wpa_cli status->
-> > Selected interface 'wlan0'
-> > wpa_state=SCANNING
-> > < no change after 10 minutes>
-> >
-> > dmesg ->
-> > rtl8192cu: MAC auto ON okay!
-> > rtl8192cu: Tx queue select: 0x05
-> > rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
-> > wlan0: authenticate with 00:08:54:9a:b2:5f (try 1)
-> > wlan0: authenticated
-> > wlan0: associate with 00:08:54:9a:b2:5f (try 1)
-> > wlan0: RX AssocResp from 00:08:54:9a:b2:5f (capab=0x411 status=0 aid=1)
-> > wlan0: associated
-> > < ifdown wlan0 >
-> > wlan0: disassociated from 00:08:54:9a:b2:5f (Reason: 14)
-> > wlan0: deauthenticating from 00:08:54:9a:b2:5f by local choice (reason=3)
-> > cfg80211: Calling CRDA for country: US
-> > rtl8192cu: MAC auto ON okay!
-> > rtl8192cu: Tx queue select: 0x05
-> > rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
-> > < ifup wlan0 >
-> > rtl8192cu: MAC auto ON okay!
-> > rtl8192cu: Tx queue select: 0x05
-> > rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
-> >
-> >
-> > cat /sys/class/net/wlan0/carrier -> 0
-> > cat /sys/class/net/wlan0/operstate -> down
-> >
-> > Kernelversion: 3.1.8
-> >
-> > modinfo rtl8192cu->
-> > filename: kernel/drivers/net/wireless/rtlwifi/rtl8192cu/rtl8192cu.ko
-> > description: Realtek 8192C/8188C 802.11n USB wireless
-> > author: Larry Finger <Larry.Finger@...>
-> > author: Georgia <georgia@...>
-> > license: GPL
-> > vermagic: 3.1.8-WuT preempt mod_unload ARMv5
-> > firmware: rtlwifi/rtl8192cufw.bin
-> > depends: rtlwifi,rtl8192c-common
-> >
-> > lsusb ->
-> > Bus 001 Device 001: ID 1d6b:0002
-> > Bus 001 Device 003: ID 0bda:8176
-> 
-> I will try to duplicate your results; however,there are two things I would 
-like 
-> you to try. First is to get a copy of the bleeding-edge compat-wireless code, 
-> build and install the package, and test to see if it still fails. If it does, 
-I 
-> want you to load the driver with a 'debug=4' option. In other words, use
-> 
-> modprobe -v rtl8192cu debug=4
-> 
-> Then, after a failure occurs, send me the output of a dmesg command.
 
-I'm having the same behavior, on a 3.1 kernel tested with 2 USB Realtek 8192cu 
-sticks.
-However I'm unable to test with the latest compat-wireless because it's crashing 
-when I load the rtl8192cu module.
+This is the first batch of patches from the reorganization our drivers and
+preparation for the inclusion of the new wl18xx driver.
 
+First of all, we moved all the TI wireless drivers into a new subdirectory
+drivers/net/wireless/ti so we can keep all our drivers in the same place.
 
-Compat-wireless backport release: compat-wireless-2012-03-14-2-g7bfa0a3
-Backport based on linux-next.git next-20120316
-<6>cfg80211: Calling CRDA to update world regulatory domain
-<6>rtl8192cu: Chip version 0x10
-<6>rtl8192cu: MAC address: 80:1f:02:1b:d7:b1
-<6>rtl8192cu: Board Type 0
-<6>rtl8192cu: Loading firmware rtlwifi/rtl8192cufw.bin
-<4>------------[ cut here ]------------
-<4>WARNING: at /indevel/minibox-android/android-kernel/minibox-kernel-
-modules/compat-wireless-2012-03-18/net/wireless/core.c:577 
-wiphy_register+0x19c/0x494 )
-<4>Modules linked in: rtl8192cu(+) rtl8192c_common rtlwifi mac80211 cfg80211 
-compat
-<4>Backtrace: 
-<4>[<c00128ec>] (dump_backtrace+0x0/0x110) from [<c0012e34>] 
-(dump_stack+0x18/0x1c)
-<4> r6:bf04dbe8 r5:bf0699ac r4:00000241
-<4>[<c0012e1c>] (dump_stack+0x0/0x1c) from [<c0021334>] 
-(warn_slowpath_common+0x58/0x70)
-<4>[<c00212dc>] (warn_slowpath_common+0x0/0x70) from [<c0021370>] 
-(warn_slowpath_null+0x24/0x2c)
-<4> r8:00000000 r7:00000820 r6:00000040 r5:bf06b840 r4:c27fc0e0
-<4>[<c002134c>] (warn_slowpath_null+0x0/0x2c) from [<bf04dbe8>] 
-(wiphy_register+0x19c/0x494 [cfg80211])
-<4>[<bf04da4c>] (wiphy_register+0x0/0x494 [cfg80211]) from [<bf07f628>] 
-(ieee80211_register_hw+0x43c/0x688 [mac80211])
-<4>[<bf07f1ec>] (ieee80211_register_hw+0x0/0x688 [mac80211]) from [<bf0cb3c0>] 
-(rtl_fw_cb+0x8c/0xd0 [rtlwifi])
-<4>[<bf0cb334>] (rtl_fw_cb+0x0/0xd0 [rtlwifi]) from [<c01b79d4>] 
-(request_firmware_work_func+0x5c/0x7c)
-<4> r7:c01b7978 r6:c27b8be0 r5:00000000 r4:c27b8be0
-<4>[<c01b7978>] (request_firmware_work_func+0x0/0x7c) from [<c003a174>] 
-(kthread+0x88/0x90)
-<4> r5:cec43d30 r4:c27f9fcc
-<4>[<c003a0ec>] (kthread+0x0/0x90) from [<c00248a0>] (do_exit+0x0/0x634)
-<4> r7:00000013 r6:c00248a0 r5:c003a0ec r4:cec43d30
-<4>---[ end trace 5941e5b8e919d8dc ]---
-<6>rtlwifi: rx_max_size 15360, rx_urb_num 8, in_ep 1
-<6>usbcore: registered new interface driver rtl8192cu
+Then, we started splitting the wl12xx driver into a core module (wlcore) and a
+lower driver (wl12xx).  This was done because the wl18xx driver shares a lot of
+the same code.  The wlcore module will eventually become a kind of common
+library for the different lower drivers to use.  This patchset contains only
+the initial part of this work.  More will follow soon.
 
-Thanks,
-Nicu
+John, please let me know if it's okay to include the first patch, with which I
+moved stuff around, in my tree so we can keep things in sync more easily.
 
+Please review.
 
-> 
-> Larry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Cheers,
+Luca.
 
+Arik Nemtsov (1):
+  wlcore/wl12xx: create per-chip-family private storage
 
+Luciano Coelho (15):
+  wireless/wl12xx/wl1251: move TI WLAN modules to a common ti
+    subdirectory
+  wl12xx/wlcore: rename wl12xx to wlcore
+  wl12xx/wlcore: spin out the wl12xx probe from wlcore to a new wl12xx
+  wl12xx/wlcore: initial split of probe
+  wl12xx/wlcore: move wl1271 struct to wlcore and add ops
+  wlcore/wl12xx: implement chip-specific partition tables
+  wlcore/wl12xx: implement chip-specific register tables
+  wlcore/wl12xx: add chip-specific identify chip operation
+  wlcore/wl12xx: move get_pg_ver to the lower driver
+  wlcore/wl12xx: move top initialization to wl12xx
+  wlcore/wl12xx: move MAC address reading operation to lower driver
+  wlcore/wl12xx: add command trigger and event ack operations
+  wlcore/wl12xx: add quirk for legacy NVS support
+  wlcore: remove some unnecessary event mailbox address reads
+  wlcore: add quirk to disable ELP
 
+ MAINTAINERS                                        |   27 +-
+ drivers/net/wireless/Kconfig                       |    3 +-
+ drivers/net/wireless/Makefile                      |    4 +-
+ drivers/net/wireless/ti/Kconfig                    |   14 +
+ drivers/net/wireless/ti/Makefile                   |    4 +
+ drivers/net/wireless/{ => ti}/wl1251/Kconfig       |    0
+ drivers/net/wireless/{ => ti}/wl1251/Makefile      |    0
+ drivers/net/wireless/{ => ti}/wl1251/acx.c         |    0
+ drivers/net/wireless/{ => ti}/wl1251/acx.h         |    0
+ drivers/net/wireless/{ => ti}/wl1251/boot.c        |    0
+ drivers/net/wireless/{ => ti}/wl1251/boot.h        |    0
+ drivers/net/wireless/{ => ti}/wl1251/cmd.c         |    0
+ drivers/net/wireless/{ => ti}/wl1251/cmd.h         |    0
+ drivers/net/wireless/{ => ti}/wl1251/debugfs.c     |    0
+ drivers/net/wireless/{ => ti}/wl1251/debugfs.h     |    0
+ drivers/net/wireless/{ => ti}/wl1251/event.c       |    0
+ drivers/net/wireless/{ => ti}/wl1251/event.h       |    0
+ drivers/net/wireless/{ => ti}/wl1251/init.c        |    0
+ drivers/net/wireless/{ => ti}/wl1251/init.h        |    0
+ drivers/net/wireless/{ => ti}/wl1251/io.c          |    0
+ drivers/net/wireless/{ => ti}/wl1251/io.h          |    0
+ drivers/net/wireless/{ => ti}/wl1251/main.c        |    0
+ drivers/net/wireless/{ => ti}/wl1251/ps.c          |    0
+ drivers/net/wireless/{ => ti}/wl1251/ps.h          |    0
+ drivers/net/wireless/{ => ti}/wl1251/reg.h         |    0
+ drivers/net/wireless/{ => ti}/wl1251/rx.c          |    0
+ drivers/net/wireless/{ => ti}/wl1251/rx.h          |    0
+ drivers/net/wireless/{ => ti}/wl1251/sdio.c        |    0
+ drivers/net/wireless/{ => ti}/wl1251/spi.c         |    0
+ drivers/net/wireless/{ => ti}/wl1251/spi.h         |    0
+ drivers/net/wireless/{ => ti}/wl1251/tx.c          |    0
+ drivers/net/wireless/{ => ti}/wl1251/tx.h          |    0
+ drivers/net/wireless/{ => ti}/wl1251/wl1251.h      |    0
+ .../net/wireless/{ => ti}/wl1251/wl12xx_80211.h    |    0
+ drivers/net/wireless/ti/wl12xx/Kconfig             |    8 +
+ drivers/net/wireless/ti/wl12xx/Makefile            |    3 +
+ drivers/net/wireless/ti/wl12xx/main.c              |  716 ++++++++++++++++++
+ drivers/net/wireless/{ => ti}/wl12xx/reg.h         |  315 ++++----
+ drivers/net/wireless/ti/wlcore/Kconfig             |   41 +
+ drivers/net/wireless/ti/wlcore/Makefile            |   15 +
+ drivers/net/wireless/{wl12xx => ti/wlcore}/acx.c   |    3 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/acx.h   |    2 +-
+ drivers/net/wireless/ti/wlcore/boot.c              |  447 +++++++++++
+ drivers/net/wireless/ti/wlcore/boot.h              |   54 ++
+ drivers/net/wireless/{wl12xx => ti/wlcore}/cmd.c   |   32 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/cmd.h   |   16 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/conf.h  |    1 -
+ drivers/net/wireless/{wl12xx => ti/wlcore}/debug.h |    1 +
+ .../net/wireless/{wl12xx => ti/wlcore}/debugfs.c   |    2 +-
+ .../net/wireless/{wl12xx => ti/wlcore}/debugfs.h   |    2 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/event.c |   19 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/event.h |    1 -
+ drivers/net/wireless/{wl12xx => ti/wlcore}/ini.h   |    0
+ drivers/net/wireless/{wl12xx => ti/wlcore}/init.c  |   20 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/init.h  |    2 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/io.c    |  191 ++----
+ drivers/net/wireless/{wl12xx => ti/wlcore}/io.h    |   88 ++-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/main.c  |  232 ++-----
+ drivers/net/wireless/{wl12xx => ti/wlcore}/ps.c    |    8 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/ps.h    |    2 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/rx.c    |   24 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/rx.h    |    0
+ drivers/net/wireless/{wl12xx => ti/wlcore}/scan.c  |    2 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/scan.h  |    2 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/sdio.c  |    6 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/spi.c   |    4 +-
+ .../net/wireless/{wl12xx => ti/wlcore}/testmode.c  |    3 +-
+ .../net/wireless/{wl12xx => ti/wlcore}/testmode.h  |    0
+ drivers/net/wireless/{wl12xx => ti/wlcore}/tx.c    |   23 +-
+ drivers/net/wireless/{wl12xx => ti/wlcore}/tx.h    |    0
+ .../net/wireless/{wl12xx => ti/wlcore}/wl12xx.h    |  242 ------
+ .../wireless/{wl12xx => ti/wlcore}/wl12xx_80211.h  |    0
+ .../{wl12xx => ti/wlcore}/wl12xx_platform_data.c   |    0
+ drivers/net/wireless/ti/wlcore/wlcore.h            |  399 ++++++++++
+ drivers/net/wireless/wl12xx/Kconfig                |   48 --
+ drivers/net/wireless/wl12xx/Makefile               |   15 -
+ drivers/net/wireless/wl12xx/boot.c                 |  794 --------------------
+ drivers/net/wireless/wl12xx/boot.h                 |  120 ---
+ 78 files changed, 2132 insertions(+), 1823 deletions(-)
+ create mode 100644 drivers/net/wireless/ti/Kconfig
+ create mode 100644 drivers/net/wireless/ti/Makefile
+ rename drivers/net/wireless/{ => ti}/wl1251/Kconfig (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/Makefile (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/acx.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/acx.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/boot.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/boot.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/cmd.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/cmd.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/debugfs.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/debugfs.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/event.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/event.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/init.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/init.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/io.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/io.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/main.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/ps.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/ps.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/reg.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/rx.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/rx.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/sdio.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/spi.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/spi.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/tx.c (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/tx.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/wl1251.h (100%)
+ rename drivers/net/wireless/{ => ti}/wl1251/wl12xx_80211.h (100%)
+ create mode 100644 drivers/net/wireless/ti/wl12xx/Kconfig
+ create mode 100644 drivers/net/wireless/ti/wl12xx/Makefile
+ create mode 100644 drivers/net/wireless/ti/wl12xx/main.c
+ rename drivers/net/wireless/{ => ti}/wl12xx/reg.h (71%)
+ create mode 100644 drivers/net/wireless/ti/wlcore/Kconfig
+ create mode 100644 drivers/net/wireless/ti/wlcore/Makefile
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/acx.c (99%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/acx.h (99%)
+ create mode 100644 drivers/net/wireless/ti/wlcore/boot.c
+ create mode 100644 drivers/net/wireless/ti/wlcore/boot.h
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/cmd.c (98%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/cmd.h (98%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/conf.h (99%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/debug.h (99%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/debugfs.c (99%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/debugfs.h (98%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/event.c (94%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/event.h (98%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/ini.h (100%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/init.c (97%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/init.h (98%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/io.c (55%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/io.h (71%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/main.c (96%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/ps.c (97%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/ps.h (98%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/rx.c (94%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/rx.h (100%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/scan.c (99%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/scan.h (99%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/sdio.c (98%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/spi.c (99%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/testmode.c (99%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/testmode.h (100%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/tx.c (98%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/tx.h (100%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/wl12xx.h (68%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/wl12xx_80211.h (100%)
+ rename drivers/net/wireless/{wl12xx => ti/wlcore}/wl12xx_platform_data.c (100%)
+ create mode 100644 drivers/net/wireless/ti/wlcore/wlcore.h
+ delete mode 100644 drivers/net/wireless/wl12xx/Kconfig
+ delete mode 100644 drivers/net/wireless/wl12xx/Makefile
+ delete mode 100644 drivers/net/wireless/wl12xx/boot.c
+ delete mode 100644 drivers/net/wireless/wl12xx/boot.h
+
+-- 
+1.7.5.4
 
