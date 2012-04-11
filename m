@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay-b22.telenor.se ([195.54.99.213]:46394 "EHLO
-	smtprelay-b22.telenor.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330Ab2DBTn0 (ORCPT
+Received: from magic.merlins.org ([209.81.13.136]:46422 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619Ab2DKF1i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 15:43:26 -0400
-Received: from ipb1.telenor.se (ipb1.telenor.se [195.54.127.164])
-	by smtprelay-b22.telenor.se (Postfix) with ESMTP id 34DD714006
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Apr 2012 21:23:38 +0200 (CEST)
-Message-ID: <1333394617.2725.11.camel@tux.homenetwork> (sfid-20120402_214329_483716_933996F1)
-Subject: Re: carl9170 driver - network connection breaks
-From: Per-Erik Westerberg <per-erik.westerberg@bredband.net>
-To: linux-wireless@vger.kernel.org
-Date: Mon, 02 Apr 2012 21:23:37 +0200
-In-Reply-To: <4f79e539d908b3.59415590@wp.pl>
-References: <4f79e539d908b3.59415590@wp.pl>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 11 Apr 2012 01:27:38 -0400
+Date: Tue, 10 Apr 2012 22:27:33 -0700
+From: Marc MERLIN <marc@merlins.org>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big network copies (page allocation failure)
+Message-ID: <20120411052733.GA17352@merlins.org> (sfid-20120411_072816_457797_033627B3)
+References: <20120409.143710.879746943062854492.davem@davemloft.net> <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop> <20120409.153452.1284163346306246866.davem@davemloft.net> <1334030180.13293.98.camel@edumazet-glaptop> <20120410051127.GA32048@merlins.org> <1334038263.2907.1.camel@edumazet-glaptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1334038263.2907.1.camel@edumazet-glaptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mån 2012-04-02 klockan 19:43 +0200 skrev Mikołaj Kuligowski:
-> carl9170 driver - network connection "hangs". It happens if some bigger file is being downloaded (few MB or bigger). It doesn't happen on kernels less then 3.2 (works well with 3.1 and previous) and doesn't depend on firmware - it happens with all available firmware versions: 1.9.3, 1.9.4, 1.9.5.  I use USB wireless card TP-LINK TL-WN821N. Ubuntu 12.04. The device works perfect with Oneiric, breaks with Precise. Please help.
-> 
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/971728
-> 
-> __________________
+On Tue, Apr 10, 2012 at 08:11:03AM +0200, Eric Dumazet wrote:
+> Please try following patch, as it solved the problem for me (no more
+> order-1 allocations in tx path)
 
-Hi,
+I applied our patch to 3.3.1 and cannot reproduce the problem anymore.
 
-I am seeing exactly the same issues using an Netgear WNDA3100 when using
-anything newer that 3.1 kernel with the carl9170 driver and the firmware
-from http://linuxwireless.org/.
+I'll leave a big wireless copy running overnight just in case, but I think
+you fixed it.
 
-I am using Gentoo Linux and have tried using both the gentoo-sources
-3.3.0, the vanilla kernel 3.3.0 and the git-sources (3.3-rc7). I have
-not yet tried 3.4-rc1 but will try that also.
-
-I have tried to enable debugfs and all the debugging options that I can
-find in the kernel-config and have googled for information on how to
-actually use debugfs but have failed to understand how to use it, any
-ideas on what to look for?
-
-  BR / P-E
-
+Thanks much,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
