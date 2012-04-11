@@ -1,285 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13162 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3448 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754947Ab2DPVn1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:43:27 -0400
-Message-ID: <1334612614.5455.2.camel@dcbw.foobar.com> (sfid-20120416_234329_889336_40739568)
-Subject: Re: [RFC 3/4] libertas: add asynchronous firmware loading capability
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Date: Mon, 16 Apr 2012 16:43:34 -0500
-In-Reply-To: <20120403160221.8DE229D401E@zog.reactivated.net>
-References: <20120403160221.8DE229D401E@zog.reactivated.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1755094Ab2DKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 05:53:30 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 3/9] brcm80211: fmac: register primary net device with
+ device mac address
+Date: Wed, 11 Apr 2012 11:52:45 +0200
+Message-ID: <1334137971-3972-4-git-send-email-arend@broadcom.com> (sfid-20120411_115345_037656_8C686E6D)
+In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-03 at 17:02 +0100, Daniel Drake wrote:
-> As described at
-> http://article.gmane.org/gmane.linux.kernel.wireless.general/86084
-> libertas is taking a long time to load because it loads firmware
-> during module loading.
-> 
-> Add a new API for interface drivers to load their firmware
-> asynchronously. The same semantics of the firmware table are followed
-> like before.
-> 
-> Interface drivers will be converted in follow-up patches, then we can
-> remove the old, synchronous firmware loading function.
-> 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
+The primary net device was registered with a primary mac address and
+upon IFUP it was set to match the actual mac address from the device.
+This patch changes that and moves the brcmf_add_if() call to the common
+part of the driver.
 
-Looks good to me.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    5 +++++
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    6 ------
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    8 --------
+ 3 files changed, 5 insertions(+), 14 deletions(-)
 
-Dan
-
-> ---
->  drivers/net/wireless/libertas/decl.h     |    8 ++
->  drivers/net/wireless/libertas/dev.h      |   10 ++
->  drivers/net/wireless/libertas/firmware.c |  143 ++++++++++++++++++++++++++++++
->  drivers/net/wireless/libertas/main.c     |    3 +
->  4 files changed, 164 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-> index 2fb2e31..84a3aa7 100644
-> --- a/drivers/net/wireless/libertas/decl.h
-> +++ b/drivers/net/wireless/libertas/decl.h
-> @@ -19,6 +19,10 @@ struct lbs_fw_table {
->  };
->  
->  struct lbs_private;
-> +typedef void (*lbs_fw_cb)(struct lbs_private *priv, int ret,
-> +		const struct firmware *helper, const struct firmware *mainfw);
-> +
-> +struct lbs_private;
->  struct sk_buff;
->  struct net_device;
->  struct cmd_ds_command;
-> @@ -70,5 +74,9 @@ int lbs_get_firmware(struct device *dev, u32 card_model,
->  			const struct lbs_fw_table *fw_table,
->  			const struct firmware **helper,
->  			const struct firmware **mainfw);
-> +int lbs_get_firmware_async(struct lbs_private *priv, struct device *device,
-> +			   u32 card_model, const struct lbs_fw_table *fw_table,
-> +			   lbs_fw_cb callback);
-> +void lbs_wait_for_firmware_load(struct lbs_private *priv);
->  
->  #endif
-> diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-> index f3fd447..6720054 100644
-> --- a/drivers/net/wireless/libertas/dev.h
-> +++ b/drivers/net/wireless/libertas/dev.h
-> @@ -7,6 +7,7 @@
->  #define _LBS_DEV_H_
->  
->  #include "defs.h"
-> +#include "decl.h"
->  #include "host.h"
->  
->  #include <linux/kfifo.h>
-> @@ -180,6 +181,15 @@ struct lbs_private {
->  	wait_queue_head_t scan_q;
->  	/* Whether the scan was initiated internally and not by cfg80211 */
->  	bool internal_scan;
-> +
-> +	/* Firmware load */
-> +	u32 fw_model;
-> +	wait_queue_head_t fw_waitq;
-> +	struct device *fw_device;
-> +	const struct firmware *helper_fw;
-> +	const struct lbs_fw_table *fw_table;
-> +	const struct lbs_fw_table *fw_iter;
-> +	lbs_fw_cb fw_callback;
->  };
->  
->  extern struct cmd_confirm_sleep confirm_sleep;
-> diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
-> index 7ec0063..8c21b83 100644
-> --- a/drivers/net/wireless/libertas/firmware.c
-> +++ b/drivers/net/wireless/libertas/firmware.c
-> @@ -3,10 +3,151 @@
->   */
->  
->  #include <linux/firmware.h>
-> +#include <linux/firmware.h>
->  #include <linux/module.h>
->  
-> +#include "dev.h"
->  #include "decl.h"
->  
-> +static void load_next_firmware_from_table(struct lbs_private *private);
-> +
-> +static void lbs_fw_loaded(struct lbs_private *priv, int ret,
-> +	const struct firmware *helper, const struct firmware *mainfw)
-> +{
-> +	unsigned long flags;
-> +
-> +	lbs_deb_fw("firmware load complete, code %d\n", ret);
-> +
-> +	/* User must free helper/mainfw */
-> +	priv->fw_callback(priv, ret, helper, mainfw);
-> +
-> +	spin_lock_irqsave(&priv->driver_lock, flags);
-> +	priv->fw_callback = NULL;
-> +	wake_up(&priv->fw_waitq);
-> +	spin_unlock_irqrestore(&priv->driver_lock, flags);
-> +}
-> +
-> +static void do_load_firmware(struct lbs_private *priv, const char *name,
-> +	void (*cb)(const struct firmware *fw, void *context))
-> +{
-> +	int ret;
-> +
-> +	lbs_deb_fw("Requesting %s\n", name);
-> +	ret = request_firmware_nowait(THIS_MODULE, true, name,
-> +			priv->fw_device, GFP_KERNEL, priv, cb);
-> +	if (ret) {
-> +		lbs_deb_fw("request_firmware_nowait error %d\n", ret);
-> +		lbs_fw_loaded(priv, ret, NULL, NULL);
-> +	}
-> +}
-> +
-> +static void main_firmware_cb(const struct firmware *firmware, void *context)
-> +{
-> +	struct lbs_private *priv = context;
-> +
-> +	if (!firmware) {
-> +		/* Failed to find firmware: try next table entry */
-> +		load_next_firmware_from_table(priv);
-> +		return;
-> +	}
-> +
-> +	/* Firmware found! */
-> +	lbs_fw_loaded(priv, 0, priv->helper_fw, firmware);
-> +}
-> +
-> +static void helper_firmware_cb(const struct firmware *firmware, void *context)
-> +{
-> +	struct lbs_private *priv = context;
-> +
-> +	if (!firmware) {
-> +		/* Failed to find firmware: try next table entry */
-> +		load_next_firmware_from_table(priv);
-> +		return;
-> +	}
-> +
-> +	/* Firmware found! */
-> +	if (priv->fw_iter->fwname) {
-> +		priv->helper_fw = firmware;
-> +		do_load_firmware(priv, priv->fw_iter->fwname, main_firmware_cb);
-> +	} else {
-> +		/* No main firmware needed for this helper --> success! */
-> +		lbs_fw_loaded(priv, 0, firmware, NULL);
-> +	}
-> +}
-> +
-> +static void load_next_firmware_from_table(struct lbs_private *priv)
-> +{
-> +	const struct lbs_fw_table *iter;
-> +
-> +	if (!priv->fw_iter)
-> +		iter = priv->fw_table;
-> +	else
-> +		iter = ++priv->fw_iter;
-> +
-> +	if (priv->helper_fw) {
-> +		release_firmware(priv->helper_fw);
-> +		priv->helper_fw = NULL;
-> +	}
-> +
-> +next:
-> +	if (!iter->helper) {
-> +		/* End of table hit. */
-> +		lbs_fw_loaded(priv, -ENOENT, NULL, NULL);
-> +		return;
-> +	}
-> +
-> +	if (iter->model != priv->fw_model) {
-> +		iter++;
-> +		goto next;
-> +	}
-> +
-> +	priv->fw_iter = iter;
-> +	do_load_firmware(priv, iter->helper, helper_firmware_cb);
-> +}
-> +
-> +void lbs_wait_for_firmware_load(struct lbs_private *priv)
-> +{
-> +	wait_event(priv->fw_waitq, priv->fw_callback == NULL);
-> +}
-> +
-> +/**
-> + *  lbs_get_firmware_async - Retrieves firmware asynchronously. Can load
-> + *  either a helper firmware and a main firmware (2-stage), or just the helper.
-> + *
-> + *  @priv:      Pointer to lbs_private instance
-> + *  @dev:     	A pointer to &device structure
-> + *  @card_model: Bus-specific card model ID used to filter firmware table
-> + *		elements
-> + *  @fw_table:	Table of firmware file names and device model numbers
-> + *		terminated by an entry with a NULL helper name
-> + *	@callback: User callback to invoke when firmware load succeeds or fails.
-> + */
-> +int lbs_get_firmware_async(struct lbs_private *priv, struct device *device,
-> +			    u32 card_model, const struct lbs_fw_table *fw_table,
-> +			    lbs_fw_cb callback)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&priv->driver_lock, flags);
-> +	if (priv->fw_callback) {
-> +		lbs_deb_fw("firmware load already in progress\n");
-> +		spin_unlock_irqrestore(&priv->driver_lock, flags);
-> +		return -EBUSY;
-> +	}
-> +
-> +	priv->fw_device = device;
-> +	priv->fw_callback = callback;
-> +	priv->fw_table = fw_table;
-> +	priv->fw_iter = NULL;
-> +	priv->fw_model = card_model;
-> +	spin_unlock_irqrestore(&priv->driver_lock, flags);
-> +
-> +	lbs_deb_fw("Starting async firmware load\n");
-> +	load_next_firmware_from_table(priv);
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(lbs_get_firmware_async);
-> +
->  /**
->   *  lbs_get_firmware - Retrieves two-stage firmware
->   *
-> @@ -18,6 +159,8 @@
->   *  @helper:	On success, the helper firmware; caller must free
->   *  @mainfw:	On success, the main firmware; caller must free
->   *
-> + * Deprecated: use lbs_get_firmware_async() instead.
-> + *
->   *  returns:		0 on success, non-zero on failure
->   */
->  int lbs_get_firmware(struct device *dev, u32 card_model,
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index 7eaf992..e96ee0a 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -878,6 +878,7 @@ static int lbs_init_adapter(struct lbs_private *priv)
->  	priv->is_host_sleep_configured = 0;
->  	priv->is_host_sleep_activated = 0;
->  	init_waitqueue_head(&priv->host_sleep_q);
-> +	init_waitqueue_head(&priv->fw_waitq);
->  	mutex_init(&priv->lock);
->  
->  	setup_timer(&priv->command_timer, lbs_cmd_timeout_handler,
-> @@ -1037,6 +1038,8 @@ void lbs_remove_card(struct lbs_private *priv)
->  	if (priv->wiphy_registered)
->  		lbs_scan_deinit(priv);
->  
-> +	lbs_wait_for_firmware_load(priv);
-> +
->  	/* worker thread destruction blocks on the in-flight command which
->  	 * should have been cleared already in lbs_stop_card().
->  	 */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 07836a8..00b6270 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1073,6 +1073,11 @@ int brcmf_bus_start(struct device *dev)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	/* add primary networking interface */
++	ret = brcmf_add_if(dev, 0, "wlan%d", drvr->mac);
++	if (ret < 0)
++		return ret;
++
+ 	/* signal bus ready */
+ 	bus_if->state = BRCMF_BUS_DATA;
+ 	return 0;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 2bf5dda..a83fbea 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3948,12 +3948,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 		}
+ 	}
+ 
+-	/* add interface and open for business */
+-	if (brcmf_add_if(bus->sdiodev->dev, 0, "wlan%d", NULL)) {
+-		brcmf_dbg(ERROR, "Add primary net device interface failed!!\n");
+-		goto fail;
+-	}
+-
+ 	return bus;
+ 
+ fail:
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 8236422..1d67ecf 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -1383,14 +1383,6 @@ static int brcmf_usb_probe_cb(struct device *dev, const char *desc,
+ 		goto fail;
+ 	}
+ 
+-	/* add interface and open for business */
+-	ret = brcmf_add_if(dev, 0, "wlan%d", NULL);
+-	if (ret) {
+-		brcmf_dbg(ERROR, "Add primary net device interface failed!!\n");
+-		brcmf_detach(dev);
+-		goto fail;
+-	}
+-
+ 	return 0;
+ fail:
+ 	/* Release resources in reverse order */
+-- 
+1.7.5.4
 
 
