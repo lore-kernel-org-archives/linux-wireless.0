@@ -1,34 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:23729 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544Ab2DIOue (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 10:50:34 -0400
-Message-ID: <4F82F735.1070505@qca.qualcomm.com> (sfid-20120409_165037_871326_B77D8D45)
-Date: Mon, 9 Apr 2012 17:50:29 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4170 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755334Ab2DKJQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 05:16:10 -0400
+Message-ID: <4F854BCE.5060909@broadcom.com> (sfid-20120411_111632_042377_7B3697B9)
+Date: Wed, 11 Apr 2012 11:15:58 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2] ath6kl: Fix target assert in p2p bringup with multi
- vif
-References: <1333724070-17603-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1333724070-17603-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: "Jim Cromie" <jim.cromie@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>
+Subject: Re: [PATCH] brcm80211: replace open-coded ARRAY_SIZE with the
+ macro
+References: <1334098954-7556-1-git-send-email-jim.cromie@gmail.com>
+ <1334098954-7556-2-git-send-email-jim.cromie@gmail.com>
+In-Reply-To: <1334098954-7556-2-git-send-email-jim.cromie@gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/06/2012 05:54 PM, Vasanthakumar Thiagarajan wrote:
-> Using interface 0 for p2p causes target assert. This is because
-> interface 0 is always initialized to non-p2p operations. Fix this
-> issue by initializing all the interfaces for p2p when fw is capable
-> of dynamic interface switching. When fw is not capable of dynamic
-> switching, make sure p2p is not brought up on interface which is
-> not initialized for this purpose.
-> 
-> Reported-by: Naveen Singh navesing@qca.qualcomm.com
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+On 04/11/2012 01:02 AM, Jim Cromie wrote:
+>
+> Signed-off-by: Jim Cromie<jim.cromie@gmail.com>
+> ---
 
-Thanks, applied.
+Acked-by: Arend van Spriel <arend@broadcom.com>
 
-Kalle
+and thanks.
+
+Gr. AvS
+
+
