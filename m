@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:52349 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756143Ab2DKThx (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:50112 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755965Ab2DKCzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 15:37:53 -0400
-From: Maciej Rutecki <maciej.rutecki@gmail.com>
-Reply-To: maciej.rutecki@gmail.com
-To: Francois Romieu <romieu@fr.zoreil.com>
-Subject: Re: [3.4-rc1][Regression][network wireless] 'task xxxx blocked for more than 120 seconds' after resume
-Date: Wed, 11 Apr 2012 21:37:47 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-References: <201204022157.05598.maciej.rutecki@gmail.com> <1333657409.3494.22.camel@jlt3.sipsolutions.net> <20120405210122.GA12135@electric-eye.fr.zoreil.com>
-In-Reply-To: <20120405210122.GA12135@electric-eye.fr.zoreil.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201204112137.47854.maciej.rutecki@gmail.com> (sfid-20120411_213816_089067_AAE8C064)
+	Tue, 10 Apr 2012 22:55:10 -0400
+Date: Tue, 10 Apr 2012 22:54:51 -0400 (EDT)
+Message-Id: <20120410.225451.92022308007980352.davem@davemloft.net> (sfid-20120411_045516_030094_0041A3C8)
+To: preining@logic.at
+Cc: egrumbach@gmail.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	ilw@linux.intel.com
+Subject: Re: 3.4-rc2, ilwagn still most of the time completely unusable
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120411023747.GA10126@gamma.logic.tuwien.ac.at>
+References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at>
+	<20120411023747.GA10126@gamma.logic.tuwien.ac.at>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On czwartek, 5 kwietnia 2012 o 23:01:22 Francois Romieu wrote:
-> Johannes Berg <johannes@sipsolutions.net> :
-> > On Thu, 2012-04-05 at 22:08 +0200, Maciej Rutecki wrote:
-> > > Dmesg when CONFIG_LOCKDEP is set:
-> > > 
-> > > http://mrutecki.pl/download/kernel/3.4-rc1/netdev_resume/dmesg-lockdep.
-> > > txt
-> > 
-> > Looks like rtl8169's fault:
-> Fix is on the way to mainline, see http://patchwork.ozlabs.org/patch/150541
-Seems be resolved in -rc2. Only in dmesg still I have messages "netlink: 140 
-bytes leftover after parsing attributes.". It seems be another issue.
+From: Norbert Preining <preining@logic.at>
+Date: Wed, 11 Apr 2012 11:37:47 +0900
 
-Thanks
--- 
-Maciej Rutecki
-http://www.mrutecki.pl
+> Well, hope that in another 20 kernel revisions that might get fixed,
+> we are not talking about a brand new wlan adapter anymore ... that
+> was some years ago ... especially the regression from 2.6.38 where it
+> was working without any problem to the current very sad state of affair
+> is frustrating.
+
+In those 20 kernel revisions you, or a party interested in helping
+you, could have GIT bisected the guilty change which introduced
+the problem.
+
+Then we'd have something concrete to go on, and use to work towards a
+fix.
+
+Right now there isn't nearly enough information to fix the problem.
