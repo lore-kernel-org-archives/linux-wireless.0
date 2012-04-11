@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:61766 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827Ab2DUWsO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 18:48:14 -0400
-Received: by eekc41 with SMTP id c41so2808521eek.19
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Apr 2012 15:48:13 -0700 (PDT)
-From: Eldad Zack <eldad@fogrefinery.com>
-To: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Eldad Zack <eldad@fogrefinery.com>
-Subject: [PATCH] [brcmsmac] "INTERMEDIATE but not AMPDU" only when tracing
-Date: Sun, 22 Apr 2012 00:48:04 +0200
-Message-Id: <1335048484-5925-1-git-send-email-eldad@fogrefinery.com> (sfid-20120422_004831_947074_17C647B3)
+Received: from mx1.redhat.com ([209.132.183.28]:54319 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754394Ab2DKUB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 16:01:28 -0400
+Date: Wed, 11 Apr 2012 16:01:05 -0400
+From: Dave Jones <davej@redhat.com>
+To: "Ted Ts'o" <tytso@mit.edu>, David Miller <davem@davemloft.net>,
+	preining@logic.at, egrumbach@gmail.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net, ilw@linux.intel.com
+Subject: Re: 3.4-rc2, ilwagn still most of the time completely unusable
+Message-ID: <20120411200105.GA22002@redhat.com> (sfid-20120411_220144_718024_7100881B)
+References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at>
+ <20120411023747.GA10126@gamma.logic.tuwien.ac.at>
+ <20120410.225451.92022308007980352.davem@davemloft.net>
+ <20120411184047.GJ12044@thunk.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120411184047.GJ12044@thunk.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I keep getting the following messages on the log buffer:
-[ 2167.097507] ieee80211 phy0: brcms_c_dotxstatus: INTERMEDIATE but not AMPDU
-[ 2281.331305] ieee80211 phy0: brcms_c_dotxstatus: INTERMEDIATE but not AMPDU
-[ 2281.332539] ieee80211 phy0: brcms_c_dotxstatus: INTERMEDIATE but not AMPDU
-[ 2329.876605] ieee80211 phy0: brcms_c_dotxstatus: INTERMEDIATE but not AMPDU
-[ 2329.877354] ieee80211 phy0: brcms_c_dotxstatus: INTERMEDIATE but not AMPDU
-[ 2462.280756] ieee80211 phy0: brcms_c_dotxstatus: INTERMEDIATE but not AMPDU
-[ 2615.651689] ieee80211 phy0: brcms_c_dotxstatus: INTERMEDIATE but not AMPDU
+On Wed, Apr 11, 2012 at 02:40:47PM -0400, Ted Ts'o wrote:
 
->From the code comment I understand that this something that can - and does, quite frequently - happen.
-This patch demotes the message to the trace level.
+ > I'll note that I've been having troubles with my iwlagn driver losing
+ > the ability to connect to WPA2 authenticated AP's at work (Google
+ > Cambridge).  This has been true for since sometime around 3.0; my
+ > excuse for why I haven't tried bisecting it is that it can take
+ > several hours for the bug to manifest itself, and when it does, it's
+ > much simpler to either (a) reboot, or (b) rmmod iwlagn and then
+ > modprobe iwlagn.
+ > 
+ > I also don't know if it's a problem with (a) the iwlagn driver, (b) my
+ > hardware, (c) the network-manager WPA code, or (d) the enterprise AP
+ > that we are using, or some combination of the four.  On my todo list
+ > is to get a completely different 802.11abn wireless PC Card, and then
+ > try to see if the problem reproduces itself there, and then see if I
+ > can at some point try to set aside a full week where I'd do nothing
+ > else with my laptop but git bisects full-time.
+ > 
+ > Sometimes, git bisects are not terribly useful ways of trying to find
+ > the problem commits --- and I've tried doing them before to debug
+ > iwlagn problems twice before, and past experience tells me it's a
+ > minimum of 1, and usually more like 2 or 3 days of lost productivity
+ > while I try to debug it --- and that's when the problem is obvious
+ > within 10 or 20 minutes of the reboot.  :-(
 
-Signed-off-by: Eldad Zack <eldad@fogrefinery.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+iwlwifi has a debug module option which generates a ton of spew, but
+the Intel developers have managed to diagnose several iwlwifi problems
+I've had by staring at the dumps. Starting there is probably going to
+be faster than bisecting. (Especially when you're in a situation like I was
+where it was just 'differently broken' at various points in time).
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 231ddf4..2fc5956 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -847,8 +847,7 @@ brcms_c_dotxstatus(struct brcms_c_info *wlc, struct tx_status *txs)
- 	 */
- 	if (!(txs->status & TX_STATUS_AMPDU)
- 	    && (txs->status & TX_STATUS_INTERMEDIATE)) {
--		wiphy_err(wlc->wiphy, "%s: INTERMEDIATE but not AMPDU\n",
--			  __func__);
-+		BCMMSG(wlc->wiphy, "INTERMEDIATE but not AMPDU\n");
- 		return false;
- 	}
- 
--- 
-1.7.9.5
-
+	Dave
