@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:43253 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753968Ab2D0JJN (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:54405 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754054Ab2DKOMF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 05:09:13 -0400
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Sedat Dilek <sedat.dilek@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-Date: Fri, 27 Apr 2012 11:08:31 +0200
-Message-Id: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com> (sfid-20120427_110939_213067_A2407E82)
+	Wed, 11 Apr 2012 10:12:05 -0400
+Date: Wed, 11 Apr 2012 10:11:46 -0400 (EDT)
+Message-Id: <20120411.101146.1779004013194245072.davem@davemloft.net> (sfid-20120411_161214_833888_75C048AD)
+To: eric.dumazet@gmail.com
+Cc: marc@merlins.org, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] tcp: avoid order-1 allocations on wifi and tx path
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1334125848.5300.2330.camel@edumazet-glaptop>
+References: <20120411052733.GA17352@merlins.org>
+	<1334122980.5300.2154.camel@edumazet-glaptop>
+	<1334125848.5300.2330.camel@edumazet-glaptop>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-User lautriv asked for belkin N-1 WLAN device support on IRC.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Date: Wed, 11 Apr 2012 08:30:48 +0200
 
-Further informations from lautriv:
-* marvell 80W8031, card-id 11ab:2a02
-* Debian/sid 3.2.x
+> Marc Merlin reported many order-1 allocations failures in TX path on its
+> wireless setup, that dont make any sense with MTU=1500 network, and non
+> SG capable hardware.
+> 
+> After investigation, it turns out TCP uses sk_stream_alloc_skb() and
+> used as a convention skb_tailroom(skb) to know how many bytes of data
+> payload could be put in this skb (for non SG capable devices)
+> 
+> Note : these skb used kmalloc-4096 (MTU=1500 + MAX_HEADER +
+> sizeof(struct skb_shared_info) being above 2048)
+> 
+> Later, mac80211 layer need to add some bytes at the tail of skb
+> (IEEE80211_ENCRYPT_TAILROOM = 18 bytes) and since no more tailroom is
+> available has to call pskb_expand_head() and request order-1
+> allocations.
+> 
+> This patch changes sk_stream_alloc_skb() so that only
+> sk->sk_prot->max_header bytes of headroom are reserved, and use a new
+> skb field, avail_size to hold the data payload limit.
+> 
+> This way, order-0 allocations done by TCP stack can leave more than 2 KB
+> of tailroom and no more allocation is performed in mac80211 layer (or
+> any layer needing some tailroom)
+> 
+> avail_size is unioned with mark/dropcount, since mark will be set later
+> in IP stack for output packets. Therefore, skb size is unchanged.
+> 
+> Reported-by: Marc MERLIN <marc@merlins.org>
+> Tested-by: Marc MERLIN <marc@merlins.org>
+> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
 
-On [1] I found a report by Jim Cromie concerning same PCI device-id:
-
-00:0e.0 Ethernet controller [0200]: Marvell Technology Group Ltd.
-88W8361 [TopDog] 802.11n Wireless [11ab:2a02] (rev 03)
-	Subsystem: Marvell Technology Group Ltd. 88W8361 [TopDog] 802.11n Wireless [11ab:2a02]
-
-So, let's add 0x2a02 to PCI device table.
-
-[1] http://www.spinics.net/lists/newbies/msg46601.html
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Sedat Dilek <sedat.dilek@gmail.com>
----
- drivers/net/wireless/mwl8k.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index b48674b..16f0a9a 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -5264,6 +5264,7 @@ MODULE_FIRMWARE("mwl8k/fmimage_8366.fw");
- MODULE_FIRMWARE(MWL8K_8366_AP_FW(MWL8K_8366_AP_FW_API));
- 
- static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
-+	{ PCI_VDEVICE(MARVELL, 0x2a02), .driver_data = MWL8363, },
- 	{ PCI_VDEVICE(MARVELL, 0x2a0a), .driver_data = MWL8363, },
- 	{ PCI_VDEVICE(MARVELL, 0x2a0c), .driver_data = MWL8363, },
- 	{ PCI_VDEVICE(MARVELL, 0x2a24), .driver_data = MWL8363, },
--- 
-1.7.9.5
-
+Applied and queued up for -stable, thanks Eric.
