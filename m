@@ -1,84 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44564 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753618Ab2D2AFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 20:05:19 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/8] MIPS: bcm47xx: refactor fetching board data
-Date: Sun, 29 Apr 2012 02:04:07 +0200
-Message-Id: <1335657853-23925-3-git-send-email-hauke@hauke-m.de> (sfid-20120429_020529_391341_11BDF0EE)
-In-Reply-To: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
-References: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:47213 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933057Ab2DKTyB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 15:54:01 -0400
+Received: by lagr15 with SMTP id r15so1131725lag.2
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:53:58 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com, coelho@ti.com
+Subject: [PATCH 11/24] wlcore/wl12xx: split Tx completion to immediate/delayed
+Date: Wed, 11 Apr 2012 22:53:27 +0300
+Message-Id: <1334174020-18957-12-git-send-email-coelho@ti.com> (sfid-20120411_215417_082930_5AF1D0DE)
+In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
+References: <1334174020-18957-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now the fetching of board data also uses nvram_read_u16 and not
-simple_strtoul any more.
+From: Arik Nemtsov <arik@wizery.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+One chip family employs immediate Tx completion, where knowledge of
+completed packets is given as part of the FW status. Another is only
+notified of Tx completion via the FW status, and has to read the
+completion status of the packets from a different location.
+
+Implement the wl12xx tx completion as a delayed Tx completion.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- arch/mips/bcm47xx/setup.c                    |    7 +------
- arch/mips/bcm47xx/sprom.c                    |   12 ++++++++++++
- arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    5 +++++
- 3 files changed, 18 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c   |   10 ++++++++++
+ drivers/net/wireless/ti/wlcore/hw_ops.h |   12 ++++++++++++
+ drivers/net/wireless/ti/wlcore/main.c   |    8 +++++---
+ drivers/net/wireless/ti/wlcore/tx.c     |    1 +
+ drivers/net/wireless/ti/wlcore/wlcore.h |    2 ++
+ 5 files changed, 30 insertions(+), 3 deletions(-)
 
-diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
-index d9278a8..53cdb72 100644
---- a/arch/mips/bcm47xx/setup.c
-+++ b/arch/mips/bcm47xx/setup.c
-@@ -109,12 +109,7 @@ static int bcm47xx_get_invariants(struct ssb_bus *bus,
- 	/* Fill boardinfo structure */
- 	memset(&(iv->boardinfo), 0 , sizeof(struct ssb_boardinfo));
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 5f81aaf..6b187d0 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -789,6 +789,14 @@ static u32 wl12xx_get_rx_packet_len(struct wl1271 *wl, void *rx_data,
+ 	return data_len - sizeof(*desc) - desc->pad_len;
+ }
  
--	if (nvram_getenv("boardvendor", buf, sizeof(buf)) >= 0)
--		iv->boardinfo.vendor = (u16)simple_strtoul(buf, NULL, 0);
--	else
--		iv->boardinfo.vendor = SSB_BOARDVENDOR_BCM;
--	if (nvram_getenv("boardtype", buf, sizeof(buf)) >= 0)
--		iv->boardinfo.type = (u16)simple_strtoul(buf, NULL, 0);
-+	bcm47xx_fill_ssb_boardinfo(&iv->boardinfo, NULL);
++static void wl12xx_tx_delayed_compl(struct wl1271 *wl)
++{
++	if (wl->fw_status->tx_results_counter == (wl->tx_results_count & 0xff))
++		return;
++
++	wl1271_tx_complete(wl);
++}
++
+ static bool wl12xx_mac_in_fuse(struct wl1271 *wl)
+ {
+ 	bool supported = false;
+@@ -862,6 +870,8 @@ static struct wlcore_ops wl12xx_ops = {
+ 	.set_tx_desc_data_len	= wl12xx_set_tx_desc_data_len,
+ 	.get_rx_buf_align	= wl12xx_get_rx_buf_align,
+ 	.get_rx_packet_len	= wl12xx_get_rx_packet_len,
++	.tx_immediate_compl	= NULL,
++	.tx_delayed_compl	= wl12xx_tx_delayed_compl,
+ 	.get_pg_ver		= wl12xx_get_pg_ver,
+ 	.get_mac		= wl12xx_get_mac,
+ };
+diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
+index 876f1a1..14748d3 100644
+--- a/drivers/net/wireless/ti/wlcore/hw_ops.h
++++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
+@@ -81,5 +81,17 @@ wlcore_hw_get_rx_packet_len(struct wl1271 *wl, void *rx_data, u32 data_len)
+ 	return wl->ops->get_rx_packet_len(wl, rx_data, data_len);
+ }
  
- 	bcm47xx_fill_sprom(&iv->sprom, NULL);
++static inline void wlcore_hw_tx_delayed_compl(struct wl1271 *wl)
++{
++	if (wl->ops->tx_delayed_compl)
++		wl->ops->tx_delayed_compl(wl);
++}
++
++static inline void wlcore_hw_tx_immediate_compl(struct wl1271 *wl)
++{
++	if (wl->ops->tx_immediate_compl)
++		wl->ops->tx_immediate_compl(wl);
++}
++
+ #endif
  
-diff --git a/arch/mips/bcm47xx/sprom.c b/arch/mips/bcm47xx/sprom.c
-index 5c8dcd2..279991a 100644
---- a/arch/mips/bcm47xx/sprom.c
-+++ b/arch/mips/bcm47xx/sprom.c
-@@ -618,3 +618,15 @@ void bcm47xx_fill_sprom(struct ssb_sprom *sprom, const char *prefix)
- 		bcm47xx_fill_sprom_r1(sprom, prefix);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 3f558d5..0392166 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -49,6 +49,7 @@
+ #include "boot.h"
+ #include "testmode.h"
+ #include "scan.h"
++#include "hw_ops.h"
+ 
+ #define WL1271_BOOT_RETRIES 3
+ 
+@@ -933,6 +934,9 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		smp_mb__after_clear_bit();
+ 
+ 		wl12xx_fw_status(wl, wl->fw_status);
++
++		wlcore_hw_tx_immediate_compl(wl);
++
+ 		intr = le32_to_cpu(wl->fw_status->intr);
+ 		intr &= WL1271_INTR_MASK;
+ 		if (!intr) {
+@@ -969,9 +973,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 			}
+ 
+ 			/* check for tx results */
+-			if (wl->fw_status->tx_results_counter !=
+-			    (wl->tx_results_count & 0xff))
+-				wl1271_tx_complete(wl);
++			wlcore_hw_tx_delayed_compl(wl);
+ 
+ 			/* Make sure the deferred queues don't get too long */
+ 			defer_count = skb_queue_len(&wl->deferred_tx_queue) +
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 1fabc48..d1811b8 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -905,6 +905,7 @@ void wl1271_tx_complete(struct wl1271 *wl)
+ 		wl->tx_results_count++;
  	}
  }
-+
-+#ifdef CONFIG_BCM47XX_SSB
-+void bcm47xx_fill_ssb_boardinfo(struct ssb_boardinfo *boardinfo,
-+				const char *prefix)
-+{
-+	nvram_read_u16(prefix, NULL, "boardvendor", &boardinfo->vendor, 0);
-+	if (!boardinfo->vendor)
-+		boardinfo->vendor = SSB_BOARDVENDOR_BCM;
-+
-+	nvram_read_u16(prefix, NULL, "boardtype", &boardinfo->type, 0);
-+}
-+#endif
-diff --git a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-index 5ecaf47..42887c6 100644
---- a/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-+++ b/arch/mips/include/asm/mach-bcm47xx/bcm47xx.h
-@@ -47,4 +47,9 @@ extern enum bcm47xx_bus_type bcm47xx_bus_type;
- void bcm47xx_fill_sprom(struct ssb_sprom *sprom, const char *prefix);
- void bcm47xx_fill_sprom_ethernet(struct ssb_sprom *sprom, const char *prefix);
++EXPORT_SYMBOL(wl1271_tx_complete);
  
-+#ifdef CONFIG_BCM47XX_SSB
-+void bcm47xx_fill_ssb_boardinfo(struct ssb_boardinfo *boardinfo,
-+				const char *prefix);
-+#endif
-+
- #endif /* __ASM_BCM47XX_H */
+ void wl1271_tx_reset_link_queues(struct wl1271 *wl, u8 hlid)
+ {
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 664df32..29b39f9 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -51,6 +51,8 @@ struct wlcore_ops {
+ 	void (*prepare_read)(struct wl1271 *wl, u32 rx_desc, u32 len);
+ 	u32 (*get_rx_packet_len)(struct wl1271 *wl, void *rx_data,
+ 				 u32 data_len);
++	void (*tx_delayed_compl)(struct wl1271 *wl);
++	void (*tx_immediate_compl)(struct wl1271 *wl);
+ 	s8 (*get_pg_ver)(struct wl1271 *wl);
+ 	void (*get_mac)(struct wl1271 *wl);
+ };
 -- 
-1.7.9.5
+1.7.5.4
 
