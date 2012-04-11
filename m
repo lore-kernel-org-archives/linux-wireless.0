@@ -1,64 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:44396 "EHLO
-	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752412Ab2DUNTn (ORCPT
+Received: from ns.visionsystems.de ([62.145.30.242]:43309 "EHLO
+	mail.visionsystems.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754394Ab2DKKlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 09:19:43 -0400
-Date: Sat, 21 Apr 2012 15:19:22 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-cc: Kalle Valo <kvalo@adurom.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] wireless: at76c50x: allocating too much data
-In-Reply-To: <20120421124523.GS6498@mwanda>
-Message-ID: <alpine.DEB.2.02.1204211518420.1987@hadrien> (sfid-20120421_152020_456895_9DE4D61F)
-References: <20120420064705.GE22649@elgon.mountain> <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com> <20120420091449.GI27101@mwanda> <87vcku9sob.fsf@purkki.adurom.net> <20120421124523.GS6498@mwanda>
+	Wed, 11 Apr 2012 06:41:25 -0400
+Message-ID: <4F855FC4.1080707@visionsystems.de> (sfid-20120411_124129_169049_CEC807A5)
+Date: Wed, 11 Apr 2012 12:41:08 +0200
+From: Yegor Yefremov <yegor_sub1@visionsystems.de>
+Reply-To: yegor_sub1@visionsystems.de
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-863727080-1335014362=:1987"
+To: Luciano Coelho <coelho@ti.com>
+CC: linux-wireless@vger.kernel.org, arik@wizery.com,
+	Yegor Yefremov <yegorslists@googlemail.com>
+Subject: Re: wl1271: communication fails with kernel 3.4-rc2 and firmware
+ series 4
+References: <4F855997.20603@visionsystems.de> <1334139944.10398.11.camel@cumari>
+In-Reply-To: <1334139944.10398.11.camel@cumari>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323329-863727080-1335014362=:1987
-Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-On Sat, 21 Apr 2012, Dan Carpenter wrote:
-
-> On Fri, Apr 20, 2012 at 09:14:44PM +0300, Kalle Valo wrote:
->> Dan Carpenter <dan.carpenter@oracle.com> writes:
->>
->>> On Fri, Apr 20, 2012 at 06:57:00PM +1000, Julian Calaby wrote:
->>>>> -       struct mib_local *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
->>>>> +       struct mib_local *m = kmalloc(sizeof(struct mib_local), GFP_KERNEL);
->>>>
->>>> Would it be better practice to use sizeof(*m)?
->>>>
->>>
->>> That was my temptation as well...  But I decided to make it match
->>> with the surrounding code.  I'm happy to resend if people want.
->>
->> IMHO sizeof(*m) is better and I tend to use it.
->>
->> Related to this: I have a bad habit of sometimes dropping '*' from
->> sizeof()? Is there a tool which could spot that?
->>
+Am 11.04.2012 12:25, schrieb Luciano Coelho:
+> Hi Yegor,
 >
-> That's what I was working on for Smatch when I sent this patch.
->
-> The odd thing is that I can't find any bugs like this in the kernel.
-> If sizeof(foo) is less than sizeof(*foo), which is probably the
-> normal case, then these get caught early on in testing.
->
-> Still I think people must have done manual audits as well...  It
-> feels too clean to be natural.
+> On Wed, 2012-04-11 at 12:14 +0200, Yegor Yefremov wrote:
+>> continuing our yesterdays discussion on IRC I try to summarize my
+>> results. 
+>>
+>> First of all I calibrated my WLAN card via ti-utils as described here
+>> http://linuxwireless.org/en/users/Drivers/wl12xx/calibrator using
+>> calibrator plt calibrate. 
+>>
+>> Then I integrated this nvs file into kernel, so I have no longer these
+>> nasty errors.
+>>
+>> Still I cannot ping anything. Here you can see the end of
+>> wpa_supplicant's log:
+>>
+>> WPA: Installing PTK to the driver.
+>> wpa_driver_nl80211_set_key: ifindex=3 alg=2 addr=0x42a48 key_idx=0 set_tx=1 seq_len=6 key_len=32
+>>    addr=5c:d9:98:f9:30:d9
+>> EAPOL: External notification - portValid=1
+>> State: 4WAY_HANDSHAKE -> GROUP_HANDSHAKE
+>> RSN: received GTK in pairwise handshake - hexdump(len=34): [REMOVED]
+>> WPA: Group Key - hexdump(len=32): [REMOVED]
+>> WPA: Installing GTK to the driver (keyidx=1 tx=0 len=32).
+>> WPA: RSC - hexdump(len=6): b1 7c 0d 00 00 00
+>> wpa_driver_nl80211_set_key: ifindex=3 alg=2 addr=0x2a443 key_idx=1 set_tx=0 seq_len=6 key_len=32
+>> WPA: Key negotiation completed with 5c:d9:98:f9:30:d9 [PTK=TKIP GTK=TKIP]
+>> Cancelling authentication timeout
+>> Removed BSSID 5c:d9:98:f9:30:d9 from blacklist
+>> State: GROUP_HANDSHAKE -> COMPLETED
+>> CTRL-EVENT-CONNECTED - Connection to 5c:d9:98:f9:30:d9 completed (reauth) [id=1
+>> id_str=]
+>> wpa_driver_nl80211_set_operstate: operstate 0->1 (UP)
+>> netlink: Operstate: linkmode=-1, operstate=6
+>> EAPOL: External notification - portValid=1
+>> EAPOL: External notification - EAP success=1
+>> EAPOL: SUPP_PAE entering state AUTHENTICATING
+>> EAPOL: SUPP_BE entering state SUCCESS
+>> EAP: EAP entering state DISABLED
+>> EAPOL: SUPP_PAE entering state AUTHENTICATED
+>> EAPOL: Supplicant port status: Authorized
+>> EAPOL: SUPP_BE entering state IDLE
+>> EAPOL authentication completed successfully
+>> RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
+>> RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+>> EAPOL: startWhen --> 0
+>> EAPOL: disable timer tick
+>>
+>> Any ideas? As i told before both 2.6.37 and 3.3-rc7 made no problems.
+> Hard to say.  From these logs everything seems to be working fine.  What
+> IP address are you using? Are you sure your routes are all set up
+> correctly? Do you get any messages in the kernel logs, TX stuck
+> watchdog, maybe?
 
-I sent some patches with respect to this.  But that was probably around a 
-year ago.
+As soon as I replace 3.4 with 2.6.37 pings go through.
 
-julia
---8323329-863727080-1335014362=:1987--
+# ifconfig wlan0
+wlan0     Link encap:Ethernet  HWaddr 00:04:D9:80:55:02
+          inet addr:192.168.1.239  Bcast:192.168.1.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:5 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:4 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:737 (737.0 B)  TX bytes:568 (568.0 B) 
+
+# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 wlan0
+
+#dmesg
+wl12xx: firmware booted (Rev 6.3.5.0.98)
+wlan0: authenticate with 5c:d9:98:f9:30:d9
+wlan0: send auth to 5c:d9:98:f9:30:d9 (try 1/3)
+wlan0: authenticated
+wlan0: associate with 5c:d9:98:f9:30:d9 (try 1/3)
+wlan0: RX AssocResp from 5c:d9:98:f9:30:d9 (capab=0x431 status=0 aid=2)
+wlan0: associated
+
+Yegor
