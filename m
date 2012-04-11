@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61368 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696Ab2D3EIn (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:39270 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752003Ab2DKGIp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 00:08:43 -0400
-Received: by iadi9 with SMTP id i9so3612087iad.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2012 21:08:42 -0700 (PDT)
-Message-ID: <4F9E1047.9030103@lwfinger.net> (sfid-20120430_060847_181996_BBB3E627)
-Date: Sun, 29 Apr 2012 23:08:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: simple w8 <simplew8@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
-References: <CAKVccoU7CnhVVQ82U23Yuww6VrTMU4FsjWcWVbk16LNKyQfvOQ@mail.gmail.com> <A872091605A443F48DE1814CF6FAFE25@realtek.com.tw> <CAKVccoUfER_m48BtyMjo3pix2_BmqBZ8kxij_RxDhOLEN5Q-9A@mail.gmail.com> <4F9AF76A.4040607@lwfinger.net> <CAKVccoUbcvO-X5w2pOuOyP=DhK+64opsJm5muznjsOWu==MUcQ@mail.gmail.com> <4F9B63CF.4010005@lwfinger.net> <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com> <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com> <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com> <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com> <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com> <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com> <4F9DFF0A.7080604@lwfinger.net> <CAKVccoWt-rhfWBynb2kTXD6CU52WtXfqYNmmOCmUaTqCfjdWzg@mail.gmail.com>
-In-Reply-To: <CAKVccoWt-rhfWBynb2kTXD6CU52WtXfqYNmmOCmUaTqCfjdWzg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 11 Apr 2012 02:08:45 -0400
+Subject: [PATCH] net: allow pskb_expand_head() to get maximum tailroom
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Marc MERLIN <marc@merlins.org>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20120411052733.GA17352@merlins.org>
+References: <20120409.143710.879746943062854492.davem@davemloft.net>
+	 <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 Apr 2012 08:08:39 +0200
+Message-ID: <1334124519.5300.2246.camel@edumazet-glaptop> (sfid-20120411_080855_815551_CA3B462E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/29/2012 10:35 PM, simple w8 wrote:
->
-> So you also use wpa_supplicant, so what happens is that when i turn
-> off wpa_supplicant the problem goes away but i also loose wifi
-> internet, and of course if i unload the rtl8192ce module.
->
-> This problem has been existing for quite some time, also in another 2
-> machines that also have realtek wifi cards, so this problem isnt just
-> from this specific card, but i really cant tell if this is really some
-> caused by the realtek drivers or wpa_supplicant or any other thing...
->
-> I have mailed hostap mailing list to see what were the chances someone
-> knows about a similiar problem but the no one seams to know...
+Marc Merlin reported many order-1 allocations failures in TX path on its
+wireless setup, that dont make any sense with MTU=1500 network, and non
+SG capable hardware.
 
-Yes, I use wpa_supplicant and I do not have the problem. If you change to an 
-unencrypted AP, then wpa_supplicant will not be used. It will be loaded, but not 
-used.
+Turns out part of the problem comes from pskb_expand_head() not using
+ksize() to get exact head size given by kmalloc(). Doing the same thing
+than __alloc_skb() allows more tailroom in skb and can prevent future
+reallocations.
 
-what version of wpa_supplicant are you using? Mine is 0.7.3.
+As a bonus, struct skb_shared_info becomes cache line aligned.
 
-Larry
+Reported-by: Marc MERLIN <marc@merlins.org>
+Tested-by: Marc MERLIN <marc@merlins.org>
+Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+---
+ net/core/skbuff.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index baf8d28..e598400 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -952,9 +952,11 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
+ 		goto adjust_others;
+ 	}
+ 
+-	data = kmalloc(size + sizeof(struct skb_shared_info), gfp_mask);
++	data = kmalloc(size + SKB_DATA_ALIGN(sizeof(struct skb_shared_info)),
++		       gfp_mask);
+ 	if (!data)
+ 		goto nodata;
++	size = SKB_WITH_OVERHEAD(ksize(data));
+ 
+ 	/* Copy only real data... and, alas, header. This should be
+ 	 * optimized for the cases when header is void.
 
 
