@@ -1,256 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:41667 "HELO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758467Ab2DJDHa (ORCPT
+Received: from na3sys009aob129.obsmtp.com ([74.125.149.136]:43855 "EHLO
+	na3sys009amx259.postini.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754560Ab2DKJi3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 23:07:30 -0400
-From: Bing Zhao <bzhao@marvell.com>
+	Wed, 11 Apr 2012 05:38:29 -0400
+Received: by lbbge1 with SMTP id ge1so618434lbb.23
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 02:38:26 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 4/5] mwifiex: add support for WPS2.0
-Date: Mon,  9 Apr 2012 20:06:56 -0700
-Message-Id: <1334027217-23724-5-git-send-email-bzhao@marvell.com> (sfid-20120410_050733_892227_0D3CF49C)
-In-Reply-To: <1334027217-23724-1-git-send-email-bzhao@marvell.com>
-References: <1334027217-23724-1-git-send-email-bzhao@marvell.com>
+Cc: arik@wizery.com, linville@tuxdriver.com, coelho@ti.com
+Subject: [PATCH 12/16] wlcore/wl12xx: add command trigger and event ack operations
+Date: Wed, 11 Apr 2012 12:37:59 +0300
+Message-Id: <1334137083-13490-13-git-send-email-coelho@ti.com> (sfid-20120411_113846_077835_E7F0570A)
+In-Reply-To: <1334137083-13490-1-git-send-email-coelho@ti.com>
+References: <1334137083-13490-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Different chips may use different bits in the interrupt trigger
+register.  Add operations to handle these differences.
 
-This patches enables setting association request and probe request
-IE for station interface. WPS exchange between WPS2.0 AP and mwifiex
-STA Enrollee/External Registrar completes successfully.
-
-Tested with wpa_supplicant 1.0 and 2.0 devel.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c  |   21 ++++++++++++++
- drivers/net/wireless/mwifiex/fw.h        |    1 +
- drivers/net/wireless/mwifiex/init.c      |    2 +
- drivers/net/wireless/mwifiex/ioctl.h     |    1 +
- drivers/net/wireless/mwifiex/join.c      |   44 ++++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/main.h      |    2 +
- drivers/net/wireless/mwifiex/sta_ioctl.c |   34 +++++++++++++++++++++++
- 7 files changed, 105 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c   |   12 ++++++++++++
+ drivers/net/wireless/ti/wl12xx/reg.h    |   16 ++++++++++++++++
+ drivers/net/wireless/ti/wlcore/cmd.c    |    6 +++++-
+ drivers/net/wireless/ti/wlcore/event.c  |    7 +++++--
+ drivers/net/wireless/ti/wlcore/wlcore.h |   18 ++----------------
+ 5 files changed, 40 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index bd07030..01d4d17 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1162,6 +1162,17 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy, struct net_device *dev,
- 	priv->user_scan_cfg->num_ssids = request->n_ssids;
- 	priv->user_scan_cfg->ssid_list = request->ssids;
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index cef2884..8d82203 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -571,6 +571,16 @@ out:
+ 	return ret;
+ }
  
-+	if (request->ie && request->ie_len) {
-+		for (i = 0; i < MWIFIEX_MAX_VSIE_NUM; i++) {
-+			if (priv->vs_ie[i].mask != MWIFIEX_VSIE_MASK_CLEAR)
-+				continue;
-+			priv->vs_ie[i].mask = MWIFIEX_VSIE_MASK_SCAN;
-+			memcpy(&priv->vs_ie[i].ie, request->ie,
-+			       request->ie_len);
-+			break;
-+		}
-+	}
++static void wl12xx_trigger_cmd(struct wl1271 *wl)
++{
++	wlcore_write_reg(wl, REG_INTERRUPT_TRIG, WL12XX_INTR_TRIG_CMD);
++}
 +
- 	for (i = 0; i < request->n_channels; i++) {
- 		chan = request->channels[i];
- 		priv->user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
-@@ -1179,6 +1190,15 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy, struct net_device *dev,
- 	if (mwifiex_set_user_scan_ioctl(priv, priv->user_scan_cfg))
- 		return -EFAULT;
++static void wl12xx_ack_event(struct wl1271 *wl)
++{
++	wlcore_write_reg(wl, REG_INTERRUPT_TRIG, WL12XX_INTR_TRIG_EVENT_ACK);
++}
++
+ static bool wl12xx_mac_in_fuse(struct wl1271 *wl)
+ {
+ 	bool supported = false;
+@@ -637,6 +647,8 @@ static void wl12xx_get_mac(struct wl1271 *wl)
+ static struct wlcore_ops wl12xx_ops = {
+ 	.identify_chip	= wl12xx_identify_chip,
+ 	.boot		= wl12xx_boot,
++	.trigger_cmd	= wl12xx_trigger_cmd,
++	.ack_event	= wl12xx_ack_event,
+ 	.get_pg_ver	= wl12xx_get_pg_ver,
+ 	.get_mac	= wl12xx_get_mac,
+ };
+diff --git a/drivers/net/wireless/ti/wl12xx/reg.h b/drivers/net/wireless/ti/wl12xx/reg.h
+index 003041b..79ede02 100644
+--- a/drivers/net/wireless/ti/wl12xx/reg.h
++++ b/drivers/net/wireless/ti/wl12xx/reg.h
+@@ -490,6 +490,22 @@ enum {
  
-+	if (request->ie && request->ie_len) {
-+		for (i = 0; i < MWIFIEX_MAX_VSIE_NUM; i++) {
-+			if (priv->vs_ie[i].mask == MWIFIEX_VSIE_MASK_SCAN) {
-+				priv->vs_ie[i].mask = MWIFIEX_VSIE_MASK_CLEAR;
-+				memset(&priv->vs_ie[i].ie, 0,
-+				       MWIFIEX_MAX_VSIE_LEN);
-+			}
-+		}
-+	}
+ /* end PLL configuration algorithm for wl128x */
+ 
++/*
++ * Host Command Interrupt. Setting this bit masks
++ * the interrupt that the host issues to inform
++ * the FW that it has sent a command
++ * to the Wlan hardware Command Mailbox.
++ */
++#define WL12XX_INTR_TRIG_CMD		BIT(0)
++
++/*
++ * Host Event Acknowlegde Interrupt. The host
++ * sets this bit to acknowledge that it received
++ * the unsolicited information from the event
++ * mailbox.
++ */
++#define WL12XX_INTR_TRIG_EVENT_ACK	BIT(1)
++
+ /*===============================================
+   HI_CFG Interface Configuration Register Values
+   ------------------------------------------
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 3ec86e9..e80f674 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -66,7 +66,11 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 
+ 	wl1271_write(wl, wl->cmd_box_addr, buf, len, false);
+ 
+-	wlcore_write_reg(wl, REG_INTERRUPT_TRIG, INTR_TRIG_CMD);
++	/*
++	 * TODO: we just need this because one bit is in a different
++	 * place.  Is there any better way?
++	 */
++	wl->ops->trigger_cmd(wl);
+ 
+ 	timeout = jiffies + msecs_to_jiffies(WL1271_COMMAND_TIMEOUT);
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 078cb01..e3f572c 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -305,8 +305,11 @@ int wl1271_event_handle(struct wl1271 *wl, u8 mbox_num)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	/* then we let the firmware know it can go on...*/
+-	wlcore_write_reg(wl, REG_INTERRUPT_TRIG, INTR_TRIG_EVENT_ACK);
++	/*
++	 * TODO: we just need this because one bit is in a different
++	 * place.  Is there any better way?
++	 */
++	wl->ops->ack_event(wl);
+ 
  	return 0;
  }
- 
-@@ -1439,6 +1459,7 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
- 	}
- 	wdev->iftype = NL80211_IFTYPE_STATION;
- 	wdev->wiphy->max_scan_ssids = 10;
-+	wdev->wiphy->max_scan_ie_len = MWIFIEX_MAX_VSIE_LEN;
- 	wdev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				       BIT(NL80211_IFTYPE_ADHOC);
- 
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index bb26114..342f799 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -104,6 +104,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define TLV_TYPE_RATE_SCOPE         (PROPRIETARY_TLV_BASE_ID + 83)
- #define TLV_TYPE_POWER_GROUP        (PROPRIETARY_TLV_BASE_ID + 84)
- #define TLV_TYPE_WAPI_IE            (PROPRIETARY_TLV_BASE_ID + 94)
-+#define TLV_TYPE_MGMT_IE            (PROPRIETARY_TLV_BASE_ID + 105)
- #define TLV_TYPE_AUTO_DS_PARAM      (PROPRIETARY_TLV_BASE_ID + 113)
- #define TLV_TYPE_PS_PARAM           (PROPRIETARY_TLV_BASE_ID + 114)
- 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 54bb483..0d55c5b 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -131,6 +131,8 @@ static int mwifiex_init_priv(struct mwifiex_private *priv)
- 	priv->wmm_qosinfo = 0;
- 	priv->curr_bcn_buf = NULL;
- 	priv->curr_bcn_size = 0;
-+	priv->wps_ie = NULL;
-+	priv->wps_ie_len = 0;
- 
- 	priv->scan_block = false;
- 
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index 887a7d9..f0f9552 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -303,6 +303,7 @@ struct mwifiex_ds_misc_subsc_evt {
- 
- #define MWIFIEX_MAX_VSIE_LEN       (256)
- #define MWIFIEX_MAX_VSIE_NUM       (8)
-+#define MWIFIEX_VSIE_MASK_CLEAR    0x00
- #define MWIFIEX_VSIE_MASK_SCAN     0x01
- #define MWIFIEX_VSIE_MASK_ASSOC    0x02
- #define MWIFIEX_VSIE_MASK_ADHOC    0x04
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index bca8b6d..5189afb 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -225,6 +225,48 @@ mwifiex_setup_rates_from_bssdesc(struct mwifiex_private *priv,
- }
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 38d1ed2..76c27dd 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -30,6 +30,8 @@
+ struct wlcore_ops {
+ 	int (*identify_chip)(struct wl1271 *wl);
+ 	int (*boot)(struct wl1271 *wl);
++	void (*trigger_cmd)(struct wl1271 *wl);
++	void (*ack_event)(struct wl1271 *wl);
+ 	s8 (*get_pg_ver)(struct wl1271 *wl);
+ 	void (*get_mac)(struct wl1271 *wl);
+ };
+@@ -345,22 +347,6 @@ int wlcore_free_hw(struct wl1271 *wl);
+ /* Hardware to Embedded CPU Interrupts - first 32-bit register set */
  
  /*
-+ * This function appends a WPS IE. It is called from the network join command
-+ * preparation routine.
-+ *
-+ * If the IE buffer has been setup by the application, this routine appends
-+ * the buffer as a WPS TLV type to the request.
-+ */
-+static int
-+mwifiex_cmd_append_wps_ie(struct mwifiex_private *priv, u8 **buffer)
-+{
-+	int retLen = 0;
-+	struct mwifiex_ie_types_header ie_header;
-+
-+	if (!buffer || !*buffer)
-+		return 0;
-+
-+	/*
-+	 * If there is a wps ie buffer setup, append it to the return
-+	 * parameter buffer pointer.
-+	 */
-+	if (priv->wps_ie_len) {
-+		dev_dbg(priv->adapter->dev, "cmd: append wps ie %d to %p\n",
-+			priv->wps_ie_len, *buffer);
-+
-+		/* Wrap the generic IE buffer with a pass through TLV type */
-+		ie_header.type = cpu_to_le16(TLV_TYPE_MGMT_IE);
-+		ie_header.len = cpu_to_le16(priv->wps_ie_len);
-+		memcpy(*buffer, &ie_header, sizeof(ie_header));
-+		*buffer += sizeof(ie_header);
-+		retLen += sizeof(ie_header);
-+
-+		memcpy(*buffer, priv->wps_ie, priv->wps_ie_len);
-+		*buffer += priv->wps_ie_len;
-+		retLen += priv->wps_ie_len;
-+
-+	}
-+
-+	kfree(priv->wps_ie);
-+	priv->wps_ie_len = 0;
-+	return retLen;
-+}
-+
-+/*
-  * This function appends a WAPI IE.
-  *
-  * This function is called from the network join command preparation routine.
-@@ -480,6 +522,8 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
- 	if (priv->sec_info.wapi_enabled && priv->wapi_ie_len)
- 		mwifiex_cmd_append_wapi_ie(priv, &pos);
- 
-+	if (priv->wps.session_enable && priv->wps_ie_len)
-+		mwifiex_cmd_append_wps_ie(priv, &pos);
- 
- 	mwifiex_cmd_append_generic_ie(priv, &pos);
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index e601c46..5081da3 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -407,6 +407,8 @@ struct mwifiex_private {
- 	struct host_cmd_ds_802_11_key_material aes_key;
- 	u8 wapi_ie[256];
- 	u8 wapi_ie_len;
-+	u8 *wps_ie;
-+	u8 wps_ie_len;
- 	u8 wmm_required;
- 	u8 wmm_enabled;
- 	u8 wmm_qosinfo;
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 3bdef07..d12ed13 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -997,6 +997,39 @@ static int mwifiex_set_wapi_ie(struct mwifiex_private *priv,
- }
- 
- /*
-+ * IOCTL request handler to set/reset WPS IE.
-+ *
-+ * The supplied WPS IE is treated as a opaque buffer. Only the first field
-+ * is checked to internally enable WPS. If buffer length is zero, the existing
-+ * WPS IE is reset.
-+ */
-+static int mwifiex_set_wps_ie(struct mwifiex_private *priv,
-+			       u8 *ie_data_ptr, u16 ie_len)
-+{
-+	if (ie_len) {
-+		priv->wps_ie = kzalloc(MWIFIEX_MAX_VSIE_LEN, GFP_KERNEL);
-+		if (!priv->wps_ie)
-+			return -ENOMEM;
-+		if (ie_len > sizeof(priv->wps_ie)) {
-+			dev_dbg(priv->adapter->dev,
-+				"info: failed to copy WPS IE, too big\n");
-+			kfree(priv->wps_ie);
-+			return -1;
-+		}
-+		memcpy(priv->wps_ie, ie_data_ptr, ie_len);
-+		priv->wps_ie_len = ie_len;
-+		dev_dbg(priv->adapter->dev, "cmd: Set wps_ie_len=%d IE=%#x\n",
-+			priv->wps_ie_len, priv->wps_ie[0]);
-+	} else {
-+		kfree(priv->wps_ie);
-+		priv->wps_ie_len = ie_len;
-+		dev_dbg(priv->adapter->dev,
-+			"info: Reset wps_ie_len=%d\n", priv->wps_ie_len);
-+	}
-+	return 0;
-+}
-+
-+/*
-  * IOCTL request handler to set WAPI key.
-  *
-  * This function prepares the correct firmware command and
-@@ -1409,6 +1442,7 @@ mwifiex_set_gen_ie_helper(struct mwifiex_private *priv, u8 *ie_data_ptr,
- 			priv->wps.session_enable = true;
- 			dev_dbg(priv->adapter->dev,
- 				"info: WPS Session Enabled.\n");
-+			ret = mwifiex_set_wps_ie(priv, ie_data_ptr, ie_len);
- 		}
- 
- 		/* Append the passed data to the end of the
+- * Host Command Interrupt. Setting this bit masks
+- * the interrupt that the host issues to inform
+- * the FW that it has sent a command
+- * to the Wlan hardware Command Mailbox.
+- */
+-#define INTR_TRIG_CMD       BIT(0)
+-
+-/*
+- * Host Event Acknowlegde Interrupt. The host
+- * sets this bit to acknowledge that it received
+- * the unsolicited information from the event
+- * mailbox.
+- */
+-#define INTR_TRIG_EVENT_ACK BIT(1)
+-
+-/*
+  * The host sets this bit to inform the Wlan
+  * FW that a TX packet is in the XFER
+  * Buffer #0.
 -- 
-1.7.0.2
+1.7.5.4
 
