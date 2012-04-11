@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:43959 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754454Ab2DSRUN convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:54393 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752813Ab2DKOLu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 13:20:13 -0400
-Received: by qadc11 with SMTP id c11so17535qad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 10:20:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMLZHHRRCCkm7CybYx=2Mp+boS=-vsfL+6UOJ=RjTy6t1F5UXg@mail.gmail.com>
-References: <20120409202402.8523E9D401E@zog.reactivated.net>
- <1334849651.1980.6.camel@dcbw.foobar.com> <CAMLZHHRRCCkm7CybYx=2Mp+boS=-vsfL+6UOJ=RjTy6t1F5UXg@mail.gmail.com>
-From: Vasily Khoruzhick <anarsoul@gmail.com>
-Date: Thu, 19 Apr 2012 20:19:52 +0300
-Message-ID: <CA+E=qVd+ZcvNzQNhWOXCdrkzFF7n9MnenjNm-binTjAEH1JQsQ@mail.gmail.com> (sfid-20120419_192019_146696_6A0EBB5F)
-Subject: Re: [RFT] libertas SPI: convert to asynchronous firmware loading
-To: Daniel Drake <dsd@laptop.org>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Apr 2012 10:11:50 -0400
+Date: Wed, 11 Apr 2012 10:11:34 -0400 (EDT)
+Message-Id: <20120411.101134.410148429938272473.davem@davemloft.net> (sfid-20120411_161155_689192_9D3DCF62)
+To: eric.dumazet@gmail.com
+Cc: marc@merlins.org, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] net: allow pskb_expand_head() to get maximum tailroom
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1334124519.5300.2246.camel@edumazet-glaptop>
+References: <1334038263.2907.1.camel@edumazet-glaptop>
+	<20120411052733.GA17352@merlins.org>
+	<1334124519.5300.2246.camel@edumazet-glaptop>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/4/19 Daniel Drake <dsd@laptop.org>:
-> Hi Vasily,
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Date: Wed, 11 Apr 2012 08:08:39 +0200
 
-Hi, Daniel
+> Marc Merlin reported many order-1 allocations failures in TX path on its
+> wireless setup, that dont make any sense with MTU=1500 network, and non
+> SG capable hardware.
+> 
+> Turns out part of the problem comes from pskb_expand_head() not using
+> ksize() to get exact head size given by kmalloc(). Doing the same thing
+> than __alloc_skb() allows more tailroom in skb and can prevent future
+> reallocations.
+> 
+> As a bonus, struct skb_shared_info becomes cache line aligned.
+> 
+> Reported-by: Marc MERLIN <marc@merlins.org>
+> Tested-by: Marc MERLIN <marc@merlins.org>
+> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
 
-> On Thu, Apr 19, 2012 at 9:34 AM, Dan Williams <dcbw@redhat.com> wrote:
->>
->> It looks sane to me from a quick review.  so unless somebody can
->> actually test this we'll probably have to push the patch...
->
-> Can you please test this patch for us?
-
-Sure, I've planed to test it, but this and next week I'm pretty busy
-(with personal stuff),
-will test it after 28th of April.
-
-Regards
-Vasily
+Applied and queued up for -stable.
