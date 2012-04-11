@@ -1,108 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:65219 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750852Ab2DPFjn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 01:39:43 -0400
-Date: Mon, 16 Apr 2012 07:39:11 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Ingo Molnar <mingo@kernel.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120416053911.GL27728@1wt.eu> (sfid-20120416_073948_813366_075D4C55)
-References: <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com> <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com> <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com> <20120414104733.GA4871@gmail.com> <CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com> <20120415065124.GC29563@gmail.com> <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com> <CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com> <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
+Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:54552 "EHLO
+	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933057Ab2DKTyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 15:54:15 -0400
+Received: by lagr15 with SMTP id r15so1078173lag.30
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:54:08 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com, coelho@ti.com
+Subject: [PATCH 20/24] wlcore/wl12xx: set HT capabilities per chip-family
+Date: Wed, 11 Apr 2012 22:53:36 +0300
+Message-Id: <1334174020-18957-21-git-send-email-coelho@ti.com> (sfid-20120411_215434_685932_61682206)
+In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
+References: <1334174020-18957-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 16, 2012 at 01:12:48AM +0300, Felipe Contreras wrote:
-> I'm not going to argue the semantics of what is a revert, but I am
-> going to show the difference between the two situations:
-> 
-> a) v3.0* (good), v3.1* (good), v3.2* (good), v3.3 (good), v3.3.1
-> (bad), v3.3.2 (good), v3.4 (bad)
+From: Arik Nemtsov <arik@wizery.com>
 
-This situation is not possible thanks to the process : if v3.3.2 has
-a fix that was not in 3.3.1, then this fix is also in 3.4.
+Set HT capabilities in the low-level HW driver. These are then used by
+wlcore when registering with mac80211.
 
-> b) v3.0* (bad), v3.1* (bad), v3.2* (bad), v3.3 (bad), v3.3.1 (good), v3.4 (bad)
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl12xx/main.c   |   14 ++++++++++++++
+ drivers/net/wireless/ti/wlcore/main.c   |   22 ++++------------------
+ drivers/net/wireless/ti/wlcore/wlcore.h |    3 +++
+ 3 files changed, 21 insertions(+), 18 deletions(-)
 
-Same here.
-
-> Maybe they are the same from certain point of view, but you just
-> argued that what *others* see is what makes the patch unrevertable,
-> well, it's obvious that from the point of view of the users the two
-> situations are clearly different. I believe it was you who said that
-> breaking user experience is the absolute no-no any project could
-> make[1]--so from that point of view a) is *much* worst.
-> 
-> But what is done is done, and as you said, you can't change the past,
-> now the important thing is what to do next. And here are the two
-> options' worst-case scenarios:
-> 
-> a.1) v3.0* (good), ... v3.3 (good), v3.3.1 (bad), v3.3.2 (bad), v3.3.3
-> (bad), v3.3.4 (bad), v3.3.5 (bad), v3.4 (good)
-
-This situation is stupid as it means we'd refuse to fix the issue.
-
-> a.2) v3.0* (good), ... v3.3 (good), v3.3.1 (bad), v3.3.2 (good),
-> v3.3.3 (good), v3.3.4 (good), v3.3.5 (good), v3.4 (bad)
-
-Not possible.
-
-> These two scenarios are unlikely, but either way, in order to
-> guarantee that you don't end up with a.2) You are willing to risk
-> going into a.1)
-
-You don't seem to understand that 3.4 is not *after* 3.3.x, but in parallel.
-This is more like this :
-
-  3.2 ----- 3.3 --------- 3.4-rc* ------------- 3.4 ----- 3.5-rc* --------
-               \                                    \
-                \                                    `--- 3.4.1 ---- 3.4.2 --
-                 \
-                  `--- 3.3.1 ----- 3.3.2 ---- 3.3.3 ---- 3.3.4 --- 3.3.5 ---
-
-Here you clearly see why everything in 3.3.x must come from upstream and
-why it's important that 3.4 has every fix that 3.3 has.
-
-> So, *obviously* v3.4 is more important than v3.3.x. I could argue that
-> the users out there would prefer a.1) any day, because it's unlikely
-> anyway (v3.4 would be good), but I won't.
-
-No because for them it would mean end of support at one point when 3.3 dies,
-with no ability to upgrade.
-
-> All I want now is to agree on a reason, you have finally pointed out
-> that the reason for this different treatment is the user's visibility,
-
-It's not the user's visibility, it's published code. Once code is published,
-you cannot magically fix it without emitting a new patch for this code and
-announcing so that users apply it. These patches are called stable releases.
-Users want a good reason to apply these patches, rebuild and reboot, and
-that's one reason we absolutely want to have the commit descriptions from
-upstream which detail the exact reason for the patch (even if it's a revert).
-
-> but that still doesn't explain why the rules for b) automatically
-> apply to a), since it's clearly different from the users's point of
-> view; if you agree that v3.4 is more important than v3.3.x, I believe
-> we have the reason right there.
-
-It's not "more important", it's important for long-term stability. For
-3.3 users, 3.3.x is more important that 3.4. However one thing is certain:
-3.4 users are not going to push fixes into 3.3.x, but thanks to the process
-we have, 3.3.x users are going to ask for a fix to be pushed upstream. So
-users pressure ensure long-term stability.
-
-Willy
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index f22cd55..ec94ad6 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1291,6 +1291,19 @@ static struct wlcore_ops wl12xx_ops = {
+ 	.get_mac		= wl12xx_get_mac,
+ };
+ 
++static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
++	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20 |
++	       (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT),
++	.ht_supported = true,
++	.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K,
++	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8,
++	.mcs = {
++		.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, },
++		.rx_highest = cpu_to_le16(72),
++		.tx_params = IEEE80211_HT_MCS_TX_DEFINED,
++		},
++};
++
+ static int __devinit wl12xx_probe(struct platform_device *pdev)
+ {
+ 	struct wl1271 *wl;
+@@ -1313,6 +1326,7 @@ static int __devinit wl12xx_probe(struct platform_device *pdev)
+ 	wl->band_rate_to_idx = wl12xx_band_rate_to_idx;
+ 	wl->hw_tx_rate_tbl_size = WL12XX_CONF_HW_RXTX_RATE_MAX;
+ 	wl->hw_min_ht_rate = WL12XX_CONF_HW_RXTX_RATE_MCS0;
++	memcpy(&wl->ht_cap, &wl12xx_ht_cap, sizeof(wl12xx_ht_cap));
+ 	wl12xx_conf_init(wl);
+ 
+ 	return wlcore_probe(wl, pdev);
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index d351c8f..ef0d04e 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4256,29 +4256,12 @@ static struct ieee80211_channel wl1271_channels[] = {
+ 	{ .hw_value = 14, .center_freq = 2484, .max_power = 25 },
+ };
+ 
+-/* 11n STA capabilities */
+-#define HW_RX_HIGHEST_RATE	72
+-
+-#define WL12XX_HT_CAP { \
+-	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20 | \
+-	       (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT), \
+-	.ht_supported = true, \
+-	.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K, \
+-	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8, \
+-	.mcs = { \
+-		.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, }, \
+-		.rx_highest = cpu_to_le16(HW_RX_HIGHEST_RATE), \
+-		.tx_params = IEEE80211_HT_MCS_TX_DEFINED, \
+-		}, \
+-}
+-
+ /* can't be const, mac80211 writes to this */
+ static struct ieee80211_supported_band wl1271_band_2ghz = {
+ 	.channels = wl1271_channels,
+ 	.n_channels = ARRAY_SIZE(wl1271_channels),
+ 	.bitrates = wl1271_rates,
+ 	.n_bitrates = ARRAY_SIZE(wl1271_rates),
+-	.ht_cap	= WL12XX_HT_CAP,
+ };
+ 
+ /* 5 GHz data rates for WL1273 */
+@@ -4352,7 +4335,6 @@ static struct ieee80211_supported_band wl1271_band_5ghz = {
+ 	.n_channels = ARRAY_SIZE(wl1271_channels_5ghz),
+ 	.bitrates = wl1271_rates_5ghz,
+ 	.n_bitrates = ARRAY_SIZE(wl1271_rates_5ghz),
+-	.ht_cap	= WL12XX_HT_CAP,
+ };
+ 
+ static const struct ieee80211_ops wl1271_ops = {
+@@ -4729,8 +4711,12 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	 */
+ 	memcpy(&wl->bands[IEEE80211_BAND_2GHZ], &wl1271_band_2ghz,
+ 	       sizeof(wl1271_band_2ghz));
++	memcpy(&wl->bands[IEEE80211_BAND_2GHZ].ht_cap, &wl->ht_cap,
++	       sizeof(wl->ht_cap));
+ 	memcpy(&wl->bands[IEEE80211_BAND_5GHZ], &wl1271_band_5ghz,
+ 	       sizeof(wl1271_band_5ghz));
++	memcpy(&wl->bands[IEEE80211_BAND_5GHZ].ht_cap, &wl->ht_cap,
++	       sizeof(wl->ht_cap));
+ 
+ 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] =
+ 		&wl->bands[IEEE80211_BAND_2GHZ];
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 0660f75..1c2d81f 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -342,6 +342,9 @@ struct wl1271 {
+ 
+ 	/* this HW rate and below are considered HT rates for this chip */
+ 	u8 hw_min_ht_rate;
++
++	/* HW HT (11n) capabilities */
++	struct ieee80211_sta_ht_cap ht_cap;
+ };
+ 
+ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
+-- 
+1.7.5.4
 
