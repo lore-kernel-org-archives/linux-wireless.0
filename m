@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:37619 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703Ab2DEIY5 (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:34544 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761097Ab2DKTyM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 04:24:57 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120404161317.GB14078@redhat.com>
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
-	<20120313081235.GC15333@redhat.com>
-	<CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
-	<20120404161317.GB14078@redhat.com>
-Date: Thu, 5 Apr 2012 09:24:56 +0100
-Message-ID: <CANHD2=qW+9z7QCur8kZ_WJQsTi1x6tNwFsKa-V=4Ex7-QTxpgw@mail.gmail.com> (sfid-20120405_102505_597772_7E157A05)
-Subject: Re: Initializing iwl3945 error
-From: Kamil Grzebien <ciptok@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 11 Apr 2012 15:54:12 -0400
+Received: by lagj5 with SMTP id j5so1408597lag.17
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:54:08 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com, coelho@ti.com
+Subject: [PATCH 21/24] wlcore: set max_rx_agg_subframes in mac80211 according to HT conf
+Date: Wed, 11 Apr 2012 22:53:37 +0300
+Message-Id: <1334174020-18957-22-git-send-email-coelho@ti.com> (sfid-20120411_215443_633705_80DC486E)
+In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
+References: <1334174020-18957-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, for lack of response. I've moved to new house recently and
-don't have internet access there. Will update it ASAP.
+From: Arik Nemtsov <arik@wizery.com>
 
-BTW. I've checked 497f16f2 [pci: Fix hotplug of Express Module with
-pci bridges] patch mentioned in https://lkml.org/lkml/2012/1/5/168 but
-it doesn't solve my problem.
+The max Rx aggregation subframes configured to FW must be the same
+number given to the upper layers (mac80211). Derive both from the same
+value, given in the conf struct.
 
-On Wed, Apr 4, 2012 at 5:13 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Thu, Mar 15, 2012 at 03:08:43PM -0600, Bjorn Helgaas wrote:
->> The bug report (http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2143)
->> has a lot of logs, but they're pretty old and I can't tell how
->> applicable they are to your situation.
->>
->> It would be useful to see a complete dmesg log, /proc/iomem, and
->> "lspci -vv" output from your machine after the problem occurs, and
->> also the same information when it works (when using the noapic flag).
->
-> Kamil, ping, can you provide requested information?
->
-> Stanislaw
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index ef0d04e..730bbb1 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -4740,7 +4740,7 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ 	wl->hw->sta_data_size = sizeof(struct wl1271_station);
+ 	wl->hw->vif_data_size = sizeof(struct wl12xx_vif);
+ 
+-	wl->hw->max_rx_aggregation_subframes = 8;
++	wl->hw->max_rx_aggregation_subframes = wl->conf.ht.rx_ba_win_size;
+ 
+ 	return 0;
+ }
+-- 
+1.7.5.4
+
