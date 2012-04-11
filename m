@@ -1,119 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62700 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754531Ab2D2Xnq (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:52573 "EHLO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933050Ab2DKTyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2012 19:43:46 -0400
-Received: by iadi9 with SMTP id i9so3418715iad.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2012 16:43:46 -0700 (PDT)
-Message-ID: <4F9DD22F.8010305@lwfinger.net> (sfid-20120430_014350_291877_11CBFC1C)
-Date: Sun, 29 Apr 2012 18:43:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: simple w8 <simplew8@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
-References: <CAKVccoU7CnhVVQ82U23Yuww6VrTMU4FsjWcWVbk16LNKyQfvOQ@mail.gmail.com> <A872091605A443F48DE1814CF6FAFE25@realtek.com.tw> <CAKVccoUfER_m48BtyMjo3pix2_BmqBZ8kxij_RxDhOLEN5Q-9A@mail.gmail.com> <4F9AF76A.4040607@lwfinger.net> <CAKVccoUbcvO-X5w2pOuOyP=DhK+64opsJm5muznjsOWu==MUcQ@mail.gmail.com> <4F9B63CF.4010005@lwfinger.net> <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com> <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com> <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
-In-Reply-To: <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Wed, 11 Apr 2012 15:54:00 -0400
+Received: by lbbge1 with SMTP id ge1so963961lbb.9
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:53:56 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com, coelho@ti.com
+Subject: [PATCH 09/24] wlcore/wl12xx: add prepare_read hw op for Rx data
+Date: Wed, 11 Apr 2012 22:53:25 +0300
+Message-Id: <1334174020-18957-10-git-send-email-coelho@ti.com> (sfid-20120411_215411_133198_338C665A)
+In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
+References: <1334174020-18957-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/29/2012 06:20 PM, simple w8 wrote:
-> 2012/4/29 simple w8<simplew8@gmail.com>:
->> 2012/4/28 Larry Finger<Larry.Finger@lwfinger.net>:
->>> On 04/27/2012 11:30 PM, simple w8 wrote:
->>>>
->>>> 2012/4/28 Larry Finger<Larry.Finger@lwfinger.net>:
->>>>>
->>>>> On 04/27/2012 04:36 PM, simple w8 wrote:
->>>>>>
->>>>>>
->>>>>>
->>>>>> What details more i could provide, could you clarify please?
->>>>>>
->>>>>
->>>>> What distro do you use? How do you control the wifi? Do you use
->>>>> NetworkManager, or what? If you use wicd, then that is likely the
->>>>> problem!
->>>>> These are the kinds of details that should have been in your first
->>>>> message.
->>>>>
->>>>> You need to get the compat-wireless source from
->>>>> http://wireless.kernel.org/en/users/Download, and build it on your
->>>>> system.
->>>>
->>>>
->>>> In previous message i clarified that the distro uses NetworkManager
->>>> NetworkManager (and networkmanager calls wpa_supplicant through dbus).
->>>> The distro i use is Mageia, but when i run Ubuntu live cd i found the
->>>> same exact problem.
->>>>
->>>> For what i see compat-wireless file arepart of the kernel, and the
->>>> distro already provides the latest kernel available thats version
->>>> 3.3.3.
->>>
->>>
->>> I do not like your tone!! If you want help, please watch what you say.
->>
->> Hu?
->> I dont understand why your saying this, seams your in a bad mood but
->> thats certainly not my fault...
->>
->>> For your information, the latest compat-wireless has the wireless code that
->>> will be in kernel 3.5. That is the reason I want you to try it.
->>
->> Anyway in the website you pointed i see this to download:
->> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
->> but for what i read there this isnt for kernel-2.6 series?
->
-> Anyway i have found this:
-> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2.6.tar.bz2
->
-> but isnt possible to build, see the output (build against kernel-3.3.4):
->
->
-> DKMS make.log for rtlwifi-1-1.mde2 for kernel 3.3.4-desktop-1.mga2 (x86_64)
-> Seg Abr 30 00:16:54 WEST 2012
-> make: Entrando no diretório `/usr/src/linux-3.3.4-desktop-1.mga2'
->    LD      /var/lib/dkms/rtlwifi/1-1.mde2/build/built-in.o
->    CC [M]  /var/lib/dkms/rtlwifi/1-1.mde2/build/base.o
-> In file included from /var/lib/dkms/rtlwifi/1-1.mde2/build/wifi.h:36:0,
->                   from /var/lib/dkms/rtlwifi/1-1.mde2/build/base.c:30:
-> include/linux/printk.h:47:2: error: unknown type name ‘va_list’
-> include/linux/printk.h:91:8: warning: type defaults to ‘int’ in
-> declaration of ‘asmlinkage’ [-Wimplicit-int]
-> include/linux/printk.h:92:1: warning: ‘format’ attribute only applies
-> to function types [-Wattributes]
-> include/linux/printk.h:92:1: error: expected ‘,’ or ‘;’ before ‘void’
-> include/linux/printk.h:98:1: warning: data definition has no type or
-> storage class [enabled by default]
-> include/linux/printk.h:98:1: warning: type defaults to ‘int’ in
-> declaration of ‘asmlinkage’ [-Wimplicit-int]
-> include/linux/printk.h:99:1: warning: ‘format’ attribute only applies
-> to function types [-Wattributes]
-> include/linux/printk.h:99:1: error: expected ‘,’ or ‘;’ before ‘int’
-> include/linux/printk.h:100:1: warning: data definition has no type or
-> storage class [enabled by default]
-> include/linux/printk.h:100:1: warning: type defaults to ‘int’ in
-> declaration of ‘asmlinkage’ [-Wimplicit-int]
-> include/linux/printk.h:101:1: warning: ‘format’ attribute only applies
-> to function types [-Wattributes]
-> include/linux/printk.h:101:1: warning: ‘__cold__’ attribute ignored
-> [-Wattributes]
-> include/linux/printk.h:101:1: error: expected ‘,’ or ‘;’ before ‘int’
-> In file included from include/linux/etherdevice.h:28:0,
->                   from /var/lib/dkms/rtlwifi/1-1.mde2/build/wifi.h:39,
->                   from /var/lib/dkms/rtlwifi/1-1.mde2/build/base.c:30:
-> include/linux/netdevice.h: In function ‘netif_tx_stop_queue’:
-> include/linux/netdevice.h:1842:3: error: implicit declaration of
-> function ‘printk’ [-Werror=implicit-function-declaration]
-> cc1: some warnings being treated as errors
+The only difference in the read_data operations is that some chips
+need to prepare the data to be read before reading.  So instead of
+having a mandatory read_data operation, we now have an option
+prepare_data operation that only needs to be implemented for chips
+that require it.
 
-Get 
-http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2012-04-26.tar.bz2. 
-That is the "bleeding-edge" version. As I said in the previous message, it will 
-build on your kernel!
+In the wl12xx lower driver, we only set the prepare_data operation for
+wl127x chips.
 
-Larry
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl12xx/main.c   |   32 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wlcore/hw_ops.h |    7 ++++++
+ drivers/net/wireless/ti/wlcore/rx.c     |   31 +----------------------------
+ drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
+ 4 files changed, 42 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 43c2c7f..e4fab26 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -32,6 +32,7 @@
+ #include "../wlcore/acx.h"
+ #include "../wlcore/tx.h"
+ #include "../wlcore/rx.h"
++#include "../wlcore/io.h"
+ #include "../wlcore/boot.h"
+ 
+ #include "reg.h"
+@@ -239,6 +240,29 @@ static const int wl12xx_rtable[REG_TABLE_LEN] = {
+ #define WL128X_FW_NAME_SINGLE	"ti-connectivity/wl128x-fw-4-sr.bin"
+ #define WL128X_PLT_FW_NAME	"ti-connectivity/wl128x-fw-4-plt.bin"
+ 
++static void wl127x_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
++{
++	if (wl->chip.id != CHIP_ID_1283_PG20) {
++		struct wl1271_acx_mem_map *wl_mem_map = wl->target_mem_map;
++		struct wl1271_rx_mem_pool_addr rx_mem_addr;
++
++		/*
++		 * Choose the block we want to read
++		 * For aggregated packets, only the first memory block
++		 * should be retrieved. The FW takes care of the rest.
++		 */
++		u32 mem_block = rx_desc & RX_MEM_BLOCK_MASK;
++
++		rx_mem_addr.addr = (mem_block << 8) +
++			le32_to_cpu(wl_mem_map->packet_memory_pool_start);
++
++		rx_mem_addr.addr_extra = rx_mem_addr.addr + 4;
++
++		wl1271_write(wl, WL1271_SLV_REG_DATA,
++			     &rx_mem_addr, sizeof(rx_mem_addr), false);
++	}
++}
++
+ static int wl12xx_identify_chip(struct wl1271 *wl)
+ {
+ 	int ret = 0;
+@@ -253,6 +277,10 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+ 		wl->plt_fw_name = WL127X_PLT_FW_NAME;
+ 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
+ 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
++
++		/* read data preparation is only needed by wl127x */
++		wl->ops->prepare_read = wl127x_prepare_read;
++
+ 		break;
+ 
+ 	case CHIP_ID_1271_PG20:
+@@ -264,6 +292,10 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
+ 		wl->plt_fw_name = WL127X_PLT_FW_NAME;
+ 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
+ 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
++
++		/* read data preparation is only needed by wl127x */
++		wl->ops->prepare_read = wl127x_prepare_read;
++
+ 		break;
+ 
+ 	case CHIP_ID_1283_PG20:
+diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
+index ddb439d..eeed297 100644
+--- a/drivers/net/wireless/ti/wlcore/hw_ops.h
++++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
+@@ -65,5 +65,12 @@ wlcore_hw_get_rx_buf_align(struct wl1271 *wl, u32 rx_desc)
+ 	return wl->ops->get_rx_buf_align(wl, rx_desc);
+ }
+ 
++static inline void
++wlcore_hw_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
++{
++	if (wl->ops->prepare_read)
++		wl->ops->prepare_read(wl, rx_desc, len);
++}
++
+ #endif
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index d1e4206..3f504d1 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -38,13 +38,6 @@
+  */
+ #include "../wl12xx/reg.h"
+ 
+-static u8 wl12xx_rx_get_mem_block(struct wl12xx_fw_status *status,
+-				  u32 drv_rx_counter)
+-{
+-	return le32_to_cpu(status->rx_pkt_descs[drv_rx_counter]) &
+-		RX_MEM_BLOCK_MASK;
+-}
+-
+ static u32 wlcore_rx_get_buf_size(struct wl1271 *wl,
+ 				  u32 rx_pkt_desc)
+ {
+@@ -202,13 +195,11 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
+ 
+ void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status)
+ {
+-	struct wl1271_acx_mem_map *wl_mem_map = wl->target_mem_map;
+ 	unsigned long active_hlids[BITS_TO_LONGS(WL12XX_MAX_LINKS)] = {0};
+ 	u32 buf_size;
+ 	u32 fw_rx_counter  = status->fw_rx_counter & NUM_RX_PKT_DESC_MOD_MASK;
+ 	u32 drv_rx_counter = wl->rx_counter & NUM_RX_PKT_DESC_MOD_MASK;
+ 	u32 rx_counter;
+-	u32 mem_block;
+ 	u32 pkt_len, align_pkt_len;
+ 	u32 pkt_offset, des;
+ 	u8 hlid;
+@@ -234,27 +225,9 @@ void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status)
+ 			break;
+ 		}
+ 
+-		if (wl->chip.id != CHIP_ID_1283_PG20) {
+-			/*
+-			 * Choose the block we want to read
+-			 * For aggregated packets, only the first memory block
+-			 * should be retrieved. The FW takes care of the rest.
+-			 */
+-			mem_block = wl12xx_rx_get_mem_block(status,
+-							    drv_rx_counter);
+-
+-			wl->rx_mem_pool_addr.addr = (mem_block << 8) +
+-			   le32_to_cpu(wl_mem_map->packet_memory_pool_start);
+-
+-			wl->rx_mem_pool_addr.addr_extra =
+-				wl->rx_mem_pool_addr.addr + 4;
+-
+-			wlcore_write_data(wl, REG_SLV_REG_DATA,
+-					  &wl->rx_mem_pool_addr,
+-					  sizeof(wl->rx_mem_pool_addr), false);
+-		}
+-
+ 		/* Read all available packets at once */
++		des = le32_to_cpu(status->rx_pkt_descs[drv_rx_counter]);
++		wlcore_hw_prepare_read(wl, des, buf_size);
+ 		wlcore_read_data(wl, REG_SLV_MEM_DATA, wl->aggr_buf,
+ 				 buf_size, true);
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 3c2ded5..79ab84e 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -47,6 +47,7 @@ struct wlcore_ops {
+ 				     struct sk_buff *skb);
+ 	enum wl_rx_buf_align (*get_rx_buf_align)(struct wl1271 *wl,
+ 						 u32 rx_desc);
++	void (*prepare_read)(struct wl1271 *wl, u32 rx_desc, u32 len);
+ 	s8 (*get_pg_ver)(struct wl1271 *wl);
+ 	void (*get_mac)(struct wl1271 *wl);
+ };
+-- 
+1.7.5.4
 
