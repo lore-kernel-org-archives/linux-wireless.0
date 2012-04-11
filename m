@@ -1,94 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:36493 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761141Ab2DKTxv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 15:53:51 -0400
-Received: by lbbgi11 with SMTP id gi11so1204919lbb.24
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:53:48 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, coelho@ti.com
-Subject: [PATCH 00/24] wl12xx/wl1251/wlcore: reorganize drivers part 2
-Date: Wed, 11 Apr 2012 22:53:16 +0300
-Message-Id: <1334174020-18957-1-git-send-email-coelho@ti.com> (sfid-20120411_215409_452520_8A2DDADF)
+Received: from mms3.broadcom.com ([216.31.210.19]:3442 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755112Ab2DKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 05:53:30 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 7/9] brcm80211: smac: do not use US as fallback
+ regulatory hint
+Date: Wed, 11 Apr 2012 11:52:49 +0200
+Message-ID: <1334137971-3972-8-git-send-email-arend@broadcom.com> (sfid-20120411_115351_401438_84265C7D)
+In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again,
+The brcmsmac driver provides the country code from sprom as a regulatory
+hint to cfg80211. When brcmsmac does not find a country code entry in
+the sprom it passes 'US' as regulatory hint. Better approach is to rely
+on the world regulatory domain in cfg80211/crda.
 
-This is the second part of the reorganization we're doing.  After this set, we
-can publish the wl18xx driver, which I hope I'll send tomorrow.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Brett Rudley <brudley@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-The same work as before follows with this series.
-
-Please review.
-
-Cheers,
-Luca.
-
-Arik Nemtsov (18):
-  wlcore/wl12xx: set the number of Tx descriptors per chip family
-  wlcore/wl12xx: change GEM Tx-spare blocks per-vif
-  wlcore/wl12xx: add hw op for calculating hw block count per packet
-  wlcore/wl12xx: add hw op for setting blocks in hw_tx_desc
-  wlcore/wl12xx: add hw op for setting frame length in tx_hw_desc
-  wlcore/wl12xx: add global elements to convert hw-rates to standard
-    rates
-  wlcore: introduce Rx block-size alignment HW quirk
-  wlcore/wl12xx: add hw op for getting rx buffer data alignment
-  wlcore/wl12xx: add hw op for getting rx packet data length
-  wlcore/wl12xx: split Tx completion to immediate/delayed
-  wlcore/wl12xx: turn no-Tx-align quirk into Tx-align
-  wlcore/wl12xx: add hw op for vif init
-  wlcore/wl12xx: expand functionality of cmd_trigger HW op
-  wlcore/wl12xx: add hw op to get rate-mask for AP-link in STA mode
-  wlcore/wl12xx: set HT capabilities per chip-family
-  wlcore: set max_rx_agg_subframes in mac80211 according to HT conf
-  wlcore: add module param to prevent HW recovery
-  wlcore/wl12xx: adapt FW status for multiple families
-
-Luciano Coelho (6):
-  wlcore/wl12xx: add prepare_read hw op for Rx data
-  wlcore/wl12xx: add hw_init operation
-  wlcore/wl12xx: move runtime configuration struct to the lower driver
-  wlcore/wl12xx: move extended radio configuration parameters to wl12xx
-  wlcore/wl12xx: use a single memory config and reset if using wl127x
-  wlcore/wl12xx: move identify firmware function to a lower driver op
-
- drivers/net/wireless/ti/wl12xx/Makefile  |    2 +-
- drivers/net/wireless/ti/wl12xx/acx.c     |   53 +++
- drivers/net/wireless/ti/wl12xx/acx.h     |   36 ++
- drivers/net/wireless/ti/wl12xx/cmd.c     |  254 +++++++++++
- drivers/net/wireless/ti/wl12xx/cmd.h     |  112 +++++
- drivers/net/wireless/ti/wl12xx/conf.h    |   50 +++
- drivers/net/wireless/ti/wl12xx/main.c    |  698 +++++++++++++++++++++++++++++-
- drivers/net/wireless/ti/wl12xx/wl12xx.h  |   31 ++
- drivers/net/wireless/ti/wlcore/acx.c     |   39 +--
- drivers/net/wireless/ti/wlcore/acx.h     |    8 +-
- drivers/net/wireless/ti/wlcore/boot.c    |   48 +--
- drivers/net/wireless/ti/wlcore/cmd.c     |  230 +----------
- drivers/net/wireless/ti/wlcore/cmd.h     |   82 ----
- drivers/net/wireless/ti/wlcore/conf.h    |   57 +---
- drivers/net/wireless/ti/wlcore/debugfs.c |    1 +
- drivers/net/wireless/ti/wlcore/hw_ops.h  |  123 ++++++
- drivers/net/wireless/ti/wlcore/init.c    |   48 +--
- drivers/net/wireless/ti/wlcore/main.c    |  551 +++---------------------
- drivers/net/wireless/ti/wlcore/rx.c      |  112 +++---
- drivers/net/wireless/ti/wlcore/rx.h      |   12 +-
- drivers/net/wireless/ti/wlcore/tx.c      |  104 ++---
- drivers/net/wireless/ti/wlcore/tx.h      |    7 +-
- drivers/net/wireless/ti/wlcore/wl12xx.h  |   32 +-
- drivers/net/wireless/ti/wlcore/wlcore.h  |   67 +++-
- 24 files changed, 1630 insertions(+), 1127 deletions(-)
- create mode 100644 drivers/net/wireless/ti/wl12xx/acx.c
- create mode 100644 drivers/net/wireless/ti/wl12xx/acx.h
- create mode 100644 drivers/net/wireless/ti/wl12xx/cmd.c
- create mode 100644 drivers/net/wireless/ti/wl12xx/cmd.h
- create mode 100644 drivers/net/wireless/ti/wl12xx/conf.h
- create mode 100644 drivers/net/wireless/ti/wl12xx/wl12xx.h
- create mode 100644 drivers/net/wireless/ti/wlcore/hw_ops.h
-
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 569ab8a..aa15558 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1069,11 +1069,7 @@ static struct brcms_info *brcms_attach(struct bcma_device *pdev)
+ 		wiphy_err(wl->wiphy, "%s: ieee80211_register_hw failed, status"
+ 			  "%d\n", __func__, err);
+ 
+-	if (wl->pub->srom_ccode[0])
+-		err = brcms_set_hint(wl, wl->pub->srom_ccode);
+-	else
+-		err = brcms_set_hint(wl, "US");
+-	if (err)
++	if (wl->pub->srom_ccode[0] && brcms_set_hint(wl, wl->pub->srom_ccode))
+ 		wiphy_err(wl->wiphy, "%s: regulatory_hint failed, status %d\n",
+ 			  __func__, err);
+ 
 -- 
 1.7.5.4
+
 
