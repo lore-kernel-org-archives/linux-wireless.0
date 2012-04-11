@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:50225 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751049Ab2DLVec (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:36607 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756753Ab2DKSBk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:34:32 -0400
+	Wed, 11 Apr 2012 14:01:40 -0400
+Message-ID: <4F85C6FF.1050004@candelatech.com> (sfid-20120411_200145_359099_85E8FC90)
+Date: Wed, 11 Apr 2012 11:01:35 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
-References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
- <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
- <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
- <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
- <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com> <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 12 Apr 2012 14:34:10 -0700
-Message-ID: <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> (sfid-20120412_233447_185982_BE741FC7)
-Subject: Re: [ 00/78] 3.3.2-stable review
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: greearb@candelatech.com
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 05/10] mac80211: Add more ethtools stats: survey, rates,
+ etc
+References: <1334166738-28243-1-git-send-email-greearb@candelatech.com> <1334166738-28243-6-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1334166738-28243-6-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 2:20 PM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
+On 04/11/2012 10:52 AM, greearb@candelatech.com wrote:
+> From: Ben Greear<greearb@candelatech.com>
 >
-> I could argue in favor of exceptions, but I don't think you realize
-> the fact that this change does not affect your tree *at all*. Adding
-> and removing a patch in the stable tree is a no-op.
+> The signal and noise are forced to be positive since ethtool
+> deals in unsigned 64-bit values and this number should be human
+> readable.  This gives easy access to some of the data formerly
+> exposed in the deprecated /proc/net/wireless file.
 
-You're a fucking moron.
+> +	if (WARN_ON(i != STA_STATS_LEN)) {
+> +		rcu_read_unlock();
+> +		return;
+> +	}
+> +
+> +	drv_get_et_stats(sdata, stats,&(data[STA_STATS_LEN]));
+> +}
+> +
 
-It's not a no-op at all, and you don't seem to understand it.
+Ahh crap, I missed an rcu_read_unlock here...will fix this
+and whatever else folks suggest and repost..but don't apply
+this patch as is!
 
-It's *information*.
+Thanks,
+Ben
 
-It's "that patch didn't work". That's not a no-op. That's actual
-useful and worthwhile knowledge.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-To quote Thomas Edison: "I have not failed. I've just found 10,000
-ways that won't work."
-
-So just reverting it from stable, *WITHOUT LEARNING THE LESSON*, is
-not a no-op at all, it's a sign of being a f*cking moron.
-
-I'm stupider for just reading your email. Go away.
-
-                    Linus
