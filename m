@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:20926 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab2DUO5r (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:59766 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165Ab2DKFnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 10:57:47 -0400
-Date: Sat, 21 Apr 2012 17:59:52 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] wireless: at76c50x: allocating too much data
-Message-ID: <20120421145952.GL27101@mwanda> (sfid-20120421_165752_513893_6F799D06)
-References: <20120420064705.GE22649@elgon.mountain>
- <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com>
- <20120420091449.GI27101@mwanda>
- <87vcku9sob.fsf@purkki.adurom.net>
- <20120421124523.GS6498@mwanda>
- <alpine.DEB.2.02.1204211548090.1987@hadrien>
- <20120421145140.GU6498@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120421145140.GU6498@mwanda>
+	Wed, 11 Apr 2012 01:43:07 -0400
+Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big
+ network copies (page allocation failure)
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Marc MERLIN <marc@merlins.org>
+Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
+	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+In-Reply-To: <20120411052733.GA17352@merlins.org>
+References: <20120409.143710.879746943062854492.davem@davemloft.net>
+	 <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop>
+	 <20120409.153452.1284163346306246866.davem@davemloft.net>
+	 <1334030180.13293.98.camel@edumazet-glaptop>
+	 <20120410051127.GA32048@merlins.org>
+	 <1334038263.2907.1.camel@edumazet-glaptop>
+	 <20120411052733.GA17352@merlins.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 Apr 2012 07:43:00 +0200
+Message-ID: <1334122980.5300.2154.camel@edumazet-glaptop> (sfid-20120411_074314_042699_8772E7AA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 21, 2012 at 05:51:41PM +0300, Dan Carpenter wrote:
-> On Sat, Apr 21, 2012 at 03:51:44PM +0200, Julia Lawall wrote:
-> > Looking for x = ... sizeof(x) ... I get 9 reports.  In most cases it
-> > looks like sizeof(x) is coincidentally the same as the size that is
-> > wanted.  Two cases that look like they could have some noticible
-> > effect are:
-> > 
-> > arch/xtensa/platforms/iss/network.c, line 789
-> > drivers/block/cciss.c, line 4211
-> > 
+On Tue, 2012-04-10 at 22:27 -0700, Marc MERLIN wrote:
+> On Tue, Apr 10, 2012 at 08:11:03AM +0200, Eric Dumazet wrote:
+> > Please try following patch, as it solved the problem for me (no more
+> > order-1 allocations in tx path)
 > 
-> Clever.  You'd need to restrict it to places where x was a  pointer.
-> That's better than my check which was specific to kmalloc().  (So
-> uh...  I'm going to rewrite mine as well to be more generic.  :P)
+> I applied our patch to 3.3.1 and cannot reproduce the problem anymore.
 > 
+> I'll leave a big wireless copy running overnight just in case, but I think
+> you fixed it.
+> 
+> Thanks much,
+> Marc
 
-The other thing would be to look for places that do:
-	func(x, sizeof(x);
+Thanks Marc for bringing this issue.
 
-Of course, you've found a lot of memset()/memcpy() bugs like that in
-the past, but probably it could be made more generic so it checks
-every function.
+I have a lenovo T420s laptop and could debug the thing pretty fast.
 
-regards,
-dan carpenter
+I'll send two official patches.
+
 
