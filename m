@@ -1,72 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46509 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:3444 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756543Ab2DFQ4V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 12:56:21 -0400
-Message-ID: <4F7F2033.4000005@openwrt.org> (sfid-20120406_185639_607540_83BAB4A3)
-Date: Fri, 06 Apr 2012 18:56:19 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1754911Ab2DKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 05:53:30 -0400
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Franky Lin" <frankyl@broadcom.com>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 6/9] brcm80211: fmac: clean up chip id table
+Date: Wed, 11 Apr 2012 11:52:48 +0200
+Message-ID: <1334137971-3972-7-git-send-email-arend@broadcom.com> (sfid-20120411_115347_216020_E529ACD7)
+In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	Linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Linux-netdev <netdev@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org> <4F681B78.9000207@gmail.com> <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com> <4F68235C.5090701@gmail.com> <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com> <4F682555.3020502@gmail.com> <20328.16366.166909.255035@gargle.gargle.HOWL> <4F6FA388.9080408@gmail.com> <20337.9030.686697.228453@gargle.gargle.HOWL> <4F7F1C74.7080009@gmail.com>
-In-Reply-To: <4F7F1C74.7080009@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-04-06 6:40 PM, Justin P. Mattock wrote:
-> On 03/26/2012 07:17 PM, Sujith Manoharan wrote:
->> Justin P. Mattock wrote:
->>> I would have to say this patch above does get rid of this crash I was
->>> seeing. as a quick test I simply connect to a WPA network, then connect
->>> to an open network going back and forth triggers this freeze for me
->>> after applying this I am able to toggle back and forth without a freeze.
->>
->> Thanks for verifying.
->>
->> Sujith
->>
-> 
-> 
->  From going through the warning message I was playing around and am 
-> looking at: AH_UNPLUGGED .. seems if I remove this from the code I have 
-> not seen this warning message.
-> is there something wrong with AH_UNPLUGGED = 0x2 ?
-> is this the wrong address(0x2)?
-> 
-> the patch that I was using is:
-> 
->  From ea8a7d6ecf8b0706f3f0521cd22cc359b20b9373 Mon Sep 17 00:00:00 2001
-> From: "Justin P. Mattock" <justinmattock@gmail.com>
-> Date: Sun, 25 Mar 2012 21:53:31 -0700
-> Subject: [PATCH] ath_test
-> 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> 
-> ---
->   drivers/net/wireless/ath/ath9k/recv.c |    3 +--
->   1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c 
-> b/drivers/net/wireless/ath/ath9k/recv.c
-> index f4ae3ba..d887cee 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -523,8 +523,7 @@ bool ath_stoprecv(struct ath_softc *sc)
->   		sc->rx.rxlink = NULL;
->   	spin_unlock_bh(&sc->rx.rxbuflock);
-> 
-> -	if (!(ah->ah_flags & AH_UNPLUGGED) &&
-> -	    unlikely(!stopped)) {
-> +	if (!(ah->ah_flags) && unlikely(!stopped)) {
-That patch is completely messed up - before showing the warning, it
-checks if ah_flags is set to 0, which will never happen with most
-devices. You're simply making the warning impossible to trigger.
+From: Franky Lin <frankyl@broadcom.com>
 
-- Felix
+Remove unsupported chip ID and rearrange the list in alphabetical
+order
+
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |   40 +++++--------------
+ 1 files changed, 11 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index 5fb17d5..333193f 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -17,17 +17,7 @@
+ #ifndef	_BRCM_HW_IDS_H_
+ #define	_BRCM_HW_IDS_H_
+ 
+-#define	BCM4325_D11DUAL_ID	0x431b
+-#define	BCM4325_D11G_ID		0x431c
+-#define	BCM4325_D11A_ID		0x431d
+-
+-#define BCM4329_D11N2G_ID	0x432f	/* 4329 802.11n 2.4G device */
+-#define BCM4329_D11N5G_ID	0x4330	/* 4329 802.11n 5G device */
+-#define BCM4329_D11NDUAL_ID	0x432e
+-
+-#define BCM4319_D11N_ID		0x4337	/* 4319 802.11n dualband device */
+-#define BCM4319_D11N2G_ID	0x4338	/* 4319 802.11n 2.4G device */
+-#define BCM4319_D11N5G_ID	0x4339	/* 4319 802.11n 5G device */
++#define BCM4313_D11N2G_ID	0x4727	/* 4313 802.11n 2.4G device */
+ 
+ #define BCM43224_D11N_ID	0x4353	/* 43224 802.11n dualband device */
+ #define BCM43224_D11N_ID_VEN1	0x0576	/* Vendor specific 43224 802.11n db */
+@@ -37,23 +27,15 @@
+ #define BCM43236_D11N_ID	0x4346	/* 43236 802.11n dualband device */
+ #define BCM43236_D11N2G_ID	0x4347	/* 43236 802.11n 2.4GHz device */
+ 
+-#define BCM4313_D11N2G_ID	0x4727	/* 4313 802.11n 2.4G device */
+-
+-/* Chip IDs */
+-#define BCM4313_CHIP_ID		0x4313	/* 4313 chip id */
+-#define	BCM4319_CHIP_ID		0x4319	/* 4319 chip id */
+-
+-#define	BCM43224_CHIP_ID	43224	/* 43224 chipcommon chipid */
+-#define	BCM43225_CHIP_ID	43225	/* 43225 chipcommon chipid */
+-#define	BCM43421_CHIP_ID	43421	/* 43421 chipcommon chipid */
+-#define	BCM43235_CHIP_ID	43235	/* 43235 chipcommon chipid */
+-#define	BCM43236_CHIP_ID	43236	/* 43236 chipcommon chipid */
+-#define	BCM43238_CHIP_ID	43238	/* 43238 chipcommon chipid */
+-#define	BCM4329_CHIP_ID		0x4329	/* 4329 chipcommon chipid */
+-#define	BCM4325_CHIP_ID		0x4325	/* 4325 chipcommon chipid */
+-#define	BCM4331_CHIP_ID		0x4331	/* 4331 chipcommon chipid */
+-#define BCM4336_CHIP_ID		0x4336	/* 4336 chipcommon chipid */
+-#define BCM4330_CHIP_ID		0x4330	/* 4330 chipcommon chipid */
+-#define BCM6362_CHIP_ID		0x6362	/* 6362 chipcommon chipid */
++/* Chipcommon Core Chip IDs */
++#define BCM4313_CHIP_ID		0x4313
++#define BCM43224_CHIP_ID	43224
++#define BCM43225_CHIP_ID	43225
++#define BCM43235_CHIP_ID	43235
++#define BCM43236_CHIP_ID	43236
++#define BCM43238_CHIP_ID	43238
++#define BCM4329_CHIP_ID		0x4329
++#define BCM4330_CHIP_ID		0x4330
++#define BCM4331_CHIP_ID		0x4331
+ 
+ #endif				/* _BRCM_HW_IDS_H_ */
+-- 
+1.7.5.4
+
+
