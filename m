@@ -1,85 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41860 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755951Ab2DHTNJ (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:36493 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1761141Ab2DKTxv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2012 15:13:09 -0400
-Received: by mail-iy0-f174.google.com with SMTP id z16so5092406iag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2012 12:13:09 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Forest Bond <forest.bond@rapidrollout.com>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/2 V3] rtl8192de: Clean up and fix 92D cut version constants and macros.
-Date: Sun,  8 Apr 2012 14:12:33 -0500
-Message-Id: <1333912354-16983-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120408_211340_144129_5B5CE6DD)
-In-Reply-To: <1333912354-16983-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1333912354-16983-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 11 Apr 2012 15:53:51 -0400
+Received: by lbbgi11 with SMTP id gi11so1204919lbb.24
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:53:48 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com, coelho@ti.com
+Subject: [PATCH 00/24] wl12xx/wl1251/wlcore: reorganize drivers part 2
+Date: Wed, 11 Apr 2012 22:53:16 +0300
+Message-Id: <1334174020-18957-1-git-send-email-coelho@ti.com> (sfid-20120411_215409_452520_8A2DDADF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Forest Bond <forest.bond@rapidrollout.com>
+Hi again,
 
-The previous definitions included both {B,C,D,E}_CUT_VERSION and
-CHIP_92D_{C,D}_CUT with conflicting values for the C and D cut versions,
-and literal hex values were used in the IS_92D_{C,D,E}_CUT macros.  So
-we clean all this up and in doing so enable cut-specific code paths for
-cuts C and D, which would not have been executed because the
-CHIP_92D_{C,D}_CUT constants were wrong and the cut version was thus
-recorded incorrectly.
+This is the second part of the reorganization we're doing.  After this set, we
+can publish the wl18xx driver, which I hope I'll send tomorrow.
 
-Signed-off-by: Forest Bond <forest.bond@rapidrollout.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192de/def.h |   16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+The same work as before follows with this series.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-index eafdf76..939c905 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-@@ -151,9 +151,6 @@ enum version_8192d {
- 
- /* for 92D */
- #define CHIP_92D_SINGLEPHY		BIT(9)
--#define C_CUT_VERSION			BIT(13)
--#define D_CUT_VERSION			((BIT(12)|BIT(13)))
--#define E_CUT_VERSION			BIT(14)
- 
- /* Chip specific */
- #define CHIP_BONDING_IDENTIFIER(_value)	(((_value)>>22)&0x3)
-@@ -173,7 +170,10 @@ enum version_8192d {
- #define RF_TYPE_1T2R			BIT(4)
- #define RF_TYPE_2T2R			BIT(5)
- #define CHIP_VENDOR_UMC			BIT(7)
--#define B_CUT_VERSION			BIT(12)
-+#define CHIP_92D_B_CUT			BIT(12)
-+#define CHIP_92D_C_CUT			BIT(13)
-+#define CHIP_92D_D_CUT			(BIT(13)|BIT(12))
-+#define CHIP_92D_E_CUT			BIT(14)
- 
- /* MASK */
- #define IC_TYPE_MASK			(BIT(0)|BIT(1)|BIT(2))
-@@ -205,15 +205,13 @@ enum version_8192d {
- 					 CHIP_92D) ? true : false)
- #define IS_92D_C_CUT(version)		((IS_92D(version)) ?		\
- 				 ((GET_CVID_CUT_VERSION(version) ==	\
--				 0x2000) ? true : false) : false)
-+				 CHIP_92D_C_CUT) ? true : false) : false)
- #define IS_92D_D_CUT(version)			((IS_92D(version)) ?	\
- 				 ((GET_CVID_CUT_VERSION(version) ==	\
--				 0x3000) ? true : false) : false)
-+				 CHIP_92D_D_CUT) ? true : false) : false)
- #define IS_92D_E_CUT(version)		((IS_92D(version)) ?		\
- 				 ((GET_CVID_CUT_VERSION(version) ==	\
--				 0x4000) ? true : false) : false)
--#define CHIP_92D_C_CUT			BIT(10)
--#define CHIP_92D_D_CUT			BIT(11)
-+				 CHIP_92D_E_CUT) ? true : false) : false)
- 
- enum rf_optype {
- 	RF_OP_BY_SW_3WIRE = 0,
+Please review.
+
+Cheers,
+Luca.
+
+Arik Nemtsov (18):
+  wlcore/wl12xx: set the number of Tx descriptors per chip family
+  wlcore/wl12xx: change GEM Tx-spare blocks per-vif
+  wlcore/wl12xx: add hw op for calculating hw block count per packet
+  wlcore/wl12xx: add hw op for setting blocks in hw_tx_desc
+  wlcore/wl12xx: add hw op for setting frame length in tx_hw_desc
+  wlcore/wl12xx: add global elements to convert hw-rates to standard
+    rates
+  wlcore: introduce Rx block-size alignment HW quirk
+  wlcore/wl12xx: add hw op for getting rx buffer data alignment
+  wlcore/wl12xx: add hw op for getting rx packet data length
+  wlcore/wl12xx: split Tx completion to immediate/delayed
+  wlcore/wl12xx: turn no-Tx-align quirk into Tx-align
+  wlcore/wl12xx: add hw op for vif init
+  wlcore/wl12xx: expand functionality of cmd_trigger HW op
+  wlcore/wl12xx: add hw op to get rate-mask for AP-link in STA mode
+  wlcore/wl12xx: set HT capabilities per chip-family
+  wlcore: set max_rx_agg_subframes in mac80211 according to HT conf
+  wlcore: add module param to prevent HW recovery
+  wlcore/wl12xx: adapt FW status for multiple families
+
+Luciano Coelho (6):
+  wlcore/wl12xx: add prepare_read hw op for Rx data
+  wlcore/wl12xx: add hw_init operation
+  wlcore/wl12xx: move runtime configuration struct to the lower driver
+  wlcore/wl12xx: move extended radio configuration parameters to wl12xx
+  wlcore/wl12xx: use a single memory config and reset if using wl127x
+  wlcore/wl12xx: move identify firmware function to a lower driver op
+
+ drivers/net/wireless/ti/wl12xx/Makefile  |    2 +-
+ drivers/net/wireless/ti/wl12xx/acx.c     |   53 +++
+ drivers/net/wireless/ti/wl12xx/acx.h     |   36 ++
+ drivers/net/wireless/ti/wl12xx/cmd.c     |  254 +++++++++++
+ drivers/net/wireless/ti/wl12xx/cmd.h     |  112 +++++
+ drivers/net/wireless/ti/wl12xx/conf.h    |   50 +++
+ drivers/net/wireless/ti/wl12xx/main.c    |  698 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/ti/wl12xx/wl12xx.h  |   31 ++
+ drivers/net/wireless/ti/wlcore/acx.c     |   39 +--
+ drivers/net/wireless/ti/wlcore/acx.h     |    8 +-
+ drivers/net/wireless/ti/wlcore/boot.c    |   48 +--
+ drivers/net/wireless/ti/wlcore/cmd.c     |  230 +----------
+ drivers/net/wireless/ti/wlcore/cmd.h     |   82 ----
+ drivers/net/wireless/ti/wlcore/conf.h    |   57 +---
+ drivers/net/wireless/ti/wlcore/debugfs.c |    1 +
+ drivers/net/wireless/ti/wlcore/hw_ops.h  |  123 ++++++
+ drivers/net/wireless/ti/wlcore/init.c    |   48 +--
+ drivers/net/wireless/ti/wlcore/main.c    |  551 +++---------------------
+ drivers/net/wireless/ti/wlcore/rx.c      |  112 +++---
+ drivers/net/wireless/ti/wlcore/rx.h      |   12 +-
+ drivers/net/wireless/ti/wlcore/tx.c      |  104 ++---
+ drivers/net/wireless/ti/wlcore/tx.h      |    7 +-
+ drivers/net/wireless/ti/wlcore/wl12xx.h  |   32 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h  |   67 +++-
+ 24 files changed, 1630 insertions(+), 1127 deletions(-)
+ create mode 100644 drivers/net/wireless/ti/wl12xx/acx.c
+ create mode 100644 drivers/net/wireless/ti/wl12xx/acx.h
+ create mode 100644 drivers/net/wireless/ti/wl12xx/cmd.c
+ create mode 100644 drivers/net/wireless/ti/wl12xx/cmd.h
+ create mode 100644 drivers/net/wireless/ti/wl12xx/conf.h
+ create mode 100644 drivers/net/wireless/ti/wl12xx/wl12xx.h
+ create mode 100644 drivers/net/wireless/ti/wlcore/hw_ops.h
+
 -- 
-1.7.10
+1.7.5.4
 
