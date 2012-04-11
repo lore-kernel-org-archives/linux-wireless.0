@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10576 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971Ab2DFOGi (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40888 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756869Ab2DKRwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 10:06:38 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 1/2] ath6kl: Don't advertise HT40 support in 2.4 Ghz
-Date: Fri, 6 Apr 2012 19:37:14 +0530
-Message-ID: <1333721235-16025-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120406_160642_317017_EF9E6953)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 11 Apr 2012 13:52:35 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 00/10] Wireless patches for wireless-testing
+Date: Wed, 11 Apr 2012 10:52:08 -0700
+Message-Id: <1334166738-28243-1-git-send-email-greearb@candelatech.com> (sfid-20120411_195246_310207_9F34AD4B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HT40 is not supported in 2.4Ghz.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Support Ethtool stats for Wireless, including in-depth
+stats for ath9k, and add some additional ath9k stats
+to debugfs.  Support scanning on-channel.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 097be01..47dbb14 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -71,7 +71,8 @@ static struct ieee80211_rate ath6kl_rates[] = {
- #define ath6kl_g_rates     (ath6kl_rates + 0)
- #define ath6kl_g_rates_size    12
- 
--#define ath6kl_g_htcap (IEEE80211_HT_CAP_SUP_WIDTH_20_40 | \
-+#define ath6kl_g_htcap IEEE80211_HT_CAP_SGI_20
-+#define ath6kl_a_htcap (IEEE80211_HT_CAP_SUP_WIDTH_20_40 | \
- 			IEEE80211_HT_CAP_SGI_20		 | \
- 			IEEE80211_HT_CAP_SGI_40)
- 
-@@ -128,7 +129,7 @@ static struct ieee80211_supported_band ath6kl_band_5ghz = {
- 	.channels = ath6kl_5ghz_a_channels,
- 	.n_bitrates = ath6kl_a_rates_size,
- 	.bitrates = ath6kl_a_rates,
--	.ht_cap.cap = ath6kl_g_htcap,
-+	.ht_cap.cap = ath6kl_a_htcap,
- 	.ht_cap.ht_supported = true,
- };
- 
+The basic ethtool patches are little changed from previous
+posted patches.  The others are tweaked at least some, and
+some have not been posted before at all.
+
+Ben Greear (10):
+  cfg80211: Add framework to support ethtool stats.
+  mac80211: Support getting sta_info stats via ethtool.
+  mac80211: Framework to get wifi-driver stats via ethtool.
+  ath9k: Support ethtool getstats api.
+  mac80211: Add more ethtools stats: survey, rates, etc
+  mac80211: Add sta_state to ethtool stats.
+  ath9k: Add tx-failed counter.
+  mac80211: Support on-channel scan option.
+  ath9k: Add more recv stats.
+  ath9k: Gather and report IRQ sync_cause errors.
+
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    2 +
+ drivers/net/wireless/ath/ath9k/debug.c      |  167 ++++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/debug.h      |   43 +++++++
+ drivers/net/wireless/ath/ath9k/hw.c         |   49 ++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    6 +
+ drivers/net/wireless/ath/ath9k/main.c       |  135 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c       |   35 ++++--
+ include/net/cfg80211.h                      |   17 +++
+ include/net/mac80211.h                      |   17 +++
+ net/mac80211/cfg.c                          |  160 +++++++++++++++++++++++++
+ net/mac80211/driver-ops.h                   |   37 ++++++
+ net/mac80211/driver-trace.h                 |   15 +++
+ net/mac80211/ieee80211_i.h                  |    3 +
+ net/mac80211/main.c                         |    4 +-
+ net/mac80211/rx.c                           |    2 +
+ net/mac80211/scan.c                         |   92 +++++++++++-----
+ net/wireless/ethtool.c                      |   29 +++++
+ 18 files changed, 695 insertions(+), 119 deletions(-)
+
 -- 
-1.7.0.4
+1.7.3.4
 
