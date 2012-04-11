@@ -1,52 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:49759 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539Ab2DXGpd (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:40903 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932416Ab2DKRxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 02:45:33 -0400
-Received: by obbta14 with SMTP id ta14so672034obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2012 23:45:32 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 23 Apr 2012 23:45:12 -0700
-Message-ID: <CAB=NE6USio_AyOL6duU-9ZC7vp0+kSXJ=VKJwHqBH_B_MBDH2Q@mail.gmail.com> (sfid-20120424_084536_345310_D5163C22)
-Subject: compat-wireless-2012-04-23 back on track with ckmake
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Apr 2012 13:53:32 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 07/10] ath9k: Add tx-failed counter.
+Date: Wed, 11 Apr 2012 10:52:15 -0700
+Message-Id: <1334166738-28243-8-git-send-email-greearb@candelatech.com> (sfid-20120411_195345_309632_67835DC2)
+In-Reply-To: <1334166738-28243-1-git-send-email-greearb@candelatech.com>
+References: <1334166738-28243-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We're back on track with compilation against all supported kernels.
+From: Ben Greear <greearb@candelatech.com>
 
-   mcgrof@flash ~/devel/compat-wireless (git::master)$ time ckmake; time ckmake
-    Trying kernel                  3.4.0-030400rc4-generic  [OK]
-    Trying kernel                     3.3.3-030303-generic  [OK]
-    Trying kernel                     3.2.2-030202-generic  [OK]
-    Trying kernel                    3.1.10-030110-generic  [OK]
-    Trying kernel                    3.0.18-030018-generic  [OK]
-    Trying kernel                  2.6.39-02063904-generic  [OK]
-    Trying kernel                  2.6.38-02063808-generic  [OK]
-    Trying kernel                  2.6.37-02063706-generic  [OK]
-    Trying kernel                  2.6.36-02063604-generic  [OK]
-    Trying kernel                  2.6.35-02063512-generic  [OK]
-    Trying kernel                  2.6.34-02063410-generic  [OK]
-    Trying kernel                  2.6.33-02063305-generic  [OK]
-    Trying kernel                  2.6.32-02063255-generic  [OK]
-    Trying kernel                  2.6.31-02063113-generic  [OK]
-    Trying kernel                  2.6.30-02063010-generic  [OK]
-    Trying kernel                  2.6.29-02062906-generic  [OK]
-    Trying kernel                  2.6.28-02062810-generic  [OK]
-    Trying kernel                    2.6.27-020627-generic  [OK]
-    Trying kernel                    2.6.26-020626-generic  [OK]
-    Trying kernel                    2.6.25-020625-generic  [OK]
-    Trying kernel                    2.6.24-020624-generic  [OK]
+This counts any failure during getting packets into
+the DMA buffers, including out-of-memory, etc.
 
-    real    94m39.991s
-    user    287m51.955s
-    sys     26m37.828s
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 ff47b32... 186efc5... M	drivers/net/wireless/ath/ath9k/debug.c
+:100644 100644 2d47f74... fe2b487... M	drivers/net/wireless/ath/ath9k/debug.h
+:100644 100644 39f8f7c... c18290a... M	drivers/net/wireless/ath/ath9k/main.c
+ drivers/net/wireless/ath/ath9k/debug.c |    1 +
+ drivers/net/wireless/ath/ath9k/debug.h |    2 ++
+ drivers/net/wireless/ath/ath9k/main.c  |    1 +
+ 3 files changed, 4 insertions(+), 0 deletions(-)
 
-    real    18m20.621s
-    user    41m8.998s
-    sys     8m59.742s
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index ff47b32..186efc5 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -524,6 +524,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+ 	PR("hw-put-tx-buf:   ", puttxbuf);
+ 	PR("hw-tx-start:     ", txstart);
+ 	PR("hw-tx-proc-desc: ", txprocdesc);
++	PR("TX-Failed:       ", txfailed);
+ 	len += snprintf(buf + len, size - len,
+ 			"%s%11p%11p%10p%10p\n", "txq-memory-address:",
+ 			sc->tx.txq_map[WME_AC_BE],
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 2d47f74..fe2b487 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -113,6 +113,7 @@ struct ath_interrupt_stats {
+  * @puttxbuf: Number of times hardware was given txbuf to write.
+  * @txstart:  Number of times hardware was told to start tx.
+  * @txprocdesc:  Number of times tx descriptor was processed
++ * @txfailed:  Out-of-memory or other errors in xmit path.
+  */
+ struct ath_tx_stats {
+ 	u32 tx_pkts_all;
+@@ -135,6 +136,7 @@ struct ath_tx_stats {
+ 	u32 puttxbuf;
+ 	u32 txstart;
+ 	u32 txprocdesc;
++	u32 txfailed;
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 39f8f7c..c18290a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1150,6 +1150,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	if (ath_tx_start(hw, skb, &txctl) != 0) {
+ 		ath_dbg(common, XMIT, "TX failed\n");
++		TX_STAT_INC(txctl.txq->axq_qnum, txfailed);
+ 		goto exit;
+ 	}
+ 
+-- 
+1.7.3.4
 
-  Luis
