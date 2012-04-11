@@ -1,36 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38491 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751820Ab2DAS4L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2012 14:56:11 -0400
-Date: Sun, 1 Apr 2012 18:52:31 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: 3945ABG fails to connect (3.4-rc1)
-Message-ID: <20120401165230.GA2399@redhat.com> (sfid-20120401_205615_236630_58DF62F7)
-References: <20120401080419.GA5207@comet.dominikbrodowski.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120401080419.GA5207@comet.dominikbrodowski.net>
+Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:55555 "EHLO
+	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933119Ab2DKTyG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 15:54:06 -0400
+Received: by lagu2 with SMTP id u2so1387755lag.21
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:54:03 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com, coelho@ti.com
+Subject: [PATCH 15/24] wlcore/wl12xx: expand functionality of cmd_trigger HW op
+Date: Wed, 11 Apr 2012 22:53:31 +0300
+Message-Id: <1334174020-18957-16-git-send-email-coelho@ti.com> (sfid-20120411_215432_551956_F2151ED1)
+In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
+References: <1334174020-18957-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 01, 2012 at 10:04:19AM +0200, Dominik Brodowski wrote:
-> Somewhere in between 3.3.0 and 3.4-rc1 my notebook fails to connect to my
-> local AP:
-> 
-> 02:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] Network Connection (rev 02)
-> 
-> Snippets from dmesg:
-[snip]
-> [   59.605953] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [   69.607344] wlan0: disassociating from $INSERT_MAC_HERE by local choice (reason=3)
-> [   69.609931] cfg80211: Calling CRDA to update world regulatory domain
-> [   69.612438] wlan0: deauthenticating from $INSERT_MAC_HERE by local choice (reason=3)
-Most likely this is fixed by: 
-http://marc.info/?l=linux-wireless&m=133180823427374&w=2
+From: Arik Nemtsov <arik@wizery.com>
 
-Plese test, thanks.
-Stanislaw
+Change the cmd_trigger op to include the write of the command buffer.
+
+Also, instead of letting the lower driver access the cmd_box_addr element
+directly, we now pass the address in the trigger_cmd operation, so it
+doesn't have to be exported.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/ti/wl12xx/main.c   |    4 +++-
+ drivers/net/wireless/ti/wlcore/cmd.c    |    2 +-
+ drivers/net/wireless/ti/wlcore/wlcore.h |    3 ++-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 564ca91..083e1d8 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -707,8 +707,10 @@ out:
+ 	return ret;
+ }
+ 
+-static void wl12xx_trigger_cmd(struct wl1271 *wl)
++static void wl12xx_trigger_cmd(struct wl1271 *wl, int cmd_box_addr,
++			       void *buf, size_t len)
+ {
++	wl1271_write(wl, cmd_box_addr, buf, len, false);
+ 	wlcore_write_reg(wl, REG_INTERRUPT_TRIG, WL12XX_INTR_TRIG_CMD);
+ }
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 8407590..5c4716c 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -70,7 +70,7 @@ int wl1271_cmd_send(struct wl1271 *wl, u16 id, void *buf, size_t len,
+ 	 * TODO: we just need this because one bit is in a different
+ 	 * place.  Is there any better way?
+ 	 */
+-	wl->ops->trigger_cmd(wl);
++	wl->ops->trigger_cmd(wl, wl->cmd_box_addr, buf, len);
+ 
+ 	timeout = jiffies + msecs_to_jiffies(WL1271_COMMAND_TIMEOUT);
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 7e2881d..83f1d7c 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -37,7 +37,8 @@ enum wl_rx_buf_align;
+ struct wlcore_ops {
+ 	int (*identify_chip)(struct wl1271 *wl);
+ 	int (*boot)(struct wl1271 *wl);
+-	void (*trigger_cmd)(struct wl1271 *wl);
++	void (*trigger_cmd)(struct wl1271 *wl, int cmd_box_addr,
++			    void *buf, size_t len);
+ 	void (*ack_event)(struct wl1271 *wl);
+ 	u32 (*calc_tx_blocks)(struct wl1271 *wl, u32 len, u32 spare_blks);
+ 	void (*set_tx_desc_blocks)(struct wl1271 *wl,
+-- 
+1.7.5.4
 
