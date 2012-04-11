@@ -1,146 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:46331 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752720Ab2DNPtT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 11:49:19 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Gabor Juhos <juhosg@openwrt.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [RFC 1/2] ath9k: add an extra boolean parameter to ath9k_hw_apply_txpower
-Date: Sat, 14 Apr 2012 17:32:18 +0200
-Message-Id: <1334417539-6498-1-git-send-email-juhosg@openwrt.org> (sfid-20120414_174945_410948_26465A80)
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:57694 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932962Ab2DKTxx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 15:53:53 -0400
+Received: by lban1 with SMTP id n1so1049331lba.40
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:53:50 -0700 (PDT)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com, coelho@ti.com
+Subject: [PATCH 02/24] wlcore/wl12xx: change GEM Tx-spare blocks per-vif
+Date: Wed, 11 Apr 2012 22:53:18 +0300
+Message-Id: <1334174020-18957-3-git-send-email-coelho@ti.com> (sfid-20120411_215410_076717_4BADEDCC)
+In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
+References: <1334174020-18957-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to unifying regulatory limit handling
-commit ca2c68cc7bc80fc4504fb420df04cce99c9ee6ec
-(ath9k_hw: clean up tx power handling) introduced
-a new helper function 'ath9k_hw_apply_txpower',
-and the direct calls of 'ah->eep_ops->set_txpower'
-has been replaced by a call of the helper function.
+From: Arik Nemtsov <arik@wizery.com>
 
-This caused a change in the behaviour of the
-'ath9k_hw_set_txpowerlimit' function. The purpose
-of that function is to calculate and store the
-rate txpower table and the regulatory limit without
-touching the hardware registers. Before the commit,
-the 'test' parameter of the function was passed to
-the 'ah->eep_ops->set_txpower'. Now the calling of
-the 'set_txpower' function happens indirectly through
-'ath9k_hw_apply_txpower', so the 'test' argument of
-the 'set_txpower' is always 'false'.
+The number of spare Tx blocks must be changed when the GEM cipher is
+engaged. Track set_key() operations to see if this is the case and
+change the Tx HW spare block count accordingly. Set the number of spare
+blocks for each operating mode from the low level driver.
 
-This patch restores the original behaviour of
-'ath9k_hw_set_txpowerlimit' by adding a new
-argument to 'ath9k_hw_apply_txpower.'
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c   |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c   |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c           |    9 +++++----
- drivers/net/wireless/ath/ath9k/hw.h           |    3 ++-
- 5 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c    |    6 ++++++
+ drivers/net/wireless/ti/wlcore/debugfs.c |    1 +
+ drivers/net/wireless/ti/wlcore/main.c    |   24 +++++++++++-------------
+ drivers/net/wireless/ti/wlcore/tx.c      |    9 ++++-----
+ drivers/net/wireless/ti/wlcore/tx.h      |    1 -
+ drivers/net/wireless/ti/wlcore/wl12xx.h  |    3 +++
+ drivers/net/wireless/ti/wlcore/wlcore.h  |    7 ++++---
+ 7 files changed, 29 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index de30cb3..8753e38 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -868,7 +868,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 	ar5008_hw_set_channel_regs(ah, chan);
- 	ar5008_hw_init_chain_masks(ah);
- 	ath9k_olc_init(ah);
--	ath9k_hw_apply_txpower(ah, chan);
-+	ath9k_hw_apply_txpower(ah, chan, false);
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 57c70a4..3447cef 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -34,6 +34,10 @@
  
- 	/* Write analog registers */
- 	if (!ath9k_hw_set_rf_regs(ah, chan, freqIndex)) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-index 59647a3..3d400e8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
-@@ -54,7 +54,7 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
+ #include "reg.h"
  
- 	if (val) {
- 		ah->paprd_table_write_done = true;
--		ath9k_hw_apply_txpower(ah, chan);
-+		ath9k_hw_apply_txpower(ah, chan, false);
- 	}
++#define WL12XX_TX_HW_BLOCK_SPARE_DEFAULT        1
++#define WL12XX_TX_HW_BLOCK_GEM_SPARE            2
++
++
+ static struct wlcore_partition_set wl12xx_ptable[PART_TABLE_LEN] = {
+ 	[PART_DOWN] = {
+ 		.mem = {
+@@ -675,6 +679,8 @@ static int __devinit wl12xx_probe(struct platform_device *pdev)
+ 	wl->ptable = wl12xx_ptable;
+ 	wl->rtable = wl12xx_rtable;
+ 	wl->num_tx_desc = 16;
++	wl->normal_tx_spare = WL12XX_TX_HW_BLOCK_SPARE_DEFAULT;
++	wl->gem_tx_spare = WL12XX_TX_HW_BLOCK_GEM_SPARE;
  
- 	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B0,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 4c9bc9f..5d2b584 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -690,7 +690,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	ar9003_hw_override_ini(ah);
- 	ar9003_hw_set_channel_regs(ah, chan);
- 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
--	ath9k_hw_apply_txpower(ah, chan);
-+	ath9k_hw_apply_txpower(ah, chan, false);
- 
- 	if (AR_SREV_9462(ah)) {
- 		if (REG_READ_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_0,
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 6fa8128..480e8f8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1453,7 +1453,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
- 		return false;
- 	}
- 	ath9k_hw_set_clockrate(ah);
--	ath9k_hw_apply_txpower(ah, chan);
-+	ath9k_hw_apply_txpower(ah, chan, false);
- 	ath9k_hw_rfbus_done(ah);
- 
- 	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
-@@ -2724,7 +2724,8 @@ static int get_antenna_gain(struct ath_hw *ah, struct ath9k_channel *chan)
- 	return ah->eep_ops->get_eeprom(ah, gain_param);
+ 	return wlcore_probe(wl, pdev);
  }
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index 9db0813..d5aea1f 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -647,6 +647,7 @@ static ssize_t vifs_state_read(struct file *file, char __user *user_buf,
+ 		VIF_STATE_PRINT_INT(last_rssi_event);
+ 		VIF_STATE_PRINT_INT(ba_support);
+ 		VIF_STATE_PRINT_INT(ba_allowed);
++		VIF_STATE_PRINT_INT(is_gem);
+ 		VIF_STATE_PRINT_LLHEX(tx_security_seq);
+ 		VIF_STATE_PRINT_INT(tx_security_last_seq_lsb);
+ 	}
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 7b39a86..b56bbc3 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1858,7 +1858,6 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ 	wl->tx_results_count = 0;
+ 	wl->tx_packets_count = 0;
+ 	wl->time_offset = 0;
+-	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+ 	wl->ap_fw_ps_map = 0;
+ 	wl->ap_ps_map = 0;
+ 	wl->sched_scanning = false;
+@@ -2912,6 +2911,17 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	int ret;
+ 	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
  
--void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan)
-+void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
-+			    bool test)
- {
- 	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
- 	struct ieee80211_channel *channel;
-@@ -2745,7 +2746,7 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan)
++	/*
++	 * A role set to GEM cipher requires different Tx settings (namely
++	 * spare blocks). Note when we are in this mode so the HW can adjust.
++	 */
++	if (key_type == KEY_GEM) {
++		if (action == KEY_ADD_OR_REPLACE)
++			wlvif->is_gem = true;
++		else if (action == KEY_REMOVE)
++			wlvif->is_gem = false;
++	}
++
+ 	if (is_ap) {
+ 		struct wl1271_station *wl_sta;
+ 		u8 hlid;
+@@ -2950,17 +2960,6 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+ 		};
  
- 	ah->eep_ops->set_txpower(ah, chan,
- 				 ath9k_regd_get_ctl(reg, chan),
--				 ant_reduction, new_pwr, false);
-+				 ant_reduction, new_pwr, test);
- }
+-		/*
+-		 * A STA set to GEM cipher requires 2 tx spare blocks.
+-		 * Return to default value when GEM cipher key is removed
+-		 */
+-		if (key_type == KEY_GEM) {
+-			if (action == KEY_ADD_OR_REPLACE)
+-				wl->tx_spare_blocks = 2;
+-			else if (action == KEY_REMOVE)
+-				wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+-		}
+-
+ 		addr = sta ? sta->addr : bcast_addr;
  
- void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
-@@ -2758,7 +2759,7 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
- 	if (test)
- 		channel->max_power = MAX_RATE_POWER / 2;
+ 		if (is_zero_ether_addr(addr)) {
+@@ -5259,7 +5258,6 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size)
+ 	wl->quirks = 0;
+ 	wl->platform_quirks = 0;
+ 	wl->sched_scanning = false;
+-	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+ 	wl->system_hlid = WL12XX_SYSTEM_HLID;
+ 	wl->active_sta_count = 0;
+ 	wl->fwlog_size = 0;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 815d0ac..3306990 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -190,7 +190,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	u32 len;
+ 	u32 total_blocks;
+ 	int id, ret = -EBUSY, ac;
+-	u32 spare_blocks = wl->tx_spare_blocks;
++	u32 spare_blocks = wl->normal_tx_spare;
+ 	bool is_dummy = false;
  
--	ath9k_hw_apply_txpower(ah, chan);
-+	ath9k_hw_apply_txpower(ah, chan, test);
+ 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
+@@ -205,11 +205,10 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	   in the firmware */
+ 	len = wl12xx_calc_packet_alignment(wl, total_len);
  
- 	if (test)
- 		channel->max_power = DIV_ROUND_UP(reg->max_power_level, 2);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 1d4b983..99b57bd 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -976,7 +976,8 @@ void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
- /* PHY */
- void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
- 				   u32 *coef_mantissa, u32 *coef_exponent);
--void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan);
-+void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
-+			    bool test);
+-	/* in case of a dummy packet, use default amount of spare mem blocks */
+-	if (unlikely(wl12xx_is_dummy_packet(wl, skb))) {
++	if (unlikely(wl12xx_is_dummy_packet(wl, skb)))
+ 		is_dummy = true;
+-		spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
+-	}
++	else if (wlvif->is_gem)
++		spare_blocks = wl->gem_tx_spare;
  
- /*
-  * Code Specific to AR5008, AR9001 or AR9002,
+ 	total_blocks = (len + TX_HW_BLOCK_SIZE - 1) / TX_HW_BLOCK_SIZE +
+ 		spare_blocks;
+diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
+index 5cf8c32..2ad7705 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.h
++++ b/drivers/net/wireless/ti/wlcore/tx.h
+@@ -25,7 +25,6 @@
+ #ifndef __TX_H__
+ #define __TX_H__
+ 
+-#define TX_HW_BLOCK_SPARE_DEFAULT        1
+ #define TX_HW_BLOCK_SIZE                 252
+ 
+ #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
+diff --git a/drivers/net/wireless/ti/wlcore/wl12xx.h b/drivers/net/wireless/ti/wlcore/wl12xx.h
+index 1516622..b09c9ed 100644
+--- a/drivers/net/wireless/ti/wlcore/wl12xx.h
++++ b/drivers/net/wireless/ti/wlcore/wl12xx.h
+@@ -375,6 +375,9 @@ struct wl12xx_vif {
+ 	struct work_struct rx_streaming_disable_work;
+ 	struct timer_list rx_streaming_timer;
+ 
++	/* does the current role use GEM for encryption (AP or STA) */
++	bool is_gem;
++
+ 	/*
+ 	 * This struct must be last!
+ 	 * data that has to be saved acrossed reconfigs (e.g. recovery)
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index a4f576d..2fb713a 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -150,9 +150,6 @@ struct wl1271 {
+ 	u32 tx_allocated_blocks;
+ 	u32 tx_results_count;
+ 
+-	/* amount of spare TX blocks to use */
+-	u32 tx_spare_blocks;
+-
+ 	/* Accounting for allocated / available Tx packets in HW */
+ 	u32 tx_pkts_freed[NUM_TX_QUEUES];
+ 	u32 tx_allocated_pkts[NUM_TX_QUEUES];
+@@ -309,6 +306,10 @@ struct wl1271 {
+ 
+ 	/* number of TX descriptors the HW supports. */
+ 	u32 num_tx_desc;
++
++	/* spare Tx blocks for normal/GEM operating modes */
++	u32 normal_tx_spare;
++	u32 gem_tx_spare;
+ };
+ 
+ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
 -- 
-1.7.2.1
+1.7.5.4
 
