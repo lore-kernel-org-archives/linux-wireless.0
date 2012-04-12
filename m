@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from storm.alittletooquiet.net ([67.23.28.199]:38639 "EHLO
-	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194Ab2DBOem (ORCPT
+Received: from h1446028.stratoserver.net ([85.214.92.142]:51558 "EHLO
+	mail.ahsoftware.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965959Ab2DLUHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 10:34:42 -0400
-Date: Mon, 2 Apr 2012 10:25:37 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: [PATCH 2/2] rtl8192de: Recognize 92D E-CUT version.
-Message-ID: <20120402142537.GB20611@alittletooquiet.net> (sfid-20120402_163445_901833_90395E28)
+	Thu, 12 Apr 2012 16:07:12 -0400
+Message-ID: <4F8733C1.7020305@ahsoftware.de> (sfid-20120412_220727_545504_85BAA223)
+Date: Thu, 12 Apr 2012 21:57:53 +0200
+From: Alexander Holler <holler@ahsoftware.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GRPZ8SYKNexpdSJ7"
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com> <20120412002927.GA23167@kroah.com>
+In-Reply-To: <20120412002927.GA23167@kroah.com>
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
---GRPZ8SYKNexpdSJ7
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Am 12.04.2012 02:29, schrieb Greg KH:
 
-=46rom: Forest Bond <forest.bond@rapidrollout.com>
+>> is there any chance for this one to be included in this review cycle?
+>>
+>> http://www.spinics.net/lists/linux-wireless/msg87999.html
+>
+> Have you read Documentation/stable_kernel_rules.txt?  Based on that, I
+> don't think it can, yet, right?
 
-The chip version constant (0xCC33) was taken from version 0001.0105.2011
-of the GPL vendor driver.  Note that this driver version also ships a
-firmware update, but I am unsure if it is required for E-CUT chips to
-function properly.
+Hmm, after reading that, I think the text could need an update about how 
+to submit patches written by others (which can already be found in the 
+upstream tree).
 
-A nearby spelling error was also corrected.
+At least for me the text reads like only the authors can request 
+inclusion of a patch into the stable tree.
 
-Signed-off-by: Forest Bond <forest.bond@rapidrollout.com>
----
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Regards,
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wire=
-less/rtlwifi/rtl8192de/hw.c
-index 509f5af..b338d52 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-@@ -1743,9 +1743,13 @@ static void _rtl92de_efuse_update_chip_version(struc=
-t ieee80211_hw *hw)
- 		chipver |=3D CHIP_92D_D_CUT;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "D-CUT!!!\n");
- 		break;
-+	case 0xCC33:
-+		chipver |=3D CHIP_92D_E_CUT;
-+		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "E-CUT!!!\n");
-+		break;
- 	default:
- 		chipver |=3D CHIP_92D_D_CUT;
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unkown CUT!\n");
-+		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown CUT!\n");
- 		break;
- 	}
- 	rtlpriv->rtlhal.version =3D chipver;
---=20
-1.7.0.4
-
---GRPZ8SYKNexpdSJ7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk95tuEACgkQRO4fQQdv5AzaNgCeMe+SDxT1ZkHchXtrB7MDfP1F
-U0oAni0bFgXrR1a+Dw4tGg/Z5GS6V8mq
-=zqe1
------END PGP SIGNATURE-----
-
---GRPZ8SYKNexpdSJ7--
+Alexander
