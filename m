@@ -1,444 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39327 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754670Ab2DZSIZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 14:08:25 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC c 4/9] compat: move netdev_attach_ops
-Date: Thu, 26 Apr 2012 20:07:48 +0200
-Message-Id: <1335463674-13003-8-git-send-email-hauke@hauke-m.de> (sfid-20120426_200830_162556_6DA36612)
-In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
-References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:51524 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934492Ab2DLQda (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 12:33:30 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/5] cfg80211: Add framework to support ethtool stats.
+Date: Thu, 12 Apr 2012 09:32:51 -0700
+Message-Id: <1334248375-22967-2-git-send-email-greearb@candelatech.com> (sfid-20120412_183338_384570_629B6B34)
+In-Reply-To: <1334248375-22967-1-git-send-email-greearb@candelatech.com>
+References: <1334248375-22967-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- include/linux/compat-2.6.29.h |  186 --------------------------------------
- include/linux/netdevice.h     |  199 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 199 insertions(+), 186 deletions(-)
- create mode 100644 include/linux/netdevice.h
+:100644 100644 a587867... a3a635c... M	include/net/cfg80211.h
+:100644 100644 9bde4d1... 7eecdf4... M	net/wireless/ethtool.c
+ include/net/cfg80211.h |   17 +++++++++++++++++
+ net/wireless/ethtool.c |   29 +++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
-index 48b62e8..c830c7a 100644
---- a/include/linux/compat-2.6.29.h
-+++ b/include/linux/compat-2.6.29.h
-@@ -51,181 +51,6 @@ typedef struct {
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index a587867..a3a635c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1514,6 +1514,16 @@ struct cfg80211_gtk_rekey_data {
+  *	later passes to cfg80211_probe_status().
+  *
+  * @set_noack_map: Set the NoAck Map for the TIDs.
++ *
++ * @get_et_sset_count:  Ethtool API to get string-set count.
++ *	See @ethtool_ops.get_sset_count
++ *
++ * @get_et_stats:  Ethtool API to get a set of u64 stats.
++ *	See @ethtool_ops.get_ethtool_stats
++ *
++ * @get_et_strings:  Ethtool API to get a set of strings to describe stats
++ *	and perhaps other supported types of ethtool data-sets.
++ *	See @ethtool_ops.get_strings
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1711,6 +1721,13 @@ struct cfg80211_ops {
+ 				  u16 noack_map);
  
- #define  PCI_EXP_LNKCTL_ES     0x0080  /* Extended Synch */
+ 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
++
++	int	(*get_et_sset_count)(struct wiphy *wiphy,
++				     struct net_device *dev, int sset);
++	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device *dev,
++				struct ethtool_stats *stats, u64 *data);
++	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
++				  u32 sset, u8 *data);
+ };
  
--/*
-- * Older kernels do not have struct net_device_ops but what we can
-- * do is just define the data structure and use a caller to let us
-- * set the data structure's routines onto the old netdev, essentially
-- * doing it the old way. This avoids huge deltas on our backports.
-- */
--
--/*
-- * This structure defines the management hooks for network devices.
-- * The following hooks can be defined; unless noted otherwise, they are
-- * optional and can be filled with a null pointer.
-- *
-- * int (*ndo_init)(struct net_device *dev);
-- *     This function is called once when network device is registered.
-- *     The network device can use this to any late stage initializaton
-- *     or semantic validattion. It can fail with an error code which will
-- *     be propogated back to register_netdev
-- *
-- * void (*ndo_uninit)(struct net_device *dev);
-- *     This function is called when device is unregistered or when registration
-- *     fails. It is not called if init fails.
-- *
-- * int (*ndo_open)(struct net_device *dev);
-- *     This function is called when network device transistions to the up
-- *     state.
-- *
-- * int (*ndo_stop)(struct net_device *dev);
-- *     This function is called when network device transistions to the down
-- *     state.
-- *
-- * netdev_tx_t (*ndo_start_xmit)(struct sk_buff *skb,
-- *                               struct net_device *dev);
-- *	Called when a packet needs to be transmitted.
-- *	Must return NETDEV_TX_OK , NETDEV_TX_BUSY.
-- *        (can also return NETDEV_TX_LOCKED iff NETIF_F_LLTX)
-- *	Required can not be NULL.
-- *
-- * u16 (*ndo_select_queue)(struct net_device *dev, struct sk_buff *skb);
-- *	Called to decide which queue to when device supports multiple
-- *	transmit queues.
-- *
-- * void (*ndo_change_rx_flags)(struct net_device *dev, int flags);
-- *	This function is called to allow device receiver to make
-- *	changes to configuration when multicast or promiscious is enabled.
-- *
-- * void (*ndo_set_rx_mode)(struct net_device *dev);
-- *	This function is called device changes address list filtering.
-- *
-- * void (*ndo_set_multicast_list)(struct net_device *dev);
-- *	This function is called when the multicast address list changes.
-- *
-- * int (*ndo_set_mac_address)(struct net_device *dev, void *addr);
-- *	This function  is called when the Media Access Control address
-- *	needs to be changed. If this interface is not defined, the
-- *	mac address can not be changed.
-- *
-- * int (*ndo_validate_addr)(struct net_device *dev);
-- *	Test if Media Access Control address is valid for the device.
-- *
-- * int (*ndo_do_ioctl)(struct net_device *dev, struct ifreq *ifr, int cmd);
-- *	Called when a user request an ioctl which can't be handled by
-- *	the generic interface code. If not defined ioctl's return
-- *	not supported error code.
-- *
-- * int (*ndo_set_config)(struct net_device *dev, struct ifmap *map);
-- *	Used to set network devices bus interface parameters. This interface
-- *	is retained for legacy reason, new devices should use the bus
-- *	interface (PCI) for low level management.
-- *
-- * int (*ndo_change_mtu)(struct net_device *dev, int new_mtu);
-- *	Called when a user wants to change the Maximum Transfer Unit
-- *	of a device. If not defined, any request to change MTU will
-- *	will return an error.
-- *
-- * void (*ndo_tx_timeout)(struct net_device *dev);
-- *	Callback uses when the transmitter has not made any progress
-- *	for dev->watchdog ticks.
-- *
-- * struct net_device_stats* (*ndo_get_stats)(struct net_device *dev);
-- *	Called when a user wants to get the network device usage
-- *	statistics. If not defined, the counters in dev->stats will
-- *	be used.
-- *
-- * void (*ndo_vlan_rx_register)(struct net_device *dev, struct vlan_group *grp);
-- *	If device support VLAN receive accleration
-- *	(ie. dev->features & NETIF_F_HW_VLAN_RX), then this function is called
-- *	when vlan groups for the device changes.  Note: grp is NULL
-- *	if no vlan's groups are being used.
-- *
-- * void (*ndo_vlan_rx_add_vid)(struct net_device *dev, unsigned short vid);
-- *	If device support VLAN filtering (dev->features & NETIF_F_HW_VLAN_FILTER)
-- *	this function is called when a VLAN id is registered.
-- *
-- * void (*ndo_vlan_rx_kill_vid)(struct net_device *dev, unsigned short vid);
-- *	If device support VLAN filtering (dev->features & NETIF_F_HW_VLAN_FILTER)
-- *	this function is called when a VLAN id is unregistered.
-- *
-- * void (*ndo_poll_controller)(struct net_device *dev);
-- *
-- *	SR-IOV management functions.
-- * int (*ndo_set_vf_mac)(struct net_device *dev, int vf, u8* mac);
-- * int (*ndo_set_vf_vlan)(struct net_device *dev, int vf, u16 vlan, u8 qos);
-- * int (*ndo_set_vf_tx_rate)(struct net_device *dev, int vf, int rate);
-- * int (*ndo_get_vf_config)(struct net_device *dev,
-- *			    int vf, struct ifla_vf_info *ivf);
-- */
--#define HAVE_NET_DEVICE_OPS
--struct net_device_ops {
--	int			(*ndo_init)(struct net_device *dev);
--	void			(*ndo_uninit)(struct net_device *dev);
--	int			(*ndo_open)(struct net_device *dev);
--	int			(*ndo_stop)(struct net_device *dev);
--	netdev_tx_t		(*ndo_start_xmit) (struct sk_buff *skb,
--						   struct net_device *dev);
--	u16			(*ndo_select_queue)(struct net_device *dev,
--						    struct sk_buff *skb);
--	void			(*ndo_change_rx_flags)(struct net_device *dev,
--						       int flags);
--	void			(*ndo_set_rx_mode)(struct net_device *dev);
--	void			(*ndo_set_multicast_list)(struct net_device *dev);
--	int			(*ndo_set_mac_address)(struct net_device *dev,
--						       void *addr);
--	int			(*ndo_validate_addr)(struct net_device *dev);
--	int			(*ndo_do_ioctl)(struct net_device *dev,
--					        struct ifreq *ifr, int cmd);
--	int			(*ndo_set_config)(struct net_device *dev,
--					          struct ifmap *map);
--	int			(*ndo_change_mtu)(struct net_device *dev,
--						  int new_mtu);
--	int			(*ndo_neigh_setup)(struct net_device *dev,
--						   struct neigh_parms *);
--	void			(*ndo_tx_timeout) (struct net_device *dev);
--
--	struct net_device_stats* (*ndo_get_stats)(struct net_device *dev);
--
--	void			(*ndo_vlan_rx_register)(struct net_device *dev,
--						        struct vlan_group *grp);
--	void			(*ndo_vlan_rx_add_vid)(struct net_device *dev,
--						       unsigned short vid);
--	void			(*ndo_vlan_rx_kill_vid)(struct net_device *dev,
--						        unsigned short vid);
--#ifdef CONFIG_NET_POLL_CONTROLLER
--	void                    (*ndo_poll_controller)(struct net_device *dev);
--#endif
--	int			(*ndo_set_vf_mac)(struct net_device *dev,
--						  int queue, u8 *mac);
--	int			(*ndo_set_vf_vlan)(struct net_device *dev,
--						   int queue, u16 vlan, u8 qos);
--	int			(*ndo_set_vf_tx_rate)(struct net_device *dev,
--						      int vf, int rate);
--/*
-- * The struct ifla_vf_info was added via b280da8d54b8d82b52f368a8703b7ada6c1744d5
-- * on the v2.6.34-rc1~233^2~338 release
-- */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
--	int			(*ndo_get_vf_config)(struct net_device *dev,
--						     int vf,
--						     struct ifla_vf_info *ivf);
--#endif
--#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
--	int			(*ndo_fcoe_enable)(struct net_device *dev);
--	int			(*ndo_fcoe_disable)(struct net_device *dev);
--	int			(*ndo_fcoe_ddp_setup)(struct net_device *dev,
--						      u16 xid,
--						      struct scatterlist *sgl,
--						      unsigned int sgc);
--	int			(*ndo_fcoe_ddp_done)(struct net_device *dev,
--						     u16 xid);
--#define NETDEV_FCOE_WWNN 0
--#define NETDEV_FCOE_WWPN 1
--	int			(*ndo_fcoe_get_wwn)(struct net_device *dev,
--						    u64 *wwn, int type);
--#endif
--};
--
- static inline int ndo_do_ioctl(struct net_device *dev,
- 			       struct ifreq *ifr,
- 			       int cmd)
-@@ -235,10 +60,6 @@ static inline int ndo_do_ioctl(struct net_device *dev,
- 	return -EOPNOTSUPP;
+ /*
+diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
+index 9bde4d1..7eecdf4 100644
+--- a/net/wireless/ethtool.c
++++ b/net/wireless/ethtool.c
+@@ -68,6 +68,32 @@ static int cfg80211_set_ringparam(struct net_device *dev,
+ 	return -ENOTSUPP;
  }
  
--
--void netdev_attach_ops(struct net_device *dev,
--		       const struct net_device_ops *ops);
--
- /**
-  *	skb_queue_is_first - check if skb is the first entry in the queue
-  *	@list: queue head
-@@ -354,13 +175,6 @@ extern int		init_dummy_netdev(struct net_device *dev);
- 
- /* Kernels >= 2.6.29 follows */
- 
--/* XXX: this can probably just go upstream ! */
--static inline void netdev_attach_ops(struct net_device *dev,
--		       const struct net_device_ops *ops)
--{
--	dev->netdev_ops = ops;
--}
--
- /* XXX: this can probably just go upstream! */
- static inline int ndo_do_ioctl(struct net_device *dev,
- 			       struct ifreq *ifr,
-diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
-new file mode 100644
-index 0000000..6c0582d
---- /dev/null
-+++ b/include/linux/netdevice.h
-@@ -0,0 +1,199 @@
-+#ifndef _COMPAT_LINUX_NETDEVICE_H
-+#define _COMPAT_LINUX_NETDEVICE_H
-+
-+#include_next <linux/netdevice.h>
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
-+
-+/*
-+ * Older kernels do not have struct net_device_ops but what we can
-+ * do is just define the data structure and use a caller to let us
-+ * set the data structure's routines onto the old netdev, essentially
-+ * doing it the old way. This avoids huge deltas on our backports.
-+ */
-+
-+/*
-+ * This structure defines the management hooks for network devices.
-+ * The following hooks can be defined; unless noted otherwise, they are
-+ * optional and can be filled with a null pointer.
-+ *
-+ * int (*ndo_init)(struct net_device *dev);
-+ *     This function is called once when network device is registered.
-+ *     The network device can use this to any late stage initializaton
-+ *     or semantic validattion. It can fail with an error code which will
-+ *     be propogated back to register_netdev
-+ *
-+ * void (*ndo_uninit)(struct net_device *dev);
-+ *     This function is called when device is unregistered or when registration
-+ *     fails. It is not called if init fails.
-+ *
-+ * int (*ndo_open)(struct net_device *dev);
-+ *     This function is called when network device transistions to the up
-+ *     state.
-+ *
-+ * int (*ndo_stop)(struct net_device *dev);
-+ *     This function is called when network device transistions to the down
-+ *     state.
-+ *
-+ * netdev_tx_t (*ndo_start_xmit)(struct sk_buff *skb,
-+ *                               struct net_device *dev);
-+ *	Called when a packet needs to be transmitted.
-+ *	Must return NETDEV_TX_OK , NETDEV_TX_BUSY.
-+ *        (can also return NETDEV_TX_LOCKED iff NETIF_F_LLTX)
-+ *	Required can not be NULL.
-+ *
-+ * u16 (*ndo_select_queue)(struct net_device *dev, struct sk_buff *skb);
-+ *	Called to decide which queue to when device supports multiple
-+ *	transmit queues.
-+ *
-+ * void (*ndo_change_rx_flags)(struct net_device *dev, int flags);
-+ *	This function is called to allow device receiver to make
-+ *	changes to configuration when multicast or promiscious is enabled.
-+ *
-+ * void (*ndo_set_rx_mode)(struct net_device *dev);
-+ *	This function is called device changes address list filtering.
-+ *
-+ * void (*ndo_set_multicast_list)(struct net_device *dev);
-+ *	This function is called when the multicast address list changes.
-+ *
-+ * int (*ndo_set_mac_address)(struct net_device *dev, void *addr);
-+ *	This function  is called when the Media Access Control address
-+ *	needs to be changed. If this interface is not defined, the
-+ *	mac address can not be changed.
-+ *
-+ * int (*ndo_validate_addr)(struct net_device *dev);
-+ *	Test if Media Access Control address is valid for the device.
-+ *
-+ * int (*ndo_do_ioctl)(struct net_device *dev, struct ifreq *ifr, int cmd);
-+ *	Called when a user request an ioctl which can't be handled by
-+ *	the generic interface code. If not defined ioctl's return
-+ *	not supported error code.
-+ *
-+ * int (*ndo_set_config)(struct net_device *dev, struct ifmap *map);
-+ *	Used to set network devices bus interface parameters. This interface
-+ *	is retained for legacy reason, new devices should use the bus
-+ *	interface (PCI) for low level management.
-+ *
-+ * int (*ndo_change_mtu)(struct net_device *dev, int new_mtu);
-+ *	Called when a user wants to change the Maximum Transfer Unit
-+ *	of a device. If not defined, any request to change MTU will
-+ *	will return an error.
-+ *
-+ * void (*ndo_tx_timeout)(struct net_device *dev);
-+ *	Callback uses when the transmitter has not made any progress
-+ *	for dev->watchdog ticks.
-+ *
-+ * struct net_device_stats* (*ndo_get_stats)(struct net_device *dev);
-+ *	Called when a user wants to get the network device usage
-+ *	statistics. If not defined, the counters in dev->stats will
-+ *	be used.
-+ *
-+ * void (*ndo_vlan_rx_register)(struct net_device *dev, struct vlan_group *grp);
-+ *	If device support VLAN receive accleration
-+ *	(ie. dev->features & NETIF_F_HW_VLAN_RX), then this function is called
-+ *	when vlan groups for the device changes.  Note: grp is NULL
-+ *	if no vlan's groups are being used.
-+ *
-+ * void (*ndo_vlan_rx_add_vid)(struct net_device *dev, unsigned short vid);
-+ *	If device support VLAN filtering (dev->features & NETIF_F_HW_VLAN_FILTER)
-+ *	this function is called when a VLAN id is registered.
-+ *
-+ * void (*ndo_vlan_rx_kill_vid)(struct net_device *dev, unsigned short vid);
-+ *	If device support VLAN filtering (dev->features & NETIF_F_HW_VLAN_FILTER)
-+ *	this function is called when a VLAN id is unregistered.
-+ *
-+ * void (*ndo_poll_controller)(struct net_device *dev);
-+ *
-+ *	SR-IOV management functions.
-+ * int (*ndo_set_vf_mac)(struct net_device *dev, int vf, u8* mac);
-+ * int (*ndo_set_vf_vlan)(struct net_device *dev, int vf, u16 vlan, u8 qos);
-+ * int (*ndo_set_vf_tx_rate)(struct net_device *dev, int vf, int rate);
-+ * int (*ndo_get_vf_config)(struct net_device *dev,
-+ *			    int vf, struct ifla_vf_info *ivf);
-+ */
-+#define HAVE_NET_DEVICE_OPS
-+struct net_device_ops {
-+	int			(*ndo_init)(struct net_device *dev);
-+	void			(*ndo_uninit)(struct net_device *dev);
-+	int			(*ndo_open)(struct net_device *dev);
-+	int			(*ndo_stop)(struct net_device *dev);
-+	netdev_tx_t		(*ndo_start_xmit) (struct sk_buff *skb,
-+						   struct net_device *dev);
-+	u16			(*ndo_select_queue)(struct net_device *dev,
-+						    struct sk_buff *skb);
-+	void			(*ndo_change_rx_flags)(struct net_device *dev,
-+						       int flags);
-+	void			(*ndo_set_rx_mode)(struct net_device *dev);
-+	void			(*ndo_set_multicast_list)(struct net_device *dev);
-+	int			(*ndo_set_mac_address)(struct net_device *dev,
-+						       void *addr);
-+	int			(*ndo_validate_addr)(struct net_device *dev);
-+	int			(*ndo_do_ioctl)(struct net_device *dev,
-+					        struct ifreq *ifr, int cmd);
-+	int			(*ndo_set_config)(struct net_device *dev,
-+					          struct ifmap *map);
-+	int			(*ndo_change_mtu)(struct net_device *dev,
-+						  int new_mtu);
-+	int			(*ndo_neigh_setup)(struct net_device *dev,
-+						   struct neigh_parms *);
-+	void			(*ndo_tx_timeout) (struct net_device *dev);
-+
-+	struct net_device_stats* (*ndo_get_stats)(struct net_device *dev);
-+
-+	void			(*ndo_vlan_rx_register)(struct net_device *dev,
-+						        struct vlan_group *grp);
-+	void			(*ndo_vlan_rx_add_vid)(struct net_device *dev,
-+						       unsigned short vid);
-+	void			(*ndo_vlan_rx_kill_vid)(struct net_device *dev,
-+						        unsigned short vid);
-+#ifdef CONFIG_NET_POLL_CONTROLLER
-+	void                    (*ndo_poll_controller)(struct net_device *dev);
-+#endif
-+	int			(*ndo_set_vf_mac)(struct net_device *dev,
-+						  int queue, u8 *mac);
-+	int			(*ndo_set_vf_vlan)(struct net_device *dev,
-+						   int queue, u16 vlan, u8 qos);
-+	int			(*ndo_set_vf_tx_rate)(struct net_device *dev,
-+						      int vf, int rate);
-+/*
-+ * The struct ifla_vf_info was added via b280da8d54b8d82b52f368a8703b7ada6c1744d5
-+ * on the v2.6.34-rc1~233^2~338 release
-+ */
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+	int			(*ndo_get_vf_config)(struct net_device *dev,
-+						     int vf,
-+						     struct ifla_vf_info *ivf);
-+#endif
-+#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
-+	int			(*ndo_fcoe_enable)(struct net_device *dev);
-+	int			(*ndo_fcoe_disable)(struct net_device *dev);
-+	int			(*ndo_fcoe_ddp_setup)(struct net_device *dev,
-+						      u16 xid,
-+						      struct scatterlist *sgl,
-+						      unsigned int sgc);
-+	int			(*ndo_fcoe_ddp_done)(struct net_device *dev,
-+						     u16 xid);
-+#define NETDEV_FCOE_WWNN 0
-+#define NETDEV_FCOE_WWPN 1
-+	int			(*ndo_fcoe_get_wwn)(struct net_device *dev,
-+						    u64 *wwn, int type);
-+#endif
-+};
-+
-+void netdev_attach_ops(struct net_device *dev,
-+		       const struct net_device_ops *ops);
-+
-+#else /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
-+
-+/* XXX: this can probably just go upstream ! */
-+static inline void netdev_attach_ops(struct net_device *dev,
-+		       const struct net_device_ops *ops)
++static int cfg80211_get_sset_count(struct net_device *dev, int sset)
 +{
-+	dev->netdev_ops = ops;
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_sset_count)
++		return rdev->ops->get_et_sset_count(wdev->wiphy, dev, sset);
++	return -EOPNOTSUPP;
 +}
 +
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
++static void cfg80211_get_stats(struct net_device *dev,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_stats)
++		rdev->ops->get_et_stats(wdev->wiphy, dev, stats, data);
++}
 +
-+#endif	/* _COMPAT_LINUX_NETDEVICE_H */
++static void cfg80211_get_strings(struct net_device *dev, u32 sset, u8 *data)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_strings)
++		rdev->ops->get_et_strings(wdev->wiphy, dev, sset, data);
++}
++
+ const struct ethtool_ops cfg80211_ethtool_ops = {
+ 	.get_drvinfo = cfg80211_get_drvinfo,
+ 	.get_regs_len = cfg80211_get_regs_len,
+@@ -75,4 +101,7 @@ const struct ethtool_ops cfg80211_ethtool_ops = {
+ 	.get_link = ethtool_op_get_link,
+ 	.get_ringparam = cfg80211_get_ringparam,
+ 	.set_ringparam = cfg80211_set_ringparam,
++	.get_strings = cfg80211_get_strings,
++	.get_ethtool_stats = cfg80211_get_stats,
++	.get_sset_count = cfg80211_get_sset_count,
+ };
 -- 
-1.7.9.5
+1.7.3.4
 
