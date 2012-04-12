@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43170 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250Ab2DZRG3 convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:38443 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757375Ab2DLN6g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 13:06:29 -0400
-From: "Giori, Kathy" <kgiori@qca.qualcomm.com>
-To: Harshal Chhaya <harshal@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: Support for AR9342 in ath9k?
-Date: Thu, 26 Apr 2012 17:06:28 +0000
-Message-ID: <20FE3948A2672041B9064A92744BD275E77F23@nasanexd02b.na.qualcomm.com> (sfid-20120426_190633_206846_37BB74E7)
-References: <CAJ8GFOjMHjWwq2rAYT+M5cFmkwHL3z_8mPqvpYXwE=C65Y7hag@mail.gmail.com>
-In-Reply-To: <CAJ8GFOjMHjWwq2rAYT+M5cFmkwHL3z_8mPqvpYXwE=C65Y7hag@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 12 Apr 2012 09:58:36 -0400
 MIME-Version: 1.0
+In-Reply-To: <4F86DCB1.20507@openwrt.org>
+References: <4F7A8EB7.4060200@silka.with-linux.com>
+	<4F7AAAD9.2040307@silka.with-linux.com>
+	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
+	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
+	<4F7AB6FE.3080009@silka.with-linux.com>
+	<20120403200306.0afbb48b@xenia.leun.net>
+	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
+	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
+	<20120404235104.682cfad3@xenia.leun.net>
+	<4F7DE3A4.1040705@candelatech.com>
+	<CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
+	<4F7F52BD.7060906@candelatech.com>
+	<20120409010816.36244f17@xenia.leun.net>
+	<CAD2nsn3-C8ZLmUpTDeA6HuPr-+=V5KkPJb6h5e7ZJsGi4v9p0g@mail.gmail.com>
+	<20120409122549.7469543a@xenia.leun.net>
+	<20120409160322.6b7b8c67@xenia.leun.net>
+	<CAD2nsn0n-VQ8ZOm69BNrbFv5HK3cdm+22yKrYprwoeFz-E2Uew@mail.gmail.com>
+	<20120409172933.4ca4775a@xenia.leun.net>
+	<4F86DCB1.20507@openwrt.org>
+Date: Thu, 12 Apr 2012 16:58:34 +0300
+Message-ID: <CAMP44s1t+kVdRi_zhR1Qt045KEwco_PQhpa-cC9zMWc5QOFA8Q@mail.gmail.com> (sfid-20120412_155853_627361_173B1080)
+Subject: Re: 3.4-rc ath9k regression (Re: [ath9k-devel] 3.3.1 ath9k regression)
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Michael Leun <lkml20120218@newton.leun.net>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	Ben Greear <greearb@candelatech.com>,
+	casteyde.christian@free.fr,
+	Kelly Anderson <kelly@silka.with-linux.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sergio Correia <lists@uece.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Harshal Chhaya
-> Sent: Thursday, April 26, 2012 8:22 AM
-> To: linux-wireless
-> Subject: Support for AR9342 in ath9k?
-> 
-> Hello,
-> 
-> I am looking for information on the level of support for AR9342 chip in 'ath9k'.
-> 
-> The page at http://linuxwireless.org/en/users/Drivers/ath9k/todo
-> indicates that the 'todo' list is still pretty large but I also found many patches (e.g.
-> http://comments.gmane.org/gmane.linux.kernel.wireless.general/68431)
-> that add support for this chip.
-> 
-> Is there enough support for AR9342 in 'ath9k' to use it as a dual-band AP? Does
-> Qualcomm Atheros have their own software package for AP functionality for this
-> chip?
-> 
-> Thanks,
-> - Harshal
+On Thu, Apr 12, 2012 at 4:46 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2012-04-09 5:29 PM, Michael Leun wrote:
+>> On Mon, 9 Apr 2012 19:52:45 +0530
 
-Harshal,
+>> Seems obvious to me, that this line
+>>
+>> if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
+>>
+>> makes the real difference.
+> Please try this patch with plain 3.3.1 or 3.4-rc2 to see if it fixes
+> this issue:
 
-Yes, for AR934x SoCs, Qualcomm Atheros supports both the ath9k upstream driver and a non-Linux-specific (but also runs on Linux) Wi-Fi driver. The ath9k todo page is out of date. Sorry about that -- hopefully we can help clean that up soon. I think the main functionality that is lacking when using the ath9k driver is that for 5GHz channel operation, DFS logic in Linux is incomplete. Zefir Kurtisi did a great job adding DFS support to ath9k (radar detection and pattern matching), but now it needs to connect to logic within mac80211 and above to satisfy the various regional specifications (FCC, ETSI, Japan). TI (Victor G) posted some RFC patches for that upper layer logic several weeks back, but I haven't seen much activity on it for a while. Hopefully DFS support will be available soon.
+Nope, not here (3.3.1).
 
-In addition to upstream driver support, one of our goals at Qualcomm Atheros is better baseline support of our platforms by implementing upstream BSP code and validating basic board support with OpenWrt. We'd like you to be able to grab any Qualcomm Atheros AP reference design and flash/boot it with the latest stable version of OpenWrt (AA at the moment). Wouldn't that be handy?
-
-It is important that customers and developers like you ask specifically about using ath9k (or OpenWrt or whatever it is you need) and explain why that support is important to you. With that input we can justify directing more internal developer resources to work on the upstream Linux components. Suggestions, recommendations, queries therefore most welcome. :)
-
-Hope that helps. Let us know how we can do even better.
-kathy
+-- 
+Felipe Contreras
