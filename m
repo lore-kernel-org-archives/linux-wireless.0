@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60569 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753716Ab2DLDcN (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43257 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306Ab2DLRY4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 23:32:13 -0400
-Message-ID: <1334201497.3788.1.camel@jlt3.sipsolutions.net> (sfid-20120412_053217_196595_A9D189B9)
-Subject: Re: Suspicious RCU usage in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 12 Apr 2012 05:31:37 +0200
-In-Reply-To: <4F83A6DE.7070109@lwfinger.net> (sfid-20120410_052034_062782_82AB2FD8)
-References: <4F83A6DE.7070109@lwfinger.net>
-	 (sfid-20120410_052034_062782_82AB2FD8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 12 Apr 2012 13:24:56 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+Date: Thu, 12 Apr 2012 10:24:55 -0700
+Message-ID: <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com> (sfid-20120412_192521_415927_17C1CBA7)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Adrian Chadd <adrian@freebsd.org>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-04-09 at 22:19 -0500, Larry Finger wrote:
-> When running kernel 3.4-rc2 from wireless testing, I got the following logged:
-> 
-> [ 2299.344437] ===============================
-> [ 2299.344443] [ INFO: suspicious RCU usage. ]
-> [ 2299.344452] 3.4.0-rc2-wl+ #222 Not tainted
-> [ 2299.344458] -------------------------------
-> [ 2299.344466] net/mac80211/sta_info.h:449 suspicious rcu_dereference_protected() usage!
-> [ 2299.344472]
-> [ 2299.344474] other info that might help us debug this:
-> [ 2299.344477]
-> [ 2299.344484]
-> [ 2299.344486] rcu_scheduler_active = 1, debug_locks = 0
-> [ 2299.344493] 1 lock held by swapper/1/0:
-> [ 2299.344499]  #0:  (&tid_tx->session_timer){+.-...}, at: [<ffffffff8104850a>] 
-> run_timer_softirq+0xfa/0x6e0
-> [ 2299.344533]
-> [ 2299.344535] stack backtrace:
-> [ 2299.344544] Pid: 0, comm: swapper/1 Not tainted 3.4.0-rc2-wl+ #222
-> [ 2299.344551] Call Trace:
-> [ 2299.344557]  <IRQ>  [<ffffffff81092fdd>] lockdep_rcu_suspicious+0xfd/0x130
-> [ 2299.344651]  [<ffffffffa05db673>] sta_tx_agg_session_timer_expired+0xe3/0x100 
-> [mac80211]
+On 12 April 2012 09:49, Felipe Contreras <felipe.contreras@gmail.com> wrote:
 
-That's odd:
+>>
+>> A revert is the same as a patch.  It needs to be in Linus's tree before
+>> I can add it to the stable releases.
+>
+> Right, because otherwise people's systems would actually work.
+>
+> But hey, as I said, following rules is more important, regardless of
+> what the rules are, and why they are there. The rules that actually
+> triggered this issue in v3.3.1, as this is not in v3.3.
+>
+> You could just accept that the patch should have never landed in
+> v3.3.1 in the first place, but it's much easier to arbitrarily keep
+> stacking patches without thinking too much about them.
 
-static inline struct tid_ampdu_tx *
-rcu_dereference_protected_tid_tx(struct sta_info *sta, int tid)
-{
-        return rcu_dereference_protected(sta->ampdu_mlme.tid_tx[tid],
-                                         lockdep_is_held(&sta->lock) ||
-                                         lockdep_is_held(&sta->ampdu_mlme.mtx));
-} 
+Greg is doing the right thing here. We face the same deal in FreeBSD -
+people want fixes to go into a release branch first, but if you do
+that you break the development flow - which is "stuff goes into -HEAD
+and is then backported to the release branches."
 
-sta_tx_agg_session_timer_expired calls ieee80211_stop_tx_ba_session
-which does:
+If you don't do this, you risk having people do (more, all)
+development and testing on a release branch and never test -HEAD (or
+"upstream linux" here). Once you open that particular flood gate, it's
+hard to close.
 
-        spin_lock_bh(&sta->lock);
-        tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+We had this problem with Squid. People ran and developed on Squid-2.4.
+The head version of Squid-2 was stable, but that isn't what people ran
+in production. They wanted features and bugfixes against Squid-2.2,
+squid-2.4, and not Squid-2.STABLE (which at the time was
+Squid-2.6/Sqiud-2.7.) That .. didn't work. Things diverged quite
+quickly and it got very ugly.
+
+So I applaud Greg for sticking to correct stable release engineering
+here. We over in the BSD world know just how painful that is. :)
 
 
-So why would the message happen? Strange.
-
-johannes
-
+Adrian
