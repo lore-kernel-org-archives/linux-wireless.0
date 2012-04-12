@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48807 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752Ab2DLEYs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 00:24:48 -0400
-Message-ID: <1334204647.3788.19.camel@jlt3.sipsolutions.net> (sfid-20120412_062452_398362_0682CAAC)
-Subject: backporting PCI PM calls
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Don Fry <donald.h.fry@intel.com>
-Date: Thu, 12 Apr 2012 06:24:07 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:42043 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762681Ab2DLUgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 16:36:08 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 4/4] ath9k: optimize the hardware hang check
+Date: Thu, 12 Apr 2012 22:35:58 +0200
+Message-Id: <1334262958-90777-4-git-send-email-nbd@openwrt.org> (sfid-20120412_223616_942951_9E5B0866)
+In-Reply-To: <1334262958-90777-3-git-send-email-nbd@openwrt.org>
+References: <1334262958-90777-1-git-send-email-nbd@openwrt.org>
+ <1334262958-90777-2-git-send-email-nbd@openwrt.org>
+ <1334262958-90777-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Since it's only called when beacons are stuck, move it to the SWBA handler
+tasklet, to avoid doing redundant checks on every single interrupt.
 
-We have a bug report against our driver in compat that will affect
-everyone else too. In
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    3 +++
+ drivers/net/wireless/ath/ath9k/main.c   |   11 -----------
+ 2 files changed, 3 insertions(+), 11 deletions(-)
 
-commit f60dc0138aa19769bf8bab9f93b043235428b66f
-Author: John W. Linville <linville@tuxdriver.com>
-Date:   Mon Oct 25 16:12:37 2010 -0400
-
-    iwlwifi: Convert to new PCI PM framework
-
-
-and the similar patches to other drivers all drivers were converted to
-use .driver.pm suspend/resume callbacks, and that removed
-
-        pci_save_state(pdev);
-        pci_disable_device(pdev);
-        pci_set_power_state(pdev, PCI_D3hot);
-
-on suspend and the corresponding calls on resume. The compat backport
-never added them back but just re-wired the callbacks, so on older
-kernels we don't call these functions at all any more, and that breaks
-suspend/resume.
-
-Anyone have ideas of how to handle it? Maybe with compat_pci_suspend(),
-whatever that is? If it even needs to exist -- maybe we could redefine
-SIMPLE_DEV_PM_OPS in compat instead or in addition?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 6264182..df5b6ac 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -369,6 +369,9 @@ void ath_beacon_tasklet(unsigned long data)
+ 	if (ath9k_hw_numtxpending(ah, sc->beacon.beaconq) != 0) {
+ 		sc->beacon.bmisscnt++;
+ 
++		if (!ath9k_hw_check_alive(ah))
++			ieee80211_queue_work(sc->hw, &sc->hw_check_work);
++
+ 		if (sc->beacon.bmisscnt < BSTUCK_THRESH * sc->nbcnvifs) {
+ 			ath_dbg(common, BSTUCK,
+ 				"missed %u consecutive beacons\n",
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index fcb13e3..95dc62e 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -692,17 +692,6 @@ void ath9k_tasklet(unsigned long data)
+ 		goto out;
+ 	}
+ 
+-	/*
+-	 * Only run the baseband hang check if beacons stop working in AP or
+-	 * IBSS mode, because it has a high false positive rate. For station
+-	 * mode it should not be necessary, since the upper layers will detect
+-	 * this through a beacon miss automatically and the following channel
+-	 * change will trigger a hardware reset anyway
+-	 */
+-	if (ath9k_hw_numtxpending(ah, sc->beacon.beaconq) != 0 &&
+-	    !ath9k_hw_check_alive(ah))
+-		ieee80211_queue_work(sc->hw, &sc->hw_check_work);
+-
+ 	if ((status & ATH9K_INT_TSFOOR) && sc->ps_enabled) {
+ 		/*
+ 		 * TSF sync does not look correct; remain awake to sync with
+-- 
+1.7.3.2
 
