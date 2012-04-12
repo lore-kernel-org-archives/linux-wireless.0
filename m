@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.scalarmail.ca ([98.158.95.75]:26342 "EHLO
-	ironport-01.sms.scalar.ca" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752253Ab2DNTBl (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:63709 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757419Ab2DLLDM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 15:01:41 -0400
-Date: Sat, 14 Apr 2012 15:01:36 -0400
-From: Nick Bowler <nbowler@elliptictech.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, arend@broadcom.com,
-	zajec5@gmail.com
-Subject: Re: [PATCH] bcma: use fallback sprom if no on chip sprom is available
-Message-ID: <20120414190136.GA22035@elliptictech.com> (sfid-20120414_210245_135261_F6E0B2B5)
-References: <20120414024430.GA19782@elliptictech.com>
- <1334407134-22803-1-git-send-email-hauke@hauke-m.de>
+	Thu, 12 Apr 2012 07:03:12 -0400
+Received: by qcro28 with SMTP id o28so1130137qcr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 04:03:11 -0700 (PDT)
+Message-ID: <4F86B66D.3050707@gmail.com> (sfid-20120412_130342_493498_69600308)
+Date: Thu, 12 Apr 2012 07:03:09 -0400
+From: Jonathan Bither <jonbither@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1334407134-22803-1-git-send-email-hauke@hauke-m.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath5k: unmap io memory on probe failure
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-04-14 14:38 +0200, Hauke Mehrtens wrote:
-> bcma should check for a fallback sprom every time it can not find a
-> sprom on the card itself or a normal external sprom mapped into the
-> memory of the chip. When otp sprom support was introduced it tried to
-> read out the sprom from the wireless chip also if no otp sprom was
-> available. This caused a Data bus error in bcma_sprom_get() when
-> reading out the sprom for the SoC.
-[...]
-> Reported-by: Nick Bowler <nbowler@elliptictech.com>
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
+Signed-off-by: Jonathan Bither <jonbither@gmail.com>
 
-This patch appears to correct the issue on my RT-N16.
-
-Thanks,
--- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
-
+diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+index 8faa129..95926a1 100644
+--- a/drivers/net/wireless/ath/ath5k/ahb.c
++++ b/drivers/net/wireless/ath/ath5k/ahb.c
+@@ -119,7 +119,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	if (res == NULL) {
+ 		dev_err(&pdev->dev, "no IRQ resource found\n");
+ 		ret = -ENXIO;
+-		goto err_out;
++		goto err_iounmap;
+ 	}
+ 
+ 	irq = res->start;
+@@ -128,7 +128,7 @@ static int ath_ahb_probe(struct platform_device *pdev)
+ 	if (hw == NULL) {
+ 		dev_err(&pdev->dev, "no memory for ieee80211_hw\n");
+ 		ret = -ENOMEM;
+-		goto err_out;
++		goto err_iounmap;
+ 	}
+ 
+ 	ah = hw->priv;
+@@ -185,6 +185,8 @@ static int ath_ahb_probe(struct platform_device *pdev)
+  err_free_hw:
+ 	ieee80211_free_hw(hw);
+ 	platform_set_drvdata(pdev, NULL);
++ err_iounmap:
++        iounmap(mem);
+  err_out:
+ 	return ret;
+ }
