@@ -1,79 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4154 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752626Ab2DPVIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:08:47 -0400
-Message-ID: <4F8C8A4F.3060208@broadcom.com> (sfid-20120416_230903_655339_6DF39643)
-Date: Mon, 16 Apr 2012 23:08:31 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:49414 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757635Ab2DLRov (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 13:44:51 -0400
+Received: by yhmm54 with SMTP id m54so1230149yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 10:44:50 -0700 (PDT)
+Date: Thu, 12 Apr 2012 10:44:40 -0700
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath9k: fix an issue in ieee80211_tx_info count field
+ management
+Message-ID: <20120412174440.GA30082@tux> (sfid-20120412_194455_633336_36BA4EC0)
+References: <CAA2SeN+DRnff_e-fDuFAV-vof0OEsw7VEkmxBhUivq0kSspzvw@mail.gmail.com>
 MIME-Version: 1.0
-To: "Felipe Contreras" <felipe.contreras@gmail.com>
-cc: "Ingo Molnar" <mingo@kernel.org>,
-	"Linus Torvalds" <torvalds@linux-foundation.org>,
-	"Greg KH" <gregkh@linuxfoundation.org>,
-	"Sergio Correia" <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	"linux-wireless Mailing List" <linux-wireless@vger.kernel.org>,
-	"Sujith Manoharan" <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-References: <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
- <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
- <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
- <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com>
- <20120414104733.GA4871@gmail.com>
- <CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com>
- <20120415065124.GC29563@gmail.com>
- <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
- <CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com>
- <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
- <20120416053220.GA14338@gmail.com>
- <CAMP44s1j297wO8TJgto+w1x3G0qTC=BehuKtE2TZnxYmdoM=Fg@mail.gmail.com>
-In-Reply-To: <CAMP44s1j297wO8TJgto+w1x3G0qTC=BehuKtE2TZnxYmdoM=Fg@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAA2SeN+DRnff_e-fDuFAV-vof0OEsw7VEkmxBhUivq0kSspzvw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 10:25 PM, Felipe Contreras wrote:
-> Releasing implies many things. There is this notion called theory of
-> mind, which children learn at a very young age, that helps us see the
-> world through the eyes of other people. If you think people *must* see
-> the word "release" and think *exactly* the same thing as  you do, and
-> apologize when they don't, well, I'd say you are missing a very
-> valuable skill.
+On Thu, Apr 05, 2012 at 11:39:57PM +0200, Lorenzo Bianconi wrote:
+> Hi all,
+> 
+> I noticed a possible issue in the status count field management of the
+> ieee80211_tx_info data structure. In particular, when the AGGR
+> processing is employed,
+> ath_tx_complete_aggr() sets status.rates[].count just for the first
+> frame and not for others belonging to the same burst, leading to wrong
+> statistic data in the mac80211 debug file system.
 
-Maybe we are all a bit autistic then.
+Thanks for the patch! Unfortunatey this patch is not well formed.
+Please review exisitng patches via git log. Also please include in the
+commit log the effects of not applying the patch Vs actually applying
+since you are indicating this is fix. This is important for considering
+patches to be either propagated or not to the stable series of the kernel.
+In this case this does not seem like a stable fix at all since it seems
+you are indicating this is only a debugfs fix.
 
-> But fine, lets suppose I should have thought exactly the same thing as
-> you did, and fine, lets say I was wrong in not doing so. That still
-> doesn't help one iota in this discussion. Linus Torvalds pointed the
-> exact reason, which allowed us to move forward, because of my
-> incompetence, or whatever.
+Patch review below.
 
-I think this thread has been going on long enough and a fair number of 
-people tried to explain the process and why it is set up as such. How 
-long do you want to rephrase and stick to your "theory of mind". Email 
-filters will probably be created rather sooner than later. Does 
-Contreras have the same linguistic origin as "contrary"? Sorry, could 
-not think of anything constructive here.
+> Regards
+> 
+> Lorenzo
+> 
+> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+> ---
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -58,7 +58,7 @@
+>  			     struct list_head *head, bool internal);
+>  static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+>  			     struct ath_tx_status *ts, int nframes, int nbad,
+> -			     int txok);
+> +			     int txok, bool update_info);
+>  static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+>  			      int seqno);
+>  static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+> @@ -542,9 +542,12 @@
+> 
+>  			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
+>  				memcpy(tx_info->control.rates, rates, sizeof(rates));
+> -				ath_tx_rc_status(sc, bf, ts, nframes, nbad, txok);
+> +				ath_tx_rc_status(sc, bf, ts, nframes, nbad,
+> +						 txok, true);
+>  				rc_update = false;
+> -			}
+> +			} else
+> +				ath_tx_rc_status(sc, bf, ts, nframes, nbad,
+> +						 txok, false);
+> 
+>  			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
+>  				!txfail);
+> @@ -2068,7 +2071,7 @@
+> 
+>  static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+>  			     struct ath_tx_status *ts, int nframes, int nbad,
+> -			     int txok)
+> +			     int txok, bool update_info)
+>  {
+>  	struct sk_buff *skb = bf->bf_mpdu;
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> @@ -2083,16 +2086,16 @@
+>  	tx_rateindex = ts->ts_rateindex;
+>  	WARN_ON(tx_rateindex >= hw->max_rates);
+> 
+> -	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
+> +	if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) && update_info) {
+>  		tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
 
-> The next logical question has still not been answered; does the
-> undroppability come from the fact that v3.4 is more important that
-> v3.3.1? This time I promise to think at least one day for all the
-> possible meanings of each key word you say.
+You are changing the behaviour here to only add the
+tx_info->flags |= IEEE80211_TX_STAT_AMPDU now only when
+update_info is set. What effects does this have from
+previous behaviour ?
 
-3.4 is not most important, but upstream is and currently those are the 
-3.4-rcN releases. Every patch has to go upstream first as it was, is, 
-and will be our past, present, and future.
+> 
+>  		BUG_ON(nbad > nframes);
+> +		tx_info->status.ampdu_len = nframes;
+> +		tx_info->status.ampdu_ack_len = nframes - nbad;
 
-The only thing I can think of in favor of your arguments is that the 
-name 'stable' imply that they are without issues, ie. stable. However, 
-with a bit of ToM you may see that they are maintenance releases.
+Same here.
 
-Gr. AvS
+>  	}
+> -	tx_info->status.ampdu_len = nframes;
+> -	tx_info->status.ampdu_ack_len = nframes - nbad;
+> 
+>  	if ((ts->ts_status & ATH9K_TXERR_FILT) == 0 &&
+> -	    (tx_info->flags & IEEE80211_TX_CTL_NO_ACK) == 0) {
+> +	    (tx_info->flags & IEEE80211_TX_CTL_NO_ACK) == 0 && update_info) {
 
+and here
 
+>  		/*
+>  		 * If an underrun error is seen assume it as an excessive
+>  		 * retry only if max frame trigger level has been reached
+> @@ -2134,7 +2137,7 @@
+>  		txq->axq_ampdu_depth--;
+> 
+>  	if (!bf_isampdu(bf)) {
+> -		ath_tx_rc_status(sc, bf, ts, 1, txok ? 0 : 1, txok);
+> +		ath_tx_rc_status(sc, bf, ts, 1, txok ? 0 : 1, txok, true);
+>  		ath_tx_complete_buf(sc, bf, txq, bf_head, ts, txok);
+>  	} else
+>  		ath_tx_complete_aggr(sc, txq, bf, bf_head, ts, txok, true);
+> 
+> --
+
+  Luis
