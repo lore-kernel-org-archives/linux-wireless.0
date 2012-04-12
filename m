@@ -1,32 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:34191 "EHLO
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:54103 "EHLO
 	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755037Ab2DPUZW convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1757772Ab2DLSnf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 16:25:22 -0400
+	Thu, 12 Apr 2012 14:43:35 -0400
 MIME-Version: 1.0
-In-Reply-To: <20120416053220.GA14338@gmail.com>
-References: <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
-	<CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
-	<CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
-	<CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com>
-	<20120414104733.GA4871@gmail.com>
-	<CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com>
-	<20120415065124.GC29563@gmail.com>
-	<CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
-	<CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com>
-	<CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
-	<20120416053220.GA14338@gmail.com>
-Date: Mon, 16 Apr 2012 23:25:18 +0300
-Message-ID: <CAMP44s1j297wO8TJgto+w1x3G0qTC=BehuKtE2TZnxYmdoM=Fg@mail.gmail.com> (sfid-20120416_222800_903656_606B060F)
+In-Reply-To: <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+Date: Thu, 12 Apr 2012 21:43:33 +0300
+Message-ID: <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com> (sfid-20120412_204352_961501_CB256C6C)
 Subject: Re: [ 00/78] 3.3.2-stable review
 From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Ingo Molnar <mingo@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
 	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
 	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
 	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
 	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
@@ -35,40 +32,68 @@ Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 16, 2012 at 8:32 AM, Ingo Molnar <mingo@kernel.org> wrote:
+On Thu, Apr 12, 2012 at 8:24 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 12 April 2012 09:49, Felipe Contreras <felipe.contreras@gmail.com> wrote:
 >
-> * Felipe Contreras <felipe.contreras@gmail.com> wrote:
->
->> On Sun, Apr 15, 2012 at 8:49 PM, Linus Torvalds
->> <torvalds@linux-foundation.org> wrote:
-
->> > The only thing that matters is "it's been made available to others".
+>>>
+>>> A revert is the same as a patch.  It needs to be in Linus's tree before
+>>> I can add it to the stable releases.
 >>
->> Exactly! Now *this* is a reason. [...]
+>> Right, because otherwise people's systems would actually work.
+>>
+>> But hey, as I said, following rules is more important, regardless of
+>> what the rules are, and why they are there. The rules that actually
+>> triggered this issue in v3.3.1, as this is not in v3.3.
+>>
+>> You could just accept that the patch should have never landed in
+>> v3.3.1 in the first place, but it's much easier to arbitrarily keep
+>> stacking patches without thinking too much about them.
 >
-> Erm, many people referred to that in this discussion explicitly
-> and implicitly - beyond its well-known technical meaning it's
-> also the English meaning of the word 'release':
+> Greg is doing the right thing here. We face the same deal in FreeBSD -
+> people want fixes to go into a release branch first, but if you do
+> that you break the development flow - which is "stuff goes into -HEAD
+> and is then backported to the release branches."
 >
->   http://www.merriam-webster.com/dictionary/releasing
+> If you don't do this, you risk having people do (more, all)
+> development and testing on a release branch and never test -HEAD (or
+> "upstream linux" here). Once you open that particular flood gate, it's
+> hard to close.
 
-Releasing implies many things. There is this notion called theory of
-mind, which children learn at a very young age, that helps us see the
-world through the eyes of other people. If you think people *must* see
-the word "release" and think *exactly* the same thing as  you do, and
-apologize when they don't, well, I'd say you are missing a very
-valuable skill.
+But this is exactly the opposite; the patch that broke things is in
+the 'release branch' (3.3.1); it's not in upstream (3.3). Sure, it's
+also on a later upstream, which is also broken.
 
-But fine, lets suppose I should have thought exactly the same thing as
-you did, and fine, lets say I was wrong in not doing so. That still
-doesn't help one iota in this discussion. Linus Torvalds pointed the
-exact reason, which allowed us to move forward, because of my
-incompetence, or whatever.
+But then are you saying that if upstream is broken (3.4-rc2), then
+stable should be broken as well (3.3.1), and remain broken until
+upstream is fixed? I fail to see what would be the point of that.
 
-The next logical question has still not been answered; does the
-undroppability come from the fact that v3.4 is more important that
-v3.3.1? This time I promise to think at least one day for all the
-possible meanings of each key word you say.
+> We had this problem with Squid. People ran and developed on Squid-2.4.
+> The head version of Squid-2 was stable, but that isn't what people ran
+> in production. They wanted features and bugfixes against Squid-2.2,
+> squid-2.4, and not Squid-2.STABLE (which at the time was
+> Squid-2.6/Sqiud-2.7.) That .. didn't work. Things diverged quite
+> quickly and it got very ugly.
+
+And why do you think the same would happen here if *one patch* is applied?
+
+Plus, git is developed this way; and yes, you might say the gates are
+opened when there's a new non-maintenance release, but the same
+happens in Linux.  It's not the rule of 'first on X' branch that keeps
+the gates safe; it's the amount of patches.
+
+> So I applaud Greg for sticking to correct stable release engineering
+> here. We over in the BSD world know just how painful that is. :)
+
+So, in your mind "correct" is "never ever do an exception", even if
+this strictness leads to less stability. If the objective is not
+stability, I would call this the 'backports' tree then, which might or
+might not lead to stability.
+
+Rules are not perfect, why not add a new rule "It reverts an earlier
+patch to 'stable'.", then you would be both following the rules, and
+ensuring more stability :)
+
+Cheers.
 
 -- 
 Felipe Contreras
