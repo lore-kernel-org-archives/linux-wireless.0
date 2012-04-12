@@ -1,69 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3501 "EHLO mms2.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:64046 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755188Ab2DKJxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:53:33 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>, stable@vger.kernel.org
-Subject: [PATCH 9/9] brcm80211: smac: resume transmit fifo upon
- receiving frames
-Date: Wed, 11 Apr 2012 11:52:51 +0200
-Message-ID: <1334137971-3972-10-git-send-email-arend@broadcom.com> (sfid-20120411_115338_861664_9BE75401)
-In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S966114Ab2DLV6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 17:58:11 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 22/24] iwlwifi: move scan related declarations out of iwl-core.h
+Date: Thu, 12 Apr 2012 14:54:19 -0700
+Message-Id: <1334267661-14654-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235824_924247_5A5CBA8F)
+In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There have been reports about not being able to use access-points
-on channel 12 and 13 or having connectivity issues when these channels
-were part of the selected regulatory domain. Upon switching to these
-channels the brcmsmac driver suspends the transmit dma fifos. This
-patch resumes them upon handing over the first received beacon to
-mac80211.
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-This patch is to be applied to the stable tree for kernel versions
-3.2 and 3.3.
+Move these as part of iwl-core.h cleanup.
 
-Cc: stable@vger.kernel.org
-Tested-by: Francesco Saverio Schiavarelli <fschiava@libero.it>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.h  |   24 ++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h |   24 ------------------------
+ 2 files changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 231ddf4..7083db7 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -7614,6 +7614,7 @@ brcms_c_recvctl(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
- {
- 	int len_mpdu;
- 	struct ieee80211_rx_status rx_status;
-+	struct ieee80211_hdr *hdr;
- 
- 	memset(&rx_status, 0, sizeof(rx_status));
- 	prep_mac80211_status(wlc, rxh, p, &rx_status);
-@@ -7623,6 +7624,13 @@ brcms_c_recvctl(struct brcms_c_info *wlc, struct d11rxhdr *rxh,
- 	skb_pull(p, D11_PHY_HDR_LEN);
- 	__skb_trim(p, len_mpdu);
- 
-+	/* unmute transmit */
-+	if (wlc->hw->suspended_fifos) {
-+		hdr = (struct ieee80211_hdr *)p->data;
-+		if (ieee80211_is_beacon(hdr->frame_control))
-+			brcms_b_mute(wlc->hw, false);
-+	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 67d89dc..caef7a9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -223,6 +223,30 @@ u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx, u8 valid);
+ void iwlagn_post_scan(struct iwl_priv *priv);
+ void iwlagn_disable_roc(struct iwl_priv *priv);
+ int iwl_force_rf_reset(struct iwl_priv *priv, bool external);
++void iwl_init_scan_params(struct iwl_priv *priv);
++int iwl_scan_cancel(struct iwl_priv *priv);
++void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
++void iwl_force_scan_end(struct iwl_priv *priv);
++void iwl_internal_short_hw_scan(struct iwl_priv *priv);
++void iwl_setup_rx_scan_handlers(struct iwl_priv *priv);
++void iwl_setup_scan_deferred_work(struct iwl_priv *priv);
++void iwl_cancel_scan_deferred_work(struct iwl_priv *priv);
++int __must_check iwl_scan_initiate(struct iwl_priv *priv,
++				   struct ieee80211_vif *vif,
++				   enum iwl_scan_type scan_type,
++				   enum ieee80211_band band);
 +
- 	memcpy(IEEE80211_SKB_RXCB(p), &rx_status, sizeof(rx_status));
- 	ieee80211_rx_irqsafe(wlc->pub->ieee_hw, p);
- }
++/* For faster active scanning, scan will move to the next channel if fewer than
++ * PLCP_QUIET_THRESH packets are heard on this channel within
++ * ACTIVE_QUIET_TIME after sending probe request.  This shortens the dwell
++ * time if it's a quiet channel (nothing responded to our probe, and there's
++ * no other traffic).
++ * Disable "quiet" feature by setting PLCP_QUIET_THRESH to 0. */
++#define IWL_ACTIVE_QUIET_TIME       cpu_to_le16(10)  /* msec */
++#define IWL_PLCP_QUIET_THRESH       cpu_to_le16(1)  /* packets */
++
++#define IWL_SCAN_CHECK_WATCHDOG		(HZ * 7)
++
+ 
+ /* bt coex */
+ void iwlagn_send_advance_bt_config(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index ddbf9ca..199a0c0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -121,30 +121,6 @@ static inline void iwl_update_stats(struct iwl_priv *priv, bool is_tx,
+ /*******************************************************************************
+  * Scanning
+  ******************************************************************************/
+-void iwl_init_scan_params(struct iwl_priv *priv);
+-int iwl_scan_cancel(struct iwl_priv *priv);
+-void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
+-void iwl_force_scan_end(struct iwl_priv *priv);
+-void iwl_internal_short_hw_scan(struct iwl_priv *priv);
+-void iwl_setup_rx_scan_handlers(struct iwl_priv *priv);
+-void iwl_setup_scan_deferred_work(struct iwl_priv *priv);
+-void iwl_cancel_scan_deferred_work(struct iwl_priv *priv);
+-int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+-				   struct ieee80211_vif *vif,
+-				   enum iwl_scan_type scan_type,
+-				   enum ieee80211_band band);
+-
+-/* For faster active scanning, scan will move to the next channel if fewer than
+- * PLCP_QUIET_THRESH packets are heard on this channel within
+- * ACTIVE_QUIET_TIME after sending probe request.  This shortens the dwell
+- * time if it's a quiet channel (nothing responded to our probe, and there's
+- * no other traffic).
+- * Disable "quiet" feature by setting PLCP_QUIET_THRESH to 0. */
+-#define IWL_ACTIVE_QUIET_TIME       cpu_to_le16(10)  /* msec */
+-#define IWL_PLCP_QUIET_THRESH       cpu_to_le16(1)  /* packets */
+-
+-#define IWL_SCAN_CHECK_WATCHDOG		(HZ * 7)
+-
+ /* traffic log definitions */
+ #define IWL_TRAFFIC_ENTRIES	(256)
+ #define IWL_TRAFFIC_ENTRY_SIZE  (64)
 -- 
-1.7.5.4
-
+1.7.0.4
 
