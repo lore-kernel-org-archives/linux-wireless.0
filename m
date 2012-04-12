@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:47323 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966018Ab2DLUIE (ORCPT
+Received: from mail.solarflare.com ([216.237.3.220]:56205 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754788Ab2DLTa5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 16:08:04 -0400
-Received: by pbcun15 with SMTP id un15so2766313pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 13:08:03 -0700 (PDT)
-Date: Thu, 12 Apr 2012 13:07:59 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Adrian Chadd <adrian@freebsd.org>, Sergio Correia <lists@uece.net>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120412200759.GB23764@kroah.com> (sfid-20120412_220830_019715_63C68FC5)
-References: <20120411231102.GA6404@kroah.com>
- <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
- <20120412002927.GA23167@kroah.com>
- <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
- <20120412011313.GA23764@kroah.com>
- <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
- <20120412144626.GA14868@kroah.com>
- <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
- <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
- <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	Thu, 12 Apr 2012 15:30:57 -0400
+Message-ID: <1334259053.2497.18.camel@bwh-desktop.uk.solarflarecom.com> (sfid-20120412_213102_078282_0434059F)
+Subject: Re: [PATCH 4/5] mac80211: Add more ethtools stats: survey, rates,
+ etc
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Florian Fainelli <florian@openwrt.org>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Date: Thu, 12 Apr 2012 20:30:53 +0100
+In-Reply-To: <4F870828.4020708@candelatech.com>
+References: <1334248375-22967-1-git-send-email-greearb@candelatech.com>
+	 <1334248375-22967-5-git-send-email-greearb@candelatech.com>
+	 <4F8705E3.2010902@openwrt.org> <4F870828.4020708@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 09:43:33PM +0300, Felipe Contreras wrote:
-> On Thu, Apr 12, 2012 at 8:24 PM, Adrian Chadd <adrian@freebsd.org> wrote:
-> > On 12 April 2012 09:49, Felipe Contreras <felipe.contreras@gmail.com> wrote:
+On Thu, 2012-04-12 at 09:51 -0700, Ben Greear wrote:
+> On 04/12/2012 09:42 AM, Florian Fainelli wrote:
+> > Hi,
 > >
-> >>>
-> >>> A revert is the same as a patch.  It needs to be in Linus's tree before
-> >>> I can add it to the stable releases.
+> > Le 04/12/12 18:32, greearb@candelatech.com a Ã©crit :
+> >> From: Ben Greear<greearb@candelatech.com>
 > >>
-> >> Right, because otherwise people's systems would actually work.
-> >>
-> >> But hey, as I said, following rules is more important, regardless of
-> >> what the rules are, and why they are there. The rules that actually
-> >> triggered this issue in v3.3.1, as this is not in v3.3.
-> >>
-> >> You could just accept that the patch should have never landed in
-> >> v3.3.1 in the first place, but it's much easier to arbitrarily keep
-> >> stacking patches without thinking too much about them.
+> >> The signal and noise are forced to be positive since ethtool
+> >> deals in unsigned 64-bit values and this number should be human
+> >> readable. This gives easy access to some of the data formerly
+> >> exposed in the deprecated /proc/net/wireless file.
 > >
-> > Greg is doing the right thing here. We face the same deal in FreeBSD -
-> > people want fixes to go into a release branch first, but if you do
-> > that you break the development flow - which is "stuff goes into -HEAD
-> > and is then backported to the release branches."
-> >
-> > If you don't do this, you risk having people do (more, all)
-> > development and testing on a release branch and never test -HEAD (or
-> > "upstream linux" here). Once you open that particular flood gate, it's
-> > hard to close.
+> > Uh, that's misleading, the signal and noise values are typically negative, so one needs to think about mentally adding a minus sign if he/she wants to
+> > understand it. Does not ethtool know about 32-bits signed integers?
 > 
-> But this is exactly the opposite; the patch that broke things is in
-> the 'release branch' (3.3.1); it's not in upstream (3.3). Sure, it's
-> also on a later upstream, which is also broken.
+> Ethtool stats only supports u64.  I think it's easy enough for
+> humans or programs to add the negative sign.  Can signal or noise
+> ever be > 0?  If so, that could actually break something that depends
+> on flipping the value to negative....
 
-What is the git commit id of the patch in 3.3.1 that caused this to
-break?  This is the first time I have heard that 3.3 worked and 3.3.1
-did not work.  Someone needs to tell me these things...
+So far as I can see, the ethtool stats were expected to be counters,
+which obviously cannot become negative (or fractional).  Maybe it's time
+to define another command and string-set to cover other types of status
+information.  The ethtool utility could ask for those typed statistics
+as well, so 'ethtool -S' would get all of them.
 
-greg k-h
+Ben.
+
+-- 
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
+
