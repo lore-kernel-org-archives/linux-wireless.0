@@ -1,195 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:39374 "HELO
-	na3sys009amx259.postini.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with SMTP id S1751948Ab2DCCyk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 22:54:40 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-bluetooth@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <padovan@profusion.mobi>,
-	Bing Zhao <bzhao@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/2] Bluetooth: btmrvl: add support for SDIO suspend/resume callbacks
-Date: Mon,  2 Apr 2012 19:53:39 -0700
-Message-Id: <1333421619-8182-2-git-send-email-bzhao@marvell.com> (sfid-20120403_045517_930693_D289C299)
-In-Reply-To: <1333421619-8182-1-git-send-email-bzhao@marvell.com>
-References: <1333421619-8182-1-git-send-email-bzhao@marvell.com>
+Received: from nbd.name ([46.4.11.11]:40447 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754996Ab2DLSgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 14:36:44 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.4] ath9k: wake up the hardware from full sleep when idle is turned off
+Date: Thu, 12 Apr 2012 20:36:31 +0200
+Message-Id: <1334255791-55353-1-git-send-email-nbd@openwrt.org> (sfid-20120412_203648_063310_BD3E74B4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+The hardware needs a reset to recover from full sleep. Issue this reset
+directly in the ath9k_config call that turns off idle, otherwise tx
+remains dead until the first channel change after the idle state change
 
-Host sleep is activated using already configured host sleep
-parameters in suspend handler and it is cancelled in resume
-handler.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/bluetooth/btmrvl_drv.h  |    2 +
- drivers/bluetooth/btmrvl_main.c |    3 +-
- drivers/bluetooth/btmrvl_sdio.c |  100 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 104 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
-index 2c79e76..94f2d65 100644
---- a/drivers/bluetooth/btmrvl_drv.h
-+++ b/drivers/bluetooth/btmrvl_drv.h
-@@ -67,6 +67,7 @@ struct btmrvl_adapter {
- 	u8 wakeup_tries;
- 	wait_queue_head_t cmd_wait_q;
- 	u8 cmd_complete;
-+	bool is_suspended;
- };
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index ba5af8e..fcb13e3 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1584,6 +1584,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &hw->conf;
++	bool reset_channel = false;
  
- struct btmrvl_private {
-@@ -142,6 +143,7 @@ int btmrvl_send_module_cfg_cmd(struct btmrvl_private *priv, int subcmd);
- int btmrvl_send_hscfg_cmd(struct btmrvl_private *priv);
- int btmrvl_enable_ps(struct btmrvl_private *priv);
- int btmrvl_prepare_command(struct btmrvl_private *priv);
-+int btmrvl_enable_hs(struct btmrvl_private *priv);
- 
- #ifdef CONFIG_DEBUG_FS
- void btmrvl_debugfs_init(struct hci_dev *hdev);
-diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
-index a880537..681ca9d 100644
---- a/drivers/bluetooth/btmrvl_main.c
-+++ b/drivers/bluetooth/btmrvl_main.c
-@@ -262,7 +262,7 @@ int btmrvl_enable_ps(struct btmrvl_private *priv)
- }
- EXPORT_SYMBOL_GPL(btmrvl_enable_ps);
- 
--static int btmrvl_enable_hs(struct btmrvl_private *priv)
-+int btmrvl_enable_hs(struct btmrvl_private *priv)
- {
- 	struct sk_buff *skb;
- 	struct btmrvl_cmd *cmd;
-@@ -298,6 +298,7 @@ static int btmrvl_enable_hs(struct btmrvl_private *priv)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(btmrvl_enable_hs);
- 
- int btmrvl_prepare_command(struct btmrvl_private *priv)
- {
-diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
-index f93a7a2..35a3e7c 100644
---- a/drivers/bluetooth/btmrvl_sdio.c
-+++ b/drivers/bluetooth/btmrvl_sdio.c
-@@ -1051,11 +1051,111 @@ static void btmrvl_sdio_remove(struct sdio_func *func)
+ 	ath9k_ps_wakeup(sc);
+ 	mutex_lock(&sc->mutex);
+@@ -1592,6 +1593,12 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		sc->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+ 		if (sc->ps_idle)
+ 			ath_cancel_work(sc);
++		else
++			/*
++			 * The chip needs a reset to properly wake up from
++			 * full sleep
++			 */
++			reset_channel = ah->chip_fullsleep;
  	}
- }
  
-+static int btmrvl_sdio_suspend(struct device *dev)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct btmrvl_sdio_card *card;
-+	struct btmrvl_private *priv;
-+	mmc_pm_flag_t pm_flags;
-+	struct hci_dev *hcidev;
-+
-+	if (func) {
-+		pm_flags = sdio_get_host_pm_caps(func);
-+		BT_DBG("%s: suspend: PM flags = 0x%x\n", sdio_func_id(func),
-+		       pm_flags);
-+		if (!(pm_flags & MMC_PM_KEEP_POWER)) {
-+			BT_ERR("%s: cannot remain alive while host is "
-+			       "suspended\n", sdio_func_id(func));
-+			return -ENOSYS;
-+		}
-+		card = sdio_get_drvdata(func);
-+		if (!card || !card->priv) {
-+			BT_ERR("Card or priv structure is not valid\n");
-+			return 0;
-+		}
-+	} else {
-+		BT_ERR("sdio_func is not specified\n");
-+		return 0;
-+	}
-+
-+	priv = card->priv;
-+
-+	if (priv->adapter->hs_state != HS_ACTIVATED) {
-+		if (btmrvl_enable_hs(priv)) {
-+			BT_ERR("HS not actived, suspend fail!\n");
-+			return -EBUSY;
-+		}
-+	}
-+	hcidev = priv->btmrvl_dev.hcidev;
-+	BT_DBG("%s: SDIO suspend\n", hcidev->name);
-+	hci_suspend_dev(hcidev);
-+	skb_queue_purge(&priv->adapter->tx_queue);
-+
-+	priv->adapter->is_suspended = true;
-+
-+	/* We will keep the power when hs enabled successfully */
-+	if (priv->adapter->hs_state == HS_ACTIVATED) {
-+		BT_DBG("suspend with MMC_PM_KEEP_POWER\n");
-+		return sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
-+	} else {
-+		BT_DBG("suspend without MMC_PM_KEEP_POWER\n");
-+		return 0;
-+	}
-+}
-+
-+static int btmrvl_sdio_resume(struct device *dev)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct btmrvl_sdio_card *card;
-+	struct btmrvl_private *priv;
-+	mmc_pm_flag_t pm_flags;
-+	struct hci_dev *hcidev;
-+
-+	if (func) {
-+		pm_flags = sdio_get_host_pm_caps(func);
-+		BT_DBG("%s: resume: PM flags = 0x%x\n", sdio_func_id(func),
-+		       pm_flags);
-+		card = sdio_get_drvdata(func);
-+		if (!card || !card->priv) {
-+			BT_ERR("Card or priv structure is not valid\n");
-+			return 0;
-+		}
-+	} else {
-+		BT_ERR("sdio_func is not specified\n");
-+		return 0;
-+	}
-+	priv = card->priv;
-+
-+	if (!priv->adapter->is_suspended) {
-+		BT_DBG("device already resumed\n");
-+		return 0;
-+	}
-+
-+	priv->adapter->is_suspended = false;
-+	hcidev = priv->btmrvl_dev.hcidev;
-+	BT_DBG("%s: SDIO resume\n", hcidev->name);
-+	hci_resume_dev(hcidev);
-+	priv->hw_wakeup_firmware(priv);
-+	priv->adapter->hs_state = HS_DEACTIVATED;
-+	BT_DBG("%s: HS DEACTIVATED in resume!\n", hcidev->name);
-+
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops btmrvl_sdio_pm_ops = {
-+	.suspend	= btmrvl_sdio_suspend,
-+	.resume		= btmrvl_sdio_resume,
-+};
-+
- static struct sdio_driver bt_mrvl_sdio = {
- 	.name		= "btmrvl_sdio",
- 	.id_table	= btmrvl_sdio_ids,
- 	.probe		= btmrvl_sdio_probe,
- 	.remove		= btmrvl_sdio_remove,
-+	.drv = {
-+		.owner = THIS_MODULE,
-+		.pm = &btmrvl_sdio_pm_ops,
-+	}
- };
+ 	/*
+@@ -1620,7 +1627,7 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		}
+ 	}
  
- static int __init btmrvl_sdio_init_module(void)
+-	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
++	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) || reset_channel) {
+ 		struct ieee80211_channel *curchan = hw->conf.channel;
+ 		int pos = curchan->hw_value;
+ 		int old_pos = -1;
 -- 
-1.7.4.1
+1.7.3.2
 
