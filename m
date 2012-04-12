@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:65204 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755732Ab2DOR3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 13:29:43 -0400
-Date: Sun, 15 Apr 2012 19:29:10 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Ingo Molnar <mingo@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48309 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757655Ab2DLNcf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 09:32:35 -0400
+Date: Thu, 12 Apr 2012 09:20:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Heinz Diehl <htd@fancy-poultry.org>,
+	linux-kernel@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
 	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
 	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120415172910.GE27728@1wt.eu> (sfid-20120415_193004_448647_91A7AFB8)
-References: <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com> <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com> <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com> <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com> <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com> <20120414104733.GA4871@gmail.com> <CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com> <20120415065124.GC29563@gmail.com> <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
-Mime-Version: 1.0
+	David Miller <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: Regression due to "ath9k: fix going to full-sleep on PS idle"
+Message-ID: <20120412132013.GA21495@tuxdriver.com> (sfid-20120412_153317_001651_0D362067)
+References: <CA+55aFxWD1bE0oiR4GpLP19MCm2CzwuApuYhcE_NF7bC+tFYjg@mail.gmail.com>
+ <20358.25376.230264.236893@gargle.gargle.HOWL>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
+In-Reply-To: <20358.25376.230264.236893@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felipe,
+On Thu, Apr 12, 2012 at 10:37:44AM +0530, Sujith Manoharan wrote:
+> Linus Torvalds wrote:
+> > You guys need to fix the subject line (like this), and make sure that
+> > the right people are cc'd. This is not a "stable" issue - stable
+> > cannot revert stuff that hasn't been reverted upstream.
+> > 
+> > So instead of stable and Greg, it should be netdev and Davem.
+> > 
+> > David/John: multiple people are complaining about that commit. It
+> > really should be reverted, or a fix found. It's broken.
+> > 
+> > I can do the revert, but it would be better coming from the networking people.
+> 
+> John has already reverted the commit:
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless.git;a=commit;h=011afa1ed8c408d694957d2474d89dc81a60b70c
 
-On Sun, Apr 15, 2012 at 08:15:23PM +0300, Felipe Contreras wrote:
-(...)
-> Why is it that the patch from yesterday doesn't reduce the version
-> skew, but the patch from today does? You are not explaining *why*.
+Yes, I'll be pushing to Dave M shortly.
 
-Severl of us have explained to you multiple times *why*. Either you're
-having a parsing problem, or you don't understand anything to versionning
-but in all cases you should try to educate yourself a minimum before
-repeating the same question in loops.
-
-> It's like I'm asking why the freezer area is different from the normal
-> refrigerator area, and you are saying; well it's colder, it's usually
-> smaller, and it makes all food taste better. So you are either just
-> describing the differences without explaining the reason (being colder
-> helps for some foods), or you are providing an unsubstantiated claim;
-> you go from a) it's colder, to b) it makes all food taste better. And
-> when asked *why* again, you repeat, well, because it's colder. And
-> then you immediately go to the conclusion; therefore you should put as
-> much food in the freezer as possible.
-
-No, it's quite the opposite, almost everyone in this thread explained to
-you that bacteria don't develop in cold and that's the reason it's better
-to keep food. But you deliberately (or maybe inconsciously because you
-don't know what bacteria are) wipe out these explanations and pretend
-nobody explained the reason to you. 
-
-Please re-read all responses, everything is there. I thought my explanation
-was detailed enough to understand why it works that way, and Ingo explained
-it in great details again. So please now make an effort to try to read what
-people explain and stop pretending they refuse to respond, that's getting
-really irritating.
-
-The fact that you're the only one to ask this in loops should ring a bell,
-it seems like many people managed to understand, either before this thread
-or during this thread. It's up to you, I don't think that insisting on
-people to explain the same things to you in many different ways will solve
-your problems, really.
-
-Regards,
-Willy
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
