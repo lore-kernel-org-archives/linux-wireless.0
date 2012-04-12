@@ -1,142 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog130.obsmtp.com ([74.125.149.143]:43692 "HELO
-	na3sys009amx259.postini.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with SMTP id S1751656Ab2DCCyh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 22:54:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-bluetooth@vger.kernel.org
+Received: from mga02.intel.com ([134.134.136.20]:63195 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966094Ab2DLV6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 17:58:09 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <padovan@profusion.mobi>,
-	Bing Zhao <bzhao@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/2] Bluetooth: btmrvl: configure default host sleep parameters
-Date: Mon,  2 Apr 2012 19:53:38 -0700
-Message-Id: <1333421619-8182-1-git-send-email-bzhao@marvell.com> (sfid-20120403_045515_893434_58CECF53)
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 15/24] iwlwifi: move iwl_set_tx_power and make it static
+Date: Thu, 12 Apr 2012 14:54:12 -0700
+Message-Id: <1334267661-14654-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235904_060460_76952158)
+In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-Currently debugfs commands "hscfgcmd" and "gpiogap" are provided
-for host sleep configuration. But if user doesn't configure host
-sleep parameters using these commands, host sleep activation is
-failed during suspend (support for suspend and resume handlers is
-added in next patch).
+This function is used only in iwl-agn-rxon.c,
+move it there and mark it static.
 
-Default host sleep configuration is done during driver initialisation
-in this patch.
+Move this function as part of iwl-core.c
+cleanup.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/bluetooth/btmrvl_drv.h  |    1 +
- drivers/bluetooth/btmrvl_main.c |   53 ++++++++++++++++++++++----------------
- drivers/bluetooth/btmrvl_sdio.c |    3 ++
- 3 files changed, 35 insertions(+), 22 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   55 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   55 ---------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    5 --
+ 3 files changed, 55 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
-index 90bda50..2c79e76 100644
---- a/drivers/bluetooth/btmrvl_drv.h
-+++ b/drivers/bluetooth/btmrvl_drv.h
-@@ -139,6 +139,7 @@ void btmrvl_check_evtpkt(struct btmrvl_private *priv, struct sk_buff *skb);
- int btmrvl_process_event(struct btmrvl_private *priv, struct sk_buff *skb);
- 
- int btmrvl_send_module_cfg_cmd(struct btmrvl_private *priv, int subcmd);
-+int btmrvl_send_hscfg_cmd(struct btmrvl_private *priv);
- int btmrvl_enable_ps(struct btmrvl_private *priv);
- int btmrvl_prepare_command(struct btmrvl_private *priv);
- 
-diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
-index d1209ad..a880537 100644
---- a/drivers/bluetooth/btmrvl_main.c
-+++ b/drivers/bluetooth/btmrvl_main.c
-@@ -200,6 +200,36 @@ int btmrvl_send_module_cfg_cmd(struct btmrvl_private *priv, int subcmd)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 18776ab..d2da1f3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -407,6 +407,61 @@ static int iwlagn_rxon_disconn(struct iwl_priv *priv,
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(btmrvl_send_module_cfg_cmd);
  
-+int btmrvl_send_hscfg_cmd(struct btmrvl_private *priv)
++static int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
 +{
-+	struct sk_buff *skb;
-+	struct btmrvl_cmd *cmd;
++	int ret;
++	s8 prev_tx_power;
++	bool defer;
++	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
 +
-+	skb = bt_skb_alloc(sizeof(*cmd), GFP_ATOMIC);
-+	if (!skb) {
-+		BT_ERR("No free skb");
-+		return -ENOMEM;
++	lockdep_assert_held(&priv->mutex);
++
++	if (priv->tx_power_user_lmt == tx_power && !force)
++		return 0;
++
++	if (tx_power < IWLAGN_TX_POWER_TARGET_POWER_MIN) {
++		IWL_WARN(priv,
++			 "Requested user TXPOWER %d below lower limit %d.\n",
++			 tx_power,
++			 IWLAGN_TX_POWER_TARGET_POWER_MIN);
++		return -EINVAL;
 +	}
 +
-+	cmd = (struct btmrvl_cmd *) skb_put(skb, sizeof(*cmd));
-+	cmd->ocf_ogf = cpu_to_le16(hci_opcode_pack(OGF,
-+						   BT_CMD_HOST_SLEEP_CONFIG));
-+	cmd->length = 2;
-+	cmd->data[0] = (priv->btmrvl_dev.gpio_gap & 0xff00) >> 8;
-+	cmd->data[1] = (u8) (priv->btmrvl_dev.gpio_gap & 0x00ff);
++	if (tx_power > priv->tx_power_device_lmt) {
++		IWL_WARN(priv,
++			"Requested user TXPOWER %d above upper limit %d.\n",
++			 tx_power, priv->tx_power_device_lmt);
++		return -EINVAL;
++	}
 +
-+	bt_cb(skb)->pkt_type = MRVL_VENDOR_PKT;
++	if (!iwl_is_ready_rf(priv))
++		return -EIO;
 +
-+	skb->dev = (void *) priv->btmrvl_dev.hcidev;
-+	skb_queue_head(&priv->adapter->tx_queue, skb);
++	/* scan complete and commit_rxon use tx_power_next value,
++	 * it always need to be updated for newest request */
++	priv->tx_power_next = tx_power;
 +
-+	BT_DBG("Queue HSCFG Command, gpio=0x%x, gap=0x%x", cmd->data[0],
-+	       cmd->data[1]);
++	/* do not set tx power when scanning or channel changing */
++	defer = test_bit(STATUS_SCANNING, &priv->status) ||
++		memcmp(&ctx->active, &ctx->staging, sizeof(ctx->staging));
++	if (defer && !force) {
++		IWL_DEBUG_INFO(priv, "Deferring tx power set\n");
++		return 0;
++	}
 +
-+	return 0;
++	prev_tx_power = priv->tx_power_user_lmt;
++	priv->tx_power_user_lmt = tx_power;
++
++	ret = iwlagn_send_tx_power(priv);
++
++	/* if fail to set tx_power, restore the orig. tx power */
++	if (ret) {
++		priv->tx_power_user_lmt = prev_tx_power;
++		priv->tx_power_next = prev_tx_power;
++	}
++	return ret;
 +}
-+EXPORT_SYMBOL_GPL(btmrvl_send_hscfg_cmd);
 +
- int btmrvl_enable_ps(struct btmrvl_private *priv)
+ static int iwlagn_rxon_connect(struct iwl_priv *priv,
+ 			       struct iwl_rxon_context *ctx)
  {
- 	struct sk_buff *skb;
-@@ -271,32 +301,11 @@ static int btmrvl_enable_hs(struct btmrvl_private *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 42789ed..3bd47e7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -66,61 +66,6 @@ void iwl_print_rx_config_cmd(struct iwl_priv *priv,
+ }
+ #endif
  
- int btmrvl_prepare_command(struct btmrvl_private *priv)
+-int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+-{
+-	int ret;
+-	s8 prev_tx_power;
+-	bool defer;
+-	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+-
+-	lockdep_assert_held(&priv->mutex);
+-
+-	if (priv->tx_power_user_lmt == tx_power && !force)
+-		return 0;
+-
+-	if (tx_power < IWLAGN_TX_POWER_TARGET_POWER_MIN) {
+-		IWL_WARN(priv,
+-			 "Requested user TXPOWER %d below lower limit %d.\n",
+-			 tx_power,
+-			 IWLAGN_TX_POWER_TARGET_POWER_MIN);
+-		return -EINVAL;
+-	}
+-
+-	if (tx_power > priv->tx_power_device_lmt) {
+-		IWL_WARN(priv,
+-			"Requested user TXPOWER %d above upper limit %d.\n",
+-			 tx_power, priv->tx_power_device_lmt);
+-		return -EINVAL;
+-	}
+-
+-	if (!iwl_is_ready_rf(priv))
+-		return -EIO;
+-
+-	/* scan complete and commit_rxon use tx_power_next value,
+-	 * it always need to be updated for newest request */
+-	priv->tx_power_next = tx_power;
+-
+-	/* do not set tx power when scanning or channel changing */
+-	defer = test_bit(STATUS_SCANNING, &priv->status) ||
+-		memcmp(&ctx->active, &ctx->staging, sizeof(ctx->staging));
+-	if (defer && !force) {
+-		IWL_DEBUG_INFO(priv, "Deferring tx power set\n");
+-		return 0;
+-	}
+-
+-	prev_tx_power = priv->tx_power_user_lmt;
+-	priv->tx_power_user_lmt = tx_power;
+-
+-	ret = iwlagn_send_tx_power(priv);
+-
+-	/* if fail to set tx_power, restore the orig. tx power */
+-	if (ret) {
+-		priv->tx_power_user_lmt = prev_tx_power;
+-		priv->tx_power_next = prev_tx_power;
+-	}
+-	return ret;
+-}
+-
+ void iwl_send_bt_config(struct iwl_priv *priv)
  {
--	struct sk_buff *skb = NULL;
--	struct btmrvl_cmd *cmd;
- 	int ret = 0;
+ 	struct iwl_bt_cmd bt_cmd = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 81c287c..fdd314f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -118,11 +118,6 @@ static inline void iwl_update_stats(struct iwl_priv *priv, bool is_tx,
+ }
+ #endif
  
- 	if (priv->btmrvl_dev.hscfgcmd) {
- 		priv->btmrvl_dev.hscfgcmd = 0;
+-/*****************************************************
+- * TX power
+- ****************************************************/
+-int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force);
 -
--		skb = bt_skb_alloc(sizeof(*cmd), GFP_ATOMIC);
--		if (skb == NULL) {
--			BT_ERR("No free skb");
--			return -ENOMEM;
--		}
--
--		cmd = (struct btmrvl_cmd *) skb_put(skb, sizeof(*cmd));
--		cmd->ocf_ogf = cpu_to_le16(hci_opcode_pack(OGF, BT_CMD_HOST_SLEEP_CONFIG));
--		cmd->length = 2;
--		cmd->data[0] = (priv->btmrvl_dev.gpio_gap & 0xff00) >> 8;
--		cmd->data[1] = (u8) (priv->btmrvl_dev.gpio_gap & 0x00ff);
--
--		bt_cb(skb)->pkt_type = MRVL_VENDOR_PKT;
--
--		skb->dev = (void *) priv->btmrvl_dev.hcidev;
--		skb_queue_head(&priv->adapter->tx_queue, skb);
--
--		BT_DBG("Queue HSCFG Command, gpio=0x%x, gap=0x%x",
--						cmd->data[0], cmd->data[1]);
-+		btmrvl_send_hscfg_cmd(priv);
- 	}
- 
- 	if (priv->btmrvl_dev.pscmd) {
-diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
-index 27b74b0..f93a7a2 100644
---- a/drivers/bluetooth/btmrvl_sdio.c
-+++ b/drivers/bluetooth/btmrvl_sdio.c
-@@ -1013,6 +1013,9 @@ static int btmrvl_sdio_probe(struct sdio_func *func,
- 	priv->btmrvl_dev.psmode = 1;
- 	btmrvl_enable_ps(priv);
- 
-+	priv->btmrvl_dev.gpio_gap = 0xffff;
-+	btmrvl_send_hscfg_cmd(priv);
-+
- 	return 0;
- 
- disable_host_int:
+ /*******************************************************************************
+  * Scanning
+  ******************************************************************************/
 -- 
-1.7.4.1
+1.7.0.4
 
