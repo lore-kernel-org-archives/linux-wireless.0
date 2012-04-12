@@ -1,184 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:59651 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754280Ab2DSJZO (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:14324 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965022Ab2DLWCQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 05:25:14 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so8417888wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 02:25:13 -0700 (PDT)
-From: Anisse Astier <anisse@astier.eu>
-To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Cc: linville@tuxdriver.com, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Anisse Astier <anisse@astier.eu>
-Subject: [PATCH RFC v2 2/2] rt2x00: Add debugfs access for rfcsr register
-Date: Thu, 19 Apr 2012 11:20:33 +0200
-Message-Id: <1334827233-32686-2-git-send-email-anisse@astier.eu> (sfid-20120419_112524_805204_E62EB514)
-In-Reply-To: <1334827233-32686-1-git-send-email-anisse@astier.eu>
-References: <1334827233-32686-1-git-send-email-anisse@astier.eu>
+	Thu, 12 Apr 2012 18:02:16 -0400
+Date: Fri, 13 Apr 2012 00:02:15 +0200 (CEST)
+From: Jesper Juhl <jj@chaosbits.net>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+In-Reply-To: <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1204122353210.7553@swampdragon.chaosbits.net> (sfid-20120413_000242_543374_DED0A12E)
+References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com> <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com> <20120412011313.GA23764@kroah.com>
+ <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com> <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com> <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
+ <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-166988466-1334268135=:7553"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RFCSR is only used in rt2800. For other chipsets, the debug struct
-for rfcsr should be zeroed, so it shouldn't be an issue.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Anisse Astier <anisse@astier.eu>
----
-Changes since v1:
- - removed initialization in chipsets other than rt2800, we now rely on
-   default initialization.
- - added comments to make this explicit
- - fix rfcsr size (64)
- - fix pre-review bug thanks to Ivo Van Doorn
----
-Please test this patch, I'd *especially* like feedback on chipsets other
-than rt2800pci.
+--8323328-166988466-1334268135=:7553
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-Test procedure:
+On Fri, 13 Apr 2012, Felipe Contreras wrote:
 
-mount -t debugfs none /sys/kernel/debug/
-cd /sys/kernel/debug/ieee80211/phy0/rt2800pci/register/
-cat ../chipset
-cat rfcsr_offset
-cat rfcsr_value
-#should fail:
-echo 2 > rfcsr_offset
+> On Thu, Apr 12, 2012 at 10:05 PM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+> > On Thu, Apr 12, 2012 at 9:49 AM, Felipe Contreras
+> > <felipe.contreras@gmail.com> wrote:
+> >>>
+> >>> A revert is the same as a patch.  It needs to be in Linus's tree before
+> >>> I can add it to the stable releases.
+> >>
+> >> Right, because otherwise people's systems would actually work.
+> >
+> > There are rules for a damn good reason.
+> >
+> > The rule for -stable is that the changes *have* to be in upstream, for
+> > a very simple reason: otherwise bugs get re-introduced.
+> >
+> > If -stable starts revertign things that aren't reverted up-stream,
+> > what do you think happens to the *next* kernel version?
+> 
+> Which is why nobody is trying to change the rules regarding that.
+> 
+> And your same argument applies to the all the thousands of commits on
+> the next kernel version; what would happen on the next kernel version?
+> 
+> The relevant patch, like the thousands of patches in v3.4-rc*, did not
+> exist in v3.3, so if you add one on v3.3.1, and remove it on v3.3.2
+> would be *exactly* the same as if you had not added it at all to the
+> stable series.
+> 
+> > I don't think you realize how well kernel development has worked over
+> > the last few years. And the stable rules are part of it.
+> 
+> I do understand how well the development works, which is why I often
+> use it as an example and guideline, but that doesn't mean it's
+> perfect.
+> 
+> > So stop complaining. Reverts really *are* just patches, Greg is 100%
+> > right, and you are simply wrong.
+> 
+> I could argue in favor of exceptions, but I don't think you realize
+> the fact that this change does not affect your tree *at all*. Adding
+> and removing a patch in the stable tree is a no-op.
+> 
+> > And the revert is now apparently in John's tree, and will make it to
+> > David and then me shortly. It will get reverted in stable too once
+> > that happens. In the meantime, your complaints are  to Greg only shows
+> > that you don't understand why the rules exist, and the fact that you
+> > *continue* to complain just makes you look stupid.
+> 
+> Is that going to happen before Friday? If not, then v3.3.2 will still
+> be broken *for no reason*.
+> 
+> 
 
+Ok, -stable got broken because a bad patch was backported from mainline to 
+stable - obviously that's not good.
 
----
- drivers/net/wireless/rt2x00/rt2800.h      |    2 ++
- drivers/net/wireless/rt2x00/rt2800lib.c   |    7 +++++++
- drivers/net/wireless/rt2x00/rt2x00debug.c |   16 ++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00debug.h |    1 +
- 4 files changed, 26 insertions(+)
+But, just reverting that broken patch from stable is *not* good enough. 
+Then we still have a broken mainline.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index d91f4f6..9348521 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -102,6 +102,8 @@
- #define BBP_SIZE			0x00ff
- #define RF_BASE				0x0004
- #define RF_SIZE				0x0010
-+#define RFCSR_BASE			0x0000
-+#define RFCSR_SIZE			0x0040
- 
- /*
-  * Number of TX queues.
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 6c95101..0cdbf2b 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -836,6 +836,13 @@ const struct rt2x00debug rt2800_rt2x00debug = {
- 		.word_size	= sizeof(u32),
- 		.word_count	= RF_SIZE / sizeof(u32),
- 	},
-+	.rfcsr	= {
-+		.read		= rt2800_rfcsr_read,
-+		.write		= rt2800_rfcsr_write,
-+		.word_base	= RFCSR_BASE,
-+		.word_size	= sizeof(u8),
-+		.word_count	= RFCSR_SIZE / sizeof(u8),
-+	},
- };
- EXPORT_SYMBOL_GPL(rt2800_rt2x00debug);
- #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index 78787fc..128dac7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -70,6 +70,7 @@ struct rt2x00debug_intf {
- 	 *     - eeprom offset/value files
- 	 *     - bbp offset/value files
- 	 *     - rf offset/value files
-+	 *     - rfcsr offset/value files
- 	 *   - queue folder
- 	 *     - frame dump file
- 	 *     - queue stats file
-@@ -89,6 +90,8 @@ struct rt2x00debug_intf {
- 	struct dentry *bbp_val_entry;
- 	struct dentry *rf_off_entry;
- 	struct dentry *rf_val_entry;
-+	struct dentry *rfcsr_off_entry;
-+	struct dentry *rfcsr_val_entry;
- 	struct dentry *queue_folder;
- 	struct dentry *queue_frame_dump_entry;
- 	struct dentry *queue_stats_entry;
-@@ -131,6 +134,7 @@ struct rt2x00debug_intf {
- 	unsigned int offset_eeprom;
- 	unsigned int offset_bbp;
- 	unsigned int offset_rf;
-+	unsigned int offset_rfcsr;
- };
- 
- void rt2x00debug_update_crypto(struct rt2x00_dev *rt2x00dev,
-@@ -448,6 +452,8 @@ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
- 	if (*offset)						\
- 		return 0;					\
- 								\
-+	/* This is should always be checked first because       \
-+	 * debug->__name could be zeroed (when unspecified) */	\
- 	if (index >= debug->__name.word_count)			\
- 		return -EINVAL;					\
- 								\
-@@ -484,6 +490,8 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,	\
- 	if (*offset)						\
- 		return 0;					\
- 								\
-+	/* This is should always be checked first because       \
-+	 * debug->__name could be zeroed (when unspecified) */	\
- 	if (index >= debug->__name.word_count)			\
- 		return -EINVAL;					\
- 								\
-@@ -525,6 +533,7 @@ RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
- RT2X00DEBUGFS_OPS(eeprom, "0x%.4x\n", u16);
- RT2X00DEBUGFS_OPS(bbp, "0x%.2x\n", u8);
- RT2X00DEBUGFS_OPS(rf, "0x%.8x\n", u32);
-+RT2X00DEBUGFS_OPS(rfcsr, "0x%.2x\n", u8);
- 
- static ssize_t rt2x00debug_read_dev_flags(struct file *file,
- 					  char __user *buf,
-@@ -640,6 +649,10 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
- 			debug->rf.word_base,
- 			debug->rf.word_count,
- 			debug->rf.word_size);
-+	data += sprintf(data, "rfcsr\t%d\t%d\t%d\n",
-+			debug->rfcsr.word_base,
-+			debug->rfcsr.word_count,
-+			debug->rfcsr.word_size);
- 	blob->size = strlen(blob->data);
- 
- 	return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
-@@ -719,6 +732,7 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
- 	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, eeprom);
- 	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, bbp);
- 	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, rf);
-+	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, rfcsr);
- 
- #undef RT2X00DEBUGFS_CREATE_REGISTER_ENTRY
- 
-@@ -770,6 +784,8 @@ void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev)
- 	debugfs_remove(intf->queue_stats_entry);
- 	debugfs_remove(intf->queue_frame_dump_entry);
- 	debugfs_remove(intf->queue_folder);
-+	debugfs_remove(intf->rfcsr_val_entry);
-+	debugfs_remove(intf->rfcsr_off_entry);
- 	debugfs_remove(intf->rf_val_entry);
- 	debugfs_remove(intf->rf_off_entry);
- 	debugfs_remove(intf->bbp_val_entry);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.h b/drivers/net/wireless/rt2x00/rt2x00debug.h
-index fa11409..e11d39b 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.h
-@@ -65,6 +65,7 @@ struct rt2x00debug {
- 	RT2X00DEBUGFS_REGISTER_ENTRY(eeprom, u16);
- 	RT2X00DEBUGFS_REGISTER_ENTRY(bbp, u8);
- 	RT2X00DEBUGFS_REGISTER_ENTRY(rf, u32);
-+	RT2X00DEBUGFS_REGISTER_ENTRY(rfcsr, u8);
- };
- 
- #endif /* RT2X00DEBUG_H */
+The rule that only commits which are in mainline get applied to -stable 
+makes really, Really, REALLY good sense. It helps ensure that we don't 
+miss fixes going forward.
+
+Imagine that bad patch xyz got added to mainline and backported to stable 
+and that the only people that get bitten by it are conservative types that 
+only run -stable kernels. Then we revert the patch from stable since it 
+broke stuff and now everyone are happy - but *mainline is still broken* 
+and there's noone pushing for the problem to get fixed in mainline since 
+noone affected by the problem run that kernel :-(
+
+By insisting that only patches in mainline get backported to -stable we 
+ensure that both mainline and stable get fixed (and thus also the *next* 
+stable kernel that'll be cut from mainline in the future).
+
+Yes it's a pain that -stable has to suffer a broken commit for a while - 
+but sometimes that's just the little pain you have to accept. The greater 
+good is that with the current rules both mainline, current -stable and 
+future -stable will get fixed.
+
 -- 
-1.7.9.4
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
+--8323328-166988466-1334268135=:7553--
