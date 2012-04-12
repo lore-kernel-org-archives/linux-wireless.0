@@ -1,58 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51000 "EHLO nbd.name"
+Received: from mga02.intel.com ([134.134.136.20]:58877 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753616Ab2DPPRR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 11:17:17 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH] ath9k: add possible wiphy interface combinations
-Date: Mon, 16 Apr 2012 17:17:07 +0200
-Message-Id: <1334589427-73226-1-git-send-email-nbd@openwrt.org> (sfid-20120416_171721_590914_F021D20B)
+	id S966101Ab2DLV6K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 17:58:10 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 16/24] iwlwifi: move iwl_send_bt_config and mark it static
+Date: Thu, 12 Apr 2012 14:54:13 -0700
+Message-Id: <1334267661-14654-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235904_967798_F05613D0)
+In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/init.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 7a6b9f6..450bee5 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -646,6 +646,21 @@ void ath9k_reload_chainmask_settings(struct ath_softc *sc)
- 		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+Move this as part of iwl-core.c cleanup.
+
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   23 +++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c |   23 -----------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
+ 3 files changed, 23 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 5773cbe..3d3302a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -726,6 +726,29 @@ static int iwlagn_send_tx_ant_config(struct iwl_priv *priv, u8 valid_tx_ant)
+ 	}
  }
  
-+static const struct ieee80211_iface_limit if_limits[] = {
-+	{ .max = 256,	.types = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				 BIT(NL80211_IFTYPE_WDS) },
-+	{ .max = 8,	.types = BIT(NL80211_IFTYPE_AP) |
-+				 BIT(NL80211_IFTYPE_P2P_GO) |
-+				 BIT(NL80211_IFTYPE_MESH_POINT) },
-+};
++static void iwl_send_bt_config(struct iwl_priv *priv)
++{
++	struct iwl_bt_cmd bt_cmd = {
++		.lead_time = BT_LEAD_TIME_DEF,
++		.max_kill = BT_MAX_KILL_DEF,
++		.kill_ack_mask = 0,
++		.kill_cts_mask = 0,
++	};
 +
-+static const struct ieee80211_iface_combination if_comb = {
-+	.limits = if_limits,
-+	.n_limits = ARRAY_SIZE(if_limits),
-+	.max_interfaces = 256,
-+	.num_different_channels = 1,
-+};
++	if (!iwlagn_mod_params.bt_coex_active)
++		bt_cmd.flags = BT_COEX_DISABLE;
++	else
++		bt_cmd.flags = BT_COEX_ENABLE;
++
++	priv->bt_enable_flag = bt_cmd.flags;
++	IWL_DEBUG_INFO(priv, "BT coex %s\n",
++		(bt_cmd.flags == BT_COEX_DISABLE) ? "disable" : "active");
++
++	if (iwl_dvm_send_cmd_pdu(priv, REPLY_BT_CONFIG,
++			     CMD_SYNC, sizeof(struct iwl_bt_cmd), &bt_cmd))
++		IWL_ERR(priv, "failed to send BT Coex Config\n");
++}
++
+ /**
+  * iwl_alive_start - called after REPLY_ALIVE notification received
+  *                   from protocol/runtime uCode (initialization uCode's
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 3bd47e7..27121fc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -66,29 +66,6 @@ void iwl_print_rx_config_cmd(struct iwl_priv *priv,
+ }
+ #endif
  
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+-void iwl_send_bt_config(struct iwl_priv *priv)
+-{
+-	struct iwl_bt_cmd bt_cmd = {
+-		.lead_time = BT_LEAD_TIME_DEF,
+-		.max_kill = BT_MAX_KILL_DEF,
+-		.kill_ack_mask = 0,
+-		.kill_cts_mask = 0,
+-	};
+-
+-	if (!iwlagn_mod_params.bt_coex_active)
+-		bt_cmd.flags = BT_COEX_DISABLE;
+-	else
+-		bt_cmd.flags = BT_COEX_ENABLE;
+-
+-	priv->bt_enable_flag = bt_cmd.flags;
+-	IWL_DEBUG_INFO(priv, "BT coex %s\n",
+-		(bt_cmd.flags == BT_COEX_DISABLE) ? "disable" : "active");
+-
+-	if (iwl_dvm_send_cmd_pdu(priv, REPLY_BT_CONFIG,
+-			     CMD_SYNC, sizeof(struct iwl_bt_cmd), &bt_cmd))
+-		IWL_ERR(priv, "failed to send BT Coex Config\n");
+-}
+-
+ int iwl_send_statistics_request(struct iwl_priv *priv, u8 flags, bool clear)
  {
-@@ -675,6 +690,9 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_MESH_POINT);
+ 	struct iwl_statistics_cmd statistics_cmd = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index fdd314f..4d17b85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -153,7 +153,6 @@ int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+  *   S e n d i n g     H o s t     C o m m a n d s   *
+  *****************************************************/
  
-+	hw->wiphy->iface_combinations = &if_comb;
-+	hw->wiphy->n_iface_combinations = 1;
-+
- 	if (AR_SREV_5416(sc->sc_ah))
- 		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+-extern void iwl_send_bt_config(struct iwl_priv *priv);
+ extern int iwl_send_statistics_request(struct iwl_priv *priv,
+ 				       u8 flags, bool clear);
  
 -- 
-1.7.3.2
+1.7.0.4
 
