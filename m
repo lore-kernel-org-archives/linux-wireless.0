@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1107 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756165Ab2DZMy5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 08:54:57 -0400
-Message-ID: <4F994593.4060205@broadcom.com> (sfid-20120426_145619_364528_DDD061F2)
-Date: Thu, 26 Apr 2012 14:54:43 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40177 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754226Ab2DLS42 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 14:56:28 -0400
+Date: Thu, 12 Apr 2012 13:56:22 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120412185622.GB2904@burratino> (sfid-20120412_205643_996626_8E2441F5)
+References: <20120411231102.GA6404@kroah.com>
+ <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+ <20120412002927.GA23167@kroah.com>
+ <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+ <20120412011313.GA23764@kroah.com>
+ <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+ <20120412144626.GA14868@kroah.com>
+ <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+ <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+ <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Joe Perches" <joe@perches.com>
-Subject: Re: [PATCH 1/2] wireless: properly use pr_fmt()
-References: <1335234998-31547-1-git-send-email-mcgrof@frijolero.org>
- <4F994349.1040607@broadcom.com>
-In-Reply-To: <4F994349.1040607@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/2012 02:44 PM, Arend van Spriel wrote:
-> On 04/24/2012 04:36 AM, Luis R. Rodriguez wrote:
->> From: "Luis R. Rodriguez"<mcgrof@frijolero.org>
->>
->> pr_fmt() is either defined or we redefine it. Typically
->> drivers define it prior to including printk.h but this
->> is done under the assumption that no other subsystem
->> it uses has already defined pr_fmt(). In such cases
->> pr_fmt() should be undefined and redefined.
->>
->> Doing this properly shaves down compilation time quite
->> considerably.
->>
->> Signed-off-by: Luis R. Rodriguez<mcgrof@frijolero.org>
->
-> Hi Luis,
->
-> I actually recall some patches removing inclusion of printk.h sometime
-> ago. Not sure what the motivation was, but I will start digging the git
-> revision logs.
->
-> Gr. AvS
->
+Felipe Contreras wrote:
 
-Here it is: https://lkml.org/lkml/2011/5/25/331
+> But then are you saying that if upstream is broken (3.4-rc2), then
+> stable should be broken as well (3.3.1), and remain broken until
+> upstream is fixed? I fail to see what would be the point of that.
 
-Gr. AvS
+No, he's saying that when upstream is broken for the same reason as
+stable is, it seems wise to:
 
+ - report upstream
+ - fix your local system
+ - fix any systems you are responsible for
+ - fix upstream
+ - only then fix stable.
+
+That way, the user doesn't get the disconcerting experience of getting
+and then losing the fix when upgrading first to the next stable
+version, then to the next upstream version.
+
+Makes sense?
+
+Hope that helps,
+Jonathan
