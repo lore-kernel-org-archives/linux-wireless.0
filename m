@@ -1,99 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:56658 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756784Ab2D3VUz (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:61821 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990Ab2DLQtg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 17:20:55 -0400
-Received: by dadz8 with SMTP id z8so4574046dad.10
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 14:20:54 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	javier@cozybit.com, devel@lists.open80211s.org,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH v2 1/4] mac80211: Advertise HT protection mode in IEs
-Date: Mon, 30 Apr 2012 14:20:29 -0700
-Message-Id: <1335820832-18887-1-git-send-email-ashok@cozybit.com> (sfid-20120430_232059_048672_2F1E9731)
+	Thu, 12 Apr 2012 12:49:36 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120412144626.GA14868@kroah.com>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+Date: Thu, 12 Apr 2012 19:49:34 +0300
+Message-ID: <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com> (sfid-20120412_185002_228405_2DBA83EE)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Reviewed-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/ibss.c        |    2 +-
- net/mac80211/ieee80211_i.h |    3 ++-
- net/mac80211/mesh.c        |    3 ++-
- net/mac80211/util.c        |    9 +++------
- 4 files changed, 8 insertions(+), 9 deletions(-)
+On Thu, Apr 12, 2012 at 5:46 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Thu, Apr 12, 2012 at 04:32:40PM +0300, Felipe Contreras wrote:
+>> On Thu, Apr 12, 2012 at 4:13 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> > On Thu, Apr 12, 2012 at 04:03:59AM +0300, Felipe Contreras wrote:
+>> >> On Thu, Apr 12, 2012 at 3:29 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> >> > On Wed, Apr 11, 2012 at 07:59:14PM -0400, Sergio Correia wrote:
+>> >> >> Hello Greg,
+>> >> >>
+>> >> >>
+>> >> >> On Wed, Apr 11, 2012 at 7:11 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> >> >> > This is the start of the stable review cycle for the 3.3.2 release.
+>> >> >> > There are 78 patches in this series, all will be posted as a response
+>> >> >> > to this one.  If anyone has any issues with these being applied, please
+>> >> >> > let me know.
+>> >> >> >
+>> >> >> > Responses should be made by Fri Apr 13 23:10:16 UTC 2012.
+>> >> >> > Anything received after that time might be too late.
+>> >> >> >
+>> >> >>
+>> >> >> is there any chance for this one to be included in this review cycle?
+>> >> >>
+>> >> >> http://www.spinics.net/lists/linux-wireless/msg87999.html
+>> >>
+>> >> I was going to ask for exactly the same thing. My system is completely
+>> >> unusable without this patch; not only does the network doesn't work,
+>> >> but quite often the kernel is stuck consuming 100% of the CPU.
+>> >>
+>> >> > Have you read Documentation/stable_kernel_rules.txt?  Based on that, I
+>> >> > don't think it can, yet, right?
+>> >>
+>> >> Why not? This patch makes the code go back to a previous state, it is
+>> >> obviously more stable than the current state, and the code already
+>> >> exists in Linus's tree (in previous releases).
+>> >
+>> > It does?  What is the git commit id of the patch?  Based in the email
+>> > above, I assumed it had not made it to Linus's tree already.
+>>
+>> It's a revert of c1afdaff90538ef085b756454f12b29575411214, so so just
+>> take a look at the code in c1afdaff90538ef085b756454f12b29575411214^.
+>>
+>> >> But hey, I guess it's OK that 3.3.x is stuck in and endless loop right
+>> >> after booting, because rules are more important than fixing obvious
+>> >> breakage.
+>> >
+>> > What rule did you think I was saying this was not acceptable for?
+>>
+>> The fact that the patch as not been applied/reviewed/accepted upstream.
+>>
+>> Personally I don't see what is the problem with reverts; we already
+>> know the previous code was working. Sure, in theory it might behave
+>> different due to other changes, but that doesn't seem to be the case
+>> here, plus, it can't be worst than the current situation of staying in
+>> an endless loop.
+>
+> A revert is the same as a patch.  It needs to be in Linus's tree before
+> I can add it to the stable releases.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 61cd391..bb1a3e6 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -164,7 +164,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 		pos = ieee80211_ie_build_ht_cap(pos, &sband->ht_cap,
- 						sband->ht_cap.cap);
- 		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
--						 chan, channel_type);
-+						 chan, channel_type, 0);
- 	}
- 
- 	if (local->hw.queues >= IEEE80211_NUM_ACS) {
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 6cd89d4..ae046b5 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1497,7 +1497,8 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			      u16 cap);
- u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       struct ieee80211_channel *channel,
--			       enum nl80211_channel_type channel_type);
-+			       enum nl80211_channel_type channel_type,
-+			       u16 prot_mode);
- 
- /* internal work items */
- void ieee80211_work_init(struct ieee80211_local *local);
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 598a96a..8a952e0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -396,7 +396,8 @@ int mesh_add_ht_oper_ie(struct sk_buff *skb,
- 		return -ENOMEM;
- 
- 	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_operation));
--	ieee80211_ie_build_ht_oper(pos, ht_cap, channel, channel_type);
-+	ieee80211_ie_build_ht_oper(pos, ht_cap, channel, channel_type,
-+				   sdata->vif.bss_conf.ht_operation_mode);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index d9a747d..22f2216 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1663,7 +1663,8 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 
- u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       struct ieee80211_channel *channel,
--			       enum nl80211_channel_type channel_type)
-+			       enum nl80211_channel_type channel_type,
-+			       u16 prot_mode)
- {
- 	struct ieee80211_ht_operation *ht_oper;
- 	/* Build HT Information */
-@@ -1689,11 +1690,7 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 	    channel_type != NL80211_CHAN_HT20)
- 		ht_oper->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
- 
--	/*
--	 * Note: According to 802.11n-2009 9.13.3.1, HT Protection field and
--	 * RIFS Mode are reserved in IBSS mode, therefore keep them at 0
--	 */
--	ht_oper->operation_mode = 0x0000;
-+	ht_oper->operation_mode = cpu_to_le16(prot_mode);
- 	ht_oper->stbc_param = 0x0000;
- 
- 	/* It seems that Basic MCS set and Supported MCS set
+Right, because otherwise people's systems would actually work.
+
+But hey, as I said, following rules is more important, regardless of
+what the rules are, and why they are there. The rules that actually
+triggered this issue in v3.3.1, as this is not in v3.3.
+
+You could just accept that the patch should have never landed in
+v3.3.1 in the first place, but it's much easier to arbitrarily keep
+stacking patches without thinking too much about them.
+
+I guess I'll better use Linus's releases for now and go to v3.3.
+
 -- 
-1.7.5.4
-
+Felipe Contreras
