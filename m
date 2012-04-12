@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41847 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892Ab2DPQLJ (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:62538 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966078Ab2DLVoq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 12:11:09 -0400
-Message-ID: <4F8C4494.2020909@candelatech.com> (sfid-20120416_181113_042899_B86EAEF8)
-Date: Mon, 16 Apr 2012 09:11:00 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 12 Apr 2012 17:44:46 -0400
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ath5k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath5k: add possible wiphy interface combinations
-References: <1334590102-83386-1-git-send-email-nbd@openwrt.org> <4F8C427C.3020505@candelatech.com> <4F8C43BD.2070403@openwrt.org>
-In-Reply-To: <4F8C43BD.2070403@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+ <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+ <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+ <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+ <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
+ <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com> <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 12 Apr 2012 14:44:24 -0700
+Message-ID: <CA+55aFwa_wgBT85_Giy-23V5WpzRFrw9oCnFpTqVVam3DeG-7A@mail.gmail.com> (sfid-20120412_234502_244827_0F7102CB)
+Subject: Re: [ 00/78] 3.3.2-stable review
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 09:07 AM, Felix Fietkau wrote:
-> On 2012-04-16 6:02 PM, Ben Greear wrote:
->> On 04/16/2012 08:28 AM, Felix Fietkau wrote:
->>> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
->>> ---
->>>    drivers/net/wireless/ath/ath5k/base.c |   16 ++++++++++++++++
->>>    1 files changed, 16 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
->>> index 3007bba..2e385f5 100644
->>> --- a/drivers/net/wireless/ath/ath5k/base.c
->>> +++ b/drivers/net/wireless/ath/ath5k/base.c
->>> @@ -2415,6 +2415,19 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
->>>    * Initialization routines *
->>>    \*************************/
->>>
->>> +static const struct ieee80211_iface_limit if_limits[] = {
->>> +	{ .max = 256,	.types = BIT(NL80211_IFTYPE_STATION) },
->>> +	{ .max = 4,	.types = BIT(NL80211_IFTYPE_AP) |
->>> +				 BIT(NL80211_IFTYPE_MESH_POINT) },
->>> +};
->>
->> The station max is just an arbitrary number or is 256 really
->> the max it can handle?  At least on ath9k, more are supported,
->> but I haven't tested ath5k lately....
-> It is an arbitrary number.
-
-I think the actual max for a channel (AP?) is somewhere around 2000, so maybe
-make it 2048 just to make sure we are not adding artificial limitations?
-
-Same with ath9k.
-
-Thanks,
-Ben
-
+On Thu, Apr 12, 2012 at 2:34 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
 >
-> - Felix
+> So just reverting it from stable, *WITHOUT LEARNING THE LESSON*, is
+> not a no-op at all, it's a sign of being a f*cking moron.
 
+Btw, the revert is now in my tree (commit 011afa1ed8c4), and marked
+for stable. So *now* Greg can revert it from stable too.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+But the important lesson to everybody should be that "we don't lose
+fixes from -stable". If a problem was found in stable, it needs to be
+fixed upstream. In fact, quite often people *do* find problems in
+stable, because it tends to have more users more quickly than
+mainline. That makes it really really important to make sure that
+those problems get fixed upstream, and not hidden in stable due to
+some kind of dieseased "it's a no-op to revert it" thinking.
 
+End of story.
+
+                    Linus
