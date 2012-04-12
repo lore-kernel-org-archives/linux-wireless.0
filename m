@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3346 "EHLO mms2.broadcom.com"
+Received: from 1wt.eu ([62.212.114.60]:65086 "EHLO 1wt.eu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753504Ab2DWRnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 13:43:42 -0400
-Message-ID: <4F9594C1.5060000@broadcom.com> (sfid-20120423_194415_990510_97182080)
-Date: Mon, 23 Apr 2012 10:43:29 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Eldad Zack" <eldad@fogrefinery.com>,
+	id S966099Ab2DLVoG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 17:44:06 -0400
+Date: Thu, 12 Apr 2012 23:43:36 +0200
+From: Willy Tarreau <w@1wt.eu>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
 	"John W. Linville" <linville@tuxdriver.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] [brcmsmac] "INTERMEDIATE but not AMPDU" only when
- tracing
-References: <1335048484-5925-1-git-send-email-eldad@fogrefinery.com>
-In-Reply-To: <1335048484-5925-1-git-send-email-eldad@fogrefinery.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120412214336.GB12807@1wt.eu> (sfid-20120412_234426_692652_6A617828)
+References: <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com> <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com> <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com> <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com> <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com> <20120412185622.GB2904@burratino> <CAMP44s2M_srvKKaicOpr+TF6hw=dxFMVRwMs2K9E_P_ooPMCXw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMP44s2M_srvKKaicOpr+TF6hw=dxFMVRwMs2K9E_P_ooPMCXw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/21/2012 03:48 PM, Eldad Zack wrote:
->  From the code comment I understand that this something that can - and does, quite frequently - happen.
-> This patch demotes the message to the trace level.
->
-> Signed-off-by: Eldad Zack<eldad@fogrefinery.com>
+On Fri, Apr 13, 2012 at 12:34:59AM +0300, Felipe Contreras wrote:
+> Now what happens when:
+> 
+>  - you realize the fix made matters worst, in fact, so worst that the
+> whole thing is unusable in some systems
+> 
+> Presumably we are now in the next round of:
+> 
+>  - fix upstream
+> 
+> But v.3.3.2 is due Friday, which makes it very likely that the fix
+> won't get in. And what did we gain? If you simplify the situation to
+> what you explained above, it seems very reasonable, but that's not the
+> whole picture.
 
-Thx Eldad,
+BTW, if you're so in need for critical fixes, why do you jump to the latest
+version ? It's known and accepted that stable versions stabilize over time
+with a few random hiccups during their early stage. You could have chosen
+3.0 instead which generally holds some fixes that cooked longer before being
+merged.
 
-Acked-by: Franky Lin<frankyl@broadcom.com>
+There's a cost at living on the bleeding edge. It's fun and sometimes it
+hurts but that should not be that dramatic that you spend so many emails
+telling how stable releases should be maintained.
+
+Willy
 
