@@ -1,41 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46942 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752512Ab2DRCX4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 22:23:56 -0400
-Message-ID: <1334715794.3725.39.camel@jlt3.sipsolutions.net> (sfid-20120418_042401_277180_5341642F)
-Subject: Re: [PATCH] iwlwifi: Fix compile when CONFIG_IWLWIFI_DEBUG is not
- defined
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>, ilw@linux.intel.com,
-	wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org
-Date: Tue, 17 Apr 2012 19:23:14 -0700
-In-Reply-To: <4f8dfa7b.3JI0H3iulrLPUzPs%Larry.Finger@lwfinger.net> (sfid-20120418_011958_143805_CDD81257)
-References: <4f8dfa7b.3JI0H3iulrLPUzPs%Larry.Finger@lwfinger.net>
-	 (sfid-20120418_011958_143805_CDD81257)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:34337 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751448Ab2DLHZD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 03:25:03 -0400
+Message-ID: <4F868345.2010009@openwrt.org> (sfid-20120412_092508_883706_52745B08)
+Date: Thu, 12 Apr 2012 09:24:53 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix an issue in ieee80211_tx_info count field
+ management
+References: <CAA2SeNJNan7uwJ_VELCb-rDX4ddq+=K0Ud3n5mrv6MJ+O-Bb9w@mail.gmail.com>  (sfid-20120406_204847_916462_26A238BC) <1334203438.3788.11.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1334203438.3788.11.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-17 at 18:19 -0500, Larry Finger wrote:
-> If CONFIG_IWLWIFI_DEBUG is not defined, the following error results when
-> compiling iwlwifi:
+On 2012-04-12 6:03 AM, Johannes Berg wrote:
+> On Fri, 2012-04-06 at 20:48 +0200, Lorenzo Bianconi wrote:
+>> Hi,
+>> 
+>> I noticed a possible issue in the status count field management of the
+>> ieee80211_tx_info data structure. In particular, when the AGGR
+>> processing is employed,
+>> status.rates[].count is set just for the first frame and not for
+>> others belonging to the same burst, leading to wrong statistic data in
+>> the mac80211 debug file system.
+>> 
+>> Regards
+>> 
+>> Lorenzo
+>> 
+>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+>> ---
+>> --- a/net/mac80211/status.c
+>> +++ b/net/mac80211/status.c
+>> @@ -355,7 +355,13 @@
+>>  	int rtap_len;
+>> 
+>>  	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+>> -		if (info->status.rates[i].idx < 0) {
+>> +		if ((info->flags & IEEE80211_TX_CTL_AMPDU) &&
+>> +		    !(info->flags & IEEE80211_TX_STAT_AMPDU)) {
+>> +			/* just the first aggr frame carry status info */
+>> +			info->status.rates[i].idx = -1;
+>> +			info->status.rates[i].count = 0;
+>> +			break;
+>> +		} else if (info->status.rates[i].idx < 0) {
 > 
->   CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-tt.o
-> In file included from drivers/net/wireless/iwlwifi/iwl-agn-tt.c:40:0:
-> drivers/net/wireless/iwlwifi/iwl-core.h:97:19: error: static declaration of ‘iwl_alloc_traffic_mem’ follows non-static declaration
-> drivers/net/wireless/iwlwifi/iwl-agn.h:513:5: note: previous declaration of ‘iwl_alloc_traffic_mem’ was here
-> make[4]: *** [drivers/net/wireless/iwlwifi/iwl-agn-tt.o] Error 1
-> make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
-> make[2]: *** [drivers/net/wireless] Error 2
-> make[1]: *** [drivers/net] Error 2
-> make: *** [drivers] Error 2
+> Is that really the way all drivers do it? I know ath9k seems to do it
+> that way, but I don't think all drivers do. ath9k is probably the
+> exception rather than the rule, at least today
+At least minstrel_ht expects it this way. If I understand iwlwifi
+correctly, it reports tx status in a similar way - on completion in
+iwlagn_rx_reply_compressed_ba(), the first subframe carries the
+information for an entire A-MPDU, the other subframes are not touched.
 
-Totally fine with me. We have a pending patch to completely remove that
-functionality though :-)
-
-johannes
-
+- Felix
