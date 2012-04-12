@@ -1,95 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:61598 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756047Ab2DXQMU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54743 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757566Ab2DLNHy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 12:12:20 -0400
-Date: Tue, 24 Apr 2012 13:12:06 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2012-04-24
-Message-ID: <20120424161206.GC9343@joana> (sfid-20120424_181224_562554_AAA071FD)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="61jdw2sOBCFtR2d/"
+	Thu, 12 Apr 2012 09:07:54 -0400
+Message-ID: <1334236037.3451.0.camel@jlt3.sipsolutions.net> (sfid-20120412_150802_386836_50D9365A)
+Subject: Re: [PATCH] compat: backport netif_wake_subqueue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	lf_driver_backport@lists.linux-foundation.org
+Date: Thu, 12 Apr 2012 15:07:17 +0200
+In-Reply-To: <CAB=NE6UJS=dnUO0Cq-7Kve+7ofnbW-XkGHqCQCf+HzEMTRn8WQ@mail.gmail.com> (sfid-20120412_095637_585399_3C14FD57)
+References: <1333746034.5577.10.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6XMuaAPFPfKGunrGuqnYLKfem35Q3nXiEpc7u23FM14ng@mail.gmail.com>
+	 <1334204193.3788.14.camel@jlt3.sipsolutions.net>
+	 <CAB=NE6UJS=dnUO0Cq-7Kve+7ofnbW-XkGHqCQCf+HzEMTRn8WQ@mail.gmail.com>
+	 (sfid-20120412_095637_585399_3C14FD57)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2012-04-12 at 00:55 -0700, Luis R. Rodriguez wrote:
+> On Wed, Apr 11, 2012 at 9:16 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Fri, 2012-04-06 at 19:23 -0700, Luis R. Rodriguez wrote:
+> >> On Fri, Apr 6, 2012 at 2:00 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >> > From: Johannes Berg <johannes.berg@intel.com>
+> >> >
+> >> > Kernels 2.6.23 - 2.6.27 had some multiqueue support,
+> >> > but called netif_wake_subqueue netif_start_subqueue.
+> >> > So to backport, just add a define.
+> >> >
+> >> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> >>
+> >> Applied and pushed, and tested with ckmake, thanks!
+> >
+> > I don't see this, did you move the repository off infradead?
+> 
+> Sorry, I forgot to push to infra, the most reliable tree is on github.
+> I use infra as backup.
 
---61jdw2sOBCFtR2d/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Oh ok, I'll switch to github. Thanks.
 
-Hi John,
+johannes
 
-A few more fixes to 3.4, there is tree new device id supported, a missing
-break and a fix to retain key during the connection.
-
-Please pull. Thanks.
-
-	Gustavo
-
---
-
-The following changes since commit 66f3b913e68e8e62bd2f9499495eeb6cc81b2662:
-
-  Bluetooth: Fix userspace compatibility issue with mgmt interface (2012-04-05 15:05:51 -0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream
-
-for you to fetch changes up to 985140369be1e886754d8ac0375dd64e4f727311:
-
-  Add Foxconn / Hon Hai IDs for btusb module (2012-04-24 11:38:41 -0300)
-
-----------------------------------------------------------------
-AceLan Kao (2):
-      Bluetooth: Add support for Atheros [13d3:3362]
-      Bluetooth: Add support for AR3012 [0cf3:e004]
-
-Manoj Iyer (1):
-      Bluetooth: btusb: Add vendor specific ID (0489 e042) for BCM20702A0
-
-Steven Harms (1):
-      Add Foxconn / Hon Hai IDs for btusb module
-
-Szymon Janc (1):
-      Bluetooth: Fix missing break in hci_cmd_complete_evt
-
-Vishal Agarwal (2):
-      Bluetooth: hci_persistent_key should return bool
-      Bluetooth: Temporary keys should be retained during connection
-
- drivers/bluetooth/ath3k.c        |    4 ++++
- drivers/bluetooth/btusb.c        |    6 ++++++
- include/net/bluetooth/hci_core.h |    3 ++-
- net/bluetooth/hci_core.c         |   27 +++++++++++++--------------
- net/bluetooth/hci_event.c        |    3 +++
- net/bluetooth/mgmt.c             |    2 +-
- 6 files changed, 29 insertions(+), 16 deletions(-)
-
---61jdw2sOBCFtR2d/
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPltDWAAoJEPs3PUX4s20odxIQAIvDhmfZyBmzGTa8KQtXQ/LV
-EkkcLF3eQ2lmgk59U+ugm4FYTZcDG2GuOn7S4lCel7bTtqrgbuh8djKgCoq4wvPa
-KN16XzDRwl1guBY7ncgvG8yzPEMuII+qf6JcuVF2G8SRYF2r4GARQQOtmphVKr31
-5vMDJC4mCtz8V4YdrFG6ZPxBSbclGyjcxvNFgPXnf3Nxb6i2s+UIjicZXLAgeD+b
-f5QlUeERZDTAs6l6bf50Uq+JbKCyMm/ra4/4VIWeBt8zsvZcHWbPaETLlZsGK/hx
-HAwt4SXyBOG3IC0rH/dJ1Eb/IOsRJmxGCX50fuNXHCQgbw2xdhVRuCsuKvBwpcrq
-pw2AMJa6DTDs1+GKgj91ZfYfjqv02CjRCZEpLEeR8B75+GFVnJY2datsI2GIo/Bd
-melp41L1x+7ivdVNjh0k7IOskUat8nBATrbl2V3zeYVGd3/JWwAUPRzqJkEri2Gg
-k+qlZR2Uu8qSjclgJS7IFnIFWMUUsAdMj/ijl0lhcU7B4M6rs2jIBMu3Ew74F8Qr
-rY9KfVAttVO4Bskg+earnwuynvLFcs1rLkg9ZEbYFrWM3X7W0027dGoApp597N/P
-d6LnyfThIoS+S94EpaT+XAJgKg2Z4BTZNZRDsxZiv0Fp5dia5QNpR3c2WN+bRzdl
-SRRRY4uwyt/N/xF+rY0n
-=pgi+
------END PGP SIGNATURE-----
-
---61jdw2sOBCFtR2d/--
