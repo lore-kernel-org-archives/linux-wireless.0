@@ -1,45 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:33775 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583Ab2DTGnx (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60948 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964991Ab2DLOsm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 02:43:53 -0400
-Date: Fri, 20 Apr 2012 09:43:28 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch 1/2] ath6kl: change || to &&
-Message-ID: <20120420064328.GC22649@elgon.mountain> (sfid-20120420_084358_070902_EB945711)
+	Thu, 12 Apr 2012 10:48:42 -0400
+Message-ID: <4F86EB44.3080703@candelatech.com> (sfid-20120412_164853_828860_B45A4F67)
+Date: Thu, 12 Apr 2012 07:48:36 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 06/10] mac80211: Add sta_state to ethtool stats.
+References: <1334166738-28243-1-git-send-email-greearb@candelatech.com>  <1334166738-28243-7-git-send-email-greearb@candelatech.com>  (sfid-20120411_195329_226978_FB464821) <1334202554.3788.9.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1334202554.3788.9.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original conditions are always true.  I think && was intended here,
-but I don't have the hardware to test.  Could you take a look?
+On 04/11/2012 08:49 PM, Johannes Berg wrote:
+> On Wed, 2012-04-11 at 10:52 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> Helps to know how the station is doing in it's association
+>> attempt.
+>>
+>> Signed-off-by: Ben Greear<greearb@candelatech.com>
+>> ---
+>> :100644 100644 bbaf564... a63834d... M	net/mac80211/cfg.c
+>>   net/mac80211/cfg.c |    6 ++++--
+>>   1 files changed, 4 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+>> index bbaf564..a63834d 100644
+>> --- a/net/mac80211/cfg.c
+>> +++ b/net/mac80211/cfg.c
+>> @@ -118,7 +118,7 @@ static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
+>>   	"rx_duplicates", "rx_fragments", "rx_dropped",
+>>   	"tx_packets", "tx_bytes", "tx_fragments",
+>>   	"tx_filtered", "tx_retry_failed", "tx_retries",
+>> -	"beacon_loss", "txrate", "rxrate", "signal",
+>> +	"beacon_loss", "sta_state", "txrate", "rxrate", "signal",
+>>   	"channel", "noise", "ch_time", "ch_time_busy",
+>>   	"ch_time_ext_busy", "ch_time_rx", "ch_time_tx"
+>>   };
+>> @@ -534,10 +534,12 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+>>   		data[i++] += sta->beacon_loss_count;
+>>
+>>   		if (!do_once) {
+>> -			i += 3;
+>> +			i += 4;
+>>   			goto after_once;
+>>   		}
+>>
+>> +		data[i++] = sta->sta_state;
+>> +
+>
+> Gee, I wish it was easier to tell if you were adding it to the right
+> spot in the list ... any way that could be made easier?
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+It would be nice, but I haven't thought of an easy way to do this,
+and I haven't noticed any other drivers
+that found a way.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-index 065e615..086a8e1 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-@@ -758,7 +758,7 @@ static void ath6kl_htc_tx_bundle(struct htc_endpoint *endpoint,
- 	u32 txb_mask;
- 	u8 ac = WMM_NUM_AC;
- 
--	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) ||
-+	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) &&
- 	    (WMI_CONTROL_SVC != endpoint->svc_id))
- 		ac = target->dev->ar->ep2ac_map[endpoint->eid];
- 
-@@ -866,7 +866,7 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
- 	 */
- 	INIT_LIST_HEAD(&txq);
- 
--	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) ||
-+	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) &&
- 	    (WMI_CONTROL_SVC != endpoint->svc_id))
- 		ac = target->dev->ar->ep2ac_map[endpoint->eid];
- 
+I *could* add a lot of #defines and do something like: data[STA_STATE_IDX] = sta->state,
+and maybe create the strings array at run-time using macros to map string to
+an idx define instead of have a static array of char*.  But, I'm not sure if
+it's worth the effort.
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
