@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53679 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318Ab2DRB5W (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:55683 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934713Ab2DLWDP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 21:57:22 -0400
-Message-ID: <1334714203.3725.24.camel@jlt3.sipsolutions.net> (sfid-20120418_035725_968484_423949BB)
-Subject: Re: [PATCH] cfg80211: increse bss expire time
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Tue, 17 Apr 2012 18:56:43 -0700
-In-Reply-To: <1334315320-4913-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1334315320-4913-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 12 Apr 2012 18:03:15 -0400
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFwa_wgBT85_Giy-23V5WpzRFrw9oCnFpTqVVam3DeG-7A@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+ <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+ <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+ <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+ <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
+ <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
+ <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> <CA+55aFwa_wgBT85_Giy-23V5WpzRFrw9oCnFpTqVVam3DeG-7A@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 12 Apr 2012 15:02:54 -0700
+Message-ID: <CAB=NE6XTF1e07n_rmx2ZP85xbAoeKb8binQWmdvw8MujFey2ug@mail.gmail.com> (sfid-20120413_000332_328848_94131316)
+Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Felipe Contreras <felipe.contreras@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I see that the patch was merged, but I'll comment anyway.
+On Thu, Apr 12, 2012 at 2:44 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Thu, Apr 12, 2012 at 2:34 PM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+>>
+>> So just reverting it from stable, *WITHOUT LEARNING THE LESSON*, is
+>> not a no-op at all, it's a sign of being a f*cking moron.
+>
+> Btw, the revert is now in my tree (commit 011afa1ed8c4), and marked
+> for stable. So *now* Greg can revert it from stable too.
+>
+> But the important lesson to everybody should be that "we don't lose
+> fixes from -stable". If a problem was found in stable, it needs to be
+> fixed upstream. In fact, quite often people *do* find problems in
+> stable, because it tends to have more users more quickly than
+> mainline. That makes it really really important to make sure that
+> those problems get fixed upstream, and not hidden in stable due to
+> some kind of dieseased "it's a no-op to revert it" thinking.
+>
+> End of story.
 
-On Fri, 2012-04-13 at 16:38 +0530, Rajkumar Manoharan wrote:
-> The background scan completion takes more time when the station is
-> having heavy uplink traffic. The scan state machine decides to fall
-> back to home channel on every off-channel visit when there are pending
-> frames in tx queue. bgscan completion took ~30sec on dual band US
-> regulatory card.
-> 
-> scan period = (20 active channels * probe timeout) +
->               (12 passive channels * passive probe timeout) +
->               (32 * timeout on home channel) +
->               (32 * flush timeout)
+FWIW if people want stable fixes propagated faster (before Linus sucks
+it in or Greg sucks it in after Linus) things like compat-wireless (to
+be renamed to compat-drivers) allows us to get these out, but we label
+them properly [0]. We in fact have a place holder for even other type
+of non-upstream patches that any PHB may come up with as required but
+-- the key is to
 
+1) help categorize these properly
+2) keep metrics of them
+3) prioritize upstream first
 
-That formula seems a bit useless :-)
+The pending-stable/ patches get patches out to the community faster
+than Linus / Greg can apply them or before we even get the community
+to test them. We get these sucked out by looking for the Cc:
+stable@vger.kernel.org The linux-next-cherry-pick/ allows you suck out
+non-stable patches and I gladly accept such patches so long as they
+are in linux-next and I can suck them out automatically if you Cc:
+stable@orbit-lab.org. There are similar tricks for the other types of
+patches.
 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  net/wireless/scan.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-> index fdbcfe6..1442bb6 100644
-> --- a/net/wireless/scan.c
-> +++ b/net/wireless/scan.c
-> @@ -18,7 +18,7 @@
->  #include "nl80211.h"
->  #include "wext-compat.h"
->  
-> -#define IEEE80211_SCAN_RESULT_EXPIRE	(15 * HZ)
-> +#define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
+[0] http://wireless.kernel.org/en/users/Download/stable/#Additional_patches_to_stable_releases
 
-I'm not sure we'll ever manage to cover the entire scanning time unless
-we bump this REALLY high. I'd much rather see us measuring the duration
-of the scan, say per hardware, and not expire for that long. Of course
-the maximum of all measurements, and take new ones every time, or
-something like that. Also maybe avoid expiring while a scan is in
-process.
-
-johannes
-
+  Luis
