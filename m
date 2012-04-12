@@ -1,109 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:48189 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142Ab2DYHea (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:45746 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933835Ab2DLACG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 03:34:30 -0400
-Received: by qcro28 with SMTP id o28so840246qcr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 00:34:30 -0700 (PDT)
+	Wed, 11 Apr 2012 20:02:06 -0400
+Date: Thu, 12 Apr 2012 09:02:02 +0900
+From: Norbert Preining <preining@logic.at>
+To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: 3.4-rc2, ilwagn still most of the time completely unusable
+Message-ID: <20120412000202.GA15286@gamma.logic.tuwien.ac.at> (sfid-20120412_020231_029633_E4C6A6D6)
+References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at> <20120411023747.GA10126@gamma.logic.tuwien.ac.at> <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CANUX_P2yiz025rkcDsisNd0uFfEaVV=Gycf0fzWA29ct7R9aDg@mail.gmail.com>
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
-	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
-	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
-	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
-	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
-	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
-	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
-	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
-	<4F901224.1040508@sipsolutions.net>
-	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
-	<4F901F16.6080007@sipsolutions.net>
-	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
-	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
-	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
-	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
-	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
-	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
-	<4F96939B.5030204@erley.org>
-	<CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
-	<D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com>
-	<CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com>
-	<CANUX_P1HQVUFcxFLtWoL+wvEXbNTk0qEJVM+4yJKBbGuhWvZbw@mail.gmail.com>
-	<CA+icZUUr9v-fc-86gAppJWF+c2PBE07eG28BNfQf+9ESvHqj=A@mail.gmail.com>
-	<CANUX_P2yiz025rkcDsisNd0uFfEaVV=Gycf0fzWA29ct7R9aDg@mail.gmail.com>
-Date: Wed, 25 Apr 2012 09:34:29 +0200
-Message-ID: <CA+icZUXG545mfc9aOYAKiLoNiYmUi3wj+5vkB_R_1jRSNSLk4A@mail.gmail.com> (sfid-20120425_093442_456576_1927CE5E)
-Subject: Re: wlan0 not present
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Dominik Feser <dominik.feser@googlemail.com>,
-	Pat Erley <pat-lkml@erley.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 25, 2012 at 9:26 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Wed, Apr 25, 2012 at 09:23, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
->> On Tue, Apr 24, 2012 at 5:34 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>> On Tue, Apr 24, 2012 at 15:45, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
->>>> On Tue, Apr 24, 2012 at 2:29 PM, Dominik Feser
->>>> <dominik.feser@googlemail.com> wrote:
->>>>> What does that mean?
->>>>>
->>>>
->>>> Pickup the patch from [2], apply it against a recent compat-wireless
->>>> version, build and test.
->>>> Report here again.
->>>>
->>>
->>> Pretty sure it won't help. True, we were trying to request the wrong
->>> fw, but then we requested (and got) the good one, so that the only
->>> effect was that load time was longer that it could be. But here, we
->>> can't even get anything working. And the prints don't made it to
->>> kernel log properly
->>>
->>
->> Originally I answered Pat as he asked what's the status with the patch
->> concerning the firmware-issue.
->> So, my post was about applying this one (so I understood the open question).
->> I didn't care about the original concern of the reporter.
->> BTW, the mentioned patch is now in wireless.git (master-2012-04-24-2).
->
-> fair enough :-)
->
->>
->> Currently, I have an issue myself on iwlwifi (6230) with Ubuntu
->> precise, but it looks like a bug in network-manager with 3.4-rc4+ (see
->> [1]).
->>
->> - Sedat -
->>
->> [1] https://bugzilla.redhat.com/show_bug.cgi?id=785772
->>
->
-> Thanks for that pointer.
+Hi Meenakshi,
 
-My first bug-report to Ubuntu BTS.
+thanks for your email
 
-Don't want to tell you how much effort this was, not the bug-report itself.
-It started with...
+On Mi, 11 Apr 2012, Venkataraman, Meenakshi wrote:
+> Sorry about the annoyance it is causing you...but let's see if we can solve the problems you're seeing.
 
-$ sudo ubuntu-bug $(pidof NetworkManager)
+Yes, let us make another trial ;-)
 
-...on Debian I was used to file with report-bug.
+> >	delba from 00:0a:79:eb:56:10 (initiator) tid 0 reason code 39
+> >	Rx BA session stop requested for ...
+> >*IF* it is connected.
+> 
+> [MV]  This is actually printed by mac80211 when it stops a block ack session; which can happen with bursty traffic. It's not an error per se. You'll see this message if you have debugging enabled for mac80211, specifically CONFIG_MAC80211_HT_DEBUG. Perhaps you could reduce the debugging information you print out for mac80211?
 
-That was not enough, I had to register a LaunchPad-account and got a
-strange "DisplayName" and "OpenIdName".
-After some struggling I got both changed.
-There are really easier ways...
+Probably I was asked to activate that at some point ;-) Will disactivate
+it. Thanks.
 
-- Sedat -
+> >On the contrary, it sometimes not even connects, after reloading the module,
+> >retrying many times, today my log was smarmed with messages:
+> >	[ 9457.156030] wlan0: authentication with 00:24:c4:ab:bd:e0 timed out
+> >	[ 9457.176828] iwlwifi 0000:06:00.0: ACTIVATE a non DRIVER active
+> >station id 0 addr 00:24:c4:ab:bd:e0
+> 
+> [MV]  this could potentially be a problem with our driver. I would like some logs to figure out what happened here. Can you send me a detailed dmesg log with debug=0xFFFFFFFF?  Thanks. :-)
 
-[1] https://bugs.launchpad.net/bugs/988183
+I will do when I am back at university.
+
+> >But I want to report *SOME* progress: Formerly I had *BIG* problems with
+> >my home network (some strange Corega WL router AFAIR, Japanese only, but
+> >it was working without a click before 2.6.38 or 39 or so).
+> >Now, when I *DISABLE* 11n (11n_disable=1) then all the problems are gone
+> >*AT*HOME*, no warnings anymore, no complains, no hickups.
+> >On the university it is still a pain.
+> 
+> [MV] Any idea how 11n is performing with 3.4-rc2 on your home network? Are you seeing the same problems as before?
+
+On the university often no connection at all.
+At home: connection hangs for several seconds, when I look at the 
+ping www.kernel.org I have more than 20% packet loss. And interestingly
+quite often the ping looks like:
+64 bytes from pub1.kernel.org (149.20.20.133): icmp_req=131 ttl=53 time=125 ms
+64 bytes from pub1.kernel.org (149.20.20.133): icmp_req=133 ttl=53 time=124 ms
+64 bytes from 149.20.20.133: icmp_req=134 ttl=53 time=135 ms
+64 bytes from pub1.kernel.org (149.20.20.133): icmp_req=135 ttl=53 time=123 ms
+64 bytes from pub1.kernel.org (149.20.20.133): icmp_req=136 ttl=53 time=121 ms
+which does NOT relate in anyway to my feeling, because when I 
+check the *real* time *before* the line
+	64 bytes from 149.20.20.133: icmp_req=134 ttl=53 time=135 ms
+there are *several* seconds, (3-4, sometimes more) of waiting time.
+
+That of course destroys regularly every ssh and ftp connection.
+http is of course not the problem (but who cares for the web?).
+
+I have create a log with the above debug settings but 11n NOT disabled.
+I also added some
+	===== remarks =======
+(variable number of =, tough, but at least always 4, so you can search
+for ====) with logger "....". The log is *BIG*, compressed 3Mb, you
+can find it here:
+	http://www.logic.at/people/preining/syslog.bz2
+
+Ok, when I have something from the university I will let you know.
+
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+IPING (participial vb.)
+The increasingly anxious shifting from leg to leg you go through when
+you are desperate to go to the lavatory and the person you are talking
+to keeps on remembering a few final things he want to mention.
+			--- Douglas Adams, The Meaning of Liff
