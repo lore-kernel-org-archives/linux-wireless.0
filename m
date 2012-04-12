@@ -1,53 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:55118 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753539Ab2DSLCT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 07:02:19 -0400
-Received: by vcqp1 with SMTP id p1so5510836vcq.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 04:02:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1334827233-32686-1-git-send-email-anisse@astier.eu>
-References: <1334827233-32686-1-git-send-email-anisse@astier.eu>
-Date: Thu, 19 Apr 2012 13:02:18 +0200
-Message-ID: <CAOZOX0XeFDwTM_Uncg1+jNExv2eBixYEVwMQ9R57SHmbJe4LvQ@mail.gmail.com> (sfid-20120419_130222_420357_A84202B9)
-Subject: Re: [PATCH v2 1/2] rt2800: debugfs register access: BBP is 256 bytes big
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Anisse Astier <anisse@astier.eu>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:64046 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966089Ab2DLV6K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 17:58:10 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/24] iwlwifi: move iwl_chswitch_done to iwl-mac80211.c
+Date: Thu, 12 Apr 2012 14:54:10 -0700
+Message-Id: <1334267661-14654-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235903_780929_96727B14)
+In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 19, 2012 at 11:20 AM, Anisse Astier <anisse@astier.eu> wrote:
-> We're already using BBP for values > 128. Make that explicit and allow
-> debugfs access.
->
-> Signed-off-by: Anisse Astier <anisse@astier.eu>
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Move this as part of iwl-core.c cleanup.
 
-> ---
-> Changes since v1: none
-> ---
->  drivers/net/wireless/rt2x00/rt2800.h |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index 1ce2634..d91f4f6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -99,7 +99,7 @@
->  #define EEPROM_BASE                    0x0000
->  #define EEPROM_SIZE                    0x0110
->  #define BBP_BASE                       0x0000
-> -#define BBP_SIZE                       0x0080
-> +#define BBP_SIZE                       0x00ff
->  #define RF_BASE                                0x0004
->  #define RF_SIZE                                0x0010
->
-> --
-> 1.7.9.4
->
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   15 ---------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    5 -----
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |   15 +++++++++++++++
+ 4 files changed, 16 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 3588d3c..ac0e8ba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -169,6 +169,7 @@ int iwlagn_suspend(struct iwl_priv *priv, struct cfg80211_wowlan *wowlan);
+ /* rx */
+ int iwlagn_hwrate_to_mac80211_idx(u32 rate_n_flags, enum ieee80211_band band);
+ void iwl_setup_rx_handlers(struct iwl_priv *priv);
++void iwl_chswitch_done(struct iwl_priv *priv, bool is_success);
+ 
+ 
+ /* tx */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 40eb91a..f43a1e5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -43,21 +43,6 @@
+ 
+ const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+ 
+-void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
+-{
+-	/*
+-	 * MULTI-FIXME
+-	 * See iwlagn_mac_channel_switch.
+-	 */
+-	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+-
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-		return;
+-
+-	if (test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status))
+-		ieee80211_chswitch_done(ctx->vif, is_success);
+-}
+-
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ void iwl_print_rx_config_cmd(struct iwl_priv *priv,
+ 			     enum iwl_rxon_context_id ctxid)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 9cf1a94..81c287c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -119,11 +119,6 @@ static inline void iwl_update_stats(struct iwl_priv *priv, bool is_tx,
+ #endif
+ 
+ /*****************************************************
+-* RX
+-******************************************************/
+-void iwl_chswitch_done(struct iwl_priv *priv, bool is_success);
+-
+-/*****************************************************
+  * TX power
+  ****************************************************/
+ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index a3aa5a4..d982493 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -914,6 +914,21 @@ out:
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+ 
++void iwl_chswitch_done(struct iwl_priv *priv, bool is_success)
++{
++	/*
++	 * MULTI-FIXME
++	 * See iwlagn_mac_channel_switch.
++	 */
++	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	if (test_and_clear_bit(STATUS_CHANNEL_SWITCH_PENDING, &priv->status))
++		ieee80211_chswitch_done(ctx->vif, is_success);
++}
++
+ static void iwlagn_configure_filter(struct ieee80211_hw *hw,
+ 				    unsigned int changed_flags,
+ 				    unsigned int *total_flags,
+-- 
+1.7.0.4
+
