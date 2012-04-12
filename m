@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:38528 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728Ab2DBVuV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 17:50:21 -0400
-Received: by ghrr11 with SMTP id r11so1522669ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 14:50:21 -0700 (PDT)
-Date: Mon, 2 Apr 2012 16:50:06 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: brcmsmac still woes, possible regression?
-Message-ID: <20120402215005.GA13969@burratino> (sfid-20120402_235030_686771_311B5512)
-References: <4F70409E.3090203@broadcom.com>
- <CAKprTDGdbUnXtbfmck9rtYfKeD71xSXjShW6HnxyZJ8uRZEfnQ@mail.gmail.com>
- <4F717EA1.4060805@broadcom.com>
- <4F72F3D4.50409@broadcom.com>
- <20120328112657.GA6114@stt008.linux.site>
- <4F7302D9.8070009@broadcom.com>
- <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
- <4F744DD8.8010004@broadcom.com>
- <20120329133835.GA5196@stt008.linux.site>
- <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:58877 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966087Ab2DLV6K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 17:58:10 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 20/24] iwlwifi: move iwl_bcast_addr to iwl-agn-sta.c
+Date: Thu, 12 Apr 2012 14:54:17 -0700
+Message-Id: <1334267661-14654-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235903_923290_E6E93525)
+In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Camaleón wrote:
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-> Were the patches applied to the mainline?
+Move this as part of iwl-core.c cleanup.
 
-I doubt it.  Where can one find the patches you were testing, by the
-way?
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-core.c    |    2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Curious,
-Jonathan
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 42af9f9..0119e7a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -34,6 +34,8 @@
+ #include "iwl-agn.h"
+ #include "iwl-trans.h"
+ 
++const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
++
+ static int iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
+ {
+ 	lockdep_assert_held(&priv->sta_lock);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 26eb7fa..94a4ebc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -41,8 +41,6 @@
+ #include "iwl-agn.h"
+ #include "iwl-trans.h"
+ 
+-const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+-
+ 
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+-- 
+1.7.0.4
+
