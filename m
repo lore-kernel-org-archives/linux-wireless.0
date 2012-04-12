@@ -1,88 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51637 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752565Ab2DVWDb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 18:03:31 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/7] compat-wireless: ti: fix some problems with the config options
-Date: Mon, 23 Apr 2012 00:03:14 +0200
-Message-Id: <1335132199-21320-2-git-send-email-hauke@hauke-m.de> (sfid-20120423_000335_128068_D3CD515E)
-In-Reply-To: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
-References: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
+Received: from icf.org.ru ([91.193.236.10]:55401 "EHLO icf.org.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762765Ab2DLUoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 16:44:34 -0400
+Date: Thu, 12 Apr 2012 23:53:56 +0400 (MSK)
+From: Georgiewskiy Yuriy <bottleman@icf.org.ru>
+To: Ben Greear <greearb@candelatech.com>
+cc: Florian Fainelli <florian@openwrt.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 4/5] mac80211: Add more ethtools stats: survey, rates,
+ etc
+In-Reply-To: <4F870828.4020708@candelatech.com>
+Message-ID: <alpine.DEB.2.02.1204122352001.29503@icf.org.ru> (sfid-20120412_224451_824525_FDE3F3A1)
+References: <1334248375-22967-1-git-send-email-greearb@candelatech.com> <1334248375-22967-5-git-send-email-greearb@candelatech.com> <4F8705E3.2010902@openwrt.org> <4F870828.4020708@candelatech.com>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1050998036-1367714212-1334260436=:29503"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After the ti drivers where reorganized some config options in config.mk
-where wrong. This patch corrects them.
----
- config.mk                              |   13 +++++--------
- patches/08-rename-config-options.patch |   11 -----------
- 2 files changed, 5 insertions(+), 19 deletions(-)
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-diff --git a/config.mk b/config.mk
-index 22a8cf1..012a59f 100644
---- a/config.mk
-+++ b/config.mk
-@@ -545,7 +545,7 @@ ifndef CONFIG_COMPAT_KERNEL_2_6_25
- 
- ifdef CONFIG_CRC7
- export CONFIG_WL1251_SPI=m
--export CONFIG_WL12XX_SPI=m
-+export CONFIG_WLCORE_SPI=m
- endif #CONFIG_CRC7
- export CONFIG_P54_SPI=m
- 
-@@ -568,14 +568,8 @@ export CONFIG_B43_SDIO=y
- ifdef CONFIG_CRC7
- ifdef CONFIG_WL12XX_PLATFORM_DATA
- export CONFIG_COMPAT_WL1251_SDIO=m
-+export CONFIG_WLCORE_SDIO=m
- endif #CONFIG_WL12XX_PLATFORM_DATA
--
--ifndef CONFIG_COMPAT_KERNEL_2_6_32
--ifdef CONFIG_WL12XX_PLATFORM_DATA
--export CONFIG_COMPAT_WLCORE_SDIO=m
--endif #CONFIG_WL12XX_PLATFORM_DATA
--endif #CONFIG_COMPAT_KERNEL_2_6_32
--
- endif #CONFIG_CRC7
- 
- export CONFIG_MWIFIEX_SDIO=m
-@@ -639,6 +633,9 @@ export CONFIG_ATH_COMMON=m
- export CONFIG_BRCMUTIL=m
- # export CONFIG_BRCMDBG=y
- 
-+export CONFIG_WL_TI=y
-+export CONFIG_WLCORE=m
-+
- ifdef CONFIG_CRC7
- export CONFIG_WL1251=m
- export CONFIG_WL12XX=m
-diff --git a/patches/08-rename-config-options.patch b/patches/08-rename-config-options.patch
-index 52143d1..da63989 100644
---- a/patches/08-rename-config-options.patch
-+++ b/patches/08-rename-config-options.patch
-@@ -90,17 +90,6 @@ CONFIG_BT_HIDP does not build with older kernel versions.
- +obj-$(CONFIG_COMPAT_BT_HIDP) += hidp.o
-  
-  hidp-objs := core.o sock.o
----- a/drivers/net/wireless/ti/wlcore/Makefile
--+++ b/drivers/net/wireless/ti/wlcore/Makefile
--@@ -7,7 +7,7 @@ wlcore_sdio-objs	= sdio.o
-- wlcore-$(CONFIG_NL80211_TESTMODE)	+= testmode.o
-- obj-$(CONFIG_WLCORE)			+= wlcore.o
-- obj-$(CONFIG_WLCORE_SPI)		+= wlcore_spi.o
---obj-$(CONFIG_WLCORE_SDIO)		+= wlcore_sdio.o
--+obj-$(CONFIG_COMPAT_WLCORE_SDIO)	+= wlcore_sdio.o
-- 
-- # small builtin driver bit
-- obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx_platform_data.o
- --- a/drivers/net/wireless/ti/wl1251/Makefile
- +++ b/drivers/net/wireless/ti/wl1251/Makefile
- @@ -5,6 +5,6 @@ wl1251_sdio-objs	+= sdio.o
--- 
-1.7.9.5
+---1050998036-1367714212-1334260436=:29503
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
+On 2012-04-12 09:51 -0700, Ben Greear wrote Florian Fainelli:
+
+BG>On 04/12/2012 09:42 AM, Florian Fainelli wrote:
+BG>> Hi,
+BG>> 
+BG>> Le 04/12/12 18:32, greearb@candelatech.com a ?crit :
+BG>> > From: Ben Greear<greearb@candelatech.com>
+BG>> > 
+BG>> > The signal and noise are forced to be positive since ethtool
+BG>> > deals in unsigned 64-bit values and this number should be human
+BG>> > readable. This gives easy access to some of the data formerly
+BG>> > exposed in the deprecated /proc/net/wireless file.
+BG>> 
+BG>> Uh, that's misleading, the signal and noise values are typically negative,
+BG>> so one needs to think about mentally adding a minus sign if he/she wants to
+BG>> understand it. Does not ethtool know about 32-bits signed integers?
+BG>
+BG>Ethtool stats only supports u64.  I think it's easy enough for
+BG>humans or programs to add the negative sign.  Can signal or noise
+BG>ever be > 0?  If so, that could actually break something that depends
+BG>on flipping the value to negative....
+
+Don't know is this is a bug or it's reaaly can be positive, but:
+
+iw dev mp0 station dump
+Station 00:02:6f:b8:94:d3 (on mp0)
+    inactive time:	49 ms
+    rx bytes:	36318341
+    rx packets:	271741
+    tx bytes:	4180152
+    tx packets:	35445
+    tx retries:	7724
+    tx failed:	123
+    signal:  	1 dBm
+    signal avg:	-2 dBm
+    tx bitrate:	240.0 MBit/s MCS 13 40Mhz short GI
+    rx bitrate:	180.0 MBit/s MCS 12 40Mhz short GI
+    mesh llid:	8349
+    mesh plid:	49801
+    mesh plink:	ESTAB
+    authorized:	yes
+    authenticated:	yes
+    preamble:	long
+    WMM/WME:	yes
+    FP:		no
+    TDLS peer:	no
+										    
+
+C уважением                       With Best Regards
+Георгиевский Юрий.                Georgiewskiy Yuriy
++7 4872 711666                    +7 4872 711666
+факс +7 4872 711143               fax +7 4872 711143
+Компания ООО "Ай Ти Сервис"       IT Service Ltd
+http://nkoort.ru                  http://nkoort.ru
+JID: GHhost@icf.org.ru            JID: GHhost@icf.org.ru
+YG129-RIPE                        YG129-RIPE
+---1050998036-1367714212-1334260436=:29503--
