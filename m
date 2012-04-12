@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:48089 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756169Ab2DORuF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 13:50:05 -0400
-Message-ID: <4F8B0A4C.3080704@openwrt.org> (sfid-20120415_195030_894779_289E81A1)
-Date: Sun, 15 Apr 2012 19:50:04 +0200
-From: Gabor Juhos <juhosg@openwrt.org>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:46055 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966131Ab2DLWo2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 18:44:28 -0400
+Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 2127B21D5D
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 18:44:28 -0400 (EDT)
+Date: Thu, 12 Apr 2012 15:44:26 -0700
+From: Greg KH <greg@kroah.com>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Google Summer of Code 2012 - 12 student slots for the Linux
+ Foundation
+Message-ID: <20120412224426.GA15398@kroah.com> (sfid-20120413_004432_571018_A4000F79)
+References: <4F870597.2010101@gmail.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH 1/3] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
-References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org> <4F8AA38E.1040702@openwrt.org> <4F8B03A3.6030804@openwrt.org> <4F8B04D7.4080605@openwrt.org>
-In-Reply-To: <4F8B04D7.4080605@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F870597.2010101@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012.04.15. 19:26 keltezéssel, Felix Fietkau írta:
-> On 2012-04-15 7:21 PM, Gabor Juhos wrote:
->> Hi Felix,
->>
->> Thank you for the comments.
->>
->>> On 2012-04-14 10:01 PM, Gabor Juhos wrote:
->>>> The REDUCE_SCALED_POWER_BY_THREE_CHAIN symbol is
->>>> defined in different eeprom files, and the value
->>>> varies between the different files.
->>>>
->>>> In eeprom_def.c and in ar9003_eeprom.c the value
->>>> of the symbol is 9, however the comments in these
->>>> files indicates the value should be 10*log10(3)*2
->>>> which is 9.54242509439325. Replace the the value
->>>> to 10 in these files.
->>>>
->>>> Also add comments to eeprom_9287.c.
->>>>
->>>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
->>> I think we should keep the value 9.
->>> If I understand the logic behind the power increase through chain
->>> combining properly, this value only describes the worst-case (wrt.
->>> regulatory compliance) upper limit of tx power, whereas in practice the
->>> measured combined power output will be much lower than that due to
->>> signal/phase differences.
->>> Regulatory compliance is already properly tested on all devices with the
->>> truncated value 9, so I don't think that we need to be even more
->>> conservative and round up here.
->>
->> Ok, I will rework the patch.
->>
->> Apart from the inconsistency between the REDUCE_SCALED_POWER_BY_THREE_CHAIN
->> values, there is another thing which confuses me.
->>
->> In the 'ath9k_hw_set_*_power_cal_table' functions the driver uses the
->> REDUCE_SCALED_POWER_BY_THREE_CHAIN constant to reduce the power values.
->> In the 'ath9k_hw_update_regulatory_maxpower' function it uses the
->> INCREASE_MAXPOW_BY_THREE_CHAIN constant to compensate the reduction. However the
->> two constants are different. I might be wrong, but in my opinion the driver
->> should use the same constant in both functions.
-> I just checked with Atheros sources, and it seems I was wrong about
-> sticking with the value 9.
-> It appears that Atheros changed it to 10 at some point, and ath9k
-> contains a mix of the old and the new version. Consistently using the
-> value 10 for 3 chains for both increase and reduction seems to be the
-> right thing to do.
+On Thu, Apr 12, 2012 at 06:40:55PM +0200, Till Kamppeter wrote:
+> Hi,
+> 
+> the first distribution of the available student slots to the
+> mentoring organizations has been done yesterday. The Linux
+> Foundation got 12 slots.
+> 
+> I will need 3 or 4 for OpenPrinting (we got 4 applications, 2 of
+> them on the same project idea), I hope the rest will server for you
+> to accommodate all good students which applied for your workgroups.
+> 
+> Please sign up as mentor to get access to the applications. I have
+> told in an earlier mail on how to do so.
+> 
+> Please inform me in case of any problems.
 
-Thank you for the information. I will add it to the commit message.
+How do we mark an application as "we should accept this one"?
 
--Gabor
+I'd like to accept:
+	http://www.google-melange.com/gsoc/proposal/review/google/gsoc2012/dvdhrm/14002
+	(KMSCON: a DRM based terminal emulator)
+
+and possibly, if the student gets it together a bit on the application:
+	http://www.google-melange.com/gsoc/proposal/review/google/gsoc2012/jcalvinowens/1
+	(NFS v4.1 and v4.2 features)
+
+thanks,
+
+greg k-h
