@@ -1,61 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42269 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753568Ab2DJJ6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 05:58:36 -0400
-Message-ID: <4F840442.5060706@openwrt.org> (sfid-20120410_115840_686120_6580A48C)
-Date: Tue, 10 Apr 2012 11:58:26 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:59722 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772Ab2DLVUW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 17:20:22 -0400
 MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	ath9k-devel@venema.h4ckr.net, kernel-janitors@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [ath9k-devel] [RFC] ath9k_hw: precedence bug in ath9k_hw_set_ofdm_nil()
-References: <20120410090445.GB26832@elgon.mountain>
-In-Reply-To: <20120410090445.GB26832@elgon.mountain>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
+Date: Fri, 13 Apr 2012 00:20:20 +0300
+Message-ID: <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com> (sfid-20120412_232040_519635_FFACCA98)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-04-10 11:04 AM, Dan Carpenter wrote:
-> This was introduced in 54da20d83f "ath9k_hw: improve ANI processing and
-> rx desensitizing parameters".  It triggers a Smatch complaint because
-> the "if (!x != y) { ..." formation is a common precedence error.
-> 
-> In this case, maybe the code was intended to be as it is.  The
-> "->ofdmWeakSigDetectOff" and "->ofdm_weak_signal_on" variables are both
-> boolean.
-> 
-> Or perhaps based we could change the != to an == and remove the negate?
-> 
-> But normally when I see this formation it is a precedence bug so that's
-> the patch I've sent.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-> index 47a9fb4..8304e27 100644
-> --- a/drivers/net/wireless/ath/ath9k/ani.c
-> +++ b/drivers/net/wireless/ath/ath9k/ani.c
-> @@ -291,7 +291,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
->  				     entry_ofdm->fir_step_level);
->  
->  	if ((aniState->noiseFloor >= aniState->rssiThrHigh) &&
-> -	    (!aniState->ofdmWeakSigDetectOff !=
-> +	    (aniState->ofdmWeakSigDetectOff !=
-Looking at other Atheros code, I think this patch is wrong, it should
-be: aniState->ofdmWeakSigDetectOff == entry_ofdm->ofdm_weak_signal_on
+On Thu, Apr 12, 2012 at 10:05 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Thu, Apr 12, 2012 at 9:49 AM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+>>>
+>>> A revert is the same as a patch.  It needs to be in Linus's tree before
+>>> I can add it to the stable releases.
+>>
+>> Right, because otherwise people's systems would actually work.
+>
+> There are rules for a damn good reason.
+>
+> The rule for -stable is that the changes *have* to be in upstream, for
+> a very simple reason: otherwise bugs get re-introduced.
+>
+> If -stable starts revertign things that aren't reverted up-stream,
+> what do you think happens to the *next* kernel version?
 
-While a bit confusing, the behavior of the original code was correct,
-aniState->ofdmWeakSigDetectOff is used as a boolean.
+Which is why nobody is trying to change the rules regarding that.
 
-This code badly needs a cleanup, the whole mess with *on vs *off
-variables is quite confusing.
+And your same argument applies to the all the thousands of commits on
+the next kernel version; what would happen on the next kernel version?
 
-- Felix
+The relevant patch, like the thousands of patches in v3.4-rc*, did not
+exist in v3.3, so if you add one on v3.3.1, and remove it on v3.3.2
+would be *exactly* the same as if you had not added it at all to the
+stable series.
+
+> I don't think you realize how well kernel development has worked over
+> the last few years. And the stable rules are part of it.
+
+I do understand how well the development works, which is why I often
+use it as an example and guideline, but that doesn't mean it's
+perfect.
+
+> So stop complaining. Reverts really *are* just patches, Greg is 100%
+> right, and you are simply wrong.
+
+I could argue in favor of exceptions, but I don't think you realize
+the fact that this change does not affect your tree *at all*. Adding
+and removing a patch in the stable tree is a no-op.
+
+> And the revert is now apparently in John's tree, and will make it to
+> David and then me shortly. It will get reverted in stable too once
+> that happens. In the meantime, your complaints are  to Greg only shows
+> that you don't understand why the rules exist, and the fact that you
+> *continue* to complain just makes you look stupid.
+
+Is that going to happen before Friday? If not, then v3.3.2 will still
+be broken *for no reason*.
+
+-- 
+Felipe Contreras
