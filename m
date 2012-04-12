@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:38363 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756202Ab2DMXFg (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:35413 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966124Ab2DLW3s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 19:05:36 -0400
-Date: Fri, 13 Apr 2012 18:05:25 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
+	Thu, 12 Apr 2012 18:29:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
+	<CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
+	<CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
+	<CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
+	<CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
+Date: Fri, 13 Apr 2012 01:29:46 +0300
+Message-ID: <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com> (sfid-20120413_003007_333057_1509BCB4)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
 	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
 	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
 	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
 	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120413230525.GA13995@burratino> (sfid-20120414_010552_418352_C022674F)
-References: <20120412011313.GA23764@kroah.com>
- <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
- <20120412144626.GA14868@kroah.com>
- <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
- <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
- <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
- <20120413105746.10ffb120@stein>
- <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
- <20120413154216.476a02ac@stein>
- <CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felipe Contreras wrote:
-> On Fri, Apr 13, 2012 at 4:42 PM, Stefan Richter wrote:
-
->> If you do not like to wait for Linus and Greg, you simply have to derive
->> an own kernel which additionally contains your preferred fixes.
+On Fri, Apr 13, 2012 at 1:07 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Thu, Apr 12, 2012 at 3:04 PM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+>>
+>> Sure, but removing that patch from the stable tree is not going the
+>> change that information; we already know the patch is wrong.
 >
-> Yes, because clearly everybody thinks the process is perfect, and
-> criticizing it is heresy.
+> .. and we wait until it has been fixed in mainline so that we *know*
+> that information doesn't get lost.
 
-Close.  Not everyone.  For example, you do not think the process is
-perfect.
+So why don't we pick potentially dangerous patches that might benefit
+from some testing, put them in 'stable', and if there are problems,
+make sure they get fixed in upstream first? Or for that matter totally
+broken patches we want to make sure they get fixed in upstream.
 
-I don't think Stefan meant the above as tongue-in-cheek, for what it's
-worth.  Another stable kernel with different rules really would be an
-interesting exercise, and would probably fulfill a need for a certain
-audience.
+Because the priority of the 'stable' tree is *stability*. Is it not?
 
-It's not like nobody does that already, anyway.  For example, I hear
-Fedora has a kernel that they maintain well for a different audience,
-using different rules.
+But what you are saying is: *before* the final review, even a hint
+that the patch might cause problems is reason enough to drop it from
+stable, but *after* the review, if we know the patch is totally
+broken, then it's the opposite; we really want it in.
 
-Ciao,
-Jonathan
+-- 
+Felipe Contreras
