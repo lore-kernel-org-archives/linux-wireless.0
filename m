@@ -1,49 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:2475 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013Ab2D0Xf1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 19:35:27 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/2] iwlwifi: remove the iwl_shared reference
-Date: Fri, 27 Apr 2012 16:29:39 -0700
-Message-Id: <1335569379-25113-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120428_013530_768006_8151B40E)
-In-Reply-To: <1335569379-25113-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335569379-25113-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:52132 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933302Ab2DLBNS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Apr 2012 21:13:18 -0400
+Received: by dake40 with SMTP id e40so1888811dak.11
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 18:13:17 -0700 (PDT)
+Date: Wed, 11 Apr 2012 18:13:13 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120412011313.GA23764@kroah.com> (sfid-20120412_031322_242902_D4E27004)
+References: <20120411231102.GA6404@kroah.com>
+ <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+ <20120412002927.GA23167@kroah.com>
+ <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change-Id: I10e42e0cc7dd91047f093ea2c5a55d65c004ada6
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Reviewed-on: http://git-mwg.jer.intel.com/gerrit/1939
-Tested-by: Jenkins
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-modparams.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On Thu, Apr 12, 2012 at 04:03:59AM +0300, Felipe Contreras wrote:
+> On Thu, Apr 12, 2012 at 3:29 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> > On Wed, Apr 11, 2012 at 07:59:14PM -0400, Sergio Correia wrote:
+> >> Hello Greg,
+> >>
+> >>
+> >> On Wed, Apr 11, 2012 at 7:11 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> >> > This is the start of the stable review cycle for the 3.3.2 release.
+> >> > There are 78 patches in this series, all will be posted as a response
+> >> > to this one.  If anyone has any issues with these being applied, please
+> >> > let me know.
+> >> >
+> >> > Responses should be made by Fri Apr 13 23:10:16 UTC 2012.
+> >> > Anything received after that time might be too late.
+> >> >
+> >>
+> >> is there any chance for this one to be included in this review cycle?
+> >>
+> >> http://www.spinics.net/lists/linux-wireless/msg87999.html
+> 
+> I was going to ask for exactly the same thing. My system is completely
+> unusable without this patch; not only does the network doesn't work,
+> but quite often the kernel is stuck consuming 100% of the CPU.
+> 
+> > Have you read Documentation/stable_kernel_rules.txt?  Based on that, I
+> > don't think it can, yet, right?
+> 
+> Why not? This patch makes the code go back to a previous state, it is
+> obviously more stable than the current state, and the code already
+> exists in Linus's tree (in previous releases).
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-index ca15d9a..d9a86d6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-@@ -60,8 +60,8 @@
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  *****************************************************************************/
--#ifndef __iwl_shared_h__
--#define __iwl_shared_h__
-+#ifndef __iwl_modparams_h__
-+#define __iwl_modparams_h__
- 
- #include <linux/types.h>
- #include <linux/spinlock.h>
-@@ -123,4 +123,4 @@ struct iwl_mod_params {
- 	bool disable_5ghz;
- };
- 
--#endif /* #__iwl_shared_h__ */
-+#endif /* #__iwl_modparams_h__ */
--- 
-1.7.0.4
+It does?  What is the git commit id of the patch?  Based in the email
+above, I assumed it had not made it to Linus's tree already.
 
+> But hey, I guess it's OK that 3.3.x is stuck in and endless loop right
+> after booting, because rules are more important than fixing obvious
+> breakage.
+
+What rule did you think I was saying this was not acceptable for?
+
+greg k-h
