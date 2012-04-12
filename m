@@ -1,61 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:54015 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757541Ab2DYSy7 convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48168 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753004Ab2DLREH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 14:54:59 -0400
-Received: by bkuw12 with SMTP id w12so354306bku.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 11:54:58 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Subject: Re: carl9170 - monitor mode TP drop
-Date: Wed, 25 Apr 2012 20:54:54 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com> <201204251928.21559.chunkeey@googlemail.com> <CAFED-j=_kPNmj-OyhFAdi_LM+rqbW6JLHC64BzdTKPyQ3iAMYg@mail.gmail.com>
-In-Reply-To: <CAFED-j=_kPNmj-OyhFAdi_LM+rqbW6JLHC64BzdTKPyQ3iAMYg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201204252054.54123.chunkeey@googlemail.com> (sfid-20120425_205525_953880_AF63FED4)
+	Thu, 12 Apr 2012 13:04:07 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/2] ath9k: Use macro to decrease code when priting recv stats.
+Date: Thu, 12 Apr 2012 10:03:59 -0700
+Message-Id: <1334250240-21038-1-git-send-email-greearb@candelatech.com> (sfid-20120412_190414_087994_9B2B0E12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, April 25, 2012 08:24:23 PM Janusz Dziedzic wrote:
-> W dniu 25 kwietnia 2012 19:28 u¿ytkownik Christian Lamparter
-> <chunkeey@googlemail.com> napisa³:
-> > On Wednesday, April 25, 2012 07:28:18 AM Janusz Dziedzic wrote:
-> > You see without the BIT set, the hardware won't sent any ACKs
-> > (Not even those which are directed at this interface - which of
-> > course is also bad, or even worse?) and with the BIT set (and if
-> > the HW is in Sniffer Mode) then the hardware acks every frames,
-> > even if they are for a different stations.
-> > So your fix might break someone else's setup.
-> >
-> 
-> As I understand, some time ago we had wpa_supplicant AP (GO) mode
-> as a two interfaces: AP + MONITOR.
-> But now MONITOR is not used.
-> Do you know other setup?
-I think you are refering to the "cooked" monitor interface, which is
-just a monitor interface that gives you frames that mac80211 has
-not used internally [mac80211: Add cooked monitor mode support].
+From: Ben Greear <greearb@candelatech.com>
 
-In fact, most monitors are purly virtual interfaces, unless the
-device only has one interface and it is set into monitor mode.
-[So, if you don't want to deal with the RX_CTRL_ACK_IN_SNIFFER
-bit all you need to do is: add a monitor interface (rather than
-set the current interface into this mode) on your STA2 "client" 
-<http://linuxwireless.org/en/users/Documentation/iw#Adding_interfaces_with_iw>
+This hides some repetitive code, and will help if the
+column widths ever need to change.
 
-Note: This is actually the prefered, because you can use the "normal"
-station interface to connect to the web and listen to the air with
-the virtual monitor interface on the same device at the same time!]
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 04edce9... 78f2962... M	drivers/net/wireless/ath/ath9k/debug.c
+ drivers/net/wireless/ath/ath9k/debug.c |   72 +++++++++++---------------------
+ 1 files changed, 24 insertions(+), 48 deletions(-)
 
-> So, maybe firmware should ACK  frames with correct destination address
-> only (if AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER)?
-> Or that is not possible because of HW limitation?
-The ACK mechanism (as well as most of the MAC) is done by the hardware
-because of the critical timing [and lack of free space]. 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 04edce9..78f2962 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -881,6 +881,13 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	len += snprintf(buf + len, size - len, "%22s : %10u\n", s, \
+ 			sc->debug.stats.rxstats.phy_err_stats[p]);
+ 
++#define RXS_ERR(s, e)					    \
++	do {						    \
++		len += snprintf(buf + len, size - len,	    \
++				"%22s : %10u\n", s,	    \
++				sc->debug.stats.rxstats.e); \
++	} while (0)
++
+ 	struct ath_softc *sc = file->private_data;
+ 	char *buf;
+ 	unsigned int len = 0, size = 1600;
+@@ -890,42 +897,18 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	if (buf == NULL)
+ 		return -ENOMEM;
+ 
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "CRC ERR",
+-			sc->debug.stats.rxstats.crc_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "DECRYPT CRC ERR",
+-			sc->debug.stats.rxstats.decrypt_crc_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "PHY ERR",
+-			sc->debug.stats.rxstats.phy_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "MIC ERR",
+-			sc->debug.stats.rxstats.mic_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "PRE-DELIM CRC ERR",
+-			sc->debug.stats.rxstats.pre_delim_crc_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "POST-DELIM CRC ERR",
+-			sc->debug.stats.rxstats.post_delim_crc_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "DECRYPT BUSY ERR",
+-			sc->debug.stats.rxstats.decrypt_busy_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-LENGTH-ERR",
+-			sc->debug.stats.rxstats.rx_len_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-OOM-ERR",
+-			sc->debug.stats.rxstats.rx_oom_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-RATE-ERR",
+-			sc->debug.stats.rxstats.rx_rate_err);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-DROP-RXFLUSH",
+-			sc->debug.stats.rxstats.rx_drop_rxflush);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-TOO-MANY-FRAGS",
+-			sc->debug.stats.rxstats.rx_too_many_frags_err);
++	RXS_ERR("CRC ERR", crc_err);
++	RXS_ERR("DECRYPT CRC ERR", decrypt_crc_err);
++	RXS_ERR("PHY ERR", phy_err);
++	RXS_ERR("MIC ERR", mic_err);
++	RXS_ERR("PRE-DELIM CRC ERR", pre_delim_crc_err);
++	RXS_ERR("POST-DELIM CRC ERR", post_delim_crc_err);
++	RXS_ERR("DECRYPT BUSY ERR", decrypt_busy_err);
++	RXS_ERR("RX-LENGTH-ERR", rx_len_err);
++	RXS_ERR("RX-OOM-ERR", rx_oom_err);
++	RXS_ERR("RX-RATE-ERR", rx_rate_err);
++	RXS_ERR("RX-DROP-RXFLUSH", rx_drop_rxflush);
++	RXS_ERR("RX-TOO-MANY-FRAGS", rx_too_many_frags_err);
+ 
+ 	PHY_ERR("UNDERRUN ERR", ATH9K_PHYERR_UNDERRUN);
+ 	PHY_ERR("TIMING ERR", ATH9K_PHYERR_TIMING);
+@@ -954,18 +937,10 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	PHY_ERR("HT-LENGTH ERR", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
+ 	PHY_ERR("HT-RATE ERR", ATH9K_PHYERR_HT_RATE_ILLEGAL);
+ 
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-Pkts-All",
+-			sc->debug.stats.rxstats.rx_pkts_all);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-Bytes-All",
+-			sc->debug.stats.rxstats.rx_bytes_all);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-Beacons",
+-			sc->debug.stats.rxstats.rx_beacons);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10u\n", "RX-Frags",
+-			sc->debug.stats.rxstats.rx_frags);
++	RXS_ERR("RX-Pkts-All", rx_pkts_all);
++	RXS_ERR("RX-Bytes-All", rx_bytes_all);
++	RXS_ERR("RX-Beacons", rx_beacons);
++	RXS_ERR("RX-Frags", rx_frags);
+ 
+ 	if (len > size)
+ 		len = size;
+@@ -975,6 +950,7 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 
+ 	return retval;
+ 
++#undef RXS_ERR
+ #undef PHY_ERR
+ }
+ 
+-- 
+1.7.3.4
 
-Regards,
-	Chr
