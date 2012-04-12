@@ -1,93 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:44166 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993Ab2DPHGh convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41427 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934492Ab2DLQTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 03:06:37 -0400
-Received: by wibhj6 with SMTP id hj6so8351241wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 00:06:36 -0700 (PDT)
-Date: Mon, 16 Apr 2012 09:06:09 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	RA-Jay Hung <Jay_Hung@ralinktech.com>
-Subject: Re: RT5390 not working with rt2800pci
-Message-ID: <20120416090609.6b257455@destiny.ordissimo> (sfid-20120416_090645_456911_D4CA7479)
-In-Reply-To: <CAGRGNgVJjVC5ZWRXsrjraT17ivT=HAnnZnhczPfwOw2Za_vatA@mail.gmail.com>
-References: <20120413142352.3b927516@destiny.ordissimo>
-	<CALUN=qJXckZ+_S90QxyvqEAbeu+Fo=cv9VZ9=AkXRJGsFH3yBQ@mail.gmail.com>
-	<CAGRGNgVdQgMoBNpJcPJuc608+exeVvpvrGRvvmEggf=GTmOkbg@mail.gmail.com>
-	<CALUN=qK65XgtG5B-Da9o6oGaSF38TsN6NuNaK5=9-nQ+TMUvtg@mail.gmail.com>
-	<CAGRGNgVJjVC5ZWRXsrjraT17ivT=HAnnZnhczPfwOw2Za_vatA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 12 Apr 2012 12:19:33 -0400
+Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q3CGJXGn010119
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 09:19:33 -0700
+Message-ID: <4F870095.90207@candelatech.com> (sfid-20120412_181938_427029_29C9B5C5)
+Date: Thu, 12 Apr 2012 09:19:33 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Splat in latest wireless-testing (3.4.0-rc2+)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 16 Apr 2012 16:22:36 +1000, Julian Calaby <julian.calaby@gmail.com> wrote :
+I have a few patches applied, but likely nothing that affects
+this particular bit of code.
 
-> Hi Anisse,
-> 
-> On Mon, Apr 16, 2012 at 15:57, Anisse Astier <anisse@astier.eu> wrote:
-> > On Mon, Apr 16, 2012 at 1:38 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> >> Hi Anisse,
-> >>
-> >> On Mon, Apr 16, 2012 at 03:33, Anisse Astier <anisse@astier.eu> wrote:
-> >>> On Fri, Apr 13, 2012 at 2:23 PM, Anisse Astier <anisse@astier.eu> wrote:
-> >>> Why some cards work and others don't is a mystery.
-> >>
-> >> Not really, old cards generally work, current cards that have been out
-> >> for a little while generally work, and bleeding edge,
-> >> just-released-yesterday cards tend not to.
-> > What I meant is that in the set of RT5390RL cards, some work, some
-> > don't, consistently, and I cannot find any difference between them.
-> 
-> Sorry, I misinterpreted what you meant.
-> 
-> So, to clarify, am I right in saying that you have:
->  - "RT5390R" cards, PCI revision 0502 which all work
-It's marked "RT5390L" (not R) and has revision 0502. And in the code it's
-referred as REV_RT5390F (yes it's different).
+------------[ cut here ]------------
+WARNING: at /home/greearb/git/linux.wireless-testing/net/mac80211/iface.c:171 ieee80211_check_queues+0x)
+Hardware name: To Be Filled By O.E.M.
+Modules linked in: 8021q garp stp llc fuse macvlan pktgen w83627ehf hwmon_vid nfs lockd fscache auth_rp]
+Pid: 2500, comm: hostapd Not tainted 3.4.0-rc2-wl+ #9
+Call Trace:
+  [<c04273e4>] warn_slowpath_common+0x65/0x7a
+  [<f89e814e>] ? ieee80211_check_queues+0xab/0xe8 [mac80211]
+  [<c0427408>] warn_slowpath_null+0xf/0x13
+  [<f89e814e>] ieee80211_check_queues+0xab/0xe8 [mac80211]
+  [<f89e8a5e>] ieee80211_do_open+0x2b9/0x509 [mac80211]
+  [<f89e8d04>] ieee80211_open+0x56/0x60 [mac80211]
+  [<c0719ff2>] __dev_open+0x80/0xae
+  [<c07181a7>] __dev_change_flags+0xa1/0x116
+  [<c0719f46>] dev_change_flags+0x13/0x3f
+  [<c07647ea>] devinet_ioctl+0x220/0x4ac
+  [<c05987d6>] ? copy_to_user+0x2f/0x105
+  [<c0765ba1>] inet_ioctl+0x82/0x9b
+  [<c070b5b6>] sock_ioctl+0x1c5/0x1e7
+  [<c070b3f1>] ? kernel_sendmsg+0x37/0x37
+  [<c04cc572>] do_vfs_ioctl+0x460/0x49f
+  [<c04c7e44>] ? path_put+0x15/0x18
+  [<c04cc5f2>] sys_ioctl+0x41/0x61
+  [<c07bd118>] sysenter_do_call+0x12/0x28
+---[ end trace dd414f1907cc9857 ]---
 
->  - "RT5390RL" cards, PCI revision 1502 which work
-Correct.
->  - "RT5390RL" cards, PCI revision 1502 which don't work with the
-> symptoms described above.
-Correct, except revisions are *not* visible in PCI revision. These are only
-visible in driver output when debug is enabled, with this printf:
-        INFO(rt2x00dev,
-             "Chipset detected - rt: %04x, rf: %04x, rev: %04x.\n",
-             rt2x00dev->chip.rt, rt2x00dev->chip.rf, rt2x00dev->chip.rev);
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Which gets it by reading register MAC_CSR0_REVISION .
-
-> 
-> Ok, so let's look at this a bit closer: the "iw info" diff you
-> provided before makes me think that there is some form of regulatory
-> setting difference between the working and non-working cards. I would
-> guess that this would be visible in the dmesg output, could you boot
-> with a working card, save the dmesg, then boot with a non-working
-> card, save the dmesg, diff them and reply with that diff? I'm guessing
-> that there would be some lines in there about CRDA or regulatory which
-> would be different.
-I don't think this is related, but I'll try to provide the two dmesg,
-with today's wireless-next.
-This might be polluted by the fact that the "working" card succeded in
-connecting(on channel 6), which then changed the regulatory domain. I'll
-try to get unpolluted results.
-
-> 
-> Also, what channel is your AP on and what region of the world are you
-> in? (I'm guessing Europe from your email address, but which country
-> specifically)
-I'm in France, but using another wireless card, I can scan APs on
-channels 1,2,3,6,8,10,11,13.
-
-
-Regards,
-
-Anisse
