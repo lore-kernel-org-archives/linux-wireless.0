@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:34896 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473Ab2DZUHt (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:38218 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762572Ab2DLTou (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 16:07:49 -0400
-Date: Thu, 26 Apr 2012 16:06:41 -0400 (EDT)
-Message-Id: <20120426.160641.1838357833476906649.davem@davemloft.net> (sfid-20120426_220801_224749_8158EADA)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-04-26
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120426193444.GI16900@tuxdriver.com>
-References: <20120425191418.GC16900@tuxdriver.com>
-	<20120426193444.GI16900@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 12 Apr 2012 15:44:50 -0400
+Received: by qcro28 with SMTP id o28so1461208qcr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 12:44:49 -0700 (PDT)
+Message-ID: <4F8730AF.1080007@gmail.com> (sfid-20120412_214453_795804_D36B9A02)
+Date: Thu, 12 Apr 2012 15:44:47 -0400
+From: Jonathan Bither <jonbither@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath5k: use compare_ether_addr on MAC addresses instead of
+ memcmp
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 26 Apr 2012 15:34:44 -0400
+Following Felix's recent patchset as an example I have replaced memcmp with
+compare_ether_addr.
 
-> This is another batch of updates intended for 3.5...
-> 
-> Nothing too special this round -- highlights include some iwlwifi
-> refactoring, some ath9k refactoring, some rtlwifi refactoring, and
-> some mac80211 mesh refactoring.  It must be Springtime!  Along with
-> all the refactoring, there is the usual variety of random tweaks here
-> and there in the wireless stack.
-> 
-> Please let me know if there are problems!
+"Because of the constant size and guaranteed 16 bit alignment, the inline
+compare_ether_addr function is much cheaper than calling memcmp."
 
-Pulled, thanks John.
+Signed-off-by: Jonathan Bither <jonbither@gmail.com>
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 3007bba..49e3b19 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1170,7 +1170,7 @@ ath5k_check_ibss_tsf(struct ath5k_hw *ah, struct sk_buff *skb,
+ 
+ 	if (ieee80211_is_beacon(mgmt->frame_control) &&
+ 	    le16_to_cpu(mgmt->u.beacon.capab_info) & WLAN_CAPABILITY_IBSS &&
+-	    memcmp(mgmt->bssid, common->curbssid, ETH_ALEN) == 0) {
++	    compare_ether_addr(mgmt->bssid, common->curbssid) == 0) {
+ 		/*
+ 		 * Received an IBSS beacon with the same BSSID. Hardware *must*
+ 		 * have updated the local TSF. We have to work around various
+@@ -1234,7 +1234,7 @@ ath5k_update_beacon_rssi(struct ath5k_hw *ah, struct sk_buff *skb, int rssi)
+ 
+ 	/* only beacons from our BSSID */
+ 	if (!ieee80211_is_beacon(mgmt->frame_control) ||
+-	    memcmp(mgmt->bssid, common->curbssid, ETH_ALEN) != 0)
++	    compare_ether_addr(mgmt->bssid, common->curbssid) != 0)
+ 		return;
+ 
+ 	ewma_add(&ah->ah_beacon_rssi_avg, rssi);
