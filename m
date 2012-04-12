@@ -1,51 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39302 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758247Ab2DZSIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 14:08:15 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC c-w 1/4] compat-wireless: fix header of compat-autoconf.h
-Date: Thu, 26 Apr 2012 20:07:43 +0200
-Message-Id: <1335463674-13003-3-git-send-email-hauke@hauke-m.de> (sfid-20120426_200819_626472_95863FD1)
-In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
-References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46853 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966196Ab2DLWcD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 18:32:03 -0400
+Received: by pbcun15 with SMTP id un15so2887549pbc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 15:32:03 -0700 (PDT)
+Date: Thu, 12 Apr 2012 15:31:59 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Alexander Holler <holler@ahsoftware.de>
+Cc: Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120412223159.GA11926@kroah.com> (sfid-20120413_003223_707026_A1DE804E)
+References: <20120411231102.GA6404@kroah.com>
+ <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+ <20120412002927.GA23167@kroah.com>
+ <4F8733C1.7020305@ahsoftware.de>
+ <20120412200606.GA23764@kroah.com>
+ <4F873B5D.7010309@ahsoftware.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F873B5D.7010309@ahsoftware.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Apr 12, 2012 at 10:30:21PM +0200, Alexander Holler wrote:
+> Am 12.04.2012 22:06, schrieb Greg KH:
+> >On Thu, Apr 12, 2012 at 09:57:53PM +0200, Alexander Holler wrote:
+> >>Hello,
+> >>
+> >>Am 12.04.2012 02:29, schrieb Greg KH:
+> >>
+> >>>>is there any chance for this one to be included in this review cycle?
+> >>>>
+> >>>>http://www.spinics.net/lists/linux-wireless/msg87999.html
+> >>>
+> >>>Have you read Documentation/stable_kernel_rules.txt?  Based on that, I
+> >>>don't think it can, yet, right?
+> >>
+> >>Hmm, after reading that, I think the text could need an update about
+> >>how to submit patches written by others (which can already be found
+> >>in the upstream tree).
+> >>
+> >>At least for me the text reads like only the authors can request
+> >>inclusion of a patch into the stable tree.
+> >
+> >Patches are always welcome, but I think you will find the file already
+> >describes this (hint, the first '-' line for the Procedure section
+> >handles it).
+> 
+> That reads:
+> 
+> "- Send the patch, after verifying that it follows the above rules, to
+>    stable@vger.kernel.org.  You must note the upstream commit ID in the
+>    changelog of your submission, as well as the kernel version you wish
+>    it to be applied to."
+> 
+> Maybe I'm a bit dumb, but what would be my changelog if the patch
+> was written by someone else (and e.g. fixes something the author
+> wasn't aware of or hasn't described)?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- scripts/gen-compat-autoconf.sh |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+It would be identical to what is in Linus's tree today.
 
-diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
-index c7bdd38..3b49565 100755
---- a/scripts/gen-compat-autoconf.sh
-+++ b/scripts/gen-compat-autoconf.sh
-@@ -130,14 +130,13 @@ function kernel_version_req {
- }
- 
- cat <<EOF
--#ifndef COMPAT_AUTOCONF_INCLUDED
--#define COMPAT_AUTOCONF_INCLUDED
- /*
-  * Automatically generated C config: don't edit
-  * $DATE 
-  * compat-wireless-2.6: $CREL
-  * linux-2.6: $KREL
-  */
-+#include <linux/version.h>
- #define COMPAT_RELEASE "$CREL"
- #define COMPAT_KERNEL_RELEASE "$KREL"
- EOF
-@@ -201,4 +200,3 @@ if [ -f $KLIB_BUILD/Makefile ]; then
- 		rm -f $MULT_DEP_FILE
- 	fi
- fi
--echo "#endif /* COMPAT_AUTOCONF_INCLUDED */"
--- 
-1.7.9.5
+Export the patch from git, add the needed information to the comment
+area (i.e. the git commit id and what kernel to apply it to) and send it
+to that email address.
 
+Or, even easier, just email the stable@ address the git commit id, and
+the kernel version you want it applied to, and cc: the authors of the
+patch and maintainers (on the signed-off-by: path).
+
+Hope this helps,
+
+greg k-h
