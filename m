@@ -1,80 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:38229 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755911Ab2DQPwV (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:58860 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753531Ab2DLVcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 11:52:21 -0400
-Received: by lbbgf7 with SMTP id gf7so10257528lbb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 08:52:18 -0700 (PDT)
-Message-ID: <1334677936.4965.13.camel@cumari> (sfid-20120417_175237_946788_9561FDBD)
-Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
-From: Luciano Coelho <coelho@ti.com>
-To: Randy Dunlap <rdunlap@xenotime.net>, johannes@sipsolutions.net
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 17 Apr 2012 18:52:16 +0300
-In-Reply-To: <4F8DB687.2090701@xenotime.net>
-References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>
-		 <4F8C784B.2040402@xenotime.net> <1334640620.27247.7.camel@cumari>
-	 <4F8DB687.2090701@xenotime.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 12 Apr 2012 17:32:36 -0400
+Received: by dake40 with SMTP id e40so2999487dak.11
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 14:32:35 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>,
+	Pavel Zubarev <pavel.zubarev@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org, ashok@cozybit.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/4] Mesh sync fixes
+Date: Thu, 12 Apr 2012 14:32:19 -0700
+Message-Id: <1334266343-3970-1-git-send-email-javier@cozybit.com> (sfid-20120412_233240_002279_A8D362C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-17 at 11:29 -0700, Randy Dunlap wrote: 
-> On 04/16/2012 10:30 PM, Luciano Coelho wrote:
-> 
-> > Hi Randy,
-> > 
-> > On Mon, 2012-04-16 at 12:51 -0700, Randy Dunlap wrote: 
-> >> From: Randy Dunlap <rdunlap@xenotime.net>
-> >>
-> >> wl12xx build fails with many undefined symbol errors when MAC80211
-> >> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
-> >> on MAC80211 (which already depends on CFG80211).
-> >>
-> >> Here are a few of the many build errors:
-> >>
-> > 
-> > [...]
-> > 
-> >> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-> >> Cc:	Luciano Coelho <coelho@ti.com>
-> >> Cc:	linux-wireless@vger.kernel.org
-> >> Cc:	"John W. Linville" <linville@tuxdriver.com>
-> >> ---
-> > 
-> > Thanks for the patch!
-> > 
-> > 
-> >> --- linux-next-20120416.orig/drivers/net/wireless/ti/wl12xx/Kconfig
-> >> +++ linux-next-20120416/drivers/net/wireless/ti/wl12xx/Kconfig
-> >> @@ -1,5 +1,6 @@
-> >>  config WL12XX
-> >>         tristate "TI wl12xx support"
-> >> +	depends on MAC80211
-> >>         select WLCORE
-> > 
-> > Do we really need this one? wl12xx selects WLCORE which in turn depends
-> > on MAC80211 (with your change below).  Maybe we don't need this?
-> 
-> Hi,
-> 
-> [testing...]
-> 
-> The build fails if either one of these "depends" is omitted.
+We noticed these while testing mesh synchronization.
 
-Yeah, thanks for testing.  I guess it's because, as Johannes said,
-select doesn't check the dependencies of the selected module.
+Javier Cardona (4):
+  mac80211: Set the correct values for hwmp (1) and airtimeLinkMetric
+    (1)
+  mac80211_hwsim: fixup for tsf setting
+  mac80211: Choose a new toffset setpoint if a big tsf jump is
+    detected.
+  mac80211: Take into account TSF adjustment latency in Toffset
+    setpoint
 
-Johannes, thanks for the explanation.
-
+ drivers/net/wireless/mac80211_hwsim.c |    1 +
+ include/linux/ieee80211.h             |    4 ++--
+ net/mac80211/mesh_sync.c              |   32 ++++++++++++++++++++++++++------
+ 3 files changed, 29 insertions(+), 8 deletions(-)
 
 -- 
-Cheers,
-Luca.
+1.7.5.4
 
