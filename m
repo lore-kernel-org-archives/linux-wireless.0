@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43050 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:48587 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174Ab2DPQTz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 12:19:55 -0400
+	id S1757926Ab2DLSLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 14:11:15 -0400
+Message-ID: <4F871AB8.3070302@openwrt.org> (sfid-20120412_201134_058299_0C8FE0BD)
+Date: Thu, 12 Apr 2012 20:11:04 +0200
 From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2] ath9k: add possible wiphy interface combinations
-Date: Mon, 16 Apr 2012 18:19:50 +0200
-Message-Id: <1334593190-90956-1-git-send-email-nbd@openwrt.org> (sfid-20120416_182148_363894_EC2CD380)
+MIME-Version: 1.0
+To: Michael Leun <ml@elektra.leun.net>
+CC: Felipe Contreras <felipe.contreras@gmail.com>,
+	Michael Leun <lkml20120218@newton.leun.net>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	Ben Greear <greearb@candelatech.com>,
+	casteyde.christian@free.fr,
+	Kelly Anderson <kelly@silka.with-linux.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sergio Correia <lists@uece.net>
+Subject: Re: 3.4-rc ath9k regression (Re: [ath9k-devel] 3.3.1 ath9k regression)
+References: <4F7A8EB7.4060200@silka.with-linux.com> <CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com> <4F7AB6FE.3080009@silka.with-linux.com> <20120403200306.0afbb48b@xenia.leun.net> <CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com> <CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com> <20120404235104.682cfad3@xenia.leun.net> <4F7DE3A4.1040705@candelatech.com> <CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com> <4F7F52BD.7060906@candelatech.com> <20120409010816.36244f17@xenia.leun.net> <CAD2nsn3-C8ZLmUpTDeA6HuPr-+=V5KkPJb6h5e7ZJsGi4v9p0g@mail.gmail.com> <20120409122549.7469543a@xenia.leun.net> <20120409160322.6b7b8c67@xenia.leun.net> <CAD2nsn0n-VQ8ZOm69BNrbFv5HK3cdm+22yKrYprwoeFz-E2Uew@mail.gmail.com> <20120409172933.4ca4775a@xenia.leun.net> <4F86DCB1.20507@openwrt.org> <CAMP44s1t+kVdRi_zhR1Qt045KEwco_PQhpa-cC9zMWc5QOFA8Q@mail.gmail.com> <20120412173518.2ecd8418@xenia.leun.net>
+In-Reply-To: <20120412173518.2ecd8418@xenia.leun.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/init.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+On 2012-04-12 5:35 PM, Michael Leun wrote:
+> On Thu, 12 Apr 2012 16:58:34 +0300
+> Felipe Contreras <felipe.contreras@gmail.com> wrote:
+> 
+>> On Thu, Apr 12, 2012 at 4:46 PM, Felix Fietkau <nbd@openwrt.org>
+>> wrote:
+>> > On 2012-04-09 5:29 PM, Michael Leun wrote:
+>> >> On Mon, 9 Apr 2012 19:52:45 +0530
+>> 
+>> >> Seems obvious to me, that this line
+>> >>
+>> >> if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
+>> >>
+>> >> makes the real difference.
+>> > Please try this patch with plain 3.3.1 or 3.4-rc2 to see if it fixes
+>> > this issue:
+>> 
+>> Nope, not here (3.3.1).
+> 
+> Also negative for 3.4-rc2, but that SLEEP<>AWAKE noise at the end
+> stopped. Still need "iwconfig wlan0 essid <myssid>" to make it ping
+> again (that not included in log below).
+OK, so my fix is definitely worth submitting, since it gets rid of some
+unnecessary sleep mode transitions. About the iwconfig command: are you
+not using wpa_supplicant?
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 7a6b9f6..622dd15 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -646,6 +646,21 @@ void ath9k_reload_chainmask_settings(struct ath_softc *sc)
- 		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
- }
- 
-+static const struct ieee80211_iface_limit if_limits[] = {
-+	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				 BIT(NL80211_IFTYPE_WDS) },
-+	{ .max = 8,	.types = BIT(NL80211_IFTYPE_AP) |
-+				 BIT(NL80211_IFTYPE_P2P_GO) |
-+				 BIT(NL80211_IFTYPE_MESH_POINT) },
-+};
-+
-+static const struct ieee80211_iface_combination if_comb = {
-+	.limits = if_limits,
-+	.n_limits = ARRAY_SIZE(if_limits),
-+	.max_interfaces = 2048,
-+	.num_different_channels = 1,
-+};
- 
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
-@@ -675,6 +690,9 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_MESH_POINT);
- 
-+	hw->wiphy->iface_combinations = &if_comb;
-+	hw->wiphy->n_iface_combinations = 1;
-+
- 	if (AR_SREV_5416(sc->sc_ah))
- 		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
--- 
-1.7.3.2
+> Due to Felipes result and 3.4-rc2 didn't repeat my test with 3.3.1, if
+> you think it would add useful information I could.
+Maybe it would be useful to get some more detailed logs from that.
 
+- Felix
