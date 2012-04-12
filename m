@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:37027 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753301Ab2DJKJ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 06:09:56 -0400
-Message-ID: <4F8406F0.9090900@neratec.com> (sfid-20120410_120959_621200_EAD28278)
-Date: Tue, 10 Apr 2012 12:09:52 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-MIME-Version: 1.0
-To: "Chadd, Adrian" <achadd@qca.qualcomm.com>
-CC: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com,
-	achadd@qca.qualcomm.com, nbd@openwrt.org
-Subject: Re: [PATCH 1/3] ath9k: add DFS pattern detector
-References: <1333466151-6570-1-git-send-email-zefir.kurtisi@neratec.com> <1333466151-6570-2-git-send-email-zefir.kurtisi@neratec.com> <CAJ-Vmon-kgy8kM=Q=4jBJFfMuMxprwjrj6Za_UyLWLEwYtMTEw@mail.gmail.com>
-In-Reply-To: <CAJ-Vmon-kgy8kM=Q=4jBJFfMuMxprwjrj6Za_UyLWLEwYtMTEw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:51179 "EHLO
+	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933717Ab2DLMmi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 08:42:38 -0400
+Received: by lagv3 with SMTP id v3so1994449lag.13
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 05:42:35 -0700 (PDT)
+Message-ID: <1334234553.10398.37.camel@cumari> (sfid-20120412_144241_700512_682B20E6)
+Subject: Re: [PATCH 00/16] wl12xx/wl1251/wlcore: reorganize drivers part 1
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: arik@wizery.com, linville@tuxdriver.com
+Date: Thu, 12 Apr 2012 15:42:33 +0300
+In-Reply-To: <1334137083-13490-1-git-send-email-coelho@ti.com>
+References: <1334137083-13490-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/06/2012 01:35 AM, Adrian Chadd wrote:
-> [top post]
+On Wed, 2012-04-11 at 12:37 +0300, Luciano Coelho wrote: 
+> Hi,
 > 
-> I think this is a good starting point. Let's aim to get this into the
-> tree and then start working on some further testing and debugging
-> APIs.
+> This is the first batch of patches from the reorganization our drivers and
+> preparation for the inclusion of the new wl18xx driver.
 > 
-> Thanks so much for working on this!
+> First of all, we moved all the TI wireless drivers into a new subdirectory
+> drivers/net/wireless/ti so we can keep all our drivers in the same place.
 > 
+> Then, we started splitting the wl12xx driver into a core module (wlcore) and a
+> lower driver (wl12xx).  This was done because the wl18xx driver shares a lot of
+> the same code.  The wlcore module will eventually become a kind of common
+> library for the different lower drivers to use.  This patchset contains only
+> the initial part of this work.  More will follow soon.
 > 
+> John, please let me know if it's okay to include the first patch, with which I
+> moved stuff around, in my tree so we can keep things in sync more easily.
 > 
-> Adrian
-> 
-Thanks for looking at it, Adrian.
+> Please review.
 
-As for the APIs, I have some debugfs based statistics used for pulse and
-pattern detection evaluation that I'll post as soon as the detector
-module gets accepted.
+Applied and pushed this series to wl12xx.git/master.
 
-Since DFS testing is a new topic anyhow, if you have some existing APIs
-used in your QCA test-lab, I'd suggest to adopt them for ath9k.
-Otherwise let's pool together and develop some sane and easy-to-use test
-framework to share the enormous testing and/or certification efforts
-(though realistically DFS testing will never be plug-and-playable to be
-performed by common developers outside full-blown testing labs :-().
-
-
-Thanks, Zefir
+-- 
+Cheers,
+Luca.
 
