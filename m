@@ -1,75 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:55683 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934713Ab2DLWDP (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54729 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754100Ab2DLQ5G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 18:03:15 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+55aFwa_wgBT85_Giy-23V5WpzRFrw9oCnFpTqVVam3DeG-7A@mail.gmail.com>
-References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
- <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
- <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
- <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
- <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
- <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
- <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> <CA+55aFwa_wgBT85_Giy-23V5WpzRFrw9oCnFpTqVVam3DeG-7A@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 12 Apr 2012 15:02:54 -0700
-Message-ID: <CAB=NE6XTF1e07n_rmx2ZP85xbAoeKb8binQWmdvw8MujFey2ug@mail.gmail.com> (sfid-20120413_000332_328848_94131316)
-Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Felipe Contreras <felipe.contreras@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk
-Content-Type: text/plain; charset=UTF-8
+	Thu, 12 Apr 2012 12:57:06 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath9k: Support ethtool getstats api.
+Date: Thu, 12 Apr 2012 09:56:59 -0700
+Message-Id: <1334249819-20771-1-git-send-email-greearb@candelatech.com> (sfid-20120412_185717_590935_ECAF60FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 2:44 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Thu, Apr 12, 2012 at 2:34 PM, Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
->>
->> So just reverting it from stable, *WITHOUT LEARNING THE LESSON*, is
->> not a no-op at all, it's a sign of being a f*cking moron.
->
-> Btw, the revert is now in my tree (commit 011afa1ed8c4), and marked
-> for stable. So *now* Greg can revert it from stable too.
->
-> But the important lesson to everybody should be that "we don't lose
-> fixes from -stable". If a problem was found in stable, it needs to be
-> fixed upstream. In fact, quite often people *do* find problems in
-> stable, because it tends to have more users more quickly than
-> mainline. That makes it really really important to make sure that
-> those problems get fixed upstream, and not hidden in stable due to
-> some kind of dieseased "it's a no-op to revert it" thinking.
->
-> End of story.
+From: Ben Greear <greearb@candelatech.com>
 
-FWIW if people want stable fixes propagated faster (before Linus sucks
-it in or Greg sucks it in after Linus) things like compat-wireless (to
-be renamed to compat-drivers) allows us to get these out, but we label
-them properly [0]. We in fact have a place holder for even other type
-of non-upstream patches that any PHB may come up with as required but
--- the key is to
+This returns many of the values that formerly could
+only be obtained from debugfs.  This should be an
+improvement when trying to access these counters
+programatically.  Currently this support is only
+enabled when DEBUGFS is enabled because otherwise
+these stats are not accumulated.
 
-1) help categorize these properly
-2) keep metrics of them
-3) prioritize upstream first
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-The pending-stable/ patches get patches out to the community faster
-than Linus / Greg can apply them or before we even get the community
-to test them. We get these sucked out by looking for the Cc:
-stable@vger.kernel.org The linux-next-cherry-pick/ allows you suck out
-non-stable patches and I gladly accept such patches so long as they
-are in linux-next and I can suck them out automatically if you Cc:
-stable@orbit-lab.org. There are similar tricks for the other types of
-patches.
+NOTE:  This depends on the wireless ethtool stats patches going
+       in first.
 
-[0] http://wireless.kernel.org/en/users/Download/stable/#Additional_patches_to_stable_releases
+:100644 100644 c8d1239... c18290a... M	drivers/net/wireless/ath/ath9k/main.c
+ drivers/net/wireless/ath/ath9k/main.c |  134 +++++++++++++++++++++++++++++++++
+ 1 files changed, 134 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c8d1239..c18290a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2405,6 +2405,134 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ATH9K_DEBUGFS
++
++/* Ethtool support for get-stats */
++
++#define AMKSTR(nm) #nm "_BE", #nm "_BK", #nm "_VI", #nm "_VO"
++static const char ath9k_gstrings_stats[][ETH_GSTRING_LEN] = {
++	"tx_pkts_nic",
++	"tx_bytes_nic",
++	"rx_pkts_nic",
++	"rx_bytes_nic",
++	AMKSTR(d_tx_pkts),
++	AMKSTR(d_tx_bytes),
++	AMKSTR(d_tx_mpdus_queued),
++	AMKSTR(d_tx_mpdus_completed),
++	AMKSTR(d_tx_mpdu_xretries),
++	AMKSTR(d_tx_aggregates),
++	AMKSTR(d_tx_ampdus_queued_hw),
++	AMKSTR(d_tx_ampdus_queued_sw),
++	AMKSTR(d_tx_ampdus_completed),
++	AMKSTR(d_tx_ampdu_retries),
++	AMKSTR(d_tx_ampdu_xretries),
++	AMKSTR(d_tx_fifo_underrun),
++	AMKSTR(d_tx_op_exceeded),
++	AMKSTR(d_tx_timer_expiry),
++	AMKSTR(d_tx_desc_cfg_err),
++	AMKSTR(d_tx_data_underrun),
++	AMKSTR(d_tx_delim_underrun),
++
++	"d_rx_decrypt_crc_err",
++	"d_rx_phy_err",
++	"d_rx_mic_err",
++	"d_rx_pre_delim_crc_err",
++	"d_rx_post_delim_crc_err",
++	"d_rx_decrypt_busy_err",
++
++	"d_rx_phyerr_radar",
++	"d_rx_phyerr_ofdm_timing",
++	"d_rx_phyerr_cck_timing",
++
++};
++#define ATH9K_SSTATS_LEN ARRAY_SIZE(ath9k_gstrings_stats)
++
++static void ath9k_get_et_strings(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif,
++				 u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS)
++		memcpy(data, *ath9k_gstrings_stats,
++		       sizeof(ath9k_gstrings_stats));
++}
++
++static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif, int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return ATH9K_SSTATS_LEN;
++	return 0;
++}
++
++#define PR_QNUM(_n) (sc->tx.txq_map[_n]->axq_qnum)
++#define AWDATA(elem)							\
++	do {								\
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].elem; \
++		data[i++] = sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].elem; \
++	} while (0)
++
++#define AWDATA_RX(elem)						\
++	do {							\
++		data[i++] = sc->debug.stats.rxstats.elem;	\
++	} while (0)
++
++static void ath9k_get_et_stats(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	struct ath_softc *sc = hw->priv;
++	int i = 0;
++
++	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_pkts_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_pkts_all);
++	data[i++] = (sc->debug.stats.txstats[PR_QNUM(WME_AC_BE)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_BK)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VI)].tx_bytes_all +
++		     sc->debug.stats.txstats[PR_QNUM(WME_AC_VO)].tx_bytes_all);
++	AWDATA_RX(rx_pkts_all);
++	AWDATA_RX(rx_bytes_all);
++
++	AWDATA(tx_pkts_all);
++	AWDATA(tx_bytes_all);
++	AWDATA(queued);
++	AWDATA(completed);
++	AWDATA(xretries);
++	AWDATA(a_aggr);
++	AWDATA(a_queued_hw);
++	AWDATA(a_queued_sw);
++	AWDATA(a_completed);
++	AWDATA(a_retries);
++	AWDATA(a_xretries);
++	AWDATA(fifo_underrun);
++	AWDATA(xtxop);
++	AWDATA(timer_exp);
++	AWDATA(desc_cfg_err);
++	AWDATA(data_underrun);
++	AWDATA(delim_underrun);
++
++	AWDATA_RX(decrypt_crc_err);
++	AWDATA_RX(phy_err);
++	AWDATA_RX(mic_err);
++	AWDATA_RX(pre_delim_crc_err);
++	AWDATA_RX(post_delim_crc_err);
++	AWDATA_RX(decrypt_busy_err);
++
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_RADAR]);
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_OFDM_TIMING]);
++	AWDATA_RX(phy_err_stats[ATH9K_PHYERR_CCK_TIMING]);
++
++	BUG_ON(i != ATH9K_SSTATS_LEN);
++}
++
++/* End of ethtool get-stats functions */
++
++#endif
++
++
+ struct ieee80211_ops ath9k_ops = {
+ 	.tx 		    = ath9k_tx,
+ 	.start 		    = ath9k_start,
+@@ -2433,4 +2561,10 @@ struct ieee80211_ops ath9k_ops = {
+ 	.get_stats	    = ath9k_get_stats,
+ 	.set_antenna	    = ath9k_set_antenna,
+ 	.get_antenna	    = ath9k_get_antenna,
++
++#ifdef CONFIG_ATH9K_DEBUGFS
++	.get_et_sset_count  = ath9k_get_et_sset_count,
++	.get_et_stats  = ath9k_get_et_stats,
++	.get_et_strings  = ath9k_get_et_strings,
++#endif
+ };
+-- 
+1.7.3.4
+
