@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:50667 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752253Ab2DMOBu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:60966 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964991Ab2DLOui (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 10:01:50 -0400
-Date: Fri, 13 Apr 2012 16:01:23 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120413160123.387e0a9b@stein> (sfid-20120413_160222_465700_1CD93FB4)
-In-Reply-To: <20120413154216.476a02ac@stein>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-	<20120413154216.476a02ac@stein>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 12 Apr 2012 10:50:38 -0400
+Message-ID: <4F86EBBA.6000303@candelatech.com> (sfid-20120412_165042_854789_C04563A7)
+Date: Thu, 12 Apr 2012 07:50:34 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 05/10] mac80211: Add more ethtools stats: survey, rates,
+ etc
+References: <1334166738-28243-1-git-send-email-greearb@candelatech.com>  <1334166738-28243-6-git-send-email-greearb@candelatech.com>  (sfid-20120411_195324_260400_4B452B18) <1334202406.3788.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1334202406.3788.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Apr 13 Stefan Richter wrote:
-> there can only be two kinds of regressions in stable:
-> 
->   A) First the regression was introduced into mainline, and accidentally it
->      was carried over from there into stable.
-> 
->   B) The regression only happened in stable because a backport from
->      mainline to stable went wrong, e.g. a prerequisite to the backport
->      was forgotten to be backported beforehand.
-> 
-> AFAIU we are talking about a regression of type A.
-> 
-> It seems you are arguing that stable candidate patches which fix
-> regressions of type A should be treated differently from other stable
-> candidate patches.
+On 04/11/2012 08:46 PM, Johannes Berg wrote:
+> On Wed, 2012-04-11 at 10:52 -0700, greearb@candelatech.com wrote:
+>
+>> --- a/net/mac80211/cfg.c
+>> +++ b/net/mac80211/cfg.c
+>> @@ -19,6 +19,7 @@
+>>   #include "cfg.h"
+>>   #include "rate.h"
+>>   #include "mesh.h"
+>> +#include "../wireless/core.h"
+>
+> NACK. Don't do that.
 
-Correction to the last sentence:
-Type A has two subtypes:  A.1) The regression occurred in mainline between
-the branch points v3.M and v3.N and resulted in a regression from v3.M.y
-to v3.N.y.  A.2) The regression occurred in mainline after branch point
-v3.N and resulted in a regression from v3.N to v3.N.y.
+So, move the pertinent header stuff to linux/include/ieee80211.h ??
 
-   A.1) Mainline and stable may be affected.
-   A.2) Mainline and stable may be affected.
-   B)   Stable is affected, mainline is not.
+Thanks,
+Ben
 
-You seem to be arguing that best practices to fix A.1 issues somehow do
-not apply to how to fix A.2 issues.  (They do apply though.)
+>
+> johannes
+
+
 -- 
-Stefan Richter
--=====-===-- -=-- -==-=
-http://arcgraph.de/sr/
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
