@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48309 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757655Ab2DLNcf (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.187]:59554 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753292Ab2DLERr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 09:32:35 -0400
-Date: Thu, 12 Apr 2012 09:20:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Heinz Diehl <htd@fancy-poultry.org>,
-	linux-kernel@vger.kernel.org, Greg KH <gregkh@linuxfoundation.org>,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	Thu, 12 Apr 2012 00:17:47 -0400
+Date: Thu, 12 Apr 2012 06:16:52 +0200
+From: Heinz Diehl <htd@fancy-poultry.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg KH <gregkh@linuxfoundation.org>, stable@vger.kernel.org,
+	torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
 	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
 	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	David Miller <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: Regression due to "ath9k: fix going to full-sleep on PS idle"
-Message-ID: <20120412132013.GA21495@tuxdriver.com> (sfid-20120412_153317_001651_0D362067)
-References: <CA+55aFxWD1bE0oiR4GpLP19MCm2CzwuApuYhcE_NF7bC+tFYjg@mail.gmail.com>
- <20358.25376.230264.236893@gargle.gargle.HOWL>
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120412041652.GA1872@fancy-poultry.org> (sfid-20120412_061807_325304_99D8183E)
+References: <20120411231102.GA6404@kroah.com>
+ <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20358.25376.230264.236893@gargle.gargle.HOWL>
+In-Reply-To: <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 10:37:44AM +0530, Sujith Manoharan wrote:
-> Linus Torvalds wrote:
-> > You guys need to fix the subject line (like this), and make sure that
-> > the right people are cc'd. This is not a "stable" issue - stable
-> > cannot revert stuff that hasn't been reverted upstream.
-> > 
-> > So instead of stable and Greg, it should be netdev and Davem.
-> > 
-> > David/John: multiple people are complaining about that commit. It
-> > really should be reverted, or a fix found. It's broken.
-> > 
-> > I can do the revert, but it would be better coming from the networking people.
+On 12.04.2012, Sergio Correia wrote: 
+
+> is there any chance for this one to be included in this review cycle?
 > 
-> John has already reverted the commit:
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless.git;a=commit;h=011afa1ed8c408d694957d2474d89dc81a60b70c
+> http://www.spinics.net/lists/linux-wireless/msg87999.html
 
-Yes, I'll be pushing to Dave M shortly.
+Thanks for pointing this out! This patch fixes my network problems
+which forced me to go back to a previous kernel.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
