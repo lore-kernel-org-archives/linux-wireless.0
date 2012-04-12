@@ -1,50 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42023 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753506Ab2D3RRs (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:47358 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934032Ab2DLPvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 13:17:48 -0400
-Date: Mon, 30 Apr 2012 13:03:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi warn_slowpath with 3.*
-Message-ID: <20120430170337.GA2560@tuxdriver.com> (sfid-20120430_191751_861148_4B63B7EF)
-References: <20120422182928.GA2854@ritirata.org>
- <20120430145803.GE2630@ritirata.org>
+	Thu, 12 Apr 2012 11:51:37 -0400
+Received: by obbtb18 with SMTP id tb18so2881536obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 08:51:37 -0700 (PDT)
+Message-ID: <4F86FA05.5080404@lwfinger.net> (sfid-20120412_175140_912049_2F202825)
+Date: Thu, 12 Apr 2012 10:51:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120430145803.GE2630@ritirata.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Suspicious RCU usage in mac80211
+References: <4F83A6DE.7070109@lwfinger.net>   (sfid-20120410_052034_062782_82AB2FD8) <1334201497.3788.1.camel@jlt3.sipsolutions.net>  <4F865155.2000202@lwfinger.net> (sfid-20120412_055225_110383_5156780F) <1334202842.3788.10.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1334202842.3788.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 30, 2012 at 04:58:04PM +0200, Antonio Quartulli wrote:
-> On Sun, Apr 22, 2012 at 08:29:29PM +0200, Antonio Quartulli wrote:
-> > Hello,
-> > 
-> > since linux-3.0 (I don't remember if it was the case even before), I'm getting
-> > this output in dmesg:
-> > 
-> > [   53.662990] ------------[ cut here ]------------
-> > [   53.663016] WARNING: at drivers/iommu/intel-iommu.c:2911
-> > intel_unmap_page+0x14b/0x180()
-> > [   53.663047] Hardware name: Latitude E5420
-> > [   53.663066] Driver unmaps unmatched page at PFN ffd1a000
-> 
-> 
-> I see that I always get the same addr passed to the unmap function:
-> 
-> [   23.950535] Driver unmaps unmatched page at PFN ffd1a000
-> 
-> is it a coincidence?
-> I'm running linux-3.3.3 right now. I can try wireless-testing if it would help.
+On 04/11/2012 10:54 PM, Johannes Berg wrote:
+>
+> What do you mean by "every time"? I wouldn't expect the timer to fire
+> every time you set up aggregation etc., the timer firing is a special
+> case to start with.
 
-Just for the record, we are seeing a similar problem on RHEL 6.3
-(which has an iwlwifi driver derived from linux-3.2).
+I meant it is intermittent, or it required some special setup that I have not 
+duplicated, as I have seen the condition only once.
 
-	https://bugzilla.redhat.com/show_bug.cgi?id=815998
+Larry
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
