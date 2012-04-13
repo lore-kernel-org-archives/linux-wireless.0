@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37120 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760821Ab2DKTrY (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:45056 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751194Ab2DMOZ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 15:47:24 -0400
-Date: Wed, 11 Apr 2012 15:35:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Thomas Pedersen <c_tpeder@qca.qualcomm.com>,
-	ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] ath6kl: handle concurrent AP-STA channel switches
-Message-ID: <20120411193542.GB2479@tuxdriver.com> (sfid-20120411_214728_250855_B2C05EE1)
-References: <1333744548-18028-1-git-send-email-c_tpeder@qca.qualcomm.com>
- <1333744548-18028-2-git-send-email-c_tpeder@qca.qualcomm.com>
- <4F82FAA6.509@qca.qualcomm.com>
+	Fri, 13 Apr 2012 10:25:26 -0400
+Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id AC09E21047
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Apr 2012 10:25:25 -0400 (EDT)
+Date: Fri, 13 Apr 2012 07:25:23 -0700
+From: Greg KH <greg@kroah.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Till Kamppeter <till.kamppeter@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [lsb-discuss] Google Summer of Code 2012 - 12 student slots for
+ the Linux Foundation
+Message-ID: <20120413142523.GC3106@kroah.com> (sfid-20120413_162530_350678_B3EE29A1)
+References: <4F870597.2010101@gmail.com>
+ <20120412224426.GA15398@kroah.com>
+ <20120413113542.3b4177b7@pyramind.ukuu.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F82FAA6.509@qca.qualcomm.com>
+In-Reply-To: <20120413113542.3b4177b7@pyramind.ukuu.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 09, 2012 at 06:05:10PM +0300, Kalle Valo wrote:
-> On 04/06/2012 11:35 PM, Thomas Pedersen wrote:
-> > If an ath6kl AP vif is beaconing on one channel, and a STA vif
-> > associates on a different channel, a WMI_DISCONNECT event will be sent
-> > to the AP vif. Make the AP vif follow the STA interface, and notify
-> > userspace.
+On Fri, Apr 13, 2012 at 11:35:42AM +0100, Alan Cox wrote:
+> > How do we mark an application as "we should accept this one"?
 > > 
-> > Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+> > I'd like to accept:
+> > 	http://www.google-melange.com/gsoc/proposal/review/google/gsoc2012/dvdhrm/14002
+> > 	(KMSCON: a DRM based terminal emulator)
 > 
-> John, if it's ok for you I can take this patch ath6kl.git once you have
-> applied the cfg80211 patch.
+> No point trying to discuss private URLs on a public list without context
+> is there ?
 
-OK.
+My appologies, I didn't realize this was originally sent to a public
+list, and also that these proposals aren't able to be reached by anyone.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+As this is something I'd like to you at least ACK as a good idea to do,
+I'll ask the student to bounce it to you.
+
+thanks,
+
+greg k-h
