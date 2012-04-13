@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:50300 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751553Ab2DBR3a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 13:29:30 -0400
-Message-ID: <1333387768.20402.7.camel@joe2Laptop> (sfid-20120402_192947_273366_34D87B51)
-Subject: Re: CONFIG_RTLWIFI_DEBUG default y
-From: Joe Perches <joe@perches.com>
-To: Borislav Petkov <bp@alien8.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Date: Mon, 02 Apr 2012 10:29:28 -0700
-In-Reply-To: <20120402171733.GB13264@x1.osrc.amd.com>
-References: <20120402164920.GA13264@x1.osrc.amd.com>
-	 <1333385618.15422.17.camel@joe2Laptop>
-	 <20120402171733.GB13264@x1.osrc.amd.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:42806 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932961Ab2DMKdP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2012 06:33:15 -0400
+Date: Fri, 13 Apr 2012 11:35:42 +0100
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Greg KH <greg@kroah.com>
+Cc: Till Kamppeter <till.kamppeter@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [lsb-discuss] Google Summer of Code 2012 - 12 student slots for
+ the Linux Foundation
+Message-ID: <20120413113542.3b4177b7@pyramind.ukuu.org.uk> (sfid-20120413_123318_587121_743A529E)
+In-Reply-To: <20120412224426.GA15398@kroah.com>
+References: <4F870597.2010101@gmail.com>
+	<20120412224426.GA15398@kroah.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-04-02 at 19:17 +0200, Borislav Petkov wrote:
-> On Mon, Apr 02, 2012 at 09:53:38AM -0700, Joe Perches wrote:
-> > To keep all the "printk(KERN_DEBUG" to "pr_debug(" conversion
-> > output the same as the it was prior to the patch.
-> > 
-> > Larry can default it to off if he wants.
+> How do we mark an application as "we should accept this one"?
 > 
-> >From looking at one user of this -
-> drivers/net/wireless/rtlwifi/rtl8192ce/hw.c - some of the messages look
-> like important ones which you wanna have enabled always, f.e. error
-> handling in rtl92ce_hw_init().
-> 
-> It probably needs splitting into debugging messages which are default n
-> and always-on messages.
+> I'd like to accept:
+> 	http://www.google-melange.com/gsoc/proposal/review/google/gsoc2012/dvdhrm/14002
+> 	(KMSCON: a DRM based terminal emulator)
 
->From my perspective, anything KERN_DEBUG that should always be
-output should not be KERN_DEBUG but some other KERN_<LEVEL>.
+No point trying to discuss private URLs on a public list without context
+is there ?
 
+ALan
