@@ -1,74 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:55134 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756006Ab2D0KMO convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:36722 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757131Ab2DMXSe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 06:12:14 -0400
+	Fri, 13 Apr 2012 19:18:34 -0400
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20120427095842.GW3157@wantstofly.org>
-References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
-	<20120427091405.GS3157@wantstofly.org>
-	<CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
-	<20120427094007.GU3157@wantstofly.org>
-	<CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
-	<20120427094637.GV3157@wantstofly.org>
-	<CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
-	<20120427095842.GW3157@wantstofly.org>
-Date: Fri, 27 Apr 2012 12:12:13 +0200
-Message-ID: <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com> (sfid-20120427_121242_059184_916C3C1D)
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <20120413230525.GA13995@burratino>
+References: <20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413154216.476a02ac@stein>
+	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
+	<20120413230525.GA13995@burratino>
+Date: Sat, 14 Apr 2012 02:18:33 +0300
+Message-ID: <CAMP44s0OdVBTwVtCoru-xvB=LVtO56jgku7X-0a7mUz1=iVCzw@mail.gmail.com> (sfid-20120414_011854_192269_E4F76725)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:58 AM, Lennert Buytenhek
-<buytenh@wantstofly.org> wrote:
-> On Fri, Apr 27, 2012 at 11:56:00AM +0200, Sedat Dilek wrote:
+On Sat, Apr 14, 2012 at 2:05 AM, Jonathan Nieder <jrnieder@gmail.com> wrote:
+> Felipe Contreras wrote:
+>> On Fri, Apr 13, 2012 at 4:42 PM, Stefan Richter wrote:
 >
->> >> >> Are you planning to or even working on support (for) 8361 devices?
->> >> >
->> >> > I don't have any such plans, and I don't know of anyone who does.
->> >>
->> >> Does 8361 require firmware support?
->> >
->> > What do you mean by that?
+>>> If you do not like to wait for Linus and Greg, you simply have to derive
+>>> an own kernel which additionally contains your preferred fixes.
 >>
->> IIRC ath5k for example needs no external firmware file.
+>> Yes, because clearly everybody thinks the process is perfect, and
+>> criticizing it is heresy.
 >
-> The 8361 requires firmware to be loaded into it before it'll do
-> anything useful.
->
->
->> >> Does a firmware file exist (name?)?
->> >
->> > There's firmware for the 8361 out there, however, that version of
->> > the firmware implements a firmware API that is different from the
->> > one that mwl8k currently implements.
->> >
->> > You could add 8361 support to mwl8k, but then you'd have to go over
->> > all the firmware command invocations in mwl8k and make sure that they
->> > will work on the 8361 firmware that you're trying to support as well.
->>
->> Without having a 8361 this will be even harder to walk through.
->>
->> Anyway, thanks for your detailed explanations.
->>
->> What's the alternative for such affected users?
->> Use ndis-wrapper?
->
-> I'm not sure.  I've never tried to get a 8361 work under Linux.
+> Close.  Not everyone.  For example, you do not think the process is
+> perfect.
 
-Just found on [1] this same wrong patch in [2] :-).
-Dunno if [3] worked and from where they have stolen fw-files.
+So you think the process is *perfect*? I would have expected
+reasonable people to know that nothing is perfect, realize the
+sarcasm, and meditate for a second. But it seems expecting somebody to
+agree the process is not perfect is too much to ask.
 
-- Sedat -
+> I don't think Stefan meant the above as tongue-in-cheek, for what it's
+> worth.  Another stable kernel with different rules really would be an
+> interesting exercise, and would probably fulfill a need for a certain
+> audience.
+>
+> It's not like nobody does that already, anyway.  For example, I hear
+> Fedora has a kernel that they maintain well for a different audience,
+> using different rules.
 
-[1] https://dev.openwrt.org/ticket/7209
-[2] https://dev.openwrt.org/attachment/ticket/7209/mwl8k_fix_pci_id.patch
-[3] https://dev.openwrt.org/attachment/ticket/7209/mwl8k_8361p.patch
+Of course, although the difference with the stable kernel would be
+very small if the only thing added is an extra rule for acceptance:
+"It reverts an earlier
+patch to 'stable'."
+
+But "we do this, and if you don't like it you can do whatever you
+want" is not a valid argument in favor of the status quo, even though
+it's used a lot in open source, and it's true, and there's nothing
+wrong with that... I yet have to see an answer to my arguments, and
+not a regurgitated answer for something nobody is proposing.
+
+Cheers.
+
+-- 
+Felipe Contreras
