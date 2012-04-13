@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:1930 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752259Ab2DSVMS (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36618 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759059Ab2DMLNx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 17:12:18 -0400
-Message-ID: <1334869564.25074.35.camel@t41.thuisdomein> (sfid-20120419_234809_527572_8442B51C)
-Subject: ath5k phy0: failed to warm reset the MAC Chip
-From: Paul Bolle <pebolle@tiscali.nl>
-To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Thu, 19 Apr 2012 23:06:04 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 13 Apr 2012 07:13:53 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 3/3] ath9k: fix beacon descriptor
+Date: Fri, 13 Apr 2012 16:44:22 +0530
+Message-ID: <1334315662-5017-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120413_131411_898945_32C5362B)
+In-Reply-To: <1334315662-5017-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1334315662-5017-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-0) In the logs of a laptop I use I've found error pairs like this error
-pair:
-    <3>[13053.997856] ath5k phy0: failed to warm reset the MAC Chip
-    <3>[13053.997871] ath5k phy0: can't reset hardware (-5)
+The tx interrupt for beacon queue is configured only for edma chips.
+As the edma chip does not support per descriptor interrupt, no need to
+set INTREQ for every beacon descriptor. And also clear ps filter for
+beacon frame.
 
-The logs show it for a v3.3 based kernel and for the v3.4-rc2 kernel. I
-can't say whether or not preceding kernels also triggered it.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-1) I only noticed these errors because I tend to check these logs for
-errors: I cannot link these errors to drops in (the quality of) wireless
-connectivity.
-
-2) The call chain involved should be:
-
-drivers/net/wireless/ath/ath5k/base.c:
-2737 ath5k_reset(...)
-     {
-2765         ret = ath5k_hw_reset(...);
-2766         if (ret) {
-2767                 ATH5K_ERR(ah, "can't reset hardware (%d)\n", ret);
-2768                 goto err;
-2769         }
-     }
-
-drivers/net/wireless/ath/ath5k/base.c:
-1144 ath5k_hw_reset(...)
-     {
-1296         ret = ath5k_hw_nic_wakeup(...);
-1297         if (ret)
-1298                 return ret;
-     }
-
- 667 ath5k_hw_nic_wakeup(...)
-     {
- 728                 ret = ath5k_hw_nic_reset(...);
- 729 
- 730         if (ret) {
- 731                 ATH5K_ERR(ah, "failed to warm reset the MAC Chip\n");
- 732                 return -EIO;
- 733         }
-     }
-
- 395 ath5k_hw_nic_reset(...)
-     {
- 421         ret = ath5k_hw_register_timeout(...);
-     }
-
-  65 ath5k_hw_register_timeout(...)
-     {
-  80         return (i <= 0) ? -EAGAIN : 0;
-     }
-
-Note that the -EAGAIN returned by ath5k_hw_register_timeout() and
-ath5k_hw_nic_reset() is transformed to -EIO by ath5k_hw_nic_wakeup().
-
-3) Do these message really indicate errors? Or can they perhaps be
-downgraded to (say) KERN_INFO level (ie, <6> prefix)?
-
-
-Paul Bolle
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index c7f012a..8874bb5 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -91,7 +91,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ieee80211_vif *vif,
+ 	info.txpower = MAX_RATE_POWER;
+ 	info.keyix = ATH9K_TXKEYIX_INVALID;
+ 	info.keytype = ATH9K_KEY_TYPE_CLEAR;
+-	info.flags = ATH9K_TXDESC_NOACK | ATH9K_TXDESC_INTREQ;
++	info.flags = ATH9K_TXDESC_NOACK | ATH9K_TXDESC_CLRDMASK;
+ 
+ 	info.buf_addr[0] = bf->bf_buf_addr;
+ 	info.buf_len[0] = roundup(skb->len, 4);
+-- 
+1.7.10
 
