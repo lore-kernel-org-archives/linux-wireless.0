@@ -1,44 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:59648 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752748Ab2DROpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:45:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/15] iwlwifi: Added foreward declaration for iwl_cfg in op_mode
-Date: Wed, 18 Apr 2012 07:41:13 -0700
-Message-Id: <1334760077-5714-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120418_164558_136846_D52BC486)
-In-Reply-To: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:23505 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755979Ab2DMS5q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2012 14:57:46 -0400
+Date: Fri, 13 Apr 2012 13:57:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192ce: Remove false positives for kmemleak
+Message-ID: <4f887727.x4wO2l98w0Ay4oPm%Larry.Finger@lwfinger.net> (sfid-20120413_205748_561926_E02E29FC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+When rtl8192ce is in operation, kmemleak indicates a number of leaks, yet
+when the driver is removed all are gone. These false positives happen
+in two locations:
 
-Please merge this with "iwlwifi: op_mode holds its pointer
-to the config"
+unreferenced object 0xffff880041124000 (size 9536):
+  comm "work_for_cpu", pid 9295, jiffies 4295037203 (age 20596.320s)
+  hex dump (first 32 bytes):
+    33 00 00 01 01 6d 00 00 00 00 b1 0e 21 0b 00 00  3....m......!...
+    01 01 6d 00 00 00 00 8b 20 c0 e9 00 00 01 01 6d  ..m..... ......m
+  backtrace:
+    [<ffffffff8137a1b1>] kmemleak_alloc+0x21/0x50
+    [<ffffffff8138d01f>] kmalloc_large_node+0x9a/0xa6
+    [<ffffffff811335a5>] __kmalloc_node_track_caller+0x175/0x3b0
+    [<ffffffff812ddfe3>] __alloc_skb+0x73/0x230
+    [<ffffffff812de1b8>] dev_alloc_skb+0x18/0x30
+    [<ffffffffa091a3b7>] rtl_pci_probe+0x10e0/0x17d2 [rtlwifi]
+-- snip --
+unreferenced object 0xffff8800b4d3f600 (size 256):
+  comm "kworker/u:2", pid 13221, jiffies 4297830173 (age 9424.568s)
+  hex dump (first 32 bytes):
+    1c d6 45 b1 00 88 ff ff 1c d6 45 b1 00 88 ff ff  ..E.......E.....
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff8137a1b1>] kmemleak_alloc+0x21/0x50
+    [<ffffffff81130f43>] kmem_cache_alloc_node+0x153/0x270
+    [<ffffffff812ddfb6>] __alloc_skb+0x46/0x230
+    [<ffffffff812de1b8>] dev_alloc_skb+0x18/0x30
+    [<ffffffffa093264a>] rtl92c_set_fw_rsvdpagepkt+0x22a/0x5c0 [rtl8192c_common]
+-- snip --
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-op-mode.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-index 73e1a0e..4ef742b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-@@ -69,6 +69,7 @@ struct sk_buff;
- struct iwl_device_cmd;
- struct iwl_rx_cmd_buffer;
- struct iwl_fw;
-+struct iwl_cfg;
+John,
+
+Another patch for 3.5.
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+@@ -34,6 +34,7 @@
+ #include "ps.h"
+ #include "efuse.h"
+ #include <linux/export.h>
++#include <linux/kmemleak.h>
  
- /**
-  * DOC: Operational mode - what is it ?
--- 
-1.7.0.4
-
+ static const u16 pcibridge_vendors[PCI_BRIDGE_VENDOR_MAX] = {
+ 	PCI_VENDOR_ID_INTEL,
+@@ -1099,6 +1100,7 @@ static int _rtl_pci_init_rx_ring(struct
+ 			u32 bufferaddress;
+ 			if (!skb)
+ 				return 0;
++			kmemleak_not_leak(skb);
+ 			entry = &rtlpci->rx_ring[rx_queue_idx].desc[i];
+ 
+ 			/*skb->dev = dev; */
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+@@ -34,6 +34,7 @@
+ #include "../rtl8192ce/def.h"
+ #include "fw_common.h"
+ #include <linux/export.h>
++#include <linux/kmemleak.h>
+ 
+ static void _rtl92c_enable_fw_download(struct ieee80211_hw *hw, bool enable)
+ {
+@@ -776,6 +777,8 @@ void rtl92c_set_fw_rsvdpagepkt(struct ie
+ 	skb = dev_alloc_skb(totalpacketlen);
+ 	if (!skb)
+ 		return;
++	kmemleak_not_leak(skb);
++
+ 	memcpy((u8 *) skb_put(skb, totalpacketlen),
+ 	       &reserved_page_packet, totalpacketlen);
+ 
