@@ -1,14 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:65161 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754671Ab2DNQDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 12:03:07 -0400
-Date: Sat, 14 Apr 2012 18:02:42 +0200
-From: Willy Tarreau <w@1wt.eu>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:46768 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932603Ab2DMI6k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2012 04:58:40 -0400
+Date: Fri, 13 Apr 2012 10:57:46 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	Adrian Chadd <adrian@freebsd.org>,
+Cc: Adrian Chadd <adrian@freebsd.org>,
 	Greg KH <gregkh@linuxfoundation.org>,
 	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org, torvalds@linux-foundation.org,
@@ -18,33 +17,58 @@ Cc: Jonathan Nieder <jrnieder@gmail.com>,
 	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
 	"John W. Linville" <linville@tuxdriver.com>
 Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120414160242.GG19802@1wt.eu> (sfid-20120414_180311_463248_FCB59FA7)
-References: <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com> <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com> <20120413105746.10ffb120@stein> <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com> <20120413154216.476a02ac@stein> <CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com> <20120413230525.GA13995@burratino> <CAMP44s0OdVBTwVtCoru-xvB=LVtO56jgku7X-0a7mUz1=iVCzw@mail.gmail.com> <20120414054401.GC19802@1wt.eu> <CAMP44s3uTTWSJCohLGf64vV6h6PgSPJ++UrmeRkRWebJWjvJ_A@mail.gmail.com>
+Message-ID: <20120413105746.10ffb120@stein> (sfid-20120413_105857_067467_41878F8B)
+In-Reply-To: <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s3uTTWSJCohLGf64vV6h6PgSPJ++UrmeRkRWebJWjvJ_A@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 14, 2012 at 06:43:06PM +0300, Felipe Contreras wrote:
-> I understand you use 'stable' as guarantee, and I know it works, but
-> do you *need* this guarantee?
-> 
-> And before you go on why you need this guarantee to avoid fixes to be
-> lost, this is an *entirely different thing*; we are not talking about
-> fixes in 'stable' that don't exist in mainline--for which there is
-> evidence that those caused problems in the past, we are talking about
-> reverting patches from 'stable' that are not part of the upstream
-> release from where the 'stable' branch was forked--*nobody* has showed
-> any evidence that this has happened before and caused issues.
+On Apr 12 Felipe Contreras wrote:
+> But this is exactly the opposite; the patch that broke things is in
+> the 'release branch' (3.3.1); it's not in upstream (3.3). Sure, it's
+> also on a later upstream, which is also broken.
+            ^^^^^
+No, upstream /earlier/ than 3.3.1 contains the defect.
 
-Why make a special case for the version from which stable was derived ?
-That doesn't make sense at all to me since by definition, *all* patches
-that are in stable were not in this version !
+v3.4-rc1 is older than v3.3.1.
 
-Take it simpler if you want : *all* patches in stable need an upstream
-commit ID, whether they're backports or reverts. You don't revert a
-patch from stable, you backport a revert from upstream.
+3.3 is not 3.3.y's upstream.  3.3 is the branch point from where 3.3.y
+began.
 
-Willy
+torvalds/linux.git #HEAD is 3.3.y's upstream.
+A git snapshot shortly before v3.4-rc1 was v3.3.1's upstream.
 
+Furthermore, consider this:  You as user of the 3.3.y series are using a
+temporary, dead-end side branch.  Its maintenance will stop at some point,
+and you will be left looking for a different, maintained series to migrate
+to.  You will be most interested in that series /not/ containing any
+regressions that you suffered already through the 3.3.y lifetime.
+
+That other 3.3+n.y kernel to which you will be wanting to migrate to
+should obviously be based on a branch point which does not lack any of the
+fixes which your last 3.3.y already had.
+
+I.e. you require that stable kernels are branched off of good branch
+points.  Mainline releases, i.e. releases of branch points, happen on a
+time-based scheme (as opposed to a feature-based scheme).  So a rule whose
+purpose is to ensure that future stable branch points contain all fixes
+that earlier stable branches had already must necessarily be a time-based
+rule.  This time-based rule is "fix mainline before stable".
+
+The rule is there to protect you, as a user of the stable series, from
+repeated regressions.
+-- 
+Stefan Richter
+-=====-===-- -=-- -==-=
+http://arcgraph.de/sr/
