@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1031 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752426Ab2D3J0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 05:26:53 -0400
-Date: Mon, 30 Apr 2012 11:26:50 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: H Hartley Sweeten <hartleys@visionengravers.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	davem@davemloft.net
-Subject: Re: [PATCH] NFC: nci/data.c: quiet sparse noise about plain integer
- as NULL pointer
-Message-ID: <20120430092650.GC31528@sortiz-mobl> (sfid-20120430_112717_224099_ECB1B210)
-References: <201204261031.16737.hartleys@visionengravers.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201204261031.16737.hartleys@visionengravers.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:50667 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752253Ab2DMOBu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2012 10:01:50 -0400
+Date: Fri, 13 Apr 2012 16:01:23 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120413160123.387e0a9b@stein> (sfid-20120413_160222_465700_1CD93FB4)
+In-Reply-To: <20120413154216.476a02ac@stein>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413154216.476a02ac@stein>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Thu, Apr 26, 2012 at 10:31:16AM -0700, H Hartley Sweeten wrote:
-> Pointers should be cleared with NULL, not 0.
+On Apr 13 Stefan Richter wrote:
+> there can only be two kinds of regressions in stable:
 > 
-> Quiets a couple sparse warnings of the type:
+>   A) First the regression was introduced into mainline, and accidentally it
+>      was carried over from there into stable.
 > 
-> warning: Using plain integer as NULL pointer
+>   B) The regression only happened in stable because a backport from
+>      mainline to stable went wrong, e.g. a prerequisite to the backport
+>      was forgotten to be backported beforehand.
 > 
-> Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
-> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-> Cc: Samuel Ortiz <sameo@linux.intel.com>
-> Cc: "David S. Miller" <davem@davemloft.net>
-This one and the 4 other NFC patches applied to my nfc-next tree, thanks.
+> AFAIU we are talking about a regression of type A.
+> 
+> It seems you are arguing that stable candidate patches which fix
+> regressions of type A should be treated differently from other stable
+> candidate patches.
 
-Cheers,
-Samuel.
+Correction to the last sentence:
+Type A has two subtypes:  A.1) The regression occurred in mainline between
+the branch points v3.M and v3.N and resulted in a regression from v3.M.y
+to v3.N.y.  A.2) The regression occurred in mainline after branch point
+v3.N and resulted in a regression from v3.N to v3.N.y.
 
+   A.1) Mainline and stable may be affected.
+   A.2) Mainline and stable may be affected.
+   B)   Stable is affected, mainline is not.
+
+You seem to be arguing that best practices to fix A.1 issues somehow do
+not apply to how to fix A.2 issues.  (They do apply though.)
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Stefan Richter
+-=====-===-- -=-- -==-=
+http://arcgraph.de/sr/
