@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4793 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754249Ab2DSTbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 15:31:10 -0400
-Message-ID: <4F9067F6.90001@broadcom.com> (sfid-20120419_213114_144090_A0257527)
-Date: Thu, 19 Apr 2012 21:31:02 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [RFC PATCH 0/8] brcm80211: smac: rework regulatory support
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from na3sys009aog134.obsmtp.com ([74.125.149.83]:53231 "HELO
+	na3sys009aog134.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753023Ab2DMCIs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Apr 2012 22:08:48 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>, <stable@vger.kernel.org>,
+	#@marvell.com, 3.2.y@marvell.com, 3.3.y@marvell.com
+Subject: [PATCH 3.4] mwifiex: update pcie8766 scratch register addresses
+Date: Thu, 12 Apr 2012 19:00:35 -0700
+Message-Id: <1334282435-29657-1-git-send-email-bzhao@marvell.com> (sfid-20120413_040852_111175_4C81528A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 10:17 PM, Seth Forshee wrote:
-> Hi Arnd,
->
-> Here's the latest update to the brcmsmac regulatory rework that I've
-> been working on. I've broken it up into a series of smaller patches,
-> cleaned things up, and finished what changes I can with the information
-> available to me.
->
+The scratch register addresses have been changed for newer chips.
+Since the old chip was never shipped and it will not be supported
+any more, just update register addresses to support the new chips.
 
-Hi Seth,
+Cc: <stable@vger.kernel.org> # 3.2.y, 3.3.y
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.h |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
 
-Just to indicate what we are doing with regard to your patches. I 
-organized a review internally for these patches. Waiting for one more to 
-sent back comments. Just pinged him today. So end of this week I can 
-probably sent you the collected comments.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
+index 445ff21..2f218f9 100644
+--- a/drivers/net/wireless/mwifiex/pcie.h
++++ b/drivers/net/wireless/mwifiex/pcie.h
+@@ -48,15 +48,15 @@
+ #define PCIE_HOST_INT_STATUS_MASK			0xC3C
+ #define PCIE_SCRATCH_2_REG				0xC40
+ #define PCIE_SCRATCH_3_REG				0xC44
+-#define PCIE_SCRATCH_4_REG				0xCC0
+-#define PCIE_SCRATCH_5_REG				0xCC4
+-#define PCIE_SCRATCH_6_REG				0xCC8
+-#define PCIE_SCRATCH_7_REG				0xCCC
+-#define PCIE_SCRATCH_8_REG				0xCD0
+-#define PCIE_SCRATCH_9_REG				0xCD4
+-#define PCIE_SCRATCH_10_REG				0xCD8
+-#define PCIE_SCRATCH_11_REG				0xCDC
+-#define PCIE_SCRATCH_12_REG				0xCE0
++#define PCIE_SCRATCH_4_REG				0xCD0
++#define PCIE_SCRATCH_5_REG				0xCD4
++#define PCIE_SCRATCH_6_REG				0xCD8
++#define PCIE_SCRATCH_7_REG				0xCDC
++#define PCIE_SCRATCH_8_REG				0xCE0
++#define PCIE_SCRATCH_9_REG				0xCE4
++#define PCIE_SCRATCH_10_REG				0xCE8
++#define PCIE_SCRATCH_11_REG				0xCEC
++#define PCIE_SCRATCH_12_REG				0xCF0
+ 
+ #define CPU_INTR_DNLD_RDY				BIT(0)
+ #define CPU_INTR_DOOR_BELL				BIT(1)
+-- 
+1.7.0.2
 
