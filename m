@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42960 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756256Ab2D3Scs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 14:32:48 -0400
-Date: Mon, 30 Apr 2012 14:22:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-	Madhan Jaganathan <madhanj@qca.qualcomm.com>,
-	Kai Shi <kaishi@qca.qualcomm.com>
-Subject: Re: [PATCH] Revert "ath9k_hw: Fix incorrect spur_freq_sd for AR9003"
-Message-ID: <20120430182200.GC2560@tuxdriver.com> (sfid-20120430_203251_706995_06BDA5A2)
-References: <1335594521-1963-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1335594521-1963-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mga09.intel.com ([134.134.136.24]:41077 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754137Ab2DMTGs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2012 15:06:48 -0400
+From: <wey-yi.w.guy@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/1] mac80211: add function retrieve average rssi
+Date: Fri, 13 Apr 2012 12:02:57 -0700
+Message-Id: <1334343777-20798-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120413_210651_693608_C98CB9A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 28, 2012 at 11:58:41AM +0530, Rajkumar Manoharan wrote:
-> This reverts commit a844adfd7bee4edc66d337de6c33b348e83552a8.
-> 
-> spur_freq_sd (for self-corr in AGC) is defined with respect to the
-> center of each 20MHz channel while spur_phase_delta (for self-corr
-> in Rx and spur data filter) is defined with respect to the center
-> of current RF channel.
-> 
-> So in short, we need to subtract spur_freq_sd (for self-corr in AGC)
-> by the offset between the center of primary20 and the center of RF
-> channel in SW. This offset could be +/10 MHz for dynamic 40.
-> 
-> Cc: Madhan Jaganathan <madhanj@qca.qualcomm.com>
-> Signed-off-by: Kai Shi <kaishi@qca.qualcomm.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-What actual bug is this causing?  Should this be applied to 3.4?
+Add utility function to provide the average rssi per vif
 
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> index 5358553..11abb97 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-> @@ -373,7 +373,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
->  			else
->  				spur_subchannel_sd = 0;
->  
-> -			spur_freq_sd = (freq_offset << 9) / 11;
-> +			spur_freq_sd = ((freq_offset + 10) << 9) / 11;
->  
->  		} else {
->  			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
-> @@ -382,7 +382,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
->  			else
->  				spur_subchannel_sd = 1;
->  
-> -			spur_freq_sd = (freq_offset << 9) / 11;
-> +			spur_freq_sd = ((freq_offset - 10) << 9) / 11;
->  
->  		}
->  
-> -- 
-> 1.7.10
-> 
-> 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ include/net/mac80211.h |    3 +++
+ net/mac80211/util.c    |    8 ++++++++
+ 2 files changed, 11 insertions(+), 0 deletions(-)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 32cd517..20a2ddd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3800,4 +3800,7 @@ int ieee80211_add_srates_ie(struct ieee80211_vif *vif,
+ 
+ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
+ 				struct sk_buff *skb, bool need_basic);
++
++int ieee80211_ave_rssi(struct ieee80211_vif *vif);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index e67fe5c..f426fec 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1797,3 +1797,11 @@ int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
+ 	}
+ 	return 0;
+ }
++
++int ieee80211_ave_rssi(struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++
++	return ifmgd->ave_beacon_signal;
++}
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
