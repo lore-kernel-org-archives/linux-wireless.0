@@ -1,30 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:48575 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755518Ab2DESTR (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:34106 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934921Ab2DMKQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 14:19:17 -0400
-Received: from 173-161-179-205-philadelphia.hfc.comcastbusiness.net ([173.161.179.205] helo=[10.10.62.54])
-	by host200.hostmonster.com with esmtpa (Exim 4.76)
-	(envelope-from <dhlii@dlasys.net>)
-	id 1SFrHA-00057c-1W
-	for linux-wireless@vger.kernel.org; Thu, 05 Apr 2012 12:19:17 -0600
-Subject: N device with open source firmware
-From: "David Lynch Jr." <dhlii@dlasys.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 05 Apr 2012 14:15:07 -0400
-Message-ID: <1333649707.4108.46.camel@hp-dhlii> (sfid-20120405_201921_406580_83D78B64)
-Mime-Version: 1.0
+	Fri, 13 Apr 2012 06:16:17 -0400
+Date: Fri, 13 Apr 2012 13:16:09 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: eric.lapuyade@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: NFC: HCI support
+Message-ID: <20120413101609.GA10315@elgon.mountain> (sfid-20120413_121625_413937_7AE46514)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am looking for recommendations for an 802.11N device that is well
-documented and has opensource firmware for a project.  I do nto care
-whether it is mPCI, USB, .... so long as there is good documentation on
-the chipset and good open source firmware as I will be making extensive
-firmware changes for testing purposes. 
+Hello Eric Lapuyade,
 
+This is a semi-automatic email about new static checker warnings.
 
-Thanks 
+The patch 8b8d2e08bf0d: "NFC: HCI support" from Apr 10, 2012, leads 
+to the following Smatch complaint:
+
+net/nfc/hci/core.c:815 nfc_hci_recv_frame()
+	 error: we previously assumed 'hcp_skb' could be null (see line 790)
+
+net/nfc/hci/core.c
+   789						     msg_len, GFP_KERNEL);
+   790			if (hcp_skb == NULL) {
+                            ^^^^^^^^^^^^^^^
+New check.
+
+   791				/* TODO ELa: cannot deliver HCP message. How to
+   792				 * propagate error up?
+   793				 */
+
+If we can't allocate memory here, shouldn't we just drop the packet and
+return?  The other layers can handle dropped packets.
+
+   794			}
+   795	
+   796			*skb_put(hcp_skb, NFC_HCI_HCP_PACKET_HEADER_LEN) = pipe;
+   797	
+   798			skb_queue_walk(&hdev->rx_hcp_frags, frag_skb) {
+   799				msg_len = frag_skb->len - NFC_HCI_HCP_PACKET_HEADER_LEN;
+   800				memcpy(skb_put(hcp_skb, msg_len),
+   801				       frag_skb->data + NFC_HCI_HCP_PACKET_HEADER_LEN,
+   802				       msg_len);
+   803			}
+   804	
+   805			skb_queue_purge(&hdev->rx_hcp_frags);
+   806		} else {
+   807			packet->header &= NFC_HCI_FRAGMENT;
+   808			hcp_skb = skb;
+   809		}
+   810	
+   811		/* if this is a response, dispatch immediately to
+   812		 * unblock waiting cmd context. Otherwise, enqueue to dispatch
+   813		 * in separate context where handler can also execute command.
+   814		 */
+   815		packet = (struct hcp_packet *)hcp_skb->data;
+                                              ^^^^^^^^^^^^^
+New dereference.
+
+   816		type = HCP_MSG_GET_TYPE(packet->message.header);
+   817		if (type == NFC_HCI_HCP_RESPONSE) {
+
+regards,
+dan carpenter
 
