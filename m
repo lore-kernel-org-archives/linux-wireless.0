@@ -1,54 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:20965 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757770Ab2DIUuy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 16:50:54 -0400
-Date: Mon, 9 Apr 2012 22:50:53 +0200 (CEST)
-From: Jesper Juhl <jj@chaosbits.net>
-To: linux-kernel@vger.kernel.org
-cc: trivial@kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
+Received: from mail.tpi.com ([70.99.223.143]:1369 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750734Ab2DMRRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2012 13:17:52 -0400
+From: Tim Gardner <tim.gardner@canonical.com>
+To: kvalo@qca.qualcomm.com, linux-kernel@vger.kernel.org
+Cc: Tim Gardner <tim.gardner@canonical.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Simon Kelley <simon@thekelleys.org.uk>
-Subject: [PATCH 11/26] wireless, atmel: remove pointless test for NULL before
- release_firmware() call
-In-Reply-To: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
-Message-ID: <alpine.LNX.2.00.1204092219310.13925@swampdragon.chaosbits.net> (sfid-20120409_225640_193420_0A64C6CC)
-References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH linux-next 1/1] ath6k: Normalize use of FW_DIR
+Date: Fri, 13 Apr 2012 11:17:27 -0600
+Message-Id: <1334337448-26270-2-git-send-email-tim.gardner@canonical.com> (sfid-20120413_191814_128722_E51A3605)
+In-Reply-To: <1334337448-26270-1-git-send-email-tim.gardner@canonical.com>
+References: <1334337448-26270-1-git-send-email-tim.gardner@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-release_firmware() does its own test. Explicitly checking before the
-call is redundant.
-
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
 ---
- drivers/net/wireless/atmel.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-index 6c87a82..d07c030 100644
---- a/drivers/net/wireless/atmel.c
-+++ b/drivers/net/wireless/atmel.c
-@@ -3989,8 +3989,7 @@ static int reset_atmel_card(struct net_device *dev)
- 			atmel_copy_to_card(priv->dev, 0x8000, &fw[0x6000], len - 0x6000);
- 		}
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 9d67964..ba81dc8 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -126,9 +126,9 @@ struct ath6kl_fw_ie {
+ #define AR6003_HW_2_0_FIRMWARE_FILE		"athwlan.bin.z77"
+ #define AR6003_HW_2_0_TCMD_FIRMWARE_FILE	"athtcmd_ram.bin"
+ #define AR6003_HW_2_0_PATCH_FILE		"data.patch.bin"
+-#define AR6003_HW_2_0_BOARD_DATA_FILE "ath6k/AR6003/hw2.0/bdata.bin"
++#define AR6003_HW_2_0_BOARD_DATA_FILE AR6003_HW_2_0_FW_DIR "/bdata.bin"
+ #define AR6003_HW_2_0_DEFAULT_BOARD_DATA_FILE \
+-			"ath6k/AR6003/hw2.0/bdata.SD31.bin"
++			AR6003_HW_2_0_FW_DIR "/bdata.SD31.bin"
  
--		if (fw_entry)
--			release_firmware(fw_entry);
-+		release_firmware(fw_entry);
- 	}
+ /* AR6003 3.0 definitions */
+ #define AR6003_HW_2_1_1_VERSION                 0x30000582
+@@ -139,25 +139,25 @@ struct ath6kl_fw_ie {
+ #define AR6003_HW_2_1_1_UTF_FIRMWARE_FILE	"utf.bin"
+ #define AR6003_HW_2_1_1_TESTSCRIPT_FILE	"nullTestFlow.bin"
+ #define AR6003_HW_2_1_1_PATCH_FILE		"data.patch.bin"
+-#define AR6003_HW_2_1_1_BOARD_DATA_FILE "ath6k/AR6003/hw2.1.1/bdata.bin"
++#define AR6003_HW_2_1_1_BOARD_DATA_FILE AR6003_HW_2_1_1_FW_DIR "/bdata.bin"
+ #define AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE	\
+-			"ath6k/AR6003/hw2.1.1/bdata.SD31.bin"
++			AR6003_HW_2_1_1_FW_DIR "/bdata.SD31.bin"
  
- 	err = atmel_wakeup_firmware(priv);
+ /* AR6004 1.0 definitions */
+ #define AR6004_HW_1_0_VERSION                 0x30000623
+ #define AR6004_HW_1_0_FW_DIR			"ath6k/AR6004/hw1.0"
+ #define AR6004_HW_1_0_FIRMWARE_FILE		"fw.ram.bin"
+-#define AR6004_HW_1_0_BOARD_DATA_FILE         "ath6k/AR6004/hw1.0/bdata.bin"
++#define AR6004_HW_1_0_BOARD_DATA_FILE         AR6004_HW_1_0_FW_DIR "/bdata.bin"
+ #define AR6004_HW_1_0_DEFAULT_BOARD_DATA_FILE \
+-	"ath6k/AR6004/hw1.0/bdata.DB132.bin"
++	AR6004_HW_1_0_FW_DIR "/bdata.DB132.bin"
+ 
+ /* AR6004 1.1 definitions */
+ #define AR6004_HW_1_1_VERSION                 0x30000001
+ #define AR6004_HW_1_1_FW_DIR			"ath6k/AR6004/hw1.1"
+ #define AR6004_HW_1_1_FIRMWARE_FILE		"fw.ram.bin"
+-#define AR6004_HW_1_1_BOARD_DATA_FILE         "ath6k/AR6004/hw1.1/bdata.bin"
++#define AR6004_HW_1_1_BOARD_DATA_FILE         AR6004_HW_1_1_FW_DIR "/bdata.bin"
+ #define AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE \
+-	"ath6k/AR6004/hw1.1/bdata.DB132.bin"
++	AR6004_HW_1_1_FW_DIR "/bdata.DB132.bin"
+ 
+ /* Per STA data, used in AP mode */
+ #define STA_PS_AWAKE		BIT(0)
 -- 
-1.7.10
-
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+1.7.9.5
 
