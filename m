@@ -1,95 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:61140 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756480Ab2DJRfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 13:35:43 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>,
-	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 00/18] NFC changes for 3.5
-Date: Tue, 10 Apr 2012 19:43:02 +0200
-Message-Id: <1334079800-10671-1-git-send-email-sameo@linux.intel.com> (sfid-20120410_193545_711987_FA892679)
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:53803 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755649Ab2DMWxY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2012 18:53:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120413190819.9469.qmail@stuge.se>
+References: <20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413190819.9469.qmail@stuge.se>
+Date: Sat, 14 Apr 2012 01:53:22 +0300
+Message-ID: <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com> (sfid-20120414_005340_694756_DB45DBC9)
+Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Felipe Contreras <felipe.contreras@gmail.com>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, Apr 13, 2012 at 10:08 PM, Peter Stuge <peter@stuge.se> wrote:
+> Felipe Contreras wrote:
+>> I guess I should avoid the "stable" series then.
+>
+> I wish you had understood this much much sooner so that this nonsense
+> thread could have been avoided.
+>
+> If you want the very latest fixes then *obviously* you need to use
+> the most bleeding edge repo. (Linus')
 
-This is my current NFC patchset for the next merge window. This is what we
-mainly have:
+No, I don't want the latest fixes, I want the latest *stable* kernel.
 
-* An HCI and SHDLC implementation from Eric.
-* A bunch of LLCP fixes.
-* Some pn533 changes (workqueue conversion and Rx chaining support).
-* A new netlink API for exposing lost targets events.
+v3.3 is stable, v3.4-rcx are not. v3.4 would take months to cook,
+there will be several release candidates, and it won't be released
+until the known issues decrease to a reasonable level.
 
-Please note that the first patch from this serie is a 3.4 fix.
+v3.3.x on the other hand are *not* stable. They contain patches
+backported from v3.4, but nobody guarantees they will work. There was
+no v3.3.1-rc1, so the first time the patches compromising v3.3.1 were
+generally tested together is in v3.3.1, at which point if somebody
+finds issues, it's too late; bad patches are *not* going to be removed
+in v3.3.2. Once a tag is made, all the patches in it are dependent on
+the pace of the development of mainline (v3.4-rcx), which is
+definitely not stable, specially in the first release candidates.
 
-You can also fetch those patches from here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git nfc-next
-
-Eric Lapuyade (7):
-  NFC: Export target lost function
-  NFC: HCI support
-  NFC: SHDLC implementation
-  NFC: Add HCI documentation
-  NFC: Fix next target_idx type and rename for clarity
-  NFC: Changed target activated state logic
-  NFC: Add Core support to generate tag lost event
-
-Samuel Ortiz (11):
-  NFC: Fix the LLCP Tx fragmentation loop
-  NFC: Add a target lost netlink event
-  NFC: The core part should generate the target index
-  NFC: Dump LLCP frames
-  NFC: No need to apply twice the modulo op to LLCP's recv_n
-  NFC: Fix LLCP TLV building routine
-  NFC: Call llcp_add_header properly when sending LLCP DM or DISC
-  NFC: Convert pn533 from tasklet to workqueues
-  NFC: pn533 Rx chaining support
-  NFC: Add MIUX to the local LLCP general bytes
-  NFC: Fix LLCP link timeout typo
-
- Documentation/nfc/nfc-hci.txt |  155 +++++++
- drivers/nfc/pn533.c           |  228 ++++++++---
- include/linux/nfc.h           |    1 +
- include/net/nfc/hci.h         |  198 +++++++++
- include/net/nfc/nfc.h         |   12 +-
- include/net/nfc/shdlc.h       |  104 +++++
- net/nfc/Kconfig               |    1 +
- net/nfc/Makefile              |    1 +
- net/nfc/core.c                |  140 ++++++-
- net/nfc/hci/Kconfig           |   16 +
- net/nfc/hci/Makefile          |    8 +
- net/nfc/hci/command.c         |  354 +++++++++++++++
- net/nfc/hci/core.c            |  830 ++++++++++++++++++++++++++++++++++++
- net/nfc/hci/hci.h             |  139 ++++++
- net/nfc/hci/hcp.c             |  156 +++++++
- net/nfc/hci/shdlc.c           |  945 +++++++++++++++++++++++++++++++++++++++++
- net/nfc/llcp/commands.c       |   12 +-
- net/nfc/llcp/llcp.c           |   21 +-
- net/nfc/nci/core.c            |    2 +-
- net/nfc/nci/ntf.c             |   11 +-
- net/nfc/netlink.c             |   30 ++
- net/nfc/nfc.h                 |    1 +
- net/nfc/rawsock.c             |    6 +
- 23 files changed, 3299 insertions(+), 72 deletions(-)
- create mode 100644 Documentation/nfc/nfc-hci.txt
- create mode 100644 include/net/nfc/hci.h
- create mode 100644 include/net/nfc/shdlc.h
- create mode 100644 net/nfc/hci/Kconfig
- create mode 100644 net/nfc/hci/Makefile
- create mode 100644 net/nfc/hci/command.c
- create mode 100644 net/nfc/hci/core.c
- create mode 100644 net/nfc/hci/hci.h
- create mode 100644 net/nfc/hci/hcp.c
- create mode 100644 net/nfc/hci/shdlc.c
+IOW, the "stable" branch tries to be stable up to a point, then, it
+becomes a testing ground for mainline, and a tracking device for
+certain mainline issues.
 
 -- 
-1.7.9.1
-
+Felipe Contreras
