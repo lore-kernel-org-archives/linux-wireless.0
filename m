@@ -1,47 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18154 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757864Ab2DYBva convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41427 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504Ab2DMK3r convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 21:51:30 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Fri, 13 Apr 2012 06:29:47 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <20375.22656.459433.717064@gargle.gargle.HOWL> (sfid-20120425_035211_486031_C7A87AE6)
-Date: Wed, 25 Apr 2012 07:20:56 +0530
-To: Aseem Sharma <aseem.sharma19@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: Survey dump does not seem to work with SONY USB Wireless LAN Adapter UWA-BR100
-In-Reply-To: <CANK3ZEczOgsru2BZ=sLnYxx_3St872y0-qAbYBV-PkhpNioNxQ@mail.gmail.com>
-References: <CANK3ZEcGEs6xSn8tgniXCGVN50VadYaY2ZvV0Fis236O19nqNQ@mail.gmail.com>
-	<CANK3ZEczOgsru2BZ=sLnYxx_3St872y0-qAbYBV-PkhpNioNxQ@mail.gmail.com>
+In-Reply-To: <20120413105746.10ffb120@stein>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+Date: Fri, 13 Apr 2012 13:29:46 +0300
+Message-ID: <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com> (sfid-20120413_122952_214820_0F330435)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Aseem Sharma wrote:
-> Hello,
-> 
-> I was previously using Cisco Aironet wireless adapter (it uses ath5k
-> driver); using which I was able to get the survey dump using the following
-> command:
-> 
-> root@as75:~# iw phy phy0 interface add mon0 type monitor
-> root@as75:~# ifconfig mon0 up
-> root@as75:~# iw dev mon0 survey dump
-> 
-> Survey data from mon0
->         frequency:                      2412 MHz
->         noise:                          -95 dBm
->         channel active time:            11813 ms
->         channel busy time:              300 ms
->         channel receive time:           237 ms
->         channel transmit time:          0 ms
-> 
-> However, when I run the same commands after connecting SONY USB Wireless
-> LAN Adapter UWA-BR100 (which internally uses ath9k_htc driver) I do not seem
-> to get any output. Also, the command is successful (as I am running echo $?
-> which returns ‘0’)
+On Fri, Apr 13, 2012 at 11:57 AM, Stefan Richter
+<stefanr@s5r6.in-berlin.de> wrote:
+> On Apr 12 Felipe Contreras wrote:
+>> But this is exactly the opposite; the patch that broke things is in
+>> the 'release branch' (3.3.1); it's not in upstream (3.3). Sure, it's
+>> also on a later upstream, which is also broken.
+>            ^^^^^
+> No, upstream /earlier/ than 3.3.1 contains the defect.
 
-ath9k_htc currently doesn't support survey dump.
+Time is not relevant for the point being made, but fine:
 
-Sujith
+But this is exactly the opposite; the patch that broke things is in
+the 'release branch' (3.3.1); it's not in the upstream release from
+where stable began (3.3). Sure, it's also on upstream, which is also
+broken.
+
+> Furthermore, consider this:  You as user of the 3.3.y series are using a
+> temporary, dead-end side branch.  Its maintenance will stop at some point,
+> and you will be left looking for a different, maintained series to migrate
+> to.  You will be most interested in that series /not/ containing any
+> regressions that you suffered already through the 3.3.y lifetime.
+
+Of course, I will be interested in that, although most likely I would
+be switching to another stable release (v3.4.1), not the upstream
+release (v3.4), and most distros would do the same. Even in the
+unlikely event that v3.4 is broken, most likely v3.4.1 would contain
+the fix. But I'm also interested in v3.3.2 working.
+
+So you are saying that:
+
+a) v3.3.1 (bad), v3.3.2 (bad), v3.4 (good)
+b) v3.3.1 (bad), v3.3.2 (good), v3.4 (bad)
+c) v3.3.1 (bad), v3.3.2 (good), v3.4 (good)
+
+b) is clearly better than a). Well, I don't see how; both situations
+have the same number of releases broken, plus b) is very unlikely
+anyway and we would end up with c). Plus, in all situation v3.4.1
+would most likely contain the fix anyway.
+
+> The rule is there to protect you, as a user of the stable series, from
+> repeated regressions.
+
+So in order to avoid b), you would rather go into a), than c)? Sorry,
+I most definitely don't *need* that "protection". I guess I should
+avoid the "stable" series then.
+
+Cheers.
+
+-- 
+Felipe Contreras
