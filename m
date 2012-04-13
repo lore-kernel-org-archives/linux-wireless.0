@@ -1,40 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:45448 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753289Ab2DEJiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 05:38:19 -0400
-Date: Thu, 5 Apr 2012 11:38:02 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: 3945ABG fails to connect (3.4-rc1)
-Message-ID: <20120405093802.GA5236@comet.dominikbrodowski.net> (sfid-20120405_113822_368889_8C68F76D)
-References: <20120401080419.GA5207@comet.dominikbrodowski.net>
- <20120401165230.GA2399@redhat.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54460 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750966Ab2DML6v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Apr 2012 07:58:51 -0400
+Message-ID: <4F8814EE.2050406@hauke-m.de> (sfid-20120413_135857_729460_9D27B5B6)
+Date: Fri, 13 Apr 2012 13:58:38 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120401165230.GA2399@redhat.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: gregkh@linuxfoundation.org, stern@rowland.harvard.edu,
+	linux-mips@linux-mips.org, ralf@linux-mips.org, m@bues.ch,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com
+Subject: Re: [PATCH v5 1/4] bcma: scan for extra address space
+References: <1331851799-5968-1-git-send-email-hauke@hauke-m.de> <1331851799-5968-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1331851799-5968-2-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 01, 2012 at 06:52:31PM +0200, Stanislaw Gruszka wrote:
-> On Sun, Apr 01, 2012 at 10:04:19AM +0200, Dominik Brodowski wrote:
-> > Somewhere in between 3.3.0 and 3.4-rc1 my notebook fails to connect to my
-> > local AP:
-> > 
-> > 02:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] Network Connection (rev 02)
-> > 
-> > Snippets from dmesg:
-> [snip]
-> > [   59.605953] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> > [   69.607344] wlan0: disassociating from $INSERT_MAC_HERE by local choice (reason=3)
-> > [   69.609931] cfg80211: Calling CRDA to update world regulatory domain
-> > [   69.612438] wlan0: deauthenticating from $INSERT_MAC_HERE by local choice (reason=3)
-> Most likely this is fixed by: 
-> http://marc.info/?l=linux-wireless&m=133180823427374&w=2
+Hi Rafał,
+
+could you give me an Acked-by line as the Maintainer of bcma for this
+patch if you are ok with this patch please.
+
+Hauke
+
+On 03/15/2012 11:49 PM, Hauke Mehrtens wrote:
+> Some cores like the USB core have two address spaces. In the USB host
+> controller one address space is used for the OHCI and the other for the
+> EHCI controller interface. The USB controller is the only core I found
+> with two address spaces. This code is based on the AI scan function
+> ai_scan() in shared/aiutils.c in the Broadcom SDK.
 > 
-> Plese test, thanks.
+> CC: Rafał Miłecki <zajec5@gmail.com>
+> CC: linux-wireless@vger.kernel.org
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  drivers/bcma/scan.c       |   19 ++++++++++++++++++-
+>  include/linux/bcma/bcma.h |    1 +
+>  2 files changed, 19 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+> index 3a2f672..1fa10ed 100644
+> --- a/drivers/bcma/scan.c
+> +++ b/drivers/bcma/scan.c
+> @@ -286,6 +286,23 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+>  			return -EILSEQ;
+>  	}
+>  
+> +	/* First Slave Address Descriptor should be port 0:
+> +	 * the main register space for the core
+> +	 */
+> +	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
+> +	if (tmp <= 0) {
+> +		/* Try again to see if it is a bridge */
+> +		tmp = bcma_erom_get_addr_desc(bus, eromptr,
+> +					      SCAN_ADDR_TYPE_BRIDGE, 0);
+> +		if (tmp <= 0) {
+> +			return -EILSEQ;
+> +		} else {
+> +			pr_info("Bridge found\n");
+> +			return -ENXIO;
+> +		}
+> +	}
+> +	core->addr = tmp;
+> +
+>  	/* get & parse slave ports */
+>  	for (i = 0; i < ports[1]; i++) {
+>  		for (j = 0; ; j++) {
+> @@ -298,7 +315,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+>  				break;
+>  			} else {
+>  				if (i == 0 && j == 0)
+> -					core->addr = tmp;
+> +					core->addr1 = tmp;
+>  			}
+>  		}
+>  	}
+> diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+> index 83c209f..7fe41e1 100644
+> --- a/include/linux/bcma/bcma.h
+> +++ b/include/linux/bcma/bcma.h
+> @@ -138,6 +138,7 @@ struct bcma_device {
+>  	u8 core_index;
+>  
+>  	u32 addr;
+> +	u32 addr1;
+>  	u32 wrap;
+>  
+>  	void __iomem *io_addr;
 
-Yes, this fixes it. Thanks!
-
-	Dominik
