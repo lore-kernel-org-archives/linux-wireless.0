@@ -1,77 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39544 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855Ab2DRQ11 (ORCPT
+Received: from mga14.intel.com ([143.182.124.37]:63873 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754028Ab2DMBck convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 12:27:27 -0400
-Message-ID: <4F8EEB6C.1030605@candelatech.com> (sfid-20120418_182731_026960_E2405696)
-Date: Wed, 18 Apr 2012 09:27:24 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 12 Apr 2012 21:32:40 -0400
+From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+To: Norbert Preining <preining@logic.at>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: RE: 3.4-rc2, ilwagn still most of the time completely unusable
+Date: Fri, 13 Apr 2012 01:32:38 +0000
+Message-ID: <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com> (sfid-20120413_033257_196714_1299DAD9)
+References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at>
+ <20120411023747.GA10126@gamma.logic.tuwien.ac.at>
+ <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com>
+ <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
+In-Reply-To: <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/6] mac80211: Support getting sta_info stats via ethtool.
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>   <1334684807-14026-3-git-send-email-greearb@candelatech.com>   (sfid-20120417_194716_243783_5644375D) <1334713070.3725.14.camel@jlt3.sipsolutions.net>  <4F8E3905.70900@candelatech.com> <1334721645.3672.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1334721645.3672.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/17/2012 09:00 PM, Johannes Berg wrote:
-> On Tue, 2012-04-17 at 20:46 -0700, Ben Greear wrote:
->
->>>> +	rcu_read_lock();
->>>> +	list_for_each_entry_rcu(sta,&local->sta_list, list) {
->>>
->>> This doesn't seem right -- shouldn't it look up the BSSID or something
->>> and only work on managed interfaces? What if there really are two
->>> stations on this interface -- then it'll just overwrite it and return a
->>> random station's data? That's useless.
+Hi Norbert,
+
+>> >	delba from 00:0a:79:eb:56:10 (initiator) tid 0 reason code 39
+>> >	Rx BA session stop requested for ...
+>> >*IF* it is connected.
 >>
->> Well, its weird at least.
->>
->> But, if there are multiple stations, like for APs??, then it will
->> add the station's stats together.  Perhaps not horribly useful, but better
->> than nothing.
+>> [MV]  This is actually printed by mac80211 when it stops a block ack session;
+>which can happen with bursty traffic. It's not an error per se. You'll see this
+>message if you have debugging enabled for mac80211, specifically
+>CONFIG_MAC80211_HT_DEBUG. Perhaps you could reduce the debugging
+>information you print out for mac80211?
 >
-> Oh, right, it's adding, I missed that. But is that really useful?
+>Probably I was asked to activate that at some point ;-) Will disactivate it.
+>Thanks.
 
-It provides a summary for AP, and precise stats for managed station
-mode (excepting TDLS where it may return sums, it seems).
+[MV] Well...actually don't turn off this debugging yet. Johannes tells me that these messages could still be due to an issue with the driver. I was looking at the standards, and  Reason code 39 means that the peer (the AP) is requesting this due to a timeout. I  don't see that in the log you sent me, so not sure what timed out. However, I do see Rx BA session stop requests from the AP with reason code 32, which is based on the standard means "disassociated for unspecified QoS related reason".
 
-I could just return all zeros for non managed
-station interfaces, but I *have* to return some value, so it seems
-little loss to just add the station stats together.
+In your logs I also see missed beacon notifications from the firmware ~every 500 milliseconds. My thought is that it is probably due to turning on power save. I'm not sure if it is affecting the performance of your system overall. Are you using the power save option? And if so, what is the behaviour when power save is turned off?
 
->> For managed interface, I *think* they don't have more than one station, right?
->
-> You can't rely on it. Typically they will, but with TDLS there might be
-> multiple.
->
->> And, as for the underlying driver stats and survey stats (in later patches),
->> that is only probed once.  I guess if you somehow had two
->> stations on different channels on the same network device,
->> the survey stats would be a bit dodgy, but it does return
->> the freq for the stats in question, so at least you know
->> what you are getting.
->
-> A single netdev is always going to be on a single channel. Actually, I
-> take that back, I think TDLS can work out of channel too, but we don't
-> support that right now.
+I don't see the invalid station activation error in the log you sent me, so I'm guessing it appears only on the other network. Do send us logs for that. 
 
-So, based on your response, a sum still seems most useful to me.  The ethtool
-API gives no way to request any subset of stats, so all I can key off of
-is the netdev.
-
-I have some plans percolating to add some new ethtool API to get subsets
-of stats, but that is likely a ways off, and of course it may not be
-accepted regardless.
+If you're up for it, I'd ask you to do one thing  (or three) -- open 3 separate bugs for the issues you're seeing at: bugzilla.intellinuxwireless.org so we can keep track of them separately. The issue of trying to activate an invalid station ID is definitely a new one, and likely due to a different cause than that related to aggregation or the troubles you're having even with 11n disabled. I could do this too, and add you to the CC list. I might need logs for these bugs, but not yet.
 
 Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Meenakshi
