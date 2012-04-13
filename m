@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s87.loopia.se ([194.9.95.110]:12761 "EHLO s87.loopia.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755551Ab2DKPvT convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41472 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755746Ab2DMUAv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 11:51:19 -0400
-Received: from s87.loopia.se (localhost [127.0.0.1])
-	by s87.loopia.se (Postfix) with ESMTP id 9D4731E29C07
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 17:51:13 +0200 (CEST)
-Received: from s87.loopia.se ([127.0.0.1])
-	by s87.loopia.se (s87.loopia.se [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id uQ0ove2xjqlZ for <linux-wireless@vger.kernel.org>;
-	Wed, 11 Apr 2012 17:51:13 +0200 (CEST)
-Received: from s329.loopia.se (s34.loopia.se [194.9.94.70])
-	by s87.loopia.se (Postfix) with ESMTP id 629D21E1E8DE
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 17:51:13 +0200 (CEST)
-From: Jan Simonson <jan@simonson.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Reply-To: Jan Simonson <jan@simonson.se>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: RTL8192e-pci NIC
-Date: Wed, 11 Apr 2012 17:51:12 +0200
-Message-ID: <3893847.nxaiIbI8jN@ymer> (sfid-20120411_175127_217761_EADA5296)
-In-Reply-To: <4F835FB9.5020100@lwfinger.net>
-References: <1502184.lhzNHmlX61@ymer> <20120409192630.GB26994@tuxdriver.com> <4F835FB9.5020100@lwfinger.net>
+	Fri, 13 Apr 2012 16:00:51 -0400
+Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q3DK0oH4008211
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Apr 2012 13:00:50 -0700
+Message-ID: <4F8885F1.3060802@candelatech.com> (sfid-20120413_220055_179087_697B446E)
+Date: Fri, 13 Apr 2012 13:00:49 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Any way to get channel index from channel?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-måndagen den 9 april 2012 17.16.25 skrev  Larry Finger:
-> Yes, but not likely very soon. This card is relatively rare, and there are 
-> several drivers for more common Realtek devices in staging.
-> 
-> @Jan - There is one other option. As you can compile drivers, I will prepare
-> a  tested copy of the driver that will compile on all recent kernels, and
-> put the source on my ftp site.
+In the ethtool stats patches, I'm trying to get the
+survey for just the current operating channel.
+(Previously posted code is wrong..can't just use index 0, duh!)
 
-That would be very helpful! I look forward to hear from you again when it's 
-available on your ftp site.
+I know the channel object: local->oper_channel
+but the API that gets survey results wants the channel
+index.
 
-Thanks again for helping me with this problem.
+Is there a fast way to get the channel index from a channel,
+or do I just need to iterate through all channels and compare
+the center-frequencies?
 
-Jan
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
