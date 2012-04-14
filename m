@@ -1,212 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:57694 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932962Ab2DKTxx (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61466 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753784Ab2DNKrj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 15:53:53 -0400
-Received: by lban1 with SMTP id n1so1049331lba.40
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:53:50 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, coelho@ti.com
-Subject: [PATCH 02/24] wlcore/wl12xx: change GEM Tx-spare blocks per-vif
-Date: Wed, 11 Apr 2012 22:53:18 +0300
-Message-Id: <1334174020-18957-3-git-send-email-coelho@ti.com> (sfid-20120411_215410_076717_4BADEDCC)
-In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
-References: <1334174020-18957-1-git-send-email-coelho@ti.com>
+	Sat, 14 Apr 2012 06:47:39 -0400
+Date: Sat, 14 Apr 2012 12:47:33 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120414104733.GA4871@gmail.com> (sfid-20120414_124757_555115_ADDB6095)
+References: <20120412011313.GA23764@kroah.com>
+ <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+ <20120412144626.GA14868@kroah.com>
+ <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+ <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
+ <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
+ <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
+ <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
+ <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
+ <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
 
-The number of spare Tx blocks must be changed when the GEM cipher is
-engaged. Track set_key() operations to see if this is the case and
-change the Tx HW spare block count accordingly. Set the number of spare
-blocks for each operating mode from the low level driver.
+* Felipe Contreras <felipe.contreras@gmail.com> wrote:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl12xx/main.c    |    6 ++++++
- drivers/net/wireless/ti/wlcore/debugfs.c |    1 +
- drivers/net/wireless/ti/wlcore/main.c    |   24 +++++++++++-------------
- drivers/net/wireless/ti/wlcore/tx.c      |    9 ++++-----
- drivers/net/wireless/ti/wlcore/tx.h      |    1 -
- drivers/net/wireless/ti/wlcore/wl12xx.h  |    3 +++
- drivers/net/wireless/ti/wlcore/wlcore.h  |    7 ++++---
- 7 files changed, 29 insertions(+), 22 deletions(-)
+> On Fri, Apr 13, 2012 at 1:07 AM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+> > On Thu, Apr 12, 2012 at 3:04 PM, Felipe Contreras
+> > <felipe.contreras@gmail.com> wrote:
+> >>
+> >> Sure, but removing that patch from the stable tree is not 
+> >> going the change that information; we already know the 
+> >> patch is wrong.
+> >
+> > .. and we wait until it has been fixed in mainline so that 
+> > we *know* that information doesn't get lost.
+> 
+> So why don't we pick potentially dangerous patches that might 
+> benefit from some testing, put them in 'stable', and if there 
+> are problems, make sure they get fixed in upstream first?
+>
+> Or for that matter totally broken patches we want to make sure 
+> they get fixed in upstream.
+> 
+> Because the priority of the 'stable' tree is *stability*. Is 
+> it not?
+> 
+> But what you are saying is: *before* the final review, even a 
+> hint that the patch might cause problems is reason enough to 
+> drop it from stable, but *after* the review, if we know the 
+> patch is totally broken, then it's the opposite; we really 
+> want it in.
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 57c70a4..3447cef 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -34,6 +34,10 @@
- 
- #include "reg.h"
- 
-+#define WL12XX_TX_HW_BLOCK_SPARE_DEFAULT        1
-+#define WL12XX_TX_HW_BLOCK_GEM_SPARE            2
-+
-+
- static struct wlcore_partition_set wl12xx_ptable[PART_TABLE_LEN] = {
- 	[PART_DOWN] = {
- 		.mem = {
-@@ -675,6 +679,8 @@ static int __devinit wl12xx_probe(struct platform_device *pdev)
- 	wl->ptable = wl12xx_ptable;
- 	wl->rtable = wl12xx_rtable;
- 	wl->num_tx_desc = 16;
-+	wl->normal_tx_spare = WL12XX_TX_HW_BLOCK_SPARE_DEFAULT;
-+	wl->gem_tx_spare = WL12XX_TX_HW_BLOCK_GEM_SPARE;
- 
- 	return wlcore_probe(wl, pdev);
- }
-diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
-index 9db0813..d5aea1f 100644
---- a/drivers/net/wireless/ti/wlcore/debugfs.c
-+++ b/drivers/net/wireless/ti/wlcore/debugfs.c
-@@ -647,6 +647,7 @@ static ssize_t vifs_state_read(struct file *file, char __user *user_buf,
- 		VIF_STATE_PRINT_INT(last_rssi_event);
- 		VIF_STATE_PRINT_INT(ba_support);
- 		VIF_STATE_PRINT_INT(ba_allowed);
-+		VIF_STATE_PRINT_INT(is_gem);
- 		VIF_STATE_PRINT_LLHEX(tx_security_seq);
- 		VIF_STATE_PRINT_INT(tx_security_last_seq_lsb);
- 	}
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 7b39a86..b56bbc3 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -1858,7 +1858,6 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
- 	wl->tx_results_count = 0;
- 	wl->tx_packets_count = 0;
- 	wl->time_offset = 0;
--	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
- 	wl->ap_fw_ps_map = 0;
- 	wl->ap_ps_map = 0;
- 	wl->sched_scanning = false;
-@@ -2912,6 +2911,17 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	int ret;
- 	bool is_ap = (wlvif->bss_type == BSS_TYPE_AP_BSS);
- 
-+	/*
-+	 * A role set to GEM cipher requires different Tx settings (namely
-+	 * spare blocks). Note when we are in this mode so the HW can adjust.
-+	 */
-+	if (key_type == KEY_GEM) {
-+		if (action == KEY_ADD_OR_REPLACE)
-+			wlvif->is_gem = true;
-+		else if (action == KEY_REMOVE)
-+			wlvif->is_gem = false;
-+	}
-+
- 	if (is_ap) {
- 		struct wl1271_station *wl_sta;
- 		u8 hlid;
-@@ -2950,17 +2960,6 @@ static int wl1271_set_key(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			0xff, 0xff, 0xff, 0xff, 0xff, 0xff
- 		};
- 
--		/*
--		 * A STA set to GEM cipher requires 2 tx spare blocks.
--		 * Return to default value when GEM cipher key is removed
--		 */
--		if (key_type == KEY_GEM) {
--			if (action == KEY_ADD_OR_REPLACE)
--				wl->tx_spare_blocks = 2;
--			else if (action == KEY_REMOVE)
--				wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
--		}
--
- 		addr = sta ? sta->addr : bcast_addr;
- 
- 		if (is_zero_ether_addr(addr)) {
-@@ -5259,7 +5258,6 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size)
- 	wl->quirks = 0;
- 	wl->platform_quirks = 0;
- 	wl->sched_scanning = false;
--	wl->tx_spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
- 	wl->system_hlid = WL12XX_SYSTEM_HLID;
- 	wl->active_sta_count = 0;
- 	wl->fwlog_size = 0;
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index 815d0ac..3306990 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -190,7 +190,7 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	u32 len;
- 	u32 total_blocks;
- 	int id, ret = -EBUSY, ac;
--	u32 spare_blocks = wl->tx_spare_blocks;
-+	u32 spare_blocks = wl->normal_tx_spare;
- 	bool is_dummy = false;
- 
- 	if (buf_offset + total_len > WL1271_AGGR_BUFFER_SIZE)
-@@ -205,11 +205,10 @@ static int wl1271_tx_allocate(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	   in the firmware */
- 	len = wl12xx_calc_packet_alignment(wl, total_len);
- 
--	/* in case of a dummy packet, use default amount of spare mem blocks */
--	if (unlikely(wl12xx_is_dummy_packet(wl, skb))) {
-+	if (unlikely(wl12xx_is_dummy_packet(wl, skb)))
- 		is_dummy = true;
--		spare_blocks = TX_HW_BLOCK_SPARE_DEFAULT;
--	}
-+	else if (wlvif->is_gem)
-+		spare_blocks = wl->gem_tx_spare;
- 
- 	total_blocks = (len + TX_HW_BLOCK_SIZE - 1) / TX_HW_BLOCK_SIZE +
- 		spare_blocks;
-diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
-index 5cf8c32..2ad7705 100644
---- a/drivers/net/wireless/ti/wlcore/tx.h
-+++ b/drivers/net/wireless/ti/wlcore/tx.h
-@@ -25,7 +25,6 @@
- #ifndef __TX_H__
- #define __TX_H__
- 
--#define TX_HW_BLOCK_SPARE_DEFAULT        1
- #define TX_HW_BLOCK_SIZE                 252
- 
- #define TX_HW_MGMT_PKT_LIFETIME_TU       2000
-diff --git a/drivers/net/wireless/ti/wlcore/wl12xx.h b/drivers/net/wireless/ti/wlcore/wl12xx.h
-index 1516622..b09c9ed 100644
---- a/drivers/net/wireless/ti/wlcore/wl12xx.h
-+++ b/drivers/net/wireless/ti/wlcore/wl12xx.h
-@@ -375,6 +375,9 @@ struct wl12xx_vif {
- 	struct work_struct rx_streaming_disable_work;
- 	struct timer_list rx_streaming_timer;
- 
-+	/* does the current role use GEM for encryption (AP or STA) */
-+	bool is_gem;
-+
- 	/*
- 	 * This struct must be last!
- 	 * data that has to be saved acrossed reconfigs (e.g. recovery)
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index a4f576d..2fb713a 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -150,9 +150,6 @@ struct wl1271 {
- 	u32 tx_allocated_blocks;
- 	u32 tx_results_count;
- 
--	/* amount of spare TX blocks to use */
--	u32 tx_spare_blocks;
--
- 	/* Accounting for allocated / available Tx packets in HW */
- 	u32 tx_pkts_freed[NUM_TX_QUEUES];
- 	u32 tx_allocated_pkts[NUM_TX_QUEUES];
-@@ -309,6 +306,10 @@ struct wl1271 {
- 
- 	/* number of TX descriptors the HW supports. */
- 	u32 num_tx_desc;
-+
-+	/* spare Tx blocks for normal/GEM operating modes */
-+	u32 normal_tx_spare;
-+	u32 gem_tx_spare;
- };
- 
- int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
--- 
-1.7.5.4
+What you don't seem to understand is that there are good reasons 
+why we first fix bugs upstream, then in -stable. Greg explained 
+it to you, Linus explained it to you and so did many others.
 
+Having an order of patches *necessarily* means that the 
+development tree will get fixes sooner than the stable tree. In 
+other words, this *necessarily* means that the stable tree - and 
+its users - will have to wait a little bit more to have the fix. 
+In the worst-case this 'have to wait a little bit longer' might 
+span the time between two minor stable kernel releases.
+
+You seem to equate this 'have to wait a little bit longer to get 
+the fix' property of the maintenance model with 'we don't care 
+about stable tree users' - that claim is obviously idiotic and 
+most of your arguments in this thread are idiotic as well.
+
+Thanks,
+
+	Ingo
