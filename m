@@ -1,125 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:49657 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757218Ab2DIOWq (ORCPT
+Received: from einhorn.in-berlin.de ([192.109.42.8]:60054 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114Ab2DNJLO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 10:22:46 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120409160322.6b7b8c67@xenia.leun.net>
-References: <4F7A8EB7.4060200@silka.with-linux.com>
-	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
-	<4F7A9D5C.8040402@silka.with-linux.com>
-	<CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com>
-	<4F7AAAD9.2040307@silka.with-linux.com>
-	<CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com>
-	<CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
-	<4F7AB6FE.3080009@silka.with-linux.com>
-	<20120403200306.0afbb48b@xenia.leun.net>
-	<CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com>
-	<CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com>
-	<20120404235104.682cfad3@xenia.leun.net>
-	<4F7DE3A4.1040705@candelatech.com>
-	<CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
-	<4F7F52BD.7060906@candelatech.com>
-	<20120409010816.36244f17@xenia.leun.net>
-	<CAD2nsn3-C8ZLmUpTDeA6HuPr-+=V5KkPJb6h5e7ZJsGi4v9p0g@mail.gmail.com>
-	<20120409122549.7469543a@xenia.leun.net>
-	<20120409160322.6b7b8c67@xenia.leun.net>
-Date: Mon, 9 Apr 2012 19:52:45 +0530
-Message-ID: <CAD2nsn0n-VQ8ZOm69BNrbFv5HK3cdm+22yKrYprwoeFz-E2Uew@mail.gmail.com> (sfid-20120409_162321_512662_07B8B200)
-Subject: Re: 3.4-rc ath9k regression (Re: [ath9k-devel] 3.3.1 ath9k regression)
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Michael Leun <lkml20120218@newton.leun.net>
-Cc: Ben Greear <greearb@candelatech.com>, casteyde.christian@free.fr,
-	Kelly Anderson <kelly@silka.with-linux.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
+	Sat, 14 Apr 2012 05:11:14 -0400
+Date: Sat, 14 Apr 2012 11:10:44 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
 	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sergio Correia <lists@uece.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120414111044.4930a5f3@stein> (sfid-20120414_111216_039419_25EAF739)
+In-Reply-To: <CAMP44s0OdVBTwVtCoru-xvB=LVtO56jgku7X-0a7mUz1=iVCzw@mail.gmail.com>
+References: <20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413154216.476a02ac@stein>
+	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
+	<20120413230525.GA13995@burratino>
+	<CAMP44s0OdVBTwVtCoru-xvB=LVtO56jgku7X-0a7mUz1=iVCzw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 9, 2012 at 7:33 PM, Michael Leun
-<lkml20120218@newton.leun.net> wrote:
-> On Mon, 9 Apr 2012 12:25:49 +0200
-> Michael Leun <lkml20120218@newton.leun.net> wrote:
->
->> On Mon, 9 Apr 2012 11:58:06 +0530
->> Mohammed Shafi <shafi.wireless@gmail.com> wrote:
->>
->> > On Mon, Apr 9, 2012 at 4:38 AM, Michael Leun
->> > <lkml20120218@newton.leun.net> wrote:
->> > > After an suspend to disk / resume cycle (in kernel suspend to
->> > > disk, openSuSE) with 3.4-rc2 my ath9k wireless does not ping
->> > > anymore.
->> > >
->> > > Output of iwconfig wlan0 looks just as usual (associated to AP).
->> > >
->> > > iwconfig wlan0 essid <myssid> fixes this (causes an
->> > > deauthenticate/authenticate with AP) - then connectivity is there
->> > > again.
->> > >
->> > > Guess what: "Of course" does not happen when reverting
->> > > c1afdaff90538ef085b756454f12b29575411214 ath9k: fix going to
->> > > full-sleep on PS idle.
->> > >
->> > > So, in my opinion it should be seriously considered to revert that
->> > > patch until it is fully understood what is going on and why.
->> >
->> > please try with the attached patch to see if it helps.
->>
->> Yes, this patch helps with the issue I see in 3.4-rc2 described above.
->
-> Sorry, but I have to partially rectify that:
->
-> It works, if the time the machine was suspended is short, as it was
-> when I did that testing.
->
-> But I noticed it failing, when the machine was hibernated for some
-> hours.
->
-> I easily can reproduce that, when I reboot the AP while the notebook is
-> down (btw: AP is TP-LINK TL-WR1043ND running OpenWRT backfire 10.03.1,
-> also using ath9k).
->
-> When I do this (hibernate notebook, reboot AP, resume notebook check
-> connectivity) with 3.4-rc2 and your test.patch it fails in 100% of
-> cases.
+On Apr 14 Felipe Contreras wrote:
+> On Sat, Apr 14, 2012 at 2:05 AM, Jonathan Nieder <jrnieder@gmail.com> wrote:
+> > I don't think Stefan meant the above as tongue-in-cheek, for what it's
+> > worth.  Another stable kernel with different rules really would be an
+> > interesting exercise, and would probably fulfill a need for a certain
+> > audience.
+> >
+> > It's not like nobody does that already, anyway.  For example, I hear
+> > Fedora has a kernel that they maintain well for a different audience,
+> > using different rules.
+> 
+> Of course, although the difference with the stable kernel would be
+> very small if the only thing added is an extra rule for acceptance:
+> "It reverts an earlier
+> patch to 'stable'."
 
-the test.patch is nothing but it reverts back to the code something
-back 3.1.1 and there is something else is also there
-, where we need to fix. unfortunately i cannot reproduce the issue in
-3.4-rc2 which you guys can easily recreate it.  i should try with
-3.3.1 tomorrow. i will go home today and see if i can find some thing
-with my analysis.
+It looks like a small difference on the surface, but it isn't.  It would
+mean "yes, we /do/ forward ports in -stable too in some cases".
 
-i was also thinking about the code, when the chip goes to FULL_SLEEP
-then in ath9k_tx we might need to chip reset to actually tx. my guess
-is there is something dependent there. i think i can add a patch with
-some of our debug messages which helps us what is happening for you
+In face of the frequent and predictable rate of mainline releases and the
+very frequent stable releases, the problems associated with forward ports
+very much appear to outweigh the benefits.
 
-reverting breaks unassociated power save case :(
+So the folks who do the actual work appear to be content with stable =
+backports only, and it seems you can't convince them to do forward ports.
+Which means that if you really want forward ports, you need to find
+somebody else who does forward ports (e.g. a suitable distributor) or do
+them yourself.
 
->
-> With 3.4-rc2 and c1afdaff90538ef085b756454f12b29575411214 reverted the
-> same works in 100% of cases.
->
->> But I agree with Ben and Sergio that it does NOT help with the issue
->> in 3.3.1 we all see.
->
-> I mixed up some mails and actually thought Ben had already answered
-> regarding your patch, but that is not true.
->
-> --
-> MfG,
->
-> Michael Leun
->
+> But "we do this, and if you don't like it you can do whatever you
+> want" is not a valid argument in favor of the status quo,
 
+That would not be a valid argument, no.  But it has been mentioned /why/
+only backports are done in stable, i.e. what the problems with forward
+ports are:
 
+  - First of all more work.  (Could be compensated by longer periods
+    between stable releases, which would be an obvious downside too,
+    and actually defeat much of the purpose of the stable series of
+    getting out fixes to people.)
 
+  - Backports are already risky, which is why only /small/ backports are
+    allowed into stable.  Forward ports bring their own set of risks.
+    Inevitably, users of the kernel called "stable" will get even
+    more reason to wonder why this series is not "stable" in a sense of
+    "absolutely free of regressions".
+
+    For example, merging subsystem development trees into the mainline is
+    actually a forward port.  The mainline is at risk not only because
+    that subsystem tree hasn't had as much exposure to hardware and
+    workloads as the mainline will have, but additionally because the
+    merge result is different from the subsystem tree head.  (The result
+    is a forward port.)  Mainline development uses for example the
+    linux-next tree in order to reduce a subset of these forward porting
+    risks, those associated with conflicting developments in different
+    subsystems and cross-tree development.  Which kinds of tools should
+    stable use if it were to accept forward ports?
+
+    So, rather than managing the risk of forward ports in stable, those
+    risks are systematically avoided by not ever doing forward ports, not
+    even small ones.
+
+  - The mainline would not immediately benefit from the work put into
+    forward ports in stable.  Worse, fixes in those forward ports might
+    not ever make it into the mainline.  That would be detrimental to all
+    mainline users, and thus to all stable users.  (Stable users are
+    mainline users because stable is branched off of mainline every 2.5
+    months.)
+
+These downsides have been mentioned in the thread; please consider them.
+It is not about "we¹ do this because we are set in our ways".  The stable
+rules have pragmatic reasons which are for example founded on lessons
+learned from the 2.4/2.5/2.6 history of development, maintenance, and
+distribution.
+
+So there are arguments for the status quo, the arguments have been
+mentioned several times, and I can't see what would invalidate any of
+these arguments.
+
+--------
+¹) Greg, if you are still reading this thread:  Excuse the 'we', I do not
+mean to speak for you.
+
+Besides, Greg, thank you for the work.  As a driver maintainer and when
+supporting end users, I benefit from it since distributor kernels do not
+deviate much from mainline these days, among else thanks to your stable
+and longterm series.  And it is an important way for me to get certain
+driver fixes delivered to users conveniently and timely.
 -- 
-thanks,
-shafi
+Stefan Richter
+-=====-===-- -=-- -===-
+http://arcgraph.de/sr/
