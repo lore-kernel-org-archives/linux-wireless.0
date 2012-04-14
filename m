@@ -1,131 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:34212 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754175Ab2DKJia (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:38:30 -0400
-Received: by lagy4 with SMTP id y4so618004lag.36
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 02:38:27 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, linville@tuxdriver.com, coelho@ti.com
-Subject: [PATCH 13/16] wlcore/wl12xx: add quirk for legacy NVS support
-Date: Wed, 11 Apr 2012 12:38:00 +0300
-Message-Id: <1334137083-13490-14-git-send-email-coelho@ti.com> (sfid-20120411_113836_677536_ED190E86)
-In-Reply-To: <1334137083-13490-1-git-send-email-coelho@ti.com>
-References: <1334137083-13490-1-git-send-email-coelho@ti.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:35304 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755955Ab2DNUY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Apr 2012 16:24:58 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/3] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
+Date: Sat, 14 Apr 2012 22:01:57 +0200
+Message-Id: <1334433719-1144-1-git-send-email-juhosg@openwrt.org> (sfid-20120414_222500_573552_7BE89E01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of checking the chip ID directly in the wlcore code to decide
-whether to use the new or the old NVS format, we now use a quirk that
-should be set by the low level driver to say that it needs to use the
-old format.
+The REDUCE_SCALED_POWER_BY_THREE_CHAIN symbol is
+defined in different eeprom files, and the value
+varies between the different files.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
+In eeprom_def.c and in ar9003_eeprom.c the value
+of the symbol is 9, however the comments in these
+files indicates the value should be 10*log10(3)*2
+which is 9.54242509439325. Replace the the value
+to 10 in these files.
+
+Also add comments to eeprom_9287.c.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/ti/wl12xx/main.c   |    6 +++-
- drivers/net/wireless/ti/wlcore/boot.c   |   41 +++++++++++++++----------------
- drivers/net/wireless/ti/wlcore/wlcore.h |    3 ++
- 3 files changed, 27 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    4 ++--
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    |    2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 8d82203..d24e49a 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -151,7 +151,8 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
- 		wl1271_warning("chip id 0x%x (1271 PG10) support is obsolete",
- 			       wl->chip.id);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 672b6c9..25a4a02 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -31,7 +31,7 @@
+ #define CTL_11G_EXT (CTL_11G | EXT_ADDITIVE)
+ #define CTL_11B_EXT (CTL_11B | EXT_ADDITIVE)
+ #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+-#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9  /* 10*log10(3)*2 */
++#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+ #define PWRINCR_3_TO_1_CHAIN      9             /* 10*log(3)*2 */
+ #define PWRINCR_3_TO_2_CHAIN      3             /* floor(10*log(3/2)*2) */
+ #define PWRINCR_2_TO_1_CHAIN      6             /* 10*log(2)*2 */
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index f272236..604eab8 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -564,8 +564,8 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
+ 	(((cfgCtl & ~CTL_MODE_M) | (pCtlMode[ctlMode] & CTL_MODE_M)) == \
+ 	 ((pEepData->ctlIndex[i] & CTL_MODE_M) | SD_NO_CTL))
  
--		wl->quirks |= WLCORE_QUIRK_NO_BLOCKSIZE_ALIGNMENT;
-+		wl->quirks |= WLCORE_QUIRK_NO_BLOCKSIZE_ALIGNMENT |
-+			WLCORE_QUIRK_LEGACY_NVS;
- 		wl->plt_fw_name = WL127X_PLT_FW_NAME;
- 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
- 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
-@@ -161,7 +162,8 @@ static int wl12xx_identify_chip(struct wl1271 *wl)
- 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (1271 PG20)",
- 			     wl->chip.id);
+-#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6
+-#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10
++#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
++#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
  
--		wl->quirks |= WLCORE_QUIRK_NO_BLOCKSIZE_ALIGNMENT;
-+		wl->quirks |= WLCORE_QUIRK_NO_BLOCKSIZE_ALIGNMENT |
-+			WLCORE_QUIRK_LEGACY_NVS;
- 		wl->plt_fw_name = WL127X_PLT_FW_NAME;
- 		wl->sr_fw_name = WL127X_FW_NAME_SINGLE;
- 		wl->mr_fw_name = WL127X_FW_NAME_MULTI;
-diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
-index 7d49870..9520073 100644
---- a/drivers/net/wireless/ti/wlcore/boot.c
-+++ b/drivers/net/wireless/ti/wlcore/boot.c
-@@ -215,27 +215,7 @@ int wlcore_boot_upload_nvs(struct wl1271 *wl)
- 	if (wl->nvs == NULL)
- 		return -ENODEV;
+ 	u16 twiceMaxEdgePower;
+ 	int i;
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 619b95d..0068627 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -992,7 +992,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+ 						  u16 powerLimit)
+ {
+ #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+-#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
++#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
  
--	if (wl->chip.id == CHIP_ID_1283_PG20) {
--		struct wl128x_nvs_file *nvs = (struct wl128x_nvs_file *)wl->nvs;
--
--		if (wl->nvs_len == sizeof(struct wl128x_nvs_file)) {
--			if (nvs->general_params.dual_mode_select)
--				wl->enable_11a = true;
--		} else {
--			wl1271_error("nvs size is not as expected: %zu != %zu",
--				     wl->nvs_len,
--				     sizeof(struct wl128x_nvs_file));
--			kfree(wl->nvs);
--			wl->nvs = NULL;
--			wl->nvs_len = 0;
--			return -EILSEQ;
--		}
--
--		/* only the first part of the NVS needs to be uploaded */
--		nvs_len = sizeof(nvs->nvs);
--		nvs_ptr = (u8 *)nvs->nvs;
--
--	} else {
-+	if (wl->quirks & WLCORE_QUIRK_LEGACY_NVS) {
- 		struct wl1271_nvs_file *nvs =
- 			(struct wl1271_nvs_file *)wl->nvs;
- 		/*
-@@ -263,6 +243,25 @@ int wlcore_boot_upload_nvs(struct wl1271 *wl)
- 		/* only the first part of the NVS needs to be uploaded */
- 		nvs_len = sizeof(nvs->nvs);
- 		nvs_ptr = (u8 *) nvs->nvs;
-+	} else {
-+		struct wl128x_nvs_file *nvs = (struct wl128x_nvs_file *)wl->nvs;
-+
-+		if (wl->nvs_len == sizeof(struct wl128x_nvs_file)) {
-+			if (nvs->general_params.dual_mode_select)
-+				wl->enable_11a = true;
-+		} else {
-+			wl1271_error("nvs size is not as expected: %zu != %zu",
-+				     wl->nvs_len,
-+				     sizeof(struct wl128x_nvs_file));
-+			kfree(wl->nvs);
-+			wl->nvs = NULL;
-+			wl->nvs_len = 0;
-+			return -EILSEQ;
-+		}
-+
-+		/* only the first part of the NVS needs to be uploaded */
-+		nvs_len = sizeof(nvs->nvs);
-+		nvs_ptr = (u8 *)nvs->nvs;
- 	}
- 
- 	/* update current MAC address to NVS */
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 76c27dd..5f5dadb 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -322,6 +322,9 @@ int wlcore_free_hw(struct wl1271 *wl);
- /* Older firmwares did not implement the FW logger over bus feature */
- #define WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED	BIT(4)
- 
-+/* Older firmwares use an old NVS format */
-+#define WLCORE_QUIRK_LEGACY_NVS			BIT(5)
-+
- /* TODO: move to the lower drivers when all usages are abstracted */
- #define CHIP_ID_1271_PG10              (0x4030101)
- #define CHIP_ID_1271_PG20              (0x4030111)
+ 	struct ar5416_eeprom_def *pEepData = &ah->eeprom.def;
+ 	u16 twiceMaxEdgePower;
 -- 
-1.7.5.4
+1.7.2.1
 
