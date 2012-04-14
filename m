@@ -1,222 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61521 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753765Ab2DCWmj (ORCPT
+Received: from mx.scalarmail.ca ([98.158.95.75]:58650 "EHLO
+	ironport-01.sms.scalar.ca" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754972Ab2DNCog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 18:42:39 -0400
-Message-ID: <4F7B7CD5.107@lwfinger.net> (sfid-20120404_004244_272580_A496BA8F)
-Date: Tue, 03 Apr 2012 17:42:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 13 Apr 2012 22:44:36 -0400
+Date: Fri, 13 Apr 2012 22:44:30 -0400
+From: Nick Bowler <nbowler@elliptictech.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Regression: bcma: early boot crash on BCM4716 w/ 3.4-rc2+ (bisected)
+Message-ID: <20120414024430.GA19782@elliptictech.com> (sfid-20120414_044455_368616_A87EAE5D)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, Bing Zhao <bzhao@marvell.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH wireless-next] wireless: Remove unnecessary ; from while
- (0) macros
-References: <1333489609.2695.14.camel@joe2Laptop>
-In-Reply-To: <1333489609.2695.14.camel@joe2Laptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/03/2012 04:46 PM, Joe Perches wrote:
-> Semicolons are not necessary after macros that end in while (0).
-> Remove them.
->
-> Simplify the macros with tests of
-> do { if (foo>size) memset1; else memset2;} while (0);
-> to a single line memset(,,min_t(size_t, foo, size))
->
-> Signed-off-by: Joe Perches<joe@perches.com>
+Hi folks,
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net> (rtlwifi part)
+Attemping to boot Linus' master on my Asus RT-N16 (Broadcom BCM4716 SoC)
+crashes early (before userspace is started).  Full boot log is appended.
+Linux 3.3 boots successfully, so I bisected to the following commit.
+Reverting the implicated commit on top of Linus' master corrects the
+issue.
 
-> ---
->   drivers/net/wireless/ath/carl9170/cmd.h       |    6 +++---
->   drivers/net/wireless/brcm80211/brcmsmac/d11.h |    2 +-
->   drivers/net/wireless/mwifiex/sdio.h           |    8 ++++----
->   drivers/net/wireless/rtlwifi/rtl8192ce/trx.h  |    7 +------
->   drivers/net/wireless/rtlwifi/rtl8192de/trx.h  |    8 ++------
->   drivers/net/wireless/rtlwifi/rtl8192se/def.h  |    7 +------
->   drivers/net/wireless/rtlwifi/rtl8192se/fw.h   |    6 +++---
->   7 files changed, 15 insertions(+), 29 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/carl9170/cmd.h b/drivers/net/wireless/ath/carl9170/cmd.h
-> index 885c427..65919c9 100644
-> --- a/drivers/net/wireless/ath/carl9170/cmd.h
-> +++ b/drivers/net/wireless/ath/carl9170/cmd.h
-> @@ -114,7 +114,7 @@ __regwrite_out :							\
->
->   #define carl9170_regwrite_result()					\
->   	__err;								\
-> -} while (0);
-> +} while (0)
->
->
->   #define carl9170_async_regwrite_get_buf()				\
-> @@ -126,7 +126,7 @@ do {									\
->   		__err = -ENOMEM;					\
->   		goto __async_regwrite_out;				\
->   	}								\
-> -} while (0);
-> +} while (0)
->
->   #define carl9170_async_regwrite_begin(carl)				\
->   do {									\
-> @@ -169,6 +169,6 @@ __async_regwrite_out:							\
->
->   #define carl9170_async_regwrite_result()				\
->   	__err;								\
-> -} while (0);
-> +} while (0)
->
->   #endif /* __CMD_H */
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/d11.h b/drivers/net/wireless/brcm80211/brcmsmac/d11.h
-> index 1948cb2..3f659e0 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/d11.h
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/d11.h
-> @@ -733,7 +733,7 @@ struct cck_phy_hdr {
->   	do { \
->   		plcp[1] = len&  0xff; \
->   		plcp[2] = ((len>>  8)&  0xff); \
-> -	} while (0);
-> +	} while (0)
->
->   #define BRCMS_SET_MIMO_PLCP_AMPDU(plcp) (plcp[3] |= MIMO_PLCP_AMPDU)
->   #define BRCMS_CLR_MIMO_PLCP_AMPDU(plcp) (plcp[3]&= ~MIMO_PLCP_AMPDU)
-> diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-> index a3fb322..0ead152 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.h
-> +++ b/drivers/net/wireless/mwifiex/sdio.h
-> @@ -193,7 +193,7 @@
->   		a->mpa_tx.ports |= (1<<(a->mpa_tx.pkt_cnt+1+(MAX_PORT -	\
->   						a->mp_end_port)));	\
->   	a->mpa_tx.pkt_cnt++;						\
-> -} while (0);
-> +} while (0)
->
->   /* SDIO Tx aggregation limit ? */
->   #define MP_TX_AGGR_PKT_LIMIT_REACHED(a)					\
-> @@ -211,7 +211,7 @@
->   	a->mpa_tx.buf_len = 0;						\
->   	a->mpa_tx.ports = 0;						\
->   	a->mpa_tx.start_port = 0;					\
-> -} while (0);
-> +} while (0)
->
->   /* SDIO Rx aggregation limit ? */
->   #define MP_RX_AGGR_PKT_LIMIT_REACHED(a)					\
-> @@ -242,7 +242,7 @@
->   	a->mpa_rx.skb_arr[a->mpa_rx.pkt_cnt] = skb;			\
->   	a->mpa_rx.len_arr[a->mpa_rx.pkt_cnt] = skb->len;		\
->   	a->mpa_rx.pkt_cnt++;						\
-> -} while (0);
-> +} while (0)
->
->   /* Reset SDIO Rx aggregation buffer parameters */
->   #define MP_RX_AGGR_BUF_RESET(a) do {					\
-> @@ -250,7 +250,7 @@
->   	a->mpa_rx.buf_len = 0;						\
->   	a->mpa_rx.ports = 0;						\
->   	a->mpa_rx.start_port = 0;					\
-> -} while (0);
-> +} while (0)
->
->
->   /* data structure for SDIO MPA TX */
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-> index efb9ab2..c4adb97 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-> @@ -530,12 +530,7 @@
->   	SET_BITS_OFFSET_LE(__pdesc+28, 0, 32, __val)
->
->   #define CLEAR_PCI_TX_DESC_CONTENT(__pdesc, _size)	\
-> -do {							\
-> -	if (_size>  TX_DESC_NEXT_DESC_OFFSET)		\
-> -		memset(__pdesc, 0, TX_DESC_NEXT_DESC_OFFSET);	\
-> -	else						\
-> -		memset(__pdesc, 0, _size);	\
-> -} while (0);
-> +	memset(__pdesc, 0, min_t(size_t, _size, TX_DESC_NEXT_DESC_OFFSET))
->
->   struct rx_fwinfo_92c {
->   	u8 gain_trsw[4];
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/trx.h b/drivers/net/wireless/rtlwifi/rtl8192de/trx.h
-> index 0dc736c..057a524 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/trx.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/trx.h
-> @@ -530,12 +530,8 @@
->   	SET_BITS_OFFSET_LE(__pdesc+28, 0, 32, __val)
->
->   #define CLEAR_PCI_TX_DESC_CONTENT(__pdesc, _size)	\
-> -do {							\
-> -	if (_size>  TX_DESC_NEXT_DESC_OFFSET)		\
-> -		memset((void *)__pdesc, 0, TX_DESC_NEXT_DESC_OFFSET);	\
-> -	else						\
-> -		memset((void *)__pdesc, 0, _size);	\
-> -} while (0);
-> +	memset((void *)__pdesc, 0,			\
-> +	       min_t(size_t, _size, TX_DESC_NEXT_DESC_OFFSET))
->
->   /* For 92D early mode */
->   #define SET_EARLYMODE_PKTNUM(__paddr, __value)		\
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/def.h b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-> index d1b0a1e..20afec6 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-> @@ -252,12 +252,7 @@
->    * the desc is cleared. */
->   #define	TX_DESC_NEXT_DESC_OFFSET			36
->   #define CLEAR_PCI_TX_DESC_CONTENT(__pdesc, _size)		\
-> -do {								\
-> -	if (_size>  TX_DESC_NEXT_DESC_OFFSET)			\
-> -		memset(__pdesc, 0, TX_DESC_NEXT_DESC_OFFSET);	\
-> -	else							\
-> -		memset(__pdesc, 0, _size);			\
-> -} while (0);
-> +	memset(__pdesc, 0, min_t(size_t, _size, TX_DESC_NEXT_DESC_OFFSET))
->
->   /* Rx Desc */
->   #define RX_STATUS_DESC_SIZE				24
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-> index b4afff6..d53f433 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-> @@ -345,7 +345,7 @@ enum fw_h2c_cmd {
->   	do {							\
->   		udelay(1000);					\
->   		rtlpriv->rtlhal.fwcmd_iomap&= (~_Bit);		\
-> -	} while (0);
-> +	} while (0)
->
->   #define FW_CMD_IO_UPDATE(rtlpriv, _val)				\
->   	rtlpriv->rtlhal.fwcmd_iomap = _val;
-> @@ -354,13 +354,13 @@ enum fw_h2c_cmd {
->   	do {							\
->   		rtl_write_word(rtlpriv, LBUS_MON_ADDR, (u16)_val);	\
->   		FW_CMD_IO_UPDATE(rtlpriv, _val);		\
-> -	} while (0);
-> +	} while (0)
->
->   #define FW_CMD_PARA_SET(rtlpriv, _val)				\
->   	do {							\
->   		rtl_write_dword(rtlpriv, LBUS_ADDR_MASK, _val);	\
->   		rtlpriv->rtlhal.fwcmd_ioparam = _val;		\
-> -	} while (0);
-> +	} while (0)
->
->   #define FW_CMD_IO_QUERY(rtlpriv)				\
->   	(u16)(rtlpriv->rtlhal.fwcmd_iomap)
->
->
->
+Please let me know if you need any more info,
+
+10d8493cd9efd38b1947b7a74276dbdc8311aa1a is the first bad commit
+commit 10d8493cd9efd38b1947b7a74276dbdc8311aa1a
+Author: Arend van Spriel <arend@broadcom.com>
+Date:   Tue Mar 6 15:50:48 2012 +0100
+
+    bcma: add support for on-chip OTP memory used for SPROM storage
+    
+    Wireless Broadcom chips can have either their SPROM data stored
+    on either external SPROM or on-chip OTP memory. Both are accessed
+    through the same register space. This patch adds support for the
+    on-chip OTP memory.
+    
+    Tested with:
+    BCM43224 OTP and SPROM
+    BCM4331 SPROM
+    BCM4313 OTP
+    
+    This patch is in response to linux-wireless thread [1].
+    
+    [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/85426
+    
+    Tested-by: Saul St. John <saul.stjohn@gmail.com>
+    Tested-by: Rafal Milecki <zajec5@gmail.com>
+    Tested-by: Hauke Mehrtens <hauke@hauke-m.de>
+    Cc: Larry Finger <Larry.Finger@lwfinger.net>
+    Signed-off-by: Arend van Spriel <arend@broadcom.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+:040000 040000 761bdd36c36c49d9e96d53e6797186bc1cc8364a fe16356daf2cdc7a3552804b85c1d7deb5b82579 M	drivers
+:040000 040000 d1494dc9d5a89da0920aadb7f605386eb909acca e83a98ac9d8eebb1f367b1ce1bbac7da50ac0479 M	include
+
+Linux version 3.4.0-rc2-00288-g7d93101 (nick@amythaon) (gcc version 4.5.3 (Gentoo 4.5.3-r2 p1.1, pie-0.4.7) ) #0 PREEMPT Thu Apr 12 20:18:40 EDT 2012
+bootconsole [early0] enabled
+CPU revision is: 00019740 (MIPS 74Kc)
+bcm47xx: using bcma bus
+bcma: Found chip with id 0x4716, rev 0x01 and package 0x0A
+bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x1F, class 0x0)
+bcma: Core 3 found: UNKNOWN (manuf 0x4A7, id 0x82C, rev 0x01, class 0x0)
+bcma: PLL init unknown for device 0x4716
+bcma: PMU resource config unknown for device 0x4716
+bcma: PMU switch/regulators init unknown for device 0x4716
+bcma: Workarounds unknown for device 0x4716
+bcma: Initializing MIPS core...
+bcma: IRQ reconfiguration done
+bcma: core 0x0800, irq : 2(S)* 3  4  5  6  D  I 
+bcma: core 0x082c, irq : 2(S)* 3  4  5  6  D  I 
+bcma: found parallel flash.
+bcma: Early bus registered
+Determined physical RAM map:
+ memory: 08000000 @ 00000000 (usable)
+Initrd not found or empty - disabling initrd
+Zone PFN ranges:
+  Normal   0x00000000 -> 0x00008000
+Movable zone start PFN for each node
+Early memory PFN ranges
+    0: 0x00000000 -> 0x00008000
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 32512
+Kernel command line:  console=ttyS0,115200 console=ttyS0,115200n8
+PID hash table entries: 512 (order: -1, 2048 bytes)
+Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
+Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
+Primary instruction cache 32kB, VIPT, 4-way, linesize 32 bytes.
+Primary data cache 32kB, 4-way, VIPT, cache aliases, linesize 32 bytes
+Writing ErrCtl register=00000000
+Readback ErrCtl register=00000000
+Memory: 126448k/131072k available (2304k kernel code, 4624k reserved, 599k data, 180k init, 0k highmem)
+SLUB: Genslabs=9, HWalign=32, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+NR_IRQS:128
+Calibrating delay loop... 238.59 BogoMIPS (lpj=119296)
+pid_max: default: 32768 minimum: 301
+Mount-cache hash table entries: 512
+NET: Registered protocol family 16
+bio: create slab <bio-0> at 0
+vgaarb: loaded
+SCSI subsystem initialized
+Switching to clocksource MIPS
+NET: Registered protocol family 2
+IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+TCP established hash table entries: 4096 (order: 3, 32768 bytes)
+TCP bind hash table entries: 4096 (order: 2, 16384 bytes)
+TCP: Hash tables configured (established 4096 bind 4096)
+TCP: reno registered
+UDP hash table entries: 256 (order: 0, 4096 bytes)
+UDP-Lite hash table entries: 256 (order: 0, 4096 bytes)
+NET: Registered protocol family 1
+bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x11, class 0x0)
+bcma: Core 2 found: GBit MAC (manuf 0x4BF, id 0x82D, rev 0x00, class 0x0)
+bcma: Core 4 found: USB 2.0 Host (manuf 0x4BF, id 0x819, rev 0x04, class 0x0)
+bcma: Core 5 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0E, class 0x0)
+bcma: Core 6 found: DDR1/DDR2 Memory Controller (manuf 0x4BF, id 0x82E, rev 0x01, class 0x0)
+bcma: Core 7 found: Internal Memory (manuf 0x4BF, id 0x80E, rev 0x07, class 0x0)
+bcma: Core 8 found: I2S (manuf 0x4BF, id 0x834, rev 0x00, class 0x0)
+bcma: Initializing MIPS core...
+bcma: set_irq: core 0x0812, irq 3 => 3
+bcma: set_irq: core 0x082d, irq 4 => 4
+bcma: set_irq: core 0x0819, irq 5 => 5
+bcma: IRQ reconfiguration done
+bcma: core 0x0800, irq : 2(S)* 3  4  5  6  D  I 
+bcma: core 0x082c, irq : 2(S)* 3  4  5  6  D  I 
+bcma: core 0x0812, irq : 2(S)  3* 4  5  6  D  I 
+bcma: core 0x082d, irq : 2(S)  3  4* 5  6  D  I 
+bcma: core 0x0819, irq : 2(S)  3  4  5* 6  D  I 
+bcma: core 0x0820, irq : 2(S)  3  4  5  6* D  I 
+bcma: core 0x082e, irq : 2(S)* 3  4  5  6  D  I 
+bcma: core 0x080e, irq : 2(S)* 3  4  5  6  D  I 
+bcma: core 0x0834, irq : 2(S)* 3  4  5  6  D  I 
+bcma: PCIEcore in host mode found
+PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [mem 0x08000000-0x0bffffff]
+pci_bus 0000:00: root bus resource [io  0x0100-0x07ff]
+bcma: PCI: Fixing up bridge 0000:00:00.0
+bcma: PCI: Fixing up device 0000:00:00.0
+bcma: PCI: Fixing up bridge 0000:00:00.1
+bcma: PCI: Fixing up device 0000:00:00.1
+Data bus error, epc == 8019e308, ra == 8019b914
+Oops[#1]:
+Cpu 0
+$ 0   : 00000000 00000000 00000000 802c5aa0
+$ 4   : 8030d410 b8000900 00000001 00000001
+$ 8   : 80353bf4 00000003 00000001 8024e380
+$12   : ffffffff 00000000 00000000 ffffffff
+$16   : 87daca00 8030d150 00000902 87daca00
+$20   : 87dacb00 87dacbb8 802d709c 80300000
+$24   : 00000000 80171fa8                  
+$28   : 87c28000 87c29df8 00000020 8019b914
+Hi    : 00000000
+Lo    : 15846c40
+epc   : 8019e308 bcma_host_soc_read16+0x10/0x18
+    Not tainted
+ra    : 8019b914 bcma_sprom_get+0x244/0x670
+Status: 11008003    KERNEL EXL IE 
+Cause : 8080001c
+PrId  : 00019740 (MIPS 74Kc)
+Modules linked in:
+Process swapper (pid: 1, threadinfo=87c28000, task=87c24000, tls=00000000)
+Stack : 00000008 00000800 00000000 00000001 00000020 8023be2c 00000000 8030d150
+        802d0000 00000000 80300000 00000008 802b8954 8023bc60 802c5000 00000000
+        802c0000 00000100 802c0000 00000200 00000006 802d9824 00000000 80300000
+        00000008 802b8954 802d709c 80300000 00000020 802d9848 00000000 80300000
+        00000008 802b8954 802d709c 800015d0 00000000 800ffca8 00000001 00000006
+        ...
+Call Trace:
+[<8019e308>] bcma_host_soc_read16+0x10/0x18
+[<8019b914>] bcma_sprom_get+0x244/0x670
+[<8023bc60>] bcma_bus_register+0xe4/0x264
+[<802d9848>] bcm47xx_register_bus_complete+0x24/0x34
+[<800015d0>] do_one_initcall+0xfc/0x1dc
+[<802d7a48>] kernel_init+0x12c/0x1f8
+[<80006c94>] kernel_thread_helper+0x10/0x18
+
+
+Code: 30a5ffff  00452821  94a20000 <03e00008> 3042ffff  8c82015c  30a5ffff  00452821  8ca20000 
+---[ end trace e93713a9d40cd06c ]---
+Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
+-- 
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
 
