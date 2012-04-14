@@ -1,104 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:55070 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733Ab2DJHzu (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:58181 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754057Ab2DNP35 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 03:55:50 -0400
-Message-ID: <4F83E781.7000003@qca.qualcomm.com> (sfid-20120410_095554_616609_55390F19)
-Date: Tue, 10 Apr 2012 10:55:45 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sat, 14 Apr 2012 11:29:57 -0400
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Pull request: ath6kl 20120410
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <20120414094137.54a7f213@stein>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413154216.476a02ac@stein>
+	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
+	<20120414094137.54a7f213@stein>
+Date: Sat, 14 Apr 2012 18:29:54 +0300
+Message-ID: <CAMP44s2Un-M2OCmuRQGpGsHR21gH=S7oJKx4Ci8tvYVCCSitUw@mail.gmail.com> (sfid-20120414_173002_443262_F4161960)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Sat, Apr 14, 2012 at 10:41 AM, Stefan Richter
+<stefanr@s5r6.in-berlin.de> wrote:
+> On Apr 14 Felipe Contreras wrote:
+>> I already exemplified how they are very different, but here it goes
+>> again. The patch "drm/i915: Add lock on drm_helper_resume_force_mode"
+>> was just tagged in 3.3.2, if I had said yesterday "this patch breaks
+>> things on my machine", then that patch would have been dropped for
+>> 3.3.2 even though it's still on mainline--why? Because we know it's
+>> broken, and broken patches are not supposed to land to stable. But
+>> today, one day later, we have to wait until it's fixed in master
+>> first. Why?
+>>
+>> What makes a patch droppable yesterday, but dependent on mainline today?
+>
+> Huh?
+>
+> Because "yesterday" was a review before stable release:
+>  - A buggy mainline release exists.
+>  - No buggy stable release exists.
+> whereas "today" is after stable release:
+>  - A buggy mainline release exists.
+>  - A buggy stable release exists.
 
-here's the first ath6kl pull request for 3.5. The biggest change is the
-completion of USB support, now ath6kl properly supports AR6004 USB
-devices. I have been careful so that there would not be any build issues
-with the new USB code, but if you find something please let me know.
+IOW; a tag makes undroppable.
 
-There are also small fixes to various issues we have found but they
-should be relatively safe.
+But *why*? You say you *really* need to problem to fixed in mainline,
+that's why it cannot be dropped, but that applies also to patches in
+the queue *before* the tag is made, doesn't it? If you find a patch in
+the stable review queue causes problems, why don't you leave it there?
+You *really* need to problem fixed in mainline, don't you?
 
-Kalle
+So yesterday the priority is stability > 'upstream first', but today
+it's 'upstream first' > stability. Nobody has put forward an argument
+for this shift in priorities--"a tag was made" is not argument.
 
-The following changes since commit 47107e84446f4724d25c724493679cc50eeef53c:
+> (The WLAN breakage wich is being talked about was reported after
+> release, not during review, right?)
 
-  iwlwifi: split POWER_PMI status bit (2012-04-09 16:37:49 -0400)
+Yeah, this is a hypothetical thought experiment to demonstrate the
+shift in priorities.
 
-are available in the git repository at:
-  git://github.com/kvalo/ath6kl.git for-linville
+> [quote re-ordered]
+>> Again, you can repeat the same thing as much as you want, it still
+>> doesn't answer what I have asked.
+>
+> Yeah, sorry for that.  All the time I thought you asked why a *revert*
+> which is applicable to mainline and stable first happens in stable.
+>
+> But your question was actually what the difference between
+>  - dropping a patch from a queue of candidate patches versus
+>  - adding a reverting patch to repair a defect from a previous release
+> is.
 
-Aarthi Thiruvengadam (2):
-      ath6kl: handle probe response from P2P device in P2P GO mode
-      ath6kl: add debug log for AP MLME operations
+Yes, that is one of my arguments.
 
-Bala Shanmugam (1):
-      ath6kl: Set background scan period.
+> The former is still part of the decision whether a changeset which
+> exists in mainline should be backported into stable.  Somebody initially
+> thought it should be, but others should have a look too and amend that
+> decision if need be.  Somebody reports that the change would introduce a
+> regression.  Usually, this disqualifies a patch from being applied to
+> stable right away, without further work having to be done in stable.
+>
+> "Drop a stable candidate before release" is a form of "decline a
+> submission to stable", happening late in the preparations of a stable
+> release.
+>
+> The latter is when damage was done; it is now about bug fixing.  This
+> involves debugging of the regression, finding a right approach to
+> fix it (e.g. revert), write + review + test + commit the fix, port the fix
+> to all relevant other kernel branches, review + test + commit those ports
+> too.
 
-Joe Perches (1):
-      ath6kl: Add __printf verification to ath6kl_printk
+Really? So if the patch doesn't make it to stable you don't need to do
+any of that? IOW; if the patch doesn't make it to stable, it's OK to
+leave it broken for v3.4? There's 10000 patches in v3.4-rc* that are
+all about bug fixing, they don't need to go into stable to be fixed,
+do they? If a non-stable patch needs to be reverted in mainline, it
+gets reverted in mainline, regardless of weather or not it made it to
+stable or not.
 
-Kalle Valo (11):
-      ath6kl: abort normal scan when scheduled scan is started
-      Merge remote branch 'wireless-next/master' into ath6kl-next
-      ath6kl: set ram reserved size only for ar6003
-      ath6kl: Add tx_complete() to struct htc_ep_callbacks
-      ath6kl: add tx_comp_multi() to struct htc_ep_callbacks
-      ath6kl: add pointer to the skb in htc_packet
-      ath6kl: add rx data padding support
-      ath6kl: remove void pointer from ath6kl_credit_setup()
-      ath6kl: add htc ops
-      ath6kl: Add HTC pipe implementation
-      ath6kl: add full USB support
+So, the hypothetical patch that was dropped in the stable review queue
+yesterday has to be fixed in mainline too, just like the hypothetical
+patch that made it to stable and was found problematic today has to be
+fixed in mainline.
 
-Raja Mani (4):
-      ath6kl: Add ARP offload related statistic info in tgt_stats
-      ath6kl: Isolate host sleep mode config part from ath6kl_wow_suspend
-      ath6kl: Optimize target power in deep sleep suspend
-      ath6kl: Store scan request info in-advance before sending SCAN request
+Again, what makes a released patch undroppable? It's not the bug
+fixing; weather or not it gets into stable, it still has to be fixed
+in mainline.
 
-Vasanthakumar Thiagarajan (7):
-      ath6kl: Dump htc header when invalid Rx frame length is detected
-      ath6kl: Configure inactivity timeout in fw
-      ath6kl: Support net_stats.multicast
-      ath6kl: Fix target assert in p2p bringup with multi vif
-      ath6kl: Don't advertise HT40 support in 2.4 Ghz
-      ath6kl: Configure htcap in fw based on the channel type in AP mode
-      ath6kl: Fix 4-way handshake failure in AP and P2P GO mode
+> "Add a reverting fix" is a form of "add a fix".
+>
+> You are indeed pointing to a procedural flaw here.  In "add a fix" cases,
+> stable release procedures ensure that if 3.3.3 included the revert, 3.4
+> will include it to, by the Linus->Greg order of commiting patches. But in
+> the "drop a candidate before release" case, Greg and the stable reviewers
+> do not have a similarly fool-proof procedure to ensure that the next branch
+> point will be free of the regression.  Now they need to watch closely that
+> a fix gets into mainline ideally before the next branch point is going to
+> be released.
 
-Vivek Natarajan (2):
-      ath6kl: Use vmalloc instead of kmalloc for fw
-      ath6kl: Fix scan related issue on suspend-resume
+I don't see the procedural flaw here. There's 10000 patches that never
+go through the stable review process, and they don't need to. Somehow
+v3.4 will be relatively OK. So the dropped patches from the stable
+review queue will just receive the same treatment as any other patch.
 
- drivers/net/wireless/ath/ath6kl/Makefile           |    3 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |  417 ++++-
- drivers/net/wireless/ath/ath6kl/common.h           |    4 +-
- drivers/net/wireless/ath/ath6kl/core.c             |   30 +-
- drivers/net/wireless/ath/ath6kl/core.h             |   34 +-
- drivers/net/wireless/ath/ath6kl/debug.c            |    6 +
- drivers/net/wireless/ath/ath6kl/debug.h            |    1 +
- drivers/net/wireless/ath/ath6kl/hif-ops.h          |   34 +
- drivers/net/wireless/ath/ath6kl/hif.h              |    6 +
- drivers/net/wireless/ath/ath6kl/htc-ops.h          |  113 ++
- drivers/net/wireless/ath/ath6kl/htc.h              |   98 +-
- .../net/wireless/ath/ath6kl/{htc.c => htc_mbox.c}  |   85 +-
- drivers/net/wireless/ath/ath6kl/htc_pipe.c         | 1713
-++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/init.c             |   57 +-
- drivers/net/wireless/ath/ath6kl/main.c             |    4 +
- drivers/net/wireless/ath/ath6kl/sdio.c             |    2 +-
- drivers/net/wireless/ath/ath6kl/txrx.c             |   23 +-
- drivers/net/wireless/ath/ath6kl/usb.c              |  785 +++++++++-
- drivers/net/wireless/ath/ath6kl/wmi.c              |   80 +
- drivers/net/wireless/ath/ath6kl/wmi.h              |   40 +
- 20 files changed, 3370 insertions(+), 165 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/htc-ops.h
- rename drivers/net/wireless/ath/ath6kl/{htc.c => htc_mbox.c} (96%)
- create mode 100644 drivers/net/wireless/ath/ath6kl/htc_pipe.c
+Just by going through the stable review process the patch already
+received more eyes to make the bugs more shallow. There might be a lot
+of trees out there where people pick patches from mainline, and they
+don't *need* to follow the "upstream first" rule, by reviewing the
+patch, and maybe even testing it, and then reporting the problem, they
+are helping getting it fixed for v3.4.
+
+You don't *need* to keep the patch in the stable review queue, you
+don't *need* to make a stable release with it in order to ensure that
+it will fixed in mainline, the information about the patch problems is
+not lost.
+
+Seems to me you are abusing the 'stable' branch as a bug tracking
+system for certain patches for the next release.
+
+> So there is indeed a difficulty involved with dropping patches from the
+> candidate queue.  Fortunately, it is not necessary to subject post-release
+> reverts to the same difficulty.
+
+It's the other way around.
+
+-- 
+Felipe Contreras
