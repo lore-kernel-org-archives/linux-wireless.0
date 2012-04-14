@@ -1,363 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:58358 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932760Ab2DLLw5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 07:52:57 -0400
-Received: by yenl12 with SMTP id l12so972610yen.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 04:52:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4F855FC4.1080707@visionsystems.de>
-References: <4F855997.20603@visionsystems.de> <1334139944.10398.11.camel@cumari>
- <4F855FC4.1080707@visionsystems.de>
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Date: Thu, 12 Apr 2012 13:52:36 +0200
-Message-ID: <CAGm1_ktjuRbq_8Dep4JNfGaQqUuadbBoxLhr9RtqT4KgNDysvA@mail.gmail.com> (sfid-20120412_135303_079625_E57770F6)
-Subject: Re: wl1271: communication fails with kernel 3.4-rc2 and firmware
- series 4
-To: yegor_sub1@visionsystems.de
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	arik@wizery.com
-Content-Type: text/plain; charset=UTF-8
+Received: from 1wt.eu ([62.212.114.60]:65137 "EHLO 1wt.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750734Ab2DNGCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Apr 2012 02:02:21 -0400
+Date: Sat, 14 Apr 2012 08:01:58 +0200
+From: Willy Tarreau <w@1wt.eu>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk
+Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
+Message-ID: <20120414060158.GD19802@1wt.eu> (sfid-20120414_080321_588248_90650415)
+References: <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com> <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com> <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com> <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com> <20120413105746.10ffb120@stein> <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com> <20120413190819.9469.qmail@stuge.se> <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 11, 2012 at 12:41 PM, Yegor Yefremov
-<yegor_sub1@visionsystems.de> wrote:
-> Am 11.04.2012 12:25, schrieb Luciano Coelho:
->> Hi Yegor,
->>
->> On Wed, 2012-04-11 at 12:14 +0200, Yegor Yefremov wrote:
->>> continuing our yesterdays discussion on IRC I try to summarize my
->>> results.
->>>
->>> First of all I calibrated my WLAN card via ti-utils as described here
->>> http://linuxwireless.org/en/users/Drivers/wl12xx/calibrator using
->>> calibrator plt calibrate.
->>>
->>> Then I integrated this nvs file into kernel, so I have no longer these
->>> nasty errors.
->>>
->>> Still I cannot ping anything. Here you can see the end of
->>> wpa_supplicant's log:
->>>
->>> WPA: Installing PTK to the driver.
->>> wpa_driver_nl80211_set_key: ifindex=3 alg=2 addr=0x42a48 key_idx=0 set_tx=1 seq_len=6 key_len=32
->>>    addr=5c:d9:98:f9:30:d9
->>> EAPOL: External notification - portValid=1
->>> State: 4WAY_HANDSHAKE -> GROUP_HANDSHAKE
->>> RSN: received GTK in pairwise handshake - hexdump(len=34): [REMOVED]
->>> WPA: Group Key - hexdump(len=32): [REMOVED]
->>> WPA: Installing GTK to the driver (keyidx=1 tx=0 len=32).
->>> WPA: RSC - hexdump(len=6): b1 7c 0d 00 00 00
->>> wpa_driver_nl80211_set_key: ifindex=3 alg=2 addr=0x2a443 key_idx=1 set_tx=0 seq_len=6 key_len=32
->>> WPA: Key negotiation completed with 5c:d9:98:f9:30:d9 [PTK=TKIP GTK=TKIP]
->>> Cancelling authentication timeout
->>> Removed BSSID 5c:d9:98:f9:30:d9 from blacklist
->>> State: GROUP_HANDSHAKE -> COMPLETED
->>> CTRL-EVENT-CONNECTED - Connection to 5c:d9:98:f9:30:d9 completed (reauth) [id=1
->>> id_str=]
->>> wpa_driver_nl80211_set_operstate: operstate 0->1 (UP)
->>> netlink: Operstate: linkmode=-1, operstate=6
->>> EAPOL: External notification - portValid=1
->>> EAPOL: External notification - EAP success=1
->>> EAPOL: SUPP_PAE entering state AUTHENTICATING
->>> EAPOL: SUPP_BE entering state SUCCESS
->>> EAP: EAP entering state DISABLED
->>> EAPOL: SUPP_PAE entering state AUTHENTICATED
->>> EAPOL: Supplicant port status: Authorized
->>> EAPOL: SUPP_BE entering state IDLE
->>> EAPOL authentication completed successfully
->>> RTM_NEWLINK: operstate=1 ifi_flags=0x11043 ([UP][RUNNING][LOWER_UP])
->>> RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
->>> EAPOL: startWhen --> 0
->>> EAPOL: disable timer tick
->>>
->>> Any ideas? As i told before both 2.6.37 and 3.3-rc7 made no problems.
->> Hard to say.  From these logs everything seems to be working fine.  What
->> IP address are you using? Are you sure your routes are all set up
->> correctly? Do you get any messages in the kernel logs, TX stuck
->> watchdog, maybe?
->
-> As soon as I replace 3.4 with 2.6.37 pings go through.
->
-> # ifconfig wlan0
-> wlan0     Link encap:Ethernet  HWaddr 00:04:D9:80:55:02
->          inet addr:192.168.1.239  Bcast:192.168.1.255  Mask:255.255.255.0
->          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->          RX packets:5 errors:0 dropped:0 overruns:0 frame:0
->          TX packets:4 errors:0 dropped:0 overruns:0 carrier:0
->          collisions:0 txqueuelen:1000
->          RX bytes:737 (737.0 B)  TX bytes:568 (568.0 B)
->
-> # route -n
-> Kernel IP routing table
-> Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
-> 192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 wlan0
->
-> #dmesg
-> wl12xx: firmware booted (Rev 6.3.5.0.98)
-> wlan0: authenticate with 5c:d9:98:f9:30:d9
-> wlan0: send auth to 5c:d9:98:f9:30:d9 (try 1/3)
-> wlan0: authenticated
-> wlan0: associate with 5c:d9:98:f9:30:d9 (try 1/3)
-> wlan0: RX AssocResp from 5c:d9:98:f9:30:d9 (capab=0x431 status=0 aid=2)
-> wlan0: associated
+On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
+> No, I don't want the latest fixes, I want the latest *stable* kernel.
 
-I made debugging on Pandaboard:
+You have it, it's 3.3.2.
 
-Jan  1 00:09:55 buildroot user.info kernel:
-dynamic_debug:ddebug_exec_queries: processed 1 queries, with 225
-matches, 0 errs
-Jan  1 00:10:28 buildroot user.debug kernel: wl12xx: mac80211 start
-Jan  1 00:10:28 buildroot user.debug kernel: wl12xx: mac80211 add
-interface type 2 mac de:ad:be:ef:00:00
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: MBOX ptrs: 0x4cf80 0x4cfc0
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: MBOX ptrs: 0x4cf80 0x4cfc0
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: available tx blocks: 99
-Jan  1 00:10:29 buildroot user.info kernel: wl12xx: firmware booted
-(Rev 6.3.5.0.98)
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: 11a is supported
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 bss info
-changed 0xe
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 conf tx 0
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 conf tx 1
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 conf tx 2
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 conf tx 3
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 bss info
-changed 0x2000
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 bss info
-changed 0x4000
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 config
-ch 1 psm off power 20 idle changed 0xffffffff
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: flushing tx buffer: 0 0
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211 config
-ch 1 psm off power 20 idle changed 0x10
-Jan  1 00:10:29 buildroot user.debug kernel: wl12xx: mac80211
-configure filter changed 0 total 80000000
-Jan  1 00:10:43 buildroot user.debug kernel: wl12xx: mac80211 hw scan
-Jan  1 00:10:43 buildroot user.debug kernel: wl12xx: rx skb
-0xef28c500: 214 B  seq 2896 hlid 0
-Jan  1 00:10:43 buildroot user.debug kernel: wl12xx: rx skb
-0xef28ca40: 142 B  seq 871 hlid 0
-Jan  1 00:10:43 buildroot user.debug kernel: wl12xx: rx skb
-0xef28c980: 214 B  seq 2897 hlid 0
-Jan  1 00:10:43 buildroot user.debug kernel: wl12xx: rx skb
-0xef28cc80: 281 B  seq 2364 hlid 0
-Jan  1 00:10:43 buildroot user.debug kernel: wl12xx: rx skb
-0xef28cb00: 142 B  seq 872 hlid 0
-Jan  1 00:10:43 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2e00: 148 B beacon seq 1545 hlid 0
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: EVENT on mbox 0
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: MBOX DUMP:
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx:    vector: 0x400
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx:    mask: 0x3893bfe
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: vector: 0x400
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: status: 0x87
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: EVENT on mbox 1
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: MBOX DUMP:
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx:    vector: 0x400
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx:    mask: 0x3893bfe
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: vector: 0x400
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: status: 0x9f
-Jan  1 00:10:44 buildroot user.debug kernel: wl12xx: mac80211 hw scan
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: EVENT on mbox 0
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: MBOX DUMP:
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx:    vector: 0x400
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx:    mask: 0x3893bfe
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: vector: 0x400
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: status: 0x87
-Jan  1 00:10:45 buildroot user.debug kernel: wlan0: authenticate with
-5c:d9:98:f9:30:d9
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 bss info
-changed 0x4000
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 config
-ch 1 psm off power 20 in use changed 0x100
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: EVENT on mbox 1
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: MBOX DUMP:
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx:    vector: 0x80000000
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx:    mask: 0x3893bfe
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: vector: 0x80000000
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 config
-ch 1 psm off power 20 in use changed 0x40
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 bss info
-changed 0xa0
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 sta 0 state=0->1
-Jan  1 00:10:45 buildroot user.debug kernel: wlan0: send auth to
-5c:d9:98:f9:30:d9 (try 1/3)
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: queue skb hlid 1 q 3 len 30
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: tx_allocate:
-size: 46, blocks: 2, id: 0
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: tx_fill_hdr: pad:
-2 hlid: 1 tx_attr: 0x824 len: 12 life: 2000 mem: 2
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2a40: 30 B  seq 0 hlid 1
-Jan  1 00:10:45 buildroot user.debug kernel: wlan0: authenticated
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 sta 0 state=1->2
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: tx_complete
-received, packets: 1
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: tx status id 0
-skb 0xee7c2c80 failures 0 rate 0x15 status 0x0
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 config
-ch 1 psm off power 20 in use changed 0x40
-Jan  1 00:10:45 buildroot user.debug kernel: wlan0: associate with
-5c:d9:98:f9:30:d9 (try 1/3)
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: queue skb hlid 1 q 3 len 73
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: tx_allocate:
-size: 89, blocks: 2, id: 0
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: tx_fill_hdr: pad:
-3 hlid: 1 tx_attr: 0xc24 len: 23 life: 2000 mem: 2
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: tx_complete
-received, packets: 1
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: tx status id 0
-skb 0xef28c680 failures 0 rate 0x15 status 0x0
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b99c0: 69 B  seq 1 hlid 1
-Jan  1 00:10:45 buildroot user.debug kernel: wlan0: RX AssocResp from
-5c:d9:98:f9:30:d9 (capab=0x431 status=0 aid=1)
-Jan  1 00:10:45 buildroot user.debug kernel: wlan0: associated
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 sta 0 state=2->3
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 conf tx 0
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 conf tx 1
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 conf tx 2
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 conf tx 3
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: mac80211 bss info
-changed 0x304d
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b9300: 131 B  seq 4 hlid 1
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b9240: 148 B beacon seq 1568 hlid 1
-Jan  1 00:10:45 buildroot user.debug kernel: cfg80211: Pending
-regulatory request, waiting for it to be processed...
-Jan  1 00:10:45 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b9300: 220 B beacon seq 171 hlid 1
-.............................................................................
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b6740: 220 B beacon seq 1920 hlid 1
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: queue skb hlid 1
-q 0 len 153
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: tx_allocate:
-size: 169, blocks: 2, id: 0
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: tx_fill_hdr: pad:
-3 hlid: 1 tx_attr: 0xc24 len: 43 life: 2000 mem: 2
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: tx_complete
-received, packets: 1
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: tx status id 0
-skb 0xee7b6740 failures 0 rate 0x15 status 0x0
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b6740: 217 B  seq 5 hlid 1
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b6200: 247 B beacon seq 2387 hlid 1
-.........................................................
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b39c0: 247 B beacon seq 2390 hlid 1
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: queue skb hlid 1
-q 0 len 131
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: tx_allocate:
-size: 147, blocks: 2, id: 0
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: tx_fill_hdr: pad:
-1 hlid: 1 tx_attr: 0x424 len: 37 life: 2000 mem: 2
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: tx_complete
-received, packets: 1
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: tx status id 0
-skb 0xee7b39c0 failures 0 rate 0x13 status 0x0
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: mac80211 set key
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: mac80211 set key
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: mac80211 sta 0 state=3->4
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: mac80211 config
-ch 1 psm on power 20 in use changed 0x10
-Jan  1 00:10:46 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b3480: 148 B beacon seq 1577 hlid 1
-..........................................................................................................
-Jan  1 00:10:51 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2800: 220 B beacon seq 229 hlid 1
-Jan  1 00:10:51 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2680: 118 B  seq 67 hlid 1
-Jan  1 00:10:51 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c25c0: 118 B  seq 69 hlid 1
-Jan  1 00:10:51 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2500: 118 B  seq 70 hlid 1
-Jan  1 00:10:51 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2440: 247 B beacon seq 2442 hlid 1
-..........................................................................................................
-Jan  1 00:10:53 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b08c0: 247 B beacon seq 2464 hlid 1
-Jan  1 00:10:53 buildroot user.debug kernel: wl12xx: queue skb hlid 1 q 0 len 60
-Jan  1 00:10:53 buildroot user.debug kernel: wl12xx: tx_allocate:
-size: 80, blocks: 2, id: 0
-Jan  1 00:10:53 buildroot user.debug kernel: wl12xx: tx_fill_hdr: pad:
-0 hlid: 1 tx_attr: 0x24 len: 20 life: 2000 mem: 2
-Jan  1 00:10:53 buildroot user.debug kernel: wl12xx: tx_complete
-received, packets: 1
-Jan  1 00:10:53 buildroot user.debug kernel: wl12xx: tx status id 0
-skb 0xee7b0680 failures 0 rate 0x10 status 0x4
-Jan  1 00:10:53 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b0380: 148 B beacon seq 1676 hlid 1
-...................................................................................
-Jan  1 00:10:54 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b6a40: 247 B beacon seq 2474 hlid 1
-Jan  1 00:10:54 buildroot user.debug kernel: wl12xx: queue skb hlid 1 q 0 len 60
-Jan  1 00:10:54 buildroot user.debug kernel: wl12xx: tx_allocate:
-size: 80, blocks: 2, id: 0
-Jan  1 00:10:54 buildroot user.debug kernel: wl12xx: tx_fill_hdr: pad:
-0 hlid: 1 tx_attr: 0x24 len: 20 life: 2000 mem: 2
-Jan  1 00:10:54 buildroot user.debug kernel: wl12xx: tx_complete
-received, packets: 1
-Jan  1 00:10:54 buildroot user.debug kernel: wl12xx: tx status id 0
-skb 0xee7b6b00 failures 0 rate 0x10 status 0x4
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b6ec0: 148 B beacon seq 1689 hlid 1
-...................................................................
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c28c0: 247 B beacon seq 2483 hlid 1
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: rx skb
-0xef28c2c0: 148 B beacon seq 1701 hlid 1
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2bc0: 220 B beacon seq 271 hlid 1
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2a40: 220 B beacon seq 2017 hlid 1
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: queue skb hlid 1 q 0 len 60
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: tx_allocate:
-size: 80, blocks: 2, id: 0
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: tx_fill_hdr: pad:
-0 hlid: 1 tx_attr: 0x24 len: 20 life: 2000 mem: 2
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: tx_complete
-received, packets: 1
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: tx status id 0
-skb 0xee7c2c80 failures 0 rate 0x10 status 0x4
-Jan  1 00:10:55 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b9540: 247 B beacon seq 2484 hlid 1
-Jan  1 00:10:56 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b99c0: 148 B beacon seq 1703 hlid 1
-....................................................................
-Jan  1 00:11:01 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b0a40: 148 B beacon seq 1768 hlid 1
-Jan  1 00:11:01 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b0980: 220 B beacon seq 321 hlid 1
-Jan  1 00:11:01 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b08c0: 118 B  seq 75 hlid 1
-Jan  1 00:11:01 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b0680: 118 B  seq 76 hlid 1
-Jan  1 00:11:01 buildroot user.debug kernel: wl12xx: rx skb
-0xef28c140: 118 B  seq 77 hlid 1
-Jan  1 00:11:01 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b05c0: 118 B  seq 78 hlid 1
-Jan  1 00:11:01 buildroot user.debug kernel: wl12xx: rx skb
-0xee7b0500: 247 B beacon seq 2539 hlid 1
-....................................
-Jan  1 00:11:23 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2d40: 220 B beacon seq 540 hlid 1
-Jan  1 00:11:23 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2d40: 118 B  seq 91 hlid 1
-Jan  1 00:11:23 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2d40: 148 B beacon seq 2058 hlid 1
-Jan  1 00:11:23 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2d40: 247 B beacon seq 2759 hlid 1
-Jan  1 00:11:23 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2d40: 118 B  seq 93 hlid 1
-Jan  1 00:11:23 buildroot user.debug kernel: wl12xx: rx skb
-0xee7c2d40: 118 B  seq 94 hlid 1
+> v3.3 is stable, v3.4-rcx are not.
 
-Do you see something strange?
+v3.3 *aims to be stable*. That's the big difference. A kernel starts
+unstable and converges to something more stable over the time. 2.4 was
+still experiencing minor issues that we didn't have in 2.6 when I did
+the last release. There were even some security issues we decided not
+to fix and to document instead. Still for its users it was considered
+much more stable than 2.6 or 3.x.
 
-Yegor
+> v3.4 would take months to cook,
+> there will be several release candidates, and it won't be released
+> until the known issues decrease to a reasonable level.
+> 
+> v3.3.x on the other hand are *not* stable.
+
+Nobody said they *are* stable as per the definition of this word.
+"stable" is the name of the branch which defines the longterm goal
+which is achieved as releases are issued. It's the same with longterm
+kernels. They try to maintain even less bugs and try to to introduce
+new ones, eventhough this happens from time to time, development is
+not an exact science.
+
+> They contain patches
+> backported from v3.4, but nobody guarantees they will work. There was
+> no v3.3.1-rc1,
+
+Few people test rc, and not all bugs or regressions can be detected by
+just a build and a boot.
+
+> so the first time the patches compromising v3.3.1 were
+> generally tested together is in v3.3.1, at which point if somebody
+> finds issues, it's too late; bad patches are *not* going to be removed
+> in v3.3.2.
+
+They would have been if the issue was specific to the backport, which it
+was not.
+
+> Once a tag is made, all the patches in it are dependent on
+> the pace of the development of mainline (v3.4-rcx), which is
+> definitely not stable, specially in the first release candidates.
+> 
+> IOW, the "stable" branch tries to be stable up to a point, then, it
+> becomes a testing ground for mainline, and a tracking device for
+> certain mainline issues.
+
+No it's the opposite, it tries to be stable past one point. It's well
+known that first stable releases still have a number of bugs, and it's
+the reason why Greg takes time to maintain multiple branches in parallel.
+Please stop playing the fool, everybody understands this and you make it
+appear like bugs are put in stable on purpose, your reasoning really does
+not make sense.
+
+Please fork the kernel and maintain your own "morestable" branch, it will
+be useful, really, because it will mean that whatever you have in your
+branch that is not in stable has to be fixed in mainline, so it will hold
+the information Linus wants not to lose. This is a lot of work but you'll
+get it done without asking anyone else to do it. I'm not kidding, I'd
+probably use it if it's maintained long enough.
+
+Willy
+
