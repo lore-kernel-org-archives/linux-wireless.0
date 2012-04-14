@@ -1,95 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3441 "EHLO MMS3.broadcom.com"
+Received: from 1wt.eu ([62.212.114.60]:65161 "EHLO 1wt.eu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754959Ab2DKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:53:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 2/9] brcm80211: fmac: remove primary mac address
- handling from brcmf_net_attach
-Date: Wed, 11 Apr 2012 11:52:44 +0200
-Message-ID: <1334137971-3972-3-git-send-email-arend@broadcom.com> (sfid-20120411_115337_372395_D31FF52B)
-In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1754671Ab2DNQDH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Apr 2012 12:03:07 -0400
+Date: Sat, 14 Apr 2012 18:02:42 +0200
+From: Willy Tarreau <w@1wt.eu>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Jonathan Nieder <jrnieder@gmail.com>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120414160242.GG19802@1wt.eu> (sfid-20120414_180311_463248_FCB59FA7)
+References: <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com> <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com> <20120413105746.10ffb120@stein> <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com> <20120413154216.476a02ac@stein> <CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com> <20120413230525.GA13995@burratino> <CAMP44s0OdVBTwVtCoru-xvB=LVtO56jgku7X-0a7mUz1=iVCzw@mail.gmail.com> <20120414054401.GC19802@1wt.eu> <CAMP44s3uTTWSJCohLGf64vV6h6PgSPJ++UrmeRkRWebJWjvJ_A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMP44s3uTTWSJCohLGf64vV6h6PgSPJ++UrmeRkRWebJWjvJ_A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mac address for the primary interface was handled different from
-the other interfaces. The code has been restructured such that the
-brcmf_net_attach function treats the interfaces equal.
+On Sat, Apr 14, 2012 at 06:43:06PM +0300, Felipe Contreras wrote:
+> I understand you use 'stable' as guarantee, and I know it works, but
+> do you *need* this guarantee?
+> 
+> And before you go on why you need this guarantee to avoid fixes to be
+> lost, this is an *entirely different thing*; we are not talking about
+> fixes in 'stable' that don't exist in mainline--for which there is
+> evidence that those caused problems in the past, we are talking about
+> reverting patches from 'stable' that are not part of the upstream
+> release from where the 'stable' branch was forked--*nobody* has showed
+> any evidence that this has happened before and caused issues.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   25 +++++++++----------
- 1 files changed, 12 insertions(+), 13 deletions(-)
+Why make a special case for the version from which stable was derived ?
+That doesn't make sense at all to me since by definition, *all* patches
+that are in stable were not in this version !
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 153d369..07836a8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -843,27 +843,26 @@ static const struct net_device_ops brcmf_netdev_ops_pri = {
- 	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
- };
- 
--static int brcmf_net_attach(struct brcmf_pub *drvr, int ifidx)
-+static int brcmf_net_attach(struct brcmf_if *ifp)
- {
-+	struct brcmf_pub *drvr = ifp->drvr;
- 	struct net_device *ndev;
--	u8 temp_addr[ETH_ALEN] = {
--		0x00, 0x90, 0x4c, 0x11, 0x22, 0x33};
-+	u8 temp_addr[ETH_ALEN];
- 
--	brcmf_dbg(TRACE, "ifidx %d\n", ifidx);
-+	brcmf_dbg(TRACE, "ifidx %d\n", ifp->idx);
- 
--	ndev = drvr->iflist[ifidx]->ndev;
-+	ndev = drvr->iflist[ifp->idx]->ndev;
- 	ndev->netdev_ops = &brcmf_netdev_ops_pri;
- 
- 	/*
--	 * We have to use the primary MAC for virtual interfaces
-+	 * determine mac address to use
- 	 */
--	if (ifidx != 0) {
--		/* for virtual interfaces use the primary MAC  */
-+	if (is_valid_ether_addr(ifp->mac_addr))
-+		memcpy(temp_addr, ifp->mac_addr, ETH_ALEN);
-+	else
- 		memcpy(temp_addr, drvr->mac, ETH_ALEN);
- 
--	}
--
--	if (ifidx == 1) {
-+	if (ifp->idx == 1) {
- 		brcmf_dbg(TRACE, "ACCESS POINT MAC:\n");
- 		/*  ACCESSPOINT INTERFACE CASE */
- 		temp_addr[0] |= 0X02;	/* set bit 2 ,
-@@ -879,7 +878,7 @@ static int brcmf_net_attach(struct brcmf_pub *drvr, int ifidx)
- 	memcpy(ndev->dev_addr, temp_addr, ETH_ALEN);
- 
- 	/* attach to cfg80211 for primary interface */
--	if (!ifidx) {
-+	if (!ifp->idx) {
- 		drvr->config = brcmf_cfg80211_attach(ndev, drvr->dev, drvr);
- 		if (drvr->config == NULL) {
- 			brcmf_dbg(ERROR, "wl_cfg80211_attach failed\n");
-@@ -940,7 +939,7 @@ brcmf_add_if(struct device *dev, int ifidx, char *name, u8 *mac_addr)
- 	if (mac_addr != NULL)
- 		memcpy(&ifp->mac_addr, mac_addr, ETH_ALEN);
- 
--	if (brcmf_net_attach(drvr, ifp->idx)) {
-+	if (brcmf_net_attach(ifp)) {
- 		brcmf_dbg(ERROR, "brcmf_net_attach failed");
- 		free_netdev(ifp->ndev);
- 		drvr->iflist[ifidx] = NULL;
--- 
-1.7.5.4
+Take it simpler if you want : *all* patches in stable need an upstream
+commit ID, whether they're backports or reverts. You don't revert a
+patch from stable, you backport a revert from upstream.
 
+Willy
 
