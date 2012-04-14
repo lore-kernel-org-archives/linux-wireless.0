@@ -1,38 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34548 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250Ab2DFPLd (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:46363 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753859Ab2DNTeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 11:11:33 -0400
-Message-ID: <1333725089.5577.0.camel@jlt3.sipsolutions.net> (sfid-20120406_171152_864558_C15746F9)
-Subject: Re: carl9170: not able to add P2P_GO - add_interface fail with
- -EBUSY
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 06 Apr 2012 17:11:29 +0200
-In-Reply-To: <201204061322.26832.chunkeey@googlemail.com> (sfid-20120406_132302_219753_F45C99D1)
-References: <CAFED-jno-531+5TPOjDJ598jAO1zMmFpe6UJOsRt4SfbCU9zDQ@mail.gmail.com>
-	 <201204061322.26832.chunkeey@googlemail.com>
-	 (sfid-20120406_132302_219753_F45C99D1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 14 Apr 2012 15:34:01 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120414155733.GF19802@1wt.eu>
+References: <20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413154216.476a02ac@stein>
+	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
+	<20120414094137.54a7f213@stein>
+	<CAMP44s2Un-M2OCmuRQGpGsHR21gH=S7oJKx4Ci8tvYVCCSitUw@mail.gmail.com>
+	<20120414155733.GF19802@1wt.eu>
+Date: Sat, 14 Apr 2012 22:33:59 +0300
+Message-ID: <CAMP44s0omtoT=4zN=sOQYGLwfWGiw4w4iAj+OS+gGOsNMatq9g@mail.gmail.com> (sfid-20120414_213427_321480_087FB5D4)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Willy Tarreau <w@1wt.eu>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-04-06 at 13:22 +0200, Christian Lamparter wrote:
+On Sat, Apr 14, 2012 at 6:57 PM, Willy Tarreau <w@1wt.eu> wrote:
+> On Sat, Apr 14, 2012 at 06:29:54PM +0300, Felipe Contreras wrote:
+>> So, the hypothetical patch that was dropped in the stable review queue
+>> yesterday has to be fixed in mainline too, just like the hypothetical
+>> patch that made it to stable and was found problematic today has to be
+>> fixed in mainline.
+>
+> Patches are not always dropped from the stable queue if we know they're
+> causing issues, sometimes they're left pending in the queue. This is how
+> Greg is able to ping developers from time to time.
 
-> > Is that chipset limitation we could add only new STA interface when
-> > main_vif is also STA?
-> <http://wireless.kernel.org/en/users/Drivers/carl9170#Multiple_Interfaces>
-> no, it's not. But you'll have to go through several hoops to extend
-> the driver to switch the "main" interface while the device is up and
-> running.
+That's news to me, but the important point remains; they don't make it
+into the stable release, correct? Yet, we still expect them to be
+fixed in mainline, correct?
 
-So the driver has a concept of the order in which interfaces are added?
-That's something I never considered when writing the interface type
-combinations support.
+>> Again, what makes a released patch undroppable?
+>
+> Being applied, in other words, having a commit ID in the branch.
 
-johannes
+Seriously? That's your reason?
 
+Hey, thousands of users out there; the reason why we pushed a patch
+that is known to be broken in v3.3.x is because it already has a
+commit ID.
+
+If that's your idea of a good reason then I don't see any point in
+discussing with you any more. No offense intended.
+
+Cheers.
+
+-- 
+Felipe Contreras
