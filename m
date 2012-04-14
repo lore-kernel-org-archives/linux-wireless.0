@@ -1,218 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:40918 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751844Ab2DKJiQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:38:16 -0400
-Received: by lahe6 with SMTP id e6so651997lah.32
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 02:38:13 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, linville@tuxdriver.com, coelho@ti.com
-Subject: [PATCH 00/16] wl12xx/wl1251/wlcore: reorganize drivers part 1
-Date: Wed, 11 Apr 2012 12:37:47 +0300
-Message-Id: <1334137083-13490-1-git-send-email-coelho@ti.com> (sfid-20120411_113820_185918_ACED94CB)
+Received: from arrakis.dune.hu ([78.24.191.176]:35311 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755966Ab2DNUY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Apr 2012 16:24:58 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 2/3] ath9k: introduce ath9k_hw_get_scaled_power helper
+Date: Sat, 14 Apr 2012 22:01:58 +0200
+Message-Id: <1334433719-1144-2-git-send-email-juhosg@openwrt.org> (sfid-20120414_222502_010682_CFC37B2A)
+In-Reply-To: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
+References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The computation of the scaled power value in
+various eeprom files uses identical code. Move
+that code into a helper function and use that
+instead of code duplication.
 
-This is the first batch of patches from the reorganization our drivers and
-preparation for the inclusion of the new wl18xx driver.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   28 +------------------
+ drivers/net/wireless/ath/ath9k/eeprom.c        |   33 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/eeprom.h        |    5 +++
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   |   30 +--------------------
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    |   23 +---------------
+ 5 files changed, 44 insertions(+), 75 deletions(-)
 
-First of all, we moved all the TI wireless drivers into a new subdirectory
-drivers/net/wireless/ti so we can keep all our drivers in the same place.
-
-Then, we started splitting the wl12xx driver into a core module (wlcore) and a
-lower driver (wl12xx).  This was done because the wl18xx driver shares a lot of
-the same code.  The wlcore module will eventually become a kind of common
-library for the different lower drivers to use.  This patchset contains only
-the initial part of this work.  More will follow soon.
-
-John, please let me know if it's okay to include the first patch, with which I
-moved stuff around, in my tree so we can keep things in sync more easily.
-
-Please review.
-
-Cheers,
-Luca.
-
-Arik Nemtsov (1):
-  wlcore/wl12xx: create per-chip-family private storage
-
-Luciano Coelho (15):
-  wireless/wl12xx/wl1251: move TI WLAN modules to a common ti
-    subdirectory
-  wl12xx/wlcore: rename wl12xx to wlcore
-  wl12xx/wlcore: spin out the wl12xx probe from wlcore to a new wl12xx
-  wl12xx/wlcore: initial split of probe
-  wl12xx/wlcore: move wl1271 struct to wlcore and add ops
-  wlcore/wl12xx: implement chip-specific partition tables
-  wlcore/wl12xx: implement chip-specific register tables
-  wlcore/wl12xx: add chip-specific identify chip operation
-  wlcore/wl12xx: move get_pg_ver to the lower driver
-  wlcore/wl12xx: move top initialization to wl12xx
-  wlcore/wl12xx: move MAC address reading operation to lower driver
-  wlcore/wl12xx: add command trigger and event ack operations
-  wlcore/wl12xx: add quirk for legacy NVS support
-  wlcore: remove some unnecessary event mailbox address reads
-  wlcore: add quirk to disable ELP
-
- MAINTAINERS                                        |   27 +-
- drivers/net/wireless/Kconfig                       |    3 +-
- drivers/net/wireless/Makefile                      |    4 +-
- drivers/net/wireless/ti/Kconfig                    |   14 +
- drivers/net/wireless/ti/Makefile                   |    4 +
- drivers/net/wireless/{ => ti}/wl1251/Kconfig       |    0
- drivers/net/wireless/{ => ti}/wl1251/Makefile      |    0
- drivers/net/wireless/{ => ti}/wl1251/acx.c         |    0
- drivers/net/wireless/{ => ti}/wl1251/acx.h         |    0
- drivers/net/wireless/{ => ti}/wl1251/boot.c        |    0
- drivers/net/wireless/{ => ti}/wl1251/boot.h        |    0
- drivers/net/wireless/{ => ti}/wl1251/cmd.c         |    0
- drivers/net/wireless/{ => ti}/wl1251/cmd.h         |    0
- drivers/net/wireless/{ => ti}/wl1251/debugfs.c     |    0
- drivers/net/wireless/{ => ti}/wl1251/debugfs.h     |    0
- drivers/net/wireless/{ => ti}/wl1251/event.c       |    0
- drivers/net/wireless/{ => ti}/wl1251/event.h       |    0
- drivers/net/wireless/{ => ti}/wl1251/init.c        |    0
- drivers/net/wireless/{ => ti}/wl1251/init.h        |    0
- drivers/net/wireless/{ => ti}/wl1251/io.c          |    0
- drivers/net/wireless/{ => ti}/wl1251/io.h          |    0
- drivers/net/wireless/{ => ti}/wl1251/main.c        |    0
- drivers/net/wireless/{ => ti}/wl1251/ps.c          |    0
- drivers/net/wireless/{ => ti}/wl1251/ps.h          |    0
- drivers/net/wireless/{ => ti}/wl1251/reg.h         |    0
- drivers/net/wireless/{ => ti}/wl1251/rx.c          |    0
- drivers/net/wireless/{ => ti}/wl1251/rx.h          |    0
- drivers/net/wireless/{ => ti}/wl1251/sdio.c        |    0
- drivers/net/wireless/{ => ti}/wl1251/spi.c         |    0
- drivers/net/wireless/{ => ti}/wl1251/spi.h         |    0
- drivers/net/wireless/{ => ti}/wl1251/tx.c          |    0
- drivers/net/wireless/{ => ti}/wl1251/tx.h          |    0
- drivers/net/wireless/{ => ti}/wl1251/wl1251.h      |    0
- .../net/wireless/{ => ti}/wl1251/wl12xx_80211.h    |    0
- drivers/net/wireless/ti/wl12xx/Kconfig             |    8 +
- drivers/net/wireless/ti/wl12xx/Makefile            |    3 +
- drivers/net/wireless/ti/wl12xx/main.c              |  716 ++++++++++++++++++
- drivers/net/wireless/{ => ti}/wl12xx/reg.h         |  315 ++++----
- drivers/net/wireless/ti/wlcore/Kconfig             |   41 +
- drivers/net/wireless/ti/wlcore/Makefile            |   15 +
- drivers/net/wireless/{wl12xx => ti/wlcore}/acx.c   |    3 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/acx.h   |    2 +-
- drivers/net/wireless/ti/wlcore/boot.c              |  447 +++++++++++
- drivers/net/wireless/ti/wlcore/boot.h              |   54 ++
- drivers/net/wireless/{wl12xx => ti/wlcore}/cmd.c   |   32 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/cmd.h   |   16 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/conf.h  |    1 -
- drivers/net/wireless/{wl12xx => ti/wlcore}/debug.h |    1 +
- .../net/wireless/{wl12xx => ti/wlcore}/debugfs.c   |    2 +-
- .../net/wireless/{wl12xx => ti/wlcore}/debugfs.h   |    2 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/event.c |   19 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/event.h |    1 -
- drivers/net/wireless/{wl12xx => ti/wlcore}/ini.h   |    0
- drivers/net/wireless/{wl12xx => ti/wlcore}/init.c  |   20 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/init.h  |    2 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/io.c    |  191 ++----
- drivers/net/wireless/{wl12xx => ti/wlcore}/io.h    |   88 ++-
- drivers/net/wireless/{wl12xx => ti/wlcore}/main.c  |  232 ++-----
- drivers/net/wireless/{wl12xx => ti/wlcore}/ps.c    |    8 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/ps.h    |    2 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/rx.c    |   24 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/rx.h    |    0
- drivers/net/wireless/{wl12xx => ti/wlcore}/scan.c  |    2 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/scan.h  |    2 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/sdio.c  |    6 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/spi.c   |    4 +-
- .../net/wireless/{wl12xx => ti/wlcore}/testmode.c  |    3 +-
- .../net/wireless/{wl12xx => ti/wlcore}/testmode.h  |    0
- drivers/net/wireless/{wl12xx => ti/wlcore}/tx.c    |   23 +-
- drivers/net/wireless/{wl12xx => ti/wlcore}/tx.h    |    0
- .../net/wireless/{wl12xx => ti/wlcore}/wl12xx.h    |  242 ------
- .../wireless/{wl12xx => ti/wlcore}/wl12xx_80211.h  |    0
- .../{wl12xx => ti/wlcore}/wl12xx_platform_data.c   |    0
- drivers/net/wireless/ti/wlcore/wlcore.h            |  399 ++++++++++
- drivers/net/wireless/wl12xx/Kconfig                |   48 --
- drivers/net/wireless/wl12xx/Makefile               |   15 -
- drivers/net/wireless/wl12xx/boot.c                 |  794 --------------------
- drivers/net/wireless/wl12xx/boot.h                 |  120 ---
- 78 files changed, 2132 insertions(+), 1823 deletions(-)
- create mode 100644 drivers/net/wireless/ti/Kconfig
- create mode 100644 drivers/net/wireless/ti/Makefile
- rename drivers/net/wireless/{ => ti}/wl1251/Kconfig (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/Makefile (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/acx.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/acx.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/boot.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/boot.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/cmd.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/cmd.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/debugfs.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/debugfs.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/event.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/event.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/init.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/init.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/io.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/io.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/main.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/ps.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/ps.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/reg.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/rx.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/rx.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/sdio.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/spi.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/spi.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/tx.c (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/tx.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/wl1251.h (100%)
- rename drivers/net/wireless/{ => ti}/wl1251/wl12xx_80211.h (100%)
- create mode 100644 drivers/net/wireless/ti/wl12xx/Kconfig
- create mode 100644 drivers/net/wireless/ti/wl12xx/Makefile
- create mode 100644 drivers/net/wireless/ti/wl12xx/main.c
- rename drivers/net/wireless/{ => ti}/wl12xx/reg.h (71%)
- create mode 100644 drivers/net/wireless/ti/wlcore/Kconfig
- create mode 100644 drivers/net/wireless/ti/wlcore/Makefile
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/acx.c (99%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/acx.h (99%)
- create mode 100644 drivers/net/wireless/ti/wlcore/boot.c
- create mode 100644 drivers/net/wireless/ti/wlcore/boot.h
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/cmd.c (98%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/cmd.h (98%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/conf.h (99%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/debug.h (99%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/debugfs.c (99%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/debugfs.h (98%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/event.c (94%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/event.h (98%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/ini.h (100%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/init.c (97%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/init.h (98%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/io.c (55%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/io.h (71%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/main.c (96%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/ps.c (97%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/ps.h (98%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/rx.c (94%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/rx.h (100%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/scan.c (99%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/scan.h (99%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/sdio.c (98%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/spi.c (99%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/testmode.c (99%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/testmode.h (100%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/tx.c (98%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/tx.h (100%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/wl12xx.h (68%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/wl12xx_80211.h (100%)
- rename drivers/net/wireless/{wl12xx => ti/wlcore}/wl12xx_platform_data.c (100%)
- create mode 100644 drivers/net/wireless/ti/wlcore/wlcore.h
- delete mode 100644 drivers/net/wireless/wl12xx/Kconfig
- delete mode 100644 drivers/net/wireless/wl12xx/Makefile
- delete mode 100644 drivers/net/wireless/wl12xx/boot.c
- delete mode 100644 drivers/net/wireless/wl12xx/boot.h
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 25a4a02..d254571 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -30,8 +30,6 @@
+ #define CTL_11A_EXT (CTL_11A | EXT_ADDITIVE)
+ #define CTL_11G_EXT (CTL_11G | EXT_ADDITIVE)
+ #define CTL_11B_EXT (CTL_11B | EXT_ADDITIVE)
+-#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+-#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+ #define PWRINCR_3_TO_1_CHAIN      9             /* 10*log(3)*2 */
+ #define PWRINCR_3_TO_2_CHAIN      3             /* floor(10*log(3/2)*2) */
+ #define PWRINCR_2_TO_1_CHAIN      6             /* 10*log(2)*2 */
+@@ -4789,30 +4787,8 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
+ 	bool is2ghz = IS_CHAN_2GHZ(chan);
+ 
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+-	scaledPower = powerLimit - antenna_reduction;
+-
+-	/*
+-	 * Reduce scaled Power by number of chains active to get
+-	 * to per chain tx power level
+-	 */
+-	switch (ar5416_get_ntxchains(ah->txchainmask)) {
+-	case 1:
+-		break;
+-	case 2:
+-		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
+-			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
+-		else
+-			scaledPower = 0;
+-		break;
+-	case 3:
+-		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
+-			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
+-		else
+-			scaledPower = 0;
+-		break;
+-	}
+-
+-	scaledPower = max((u16)0, scaledPower);
++	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
++						antenna_reduction);
+ 
+ 	/*
+ 	 * Get target powers from EEPROM - our baseline for TX Power
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index c435232..61bad99 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -290,6 +290,39 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
+ 	return twiceMaxEdgePower;
+ }
+ 
++u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
++			      u8 antenna_reduction)
++{
++	u16 scaled_power;
++
++	scaled_power = power_limit - antenna_reduction;
++
++	/*
++	 * Reduce scaled Power by number of chains active
++	 * to get the per chain tx power level.
++	 */
++	switch (ar5416_get_ntxchains(ah->txchainmask)) {
++	case 1:
++		break;
++	case 2:
++		if (scaled_power > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
++			scaled_power -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
++		else
++			scaled_power = 0;
++		break;
++	case 3:
++		if (scaled_power > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
++			scaled_power -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
++		else
++			scaled_power = 0;
++		break;
++	}
++
++	scaled_power = max((u16)0, scaled_power);
++
++	return scaled_power;
++}
++
+ void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 5ff7ab9..8d779b4 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -82,6 +82,9 @@
+ #define INCREASE_MAXPOW_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+ #define INCREASE_MAXPOW_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+ 
++#define REDUCE_SCALED_POWER_BY_TWO_CHAIN	6  /* 10*log10(2)*2 */
++#define REDUCE_SCALED_POWER_BY_THREE_CHAIN	10 /* 10*log10(3)*2 */
++
+ /*
+  * For AR9285 and later chipsets, the following bits are not being programmed
+  * in EEPROM and so need to be enabled always.
+@@ -686,6 +689,8 @@ void ath9k_hw_get_target_powers(struct ath_hw *ah,
+ 				u16 numRates, bool isHt40Target);
+ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
+ 				bool is2GHz, int num_band_edges);
++u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
++			      u8 antenna_reduction);
+ void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah);
+ int ath9k_hw_eeprom_init(struct ath_hw *ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 604eab8..5ab0e6e 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -564,9 +564,6 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
+ 	(((cfgCtl & ~CTL_MODE_M) | (pCtlMode[ctlMode] & CTL_MODE_M)) == \
+ 	 ((pEepData->ctlIndex[i] & CTL_MODE_M) | SD_NO_CTL))
+ 
+-#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+-#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+-
+ 	u16 twiceMaxEdgePower;
+ 	int i;
+ 	struct cal_ctl_data_ar9287 *rep;
+@@ -591,29 +588,8 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
+ 	tx_chainmask = ah->txchainmask;
+ 
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+-	scaledPower = powerLimit - antenna_reduction;
+-
+-	/*
+-	 * Reduce scaled Power by number of chains active
+-	 * to get the per chain tx power level.
+-	 */
+-	switch (ar5416_get_ntxchains(tx_chainmask)) {
+-	case 1:
+-		break;
+-	case 2:
+-		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
+-			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
+-		else
+-			scaledPower = 0;
+-		break;
+-	case 3:
+-		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
+-			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
+-		else
+-			scaledPower = 0;
+-		break;
+-	}
+-	scaledPower = max((u16)0, scaledPower);
++	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
++						antenna_reduction);
+ 
+ 	/*
+ 	 * Get TX power from EEPROM.
+@@ -786,8 +762,6 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
+ 
+ #undef CMP_CTL
+ #undef CMP_NO_CTL
+-#undef REDUCE_SCALED_POWER_BY_TWO_CHAIN
+-#undef REDUCE_SCALED_POWER_BY_THREE_CHAIN
+ }
+ 
+ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 0068627..3a9c9ed 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -991,9 +991,6 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+ 						  u16 antenna_reduction,
+ 						  u16 powerLimit)
+ {
+-#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+-#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+-
+ 	struct ar5416_eeprom_def *pEepData = &ah->eeprom.def;
+ 	u16 twiceMaxEdgePower;
+ 	int i;
+@@ -1027,24 +1024,8 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+ 
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+ 
+-	scaledPower = powerLimit - antenna_reduction;
+-
+-	switch (ar5416_get_ntxchains(tx_chainmask)) {
+-	case 1:
+-		break;
+-	case 2:
+-		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
+-			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
+-		else
+-			scaledPower = 0;
+-		break;
+-	case 3:
+-		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
+-			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
+-		else
+-			scaledPower = 0;
+-		break;
+-	}
++	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
++						antenna_reduction);
+ 
+ 	if (IS_CHAN_2GHZ(chan)) {
+ 		numCtlModes = ARRAY_SIZE(ctlModesFor11g) -
 -- 
-1.7.5.4
+1.7.2.1
 
