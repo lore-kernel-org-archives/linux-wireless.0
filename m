@@ -1,12 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41396 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754332Ab2DNPwD convert rfc822-to-8bit (ORCPT
+Received: from einhorn.in-berlin.de ([192.109.42.8]:59336 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752623Ab2DNHmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 11:52:03 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120414111044.4930a5f3@stein>
-References: <20120412011313.GA23764@kroah.com>
+	Sat, 14 Apr 2012 03:42:09 -0400
+Date: Sat, 14 Apr 2012 09:41:37 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120414094137.54a7f213@stein> (sfid-20120414_094309_910020_3DF3FA5D)
+In-Reply-To: <CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com>
+	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
+	<20120412002927.GA23167@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
 	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
 	<20120412144626.GA14868@kroah.com>
 	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
@@ -16,45 +33,85 @@ References: <20120412011313.GA23764@kroah.com>
 	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
 	<20120413154216.476a02ac@stein>
 	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
-	<20120413230525.GA13995@burratino>
-	<CAMP44s0OdVBTwVtCoru-xvB=LVtO56jgku7X-0a7mUz1=iVCzw@mail.gmail.com>
-	<20120414111044.4930a5f3@stein>
-Date: Sat, 14 Apr 2012 18:52:00 +0300
-Message-ID: <CAMP44s2jLv=VPgjiocmzzyUqzUYp4b7nFEU_XV6nT=n+OZ3RNw@mail.gmail.com> (sfid-20120414_175226_185966_998834DD)
-Subject: Re: [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 14, 2012 at 12:10 PM, Stefan Richter
-<stefanr@s5r6.in-berlin.de> wrote:
-> On Apr 14 Felipe Contreras wrote:
+On Apr 14 Felipe Contreras wrote:
+> I already exemplified how they are very different, but here it goes
+> again. The patch "drm/i915: Add lock on drm_helper_resume_force_mode"
+> was just tagged in 3.3.2, if I had said yesterday "this patch breaks
+> things on my machine", then that patch would have been dropped for
+> 3.3.2 even though it's still on mainline--why? Because we know it's
+> broken, and broken patches are not supposed to land to stable. But
+> today, one day later, we have to wait until it's fixed in master
+> first. Why?
+> 
+> What makes a patch droppable yesterday, but dependent on mainline today?
 
->> Of course, although the difference with the stable kernel would be
->> very small if the only thing added is an extra rule for acceptance:
->> "It reverts an earlier patch to 'stable'."
->
-> It looks like a small difference on the surface, but it isn't.  It would
-> mean "yes, we /do/ forward ports in -stable too in some cases".
+Huh?
 
-How? There's a lot reverts in mainline, where do they come from? Are
-they forward ports from some ghost trees?
+Because "yesterday" was a review before stable release:
+  - A buggy mainline release exists.
+  - No buggy stable release exists.
+whereas "today" is after stable release:
+  - A buggy mainline release exists.
+  - A buggy stable release exists.
 
-If you drop a patch from the stable review queue before it gets into a
-stable release, and then that patch is reverted from mainline, is that
-also a "forward port"?
+(The WLAN breakage wich is being talked about was reported after
+release, not during review, right?)
 
+[quote re-ordered]
+> Again, you can repeat the same thing as much as you want, it still
+> doesn't answer what I have asked.
+
+Yeah, sorry for that.  All the time I thought you asked why a *revert*
+which is applicable to mainline and stable first happens in stable.
+
+But your question was actually what the difference between
+  - dropping a patch from a queue of candidate patches versus
+  - adding a reverting patch to repair a defect from a previous release
+is.
+
+The former is still part of the decision whether a changeset which
+exists in mainline should be backported into stable.  Somebody initially
+thought it should be, but others should have a look too and amend that
+decision if need be.  Somebody reports that the change would introduce a
+regression.  Usually, this disqualifies a patch from being applied to
+stable right away, without further work having to be done in stable.
+
+"Drop a stable candidate before release" is a form of "decline a
+submission to stable", happening late in the preparations of a stable
+release.
+
+The latter is when damage was done; it is now about bug fixing.  This
+involves debugging of the regression, finding a right approach to
+fix it (e.g. revert), write + review + test + commit the fix, port the fix
+to all relevant other kernel branches, review + test + commit those ports
+too.
+
+"Add a reverting fix" is a form of "add a fix".
+
+You are indeed pointing to a procedural flaw here.  In "add a fix" cases,
+stable release procedures ensure that if 3.3.3 included the revert, 3.4
+will include it to, by the Linus->Greg order of commiting patches. But in
+the "drop a candidate before release" case, Greg and the stable reviewers
+do not have a similarly fool-proof procedure to ensure that the next branch
+point will be free of the regression.  Now they need to watch closely that
+a fix gets into mainline ideally before the next branch point is going to
+be released.
+
+So there is indeed a difficulty involved with dropping patches from the
+candidate queue.  Fortunately, it is not necessary to subject post-release
+reverts to the same difficulty.
+
+> This of course, has *not* been explained.
+
+Others had discussed "not adding a changeset" versus "amending an already
+released changeset by another changeset on top of it" already.  Now I did
+too and apologize to everybody else for redundancy.
 -- 
-Felipe Contreras
+Stefan Richter
+-=====-===-- -=-- -===-
+http://arcgraph.de/sr/
