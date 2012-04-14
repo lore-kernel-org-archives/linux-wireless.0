@@ -1,61 +1,374 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47203 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752748Ab2DROaU (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:41044 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753380Ab2DNCir (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:30:20 -0400
-Message-ID: <1334759395.16897.231.camel@aeonflux> (sfid-20120418_163025_531409_46D5B114)
-Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Wed, 18 Apr 2012 16:29:55 +0200
-In-Reply-To: <20120418132224.GG19228@aemeltch-MOBL1>
-References: <4F84A422.3030900@sipsolutions.net>
-	 <1334093378.16897.62.camel@aeonflux>
-	 <20120411070514.GB17779@aemeltch-MOBL1>
-	 <1334714841.3725.37.camel@jlt3.sipsolutions.net>
-	 <20120418112017.GC19228@aemeltch-MOBL1>
-	 <1334749879.16897.221.camel@aeonflux>
-	 <20120418121014.GD19228@aemeltch-MOBL1>
-	 <1334751359.16897.225.camel@aeonflux>
-	 <20120418123326.GF19228@aemeltch-MOBL1>
-	 <1334754717.16897.228.camel@aeonflux>
-	 <20120418132224.GG19228@aemeltch-MOBL1>
+	Fri, 13 Apr 2012 22:38:47 -0400
+Message-ID: <1334371116.17649.1.camel@phoenix> (sfid-20120414_043854_589823_82D821B3)
+Subject: [PATCH] net/wireless: use module_pci_driver
+From: Axel Lin <axel.lin@gmail.com>
+To: netdev@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Simon Kelley <simon@thekelleys.org.uk>,
+	Jouni Malinen <j@w1.fi>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Date: Sat, 14 Apr 2012 10:38:36 +0800
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrei,
+This patch converts the drivers in drivers/net/wireless/* to use
+module_pci_driver() macro which makes the code smaller and a bit simpler.
 
-> > > > > > This is also a little bit of confusing since FullMac cards will not
-> > > > > > create an AMP virtual interface. With them you just see the HCI AMP
-> > > > > > controller on the Bluetooth side. Can an AMP virtual interface be just
-> > > > > > virtual inside mac80211 or does it have to have a netdev attached to it?
-> > > > > 
-> > > > > If we create virtual interface then netdev is allocated and we can handle
-> > > > > it with common tools.
-> > > > 
-> > > > what common tools do you wanna use here. We actually do not wanna have
-> > > > them show up as netdev devices at all. AMP connections don't have IP
-> > > > addresses or anything else for that matter.
-> > > 
-> > > I might want to set up MAC address. Otherwise I might not need netdev. I
-> > > feel that I need it for interface separation.
-> > 
-> > what MAC address? And where do you get this MAC address from? AMP
-> > controllers do not have MAC addresses.
-> 
-> I assume I need some address to send/receive data over wireless.
+Signed-off-by: Axel Lin <axel.lin@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>
+Cc: Nick Kossifidis <mickflemm@gmail.com>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Simon Kelley <simon@thekelleys.org.uk>
+Cc: Jouni Malinen <j@w1.fi>
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+---
+ drivers/net/wireless/adm8211.c              |   17 +----------------
+ drivers/net/wireless/ath/ath5k/pci.c        |   26 +-------------------------
+ drivers/net/wireless/atmel_pci.c            |   13 +------------
+ drivers/net/wireless/hostap/hostap_pci.c    |   16 +---------------
+ drivers/net/wireless/hostap/hostap_plx.c    |   16 +---------------
+ drivers/net/wireless/mwl8k.c                |   13 +------------
+ drivers/net/wireless/p54/p54pci.c           |   13 +------------
+ drivers/net/wireless/rt2x00/rt2400pci.c     |   13 +------------
+ drivers/net/wireless/rt2x00/rt2500pci.c     |   13 +------------
+ drivers/net/wireless/rt2x00/rt61pci.c       |   13 +------------
+ drivers/net/wireless/rtl818x/rtl8180/dev.c  |   13 +------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c |   19 +------------------
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c |   19 +------------------
+ 13 files changed, 13 insertions(+), 191 deletions(-)
 
-from a Bluetooth point, we do not have to deal with the MAC address.
-When looking at the mac80211 part, I do not know. However even then,
-that address should come from the driver and not from userspace.
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index f5ce562..0ac09a2 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1991,19 +1991,4 @@ static struct pci_driver adm8211_driver = {
+ #endif /* CONFIG_PM */
+ };
+ 
+-
+-
+-static int __init adm8211_init(void)
+-{
+-	return pci_register_driver(&adm8211_driver);
+-}
+-
+-
+-static void __exit adm8211_exit(void)
+-{
+-	pci_unregister_driver(&adm8211_driver);
+-}
+-
+-
+-module_init(adm8211_init);
+-module_exit(adm8211_exit);
++module_pci_driver(adm8211_driver);
+diff --git a/drivers/net/wireless/ath/ath5k/pci.c b/drivers/net/wireless/ath/ath5k/pci.c
+index 53424e8..bbae8e2 100644
+--- a/drivers/net/wireless/ath/ath5k/pci.c
++++ b/drivers/net/wireless/ath/ath5k/pci.c
+@@ -339,28 +339,4 @@ static struct pci_driver ath5k_pci_driver = {
+ 	.driver.pm	= ATH5K_PM_OPS,
+ };
+ 
+-/*
+- * Module init/exit functions
+- */
+-static int __init
+-init_ath5k_pci(void)
+-{
+-	int ret;
+-
+-	ret = pci_register_driver(&ath5k_pci_driver);
+-	if (ret) {
+-		pr_err("pci: can't register pci driver\n");
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+-static void __exit
+-exit_ath5k_pci(void)
+-{
+-	pci_unregister_driver(&ath5k_pci_driver);
+-}
+-
+-module_init(init_ath5k_pci);
+-module_exit(exit_ath5k_pci);
++module_pci_driver(ath5k_pci_driver);
+diff --git a/drivers/net/wireless/atmel_pci.c b/drivers/net/wireless/atmel_pci.c
+index 9ab1192..51e33b5 100644
+--- a/drivers/net/wireless/atmel_pci.c
++++ b/drivers/net/wireless/atmel_pci.c
+@@ -74,15 +74,4 @@ static void __devexit atmel_pci_remove(struct pci_dev *pdev)
+ 	stop_atmel_card(pci_get_drvdata(pdev));
+ }
+ 
+-static int __init atmel_init_module(void)
+-{
+-	return pci_register_driver(&atmel_driver);
+-}
+-
+-static void __exit atmel_cleanup_module(void)
+-{
+-	pci_unregister_driver(&atmel_driver);
+-}
+-
+-module_init(atmel_init_module);
+-module_exit(atmel_cleanup_module);
++module_pci_driver(atmel_driver);
+diff --git a/drivers/net/wireless/hostap/hostap_pci.c b/drivers/net/wireless/hostap/hostap_pci.c
+index 972a9c3..05ca340 100644
+--- a/drivers/net/wireless/hostap/hostap_pci.c
++++ b/drivers/net/wireless/hostap/hostap_pci.c
+@@ -457,18 +457,4 @@ static struct pci_driver prism2_pci_driver = {
+ #endif /* CONFIG_PM */
+ };
+ 
+-
+-static int __init init_prism2_pci(void)
+-{
+-	return pci_register_driver(&prism2_pci_driver);
+-}
+-
+-
+-static void __exit exit_prism2_pci(void)
+-{
+-	pci_unregister_driver(&prism2_pci_driver);
+-}
+-
+-
+-module_init(init_prism2_pci);
+-module_exit(exit_prism2_pci);
++module_pci_driver(prism2_pci_driver);
+diff --git a/drivers/net/wireless/hostap/hostap_plx.c b/drivers/net/wireless/hostap/hostap_plx.c
+index 33e7903..c3d067e 100644
+--- a/drivers/net/wireless/hostap/hostap_plx.c
++++ b/drivers/net/wireless/hostap/hostap_plx.c
+@@ -616,18 +616,4 @@ static struct pci_driver prism2_plx_driver = {
+ 	.remove		= prism2_plx_remove,
+ };
+ 
+-
+-static int __init init_prism2_plx(void)
+-{
+-	return pci_register_driver(&prism2_plx_driver);
+-}
+-
+-
+-static void __exit exit_prism2_plx(void)
+-{
+-	pci_unregister_driver(&prism2_plx_driver);
+-}
+-
+-
+-module_init(init_prism2_plx);
+-module_exit(exit_prism2_plx);
++module_pci_driver(prism2_plx_driver);
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index b48674b..e30cc32 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5893,18 +5893,7 @@ static struct pci_driver mwl8k_driver = {
+ 	.shutdown	= __devexit_p(mwl8k_shutdown),
+ };
+ 
+-static int __init mwl8k_init(void)
+-{
+-	return pci_register_driver(&mwl8k_driver);
+-}
+-
+-static void __exit mwl8k_exit(void)
+-{
+-	pci_unregister_driver(&mwl8k_driver);
+-}
+-
+-module_init(mwl8k_init);
+-module_exit(mwl8k_exit);
++module_pci_driver(mwl8k_driver);
+ 
+ MODULE_DESCRIPTION(MWL8K_DESC);
+ MODULE_VERSION(MWL8K_VERSION);
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index 45df728..89318ad 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -667,15 +667,4 @@ static struct pci_driver p54p_driver = {
+ 	.driver.pm	= P54P_PM_OPS,
+ };
+ 
+-static int __init p54p_init(void)
+-{
+-	return pci_register_driver(&p54p_driver);
+-}
+-
+-static void __exit p54p_exit(void)
+-{
+-	pci_unregister_driver(&p54p_driver);
+-}
+-
+-module_init(p54p_init);
+-module_exit(p54p_exit);
++module_pci_driver(p54p_driver);
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 3a6b402..5e6b501 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -1828,15 +1828,4 @@ static struct pci_driver rt2400pci_driver = {
+ 	.resume		= rt2x00pci_resume,
+ };
+ 
+-static int __init rt2400pci_init(void)
+-{
+-	return pci_register_driver(&rt2400pci_driver);
+-}
+-
+-static void __exit rt2400pci_exit(void)
+-{
+-	pci_unregister_driver(&rt2400pci_driver);
+-}
+-
+-module_init(rt2400pci_init);
+-module_exit(rt2400pci_exit);
++module_pci_driver(rt2400pci_driver);
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index dcc0e1f..136b849 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -2119,15 +2119,4 @@ static struct pci_driver rt2500pci_driver = {
+ 	.resume		= rt2x00pci_resume,
+ };
+ 
+-static int __init rt2500pci_init(void)
+-{
+-	return pci_register_driver(&rt2500pci_driver);
+-}
+-
+-static void __exit rt2500pci_exit(void)
+-{
+-	pci_unregister_driver(&rt2500pci_driver);
+-}
+-
+-module_init(rt2500pci_init);
+-module_exit(rt2500pci_exit);
++module_pci_driver(rt2500pci_driver);
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index e0c6d11..ee22bd7 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -3092,15 +3092,4 @@ static struct pci_driver rt61pci_driver = {
+ 	.resume		= rt2x00pci_resume,
+ };
+ 
+-static int __init rt61pci_init(void)
+-{
+-	return pci_register_driver(&rt61pci_driver);
+-}
+-
+-static void __exit rt61pci_exit(void)
+-{
+-	pci_unregister_driver(&rt61pci_driver);
+-}
+-
+-module_init(rt61pci_init);
+-module_exit(rt61pci_exit);
++module_pci_driver(rt61pci_driver);
+diff --git a/drivers/net/wireless/rtl818x/rtl8180/dev.c b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+index 2f14a5f..2bebcb7 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180/dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180/dev.c
+@@ -1173,15 +1173,4 @@ static struct pci_driver rtl8180_driver = {
+ #endif /* CONFIG_PM */
+ };
+ 
+-static int __init rtl8180_init(void)
+-{
+-	return pci_register_driver(&rtl8180_driver);
+-}
+-
+-static void __exit rtl8180_exit(void)
+-{
+-	pci_unregister_driver(&rtl8180_driver);
+-}
+-
+-module_init(rtl8180_init);
+-module_exit(rtl8180_exit);
++module_pci_driver(rtl8180_driver);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+index 2c3b733..3aa927f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
+@@ -389,21 +389,4 @@ static struct pci_driver rtl92ce_driver = {
+ 	.driver.pm = &rtlwifi_pm_ops,
+ };
+ 
+-static int __init rtl92ce_module_init(void)
+-{
+-	int ret;
+-
+-	ret = pci_register_driver(&rtl92ce_driver);
+-	if (ret)
+-		RT_ASSERT(false, "No device found\n");
+-
+-	return ret;
+-}
+-
+-static void __exit rtl92ce_module_exit(void)
+-{
+-	pci_unregister_driver(&rtl92ce_driver);
+-}
+-
+-module_init(rtl92ce_module_init);
+-module_exit(rtl92ce_module_exit);
++module_pci_driver(rtl92ce_driver);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index f1b3600..730bcc9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -450,21 +450,4 @@ static struct pci_driver rtl92se_driver = {
+ 	.driver.pm = &rtlwifi_pm_ops,
+ };
+ 
+-static int __init rtl92se_module_init(void)
+-{
+-	int ret = 0;
+-
+-	ret = pci_register_driver(&rtl92se_driver);
+-	if (ret)
+-		RT_ASSERT(false, "No device found\n");
+-
+-	return ret;
+-}
+-
+-static void __exit rtl92se_module_exit(void)
+-{
+-	pci_unregister_driver(&rtl92se_driver);
+-}
+-
+-module_init(rtl92se_module_init);
+-module_exit(rtl92se_module_exit);
++module_pci_driver(rtl92se_driver);
+-- 
+1.7.5.4
 
-Regards
-
-Marcel
 
 
