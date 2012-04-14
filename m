@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:39956 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752229Ab2DBRRj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 13:17:39 -0400
-Date: Mon, 2 Apr 2012 19:17:33 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Joe Perches <joe@perches.com>
-Subject: Re: CONFIG_RTLWIFI_DEBUG default y
-Message-ID: <20120402171733.GB13264@x1.osrc.amd.com> (sfid-20120402_191756_430184_2094561A)
-References: <20120402164920.GA13264@x1.osrc.amd.com>
- <1333385618.15422.17.camel@joe2Laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1333385618.15422.17.camel@joe2Laptop>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:38618 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967Ab2DNWru (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Apr 2012 18:47:50 -0400
+Date: Sun, 15 Apr 2012 00:47:14 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120415004714.4d729bef@stein> (sfid-20120415_004805_556689_8104D4CA)
+In-Reply-To: <CAMP44s05k3YkXSLGdYjJ42d+uEM+bLS9uZ+2ztUBWqcO6kyUtA@mail.gmail.com>
+References: <20120411231102.GA6404@kroah.com>
+	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
+	<20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413154216.476a02ac@stein>
+	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
+	<20120414094137.54a7f213@stein>
+	<CAMP44s2Un-M2OCmuRQGpGsHR21gH=S7oJKx4Ci8tvYVCCSitUw@mail.gmail.com>
+	<20120414195559.3d5ab944@stein>
+	<CAMP44s0ngzwkbQapTip=oW1b5m2uO5zCzbXHVqHXwT2+Wpgo_A@mail.gmail.com>
+	<20120414232124.1ffd7ac9@stein>
+	<CAMP44s05k3YkXSLGdYjJ42d+uEM+bLS9uZ+2ztUBWqcO6kyUtA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 02, 2012 at 09:53:38AM -0700, Joe Perches wrote:
-> To keep all the "printk(KERN_DEBUG" to "pr_debug(" conversion
-> output the same as the it was prior to the patch.
-> 
-> Larry can default it to off if he wants.
+On Apr 15 Felipe Contreras wrote:
+> The question that has not been answered is what makes them different,
 
->From looking at one user of this -
-drivers/net/wireless/rtlwifi/rtl8192ce/hw.c - some of the messages look
-like important ones which you wanna have enabled always, f.e. error
-handling in rtl92ce_hw_init().
+It was answered in the grandparent post and in posts before it.
 
-It probably needs splitting into debugging messages which are default n
-and always-on messages.
+> I'm glad you see it's silly to put bad patches in the stable release
+> just so they get properly tracked for mainline, but that's exactly
+> what you arguing for.
 
-Thanks.
-
+I am not arguing for anything remotely like that.
 -- 
-Regards/Gruss,
-Boris.
+Stefan Richter
+-=====-===-- -=-- -====
+http://arcgraph.de/sr/
