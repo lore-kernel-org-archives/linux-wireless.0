@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:16563 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752491Ab2DRPCJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 11:02:09 -0400
-Date: Wed, 18 Apr 2012 18:02:53 +0300
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-Message-ID: <20120418150252.GI19228@aemeltch-MOBL1> (sfid-20120418_170228_060334_24B6873C)
-References: <20120411070514.GB17779@aemeltch-MOBL1>
- <1334714841.3725.37.camel@jlt3.sipsolutions.net>
- <20120418112017.GC19228@aemeltch-MOBL1>
- <1334749879.16897.221.camel@aeonflux>
- <20120418121014.GD19228@aemeltch-MOBL1>
- <1334751359.16897.225.camel@aeonflux>
- <20120418123326.GF19228@aemeltch-MOBL1>
- <1334754717.16897.228.camel@aeonflux>
- <20120418132224.GG19228@aemeltch-MOBL1>
- <1334759395.16897.231.camel@aeonflux>
+Received: from mx.scalarmail.ca ([98.158.95.75]:26342 "EHLO
+	ironport-01.sms.scalar.ca" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752253Ab2DNTBl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Apr 2012 15:01:41 -0400
+Date: Sat, 14 Apr 2012 15:01:36 -0400
+From: Nick Bowler <nbowler@elliptictech.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, arend@broadcom.com,
+	zajec5@gmail.com
+Subject: Re: [PATCH] bcma: use fallback sprom if no on chip sprom is available
+Message-ID: <20120414190136.GA22035@elliptictech.com> (sfid-20120414_210245_135261_F6E0B2B5)
+References: <20120414024430.GA19782@elliptictech.com>
+ <1334407134-22803-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1334759395.16897.231.camel@aeonflux>
+In-Reply-To: <1334407134-22803-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+On 2012-04-14 14:38 +0200, Hauke Mehrtens wrote:
+> bcma should check for a fallback sprom every time it can not find a
+> sprom on the card itself or a normal external sprom mapped into the
+> memory of the chip. When otp sprom support was introduced it tried to
+> read out the sprom from the wireless chip also if no otp sprom was
+> available. This caused a Data bus error in bcma_sprom_get() when
+> reading out the sprom for the SoC.
+[...]
+> Reported-by: Nick Bowler <nbowler@elliptictech.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
 
-On Wed, Apr 18, 2012 at 04:29:55PM +0200, Marcel Holtmann wrote:
-> > > > > > If we create virtual interface then netdev is allocated and we can handle
-> > > > > > it with common tools.
-> > > > > 
-> > > > > what common tools do you wanna use here. We actually do not wanna have
-> > > > > them show up as netdev devices at all. AMP connections don't have IP
-> > > > > addresses or anything else for that matter.
-> > > > 
-> > > > I might want to set up MAC address. Otherwise I might not need netdev. I
-> > > > feel that I need it for interface separation.
-> > > 
-> > > what MAC address? And where do you get this MAC address from? AMP
-> > > controllers do not have MAC addresses.
-> > 
-> > I assume I need some address to send/receive data over wireless.
-> 
-> from a Bluetooth point, we do not have to deal with the MAC address.
-> When looking at the mac80211 part, I do not know. However even then,
-> that address should come from the driver and not from userspace.
+This patch appears to correct the issue on my RT-N16.
 
-The MAC address coming from driver might be already used in default
-wireless interface. I am not very familiar with wireless devices, maybe
-they have pool of MAC addresses we might choose from ...
+Thanks,
+-- 
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
 
-My point here: we create virtual interface and separate it from other
-wireless interfaces => hence we do not need to worry (much) about
-concurrency between wireless interfaces. Those interfaces need to have
-separate MAC addresses assigned if I understand virtual interfaces concept
-right.
-
-Best regards 
-Andrei Emeltchenko 
