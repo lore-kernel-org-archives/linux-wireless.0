@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42958 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760485Ab2D0Rrt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 13:47:49 -0400
-Date: Fri, 27 Apr 2012 13:44:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
-Subject: CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
- (Barcelona!)
-Message-ID: <20120427174439.GC16207@tuxdriver.com> (sfid-20120427_194754_950690_60A07BB5)
-References: <20120322192406.GB2432@tuxdriver.com>
- <1332698585.1870.88.camel@aeonflux>
- <20120326145433.GE13806@tuxdriver.com>
- <1332774906.1870.98.camel@aeonflux>
- <20120326152541.GH13806@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120326152541.GH13806@tuxdriver.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:35342 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755966Ab2DNUZE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Apr 2012 16:25:04 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 3/3] ath9k: simplify ath9k_hw_get_scaled_power function
+Date: Sat, 14 Apr 2012 22:01:59 +0200
+Message-Id: <1334433719-1144-3-git-send-email-juhosg@openwrt.org> (sfid-20120414_222508_109917_8E532E77)
+In-Reply-To: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
+References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 26, 2012 at 11:25:42AM -0400, John W. Linville wrote:
-> On Mon, Mar 26, 2012 at 05:15:06PM +0200, Marcel Holtmann wrote:
-> 
-> > > I don't think that 1 day is enough.  2 might not be enough, depending
-> > > on how we stage it.  Do you think that we would have more than one
-> > > "track" (e.g. separate Blueooth/802.11/NFC sessions)?  A single
-> > > "plenary" session?  Or some mix?
-> > 
-> > so what about 2 days single track and 1 day with breakout sessions. So
-> > we could do 12 talks with morning and afternoon sessions on the 3rd day
-> > as needed.
-> > 
-> > If we have many proposals for presentations, we can always go switch to
-> > 2 tracks. If we require LinuxCon registration, then it should be no
-> > problem to get a second room. If not, I have to negotiate with Angela
-> > next week ;)
-> 
-> My only concern is filling the number of slots.  Will we have 12+
-> presentation poposals?
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.c |   21 ++++++++-------------
+ 1 files changed, 8 insertions(+), 13 deletions(-)
 
-Just to keep the ball rolling...
-
-Angela has reserved space for us at the Hotel Fira
-Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
-Please note that this will overlap Yocto Dev Days, oVirt Summit and
-KVM Forum at the same venue.
-
-Now, we need some talk proposals!  Please post in this thread (or
-contact me or Marcel directly if necessary) to propose talks.  I would
-love to see any topics on any relevant technologies, as well as topics
-about how the projects are being managed, new sub-projects, etc.
-It seems like a long time away right now, but it is a good time to
-start thinking... :-)
-
-Thanks,
-
-John
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index 61bad99..6a64dec 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -293,9 +293,7 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
+ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
+ 			      u8 antenna_reduction)
+ {
+-	u16 scaled_power;
+-
+-	scaled_power = power_limit - antenna_reduction;
++	u16 reduction = antenna_reduction;
+ 
+ 	/*
+ 	 * Reduce scaled Power by number of chains active
+@@ -305,22 +303,19 @@ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
+ 	case 1:
+ 		break;
+ 	case 2:
+-		if (scaled_power > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
+-			scaled_power -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
+-		else
+-			scaled_power = 0;
++		reduction += REDUCE_SCALED_POWER_BY_TWO_CHAIN;
+ 		break;
+ 	case 3:
+-		if (scaled_power > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
+-			scaled_power -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
+-		else
+-			scaled_power = 0;
++		reduction += REDUCE_SCALED_POWER_BY_THREE_CHAIN;
+ 		break;
+ 	}
+ 
+-	scaled_power = max((u16)0, scaled_power);
++	if (power_limit > reduction)
++		power_limit -= reduction;
++	else
++		power_limit = 0;
+ 
+-	return scaled_power;
++	return power_limit;
+ }
+ 
+ void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.2.1
+
