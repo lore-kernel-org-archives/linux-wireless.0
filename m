@@ -1,43 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:64460 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754450Ab2DHTyd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2012 15:54:33 -0400
-Received: by wibhj6 with SMTP id hj6so1836331wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2012 12:54:32 -0700 (PDT)
+Received: from arrakis.dune.hu ([78.24.191.176]:48089 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756169Ab2DORuF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Apr 2012 13:50:05 -0400
+Message-ID: <4F8B0A4C.3080704@openwrt.org> (sfid-20120415_195030_894779_289E81A1)
+Date: Sun, 15 Apr 2012 19:50:04 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <4F815181.6030007@broadcom.com>
-References: <4F7F71A2.40105@hauke-m.de>
-	<4F815181.6030007@broadcom.com>
-Date: Sun, 8 Apr 2012 21:54:31 +0200
-Message-ID: <CACna6rzSsQXxyMTX+-UJ-BuJ671avs8dVPOnOc1kSRW-3URvQg@mail.gmail.com> (sfid-20120408_215447_695007_E1E1B953)
-Subject: Re: brcmsmac on BCM47XX SoCs
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 1/3] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
+References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org> <4F8AA38E.1040702@openwrt.org> <4F8B03A3.6030804@openwrt.org> <4F8B04D7.4080605@openwrt.org>
+In-Reply-To: <4F8B04D7.4080605@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/4/8 Arend van Spriel <arend@broadcom.com>:
-> On 04/06/2012 11:43 PM, Hauke Mehrtens wrote:
->> What are your plans to support phy_ht in brcmsmac, for now it is just
->> supported by b43?
->
->
-> I have not been paying good attention to community feedback on b43 phy_ht
-> support. As b43 support bcm4331 with that phy we decided to stay clear from
-> that device. We are to add new phy code for new devices. Not sure if that
-> includes the phy_ht.
+2012.04.15. 19:26 keltezÈssel, Felix Fietkau Ìrta:
+> On 2012-04-15 7:21 PM, Gabor Juhos wrote:
+>> Hi Felix,
+>>
+>> Thank you for the comments.
+>>
+>>> On 2012-04-14 10:01 PM, Gabor Juhos wrote:
+>>>> The REDUCE_SCALED_POWER_BY_THREE_CHAIN symbol is
+>>>> defined in different eeprom files, and the value
+>>>> varies between the different files.
+>>>>
+>>>> In eeprom_def.c and in ar9003_eeprom.c the value
+>>>> of the symbol is 9, however the comments in these
+>>>> files indicates the value should be 10*log10(3)*2
+>>>> which is 9.54242509439325. Replace the the value
+>>>> to 10 in these files.
+>>>>
+>>>> Also add comments to eeprom_9287.c.
+>>>>
+>>>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+>>> I think we should keep the value 9.
+>>> If I understand the logic behind the power increase through chain
+>>> combining properly, this value only describes the worst-case (wrt.
+>>> regulatory compliance) upper limit of tx power, whereas in practice the
+>>> measured combined power output will be much lower than that due to
+>>> signal/phase differences.
+>>> Regulatory compliance is already properly tested on all devices with the
+>>> truncated value 9, so I don't think that we need to be even more
+>>> conservative and round up here.
+>>
+>> Ok, I will rework the patch.
+>>
+>> Apart from the inconsistency between the REDUCE_SCALED_POWER_BY_THREE_CHAIN
+>> values, there is another thing which confuses me.
+>>
+>> In the 'ath9k_hw_set_*_power_cal_table' functions the driver uses the
+>> REDUCE_SCALED_POWER_BY_THREE_CHAIN constant to reduce the power values.
+>> In the 'ath9k_hw_update_regulatory_maxpower' function it uses the
+>> INCREASE_MAXPOW_BY_THREE_CHAIN constant to compensate the reduction. However the
+>> two constants are different. I might be wrong, but in my opinion the driver
+>> should use the same constant in both functions.
+> I just checked with Atheros sources, and it seems I was wrong about
+> sticking with the value 9.
+> It appears that Atheros changed it to 10 at some point, and ath9k
+> contains a mix of the old and the new version. Consistently using the
+> value 10 for 3 chains for both increase and reduction seems to be the
+> right thing to do.
 
-Whoops, that's extremely too bad. HT support is really wanted for a
-lot of routers. What we have in b43 is support coming from watching
-mmio ops only, there is no way for it to be complete. I believe you
-really should think and releasing HT PHY code, a lot of ppl will be
-interested in that.
+Thank you for the information. I will add it to the commit message.
 
--- 
-Rafa≈Ç
+-Gabor
