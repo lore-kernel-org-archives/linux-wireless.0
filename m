@@ -1,72 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:42343 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752600Ab2DPBvo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 21:51:44 -0400
-Message-ID: <1334541087.3209.39.camel@deadeye> (sfid-20120416_035149_355226_0D6CA4AD)
-Subject: Re: [PATCH 0/2] linux-firmware: ath6k update 20120410
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: dwmw2@infradead.org, ath6kl-devel@qualcomm.com,
-	linux-wireless@vger.kernel.org
-Date: Mon, 16 Apr 2012 02:51:27 +0100
-In-Reply-To: <20120410121708.15361.62740.stgit@x201>
-References: <20120410121708.15361.62740.stgit@x201>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-Sngji6coMPiDiyN2Hwg0"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:44679 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752335Ab2DOKPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Apr 2012 06:15:52 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 5/9] ath9k_hw: fix and clean up PHY activation delay
+Date: Sun, 15 Apr 2012 12:15:37 +0200
+Message-Id: <1334484941-27673-5-git-send-email-nbd@openwrt.org> (sfid-20120415_121559_133362_D2F4696B)
+In-Reply-To: <1334484941-27673-4-git-send-email-nbd@openwrt.org>
+References: <1334484941-27673-1-git-send-email-nbd@openwrt.org>
+ <1334484941-27673-2-git-send-email-nbd@openwrt.org>
+ <1334484941-27673-3-git-send-email-nbd@openwrt.org>
+ <1334484941-27673-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The delay calculation is the same for all chips, however some parts of the
+code missed the extra delay factor for half/quarter.
+Clean up the code and move the delay calculation to a common place.
 
---=-Sngji6coMPiDiyN2Hwg0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |   17 ++---------------
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   20 ++------------------
+ drivers/net/wireless/ath/ath9k/hw.c         |   16 ++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    2 ++
+ 4 files changed, 22 insertions(+), 33 deletions(-)
 
-On Tue, 2012-04-10 at 15:18 +0300, Kalle Valo wrote:
-> (Resending as my --cc had a space and stgit didn't send this to the maili=
-ng
-> lists.)
->=20
-> Hi Ben,
->=20
-> here's a firmware update for ath6k. We update the AR6003 hw2.1.1 to the
-> latest in our 3.2.0 branch and add a new firmware for AR6004.
->=20
-> This is the first time I'm sending patches for linux-firmware so please
-> let me know if there are any errors.
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index de30cb3..f554bff 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -618,19 +618,10 @@ static void ar5008_hw_init_bb(struct ath_hw *ah,
+ 	u32 synthDelay;
+ 
+ 	synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
+-	if (IS_CHAN_B(chan))
+-		synthDelay = (4 * synthDelay) / 22;
+-	else
+-		synthDelay /= 10;
+-
+-	if (IS_CHAN_HALF_RATE(chan))
+-		synthDelay *= 2;
+-	else if (IS_CHAN_QUARTER_RATE(chan))
+-		synthDelay *= 4;
+ 
+ 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
+ 
+-	udelay(synthDelay + BASE_ACTIVATE_DELAY);
++	ath9k_hw_synth_delay(ah, chan, synthDelay);
+ }
+ 
+ static void ar5008_hw_init_chain_masks(struct ath_hw *ah)
+@@ -948,12 +939,8 @@ static bool ar5008_hw_rfbus_req(struct ath_hw *ah)
+ static void ar5008_hw_rfbus_done(struct ath_hw *ah)
+ {
+ 	u32 synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
+-	if (IS_CHAN_B(ah->curchan))
+-		synthDelay = (4 * synthDelay) / 22;
+-	else
+-		synthDelay /= 10;
+ 
+-	udelay(synthDelay + BASE_ACTIVATE_DELAY);
++	ath9k_hw_synth_delay(ah, ah->curchan, synthDelay);
+ 
+ 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 5bc09a1..00afab5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -524,22 +524,10 @@ static void ar9003_hw_init_bb(struct ath_hw *ah,
+ 	 * Value is in 100ns increments.
+ 	 */
+ 	synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
+-	if (IS_CHAN_B(chan))
+-		synthDelay = (4 * synthDelay) / 22;
+-	else
+-		synthDelay /= 10;
+ 
+ 	/* Activate the PHY (includes baseband activate + synthesizer on) */
+ 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
+-
+-	/*
+-	 * There is an issue if the AP starts the calibration before
+-	 * the base band timeout completes.  This could result in the
+-	 * rx_clear false triggering.  As a workaround we add delay an
+-	 * extra BASE_ACTIVATE_DELAY usecs to ensure this condition
+-	 * does not happen.
+-	 */
+-	udelay(synthDelay + BASE_ACTIVATE_DELAY);
++	ath9k_hw_synth_delay(ah, chan, synthDelay);
+ }
+ 
+ static void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx)
+@@ -799,12 +787,8 @@ static bool ar9003_hw_rfbus_req(struct ath_hw *ah)
+ static void ar9003_hw_rfbus_done(struct ath_hw *ah)
+ {
+ 	u32 synthDelay = REG_READ(ah, AR_PHY_RX_DELAY) & AR_PHY_RX_DELAY_DELAY;
+-	if (IS_CHAN_B(ah->curchan))
+-		synthDelay = (4 * synthDelay) / 22;
+-	else
+-		synthDelay /= 10;
+ 
+-	udelay(synthDelay + BASE_ACTIVATE_DELAY);
++	ath9k_hw_synth_delay(ah, ah->curchan, synthDelay);
+ 
+ 	REG_WRITE(ah, AR_PHY_RFBUS_REQ, 0);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e408aaf..5df42ab 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -142,6 +142,22 @@ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout)
+ }
+ EXPORT_SYMBOL(ath9k_hw_wait);
+ 
++void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
++			  int hw_delay)
++{
++	if (IS_CHAN_B(chan))
++		hw_delay = (4 * hw_delay) / 22;
++	else
++		hw_delay /= 10;
++
++	if (IS_CHAN_HALF_RATE(chan))
++		hw_delay *= 2;
++	else if (IS_CHAN_QUARTER_RATE(chan))
++		hw_delay *= 4;
++
++	udelay(hw_delay + BASE_ACTIVATE_DELAY);
++}
++
+ void ath9k_hw_write_array(struct ath_hw *ah, struct ar5416IniArray *array,
+ 			  int column, unsigned int *writecnt)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1d4b983..a411646 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -923,6 +923,8 @@ void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val);
+ void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna);
+ 
+ /* General Operation */
++void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
++			  int hw_delay);
+ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
+ void ath9k_hw_write_array(struct ath_hw *ah, struct ar5416IniArray *array,
+ 			  int column, unsigned int *writecnt);
+-- 
+1.7.3.2
 
-I've applied these.  However, in future please only add File: lines to
-WHENCE for regular files.  I've now removed all such lines from the
-listings for ath6kl.
-
-Ben.
-
---=20
-Ben Hutchings
-This sentence contradicts itself - no actually it doesn't.
-
---=-Sngji6coMPiDiyN2Hwg0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAT4t7H+e/yOyVhhEJAQp7EQ//SlJ6sKiUgzEBtk3q86VqcVJe9tCisW4D
-7HM/z6OfjNr2aMN7oxOAusOtb4G7yLqgjfd8xmG6C/aSb8MsTZxuDNJyxUmxokGd
-C8idWFqKuRdU+h3STlJrPMCzkWFjKMYlUNcQf1OCWYEWnn6S1KvN0HoEj/NTpXz4
-Q/2+jt08ISE9eLcg9uGAIBvnrIw6+TPOa4QzsJILBk8w4inrmROYcwaOj8OOeDTT
-ts07cOhvUtasvj0ZGZoHQUh3qp1z0PVUn88r76hComwC5Pdzu/PCvQzEDOTHWR56
-fdYyWyo6DM1KUgRvRrkSnZyQVdCfnCvc7f7GLF87iytmFY4m9QUJpyDxcbvGNME6
-3RjXHSsVI8rz5w1zAykeWYNNefWFEmgrT5mXOju50D1R7DCDnSLsGEPuBfoqzZW/
-lF8X40iKHhV7YFMsxfPuKitw1j3M1N2zZxnKSbRF/jybscyLQy6W/na/vhs6BImb
-zXWf60HpTKhst0Hge30CAHCtZObw1CkZpLxH2fo1bGavY2jKOt/XJ7tvYMLebB1I
-+ovDQjR06BOdS+OEShVPs0pKNl7nSYNfpqHstqcdepHj7Zxdc2uHTG3eHzeNtaU0
-XmVz3jkJj3yHWUjK0oBEsCsW1QT2wQC2qTN7TzV3u/ReSKC7YSQH4evk6h5SMzim
-tTQ6qM83smI=
-=4kaG
------END PGP SIGNATURE-----
-
---=-Sngji6coMPiDiyN2Hwg0--
