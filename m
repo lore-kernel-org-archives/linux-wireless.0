@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60948 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964991Ab2DLOsm (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58967 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab2DOJTi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 10:48:42 -0400
-Message-ID: <4F86EB44.3080703@candelatech.com> (sfid-20120412_164853_828860_B45A4F67)
-Date: Thu, 12 Apr 2012 07:48:36 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 15 Apr 2012 05:19:38 -0400
+Received: by wejx9 with SMTP id x9so2755319wej.19
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2012 02:19:36 -0700 (PDT)
+Message-ID: <4F8A92A5.8090707@gmail.com> (sfid-20120415_112017_062083_C0856454)
+Date: Sun, 15 Apr 2012 11:19:33 +0200
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 06/10] mac80211: Add sta_state to ethtool stats.
-References: <1334166738-28243-1-git-send-email-greearb@candelatech.com>  <1334166738-28243-7-git-send-email-greearb@candelatech.com>  (sfid-20120411_195329_226978_FB464821) <1334202554.3788.9.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1334202554.3788.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	IvDoorn@gmail.com, linville@tuxdriver.com, gwingerde@gmail.com,
+	helmut.schaa@googlemail.com
+Subject: Re: [rt2x00-users] [PATCH] wireless: rt2x00: rt2800usb add more devices
+ ids
+References: <1334448592-16391-1-git-send-email-xose.vazquez@gmail.com> <4F8A6CB6.4080006@01019freenet.de>
+In-Reply-To: <4F8A6CB6.4080006@01019freenet.de>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2012 08:49 PM, Johannes Berg wrote:
-> On Wed, 2012-04-11 at 10:52 -0700, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> Helps to know how the station is doing in it's association
->> attempt.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->> :100644 100644 bbaf564... a63834d... M	net/mac80211/cfg.c
->>   net/mac80211/cfg.c |    6 ++++--
->>   1 files changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
->> index bbaf564..a63834d 100644
->> --- a/net/mac80211/cfg.c
->> +++ b/net/mac80211/cfg.c
->> @@ -118,7 +118,7 @@ static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
->>   	"rx_duplicates", "rx_fragments", "rx_dropped",
->>   	"tx_packets", "tx_bytes", "tx_fragments",
->>   	"tx_filtered", "tx_retry_failed", "tx_retries",
->> -	"beacon_loss", "txrate", "rxrate", "signal",
->> +	"beacon_loss", "sta_state", "txrate", "rxrate", "signal",
->>   	"channel", "noise", "ch_time", "ch_time_busy",
->>   	"ch_time_ext_busy", "ch_time_rx", "ch_time_tx"
->>   };
->> @@ -534,10 +534,12 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
->>   		data[i++] += sta->beacon_loss_count;
->>
->>   		if (!do_once) {
->> -			i += 3;
->> +			i += 4;
->>   			goto after_once;
->>   		}
->>
->> +		data[i++] = sta->sta_state;
->> +
->
-> Gee, I wish it was easier to tell if you were adding it to the right
-> spot in the list ... any way that could be made easier?
+On 04/15/2012 08:37 AM, Andreas Hartmann wrote:
 
-It would be nice, but I haven't thought of an easy way to do this,
-and I haven't noticed any other drivers
-that found a way.
+> Did you test them? What did you test exactly? What exactly works, what
+> does not?
 
-I *could* add a lot of #defines and do something like: data[STA_STATE_IDX] = sta->state,
-and maybe create the strings array at run-time using macros to map string to
-an idx define instead of have a static array of char*.  But, I'm not sure if
-it's worth the effort.
+NO. NOTHING . I DON'T KNOW. But...
 
-Thanks,
-Ben
+> It doesn't mean anything, if they work with the legacy driver.
 
->
-> johannes
+..., the chips in these devices are *identified* . They perform so well
+or so badly like those that are already in the driver(rt2800usb).
 
+> Linksys WUSB600Nv2 e.g. works fine with the legacy driver, but only
+> limited (if at all) with rt2800usb yet.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+<http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/net/wireless/rt2x00/Kconfig;h=299c3879582da14e12ca00d7f11184da8c61bed7;hb=HEAD#l83>
 
+config RT2800USB_RT35XX
+	bool "rt2800usb - Include support for rt35xx devices ( *EXPERIMENTAL* )"
+	depends on *EXPERIMENTAL*
