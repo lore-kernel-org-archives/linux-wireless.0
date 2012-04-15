@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:59814 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751049Ab2DLVfA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:35:00 -0400
+Received: from arrakis.dune.hu ([78.24.191.176]:52635 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754727Ab2DORVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Apr 2012 13:21:42 -0400
+Message-ID: <4F8B03A3.6030804@openwrt.org> (sfid-20120415_192214_760913_9D38ED18)
+Date: Sun, 15 Apr 2012 19:21:39 +0200
+From: Gabor Juhos <juhosg@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20120412185622.GB2904@burratino>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120412185622.GB2904@burratino>
-Date: Fri, 13 Apr 2012 00:34:59 +0300
-Message-ID: <CAMP44s2M_srvKKaicOpr+TF6hw=dxFMVRwMs2K9E_P_ooPMCXw@mail.gmail.com> (sfid-20120412_233505_927128_615CD711)
-Subject: Re: [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 1/3] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
+References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org> <4F8AA38E.1040702@openwrt.org>
+In-Reply-To: <4F8AA38E.1040702@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 9:56 PM, Jonathan Nieder <jrnieder@gmail.com> wrote:
-> Felipe Contreras wrote:
->
->> But then are you saying that if upstream is broken (3.4-rc2), then
->> stable should be broken as well (3.3.1), and remain broken until
->> upstream is fixed? I fail to see what would be the point of that.
->
-> No, he's saying that when upstream is broken for the same reason as
-> stable is, it seems wise to:
->
->  - report upstream
->  - fix your local system
->  - fix any systems you are responsible for
->  - fix upstream
->  - only then fix stable.
+Hi Felix,
 
-I'm not sure those steps were followed for this particular patch on
-v3.3.1, but lets assume they where. Now what happens when:
+Thank you for the comments.
 
- - you realize the fix made matters worst, in fact, so worst that the
-whole thing is unusable in some systems
+> On 2012-04-14 10:01 PM, Gabor Juhos wrote:
+>> The REDUCE_SCALED_POWER_BY_THREE_CHAIN symbol is
+>> defined in different eeprom files, and the value
+>> varies between the different files.
+>>
+>> In eeprom_def.c and in ar9003_eeprom.c the value
+>> of the symbol is 9, however the comments in these
+>> files indicates the value should be 10*log10(3)*2
+>> which is 9.54242509439325. Replace the the value
+>> to 10 in these files.
+>>
+>> Also add comments to eeprom_9287.c.
+>>
+>> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> I think we should keep the value 9.
+> If I understand the logic behind the power increase through chain
+> combining properly, this value only describes the worst-case (wrt.
+> regulatory compliance) upper limit of tx power, whereas in practice the
+> measured combined power output will be much lower than that due to
+> signal/phase differences.
+> Regulatory compliance is already properly tested on all devices with the
+> truncated value 9, so I don't think that we need to be even more
+> conservative and round up here.
 
-Presumably we are now in the next round of:
+Ok, I will rework the patch.
 
- - fix upstream
+Apart from the inconsistency between the REDUCE_SCALED_POWER_BY_THREE_CHAIN
+values, there is another thing which confuses me.
 
-But v.3.3.2 is due Friday, which makes it very likely that the fix
-won't get in. And what did we gain? If you simplify the situation to
-what you explained above, it seems very reasonable, but that's not the
-whole picture.
+In the 'ath9k_hw_set_*_power_cal_table' functions the driver uses the
+REDUCE_SCALED_POWER_BY_THREE_CHAIN constant to reduce the power values.
+In the 'ath9k_hw_update_regulatory_maxpower' function it uses the
+INCREASE_MAXPOW_BY_THREE_CHAIN constant to compensate the reduction. However the
+two constants are different. I might be wrong, but in my opinion the driver
+should use the same constant in both functions.
 
--- 
-Felipe Contreras
+-Gabor
