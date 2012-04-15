@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:46128 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751843Ab2DFScn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 14:32:43 -0400
-Received: by vbbff1 with SMTP id ff1so1337113vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 11:32:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4F7F1780.1090803@openwrt.org>
-References: <CAA2SeN+DRnff_e-fDuFAV-vof0OEsw7VEkmxBhUivq0kSspzvw@mail.gmail.com>
-	<4F7F1780.1090803@openwrt.org>
-Date: Fri, 6 Apr 2012 20:32:42 +0200
-Message-ID: <CAA2SeNL0YSiSp4f_jNr8PN5Qo28g2m9aNDRMg45ZyM_wf=vKVA@mail.gmail.com> (sfid-20120406_203247_573445_E409896B)
-Subject: Re: [PATCH] ath9k: fix an issue in ieee80211_tx_info count field management
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:44674 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750963Ab2DOKPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Apr 2012 06:15:52 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 7/9] ath9k_hw: disable Tx IQ calibration on half/quarter channels
+Date: Sun, 15 Apr 2012 12:15:39 +0200
+Message-Id: <1334484941-27673-7-git-send-email-nbd@openwrt.org> (sfid-20120415_121555_721592_E88BDA40)
+In-Reply-To: <1334484941-27673-6-git-send-email-nbd@openwrt.org>
+References: <1334484941-27673-1-git-send-email-nbd@openwrt.org>
+ <1334484941-27673-2-git-send-email-nbd@openwrt.org>
+ <1334484941-27673-3-git-send-email-nbd@openwrt.org>
+ <1334484941-27673-4-git-send-email-nbd@openwrt.org>
+ <1334484941-27673-5-git-send-email-nbd@openwrt.org>
+ <1334484941-27673-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 2012-04-05 11:39 PM, Lorenzo Bianconi wrote:
->> Hi all,
->>
->> I noticed a possible issue in the status count field management of the
->> ieee80211_tx_info data structure. In particular, when the AGGR
->> processing is employed,
->> ath_tx_complete_aggr() sets status.rates[].count just for the first
->> frame and not for others belonging to the same burst, leading to wrong
->> statistic data in the mac80211 debug file system.
-> The driver behavior is OK and mac80211 needs to be changed. The tx
-> status code that counts retries needs to check if AMPDU CTL and STATUS
-> flags match and stop counting for packets where they don't match.
->
-> - Felix
+It does not work properly and reduces throughput.
 
-Ack. I will send another patch in order to fix the issue in mac80211.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Regards
-
-Lorenzo
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 63089cc..a0387a0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1000,10 +1000,12 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
+ 		ar9003_mci_init_cal_req(ah, &is_reusable);
+ 
+-	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
+-	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
+-	udelay(5);
+-	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
++	if (!(IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))) {
++		txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
++		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
++		udelay(5);
++		REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_EN);
++	}
+ 
+ skip_tx_iqcal:
+ 	if (run_agc_cal || !(ah->ah_flags & AH_FASTCC)) {
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+1.7.3.2
+
