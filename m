@@ -1,84 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.watchguard.com ([206.191.171.101]:22904 "EHLO
-	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932464Ab2DYXq1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 19:46:27 -0400
-From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Andreas Hartmann <andihartmann@01019freenet.de>,
-	Andrew Chant <andrew.chant@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>
-Subject: Re: AP mode my ath9k broke between 3.3 and 3.4-rc2
-Date: Wed, 25 Apr 2012 23:46:26 +0000
-Message-ID: <80FFDD6E-923A-4348-AEC0-2C85C60A0D22@watchguard.com> (sfid-20120426_014631_912353_52FF859D)
-References: <CANugF37WSOdHODRXOb6nnBCh5HMTTUqf0VpyPuTDdNK80-LkAQ@mail.gmail.com>
- <CANugF37wdS3=u7grT3H6WAJM=XxTukZoWdj70SXLL8k_6t1b6A@mail.gmail.com>
- <4F9679AB.6010103@01019freenet.de> <20120424125429.GB3770@tuxdriver.com>
- <4F983795.3070906@openwrt.org>
-In-Reply-To: <4F983795.3070906@openwrt.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from 1wt.eu ([62.212.114.60]:65204 "EHLO 1wt.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755732Ab2DOR3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Apr 2012 13:29:43 -0400
+Date: Sun, 15 Apr 2012 19:29:10 +0200
+From: Willy Tarreau <w@1wt.eu>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120415172910.GE27728@1wt.eu> (sfid-20120415_193004_448647_91A7AFB8)
+References: <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com> <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com> <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com> <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com> <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com> <20120414104733.GA4871@gmail.com> <CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com> <20120415065124.GC29563@gmail.com> <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Felipe,
 
-On Apr 25, 2012, at 10:42 AM, Felix Fietkau wrote:
+On Sun, Apr 15, 2012 at 08:15:23PM +0300, Felipe Contreras wrote:
+(...)
+> Why is it that the patch from yesterday doesn't reduce the version
+> skew, but the patch from today does? You are not explaining *why*.
 
-> On 2012-04-24 2:54 PM, John W. Linville wrote:
->> On Tue, Apr 24, 2012 at 12:00:11PM +0200, Andreas Hartmann wrote:
->>> Andrew Chant wrote:
->>>> 3.4-rc4 doesn't work either.
->>>> If I revert the patch on 3.4-rc4, the Intel card is able to associate again.
->>>> -Andrew
->>>> 
->>>> On Tue, Apr 24, 2012 at 12:11 AM, Andrew Chant <andrew.chant@gmail.com> wrote:
->>>>> Hello,
->>>>> my Atheros AR9300 PCIe card (168c:0030) stopped working as an AP on
->>>>> the 5GHz band between 3.3 and 3.4-rc2.
->>>>> After 14 git bisects, I believe I have narrowed it down to the following patch:
->>>>> 
->>>>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=293702a3fb75832613e2af097bdc3ac8ef775b33
->>>>> 
->>>>> mac80211: use common radiotap code for cooked monitors
->>> 
->>> Same problem here with ar9285 / 2.4GHz / eap-tls / 802.11n / hostapd
->>> 0.7.3 / compat-wireless-3.4-rc3-1.tar.bz2
->>> 
->>> Removing "mac80211: use common radiotap code for cooked monitors" solves
->>> the problem here, too.
->>> 
->>> Using rt2860 as AP seems not to be a problem.
->> 
->> Sounds like we may need to revert it upstream.  Johannes, any comments?
-> That's a known bug, which I submitted a fix for. When looking at the
-> 3.4-rc4 log, I don't see my fix in there. It was submitted as
-> "[PATCH] mac80211: fix truncated packets in cooked monitor rx"
+Severl of us have explained to you multiple times *why*. Either you're
+having a parsing problem, or you don't understand anything to versionning
+but in all cases you should try to educate yourself a minimum before
+repeating the same question in loops.
 
+> It's like I'm asking why the freezer area is different from the normal
+> refrigerator area, and you are saying; well it's colder, it's usually
+> smaller, and it makes all food taste better. So you are either just
+> describing the differences without explaining the reason (being colder
+> helps for some foods), or you are providing an unsubstantiated claim;
+> you go from a) it's colder, to b) it makes all food taste better. And
+> when asked *why* again, you repeat, well, because it's colder. And
+> then you immediately go to the conclusion; therefore you should put as
+> much food in the freezer as possible.
 
-Just as another data-point, I'm using ath9k for an AR9300 Rev:3 chipset
-with compat-wireless-v3.4-rc3-1, and it doesn't work as an AP in any case:
+No, it's quite the opposite, almost everyone in this thread explained to
+you that bacteria don't develop in cold and that's the reason it's better
+to keep food. But you deliberately (or maybe inconsciously because you
+don't know what bacteria are) wipe out these explanations and pretend
+nobody explained the reason to you. 
 
-Stock code:
-  fails
-Reverting [PATCH] mac80211: use common radiotap code for cooked monitors:
-  fails
-Leaving the above in place and applying Felix's radiotap patch:
-  fails
+Please re-read all responses, everything is there. I thought my explanation
+was detailed enough to understand why it works that way, and Ingo explained
+it in great details again. So please now make an effort to try to read what
+people explain and stop pretending they refuse to respond, that's getting
+really irritating.
 
-I get a lot of these logs from hostapd:
+The fact that you're the only one to ask this in loops should ring a bell,
+it seems like many people managed to understand, either before this thread
+or during this thread. It's up to you, I don't think that insisting on
+people to explain the same things to you in many different ways will solve
+your problems, really.
 
-1335397090.413064: Could not parse ProbeReq from 00:24:44:f5:e3:c2
-
-I'm using hostapd 0.7.3.  If I rewind to an earlier "stable", it works -
-at least the AP works; there is a bug in client mode when connecting to
-a WEP AP, which is fixed in v3.4-rc3-1.
-
-Should I try switching from "stable" to "next"?
-
---
--bp
-
+Regards,
+Willy
 
