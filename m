@@ -1,77 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:47198 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753801Ab2DPOQL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39568 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756558Ab2DOB7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 10:16:11 -0400
-Message-ID: <1334585757.3209.125.camel@deadeye> (sfid-20120416_161614_751893_18DA30E9)
-Subject: Re: [PATCH 0/2] linux-firmware: ath6k update 20120410
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: dwmw2@infradead.org, ath6kl-devel@qualcomm.com,
-	linux-wireless@vger.kernel.org
-Date: Mon, 16 Apr 2012 15:15:57 +0100
-In-Reply-To: <1334541087.3209.39.camel@deadeye>
-References: <20120410121708.15361.62740.stgit@x201>
-	 <1334541087.3209.39.camel@deadeye>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-ERZyAsruYclJpRlCkDEO"
-Mime-Version: 1.0
+	Sat, 14 Apr 2012 21:59:53 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20362.11117.884392.679390@gargle.gargle.HOWL> (sfid-20120415_040104_086756_82666667)
+Date: Sun, 15 Apr 2012 07:29:09 +0530
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: [RFC 2/2] ath9k: fix tx power settings for AR9287
+In-Reply-To: <1334417539-6498-2-git-send-email-juhosg@openwrt.org>
+References: <1334417539-6498-1-git-send-email-juhosg@openwrt.org>
+	<1334417539-6498-2-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Gabor Juhos wrote:
+> The 'ath9k_hw_update_regulatory_maxpower'
+> helper function has been introduced by
+> commit a55f858852e4345d0a31af593c46738ca8614bff
+> (ath9k_hw: Cleanup TX power calculation for AR9287).
+> 
+> Updating of the max_power_level value has been moved
+> into the helper function in that change, however the
+> removed code from 'ath9k_hw_ar9287_set_txpower' has
+> not been replaced with a call of the new helper
+> function.
+> 
+> Due to that missing call, retrieving tx power for 2x2
+> and 3x3 chainmask is not handled properly. During the
+> calculation of the tx power for 2x2 and 3x3 chainmasks
+> the values are reduced. Those reductions must be
+> compensated during retrieving.
+> 
+> Fix this by adding the missing call of the helper
+> function.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/eeprom_9287.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+> index f272236..b34e8b2 100644
+> --- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+> +++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+> @@ -824,6 +824,8 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
+>  			regulatory->max_power_level = ratesArray[i];
+>  	}
+>  
+> +	ath9k_hw_update_regulatory_maxpower(ah);
+> +
 
---=-ERZyAsruYclJpRlCkDEO
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Looks like I got confused between 4K-based cards and AR9287.
+Thanks for catching this.
 
-On Mon, 2012-04-16 at 02:51 +0100, Ben Hutchings wrote:
-> On Tue, 2012-04-10 at 15:18 +0300, Kalle Valo wrote:
-> > (Resending as my --cc had a space and stgit didn't send this to the mai=
-ling
-> > lists.)
-> >=20
-> > Hi Ben,
-> >=20
-> > here's a firmware update for ath6k. We update the AR6003 hw2.1.1 to the
-> > latest in our 3.2.0 branch and add a new firmware for AR6004.
-> >=20
-> > This is the first time I'm sending patches for linux-firmware so please
-> > let me know if there are any errors.
->=20
-> I've applied these.  However, in future please only add File: lines to
-> WHENCE for regular files.  I've now removed all such lines from the
-> listings for ath6kl.
+Acked-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-What I meant to say is that I removed File: lines that referred to
-directories.
-
-Ben.
-
---=20
-Ben Hutchings
-This sentence contradicts itself - no actually it doesn't.
-
---=-ERZyAsruYclJpRlCkDEO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAT4wpnee/yOyVhhEJAQpDmA/7BScwEgREoTcvdyejpwAYLRGa/Ksy6Z8d
-yfWLX0+wv/bIWtCRtIr0N70l/kP2d74P+EPDDnXhOdCMo8ZEoJcC6yhJ6Yb4VNhg
-ef9fKUTOH/lQ3kY/ag5XxbRWUMA7Ykz49aTd7q3p+xBTey446Lww4dl89sCQAgbz
-/JO21BK1Sy2C6jBYguosFt0SjFziE3X5g+evWDFUUEWjyeKnPHliZJOZEtuN+KdU
-bYRhE6Wewnj6ergY6iun3NEpa2BSZP/pk+oyJaeQ/i3Tmjg1J1k+zofr2iq5xM4R
-UXUwZuJgw0dYzyxzuhxqXeCDIiSnfIkLVsJ+G/Tuq2Bk+4gAI4DKDvOZRl1S3PGM
-fV6HM9NHd2qY6rTmdYUMBVcGUFl9UghMqShJeSAtIFhtkHp4zn8nSun3+uaul82I
-1nyJhD31pVYACyinLggo56EQbROyPhI5Ol+pNYK6z1ABtj2Uw4FKshGcmMX6h3ca
-mSPgGJTX+YXFm1DQFhetGcl2ipC4Ss0SxjlZs+e0GbgIvG/kPJEVtozVtEQ431Bn
-IFQczIhneY3LZrL+/NbM/vyJtz3JMEBHyFM8Jy1b1m1Ln6jp/kW4sIXFfKFGItIy
-9MJNOoDPs0IgMximIBdW6AtnDQr/zPg0JcKwLcqAH3rf3t9aq4BnvzE5nN4xYAqA
-ZycLLQ0zZmU=
-=KhP5
------END PGP SIGNATURE-----
-
---=-ERZyAsruYclJpRlCkDEO--
+Sujith
