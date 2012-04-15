@@ -1,144 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:58511 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754764Ab2DQOiI convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:57969 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751797Ab2DONEl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 10:38:08 -0400
-Received: by bkcik5 with SMTP id ik5so4627558bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 07:38:06 -0700 (PDT)
-Date: Tue, 17 Apr 2012 16:37:46 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Cc: linville@tuxdriver.com, RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Kevin Chou <kevin.chou@mediatek.com>,
-	John Li <chen-yang.li@mediatek.com>,
-	RA-Jay Hung <Jay_Hung@ralinktech.com>
-Subject: Re: RT5390 not working with rt2800pci
-Message-ID: <20120417163746.35c232c8@destiny.ordissimo> (sfid-20120417_163812_740431_8F34BA56)
-In-Reply-To: <20120413142352.3b927516@destiny.ordissimo>
-References: <20120413142352.3b927516@destiny.ordissimo>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sun, 15 Apr 2012 09:04:41 -0400
+Received: by eekc41 with SMTP id c41so1085467eek.19
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2012 06:04:40 -0700 (PDT)
+References: <1334448592-16391-1-git-send-email-xose.vazquez@gmail.com> <4F8A6CB6.4080006@01019freenet.de> <4F8A92A5.8090707@gmail.com> <4F8AB8F9.4060503@01019freenet.de>
+In-Reply-To: <4F8AB8F9.4060503@01019freenet.de>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <201C9B63-C214-4D44-B3D0-44948F9DE260@gmail.com> (sfid-20120415_150509_995662_2390DAFA)
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"IvDoorn@gmail.com" <IvDoorn@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [rt2x00-users] [PATCH] wireless: rt2x00: rt2800usb add more devices ids
+Date: Sun, 15 Apr 2012 15:04:39 +0200
+To: Andreas Hartmann <andihartmann@01019freenet.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi again,
+On 15 apr. 2012, at 14:03, Andreas Hartmann <andihartmann@01019freenet.de> wrote:
 
-On Fri, 13 Apr 2012 14:23:52 +0200, Anisse Astier <anisse@astier.eu> wrote :
+> Hello Xose,
+> 
+> sorry for double post - I accidentally pressed the wrong answer button :-(.
+> 
+> Xose Vazquez Perez wrote:
+>> On 04/15/2012 08:37 AM, Andreas Hartmann wrote:
+>> 
+>>> Did you test them? What did you test exactly? What exactly works, what
+>>> does not?
+>> 
+>> NO. NOTHING . I DON'T KNOW. But...
+>> 
+>>> It doesn't mean anything, if they work with the legacy driver.
+>> 
+>> ..., the chips in these devices are *identified* . They perform so well
+>> or so badly like those that are already in the driver(rt2800usb).
+> 
+> This is an expectation. The mentioned WUSB600Nv2 is one proof, that it
+> isn't (always) enough to successfully identify chips and derive, that it
+> behaves like other brands using the same chip. There have been brands
+> with this chip, which have been working fine (supposedly), but this
+> special brand didn't work at all here - even though it uses an already
+> known chip.
+> 
+>>> Linksys WUSB600Nv2 e.g. works fine with the legacy driver, but only
+>>> limited (if at all) with rt2800usb yet.
+>> 
+>> <http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/net/wireless/rt2x00/Kconfig;h=299c3879582da14e12ca00d7f11184da8c61bed7;hb=HEAD#l83>
+>> 
+>> config RT2800USB_RT35XX
+>>    bool "rt2800usb - Include support for rt35xx devices ( *EXPERIMENTAL* )"
+>>    depends on *EXPERIMENTAL*
+> 
+> Chance :-)
+> 
+> rt2860 (PCI) chipset (rt2800pci) isn't experimental but is nevertheless
+> broken since 3.2 [1].
+> 
+> I'm seeing a fundamental problem (but not just here :-)) regarding QA. I
+> can't see any QA if there is done any change. Ok, I don't know all and
+> maybe, I'm blind, too. But I'm willing to learn .
+> 
+> That's why I'm wondering: When are all these appropriate devices going
+> to be tested? I think, a good point would be during development and not
+> after they have been released (means: "experimental" was removed). If
+> the ID's are committed, it should be ensured, that they really behave as
+> expected.
 
-> [resent with compressed dmesg(<40k) and removed one Cc:, sorry for the spam]
-> 
-> Hi,
-> 
-> I have two[1] (seemingly) identical mini pcie RT5390 wireless cards. One
-> works, the other doesn't.
-> By "doesn't" work, I mean it can't receive any network further than 1m(at
-> least it's still "wireless" ;-)). Scan is empty, except if I put the AP
-> right next to the laptop.
-> 
-> I'm using the rt2800pci in-kernel driver. Support for this card was added
-> in 2.6.39. To make sure there was no regression, I tested the following
-> kernels: 2.6.39.4, 3.0.8, 3.2.5, 3.3.1 and wireless-next as of today.
-> I'm also using the latest firmware rt2860.bin version 34 from official
-> linux-firmware git tree.
-> 
-> Behaviour is reproduced with or without plugging the antenna. Behaviour
-> follows the card, if I put on another motherboard.
-> 
-> Markings on the chips are identical whether it's working or not:
->  - Ralink RT5390RL NAF8590109 1133STA1
-> 
-> lspci[3] doesn't change (except mac address) whether it's working or not.
-> dmesg (attached) with rt2x00 debug output doesn't show anything special.
-> 
-> I've tried rt5390sta[2], and it doesn't help. Working card is working,
-> non-working is not.
-> 
-> 
-> Last, but not least, it works on windows. 
->  - if we reboot from windows, it works
->  - if we halt the hardware, and power it on, it doesn't work.
-> Which means that the windows driver does something that rt2800pci
-> doesn't, and that the state is preserved as long as we don't cut power.
-> 
-> 
-> Regards,
-> 
-> Anisse
-> 
-> 
-[...]
+Andreas,
 
-Ok, I've found a solution.
+It is impossible to test each and every device that uses a Ralink chipset. Therefore we run tests on the chipsets only, and simply list all devices that contain these chipsets.
 
-After looking into the latest ralink release, for chipset 5572, I saw
-that rt5390 support was updated. And that support for the chip with rev
-1502 was added, named RT5390R.
-The only difference with "normal" 5390 is that this one supports hardware
-antenna diversity, so the driver should tell the card which antenna to
-use by default (the main one in my case).
-This is replicated in the patch below, which has been tested on both
-working and non-working 1502s, and is proving to work quite well.
+Granted, we are having issues with some of the chipsets, but that should not prevent adding other devices that use the same chipset to the driver.
 
-I still don't know how to integrate this properly with rt2800pci's
-antenna diversity code, since this is the first chipset to have hardware
-antenna diversity in the rt2800 family (others had it in rt61 and rt73
-for example).
-
-I'll look into it over the next two weeks, and send a patch if no one
-does before.
-
-
-
-From: Anisse Astier <anisse@astier.eu>
-Date: Tue, 17 Apr 2012 12:23:21 +0200
-Subject: [PATCH] rt2800: add chipset RT5390R support
-
-This is for testing Only !! Please don't merge !
 ---
- drivers/net/wireless/rt2x00/rt2800.h    |    1 +
- drivers/net/wireless/rt2x00/rt2800lib.c |   12 ++++++++++++
- 2 files changed, 13 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 063bfa8..1ce2634 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -83,6 +83,7 @@
- #define REV_RT3090E			0x0211
- #define REV_RT3390E			0x0211
- #define REV_RT5390F			0x0502
-+#define REV_RT5390R			0x1502
- 
- /*
-  * Signal information.
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index bd19802..e94661f 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3928,6 +3928,18 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
- 	}
- 
-+	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
-+		rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY;
-+		rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY;
-+		rt2x00dev->default_ant.rx_chain_num = 0;
-+		rt2x00dev->default_ant.tx_chain_num = 0;
-+
-+		rt2800_bbp_write(rt2x00dev, 150, 0);
-+		rt2800_bbp_write(rt2x00dev, 151, 0);
-+		rt2800_bbp_write(rt2x00dev, 154, 0);
-+		rt2800_bbp_write(rt2x00dev, 152, 0x80);
-+	}
-+
- 	return 0;
- }
- 
--- 
-1.7.9.4
-
+Gertjan
