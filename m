@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62089 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762142Ab2DLH4G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 03:56:06 -0400
-Received: by iagz16 with SMTP id z16so2461371iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 00:56:05 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:33937 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752366Ab2DOKbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Apr 2012 06:31:47 -0400
+Message-ID: <4F8AA38E.1040702@openwrt.org> (sfid-20120415_123150_561635_4ACC050D)
+Date: Sun, 15 Apr 2012 12:31:42 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1334204193.3788.14.camel@jlt3.sipsolutions.net>
-References: <1333746034.5577.10.camel@jlt3.sipsolutions.net>
- <CAB=NE6XMuaAPFPfKGunrGuqnYLKfem35Q3nXiEpc7u23FM14ng@mail.gmail.com> <1334204193.3788.14.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 12 Apr 2012 00:55:45 -0700
-Message-ID: <CAB=NE6UJS=dnUO0Cq-7Kve+7ofnbW-XkGHqCQCf+HzEMTRn8WQ@mail.gmail.com> (sfid-20120412_095610_070876_9D11A05B)
-Subject: Re: [PATCH] compat: backport netif_wake_subqueue
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	lf_driver_backport@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 1/3] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
+References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
+In-Reply-To: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 11, 2012 at 9:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-04-06 at 19:23 -0700, Luis R. Rodriguez wrote:
->> On Fri, Apr 6, 2012 at 2:00 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > From: Johannes Berg <johannes.berg@intel.com>
->> >
->> > Kernels 2.6.23 - 2.6.27 had some multiqueue support,
->> > but called netif_wake_subqueue netif_start_subqueue.
->> > So to backport, just add a define.
->> >
->> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->>
->> Applied and pushed, and tested with ckmake, thanks!
->
-> I don't see this, did you move the repository off infradead?
+On 2012-04-14 10:01 PM, Gabor Juhos wrote:
+> The REDUCE_SCALED_POWER_BY_THREE_CHAIN symbol is
+> defined in different eeprom files, and the value
+> varies between the different files.
+> 
+> In eeprom_def.c and in ar9003_eeprom.c the value
+> of the symbol is 9, however the comments in these
+> files indicates the value should be 10*log10(3)*2
+> which is 9.54242509439325. Replace the the value
+> to 10 in these files.
+> 
+> Also add comments to eeprom_9287.c.
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+I think we should keep the value 9.
+If I understand the logic behind the power increase through chain
+combining properly, this value only describes the worst-case (wrt.
+regulatory compliance) upper limit of tx power, whereas in practice the
+measured combined power output will be much lower than that due to
+signal/phase differences.
+Regulatory compliance is already properly tested on all devices with the
+truncated value 9, so I don't think that we need to be even more
+conservative and round up here.
 
-Sorry, I forgot to push to infra, the most reliable tree is on github.
-I use infra as backup.
-
-  Luis
+- Felix
