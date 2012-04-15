@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44595 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755390Ab2D2AFW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 20:05:22 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/8] MIPS: bcm47xx: read baordrev without prefix from sprom
-Date: Sun, 29 Apr 2012 02:04:09 +0200
-Message-Id: <1335657853-23925-5-git-send-email-hauke@hauke-m.de> (sfid-20120429_020527_675792_47865E3E)
-In-Reply-To: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
-References: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
+Received: from mout2.freenet.de ([195.4.92.92]:38904 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752626Ab2DOSLo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Apr 2012 14:11:44 -0400
+Received: from [195.4.92.140] (helo=mjail0.freenet.de)
+	by mout2.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1SJTvK-0000pg-K8
+	for linux-wireless@vger.kernel.org; Sun, 15 Apr 2012 20:11:42 +0200
+Received: from localhost ([::1]:33906 helo=mjail0.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1SJTvK-000581-Dm
+	for linux-wireless@vger.kernel.org; Sun, 15 Apr 2012 20:11:42 +0200
+Received: from [195.4.92.19] (port=41339 helo=9.mx.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1SJTtH-0003aa-AD
+	for linux-wireless@vger.kernel.org; Sun, 15 Apr 2012 20:09:35 +0200
+Received: from [2002:4fde:7ca:2:5054:ff:feb8:40bd] (port=34716 helo=mail.maya.org)
+	by 9.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1SJTtH-0003Cv-0q
+	for linux-wireless@vger.kernel.org; Sun, 15 Apr 2012 20:09:35 +0200
+Message-ID: <4F8B0ED1.5050302@01019freenet.de> (sfid-20120415_201148_052897_0ED30796)
+Date: Sun, 15 Apr 2012 20:09:21 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"IvDoorn@gmail.com" <IvDoorn@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>
+Subject: Re: [rt2x00-users] [PATCH] wireless: rt2x00: rt2800usb add more devices
+ ids
+References: <1334448592-16391-1-git-send-email-xose.vazquez@gmail.com> <4F8A6CB6.4080006@01019freenet.de> <4F8A92A5.8090707@gmail.com> <4F8AB8F9.4060503@01019freenet.de> <201C9B63-C214-4D44-B3D0-44948F9DE260@gmail.com>
+In-Reply-To: <201C9B63-C214-4D44-B3D0-44948F9DE260@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the boardrev with a prefix is not available, try to read it
-without a prefix. This is based on code from the Broadcom SDK.
+Hello Gertjan,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- arch/mips/bcm47xx/sprom.c |    2 ++
- 1 file changed, 2 insertions(+)
+thank you for your response!
 
-diff --git a/arch/mips/bcm47xx/sprom.c b/arch/mips/bcm47xx/sprom.c
-index a29d207..17282e0 100644
---- a/arch/mips/bcm47xx/sprom.c
-+++ b/arch/mips/bcm47xx/sprom.c
-@@ -165,6 +165,8 @@ static void bcm47xx_fill_sprom_r1234589(struct ssb_sprom *sprom,
- 					const char *prefix)
- {
- 	nvram_read_u16(prefix, NULL, "boardrev", &sprom->board_rev, 0);
-+	if (!sprom->board_rev)
-+		nvram_read_u16(NULL, NULL, "boardrev", &sprom->board_rev, 0);
- 	nvram_read_u16(prefix, NULL, "boardnum", &sprom->board_num, 0);
- 	nvram_read_u8(prefix, NULL, "ledbh0", &sprom->gpio0, 0xff);
- 	nvram_read_u8(prefix, NULL, "ledbh1", &sprom->gpio1, 0xff);
--- 
-1.7.9.5
 
+Gertjan van Wingerde wrote:
+[...]
+> It is impossible to test each and every device that uses a Ralink
+> chipset. Therefore we run tests on the chipsets only, and simply list
+> all devices that contain these chipsets.
+> 
+> Granted, we are having issues with some of the chipsets, but that
+> should not prevent adding other devices that use the same chipset to
+> the driver.
+
+It would help for making decisions on which brand to buy, if there were
+a notice in the source code, e.g.: _device successfully tested
+(802.11abgn)_ - other devices don't get any comment.
+
+This way, I would be completely content with the practice to fire in
+blindly every ID of each existing device containing a Ralink chipset.
+
+
+Kind regards,
+Andreas
