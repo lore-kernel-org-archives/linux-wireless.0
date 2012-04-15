@@ -1,310 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:37778 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932138Ab2DSVdI (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:49484 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991Ab2DOWMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 17:33:08 -0400
-Received: by mail-iy0-f174.google.com with SMTP id z16so12437635iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 14:33:08 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/6 V2] rtlwifi: Move dig_t and ps_t structs
-Date: Thu, 19 Apr 2012 16:32:39 -0500
-Message-Id: <1334871164-9795-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120419_233329_936670_CE6298DF)
-In-Reply-To: <1334871164-9795-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1334871164-9795-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sun, 15 Apr 2012 18:12:49 -0400
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com>
+References: <20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
+	<CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
+	<CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
+	<CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
+	<CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
+	<CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com>
+	<20120414104733.GA4871@gmail.com>
+	<CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com>
+	<20120415065124.GC29563@gmail.com>
+	<CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
+	<CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com>
+Date: Mon, 16 Apr 2012 01:12:48 +0300
+Message-ID: <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com> (sfid-20120416_001306_711846_F5CBF644)
+Subject: Re: [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ingo Molnar <mingo@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move struct definitions for dig_t and ps_t to the common header file.
+On Sun, Apr 15, 2012 at 8:49 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Sun, Apr 15, 2012 at 10:15 AM, Felipe Contreras
+> <felipe.contreras@gmail.com> wrote:
+>>
+>> This is not a reason, this is just stating what happens without
+>> explaining *why*.
+>>
+>> Q: What changes when a tag is made?
+>> A: A tag is made
 
-This move is needed to convert these structures from a "per-driver" to a
-"per-interface" basis.
+[...]
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h |   34 ------------
- drivers/net/wireless/rtlwifi/rtl8192ce/dm.h       |   34 ------------
- drivers/net/wireless/rtlwifi/rtl8192de/dm.h       |   49 -----------------
- drivers/net/wireless/rtlwifi/rtl8192se/dm.h       |   42 ---------------
- drivers/net/wireless/rtlwifi/wifi.h               |   59 +++++++++++++++++++++
- 5 files changed, 59 insertions(+), 159 deletions(-)
+> The only thing that matters is "it's been made available to others".
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
-index 2178e37..b3180ea 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
-@@ -91,40 +91,6 @@
- #define TX_POWER_NEAR_FIELD_THRESH_LVL2		74
- #define TX_POWER_NEAR_FIELD_THRESH_LVL1		67
- 
--struct ps_t {
--	u8 pre_ccastate;
--	u8 cur_ccasate;
--	u8 pre_rfstate;
--	u8 cur_rfstate;
--	long rssi_val_min;
--};
--
--struct dig_t {
--	u8 dig_enable_flag;
--	u8 dig_ext_port_stage;
--	u32 rssi_lowthresh;
--	u32 rssi_highthresh;
--	u32 fa_lowthresh;
--	u32 fa_highthresh;
--	u8 cursta_connectctate;
--	u8 presta_connectstate;
--	u8 curmultista_connectstate;
--	u8 pre_igvalue;
--	u8 cur_igvalue;
--	char backoff_val;
--	char backoff_val_range_max;
--	char backoff_val_range_min;
--	u8 rx_gain_range_max;
--	u8 rx_gain_range_min;
--	u8 rssi_val_min;
--	u8 pre_cck_pd_state;
--	u8 cur_cck_pd_state;
--	u8 pre_cck_fa_state;
--	u8 cur_cck_fa_state;
--	u8 pre_ccastate;
--	u8 cur_ccasate;
--};
--
- struct swat_t {
- 	u8 failure_cnt;
- 	u8 try_flag;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
-index 26747fa..56611d7 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
-@@ -86,40 +86,6 @@
- #define TX_POWER_NEAR_FIELD_THRESH_LVL2		74
- #define TX_POWER_NEAR_FIELD_THRESH_LVL1		67
- 
--struct ps_t {
--	u8 pre_ccastate;
--	u8 cur_ccasate;
--	u8 pre_rfstate;
--	u8 cur_rfstate;
--	long rssi_val_min;
--};
--
--struct dig_t {
--	u8 dig_enable_flag;
--	u8 dig_ext_port_stage;
--	u32 rssi_lowthresh;
--	u32 rssi_highthresh;
--	u32 fa_lowthresh;
--	u32 fa_highthresh;
--	u8 cursta_connectctate;
--	u8 presta_connectstate;
--	u8 curmultista_connectstate;
--	u8 pre_igvalue;
--	u8 cur_igvalue;
--	char backoff_val;
--	char backoff_val_range_max;
--	char backoff_val_range_min;
--	u8 rx_gain_range_max;
--	u8 rx_gain_range_min;
--	u8 rssi_val_min;
--	u8 pre_cck_pd_state;
--	u8 cur_cck_pd_state;
--	u8 pre_cck_fa_state;
--	u8 cur_cck_fa_state;
--	u8 pre_ccastate;
--	u8 cur_ccasate;
--};
--
- struct swat_t {
- 	u8 failure_cnt;
- 	u8 try_flag;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
-index 91030ec..7ede6a7 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
-@@ -87,55 +87,6 @@
- #define TX_POWER_NEAR_FIELD_THRESH_LVL1		67
- #define INDEX_MAPPING_NUM			13
- 
--struct ps_t {
--	u8 pre_ccastate;
--	u8 cur_ccasate;
--
--	u8 pre_rfstate;
--	u8 cur_rfstate;
--
--	long rssi_val_min;
--};
--
--struct dig_t {
--	u8 dig_enable_flag;
--	u8 dig_ext_port_stage;
--
--	u32 rssi_lowthresh;
--	u32 rssi_highthresh;
--
--	u32 fa_lowthresh;
--	u32 fa_highthresh;
--
--	u8 cursta_connectctate;
--	u8 presta_connectstate;
--	u8 curmultista_connectstate;
--
--	u8 pre_igvalue;
--	u8 cur_igvalue;
--
--	char backoff_val;
--	char backoff_val_range_max;
--	char backoff_val_range_min;
--	u8 rx_gain_range_max;
--	u8 rx_gain_range_min;
--	u8 min_undecorated_pwdb_for_dm;
--	long last_min_undecorated_pwdb_for_dm;
--
--	u8 pre_cck_pd_state;
--	u8 cur_cck_pd_state;
--
--	u8 pre_cck_fa_state;
--	u8 cur_cck_fa_state;
--
--	u8 pre_ccastate;
--	u8 cur_ccasate;
--
--	u8 large_fa_hit;
--	u8 forbidden_igi;
--	u32 recover_cnt;
--};
--
- struct swat {
- 	u8 failure_cnt;
- 	u8 try_flag;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
-index e1b19a6..f8ace73 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
-@@ -29,48 +29,6 @@
- #ifndef	__RTL_92S_DM_H__
- #define __RTL_92S_DM_H__
- 
--struct dig_t {
--	u8 dig_enable_flag;
--	u8 dig_algorithm;
--	u8 dig_twoport_algorithm;
--	u8 dig_ext_port_stage;
--	u8 dig_dbgmode;
--	u8 dig_slgorithm_switch;
--
--	long rssi_lowthresh;
--	long rssi_highthresh;
--
--	u32 fa_lowthresh;
--	u32 fa_highthresh;
--
--	long rssi_highpower_lowthresh;
--	long rssi_highpower_highthresh;
--
--	u8 dig_state;
--	u8 dig_highpwrstate;
--	u8 cur_sta_connectstate;
--	u8 pre_sta_connectstate;
--	u8 cur_ap_connectstate;
--	u8 pre_ap_connectstate;
--
--	u8 cur_pd_thstate;
--	u8 pre_pd_thstate;
--	u8 cur_cs_ratiostate;
--	u8 pre_cs_ratiostate;
--
--	u32 pre_igvalue;
--	u32	cur_igvalue;
--
--	u8 backoff_enable_flag;
--	char backoff_val;
--	char backoffval_range_max;
--	char backoffval_range_min;
--	u8 rx_gain_range_max;
--	u8 rx_gain_range_min;
--
--	long rssi_val;
--};
--
- enum dm_dig_alg {
- 	DIG_ALGO_BY_FALSE_ALARM = 0,
- 	DIG_ALGO_BY_RSSI	= 1,
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 5213988..32df6bd 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1592,6 +1592,65 @@ struct rtl_debug {
- 	char proc_name[20];
- };
- 
-+struct ps_t {
-+	u8 pre_ccastate;
-+	u8 cur_ccasate;
-+	u8 pre_rfstate;
-+	u8 cur_rfstate;
-+	long rssi_val_min;
-+};
-+
-+struct dig_t {
-+	u32 rssi_lowthresh;
-+	u32 rssi_highthresh;
-+	u32 fa_lowthresh;
-+	u32 fa_highthresh;
-+	long last_min_undecorated_pwdb_for_dm;
-+	long rssi_highpower_lowthresh;
-+	long rssi_highpower_highthresh;
-+	u32 recover_cnt;
-+	u32 pre_igvalue;
-+	u32 cur_igvalue;
-+	long rssi_val;
-+	u8 dig_enable_flag;
-+	u8 dig_ext_port_stage;
-+	u8 dig_algorithm;
-+	u8 dig_twoport_algorithm;
-+	u8 dig_dbgmode;
-+	u8 dig_slgorithm_switch;
-+	u8 cursta_connectctate;
-+	u8 presta_connectstate;
-+	u8 curmultista_connectstate;
-+	char backoff_val;
-+	char backoff_val_range_max;
-+	char backoff_val_range_min;
-+	u8 rx_gain_range_max;
-+	u8 rx_gain_range_min;
-+	u8 min_undecorated_pwdb_for_dm;
-+	u8 rssi_val_min;
-+	u8 pre_cck_pd_state;
-+	u8 cur_cck_pd_state;
-+	u8 pre_cck_fa_state;
-+	u8 cur_cck_fa_state;
-+	u8 pre_ccastate;
-+	u8 cur_ccasate;
-+	u8 large_fa_hit;
-+	u8 forbidden_igi;
-+	u8 dig_state;
-+	u8 dig_highpwrstate;
-+	u8 cur_sta_connectstate;
-+	u8 pre_sta_connectstate;
-+	u8 cur_ap_connectstate;
-+	u8 pre_ap_connectstate;
-+	u8 cur_pd_thstate;
-+	u8 pre_pd_thstate;
-+	u8 cur_cs_ratiostate;
-+	u8 pre_cs_ratiostate;
-+	u8 backoff_enable_flag;
-+	char backoffval_range_max;
-+	char backoffval_range_min;
-+};
-+
- struct rtl_priv {
- 	struct completion firmware_loading_complete;
- 	struct rtl_locks locks;
+Exactly! Now *this* is a reason. After sending that mail I tried to
+think of one since nobody else came up with it. This is in fact, a
+good reason, but it implies something I'll explain below.
+
+[...]
+
+I do agree with all what you said above.
+
+> And the thing is, it's not just 3.3.3 that follows 3.3.2. It's 3.4.1
+> too. The reason we have the "no stable fixes before it's been
+> upstreamed" (and again: a "revert" is *nothing* but another name for a
+> fix, that gives some additional information about *how* we fixed
+> something too) is because we want to make nice plodding reliable
+> forward progress. Mistakes (== bugs) will happen, but the stable rules
+> are there to make sure that those mistakes get fixed, and don't have
+> long-term impact. THAT is the "stable" part of the stable series.
+> Things are monotonic in the big picture, even if we may have some
+> non-monotonic noise in the details.
+
+I'm not going to argue the semantics of what is a revert, but I am
+going to show the difference between the two situations:
+
+a) v3.0* (good), v3.1* (good), v3.2* (good), v3.3 (good), v3.3.1
+(bad), v3.3.2 (good), v3.4 (bad)
+b) v3.0* (bad), v3.1* (bad), v3.2* (bad), v3.3 (bad), v3.3.1 (good), v3.4 (bad)
+
+Maybe they are the same from certain point of view, but you just
+argued that what *others* see is what makes the patch unrevertable,
+well, it's obvious that from the point of view of the users the two
+situations are clearly different. I believe it was you who said that
+breaking user experience is the absolute no-no any project could
+make[1]--so from that point of view a) is *much* worst.
+
+But what is done is done, and as you said, you can't change the past,
+now the important thing is what to do next. And here are the two
+options' worst-case scenarios:
+
+a.1) v3.0* (good), ... v3.3 (good), v3.3.1 (bad), v3.3.2 (bad), v3.3.3
+(bad), v3.3.4 (bad), v3.3.5 (bad), v3.4 (good)
+a.2) v3.0* (good), ... v3.3 (good), v3.3.1 (bad), v3.3.2 (good),
+v3.3.3 (good), v3.3.4 (good), v3.3.5 (good), v3.4 (bad)
+
+These two scenarios are unlikely, but either way, in order to
+guarantee that you don't end up with a.2) You are willing to risk
+going into a.1)
+
+So, *obviously* v3.4 is more important than v3.3.x. I could argue that
+the users out there would prefer a.1) any day, because it's unlikely
+anyway (v3.4 would be good), but I won't.
+
+All I want now is to agree on a reason, you have finally pointed out
+that the reason for this different treatment is the user's visibility,
+but that still doesn't explain why the rules for b) automatically
+apply to a), since it's clearly different from the users's point of
+view; if you agree that v3.4 is more important than v3.3.x, I believe
+we have the reason right there.
+
+Cheers.
+
+[1] http://www.youtube.com/watch?v=kzKzUBLEzwk
+
 -- 
-1.7.10.130.g36e6c
-
+Felipe Contreras
