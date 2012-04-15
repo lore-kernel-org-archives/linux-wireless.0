@@ -1,59 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59072 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752000Ab2DQDFo (ORCPT
+Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:4753 "EHLO
+	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753821Ab2DOMZX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 23:05:44 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Sun, 15 Apr 2012 08:25:23 -0400
+Message-ID: <4F8ABE31.1020708@gmail.com> (sfid-20120415_142526_885401_EFAE94A0)
+Date: Sun, 15 Apr 2012 14:25:21 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20364.56786.840266.849827@gargle.gargle.HOWL> (sfid-20120417_050618_984536_80FD8354)
-Date: Tue, 17 Apr 2012 08:34:50 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Fix TX fragmentation
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	IvDoorn@gmail.com, linville@tuxdriver.com,
+	helmut.schaa@googlemail.com
+Subject: Re: [PATCH] wireless: rt2x00: rt2800usb add more devices ids
+References: <1334448592-16391-1-git-send-email-xose.vazquez@gmail.com>
+In-Reply-To: <1334448592-16391-1-git-send-email-xose.vazquez@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assigning sequence number for frames without taking care
-of the fragment field breaks transmission of fragmented frames.
-Fix this by assigning the fragment number properly.
+On 04/15/12 02:09, Xose Vazquez Perez wrote:
+> They were taken from ralink drivers:
+> 2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
+> 2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO
+> 
+> 0x1eda,0x2210 RT3070 Airties
+> 
+> 0x083a,0xb511 RT3370 Panasonic
+> 0x0471,0x20dd RT3370 Philips
+> 
+> 0x1875,0x7733 RT3573 Air Live
+> 0x7392,0x7733 RT3573 Edimax
+> 0x0e66,0x0021 RT3573 Hawking
+> 0x2019,0xed19 RT3573 Planex
+> 0x148f,0x3573 RT3573 Ralink
+> 0x0df6,0x0067 RT3573 Sitecom
+> 0x1690,0x0764 RT35xx Askey
+> 0x0df6,0x0065 RT35xx Sitecom
+> 0x0df6,0x0066 RT35xx Sitecom
+> 0x0df6,0x0068 RT35xx Sitecom
+> 
+> 0x2001,0x3c1c RT5370 DLink
+> 0x2001,0x3c1d RT5370 DLink
+> 
+> 2001 is D-Link not Alpha
+> 
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Please do not add the RT3573 devices (yet). The RT3573 chipset is not
+supported by rt2x00 at the moment and it is quite a different beast from
+the other chipsets (different EEPROM layout, 3x3 device).
+
+The other ones are OK to add.
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |   27 ++++++++++++++++++++++++---
+>  1 files changed, 24 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 001735f..c4d7f6f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -922,6 +922,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x1482, 0x3c09) },
+>  	/* AirTies */
+>  	{ USB_DEVICE(0x1eda, 0x2012) },
+> +	{ USB_DEVICE(0x1eda, 0x2210) },
+>  	{ USB_DEVICE(0x1eda, 0x2310) },
+>  	/* Allwin */
+>  	{ USB_DEVICE(0x8516, 0x2070) },
+> @@ -1134,6 +1135,10 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  #ifdef CONFIG_RT2800USB_RT33XX
+>  	/* Belkin */
+>  	{ USB_DEVICE(0x050d, 0x945b) },
+> +	/* Panasonic */
+> +	{ USB_DEVICE(0x083a, 0xb511) },
+> +	/* Philips */
+> +	{ USB_DEVICE(0x0471, 0x20dd) },
+>  	/* Ralink */
+>  	{ USB_DEVICE(0x148f, 0x3370) },
+>  	{ USB_DEVICE(0x148f, 0x8070) },
+> @@ -1141,38 +1146,54 @@ static struct usb_device_id rt2800usb_device_table[] = {
+>  	{ USB_DEVICE(0x0df6, 0x0050) },
+>  #endif
+>  #ifdef CONFIG_RT2800USB_RT35XX
+> +	/* Air Live */
+> +	{ USB_DEVICE(0x1875, 0x7733) },
+>  	/* Allwin */
+>  	{ USB_DEVICE(0x8516, 0x3572) },
+>  	/* Askey */
+>  	{ USB_DEVICE(0x1690, 0x0744) },
+> +	{ USB_DEVICE(0x1690, 0x0764) },
+>  	/* Cisco */
+>  	{ USB_DEVICE(0x167b, 0x4001) },
+> +	/* Edimax */
+> +	{ USB_DEVICE(0x7392, 0x7733) },
+>  	/* EnGenius */
+>  	{ USB_DEVICE(0x1740, 0x9801) },
+> +	/* Hawking */
+> +	{ USB_DEVICE(0x0e66, 0x0021) },
+>  	/* I-O DATA */
+>  	{ USB_DEVICE(0x04bb, 0x0944) },
+>  	/* Linksys */
+>  	{ USB_DEVICE(0x13b1, 0x002f) },
+>  	{ USB_DEVICE(0x1737, 0x0079) },
+> +	/* Planex */
+> +	{ USB_DEVICE(0x2019, 0xed19) },
+>  	/* Ralink */
+>  	{ USB_DEVICE(0x148f, 0x3572) },
+> +	{ USB_DEVICE(0x148f, 0x3573) },
+>  	/* Sitecom */
+>  	{ USB_DEVICE(0x0df6, 0x0041) },
+>  	{ USB_DEVICE(0x0df6, 0x0062) },
+> +	{ USB_DEVICE(0x0df6, 0x0065) },
+> +	{ USB_DEVICE(0x0df6, 0x0066) },
+> +	{ USB_DEVICE(0x0df6, 0x0067) },
+> +	{ USB_DEVICE(0x0df6, 0x0068) },
+>  	/* Toshiba */
+>  	{ USB_DEVICE(0x0930, 0x0a07) },
+>  	/* Zinwell */
+>  	{ USB_DEVICE(0x5a57, 0x0284) },
+>  #endif
+>  #ifdef CONFIG_RT2800USB_RT53XX
+> -	/* Alpha */
+> -	{ USB_DEVICE(0x2001, 0x3c15) },
+> -	{ USB_DEVICE(0x2001, 0x3c19) },
+>  	/* Arcadyan */
+>  	{ USB_DEVICE(0x043e, 0x7a12) },
+>  	/* Azurewave */
+>  	{ USB_DEVICE(0x13d3, 0x3329) },
+>  	{ USB_DEVICE(0x13d3, 0x3365) },
+> +	/* D-Link */
+> +	{ USB_DEVICE(0x2001, 0x3c15) },
+> +	{ USB_DEVICE(0x2001, 0x3c19) },
+> +	{ USB_DEVICE(0x2001, 0x3c1c) },
+> +	{ USB_DEVICE(0x2001, 0x3c1d) },
+>  	/* LG innotek */
+>  	{ USB_DEVICE(0x043e, 0x7a22) },
+>  	/* Panasonic */
+
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 834e6bc..23eaa1b 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1820,6 +1820,7 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 	struct ath_frame_info *fi = get_frame_info(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ath_buf *bf;
-+	int fragno;
- 	u16 seqno;
- 
- 	bf = ath_tx_get_buffer(sc);
-@@ -1831,9 +1832,16 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 	ATH_TXBUF_RESET(bf);
- 
- 	if (tid) {
-+		fragno = le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG;
- 		seqno = tid->seq_next;
- 		hdr->seq_ctrl = cpu_to_le16(tid->seq_next << IEEE80211_SEQ_SEQ_SHIFT);
--		INCR(tid->seq_next, IEEE80211_SEQ_MAX);
-+
-+		if (fragno)
-+			hdr->seq_ctrl |= cpu_to_le16(fragno);
-+
-+		if (!ieee80211_has_morefrags(hdr->frame_control))
-+			INCR(tid->seq_next, IEEE80211_SEQ_MAX);
-+
- 		bf->bf_state.seqno = seqno;
- 	}
- 
--- 
-1.7.10
-
+Gertjan
