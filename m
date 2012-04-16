@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:61220 "EHLO mga14.intel.com"
+Received: from mout2.freenet.de ([195.4.92.92]:58912 "EHLO mout2.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756690Ab2DJRgD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 13:36:03 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>,
-	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 14/18] NFC: Call llcp_add_header properly when sending LLCP DM or DISC
-Date: Tue, 10 Apr 2012 19:43:16 +0200
-Message-Id: <1334079800-10671-15-git-send-email-sameo@linux.intel.com> (sfid-20120410_193607_691540_3D1111C8)
-In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
-References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+	id S1752574Ab2DPJOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 05:14:06 -0400
+Message-ID: <4F8BE25B.5030208@01019freenet.de> (sfid-20120416_111413_162608_0A68AD7E)
+Date: Mon, 16 Apr 2012 11:11:55 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Jakub Kicinski <kubakici@wp.pl>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 0/4] rt2x00: fix initialization after legacy
+ driver
+References: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
+In-Reply-To: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dsap and ssap were swapped when sending DN or DISC.
+Hi Jakub,
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/commands.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Jakub Kicinski wrote:
+> Hi,
+> 
+> I've been testing these patches for a few weeks and I think it's about 
+> the time to post them.
+> 
+> The main purpose of this set is to make it possible to switch between
+> rt2800pci and legacy driver w/o rebooting or suspending whole machine.
+> Today rt2800pci will fail to bring the interface up if it was earlier
+> operated by legacy drv. I'm sure it happens with rt3090, rt2860 seems
+> to work fine.
 
-diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
-index 34ee684..11a3b7d 100644
---- a/net/nfc/llcp/commands.c
-+++ b/net/nfc/llcp/commands.c
-@@ -248,7 +248,7 @@ int nfc_llcp_disconnect(struct nfc_llcp_sock *sock)
- 
- 	skb_reserve(skb, dev->tx_headroom + NFC_HEADER_SIZE);
- 
--	skb = llcp_add_header(skb, sock->ssap, sock->dsap, LLCP_PDU_DISC);
-+	skb = llcp_add_header(skb, sock->dsap, sock->ssap, LLCP_PDU_DISC);
- 
- 	skb_queue_tail(&local->tx_queue, skb);
- 
-@@ -416,7 +416,7 @@ int nfc_llcp_send_dm(struct nfc_llcp_local *local, u8 ssap, u8 dsap, u8 reason)
- 
- 	skb_reserve(skb, dev->tx_headroom + NFC_HEADER_SIZE);
- 
--	skb = llcp_add_header(skb, ssap, dsap, LLCP_PDU_DM);
-+	skb = llcp_add_header(skb, dsap, ssap, LLCP_PDU_DM);
- 
- 	memcpy(skb_put(skb, 1), &reason, 1);
- 
--- 
-1.7.9.1
+I'm running these patches since a few weeks now. I didn't had the
+problem you tried to fix (because I never used the legacy driver), but I
+had another one, which seems to be fixed with this patchset, too:
 
+Before this set, the device often wasn't usable at all after loading the
+modules and starting of hostapd. No beacon could be seen, although the
+log files didn't show any problem.
+
+With your patchset applied, I face this problem really seldom now, about
+once a week (instead of 3 or 4 times a day).
+
+
+Thanks!
+Regards,
+Andreas
