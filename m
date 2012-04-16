@@ -1,139 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38913 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758156Ab2DXWum (ORCPT
+Received: from queueout04-winn.ispmail.ntl.com ([81.103.221.58]:15286 "EHLO
+	queueout04-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755821Ab2DPXY4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 18:50:42 -0400
-Message-ID: <4F972E3F.4020609@candelatech.com> (sfid-20120425_005055_768092_CA5F20E9)
-Date: Tue, 24 Apr 2012 15:50:39 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: Strange problem with ath9k and ASUS N66U AP.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 16 Apr 2012 19:24:56 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	dcbw@redhat.com
+Subject: [PATCH 5/5] libertas USB: convert to asynchronous firmware loading
+Message-Id: <20120416225356.07EAF9D401F@zog.reactivated.net> (sfid-20120417_012510_040023_CD085D9B)
+Date: Mon, 16 Apr 2012 23:53:55 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am trying some ath9k virtual clients against an ASUS N66U.
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+Acked-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/if_usb.c |  102 +++++++++++++------------------
+ 1 files changed, 43 insertions(+), 59 deletions(-)
 
-Kernel is 3.3.3+, but we've been seeing weird things since at
-least 3.0 kernel with another Asus AP, but haven't looked at
-the problem in detail on older kernels yet.
-
-The issue seems to be that the ath9k side thinks all is well,
-but the N66U shows it as not authenticated.
-
-If anyone has any ideas on how to go about debugging
-this, please let me know.
-
-sta11 is :0C, and is not working properly
-sta12 is :0D, and is working fine.
-
-Here is part of the N66U wifi log showing that it
-thinks sta11 is not authorized:
-
-00:95:95:00:00:0C  associated
-00:95:95:00:00:0D  associated authorized
-
-
-Here's the supplicant logs:
-
-[root@lanner-i7 wifi]# grep sta12 wpa_supplicant_log_wiphy0.txt
-1335305195.312287: sta12: Failed to initiate AP scan
-1335305195.313249: sta12: Failed to initiate AP scan
-1335305196.317750: sta12: Failed to initiate AP scan
-1335305197.318436: sta12: Failed to initiate AP scan
-1335305198.320208: sta12: Failed to initiate AP scan
-1335305198.860472: sta12: SME: Trying to authenticate with c8:60:00:e8:88:b0 (SSID='n66-2.4g' freq=2462 MHz)
-1335305198.866465: sta12: Trying to associate with c8:60:00:e8:88:b0 (SSID='n66-2.4g' freq=2462 MHz)
-1335305199.074988: sta12: Associated with c8:60:00:e8:88:b0
-1335305199.185713: sta12: WPA: Key negotiation completed with c8:60:00:e8:88:b0 [PTK=CCMP GTK=TKIP]
-1335305199.185740: sta12: CTRL-EVENT-CONNECTED - Connection to c8:60:00:e8:88:b0 completed (auth) [id=0 id_str=]
-
-[root@lanner-i7 wifi]# grep sta11 wpa_supplicant_log_wiphy0.txt
-1335305195.289391: sta11: Failed to initiate AP scan
-1335305195.290317: sta11: Failed to initiate AP scan
-1335305196.297866: sta11: Failed to initiate AP scan
-1335305197.298550: sta11: Failed to initiate AP scan
-1335305198.298661: sta11: Failed to initiate AP scan
-1335305198.860719: sta11: SME: Trying to authenticate with c8:60:00:e8:88:b0 (SSID='n66-2.4g' freq=2462 MHz)
-1335305198.871241: sta11: Trying to associate with c8:60:00:e8:88:b0 (SSID='n66-2.4g' freq=2462 MHz)
-1335305199.086967: sta11: Associated with c8:60:00:e8:88:b0
-1335305199.191947: sta11: WPA: Key negotiation completed with c8:60:00:e8:88:b0 [PTK=CCMP GTK=TKIP]
-1335305199.191968: sta11: CTRL-EVENT-CONNECTED - Connection to c8:60:00:e8:88:b0 completed (auth) [id=0 id_str=]
-1335305199.266207: sta11: WPA: Key negotiation completed with c8:60:00:e8:88:b0 [PTK=CCMP GTK=TKIP]
-
-Only thing I notice above is that the key negotiation completed after the connection completed,
-and appears duplicated???
-
-
-[root@lanner-i7 wifi]# iwconfig sta11
-sta11     IEEE 802.11abgn  ESSID:"n66-2.4g"
-           Mode:Managed  Frequency:2.462 GHz  Access Point: C8:60:00:E8:88:B0
-           Bit Rate:216.7 Mb/s   Tx-Power=22 dBm
-           Retry  long limit:7   RTS thr:off   Fragment thr:off
-           Encryption key:off
-           Power Management:off
-           Link Quality=119/70
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:1  Invalid misc:2364   Missed beacon:0
-
-[root@lanner-i7 wifi]# iwconfig sta12
-sta12     IEEE 802.11abgn  ESSID:"n66-2.4g"
-           Mode:Managed  Frequency:2.462 GHz  Access Point: C8:60:00:E8:88:B0
-           Bit Rate:1 Mb/s   Tx-Power=22 dBm
-           Retry  long limit:7   RTS thr:off   Fragment thr:off
-           Encryption key:off
-           Power Management:off
-           Link Quality=10/70
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:0  Invalid misc:51   Missed beacon:0
-
-
-[root@lanner-i7 wifi]# iw dev sta11 station dump
-Station c8:60:00:e8:88:b0 (on sta11)
-	inactive time:	25 ms
-	rx bytes:	6160759
-	rx packets:	58821
-	tx bytes:	64751
-	tx packets:	194
-	tx retries:	357
-	tx failed:	1
-	signal:  	-20 dBm
-	signal avg:	-21 dBm
-	tx bitrate:	216.7 MBit/s MCS 23 short GI
-	authorized:	yes
-	authenticated:	yes
-	preamble:	long
-	WMM/WME:	yes
-	MFP:		no
-	TDLS peer:		no
-
-[root@lanner-i7 wifi]# iw dev sta12 station dump
-Station c8:60:00:e8:88:b0 (on sta12)
-	inactive time:	12332 ms
-	rx bytes:	6182842
-	rx packets:	45350
-	tx bytes:	11089
-	tx packets:	81
-	tx retries:	139
-	tx failed:	0
-	signal:  	-23 dBm
-	signal avg:	-22 dBm
-	tx bitrate:	1.0 MBit/s
-	authorized:	yes
-	authenticated:	yes
-	preamble:	long
-	WMM/WME:	yes
-	MFP:		no
-	TDLS peer:		no
-[root@lanner-i7 wifi]#
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 3dde3e0..d5c02a7 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -41,6 +41,16 @@ enum {
+ 	MODEL_8682 = 0x2
+ };
+ 
++/* table of firmware file names */
++static const struct lbs_fw_table fw_table[] = {
++	{ MODEL_8388, "libertas/usb8388_olpc.bin", NULL },
++	{ MODEL_8388, "libertas/usb8388_v9.bin", NULL },
++	{ MODEL_8388, "libertas/usb8388_v5.bin", NULL },
++	{ MODEL_8388, "libertas/usb8388.bin", NULL },
++	{ MODEL_8388, "usb8388.bin", NULL },
++	{ MODEL_8682, "libertas/usb8682.bin", NULL }
++};
++
+ static struct usb_device_id if_usb_table[] = {
+ 	/* Enter the device signature inside */
+ 	{ USB_DEVICE(0x1286, 0x2001), .driver_info = MODEL_8388 },
+@@ -52,7 +62,9 @@ MODULE_DEVICE_TABLE(usb, if_usb_table);
+ 
+ static void if_usb_receive(struct urb *urb);
+ static void if_usb_receive_fwload(struct urb *urb);
+-static int if_usb_prog_firmware(struct if_usb_card *cardp);
++static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
++				 const struct firmware *fw,
++				 const struct firmware *unused);
+ static int if_usb_host_to_card(struct lbs_private *priv, uint8_t type,
+ 			       uint8_t *payload, uint16_t nb);
+ static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload,
+@@ -187,6 +199,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	struct usb_endpoint_descriptor *endpoint;
+ 	struct lbs_private *priv;
+ 	struct if_usb_card *cardp;
++	int r = -ENOMEM;
+ 	int i;
+ 
+ 	udev = interface_to_usbdev(intf);
+@@ -244,17 +257,10 @@ static int if_usb_probe(struct usb_interface *intf,
+ 		goto dealloc;
+ 	}
+ 
+-	/* Upload firmware */
+-	if (if_usb_prog_firmware(cardp)) {
+-		lbs_deb_usbd(&udev->dev, "FW upload failed\n");
+-		goto err_prog_firmware;
+-	}
+-
+ 	if (!(priv = lbs_add_card(cardp, &intf->dev)))
+-		goto err_prog_firmware;
++		goto err_add_card;
+ 
+ 	cardp->priv = priv;
+-	cardp->priv->fw_ready = 1;
+ 
+ 	priv->hw_host_to_card = if_usb_host_to_card;
+ 	priv->enter_deep_sleep = NULL;
+@@ -267,34 +273,25 @@ static int if_usb_probe(struct usb_interface *intf,
+ 
+ 	cardp->boot2_version = udev->descriptor.bcdDevice;
+ 
+-	if_usb_submit_rx_urb(cardp);
+-
+-	if (lbs_start_card(priv))
+-		goto err_start_card;
+-
+-	if_usb_setup_firmware(priv);
+-
+ 	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
+ 
+-	/*
+-	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
+-	 */
+-	priv->wol_criteria = EHS_REMOVE_WAKEUP;
+-	if (lbs_host_sleep_cfg(priv, priv->wol_criteria, NULL))
+-		priv->ehs_remove_supported = false;
++	r = lbs_get_firmware_async(priv, &udev->dev, cardp->model,
++				   fw_table, if_usb_prog_firmware);
++	if (r)
++		goto err_get_fw;
+ 
+ 	return 0;
+ 
+-err_start_card:
++err_get_fw:
+ 	lbs_remove_card(priv);
+-err_prog_firmware:
++err_add_card:
+ 	if_usb_reset_device(cardp);
+ dealloc:
+ 	if_usb_free(cardp);
+ 
+ error:
+-	return -ENOMEM;
++	return r;
+ }
+ 
+ /**
+@@ -829,49 +826,22 @@ static int check_fwfile_format(const uint8_t *data, uint32_t totlen)
+ 	return ret;
+ }
+ 
+-/* table of firmware file names */
+-static const struct {
+-	u32 model;
+-	const char *fwname;
+-} fw_table[] = {
+-	{ MODEL_8388, "libertas/usb8388_olpc.bin" },
+-	{ MODEL_8388, "libertas/usb8388_v9.bin" },
+-	{ MODEL_8388, "libertas/usb8388_v5.bin" },
+-	{ MODEL_8388, "libertas/usb8388.bin" },
+-	{ MODEL_8388, "usb8388.bin" },
+-	{ MODEL_8682, "libertas/usb8682.bin" }
+-};
+-
+-static int get_fw(struct if_usb_card *cardp)
+-{
+-	int i;
+-
+-	/* Otherwise search for firmware to use */
+-	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
+-		if (fw_table[i].model != cardp->model)
+-			continue;
+-		if (request_firmware(&cardp->fw, fw_table[i].fwname,
+-					&cardp->udev->dev) == 0)
+-			return 0;
+-	}
+-
+-	return -ENOENT;
+-}
+-
+-static int if_usb_prog_firmware(struct if_usb_card *cardp)
++static void if_usb_prog_firmware(struct lbs_private *priv, int ret,
++				 const struct firmware *fw,
++				 const struct firmware *unused)
+ {
++	struct if_usb_card *cardp = priv->card;
+ 	int i = 0;
+ 	static int reset_count = 10;
+-	int ret = 0;
+ 
+ 	lbs_deb_enter(LBS_DEB_USB);
+ 
+-	ret = get_fw(cardp);
+ 	if (ret) {
+ 		pr_err("failed to find firmware (%d)\n", ret);
+ 		goto done;
+ 	}
+ 
++	cardp->fw = fw;
+ 	if (check_fwfile_format(cardp->fw->data, cardp->fw->size)) {
+ 		ret = -EINVAL;
+ 		goto release_fw;
+@@ -954,13 +924,27 @@ restart:
+ 		goto release_fw;
+ 	}
+ 
++	cardp->priv->fw_ready = 1;
++	if_usb_submit_rx_urb(cardp);
++
++	if (lbs_start_card(priv))
++		goto release_fw;
++
++	if_usb_setup_firmware(priv);
++
++	/*
++	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
++	 */
++	priv->wol_criteria = EHS_REMOVE_WAKEUP;
++	if (lbs_host_sleep_cfg(priv, priv->wol_criteria, NULL))
++		priv->ehs_remove_supported = false;
++
+  release_fw:
+ 	release_firmware(cardp->fw);
+ 	cardp->fw = NULL;
+ 
+  done:
+-	lbs_deb_leave_args(LBS_DEB_USB, "ret %d", ret);
+-	return ret;
++	lbs_deb_leave(LBS_DEB_USB);
+ }
+ 
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.7.6
 
