@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58074 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755638Ab2DES41 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 14:56:27 -0400
-Message-ID: <1333652183.3494.21.camel@jlt3.sipsolutions.net> (sfid-20120405_205631_681235_62603AA1)
-Subject: Re: [3.4-rc1][Regression][network wireless] 'task xxxx blocked for
- more than 120 seconds' after resume
-From: Johannes Berg <johannes@sipsolutions.net>
-To: maciej.rutecki@gmail.com
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>
-Date: Thu, 05 Apr 2012 20:56:23 +0200
-In-Reply-To: <201204052037.37497.maciej.rutecki@gmail.com> (sfid-20120405_203812_209408_5261E33E)
-References: <201204022157.05598.maciej.rutecki@gmail.com>
-	 <1333440469.3574.0.camel@jlt3.sipsolutions.net>
-	 <20120405103254.GE2378@redhat.com>
-	 <201204052037.37497.maciej.rutecki@gmail.com>
-	 (sfid-20120405_203812_209408_5261E33E)
+Received: from mx1.redhat.com ([209.132.183.28]:65534 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751362Ab2DPVnV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:43:21 -0400
+Message-ID: <1334612599.5455.1.camel@dcbw.foobar.com> (sfid-20120416_234324_523652_FA14F9D1)
+Subject: Re: [RFC 2/4] libertas: harden-up exit paths
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Date: Mon, 16 Apr 2012 16:43:19 -0500
+In-Reply-To: <20120403160154.401D39D401E@zog.reactivated.net>
+References: <20120403160154.401D39D401E@zog.reactivated.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-04-05 at 20:37 +0200, Maciej Rutecki wrote:
-> On czwartek, 5 kwietnia 2012 o 12:32:54 Stanislaw Gruszka wrote:
-> > On Tue, Apr 03, 2012 at 10:07:49AM +0200, Johannes Berg wrote:
-> > > -ilw
-> > > +netdev
-> > > 
-> > > I have no idea what this could be, but I'm almost certain it's not
-> > > caused by our wireless driver. Looks more like rtl8169 is to blame.
-> > 
-> > I'm not sure. Looks like there is deadlock or infinite loop in process
-> > that holds rtnl lock. This can be wireless driver, wired driver or
-> > generic network code bug.
-> > 
-> > Maciej, please recompile with CONFIG_LOCKDEP and check if it will not
-> > find any deadlock. If not, when problem will happen please do
+On Tue, 2012-04-03 at 17:01 +0100, Daniel Drake wrote:
+> These simple sanity check avoids extra complexity in error paths when
+> moving to asynchronous firmware loading (which means the device may fail to
+> init some time after its creation).
+
+Looks fine to me.
+
+Dan
+
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
+> ---
+>  drivers/net/wireless/libertas/main.c |    9 ++++++++-
+>  1 files changed, 8 insertions(+), 1 deletions(-)
 > 
-> Did you mean "CONFIG_LOCKDEP_SUPPORT"?
+> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+> index fa09585..7eaf992 100644
+> --- a/drivers/net/wireless/libertas/main.c
+> +++ b/drivers/net/wireless/libertas/main.c
+> @@ -1033,7 +1033,9 @@ void lbs_remove_card(struct lbs_private *priv)
+>  	lbs_deb_enter(LBS_DEB_MAIN);
+>  
+>  	lbs_remove_mesh(priv);
+> -	lbs_scan_deinit(priv);
+> +
+> +	if (priv->wiphy_registered)
+> +		lbs_scan_deinit(priv);
+>  
+>  	/* worker thread destruction blocks on the in-flight command which
+>  	 * should have been cleared already in lbs_stop_card().
+> @@ -1128,6 +1130,11 @@ void lbs_stop_card(struct lbs_private *priv)
+>  		goto out;
+>  	dev = priv->dev;
+>  
+> +	/* If the netdev isn't registered, it means that lbs_start_card() was
+> +	 * never called so we have nothing to do here. */
+> +	if (dev->reg_state != NETREG_REGISTERED)
+> +		goto out;
+> +
+>  	netif_stop_queue(dev);
+>  	netif_carrier_off(dev);
+>  
 
-No, _SUPPORT means you could enable CONFIG_LOCKDEP, but we would like to
-see this with CONFIG_LOCKDEP enabled.
-
-johannes
 
