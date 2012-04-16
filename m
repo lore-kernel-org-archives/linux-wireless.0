@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:34575 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757651Ab2DYTaO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 15:30:14 -0400
-Received: by lahj13 with SMTP id j13so383864lah.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 12:30:12 -0700 (PDT)
-MIME-Version: 1.0
-From: Stephen P <srpape@gmail.com>
-Date: Wed, 25 Apr 2012 15:29:52 -0400
-Message-ID: <CADdUxCwt35GQU2j-a4AvvJVS=h93sgBqg09CZNxTivRfbYsqzg@mail.gmail.com> (sfid-20120425_213020_053036_308FB559)
-Subject: AR9170 documentation for a driver port?
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mgw2.diku.dk ([130.225.96.92]:49603 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754690Ab2DPPoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 11:44:08 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Dan Williams <dcbw@redhat.com>
+Cc: kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] drivers/net/wireless/libertas/if_usb.c: add missing debugging code
+Date: Mon, 16 Apr 2012 17:44:00 +0200
+Message-Id: <1334591040-29298-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20120416_174441_054031_5E62DBB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-I'm interested in writing a USB driver for the AR9170 chipset in Java
-(for Android's USB host mode API).
+Add a corresponding leave call on error failure.
 
-I've looked through carl9170 briefly, but is there anywhere I can find
-an explanation of the USB protocol and documentation about the chipset?
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Essentially I just want to put the device into monitor mode, be able
-to change channels, etc. Any information would be appreciated.
+---
+ drivers/net/wireless/libertas/if_usb.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Thanks!
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 74da5f1..ce4938d 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -1128,8 +1128,10 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ 
+ 	lbs_deb_enter(LBS_DEB_USB);
+ 
+-	if (priv->psstate != PS_STATE_FULL_POWER)
+-		return -1;
++	if (priv->psstate != PS_STATE_FULL_POWER) {
++		ret = -1;
++		goto out;
++	}
+ 
+ #ifdef CONFIG_OLPC
+ 	if (machine_is_olpc()) {
+
