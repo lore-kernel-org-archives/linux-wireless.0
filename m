@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:62873 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692Ab2DPVzT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:55:19 -0400
-Received: by pbcun15 with SMTP id un15so6850465pbc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 14:55:18 -0700 (PDT)
+Received: from nbd.name ([46.4.11.11]:56484 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751189Ab2DPQH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 12:07:29 -0400
+Message-ID: <4F8C43BD.2070403@openwrt.org> (sfid-20120416_180732_759319_0E37C81C)
+Date: Mon, 16 Apr 2012 18:07:25 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1334612679.5455.4.camel@dcbw.foobar.com>
-References: <20120403160319.B26CF9D401E@zog.reactivated.net>
-	<1334612679.5455.4.camel@dcbw.foobar.com>
-Date: Mon, 16 Apr 2012 15:55:18 -0600
-Message-ID: <CAMLZHHQ02Y0s7O4t7jKZZ+1H8SiyPGYxwLhdVHYSuf5aUA0fqw@mail.gmail.com> (sfid-20120416_235522_918684_1DB5D4AA)
-Subject: Re: [RFC 4/4] libertas SDIO: convert to asynchronous firmware loading
-From: Daniel Drake <dsd@laptop.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+To: Ben Greear <greearb@candelatech.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	ath5k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath5k: add possible wiphy interface combinations
+References: <1334590102-83386-1-git-send-email-nbd@openwrt.org> <4F8C427C.3020505@candelatech.com>
+In-Reply-To: <4F8C427C.3020505@candelatech.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 16, 2012 at 3:44 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Tue, 2012-04-03 at 17:03 +0100, Daniel Drake wrote:
->> Signed-off-by: Daniel Drake <dsd@laptop.org>
->
-> Works on my standalone SD8686 dev board; though I do get:
->
-> [32350.237619] libertas_sdio mmc0:0001:1: (unregistered net_device):
-> 00:50:43:20:74:05, fw 9.70.3p36, cap 0x00000303
-> [32350.239847] libertas_sdio mmc0:0001:1: (unregistered net_device):
-> PREP_CMD: command 0x00a3 failed: 2
->
-> where the "unregistered net_device" is a bit odd.  Perhaps we should fix
-> that before the final series.
+On 2012-04-16 6:02 PM, Ben Greear wrote:
+> On 04/16/2012 08:28 AM, Felix Fietkau wrote:
+>> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+>> ---
+>>   drivers/net/wireless/ath/ath5k/base.c |   16 ++++++++++++++++
+>>   1 files changed, 16 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+>> index 3007bba..2e385f5 100644
+>> --- a/drivers/net/wireless/ath/ath5k/base.c
+>> +++ b/drivers/net/wireless/ath/ath5k/base.c
+>> @@ -2415,6 +2415,19 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+>>   * Initialization routines *
+>>   \*************************/
+>>
+>> +static const struct ieee80211_iface_limit if_limits[] = {
+>> +	{ .max = 256,	.types = BIT(NL80211_IFTYPE_STATION) },
+>> +	{ .max = 4,	.types = BIT(NL80211_IFTYPE_AP) |
+>> +				 BIT(NL80211_IFTYPE_MESH_POINT) },
+>> +};
+> 
+> The station max is just an arbitrary number or is 256 really
+> the max it can handle?  At least on ath9k, more are supported,
+> but I haven't tested ath5k lately....
+It is an arbitrary number.
 
-That actually appears the same before the patches too, it's been this
-way ever since the cfg80211 port. Mind if I leave this issue for
-another moment?
-
-Thanks,
-Daniel
+- Felix
