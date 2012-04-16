@@ -1,122 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:34317 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754560Ab2DKJic (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:42343 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752600Ab2DPBvo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:38:32 -0400
-Received: by lbom4 with SMTP id m4so826636lbo.39
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 02:38:30 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, linville@tuxdriver.com, coelho@ti.com
-Subject: [PATCH 16/16] wlcore/wl12xx: create per-chip-family private storage
-Date: Wed, 11 Apr 2012 12:38:03 +0300
-Message-Id: <1334137083-13490-17-git-send-email-coelho@ti.com> (sfid-20120411_113844_068014_FEA72CAA)
-In-Reply-To: <1334137083-13490-1-git-send-email-coelho@ti.com>
-References: <1334137083-13490-1-git-send-email-coelho@ti.com>
+	Sun, 15 Apr 2012 21:51:44 -0400
+Message-ID: <1334541087.3209.39.camel@deadeye> (sfid-20120416_035149_355226_0D6CA4AD)
+Subject: Re: [PATCH 0/2] linux-firmware: ath6k update 20120410
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: dwmw2@infradead.org, ath6kl-devel@qualcomm.com,
+	linux-wireless@vger.kernel.org
+Date: Mon, 16 Apr 2012 02:51:27 +0100
+In-Reply-To: <20120410121708.15361.62740.stgit@x201>
+References: <20120410121708.15361.62740.stgit@x201>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-Sngji6coMPiDiyN2Hwg0"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
 
-This storage is allocated in wlcore_alloc_hw and freed in free_hw. The
-size of the storage is determined by the low-level driver.
+--=-Sngji6coMPiDiyN2Hwg0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl12xx/main.c   |    6 +++++-
- drivers/net/wireless/ti/wlcore/main.c   |   13 ++++++++++++-
- drivers/net/wireless/ti/wlcore/wlcore.h |    5 ++++-
- 3 files changed, 21 insertions(+), 3 deletions(-)
+On Tue, 2012-04-10 at 15:18 +0300, Kalle Valo wrote:
+> (Resending as my --cc had a space and stgit didn't send this to the maili=
+ng
+> lists.)
+>=20
+> Hi Ben,
+>=20
+> here's a firmware update for ath6k. We update the AR6003 hw2.1.1 to the
+> latest in our 3.2.0 branch and add a new firmware for AR6004.
+>=20
+> This is the first time I'm sending patches for linux-firmware so please
+> let me know if there are any errors.
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index d24e49a..e05a1cf 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -655,12 +655,16 @@ static struct wlcore_ops wl12xx_ops = {
- 	.get_mac	= wl12xx_get_mac,
- };
- 
-+struct wl12xx_priv {
-+};
-+
- static int __devinit wl12xx_probe(struct platform_device *pdev)
- {
- 	struct wl1271 *wl;
- 	struct ieee80211_hw *hw;
-+	struct wl12xx_priv *priv;
- 
--	hw = wlcore_alloc_hw();
-+	hw = wlcore_alloc_hw(sizeof(*priv));
- 	if (IS_ERR(hw)) {
- 		wl1271_error("can't allocate hw");
- 		return PTR_ERR(hw);
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 5a20292..2e29baf 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5197,7 +5197,7 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
- 
- #define WL1271_DEFAULT_CHANNEL 0
- 
--struct ieee80211_hw *wlcore_alloc_hw(void)
-+struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size)
- {
- 	struct ieee80211_hw *hw;
- 	struct wl1271 *wl;
-@@ -5216,6 +5216,13 @@ struct ieee80211_hw *wlcore_alloc_hw(void)
- 	wl = hw->priv;
- 	memset(wl, 0, sizeof(*wl));
- 
-+	wl->priv = kzalloc(priv_size, GFP_KERNEL);
-+	if (!wl->priv) {
-+		wl1271_error("could not alloc wl priv");
-+		ret = -ENOMEM;
-+		goto err_priv_alloc;
-+	}
-+
- 	INIT_LIST_HEAD(&wl->wlvif_list);
- 
- 	wl->hw = hw;
-@@ -5316,6 +5323,9 @@ err_wq:
- 
- err_hw:
- 	wl1271_debugfs_exit(wl);
-+	kfree(wl->priv);
-+
-+err_priv_alloc:
- 	ieee80211_free_hw(hw);
- 
- err_hw_alloc:
-@@ -5354,6 +5364,7 @@ int wlcore_free_hw(struct wl1271 *wl)
- 	kfree(wl->tx_res_if);
- 	destroy_workqueue(wl->freezable_wq);
- 
-+	kfree(wl->priv);
- 	ieee80211_free_hw(wl->hw);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 66c33b8..01ac091 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -300,11 +300,14 @@ struct wl1271 {
- 	const char *plt_fw_name;
- 	const char *sr_fw_name;
- 	const char *mr_fw_name;
-+
-+	/* per-chip-family private structure */
-+	void *priv;
- };
- 
- int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
- int __devexit wlcore_remove(struct platform_device *pdev);
--struct ieee80211_hw *wlcore_alloc_hw(void);
-+struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size);
- int wlcore_free_hw(struct wl1271 *wl);
- 
- /* Firmware image load chunk size */
--- 
-1.7.5.4
+I've applied these.  However, in future please only add File: lines to
+WHENCE for regular files.  I've now removed all such lines from the
+listings for ath6kl.
 
+Ben.
+
+--=20
+Ben Hutchings
+This sentence contradicts itself - no actually it doesn't.
+
+--=-Sngji6coMPiDiyN2Hwg0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIVAwUAT4t7H+e/yOyVhhEJAQp7EQ//SlJ6sKiUgzEBtk3q86VqcVJe9tCisW4D
+7HM/z6OfjNr2aMN7oxOAusOtb4G7yLqgjfd8xmG6C/aSb8MsTZxuDNJyxUmxokGd
+C8idWFqKuRdU+h3STlJrPMCzkWFjKMYlUNcQf1OCWYEWnn6S1KvN0HoEj/NTpXz4
+Q/2+jt08ISE9eLcg9uGAIBvnrIw6+TPOa4QzsJILBk8w4inrmROYcwaOj8OOeDTT
+ts07cOhvUtasvj0ZGZoHQUh3qp1z0PVUn88r76hComwC5Pdzu/PCvQzEDOTHWR56
+fdYyWyo6DM1KUgRvRrkSnZyQVdCfnCvc7f7GLF87iytmFY4m9QUJpyDxcbvGNME6
+3RjXHSsVI8rz5w1zAykeWYNNefWFEmgrT5mXOju50D1R7DCDnSLsGEPuBfoqzZW/
+lF8X40iKHhV7YFMsxfPuKitw1j3M1N2zZxnKSbRF/jybscyLQy6W/na/vhs6BImb
+zXWf60HpTKhst0Hge30CAHCtZObw1CkZpLxH2fo1bGavY2jKOt/XJ7tvYMLebB1I
++ovDQjR06BOdS+OEShVPs0pKNl7nSYNfpqHstqcdepHj7Zxdc2uHTG3eHzeNtaU0
+XmVz3jkJj3yHWUjK0oBEsCsW1QT2wQC2qTN7TzV3u/ReSKC7YSQH4evk6h5SMzim
+tTQ6qM83smI=
+=4kaG
+-----END PGP SIGNATURE-----
+
+--=-Sngji6coMPiDiyN2Hwg0--
