@@ -1,77 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2983 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757033Ab2DZOzj (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:44227 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848Ab2DPF52 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 10:55:39 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 2/2] ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
-Date: Thu, 26 Apr 2012 20:26:14 +0530
-Message-ID: <1335452174-7093-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120426_165806_550533_4133699C)
-In-Reply-To: <1335452174-7093-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1335452174-7093-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Mon, 16 Apr 2012 01:57:28 -0400
+Received: by qcro28 with SMTP id o28so2930858qcr.19
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2012 22:57:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAGRGNgVdQgMoBNpJcPJuc608+exeVvpvrGRvvmEggf=GTmOkbg@mail.gmail.com>
+References: <20120413142352.3b927516@destiny.ordissimo> <CALUN=qJXckZ+_S90QxyvqEAbeu+Fo=cv9VZ9=AkXRJGsFH3yBQ@mail.gmail.com>
+ <CAGRGNgVdQgMoBNpJcPJuc608+exeVvpvrGRvvmEggf=GTmOkbg@mail.gmail.com>
+From: Anisse Astier <anisse@astier.eu>
+Date: Mon, 16 Apr 2012 07:57:07 +0200
+Message-ID: <CALUN=qK65XgtG5B-Da9o6oGaSF38TsN6NuNaK5=9-nQ+TMUvtg@mail.gmail.com> (sfid-20120416_075732_151000_CA4A18D0)
+Subject: Re: RT5390 not working with rt2800pci
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linville@tuxdriver.com, RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	RA-Jay Hung <Jay_Hung@ralinktech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return status of ath6kl_htc_tx_issue() is ignored in
-ath6kl_htc_tx_from_queue(), but failed tx packet is
-is not cleaned up. To fix memory leak in this case, call
-completion with error. Also, throw an error debug message
-when tx fails in ath6kl_sdio_write_async() due to shortage
-in bus request buffer.
+On Mon, Apr 16, 2012 at 1:38 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Anisse,
+>
+> On Mon, Apr 16, 2012 at 03:33, Anisse Astier <anisse@astier.eu> wrote:
+>> On Fri, Apr 13, 2012 at 2:23 PM, Anisse Astier <anisse@astier.eu> wrote:
+>>>
+>>> [1] I have many of both, in RT5390(rev 1502) and RT5390F(rev 0502) models. All non working are rev 1502, even if some rev 1502 are working.
+>>
+>> To clarify, Revs 0502, marked RT5390L are all working, and can be
+>> ignored for the purpose of this discussion.
+>>
+>> The only non-working revs are 1502, which is the model marked
+>> "RT5390RL". This model has zero google results apart from this
+>> discussion, so I'm guessing it might be new, hence not much tested and
+>> not supported.
+>
+> This is likely to be the case, I'm sure that the rt2x00 developers
+> will probably have support in the driver once RaLink gives them the
+> code / info needed.
+>
+>> Why some cards work and others don't is a mystery.
+>
+> Not really, old cards generally work, current cards that have been out
+> for a little while generally work, and bleeding edge,
+> just-released-yesterday cards tend not to.
+What I meant is that in the set of RT5390RL cards, some work, some
+don't, consistently, and I cannot find any difference between them.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc_mbox.c |    8 +++++++-
- drivers/net/wireless/ath/ath6kl/sdio.c     |    4 +++-
- 2 files changed, 10 insertions(+), 2 deletions(-)
+>
+> In general, the kernel developers only add support for a card once
+> it's been released.
+Indeed, and once someone reports they exist ;-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-index 65310d5..8729803 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-@@ -850,6 +850,7 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
- 	int bundle_sent;
- 	int n_pkts_bundle;
- 	u8 ac = WMM_NUM_AC;
-+	int status;
- 
- 	spin_lock_bh(&target->tx_lock);
- 
-@@ -911,7 +912,12 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
- 
- 			ath6kl_htc_tx_prep_pkt(packet, packet->info.tx.flags,
- 					       0, packet->info.tx.seqno);
--			ath6kl_htc_tx_issue(target, packet);
-+			status = ath6kl_htc_tx_issue(target, packet);
-+
-+			if (status) {
-+				packet->status = status;
-+				packet->completion(packet->context, packet);
-+			}
- 		}
- 
- 		spin_lock_bh(&target->tx_lock);
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 0384a0f..efe083f 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -552,8 +552,10 @@ static int ath6kl_sdio_write_async(struct ath6kl *ar, u32 address, u8 *buffer,
- 
- 	bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
- 
--	if (!bus_req)
-+	if (!bus_req) {
-+		ath6kl_err("Ran out of bus request buffer for tx\n");
- 		return -ENOMEM;
-+	}
- 
- 	bus_req->address = address;
- 	bus_req->buffer = buffer;
--- 
-1.7.0.4
-
+>
+> Thanks,
+>
+> --
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
