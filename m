@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49409 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755445Ab2DJIFI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 04:05:08 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Fix possible unaligned memory access in ath6kl_get_rsn_capab()
-Date: Tue, 10 Apr 2012 13:35:47 +0530
-Message-ID: <1334045147-26773-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120410_100518_039010_C35D71DF)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from arrakis.dune.hu ([78.24.191.176]:54304 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753151Ab2DPT1V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 15:27:21 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 3/5] ath9k: simplify ath9k_hw_get_scaled_power function
+Date: Mon, 16 Apr 2012 22:22:48 +0200
+Message-Id: <1334607770-26090-3-git-send-email-juhosg@openwrt.org> (sfid-20120416_212725_830389_B165E365)
+In-Reply-To: <1334607770-26090-1-git-send-email-juhosg@openwrt.org>
+References: <1334607770-26090-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-alignment is not taken care in accessing pairwise cipher and AKM suite
-count which are parsed from rsn ie. Fix this alignment issue.
-
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom.c |   21 ++++++++-------------
+ 1 files changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index fb73196..707c299 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2546,14 +2546,14 @@ static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
- 	/* skip pairwise cipher suite */
- 	if (rsn_ie_len < 2)
- 		return -EINVAL;
--	cnt = *((u16 *) rsn_ie);
-+	cnt = get_unaligned_le16(rsn_ie);
- 	rsn_ie += (2 + cnt * 4);
- 	rsn_ie_len -= (2 + cnt * 4);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index 61bad99..6a64dec 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -293,9 +293,7 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
+ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
+ 			      u8 antenna_reduction)
+ {
+-	u16 scaled_power;
+-
+-	scaled_power = power_limit - antenna_reduction;
++	u16 reduction = antenna_reduction;
  
- 	/* skip akm suite */
- 	if (rsn_ie_len < 2)
- 		return -EINVAL;
--	cnt = *((u16 *) rsn_ie);
-+	cnt = get_unaligned_le16(rsn_ie);
- 	rsn_ie += (2 + cnt * 4);
- 	rsn_ie_len -= (2 + cnt * 4);
+ 	/*
+ 	 * Reduce scaled Power by number of chains active
+@@ -305,22 +303,19 @@ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
+ 	case 1:
+ 		break;
+ 	case 2:
+-		if (scaled_power > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
+-			scaled_power -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
+-		else
+-			scaled_power = 0;
++		reduction += REDUCE_SCALED_POWER_BY_TWO_CHAIN;
+ 		break;
+ 	case 3:
+-		if (scaled_power > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
+-			scaled_power -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
+-		else
+-			scaled_power = 0;
++		reduction += REDUCE_SCALED_POWER_BY_THREE_CHAIN;
+ 		break;
+ 	}
  
+-	scaled_power = max((u16)0, scaled_power);
++	if (power_limit > reduction)
++		power_limit -= reduction;
++	else
++		power_limit = 0;
+ 
+-	return scaled_power;
++	return power_limit;
+ }
+ 
+ void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
 -- 
-1.7.0.4
+1.7.2.1
 
