@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33726 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708Ab2DRBq7 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48891 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789Ab2DPF3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 21:46:59 -0400
-Message-ID: <1334713585.3725.22.camel@jlt3.sipsolutions.net> (sfid-20120418_034702_399086_9F4BE844)
-Subject: Re: [PATCH v5] mac80211: Support on-channel scan option.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Apr 2012 18:46:25 -0700
-In-Reply-To: <1334685256-14123-1-git-send-email-greearb@candelatech.com> (sfid-20120417_195429_265193_DA2F0B63)
-References: <1334685256-14123-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20120417_195429_265193_DA2F0B63)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 16 Apr 2012 01:29:23 -0400
+Message-ID: <4F8BAE2F.5090200@lwfinger.net> (sfid-20120416_072942_850522_3C162CDC)
+Date: Mon, 16 Apr 2012 00:29:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: LKML <linux-kernel@vger.kernel.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>
+CC: driverdevel <devel@driverdev.osuosl.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Jan Simonson <jan@simonson.se>
+Subject: Problem with crypto when initializing TKIP
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-17 at 10:54 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This based on an idea posted by Stanislaw Gruszka,
-> though I accept full blame for the implementation!
-> 
-> This has been tested with ath9k.
-> 
-> The idea is to let users scan on the current operating
-> channel without interrupting normal traffic more than
-> absolutely necessary (changing power level might reset
-> some hardware, for instance).
+I am trying to fix the driver r8192e_pci from the staging tree. It works fine 
+with WEP and CCMP encryption, but it fails when trying to initialize TKIP. This 
+driver does not use mac80211, but incorporates its own softmac routines.
 
-Seems OK to me now. I might change the subject/description a bit to note
-that really it's not an "option" but an optimisation if the user
-requests a single-channel on-channel scan, but ultimately I don't really
-care all that much.
+This problem is a regression between 3.2.0 and 3.3.0, but I was unable to get a 
+reasonable result using bisection.
 
-johannes
+Routine rtllib_tkip_init() from drivers/staging/rtl8192e/rtllib_crypt_tkip.c 
+does the same set of steps as is done in mac80211. Everything works with mac80211.
 
+The block cipher allocation calls to crypto_alloc_blkcipher("ecb(arc4)",...) are 
+OK. The crypto_alloc_hash("michael_mic",...) call is the part that fails. The 
+problem shows up in the code fragment below from crypto/api.c:
+
+         ok = crypto_probing_notify(CRYPTO_MSG_ALG_REQUEST, larval);
+
+         if (ok == NOTIFY_STOP)
+                 alg = crypto_larval_wait(larval);
+         else {
+                 crypto_mod_put(larval);
+                 alg = ERR_PTR(-ENOENT);
+         }
+
+The value of ok is NOTIFY_OK, which leads to a return of -ENOENT and a failure 
+of the initialization.
+
+I know this code is pretty old, and perhaps nobody remembers it, but I would 
+appreciate some pointers on debugging this issue.
+
+Thanks,
+
+Larry
