@@ -1,76 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:64778 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759340Ab2D0KRg (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:59070 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755135Ab2DPVj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 06:17:36 -0400
-Date: Fri, 27 Apr 2012 12:17:32 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: sedat.dilek@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-Message-ID: <20120427101732.GX3157@wantstofly.org> (sfid-20120427_121831_257188_584F40D3)
-References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
- <20120427091405.GS3157@wantstofly.org>
- <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
- <20120427094007.GU3157@wantstofly.org>
- <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
- <20120427094637.GV3157@wantstofly.org>
- <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
- <20120427095842.GW3157@wantstofly.org>
- <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
+	Mon, 16 Apr 2012 17:39:58 -0400
+Message-ID: <4F8C9191.8000800@gmail.com> (sfid-20120416_234020_635638_5653AB79)
+Date: Mon, 16 Apr 2012 14:39:29 -0700
+From: Don deJuan <donjuansjiz@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+CC: Greg KH <gregkh@linuxfoundation.org>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk
+Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
+References: <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com> <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com> <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com> <20120413105746.10ffb120@stein> <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com> <20120413190819.9469.qmail@stuge.se> <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com> <20120416162710.GA24100@kroah.com> <CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com> <20120416205856.GA22298@kroah.com> <CAMP44s2OdH+1RG2O6+QXkik8Ww_ZSHN=yzEKwD1KvRAcceNSRA@mail.gmail.com>
+In-Reply-To: <CAMP44s2OdH+1RG2O6+QXkik8Ww_ZSHN=yzEKwD1KvRAcceNSRA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 12:12:13PM +0200, Sedat Dilek wrote:
+On 04/16/2012 02:18 PM, Felipe Contreras wrote:
+> On Mon, Apr 16, 2012 at 11:58 PM, Greg KH<gregkh@linuxfoundation.org>  wrote:
+>> On Mon, Apr 16, 2012 at 11:11:05PM +0300, Felipe Contreras wrote:
+>>> On Mon, Apr 16, 2012 at 7:27 PM, Greg KH<gregkh@linuxfoundation.org>  wrote:
+>>>> Just one minor correction in this looney email thread:
+>>>>
+>>>> On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
+>>>>> v3.3.x on the other hand are *not* stable. They contain patches
+>>>>> backported from v3.4, but nobody guarantees they will work. There was
+>>>>> no v3.3.1-rc1, so the first time the patches compromising v3.3.1 were
+>>>>> generally tested together is in v3.3.1, at which point if somebody
+>>>>> finds issues, it's too late; bad patches are *not* going to be removed
+>>>>> in v3.3.2.
+>>>>
+>>>> Of course there was a 3.3.1-rc1, see the linux-kernel archives for the
+>>>> announcemen and the individual patches.  kernel.org has the large patch
+>>>> itself if you like that format instead.
+>>>
+>>> I don't see it here:
+>>> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=tags
+>>>
+>>> If you really want people to try it, why not tag it?
+>>
+>> That would be because I don't keep it in that tree.  It is in a quilt
+>> tree you can find in the stable-queue.git repo, and I have never tagged
+>> -rc1 releases there.  No one has ever asked for it before, so in the
+>> past 6 years of stable releases, I guess no one ever needed it.
+>>
+>> ketchup and tarballs seem to work well for others, perhaps you can use
+>> that as well (hint, ketchup on top of the linux-stable tree works just
+>> fine for testing this.)
+>
+> Perhaps the current process will be continue to be OK, but I do
+> believe a tagged v3.3.1-rc1 would have catched the ath9k issue.
+> Hopefully that would mean it could have been dropped/reverted for
+> v3.3.1.
+>
+> I used to compile my own kernels and use your stable tree, but this a
+> new laptop and I was using Arch Linux which automatically updated to
+> v3.3.1, and with no network I had no way to revert to v3.2.x.
 
-> >> >> >> Are you planning to or even working on support (for) 8361 devices?
-> >> >> >
-> >> >> > I don't have any such plans, and I don't know of anyone who does.
-> >> >>
-> >> >> Does 8361 require firmware support?
-> >> >
-> >> > What do you mean by that?
-> >>
-> >> IIRC ath5k for example needs no external firmware file.
-> >
-> > The 8361 requires firmware to be loaded into it before it'll do
-> > anything useful.
-> >
-> >
-> >> >> Does a firmware file exist (name?)?
-> >> >
-> >> > There's firmware for the 8361 out there, however, that version of
-> >> > the firmware implements a firmware API that is different from the
-> >> > one that mwl8k currently implements.
-> >> >
-> >> > You could add 8361 support to mwl8k, but then you'd have to go over
-> >> > all the firmware command invocations in mwl8k and make sure that they
-> >> > will work on the 8361 firmware that you're trying to support as well.
-> >>
-> >> Without having a 8361 this will be even harder to walk through.
-> >>
-> >> Anyway, thanks for your detailed explanations.
-> >>
-> >> What's the alternative for such affected users?
-> >> Use ndis-wrapper?
-> >
-> > I'm not sure.  I've never tried to get a 8361 work under Linux.
-> 
-> Just found on [1] this same wrong patch in [2] :-).
-> Dunno if [3] worked and from where they have stolen fw-files.
-> 
-> - Sedat -
-> 
-> [1] https://dev.openwrt.org/ticket/7209
-> [2] https://dev.openwrt.org/attachment/ticket/7209/mwl8k_fix_pci_id.patch
-> [3] https://dev.openwrt.org/attachment/ticket/7209/mwl8k_8361p.patch
+For an Arch user I am shocked you are able to keep things going on your 
+setup. Why are you not spending this much effort complaining to Arch 
+Dev's for not properly testing 3.3.1 before pushing it. I know they did 
+not put it into testing and was just put through the mailing list for 
+people to test, with only a few ack's showing up on the list, before 
+pushing about a day later.
 
-I doubt that [3] is really all that's needed to make it work.  But if
-there's someone for whom it works, I'd like them to run some tests on
-mwl8k + [3] on 88w8361p.
+Also how did you not have something to roll back to? Why was there not a 
+package left in your /var/cache/pacman/pkg cache? Unless you clean out 
+your cache way to often you should have more than one kernel you could 
+have "rolled back" with a simple pacman -U linux-version-that-last-worked.
+
+This much effort and bitching on your part to people who had nothing to 
+do with you getting a bad push from Arch, Arch should have done further 
+testing of it OR you should have waited a day before updating to see if 
+anything on your shiny new laptop would have been effected.
+
+> Fortunately I had the kernel sources available, but I wonder how many
+> people were completely stuck.
+
+On arch no one should have been stuck if they would have read the wiki's 
+and been more aware of their systems. Stable or not you are living on 
+the bleeding edge or as close to it as possible when on Arch, read their 
+philosophy and methods and their wiki. Then if you have issues with 
+something Arch pushes to you, would it not be better to spend your 
+efforts on the distro you are running?
+
+>
+> If some other 3.x.1 release get broken this way, I would seriously
+> consider tagging v3.x.1-rc1 as well. It works for Linus' tree.
+>
+> Cheers.
+>
+
+
+Just my .02 from someone not involved in any of this who is just fed up 
+with you twisting crap around to fit your gripes with something that is 
+not related to the trees or methods at hand. YOU got a package from YOUR 
+distro of choice and because YOU were not aware of things when updating 
+your distro YOU broke it. Not Linus or Greg, but Arch and you not 
+understanding the kernel did NOT go through the normal testing repo. I 
+have a system that would have broke in the same manner as yours, running 
+Arch, but because I am aware I have a few things that are getting lots 
+of work in the kernel, I need to be aware of the updates, especially 
+kernel's just being tested through the mailing list. Also why did you 
+not have at least the LTS as a backup on your Arch install, if you are 
+clearing out your cache so frequently to not have at least one version 
+to "roll back"?
+Learn your hardware and how it interacts with the distro you choose and 
+you can better help yourself and ALL these efforts would not just end up 
+making you seem like a ranting loon!
+
