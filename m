@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64135 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861Ab2DLHc7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 03:32:59 -0400
-Message-ID: <4F868526.5020703@qca.qualcomm.com> (sfid-20120412_093301_811924_14F54B18)
-Date: Thu, 12 Apr 2012 10:32:54 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from ivanich.tenet.odessa.ua ([85.238.100.22]:44918 "EHLO
+	ivanich.org.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752828Ab2DPWTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 18:19:32 -0400
+Received: from mail.ivanich.od.ua ([85.238.100.22] helo=ivanich.org.ua)
+	by ivanich.org.ua with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <spams@ivanich.org.ua>)
+	id 1SJtqc-0005SQ-Ay
+	for linux-wireless@vger.kernel.org; Tue, 17 Apr 2012 00:52:34 +0300
+From: spams@ivanich.org.ua
+To: linux-wireless@vger.kernel.org
+Subject: Regression in kernel-3.4-rcx with rtl8192ce
+Date: Tue, 17 Apr 2012 00:52:23 +0300
+Message-ID: <2054318.iQACctbcH2@ivanich.org.ua> (sfid-20120417_001936_283344_0382ED37)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Checkpatch warnings with pr_fmt()
-References: <4F868445.1030209@qca.qualcomm.com>
-In-Reply-To: <4F868445.1030209@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/2012 10:29 AM, Kalle Valo wrote:
-> Hi Joe,
-> 
-> due to checkpatch warnings in ath6kl, from a recent pr_fmt() addition, I
-> had to update checkpatch and now I get lots of useless warnings like this:
-> 
-> drivers/net/wireless/ath/ath6kl/common.h:28: CHECK: Don't begin block
-> comments with only a /* line, use /* comment...
-> drivers/net/wireless/ath/ath6kl/bmi.h:233: CHECK: No space is necessary
-> after a cast
-> 
-> IMHO they are wrong, at least the style I have tried to enforce in
-> ath6kl is totally opposite (I have "/*\n" on multiline comments and a
-> space after a cast). And at least CodingStyle seems to recommend my
-> style for the multiline comments.
-> 
-> Would you consider removing these two warnings? Or maybe add a new check
-> level so that I can easily disable them?
-> 
-> As I get a lot of patches from people not familiar with the Linux coding
-> style checkpatch is a valuable tool for me, I cannot spot all the style
-> issues by just reviewing the patches. But now checkpatch is useless for
-> me as the real warnings get buried within the noise.
+I'm using rtl8188ce in AP mode with hostapd, after upgrade to 3.4-rcx 
+kernel(tried 3.4-rc2,rc3 and latest source from wireless-next.git) I can't 
+connect to my AP.
+AP Log:
+Apr 16 23:31:39 localhost hostapd: wlan0: STA d8:b3:cf:d1:a0:58 IEEE 802.11: 
+authenticated
+Apr 16 23:31:39 localhost hostapd: wlan0: STA d8:b3:cf:d1:a0:58 IEEE 802.11: 
+Station sent an invalid association request
 
-Forgot to mention that for now I just reverted commit aad4f614983
-("checkpatch: add --strict tests for braces, comments and casts") and
-checkpatch is usable again. But I hope we find a proper solution for this.
-
-Kalle
+Tried disabling and enabling different options in hostapd.conf but with no 
+luck. With kernels-3.3.x it works just fine.
+Thank you. 
