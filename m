@@ -1,54 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:45088 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757343Ab2DIUvC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 16:51:02 -0400
-Date: Mon, 9 Apr 2012 22:51:01 +0200 (CEST)
-From: Jesper Juhl <jj@chaosbits.net>
-To: linux-kernel@vger.kernel.org
-cc: trivial@kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH 12/26] ipw2200: remove a redundant NULL check before calling
- release_firmware()
-In-Reply-To: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
-Message-ID: <alpine.LNX.2.00.1204092220360.13925@swampdragon.chaosbits.net> (sfid-20120409_225614_586222_6DE6F69B)
-References: <alpine.LNX.2.00.1204092157340.13925@swampdragon.chaosbits.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from nbd.name ([46.4.11.11]:48157 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755186Ab2DPVJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:09:34 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 4/8] ath9k_hw: increase symbol overlap window for half/quarter channels
+Date: Mon, 16 Apr 2012 23:09:21 +0200
+Message-Id: <1334610565-37399-4-git-send-email-nbd@openwrt.org> (sfid-20120416_230945_238070_47411B11)
+In-Reply-To: <1334610565-37399-3-git-send-email-nbd@openwrt.org>
+References: <1334610565-37399-1-git-send-email-nbd@openwrt.org>
+ <1334610565-37399-2-git-send-email-nbd@openwrt.org>
+ <1334610565-37399-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The release_firmware() function does its own NULL test, so testing
-before calling it is rather redundant.
-
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ipw2x00/ipw2200.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |    3 +++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 2b02257..77c5d2f 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -3657,8 +3657,7 @@ static int ipw_load(struct ipw_priv *priv)
- 		priv->rxq = NULL;
- 	}
- 	ipw_tx_queue_free(priv);
--	if (raw)
--		release_firmware(raw);
-+	release_firmware(raw);
- #ifdef CONFIG_PM
- 	fw_loaded = 0;
- 	raw = NULL;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index b9f88a2..5bc09a1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -726,6 +726,10 @@ static void ar9003_hw_set_rfmode(struct ath_hw *ah,
+ 	if (IS_CHAN_HALF_RATE(chan))
+ 		rfMode |= AR_PHY_MODE_HALF;
+ 
++	if (rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF))
++		REG_RMW_FIELD(ah, AR_PHY_FRAME_CTL,
++			      AR_PHY_FRAME_CTL_CF_OVERLAP_WINDOW, 3);
++
+ 	REG_WRITE(ah, AR_PHY_MODE, rfMode);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index d834d97..7268a48 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -468,6 +468,9 @@
+ #define AR_PHY_ADDAC_PARA_CTL    (AR_SM_BASE + 0x150)
+ #define AR_PHY_XPA_CFG           (AR_SM_BASE + 0x158)
+ 
++#define AR_PHY_FRAME_CTL_CF_OVERLAP_WINDOW  3
++#define AR_PHY_FRAME_CTL_CF_OVERLAP_WINDOW_S    0
++
+ #define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A           0x0001FC00
+ #define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A_S         10
+ #define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A                       0x3FF
 -- 
-1.7.10
-
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+1.7.3.2
 
