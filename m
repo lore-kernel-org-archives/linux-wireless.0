@@ -1,135 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:57372 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756030Ab2DSR0R convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 13:26:17 -0400
-Received: by bkcik5 with SMTP id ik5so6574957bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 10:26:15 -0700 (PDT)
-Subject: Re: wlan0 not present
-Mime-Version: 1.0 (Apple Message framework v1257)
-Content-Type: text/plain; charset=iso-8859-1
-From: Dominik Feser <dominik.feser@googlemail.com>
-In-Reply-To: <CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
-Date: Thu, 19 Apr 2012 19:26:11 +0200
-Cc: Dominik Feser <dominik.feser@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Message-Id: <D17CF50A-2CD7-427A-8159-A7857571823D@gmail.com> (sfid-20120419_192622_018153_D8842AA7)
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com> <CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com> <816C5F70-E340-46F9-8206-2B230A27F3AD@gmail.com> <CANUX_P3=ttVKdLYBfAdGRhmfDRbPruogw8Eo_d09on0ajdTqUw@mail.gmail.com> <5714877C-2465-4FD5-94A0-9D0806A803C4@gmail.com> <CANUX_P27GoLY2q9jmsWw9Rzn9posf3mCjDa98+q4JP=83wYthg@mail.gmail.com> <8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com> <CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com> <9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com> <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com> <8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com> <CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com> <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> <4F901224.1040508@sipsolutions.net> <EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com> <4F901F16.6080007@sipsolutions.net> <CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com> <CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
+Received: from 1wt.eu ([62.212.114.60]:65219 "EHLO 1wt.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750852Ab2DPFjn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 01:39:43 -0400
+Date: Mon, 16 Apr 2012 07:39:11 +0200
+From: Willy Tarreau <w@1wt.eu>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Ingo Molnar <mingo@kernel.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120416053911.GL27728@1wt.eu> (sfid-20120416_073948_813366_075D4C55)
+References: <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com> <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com> <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com> <20120414104733.GA4871@gmail.com> <CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com> <20120415065124.GC29563@gmail.com> <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com> <CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com> <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After applying the patch make comes up with:
-
-# make
-./scripts/gen-compat-autoconf.sh /root/compat-wireless-3.4-rc1-2/.config /root/compat-wireless-3.4-rc1-2/config.mk > include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.32.12-0.7.1/build M=/root/compat-wireless-3.4-rc1-2 modules
-make[1]: Entering directory `/mnt/src/redhat/BUILD/kernel-2.6.32.120.7.1'
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/main.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-2.6.33.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-2.6.35.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-2.6.36.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/kfifo.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-2.6.37.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-2.6.38.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-2.6.39.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/kstrtox.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-3.0.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-3.2.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-3.3.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat-3.5.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/cordic.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/crc8.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat_atomic.o
-  LD [M]  /root/compat-wireless-3.4-rc1-2/compat/compat.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/compat_firmware_class.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn-rs.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-mac80211.o
-/root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-mac80211.c: In function »iwlagn_mac_resume«:
-/root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-mac80211.c:440: Warnung: Variable »img« wird nicht verwendet
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-ucode.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn-tx.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-debug.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn-lib.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn-calib.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-io.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn-tt.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn-sta.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn-rx.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-core.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-eeprom.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-power.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-scan.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-led.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-agn-rxon.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-5000.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-6000.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-1000.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-2000.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-pci.o
-  CC [M]  /root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-drv.o
-/root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-drv.c: In function »iwl_request_firmware«:
-/root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-drv.c:183: Fehler: »struct iwl_drv« hat kein Element namens »dev«
-/root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-drv.c:183: Fehler: »struct iwl_drv« hat kein Element namens »dev«
-make[4]: *** [/root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi/iwl-drv.o] Fehler 1
-make[3]: *** [/root/compat-wireless-3.4-rc1-2/drivers/net/wireless/iwlwifi] Fehler 2
-make[2]: *** [/root/compat-wireless-3.4-rc1-2/drivers/net/wireless] Fehler 2
-make[1]: *** [_module_/root/compat-wireless-3.4-rc1-2] Fehler 2
-make[1]: Leaving directory `/mnt/src/redhat/BUILD/kernel-2.6.32.120.7.1'
-make: *** [modules] Fehler 2
-
-the geman text means:
-struct iwl_drv has no element with name dev
-
-
-Am 19.04.2012 um 18:19 schrieb Emmanuel Grumbach:
-
-> On Thu, Apr 19, 2012 at 18:08, Dominik Feser
-> <dominik.feser@googlemail.com> wrote:
->> May it be that the fact that Centos 5 doesnt have hotplug causes the issue?
->> 
+On Mon, Apr 16, 2012 at 01:12:48AM +0300, Felipe Contreras wrote:
+> I'm not going to argue the semantics of what is a revert, but I am
+> going to show the difference between the two situations:
 > 
-> Don't think so.
-> Can it be a problem in the backport of request_firwamre_no_wait ?
-> Did I see somewhere that you run 2.6.38 ?
-> Can you check again after having applied the patch attached ?
+> a) v3.0* (good), v3.1* (good), v3.2* (good), v3.3 (good), v3.3.1
+> (bad), v3.3.2 (good), v3.4 (bad)
+
+This situation is not possible thanks to the process : if v3.3.2 has
+a fix that was not in 3.3.1, then this fix is also in 3.4.
+
+> b) v3.0* (bad), v3.1* (bad), v3.2* (bad), v3.3 (bad), v3.3.1 (good), v3.4 (bad)
+
+Same here.
+
+> Maybe they are the same from certain point of view, but you just
+> argued that what *others* see is what makes the patch unrevertable,
+> well, it's obvious that from the point of view of the users the two
+> situations are clearly different. I believe it was you who said that
+> breaking user experience is the absolute no-no any project could
+> make[1]--so from that point of view a) is *much* worst.
 > 
-> from the main dir of compat:
-> patch -p1 < print.patch
+> But what is done is done, and as you said, you can't change the past,
+> now the important thing is what to do next. And here are the two
+> options' worst-case scenarios:
 > 
-> Thanks
-> 
->> Am 19.04.2012 um 16:20 schrieb Johannes Berg:
->> 
->>> On 4/19/2012 7:09 AM, Dominik Feser wrote:
->>>> Finally, here is the output of dmesg after recompiling:
->>>> 
->>>> iwlwifi 0000:02:00.0: edd19e18
->>>> iwlwifi 0000:02:00.0: d55c1e18
->>>> iwlwifi 0000:02:00.0: d55c1ddc
->>>> iwlwifi 0000:02:00.0: PCI INT A disabled
->>>> Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
->>>> Copyright(c) 2003-2012 Intel Corporation
->>>> iwlwifi 0000:02:00.0: PCI INT A ->  GSI 17 (level, low) ->  IRQ 17
->>>> iwlwifi 0000:02:00.0: setting latency timer to 64
->>>> iwlwifi 0000:02:00.0: pci_resource_len = 0x00002000
->>>> iwlwifi 0000:02:00.0: pci_resource_base = f447c000
->>>> iwlwifi 0000:02:00.0: HW Revision ID = 0x34
->>>> iwlwifi 0000:02:00.0: irq 1277 (277) for MSI/MSI-X
->>>> iwlwifi 0000:02:00.0: U iwl_request_firmware d5b37d70
->>>> iwlwifi 0000:02:00.0: U iwl_request_firmware e09ebdd4
->>>> iwlwifi 0000:02:00.0: ee2afe18
->>>> iwlwifi 0000:02:00.0: U iwl_request_firmware ee2afdd4
->>>> iwlwifi 0000:02:00.0: cc93fe18
->>>> iwlwifi 0000:02:00.0: cc93fddc
->>> 
->>> Still pretty useless since you get %pV printed as a pointer rather than a message. Does anyone know how to fix that in compat? But the iwl_request_firmware 3 times probably means it failed?
->>> 
->>> johannes
->> 
-> <print.patch>
+> a.1) v3.0* (good), ... v3.3 (good), v3.3.1 (bad), v3.3.2 (bad), v3.3.3
+> (bad), v3.3.4 (bad), v3.3.5 (bad), v3.4 (good)
+
+This situation is stupid as it means we'd refuse to fix the issue.
+
+> a.2) v3.0* (good), ... v3.3 (good), v3.3.1 (bad), v3.3.2 (good),
+> v3.3.3 (good), v3.3.4 (good), v3.3.5 (good), v3.4 (bad)
+
+Not possible.
+
+> These two scenarios are unlikely, but either way, in order to
+> guarantee that you don't end up with a.2) You are willing to risk
+> going into a.1)
+
+You don't seem to understand that 3.4 is not *after* 3.3.x, but in parallel.
+This is more like this :
+
+  3.2 ----- 3.3 --------- 3.4-rc* ------------- 3.4 ----- 3.5-rc* --------
+               \                                    \
+                \                                    `--- 3.4.1 ---- 3.4.2 --
+                 \
+                  `--- 3.3.1 ----- 3.3.2 ---- 3.3.3 ---- 3.3.4 --- 3.3.5 ---
+
+Here you clearly see why everything in 3.3.x must come from upstream and
+why it's important that 3.4 has every fix that 3.3 has.
+
+> So, *obviously* v3.4 is more important than v3.3.x. I could argue that
+> the users out there would prefer a.1) any day, because it's unlikely
+> anyway (v3.4 would be good), but I won't.
+
+No because for them it would mean end of support at one point when 3.3 dies,
+with no ability to upgrade.
+
+> All I want now is to agree on a reason, you have finally pointed out
+> that the reason for this different treatment is the user's visibility,
+
+It's not the user's visibility, it's published code. Once code is published,
+you cannot magically fix it without emitting a new patch for this code and
+announcing so that users apply it. These patches are called stable releases.
+Users want a good reason to apply these patches, rebuild and reboot, and
+that's one reason we absolutely want to have the commit descriptions from
+upstream which detail the exact reason for the patch (even if it's a revert).
+
+> but that still doesn't explain why the rules for b) automatically
+> apply to a), since it's clearly different from the users's point of
+> view; if you agree that v3.4 is more important than v3.3.x, I believe
+> we have the reason right there.
+
+It's not "more important", it's important for long-term stability. For
+3.3 users, 3.3.x is more important that 3.4. However one thing is certain:
+3.4 users are not going to push fixes into 3.3.x, but thanks to the process
+we have, 3.3.x users are going to ask for a fix to be pushed upstream. So
+users pressure ensure long-term stability.
+
+Willy
 
