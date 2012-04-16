@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ar100.montanavision.com ([216.146.103.100]:43881 "EHLO
-	silka.with-linux.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582Ab2DCIjA (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:45629 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010Ab2DPTDo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 04:39:00 -0400
-Message-ID: <4F7AB6FE.3080009@silka.with-linux.com> (sfid-20120403_103920_735435_0E5AA395)
-Date: Tue, 03 Apr 2012 02:38:22 -0600
-From: Kelly Anderson <kelly@silka.with-linux.com>
+	Mon, 16 Apr 2012 15:03:44 -0400
+Received: by bkcik5 with SMTP id ik5so3936865bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 12:03:43 -0700 (PDT)
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: Ben Greear <greearb@candelatech.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] 3.3.1 ath9k regression
-References: <4F7A8EB7.4060200@silka.with-linux.com> <4F7A923D.5000002@candelatech.com> <CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com> <4F7A9D5C.8040402@silka.with-linux.com> <CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com> <4F7AAAD9.2040307@silka.with-linux.com> <CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com> <CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
-In-Reply-To: <CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20120416105528.GA25190@elgon.mountain>
+References: <20120416105528.GA25190@elgon.mountain>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 16 Apr 2012 22:03:26 +0300
+Message-ID: <CA+XVXfeZd+P135QjR1YarVq-qVvK-N1H8wMe5UaDGy+7Rb_Bpg@mail.gmail.com> (sfid-20120416_210347_834282_D9AFCF44)
+Subject: Re: wlcore/wl12xx: change GEM Tx-spare blocks per-vif
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/03/2012 02:04 AM, Mohammed Shafi wrote:
-> On Tue, Apr 3, 2012 at 1:22 PM, Mohammed Shafi<shafi.wireless@gmail.com>  wrote:
->>> I just tried the unpatched kernel with pcie_aspm=off.  The device shows up
->>> with ifconfig,
->>> but it will not connect to the access point.
->> oh, ok in addition does disabling power save helps ?
-
-Setting ath9k power management off makes no difference.
-
-> also please provide the logs sudo modprobe -v ath9k debug=0xe01 when
-> the STA is not able to connect
-
-I'm using systemd with kmod, so I'm not sure that the modprobe -v is 
-giving you anything useful.
-
-The output of the modprobe -v is nothing.
-
-
-The systemd journal has these entries (which are truncated due to the 
-way systemd-journal handles piped out)
-
-
-Apr 03 02:26:50 comer.internal kernel: Registered led device: ath9k-phy1
-Apr 03 02:26:50 comer.internal kernel: ieee80211 phy1: Atheros AR9280 
-Rev:2...16
-
-
->> --
->> thanks,
->> shafi
+On Mon, Apr 16, 2012 at 13:55, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> Hello Arik Nemtsov,
 >
+> This is a semi-automatic email about new static checker warnings.
 >
+> The patch 3edab305dfd4: "wlcore/wl12xx: change GEM Tx-spare blocks
+> per-vif" from Dec 7, 2011, leads to the following Smatch complaint:
+>
+> drivers/net/wireless/ti/wlcore/tx.c:231 wl1271_tx_allocate()
+>         warn: variable dereferenced before check 'wlvif' (see line 208)
 
+Thanks Dan. We'll fix it shortly.
+
+Arik
