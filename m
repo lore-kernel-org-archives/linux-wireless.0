@@ -1,28 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38012 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab2DSNZe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 09:25:34 -0400
-Message-ID: <4F901224.1040508@sipsolutions.net> (sfid-20120419_152538_234058_25F41FAD)
-Date: Thu, 19 Apr 2012 06:24:52 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-To: Dominik Feser <dominik.feser@googlemail.com>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: Re: wlan0 not present
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <4B048FDE-C784-4401-9FEC-16F8CC0B8D59@gmail.com> <CANUX_P0FO-P6ZFow15shNpZg6Z8FAPP7AovJH=xUKPyVEMtoBw@mail.gmail.com> <FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com> <CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com> <816C5F70-E340-46F9-8206-2B230A27F3AD@gmail.com> <CANUX_P3=ttVKdLYBfAdGRhmfDRbPruogw8Eo_d09on0ajdTqUw@mail.gmail.com> <5714877C-2465-4FD5-94A0-9D0806A803C4@gmail.com> <CANUX_P27GoLY2q9jmsWw9Rzn9posf3mCjDa98+q4JP=83wYthg@mail.gmail.com> <8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com> <CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com> <9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com> <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com> <8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com> <CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com> <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> (sfid-20120419_152129_778732_024C8F79)
-In-Reply-To: <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> (sfid-20120419_152129_778732_024C8F79)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:26131 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752086Ab2DPSLp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 14:11:45 -0400
+Message-ID: <1334597386.10194.35.camel@dcbw.foobar.com> (sfid-20120416_201148_682282_AD6FAD3A)
+Subject: Re: [PATCH] libertas: fix signedness bug in lbs_auth_to_authtype()
+From: Dan Williams <dcbw@redhat.com>
+To: Kiran Divekar <dkiran@marvell.com>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Date: Mon, 16 Apr 2012 12:29:46 -0500
+In-Reply-To: <1332959881-31278-1-git-send-email-dkiran@marvell.com>
+References: <1332959881-31278-1-git-send-email-dkiran@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/19/2012 6:20 AM, Dominik Feser wrote:
-> Ah ok, this is what I did several times now. After unpacking there is no .config file. After running the driver-select script and making the driver the first time the .config file appears.
-> Just then it seems to me that f I add the debug line to .config and remake this isn't recognized by the make...
+On Wed, 2012-03-28 at 11:38 -0700, Kiran Divekar wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Return type for lbs_auth_to_authtype() is changed from "u8" to
+> "int" to return negative error code correctly.
+> Also an error check is added in connect handler for invalid auth
+> type.
+> 
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Kiran Divekar <dkiran@marvell.com>
 
-You should modify config.mk, not .config
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-johannes
+> ---
+>  drivers/net/wireless/libertas/cfg.c |    9 +++++++--
+>  1 files changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+> index 3fa1ece..2fa879b 100644
+> --- a/drivers/net/wireless/libertas/cfg.c
+> +++ b/drivers/net/wireless/libertas/cfg.c
+> @@ -103,7 +103,7 @@ static const u32 cipher_suites[] = {
+>   * Convert NL80211's auth_type to the one from Libertas, see chapter 5.9.1
+>   * in the firmware spec
+>   */
+> -static u8 lbs_auth_to_authtype(enum nl80211_auth_type auth_type)
+> +static int lbs_auth_to_authtype(enum nl80211_auth_type auth_type)
+>  {
+>  	int ret = -ENOTSUPP;
+>  
+> @@ -1411,7 +1411,12 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
+>  		goto done;
+>  	}
+>  
+> -	lbs_set_authtype(priv, sme);
+> +	ret = lbs_set_authtype(priv, sme);
+> +	if (ret == -ENOTSUPP) {
+> +		wiphy_err(wiphy, "unsupported authtype 0x%x\n", sme->auth_type);
+> +		goto done;
+> +	}
+> +
+>  	lbs_set_radio(priv, preamble, 1);
+>  
+>  	/* Do the actual association */
+
+
