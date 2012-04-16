@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:37575 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754601Ab2DFWoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 18:44:13 -0400
-Message-ID: <4F7F71A2.40105@hauke-m.de> (sfid-20120407_004416_719638_D56BBD00)
-Date: Sat, 07 Apr 2012 00:43:46 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:4154 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752626Ab2DPVIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:08:47 -0400
+Message-ID: <4F8C8A4F.3060208@broadcom.com> (sfid-20120416_230903_655339_6DF39643)
+Date: Mon, 16 Apr 2012 23:08:31 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: brcmsmac on BCM47XX SoCs
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Felipe Contreras" <felipe.contreras@gmail.com>
+cc: "Ingo Molnar" <mingo@kernel.org>,
+	"Linus Torvalds" <torvalds@linux-foundation.org>,
+	"Greg KH" <gregkh@linuxfoundation.org>,
+	"Sergio Correia" <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	"linux-wireless Mailing List" <linux-wireless@vger.kernel.org>,
+	"Sujith Manoharan" <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+References: <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
+ <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
+ <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
+ <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com>
+ <20120414104733.GA4871@gmail.com>
+ <CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com>
+ <20120415065124.GC29563@gmail.com>
+ <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
+ <CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com>
+ <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
+ <20120416053220.GA14338@gmail.com>
+ <CAMP44s1j297wO8TJgto+w1x3G0qTC=BehuKtE2TZnxYmdoM=Fg@mail.gmail.com>
+In-Reply-To: <CAMP44s1j297wO8TJgto+w1x3G0qTC=BehuKtE2TZnxYmdoM=Fg@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+On 04/16/2012 10:25 PM, Felipe Contreras wrote:
+> Releasing implies many things. There is this notion called theory of
+> mind, which children learn at a very young age, that helps us see the
+> world through the eyes of other people. If you think people *must* see
+> the word "release" and think *exactly* the same thing as  you do, and
+> apologize when they don't, well, I'd say you are missing a very
+> valuable skill.
 
-I am currently trying to get brcmsmac running on my SoC (bcm4718 +
-bcm43224). Using the sprom from bcma and not fetching it in brcmsmac was
-not a big problem, are you interested in the patch?
-I want to remove the pci code from brcmsmac as it should go into bcma
-and some/most parts of the code are already there. I already did some of
-this but I still have problems with my device, have you already started
-this? I do not know if these problems  are related to my changes or some
-other problems with my devices and brcmsmac.
+Maybe we are all a bit autistic then.
 
-I want to get AP mode working on these device with brcmsmac, but for now
-I do not even get station mode running. ;-)
+> But fine, lets suppose I should have thought exactly the same thing as
+> you did, and fine, lets say I was wrong in not doing so. That still
+> doesn't help one iota in this discussion. Linus Torvalds pointed the
+> exact reason, which allowed us to move forward, because of my
+> incompetence, or whatever.
 
-Are there any devices with a ccrev < 20 supported by brcmsmac, the
-lowest version I saw was 31 and there are some conditions in brcmsmac
-for < 6, < 10 and < 20?
+I think this thread has been going on long enough and a fair number of 
+people tried to explain the process and why it is set up as such. How 
+long do you want to rephrase and stick to your "theory of mind". Email 
+filters will probably be created rather sooner than later. Does 
+Contreras have the same linguistic origin as "contrary"? Sorry, could 
+not think of anything constructive here.
 
-What are your plans to support phy_ht in brcmsmac, for now it is just
-supported by b43?
+> The next logical question has still not been answered; does the
+> undroppability come from the fact that v3.4 is more important that
+> v3.3.1? This time I promise to think at least one day for all the
+> possible meanings of each key word you say.
 
-I am a little confused by the vendorid/vid and vendorid/did and the
-boardvendor and boardtype members. brcms_c_chipmatch() uses vendorid and
-vendorid from the pci config space, but what is the equivalent for SoCs
-not on pci bus? boardvendor and boardtype are fetched in
-ai_nvram_process and are fetched from nvram when an SoC is used and from
-pci config space on a pci device at least that is the way it is done in
-the Boradcom SDK.
+3.4 is not most important, but upstream is and currently those are the 
+3.4-rcN releases. Every patch has to go upstream first as it was, is, 
+and will be our past, present, and future.
 
-Hauke
+The only thing I can think of in favor of your arguments is that the 
+name 'stable' imply that they are without issues, ie. stable. However, 
+with a bit of ToM you may see that they are maintenance releases.
+
+Gr. AvS
+
+
