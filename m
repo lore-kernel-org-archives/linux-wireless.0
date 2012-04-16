@@ -1,154 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:45506 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932377Ab2DJXC4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 19:02:56 -0400
-Received: by mail-ob0-f174.google.com with SMTP id tb18so402680obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Apr 2012 16:02:56 -0700 (PDT)
-From: Jim Cromie <jim.cromie@gmail.com>
+Received: from nbd.name ([46.4.11.11]:43050 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751174Ab2DPQTz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 12:19:55 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: brudley@broadcom.com, Jim Cromie <jim.cromie@gmail.com>
-Subject: [PATCH] brcm80211: replace open-coded ARRAY_SIZE with the macro
-Date: Tue, 10 Apr 2012 17:02:34 -0600
-Message-Id: <1334098954-7556-2-git-send-email-jim.cromie@gmail.com> (sfid-20120411_010300_809100_7E5A9722)
-In-Reply-To: <1334098954-7556-1-git-send-email-jim.cromie@gmail.com>
-References: <1334098954-7556-1-git-send-email-jim.cromie@gmail.com>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2] ath9k: add possible wiphy interface combinations
+Date: Mon, 16 Apr 2012 18:19:50 +0200
+Message-Id: <1334593190-90956-1-git-send-email-nbd@openwrt.org> (sfid-20120416_182148_363894_EC2CD380)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Signed-off-by: Jim Cromie <jim.cromie@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |    3 +-
- .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   41 +++++--------------
- 2 files changed, 12 insertions(+), 32 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-index ce8562a..0fce56235 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -207,8 +207,7 @@ static const iqcal_gain_params_lcnphy *tbl_iqcal_gainparams_lcnphy[1] = {
- };
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 7a6b9f6..622dd15 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -646,6 +646,21 @@ void ath9k_reload_chainmask_settings(struct ath_softc *sc)
+ 		setup_ht_cap(sc, &sc->sbands[IEEE80211_BAND_5GHZ].ht_cap);
+ }
  
- static const u16 iqcal_gainparams_numgains_lcnphy[1] = {
--	sizeof(tbl_iqcal_gainparams_lcnphy_2G) /
--	sizeof(*tbl_iqcal_gainparams_lcnphy_2G),
-+	ARRAY_SIZE(tbl_iqcal_gainparams_lcnphy_2G),
- };
++static const struct ieee80211_iface_limit if_limits[] = {
++	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_STATION) |
++				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
++				 BIT(NL80211_IFTYPE_WDS) },
++	{ .max = 8,	.types = BIT(NL80211_IFTYPE_AP) |
++				 BIT(NL80211_IFTYPE_P2P_GO) |
++				 BIT(NL80211_IFTYPE_MESH_POINT) },
++};
++
++static const struct ieee80211_iface_combination if_comb = {
++	.limits = if_limits,
++	.n_limits = ARRAY_SIZE(if_limits),
++	.max_interfaces = 2048,
++	.num_different_channels = 1,
++};
  
- static const struct lcnphy_sfo_cfg lcnphy_sfo_cfg[] = {
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-index 3909574..812b6e3 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-@@ -16353,11 +16353,7 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 			wlc_phy_set_rfseq_nphy(pi, NPHY_RFSEQ_RX2TX,
- 					       rfseq_rx2tx_events_rev3_ipa,
- 					       rfseq_rx2tx_dlys_rev3_ipa,
--					       sizeof
--					       (rfseq_rx2tx_events_rev3_ipa) /
--					       sizeof
--					       (rfseq_rx2tx_events_rev3_ipa
--						[0]));
-+					       ARRAY_SIZE(rfseq_rx2tx_events_rev3_ipa));
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ {
+@@ -675,6 +690,9 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		BIT(NL80211_IFTYPE_ADHOC) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT);
  
- 		mod_phy_reg(pi, 0x299, (0x3 << 14), (0x1 << 14));
- 		mod_phy_reg(pi, 0x29d, (0x3 << 14), (0x1 << 14));
-@@ -16858,18 +16854,13 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 		wlc_phy_set_rfseq_nphy(pi, NPHY_RFSEQ_TX2RX,
- 				       rfseq_tx2rx_events_rev3,
- 				       rfseq_tx2rx_dlys_rev3,
--				       sizeof(rfseq_tx2rx_events_rev3) /
--				       sizeof(rfseq_tx2rx_events_rev3[0]));
-+				       ARRAY_SIZE(rfseq_tx2rx_events_rev3));
++	hw->wiphy->iface_combinations = &if_comb;
++	hw->wiphy->n_iface_combinations = 1;
++
+ 	if (AR_SREV_5416(sc->sc_ah))
+ 		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
  
- 		if (PHY_IPA(pi))
- 			wlc_phy_set_rfseq_nphy(pi, NPHY_RFSEQ_RX2TX,
- 					       rfseq_rx2tx_events_rev3_ipa,
- 					       rfseq_rx2tx_dlys_rev3_ipa,
--					       sizeof
--					       (rfseq_rx2tx_events_rev3_ipa) /
--					       sizeof
--					       (rfseq_rx2tx_events_rev3_ipa
--						[0]));
-+					       ARRAY_SIZE(rfseq_rx2tx_events_rev3_ipa));
- 
- 		if ((pi->sh->hw_phyrxchain != 0x3) &&
- 		    (pi->sh->hw_phyrxchain != pi->sh->hw_phytxchain)) {
-@@ -16885,8 +16876,7 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 				pi, NPHY_RFSEQ_RX2TX,
- 				rfseq_rx2tx_events_rev3,
- 				rfseq_rx2tx_dlys_rev3,
--				sizeof(rfseq_rx2tx_events_rev3)	/
--				sizeof(rfseq_rx2tx_events_rev3[0]));
-+				ARRAY_SIZE(rfseq_rx2tx_events_rev3));
- 		}
- 
- 		if (CHSPEC_IS2G(pi->radio_chanspec))
-@@ -17209,13 +17199,11 @@ static void wlc_phy_workarounds_nphy(struct brcms_phy *pi)
- 
- 		wlc_phy_set_rfseq_nphy(pi, NPHY_RFSEQ_RX2TX, rfseq_rx2tx_events,
- 				       rfseq_rx2tx_dlys,
--				       sizeof(rfseq_rx2tx_events) /
--				       sizeof(rfseq_rx2tx_events[0]));
-+				       ARRAY_SIZE(rfseq_rx2tx_events));
- 
- 		wlc_phy_set_rfseq_nphy(pi, NPHY_RFSEQ_TX2RX, rfseq_tx2rx_events,
- 				       rfseq_tx2rx_dlys,
--				       sizeof(rfseq_tx2rx_events) /
--				       sizeof(rfseq_tx2rx_events[0]));
-+				       ARRAY_SIZE(rfseq_tx2rx_events));
- 
- 		wlc_phy_workarounds_nphy_gainctrl(pi);
- 
-@@ -19357,8 +19345,7 @@ static void wlc_phy_spurwar_nphy(struct brcms_phy *pi)
- 			}
- 
- 			if (isAdjustNoiseVar) {
--				numTonesAdjust = sizeof(nphy_adj_tone_id_buf) /
--						sizeof(nphy_adj_tone_id_buf[0]);
-+				numTonesAdjust = ARRAY_SIZE(nphy_adj_tone_id_buf);
- 
- 				wlc_phy_adjust_min_noisevar_nphy(
- 					pi,
-@@ -25204,32 +25191,26 @@ static u8 wlc_phy_a3_nphy(struct brcms_phy *pi, u8 start_gain, u8 core)
- 
- 				phy_a15 = pad_gain_codes_used_2057rev5;
- 				phy_a13 =
--					sizeof(pad_gain_codes_used_2057rev5) /
--					sizeof(pad_gain_codes_used_2057rev5
--						[0]) - 1;
-+					ARRAY_SIZE(pad_gain_codes_used_2057rev5) - 1;
- 
- 			} else if ((pi->pubpi.radiorev == 7)
- 				   || (pi->pubpi.radiorev == 8)) {
- 
- 				phy_a15 = pad_gain_codes_used_2057rev7;
- 				phy_a13 =
--					sizeof(pad_gain_codes_used_2057rev7) /
--					sizeof(pad_gain_codes_used_2057rev7
--						[0]) - 1;
-+					ARRAY_SIZE(pad_gain_codes_used_2057rev7) - 1;
- 
- 			} else {
- 
- 				phy_a15 = pad_all_gain_codes_2057;
--				phy_a13 = sizeof(pad_all_gain_codes_2057) /
--					  sizeof(pad_all_gain_codes_2057[0]) -
-+				phy_a13 = ARRAY_SIZE(pad_all_gain_codes_2057) -
- 					  1;
- 			}
- 
- 		} else {
- 
- 			phy_a15 = pga_all_gain_codes_2057;
--			phy_a13 = sizeof(pga_all_gain_codes_2057) /
--				  sizeof(pga_all_gain_codes_2057[0]) - 1;
-+			phy_a13 = ARRAY_SIZE(pga_all_gain_codes_2057) - 1;
- 		}
- 
- 		phy_a14 = 0;
 -- 
-1.7.8.1
+1.7.3.2
 
