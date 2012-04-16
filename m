@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:55473 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755046Ab2DZLqz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 07:46:55 -0400
+Received: from mms3.broadcom.com ([216.31.210.19]:4141 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751209Ab2DPIvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 04:51:15 -0400
+Message-ID: <4F8BDD79.6030008@broadcom.com> (sfid-20120416_105118_487304_039AA924)
+Date: Mon, 16 Apr 2012 10:51:05 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20120425.163926.2209040699696617525.davem@davemloft.net>
-References: <20120425191418.GC16900@tuxdriver.com> <20120425.163926.2209040699696617525.davem@davemloft.net>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 26 Apr 2012 04:46:34 -0700
-Message-ID: <CAB=NE6Xqi42GgDRHg-oPuLgofXYGpBrLm-YPa+AfyQ+NhsK3ww@mail.gmail.com> (sfid-20120426_134700_056946_D66CEACA)
-Subject: Re: pull request: wireless-next 2012-04-25
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Greg KH" <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 0/9] brcm80211: minor bug fixes for broadcom driver
+References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+ <20120413175717.GD2616@tuxdriver.com>
+In-Reply-To: <20120413175717.GD2616@tuxdriver.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 25, 2012 at 1:39 PM, David Miller <davem@davemloft.net> wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Wed, 25 Apr 2012 15:14:19 -0400
+On 04/13/2012 07:57 PM, John W. Linville wrote:
+> On Wed, Apr 11, 2012 at 11:52:42AM +0200, Arend van Spriel wrote:
 >
->> This is another batch of updates intended for 3.5...
->  ...
->> Please let me know if there are problems!
+> In general, when mixing fixes and features/updates into a single
+> series then the fixes should come at the beginning of the series.
+> This helps to avoid dependencies on non-fix patches.
 >
-> There are:
+> I'll try to apply patch 9 to the wireless tree, and if that works I
+> won't complain about it... :-)
 >
-> From 792545c7bc5d6b922d3778dc602e557d64c83551 Mon Sep 17 00:00:00 2001
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> Date: Mon, 23 Apr 2012 19:55:48 -0700
-> Subject: [PATCH 88/88] libertas: include sched.h on firmware.c
->
-> Do not assume we have our subsystem including this for us,
-> at least for older kernels this is not true. Lets just be
-> explicit about this requirement for the usage of wake_up().
->
-> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->
-> This is bogus, wake_up() is defined in linux/wait.h, the whole
-> point of the linux/sched.h split up is so that linux/sched.h
-> includes could be removed and replaced with actual dependencies.
->
-> Also, please don't accept any patches from Luis that add those
-> #undef pr_fmt things to the atheros drivers.
->
-> He tried to add it an ethernet driver, and I asked him to explain
-> exactly why he's doing and that if it's appropriate then it's
-> appropriate everywhere not just in a few specific drivers.  He failed
-> to respond to me, and therefore failed to explain the situation and
-> address my concerned.  And then I saw just today that he's submitting
-> the same patch to wireless drivers.  That's not acceptable.
+> John
 
-Sorry about that, I missed your reply, will dig it up and reply.
+Like mentioned on collaboration summit, we may need a bit more education 
+on how to deal with stable fixes. I tagged the patch with cc to stable, 
+but not sure if that is the correct way to do it. The stable rules are 
+written in a generic way so I want know how the picture looks like when 
+moving patches upstream via a maintainer tree.
 
-  Luis
+So here is my understanding:
+
+1. submit patch without CC'ing stable against your wireless tree.
+2. patch moves upstream to Dave's net tree.
+3. patch moves further upstream to Linus' tree.
+4. submit patch to stable with upstream commit id.
+
+Is adding the CC to stable in step 1. a shortcut or is step 4. still 
+necessary in that case?
+
+Gr. AvS
+
