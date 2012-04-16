@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56852 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932255Ab2DSTqs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 15:46:48 -0400
-Date: Thu, 19 Apr 2012 14:46:44 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [RFC PATCH 0/8] brcm80211: smac: rework regulatory support
-Message-ID: <20120419194644.GC31147@thinkpad-t410> (sfid-20120419_214659_081866_750D88D2)
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
- <4F9067F6.90001@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F9067F6.90001@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:7007 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751221Ab2DPVmm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:42:42 -0400
+Message-ID: <1334612555.5455.0.camel@dcbw.foobar.com> (sfid-20120416_234245_381785_36BE5360)
+Subject: Re: [RFC 1/4] libertas: Firmware loading simplifications
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Date: Mon, 16 Apr 2012 16:42:35 -0500
+In-Reply-To: <CAMLZHHTJ_tX+4D=LRyn6gbNKHeRNW5_j4YS4_qz5MDMROYiCiA@mail.gmail.com>
+References: <20120403160104.D765B9D401E@zog.reactivated.net>
+	 <1334597520.10194.37.camel@dcbw.foobar.com>
+	 <CAMLZHHTJ_tX+4D=LRyn6gbNKHeRNW5_j4YS4_qz5MDMROYiCiA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 19, 2012 at 09:31:02PM +0200, Arend van Spriel wrote:
-> On 04/16/2012 10:17 PM, Seth Forshee wrote:
-> >Hi Arnd,
-> >
-> >Here's the latest update to the brcmsmac regulatory rework that I've
-> >been working on. I've broken it up into a series of smaller patches,
-> >cleaned things up, and finished what changes I can with the information
-> >available to me.
-> >
+On Mon, 2012-04-16 at 14:30 -0600, Daniel Drake wrote:
+> On Mon, Apr 16, 2012 at 11:32 AM, Dan Williams <dcbw@redhat.com> wrote:
+> > I think the reprogram functionality was intended for the school server
+> > use-case.  I was advocating for a standalone firmware flashing tool for
+> > this anyway (and had written a Python-based one back in 2007) but if
+> > OLPC doesn't support the school server stuff anymore, we can safely
+> > remove the flashing capability.
 > 
-> Hi Seth,
-> 
-> Just to indicate what we are doing with regard to your patches. I
-> organized a review internally for these patches. Waiting for one
-> more to sent back comments. Just pinged him today. So end of this
-> week I can probably sent you the collected comments.
+> Yes, unfortunately those efforts are long-dead as it didn't succeed.
 
-Wonderful, thanks a lot. I'm looking forward to receiving feedback.
+Fine by me then, #1 looks good.
 
-Seth
+Dan
 
