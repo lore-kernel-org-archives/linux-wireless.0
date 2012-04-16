@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:16761 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756803Ab2DKUlh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 16:41:37 -0400
-Date: Wed, 11 Apr 2012 22:41:36 +0200 (CEST)
-From: Jesper Juhl <jj@chaosbits.net>
-To: linux-wireless@vger.kernel.org
-cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Robert Love <rlove@google.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: fix memory leak in ath6kl_fwlog_block_read()
-Message-ID: <alpine.LNX.2.00.1204112239070.2137@swampdragon.chaosbits.net> (sfid-20120411_224157_533975_11EC9167)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from arrakis.dune.hu ([78.24.191.176]:54274 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751687Ab2DPT1R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 15:27:17 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 1/5] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
+Date: Mon, 16 Apr 2012 22:22:46 +0200
+Message-Id: <1334607770-26090-1-git-send-email-juhosg@openwrt.org> (sfid-20120416_212721_259041_44F4109F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If, in
-drivers/net/wireless/ath/ath6kl/debug.c::ath6kl_fwlog_block_read(),
-the call to wait_for_completion_interruptible() returns -ERESTARTSYS
-then we'll return without freeing the (as yet unused) memory we
-allocated for 'buf' - thus leaking it.
+The REDUCE_SCALED_POWER_BY_THREE_CHAIN symbol is
+defined in different eeprom files, but the value
+varies between the different files.
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+In eeprom_def.c and in ar9003_eeprom.c the value
+of the symbol is 9, however the comments in these
+files indicates the value should be 10*log10(3)*2
+which is 9.54242509439325.
+
+The same inconsistency was present in the Atheros
+reference code as well, but that has been fixed
+lately. Replace the value with 10 in these files
+in order to follow the reference code.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/ath/ath6kl/debug.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+v2: update commit message
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index d01403a..34eb927 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -401,8 +401,10 @@ static ssize_t ath6kl_fwlog_block_read(struct file *file,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 672b6c9..25a4a02 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -31,7 +31,7 @@
+ #define CTL_11G_EXT (CTL_11G | EXT_ADDITIVE)
+ #define CTL_11B_EXT (CTL_11B | EXT_ADDITIVE)
+ #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+-#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9  /* 10*log10(3)*2 */
++#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+ #define PWRINCR_3_TO_1_CHAIN      9             /* 10*log(3)*2 */
+ #define PWRINCR_3_TO_2_CHAIN      3             /* floor(10*log(3/2)*2) */
+ #define PWRINCR_2_TO_1_CHAIN      6             /* 10*log(2)*2 */
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 43f554e..6a85796 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -992,7 +992,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
+ 						  u16 powerLimit)
+ {
+ #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
+-#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
++#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
  
- 		ret = wait_for_completion_interruptible(
- 			&ar->debug.fwlog_completion);
--		if (ret == -ERESTARTSYS)
-+		if (ret == -ERESTARTSYS) {
-+			vfree(buf);
- 			return ret;
-+		}
- 
- 		spin_lock(&ar->debug.fwlog_queue.lock);
- 	}
+ 	struct ar5416_eeprom_def *pEepData = &ah->eeprom.def;
+ 	u16 twiceMaxEdgePower;
 -- 
-1.7.10
-
-
-PS. Please CC me on replies.
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+1.7.2.1
 
