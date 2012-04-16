@@ -1,39 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:44592 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026Ab2DCHQC (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:53558 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198Ab2DPKea (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 03:16:02 -0400
-MIME-Version: 1.0
-In-Reply-To: <4F7A9D5C.8040402@silka.with-linux.com>
-References: <4F7A8EB7.4060200@silka.with-linux.com>
-	<4F7A923D.5000002@candelatech.com>
-	<CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com>
-	<4F7A9D5C.8040402@silka.with-linux.com>
-Date: Tue, 3 Apr 2012 12:46:01 +0530
-Message-ID: <CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com> (sfid-20120403_091625_040938_0A2EB62E)
-Subject: Re: [ath9k-devel] 3.3.1 ath9k regression
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Kelly Anderson <kelly@silka.with-linux.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 16 Apr 2012 06:34:30 -0400
+Received: by dake40 with SMTP id e40so6743214dak.11
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 03:34:30 -0700 (PDT)
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	656813@bugs.debian.org, s.L-H@gmx.de,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Subject: [PATCH] net/wireless: ipw2200: Fix WARN_ON occurring in wiphy_register called by ipw_pci_probe
+Date: Mon, 16 Apr 2012 06:38:30 -0400
+Message-Id: <1334572710-10838-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20120416_123434_240784_D20B8272)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kelly,
+The problem was found by Stefan Lippers-Hollmann
+http://marc.info/?l=linux-wireless&m=132720334512946&w=2
 
-could you please try to see by disabling ASPM in the boot option and
-see if it helps
+WARNING: at /tmp/buildd/linux-aptosid-3.2/debian/build/source_i386_none/net/wireless/core.c:562 wiphy_register+0x45/0x38d [cfg80211]()
+Hardware name: TravelMate 290 \xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff\xffffffff
+Modules linked in: ipw2200(+) iTCO_wdt libipw joydev drm snd_seq snd_timer snd_seq_device iTCO_vendor_support yenta_socket snd intel_agp i2c_i801 pcmcia_rsrc cfg80211 soundcore parport_pc psmouse parport rng_core snd_page_alloc serio_raw pcspkr i2c_algo_bit intel_gtt pcmcia_core evdev irda crc_ccitt rfkill lib80211 processor container ac battery shpchp pci_hotplug button ext4 mbcache jbd2 crc16 dm_mod sd_mod sr_mod crc_t10dif cdrom ata_generic pata_acpi ata_piix libata scsi_mod firewire_ohci firewire_core crc_itu_t 8139too 8139cp mii uhci_hcd ehci_hcd usbcore usb_common [last unloaded: scsi_wait_scan]
+Pid: 328, comm: modprobe Not tainted 3.2-1.slh.4-aptosid-686 #1
+Call Trace:
+[<c012eaf4>] ? warn_slowpath_common+0x7c/0x8f
+[<e0ff0b3e>] ? wiphy_register+0x45/0x38d [cfg80211]
+[<e0ff0b3e>] ? wiphy_register+0x45/0x38d [cfg80211]
+[<c012eb22>] ? warn_slowpath_null+0x1b/0x1f
+[<e0ff0b3e>] ? wiphy_register+0x45/0x38d [cfg80211]
+[<c01f89d7>] ? internal_create_group+0xf5/0xff
+[<e0a2de1c>] ? ipw_pci_probe+0xa9a/0xbd0 [ipw2200]
+[<c01519f4>] ? arch_local_irq_save+0xf/0x14
+[<c0252986>] ? pci_device_probe+0x53/0x9a
+[<c02c2820>] ? driver_probe_device+0x94/0x124
+[<c0252871>] ? pci_match_id+0x15/0x34
+[<c02c28f0>] ? __driver_attach+0x40/0x5b
+[<c02c1d81>] ? bus_for_each_dev+0x37/0x60
+[<c02c25aa>] ? driver_attach+0x17/0x1a
+[<c02c28b0>] ? driver_probe_device+0x124/0x124
+[<c02c22c4>] ? bus_add_driver+0x92/0x1d1
+[<e099d000>] ? 0xe099cfff
+[<c02c2cb8>] ? driver_register+0x7d/0xd4
+[<c017cd50>] ? jump_label_module_notify+0xec/0x167
+[<e099d000>] ? 0xe099cfff
+[<c0253017>] ? __pci_register_driver+0x32/0x87
+[<e099d000>] ? 0xe099cfff
+[<e099d02e>] ? ipw_init+0x2e/0x72 [ipw2200]
+[<c0101173>] ? do_one_initcall+0x7d/0x132
+[<c0145016>] ? __blocking_notifier_call_chain+0x47/0x4f
+[<c0154a73>] ? sys_init_module+0x13a4/0x159c
+[<c03a639f>] ? sysenter_do_call+0x12/0x28
 
-http://linuxwireless.org/en/users/Documentation/ASPM
+This warning appears only if we apply Ben Hutchings' fix
+http://marc.info/?l=linux-wireless&m=132720195012653&w=2
+for the bug reported by Cesare Leonardi
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=656813
+with cfg80211 warning during device registration
+("cfg80211: failed to add phy80211 symlink to netdev!").
 
-pcie_aspm=      [PCIE] Forcibly enable or disable PCIe Active State Power
-off     Disable ASPM.
+We separate device bring up and registration with network stack
+to avoid the problem.
 
+After that Ben Hutchings' fix can be applied to fix the bug.
+
+Cc: stable@kernel.org
+Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+
+---
+
+Stefan, can you test it once again?
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c |   21 ++++++---------------
+ 1 files changed, 6 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index f37d315..4130802 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -11432,20 +11432,6 @@ static void ipw_bg_down(struct work_struct *work)
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+-/* Called by register_netdev() */
+-static int ipw_net_init(struct net_device *dev)
+-{
+-	int rc = 0;
+-	struct ipw_priv *priv = libipw_priv(dev);
+-
+-	mutex_lock(&priv->mutex);
+-	if (ipw_up(priv))
+-		rc = -EIO;
+-	mutex_unlock(&priv->mutex);
+-
+-	return rc;
+-}
+-
+ static int ipw_wdev_init(struct net_device *dev)
+ {
+ 	int i, rc = 0;
+@@ -11714,7 +11700,6 @@ static void ipw_prom_free(struct ipw_priv *priv)
+ #endif
+ 
+ static const struct net_device_ops ipw_netdev_ops = {
+-	.ndo_init		= ipw_net_init,
+ 	.ndo_open		= ipw_net_open,
+ 	.ndo_stop		= ipw_net_stop,
+ 	.ndo_set_rx_mode	= ipw_net_set_multicast_list,
+@@ -11841,6 +11826,12 @@ static int __devinit ipw_pci_probe(struct pci_dev *pdev,
+ 		goto out_release_irq;
+ 	}
+ 
++	if (ipw_up(priv)) {
++		mutex_unlock(&priv->mutex);
++		err = -EIO;
++		goto out_remove_sysfs;
++	}
++
+ 	mutex_unlock(&priv->mutex);
+ 	err = register_netdev(net_dev);
+ 	if (err) {
 -- 
-thanks,
-shafi
+1.7.2.5
+
