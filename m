@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:43367 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753788Ab2DFKj5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35794 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990Ab2DPReO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 06:39:57 -0400
-Received: by qafi31 with SMTP id i31so467182qaf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 03:39:57 -0700 (PDT)
+	Mon, 16 Apr 2012 13:34:14 -0400
+Message-ID: <4F8C5816.8070402@sipsolutions.net> (sfid-20120416_193417_729714_402FC428)
+Date: Mon, 16 Apr 2012 10:34:14 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Date: Fri, 6 Apr 2012 12:39:57 +0200
-Message-ID: <CAFED-jno-531+5TPOjDJ598jAO1zMmFpe6UJOsRt4SfbCU9zDQ@mail.gmail.com> (sfid-20120406_124001_086979_8243923B)
-Subject: carl9170: not able to add P2P_GO - add_interface fail with -EBUSY
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>, chunkeey@googlemail.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Matt Chen <machen@suse.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, ath9k-devel@lists.ath9k.org,
+	Takashi Iwai <tiwai@suse.de>
+Subject: Re: About rfkill racing issue.
+References: <CALx5=V_5XzAqddWRGzS4d-9MoHLV=abN2DOA-X7EtQ+78DBdzg@mail.gmail.com> (sfid-20120412_081533_107871_65FBA849)
+In-Reply-To: <CALx5=V_5XzAqddWRGzS4d-9MoHLV=abN2DOA-X7EtQ+78DBdzg@mail.gmail.com> (sfid-20120412_081533_107871_65FBA849)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 4/11/2012 11:15 PM, Matt Chen wrote:
+> Hi list,
+> It is found by notebook that rfkill doesn't work very right. I don't
+> know where to post this discussion, so I choose here to start the
+> talk.
+> Basically we found the input handler in net/rfkill/input.c , because
+> the nature of stateless key events, it can only toggle the saved
+> state.  This screws up when started as blocked at
+> boot, as already suspected.
+> Now we thought Synchronizing to the
+> hard block state looks as if working, but it's also dangerous because
+> the operation is racy. The hard block check on ath9k driver is done
+> in a poll basis, for example. Thus, the polling might happen just
+> before the key event is handled, and it might happen after the key
+> event.
+> Another option would be to get synchronize the soft block state at the
+> driver initialization time.  But, this doesn't work always because we
+> never know whether ther rfkill key event is generated.  The rfkill key
+> event depends on BIOS. Thus, if we set the soft block as same as the
+> hard block at the init time (and set as blocked), the soft block will
+> be never unblocked if some BIOS version doesn't emit a key event.
+>
+> So we would like to discuss with the all experts here for this issue.
+> Do you have a good idea to fix the rfkill for the issue ?
 
-With latest compat, wpa_supplicant seems p2p_concurent is set for
-car9170 driver based on information from driver.
-So, next after p2p_group_add new virtual interface is created for that
-- p2p-wlan0-0.
+How is hard rfkill related to input handling? It shouldn't be.
 
-Next, carl9170_op_add_interface() return -EBUSY because there is
-already main_vif (NL80211_IFTYPE_STATION) created by default on
-startup.
-Because of that p2p_group_add() always fail with such chipset and
-p2p_concurent=1.
+I don't understand what you're saying I think.
 
-STEPS:
-- run wpa_supplicant
-- run wpa_cli
-- p2p_group_add
-FAIL
-
-Is that chipset limitation we could add only new STA interface when
-main_vif is also STA?
-Where could I find HW documentation for carl9170?
-
-
-
-I suspect lower change is not acceptable because of HW limitation?
-
-        main_vif = carl9170_get_main_vif(ar);
-
-        if (main_vif) {
-                switch (main_vif->type) {
-                case NL80211_IFTYPE_STATION:
--                       if (vif->type == NL80211_IFTYPE_STATION)
-+                       if ((vif->type == NL80211_IFTYPE_STATION) ||
-+                           (vif->type == NL80211_IFTYPE_AP))
-                                break;
-
-
-
-BR
-Janusz
+johannes
