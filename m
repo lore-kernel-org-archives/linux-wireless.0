@@ -1,45 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4154 "EHLO mms2.broadcom.com"
+Received: from mga01.intel.com ([192.55.52.88]:28026 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752626Ab2DPVIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:08:42 -0400
-Message-ID: <4F8C8A52.1070908@broadcom.com> (sfid-20120416_230846_060693_0FBC3DB7)
-Date: Mon, 16 Apr 2012 14:08:34 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Kiss Robert" <kepten@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Broadcom brcm80211 monitor mode
-References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com>
- <4F356004.9090409@broadcom.com>
- <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com>
- <4F469ADF.5040806@broadcom.com>
- <CAN+AqrXDTLVZqP_jdbWTm-=FFmj2RqY6sD+B-GiUR6OL_SU2xQ@mail.gmail.com>
-In-Reply-To: <CAN+AqrXDTLVZqP_jdbWTm-=FFmj2RqY6sD+B-GiUR6OL_SU2xQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1755583Ab2DPWB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 18:01:28 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/16] iwlwifi: complete STATUS_READY refactoring
+Date: Mon, 16 Apr 2012 14:56:58 -0700
+Message-Id: <1334613430-30720-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120417_000249_228946_BA3F34AA)
+In-Reply-To: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 12:50 PM, Kiss Robert wrote:
-> Hi,
->
-> Is there any hope in the near future for a brcm80211 firmware which
-> supports monitor mode? If I got it right, it is either Broadcom who
-> could release such a firmware or someone else who has infinite free
-> time to reverse engineer the blob firmware, right? Is there any
-> initiative for that? Maybe some progress on it? I ask it because I'd
-> like to contribute to such a project if it already exists.
+From: Don Fry <donald.h.fry@intel.com>
 
-There is no plan for adding monitor mode support since it's not 
-requested by any products. And it's impossible to release the firmware 
-source code at the moment. I am not aware of any reverse engineering 
-project for Broadcom fullmac dongle. However, I do plan to work on the 
-monitor mode support on the firmware for SDIO dongle as a leisure 
-project although I don't have a schedule for it. I will announce it on 
-the mail list when it's ready. Stay tuned :)
+When WiMax takes over the RF, inform the op_mode.
 
-Regards,
--Franky
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    9 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h       |    7 +++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    7 +------
+ 3 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 427f63c..a88130f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2250,6 +2250,14 @@ static void iwl_nic_config(struct iwl_op_mode *op_mode)
+ 	priv->lib->nic_config(priv);
+ }
+ 
++static void iwl_wimax_active(struct iwl_op_mode *op_mode)
++{
++	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
++
++	clear_bit(STATUS_READY, &priv->status);
++	IWL_ERR(priv, "RF is used by WiMAX\n");
++}
++
+ static void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, int queue)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+@@ -2341,6 +2349,7 @@ const struct iwl_op_mode_ops iwl_dvm_ops = {
+ 	.nic_error = iwl_nic_error,
+ 	.cmd_queue_full = iwl_cmd_queue_full,
+ 	.nic_config = iwl_nic_config,
++	.wimax_active = iwl_wimax_active,
+ };
+ 
+ /*****************************************************************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index b1fd251..ca947ae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -125,6 +125,7 @@ struct iwl_fw;
+  * @cmd_queue_full: Called when the command queue gets full. Must be atomic.
+  * @nic_config: configure NIC, called before firmware is started.
+  *	May sleep
++ * @wimax_active: invoked when WiMax becomes active.  Must be atomic.
+  */
+ struct iwl_op_mode_ops {
+ 	struct iwl_op_mode *(*start)(struct iwl_trans *trans,
+@@ -139,6 +140,7 @@ struct iwl_op_mode_ops {
+ 	void (*nic_error)(struct iwl_op_mode *op_mode);
+ 	void (*cmd_queue_full)(struct iwl_op_mode *op_mode);
+ 	void (*nic_config)(struct iwl_op_mode *op_mode);
++	void (*wimax_active)(struct iwl_op_mode *op_mode);
+ };
+ 
+ /**
+@@ -209,6 +211,11 @@ static inline void iwl_op_mode_nic_config(struct iwl_op_mode *op_mode)
+ 	op_mode->ops->nic_config(op_mode);
+ }
+ 
++static inline void iwl_op_mode_wimax_active(struct iwl_op_mode *op_mode)
++{
++	op_mode->ops->wimax_active(op_mode);
++}
++
+ /*****************************************************
+ * Op mode layers implementations
+ ******************************************************/
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index b35f120..e1af031 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -547,14 +547,9 @@ static void iwl_irq_handle_error(struct iwl_trans *trans)
+ 			APMS_CLK_VAL_MRB_FUNC_MODE) ||
+ 	     (iwl_read_prph(trans, APMG_PS_CTRL_REG) &
+ 			APMG_PS_CTRL_VAL_RESET_REQ))) {
+-		/*
+-		 * Keep the restart process from trying to send host
+-		 * commands by clearing the ready bit.
+-		 */
+-		clear_bit(STATUS_READY, &trans->shrd->status);
+ 		clear_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
++		iwl_op_mode_wimax_active(trans->op_mode);
+ 		wake_up(&trans->wait_command_queue);
+-		IWL_ERR(trans, "RF is used by WiMAX\n");
+ 		return;
+ 	}
+ 
+-- 
+1.7.0.4
 
