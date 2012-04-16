@@ -1,81 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:34831 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430Ab2DRO4y (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:64079 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754488Ab2DPU7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:56:54 -0400
-Received: by obbta14 with SMTP id ta14so6696443obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 07:56:54 -0700 (PDT)
+	Mon, 16 Apr 2012 16:59:00 -0400
+Received: by dake40 with SMTP id e40so7404113dak.11
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 13:59:00 -0700 (PDT)
+Date: Mon, 16 Apr 2012 13:58:56 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk
+Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
+Message-ID: <20120416205856.GA22298@kroah.com> (sfid-20120416_225906_114402_DE445815)
+References: <20120412144626.GA14868@kroah.com>
+ <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+ <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+ <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+ <20120413105746.10ffb120@stein>
+ <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+ <20120413190819.9469.qmail@stuge.se>
+ <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
+ <20120416162710.GA24100@kroah.com>
+ <CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1334714536.3725.33.camel@jlt3.sipsolutions.net>
-References: <4F630AEA.10703@etit.tu-chemnitz.de> <20120316204547.GG18861@tux>
- <4F63BA31.1080608@etit.tu-chemnitz.de> <4F856449.3000804@etit.tu-chemnitz.de>
- <1334203508.3788.12.camel@jlt3.sipsolutions.net> <4F868732.1030401@etit.tu-chemnitz.de>
- <1334714536.3725.33.camel@jlt3.sipsolutions.net>
-From: Javier Cardona <javier@cozybit.com>
-Date: Wed, 18 Apr 2012 07:56:28 -0700
-Message-ID: <CAPjQAd99vzQDO0PzC-0jq1j8h4ekQAP_dRE=g5f=w=6EwcXrDw@mail.gmail.com> (sfid-20120418_165657_664375_B7AF5297)
-Subject: Re: [Greenmesh] [ath9k] mesh powersave hardware sleep + wakeup
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, henry@logout.com,
-	"greenmesh@lists.osll.spb.ru" <greenmesh@lists.osll.spb.ru>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 17, 2012 at 7:02 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> (...)
-> Keep in mind that TSF == start of TSF field, while rx_status->timestamp
-> == start of first symbol, which I didn't even remember when you guys did
-> all the Toffset things, I'm guessing they're all wrong :-)
+On Mon, Apr 16, 2012 at 11:11:05PM +0300, Felipe Contreras wrote:
+> On Mon, Apr 16, 2012 at 7:27 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> > Just one minor correction in this looney email thread:
+> >
+> > On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
+> >> v3.3.x on the other hand are *not* stable. They contain patches
+> >> backported from v3.4, but nobody guarantees they will work. There was
+> >> no v3.3.1-rc1, so the first time the patches compromising v3.3.1 were
+> >> generally tested together is in v3.3.1, at which point if somebody
+> >> finds issues, it's too late; bad patches are *not* going to be removed
+> >> in v3.3.2.
+> >
+> > Of course there was a 3.3.1-rc1, see the linux-kernel archives for the
+> > announcemen and the individual patches.  kernel.org has the large patch
+> > itself if you like that format instead.
+> 
+> I don't see it here:
+> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=tags
+> 
+> If you really want people to try it, why not tag it?
 
-I think you guessed wrong :)
+That would be because I don't keep it in that tree.  It is in a quilt
+tree you can find in the stable-queue.git repo, and I have never tagged
+-rc1 releases there.  No one has ever asked for it before, so in the
+past 6 years of stable releases, I guess no one ever needed it.
 
-http://www.mail-archive.com/devel@lists.open80211s.org/msg01552.html
+ketchup and tarballs seem to work well for others, perhaps you can use
+that as well (hint, ketchup on top of the linux-stable tree works just
+fine for testing this.)
 
-+       if (rx_status->flag & RX_FLAG_MACTIME_MPDU && rx_status->mactime) {
-+               /*
-+                * The mactime is defined as the time the first data symbol
-+                * of the frame hits the PHY, and the timestamp of the beacon
-+                * is defined as "the time that the data symbol containing the
-+                * first bit of the timestamp is transmitted to the PHY plus
-+                * the transmitting STA's delays through its local PHY from the
-+                * MAC-PHY interface to its interface with the WM" (802.11
-+                * 11.1.2)
-+                *
-+                * T_r, in 13.13.2.2.2, is just defined as "the frame reception
-+                * time" but we unless we interpret that time to be the same
-+                * time of the beacon timestamp, the offset calculation will be
-+                * off.  Below we adjust t_r to be "the time at which the first
-+                * symbol of the timestamp element in the beacon is received".
-+                * This correction depends on the rate.
-+                *
-+                * Based on similar code in ibss.c
-+                */
-+               int rate;
-+
-+               if (rx_status->flag & RX_FLAG_HT) {
-+                       /* TODO:
-+                        * In principle there could be HT-beacons (Dual Beacon
-+                        * HT Operation options), but for now ignore them and
-+                        * just use the primary (i.e. non-HT) beacons for
-+                        * synchronization.
-+                        * */
-+                       goto no_sync;
-+               } else
-+                       rate = local->hw.wiphy->bands[rx_status->band]->
-+                               bitrates[rx_status->rate_idx].bitrate;
-+
-+               /* 24 bytes of header * 8 bits/byte *
-+                * 10*(100 Kbps)/Mbps / rate (100 Kbps)*/
-+               t_r = rx_status->mactime + (24 * 8 * 10 / rate);
-+       }
-
-
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+greg k-h
