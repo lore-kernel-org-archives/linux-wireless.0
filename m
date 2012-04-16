@@ -1,111 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24143 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755926Ab2DFKKg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 06:10:36 -0400
-Message-ID: <4F7EC117.7070500@qca.qualcomm.com> (sfid-20120406_121059_296033_51CB5EB8)
-Date: Fri, 6 Apr 2012 15:40:31 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4154 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752626Ab2DPVIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:08:42 -0400
+Message-ID: <4F8C8A52.1070908@broadcom.com> (sfid-20120416_230846_060693_0FBC3DB7)
+Date: Mon, 16 Apr 2012 14:08:34 -0700
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Fix target assert in p2p bringup with multi vif
-References: <1333608369-18301-1-git-send-email-vthiagar@qca.qualcomm.com> <4F7EBF71.7070802@qca.qualcomm.com>
-In-Reply-To: <4F7EBF71.7070802@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: "Kiss Robert" <kepten@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom brcm80211 monitor mode
+References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com>
+ <4F356004.9090409@broadcom.com>
+ <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com>
+ <4F469ADF.5040806@broadcom.com>
+ <CAN+AqrXDTLVZqP_jdbWTm-=FFmj2RqY6sD+B-GiUR6OL_SU2xQ@mail.gmail.com>
+In-Reply-To: <CAN+AqrXDTLVZqP_jdbWTm-=FFmj2RqY6sD+B-GiUR6OL_SU2xQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 04/16/2012 12:50 PM, Kiss Robert wrote:
+> Hi,
+>
+> Is there any hope in the near future for a brcm80211 firmware which
+> supports monitor mode? If I got it right, it is either Broadcom who
+> could release such a firmware or someone else who has infinite free
+> time to reverse engineer the blob firmware, right? Is there any
+> initiative for that? Maybe some progress on it? I ask it because I'd
+> like to contribute to such a project if it already exists.
 
+There is no plan for adding monitor mode support since it's not 
+requested by any products. And it's impossible to release the firmware 
+source code at the moment. I am not aware of any reverse engineering 
+project for Broadcom fullmac dongle. However, I do plan to work on the 
+monitor mode support on the firmware for SDIO dongle as a leisure 
+project although I don't have a schedule for it. I will announce it on 
+the mail list when it's ready. Stay tuned :)
 
-On Friday 06 April 2012 03:33 PM, Kalle Valo wrote:
-> On 04/05/2012 09:46 AM, Vasanthakumar Thiagarajan wrote:
->> Using interface 0 for p2p causes target assert. This is because
->> interface 0 is always initialized to non-p2p operations. Fix this
->> issue by initializing all the interfaces for p2p when fw is capable
->> of dynamic interface switching. When fw is not capable of dynamic
->> switching, make sure p2p is not brought up on interface which is
->> not initialized for this purpose.
->>
->> Reported-by: Naveen Singh navesing@qca.qualcomm.com
->> Signed-off-by: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
->> ---
->>   drivers/net/wireless/ath/ath6kl/cfg80211.c |   26 +++++++++++++++++++++++
->>   drivers/net/wireless/ath/ath6kl/init.c     |   31 ++++++++++++++++++----------
->>   2 files changed, 46 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
->> index 1272508..26fb3d7 100644
->> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
->> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
->> @@ -1451,9 +1451,35 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
->>   					struct vif_params *params)
->>   {
->>   	struct ath6kl_vif *vif = netdev_priv(ndev);
->> +	int i;
->>
->>   	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type %u\n", __func__, type);
->>
->> +	/*
->> +	 * Don't bring up p2p on an interface which is not initialized
->> +	 * for p2p operation where fw does not have capability to switch
->> +	 * dynamically between non-p2p and p2p type interface.
->> +	 */
->> +	if (!test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
->> +		      vif->ar->fw_capabilities)) {
->> +		if (type == NL80211_IFTYPE_P2P_CLIENT ||
->> +		    type == NL80211_IFTYPE_P2P_GO) {
->> +			if (vif->ar->vif_max>  1) {
->> +				for (i = vif->ar->max_norm_iface;
->> +				     i<  vif->ar->vif_max; i++) {
->> +					if (i == vif->fw_vif_idx)
->> +						break;
->> +				}
->> +				if (i == vif->ar->vif_max) {
->> +					ath6kl_err("Invalid interface to bring up P2P\n");
->> +					return -EINVAL;
->> +				}
->> +			} else
->> +				if (vif->fw_vif_idx != 0)
->> +					return -EINVAL;
->> +		}
->> +	}
->
-> IMHO this is difficult to read. Could it be simplified by reducing the
-> unnecessary indentation:
->
-> 	if (!test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
-> 		      vif->ar->fw_capabilities)&&
->              (type == NL80211_IFTYPE_P2P_CLIENT ||
-> 	     type == NL80211_IFTYPE_P2P_GO)) {
->
-> 		if (vif->ar->vif_max == 0) {
-> 			if (vif->fw_vif_idx != 0)
-> 				return -EINVAL;
-> 			else
-> 				goto foo;
-> 		}
->
-> 		for (i = vif->ar->max_norm_iface;
-> 		     i<  vif->ar->vif_max; i++) {
-> 			if (i == vif->fw_vif_idx)
-> 				break;
-> 			}
-> 		}
->
-> 		if (i == vif->ar->vif_max) {
-> 			ath6kl_err("Invalid interface to bring up P2P\n");
-> 			return -EINVAL;
-> 		}
-> 	}
->
-> foo:
->
-> I'm sure I added bugs above but hopefully it still shows my idea. At
-> least you can combine the first two if statements and get rid of one
-> indentation level.
+Regards,
+-Franky
 
-I get your idea, i'll change it. Thanks!
-
-Vasanth
