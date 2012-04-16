@@ -1,109 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39524 "EHLO mga11.intel.com"
+Received: from nbd.name ([46.4.11.11]:41774 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758589Ab2DXXva (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 19:51:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 09/11] iwlwifi: use IWL_* instead of dev_printk when possible
-Date: Tue, 24 Apr 2012 16:46:02 -0700
-Message-Id: <1335311164-10252-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015156_781842_3F04567F)
-In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753717Ab2DPM5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 08:57:07 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH] mac80211: fix truncated packets in cooked monitor rx
+Date: Mon, 16 Apr 2012 14:56:48 +0200
+Message-Id: <1334581008-22807-1-git-send-email-nbd@openwrt.org> (sfid-20120416_145711_625361_925CBBCF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cooked monitor rx was recently changed to use ieee80211_add_rx_radiotap_header
+instead of generating only limited radiotap information.
+ieee80211_add_rx_radiotap_header assumes that FCS info is still present if
+the hardware supports receiving it, however when cooked monitor rx packets
+are processed, FCS info has already been stripped.
+Fix this by adding an extra flag indicating FCS presence.
 
-Also remove a debug print when allocation error occurred.
-The kernel will complain anyway.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |   11 +++++------
- drivers/net/wireless/iwlwifi/iwl-drv.c |    8 ++++----
- 2 files changed, 9 insertions(+), 10 deletions(-)
+ net/mac80211/rx.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b53852d..8f60f28 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1422,32 +1422,31 @@ void iwl_set_hw_params(struct iwl_priv *priv)
- 
- void iwl_debug_config(struct iwl_priv *priv)
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 54a0491..7cbb4aa 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -103,7 +103,7 @@ static void
+ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 				 struct sk_buff *skb,
+ 				 struct ieee80211_rate *rate,
+-				 int rtap_len)
++				 int rtap_len, bool has_fcs)
  {
--	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_DEBUG "
-+	IWL_INFO(priv, "CONFIG_IWLWIFI_DEBUG "
- #ifdef CONFIG_IWLWIFI_DEBUG
- 		"enabled\n");
- #else
- 		"disabled\n");
- #endif
--	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_DEBUGFS "
-+	IWL_INFO(priv, "CONFIG_IWLWIFI_DEBUGFS "
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 		"enabled\n");
- #else
- 		"disabled\n");
- #endif
--	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_DEVICE_TRACING "
-+	IWL_INFO(priv, "CONFIG_IWLWIFI_DEVICE_TRACING "
- #ifdef CONFIG_IWLWIFI_DEVICE_TRACING
- 		"enabled\n");
- #else
- 		"disabled\n");
- #endif
--
--	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_DEVICE_TESTMODE "
-+	IWL_INFO(priv, "CONFIG_IWLWIFI_DEVICE_TESTMODE "
- #ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
- 		"enabled\n");
- #else
- 		"disabled\n");
- #endif
--	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_P2P "
-+	IWL_INFO(priv, "CONFIG_IWLWIFI_P2P "
- #ifdef CONFIG_IWLWIFI_P2P
- 		"enabled\n");
- #else
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 05302d6..430cca5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -66,6 +66,7 @@
- #include <linux/module.h>
- 
- #include "iwl-drv.h"
-+#include "iwl-debug.h"
- #include "iwl-trans.h"
- #include "iwl-op-mode.h"
- #include "iwl-agn-hw.h"
-@@ -892,10 +893,9 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
- 	int ret;
- 
- 	drv = kzalloc(sizeof(*drv), GFP_KERNEL);
--	if (!drv) {
--		dev_printk(KERN_ERR, trans->dev, "Couldn't allocate iwl_drv");
-+	if (!drv)
- 		return NULL;
--	}
-+
- 	drv->trans = trans;
- 	drv->dev = trans->dev;
- 	drv->cfg = cfg;
-@@ -905,7 +905,7 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
- 	ret = iwl_request_firmware(drv, true);
- 
- 	if (ret) {
--		dev_printk(KERN_ERR, trans->dev, "Couldn't request the fw");
-+		IWL_ERR(trans, "Couldn't request the fw\n");
- 		kfree(drv);
- 		drv = NULL;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_radiotap_header *rthdr;
+@@ -134,7 +134,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
  	}
+ 
+ 	/* IEEE80211_RADIOTAP_FLAGS */
+-	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
++	if (has_fcs && (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS))
+ 		*pos |= IEEE80211_RADIOTAP_F_FCS;
+ 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
+ 		*pos |= IEEE80211_RADIOTAP_F_BADFCS;
+@@ -294,7 +294,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	}
+ 
+ 	/* prepend radiotap information */
+-	ieee80211_add_rx_radiotap_header(local, skb, rate, needed_headroom);
++	ieee80211_add_rx_radiotap_header(local, skb, rate, needed_headroom,
++					 true);
+ 
+ 	skb_reset_mac_header(skb);
+ 	skb->ip_summed = CHECKSUM_UNNECESSARY;
+@@ -2567,7 +2568,8 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
+ 		goto out_free_skb;
+ 
+ 	/* prepend radiotap information */
+-	ieee80211_add_rx_radiotap_header(local, skb, rate, needed_headroom);
++	ieee80211_add_rx_radiotap_header(local, skb, rate, needed_headroom,
++					 false);
+ 
+ 	skb_set_mac_header(skb, 0);
+ 	skb->ip_summed = CHECKSUM_UNNECESSARY;
 -- 
-1.7.0.4
+1.7.3.2
 
