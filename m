@@ -1,123 +1,628 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61662 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759053Ab2DJPOV (ORCPT
+Received: from queueout04-winn.ispmail.ntl.com ([81.103.221.58]:15286 "EHLO
+	queueout04-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755705Ab2DPXYz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 11:14:21 -0400
-Cc: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [WIP 02/11] ath9k: Add definitions and structures to support WoW
-Date: Tue, 10 Apr 2012 20:43:12 +0530
-Message-ID: <1334070801-21708-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120410_171424_424244_28F5D8A4)
-In-Reply-To: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 16 Apr 2012 19:24:55 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	dcbw@redhat.com
+Subject: [PATCH 1/5] libertas: Firmware loading simplifications
+Message-Id: <20120416225242.6F4D49D401E@zog.reactivated.net> (sfid-20120417_012500_299820_69FE7E65)
+Date: Mon, 16 Apr 2012 23:52:42 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Remove the ability to pass module parameters with firmware filenames
+for USB and SDIO interfaces.
 
-*add structures, macros and variables for WoW, so that the driver
-can make use of it.
-*maintain a list for user enabled patterns and masks
-*track pattern slots for the hardware limitation on the
-maximum number of patterns that can be stored.
-*track interrupts enabled before WoW suspend, so
-that can be reconfigured after resume
-*have macros to parse user defined wow configurations to
-hardware code
+Remove the ability to pass custom "user" filenames to lbs_get_firmware().
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Remove the ability to reprogram internal device memory with a different
+firmware from the USB driver (we don't know of any users), and simplify
+the OLPC firmware loading quirk to simply placing the OLPC firmware
+at the top of the list (we don't know of any users other than OLPC).
+
+Move lbs_get_firmware() into its own file.
+
+These simplifications should have no real-life effect but make the
+upcoming transition to asynchronous firmware loading considerably less
+painful.
+
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+Acked-by: Dan Williams <dcbw@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |   21 +++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h    |   21 +++++++++++++++++++++
- 2 files changed, 42 insertions(+), 0 deletions(-)
+ drivers/net/wireless/libertas/Makefile   |    1 +
+ drivers/net/wireless/libertas/decl.h     |    3 +-
+ drivers/net/wireless/libertas/firmware.c |   79 ++++++++++++++
+ drivers/net/wireless/libertas/if_cs.c    |    4 +-
+ drivers/net/wireless/libertas/if_sdio.c  |   25 +----
+ drivers/net/wireless/libertas/if_spi.c   |    5 +-
+ drivers/net/wireless/libertas/if_usb.c   |  169 ++----------------------------
+ drivers/net/wireless/libertas/main.c     |  101 ------------------
+ 8 files changed, 94 insertions(+), 293 deletions(-)
+ create mode 100644 drivers/net/wireless/libertas/firmware.c
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8c84049..2b3c94b 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -487,6 +487,19 @@ static inline u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc,
- }
- #endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+diff --git a/drivers/net/wireless/libertas/Makefile b/drivers/net/wireless/libertas/Makefile
+index f7d01bf..eac72f7 100644
+--- a/drivers/net/wireless/libertas/Makefile
++++ b/drivers/net/wireless/libertas/Makefile
+@@ -6,6 +6,7 @@ libertas-y += ethtool.o
+ libertas-y += main.o
+ libertas-y += rx.o
+ libertas-y += tx.o
++libertas-y += firmware.o
+ libertas-$(CONFIG_LIBERTAS_MESH) += mesh.o
  
-+struct ath9k_wow_pattern {
-+	bool slot;
-+	u8 pattern_bytes[MAX_PATTERN_SIZE];
-+	u8 mask_bytes[MAX_PATTERN_SIZE];
-+	u32 pattern_len;
-+	struct list_head list;
-+};
-+
-+struct ath9k_wow_info {
-+	u32 num_of_patterns;
-+	struct list_head wow_patterns;
-+};
-+
- /********************/
- /*   LED Control    */
- /********************/
-@@ -680,6 +693,14 @@ struct ath_softc {
+ usb8xxx-objs += if_usb.o
+diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
+index bc951ab..2fb2e31 100644
+--- a/drivers/net/wireless/libertas/decl.h
++++ b/drivers/net/wireless/libertas/decl.h
+@@ -66,8 +66,7 @@ int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
+ u32 lbs_fw_index_to_data_rate(u8 index);
+ u8 lbs_data_rate_to_fw_index(u32 rate);
  
- 	struct ath_ant_comb ant_comb;
- 	u8 ant_tx, ant_rx;
-+
-+#ifdef CONFIG_PM_SLEEP
-+	bool wow_got_bmiss_intr;
-+	bool wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
-+	u32 wow_intr_before_sleep;
-+	u32 wow_support_enabled;
-+	struct ath9k_wow_info wow_info;
-+#endif
- };
- 
- void ath9k_tasklet(unsigned long data);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index aa1680a..c061070 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -179,6 +179,24 @@
- #define PAPRD_TABLE_SZ			24
- #define PAPRD_IDEAL_AGC2_PWR_RANGE	0xe0
- 
-+/* Wake on Wireless */
-+
-+#define MAX_PATTERN_SIZE		256
-+#define MAX_PATTERN_MASK_SIZE		32
-+#define MAX_NUM_PATTERN			8
-+#define MAX_NUM_USER_PATTERN		6 /*  deducting the disassociate and
-+					      deauthenticate packets */
-+
+-int lbs_get_firmware(struct device *dev, const char *user_helper,
+-			const char *user_mainfw, u32 card_model,
++int lbs_get_firmware(struct device *dev, u32 card_model,
+ 			const struct lbs_fw_table *fw_table,
+ 			const struct firmware **helper,
+ 			const struct firmware **mainfw);
+diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
+new file mode 100644
+index 0000000..0c8c845
+--- /dev/null
++++ b/drivers/net/wireless/libertas/firmware.c
+@@ -0,0 +1,79 @@
 +/*
-+ * WoW trigger mapping to hardware code
++ * Firmware loading and handling functions.
 + */
 +
-+#define AH_WOW_USER_PATTERN_EN		BIT(0)
-+#define AH_WOW_MAGIC_PATTERN_EN		BIT(1)
-+#define AH_WOW_LINK_CHANGE		BIT(2)
-+#define AH_WOW_BEACON_MISS		BIT(3)
-+#define AH_WOW_MAX_EVENTS		4
++#include <linux/firmware.h>
++#include <linux/module.h>
 +
- enum ath_hw_txq_subtype {
- 	ATH_TXQ_AC_BE = 0,
- 	ATH_TXQ_AC_BK = 1,
-@@ -875,6 +893,9 @@ struct ath_hw {
- 	/* Enterprise mode cap */
- 	u32 ent_mode;
++#include "decl.h"
++
++/**
++ *  lbs_get_firmware - Retrieves two-stage firmware
++ *
++ *  @dev:     	A pointer to &device structure
++ *  @card_model: Bus-specific card model ID used to filter firmware table
++ *		elements
++ *  @fw_table:	Table of firmware file names and device model numbers
++ *		terminated by an entry with a NULL helper name
++ *  @helper:	On success, the helper firmware; caller must free
++ *  @mainfw:	On success, the main firmware; caller must free
++ *
++ *  returns:		0 on success, non-zero on failure
++ */
++int lbs_get_firmware(struct device *dev, u32 card_model,
++			const struct lbs_fw_table *fw_table,
++			const struct firmware **helper,
++			const struct firmware **mainfw)
++{
++	const struct lbs_fw_table *iter;
++	int ret;
++
++	BUG_ON(helper == NULL);
++	BUG_ON(mainfw == NULL);
++
++	/* Search for firmware to use from the table. */
++	iter = fw_table;
++	while (iter && iter->helper) {
++		if (iter->model != card_model)
++			goto next;
++
++		if (*helper == NULL) {
++			ret = request_firmware(helper, iter->helper, dev);
++			if (ret)
++				goto next;
++
++			/* If the device has one-stage firmware (ie cf8305) and
++			 * we've got it then we don't need to bother with the
++			 * main firmware.
++			 */
++			if (iter->fwname == NULL)
++				return 0;
++		}
++
++		if (*mainfw == NULL) {
++			ret = request_firmware(mainfw, iter->fwname, dev);
++			if (ret) {
++				/* Clear the helper to ensure we don't have
++				 * mismatched firmware pairs.
++				 */
++				release_firmware(*helper);
++				*helper = NULL;
++			}
++		}
++
++		if (*helper && *mainfw)
++			return 0;
++
++  next:
++		iter++;
++	}
++
++	/* Failed */
++	release_firmware(*helper);
++	*helper = NULL;
++	release_firmware(*mainfw);
++	*mainfw = NULL;
++
++	return -ENOENT;
++}
++EXPORT_SYMBOL_GPL(lbs_get_firmware);
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index 171a06b..cee5052 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -890,8 +890,8 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 		goto out2;
+ 	}
  
-+#ifdef CONFIG_PM_SLEEP
-+	u32 wow_event_mask;
-+#endif
- 	bool is_clk_25mhz;
- 	int (*get_mac_revision)(void);
- 	int (*external_reset)(void);
+-	ret = lbs_get_firmware(&p_dev->dev, NULL, NULL, card->model,
+-				&fw_table[0], &helper, &mainfw);
++	ret = lbs_get_firmware(&p_dev->dev, card->model, &fw_table[0],
++				&helper, &mainfw);
+ 	if (ret) {
+ 		pr_err("failed to find firmware (%d)\n", ret);
+ 		goto out2;
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index 15bfe2f..6590feb 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -65,12 +65,6 @@ static void if_sdio_interrupt(struct sdio_func *func);
+  */
+ static u8 user_rmmod;
+ 
+-static char *lbs_helper_name = NULL;
+-module_param_named(helper_name, lbs_helper_name, charp, 0644);
+-
+-static char *lbs_fw_name = NULL;
+-module_param_named(fw_name, lbs_fw_name, charp, 0644);
+-
+ static const struct sdio_device_id if_sdio_ids[] = {
+ 	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL,
+ 			SDIO_DEVICE_ID_MARVELL_LIBERTAS) },
+@@ -124,11 +118,6 @@ struct if_sdio_card {
+ 	unsigned long		ioport;
+ 	unsigned int		scratch_reg;
+ 
+-	const char		*helper;
+-	const char		*firmware;
+-	bool			helper_allocated;
+-	bool			firmware_allocated;
+-
+ 	u8			buffer[65536] __attribute__((aligned(4)));
+ 
+ 	spinlock_t		lock;
+@@ -725,8 +714,8 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
+ 		goto success;
+ 	}
+ 
+-	ret = lbs_get_firmware(&card->func->dev, lbs_helper_name, lbs_fw_name,
+-				card->model, &fw_table[0], &helper, &mainfw);
++	ret = lbs_get_firmware(&card->func->dev, card->model, &fw_table[0],
++				&helper, &mainfw);
+ 	if (ret) {
+ 		pr_err("failed to find firmware (%d)\n", ret);
+ 		goto out;
+@@ -1242,10 +1231,6 @@ free:
+ 		kfree(packet);
+ 	}
+ 
+-	if (card->helper_allocated)
+-		kfree(card->helper);
+-	if (card->firmware_allocated)
+-		kfree(card->firmware);
+ 	kfree(card);
+ 
+ 	goto out;
+@@ -1293,12 +1278,6 @@ static void if_sdio_remove(struct sdio_func *func)
+ 		kfree(packet);
+ 	}
+ 
+-	if (card->helper_allocated)
+-		kfree(card->helper);
+-	if (card->firmware_allocated)
+-		kfree(card->firmware);
+-	kfree(card);
+-
+ 	lbs_deb_leave(LBS_DEB_SDIO);
+ }
+ 
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index 7a5df4f..9604a1c 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -1064,9 +1064,8 @@ static int if_spi_init_card(struct if_spi_card *card)
+ 			goto out;
+ 		}
+ 
+-		err = lbs_get_firmware(&card->spi->dev, NULL, NULL,
+-					card->card_id, &fw_table[0], &helper,
+-					&mainfw);
++		err = lbs_get_firmware(&card->spi->dev, card->card_id,
++					&fw_table[0], &helper, &mainfw);
+ 		if (err) {
+ 			netdev_err(priv->dev, "failed to find firmware (%d)\n",
+ 				   err);
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 74da5f1..3dde3e0 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -29,9 +29,6 @@
+ 
+ #define MESSAGE_HEADER_LEN	4
+ 
+-static char *lbs_fw_name = NULL;
+-module_param_named(fw_name, lbs_fw_name, charp, 0644);
+-
+ MODULE_FIRMWARE("libertas/usb8388_v9.bin");
+ MODULE_FIRMWARE("libertas/usb8388_v5.bin");
+ MODULE_FIRMWARE("libertas/usb8388.bin");
+@@ -55,10 +52,7 @@ MODULE_DEVICE_TABLE(usb, if_usb_table);
+ 
+ static void if_usb_receive(struct urb *urb);
+ static void if_usb_receive_fwload(struct urb *urb);
+-static int __if_usb_prog_firmware(struct if_usb_card *cardp,
+-					const char *fwname, int cmd);
+-static int if_usb_prog_firmware(struct if_usb_card *cardp,
+-					const char *fwname, int cmd);
++static int if_usb_prog_firmware(struct if_usb_card *cardp);
+ static int if_usb_host_to_card(struct lbs_private *priv, uint8_t type,
+ 			       uint8_t *payload, uint16_t nb);
+ static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload,
+@@ -67,69 +61,6 @@ static void if_usb_free(struct if_usb_card *cardp);
+ static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
+ static int if_usb_reset_device(struct if_usb_card *cardp);
+ 
+-/* sysfs hooks */
+-
+-/*
+- *  Set function to write firmware to device's persistent memory
+- */
+-static ssize_t if_usb_firmware_set(struct device *dev,
+-		struct device_attribute *attr, const char *buf, size_t count)
+-{
+-	struct lbs_private *priv = to_net_dev(dev)->ml_priv;
+-	struct if_usb_card *cardp = priv->card;
+-	int ret;
+-
+-	BUG_ON(buf == NULL);
+-
+-	ret = if_usb_prog_firmware(cardp, buf, BOOT_CMD_UPDATE_FW);
+-	if (ret == 0)
+-		return count;
+-
+-	return ret;
+-}
+-
+-/*
+- * lbs_flash_fw attribute to be exported per ethX interface through sysfs
+- * (/sys/class/net/ethX/lbs_flash_fw).  Use this like so to write firmware to
+- * the device's persistent memory:
+- * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_flash_fw
+- */
+-static DEVICE_ATTR(lbs_flash_fw, 0200, NULL, if_usb_firmware_set);
+-
+-/**
+- * if_usb_boot2_set - write firmware to device's persistent memory
+- *
+- * @dev: target device
+- * @attr: device attributes
+- * @buf: firmware buffer to write
+- * @count: number of bytes to write
+- *
+- * returns: number of bytes written or negative error code
+- */
+-static ssize_t if_usb_boot2_set(struct device *dev,
+-		struct device_attribute *attr, const char *buf, size_t count)
+-{
+-	struct lbs_private *priv = to_net_dev(dev)->ml_priv;
+-	struct if_usb_card *cardp = priv->card;
+-	int ret;
+-
+-	BUG_ON(buf == NULL);
+-
+-	ret = if_usb_prog_firmware(cardp, buf, BOOT_CMD_UPDATE_BOOT2);
+-	if (ret == 0)
+-		return count;
+-
+-	return ret;
+-}
+-
+-/*
+- * lbs_flash_boot2 attribute to be exported per ethX interface through sysfs
+- * (/sys/class/net/ethX/lbs_flash_boot2).  Use this like so to write firmware
+- * to the device's persistent memory:
+- * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_flash_boot2
+- */
+-static DEVICE_ATTR(lbs_flash_boot2, 0200, NULL, if_usb_boot2_set);
+-
+ /**
+  * if_usb_write_bulk_callback - callback function to handle the status
+  * of the URB
+@@ -314,13 +245,10 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	}
+ 
+ 	/* Upload firmware */
+-	kparam_block_sysfs_write(fw_name);
+-	if (__if_usb_prog_firmware(cardp, lbs_fw_name, BOOT_CMD_FW_BY_USB)) {
+-		kparam_unblock_sysfs_write(fw_name);
++	if (if_usb_prog_firmware(cardp)) {
+ 		lbs_deb_usbd(&udev->dev, "FW upload failed\n");
+ 		goto err_prog_firmware;
+ 	}
+-	kparam_unblock_sysfs_write(fw_name);
+ 
+ 	if (!(priv = lbs_add_card(cardp, &intf->dev)))
+ 		goto err_prog_firmware;
+@@ -349,14 +277,6 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	usb_get_dev(udev);
+ 	usb_set_intfdata(intf, cardp);
+ 
+-	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_flash_fw))
+-		netdev_err(priv->dev,
+-			   "cannot register lbs_flash_fw attribute\n");
+-
+-	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_flash_boot2))
+-		netdev_err(priv->dev,
+-			   "cannot register lbs_flash_boot2 attribute\n");
+-
+ 	/*
+ 	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
+ 	 */
+@@ -389,9 +309,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
+ 
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
+-	device_remove_file(&priv->dev->dev, &dev_attr_lbs_flash_boot2);
+-	device_remove_file(&priv->dev->dev, &dev_attr_lbs_flash_fw);
+-
+ 	cardp->surprise_removed = 1;
+ 
+ 	if (priv) {
+@@ -912,58 +829,12 @@ static int check_fwfile_format(const uint8_t *data, uint32_t totlen)
+ 	return ret;
+ }
+ 
+-
+-/**
+-*  if_usb_prog_firmware - programs the firmware subject to cmd
+-*
+-*  @cardp:	the if_usb_card descriptor
+-*  @fwname:	firmware or boot2 image file name
+-*  @cmd:	either BOOT_CMD_FW_BY_USB, BOOT_CMD_UPDATE_FW,
+-*		or BOOT_CMD_UPDATE_BOOT2.
+-*  returns:	0 or error code
+-*/
+-static int if_usb_prog_firmware(struct if_usb_card *cardp,
+-				const char *fwname, int cmd)
+-{
+-	struct lbs_private *priv = cardp->priv;
+-	unsigned long flags, caps;
+-	int ret;
+-
+-	caps = priv->fwcapinfo;
+-	if (((cmd == BOOT_CMD_UPDATE_FW) && !(caps & FW_CAPINFO_FIRMWARE_UPGRADE)) ||
+-	    ((cmd == BOOT_CMD_UPDATE_BOOT2) && !(caps & FW_CAPINFO_BOOT2_UPGRADE)))
+-		return -EOPNOTSUPP;
+-
+-	/* Ensure main thread is idle. */
+-	spin_lock_irqsave(&priv->driver_lock, flags);
+-	while (priv->cur_cmd != NULL || priv->dnld_sent != DNLD_RES_RECEIVED) {
+-		spin_unlock_irqrestore(&priv->driver_lock, flags);
+-		if (wait_event_interruptible(priv->waitq,
+-				(priv->cur_cmd == NULL &&
+-				priv->dnld_sent == DNLD_RES_RECEIVED))) {
+-			return -ERESTARTSYS;
+-		}
+-		spin_lock_irqsave(&priv->driver_lock, flags);
+-	}
+-	priv->dnld_sent = DNLD_BOOTCMD_SENT;
+-	spin_unlock_irqrestore(&priv->driver_lock, flags);
+-
+-	ret = __if_usb_prog_firmware(cardp, fwname, cmd);
+-
+-	spin_lock_irqsave(&priv->driver_lock, flags);
+-	priv->dnld_sent = DNLD_RES_RECEIVED;
+-	spin_unlock_irqrestore(&priv->driver_lock, flags);
+-
+-	wake_up(&priv->waitq);
+-
+-	return ret;
+-}
+-
+ /* table of firmware file names */
+ static const struct {
+ 	u32 model;
+ 	const char *fwname;
+ } fw_table[] = {
++	{ MODEL_8388, "libertas/usb8388_olpc.bin" },
+ 	{ MODEL_8388, "libertas/usb8388_v9.bin" },
+ 	{ MODEL_8388, "libertas/usb8388_v5.bin" },
+ 	{ MODEL_8388, "libertas/usb8388.bin" },
+@@ -971,35 +842,10 @@ static const struct {
+ 	{ MODEL_8682, "libertas/usb8682.bin" }
+ };
+ 
+-#ifdef CONFIG_OLPC
+-
+-static int try_olpc_fw(struct if_usb_card *cardp)
+-{
+-	int retval = -ENOENT;
+-
+-	/* try the OLPC firmware first; fall back to fw_table list */
+-	if (machine_is_olpc() && cardp->model == MODEL_8388)
+-		retval = request_firmware(&cardp->fw,
+-				"libertas/usb8388_olpc.bin", &cardp->udev->dev);
+-	return retval;
+-}
+-
+-#else
+-static int try_olpc_fw(struct if_usb_card *cardp) { return -ENOENT; }
+-#endif /* !CONFIG_OLPC */
+-
+-static int get_fw(struct if_usb_card *cardp, const char *fwname)
++static int get_fw(struct if_usb_card *cardp)
+ {
+ 	int i;
+ 
+-	/* Try user-specified firmware first */
+-	if (fwname)
+-		return request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
+-
+-	/* Handle OLPC firmware */
+-	if (try_olpc_fw(cardp) == 0)
+-		return 0;
+-
+ 	/* Otherwise search for firmware to use */
+ 	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
+ 		if (fw_table[i].model != cardp->model)
+@@ -1012,8 +858,7 @@ static int get_fw(struct if_usb_card *cardp, const char *fwname)
+ 	return -ENOENT;
+ }
+ 
+-static int __if_usb_prog_firmware(struct if_usb_card *cardp,
+-					const char *fwname, int cmd)
++static int if_usb_prog_firmware(struct if_usb_card *cardp)
+ {
+ 	int i = 0;
+ 	static int reset_count = 10;
+@@ -1021,7 +866,7 @@ static int __if_usb_prog_firmware(struct if_usb_card *cardp,
+ 
+ 	lbs_deb_enter(LBS_DEB_USB);
+ 
+-	ret = get_fw(cardp, fwname);
++	ret = get_fw(cardp);
+ 	if (ret) {
+ 		pr_err("failed to find firmware (%d)\n", ret);
+ 		goto done;
+@@ -1053,7 +898,7 @@ restart:
+ 	do {
+ 		int j = 0;
+ 		i++;
+-		if_usb_issue_boot_command(cardp, cmd);
++		if_usb_issue_boot_command(cardp, BOOT_CMD_FW_BY_USB);
+ 		/* wait for command response */
+ 		do {
+ 			j++;
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 3b81b70..fa09585 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1177,107 +1177,6 @@ void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx)
+ }
+ EXPORT_SYMBOL_GPL(lbs_notify_command_response);
+ 
+-/**
+- *  lbs_get_firmware - Retrieves two-stage firmware
+- *
+- *  @dev:     	A pointer to &device structure
+- *  @user_helper: User-defined helper firmware file
+- *  @user_mainfw: User-defined main firmware file
+- *  @card_model: Bus-specific card model ID used to filter firmware table
+- *		elements
+- *  @fw_table:	Table of firmware file names and device model numbers
+- *		terminated by an entry with a NULL helper name
+- *  @helper:	On success, the helper firmware; caller must free
+- *  @mainfw:	On success, the main firmware; caller must free
+- *
+- *  returns:		0 on success, non-zero on failure
+- */
+-int lbs_get_firmware(struct device *dev, const char *user_helper,
+-			const char *user_mainfw, u32 card_model,
+-			const struct lbs_fw_table *fw_table,
+-			const struct firmware **helper,
+-			const struct firmware **mainfw)
+-{
+-	const struct lbs_fw_table *iter;
+-	int ret;
+-
+-	BUG_ON(helper == NULL);
+-	BUG_ON(mainfw == NULL);
+-
+-	/* Try user-specified firmware first */
+-	if (user_helper) {
+-		ret = request_firmware(helper, user_helper, dev);
+-		if (ret) {
+-			dev_err(dev, "couldn't find helper firmware %s\n",
+-				user_helper);
+-			goto fail;
+-		}
+-	}
+-	if (user_mainfw) {
+-		ret = request_firmware(mainfw, user_mainfw, dev);
+-		if (ret) {
+-			dev_err(dev, "couldn't find main firmware %s\n",
+-				user_mainfw);
+-			goto fail;
+-		}
+-	}
+-
+-	if (*helper && *mainfw)
+-		return 0;
+-
+-	/* Otherwise search for firmware to use.  If neither the helper or
+-	 * the main firmware were specified by the user, then we need to
+-	 * make sure that found helper & main are from the same entry in
+-	 * fw_table.
+-	 */
+-	iter = fw_table;
+-	while (iter && iter->helper) {
+-		if (iter->model != card_model)
+-			goto next;
+-
+-		if (*helper == NULL) {
+-			ret = request_firmware(helper, iter->helper, dev);
+-			if (ret)
+-				goto next;
+-
+-			/* If the device has one-stage firmware (ie cf8305) and
+-			 * we've got it then we don't need to bother with the
+-			 * main firmware.
+-			 */
+-			if (iter->fwname == NULL)
+-				return 0;
+-		}
+-
+-		if (*mainfw == NULL) {
+-			ret = request_firmware(mainfw, iter->fwname, dev);
+-			if (ret && !user_helper) {
+-				/* Clear the helper if it wasn't user-specified
+-				 * and the main firmware load failed, to ensure
+-				 * we don't have mismatched firmware pairs.
+-				 */
+-				release_firmware(*helper);
+-				*helper = NULL;
+-			}
+-		}
+-
+-		if (*helper && *mainfw)
+-			return 0;
+-
+-  next:
+-		iter++;
+-	}
+-
+-  fail:
+-	/* Failed */
+-	release_firmware(*helper);
+-	*helper = NULL;
+-	release_firmware(*mainfw);
+-	*mainfw = NULL;
+-
+-	return -ENOENT;
+-}
+-EXPORT_SYMBOL_GPL(lbs_get_firmware);
+-
+ static int __init lbs_init_module(void)
+ {
+ 	lbs_deb_enter(LBS_DEB_MAIN);
 -- 
-1.7.0.4
+1.7.7.6
 
