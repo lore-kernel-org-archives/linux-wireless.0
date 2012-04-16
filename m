@@ -1,53 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:48976 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751803Ab2DLHlv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 03:41:51 -0400
-Message-ID: <4F868732.1030401@etit.tu-chemnitz.de> (sfid-20120412_094155_441467_D79427D6)
-Date: Thu, 12 Apr 2012 09:41:38 +0200
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	javier@cozybit.com, linux-wireless@vger.kernel.org,
-	henry@logout.com,
-	"greenmesh@lists.osll.spb.ru" <greenmesh@lists.osll.spb.ru>
-Subject: Re: [Greenmesh] [ath9k] mesh powersave hardware sleep + wakeup
-References: <4F630AEA.10703@etit.tu-chemnitz.de>  <20120316204547.GG18861@tux> <4F63BA31.1080608@etit.tu-chemnitz.de>  <4F856449.3000804@etit.tu-chemnitz.de> <1334203508.3788.12.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1334203508.3788.12.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from arrakis.dune.hu ([78.24.191.176]:38727 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754591Ab2DPTu7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 15:50:59 -0400
+From: Gabor Juhos <juhosg@openwrt.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 1/2] ath9k: move ath9k_hw_fbin2freq function to eeprom.h
+Date: Mon, 16 Apr 2012 22:46:31 +0200
+Message-Id: <1334609192-26412-1-git-send-email-juhosg@openwrt.org> (sfid-20120416_215103_053588_4A7DA9DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/12 06:05, Johannes Berg wrote:
-> On Wed, 2012-04-11 at 13:00 +0200, Marco Porsch wrote:
->
->> Thus, I think we will need an additional/extended interface
->> mac80211<->driver here.
->>
->> I see two possibilities:
->> a) request the next wakeup time from mac80211 each time the hardware is
->> put to sleep (e.g. from ath9k_ps_restore).
->> b) give a whole list of periodic wakeup events of all vif to the driver.
->> Then the driver is supposed to sort out the closest event.
->>
->> What would be the better approach for such an interface? Or maybe a
->> completely different idea?
->
-> What time units would that be in, and how could you correlate them?
+Both eeprom.c and ar9003_eeprom.c has an indentical
+'ath9k_hw_fbin2freq' function. Move the function to
+a common place and remove the duplicates.
 
-I did not take an exhaustive overview over all possible drivers.
-But as the current mac80211<->driver interface carries only beacon 
-interval (in TU) and DTIM period, that should be a good starting point.
-ath9k additionally relies on the neighbors address to check whether it 
-can resume sleep after receiving an expected beacon (see setting of 
-'is_mybeacon' in ath_rx_tasklet).
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    9 ---------
+ drivers/net/wireless/ath/ath9k/eeprom.c        |    8 --------
+ drivers/net/wireless/ath/ath9k/eeprom.h        |    8 ++++++++
+ 3 files changed, 8 insertions(+), 17 deletions(-)
 
-Concerning correlation, in mesh mode we recently have t_offset (in TSF 
-increments) stored in sta_info and in client mode the drivers' 
-synchronised TSF should be the reference (but I am not quite sure what 
-happens when one client is associated to multiple AP).
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 672b6c9..122a066 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -2936,15 +2936,6 @@ static const struct ar9300_eeprom *ar9003_eeprom_struct_find_by_id(int id)
+ #undef N_LOOP
+ }
+ 
+-
+-static u16 ath9k_hw_fbin2freq(u8 fbin, bool is2GHz)
+-{
+-	if (fbin == AR5416_BCHAN_UNUSED)
+-		return fbin;
+-
+-	return (u16) ((is2GHz) ? (2300 + fbin) : (4800 + 5 * fbin));
+-}
+-
+ static int ath9k_hw_ar9300_check_eeprom(struct ath_hw *ah)
+ {
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index c435232..ef174e3 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -16,14 +16,6 @@
+ 
+ #include "hw.h"
+ 
+-static inline u16 ath9k_hw_fbin2freq(u8 fbin, bool is2GHz)
+-{
+-	if (fbin == AR5416_BCHAN_UNUSED)
+-		return fbin;
+-
+-	return (u16) ((is2GHz) ? (2300 + fbin) : (4800 + 5 * fbin));
+-}
+-
+ void ath9k_hw_analog_shift_regwrite(struct ath_hw *ah, u32 reg, u32 val)
+ {
+         REG_WRITE(ah, reg, val);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 5ff7ab9..fc13e63 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -697,6 +697,14 @@ void ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 				u16 *pPdGainBoundaries, u8 *pPDADCValues,
+ 				u16 numXpdGains);
+ 
++static inline u16 ath9k_hw_fbin2freq(u8 fbin, bool is2GHz)
++{
++	if (fbin == AR5416_BCHAN_UNUSED)
++		return fbin;
++
++	return (u16) ((is2GHz) ? (2300 + fbin) : (4800 + 5 * fbin));
++}
++
+ #define ar5416_get_ntxchains(_txchainmask)			\
+ 	(((_txchainmask >> 2) & 1) +                            \
+ 	 ((_txchainmask >> 1) & 1) + (_txchainmask & 1))
+-- 
+1.7.2.1
 
-Regards,
-Marco
