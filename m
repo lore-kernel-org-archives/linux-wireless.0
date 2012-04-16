@@ -1,121 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li235-22.members.linode.com ([173.255.225.22]:46389 "EHLO
-	erley.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753045Ab2DXL61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 07:58:27 -0400
-Message-ID: <4F96939B.5030204@erley.org> (sfid-20120424_135832_229726_9EC892C3)
-Date: Tue, 24 Apr 2012 07:50:51 -0400
-From: Pat Erley <pat-lkml@erley.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:34700 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754824Ab2DPVo1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:44:27 -0400
 MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Dominik Feser <dominik.feser@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: Re: wlan0 not present
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com> <CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com> <9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com> <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com> <8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com> <CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com> <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> <4F901224.1040508@sipsolutions.net> <EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com> <4F901F16.6080007@sipsolutions.net> <CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com> <CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com> <CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com> <CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com> <04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com> <CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
-In-Reply-To: <CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20120416212718.GA22824@kroah.com>
+References: <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413190819.9469.qmail@stuge.se>
+	<CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
+	<20120416162710.GA24100@kroah.com>
+	<CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com>
+	<20120416205856.GA22298@kroah.com>
+	<CAMP44s2OdH+1RG2O6+QXkik8Ww_ZSHN=yzEKwD1KvRAcceNSRA@mail.gmail.com>
+	<20120416212718.GA22824@kroah.com>
+Date: Tue, 17 Apr 2012 00:44:25 +0300
+Message-ID: <CAMP44s2bg8AC+jMXRv-GoRaag2qDgttHoVWmKOxH7zTg4-qtLQ@mail.gmail.com> (sfid-20120416_234446_328690_B7A350CC)
+Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Try a newer compat-wireless.  I saw mention of a patch on this ML
-that iwlwifi was looking for firmwares that aren't available yet.
-
-Specifically, it wants a -6 ucode, where you have -5.  I'm not
-sure if this has been merged upstream yet.
-
-On 04/24/2012 01:28 AM, Emmanuel Grumbach wrote:
-> On Tue, Apr 24, 2012 at 00:26, Dominik Feser
-> <dominik.feser@googlemail.com>  wrote:
->> Hmm, no one?
+On Tue, Apr 17, 2012 at 12:27 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> On Tue, Apr 17, 2012 at 12:18:13AM +0300, Felipe Contreras wrote:
+>> On Mon, Apr 16, 2012 at 11:58 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> > On Mon, Apr 16, 2012 at 11:11:05PM +0300, Felipe Contreras wrote:
+>> >> On Mon, Apr 16, 2012 at 7:27 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+>> >> > Just one minor correction in this looney email thread:
+>> >> >
+>> >> > On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
+>> >> >> v3.3.x on the other hand are *not* stable. They contain patches
+>> >> >> backported from v3.4, but nobody guarantees they will work. There was
+>> >> >> no v3.3.1-rc1, so the first time the patches compromising v3.3.1 were
+>> >> >> generally tested together is in v3.3.1, at which point if somebody
+>> >> >> finds issues, it's too late; bad patches are *not* going to be removed
+>> >> >> in v3.3.2.
+>> >> >
+>> >> > Of course there was a 3.3.1-rc1, see the linux-kernel archives for the
+>> >> > announcemen and the individual patches.  kernel.org has the large patch
+>> >> > itself if you like that format instead.
+>> >>
+>> >> I don't see it here:
+>> >> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=tags
+>> >>
+>> >> If you really want people to try it, why not tag it?
+>> >
+>> > That would be because I don't keep it in that tree.  It is in a quilt
+>> > tree you can find in the stable-queue.git repo, and I have never tagged
+>> > -rc1 releases there.  No one has ever asked for it before, so in the
+>> > past 6 years of stable releases, I guess no one ever needed it.
+>> >
+>> > ketchup and tarballs seem to work well for others, perhaps you can use
+>> > that as well (hint, ketchup on top of the linux-stable tree works just
+>> > fine for testing this.)
 >>
+>> Perhaps the current process will be continue to be OK, but I do
+>> believe a tagged v3.3.1-rc1 would have catched the ath9k issue.
 >
-> Apparently, Luis ?
->
->> Am 22.04.2012 um 18:53 schrieb Emmanuel Grumbach:
->>
->>> On Sun, Apr 22, 2012 at 16:00, Dominik Feser
->>> <dominik.feser@googlemail.com>  wrote:
->>>> THX a lot! Here is the dmesg output:
->>>>
->>>> Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
->>>> Copyright(c) 2003-2012 Intel Corporation
->>>> iwlwifi 0000:02:00.0: PCI INT A ->  GSI 17 (level, low) ->  IRQ 17
->>>> iwlwifi 0000:02:00.0: setting latency timer to 64
->>>> iwlwifi 0000:02:00.0: pci_resource_len = 0x00002000
->>>> iwlwifi 0000:02:00.0: pci_resource_base = f4498000
->>>> iwlwifi 0000:02:00.0: HW Revision ID = 0x34
->>>> iwlwifi 0000:02:00.0: irq 1277 (277) for MSI/MSI-X
->>>> iwlwifi 0000:02:00.0: U iwl_request_firmware eebd9d74
->>>> iwlwifi 0000:02:00.0: U iwl_request_firmware c8ee1dd8
->>>> iwlwifi 0000:02:00.0: U iwl_request_firmware ed655dd8
->>>> iwlwifi 0000:02:00.0: d21d7e18
->>>> iwlwifi 0000:02:00.0: U iwl_request_firmware d21d7dd8
->>>> iwlwifi 0000:02:00.0: eda37e18
->>>> iwlwifi 0000:02:00.0: eda37de0
->>>> iwlwifi 0000:02:00.0: U iwl_trans_pcie_rx_free eda37d80
->>>> iwlwifi 0000:02:00.0: PCI INT A disabled
->>>>
->>>>
->>>
->>> Still useless... Gosh... Does someone know to get real prints here ??
->>> I just use dev_err("WHATEVER %s", "STRING");
->>>
->>>>
->>>>
->>>> Am 19.04.2012 um 18:19 schrieb Emmanuel Grumbach:
->>>>
->>>>> On Thu, Apr 19, 2012 at 18:08, Dominik Feser
->>>>> <dominik.feser@googlemail.com>  wrote:
->>>>>> May it be that the fact that Centos 5 doesnt have hotplug causes the issue?
->>>>>>
->>>>>
->>>>> Don't think so.
->>>>> Can it be a problem in the backport of request_firwamre_no_wait ?
->>>>> Did I see somewhere that you run 2.6.38 ?
->>>>> Can you check again after having applied the patch attached ?
->>>>>
->>>>> from the main dir of compat:
->>>>> patch -p1<  print.patch
->>>>>
->>>>> Thanks
->>>>>
->>>>>> Am 19.04.2012 um 16:20 schrieb Johannes Berg:
->>>>>>
->>>>>>> On 4/19/2012 7:09 AM, Dominik Feser wrote:
->>>>>>>> Finally, here is the output of dmesg after recompiling:
->>>>>>>>
->>>>>>>> iwlwifi 0000:02:00.0: edd19e18
->>>>>>>> iwlwifi 0000:02:00.0: d55c1e18
->>>>>>>> iwlwifi 0000:02:00.0: d55c1ddc
->>>>>>>> iwlwifi 0000:02:00.0: PCI INT A disabled
->>>>>>>> Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
->>>>>>>> Copyright(c) 2003-2012 Intel Corporation
->>>>>>>> iwlwifi 0000:02:00.0: PCI INT A ->    GSI 17 (level, low) ->    IRQ 17
->>>>>>>> iwlwifi 0000:02:00.0: setting latency timer to 64
->>>>>>>> iwlwifi 0000:02:00.0: pci_resource_len = 0x00002000
->>>>>>>> iwlwifi 0000:02:00.0: pci_resource_base = f447c000
->>>>>>>> iwlwifi 0000:02:00.0: HW Revision ID = 0x34
->>>>>>>> iwlwifi 0000:02:00.0: irq 1277 (277) for MSI/MSI-X
->>>>>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware d5b37d70
->>>>>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware e09ebdd4
->>>>>>>> iwlwifi 0000:02:00.0: ee2afe18
->>>>>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware ee2afdd4
->>>>>>>> iwlwifi 0000:02:00.0: cc93fe18
->>>>>>>> iwlwifi 0000:02:00.0: cc93fddc
->>>>>>>
->>>>>>> Still pretty useless since you get %pV printed as a pointer rather than a message. Does anyone know how to fix that in compat? But the iwl_request_firmware 3 times probably means it failed?
->>>>>>>
->>>>>>> johannes
->>>>>>
->>>>> <print.patch>
->>>>
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> How exactly would that have helped here?
 
+More people would have given it a try. Not that many people read the
+mailing list, and the ones that do certainly might want to avoid
+applying a big series of patches; even if their mail client makes it
+easy (mine (Gmail) doesn't). A tag, and an announcement to give a try
+would make it *much* easier.
+
+> You point out:
+>
+>> I used to compile my own kernels and use your stable tree, but this a
+>> new laptop and I was using Arch Linux which automatically updated to
+>> v3.3.1, and with no network I had no way to revert to v3.2.x.
+>> Fortunately I had the kernel sources available, but I wonder how many
+>> people were completely stuck.
+>
+> Arch wouldn't have included a -rc in their kernel (unless they are
+> crazy), so this would not have helped your situation at all.
+
+There's *a lot* of people that got affected by the 3.3.1 release; we
+don't need to break a lot of boxes to figure out there's an issue,
+only a few would suffice, even one.
+
+>> If some other 3.x.1 release get broken this way, I would seriously
+>> consider tagging v3.x.1-rc1 as well. It works for Linus' tree.
+>
+> "this way" was for a very tiny subset of hardware, so odds are, if this
+> happens again, it wouldn't be caught this way either.  That subset just
+> happened to show up in your machine, but, for example, not in the wide
+> range of hardware I test with here, nor the machines that others test
+> with.
+
+It was certainly not just me. I have seen a lot of people mentioning
+"their wifi is broken", a lot of them using Arch Linux,
+coincidentally.
+
+These issues would most likely not be caught before v3.x.1, and which
+point it's too late, they cannot be reverted to v3.x.2 just like that;
+they have to wait for upstream. Hopefully and probably everything
+would go smooth like this time, but maybe not, we'll have to wait and
+see. With more people using Arch Linux and thus the latest "stable"
+release, I'd say we might see an increase in these kinds of issues.
+
+Cheers.
+
+-- 
+Felipe Contreras
