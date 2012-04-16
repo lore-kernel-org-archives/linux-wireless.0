@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:29477 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752101Ab2DPWxH (ORCPT
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:33100 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755221Ab2DPUaI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:53:07 -0400
+	Mon, 16 Apr 2012 16:30:08 -0400
+Received: by dake40 with SMTP id e40so7376903dak.11
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 13:30:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1334597520.10194.37.camel@dcbw.foobar.com>
+References: <20120403160104.D765B9D401E@zog.reactivated.net>
+	<1334597520.10194.37.camel@dcbw.foobar.com>
+Date: Mon, 16 Apr 2012 14:30:07 -0600
+Message-ID: <CAMLZHHTJ_tX+4D=LRyn6gbNKHeRNW5_j4YS4_qz5MDMROYiCiA@mail.gmail.com> (sfid-20120416_223017_415513_E645FEBE)
+Subject: Re: [RFC 1/4] libertas: Firmware loading simplifications
 From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	dcbw@redhat.com
-Subject: [PATCH 2/5] libertas: harden-up exit paths
-Message-Id: <20120416225302.E2D479D401E@zog.reactivated.net> (sfid-20120417_005311_443403_2472808C)
-Date: Mon, 16 Apr 2012 23:53:02 +0100 (BST)
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These simple sanity check avoids extra complexity in error paths when
-moving to asynchronous firmware loading (which means the device may fail to
-init some time after its creation).
+On Mon, Apr 16, 2012 at 11:32 AM, Dan Williams <dcbw@redhat.com> wrote:
+> I think the reprogram functionality was intended for the school server
+> use-case.  I was advocating for a standalone firmware flashing tool for
+> this anyway (and had written a Python-based one back in 2007) but if
+> OLPC doesn't support the school server stuff anymore, we can safely
+> remove the flashing capability.
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
-Acked-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/main.c |    9 ++++++++-
- 1 files changed, 8 insertions(+), 1 deletions(-)
+Yes, unfortunately those efforts are long-dead as it didn't succeed.
 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index fa09585..7eaf992 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1033,7 +1033,9 @@ void lbs_remove_card(struct lbs_private *priv)
- 	lbs_deb_enter(LBS_DEB_MAIN);
- 
- 	lbs_remove_mesh(priv);
--	lbs_scan_deinit(priv);
-+
-+	if (priv->wiphy_registered)
-+		lbs_scan_deinit(priv);
- 
- 	/* worker thread destruction blocks on the in-flight command which
- 	 * should have been cleared already in lbs_stop_card().
-@@ -1128,6 +1130,11 @@ void lbs_stop_card(struct lbs_private *priv)
- 		goto out;
- 	dev = priv->dev;
- 
-+	/* If the netdev isn't registered, it means that lbs_start_card() was
-+	 * never called so we have nothing to do here. */
-+	if (dev->reg_state != NETREG_REGISTERED)
-+		goto out;
-+
- 	netif_stop_queue(dev);
- 	netif_carrier_off(dev);
- 
--- 
-1.7.7.6
-
+Thanks
+Daniel
