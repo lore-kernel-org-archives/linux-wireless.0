@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4192 "EHLO mms2.broadcom.com"
+Received: from mga01.intel.com ([192.55.52.88]:57140 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750986Ab2DBVkq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 17:40:46 -0400
-Message-ID: <4F7A1CC8.4020006@broadcom.com> (sfid-20120402_234049_499488_4DFF8927)
-Date: Mon, 2 Apr 2012 14:40:24 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Kiran Karra" <kiran.karra@gmail.com>
-cc: "linux wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: BCM4329 chipset -- open80211s
-References: <CAAaUcVyTk7zRs4XACXa_Sw_n6qgcF_7b2Mf_dNhEMsiwgGa_QA@mail.gmail.com>
-In-Reply-To: <CAAaUcVyTk7zRs4XACXa_Sw_n6qgcF_7b2Mf_dNhEMsiwgGa_QA@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1755592Ab2DPWB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 18:01:28 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Amit Beka <amit.beka@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/16] iwlwifi: added HBUS_TARG_TEST_REG
+Date: Mon, 16 Apr 2012 14:57:00 -0700
+Message-Id: <1334613430-30720-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120417_000248_718101_4A95B9E2)
+In-Reply-To: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kiran,
+From: Amit Beka <amit.beka@intel.com>
 
-On 03/31/2012 12:18 PM, Kiran Karra wrote:
-> Hi All,
-> I would like to know if I can use open80211s with the BCM4329 chipset?
->   From the research I've done, the BCM4329 is a FullMAC device, not a
-> SoftMAC device.  The open-source linux driver that can work with the
-> BCM4329 chipset is the brcmfmac.  Therefore, it does not use the
-> mac80211 framework.  The brcmfmac driver is integrated with cfg80211.
-> Since open80211s is based off the mac80211 stack, does this mean
-> open80211s can never be used with brcmfmac?  Is it possible to
-> interface the open80211s code directly with cfg80211?  Would the
-> cfg80211 api provide all the necessary callbacks in order to acheive
-> mesh functionality?  If this is possible, does anyone have an idea of
-> how much time this effort would require?
+This register is used to enable some debug mechanisms.
 
-The current implementation of support for 4329 is using the chipset to 
-handle all 80211 stuff. The packet passed between host and the dongle 
-chipset is Ethernet packet (802.3). Currently we don't have any plan to 
-add mesh mode support in firmware.
+Signed-off-by: Amit Beka <amit.beka@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-csr.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-Thanks,
--Franky
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index 5f96ce1..5975054 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -430,6 +430,9 @@
+ #define HBUS_TARG_PRPH_WDAT     (HBUS_BASE+0x04c)
+ #define HBUS_TARG_PRPH_RDAT     (HBUS_BASE+0x050)
+ 
++/* Used to enable DBGM */
++#define HBUS_TARG_TEST_REG	(HBUS_BASE+0x05c)
++
+ /*
+  * Per-Tx-queue write pointer (index, really!)
+  * Indicates index to next TFD that driver will fill (1 past latest filled).
+-- 
+1.7.0.4
 
