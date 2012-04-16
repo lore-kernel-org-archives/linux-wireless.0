@@ -1,79 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39214 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608Ab2DAUxq (ORCPT
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:48316 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754795Ab2DPQvf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2012 16:53:46 -0400
-Message-ID: <4F78C056.4080307@candelatech.com> (sfid-20120401_225349_388622_92AB641F)
-Date: Sun, 01 Apr 2012 13:53:42 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 16 Apr 2012 12:51:35 -0400
+Message-ID: <4F8C784B.2040402@xenotime.net> (sfid-20120416_185151_848269_EAC36264)
+Date: Mon, 16 Apr 2012 12:51:39 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211:  Support on-channel scan option.
-References: <1333233041-3246-1-git-send-email-greearb@candelatech.com>   (sfid-20120401_003057_469452_61057064) <1333305916.3703.2.camel@jlt3.sipsolutions.net>  <4F78BE67.8090609@candelatech.com> <1333313357.22977.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1333313357.22977.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+CC: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH -next] wireless: TI wlxxx depends on MAC80211
+References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>
+In-Reply-To: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/01/2012 01:49 PM, Johannes Berg wrote:
-> On Sun, 2012-04-01 at 13:45 -0700, Ben Greear wrote:
->> On 04/01/2012 11:45 AM, Johannes Berg wrote:
->>> On Sat, 2012-03-31 at 15:30 -0700, greearb@candelatech.com wrote:
->>>
->>>
->>>>    static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
->>>>    				  struct cfg80211_scan_request *req)
->>>> @@ -438,6 +461,33 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
->>>>    	local->scan_req = req;
->>>>    	local->scan_sdata = sdata;
->>>>
->>>> +	/* If we are scanning only on the current channel, then
->>>> +	 * we do not need to stop normal activities
->>>> +	 */
->>>> +	if ((req->n_channels == 1)&&
->>>> +	    (req->channels[0]->center_freq ==
->>>> +	     local->hw.conf.channel->center_freq)) {
->>> ...
->>>> +		return 0;
->>>> +	}
->>>> +
->>>>    	if (local->ops->hw_scan)
->>>>    		__set_bit(SCAN_HW_SCANNING,&local->scanning);
->>>
->>> Clearly, you're joking.
->>
->> That is worthless feedback and gives me no idea what you
->> think should be fixed about it.
->>
->> If you hate the entire idea of optimizing scanning on channel,
->> just say so plainly.
->
-> I did quote only the relevant pieces -- you're completely ignoring hw
-> scan. Why should I care about this patch then?
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Well, I was hoping that a simple scan-on-channel wouldn't need to
-care about the hw-scan logic.
+wl12xx build fails with many undefined symbol errors when MAC80211
+and CFG80211 are not enabled, so make WLCORE and WL12XX depend
+on MAC80211 (which already depends on CFG80211).
 
-But, I can change it so that the optimized scan-on-channel only
-is supported on NICs that do software-scan?
+Here are a few of the many build errors:
 
-The patch does have a small bug in the scan-complete logic,
-but aside from that, it appears to work on ath9k.
+drivers/built-in.o: In function `wl1271_register_hw':
+main.c:(.text+0x4197cd): undefined reference to `ieee80211_register_hw'
+drivers/built-in.o: In function `wl1271_rx_streaming_timer':
+main.c:(.text+0x419818): undefined reference to `ieee80211_queue_work'
+drivers/built-in.o: In function `wl1271_flush_deferred_work':
+main.c:(.text+0x419910): undefined reference to `ieee80211_rx'
+main.c:(.text+0x419938): undefined reference to `ieee80211_tx_status'
+drivers/built-in.o: In function `wl12xx_op_channel_switch':
+main.c:(.text+0x419afc): undefined reference to `ieee80211_chswitch_done'
+drivers/built-in.o: In function `wl1271_ssid_set':
+drivers/built-in.o: In function `wl1271_event_process':
+event.c:(.text+0x41fec4): undefined reference to `ieee80211_sched_scan_stopped'
+event.c:(.text+0x41ff88): undefined reference to `ieee80211_cqm_rssi_notify'
+event.c:(.text+0x42000d): undefined reference to `ieee80211_stop_rx_ba_session'
+event.c:(.text+0x420048): undefined reference to `ieee80211_stop_rx_ba_session'
+event.c:(.text+0x4200b8): undefined reference to `ieee80211_chswitch_done'
+event.c:(.text+0x4201ae): undefined reference to `ieee80211_find_sta'
+event.c:(.text+0x4201ba): undefined reference to `ieee80211_report_low_ack'
+event.c:(.text+0x42021b): undefined reference to `ieee80211_connection_loss'
+drivers/built-in.o: In function `wl1271_tx_complete_packet':
+tx.c:(.text+0x4206a6): undefined reference to `ieee80211_get_hdrlen_from_skb'
+drivers/built-in.o: In function `wl1271_tx_fill_hdr':
+tx.c:(.text+0x4208ca): undefined reference to `ieee80211_hdrlen'
+drivers/built-in.o: In function `wl1271_handle_tx_low_watermark':
+(.text+0x420e25): undefined reference to `ieee80211_wake_queue'
+drivers/built-in.o: In function `wl12xx_rearm_rx_streaming':
+(.text+0x420ed9): undefined reference to `ieee80211_queue_work'
+drivers/built-in.o: In function `wl1271_tx_work_locked':
+(.text+0x421008): undefined reference to `ieee80211_free_txskb'
+drivers/built-in.o: In function `wl1271_rx_status.clone.2':
+rx.c:(.text+0x421593): undefined reference to `ieee80211_channel_to_frequency'
+drivers/built-in.o: In function `wl1271_ps_filter_frames':
+ps.c:(.text+0x421a41): undefined reference to `ieee80211_tx_status'
 
-Thanks,
-Ben
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Cc:	Luciano Coelho <coelho@ti.com>
+Cc:	linux-wireless@vger.kernel.org
+Cc:	"John W. Linville" <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ti/wl12xx/Kconfig |    1 +
+ drivers/net/wireless/ti/wlcore/Kconfig |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--- linux-next-20120416.orig/drivers/net/wireless/ti/wl12xx/Kconfig
++++ linux-next-20120416/drivers/net/wireless/ti/wl12xx/Kconfig
+@@ -1,5 +1,6 @@
+ config WL12XX
+        tristate "TI wl12xx support"
++	depends on MAC80211
+        select WLCORE
+        ---help---
+ 	  This module adds support for wireless adapters based on TI wl1271,
+--- linux-next-20120416.orig/drivers/net/wireless/ti/wlcore/Kconfig
++++ linux-next-20120416/drivers/net/wireless/ti/wlcore/Kconfig
+@@ -1,6 +1,6 @@
+ config WLCORE
+ 	tristate "TI wlcore support"
+-	depends on WL_TI && GENERIC_HARDIRQS
++	depends on WL_TI && GENERIC_HARDIRQS && MAC80211
+ 	depends on INET
+ 	select FW_LOADER
+ 	---help---
