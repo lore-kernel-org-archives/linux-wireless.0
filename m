@@ -1,119 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8968 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751059Ab2DEGpf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 02:45:35 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Fix target assert in p2p bringup with multi vif
-Date: Thu, 5 Apr 2012 12:16:09 +0530
-Message-ID: <1333608369-18301-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120405_084540_039147_E2071D0A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:34024 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754750Ab2DPUKy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 16:10:54 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 3.4] mac80211: fix logic error in ibss channel type check
+Date: Mon, 16 Apr 2012 22:10:42 +0200
+Message-Id: <1334607042-32574-1-git-send-email-nbd@openwrt.org> (sfid-20120416_221059_319517_200D2B37)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using interface 0 for p2p causes target assert. This is because
-interface 0 is always initialized to non-p2p operations. Fix this
-issue by initializing all the interfaces for p2p when fw is capable
-of dynamic interface switching. When fw is not capable of dynamic
-switching, make sure p2p is not brought up on interface which is
-not initialized for this purpose.
+The broken check leads to rate control attempting to use HT40 while
+the driver is configured for HT20. This leads to interesting hardware
+issues.
 
-Reported-by: Naveen Singh navesing@qca.qualcomm.com
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+HT40 can only be used if the channel type is either HT40- or HT40+
+and if the channel type of the cell matches the local type.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@vger.kernel.org
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   26 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/init.c     |   31 ++++++++++++++++++----------
- 2 files changed, 46 insertions(+), 11 deletions(-)
+ net/mac80211/ibss.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 1272508..26fb3d7 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1451,9 +1451,35 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
- 					struct vif_params *params)
- {
- 	struct ath6kl_vif *vif = netdev_priv(ndev);
-+	int i;
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type %u\n", __func__, type);
- 
-+	/*
-+	 * Don't bring up p2p on an interface which is not initialized
-+	 * for p2p operation where fw does not have capability to switch
-+	 * dynamically between non-p2p and p2p type interface.
-+	 */
-+	if (!test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
-+		      vif->ar->fw_capabilities)) {
-+		if (type == NL80211_IFTYPE_P2P_CLIENT ||
-+		    type == NL80211_IFTYPE_P2P_GO) {
-+			if (vif->ar->vif_max > 1) {
-+				for (i = vif->ar->max_norm_iface;
-+				     i < vif->ar->vif_max; i++) {
-+					if (i == vif->fw_vif_idx)
-+						break;
-+				}
-+				if (i == vif->ar->vif_max) {
-+					ath6kl_err("Invalid interface to bring up P2P\n");
-+					return -EINVAL;
-+				}
-+			} else
-+				if (vif->fw_vif_idx != 0)
-+					return -EINVAL;
-+		}
-+	}
-+
- 	switch (type) {
- 	case NL80211_IFTYPE_STATION:
- 		vif->next_mode = INFRA_NETWORK;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 5949ab5..edd7788 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -488,22 +488,31 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 		fw_mode |= fw_iftype << (i * HI_OPTION_FW_MODE_BITS);
- 
- 	/*
--	 * By default, submodes :
-+	 * Submodes when fw does not support dynamic interface
-+	 * switching:
- 	 *		vif[0] - AP/STA/IBSS
- 	 *		vif[1] - "P2P dev"/"P2P GO"/"P2P Client"
- 	 *		vif[2] - "P2P dev"/"P2P GO"/"P2P Client"
-+	 * Otherwise, All the interface are initialized to p2p dev.
- 	 */
- 
--	for (i = 0; i < ar->max_norm_iface; i++)
--		fw_submode |= HI_OPTION_FW_SUBMODE_NONE <<
--			      (i * HI_OPTION_FW_SUBMODE_BITS);
-+	if (test_bit(ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
-+		     ar->fw_capabilities)) {
-+		for (i = 0; i < ar->vif_max; i++)
-+			fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
-+				(i * HI_OPTION_FW_SUBMODE_BITS);
-+	} else {
-+		for (i = 0; i < ar->max_norm_iface; i++)
-+			fw_submode |= HI_OPTION_FW_SUBMODE_NONE <<
-+				(i * HI_OPTION_FW_SUBMODE_BITS);
- 
--	for (i = ar->max_norm_iface; i < ar->vif_max; i++)
--		fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
--			      (i * HI_OPTION_FW_SUBMODE_BITS);
-+		for (i = ar->max_norm_iface; i < ar->vif_max; i++)
-+			fw_submode |= HI_OPTION_FW_SUBMODE_P2PDEV <<
-+				(i * HI_OPTION_FW_SUBMODE_BITS);
- 
--	if (ar->p2p && ar->vif_max == 1)
--		fw_submode = HI_OPTION_FW_SUBMODE_P2PDEV;
-+		if (ar->p2p && ar->vif_max == 1)
-+			fw_submode = HI_OPTION_FW_SUBMODE_P2PDEV;
-+	}
- 
- 	if (ath6kl_bmi_write_hi32(ar, hi_app_host_interest,
- 				  HTC_PROTOCOL_VERSION) != 0) {
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 49a2079..61cd391 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -455,8 +455,8 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 			 * fall back to HT20 if we don't use or use
+ 			 * the other extension channel
+ 			 */
+-			if ((channel_type == NL80211_CHAN_HT40MINUS ||
+-			     channel_type == NL80211_CHAN_HT40PLUS) &&
++			if (!(channel_type == NL80211_CHAN_HT40MINUS ||
++			      channel_type == NL80211_CHAN_HT40PLUS) ||
+ 			    channel_type != sdata->u.ibss.channel_type)
+ 				sta_ht_cap_new.cap &=
+ 					~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
 -- 
-1.7.0.4
+1.7.3.2
 
