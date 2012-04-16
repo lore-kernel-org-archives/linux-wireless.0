@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:47854 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753012Ab2DRMQY (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:29477 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752101Ab2DPWxH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 08:16:24 -0400
-Message-ID: <1334751359.16897.225.camel@aeonflux> (sfid-20120418_141628_473012_02A99E1B)
-Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Wed, 18 Apr 2012 14:15:59 +0200
-In-Reply-To: <20120418121014.GD19228@aemeltch-MOBL1>
-References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
-	 <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
-	 <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux>
-	 <4F84A422.3030900@sipsolutions.net> <1334093378.16897.62.camel@aeonflux>
-	 <20120411070514.GB17779@aemeltch-MOBL1>
-	 <1334714841.3725.37.camel@jlt3.sipsolutions.net>
-	 <20120418112017.GC19228@aemeltch-MOBL1>
-	 <1334749879.16897.221.camel@aeonflux>
-	 <20120418121014.GD19228@aemeltch-MOBL1>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 16 Apr 2012 18:53:07 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
+	dcbw@redhat.com
+Subject: [PATCH 2/5] libertas: harden-up exit paths
+Message-Id: <20120416225302.E2D479D401E@zog.reactivated.net> (sfid-20120417_005311_443403_2472808C)
+Date: Mon, 16 Apr 2012 23:53:02 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrei,
+These simple sanity check avoids extra complexity in error paths when
+moving to asynchronous firmware loading (which means the device may fail to
+init some time after its creation).
 
-<snip>
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+Acked-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/main.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-> > This is also a little bit of confusing since FullMac cards will not
-> > create an AMP virtual interface. With them you just see the HCI AMP
-> > controller on the Bluetooth side. Can an AMP virtual interface be just
-> > virtual inside mac80211 or does it have to have a netdev attached to it?
-> 
-> If we create virtual interface then netdev is allocated and we can handle
-> it with common tools.
-
-what common tools do you wanna use here. We actually do not wanna have
-them show up as netdev devices at all. AMP connections don't have IP
-addresses or anything else for that matter. We do not even need the
-statistics here since they will be counted within HCI AMP controller in
-the Bluetooth subsystem.
-
-If you wanna do IP over AMP, it would be via BNEP. And the netdev you
-are getting would come as bnep0 from the Bluetooth stack and not via the
-mac80211 stack.
-
-Regards
-
-Marcel
-
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index fa09585..7eaf992 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1033,7 +1033,9 @@ void lbs_remove_card(struct lbs_private *priv)
+ 	lbs_deb_enter(LBS_DEB_MAIN);
+ 
+ 	lbs_remove_mesh(priv);
+-	lbs_scan_deinit(priv);
++
++	if (priv->wiphy_registered)
++		lbs_scan_deinit(priv);
+ 
+ 	/* worker thread destruction blocks on the in-flight command which
+ 	 * should have been cleared already in lbs_stop_card().
+@@ -1128,6 +1130,11 @@ void lbs_stop_card(struct lbs_private *priv)
+ 		goto out;
+ 	dev = priv->dev;
+ 
++	/* If the netdev isn't registered, it means that lbs_start_card() was
++	 * never called so we have nothing to do here. */
++	if (dev->reg_state != NETREG_REGISTERED)
++		goto out;
++
+ 	netif_stop_queue(dev);
+ 	netif_carrier_off(dev);
+ 
+-- 
+1.7.7.6
 
