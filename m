@@ -1,81 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28026 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:48154 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755595Ab2DPWBb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:01:31 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/16] iwlwifi: phy db channel to tx power channel group
-Date: Mon, 16 Apr 2012 14:57:07 -0700
-Message-Id: <1334613430-30720-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120417_000153_602031_6F480BFD)
-In-Reply-To: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1755071Ab2DPVJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:09:34 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 7/8] ath9k_hw: disable fast channel change when changing from/to half/quarter mode
+Date: Mon, 16 Apr 2012 23:09:24 +0200
+Message-Id: <1334610565-37399-7-git-send-email-nbd@openwrt.org> (sfid-20120416_230939_438042_9909BA6E)
+In-Reply-To: <1334610565-37399-6-git-send-email-nbd@openwrt.org>
+References: <1334610565-37399-1-git-send-email-nbd@openwrt.org>
+ <1334610565-37399-2-git-send-email-nbd@openwrt.org>
+ <1334610565-37399-3-git-send-email-nbd@openwrt.org>
+ <1334610565-37399-4-git-send-email-nbd@openwrt.org>
+ <1334610565-37399-5-git-send-email-nbd@openwrt.org>
+ <1334610565-37399-6-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
-
-Implement mapping of channel to TX power channel group,
-for sending channel specific data before add context.
-
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-phy-db.c |   20 ++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-phy-db.h |    6 ++++++
- 2 files changed, 24 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-index d65305d..1a791af 100644
---- a/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-@@ -228,8 +228,24 @@ static u16 channel_id_to_papd(u16 ch_id)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index ff8d58d..26e6083 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1440,6 +1440,10 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
+ 						    CHANNEL_5GHZ));
+ 	mode_diff = (chan->chanmode != ah->curchan->chanmode);
  
- static u16 channel_id_to_txp(struct iwl_phy_db *phy_db, u16 ch_id)
- {
--	/* TODO David*/
--	return 0;
-+	struct iwl_phy_db_chg_txp *txp_chg;
-+	int i;
-+	u8 ch_index = ch_id_to_ch_index(ch_id);
-+	if (ch_index == 0xff)
-+		return 0xff;
++	if ((ah->curchan->channelFlags | chan->channelFlags) &
++	    (CHANNEL_HALF | CHANNEL_QUARTER))
++		return false;
 +
-+	for (i = 0; i < IWL_NUM_TXP_CH_GROUPS; i++) {
-+		txp_chg = (void *)phy_db->calib_ch_group_txp[i].data;
-+		if (!txp_chg)
-+			return 0xff;
-+		/*
-+		 * Looking for the first channel group that its max channel is
-+		 * higher then wanted channel.
-+		 */
-+		if (le16_to_cpu(txp_chg->max_channel_idx) >= ch_index)
-+			return i;
-+	}
-+	return 0xff;
- }
- 
- int iwl_phy_db_get_section_data(struct iwl_phy_db *phy_db,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-phy-db.h b/drivers/net/wireless/iwlwifi/iwl-phy-db.h
-index ba91a8b..5e86305 100644
---- a/drivers/net/wireless/iwlwifi/iwl-phy-db.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-phy-db.h
-@@ -108,6 +108,12 @@ enum iwl_phy_db_section_type {
- 	IWL_PHY_DB_MAX
- };
- 
-+/* for parsing of tx power channel group data that comes from the firmware*/
-+struct iwl_phy_db_chg_txp {
-+	__le32 space;
-+	__le16 max_channel_idx;
-+} __packed;
-+
- struct iwl_phy_db *iwl_phy_db_init(struct iwl_shared *shrd);
- 
- void iwl_phy_db_free(struct iwl_phy_db *phy_db);
+ 	for (qnum = 0; qnum < AR_NUM_QCU; qnum++) {
+ 		if (ath9k_hw_numtxpending(ah, qnum)) {
+ 			ath_dbg(common, QUEUE,
 -- 
-1.7.0.4
+1.7.3.2
 
