@@ -1,110 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50496 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754156Ab2DQRrD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 13:47:03 -0400
-From: greearb@candelatech.com
+Received: from nbd.name ([46.4.11.11]:48152 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754665Ab2DPVJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 17:09:34 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 1/6] cfg80211: Add framework to support ethtool stats.
-Date: Tue, 17 Apr 2012 10:46:42 -0700
-Message-Id: <1334684807-14026-2-git-send-email-greearb@candelatech.com> (sfid-20120417_194706_796397_38278FB3)
-In-Reply-To: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 2/8] ath9k_hw: increase ACK timeout for half/quarter channels
+Date: Mon, 16 Apr 2012 23:09:19 +0200
+Message-Id: <1334610565-37399-2-git-send-email-nbd@openwrt.org> (sfid-20120416_230937_773387_C7676A29)
+In-Reply-To: <1334610565-37399-1-git-send-email-nbd@openwrt.org>
+References: <1334610565-37399-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+For some reason the MAC timing is a bit off when waiting for ACKs, so add
+some extra delay to the ACK timeout values. Significantly reduces the
+number of retransmissions in my tests.
+Also disable the 2.4 GHz ACK timeout workaround in half/quarter mode, it
+is not required there.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-:100644 100644 815dc3f... 27f9561... M	include/net/cfg80211.h
-:100644 100644 9bde4d1... 7eecdf4... M	net/wireless/ethtool.c
- include/net/cfg80211.h |   17 +++++++++++++++++
- net/wireless/ethtool.c |   29 +++++++++++++++++++++++++++++
- 2 files changed, 46 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 815dc3f..27f9561 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1514,6 +1514,16 @@ struct cfg80211_gtk_rekey_data {
-  *	later passes to cfg80211_probe_status().
-  *
-  * @set_noack_map: Set the NoAck Map for the TIDs.
-+ *
-+ * @get_et_sset_count:  Ethtool API to get string-set count.
-+ *	See @ethtool_ops.get_sset_count
-+ *
-+ * @get_et_stats:  Ethtool API to get a set of u64 stats.
-+ *	See @ethtool_ops.get_ethtool_stats
-+ *
-+ * @get_et_strings:  Ethtool API to get a set of strings to describe stats
-+ *	and perhaps other supported types of ethtool data-sets.
-+ *	See @ethtool_ops.get_strings
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -1712,6 +1722,13 @@ struct cfg80211_ops {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 122447c..0b16e30 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -971,7 +971,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+ 	const struct ath9k_channel *chan = ah->curchan;
+-	int acktimeout, ctstimeout;
++	int acktimeout, ctstimeout, ack_offset = 0;
+ 	int slottime;
+ 	int sifstime;
+ 	int rx_lat = 0, tx_lat = 0, eifs = 0;
+@@ -1005,6 +1005,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		    tx_lat += 11;
  
- 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
- 					       enum nl80211_channel_type *type);
-+
-+	int	(*get_et_sset_count)(struct wiphy *wiphy,
-+				     struct net_device *dev, int sset);
-+	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device *dev,
-+				struct ethtool_stats *stats, u64 *data);
-+	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
-+				  u32 sset, u8 *data);
- };
+ 		sifstime *= 2;
++		ack_offset = 16;
+ 		slottime = 13;
+ 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
+ 		eifs = 340;
+@@ -1014,6 +1015,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 		    tx_lat += 22;
  
- /*
-diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
-index 9bde4d1..7eecdf4 100644
---- a/net/wireless/ethtool.c
-+++ b/net/wireless/ethtool.c
-@@ -68,6 +68,32 @@ static int cfg80211_set_ringparam(struct net_device *dev,
- 	return -ENOTSUPP;
- }
+ 		sifstime *= 4;
++		ack_offset = 32;
+ 		slottime = 21;
+ 	} else {
+ 		if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah)) {
+@@ -1031,7 +1033,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	}
  
-+static int cfg80211_get_sset_count(struct net_device *dev, int sset)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	if (rdev->ops->get_et_sset_count)
-+		return rdev->ops->get_et_sset_count(wdev->wiphy, dev, sset);
-+	return -EOPNOTSUPP;
-+}
-+
-+static void cfg80211_get_stats(struct net_device *dev,
-+			       struct ethtool_stats *stats, u64 *data)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	if (rdev->ops->get_et_stats)
-+		rdev->ops->get_et_stats(wdev->wiphy, dev, stats, data);
-+}
-+
-+static void cfg80211_get_strings(struct net_device *dev, u32 sset, u8 *data)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-+	if (rdev->ops->get_et_strings)
-+		rdev->ops->get_et_strings(wdev->wiphy, dev, sset, data);
-+}
-+
- const struct ethtool_ops cfg80211_ethtool_ops = {
- 	.get_drvinfo = cfg80211_get_drvinfo,
- 	.get_regs_len = cfg80211_get_regs_len,
-@@ -75,4 +101,7 @@ const struct ethtool_ops cfg80211_ethtool_ops = {
- 	.get_link = ethtool_op_get_link,
- 	.get_ringparam = cfg80211_get_ringparam,
- 	.set_ringparam = cfg80211_set_ringparam,
-+	.get_strings = cfg80211_get_strings,
-+	.get_ethtool_stats = cfg80211_get_stats,
-+	.get_sset_count = cfg80211_get_sset_count,
- };
+ 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
+-	acktimeout = slottime + sifstime + 3 * ah->coverage_class;
++	acktimeout = slottime + sifstime + 3 * ah->coverage_class + ack_offset;
+ 	ctstimeout = acktimeout;
+ 
+ 	/*
+@@ -1041,7 +1043,8 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
+ 	 * BA frames in some implementations, but it has been found to fix ACK
+ 	 * timeout issues in other cases as well.
+ 	 */
+-	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ) {
++	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ &&
++	    !IS_CHAN_HALF_RATE(chan) && !IS_CHAN_QUARTER_RATE(chan)) {
+ 		acktimeout += 64 - sifstime - ah->slottime;
+ 		ctstimeout += 48 - sifstime - ah->slottime;
+ 	}
 -- 
-1.7.3.4
+1.7.3.2
 
