@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:56881 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752808Ab2DISge (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 14:36:34 -0400
-Date: Mon, 9 Apr 2012 11:36:32 -0700
-From: Marc MERLIN <marc@merlins.org>
-To: David Miller <davem@davemloft.net>
-Cc: bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big network copies (page allocation failure)
-Message-ID: <20120409183632.GO29342@merlins.org> (sfid-20120409_203643_501996_1CB58FE5)
-References: <20120329163800.GH24933@merlins.org> <1333044575.2656.1.camel@bwh-desktop.uk.solarflarecom.com> <20120409172051.GR32290@merlins.org> <20120409.141241.1216091936509309354.davem@davemloft.net>
+Received: from nbd.name ([46.4.11.11]:33307 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751908Ab2DPJox (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 05:44:53 -0400
+Message-ID: <4F8BEA0D.9020104@openwrt.org> (sfid-20120416_114457_196505_74E13058)
+Date: Mon, 16 Apr 2012 11:44:45 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120409.141241.1216091936509309354.davem@davemloft.net>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 2/9] ath9k_hw: do not override SIFS time for half/quarter
+ channels
+References: <1334484941-27673-1-git-send-email-nbd@openwrt.org> <1334484941-27673-2-git-send-email-nbd@openwrt.org> <CALSq=BZgn+O2BNq=yAe_g5DAqR7jO3eSX2AcABtWqGUcYjB_qQ@mail.gmail.com> <4F8B1312.2010108@openwrt.org> <CALSq=BZMi0Tc+7paCi_Fid5hurXVxBCROe3xOzpP+o1BW1EBQA@mail.gmail.com>
+In-Reply-To: <CALSq=BZMi0Tc+7paCi_Fid5hurXVxBCROe3xOzpP+o1BW1EBQA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 09, 2012 at 02:12:41PM -0400, David Miller wrote:
-> From: Marc MERLIN <marc@merlins.org>
-> Date: Mon, 9 Apr 2012 10:20:51 -0700
+On 2012-04-16 8:30 AM, Daniel Halperin wrote:
+> On Sun, Apr 15, 2012 at 11:27 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2012-04-15 8:22 PM, Daniel Halperin wrote:
+>>> Felix,
+>>>
+>>> This whole patch series throws the NICs out of spec compliance. For
+>>> instance, page 626 of the 802.11-2007 standard (Table 17-15) says that
+>>> aSIFStime is 32 us in 10 MHz mode and 64 us in 5 MHz mode.
+>>>
+>>> This might be okay to do for certain implementations (as, apparently,
+>>> AR9280/AR9380), but will break compatibility with any device obeying
+>>> the standard instead.
+>>>
+>>> (I wonder that, if this code below still works, then it seems that you
+>>> might not be properly downclocking the chips' reference clock...)
+>>>
+>>> Are you aware there's a standard for this? Why violate it?
+>> I'm aware that there's a standard for it, but if I put in the standard
+>> values, the connection gets unreliable to the point where it's almost
+>> unusable. That's why I chose to use existing products with 5/10 MHz
+>> support as reference instead.
+>>
 > 
-> > Any idea what's going on, what bucket of RAM is an issue for the driver
-> > (total RAM is more than plenty), and where I should go from there?
+> I hear you, but still suspect the bug's somewhere else. Violating the
+> standard likely isn't the right choice unless you have a good
+> reason... it sounds like you don't know why this is happening but this
+> hack 'seems to work'.
 > 
-> The wireless layer is allocating high-order pages, so it's
-> not the amount of ram, it's the fragmentation of it leading
-> to a lack of those high-order pages.
+> (UBNT is also ath-based, right? So it's not really proof that this
+> hack doesn't break compatibility..)
+Right, UBNT is also ath-based, and I dumped the registers on the device
+to figure out what parameters they were using, and used those as
+reference for my ath9k work.
+I'm not aware of *any* standard compliant 5/10 MHz product out there, do
+you know any?
 
-I figured it was something of the sort, thanks for the professional
-confirmation :)
-
-What's my next step, file a bug with a specific team?
-
-Thanks,
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+- Felix
