@@ -1,82 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57513 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752557Ab2DRO0D (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17442 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735Ab2DPQ2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:26:03 -0400
-Message-ID: <4F8ECEF4.4010507@sipsolutions.net> (sfid-20120418_162608_232772_72EEF7B2)
-Date: Wed, 18 Apr 2012 07:25:56 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 16 Apr 2012 12:28:08 -0400
+Date: Mon, 16 Apr 2012 19:28:03 +0300
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Configure probed SSID list consistently
+Message-ID: <20120416162803.GA9671@jouni.qca.qualcomm.com> (sfid-20120416_182813_373730_2DA42B0C)
 MIME-Version: 1.0
-To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: Validate legacy rateset.
-References: <1334298173-4132-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120413_082304_815922_B50E6F19) <4F8C5776.6060209@sipsolutions.net> <4F8D24CC.5030205@qca.qualcomm.com> <4F8D7758.6040304@sipsolutions.net> <4F8E592B.6010104@qca.qualcomm.com>
-In-Reply-To: <4F8E592B.6010104@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/17/2012 11:03 PM, Bala Shanmugam wrote:
-> On 04/17/2012 07:29 PM, Johannes Berg wrote:
->> On 4/17/2012 1:07 AM, Bala Shanmugam wrote:
->>> On 04/16/2012 11:01 PM, Johannes Berg wrote:
->>>> On 4/12/2012 11:22 PM, Bala Shanmugam wrote:
->>>>> Legacy rates are not validated while configuring
->>>>> tx rateset using iw. So below cmd is accepted by nl80211.
->>>>> sudo iw wlan2 set bitrates legacy-2.4 3
->>>>>
->>>>> Validate legacy rates and return
->>>>> error while configuring improper rates.
->>>>>
->>>>> Signed-off-by: Bala Shanmugam<bkamatch@qca.qualcomm.com>
->>>>> ---
->>>>> net/wireless/nl80211.c | 2 ++
->>>>> 1 files changed, 2 insertions(+), 0 deletions(-)
->>>>>
->>>>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->>>>> index e49da27..cc7bef7 100644
->>>>> --- a/net/wireless/nl80211.c
->>>>> +++ b/net/wireless/nl80211.c
->>>>> @@ -5540,6 +5540,8 @@ static int nl80211_set_tx_bitrate_mask(struct
->>>>> sk_buff *skb,
->>>>> sband,
->>>>> nla_data(tb[NL80211_TXRATE_LEGACY]),
->>>>> nla_len(tb[NL80211_TXRATE_LEGACY]));
->>>>> + if (mask.control[band].legacy == 0)
->>>>> + return -EINVAL;
->>>>
->>>> I don't think this is right since it would also reject an
->>>> intentionally empty set.
->>
->>> This check comes into picture only when legacy rates are configured.
->>> For intentionally empty set "if (tb[NL80211_TXRATE_LEGACY])" condition
->>> will fail and control will not come here. I tested the same.
->>> With this patch
->>> "sudo iw wlan0 set bitrates mcs-5 6" executes without any error message.
->>
->> However, that means "don't change legacy settings", not "empty legacy
->> rateset".
->>
->> johannes
-> Good catch.
-> I didn't think of below configuration which is to specify empty legacy
-> rateset for 2.4 band.
-> sudo iw wlan0 set bitrates legacy-2.4
-> Correct me if I am wrong.
->
-> Anyway we need to reject invalid legacy rates and below additional check
-> will allow empty rateset
-> and block invalid rates
-> if (mask.control[band].legacy == 0 && nla_len(tb[NL80211_TXRATE_LEGACY]))
-> return -EINVAL;
+Set max_scan_ssids and max_sched_scan_ssids to same value. These use the
+same probed SSID list, so there is no point in using different maximum
+number of SSIDs.
 
-But then you can still say
+Clear probed SSID entries that are not used. This was already done for
+sched_scan, but not for scan. Be consistent and clear the table for both
+cases to avoid leaving bogus entries.
 
-sudo iw wlan0 set bitrates legacy-2.4 1 2 3 4
+In addition, share the same function for setting the probed SSIDs for
+scan and sched_scan paths. This fixes setting of wildcard SSID flag
+(ANY_SSID_FLAG) and changes the scan path to use probed SSID index
+consistently (i.e., start with 0 similarly to sched_scan; firmware
+will handle the needed internal mapping).
 
-and have it be accepted which is wrong as well.
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   63 +++++++++++++++------------
+ 1 files changed, 35 insertions(+), 28 deletions(-)
 
-You really should verify every single rate.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index c5e90d3..5b988aa 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -882,6 +882,32 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl_vif *vif, u8 reason,
+ 	vif->sme_state = SME_DISCONNECTED;
+ }
+ 
++static int ath6kl_set_probed_ssids(struct ath6kl *ar,
++				   struct ath6kl_vif *vif,
++				   struct cfg80211_ssid *ssids, int n_ssids)
++{
++	u8 i;
++
++	if (n_ssids > MAX_PROBED_SSID_INDEX)
++		return -EINVAL;
++
++	for (i = 0; i < n_ssids; i++) {
++		ath6kl_wmi_probedssid_cmd(ar->wmi, vif->fw_vif_idx, i,
++					  ssids[i].ssid_len ?
++					  SPECIFIC_SSID_FLAG : ANY_SSID_FLAG,
++					  ssids[i].ssid_len,
++					  ssids[i].ssid);
++	}
++
++	/* Make sure no old entries are left behind */
++	for (i = n_ssids; i < MAX_PROBED_SSID_INDEX; i++) {
++		ath6kl_wmi_probedssid_cmd(ar->wmi, vif->fw_vif_idx, i,
++					  DISABLE_SSID_FLAG, 0, NULL);
++	}
++
++	return 0;
++}
++
+ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 				struct cfg80211_scan_request *request)
+ {
+@@ -909,18 +935,10 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 		}
+ 	}
+ 
+-	if (request->n_ssids && request->ssids[0].ssid_len) {
+-		u8 i;
+-
+-		if (request->n_ssids > (MAX_PROBED_SSID_INDEX - 1))
+-			request->n_ssids = MAX_PROBED_SSID_INDEX - 1;
+-
+-		for (i = 0; i < request->n_ssids; i++)
+-			ath6kl_wmi_probedssid_cmd(ar->wmi, vif->fw_vif_idx,
+-						  i + 1, SPECIFIC_SSID_FLAG,
+-						  request->ssids[i].ssid_len,
+-						  request->ssids[i].ssid);
+-	}
++	ret = ath6kl_set_probed_ssids(ar, vif, request->ssids,
++				      request->n_ssids);
++	if (ret < 0)
++		return ret;
+ 
+ 	/* this also clears IE in fw if it's not set */
+ 	ret = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
+@@ -3100,7 +3118,6 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
+ 	u16 interval;
+ 	int ret;
+-	u8 i;
+ 
+ 	if (ar->state != ATH6KL_STATE_ON)
+ 		return -EIO;
+@@ -3110,11 +3127,10 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 
+ 	ath6kl_cfg80211_scan_complete_event(vif, true);
+ 
+-	for (i = 0; i < ar->wiphy->max_sched_scan_ssids; i++) {
+-		ath6kl_wmi_probedssid_cmd(ar->wmi, vif->fw_vif_idx,
+-					  i, DISABLE_SSID_FLAG,
+-					  0, NULL);
+-	}
++	ret = ath6kl_set_probed_ssids(ar, vif, request->ssids,
++				      request->n_ssids);
++	if (ret < 0)
++		return ret;
+ 
+ 	/* fw uses seconds, also make sure that it's >0 */
+ 	interval = max_t(u16, 1, request->interval / 1000);
+@@ -3123,15 +3139,6 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 				  interval, interval,
+ 				  10, 0, 0, 0, 3, 0, 0, 0);
+ 
+-	if (request->n_ssids && request->ssids[0].ssid_len) {
+-		for (i = 0; i < request->n_ssids; i++) {
+-			ath6kl_wmi_probedssid_cmd(ar->wmi, vif->fw_vif_idx,
+-						  i, SPECIFIC_SSID_FLAG,
+-						  request->ssids[i].ssid_len,
+-						  request->ssids[i].ssid);
+-		}
+-	}
+-
+ 	ret = ath6kl_wmi_set_wow_mode_cmd(ar->wmi, vif->fw_vif_idx,
+ 					  ATH6KL_WOW_MODE_ENABLE,
+ 					  WOW_FILTER_SSID,
+@@ -3448,7 +3455,7 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+ 	wiphy->wowlan.pattern_min_len = 1;
+ 	wiphy->wowlan.pattern_max_len = WOW_PATTERN_SIZE;
+ 
+-	wiphy->max_sched_scan_ssids = 10;
++	wiphy->max_sched_scan_ssids = MAX_PROBED_SSID_INDEX;
+ 
+ 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM |
+ 			    WIPHY_FLAG_HAVE_AP_SME |
+-- 
+1.7.5.4
 
-johannes
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
