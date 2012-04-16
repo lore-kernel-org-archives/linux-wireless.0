@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61393 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754093Ab2DJBsS convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:33050 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754689Ab2DPULJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 21:48:18 -0400
-Received: by iagz16 with SMTP id z16so6667655iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2012 18:48:17 -0700 (PDT)
+	Mon, 16 Apr 2012 16:11:09 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAPjQAd9WPiPr2z310eRuXxueQwDRKL_m7YqSKD=y5Fn3t2Gkww@mail.gmail.com>
-References: <1333957617-13732-1-git-send-email-yeohchunyeow@gmail.com>
-	<CAPjQAd9WPiPr2z310eRuXxueQwDRKL_m7YqSKD=y5Fn3t2Gkww@mail.gmail.com>
-Date: Tue, 10 Apr 2012 09:48:17 +0800
-Message-ID: <CAEFj985DuwSb5hSnu77UGwOxYu7K9pqn==Ln6_cW1+JQga-=7Q@mail.gmail.com> (sfid-20120410_034849_753606_EAF8D765)
-Subject: Re: [PATCH] mac80211: fix the assignment of PREQ's MAC address for
- Proactive RANN
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20120416162710.GA24100@kroah.com>
+References: <20120412011313.GA23764@kroah.com>
+	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
+	<20120412144626.GA14868@kroah.com>
+	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
+	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
+	<20120413105746.10ffb120@stein>
+	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
+	<20120413190819.9469.qmail@stuge.se>
+	<CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
+	<20120416162710.GA24100@kroah.com>
+Date: Mon, 16 Apr 2012 23:11:05 +0300
+Message-ID: <CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com> (sfid-20120416_221128_312498_24107098)
+Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
+From: Felipe Contreras <felipe.contreras@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	akpm@linux-foundation.org, torvalds@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Javier
-
-> 1. I would suggest rewording the description.  Maybe something like:
+On Mon, Apr 16, 2012 at 7:27 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
+> Just one minor correction in this looney email thread:
 >
-> "Record the RANN sender's address only for RANNs that meet the
-> acceptance criteria (per sections 13.10.12.4.2)."
-
-Noted, your description is clearer.
-
-> 2. Also, to properly review the patch, I had to find your earlier
-> patch (http://lists.open80211s.org/pipermail/devel/2012-March/003113.html)
-> that's still in John's queue.  Maybe merge the two patches and
-> resubmit?
-
-I have found out that the previous patches are merged upstream 5 hours ago.
-
-> 3. Before your patch, the address in rann_snd_addr was always valid if
-> mpath->is_root == true.  This is why elsewhere in the code you could
-> safely do things like:
+> On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
+>> v3.3.x on the other hand are *not* stable. They contain patches
+>> backported from v3.4, but nobody guarantees they will work. There was
+>> no v3.3.1-rc1, so the first time the patches compromising v3.3.1 were
+>> generally tested together is in v3.3.1, at which point if somebody
+>> finds issues, it's too late; bad patches are *not* going to be removed
+>> in v3.3.2.
 >
-> da = (mpath && mpath->is_root) ? mpath->rann_snd_addr : broadcast_addr;
->
-> This is no longer the case, at least not evidently.  Can you double
-> check that the possibility where mpath->is_root == true and
-> mpath->rann_snd_addr is uninitialized is correctly addressed?  Maybe
-> by initializing mpath->rann_snd_addr to be the broadcast address?
->
+> Of course there was a 3.3.1-rc1, see the linux-kernel archives for the
+> announcemen and the individual patches. Â kernel.org has the large patch
+> itself if you like that format instead.
 
-Ok, I will take a look on this. Perhaps, adding it on the mesh_path_add routine.
+I don't see it here:
+http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=tags
 
-> 4. The comment  /* Using individually addressed PREQ for root node */
-> does not make sense there.  I think it's ok to remove, or reword as /*
-> Recording RANNs sender address to send individually addressed PREQs
-> destined for root node */
+If you really want people to try it, why not tag it?
 
-Noted.
-
-Regards,
-Chun-Yeow
+-- 
+Felipe Contreras
