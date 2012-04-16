@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65534 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:57140 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751362Ab2DPVnV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:43:21 -0400
-Message-ID: <1334612599.5455.1.camel@dcbw.foobar.com> (sfid-20120416_234324_523652_FA14F9D1)
-Subject: Re: [RFC 2/4] libertas: harden-up exit paths
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Date: Mon, 16 Apr 2012 16:43:19 -0500
-In-Reply-To: <20120403160154.401D39D401E@zog.reactivated.net>
-References: <20120403160154.401D39D401E@zog.reactivated.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754741Ab2DPWB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 18:01:28 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/16] iwlwifi: remove antenna from mod params struct
+Date: Mon, 16 Apr 2012 14:56:57 -0700
+Message-Id: <1334613430-30720-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120417_000203_896945_C14DBC4E)
+In-Reply-To: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-03 at 17:01 +0100, Daniel Drake wrote:
-> These simple sanity check avoids extra complexity in error paths when
-> moving to asynchronous firmware loading (which means the device may fail to
-> init some time after its creation).
+From: Johannes Berg <johannes.berg@intel.com>
 
-Looks fine to me.
+It doesn't even exist as a module parameter,
+so just remove the item from the struct.
 
-Dan
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
-> ---
->  drivers/net/wireless/libertas/main.c |    9 ++++++++-
->  1 files changed, 8 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-> index fa09585..7eaf992 100644
-> --- a/drivers/net/wireless/libertas/main.c
-> +++ b/drivers/net/wireless/libertas/main.c
-> @@ -1033,7 +1033,9 @@ void lbs_remove_card(struct lbs_private *priv)
->  	lbs_deb_enter(LBS_DEB_MAIN);
->  
->  	lbs_remove_mesh(priv);
-> -	lbs_scan_deinit(priv);
-> +
-> +	if (priv->wiphy_registered)
-> +		lbs_scan_deinit(priv);
->  
->  	/* worker thread destruction blocks on the in-flight command which
->  	 * should have been cleared already in lbs_stop_card().
-> @@ -1128,6 +1130,11 @@ void lbs_stop_card(struct lbs_private *priv)
->  		goto out;
->  	dev = priv->dev;
->  
-> +	/* If the netdev isn't registered, it means that lbs_start_card() was
-> +	 * never called so we have nothing to do here. */
-> +	if (dev->reg_state != NETREG_REGISTERED)
-> +		goto out;
-> +
->  	netif_stop_queue(dev);
->  	netif_carrier_off(dev);
->  
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 8c962c1..428883b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -118,7 +118,6 @@ extern struct iwl_mod_params iwlagn_mod_params;
+  * @disable_11n: disable 11n capabilities, default = 0,
+  *	use IWL_DISABLE_HT_* constants
+  * @amsdu_size_8K: enable 8K amsdu size, default = 1
+- * @antenna: both antennas (use diversity), default = 0
+  * @restart_fw: restart firmware, default = 1
+  * @plcp_check: enable plcp health check, default = true
+  * @wd_disable: enable stuck queue check, default = 0
+@@ -135,7 +134,6 @@ struct iwl_mod_params {
+ 	int sw_crypto;
+ 	unsigned int disable_11n;
+ 	int amsdu_size_8K;
+-	int antenna;
+ 	int restart_fw;
+ 	bool plcp_check;
+ 	int  wd_disable;
+-- 
+1.7.0.4
 
