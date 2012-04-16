@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:37778 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933521Ab2DSVdK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 17:33:10 -0400
-Received: by mail-iy0-f174.google.com with SMTP id z16so12437635iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 14:33:09 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mga02.intel.com ([134.134.136.20]:26223 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750699Ab2DPTHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 15:07:49 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/6 V2] rtlwifi: Add dm structs to private structure
-Date: Thu, 19 Apr 2012 16:32:40 -0500
-Message-Id: <1334871164-9795-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120419_233316_778652_CCA2BAF7)
-In-Reply-To: <1334871164-9795-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1334871164-9795-1-git-send-email-Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/1] MAINTAINERS: Add maintainer for iwlwifi
+Date: Mon, 16 Apr 2012 12:03:35 -0700
+Message-Id: <1334603015-11991-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120416_210752_452898_BF5BA179)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the dig_t and ps_t structures to the private variables.
+Add Johannes Berg as the primary maintainer for iwlwifi driver
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/rtlwifi/wifi.h |    4 ++++
- 1 file changed, 4 insertions(+)
+ MAINTAINERS |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index 32df6bd..bd816ae 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1688,6 +1688,10 @@ struct rtl_priv {
- 	   interface or hardware */
- 	unsigned long status;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index dbfb6b2..b6205e3 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3592,6 +3592,7 @@ S:	Supported
+ F:	drivers/net/wireless/iwlegacy/
  
-+	/* tables for dm */
-+	struct dig_t dm_digtable;
-+	struct ps_t dm_pstable;
-+
- 	/* data buffer pointer for USB reads */
- 	__le32 *usb_data;
- 	int usb_data_index;
+ INTEL WIRELESS WIFI LINK (iwlwifi)
++M:	Johannes Berg <johannes.berg@intel.com>
+ M:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+ M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
 -- 
-1.7.10.130.g36e6c
+1.7.0.4
 
