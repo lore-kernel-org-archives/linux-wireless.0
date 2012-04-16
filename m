@@ -1,78 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32825 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755836Ab2DWVw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 17:52:58 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 20/29] iwlwifi: move PLCP defines to config
-Date: Mon, 23 Apr 2012 14:47:31 -0700
-Message-Id: <1335217660-21950-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235342_346783_A32A7936)
-In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:36610 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892Ab2DPFc0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 01:32:26 -0400
+Date: Mon, 16 Apr 2012 07:32:20 +0200
+From: Ingo Molnar <mingo@kernel.org>
+To: Felipe Contreras <felipe.contreras@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org, akpm@linux-foundation.org,
+	alan@lxorguk.ukuu.org.uk,
+	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [ 00/78] 3.3.2-stable review
+Message-ID: <20120416053220.GA14338@gmail.com> (sfid-20120416_073242_039091_FFD52CDB)
+References: <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
+ <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
+ <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
+ <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com>
+ <20120414104733.GA4871@gmail.com>
+ <CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com>
+ <20120415065124.GC29563@gmail.com>
+ <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
+ <CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com>
+ <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Since they're used in the config, they
-should be declared in iwl-config.h.
+* Felipe Contreras <felipe.contreras@gmail.com> wrote:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-config.h |   12 ++++++++++++
- drivers/net/wireless/iwlwifi/iwl-dev.h    |   11 -----------
- 2 files changed, 12 insertions(+), 11 deletions(-)
+> On Sun, Apr 15, 2012 at 8:49 PM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+> > On Sun, Apr 15, 2012 at 10:15 AM, Felipe Contreras
+> > <felipe.contreras@gmail.com> wrote:
+> >>
+> >> This is not a reason, this is just stating what happens without
+> >> explaining *why*.
+> >>
+> >> Q: What changes when a tag is made?
+> >> A: A tag is made
+> 
+> [...]
+> 
+> > The only thing that matters is "it's been made available to others".
+> 
+> Exactly! Now *this* is a reason. [...]
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 47bfd5e..71e6285 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -102,6 +102,18 @@ enum iwl_led_mode {
- };
- 
- /*
-+ * This is the threshold value of plcp error rate per 100mSecs.  It is
-+ * used to set and check for the validity of plcp_delta.
-+ */
-+#define IWL_MAX_PLCP_ERR_THRESHOLD_MIN		1
-+#define IWL_MAX_PLCP_ERR_THRESHOLD_DEF		50
-+#define IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF	100
-+#define IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF	200
-+#define IWL_MAX_PLCP_ERR_THRESHOLD_MAX		255
-+#define IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE	0
-+
-+
-+/*
-  * @max_ll_items: max number of OTP blocks
-  * @shadow_ram_support: shadow support for OTP memory
-  * @led_compensation: compensate on the led on/off time per HW according
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 6853fc7..80cd942 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -533,17 +533,6 @@ struct iwl_event_log {
- 	int wraps_more_count;
- };
- 
--/*
-- * This is the threshold value of plcp error rate per 100mSecs.  It is
-- * used to set and check for the validity of plcp_delta.
-- */
--#define IWL_MAX_PLCP_ERR_THRESHOLD_MIN	(1)
--#define IWL_MAX_PLCP_ERR_THRESHOLD_DEF	(50)
--#define IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF	(100)
--#define IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF	(200)
--#define IWL_MAX_PLCP_ERR_THRESHOLD_MAX	(255)
--#define IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE	(0)
--
- #define IWL_DELAY_NEXT_FORCE_RF_RESET  (HZ*3)
- 
- /* TX queue watchdog timeouts in mSecs */
--- 
-1.7.0.4
+Erm, many people referred to that in this discussion explicitly 
+and implicitly - beyond its well-known technical meaning it's 
+also the English meaning of the word 'release':
 
+   http://www.merriam-webster.com/dictionary/releasing
+
+  : [...] to make available to the public [...]
+
+So stop pretending that this is somehow the mistake of *others* 
+explaining it to you wrong ...
+
+Just admit it already that you were trivially and dead wrong all 
+along, and that you were pretty difficult and obnoxious about 
+handling a discussion that went against you.
+
+Being wrong is normal and it happens all the time - and a big 
+part of the picture is how you handle such situations, to not 
+try to wriggle out of the responsibility of being wrong and to 
+not waste other people's time with such self-gratifying mental 
+obfuscation.
+
+Such as:
+
+> I'm not going to argue the semantics of what is a revert, 
+> [...]
+
+You should not argue about the semantics about a revert not 
+because somehow it's not important (it is), but because you've 
+been wrong about this issue too. You should learn and improve.
+
+Thanks,
+
+	Ingo
