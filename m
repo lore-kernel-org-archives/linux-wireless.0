@@ -1,162 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32418 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932325Ab2DDS5F (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:46110 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472Ab2DPTul (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2012 14:57:05 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath6kl-devel@qualcomm.com>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [PATCH 1/2] cfg80211: add channel switch notify event
-Date: Wed, 4 Apr 2012 11:56:55 -0700
-Message-ID: <1333565817-18816-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120404_205710_458936_B8169D57)
+	Mon, 16 Apr 2012 15:50:41 -0400
+Received: by wibhj6 with SMTP id hj6so9021968wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 12:50:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4F469ADF.5040806@broadcom.com>
+References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com>
+ <4F356004.9090409@broadcom.com> <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com>
+ <4F469ADF.5040806@broadcom.com>
+From: Kiss Robert <kepten@gmail.com>
+Date: Mon, 16 Apr 2012 21:50:20 +0200
+Message-ID: <CAN+AqrXDTLVZqP_jdbWTm-=FFmj2RqY6sD+B-GiUR6OL_SU2xQ@mail.gmail.com> (sfid-20120416_215044_896813_D33EC3D3)
+Subject: Re: Broadcom brcm80211 monitor mode
+To: Franky Lin <frankyl@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware may decide to switch channels while already beaconing, e.g.
-in response to a cfg80211 connect request on a different vif. Add this
-event to notify userspace when an AP or GO interface has successfully
-migrated to a new channel, so it can update its configuration
-accordingly.
+Hi,
 
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
----
- include/linux/nl80211.h |    7 +++++++
- include/net/cfg80211.h  |   10 ++++++++++
- net/wireless/mlme.c     |   11 +++++++++++
- net/wireless/nl80211.c  |   32 ++++++++++++++++++++++++++++++++
- net/wireless/nl80211.h  |    4 ++++
- 5 files changed, 64 insertions(+), 0 deletions(-)
+Is there any hope in the near future for a brcm80211 firmware which
+supports monitor mode? If I got it right, it is either Broadcom who
+could release such a firmware or someone else who has infinite free
+time to reverse engineer the blob firmware, right? Is there any
+initiative for that? Maybe some progress on it? I ask it because I'd
+like to contribute to such a project if it already exists.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index e474f6e..49f2bbe 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -548,6 +548,11 @@
-  * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs whether
-  *      No Acknowledgement Policy should be applied.
-  *
-+ * @NL80211_CMD_CH_SWITCH_NOTIFY: An AP or GO may decide to switch channels
-+ *	independently of the userspace SME, send this event indicating
-+ *	%NL80211_ATTR_IFINDEX is now on %NL80211_ATTR_WIPHY_FREQ with
-+ *	%NL80211_ATTR_WIPHY_CHANNEL_TYPE.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -689,6 +694,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_SET_NOACK_MAP,
- 
-+	NL80211_CMD_CH_SWITCH_NOTIFY,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 69b7ad3..eadc897 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3340,6 +3340,16 @@ int cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
- 				 enum nl80211_channel_type channel_type);
- 
- /*
-+ * cfg80211_ch_switch_notify - notify userspace about netdev channel switch
-+ * @dev: the device which switched channels
-+ * @freq: new channel frequency (in MHz)
-+ * @type: channel type
-+ * @gfp: allocation flags
-+ */
-+void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
-+			       enum nl80211_channel_type type, gfp_t gfp);
-+
-+/*
-  * cfg80211_calculate_bitrate - calculate actual bitrate (in 100Kbps units)
-  * @rate: given rate_info to calculate bitrate from
-  *
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index f5a7ac3..895a5ba 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -928,6 +928,17 @@ void cfg80211_pmksa_candidate_notify(struct net_device *dev, int index,
- }
- EXPORT_SYMBOL(cfg80211_pmksa_candidate_notify);
- 
-+void cfg80211_ch_switch_notify(struct net_device *dev, int freq,
-+			       enum nl80211_channel_type type, gfp_t gfp)
-+{
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
-+
-+	nl80211_ch_switch_notify(rdev, dev, freq, type, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_ch_switch_notify);
-+
- bool cfg80211_rx_spurious_frame(struct net_device *dev,
- 				const u8 *addr, gfp_t gfp)
- {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4c1eb94..d5d489f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7890,6 +7890,38 @@ void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
- 	nlmsg_free(msg);
- }
- 
-+void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
-+			      struct net_device *netdev, int freq,
-+			      enum nl80211_channel_type type, gfp_t gfp)
-+{
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	msg = nlmsg_new(NLMSG_GOODSIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_CH_SWITCH_NOTIFY);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE, type);
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
-+				nl80211_mlme_mcgrp.id, gfp);
-+	return;
-+
-+ nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
-+}
-+
- void
- nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
- 				struct net_device *netdev, const u8 *peer,
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 4ffe50d..01a1122 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -118,6 +118,10 @@ void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
- 				    struct net_device *netdev, int index,
- 				    const u8 *bssid, bool preauth, gfp_t gfp);
- 
-+void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
-+			      struct net_device *dev, int freq,
-+			      enum nl80211_channel_type type, gfp_t gfp);
-+
- bool nl80211_unexpected_frame(struct net_device *dev,
- 			      const u8 *addr, gfp_t gfp);
- bool nl80211_unexpected_4addr_frame(struct net_device *dev,
--- 
-1.7.4.1
+Cheers,
 
+Robert
+
+On 23 February 2012 21:00, Franky Lin <frankyl@broadcom.com> wrote:
+> On 02/23/2012 08:00 AM, Kiss Robert wrote:
+>>
+>> I have read somewhere that the Broadcom 4330 chipset on Samsung Galaxy
+>> S II cannot be put to monitor mode because of some hardware
+>> limitation. Is that true? Can someone confirm that?
+>
+>
+> Hi Robert,
+>
+> It's a firmware limitation instead of hardware to be more precise. There is
+> no firmware out there support monitor mode so the support can not be done by
+> changing the host driver only.
+>
+> Regards,
+> Franky
+>
