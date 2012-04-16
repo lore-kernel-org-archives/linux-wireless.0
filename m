@@ -1,30 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay001.isp.belgacom.be ([195.238.6.51]:29576 "EHLO
-	mailrelay001.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932108Ab2DLR5B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 13:57:01 -0400
-Message-ID: <4F871756.80002@computer.org> (sfid-20120412_195709_808346_D7D6B208)
-Date: Thu, 12 Apr 2012 19:56:38 +0200
-From: Jan Ceuleers <jan.ceuleers@computer.org>
+Received: from mga11.intel.com ([192.55.52.93]:14890 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751958Ab2DPSNZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Apr 2012 14:13:25 -0400
+Date: Mon, 16 Apr 2012 20:22:18 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] NFC: remove unneeded NULL check
+Message-ID: <20120416182218.GX24130@sortiz-mobl> (sfid-20120416_201330_764419_E9A9B7A4)
+References: <20120413192812.GE18505@elgon.mountain>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Florian Fainelli <florian@openwrt.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 4/5] mac80211: Add more ethtools stats: survey, rates,
- etc
-References: <1334248375-22967-1-git-send-email-greearb@candelatech.com> <1334248375-22967-5-git-send-email-greearb@candelatech.com> <4F8705E3.2010902@openwrt.org> <4F870828.4020708@candelatech.com>
-In-Reply-To: <4F870828.4020708@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120413192812.GE18505@elgon.mountain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> Ethtool stats only supports u64. I think it's easy enough for
-> humans or programs to add the negative sign. Can signal or noise
-> ever be > 0? If so, that could actually break something that depends
-> on flipping the value to negative....
+Hi Dan,
 
-The unit of these quantities is dBm, right? So if the {signal|noise} is 
-greater than 1mW the corresponding value in dBm would be positive.
+On Fri, Apr 13, 2012 at 10:28:12PM +0300, Dan Carpenter wrote:
+> container_of() works by subtracting the offset of the member.  The math
+> can't really return a zero here.  Sometimes people check it when they
+> actually meant to check something else but in this case we can just
+> remove the check.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Applied to my nfc-next queue, thanks.
 
+Cheers,
+Samuel.
+
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
