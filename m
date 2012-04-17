@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54743 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757566Ab2DLNHy (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50505 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755645Ab2DQRrV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 09:07:54 -0400
-Message-ID: <1334236037.3451.0.camel@jlt3.sipsolutions.net> (sfid-20120412_150802_386836_50D9365A)
-Subject: Re: [PATCH] compat: backport netif_wake_subqueue
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	lf_driver_backport@lists.linux-foundation.org
-Date: Thu, 12 Apr 2012 15:07:17 +0200
-In-Reply-To: <CAB=NE6UJS=dnUO0Cq-7Kve+7ofnbW-XkGHqCQCf+HzEMTRn8WQ@mail.gmail.com> (sfid-20120412_095637_585399_3C14FD57)
-References: <1333746034.5577.10.camel@jlt3.sipsolutions.net>
-	 <CAB=NE6XMuaAPFPfKGunrGuqnYLKfem35Q3nXiEpc7u23FM14ng@mail.gmail.com>
-	 <1334204193.3788.14.camel@jlt3.sipsolutions.net>
-	 <CAB=NE6UJS=dnUO0Cq-7Kve+7ofnbW-XkGHqCQCf+HzEMTRn8WQ@mail.gmail.com>
-	 (sfid-20120412_095637_585399_3C14FD57)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 17 Apr 2012 13:47:21 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 6/6] mac80211: Add sta_state to ethtool stats.
+Date: Tue, 17 Apr 2012 10:46:47 -0700
+Message-Id: <1334684807-14026-7-git-send-email-greearb@candelatech.com> (sfid-20120417_194724_045118_B502EAFF)
+In-Reply-To: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-04-12 at 00:55 -0700, Luis R. Rodriguez wrote:
-> On Wed, Apr 11, 2012 at 9:16 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Fri, 2012-04-06 at 19:23 -0700, Luis R. Rodriguez wrote:
-> >> On Fri, Apr 6, 2012 at 2:00 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >> > From: Johannes Berg <johannes.berg@intel.com>
-> >> >
-> >> > Kernels 2.6.23 - 2.6.27 had some multiqueue support,
-> >> > but called netif_wake_subqueue netif_start_subqueue.
-> >> > So to backport, just add a define.
-> >> >
-> >> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> >>
-> >> Applied and pushed, and tested with ckmake, thanks!
-> >
-> > I don't see this, did you move the repository off infradead?
-> 
-> Sorry, I forgot to push to infra, the most reliable tree is on github.
-> I use infra as backup.
+From: Ben Greear <greearb@candelatech.com>
 
-Oh ok, I'll switch to github. Thanks.
+Helps to know how the station is doing in it's association
+attempt.
 
-johannes
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 94a340b... a7c62c4... M	net/mac80211/cfg.c
+ net/mac80211/cfg.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 94a340b..a7c62c4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -117,7 +117,7 @@ static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
+ 	"rx_duplicates", "rx_fragments", "rx_dropped",
+ 	"tx_packets", "tx_bytes", "tx_fragments",
+ 	"tx_filtered", "tx_retry_failed", "tx_retries",
+-	"beacon_loss", "txrate", "rxrate", "signal",
++	"beacon_loss", "sta_state", "txrate", "rxrate", "signal",
+ 	"channel", "noise", "ch_time", "ch_time_busy",
+ 	"ch_time_ext_busy", "ch_time_rx", "ch_time_tx"
+ };
+@@ -533,10 +533,12 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+ 		data[i++] += sta->beacon_loss_count;
+ 
+ 		if (!do_once) {
+-			i += 3;
++			i += 4;
+ 			goto after_once;
+ 		}
+ 
++		data[i++] = sta->sta_state;
++
+ 		do_once = false;
+ 		sinfo.filled = 0;
+ 		sta_set_sinfo(sta, &sinfo);
+-- 
+1.7.3.4
 
