@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42121 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753438Ab2DJRfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 13:35:05 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>,
-	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 01/18 3.4] NFC: Fix the LLCP Tx fragmentation loop
-Date: Tue, 10 Apr 2012 19:43:03 +0200
-Message-Id: <1334079800-10671-2-git-send-email-sameo@linux.intel.com> (sfid-20120410_193510_177568_9B6FADE5)
-In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
-References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56109 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751469Ab2DQW7b (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 18:59:31 -0400
+Received: by lahj13 with SMTP id j13so5255661lah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 15:59:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120417163746.35c232c8@destiny.ordissimo>
+References: <20120413142352.3b927516@destiny.ordissimo> <20120417163746.35c232c8@destiny.ordissimo>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 18 Apr 2012 08:59:10 +1000
+Message-ID: <CAGRGNgX_T=LGTN90zXp_CrjWfMx3RrkvGs8uKYg9SXqU0q2pxQ@mail.gmail.com> (sfid-20120418_005936_517519_575A0F2A)
+Subject: Re: RT5390 not working with rt2800pci
+To: Anisse Astier <anisse@astier.eu>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linville@tuxdriver.com, RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Kevin Chou <kevin.chou@mediatek.com>,
+	John Li <chen-yang.li@mediatek.com>,
+	RA-Jay Hung <Jay_Hung@ralinktech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/commands.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Hi Anisse,
 
-diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
-index 7b76eb7..ef10ffc 100644
---- a/net/nfc/llcp/commands.c
-+++ b/net/nfc/llcp/commands.c
-@@ -474,7 +474,7 @@ int nfc_llcp_send_i_frame(struct nfc_llcp_sock *sock,
- 
- 	while (remaining_len > 0) {
- 
--		frag_len = min_t(u16, local->remote_miu, remaining_len);
-+		frag_len = min_t(size_t, local->remote_miu, remaining_len);
- 
- 		pr_debug("Fragment %zd bytes remaining %zd",
- 			 frag_len, remaining_len);
-@@ -497,7 +497,7 @@ int nfc_llcp_send_i_frame(struct nfc_llcp_sock *sock,
- 		release_sock(sk);
- 
- 		remaining_len -= frag_len;
--		msg_ptr += len;
-+		msg_ptr += frag_len;
- 	}
- 
- 	kfree(msg_data);
+On Wed, Apr 18, 2012 at 00:37, Anisse Astier <anisse@astier.eu> wrote:
+> Ok, I've found a solution.
+>
+> After looking into the latest ralink release, for chipset 5572, I saw
+> that rt5390 support was updated. And that support for the chip with rev
+> 1502 was added, named RT5390R.
+> The only difference with "normal" 5390 is that this one supports hardware
+> antenna diversity, so the driver should tell the card which antenna to
+> use by default (the main one in my case).
+> This is replicated in the patch below, which has been tested on both
+> working and non-working 1502s, and is proving to work quite well.
+
+That would explain it - I'm guessing the non-working 1502s have their
+antennas set up "wrongly" by default.
+
+> I still don't know how to integrate this properly with rt2800pci's
+> antenna diversity code, since this is the first chipset to have hardware
+> antenna diversity in the rt2800 family (others had it in rt61 and rt73
+> for example).
+
+I think the patch you sent is a reasonable workaround (with an
+appropriate comment explaining what's happening) while proper antenna
+diversity support is added.
+
+Thanks,
+
 -- 
-1.7.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
