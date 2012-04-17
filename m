@@ -1,77 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43344 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756574Ab2D3TRt (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50500 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755645Ab2DQRrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 15:17:49 -0400
-Date: Mon, 30 Apr 2012 15:09:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	javier@cozybit.com, devel@lists.open80211s.org
-Subject: Re: [PATCH 3/4] mac80211: Allow nonHT/HT peering in mesh
-Message-ID: <20120430190935.GF2560@tuxdriver.com> (sfid-20120430_211753_827733_7EE619D7)
-References: <1335498506-9600-1-git-send-email-ashok@cozybit.com>
- <1335498506-9600-3-git-send-email-ashok@cozybit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1335498506-9600-3-git-send-email-ashok@cozybit.com>
+	Tue, 17 Apr 2012 13:47:10 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 5/6] mac80211: Add more ethtools stats: survey, rates, etc
+Date: Tue, 17 Apr 2012 10:46:46 -0700
+Message-Id: <1334684807-14026-6-git-send-email-greearb@candelatech.com> (sfid-20120417_194713_443684_C3723CAF)
+In-Reply-To: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 26, 2012 at 08:48:25PM -0700, Ashok Nagarajan wrote:
-> Now that we have protection enabled, allow non-HT and HT20 stations to peer
-> with HT40+/- stations. Peering is still disallowed for HT40+/- mismatch.
-> 
-> Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-> Reviewed-by: Thomas Pedersen <thomas@cozybit.com>
+From: Ben Greear <greearb@candelatech.com>
 
-  CC      net/mac80211/mesh.o
-net/mac80211/mesh.c: In function ‘mesh_matches_local’:
-net/mac80211/mesh.c:79:28: warning: ‘sta_channel_type’ may be used uninitialized in this function
+The signal and noise are forced to be positive since ethtool
+deals in unsigned 64-bit values and this number should be human
+readable.  This gives easy access to some of the data formerly
+exposed in the deprecated /proc/net/wireless file.
 
-Please don't add warnings!
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
-> ---
->  net/mac80211/mesh.c |   12 +++++++++---
->  1 files changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-> index 8a952e0..d25cb78 100644
-> --- a/net/mac80211/mesh.c
-> +++ b/net/mac80211/mesh.c
-> @@ -76,6 +76,7 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
->  	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
->  	struct ieee80211_local *local = sdata->local;
->  	u32 basic_rates = 0;
-> +	enum nl80211_channel_type sta_channel_type;
->  
->  	/*
->  	 * As support for each feature is added, check for matching
-> @@ -102,10 +103,15 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
->  	if (sdata->vif.bss_conf.basic_rates != basic_rates)
->  		goto mismatch;
->  
-> -	/* disallow peering with mismatched channel types for now */
-> +	if (ie->ht_operation)
-> +		sta_channel_type =
-> +			ieee80211_ht_oper_to_channel_type(ie->ht_operation);
-> +
-> +	/* Disallow HT40+/- mismatch */
->  	if (ie->ht_operation &&
-> -	    (local->_oper_channel_type !=
-> -	     ieee80211_ht_oper_to_channel_type(ie->ht_operation)))
-> +	    local->_oper_channel_type > NL80211_CHAN_HT20 &&
-> +	    sta_channel_type > NL80211_CHAN_HT20 &&
-> +	    local->_oper_channel_type != sta_channel_type)
->  		goto mismatch;
->  
->  	return true;
-> -- 
-> 1.7.5.4
-> 
-> 
+v2:  Properly get survey results.
 
+:100644 100644 e90accc... 94a340b... M	net/mac80211/cfg.c
+ net/mac80211/cfg.c |  172 +++++++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 131 insertions(+), 41 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index e90accc..94a340b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -117,7 +117,9 @@ static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
+ 	"rx_duplicates", "rx_fragments", "rx_dropped",
+ 	"tx_packets", "tx_bytes", "tx_fragments",
+ 	"tx_filtered", "tx_retry_failed", "tx_retries",
+-	"beacon_loss"
++	"beacon_loss", "txrate", "rxrate", "signal",
++	"channel", "noise", "ch_time", "ch_time_busy",
++	"ch_time_ext_busy", "ch_time_rx", "ch_time_tx"
+ };
+ #define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
+ 
+@@ -138,46 +140,6 @@ static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
+ 	return rv;
+ }
+ 
+-static void ieee80211_get_et_stats(struct wiphy *wiphy,
+-				   struct net_device *dev,
+-				   struct ethtool_stats *stats,
+-				   u64 *data)
+-{
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+-	struct sta_info *sta;
+-	struct ieee80211_local *local = sdata->local;
+-
+-	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
+-
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+-		int i = 0;
+-
+-		/* Make sure this station belongs to the proper dev */
+-		if (sta->sdata->dev != dev)
+-			continue;
+-
+-		data[i++] += sta->rx_packets;
+-		data[i++] += sta->rx_bytes;
+-		data[i++] += sta->wep_weak_iv_count;
+-		data[i++] += sta->num_duplicates;
+-		data[i++] += sta->rx_fragments;
+-		data[i++] += sta->rx_dropped;
+-
+-		data[i++] += sta->tx_packets;
+-		data[i++] += sta->tx_bytes;
+-		data[i++] += sta->tx_fragments;
+-		data[i++] += sta->tx_filtered_count;
+-		data[i++] += sta->tx_retry_failed;
+-		data[i++] += sta->tx_retry_count;
+-		data[i++] += sta->beacon_loss_count;
+-		BUG_ON(i != STA_STATS_LEN);
+-	}
+-	rcu_read_unlock();
+-
+-	drv_get_et_stats(sdata, stats, &(data[STA_STATS_LEN]));
+-}
+-
+ static void ieee80211_get_et_strings(struct wiphy *wiphy,
+ 				     struct net_device *dev,
+ 				     u32 sset, u8 *data)
+@@ -531,6 +493,134 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
+ }
+ 
++static void ieee80211_get_et_stats(struct wiphy *wiphy,
++				   struct net_device *dev,
++				   struct ethtool_stats *stats,
++				   u64 *data)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++	struct ieee80211_local *local = sdata->local;
++	struct station_info sinfo;
++	struct survey_info survey;
++	bool do_once = true;
++	int i;
++#define STA_STATS_SURVEY_LEN 7
++
++	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		i = 0;
++
++		/* Make sure this station belongs to the proper dev */
++		if (sta->sdata->dev != dev)
++			continue;
++
++		data[i++] += sta->rx_packets;
++		data[i++] += sta->rx_bytes;
++		data[i++] += sta->wep_weak_iv_count;
++		data[i++] += sta->num_duplicates;
++		data[i++] += sta->rx_fragments;
++		data[i++] += sta->rx_dropped;
++
++		data[i++] += sta->tx_packets;
++		data[i++] += sta->tx_bytes;
++		data[i++] += sta->tx_fragments;
++		data[i++] += sta->tx_filtered_count;
++		data[i++] += sta->tx_retry_failed;
++		data[i++] += sta->tx_retry_count;
++		data[i++] += sta->beacon_loss_count;
++
++		if (!do_once) {
++			i += 3;
++			goto after_once;
++		}
++
++		do_once = false;
++		sinfo.filled = 0;
++		sta_set_sinfo(sta, &sinfo);
++
++		if (sinfo.filled | STATION_INFO_TX_BITRATE)
++			data[i] = 100000 *
++				cfg80211_calculate_bitrate(&sinfo.txrate);
++		i++;
++		if (sinfo.filled | STATION_INFO_RX_BITRATE)
++			data[i] = 100000 *
++				cfg80211_calculate_bitrate(&sinfo.rxrate);
++		i++;
++
++		if (sinfo.filled | STATION_INFO_SIGNAL_AVG)
++			data[i] = (u8)sinfo.signal_avg;
++		i++;
++
++after_once:
++		if (WARN_ON(i != (STA_STATS_LEN - STA_STATS_SURVEY_LEN))) {
++			rcu_read_unlock();
++			return;
++		}
++	}
++
++	i = STA_STATS_LEN - STA_STATS_SURVEY_LEN;
++	/* Get survey stats for current channel */
++	survey.filled = 0;
++	if (drv_get_survey(local, 0, &survey) != 0) {
++		survey.filled = 0;
++		data[i++] = 0;
++	} else {
++		/* ath9k (and maybe others??) only updates internal stats
++		 * when you get channel index 0, so if
++		 * we are NOT on channel zero, get the real stats
++		 * now.
++		 */
++		int ch_idx = ieee80211_get_channel_idx(local->hw.wiphy,
++			local->oper_channel->center_freq);
++		if (ch_idx == 0) {
++			data[i++] = survey.channel->center_freq;
++		} else {
++			survey.filled = 0;
++			if (drv_get_survey(local, ch_idx, &survey) != 0) {
++				survey.filled = 0;
++				data[i++] = 0;
++			} else {
++				data[i++] = survey.channel->center_freq;
++			}
++		}
++	}
++
++	if (survey.filled & SURVEY_INFO_NOISE_DBM)
++		data[i++] = (u8)survey.noise;
++	else
++		data[i++] = -1LL;
++	if (survey.filled & SURVEY_INFO_CHANNEL_TIME)
++		data[i++] = survey.channel_time;
++	else
++		data[i++] = -1LL;
++	if (survey.filled & SURVEY_INFO_CHANNEL_TIME_BUSY)
++		data[i++] = survey.channel_time_busy;
++	else
++		data[i++] = -1LL;
++	if (survey.filled & SURVEY_INFO_CHANNEL_TIME_EXT_BUSY)
++		data[i++] = survey.channel_time_ext_busy;
++	else
++		data[i++] = -1LL;
++	if (survey.filled & SURVEY_INFO_CHANNEL_TIME_RX)
++		data[i++] = survey.channel_time_rx;
++	else
++		data[i++] = -1LL;
++	if (survey.filled & SURVEY_INFO_CHANNEL_TIME_TX)
++		data[i++] = survey.channel_time_tx;
++	else
++		data[i++] = -1LL;
++
++	rcu_read_unlock();
++
++	if (WARN_ON(i != STA_STATS_LEN))
++		return;
++
++	drv_get_et_stats(sdata, stats, &(data[STA_STATS_LEN]));
++}
++
+ 
+ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 int idx, u8 *mac, struct station_info *sinfo)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.3.4
+
