@@ -1,78 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48152 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754665Ab2DPVJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:09:34 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 2/8] ath9k_hw: increase ACK timeout for half/quarter channels
-Date: Mon, 16 Apr 2012 23:09:19 +0200
-Message-Id: <1334610565-37399-2-git-send-email-nbd@openwrt.org> (sfid-20120416_230937_773387_C7676A29)
-In-Reply-To: <1334610565-37399-1-git-send-email-nbd@openwrt.org>
-References: <1334610565-37399-1-git-send-email-nbd@openwrt.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:52166 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751793Ab2DQIJA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 04:09:00 -0400
+Received: by yenl12 with SMTP id l12so2904774yen.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 01:09:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201204162225.q3GMPTrS006633@mail.maya.org>
+References: <201204162225.q3GMPTrS006633@mail.maya.org>
+Date: Tue, 17 Apr 2012 10:09:00 +0200
+Message-ID: <CAGXE3d8Vdg3VHKVJQ4KLK_Tje1ZCEzjESBFYDTWNAsAMTHsTVg@mail.gmail.com> (sfid-20120417_100907_713298_4C95C643)
+Subject: Re: [PATCH] rt2x00: Don't let mac80211 send a BAR when an AMPDU
+ subframe fails
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For some reason the MAC timing is a bit off when waiting for ACKs, so add
-some extra delay to the ACK timeout values. Significantly reduces the
-number of retransmissions in my tests.
-Also disable the 2.4 GHz ACK timeout workaround in half/quarter mode, it
-is not required there.
+On Tue, Apr 17, 2012 at 12:25 AM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> There are connection stalls or very poor throughputs with rt2800
+> hardware using 802.11n in AP mode since patch "mac80211: retry sending
+> failed BAR frames later instead of tearing down aggr"[1][2].
+>
+> Since rt2800 hardware is not able to correctly report the tx status of
+> BAR frames, this patch removes as workaround the existing error handling
+> on AP side, which lets mac80211 send a BAR when an AMPDU subframe fails.
+>
+> As a result, most wifi clients (aside from Intel STAs on Windows)
+> instead will timeout now the reorder buffer and request the lost frame
+> again.
+>
+> The correct solution would be, to tear down BA session on AP side.
+>
+> This patch was born on the basis of "[RFT] rt2x00: Tear down BA
+> session on QoS frame failure"[3].
+>
+> Thanks to Helmut Schaa for his support!
+>
+> [1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/83297/focus=83304
+> [2] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=f0425beda4d404a6e751439b562100b902ba9c98
+> [3] http://thread.gmane.org/gmane.linux.drivers.rt2x00.user/569
+>
+> Signed-off-by: Andreas Hartmann <andihartmann@01019freenet.de>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+Thanks for the patch Andreas! Let's use this as a workaround for now.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 122447c..0b16e30 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -971,7 +971,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ieee80211_conf *conf = &common->hw->conf;
- 	const struct ath9k_channel *chan = ah->curchan;
--	int acktimeout, ctstimeout;
-+	int acktimeout, ctstimeout, ack_offset = 0;
- 	int slottime;
- 	int sifstime;
- 	int rx_lat = 0, tx_lat = 0, eifs = 0;
-@@ -1005,6 +1005,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		    tx_lat += 11;
- 
- 		sifstime *= 2;
-+		ack_offset = 16;
- 		slottime = 13;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
- 		eifs = 340;
-@@ -1014,6 +1015,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		    tx_lat += 22;
- 
- 		sifstime *= 4;
-+		ack_offset = 32;
- 		slottime = 21;
- 	} else {
- 		if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah)) {
-@@ -1031,7 +1033,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 	}
- 
- 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
--	acktimeout = slottime + sifstime + 3 * ah->coverage_class;
-+	acktimeout = slottime + sifstime + 3 * ah->coverage_class + ack_offset;
- 	ctstimeout = acktimeout;
- 
- 	/*
-@@ -1041,7 +1043,8 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 	 * BA frames in some implementations, but it has been found to fix ACK
- 	 * timeout issues in other cases as well.
- 	 */
--	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ) {
-+	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ &&
-+	    !IS_CHAN_HALF_RATE(chan) && !IS_CHAN_QUARTER_RATE(chan)) {
- 		acktimeout += 64 - sifstime - ah->slottime;
- 		ctstimeout += 48 - sifstime - ah->slottime;
- 	}
--- 
-1.7.3.2
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
+> ---
+> Index: a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> ===================================================================================
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c   2012-02-02 22:12:56.000000000 +0100
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c   2012-04-16 23:26:46.100458775 +0200
+> @@ -387,9 +387,10 @@
+>                tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
+>                tx_info->status.ampdu_len = 1;
+>                tx_info->status.ampdu_ack_len = success ? 1 : 0;
+> -
+> -               if (!success)
+> -                       tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
+> +               /*
+> +                * TODO: Need to tear down BA session here
+> +                * if not successful.
+> +                */
+>        }
+>
+>        if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
