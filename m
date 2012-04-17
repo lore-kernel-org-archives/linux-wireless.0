@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:54405 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754054Ab2DKOMF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 10:12:05 -0400
-Date: Wed, 11 Apr 2012 10:11:46 -0400 (EDT)
-Message-Id: <20120411.101146.1779004013194245072.davem@davemloft.net> (sfid-20120411_161214_833888_75C048AD)
-To: eric.dumazet@gmail.com
-Cc: marc@merlins.org, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] tcp: avoid order-1 allocations on wifi and tx path
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1334125848.5300.2330.camel@edumazet-glaptop>
-References: <20120411052733.GA17352@merlins.org>
-	<1334122980.5300.2154.camel@edumazet-glaptop>
-	<1334125848.5300.2330.camel@edumazet-glaptop>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mms3.broadcom.com ([216.31.210.19]:4087 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751087Ab2DQTUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 15:20:47 -0400
+Message-ID: <4F8DC25E.9090702@broadcom.com> (sfid-20120417_212051_380732_7747364C)
+Date: Tue, 17 Apr 2012 21:19:58 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Dominik Feser" <dominik.feser@googlemail.com>
+cc: linux-wireless@vger.kernel.org,
+	"Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: wlan0 not present
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+In-Reply-To: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Date: Wed, 11 Apr 2012 08:30:48 +0200
+On 04/17/2012 07:59 PM, Dominik Feser wrote:
+> Hi!
+> Maybe someone can help me. I have compiled and installed compat-wireless-3.4-rc1-2 and it seems to load correctly. The thing I am missing is the wlan0 device.
+>
+> # lspci -kvm
+> Device:	02:00.0
+> Class:	Network controller
+> Vendor:	Intel Corporation
+> Device:	Centrino Advanced-N 6205
+> SVendor:	Intel Corporation
+> SDevice:	Centrino Advanced-N 6205 AGN
+> Rev:	34
+> Module:	iwlwifi
+>
+> Nothing...
+>
+> Maybe some thoughts?
+>
 
-> Marc Merlin reported many order-1 allocations failures in TX path on its
-> wireless setup, that dont make any sense with MTU=1500 network, and non
-> SG capable hardware.
-> 
-> After investigation, it turns out TCP uses sk_stream_alloc_skb() and
-> used as a convention skb_tailroom(skb) to know how many bytes of data
-> payload could be put in this skb (for non SG capable devices)
-> 
-> Note : these skb used kmalloc-4096 (MTU=1500 + MAX_HEADER +
-> sizeof(struct skb_shared_info) being above 2048)
-> 
-> Later, mac80211 layer need to add some bytes at the tail of skb
-> (IEEE80211_ENCRYPT_TAILROOM = 18 bytes) and since no more tailroom is
-> available has to call pskb_expand_head() and request order-1
-> allocations.
-> 
-> This patch changes sk_stream_alloc_skb() so that only
-> sk->sk_prot->max_header bytes of headroom are reserved, and use a new
-> skb field, avail_size to hold the data payload limit.
-> 
-> This way, order-0 allocations done by TCP stack can leave more than 2 KB
-> of tailroom and no more allocation is performed in mac80211 layer (or
-> any layer needing some tailroom)
-> 
-> avail_size is unioned with mark/dropcount, since mark will be set later
-> in IP stack for output packets. Therefore, skb size is unchanged.
-> 
-> Reported-by: Marc MERLIN <marc@merlins.org>
-> Tested-by: Marc MERLIN <marc@merlins.org>
-> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+I am not too familiar with iwlwifi or compat-wireless, but it seems the 
+driver did not start successfully. Did it work before trying 
+compat-wireless? Can you provide full dmesg output instead of filter it 
+with grep? Can you enable Driver-API tracing in mac80211?
 
-Applied and queued up for -stable, thanks Eric.
+Gr. AvS
+
