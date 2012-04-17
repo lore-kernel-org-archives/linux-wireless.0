@@ -1,104 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64046 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966110Ab2DLV6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:58:11 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 17/24] iwlwifi: move iwl_print_rx_config_cmd to iwl-agn-rxon.c
-Date: Thu, 12 Apr 2012 14:54:14 -0700
-Message-Id: <1334267661-14654-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235904_824392_13190038)
-In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:44348 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755835Ab2DQJHS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 05:07:18 -0400
+Date: Tue, 17 Apr 2012 12:07:17 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: colin@cozybit.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: libertas: if_spi, driver for libertas GSPI devices
+Message-ID: <20120417090717.GA2339@elgon.mountain> (sfid-20120417_110744_463685_E9145D7F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Hi Colin,
 
-Move this as part of iwl-core.c cleanup.
+I was going through some old stuff and I had a question about a
+potential overfow in if_spi_c2h_cmd().
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   27 +++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c     |   23 -----------------------
- 2 files changed, 27 insertions(+), 23 deletions(-)
+   714          } else if (len > IF_SPI_CMD_BUF_SIZE) {
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+We cap "len" at 2400 bytes here.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index d2da1f3..69279af 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -931,6 +931,33 @@ static int iwl_full_rxon_required(struct iwl_priv *priv,
- 	return 0;
- }
- 
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+void iwl_print_rx_config_cmd(struct iwl_priv *priv,
-+			     enum iwl_rxon_context_id ctxid)
-+{
-+	struct iwl_rxon_context *ctx = &priv->contexts[ctxid];
-+	struct iwl_rxon_cmd *rxon = &ctx->staging;
-+
-+	IWL_DEBUG_RADIO(priv, "RX CONFIG:\n");
-+	iwl_print_hex_dump(priv, IWL_DL_RADIO, (u8 *) rxon, sizeof(*rxon));
-+	IWL_DEBUG_RADIO(priv, "u16 channel: 0x%x\n",
-+			le16_to_cpu(rxon->channel));
-+	IWL_DEBUG_RADIO(priv, "u32 flags: 0x%08X\n",
-+			le32_to_cpu(rxon->flags));
-+	IWL_DEBUG_RADIO(priv, "u32 filter_flags: 0x%08x\n",
-+			le32_to_cpu(rxon->filter_flags));
-+	IWL_DEBUG_RADIO(priv, "u8 dev_type: 0x%x\n", rxon->dev_type);
-+	IWL_DEBUG_RADIO(priv, "u8 ofdm_basic_rates: 0x%02x\n",
-+			rxon->ofdm_basic_rates);
-+	IWL_DEBUG_RADIO(priv, "u8 cck_basic_rates: 0x%02x\n",
-+			rxon->cck_basic_rates);
-+	IWL_DEBUG_RADIO(priv, "u8[6] node_addr: %pM\n", rxon->node_addr);
-+	IWL_DEBUG_RADIO(priv, "u8[6] bssid_addr: %pM\n", rxon->bssid_addr);
-+	IWL_DEBUG_RADIO(priv, "u16 assoc_id: 0x%x\n",
-+			le16_to_cpu(rxon->assoc_id));
-+}
-+#endif
-+
- /**
-  * iwlagn_commit_rxon - commit staging_rxon to hardware
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 27121fc..e839719 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -43,29 +43,6 @@
- 
- const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
- 
--#ifdef CONFIG_IWLWIFI_DEBUG
--void iwl_print_rx_config_cmd(struct iwl_priv *priv,
--			     enum iwl_rxon_context_id ctxid)
--{
--	struct iwl_rxon_context *ctx = &priv->contexts[ctxid];
--	struct iwl_rxon_cmd *rxon = &ctx->staging;
--
--	IWL_DEBUG_RADIO(priv, "RX CONFIG:\n");
--	iwl_print_hex_dump(priv, IWL_DL_RADIO, (u8 *) rxon, sizeof(*rxon));
--	IWL_DEBUG_RADIO(priv, "u16 channel: 0x%x\n", le16_to_cpu(rxon->channel));
--	IWL_DEBUG_RADIO(priv, "u32 flags: 0x%08X\n", le32_to_cpu(rxon->flags));
--	IWL_DEBUG_RADIO(priv, "u32 filter_flags: 0x%08x\n",
--			le32_to_cpu(rxon->filter_flags));
--	IWL_DEBUG_RADIO(priv, "u8 dev_type: 0x%x\n", rxon->dev_type);
--	IWL_DEBUG_RADIO(priv, "u8 ofdm_basic_rates: 0x%02x\n",
--			rxon->ofdm_basic_rates);
--	IWL_DEBUG_RADIO(priv, "u8 cck_basic_rates: 0x%02x\n", rxon->cck_basic_rates);
--	IWL_DEBUG_RADIO(priv, "u8[6] node_addr: %pM\n", rxon->node_addr);
--	IWL_DEBUG_RADIO(priv, "u8[6] bssid_addr: %pM\n", rxon->bssid_addr);
--	IWL_DEBUG_RADIO(priv, "u16 assoc_id: 0x%x\n", le16_to_cpu(rxon->assoc_id));
--}
--#endif
--
- int iwl_send_statistics_request(struct iwl_priv *priv, u8 flags, bool clear)
- {
- 	struct iwl_statistics_cmd statistics_cmd = {
--- 
-1.7.0.4
+   715                  netdev_err(priv->dev,
+   716                             "%s: error: response packet too large: %d bytes, but maximum is %d\n",
+   717                             __func__, len, IF_SPI_CMD_BUF_SIZE);
+   718                  err = -EINVAL;
+   719                  goto out;
+   720          }
+   721  
+   722          /* Read the data from the WLAN module into our command buffer */
+   723          err = spu_read(card, IF_SPI_CMD_RDWRPORT_REG,
+   724                                  card->cmd_buffer, ALIGN(len, 4));
+   725          if (err)
+   726                  goto out;
+   727  
+   728          spin_lock_irqsave(&priv->driver_lock, flags);
+   729          i = (priv->resp_idx == 0) ? 1 : 0;
+   730          BUG_ON(priv->resp_len[i]);
+   731          priv->resp_len[i] = len;
+   732          memcpy(priv->resp_buf[i], card->cmd_buffer, len);
+                       ^^^^^^^^^^^^^^^^
+But ->resp_buf[i] can only hold LBS_UPLD_SIZE (2312) bytes, so we could
+write past the end of the array.
+
+   733          lbs_notify_command_response(priv, i);
+
+regards,
+dan carpenter
 
