@@ -1,100 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50663 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751974Ab2DLPDq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 11:03:46 -0400
-Message-ID: <4F86EECC.4090805@candelatech.com> (sfid-20120412_170351_061464_4FEEE0BC)
-Date: Thu, 12 Apr 2012 08:03:40 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from nbd.name ([46.4.11.11]:38807 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750990Ab2DQLGX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 07:06:23 -0400
+Message-ID: <4F8D4EA8.1010602@openwrt.org> (sfid-20120417_130627_944782_115186A8)
+Date: Tue, 17 Apr 2012 13:06:16 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 08/10] mac80211: Support on-channel scan option.
-References: <1334166738-28243-1-git-send-email-greearb@candelatech.com>  <1334166738-28243-9-git-send-email-greearb@candelatech.com>  (sfid-20120411_195349_401873_95D8A0F4) <1334202356.3788.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1334202356.3788.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	rodrigue@qca.qualcomm.com
+Subject: Re: [PATCH v2 7/8] ath9k_hw: disable fast channel change when changing
+ from/to half/quarter mode
+References: <1334610565-37399-1-git-send-email-nbd@openwrt.org> <1334610565-37399-2-git-send-email-nbd@openwrt.org> <1334610565-37399-3-git-send-email-nbd@openwrt.org> <1334610565-37399-4-git-send-email-nbd@openwrt.org> <1334610565-37399-5-git-send-email-nbd@openwrt.org> <1334610565-37399-6-git-send-email-nbd@openwrt.org> <1334610565-37399-7-git-send-email-nbd@openwrt.org> <20364.60189.208919.748818@gargle.gargle.HOWL>
+In-Reply-To: <20364.60189.208919.748818@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2012 08:45 PM, Johannes Berg wrote:
-> On Wed, 2012-04-11 at 10:52 -0700, greearb@candelatech.com wrote:
->
->>   static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
->>   				  struct cfg80211_scan_request *req)
->> @@ -438,10 +461,43 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
->>   	local->scan_req = req;
->>   	local->scan_sdata = sdata;
->>
->> -	if (local->ops->hw_scan)
->> +	if (local->ops->hw_scan) {
->>   		__set_bit(SCAN_HW_SCANNING,&local->scanning);
->> -	else
->> -		__set_bit(SCAN_SW_SCANNING,&local->scanning);
->> +	} else {
->> +		/* If we are scanning only on the current channel, then
->> +		 * we do not need to stop normal activities
->> +		 */
->> +		if ((req->n_channels == 1)&&
->> +		    (req->channels[0]->center_freq ==
->> +		     local->hw.conf.channel->center_freq)) {
->
-> how about "else if {", then the indentation isn't so deep and you can
-> have much nicer code in the entire block :)
->
->> +			unsigned long next_delay;
->
-> please add a blank line after variable declarations.
->
->> +		}
->> +		else {
->
-> please read the coding style documentation
->
->> @@ -672,6 +704,12 @@ void ieee80211_scan_work(struct work_struct *work)
->>
->>   	sdata = local->scan_sdata;
->>
->> +	/* When scanning on-channel, the first-callback means completeed. */
->
-> typo "completed"
+On 2012-04-17 6:01 AM, Sujith Manoharan wrote:
+> Felix Fietkau wrote:
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/hw.c |    4 ++++
+>>  1 files changed, 4 insertions(+), 0 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+>> index ff8d58d..26e6083 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>> @@ -1440,6 +1440,10 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
+>>  						    CHANNEL_5GHZ));
+>>  	mode_diff = (chan->chanmode != ah->curchan->chanmode);
+>>  
+>> +	if ((ah->curchan->channelFlags | chan->channelFlags) &
+>> +	    (CHANNEL_HALF | CHANNEL_QUARTER))
+>> +		return false;
+>> +
+> 
+> ath9k_hw_do_fastcc() is a better place where this check can be done.
+OK, will send a v3.
 
-Ok, will fix all of that.
-
-
->> +	if (test_bit(SCAN_ONCHANNEL_SCANNING,&local->scanning)) {
->> +		aborted = test_and_clear_bit(SCAN_ABORTED,&local->scanning);
->> +		goto out_complete;
->> +	}
->
-> how does the onchannel bit get cleared?
-
-__ieee80211_scan_completed sets local->scanning to 0, and it
-will WARN_ON if local->scanning is NOT zero when entering
-the method, so I don't think I should clear it earlier.
-
-> Shouldn't you be calling pre/post scan hooks?
-
-Probably so...I'll add that.  Doesn't look like ath9k uses
-it, but maybe some other NIC does need it.
-
-> I'm a bit divided over this. On the one hand, it seems like a mildly
-> useful optimisation, on the other though it adds a bunch of complexity
-> for multi-channel we've been thinking about... Not that we want to
-> support multi-channel with SW scan anyway, but still.
-
-It's just an optimization...maybe just add a check and do a regular scan
-if multi-channel is active if it's difficult to just make it work with
-multi-channel?
-
-Thanks,
-Ben
-
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+- Felix
