@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37375 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990Ab2DRBiY (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50494 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754156Ab2DQRq5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 21:38:24 -0400
-Message-ID: <1334713070.3725.14.camel@jlt3.sipsolutions.net> (sfid-20120418_033827_852475_85CFABFF)
-Subject: Re: [PATCH v2 2/6] mac80211: Support getting sta_info stats via
- ethtool.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Apr 2012 18:37:50 -0700
-In-Reply-To: <1334684807-14026-3-git-send-email-greearb@candelatech.com> (sfid-20120417_194716_243783_5644375D)
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
-	 <1334684807-14026-3-git-send-email-greearb@candelatech.com>
-	 (sfid-20120417_194716_243783_5644375D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 17 Apr 2012 13:46:57 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 0/6] Add ethtool stats support for Wireless Devices 
+Date: Tue, 17 Apr 2012 10:46:41 -0700
+Message-Id: <1334684807-14026-1-git-send-email-greearb@candelatech.com> (sfid-20120417_194701_243314_85F8C04C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-17 at 10:46 -0700, greearb@candelatech.com wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> +static void ieee80211_get_et_stats(struct wiphy *wiphy,
-> +				   struct net_device *dev,
-> +				   struct ethtool_stats *stats,
-> +				   u64 *data)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	struct sta_info *sta;
-> +	struct ieee80211_local *local = sdata->local;
-> +
-> +	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-> +
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(sta, &local->sta_list, list) {
 
-This doesn't seem right -- shouldn't it look up the BSSID or something
-and only work on managed interfaces? What if there really are two
-stations on this interface -- then it'll just overwrite it and return a
-random station's data? That's useless.
+This enables ethtool stats for mac80211 devices.  It also
+adds hooks to call down into mac80211 drivers for additional
+stats.  Patches to enable this hook in ath9k will be posted
+in a different series.
 
-johannes
+There was a review question about how to make the ethtool
+strings line up with the data in a less error prone manner.
+This patch series does NOT address that.  I think it may
+be more work than it's worth to try to do this, but we
+can always retro-fit such behaviour later if desired.
+Many drivers have this issue, so perhaps some support
+code in the ethtool core is the way to go.
+
+V2:  Fix getting survey stats:  Need to specify the
+  current channel index, not just use index zero.  The
+  fix for this involved adding a new helper method which
+  adds a patch to the series.
+
+
+Ben Greear (6):
+  cfg80211: Add framework to support ethtool stats.
+  mac80211: Support getting sta_info stats via ethtool.
+  mac80211: Framework to get wifi-driver stats via ethtool.
+  wireless: Add util method to get channel index from frequency.
+  mac80211: Add more ethtools stats: survey, rates, etc
+  mac80211: Add sta_state to ethtool stats.
+
+ include/net/cfg80211.h      |   24 ++++++
+ include/net/mac80211.h      |   17 ++++
+ net/mac80211/cfg.c          |  176 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h   |   37 +++++++++
+ net/mac80211/driver-trace.h |   15 ++++
+ net/wireless/ethtool.c      |   29 +++++++
+ net/wireless/util.c         |   24 ++++++
+ 7 files changed, 322 insertions(+), 0 deletions(-)
+
+-- 
+1.7.3.4
 
