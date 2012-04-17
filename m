@@ -1,45 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail127.messagelabs.com ([216.82.250.115]:40534 "EHLO
-	mail127.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754557Ab2DZR4Q (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50502 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755645Ab2DQRrM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 13:56:16 -0400
-From: H Hartley Sweeten <hartleys@visionengravers.com>
-To: Linux Kernel <linux-kernel@vger.kernel.org>
-Subject: [PATCH] NFC: nci/lib.c: include header for exported symbol prototype
-Date: Thu, 26 Apr 2012 10:56:00 -0700
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<lauro.venancio@openbossa.org>, <aloisio.almeida@openbossa.org>,
-	<sameo@linux.intel.com>, <davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <201204261056.01229.hartleys@visionengravers.com> (sfid-20120426_195639_252763_2EB02E08)
+	Tue, 17 Apr 2012 13:47:12 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 2/6] mac80211: Support getting sta_info stats via ethtool.
+Date: Tue, 17 Apr 2012 10:46:43 -0700
+Message-Id: <1334684807-14026-3-git-send-email-greearb@candelatech.com> (sfid-20120417_194716_243783_5644375D)
+In-Reply-To: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Include the header to pickup the exported symbol prototype.
+From: Ben Greear <greearb@candelatech.com>
 
-Quites the sparse warning:
+This lets ethtool print out stats related to stations
+connected to the interface.  Does not yet get stats
+from the underlying driver.
 
-warning: symbol 'nci_to_errno' was not declared. Should it be static?
-
-Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-CC: Samuel Ortiz <sameo@linux.intel.com>
-CC: "David S. Miller" <davem@davemloft.net>
-
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
+:100644 100644 510a745... 1cb0529... M	net/mac80211/cfg.c
+ net/mac80211/cfg.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 71 insertions(+), 0 deletions(-)
 
-diff --git a/net/nfc/nci/lib.c b/net/nfc/nci/lib.c
-index 6a63e5e..6b7fd26 100644
---- a/net/nfc/nci/lib.c
-+++ b/net/nfc/nci/lib.c
-@@ -31,6 +31,7 @@
- #include <linux/errno.h>
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 510a745..1cb0529 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -112,6 +112,74 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 	return 0;
+ }
  
- #include <net/nfc/nci.h>
-+#include <net/nfc/nci_core.h>
- 
- /* NCI status codes to Unix errno mapping */
- int nci_to_errno(__u8 code)
++static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
++	"rx_packets", "rx_bytes", "wep_weak_iv_count",
++	"rx_duplicates", "rx_fragments", "rx_dropped",
++	"tx_packets", "tx_bytes", "tx_fragments",
++	"tx_filtered", "tx_retry_failed", "tx_retries",
++	"beacon_loss"
++};
++#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
++
++static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
++				       struct net_device *dev,
++				       int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return STA_STATS_LEN;
++
++	return -EOPNOTSUPP;
++}
++
++static void ieee80211_get_et_stats(struct wiphy *wiphy,
++				   struct net_device *dev,
++				   struct ethtool_stats *stats,
++				   u64 *data)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++	struct ieee80211_local *local = sdata->local;
++
++	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		int i = 0;
++
++		/* Make sure this station belongs to the proper dev */
++		if (sta->sdata->dev != dev)
++			continue;
++
++		data[i++] += sta->rx_packets;
++		data[i++] += sta->rx_bytes;
++		data[i++] += sta->wep_weak_iv_count;
++		data[i++] += sta->num_duplicates;
++		data[i++] += sta->rx_fragments;
++		data[i++] += sta->rx_dropped;
++
++		data[i++] += sta->tx_packets;
++		data[i++] += sta->tx_bytes;
++		data[i++] += sta->tx_fragments;
++		data[i++] += sta->tx_filtered_count;
++		data[i++] += sta->tx_retry_failed;
++		data[i++] += sta->tx_retry_count;
++		data[i++] += sta->beacon_loss_count;
++		BUG_ON(i != STA_STATS_LEN);
++	}
++	rcu_read_unlock();
++}
++
++static void ieee80211_get_et_strings(struct wiphy *wiphy,
++				     struct net_device *dev,
++				     u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS) {
++		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
++		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
++	}
++}
++
++
+ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
+ 			     struct key_params *params)
+@@ -2775,4 +2843,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ #ifdef CONFIG_PM
+ 	.set_wakeup = ieee80211_set_wakeup,
+ #endif
++	.get_et_sset_count = ieee80211_get_et_sset_count,
++	.get_et_stats = ieee80211_get_et_stats,
++	.get_et_strings = ieee80211_get_et_strings,
+ };
+-- 
+1.7.3.4
+
