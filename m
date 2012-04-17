@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49133 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756561Ab2DSX35 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:40659 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937Ab2DQT2D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 19:29:57 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: disallow WoW with multiple vifs
-Date: Thu, 19 Apr 2012 16:29:19 -0700
-Message-ID: <1334878159-7713-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120420_013003_634244_8F84F526)
+	Tue, 17 Apr 2012 15:28:03 -0400
+Received: by obbta14 with SMTP id ta14so5514874obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 12:28:02 -0700 (PDT)
+Message-ID: <4F8DC439.103@lwfinger.net> (sfid-20120417_212807_723740_378F3BA2)
+Date: Tue, 17 Apr 2012 14:27:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: carl9170 firmware
+References: <4F8DA785.6040608@lwfinger.net> <201204172035.06023.chunkeey@googlemail.com>
+In-Reply-To: <201204172035.06023.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath6kl fw does not have enough memory to support the WoW filters of
-more than one vif. Disallow WoW suspend if this is the case.
+On 04/17/2012 01:35 PM, Christian Lamparter wrote:
+> On Tuesday, April 17, 2012 07:25:25 PM Larry Finger wrote:
+>> Christian,
+>>
+>> A question regarding adding carl9170-1.fw to the openSUSE firmware package is
+>> being discussed on the oS kernel mailing list; however, I do not see that one
+>> in the linux-firmware git repo. Should it be there?
+> Does the repo take source code releases? [much like the work we do for the
+> kernel driver, or have you ever seen a binary release on this ML :D ]. The
+> files on<http://wireless.kernel.org/en/users/Drivers/carl9170#Firmware_binary>
+> are just for convenience.
 
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+AFAIK, the repo only takes binary files. With the source under GPL2, that should 
+not be a problem; however, the fact that there are two versions with the same 
+name would be trouble. Adding under that name has the possibility of breaking 
+all the systems that use the other version.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index a8a7570..7ad03ed 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2059,6 +2059,10 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	u8 index = 0;
- 	__be32 ips[MAX_IP_ADDRS];
- 
-+	/* The FW currently can't support multi-vif WoW properly. */
-+	if (ar->num_vif > 1)
-+		return -EIO;
-+
- 	vif = ath6kl_vif_first(ar);
- 	if (!vif)
- 		return -EIO;
-@@ -3125,6 +3129,10 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
- 	if (vif->sme_state != SME_DISCONNECTED)
- 		return -EBUSY;
- 
-+	/* The FW currently can't support multi-vif WoW properly. */
-+	if (ar->num_vif > 1)
-+		return -EIO;
-+
- 	ath6kl_cfg80211_scan_complete_event(vif, true);
- 
- 	ret = ath6kl_set_probed_ssids(ar, vif, request->ssids,
--- 
-1.7.4.1
+Too bad that the newer firmware was not renamed carl9170-2.fw. Then both could 
+be added to the repo and the driver could load whichever one it needed. 
+Unfortunately, making that change now would be difficult to propagate back to 
+all the stable versions, but you might consider it for V3.5 and forward. In 
+conjunction with that change, submit the newer firmware to the firmware repo 
+with the -2 name. That won't break anyone's system. Users for kernels up to 3.4 
+will still see what they did before.
+
+>> Is there a legal problem with redistribution?
+> Not that I know of.
+
+With a GPLv2 license, there will be no problem.
+
+Larry
+
+
+> Regards,
+> 	Christian
+>
 
