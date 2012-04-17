@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36785 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756578Ab2DIPIY (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:38229 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755911Ab2DQPwV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 11:08:24 -0400
-Message-ID: <4F82FB63.5070108@qca.qualcomm.com> (sfid-20120409_170827_369380_C542FF6A)
-Date: Mon, 9 Apr 2012 18:08:19 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Subramania Sharma <sharmat@qca.qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Fix 4-way handshake failure in AP and P2P GO
- mode
-References: <1333644981-3721-1-git-send-email-vthiagar@qca.qualcomm.com> <4F82F66E.8000800@qca.qualcomm.com> <4F82F950.3020006@qca.qualcomm.com>
-In-Reply-To: <4F82F950.3020006@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 17 Apr 2012 11:52:21 -0400
+Received: by lbbgf7 with SMTP id gf7so10257528lbb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 08:52:18 -0700 (PDT)
+Message-ID: <1334677936.4965.13.camel@cumari> (sfid-20120417_175237_946788_9561FDBD)
+Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
+From: Luciano Coelho <coelho@ti.com>
+To: Randy Dunlap <rdunlap@xenotime.net>, johannes@sipsolutions.net
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 17 Apr 2012 18:52:16 +0300
+In-Reply-To: <4F8DB687.2090701@xenotime.net>
+References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>
+		 <4F8C784B.2040402@xenotime.net> <1334640620.27247.7.camel@cumari>
+	 <4F8DB687.2090701@xenotime.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/2012 05:59 PM, Vasanthakumar Thiagarajan wrote:
-> On Monday 09 April 2012 08:17 PM, Kalle Valo wrote:
->> On 04/05/2012 07:56 PM, Vasanthakumar Thiagarajan wrote:
->>> RSN capability field of RSN IE which is generated (which is what really
->>> advertised in beacon/probe response) differs from the one generated in
->>> wpa_supplicant. This inconsistency in rsn IE results in 4-way handshake
->>> failure. To fix this, configure rsn capability used in wpa_supplicant
->>> in firmware using a new wmi command, WMI_SET_IE_CMDID. There is a bit
->>> (ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE) in fw_capabilities to advertise
->>> this support to driver.
->>>
->>> Signed-off-by: Subramania Sharma<sharmat@qca.qualcomm.com>
->>> Signed-off-by: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
->>
->> Otherwise looks good but there's a sparse warning:
->>
->> drivers/net/wireless/ath/ath6kl/cfg80211.c:2539:20: warning: incorrect
->> type in assignment (different base types)
->> drivers/net/wireless/ath/ath6kl/cfg80211.c:2539:20:    expected unsigned
->> short [unsigned] [short] [usertype]<noident>
->> drivers/net/wireless/ath/ath6kl/cfg80211.c:2539:20:    got restricted
->> __le16 [usertype]<noident>
+On Tue, 2012-04-17 at 11:29 -0700, Randy Dunlap wrote: 
+> On 04/16/2012 10:30 PM, Luciano Coelho wrote:
 > 
-> grr, for some reason my sparse does not report this. How about the 
-> change like the following over this patch so that we need not worry 
-> about endianness in accessing rsn-cap?. Thanks!.
+> > Hi Randy,
+> > 
+> > On Mon, 2012-04-16 at 12:51 -0700, Randy Dunlap wrote: 
+> >> From: Randy Dunlap <rdunlap@xenotime.net>
+> >>
+> >> wl12xx build fails with many undefined symbol errors when MAC80211
+> >> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
+> >> on MAC80211 (which already depends on CFG80211).
+> >>
+> >> Here are a few of the many build errors:
+> >>
+> > 
+> > [...]
+> > 
+> >> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+> >> Cc:	Luciano Coelho <coelho@ti.com>
+> >> Cc:	linux-wireless@vger.kernel.org
+> >> Cc:	"John W. Linville" <linville@tuxdriver.com>
+> >> ---
+> > 
+> > Thanks for the patch!
+> > 
+> > 
+> >> --- linux-next-20120416.orig/drivers/net/wireless/ti/wl12xx/Kconfig
+> >> +++ linux-next-20120416/drivers/net/wireless/ti/wl12xx/Kconfig
+> >> @@ -1,5 +1,6 @@
+> >>  config WL12XX
+> >>         tristate "TI wl12xx support"
+> >> +	depends on MAC80211
+> >>         select WLCORE
+> > 
+> > Do we really need this one? wl12xx selects WLCORE which in turn depends
+> > on MAC80211 (with your change below).  Maybe we don't need this?
+> 
+> Hi,
+> 
+> [testing...]
+> 
+> The build fails if either one of these "depends" is omitted.
 
-Looks good to me.
+Yeah, thanks for testing.  I guess it's because, as Johannes said,
+select doesn't check the dependencies of the selected module.
 
-Kalle
+Johannes, thanks for the explanation.
+
+
+-- 
+Cheers,
+Luca.
+
