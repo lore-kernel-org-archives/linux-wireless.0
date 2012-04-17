@@ -1,90 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3448 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755094Ab2DKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:53:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 3/9] brcm80211: fmac: register primary net device with
- device mac address
-Date: Wed, 11 Apr 2012 11:52:45 +0200
-Message-ID: <1334137971-3972-4-git-send-email-arend@broadcom.com> (sfid-20120411_115345_037656_8C686E6D)
-In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:54412 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639Ab2DQPoD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 11:44:03 -0400
+Received: by gghe5 with SMTP id e5so3139994ggh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 08:44:03 -0700 (PDT)
+Message-ID: <4F8D8FBE.7080107@lwfinger.net> (sfid-20120417_174408_481169_BB46ABE3)
+Date: Tue, 17 Apr 2012 10:43:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	IvDoorn@gmail.com, linville@tuxdriver.com, gwingerde@gmail.com,
+	helmut.schaa@googlemail.com
+Subject: Re: [PATCH] wireless: rt2x00: rt{2500,73}usb.c put back duplicate
+ id
+References: <1334437201-12737-1-git-send-email-xose.vazquez@gmail.com> <4F89EDCC.7080302@lwfinger.net> <4F8D8882.3070004@gmail.com>
+In-Reply-To: <4F8D8882.3070004@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The primary net device was registered with a primary mac address and
-upon IFUP it was set to match the actual mac address from the device.
-This patch changes that and moves the brcmf_add_if() call to the common
-part of the driver.
+On 04/17/2012 10:13 AM, Xose Vazquez Perez wrote:
+> On 04/14/2012 11:36 PM, Larry Finger wrote:
+>
+>> On 04/14/2012 04:00 PM, Xose Vazquez Perez wrote:
+>>> put back 0x050d,0x7050 to rt73usb, same usb_id for two chips:
+>>>
+>>> K7SF5D7050A ver 2xxx is rt2500
+>>> K7SF5D7050B ver 3xxx is rt73
+>>>
+>>> <http://en-us-support.belkin.com/app/answers/detail/a_id/297/kw/K7SF5D7050>
+>>>
+>>> Signed-off-by: Xose Vazquez Perez<xose.vazquez@gmail.com>
+>
+>> I did a quick look at the rt2500 driver and did not see any code
+>> that detects what version chip is being read. If it is possible
+>> to determine if it is ver 2xxx and not 3xxx, then the probe
+>> routine should do that and return an error if the wrong driver
+>> is being loaded. A similar situation arises in the Realtek PCI
+>> devices. In that case, it is a PCI revision that allows a driver
+>> to reject the wrong hardware.
+>
+> This is just a patch to return to the original situation.
+> (0x050d, 0x7050) was deleted by commit 08b8099c128d601fd675b212ef8b10397706b633
+> [1], and I was wrong.
+>
+> [1]<http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=08b8099c128d601fd675b212ef8b10397706b633>
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    5 +++++
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    6 ------
- drivers/net/wireless/brcm80211/brcmfmac/usb.c      |    8 --------
- 3 files changed, 5 insertions(+), 14 deletions(-)
+You should not "fix" a mistake by making another. My position is that this 
+should be done properly this time, otherwise users get devices that don't work 
+merely because the wrong driver got loaded first. As long as there is some 
+parameter available early in the load process that distinguishes the two 
+devices, the probe routine needs to use it to avoid using the wrong driver.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 07836a8..00b6270 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -1073,6 +1073,11 @@ int brcmf_bus_start(struct device *dev)
- 	if (ret < 0)
- 		return ret;
- 
-+	/* add primary networking interface */
-+	ret = brcmf_add_if(dev, 0, "wlan%d", drvr->mac);
-+	if (ret < 0)
-+		return ret;
-+
- 	/* signal bus ready */
- 	bus_if->state = BRCMF_BUS_DATA;
- 	return 0;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 2bf5dda..a83fbea 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3948,12 +3948,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 		}
- 	}
- 
--	/* add interface and open for business */
--	if (brcmf_add_if(bus->sdiodev->dev, 0, "wlan%d", NULL)) {
--		brcmf_dbg(ERROR, "Add primary net device interface failed!!\n");
--		goto fail;
--	}
--
- 	return bus;
- 
- fail:
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 8236422..1d67ecf 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -1383,14 +1383,6 @@ static int brcmf_usb_probe_cb(struct device *dev, const char *desc,
- 		goto fail;
- 	}
- 
--	/* add interface and open for business */
--	ret = brcmf_add_if(dev, 0, "wlan%d", NULL);
--	if (ret) {
--		brcmf_dbg(ERROR, "Add primary net device interface failed!!\n");
--		brcmf_detach(dev);
--		goto fail;
--	}
--
- 	return 0;
- fail:
- 	/* Release resources in reverse order */
--- 
-1.7.5.4
+I don't have either of these devices, thus I cannot help in that part.
+
+Larry
+
 
 
