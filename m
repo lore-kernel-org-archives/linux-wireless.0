@@ -1,101 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog135.obsmtp.com ([74.125.149.84]:36805 "EHLO
-	psmtp.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933016Ab2DKTyE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 15:54:04 -0400
-Received: by lbbgi11 with SMTP id gi11so952014lbb.38
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 12:54:02 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com, coelho@ti.com
-Subject: [PATCH 14/24] wlcore/wl12xx: add hw op for vif init
-Date: Wed, 11 Apr 2012 22:53:30 +0300
-Message-Id: <1334174020-18957-15-git-send-email-coelho@ti.com> (sfid-20120411_215426_779619_34BAE5A2)
-In-Reply-To: <1334174020-18957-1-git-send-email-coelho@ti.com>
-References: <1334174020-18957-1-git-send-email-coelho@ti.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54144 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751021Ab2DQSrc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 14:47:32 -0400
+Date: Tue, 17 Apr 2012 14:42:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: linux-wireless@vger.kernel.org,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 1/2] ath9k: add an extra boolean parameter to
+ ath9k_hw_apply_txpower
+Message-ID: <20120417184235.GD2477@tuxdriver.com> (sfid-20120417_204736_537302_37BD31D0)
+References: <1334515086-16150-1-git-send-email-juhosg@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1334515086-16150-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Are these intended as fixes for 3.4?
 
-Add an op for family-specific vif initialization.  Currently unused,
-but will be needed when wl18xx support is implemented.
+On Sun, Apr 15, 2012 at 08:38:05PM +0200, Gabor Juhos wrote:
+> In order to unifying regulatory limit handling
+> commit ca2c68cc7bc80fc4504fb420df04cce99c9ee6ec
+> (ath9k_hw: clean up tx power handling) introduced
+> a new helper function 'ath9k_hw_apply_txpower',
+> and the direct calls of 'ah->eep_ops->set_txpower'
+> has been replaced by a call of the helper function.
+> 
+> This caused a change in the behaviour of the
+> 'ath9k_hw_set_txpowerlimit' function. The purpose
+> of that function is to calculate and store the
+> rate txpower table and the regulatory limit without
+> touching the hardware registers. Before the commit,
+> the 'test' parameter of the function was passed to
+> the 'ah->eep_ops->set_txpower'. Now the calling of
+> the 'set_txpower' function happens indirectly through
+> 'ath9k_hw_apply_txpower', so the 'test' argument of
+> the 'set_txpower' is always 'false'.
+> 
+> This patch restores the original behaviour of
+> 'ath9k_hw_set_txpowerlimit' by adding a new
+> argument to 'ath9k_hw_apply_txpower.'
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> Acked-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar5008_phy.c   |    2 +-
+>  drivers/net/wireless/ath/ath9k/ar9003_paprd.c |    2 +-
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.c   |    2 +-
+>  drivers/net/wireless/ath/ath9k/hw.c           |    9 +++++----
+>  drivers/net/wireless/ath/ath9k/hw.h           |    3 ++-
+>  5 files changed, 10 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> index de30cb3..8753e38 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> @@ -868,7 +868,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+>  	ar5008_hw_set_channel_regs(ah, chan);
+>  	ar5008_hw_init_chain_masks(ah);
+>  	ath9k_olc_init(ah);
+> -	ath9k_hw_apply_txpower(ah, chan);
+> +	ath9k_hw_apply_txpower(ah, chan, false);
+>  
+>  	/* Write analog registers */
+>  	if (!ath9k_hw_set_rf_regs(ah, chan, freqIndex)) {
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+> index 59647a3..3d400e8 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+> @@ -54,7 +54,7 @@ void ar9003_paprd_enable(struct ath_hw *ah, bool val)
+>  
+>  	if (val) {
+>  		ah->paprd_table_write_done = true;
+> -		ath9k_hw_apply_txpower(ah, chan);
+> +		ath9k_hw_apply_txpower(ah, chan, false);
+>  	}
+>  
+>  	REG_RMW_FIELD(ah, AR_PHY_PAPRD_CTRL0_B0,
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> index 4c9bc9f..5d2b584 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> @@ -690,7 +690,7 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+>  	ar9003_hw_override_ini(ah);
+>  	ar9003_hw_set_channel_regs(ah, chan);
+>  	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+> -	ath9k_hw_apply_txpower(ah, chan);
+> +	ath9k_hw_apply_txpower(ah, chan, false);
+>  
+>  	if (AR_SREV_9462(ah)) {
+>  		if (REG_READ_FIELD(ah, AR_PHY_TX_IQCAL_CONTROL_0,
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index 6fa8128..480e8f8 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -1453,7 +1453,7 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
+>  		return false;
+>  	}
+>  	ath9k_hw_set_clockrate(ah);
+> -	ath9k_hw_apply_txpower(ah, chan);
+> +	ath9k_hw_apply_txpower(ah, chan, false);
+>  	ath9k_hw_rfbus_done(ah);
+>  
+>  	if (IS_CHAN_OFDM(chan) || IS_CHAN_HT(chan))
+> @@ -2724,7 +2724,8 @@ static int get_antenna_gain(struct ath_hw *ah, struct ath9k_channel *chan)
+>  	return ah->eep_ops->get_eeprom(ah, gain_param);
+>  }
+>  
+> -void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan)
+> +void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
+> +			    bool test)
+>  {
+>  	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
+>  	struct ieee80211_channel *channel;
+> @@ -2745,7 +2746,7 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan)
+>  
+>  	ah->eep_ops->set_txpower(ah, chan,
+>  				 ath9k_regd_get_ctl(reg, chan),
+> -				 ant_reduction, new_pwr, false);
+> +				 ant_reduction, new_pwr, test);
+>  }
+>  
+>  void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
+> @@ -2758,7 +2759,7 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
+>  	if (test)
+>  		channel->max_power = MAX_RATE_POWER / 2;
+>  
+> -	ath9k_hw_apply_txpower(ah, chan);
+> +	ath9k_hw_apply_txpower(ah, chan, test);
+>  
+>  	if (test)
+>  		channel->max_power = DIV_ROUND_UP(reg->max_power_level, 2);
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+> index 1d4b983..99b57bd 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -976,7 +976,8 @@ void ath9k_hw_name(struct ath_hw *ah, char *hw_name, size_t len);
+>  /* PHY */
+>  void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+>  				   u32 *coef_mantissa, u32 *coef_exponent);
+> -void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan);
+> +void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
+> +			    bool test);
+>  
+>  /*
+>   * Code Specific to AR5008, AR9001 or AR9002,
+> -- 
+> 1.7.2.1
+> 
+> 
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wl12xx/main.c   |    1 +
- drivers/net/wireless/ti/wlcore/hw_ops.h |    9 +++++++++
- drivers/net/wireless/ti/wlcore/init.c   |    5 +++++
- drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
- 4 files changed, 16 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 9b2f40c..564ca91 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -915,6 +915,7 @@ static struct wlcore_ops wl12xx_ops = {
- 	.tx_immediate_compl	= NULL,
- 	.tx_delayed_compl	= wl12xx_tx_delayed_compl,
- 	.hw_init		= wl12xx_hw_init,
-+	.init_vif		= NULL,
- 	.get_pg_ver		= wl12xx_get_pg_ver,
- 	.get_mac		= wl12xx_get_mac,
- };
-diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
-index 14748d3..262728a 100644
---- a/drivers/net/wireless/ti/wlcore/hw_ops.h
-+++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
-@@ -93,5 +93,14 @@ static inline void wlcore_hw_tx_immediate_compl(struct wl1271 *wl)
- 		wl->ops->tx_immediate_compl(wl);
- }
- 
-+static inline int
-+wlcore_hw_init_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif)
-+{
-+	if (wl->ops->init_vif)
-+		return wl->ops->init_vif(wl, wlvif);
-+
-+	return 0;
-+}
-+
- #endif
- 
-diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
-index afe4f75..9f89255 100644
---- a/drivers/net/wireless/ti/wlcore/init.c
-+++ b/drivers/net/wireless/ti/wlcore/init.c
-@@ -32,6 +32,7 @@
- #include "cmd.h"
- #include "tx.h"
- #include "io.h"
-+#include "hw_ops.h"
- 
- int wl1271_init_templates_config(struct wl1271 *wl)
- {
-@@ -638,6 +639,10 @@ int wl1271_init_vif_specific(struct wl1271 *wl, struct ieee80211_vif *vif)
- 	if (ret < 0)
- 		return ret;
- 
-+	ret = wlcore_hw_init_vif(wl, wlvif);
-+	if (ret < 0)
-+		return ret;
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 91ccd1e..7e2881d 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -54,6 +54,7 @@ struct wlcore_ops {
- 	void (*tx_delayed_compl)(struct wl1271 *wl);
- 	void (*tx_immediate_compl)(struct wl1271 *wl);
- 	int (*hw_init)(struct wl1271 *wl);
-+	int (*init_vif)(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- 	s8 (*get_pg_ver)(struct wl1271 *wl);
- 	void (*get_mac)(struct wl1271 *wl);
- };
 -- 
-1.7.5.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
