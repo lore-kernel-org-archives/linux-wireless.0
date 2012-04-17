@@ -1,206 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:50397 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755005Ab2DSMDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 08:03:18 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linville@tuxdriver.com
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	rodrigue@qca.qualcomm.com,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH] ath9k: make DFS detector pools SMP safe
-Date: Thu, 19 Apr 2012 14:03:04 +0200
-Message-Id: <1334836984-5983-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120419_140322_676001_1D9160A9)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:58511 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754764Ab2DQOiI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 10:38:08 -0400
+Received: by bkcik5 with SMTP id ik5so4627558bkc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 07:38:06 -0700 (PDT)
+Date: Tue, 17 Apr 2012 16:37:46 +0200
+From: Anisse Astier <anisse@astier.eu>
+To: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Cc: linville@tuxdriver.com, RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Kevin Chou <kevin.chou@mediatek.com>,
+	John Li <chen-yang.li@mediatek.com>,
+	RA-Jay Hung <Jay_Hung@ralinktech.com>
+Subject: Re: RT5390 not working with rt2800pci
+Message-ID: <20120417163746.35c232c8@destiny.ordissimo> (sfid-20120417_163812_740431_8F34BA56)
+In-Reply-To: <20120413142352.3b927516@destiny.ordissimo>
+References: <20120413142352.3b927516@destiny.ordissimo>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds locking of the detector's shared pulse and PRI sequence
-pools to enable multi-wiphy operation on SMP systems.
+Hi again,
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+On Fri, 13 Apr 2012 14:23:52 +0200, Anisse Astier <anisse@astier.eu> wrote :
+
+> [resent with compressed dmesg(<40k) and removed one Cc:, sorry for the spam]
+> 
+> Hi,
+> 
+> I have two[1] (seemingly) identical mini pcie RT5390 wireless cards. One
+> works, the other doesn't.
+> By "doesn't" work, I mean it can't receive any network further than 1m(at
+> least it's still "wireless" ;-)). Scan is empty, except if I put the AP
+> right next to the laptop.
+> 
+> I'm using the rt2800pci in-kernel driver. Support for this card was added
+> in 2.6.39. To make sure there was no regression, I tested the following
+> kernels: 2.6.39.4, 3.0.8, 3.2.5, 3.3.1 and wireless-next as of today.
+> I'm also using the latest firmware rt2860.bin version 34 from official
+> linux-firmware git tree.
+> 
+> Behaviour is reproduced with or without plugging the antenna. Behaviour
+> follows the card, if I put on another motherboard.
+> 
+> Markings on the chips are identical whether it's working or not:
+>  - Ralink RT5390RL NAF8590109 1133STA1
+> 
+> lspci[3] doesn't change (except mac address) whether it's working or not.
+> dmesg (attached) with rt2x00 debug output doesn't show anything special.
+> 
+> I've tried rt5390sta[2], and it doesn't help. Working card is working,
+> non-working is not.
+> 
+> 
+> Last, but not least, it works on windows. 
+>  - if we reboot from windows, it works
+>  - if we halt the hardware, and power it on, it doesn't work.
+> Which means that the windows driver does something that rt2800pci
+> doesn't, and that the state is preserved as long as we don't cut power.
+> 
+> 
+> Regards,
+> 
+> Anisse
+> 
+> 
+[...]
+
+Ok, I've found a solution.
+
+After looking into the latest ralink release, for chipset 5572, I saw
+that rt5390 support was updated. And that support for the chip with rev
+1502 was added, named RT5390R.
+The only difference with "normal" 5390 is that this one supports hardware
+antenna diversity, so the driver should tell the card which antenna to
+use by default (the main one in my case).
+This is replicated in the patch below, which has been tested on both
+working and non-working 1502s, and is proving to work quite well.
+
+I still don't know how to integrate this properly with rt2800pci's
+antenna diversity code, since this is the first chipset to have hardware
+antenna diversity in the rt2800 family (others had it in rt61 and rt73
+for example).
+
+I'll look into it over the next two weeks, and send a patch if no one
+does before.
+
+
+
+From: Anisse Astier <anisse@astier.eu>
+Date: Tue, 17 Apr 2012 12:23:21 +0200
+Subject: [PATCH] rt2800: add chipset RT5390R support
+
+This is for testing Only !! Please don't merge !
 ---
- drivers/net/wireless/ath/ath9k/dfs_pri_detector.c |  110 +++++++++++++++------
- 1 files changed, 78 insertions(+), 32 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h    |    1 +
+ drivers/net/wireless/rt2x00/rt2800lib.c |   12 ++++++++++++
+ 2 files changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
-index 025e88a..ecb6334 100644
---- a/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
-+++ b/drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
-@@ -15,6 +15,7 @@
-  */
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 063bfa8..1ce2634 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -83,6 +83,7 @@
+ #define REV_RT3090E			0x0211
+ #define REV_RT3390E			0x0211
+ #define REV_RT5390F			0x0502
++#define REV_RT5390R			0x1502
  
- #include <linux/slab.h>
-+#include <linux/spinlock.h>
- 
- #include "dfs_pattern_detector.h"
- #include "dfs_pri_detector.h"
-@@ -94,6 +95,73 @@ static u32 pde_get_multiple(u32 val, u32 fraction, u32 tolerance)
- static u32 singleton_pool_references;
- static LIST_HEAD(pulse_pool);
- static LIST_HEAD(pseq_pool);
-+static DEFINE_SPINLOCK(pool_lock);
-+
-+static void pool_register_ref(void)
-+{
-+	spin_lock_bh(&pool_lock);
-+	singleton_pool_references++;
-+	spin_unlock_bh(&pool_lock);
-+}
-+
-+static void pool_deregister_ref(void)
-+{
-+	spin_lock_bh(&pool_lock);
-+	singleton_pool_references--;
-+	if (singleton_pool_references == 0) {
-+		/* free singleton pools with no references left */
-+		struct pri_sequence *ps, *ps0;
-+		struct pulse_elem *p, *p0;
-+
-+		list_for_each_entry_safe(p, p0, &pulse_pool, head) {
-+			list_del(&p->head);
-+			kfree(p);
-+		}
-+		list_for_each_entry_safe(ps, ps0, &pseq_pool, head) {
-+			list_del(&ps->head);
-+			kfree(ps);
-+		}
-+	}
-+	spin_unlock_bh(&pool_lock);
-+}
-+
-+static void pool_put_pulse_elem(struct pulse_elem *pe)
-+{
-+	spin_lock_bh(&pool_lock);
-+	list_add(&pe->head, &pulse_pool);
-+	spin_unlock_bh(&pool_lock);
-+}
-+
-+static void pool_put_pseq_elem(struct pri_sequence *pse)
-+{
-+	spin_lock_bh(&pool_lock);
-+	list_add(&pse->head, &pseq_pool);
-+	spin_unlock_bh(&pool_lock);
-+}
-+
-+static struct pri_sequence *pool_get_pseq_elem(void)
-+{
-+	struct pri_sequence *pse = NULL;
-+	spin_lock_bh(&pool_lock);
-+	if (!list_empty(&pseq_pool)) {
-+		pse = list_first_entry(&pseq_pool, struct pri_sequence, head);
-+		list_del(&pse->head);
-+	}
-+	spin_unlock_bh(&pool_lock);
-+	return pse;
-+}
-+
-+static struct pulse_elem *pool_get_pulse_elem(void)
-+{
-+	struct pulse_elem *pe = NULL;
-+	spin_lock_bh(&pool_lock);
-+	if (!list_empty(&pulse_pool)) {
-+		pe = list_first_entry(&pulse_pool, struct pulse_elem, head);
-+		list_del(&pe->head);
-+	}
-+	spin_unlock_bh(&pool_lock);
-+	return pe;
-+}
- 
- static struct pulse_elem *pulse_queue_get_tail(struct pri_detector *pde)
- {
-@@ -110,7 +178,7 @@ static bool pulse_queue_dequeue(struct pri_detector *pde)
- 		list_del_init(&p->head);
- 		pde->count--;
- 		/* give it back to pool */
--		list_add(&p->head, &pulse_pool);
-+		pool_put_pulse_elem(p);
+ /*
+  * Signal information.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index bd19802..e94661f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3928,6 +3928,18 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
  	}
- 	return (pde->count > 0);
- }
-@@ -138,11 +206,8 @@ static void pulse_queue_check_window(struct pri_detector *pde)
  
- static bool pulse_queue_enqueue(struct pri_detector *pde, u64 ts)
- {
--	struct pulse_elem *p;
--	if (!list_empty(&pulse_pool)) {
--		p = list_first_entry(&pulse_pool, struct pulse_elem, head);
--		list_del(&p->head);
--	} else {
-+	struct pulse_elem *p = pool_get_pulse_elem();
-+	if (p == NULL) {
- 		p = kmalloc(sizeof(*p), GFP_KERNEL);
- 		if (p == NULL) {
- 			pr_err("failed to allocate pulse_elem\n");
-@@ -220,12 +285,8 @@ static bool pseq_handler_create_sequences(struct pri_detector *pde,
- 
- 		/* this is a valid one, add it */
- 		ps.deadline_ts = ps.first_ts + ps.dur;
--
--		if (!list_empty(&pseq_pool)) {
--			new_ps = list_first_entry(&pseq_pool,
--						  struct pri_sequence, head);
--			list_del(&new_ps->head);
--		} else {
-+		new_ps = pool_get_pseq_elem();
-+		if (new_ps == NULL) {
- 			new_ps = kmalloc(sizeof(*new_ps), GFP_KERNEL);
- 			if (new_ps == NULL)
- 				return false;
-@@ -250,7 +311,7 @@ pseq_handler_add_to_existing_seqs(struct pri_detector *pde, u64 ts)
- 		/* first ensure that sequence is within window */
- 		if (ts > ps->deadline_ts) {
- 			list_del_init(&ps->head);
--			list_add(&ps->head, &pseq_pool);
-+			pool_put_pseq_elem(ps);
- 			continue;
- 		}
- 
-@@ -299,11 +360,11 @@ static void pri_detector_reset(struct pri_detector *pde, u64 ts)
- 	struct pulse_elem *p, *p0;
- 	list_for_each_entry_safe(ps, ps0, &pde->sequences, head) {
- 		list_del_init(&ps->head);
--		list_add(&ps->head, &pseq_pool);
-+		pool_put_pseq_elem(ps);
- 	}
- 	list_for_each_entry_safe(p, p0, &pde->pulses, head) {
- 		list_del_init(&p->head);
--		list_add(&p->head, &pulse_pool);
-+		pool_put_pulse_elem(p);
- 	}
- 	pde->count = 0;
- 	pde->last_ts = ts;
-@@ -312,22 +373,7 @@ static void pri_detector_reset(struct pri_detector *pde, u64 ts)
- static void pri_detector_exit(struct pri_detector *de)
- {
- 	pri_detector_reset(de, 0);
--
--	singleton_pool_references--;
--	if (singleton_pool_references == 0) {
--		/* free singleton pools with no references left */
--		struct pri_sequence *ps, *ps0;
--		struct pulse_elem *p, *p0;
--
--		list_for_each_entry_safe(p, p0, &pulse_pool, head) {
--			list_del(&p->head);
--			kfree(p);
--		}
--		list_for_each_entry_safe(ps, ps0, &pseq_pool, head) {
--			list_del(&ps->head);
--			kfree(ps);
--		}
--	}
-+	pool_deregister_ref();
- 	kfree(de);
++	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
++		rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY;
++		rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY;
++		rt2x00dev->default_ant.rx_chain_num = 0;
++		rt2x00dev->default_ant.tx_chain_num = 0;
++
++		rt2800_bbp_write(rt2x00dev, 150, 0);
++		rt2800_bbp_write(rt2x00dev, 151, 0);
++		rt2800_bbp_write(rt2x00dev, 154, 0);
++		rt2800_bbp_write(rt2x00dev, 152, 0x80);
++	}
++
+ 	return 0;
  }
  
-@@ -385,6 +431,6 @@ pri_detector_init(const struct radar_detector_specs *rs)
- 	de->max_count = rs->ppb * 2;
- 	de->rs = rs;
- 
--	singleton_pool_references++;
-+	pool_register_ref();
- 	return de;
- }
 -- 
-1.7.4.1
+1.7.9.4
 
