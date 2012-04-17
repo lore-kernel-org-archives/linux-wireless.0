@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53934 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753074Ab2DTMNp (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44749 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082Ab2DQSfU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 08:13:45 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Subject: [PATCH v2] cfg80211: Validate legacy rateset.
-Date: Fri, 20 Apr 2012 17:43:21 +0530
-Message-ID: <1334924001-8584-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120420_141349_224433_434B8225)
+	Tue, 17 Apr 2012 14:35:20 -0400
+Received: by bkcik5 with SMTP id ik5so4831134bkc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 11:35:19 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: carl9170 firmware
+Date: Tue, 17 Apr 2012 20:35:05 +0200
+References: <4F8DA785.6040608@lwfinger.net>
+In-Reply-To: <4F8DA785.6040608@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201204172035.06023.chunkeey@googlemail.com> (sfid-20120417_203525_999692_08744CE6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Legacy rates are not validated while configuring
-tx rateset using iw. So below cmd is accepted by nl80211.
-sudo iw wlan2 set bitrates legacy-2.4 1 2 3
+On Tuesday, April 17, 2012 07:25:25 PM Larry Finger wrote:
+> Christian,
+> 
+> A question regarding adding carl9170-1.fw to the openSUSE firmware package is 
+> being discussed on the oS kernel mailing list; however, I do not see that one
+> in the linux-firmware git repo. Should it be there? 
+Does the repo take source code releases? [much like the work we do for the
+kernel driver, or have you ever seen a binary release on this ML :D ]. The
+files on <http://wireless.kernel.org/en/users/Drivers/carl9170#Firmware_binary>
+are just for convenience.
+ 
+> Is there a legal problem with redistribution?
+Not that I know of.
 
-Validate legacy rates and return
-error if any rate in the rateset is not valid.
-
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
- net/wireless/nl80211.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bcf6f70..f822e7c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5577,6 +5577,9 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 				sband,
- 				nla_data(tb[NL80211_TXRATE_LEGACY]),
- 				nla_len(tb[NL80211_TXRATE_LEGACY]));
-+			if (mask.control[band].legacy == 0 &&
-+				nla_len(tb[NL80211_TXRATE_LEGACY]))
-+				return -EINVAL;
- 		}
- 		if (tb[NL80211_TXRATE_MCS]) {
- 			if (!ht_rateset_to_mask(
--- 
-1.7.4.1
-
+Regards,
+	Christian
