@@ -1,102 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4754 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752670Ab2DDHDh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2012 03:03:37 -0400
-Message-ID: <4F7BF234.10900@broadcom.com> (sfid-20120404_090350_943362_3C7FD31A)
-Date: Wed, 4 Apr 2012 09:03:16 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:51799 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756078Ab2DQOAA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 10:00:00 -0400
+Message-ID: <4F8D7758.6040304@sipsolutions.net> (sfid-20120417_160015_548886_9264F57E)
+Date: Tue, 17 Apr 2012 06:59:52 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Michael Green" <green@qca.qualcomm.com>,
-	"David Quan" <dquan@qca.qualcomm.com>,
-	"Henry Ptasinski" <henry@logout.com>, linux-kernel@vger.kernel.org
-Subject: Re: Problems with regulatory domain support and BCM43224
-References: <4F591E14.4010000@broadcom.com>
- <CAB=NE6XnorRDEu976uMkPFNKHQjhRT0Craf3ZjL9dYysPjmQng@mail.gmail.com>
- <20120320220706.GA17272@thinkpad-t410> <4F69B604.4030303@broadcom.com>
- <20120321141916.GA23643@thinkpad-t410> <4F6A1514.9090907@broadcom.com>
- <20120321181753.GC24075@tux> <20120321193706.GC23643@thinkpad-t410>
- <20120322002715.GA3709@tux> <20120326193608.GE17126@thinkpad-t410>
- <20120404024632.GA13090@thinkpad-t410>
-In-Reply-To: <20120404024632.GA13090@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: Validate legacy rateset.
+References: <1334298173-4132-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120413_082304_815922_B50E6F19) <4F8C5776.6060209@sipsolutions.net> <4F8D24CC.5030205@qca.qualcomm.com>
+In-Reply-To: <4F8D24CC.5030205@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/04/2012 04:46 AM, Seth Forshee wrote:
-> On Mon, Mar 26, 2012 at 02:36:08PM -0500, Seth Forshee wrote:
->> I've been studying the existing brcmsmac regulatory code in more detail,
->> and I think there's a lot of potential to make the integration with the
->> core regulatory support much better. I'm still making my way through
->> some of the code, but here's what I see so far.
+On 4/17/2012 1:07 AM, Bala Shanmugam wrote:
+> On 04/16/2012 11:01 PM, Johannes Berg wrote:
+>> On 4/12/2012 11:22 PM, Bala Shanmugam wrote:
+>>> Legacy rates are not validated while configuring
+>>> tx rateset using iw. So below cmd is accepted by nl80211.
+>>> sudo iw wlan2 set bitrates legacy-2.4 3
+>>>
+>>> Validate legacy rates and return
+>>> error while configuring improper rates.
+>>>
+>>> Signed-off-by: Bala Shanmugam<bkamatch@qca.qualcomm.com>
+>>> ---
+>>> net/wireless/nl80211.c | 2 ++
+>>> 1 files changed, 2 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>>> index e49da27..cc7bef7 100644
+>>> --- a/net/wireless/nl80211.c
+>>> +++ b/net/wireless/nl80211.c
+>>> @@ -5540,6 +5540,8 @@ static int nl80211_set_tx_bitrate_mask(struct
+>>> sk_buff *skb,
+>>> sband,
+>>> nla_data(tb[NL80211_TXRATE_LEGACY]),
+>>> nla_len(tb[NL80211_TXRATE_LEGACY]));
+>>> + if (mask.control[band].legacy == 0)
+>>> + return -EINVAL;
 >>
->> Once full and accurate regdomain information is provided to the core
->> regulatory code, all the code in channel.c that's checking against
->> regulatory constraints can be eliminated, as that will get done at a
->> higher level. I think the code to set the Tx power should also be
->> reworked to use the constraints from the core regdom code. At that point
->> the need for the custom regdom structures is mostly eliminated.
->>
->> I'm going to start toying with implementing some of this this week, time
->> permitting. I think X2 is the only domain I have enough information on
->> to realistically implement. But even with that one it would be helpful
->> to understand what it's meant to represent, as Luis pointed out.
->>
->> I have one other question as well. Does the data in channel.c generally
->> represent the most permissive regulatory parameters that ought to be
->> used? That's the assumption I'm working under right now.
->
-> Below is a diff of the changes I've made locally to the brcmsmac
-> regulatory support. I haven't started thinking about dividing it up into
-> more digestible chunks, so for now it's just one massive diff. I've made
-> a lot of progress towards moving brcmsmac away from its custom formats
-> for regulatory information, but there are a few points I'm still having
-> difficulty with.
->
-> The patch builds, and kind of works. Scanning seems to be fine; I can
-> see all the APs I expect in my area, including the one on a DFS channel
-> that I couldn't see previously. I can associate with my 2.4 GHz APs, but
-> not the 5 GHz AP. I see timme outs waiting for probe responses, and I'm
-> hitting the WARN_ON_ONCE in brcms_c_wait_for_tx_completion(). I haven't
-> really debugged this yet -- I thought I'd send out the patch to collect
-> comments while I debug. Suggestions of what's causing this are also
-> welcome :)
->
-> One of the major unresolved issues in the patch is what to do with the
-> data in struct locale_mimo_info. The regulatory rules only hold one
-> power level. I'm unsure why the brcmsmac implementation differs in this
-> regard. Suggestions?
->
-> The txpwr calculations are modified, both to use the regdomain data so
-> far as possible and to eliminate redundant code. I'd appreciate review
-> of these changes in addition to the suggestions on how to handle the
-> MIMO power limits as I've already mentioned.
->
-> Initialization has also changed somewhat. The piece that looks most
-> significant to me is that wlc_phy_txpower_limit_set() gets called later,
-> not until after the ieee80211_hw device is registered.
->
-> Beyond these I still have a number of comments with my initials (SAF)
-> that contain questions, comments, and TODOs. Feedback regarding these
-> items, or anything else, are greatly appreciated.
->
-> Looking forward to your comments.
->
-> Thanks,
-> Seth
->
+>> I don't think this is right since it would also reject an
+>> intentionally empty set.
 
-Thanks, Seth
+> This check comes into picture only when legacy rates are configured.
+> For intentionally empty set "if (tb[NL80211_TXRATE_LEGACY])" condition
+> will fail and control will not come here. I tested the same.
+> With this patch
+> "sudo iw wlan0 set bitrates mcs-5 6" executes without any error message.
 
-I am sure you are moving in the right direction here. Unfortunately, I 
-am currently unable to give the patch a spin. I am attending the linux 
-collaboration summit in San Francisco and I can only do some basic 
-testing on it. I will be back in my office next week to do some more 
-elaborate testing on it.
+However, that means "don't change legacy settings", not "empty legacy 
+rateset".
 
-Gr. AvS
-
+johannes
