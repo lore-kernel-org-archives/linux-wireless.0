@@ -1,79 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32825 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755855Ab2DWVw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 17:52:59 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 24/29] iwlwifi: move OTP defines
-Date: Mon, 23 Apr 2012 14:47:35 -0700
-Message-Id: <1335217660-21950-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235309_649514_C5958421)
-In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:41897 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752661Ab2DQPXu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 11:23:50 -0400
+Message-ID: <4F8D8B09.8080205@sipsolutions.net> (sfid-20120417_172354_632275_3C333DAD)
+Date: Tue, 17 Apr 2012 08:23:53 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+To: Piotr.Nakraszewicz@tieto.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] mac80211: Advertise dtim period to all drivers
+References: <E50901D4F2CF69428D43141B7C85867929CC14EA67@EXMB03.eu.tieto.com>
+In-Reply-To: <E50901D4F2CF69428D43141B7C85867929CC14EA67@EXMB03.eu.tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 4/17/2012 7:40 AM, Piotr.Nakraszewicz@tieto.com wrote:
+> Hi,
+>
+> Don't look for IEEE80211_HW_NEED_DTIM_PERIOD flag after association finishes and advertise DTIM period to all drivers.
 
-Since the PCI core shouldn't include the
-iwl-eeprom.h header file, move the OTP
-definitions into iwl-agn-hw.h which can
-be included.
+This is not possible. If you don't set the flag, we don't necessarily 
+*know* the DTIM period since we might not ever have received a beacon 
+from the AP.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h |   11 +++++++++++
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |   11 -----------
- 2 files changed, 11 insertions(+), 11 deletions(-)
+johannes
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-index c797ab1..7960a52 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
-@@ -102,6 +102,17 @@
- 
- /* EEPROM */
- #define IWLAGN_EEPROM_IMG_SIZE		2048
-+/* OTP */
-+/* lower blocks contain EEPROM image and calibration data */
-+#define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
-+/* high blocks contain PAPD data */
-+#define OTP_HIGH_IMAGE_SIZE_6x00        (6 * 512 * sizeof(u16)) /* 6 KB */
-+#define OTP_HIGH_IMAGE_SIZE_1000        (0x200 * sizeof(u16)) /* 1024 bytes */
-+#define OTP_MAX_LL_ITEMS_1000		(3)	/* OTP blocks for 1000 */
-+#define OTP_MAX_LL_ITEMS_6x00		(4)	/* OTP blocks for 6x00 */
-+#define OTP_MAX_LL_ITEMS_6x50		(7)	/* OTP blocks for 6x50 */
-+#define OTP_MAX_LL_ITEMS_2x00		(4)	/* OTP blocks for 2x00 */
-+
- 
- #define IWLAGN_NUM_QUEUES		20
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index 24279db..64bfd94 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -206,17 +206,6 @@ struct iwl_eeprom_calib_hdr {
- /* 6000 regulatory - indirect access */
- #define EEPROM_6000_REG_BAND_24_HT40_CHANNELS  ((0x80)\
- 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 14  bytes */
--/* OTP */
--/* lower blocks contain EEPROM image and calibration data */
--#define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
--/* high blocks contain PAPD data */
--#define OTP_HIGH_IMAGE_SIZE_6x00        (6 * 512 * sizeof(u16)) /* 6 KB */
--#define OTP_HIGH_IMAGE_SIZE_1000        (0x200 * sizeof(u16)) /* 1024 bytes */
--#define OTP_MAX_LL_ITEMS_1000		(3)	/* OTP blocks for 1000 */
--#define OTP_MAX_LL_ITEMS_6x00		(4)	/* OTP blocks for 6x00 */
--#define OTP_MAX_LL_ITEMS_6x50		(7)	/* OTP blocks for 6x50 */
--#define OTP_MAX_LL_ITEMS_2x00		(4)	/* OTP blocks for 2x00 */
--
- /* 2.4 GHz */
- extern const u8 iwl_eeprom_band_1[14];
- 
--- 
-1.7.0.4
+> Signed-off-by: Piotr Nakraszewicz<piotr.nakraszewicz@tieto.com>
+> ---
+>   include/net/mac80211.h |    4 +---
+>   net/mac80211/mlme.c    |    6 +-----
+>   2 files changed, 2 insertions(+), 8 deletions(-)
+>
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index bebd89f..436267f 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -230,9 +230,7 @@ enum ieee80211_rssi_event {
+>    *	if the hardware cannot handle this it must set the
+>    *	IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE hardware flag
+>    * @dtim_period: num of beacons before the next DTIM, for beaconing,
+> - *	valid in station mode only while @assoc is true and if also
+> - *	requested by %IEEE80211_HW_NEED_DTIM_PERIOD (cf. also hw conf
+> - *	@ps_dtim_period)
+> + *	valid in station mode only while @assoc is true
+>    * @last_tsf: last beacon's/probe response's TSF timestamp (could be old
+>    *	as it may have been received during scanning long ago)
+>    * @beacon_int: beacon interval
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index c8836fa..39e0912 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -1290,11 +1290,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+>
+>   	ieee80211_led_assoc(local, 1);
+>
+> -	if (local->hw.flags&  IEEE80211_HW_NEED_DTIM_PERIOD)
+> -		bss_conf->dtim_period = bss->dtim_period;
+> -	else
+> -		bss_conf->dtim_period = 0;
+> -
+> +	bss_conf->dtim_period = bss->dtim_period;
+>   	bss_conf->assoc = 1;
+>
+>   	/* Tell the driver to monitor connection quality (if supported) */
 
