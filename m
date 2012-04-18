@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41896 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175Ab2DKIyj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 04:54:39 -0400
-Message-ID: <4F8546C7.40703@qca.qualcomm.com> (sfid-20120411_105451_850696_5D0D7B74)
-Date: Wed, 11 Apr 2012 11:54:31 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mga14.intel.com ([143.182.124.37]:33372 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751917Ab2DRMcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 08:32:43 -0400
+Date: Wed, 18 Apr 2012 15:33:28 +0300
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+Message-ID: <20120418123326.GF19228@aemeltch-MOBL1> (sfid-20120418_143248_703121_5ECF65FB)
+References: <4F846257.1060807@sipsolutions.net>
+ <1334092668.16897.54.camel@aeonflux>
+ <4F84A422.3030900@sipsolutions.net>
+ <1334093378.16897.62.camel@aeonflux>
+ <20120411070514.GB17779@aemeltch-MOBL1>
+ <1334714841.3725.37.camel@jlt3.sipsolutions.net>
+ <20120418112017.GC19228@aemeltch-MOBL1>
+ <1334749879.16897.221.camel@aeonflux>
+ <20120418121014.GD19228@aemeltch-MOBL1>
+ <1334751359.16897.225.camel@aeonflux>
 MIME-Version: 1.0
-To: Anthony Ginger <mapfly@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: ath6kl hostapd
-References: <CAK0tYSKLhALwUca2LPiRLfXTK-Qt3Oh3Lvk=V272AXdb=aAP7w@mail.gmail.com> <4F4B25F5.4090204@qca.qualcomm.com>
-In-Reply-To: <4F4B25F5.4090204@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1334751359.16897.225.camel@aeonflux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2012 08:43 AM, Kalle Valo wrote:
-> On 02/16/2012 01:30 PM, Anthony Ginger wrote:
+Hi Marcel,
+
+On Wed, Apr 18, 2012 at 02:15:59PM +0200, Marcel Holtmann wrote:
+> > > This is also a little bit of confusing since FullMac cards will not
+> > > create an AMP virtual interface. With them you just see the HCI AMP
+> > > controller on the Bluetooth side. Can an AMP virtual interface be just
+> > > virtual inside mac80211 or does it have to have a netdev attached to it?
+> > 
+> > If we create virtual interface then netdev is allocated and we can handle
+> > it with common tools.
 > 
->> Can ath6kl support AP mode? If yes, how to config it? I tried a
->> simplest config, but can't find the AP.
-> 
-> I have used AP mode only with wpasupplicant, I haven't tried with
-> hostapd yet. I would guess that ath6kl works with hostapd as well but of
-> course there can be some issues.
+> what common tools do you wanna use here. We actually do not wanna have
+> them show up as netdev devices at all. AMP connections don't have IP
+> addresses or anything else for that matter.
 
-Sorry for taking so long to answer but I finally tested this myself.
+I might want to set up MAC address. Otherwise I might not need netdev. I
+feel that I need it for interface separation.
 
-With latest firmware 3.2.0.144 (which I submitted to linux-firmware.git
-yesterday) and latest hostapd from git I can create a WPA-PSK network
-using hostapd and my Nokia N900 succesfully connected to the network and
-I was able to ping N900.
-
-If this is not working for you I recommend updating to the latest firmware.
-
-Kalle
+Best regards 
+Andrei Emeltchenko 
+ 
