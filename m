@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from storm.alittletooquiet.net ([67.23.28.199]:36262 "EHLO
-	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753796Ab2DESCl (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62470 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753391Ab2DRTJD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 14:02:41 -0400
-Date: Thu, 5 Apr 2012 14:02:40 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Jingjun Wu <jingjun_wu@realsil.com.cn>
-Subject: [PATCH v2 2/2] rtl8192de: Recognize 92D E-CUT version.
-Message-ID: <20120405180240.GF21869@alittletooquiet.net> (sfid-20120405_200244_014341_892D47E1)
+	Wed, 18 Apr 2012 15:09:03 -0400
+Received: by iagz16 with SMTP id z16so10797787iag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 12:09:03 -0700 (PDT)
+Message-ID: <4F8F114C.7080401@lwfinger.net> (sfid-20120418_210908_152027_06B79CE8)
+Date: Wed, 18 Apr 2012 14:09:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: carl9170 firmware
+References: <4F8DA785.6040608@lwfinger.net> <201204172035.06023.chunkeey@googlemail.com> <4F8DC439.103@lwfinger.net> <201204182026.49607.chunkeey@googlemail.com>
+In-Reply-To: <201204182026.49607.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The chip version constant (0xCC33) was taken from version 0001.0105.2011
-of the GPL vendor driver.  Note that this driver version also ships a
-firmware update, but I am unsure if it is required for E-CUT chips to
-function properly.
+On 04/18/2012 01:26 PM, Christian Lamparter wrote:
+> On Tuesday, April 17, 2012 09:27:53 PM Larry Finger wrote:
+>> On 04/17/2012 01:35 PM, Christian Lamparter wrote:
+>>> On Tuesday, April 17, 2012 07:25:25 PM Larry Finger wrote:
+>>>> A question regarding adding carl9170-1.fw to the openSUSE firmware package is
+>>>> being discussed on the oS kernel mailing list; however, I do not see that one
+>>>> in the linux-firmware git repo. Should it be there?
+>>> Does the repo take source code releases? [much like the work we do for the
+>>> kernel driver, or have you ever seen a binary release on this ML :D ]. The
+>>> files on<http://wireless.kernel.org/en/users/Drivers/carl9170#Firmware_binary>
+>>> are just for convenience.
+>>
+>> AFAIK, the repo only takes binary files. With the source under GPL2, that should
+>> not be a problem; however, the fact that there are two versions with the same
+>> name would be trouble. Adding under that name has the possibility of breaking
+>> all the systems that use the other version.
+> I think I would need to read the opensuse ML discussion first to know why this
+> is a "big" deal suddenly. (do you have a link?)
+>
+> On the other hand: I don't like the idea of supporting "old"&  "new" firmwares.
+> Usually they get mixed up and then you end up with "new" reports for
+> "old" bugs. In fact, p54 users' complain about that alot.
 
-A nearby spelling error was also corrected.
+If the filename that the driver requests is changed, that should reduce the 
+complaints. I would think that the current setup with two different, 
+incompatible versions having the same name would be trouble.
 
-Signed-off-by: Forest Bond <forest.bond@rapidrollout.com>
----
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+The thread is at http://lists.opensuse.org/opensuse-kernel/2012-04/msg00040.html.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-index 7d87712..2655448 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-@@ -1743,9 +1743,13 @@ static void _rtl92de_efuse_update_chip_version(struct ieee80211_hw *hw)
- 		chipver |= CHIP_92D_D_CUT;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "D-CUT!!!\n");
- 		break;
-+	case 0xCC33:
-+		chipver |= CHIP_92D_E_CUT;
-+		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "E-CUT!!!\n");
-+		break;
- 	default:
- 		chipver |= CHIP_92D_D_CUT;
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unkown CUT!\n");
-+		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown CUT!\n");
- 		break;
- 	}
- 	rtlpriv->rtlhal.version = chipver;
--- 
-1.7.0.4
+Larry
 
--- 
-Forest Bond
-http://www.alittletooquiet.net
-http://www.rapidrollout.com
