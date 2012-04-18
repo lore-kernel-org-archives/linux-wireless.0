@@ -1,90 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3441 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754467Ab2DKJxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:53:34 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 8/9] brcm80211: smac: only provide valid regulatory hint
-Date: Wed, 11 Apr 2012 11:52:50 +0200
-Message-ID: <1334137971-3972-9-git-send-email-arend@broadcom.com> (sfid-20120411_115341_143812_48269214)
-In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:43493 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752491Ab2DROa7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 10:30:59 -0400
+Message-ID: <4F8ED023.2050605@sipsolutions.net> (sfid-20120418_163103_972865_08E014B2)
+Date: Wed, 18 Apr 2012 07:30:59 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com> <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux> <4F84A422.3030900@sipsolutions.net> <1334093378.16897.62.camel@aeonflux> <20120411070514.GB17779@aemeltch-MOBL1> <1334714841.3725.37.camel@jlt3.sipsolutions.net> <20120418112017.GC19228@aemeltch-MOBL1>
+In-Reply-To: <20120418112017.GC19228@aemeltch-MOBL1>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver provides a regulatory hint to cfg80211 as obtained from the
-SPROM. Mostly, this will be a two-letter ISO country code. However, it
-may obtain special country code similar to the world regulatory domain
-as used in cfg80211. This patch avoids setting these special codes as
-the hint is lost to cfg80211.
+On 4/18/2012 4:20 AM, Andrei Emeltchenko wrote:
+> Hi Johannes,
+>
+> On Tue, Apr 17, 2012 at 07:07:21PM -0700, Johannes Berg wrote:
+>>>>>>> I don't get this patch at all. Why am I reviewing some very very basic
+>>>>>>> skeleton code when we should be discussing userspace APIs (we have
+>>>>>>> already discussed them with a few people years ago), how the AMP is
+>>>>>>> going to be managed, how the security handshake is going to work, etc.
+>>>
+>>> Do we have some outcome from that discussion?
+>>
+>> This API-defining patch is probably the best we have:
+>> http://johannes.sipsolutions.net/patches/kernel/all/2010-10-13-15%
+>> 3a24/035-bt3-amp.patch
+>
+> Thanks for the link. After looking to the patches I think that there are
+> some similarities with respect to interface type. As I understood the
+> basic idea is the same: create virtual interface. But in your case the
+> implementation is really difficult.
+>
+> Why do we need netlink commands like NL80211_CMD_HCI_AMP_ADD and
+> NL80211_CMD_HCI_AMP_DELETE if what we need is to create/delete virtual
+> interface which can be done with standard tools with a several lines
+> patch to iw:
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Brett Rudley <brudley@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/channel.c |   36 ++++++++++++++++++++-
- 1 files changed, 35 insertions(+), 1 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-index 55e9f45..0efe88e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-@@ -628,6 +628,40 @@ brcms_c_country_aggregate_map(struct brcms_cm_info *wlc_cm, const char *ccode,
- 	return false;
- }
- 
-+/*
-+ * Indicates whether the country provided is valid to pass
-+ * to cfg80211 or not.
-+ *
-+ * returns true if valid; false if not.
-+ */
-+static bool brcms_c_country_valid(const char *ccode)
-+{
-+	/*
-+	 * only allow ascii alpha uppercase for the first 2
-+	 * chars.
-+	 */
-+	if (!((0x80 & ccode[0]) == 0 && ccode[0] >= 0x41 && ccode[0] <= 0x5A &&
-+	      (0x80 & ccode[1]) == 0 && ccode[1] >= 0x41 && ccode[1] <= 0x5A &&
-+	      ccode[2] == '\0'))
-+		return false;
-+
-+	/*
-+	 * do not match ISO 3166-1 user assigned country codes
-+	 * that may be in the driver table
-+	 */
-+	if (!strcmp("AA", ccode) ||        /* AA */
-+	    !strcmp("ZZ", ccode) ||        /* ZZ */
-+	    ccode[0] == 'X' ||             /* XA - XZ */
-+	    (ccode[0] == 'Q' &&            /* QM - QZ */
-+	     (ccode[1] >= 'M' && ccode[1] <= 'Z')))
-+		return false;
-+
-+	if (!strcmp("NA", ccode))
-+		return false;
-+
-+	return true;
-+}
-+
- /* Lookup a country info structure from a null terminated country
-  * abbreviation and regrev directly with no translation.
-  */
-@@ -1089,7 +1123,7 @@ struct brcms_cm_info *brcms_c_channel_mgr_attach(struct brcms_c_info *wlc)
- 
- 	/* store the country code for passing up as a regulatory hint */
- 	ccode = getvar(wlc->hw->sih, BRCMS_SROM_CCODE);
--	if (ccode)
-+	if (ccode && brcms_c_country_valid(ccode))
- 		strncpy(wlc->pub->srom_ccode, ccode, BRCM_CNTRY_BUF_SZ - 1);
- 
- 	/*
--- 
-1.7.5.4
+That would work, but the plan was to have separate commands because 
+those commands create a virtual netdev, which we don't want in this case.
 
+And no, given the lack of userspace tools we never tested these patches. 
+I was more of a "write down API thoughts in code" thing.
 
+johannes
