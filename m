@@ -1,40 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41472 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755746Ab2DMUAv (ORCPT
+Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:39878 "EHLO
+	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753955Ab2DRTJt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 16:00:51 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q3DK0oH4008211
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Apr 2012 13:00:50 -0700
-Message-ID: <4F8885F1.3060802@candelatech.com> (sfid-20120413_220055_179087_697B446E)
-Date: Fri, 13 Apr 2012 13:00:49 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Any way to get channel index from channel?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 18 Apr 2012 15:09:49 -0400
+From: Daniel Drake <dsd@laptop.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com,
+	libertas-dev@lists.infradead.org
+Subject: [PATCH] libertas CS: convert to asynchronous firmware loading
+Message-Id: <20120418190944.A02A69D401E@zog.reactivated.net> (sfid-20120418_210954_111886_A18957EC)
+Date: Wed, 18 Apr 2012 20:09:44 +0100 (BST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the ethtool stats patches, I'm trying to get the
-survey for just the current operating channel.
-(Previously posted code is wrong..can't just use index 0, duh!)
+Signed-off-by: Daniel Drake <dsd@laptop.org>
+Tested-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/if_cs.c |   92 ++++++++++++++++++---------------
+ 1 files changed, 51 insertions(+), 41 deletions(-)
 
-I know the channel object: local->oper_channel
-but the API that gets survey results wants the channel
-index.
-
-Is there a fast way to get the channel index from a channel,
-or do I just need to iterate through all channels and compare
-the center-frequencies?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index bb3deb3..c211b86 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -738,6 +738,52 @@ done:
+ 	return ret;
+ }
+ 
++static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
++				 const struct firmware *helper,
++				 const struct firmware *mainfw)
++{
++	struct if_cs_card *card = priv->card;
++
++	if (ret) {
++		pr_err("failed to find firmware (%d)\n", ret);
++		return;
++	}
++
++	/* Load the firmware */
++	ret = if_cs_prog_helper(card, helper);
++	if (ret == 0 && (card->model != MODEL_8305))
++		ret = if_cs_prog_real(card, mainfw);
++	if (ret)
++		goto out;
++
++	/* Now actually get the IRQ */
++	ret = request_irq(card->p_dev->irq, if_cs_interrupt,
++		IRQF_SHARED, DRV_NAME, card);
++	if (ret) {
++		pr_err("error in request_irq\n");
++		goto out;
++	}
++
++	/*
++	 * Clear any interrupt cause that happened while sending
++	 * firmware/initializing card
++	 */
++	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
++	if_cs_enable_ints(card);
++
++	/* And finally bring the card up */
++	priv->fw_ready = 1;
++	if (lbs_start_card(priv) != 0) {
++		pr_err("could not activate card\n");
++		free_irq(card->p_dev->irq, card);
++	}
++
++out:
++	if (helper)
++		release_firmware(helper);
++	if (mainfw)
++		release_firmware(mainfw);
++}
+ 
+ 
+ /********************************************************************/
+@@ -809,8 +855,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 	unsigned int prod_id;
+ 	struct lbs_private *priv;
+ 	struct if_cs_card *card;
+-	const struct firmware *helper = NULL;
+-	const struct firmware *mainfw = NULL;
+ 
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+@@ -890,20 +934,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 		goto out2;
+ 	}
+ 
+-	ret = lbs_get_firmware(&p_dev->dev, card->model, &fw_table[0],
+-				&helper, &mainfw);
+-	if (ret) {
+-		pr_err("failed to find firmware (%d)\n", ret);
+-		goto out2;
+-	}
+-
+-	/* Load the firmware early, before calling into libertas.ko */
+-	ret = if_cs_prog_helper(card, helper);
+-	if (ret == 0 && (card->model != MODEL_8305))
+-		ret = if_cs_prog_real(card, mainfw);
+-	if (ret)
+-		goto out2;
+-
+ 	/* Make this card known to the libertas driver */
+ 	priv = lbs_add_card(card, &p_dev->dev);
+ 	if (!priv) {
+@@ -911,37 +941,22 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 		goto out2;
+ 	}
+ 
+-	/* Finish setting up fields in lbs_private */
++	/* Set up fields in lbs_private */
+ 	card->priv = priv;
+ 	priv->card = card;
+ 	priv->hw_host_to_card = if_cs_host_to_card;
+ 	priv->enter_deep_sleep = NULL;
+ 	priv->exit_deep_sleep = NULL;
+ 	priv->reset_deep_sleep_wakeup = NULL;
+-	priv->fw_ready = 1;
+ 
+-	/* Now actually get the IRQ */
+-	ret = request_irq(p_dev->irq, if_cs_interrupt,
+-		IRQF_SHARED, DRV_NAME, card);
++	/* Get firmware */
++	ret = lbs_get_firmware_async(priv, &p_dev->dev, card->model, fw_table,
++				     if_cs_prog_firmware);
+ 	if (ret) {
+-		pr_err("error in request_irq\n");
+-		goto out3;
+-	}
+-
+-	/*
+-	 * Clear any interrupt cause that happened while sending
+-	 * firmware/initializing card
+-	 */
+-	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
+-	if_cs_enable_ints(card);
+-
+-	/* And finally bring the card up */
+-	if (lbs_start_card(priv) != 0) {
+-		pr_err("could not activate card\n");
++		pr_err("failed to find firmware (%d)\n", ret);
+ 		goto out3;
+ 	}
+ 
+-	ret = 0;
+ 	goto out;
+ 
+ out3:
+@@ -951,11 +966,6 @@ out2:
+ out1:
+ 	pcmcia_disable_device(p_dev);
+ out:
+-	if (helper)
+-		release_firmware(helper);
+-	if (mainfw)
+-		release_firmware(mainfw);
+-
+ 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
+ 	return ret;
+ }
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.7.6
 
