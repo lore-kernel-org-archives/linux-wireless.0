@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:33372 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751917Ab2DRMcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 08:32:43 -0400
-Date: Wed, 18 Apr 2012 15:33:28 +0300
-From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Received: from he.sipsolutions.net ([78.46.109.217]:50005 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300Ab2DRCH5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 22:07:57 -0400
+Message-ID: <1334714841.3725.37.camel@jlt3.sipsolutions.net> (sfid-20120418_040802_015818_EC344263)
 Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-Message-ID: <20120418123326.GF19228@aemeltch-MOBL1> (sfid-20120418_143248_703121_5ECF65FB)
-References: <4F846257.1060807@sipsolutions.net>
- <1334092668.16897.54.camel@aeonflux>
- <4F84A422.3030900@sipsolutions.net>
- <1334093378.16897.62.camel@aeonflux>
- <20120411070514.GB17779@aemeltch-MOBL1>
- <1334714841.3725.37.camel@jlt3.sipsolutions.net>
- <20120418112017.GC19228@aemeltch-MOBL1>
- <1334749879.16897.221.camel@aeonflux>
- <20120418121014.GD19228@aemeltch-MOBL1>
- <1334751359.16897.225.camel@aeonflux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1334751359.16897.225.camel@aeonflux>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Tue, 17 Apr 2012 19:07:21 -0700
+In-Reply-To: <20120411070514.GB17779@aemeltch-MOBL1>
+References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux>
+	 <4F84A422.3030900@sipsolutions.net> <1334093378.16897.62.camel@aeonflux>
+	 <20120411070514.GB17779@aemeltch-MOBL1>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+Hi,
 
-On Wed, Apr 18, 2012 at 02:15:59PM +0200, Marcel Holtmann wrote:
-> > > This is also a little bit of confusing since FullMac cards will not
-> > > create an AMP virtual interface. With them you just see the HCI AMP
-> > > controller on the Bluetooth side. Can an AMP virtual interface be just
-> > > virtual inside mac80211 or does it have to have a netdev attached to it?
-> > 
-> > If we create virtual interface then netdev is allocated and we can handle
-> > it with common tools.
+> > > >> I don't get this patch at all. Why am I reviewing some very very basic
+> > > >> skeleton code when we should be discussing userspace APIs (we have
+> > > >> already discussed them with a few people years ago), how the AMP is
+> > > >> going to be managed, how the security handshake is going to work, etc.
 > 
-> what common tools do you wanna use here. We actually do not wanna have
-> them show up as netdev devices at all. AMP connections don't have IP
-> addresses or anything else for that matter.
+> Do we have some outcome from that discussion?
 
-I might want to set up MAC address. Otherwise I might not need netdev. I
-feel that I need it for interface separation.
+This API-defining patch is probably the best we have:
+http://johannes.sipsolutions.net/patches/kernel/all/2010-10-13-15%
+3a24/035-bt3-amp.patch
 
-Best regards 
-Andrei Emeltchenko 
- 
+> > The whole AMP control goes via A2MP and L2CAP and both are fully
+> > implemented inside the kernel. In theory we do not even need to expose
+> > HCI AMP interfaces to userspace.
+> 
+> Johannes, you can think of SoftAMP as analog of SoftMAC (vs FullMAC).
+> SoftMAC is also possible to implement in user space but only
+> authentication is done this way.
+
+Yeah, and we also implement roaming and crypto stuff in userspace, for
+softmac. Heck, we implement crypto in userspace even for fullmac, so
+really ...
+
+> Consider use case when user sends data over Bluetooth High Speed. Data
+> go from obex user space to kernel L2CAP. Then you just need to add
+> MAC header and send to wireless device. But you are proposing to copy data
+> to user space for processing; then user space needs to copy data again to 
+> kernel and then to wireless device.
+
+I never said data should be copied. If you thought I did, you
+misunderstood me.
+
+> I think that user does not need to know that it uses High Speed, it just
+> notice that speed is better :). Do you require any special API for
+> latest and greatest wireless standard? Why user shall care about it?
+
+Well, actually, yes, most new wireless standards do require new API for
+the supplicant to be able to use them. The *user* never needs to know
+about it of course -- consider the supplicant part of the wireless
+stack.
+
+johannes
+
