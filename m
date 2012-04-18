@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2197 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756168Ab2D3QyA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 12:54:00 -0400
-Message-ID: <4F9EC3A1.2070001@broadcom.com> (sfid-20120430_185405_270879_0DE5AEF7)
-Date: Mon, 30 Apr 2012 09:53:53 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from mail.candelatech.com ([208.74.158.172]:39544 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752855Ab2DRQ11 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 12:27:27 -0400
+Message-ID: <4F8EEB6C.1030605@candelatech.com> (sfid-20120418_182731_026960_E2405696)
+Date: Wed, 18 Apr 2012 09:27:24 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: brcm80211: fmac: fix missing completion events issue
-References: <20120430112219.GA23246@elgon.mountain>
-In-Reply-To: <20120430112219.GA23246@elgon.mountain>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/6] mac80211: Support getting sta_info stats via ethtool.
+References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>   <1334684807-14026-3-git-send-email-greearb@candelatech.com>   (sfid-20120417_194716_243783_5644375D) <1334713070.3725.14.camel@jlt3.sipsolutions.net>  <4F8E3905.70900@candelatech.com> <1334721645.3672.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1334721645.3672.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/30/2012 04:22 AM, Dan Carpenter wrote:
-> Hello Franky Lin,
+On 04/17/2012 09:00 PM, Johannes Berg wrote:
+> On Tue, 2012-04-17 at 20:46 -0700, Ben Greear wrote:
 >
-> The patch b948a85c1f26: "brcm80211: fmac: fix missing completion
-> events issue" from Apr 23, 2012, leads to the following Smatch warning:
-> drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c:2650
-> brcmf_sdbrcm_dpc_thread()
-> 	 error: double unlock 'spin_lock:&bus->dpc_tl_lock'
+>>>> +	rcu_read_lock();
+>>>> +	list_for_each_entry_rcu(sta,&local->sta_list, list) {
+>>>
+>>> This doesn't seem right -- shouldn't it look up the BSSID or something
+>>> and only work on managed interfaces? What if there really are two
+>>> stations on this interface -- then it'll just overwrite it and return a
+>>> random station's data? That's useless.
+>>
+>> Well, its weird at least.
+>>
+>> But, if there are multiple stations, like for APs??, then it will
+>> add the station's stats together.  Perhaps not horribly useful, but better
+>> than nothing.
 >
->
->    2631
->    2632                  spin_lock_irqsave(&bus->dpc_tl_lock, flags);
->    2633                  list_for_each_safe(cur_hd, tmp_hd,&bus->dpc_tsklst) {
->    2634                          spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
->    2635
->    2636                          if (bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) {
->    2637                                  /* after stopping the bus, exit thread */
->    2638                                  brcmf_sdbrcm_bus_stop(bus->sdiodev->dev);
->    2639                                  bus->dpc_tsk = NULL;
->    2640                                  break;
->                                          ^^^^^^
-> We are not holding the lock here.
->
->    2641                          }
->    2642
->    2643                          if (brcmf_sdbrcm_dpc(bus))
->    2644                                  brcmf_sdbrcm_adddpctsk(bus);
->    2645
->    2646                          spin_lock_irqsave(&bus->dpc_tl_lock, flags);
->    2647                          list_del(cur_hd);
->    2648                          kfree(cur_hd);
->    2649                  }
->    2650                  spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
->                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Double unlock.  Double IRQ restore.
+> Oh, right, it's adding, I missed that. But is that really useful?
 
-Hi Dan,
+It provides a summary for AP, and precise stats for managed station
+mode (excepting TDLS where it may return sums, it seems).
 
-Thx for catching this. Working on a fix.
+I could just return all zeros for non managed
+station interfaces, but I *have* to return some value, so it seems
+little loss to just add the station stats together.
 
-Regards,
-Franky
+>> For managed interface, I *think* they don't have more than one station, right?
+>
+> You can't rely on it. Typically they will, but with TDLS there might be
+> multiple.
+>
+>> And, as for the underlying driver stats and survey stats (in later patches),
+>> that is only probed once.  I guess if you somehow had two
+>> stations on different channels on the same network device,
+>> the survey stats would be a bit dodgy, but it does return
+>> the freq for the stats in question, so at least you know
+>> what you are getting.
+>
+> A single netdev is always going to be on a single channel. Actually, I
+> take that back, I think TDLS can work out of channel too, but we don't
+> support that right now.
+
+So, based on your response, a sum still seems most useful to me.  The ethtool
+API gives no way to request any subset of stats, so all I can key off of
+is the netdev.
+
+I have some plans percolating to add some new ethtool API to get subsets
+of stats, but that is likely a ways off, and of course it may not be
+accepted regardless.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
