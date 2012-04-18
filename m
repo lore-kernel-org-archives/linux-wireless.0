@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:33352 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756500Ab2D3TW5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 15:22:57 -0400
-Received: by wgbdr13 with SMTP id dr13so834738wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 12:22:56 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:3737 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752799Ab2DRP36 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 11:29:58 -0400
+Message-ID: <4F8EDDE6.9080802@broadcom.com> (sfid-20120418_173001_446558_5B228B03)
+Date: Wed, 18 Apr 2012 17:29:42 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOvK7nA7=B_=kaQasYpwAegNG21GdxCuTZ5z+T7PMYPNaTxsXA@mail.gmail.com>
-References: <CAOvK7nAOHqKC8rpFDqGnW7NLCX-G2+syRGih_rv7N5O5rfOUdA@mail.gmail.com>
-	<CANUX_P1t8XJOka-QGzZSYFHb6MLc7rm4madn059Yg4b6hJB49A@mail.gmail.com>
-	<CAOvK7nDO4fS6R5go+ZXYBqyQc8hhbJGun9Weh=-EyX5k11+tXw@mail.gmail.com>
-	<CANUX_P2rzvDCBVLmU2rfaZmUOCMuMDe5=TXE_jwxq4ULrvc=QQ@mail.gmail.com>
-	<CAOvK7nCwRbDNZSnn0EvFMpcQMvX1DmU-tBuFT4kRW1TigwyJDQ@mail.gmail.com>
-	<CANUX_P0JsyA53T_vs5Ea0pE5Ye4G9xRC4xKcdwgAmoC8E63sHg@mail.gmail.com>
-	<CAOvK7nCf6k_ugJ=UBF8y0VBr_kVmESpetfnpn=NW73r_K=kKyw@mail.gmail.com>
-	<CAOvK7nCGwqqqrWNQhPqZoBqs6eT11gQNYbrZhb0bNSPTS-YxEw@mail.gmail.com>
-	<CANUX_P2DDQ-U9Yz2YksEEpOgjyyYO1GnFHR8ogEHNwojKvn3yg@mail.gmail.com>
-	<CAOvK7nB0L9GcnV-cNONndZMrAVLfFf3VaY4T-gPb+FgrNByeSA@mail.gmail.com>
-	<CANUX_P38L7OqBNeK+jO0EPMHf1M3QKxmsTA6o-t+6ujoq1VJ5w@mail.gmail.com>
-	<CAOvK7nB1gnnWcv6HFrn1MhMe-FheRtdTpi+BhCcCYNx6RowaTQ@mail.gmail.com>
-	<CANUX_P3SFmNKqUTt53EHkAjupAoB8ZxQZZP1osm7=JwfHnwbqg@mail.gmail.com>
-	<CANUX_P1ivcpLxm4z5k8SU+hGXG0A1hbSMnps7_i025kaAThyCg@mail.gmail.com>
-	<CAOvK7nBGBDWhQnq8MT51dE=LXUxoQH1FLJ2TNUr42He1KbBurg@mail.gmail.com>
-	<CANUX_P25bU36A0n4YSO1mBUTn9pxYYua28=o9Soo12mVyZNVcQ@mail.gmail.com>
-	<CANUX_P3+4hTGJSoo669LixMmNjxv1pqAwmLgVi16iF+LX7-ebQ@mail.gmail.com>
-	<CAOvK7nA7=B_=kaQasYpwAegNG21GdxCuTZ5z+T7PMYPNaTxsXA@mail.gmail.com>
-Date: Mon, 30 Apr 2012 22:22:55 +0300
-Message-ID: <CANUX_P3JrvyV7wXCkeXaS4k3GgcRxkSPW_5TGpqXFhrHKp5OYQ@mail.gmail.com> (sfid-20120430_212300_847418_BA9A4BBA)
-Subject: Re: iwlwifi bug
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: dchyan@princeton.edu
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Matthew Garrett" <mjg59@srcf.ucam.org>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: brcmsmac hangs machine if loaded after busmastering
+ disabled
+References: <20120319215154.GA18508@srcf.ucam.org>
+ <4F856EE9.2040407@broadcom.com> <20120411115118.GA3791@srcf.ucam.org>
+ <4F8EA657.7020006@broadcom.com> <20120418123449.GB26953@srcf.ucam.org>
+In-Reply-To: <20120418123449.GB26953@srcf.ucam.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 30, 2012 at 21:41, Daniel Chyan <dchyan@princeton.edu> wrote:
-> I am running iwlwifi with the additional flags. Nothing particularly
-> alarming has appeared in the logs, but I have attached it.
+On 04/18/2012 02:34 PM, Matthew Garrett wrote:
+> On Wed, Apr 18, 2012 at 01:32:39PM +0200, Arend van Spriel wrote:
+>> I discussed this with hardware designer and here is his quote "You
+>> would need to disable the DMA engines before disable PCIe master
+>> mode. If you didn't do that, and the DMA engines were active, the
+>> MAC would almost certainly hang."
+>>
+>> So disabling the master mode solved your memory corruption, but the
+>> chip will hang. The DMA engines mentioned are the on-chip engines.
+>> As you indicated you can only use common PCI operations so I do not
+>> expect disabling BAR decoding will solve the hang in the chip.
+>
+> Yeah, I can get away with putting generic PCI operations in the
+> bootloader, but a specific Broadcom driver is probably going a bit
+> far...
+>
+>> Only as an experiment you could try to reset the device toggling the
+>> pci power state.
+>
+> Should putting the PCI device in D3 be sufficient for this, or would I
+> also need to touch any state in the 802.11 core?
 >
 
-Yeah... I was hoping you could reliably reproduce the issue but
-apparently not :-)
+I am not sure, but D3 is a good guess. It is all a workaround as the 
+real fix should be in Apple's UEFI implementation. I think it is 
+unlikely we can make them do that although we probably supplied them the 
+wireless part.
+
+Gr. AvS
+
