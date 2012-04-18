@@ -1,109 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:36774 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753860Ab2DSQTp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 12:19:45 -0400
-Received: by wgbdr13 with SMTP id dr13so8794058wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 09:19:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
-	<FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com>
-	<CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com>
-	<816C5F70-E340-46F9-8206-2B230A27F3AD@gmail.com>
-	<CANUX_P3=ttVKdLYBfAdGRhmfDRbPruogw8Eo_d09on0ajdTqUw@mail.gmail.com>
-	<5714877C-2465-4FD5-94A0-9D0806A803C4@gmail.com>
-	<CANUX_P27GoLY2q9jmsWw9Rzn9posf3mCjDa98+q4JP=83wYthg@mail.gmail.com>
-	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
-	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
-	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
-	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
-	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
-	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
-	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
-	<4F901224.1040508@sipsolutions.net>
-	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
-	<4F901F16.6080007@sipsolutions.net>
-	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
-Date: Thu, 19 Apr 2012 19:19:43 +0300
-Message-ID: <CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com> (sfid-20120419_181948_489946_60D58C43)
-Subject: Re: wlan0 not present
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Dominik Feser <dominik.feser@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Content-Type: multipart/mixed; boundary=0016e6d778b12b991404be0a8a3f
+Received: from mga11.intel.com ([192.55.52.93]:14459 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753627Ab2DROpx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 10:45:53 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 15/15] iwlwifi: move iwl_rxon_context_id to user
+Date: Wed, 18 Apr 2012 07:41:17 -0700
+Message-Id: <1334760077-5714-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120418_164602_723768_9CB6F062)
+In-Reply-To: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0016e6d778b12b991404be0a8a3f
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Thu, Apr 19, 2012 at 18:08, Dominik Feser
-<dominik.feser@googlemail.com> wrote:
-> May it be that the fact that Centos 5 doesnt have hotplug causes the issu=
-e?
->
+It can be moved to iwl-dev.h since it is op_mode specific.
 
-Don't think so.
-Can it be a problem in the backport of request_firwamre_no_wait ?
-Did I see somewhere that you run 2.6.38 ?
-Can you check again after having applied the patch attached ?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    7 +++++++
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    7 -------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-from the main dir of compat:
-patch -p1 < print.patch
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 3816429..9d58b23 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -604,6 +604,13 @@ struct iwl_rf_reset {
+ 	unsigned long last_reset_jiffies;
+ };
+ 
++enum iwl_rxon_context_id {
++	IWL_RXON_CTX_BSS,
++	IWL_RXON_CTX_PAN,
++
++	NUM_IWL_RXON_CTX
++};
++
+ /* extend beacon time format bit shifting  */
+ /*
+  * for _agn devices
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 8bb56f2..2abf4bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -126,11 +126,4 @@ static inline bool iwl_have_debug_level(u32 level)
+ 	return iwlagn_mod_params.debug_level & level;
+ }
+ 
+-enum iwl_rxon_context_id {
+-	IWL_RXON_CTX_BSS,
+-	IWL_RXON_CTX_PAN,
+-
+-	NUM_IWL_RXON_CTX
+-};
+-
+ #endif /* #__iwl_shared_h__ */
+-- 
+1.7.0.4
 
-Thanks
-
-> Am 19.04.2012 um 16:20 schrieb Johannes Berg:
->
->> On 4/19/2012 7:09 AM, Dominik Feser wrote:
->>> Finally, here is the output of dmesg after recompiling:
->>>
->>> iwlwifi 0000:02:00.0: edd19e18
->>> iwlwifi 0000:02:00.0: d55c1e18
->>> iwlwifi 0000:02:00.0: d55c1ddc
->>> iwlwifi 0000:02:00.0: PCI INT A disabled
->>> Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
->>> Copyright(c) 2003-2012 Intel Corporation
->>> iwlwifi 0000:02:00.0: PCI INT A -> =A0GSI 17 (level, low) -> =A0IRQ 17
->>> iwlwifi 0000:02:00.0: setting latency timer to 64
->>> iwlwifi 0000:02:00.0: pci_resource_len =3D 0x00002000
->>> iwlwifi 0000:02:00.0: pci_resource_base =3D f447c000
->>> iwlwifi 0000:02:00.0: HW Revision ID =3D 0x34
->>> iwlwifi 0000:02:00.0: irq 1277 (277) for MSI/MSI-X
->>> iwlwifi 0000:02:00.0: U iwl_request_firmware d5b37d70
->>> iwlwifi 0000:02:00.0: U iwl_request_firmware e09ebdd4
->>> iwlwifi 0000:02:00.0: ee2afe18
->>> iwlwifi 0000:02:00.0: U iwl_request_firmware ee2afdd4
->>> iwlwifi 0000:02:00.0: cc93fe18
->>> iwlwifi 0000:02:00.0: cc93fddc
->>
->> Still pretty useless since you get %pV printed as a pointer rather than =
-a message. Does anyone know how to fix that in compat? But the iwl_request_=
-firmware 3 times probably means it failed?
->>
->> johannes
->
-
---0016e6d778b12b991404be0a8a3f
-Content-Type: application/octet-stream; name="print.patch"
-Content-Disposition: attachment; filename="print.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h180mthh0
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWRydi5jIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtZHJ2LmMKaW5kZXggODBiMTQzOC4uNTc3M2E2
-MCAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtZHJ2LmMKKysr
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtZHJ2LmMKQEAgLTE4NSw3ICsxODUs
-NyBAQCBzdGF0aWMgaW50IGl3bF9yZXF1ZXN0X2Zpcm13YXJlKHN0cnVjdCBpd2xfZHJ2ICpkcnYs
-IGJvb2wgZmlyc3QpCiAKIAlzcHJpbnRmKGRydi0+ZmlybXdhcmVfbmFtZSwgIiVzJXMlcyIsIG5h
-bWVfcHJlLCB0YWcsICIudWNvZGUiKTsKIAotCUlXTF9ERUJVR19JTkZPKGRydiwgImF0dGVtcHRp
-bmcgdG8gbG9hZCBmaXJtd2FyZSAlcyclcydcbiIsCisJZGV2X2VycihkcnYtPmRldiwgImF0dGVt
-cHRpbmcgdG8gbG9hZCBmaXJtd2FyZSAlcyclcydcbiIsCiAJCSAgICAgICAoZHJ2LT5md19pbmRl
-eCA9PSBVQ09ERV9FWFBFUklNRU5UQUxfSU5ERVgpCiAJCQkJPyAiRVhQRVJJTUVOVEFMICIgOiAi
-IiwKIAkJICAgICAgIGRydi0+ZmlybXdhcmVfbmFtZSk7Cg==
---0016e6d778b12b991404be0a8a3f--
