@@ -1,281 +1,350 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62741 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971Ab2DFOHB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 10:07:01 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 2/2] ath6kl: Configure htcap in fw based on the channel type in AP mode
-Date: Fri, 6 Apr 2012 19:37:15 +0530
-Message-ID: <1333721235-16025-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120406_160705_616283_819DC225)
-In-Reply-To: <1333721235-16025-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1333721235-16025-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:59648 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753472Ab2DROpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 10:45:50 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/15] iwlwifi: transport holds its pointer to the config
+Date: Wed, 18 Apr 2012 07:41:07 -0700
+Message-Id: <1334760077-5714-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120418_165904_300693_A4538436)
+In-Reply-To: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch disables HT in start_ap if the type of the channel on
-which the AP mode is going to be operating is non-HT. HT is enabled
-with default ht cap setting if the operating channel is going to be
-11n.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Instead of using the shared area that we be killed.
+Remove the pointer to config from shared since it is not
+used any more.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   77 ++++++++++++++++++++--------
- drivers/net/wireless/ath/ath6kl/common.h   |    1 +
- drivers/net/wireless/ath/ath6kl/core.h     |    9 +++
- drivers/net/wireless/ath/ath6kl/wmi.c      |   37 +++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |   13 +++++
- 5 files changed, 116 insertions(+), 21 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-drv.c           |    2 -
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c        |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |    3 --
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    6 ++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |   36 +++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-trans.h         |    8 ++++-
+ 8 files changed, 32 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 47dbb14..bd3e85b 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2421,31 +2421,25 @@ void ath6kl_check_wow_status(struct ath6kl *ar)
- }
- #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 69b5b1a..77262f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -890,8 +890,6 @@ struct iwl_drv *iwl_drv_start(struct iwl_shared *shrd,
+ 	struct iwl_drv *drv;
+ 	int ret;
  
--static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
--			      struct ieee80211_channel *chan,
--			      enum nl80211_channel_type channel_type)
-+static int ath6kl_set_htcap(struct ath6kl_vif *vif, enum ieee80211_band band,
-+			    bool ht_enable)
- {
--	struct ath6kl_vif *vif;
+-	shrd->cfg = cfg;
 -
--	/*
--	 * 'dev' could be NULL if a channel change is required for the hardware
--	 * device itself, instead of a particular VIF.
--	 *
--	 * FIXME: To be handled properly when monitor mode is supported.
--	 */
--	if (!dev)
--		return -EBUSY;
--
--	vif = netdev_priv(dev);
-+	struct ath6kl_htcap *htcap = &vif->htcap;
+ 	drv = kzalloc(sizeof(*drv), GFP_KERNEL);
+ 	if (!drv) {
+ 		dev_printk(KERN_ERR, trans->dev, "Couldn't allocate iwl_drv");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 593485b..84e2384 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -433,7 +433,7 @@ static int iwl_init_otp_access(struct iwl_trans *trans)
+ 		 * CSR auto clock gate disable bit -
+ 		 * this is only applicable for HW with OTP shadow RAM
+ 		 */
+-		if (cfg(trans)->base_params->shadow_ram_support)
++		if (trans->cfg->base_params->shadow_ram_support)
+ 			iwl_set_bit(trans, CSR_DBG_LINK_PWR_MGMT_REG,
+ 				CSR_RESET_LINK_PWR_MGMT_DISABLED);
+ 	}
+@@ -554,7 +554,7 @@ static int iwl_find_otp_image(struct iwl_trans *trans,
+ 		}
+ 		/* more in the link list, continue */
+ 		usedblocks++;
+-	} while (usedblocks <= cfg(trans)->base_params->max_ll_items);
++	} while (usedblocks <= trans->cfg->base_params->max_ll_items);
  
--	if (!ath6kl_cfg80211_ready(vif))
--		return -EIO;
-+	if (htcap->ht_enable == ht_enable)
-+		return 0;
- 
--	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: center_freq=%u hw_value=%u\n",
--		   __func__, chan->center_freq, chan->hw_value);
--	vif->next_chan = chan->center_freq;
-+	if (ht_enable) {
-+		/* Set default ht capabilities */
-+		htcap->ht_enable = true;
-+		htcap->cap_info = (band == IEEE80211_BAND_2GHZ) ?
-+				   ath6kl_g_htcap : ath6kl_a_htcap;
-+		htcap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_16K;
-+	} else /* Disable ht */
-+		memset(htcap, 0, sizeof(*htcap));
- 
--	return 0;
-+	return ath6kl_wmi_set_htcap_cmd(vif->ar->wmi, vif->fw_vif_idx,
-+					band, htcap);
- }
- 
- static bool ath6kl_is_p2p_ie(const u8 *pos)
-@@ -2568,6 +2562,35 @@ static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
- 	return 0;
- }
- 
-+static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
-+			      struct ieee80211_channel *chan,
-+			      enum nl80211_channel_type channel_type)
-+{
-+	struct ath6kl_vif *vif;
-+
-+	/*
-+	 * 'dev' could be NULL if a channel change is required for the hardware
-+	 * device itself, instead of a particular VIF.
-+	 *
-+	 * FIXME: To be handled properly when monitor mode is supported.
-+	 */
-+	if (!dev)
-+		return -EBUSY;
-+
-+	vif = netdev_priv(dev);
-+
-+	if (!ath6kl_cfg80211_ready(vif))
-+		return -EIO;
-+
-+	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: center_freq=%u hw_value=%u\n",
-+		   __func__, chan->center_freq, chan->hw_value);
-+	vif->next_chan = chan->center_freq;
-+	vif->next_ch_type = channel_type;
-+	vif->next_ch_band = chan->band;
-+
-+	return 0;
-+}
-+
- static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			   struct cfg80211_ap_settings *info)
- {
-@@ -2734,6 +2757,10 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 			return res;
+ 	/* OTP has no valid blocks */
+ 	IWL_DEBUG_EEPROM(trans, "OTP has no valid blocks\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 00a6dda..68974a9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -281,7 +281,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		goto out_free_bus;
  	}
  
-+	if (ath6kl_set_htcap(vif, vif->next_ch_band,
-+			     vif->next_ch_type != NL80211_CHAN_NO_HT))
-+		return -EIO;
-+
- 	res = ath6kl_wmi_ap_profile_commit(ar->wmi, vif->fw_vif_idx, &p);
- 	if (res < 0)
- 		return res;
-@@ -2768,6 +2795,13 @@ static int ath6kl_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- 	ath6kl_wmi_disconnect_cmd(ar->wmi, vif->fw_vif_idx);
- 	clear_bit(CONNECTED, &vif->flags);
- 
-+	/* Restore ht setting in firmware */
-+	if (ath6kl_set_htcap(vif, IEEE80211_BAND_2GHZ, true))
-+		return -EIO;
-+
-+	if (ath6kl_set_htcap(vif, IEEE80211_BAND_5GHZ, true))
-+		return -EIO;
-+
- 	return 0;
- }
- 
-@@ -3313,6 +3347,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
- 	vif->next_mode = nw_type;
- 	vif->listen_intvl_t = ATH6KL_DEFAULT_LISTEN_INTVAL;
- 	vif->bmiss_time_t = ATH6KL_DEFAULT_BMISS_TIME;
-+	vif->htcap.ht_enable = true;
- 
- 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
- 	if (fw_vif_idx != 0)
-diff --git a/drivers/net/wireless/ath/ath6kl/common.h b/drivers/net/wireless/ath/ath6kl/common.h
-index 71f5450..98a8861 100644
---- a/drivers/net/wireless/ath/ath6kl/common.h
-+++ b/drivers/net/wireless/ath/ath6kl/common.h
-@@ -78,6 +78,7 @@ enum crypto_type {
- 
- struct htc_endpoint_credit_dist;
- struct ath6kl;
-+struct ath6kl_htcap;
- enum htc_credit_dist_reason;
- struct ath6kl_htc_credit_info;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 72e6a94..d27d0cf 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -477,6 +477,12 @@ struct ath6kl_mc_filter {
- 	char hw_addr[ATH6KL_MCAST_FILTER_MAC_ADDR_SIZE];
+-	iwl_trans = iwl_trans_pcie_alloc(shrd, pdev, ent);
++	iwl_trans = iwl_trans_pcie_alloc(shrd, pdev, ent, cfg);
+ 	if (iwl_trans == NULL) {
+ 		err = -ENOMEM;
+ 		goto out_free_bus;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index d519487..3ebe96e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -150,16 +150,13 @@ struct iwl_mod_params {
+ /**
+  * struct iwl_shared - shared fields for all the layers of the driver
+  *
+- * @cfg: see struct iwl_cfg
+  * @trans: pointer to the transport layer data
+  */
+ struct iwl_shared {
+-	const struct iwl_cfg *cfg;
+ 	struct iwl_trans *trans;
  };
  
-+struct ath6kl_htcap {
-+	bool ht_enable;
-+	unsigned short cap_info;
-+	u8 ampdu_factor;
-+};
-+
- /*
-  * Driver's maximum limit, note that some firmwares support only one vif
-  * and the runtime (current) limit must be checked from ar->vif_max.
-@@ -525,6 +531,7 @@ struct ath6kl_vif {
- 	struct ath6kl_wep_key wep_key_list[WMI_MAX_KEY_INDEX + 1];
- 	struct ath6kl_key keys[WMI_MAX_KEY_INDEX + 1];
- 	struct aggr_info *aggr_cntxt;
-+	struct ath6kl_htcap htcap;
+ /*Whatever _m is (iwl_trans, iwl_priv, these macros will work */
+-#define cfg(_m)		((_m)->shrd->cfg)
+ #define trans(_m)	((_m)->shrd->trans)
  
- 	struct timer_list disconnect_timer;
- 	struct timer_list sched_scan_timer;
-@@ -537,6 +544,8 @@ struct ath6kl_vif {
- 	u32 send_action_id;
- 	bool probe_req_report;
- 	u16 next_chan;
-+	enum nl80211_channel_type next_ch_type;
-+	enum ieee80211_band next_ch_band;
- 	u16 assoc_bss_beacon_int;
- 	u16 listen_intvl_t;
- 	u16 bmiss_time_t;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 7cd1d96..7c8a997 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -2882,6 +2882,43 @@ int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 if_idx,
- 	return ret;
- }
+ static inline bool iwl_have_debug_level(u32 level)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index de78fb8..390490b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -140,7 +140,7 @@ void iwl_rx_queue_update_write_ptr(struct iwl_trans *trans,
+ 	if (q->need_update == 0)
+ 		goto exit_unlock;
  
-+int ath6kl_wmi_set_htcap_cmd(struct wmi *wmi, u8 if_idx,
-+			     enum ieee80211_band band,
-+			     struct ath6kl_htcap *htcap)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_set_htcap_cmd *cmd;
-+
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_set_htcap_cmd *) skb->data;
-+
-+	/*
-+	 * NOTE: Band in firmware matches enum ieee80211_band, it is unlikely
-+	 * this will be changed in firmware. If at all there is any change in
-+	 * band value, the host needs to be fixed.
-+	 */
-+	cmd->band = band;
-+	cmd->ht_enable = !!htcap->ht_enable;
-+	cmd->ht20_sgi = !!(htcap->cap_info & IEEE80211_HT_CAP_SGI_20);
-+	cmd->ht40_supported =
-+		!!(htcap->cap_info & IEEE80211_HT_CAP_SUP_WIDTH_20_40);
-+	cmd->ht40_sgi = !!(htcap->cap_info & IEEE80211_HT_CAP_SGI_40);
-+	cmd->intolerant_40mhz =
-+		!!(htcap->cap_info & IEEE80211_HT_CAP_40MHZ_INTOLERANT);
-+	cmd->max_ampdu_len_exp = htcap->ampdu_factor;
-+
-+	ath6kl_dbg(ATH6KL_DBG_WMI,
-+		   "Set htcap: band:%d ht_enable:%d 40mhz:%d sgi_20mhz:%d sgi_40mhz:%d 40mhz_intolerant:%d ampdu_len_exp:%d\n",
-+		   cmd->band, cmd->ht_enable, cmd->ht40_supported,
-+		   cmd->ht20_sgi, cmd->ht40_sgi, cmd->intolerant_40mhz,
-+		   cmd->max_ampdu_len_exp);
-+	return ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_SET_HT_CAP_CMDID,
-+				   NO_SYNC_WMIFLAG);
-+}
-+
- int ath6kl_wmi_test_cmd(struct wmi *wmi, void *buf, size_t len)
+-	if (cfg(trans)->base_params->shadow_reg_enable) {
++	if (trans->cfg->base_params->shadow_reg_enable) {
+ 		/* shadow register enabled */
+ 		/* Device expects a multiple of 8 */
+ 		q->write_actual = (q->write & ~0x7);
+@@ -543,7 +543,7 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ static void iwl_irq_handle_error(struct iwl_trans *trans)
  {
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 25aa6b8..d3d2ab5 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1277,6 +1277,16 @@ struct wmi_mcast_filter_add_del_cmd {
- 	u8 mcast_mac[ATH6KL_MCAST_FILTER_MAC_ADDR_SIZE];
- } __packed;
+ 	/* W/A for WiFi/WiMAX coex and WiMAX own the RF */
+-	if (cfg(trans)->internal_wimax_coex &&
++	if (trans->cfg->internal_wimax_coex &&
+ 	    (!(iwl_read_prph(trans, APMG_CLK_CTRL_REG) &
+ 			APMS_CLK_VAL_MRB_FUNC_MODE) ||
+ 	     (iwl_read_prph(trans, APMG_PS_CTRL_REG) &
+@@ -680,7 +680,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 	if (inta & CSR_INT_BIT_WAKEUP) {
+ 		IWL_DEBUG_ISR(trans, "Wakeup interrupt\n");
+ 		iwl_rx_queue_update_write_ptr(trans, &trans_pcie->rxq);
+-		for (i = 0; i < cfg(trans)->base_params->num_of_queues; i++)
++		for (i = 0; i < trans->cfg->base_params->num_of_queues; i++)
+ 			iwl_txq_update_write_ptr(trans,
+ 						 &trans_pcie->txq[i]);
  
-+struct wmi_set_htcap_cmd {
-+	u8 band;
-+	u8 ht_enable;
-+	u8 ht40_supported;
-+	u8 ht20_sgi;
-+	u8 ht40_sgi;
-+	u8 intolerant_40mhz;
-+	u8 max_ampdu_len_exp;
-+} __packed;
-+
- /* Command Replies */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 9188740..bb0a314 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -99,7 +99,7 @@ void iwl_txq_update_write_ptr(struct iwl_trans *trans, struct iwl_tx_queue *txq)
+ 	if (txq->need_update == 0)
+ 		return;
  
- /* WMI_GET_CHANNEL_LIST_CMDID reply */
-@@ -2487,6 +2497,9 @@ int ath6kl_wmi_get_roam_tbl_cmd(struct wmi *wmi);
- int ath6kl_wmi_set_wmm_txop(struct wmi *wmi, u8 if_idx, enum wmi_txop_cfg cfg);
- int ath6kl_wmi_set_keepalive_cmd(struct wmi *wmi, u8 if_idx,
- 				 u8 keep_alive_intvl);
-+int ath6kl_wmi_set_htcap_cmd(struct wmi *wmi, u8 if_idx,
-+			     enum ieee80211_band band,
-+			     struct ath6kl_htcap *htcap);
- int ath6kl_wmi_test_cmd(struct wmi *wmi, void *buf, size_t len);
+-	if (cfg(trans)->base_params->shadow_reg_enable) {
++	if (trans->cfg->base_params->shadow_reg_enable) {
+ 		/* shadow register enabled */
+ 		iwl_write32(trans, HBUS_TARG_WRPTR,
+ 			    txq->q.write_ptr | (txq_id << 8));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 14a32c4..76f05ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -79,7 +79,7 @@
+ #define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
  
- s32 ath6kl_wmi_get_rate(s8 rate_index);
+ #define SCD_QUEUECHAIN_SEL_ALL(trans, trans_pcie)	\
+-	(((1<<cfg(trans)->base_params->num_of_queues) - 1) &\
++	(((1<<trans->cfg->base_params->num_of_queues) - 1) &\
+ 	(~(1<<(trans_pcie)->cmd_queue)))
+ 
+ static int iwl_trans_rx_alloc(struct iwl_trans *trans)
+@@ -522,7 +522,7 @@ static void iwl_trans_pcie_tx_free(struct iwl_trans *trans)
+ 	/* Tx queues */
+ 	if (trans_pcie->txq) {
+ 		for (txq_id = 0;
+-		     txq_id < cfg(trans)->base_params->num_of_queues; txq_id++)
++		     txq_id < trans->cfg->base_params->num_of_queues; txq_id++)
+ 			iwl_tx_queue_free(trans, txq_id);
+ 	}
+ 
+@@ -547,7 +547,7 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
+ 	int txq_id, slots_num;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	u16 scd_bc_tbls_size = cfg(trans)->base_params->num_of_queues *
++	u16 scd_bc_tbls_size = trans->cfg->base_params->num_of_queues *
+ 			sizeof(struct iwlagn_scd_bc_tbl);
+ 
+ 	/*It is not allowed to alloc twice, so warn when this happens.
+@@ -571,7 +571,7 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
+ 		goto error;
+ 	}
+ 
+-	trans_pcie->txq = kcalloc(cfg(trans)->base_params->num_of_queues,
++	trans_pcie->txq = kcalloc(trans->cfg->base_params->num_of_queues,
+ 				  sizeof(struct iwl_tx_queue), GFP_KERNEL);
+ 	if (!trans_pcie->txq) {
+ 		IWL_ERR(trans, "Not enough memory for txq\n");
+@@ -580,7 +580,7 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
+ 	}
+ 
+ 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
+-	for (txq_id = 0; txq_id < cfg(trans)->base_params->num_of_queues;
++	for (txq_id = 0; txq_id < trans->cfg->base_params->num_of_queues;
+ 	     txq_id++) {
+ 		slots_num = (txq_id == trans_pcie->cmd_queue) ?
+ 					TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+@@ -626,7 +626,7 @@ static int iwl_tx_init(struct iwl_trans *trans)
+ 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 
+ 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
+-	for (txq_id = 0; txq_id < cfg(trans)->base_params->num_of_queues;
++	for (txq_id = 0; txq_id < trans->cfg->base_params->num_of_queues;
+ 	     txq_id++) {
+ 		slots_num = (txq_id == trans_pcie->cmd_queue) ?
+ 					TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+@@ -749,9 +749,9 @@ static int iwl_apm_init(struct iwl_trans *trans)
+ 	iwl_apm_config(trans);
+ 
+ 	/* Configure analog phase-lock-loop before activating to D0A */
+-	if (cfg(trans)->base_params->pll_cfg_val)
++	if (trans->cfg->base_params->pll_cfg_val)
+ 		iwl_set_bit(trans, CSR_ANA_PLL_CFG,
+-			    cfg(trans)->base_params->pll_cfg_val);
++			    trans->cfg->base_params->pll_cfg_val);
+ 
+ 	/*
+ 	 * Set "initialization complete" bit to move adapter from
+@@ -861,7 +861,7 @@ static int iwl_nic_init(struct iwl_trans *trans)
+ 	if (iwl_tx_init(trans))
+ 		return -ENOMEM;
+ 
+-	if (cfg(trans)->base_params->shadow_reg_enable) {
++	if (trans->cfg->base_params->shadow_reg_enable) {
+ 		/* enable shadow regs in HW */
+ 		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL,
+ 			0x800FFFFF);
+@@ -1080,7 +1080,7 @@ static void iwl_tx_start(struct iwl_trans *trans)
+ 		iwl_write_targ_mem(trans, a, 0);
+ 	for (; a < trans_pcie->scd_base_addr +
+ 	       SCD_TRANS_TBL_OFFSET_QUEUE(
+-				cfg(trans)->base_params->num_of_queues);
++				trans->cfg->base_params->num_of_queues);
+ 	       a += 4)
+ 		iwl_write_targ_mem(trans, a, 0);
+ 
+@@ -1103,7 +1103,7 @@ static void iwl_tx_start(struct iwl_trans *trans)
+ 	iwl_write_prph(trans, SCD_AGGR_SEL, 0);
+ 
+ 	/* initiate the queues */
+-	for (i = 0; i < cfg(trans)->base_params->num_of_queues; i++) {
++	for (i = 0; i < trans->cfg->base_params->num_of_queues; i++) {
+ 		iwl_write_prph(trans, SCD_QUEUE_RDPTR(i), 0);
+ 		iwl_write_direct32(trans, HBUS_TARG_WRPTR, 0 | (i << 8));
+ 		iwl_write_targ_mem(trans, trans_pcie->scd_base_addr +
+@@ -1120,7 +1120,7 @@ static void iwl_tx_start(struct iwl_trans *trans)
+ 	}
+ 
+ 	iwl_write_prph(trans, SCD_INTERRUPT_MASK,
+-			IWL_MASK(0, cfg(trans)->base_params->num_of_queues));
++			IWL_MASK(0, trans->cfg->base_params->num_of_queues));
+ 
+ 	/* Activate all Tx DMA/FIFO channels */
+ 	iwl_trans_txq_set_sched(trans, IWL_MASK(0, 7));
+@@ -1188,7 +1188,7 @@ static int iwl_trans_tx_stop(struct iwl_trans *trans)
+ 	}
+ 
+ 	/* Unmap DMA from host system and free skb's */
+-	for (txq_id = 0; txq_id < cfg(trans)->base_params->num_of_queues;
++	for (txq_id = 0; txq_id < trans->cfg->base_params->num_of_queues;
+ 	     txq_id++)
+ 		iwl_tx_queue_unmap(trans, txq_id);
+ 
+@@ -1617,7 +1617,7 @@ static int iwl_trans_pcie_wait_tx_queue_empty(struct iwl_trans *trans)
+ 	int ret = 0;
+ 
+ 	/* waiting for all the tx frames complete might take a while */
+-	for (cnt = 0; cnt < cfg(trans)->base_params->num_of_queues; cnt++) {
++	for (cnt = 0; cnt < trans->cfg->base_params->num_of_queues; cnt++) {
+ 		if (cnt == trans_pcie->cmd_queue)
+ 			continue;
+ 		txq = &trans_pcie->txq[cnt];
+@@ -1829,7 +1829,7 @@ static ssize_t iwl_dbgfs_tx_queue_read(struct file *file,
+ 	int ret;
+ 	size_t bufsz;
+ 
+-	bufsz = sizeof(char) * 64 * cfg(trans)->base_params->num_of_queues;
++	bufsz = sizeof(char) * 64 * trans->cfg->base_params->num_of_queues;
+ 
+ 	if (!trans_pcie->txq) {
+ 		IWL_ERR(trans, "txq not ready\n");
+@@ -1839,7 +1839,7 @@ static ssize_t iwl_dbgfs_tx_queue_read(struct file *file,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	for (cnt = 0; cnt < cfg(trans)->base_params->num_of_queues; cnt++) {
++	for (cnt = 0; cnt < trans->cfg->base_params->num_of_queues; cnt++) {
+ 		txq = &trans_pcie->txq[cnt];
+ 		q = &txq->q;
+ 		pos += scnprintf(buf + pos, bufsz - pos,
+@@ -2085,7 +2085,8 @@ const struct iwl_trans_ops trans_ops_pcie = {
+ 
+ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
+ 				       struct pci_dev *pdev,
+-				       const struct pci_device_id *ent)
++				       const struct pci_device_id *ent,
++				       const struct iwl_cfg *cfg)
+ {
+ 	struct iwl_trans_pcie *trans_pcie;
+ 	struct iwl_trans *trans;
+@@ -2102,6 +2103,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
+ 
+ 	trans->ops = &trans_ops_pcie;
+ 	trans->shrd = shrd;
++	trans->cfg = cfg;
+ 	trans_pcie->trans = trans;
+ 	spin_lock_init(&trans_pcie->irq_lock);
+ 	init_waitqueue_head(&trans_pcie->ucode_write_waitq);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index f3496a0..80e3399 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -429,6 +429,7 @@ enum iwl_trans_state {
+  * @ops - pointer to iwl_trans_ops
+  * @op_mode - pointer to the op_mode
+  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
++ * @cfg - pointer to the configuration
+  * @reg_lock - protect hw register access
+  * @dev - pointer to struct device * that represents the device
+  * @hw_id: a u32 with the ID of the device / subdevice.
+@@ -441,6 +442,7 @@ struct iwl_trans {
+ 	const struct iwl_trans_ops *ops;
+ 	struct iwl_op_mode *op_mode;
+ 	struct iwl_shared *shrd;
++	const struct iwl_cfg *cfg;
+ 	enum iwl_trans_state state;
+ 	spinlock_t reg_lock;
+ 
+@@ -625,12 +627,14 @@ struct pci_device_id;
+ extern const struct iwl_trans_ops trans_ops_pcie;
+ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
+ 				       struct pci_dev *pdev,
+-				       const struct pci_device_id *ent);
++				       const struct pci_device_id *ent,
++				       const struct iwl_cfg *cfg);
+ int __must_check iwl_pci_register_driver(void);
+ void iwl_pci_unregister_driver(void);
+ 
+ extern const struct iwl_trans_ops trans_ops_idi;
+ struct iwl_trans *iwl_trans_idi_alloc(struct iwl_shared *shrd,
+ 				      void *pdev_void,
+-				      const void *ent_void);
++				      const void *ent_void,
++				      const struct iwl_cfg *cfg);
+ #endif /* __iwl_trans_h__ */
 -- 
 1.7.0.4
 
