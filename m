@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14459 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:29687 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751274Ab2DROpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:45:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/15] iwlwifi: Remove inconsistent and redundant declaration
-Date: Wed, 18 Apr 2012 07:41:14 -0700
-Message-Id: <1334760077-5714-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120418_164559_006321_B7CBCD3E)
-In-Reply-To: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752566Ab2DRNVn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 09:21:43 -0400
+Date: Wed, 18 Apr 2012 16:22:26 +0300
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+Message-ID: <20120418132224.GG19228@aemeltch-MOBL1> (sfid-20120418_152148_776186_2B8A7176)
+References: <4F84A422.3030900@sipsolutions.net>
+ <1334093378.16897.62.camel@aeonflux>
+ <20120411070514.GB17779@aemeltch-MOBL1>
+ <1334714841.3725.37.camel@jlt3.sipsolutions.net>
+ <20120418112017.GC19228@aemeltch-MOBL1>
+ <1334749879.16897.221.camel@aeonflux>
+ <20120418121014.GD19228@aemeltch-MOBL1>
+ <1334751359.16897.225.camel@aeonflux>
+ <20120418123326.GF19228@aemeltch-MOBL1>
+ <1334754717.16897.228.camel@aeonflux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1334754717.16897.228.camel@aeonflux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Hi Marcel,
 
-Remove declaration of iwl_alloc_traffic_mem from iwl-agn.h,
-from methods that was exposed to support MVM.
+On Wed, Apr 18, 2012 at 03:11:57PM +0200, Marcel Holtmann wrote:
+> > > > > This is also a little bit of confusing since FullMac cards will not
+> > > > > create an AMP virtual interface. With them you just see the HCI AMP
+> > > > > controller on the Bluetooth side. Can an AMP virtual interface be just
+> > > > > virtual inside mac80211 or does it have to have a netdev attached to it?
+> > > > 
+> > > > If we create virtual interface then netdev is allocated and we can handle
+> > > > it with common tools.
+> > > 
+> > > what common tools do you wanna use here. We actually do not wanna have
+> > > them show up as netdev devices at all. AMP connections don't have IP
+> > > addresses or anything else for that matter.
+> > 
+> > I might want to set up MAC address. Otherwise I might not need netdev. I
+> > feel that I need it for interface separation.
+> 
+> what MAC address? And where do you get this MAC address from? AMP
+> controllers do not have MAC addresses.
 
-MVM doesn't have to use this declaration.
+I assume I need some address to send/receive data over wireless.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 67cd123..3d6f3e2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -510,7 +510,6 @@ void iwl_setup_deferred_work(struct iwl_priv *priv);
- int iwl_send_wimax_coex(struct iwl_priv *priv);
- int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
- void iwl_debug_config(struct iwl_priv *priv);
--int iwl_alloc_traffic_mem(struct iwl_priv *priv);
- void iwl_set_hw_params(struct iwl_priv *priv);
- void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
- int iwl_init_drv(struct iwl_priv *priv);
--- 
-1.7.0.4
+Best regards 
+Andrei Emeltchenko 
 
