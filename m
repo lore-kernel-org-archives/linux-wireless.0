@@ -1,152 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:65306 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754110Ab2DSN5m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 09:57:42 -0400
-Received: by wgbdr13 with SMTP id dr13so8656426wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 06:57:41 -0700 (PDT)
-From: Anisse Astier <anisse@astier.eu>
-To: Ivo van Doorn <IvDoorn@gmail.com>, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Cc: linville@tuxdriver.com, Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Anisse Astier <anisse@astier.eu>
-Subject: [PATCH v3 1/2] rt2x00: debugfs support - allow a register to be empty
-Date: Thu, 19 Apr 2012 15:53:09 +0200
-Message-Id: <1334843590-7920-1-git-send-email-anisse@astier.eu> (sfid-20120419_155746_461265_BE5DB72B)
-In-Reply-To: <CAOZOX0UXc0OwhWOiM0PWbGfyynmrQ4kZRAVFJyxtiHe-veUg=g@mail.gmail.com>
-References: <CAOZOX0UXc0OwhWOiM0PWbGfyynmrQ4kZRAVFJyxtiHe-veUg=g@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:39112 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753608Ab2DROpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 10:45:52 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/15] iwlwifi: split between AGG_ON and AGG_STARTING
+Date: Wed, 18 Apr 2012 07:41:15 -0700
+Message-Id: <1334760077-5714-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120418_164601_132382_83741C81)
+In-Reply-To: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow a register to be unspecified, therefore not creating its debugfs
-file entry.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Anisse Astier <anisse@astier.eu>
+This allows not to notify the transport about aggregation stopped
+while aggregation haven't been started.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-Changes since v2:
-Acked patch not resent (BBP size), and split the second patch in two to
-incorporate changes suggested by Ivo Van Doorn (thanks for the review!) :
- - first part (this patch) now is only a small rewrite of the code to
-   initialize only the supported register. Any unsupported register wouldn't
-   have its files created.
- - first patch best viewed ignoring spaces ((git) diff -w)
- - second part is effectively adding RFCSR support.
- - we allocate more data for sprintf since we add a new register.
- - Updated test procedure (see below)
-Changes since v1:
- - removed initialization in chipsets other than rt2800, we now rely on
-   default initialization.
- - added comments to make this explicit
- - fix rfcsr size (64)
- - fix pre-review bug thanks to Ivo Van Doorn
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   20 +++++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    2 ++
+ 2 files changed, 19 insertions(+), 3 deletions(-)
 
-
-How to test ?
-I'd like feedback on chipsets other than rt2800pci.
-
-Test procedure:
-mount -t debugfs none /sys/kernel/debug/
-cd /sys/kernel/debug/ieee80211/phy0/rt2800pci/
-cat chipset # shouldn't have any "rfcsr" line if not rt2800
-ls register # shouldn't have any rfcsr_* file if not rt2800
-
----
- drivers/net/wireless/rt2x00/rt2x00debug.c |   73 +++++++++++++++--------------
- 1 file changed, 38 insertions(+), 35 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index 78787fc..ac898c4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -624,22 +624,21 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
- 	data += sprintf(data, "revision:\t%04x\n", intf->rt2x00dev->chip.rev);
- 	data += sprintf(data, "\n");
- 	data += sprintf(data, "register\tbase\twords\twordsize\n");
--	data += sprintf(data, "csr\t%d\t%d\t%d\n",
--			debug->csr.word_base,
--			debug->csr.word_count,
--			debug->csr.word_size);
--	data += sprintf(data, "eeprom\t%d\t%d\t%d\n",
--			debug->eeprom.word_base,
--			debug->eeprom.word_count,
--			debug->eeprom.word_size);
--	data += sprintf(data, "bbp\t%d\t%d\t%d\n",
--			debug->bbp.word_base,
--			debug->bbp.word_count,
--			debug->bbp.word_size);
--	data += sprintf(data, "rf\t%d\t%d\t%d\n",
--			debug->rf.word_base,
--			debug->rf.word_count,
--			debug->rf.word_size);
-+#define RT2X00DEBUGFS_SPRINTF_REGISTER(__name)			\
-+{								\
-+	if(debug->__name.read)					\
-+		data += sprintf(data, __stringify(__name)	\
-+				"\t%d\t%d\t%d\n",		\
-+				debug->__name.word_base,	\
-+				debug->__name.word_count,	\
-+				debug->__name.word_size);	\
-+}
-+	RT2X00DEBUGFS_SPRINTF_REGISTER(csr);
-+	RT2X00DEBUGFS_SPRINTF_REGISTER(eeprom);
-+	RT2X00DEBUGFS_SPRINTF_REGISTER(bbp);
-+	RT2X00DEBUGFS_SPRINTF_REGISTER(rf);
-+#undef RT2X00DEBUGFS_SPRINTF_REGISTER
-+
- 	blob->size = strlen(blob->data);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 76fea8f..b77a079 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -522,6 +522,7 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ {
+ 	struct iwl_tid_data *tid_data;
+ 	int sta_id, txq_id;
++	enum iwl_agg_state agg_state;
  
- 	return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
-@@ -694,25 +693,29 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
- 	if (IS_ERR(intf->register_folder) || !intf->register_folder)
- 		goto exit;
+ 	sta_id = iwl_sta_id(sta);
  
--#define RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(__intf, __name)	\
--({								\
--	(__intf)->__name##_off_entry =				\
--	    debugfs_create_u32(__stringify(__name) "_offset",	\
--			       S_IRUSR | S_IWUSR,		\
--			       (__intf)->register_folder,	\
--			       &(__intf)->offset_##__name);	\
--	if (IS_ERR((__intf)->__name##_off_entry)		\
--			|| !(__intf)->__name##_off_entry)	\
--		goto exit;					\
--								\
--	(__intf)->__name##_val_entry =				\
--	    debugfs_create_file(__stringify(__name) "_value",	\
--				S_IRUSR | S_IWUSR,		\
--				(__intf)->register_folder,	\
--				(__intf), &rt2x00debug_fop_##__name);\
--	if (IS_ERR((__intf)->__name##_val_entry)		\
--			|| !(__intf)->__name##_val_entry)	\
--		goto exit;					\
-+#define RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(__intf, __name)			\
-+({										\
-+	if(debug->__name.read) {						\
-+		(__intf)->__name##_off_entry =					\
-+		debugfs_create_u32(__stringify(__name) "_offset",		\
-+				       S_IRUSR | S_IWUSR,			\
-+				       (__intf)->register_folder,		\
-+				       &(__intf)->offset_##__name);		\
-+		if (IS_ERR((__intf)->__name##_off_entry)			\
-+				|| !(__intf)->__name##_off_entry)		\
-+			goto exit;						\
-+										\
-+		(__intf)->__name##_val_entry =					\
-+		debugfs_create_file(__stringify(__name) "_value",		\
-+					S_IRUSR | S_IWUSR,			\
-+					(__intf)->register_folder,		\
-+					(__intf), &rt2x00debug_fop_##__name);	\
-+		if (IS_ERR((__intf)->__name##_val_entry)			\
-+				|| !(__intf)->__name##_val_entry)		\
-+			goto exit;						\
-+	} else									\
-+		DEBUG(rt2x00dev, "Unsupported register on this device: "	\
-+			__stringify(__name) "\n");				\
- })
+@@ -545,6 +546,13 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 		*/
+ 		IWL_DEBUG_HT(priv, "AGG stop before setup done\n");
+ 		goto turn_off;
++	case IWL_AGG_STARTING:
++		/*
++		 * This can happen when the session is stopped before
++		 * we receive ADDBA response
++		 */
++		IWL_DEBUG_HT(priv, "AGG stop before AGG became operational\n");
++		goto turn_off;
+ 	case IWL_AGG_ON:
+ 		break;
+ 	default:
+@@ -576,12 +584,17 @@ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	IWL_DEBUG_TX_QUEUES(priv, "Can proceed: ssn = next_recl = %d\n",
+ 			    tid_data->agg.ssn);
+ turn_off:
++	agg_state = priv->tid_data[sta_id][tid].agg.state;
+ 	priv->tid_data[sta_id][tid].agg.state = IWL_AGG_OFF;
  
- 	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, csr);
+ 	spin_unlock_bh(&priv->sta_lock);
+ 
+ 	if (test_bit(txq_id, priv->agg_q_alloc)) {
+-		iwl_trans_tx_agg_disable(priv->trans, txq_id);
++		/* If the transport didn't know that we wanted to start
++		 * agreggation, don't tell it that we want to stop them
++		 */
++		if (agg_state != IWL_AGG_STARTING)
++			iwl_trans_tx_agg_disable(priv->trans, txq_id);
+ 		iwlagn_dealloc_agg_txq(priv, txq_id);
+ 	}
+ 
+@@ -634,7 +647,7 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	if (*ssn == tid_data->next_reclaimed) {
+ 		IWL_DEBUG_TX_QUEUES(priv, "Can proceed: ssn = next_recl = %d\n",
+ 				    tid_data->agg.ssn);
+-		tid_data->agg.state = IWL_AGG_ON;
++		tid_data->agg.state = IWL_AGG_STARTING;
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 	} else {
+ 		IWL_DEBUG_TX_QUEUES(priv, "Can't proceed: ssn %d, "
+@@ -661,6 +674,7 @@ int iwlagn_tx_agg_oper(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	spin_lock_bh(&priv->sta_lock);
+ 	ssn = priv->tid_data[sta_priv->sta_id][tid].agg.ssn;
+ 	q = priv->tid_data[sta_priv->sta_id][tid].agg.txq_id;
++	priv->tid_data[sta_priv->sta_id][tid].agg.state = IWL_AGG_ON;
+ 	spin_unlock_bh(&priv->sta_lock);
+ 
+ 	fifo = ctx->ac_to_fifo[tid_to_ac[tid]];
+@@ -745,7 +759,7 @@ static void iwlagn_check_ratid_empty(struct iwl_priv *priv, int sta_id, u8 tid)
+ 			IWL_DEBUG_TX_QUEUES(priv,
+ 				"Can continue ADDBA flow ssn = next_recl ="
+ 				" %d", tid_data->next_reclaimed);
+-			tid_data->agg.state = IWL_AGG_ON;
++			tid_data->agg.state = IWL_AGG_STARTING;
+ 			ieee80211_start_tx_ba_cb_irqsafe(vif, addr, tid);
+ 		}
+ 		break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f3eccf6..3816429 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -194,6 +194,7 @@ struct iwl_qos_info {
+  * These states relate to a specific RA / TID.
+  *
+  * @IWL_AGG_OFF: aggregation is not used
++ * @IWL_AGG_STARTING: aggregation are starting (between start and oper)
+  * @IWL_AGG_ON: aggregation session is up
+  * @IWL_EMPTYING_HW_QUEUE_ADDBA: establishing a BA session - waiting for the
+  *	HW queue to be empty from packets for this RA /TID.
+@@ -202,6 +203,7 @@ struct iwl_qos_info {
+  */
+ enum iwl_agg_state {
+ 	IWL_AGG_OFF = 0,
++	IWL_AGG_STARTING,
+ 	IWL_AGG_ON,
+ 	IWL_EMPTYING_HW_QUEUE_ADDBA,
+ 	IWL_EMPTYING_HW_QUEUE_DELBA,
 -- 
-1.7.9.4
+1.7.0.4
 
