@@ -1,146 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:50715 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756744Ab2DXXcd (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:58546 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752992Ab2DRNMW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 19:32:33 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-bluetooth@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH RESEND 1/2] Bluetooth: btmrvl: configure default host sleep parameters
-Date: Tue, 24 Apr 2012 16:31:40 -0700
-Message-Id: <1335310301-11600-1-git-send-email-bzhao@marvell.com> (sfid-20120425_013237_824286_F3933919)
+	Wed, 18 Apr 2012 09:12:22 -0400
+Message-ID: <1334754717.16897.228.camel@aeonflux> (sfid-20120418_151247_508989_3DCE6D59)
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Wed, 18 Apr 2012 15:11:57 +0200
+In-Reply-To: <20120418123326.GF19228@aemeltch-MOBL1>
+References: <4F846257.1060807@sipsolutions.net>
+	 <1334092668.16897.54.camel@aeonflux> <4F84A422.3030900@sipsolutions.net>
+	 <1334093378.16897.62.camel@aeonflux>
+	 <20120411070514.GB17779@aemeltch-MOBL1>
+	 <1334714841.3725.37.camel@jlt3.sipsolutions.net>
+	 <20120418112017.GC19228@aemeltch-MOBL1>
+	 <1334749879.16897.221.camel@aeonflux>
+	 <20120418121014.GD19228@aemeltch-MOBL1>
+	 <1334751359.16897.225.camel@aeonflux>
+	 <20120418123326.GF19228@aemeltch-MOBL1>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Hi Andrei,
 
-Currently debugfs commands "hscfgcmd" and "gpiogap" are provided
-for host sleep configuration. But if user doesn't configure host
-sleep parameters using these commands, host sleep activation is
-failed during suspend (support for suspend and resume handlers is
-added in next patch).
+> > > > This is also a little bit of confusing since FullMac cards will not
+> > > > create an AMP virtual interface. With them you just see the HCI AMP
+> > > > controller on the Bluetooth side. Can an AMP virtual interface be just
+> > > > virtual inside mac80211 or does it have to have a netdev attached to it?
+> > > 
+> > > If we create virtual interface then netdev is allocated and we can handle
+> > > it with common tools.
+> > 
+> > what common tools do you wanna use here. We actually do not wanna have
+> > them show up as netdev devices at all. AMP connections don't have IP
+> > addresses or anything else for that matter.
+> 
+> I might want to set up MAC address. Otherwise I might not need netdev. I
+> feel that I need it for interface separation.
 
-Default host sleep configuration is done during driver initialisation
-in this patch.
+what MAC address? And where do you get this MAC address from? AMP
+controllers do not have MAC addresses.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
-Last 2 patches were sent to Gustavo's old e-mail address.
-Resending...
+Regards
 
- drivers/bluetooth/btmrvl_drv.h  |    1 +
- drivers/bluetooth/btmrvl_main.c |   53 ++++++++++++++++++++++----------------
- drivers/bluetooth/btmrvl_sdio.c |    3 ++
- 3 files changed, 35 insertions(+), 22 deletions(-)
+Marcel
 
-diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
-index 90bda50..2c79e76 100644
---- a/drivers/bluetooth/btmrvl_drv.h
-+++ b/drivers/bluetooth/btmrvl_drv.h
-@@ -139,6 +139,7 @@ void btmrvl_check_evtpkt(struct btmrvl_private *priv, struct sk_buff *skb);
- int btmrvl_process_event(struct btmrvl_private *priv, struct sk_buff *skb);
- 
- int btmrvl_send_module_cfg_cmd(struct btmrvl_private *priv, int subcmd);
-+int btmrvl_send_hscfg_cmd(struct btmrvl_private *priv);
- int btmrvl_enable_ps(struct btmrvl_private *priv);
- int btmrvl_prepare_command(struct btmrvl_private *priv);
- 
-diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
-index d1209ad..a880537 100644
---- a/drivers/bluetooth/btmrvl_main.c
-+++ b/drivers/bluetooth/btmrvl_main.c
-@@ -200,6 +200,36 @@ int btmrvl_send_module_cfg_cmd(struct btmrvl_private *priv, int subcmd)
- }
- EXPORT_SYMBOL_GPL(btmrvl_send_module_cfg_cmd);
- 
-+int btmrvl_send_hscfg_cmd(struct btmrvl_private *priv)
-+{
-+	struct sk_buff *skb;
-+	struct btmrvl_cmd *cmd;
-+
-+	skb = bt_skb_alloc(sizeof(*cmd), GFP_ATOMIC);
-+	if (!skb) {
-+		BT_ERR("No free skb");
-+		return -ENOMEM;
-+	}
-+
-+	cmd = (struct btmrvl_cmd *) skb_put(skb, sizeof(*cmd));
-+	cmd->ocf_ogf = cpu_to_le16(hci_opcode_pack(OGF,
-+						   BT_CMD_HOST_SLEEP_CONFIG));
-+	cmd->length = 2;
-+	cmd->data[0] = (priv->btmrvl_dev.gpio_gap & 0xff00) >> 8;
-+	cmd->data[1] = (u8) (priv->btmrvl_dev.gpio_gap & 0x00ff);
-+
-+	bt_cb(skb)->pkt_type = MRVL_VENDOR_PKT;
-+
-+	skb->dev = (void *) priv->btmrvl_dev.hcidev;
-+	skb_queue_head(&priv->adapter->tx_queue, skb);
-+
-+	BT_DBG("Queue HSCFG Command, gpio=0x%x, gap=0x%x", cmd->data[0],
-+	       cmd->data[1]);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(btmrvl_send_hscfg_cmd);
-+
- int btmrvl_enable_ps(struct btmrvl_private *priv)
- {
- 	struct sk_buff *skb;
-@@ -271,32 +301,11 @@ static int btmrvl_enable_hs(struct btmrvl_private *priv)
- 
- int btmrvl_prepare_command(struct btmrvl_private *priv)
- {
--	struct sk_buff *skb = NULL;
--	struct btmrvl_cmd *cmd;
- 	int ret = 0;
- 
- 	if (priv->btmrvl_dev.hscfgcmd) {
- 		priv->btmrvl_dev.hscfgcmd = 0;
--
--		skb = bt_skb_alloc(sizeof(*cmd), GFP_ATOMIC);
--		if (skb == NULL) {
--			BT_ERR("No free skb");
--			return -ENOMEM;
--		}
--
--		cmd = (struct btmrvl_cmd *) skb_put(skb, sizeof(*cmd));
--		cmd->ocf_ogf = cpu_to_le16(hci_opcode_pack(OGF, BT_CMD_HOST_SLEEP_CONFIG));
--		cmd->length = 2;
--		cmd->data[0] = (priv->btmrvl_dev.gpio_gap & 0xff00) >> 8;
--		cmd->data[1] = (u8) (priv->btmrvl_dev.gpio_gap & 0x00ff);
--
--		bt_cb(skb)->pkt_type = MRVL_VENDOR_PKT;
--
--		skb->dev = (void *) priv->btmrvl_dev.hcidev;
--		skb_queue_head(&priv->adapter->tx_queue, skb);
--
--		BT_DBG("Queue HSCFG Command, gpio=0x%x, gap=0x%x",
--						cmd->data[0], cmd->data[1]);
-+		btmrvl_send_hscfg_cmd(priv);
- 	}
- 
- 	if (priv->btmrvl_dev.pscmd) {
-diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
-index 27b74b0..f93a7a2 100644
---- a/drivers/bluetooth/btmrvl_sdio.c
-+++ b/drivers/bluetooth/btmrvl_sdio.c
-@@ -1013,6 +1013,9 @@ static int btmrvl_sdio_probe(struct sdio_func *func,
- 	priv->btmrvl_dev.psmode = 1;
- 	btmrvl_enable_ps(priv);
- 
-+	priv->btmrvl_dev.gpio_gap = 0xffff;
-+	btmrvl_send_hscfg_cmd(priv);
-+
- 	return 0;
- 
- disable_host_int:
--- 
-1.7.4.1
 
