@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:41790 "EHLO
-	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751192Ab2DUNvq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 09:51:46 -0400
-Date: Sat, 21 Apr 2012 15:51:44 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-cc: Kalle Valo <kvalo@adurom.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] wireless: at76c50x: allocating too much data
-In-Reply-To: <20120421124523.GS6498@mwanda>
-Message-ID: <alpine.DEB.2.02.1204211548090.1987@hadrien> (sfid-20120421_155151_545528_C3D751A8)
-References: <20120420064705.GE22649@elgon.mountain> <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com> <20120420091449.GI27101@mwanda> <87vcku9sob.fsf@purkki.adurom.net> <20120421124523.GS6498@mwanda>
+Received: from mms3.broadcom.com ([216.31.210.19]:2848 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751528Ab2DRLc5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 07:32:57 -0400
+Message-ID: <4F8EA657.7020006@broadcom.com> (sfid-20120418_133301_140424_4A7653C4)
+Date: Wed, 18 Apr 2012 13:32:39 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-1782511839-1335016304=:1987"
+To: "Matthew Garrett" <mjg59@srcf.ucam.org>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Henry Ptasinski" <henryp@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Subject: Re: brcmsmac hangs machine if loaded after busmastering
+ disabled
+References: <20120319215154.GA18508@srcf.ucam.org>
+ <4F856EE9.2040407@broadcom.com> <20120411115118.GA3791@srcf.ucam.org>
+In-Reply-To: <20120411115118.GA3791@srcf.ucam.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323329-1782511839-1335016304=:1987
-Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-On Sat, 21 Apr 2012, Dan Carpenter wrote:
-
-> On Fri, Apr 20, 2012 at 09:14:44PM +0300, Kalle Valo wrote:
->> Dan Carpenter <dan.carpenter@oracle.com> writes:
+On 04/11/2012 01:51 PM, Matthew Garrett wrote:
+> On Wed, Apr 11, 2012 at 01:45:45PM +0200, Arend van Spriel wrote:
 >>
->>> On Fri, Apr 20, 2012 at 06:57:00PM +1000, Julian Calaby wrote:
->>>>> -       struct mib_local *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
->>>>> +       struct mib_local *m = kmalloc(sizeof(struct mib_local), GFP_KERNEL);
->>>>
->>>> Would it be better practice to use sizeof(*m)?
->>>>
->>>
->>> That was my temptation as well...  But I decided to make it match
->>> with the surrounding code.  I'm happy to resend if people want.
->>
->> IMHO sizeof(*m) is better and I tend to use it.
->>
->> Related to this: I have a bad habit of sometimes dropping '*' from
->> sizeof()? Is there a tool which could spot that?
->>
+>> Are you disabling bus master or the entire wireless device? Could
+>> you try disabling the device in the bootloader, ie.
+>> pci_disable_device() or something equivalent.
 >
-> That's what I was working on for Smatch when I sent this patch.
+> I'm just disabling the bus mastering. Do you expect there to be a
+> behavioural difference in the core if I disable BAR decoding as well?
 >
-> The odd thing is that I can't find any bugs like this in the kernel.
-> If sizeof(foo) is less than sizeof(*foo), which is probably the
-> normal case, then these get caught early on in testing.
->
-> Still I think people must have done manual audits as well...  It
-> feels too clean to be natural.
 
-Looking for x = ... sizeof(x) ... I get 9 reports.  In most cases it looks 
-like sizeof(x) is coincidentally the same as the size that is wanted.  Two 
-cases that look like they could have some noticible effect are:
+I discussed this with hardware designer and here is his quote "You would 
+need to disable the DMA engines before disable PCIe master mode. If you 
+didn't do that, and the DMA engines were active, the MAC would almost 
+certainly hang."
 
-arch/xtensa/platforms/iss/network.c, line 789
-drivers/block/cciss.c, line 4211
+So disabling the master mode solved your memory corruption, but the chip 
+will hang. The DMA engines mentioned are the on-chip engines. As you 
+indicated you can only use common PCI operations so I do not expect 
+disabling BAR decoding will solve the hang in the chip.
 
-I will send patches for those two.
+Only as an experiment you could try to reset the device toggling the pci 
+power state.
 
-julia
---8323329-1782511839-1335016304=:1987--
+Gr. AvS
+
