@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33888 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054Ab2DRBol (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:42287 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071Ab2DRQhv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 21:44:41 -0400
-Message-ID: <1334713448.3725.21.camel@jlt3.sipsolutions.net> (sfid-20120418_034443_909837_97BA38AB)
-Subject: Re: [PATCH v2 0/6] Add ethtool stats support for Wireless Devices
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Apr 2012 18:44:08 -0700
-In-Reply-To: <1334684807-14026-1-git-send-email-greearb@candelatech.com> (sfid-20120417_194701_243314_85F8C04C)
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20120417_194701_243314_85F8C04C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 18 Apr 2012 12:37:51 -0400
+Received: by wgbdr13 with SMTP id dr13so7711464wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 09:37:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com>
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+	<4F8DC25E.9090702@broadcom.com>
+	<B9AA983D-A169-497D-9C8E-BDBEF2348BB6@gmail.com>
+	<4F8E0CBE.6010103@sipsolutions.net>
+	<0FC1AE2B-7E32-466B-AC33-F969F4E72B98@gmail.com>
+	<CANUX_P38YDFtL-KzKnFHd0+Ca29SUXoY+mGKaDUjConXaf3c9A@mail.gmail.com>
+	<4B048FDE-C784-4401-9FEC-16F8CC0B8D59@gmail.com>
+	<CANUX_P0FO-P6ZFow15shNpZg6Z8FAPP7AovJH=xUKPyVEMtoBw@mail.gmail.com>
+	<FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com>
+Date: Wed, 18 Apr 2012 19:37:50 +0300
+Message-ID: <CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com> (sfid-20120418_183804_424343_D6F5E11A)
+Subject: Re: wlan0 not present
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Dominik Feser <dominik.feser@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-17 at 10:46 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> 
-> This enables ethtool stats for mac80211 devices.  It also
-> adds hooks to call down into mac80211 drivers for additional
-> stats.  Patches to enable this hook in ath9k will be posted
-> in a different series.
-> 
-> There was a review question about how to make the ethtool
-> strings line up with the data in a less error prone manner.
-> This patch series does NOT address that.  I think it may
-> be more work than it's worth to try to do this, but we
-> can always retro-fit such behaviour later if desired.
-> Many drivers have this issue, so perhaps some support
-> code in the ethtool core is the way to go.
-> 
-> V2:  Fix getting survey stats:  Need to specify the
->   current channel index, not just use index zero.  The
->   fix for this involved adding a new helper method which
->   adds a patch to the series.
+On Wed, Apr 18, 2012 at 17:39, Dominik Feser
+<dominik.feser@googlemail.com> wrote:
+> There it is:
+>
+> # lspci -x -s 02:00
+> 02:00.0 Network controller: Intel Corporation Centrino Advanced-N 6205 (rev 34)
+> 00: 86 80 82 00 02 00 10 00 34 00 80 02 10 00 00 00
+> 10: 04 00 d0 e2 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 21 13
+> 30: 00 00 00 00 c8 00 00 00 00 00 00 00 0a 01 00 00
+>
 
-I'm in training all day tomorrow, and then I'll make my way home only to
-go on vacation this weekend, for two weeks.
+Ok, you need a fw whose name is iwlwifi-6000g2a-*
 
-Would you mind holding all of this until I return from vacation? There
-are some issues with this where at least one of us has a total
-misunderstanding about how some things work. TBH, it could be me because
-I'm not very familiar with the survey code.
+can you send the output of
 
-johannes
+ls /lib/firmware iwlwifi-6000g2a-*
 
+
+thanks
