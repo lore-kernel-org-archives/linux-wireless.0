@@ -1,69 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48155 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755073Ab2DPVJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:09:34 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 1/8] ath9k_hw: use standard SIFS time as reference for half/quarter channels
-Date: Mon, 16 Apr 2012 23:09:18 +0200
-Message-Id: <1334610565-37399-1-git-send-email-nbd@openwrt.org> (sfid-20120416_230947_952698_72E141AE)
+Received: from he.sipsolutions.net ([78.46.109.217]:37380 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708Ab2DRBlG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 21:41:06 -0400
+Message-ID: <1334713232.3725.17.camel@jlt3.sipsolutions.net> (sfid-20120418_034110_906953_97D33FD4)
+Subject: Re: [PATCH v2 4/6] wireless: Add util method to get channel index
+ from frequency.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Apr 2012 18:40:32 -0700
+In-Reply-To: <1334684807-14026-5-git-send-email-greearb@candelatech.com> (sfid-20120417_194726_924640_2523B282)
+References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+	 <1334684807-14026-5-git-send-email-greearb@candelatech.com>
+	 (sfid-20120417_194726_924640_2523B282)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+On Tue, 2012-04-17 at 10:46 -0700, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+> :100644 100644 27f9561... be6fb62... M	include/net/cfg80211.h
+> :100644 100644 6cba001... 2fd0e97... M	net/wireless/util.c
+>  include/net/cfg80211.h |    7 +++++++
+>  net/wireless/util.c    |   24 ++++++++++++++++++++++++
+>  2 files changed, 31 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 27f9561..be6fb62 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -2388,6 +2388,13 @@ ieee80211_get_channel(struct wiphy *wiphy, int freq)
+>  }
+>  
+>  /**
+> + * ieee80211_get_channel_idx - get channel index from wiphy for specified freq
+> + * @wiphy: the struct wiphy to get the channel for
+> + * @freq: the center frequency of the channel
+> + */
+> +extern int ieee80211_get_channel_idx(struct wiphy *wiphy, int freq);
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 373cef6..122447c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -992,6 +992,11 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		rx_lat = 37;
- 	tx_lat = 54;
- 
-+	if (IS_CHAN_5GHZ(chan))
-+		sifstime = 16;
-+	else
-+		sifstime = 10;
-+
- 	if (IS_CHAN_HALF_RATE(chan)) {
- 		eifs = 175;
- 		rx_lat *= 2;
-@@ -999,8 +1004,8 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 11;
- 
-+		sifstime *= 2;
- 		slottime = 13;
--		sifstime = 32;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
- 		eifs = 340;
- 		rx_lat = (rx_lat * 4) - 1;
-@@ -1008,8 +1013,8 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
- 
-+		sifstime *= 4;
- 		slottime = 21;
--		sifstime = 64;
- 	} else {
- 		if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah)) {
- 			eifs = AR_D_GBL_IFS_EIFS_ASYNC_FIFO;
-@@ -1023,10 +1028,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		tx_lat = MS(reg, AR_USEC_TX_LAT);
- 
- 		slottime = ah->slottime;
--		if (IS_CHAN_5GHZ(chan))
--			sifstime = 16;
--		else
--			sifstime = 10;
- 	}
- 
- 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
--- 
-1.7.3.2
+I prefer you drop the extern, but ...
+
+
+> +int ieee80211_get_channel_idx(struct wiphy *wiphy, int freq)
+> +{
+> +       enum ieee80211_band band;
+> +       struct ieee80211_supported_band *sband;
+> +       int i;
+> +       int rv = 0;
+> +
+> +       for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+> +               sband = wiphy->bands[band];
+> +
+> +               if (!sband)
+> +                       continue;
+> +
+> +               for (i = 0; i < sband->n_channels; i++) {
+> +                       if (sband->channels[i].center_freq == freq)
+> +                               return rv;
+> +                       rv++;
+> +               }
+> +       }
+> +
+> +       return NULL;
+> +}
+
+
+"return NULL"? Really?
+
+Also, what use is the index? It's some kind of global channel index, but
+that's almost completely useless. I think you need a very very very good
+reason to have this function and you're not even stating a single one.
+
+johannes
 
