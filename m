@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47387 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751903Ab2DPWXV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:23:21 -0400
-Message-ID: <1334614996.5455.30.camel@dcbw.foobar.com> (sfid-20120417_002324_752352_1D40F2DC)
-Subject: Re: [RFC 4/4] libertas SDIO: convert to asynchronous firmware
- loading
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Date: Mon, 16 Apr 2012 17:23:16 -0500
-In-Reply-To: <CAMLZHHQ02Y0s7O4t7jKZZ+1H8SiyPGYxwLhdVHYSuf5aUA0fqw@mail.gmail.com>
-References: <20120403160319.B26CF9D401E@zog.reactivated.net>
-	 <1334612679.5455.4.camel@dcbw.foobar.com>
-	 <CAMLZHHQ02Y0s7O4t7jKZZ+1H8SiyPGYxwLhdVHYSuf5aUA0fqw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:54306 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064Ab2DRRMP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 13:12:15 -0400
+Received: by wibhj6 with SMTP id hj6so916809wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 10:12:14 -0700 (PDT)
+From: Anisse Astier <anisse@astier.eu>
+To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Cc: linville@tuxdriver.com, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Anisse Astier <anisse@astier.eu>
+Subject: [PATCH 1/2] rt2800: debugfs register access: BBP is 256 bytes big
+Date: Wed, 18 Apr 2012 19:07:42 +0200
+Message-Id: <1334768863-26839-1-git-send-email-anisse@astier.eu> (sfid-20120418_191220_865064_D5767BAE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-04-16 at 15:55 -0600, Daniel Drake wrote:
-> On Mon, Apr 16, 2012 at 3:44 PM, Dan Williams <dcbw@redhat.com> wrote:
-> > On Tue, 2012-04-03 at 17:03 +0100, Daniel Drake wrote:
-> >> Signed-off-by: Daniel Drake <dsd@laptop.org>
-> >
-> > Works on my standalone SD8686 dev board; though I do get:
-> >
-> > [32350.237619] libertas_sdio mmc0:0001:1: (unregistered net_device):
-> > 00:50:43:20:74:05, fw 9.70.3p36, cap 0x00000303
-> > [32350.239847] libertas_sdio mmc0:0001:1: (unregistered net_device):
-> > PREP_CMD: command 0x00a3 failed: 2
-> >
-> > where the "unregistered net_device" is a bit odd.  Perhaps we should fix
-> > that before the final series.
-> 
-> That actually appears the same before the patches too, it's been this
-> way ever since the cfg80211 port. Mind if I leave this issue for
-> another moment?
+We're already using BBP for values > 128. Make that explicit and allow
+debugfs access.
 
-I have no problem with that.
+Signed-off-by: Anisse Astier <anisse@astier.eu>
+---
+ drivers/net/wireless/rt2x00/rt2800.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Dan
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 1ce2634..d91f4f6 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -99,7 +99,7 @@
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0110
+ #define BBP_BASE			0x0000
+-#define BBP_SIZE			0x0080
++#define BBP_SIZE			0x00ff
+ #define RF_BASE				0x0004
+ #define RF_SIZE				0x0010
+ 
+-- 
+1.7.9.4
 
