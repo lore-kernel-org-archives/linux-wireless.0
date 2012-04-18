@@ -1,119 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50502 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755645Ab2DQRrM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43841 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753852Ab2DRPJJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 13:47:12 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 2/6] mac80211: Support getting sta_info stats via ethtool.
-Date: Tue, 17 Apr 2012 10:46:43 -0700
-Message-Id: <1334684807-14026-3-git-send-email-greearb@candelatech.com> (sfid-20120417_194716_243783_5644375D)
-In-Reply-To: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+	Wed, 18 Apr 2012 11:09:09 -0400
+Message-ID: <4F8ED913.4040807@sipsolutions.net> (sfid-20120418_170926_285914_2C38BB60)
+Date: Wed, 18 Apr 2012 08:09:07 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com> <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux> <4F84A422.3030900@sipsolutions.net> <4F84A52A.7050905@sipsolutions.net> <20120411071119.GC17779@aemeltch-MOBL1> <1334714611.3725.34.camel@jlt3.sipsolutions.net> <20120418121551.GE19228@aemeltch-MOBL1> <4F8ED1D0.1070401@sipsolutions.net> <20120418145202.GH19228@aemeltch-MOBL1>
+In-Reply-To: <20120418145202.GH19228@aemeltch-MOBL1>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi Andrei,
 
-This lets ethtool print out stats related to stations
-connected to the interface.  Does not yet get stats
-from the underlying driver.
+>> No, this is incorrect. If one device wants to connect on one
+>> channel, the other typically has to use the same channel. If one
+>> device wants to scan, the other will be affected. Some hardware may
+>> support switching around between two channels, but might also
+>> support more than 2 virtual interfaces, so again they won't be
+>> independent.
+>
+> BTW: which devices can switch channels?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 510a745... 1cb0529... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |   71 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 71 insertions(+), 0 deletions(-)
+None today, I'm working on it.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 510a745..1cb0529 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -112,6 +112,74 @@ static int ieee80211_set_noack_map(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
-+	"rx_packets", "rx_bytes", "wep_weak_iv_count",
-+	"rx_duplicates", "rx_fragments", "rx_dropped",
-+	"tx_packets", "tx_bytes", "tx_fragments",
-+	"tx_filtered", "tx_retry_failed", "tx_retries",
-+	"beacon_loss"
-+};
-+#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
-+
-+static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return STA_STATS_LEN;
-+
-+	return -EOPNOTSUPP;
-+}
-+
-+static void ieee80211_get_et_stats(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   struct ethtool_stats *stats,
-+				   u64 *data)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+	struct ieee80211_local *local = sdata->local;
-+
-+	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		int i = 0;
-+
-+		/* Make sure this station belongs to the proper dev */
-+		if (sta->sdata->dev != dev)
-+			continue;
-+
-+		data[i++] += sta->rx_packets;
-+		data[i++] += sta->rx_bytes;
-+		data[i++] += sta->wep_weak_iv_count;
-+		data[i++] += sta->num_duplicates;
-+		data[i++] += sta->rx_fragments;
-+		data[i++] += sta->rx_dropped;
-+
-+		data[i++] += sta->tx_packets;
-+		data[i++] += sta->tx_bytes;
-+		data[i++] += sta->tx_fragments;
-+		data[i++] += sta->tx_filtered_count;
-+		data[i++] += sta->tx_retry_failed;
-+		data[i++] += sta->tx_retry_count;
-+		data[i++] += sta->beacon_loss_count;
-+		BUG_ON(i != STA_STATS_LEN);
-+	}
-+	rcu_read_unlock();
-+}
-+
-+static void ieee80211_get_et_strings(struct wiphy *wiphy,
-+				     struct net_device *dev,
-+				     u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS) {
-+		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
-+		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
-+	}
-+}
-+
-+
- static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 			     u8 key_idx, bool pairwise, const u8 *mac_addr,
- 			     struct key_params *params)
-@@ -2775,4 +2843,7 @@ struct cfg80211_ops mac80211_config_ops = {
- #ifdef CONFIG_PM
- 	.set_wakeup = ieee80211_set_wakeup,
- #endif
-+	.get_et_sset_count = ieee80211_get_et_sset_count,
-+	.get_et_stats = ieee80211_get_et_stats,
-+	.get_et_strings = ieee80211_get_et_strings,
- };
--- 
-1.7.3.4
+>> Therefore, you need something managing all this concurrency. This is
+>> in a small part the driver which will enforce restrictions (it will
+>> reject new impossible things), but mostly the supplicant which can
+>> make policy decisions about which usage should win.
+>
+> This doesn't sound like a rocket science to me. IMO this might be done in
+> drivers. Those drivers which can switch channels why do they need
+> wpa_supplicant involved making this decision?
 
+I don't think you understand.
+
+Say our device can do 3 virtual interfaces, on 2 channels. Then if the 
+user is connected to some managed network (say office network), one 
+interface & channel is used up. Now the user has AMP running, another 
+channel might be used up. Now the user wants to do P2P negotiation. Now 
+the supplicant, which is doing the negotiation, needs to know that it 
+can negotiate only one of those two channels, not any other. Or maybe 
+P2P should win, then it might disconnect the AMP or the managed 
+connection. But all those are policy decisions, so the driver can't 
+really handle them.
+
+johannes
