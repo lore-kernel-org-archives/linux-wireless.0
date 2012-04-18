@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:43207 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758712Ab2DZSZT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 14:25:19 -0400
-Received: by bkuw12 with SMTP id w12so1253049bku.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2012 11:25:18 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Subject: Re: carl9170 - monitor mode TP drop
-Date: Thu, 26 Apr 2012 20:25:12 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com> <201204252054.54123.chunkeey@googlemail.com> <CAFED-jkq58fjv2B+kOr5KJD4p7MUa35Pq6uP=yfCEfMa9Ujp=w@mail.gmail.com>
-In-Reply-To: <CAFED-jkq58fjv2B+kOr5KJD4p7MUa35Pq6uP=yfCEfMa9Ujp=w@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Message-Id: <201204262025.12410.chunkeey@googlemail.com> (sfid-20120426_202523_424394_4A6A7CEE)
+Received: from mga11.intel.com ([192.55.52.93]:59648 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752748Ab2DROpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 10:45:52 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 11/15] iwlwifi: Added foreward declaration for iwl_cfg in op_mode
+Date: Wed, 18 Apr 2012 07:41:13 -0700
+Message-Id: <1334760077-5714-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120418_164558_136846_D52BC486)
+In-Reply-To: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, April 26, 2012 09:45:22 AM Janusz Dziedzic wrote:
-> W dniu 25 kwietnia 2012 20:54 u¿ytkownik Christian Lamparter
-> So, what steps you suggest?
-> I would like to record traffic from channel 6 and would like to not
-> have this SNIFFER ACK.
-> 
-> This is what I tried:
-> - ifconfig wlan0 up (no matter if up or down)
-> - iw phy phy0 interface add moni0 type monitor
-> - iw phy phy0 set channel 6
-> - ifconfig moni0 up
-> 
-> After last step I still see TP drop between AP and STA1 on channel6
-Uh that's right. it was:
+From: David Spinadel <david.spinadel@intel.com>
 
-iw phy0 interface add moni type monitor flags none
+Please merge this with "iwlwifi: op_mode holds its pointer
+to the config"
 
-the "flags none" is the important bit.
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Regards,
-	Christian
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index 73e1a0e..4ef742b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -69,6 +69,7 @@ struct sk_buff;
+ struct iwl_device_cmd;
+ struct iwl_rx_cmd_buffer;
+ struct iwl_fw;
++struct iwl_cfg;
+ 
+ /**
+  * DOC: Operational mode - what is it ?
+-- 
+1.7.0.4
+
