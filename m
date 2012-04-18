@@ -1,71 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53026 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754983Ab2DIIk4 convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:57318 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752668Ab2DRLvq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 04:40:56 -0400
-Received: by iagz16 with SMTP id z16so5615442iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2012 01:40:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4F7F4A0F.2050300@lwfinger.net>
-References: <4F0EEA1B.3040501@wut.de>
-	<4F0FA4DD.5020601@lwfinger.net>
-	<loom.20120405T091556-756@post.gmane.org>
-	<4F7D90AF.2040109@gtri.gatech.edu>
-	<4F7E4F2A.1030404@lwfinger.net>
-	<CAL9MRr=U+CCzjP-cSOkPJpvw=AQuHX23grj1atfkT9uxLzEM4w@mail.gmail.com>
-	<4F7F4A0F.2050300@lwfinger.net>
-Date: Mon, 9 Apr 2012 11:40:56 +0300
-Message-ID: <CAL9MRrkeh629QuOTg7fuqPFSsnNiRNW-kTB=gPiqoMipOQfq6Q@mail.gmail.com> (sfid-20120409_104101_117509_77A97F8B)
-Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
-From: Nicu Pavel <npavel@mini-box.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 Apr 2012 07:51:46 -0400
+Message-ID: <1334749879.16897.221.camel@aeonflux> (sfid-20120418_135151_114484_79B12BED)
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Wed, 18 Apr 2012 13:51:19 +0200
+In-Reply-To: <20120418112017.GC19228@aemeltch-MOBL1>
+References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux>
+	 <4F84A422.3030900@sipsolutions.net> <1334093378.16897.62.camel@aeonflux>
+	 <20120411070514.GB17779@aemeltch-MOBL1>
+	 <1334714841.3725.37.camel@jlt3.sipsolutions.net>
+	 <20120418112017.GC19228@aemeltch-MOBL1>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Andrei,
 
-On Fri, Apr 6, 2012 at 10:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 04/06/2012 03:48 AM, Nicu Pavel wrote:
->>
->> ---->  ifdown/ifup no scanning results.
->>
->> <6>rtl8192cu: MAC auto ON okay!
->> <6>rtl8192cu: Tx queue select: 0x05
->> <7>rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0>  FALSE driver sleep or
->> unload
->> <6>rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
->> <7>rtl8192cu:rtl92cu_set_hw_reg():<0-0>  ### Set RCR(0xf0002ace) ###
->> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
->> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
->> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
->> <7>rtlwifi:rtl_op_conf_tx():<0-0>  queue number -954253944 is incorrect!
->> <7>rtl8192cu:rtl92cu_set_hw_reg():<0-0>  ### Set RCR(0xf0002a0e) ###
->>
->> ---->  ifdown/ifup no scanning results.
->
->
-> Please try the attached patch. After looking at the backtraces for the calls
-> that set the BSSID filters, I could see no reason for the driver to fail,
-> yet it did. Once I kept those bits clear you did in the beginning, then it
-> works. The amount of extra overhead will be minimal as the bits were only
-> set for a short time.
->
-> If this patch works for you, then I will send it upstream for mainline and
-> stable. The best place to keep the bits clear would be in the calling
-> routine, not in rtl92cu_set_hw_reg(); however, that patch will be much more
-> intrusive and would not be accepted for 3.4.
+> > > > > >> I don't get this patch at all. Why am I reviewing some very very basic
+> > > > > >> skeleton code when we should be discussing userspace APIs (we have
+> > > > > >> already discussed them with a few people years ago), how the AMP is
+> > > > > >> going to be managed, how the security handshake is going to work, etc.
+> > > 
+> > > Do we have some outcome from that discussion?
+> > 
+> > This API-defining patch is probably the best we have:
+> > http://johannes.sipsolutions.net/patches/kernel/all/2010-10-13-15%
+> > 3a24/035-bt3-amp.patch
+> 
+> Thanks for the link. After looking to the patches I think that there are
+> some similarities with respect to interface type. As I understood the
+> basic idea is the same: create virtual interface. But in your case the
+> implementation is really difficult.
+> 
+> Why do we need netlink commands like NL80211_CMD_HCI_AMP_ADD and
+> NL80211_CMD_HCI_AMP_DELETE if what we need is to create/delete virtual
+> interface which can be done with standard tools with a several lines
+> patch to iw:
 
-It works if I change:
-rtl_write_dword(rtlpriv, REG_RCR, ((u32 *) (val))[0]);
-to:
-rtl_write_dword(rtlpriv, REG_RCR, mac->rx_conf);
+if we put the crypto piece aside for a minute, then we need to decide
+who is creating the actual AMP virtual interface on mac80211.
 
-Thanks,
-Nicu
->
-> Larry
->
+And here the problem starts. That part is actually not triggered from
+userspace via wpa_supplicant. It is triggered over the A2MP (AMP manager
+protocol) that runs inside the Bluetooth stack in the kernel.
+
+Or is the idea to always keep the AMP virtual interface around? Meaning
+that as soon as we have a mac80211 card, we have an AMP virtual
+interface if the driver supports it?
+
+This is also a little bit of confusing since FullMac cards will not
+create an AMP virtual interface. With them you just see the HCI AMP
+controller on the Bluetooth side. Can an AMP virtual interface be just
+virtual inside mac80211 or does it have to have a netdev attached to it?
+
+<snip>
+
+> > > > The whole AMP control goes via A2MP and L2CAP and both are fully
+> > > > implemented inside the kernel. In theory we do not even need to expose
+> > > > HCI AMP interfaces to userspace.
+> > > 
+> > > Johannes, you can think of SoftAMP as analog of SoftMAC (vs FullMAC).
+> > > SoftMAC is also possible to implement in user space but only
+> > > authentication is done this way.
+> > 
+> > Yeah, and we also implement roaming and crypto stuff in userspace, for
+> > softmac. Heck, we implement crypto in userspace even for fullmac, so
+> > really ...
+> 
+> Does crypto stuff mean getting symmetric key?
+> 
+> I see that all commands by default are sent via netlink to wpa_supplicant.
+> I think that we can send those command which cannot be handled by us
+> directly but I believe most command might be handled directly.
+
+The crypto itself is done either in hardware or with the kernel crypto
+framework. Just the EAP part is done inside wpa_supplicant.
+
+With the changes that we did for Bluetooth and its management interface,
+all the link keys are present in the kernel. And these are used as the
+WPA2 PSK. I don't think it is a good idea to push these around into
+userspace to wpa_supplicant one more time. And we would need to do that
+since bluetoothd has no option to hand them out.
+
+I still think that WPA2 PSK only EAP implementation for Bluetooth AMP
+controllers would be a good idea in the kernel. It has nothing to do
+with policy or user input in this specific case. The roundtrip into
+userspace for doing EAP 4-way handshake and some HMAC-SHA1 where the PSK
+is already present in kernel space seems really pointless.
+
+Regards
+
+Marcel
+
+
