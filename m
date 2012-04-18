@@ -1,79 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:64963 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762Ab2DJFAN convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38250 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708Ab2DRCCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 01:00:13 -0400
-Received: by obbtb18 with SMTP id tb18so6774404obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2012 22:00:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1334032316-7011-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1334032316-7011-1-git-send-email-yeohchunyeow@gmail.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Mon, 9 Apr 2012 21:59:52 -0700
-Message-ID: <CAPjQAd8FuPbL+QRMij=j29CZCuxZ+29FpBB2fD5btsz80Ep9YQ@mail.gmail.com> (sfid-20120410_070018_169039_C1F1B800)
-Subject: Re: [PATCH v2] mac80211: fix the assignment of PREQ's MAC address for
- Proactive RANN
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 17 Apr 2012 22:02:52 -0400
+Message-ID: <1334714536.3725.33.camel@jlt3.sipsolutions.net> (sfid-20120418_040256_304427_BAA29319)
+Subject: Re: [Greenmesh] [ath9k] mesh powersave hardware sleep + wakeup
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	javier@cozybit.com, linux-wireless@vger.kernel.org,
+	henry@logout.com,
+	"greenmesh@lists.osll.spb.ru" <greenmesh@lists.osll.spb.ru>
+Date: Tue, 17 Apr 2012 19:02:16 -0700
+In-Reply-To: <4F868732.1030401@etit.tu-chemnitz.de>
+References: <4F630AEA.10703@etit.tu-chemnitz.de>
+	  <20120316204547.GG18861@tux> <4F63BA31.1080608@etit.tu-chemnitz.de>
+	  <4F856449.3000804@etit.tu-chemnitz.de>
+	 <1334203508.3788.12.camel@jlt3.sipsolutions.net>
+	 <4F868732.1030401@etit.tu-chemnitz.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 9, 2012 at 9:31 PM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
-> Record the RANN sender's address only for RANNs that meet the acceptance
-> criteria (per sections 13.10.12.4.2).
->
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Reviewed-by: Javier Cardona <javier@cozybit.com>
+On Thu, 2012-04-12 at 09:41 +0200, Marco Porsch wrote:
 
-> ---
-> v2: reword description (Javier)
->    initialize is_root and rann_snd_addr
->
->  net/mac80211/mesh_hwmp.c    |    5 +++--
->  net/mac80211/mesh_pathtbl.c |    2 ++
->  2 files changed, 5 insertions(+), 2 deletions(-)
->
-> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-> index a80da37..8130e5f 100644
-> --- a/net/mac80211/mesh_hwmp.c
-> +++ b/net/mac80211/mesh_hwmp.c
-> @@ -800,10 +800,11 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
->                                       0, sdata);
->                mpath->sn = orig_sn;
->                mpath->rann_metric = metric + metric_txsta;
-> +               /* Recording RANNs sender address to send individually
-> +                * addressed PREQs destined for root mesh STA */
-> +               memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
->        }
->
-> -       /* Using individually addressed PREQ for root node */
-> -       memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
->        mpath->is_root = true;
->
->        if (root_is_gate)
-> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-> index 49aaefd..baa6096 100644
-> --- a/net/mac80211/mesh_pathtbl.c
-> +++ b/net/mac80211/mesh_pathtbl.c
-> @@ -538,6 +538,8 @@ int mesh_path_add(u8 *dst, struct ieee80211_sub_if_data *sdata)
->
->        read_lock_bh(&pathtbl_resize_lock);
->        memcpy(new_mpath->dst, dst, ETH_ALEN);
-> +       memset(new_mpath->rann_snd_addr, 0xff, ETH_ALEN);
-> +       new_mpath->is_root = false;
->        new_mpath->sdata = sdata;
->        new_mpath->flags = 0;
->        skb_queue_head_init(&new_mpath->frame_queue);
-> --
-> 1.7.0.4
->
+> > What time units would that be in, and how could you correlate them?
+> 
+> I did not take an exhaustive overview over all possible drivers.
+> But as the current mac80211<->driver interface carries only beacon 
+> interval (in TU) and DTIM period, that should be a good starting point.
 
+Those aren't really useful at all? You need to define wakeups in
+absolute terms I'd think? And you could have the TSF from the beacon,
+but that itself is also useless since you need the offset.
 
+> ath9k additionally relies on the neighbors address to check whether it 
+> can resume sleep after receiving an expected beacon (see setting of 
+> 'is_mybeacon' in ath_rx_tasklet).
 
--- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+That's IBSS only I'd think?
+
+> Concerning correlation, in mesh mode we recently have t_offset (in TSF 
+> increments) stored in sta_info and in client mode the drivers' 
+> synchronised TSF should be the reference (but I am not quite sure what 
+> happens when one client is associated to multiple AP).
+
+That's starting to sound more like a solution, but even then you have a
+lot of issues to resolve like when exactly is the timestamp hitting.
+Keep in mind that TSF == start of TSF field, while rx_status->timestamp
+== start of first symbol, which I didn't even remember when you guys did
+all the Toffset things, I'm guessing they're all wrong :-)
+
+johannes
+
