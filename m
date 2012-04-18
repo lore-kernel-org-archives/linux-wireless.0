@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:40851 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752522Ab2DRTdG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 15:33:06 -0400
-Date: Wed, 18 Apr 2012 15:31:58 -0400 (EDT)
-Message-Id: <20120418.153158.1057856043612723800.davem@davemloft.net> (sfid-20120418_213325_757760_2F06F4C4)
+Received: from mga11.intel.com ([192.55.52.93]:14459 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751274Ab2DROpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 10:45:52 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-04-18
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120418184320.GA2436@tuxdriver.com>
-References: <20120418184320.GA2436@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/15] iwlwifi: Remove inconsistent and redundant declaration
+Date: Wed, 18 Apr 2012 07:41:14 -0700
+Message-Id: <1334760077-5714-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120418_164559_006321_B7CBCD3E)
+In-Reply-To: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 18 Apr 2012 14:43:20 -0400
+From: David Spinadel <david.spinadel@intel.com>
 
-> First up, we have a minor signedness fix for libertas from Amitkumar
-> Karwar.  Next, Arend gives us a brcm80211 fix for correctly enabling
-> Tx FIFOs on channels 12 and 13.  Bing Zhao gives us some register
-> address corrections for mwifiex.  Felix give us a trio of fixes --
-> one for ath9k to wake the hardware properly from full sleep, one for
-> mac80211 to properly handle packets in cooked monitor mode, and one
-> for ensuring that the proper HT mode selection is honored.
-> 
-> Hauke gives us a bcma fix for handling the lack of an sprom.  Jonathon
-> Bither gives us an ath5k fix for a missing THIS_MODULE build issue,
-> and another ath5k fix for an io mapping leak.  Lukasz Kucharczyk
-> fixes a bitwise check in cfg80211, and Sujith gives us an ath9k fix
-> for assigning sequence numbers for fragmented frames.  Finally, we
-> have a MAINTAINERS change from Wey-Yi Guy -- congrats to Johannes
-> Berg for taking the lead on iwlwifi. :-)
+Remove declaration of iwl_alloc_traffic_mem from iwl-agn.h,
+from methods that was exposed to support MVM.
 
-:-)  Pulled, thanks.
+MVM doesn't have to use this declaration.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 67cd123..3d6f3e2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -510,7 +510,6 @@ void iwl_setup_deferred_work(struct iwl_priv *priv);
+ int iwl_send_wimax_coex(struct iwl_priv *priv);
+ int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
+ void iwl_debug_config(struct iwl_priv *priv);
+-int iwl_alloc_traffic_mem(struct iwl_priv *priv);
+ void iwl_set_hw_params(struct iwl_priv *priv);
+ void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
+ int iwl_init_drv(struct iwl_priv *priv);
+-- 
+1.7.0.4
+
