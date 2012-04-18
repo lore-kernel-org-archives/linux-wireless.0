@@ -1,81 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:44900 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790Ab2DRO26 (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:47203 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752748Ab2DROaU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:28:58 -0400
-Received: by wejx9 with SMTP id x9so4757416wej.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 07:28:57 -0700 (PDT)
-From: Anisse Astier <anisse@astier.eu>
-To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
-	RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Kevin Chou <kevin.chou@mediatek.com>,
-	John Li <chen-yang.li@mediatek.com>,
-	RA-Jay Hung <Jay_Hung@ralinktech.com>,
-	Anisse Astier <anisse@astier.eu>
-Subject: [PATCH] rt2800: add chipset revision RT5390R support
-Date: Wed, 18 Apr 2012 16:23:59 +0200
-Message-Id: <1334759039-24349-1-git-send-email-anisse@astier.eu> (sfid-20120418_162902_099222_C4C638BB)
+	Wed, 18 Apr 2012 10:30:20 -0400
+Message-ID: <1334759395.16897.231.camel@aeonflux> (sfid-20120418_163025_531409_46D5B114)
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Wed, 18 Apr 2012 16:29:55 +0200
+In-Reply-To: <20120418132224.GG19228@aemeltch-MOBL1>
+References: <4F84A422.3030900@sipsolutions.net>
+	 <1334093378.16897.62.camel@aeonflux>
+	 <20120411070514.GB17779@aemeltch-MOBL1>
+	 <1334714841.3725.37.camel@jlt3.sipsolutions.net>
+	 <20120418112017.GC19228@aemeltch-MOBL1>
+	 <1334749879.16897.221.camel@aeonflux>
+	 <20120418121014.GD19228@aemeltch-MOBL1>
+	 <1334751359.16897.225.camel@aeonflux>
+	 <20120418123326.GF19228@aemeltch-MOBL1>
+	 <1334754717.16897.228.camel@aeonflux>
+	 <20120418132224.GG19228@aemeltch-MOBL1>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-About 70% of the chips with revision RT5390R initialize incorrectly, using
-the auxiliary antenna instead of the main one. The net result is that
-signal reception is very poor (no AP further than 1M).
+Hi Andrei,
 
-This chipset differs from RT5390 and RT5390F by its support of hardware
-antenna diversity. Therefore antenna selection should be done
-differently, by disabling software features and previously selected
-antenna.
+> > > > > > This is also a little bit of confusing since FullMac cards will not
+> > > > > > create an AMP virtual interface. With them you just see the HCI AMP
+> > > > > > controller on the Bluetooth side. Can an AMP virtual interface be just
+> > > > > > virtual inside mac80211 or does it have to have a netdev attached to it?
+> > > > > 
+> > > > > If we create virtual interface then netdev is allocated and we can handle
+> > > > > it with common tools.
+> > > > 
+> > > > what common tools do you wanna use here. We actually do not wanna have
+> > > > them show up as netdev devices at all. AMP connections don't have IP
+> > > > addresses or anything else for that matter.
+> > > 
+> > > I might want to set up MAC address. Otherwise I might not need netdev. I
+> > > feel that I need it for interface separation.
+> > 
+> > what MAC address? And where do you get this MAC address from? AMP
+> > controllers do not have MAC addresses.
+> 
+> I assume I need some address to send/receive data over wireless.
 
-This changeset does just that, and makes all RT5390R work properly.
+from a Bluetooth point, we do not have to deal with the MAC address.
+When looking at the mac80211 part, I do not know. However even then,
+that address should come from the driver and not from userspace.
 
-This is based on Ralink's 2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO
-driver.
+Regards
 
-Signed-off-by: Anisse Astier <anisse@astier.eu>
----
- drivers/net/wireless/rt2x00/rt2800.h    |    1 +
- drivers/net/wireless/rt2x00/rt2800lib.c |   10 ++++++++++
- 2 files changed, 11 insertions(+)
+Marcel
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 063bfa8..1ce2634 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -83,6 +83,7 @@
- #define REV_RT3090E			0x0211
- #define REV_RT3390E			0x0211
- #define REV_RT5390F			0x0502
-+#define REV_RT5390R			0x1502
- 
- /*
-  * Signal information.
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index bd19802..6c95101 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -3356,6 +3356,16 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 			rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
- 		}
- 
-+		/* This chip has hardware antenna diversity*/
-+		if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
-+			rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY; /* Unused */
-+			rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY; /* Unused */
-+
-+			rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
-+			rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
-+			rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
-+		}
-+
- 		rt2800_bbp_read(rt2x00dev, 152, &value);
- 		if (ant == 0)
- 			rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 1);
--- 
-1.7.9.4
 
