@@ -1,93 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47893 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755859Ab2DWVw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 17:52:59 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 25/29] iwlwifi: clean up some hw file includes
-Date: Mon, 23 Apr 2012 14:47:36 -0700
-Message-Id: <1335217660-21950-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235314_018814_821C8082)
-In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48207 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990Ab2DRBXW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Apr 2012 21:23:22 -0400
+From: Ming Jiang <mjiang@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <rmani@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Ming Jiang <mjiang@qca.qualcomm.com>
+Subject: [PATCH v2] ath6kl clear the MMC_PM_KEEP_POWER for cutpower case
+Date: Wed, 18 Apr 2012 09:25:04 +0800
+Message-ID: <1334712304-12666-1-git-send-email-mjiang@qca.qualcomm.com> (sfid-20120418_032326_578749_54223081)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ath6kl: If wow deepsleep pno suspend failure driver will choose cutpower.
+in this scenario MMC_PM_KEEP_POWER should be cleared so that mmc will power
+off the ar6000
 
-We can't get rid of everything yet due to
-the BT definitions that I'm not quite sure
-yet how to handle, but we can get rid of
-most unneeded includes.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Ming Jiang <mjiang@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-2000.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-5000.c |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-6000.c |    3 ++-
- 4 files changed, 8 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath6kl/sdio.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 42de5aa..c1aa5f2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -28,7 +28,8 @@
- #include <linux/stringify.h>
- #include "iwl-config.h"
- #include "iwl-cfg.h"
--#include "iwl-dev.h" /* still needed */
-+#include "iwl-csr.h"
-+#include "iwl-agn-hw.h"
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 44ea7a7..f6ac4f7 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -915,6 +915,9 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	}
  
- /* Highest firmware API version supported */
- #define IWL1000_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index d3d8c10..9484e3b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -28,7 +28,8 @@
- #include <linux/stringify.h>
- #include "iwl-config.h"
- #include "iwl-cfg.h"
--#include "iwl-dev.h" /* still needed */
-+#include "iwl-agn-hw.h"
-+#include "iwl-commands.h" /* needed for BT for now */
+ cut_pwr:
++	if (func->card && func->card->host)
++		func->card->host->pm_flags &= ~(MMC_PM_KEEP_POWER);
++
+ 	return ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_CUTPOWER, NULL);
+ }
  
- /* Highest firmware API version supported */
- #define IWL2030_UCODE_API_MAX 6
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 94d465e..67d4ef2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -28,7 +28,8 @@
- #include <linux/stringify.h>
- #include "iwl-config.h"
- #include "iwl-cfg.h"
--#include "iwl-dev.h" /* still needed */
-+#include "iwl-agn-hw.h"
-+#include "iwl-csr.h"
- 
- /* Highest firmware API version supported */
- #define IWL5000_UCODE_API_MAX 5
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 6db0a40..08afedf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -28,7 +28,8 @@
- #include <linux/stringify.h>
- #include "iwl-config.h"
- #include "iwl-cfg.h"
--#include "iwl-dev.h" /* still needed */
-+#include "iwl-agn-hw.h"
-+#include "iwl-commands.h" /* needed for BT for now */
- 
- /* Highest firmware API version supported */
- #define IWL6000_UCODE_API_MAX 6
 -- 
-1.7.0.4
+1.7.1
 
