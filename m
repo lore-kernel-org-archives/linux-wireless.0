@@ -1,139 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53507 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752952Ab2DWTu6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49422 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300Ab2DRBau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 15:50:58 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v4 2/4] mac80211: Support getting sta_info stats via ethtool.
-Date: Mon, 23 Apr 2012 12:50:30 -0700
-Message-Id: <1335210632-19958-3-git-send-email-greearb@candelatech.com> (sfid-20120423_215101_913283_A01C727A)
-In-Reply-To: <1335210632-19958-1-git-send-email-greearb@candelatech.com>
-References: <1335210632-19958-1-git-send-email-greearb@candelatech.com>
+	Tue, 17 Apr 2012 21:30:50 -0400
+Message-ID: <1334712616.3725.7.camel@jlt3.sipsolutions.net> (sfid-20120418_033053_999073_C2169F41)
+Subject: Re: [PATCH 1/1] mac80211: add function retrieve average rssi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: wey-yi.w.guy@intel.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Apr 2012 18:30:16 -0700
+In-Reply-To: <1334343777-20798-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1334343777-20798-1-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, 2012-04-13 at 12:02 -0700, wey-yi.w.guy@intel.com wrote:
+> From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> 
+> Add utility function to provide the average rssi per vif
+> 
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  include/net/mac80211.h |    3 +++
+>  net/mac80211/util.c    |    8 ++++++++
+>  2 files changed, 11 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 32cd517..20a2ddd 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -3800,4 +3800,7 @@ int ieee80211_add_srates_ie(struct ieee80211_vif *vif,
+>  
+>  int ieee80211_add_ext_srates_ie(struct ieee80211_vif *vif,
+>  				struct sk_buff *skb, bool need_basic);
+> +
+> +int ieee80211_ave_rssi(struct ieee80211_vif *vif);
 
-This lets ethtool print out stats related to stations
-connected to the interface.  Does not yet get stats
-from the underlying driver.
+There should be some documentation here I think, especially about the
+point below:
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 510a745... a1d04c8... M	net/mac80211/cfg.c
- net/mac80211/cfg.c |   91 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 91 insertions(+), 0 deletions(-)
+> +int ieee80211_ave_rssi(struct ieee80211_vif *vif)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> +	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+> +
+> +	return ifmgd->ave_beacon_signal;
+> +}
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 510a745..a1d04c8 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -450,6 +450,94 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
- }
- 
-+static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
-+	"rx_packets", "rx_bytes", "wep_weak_iv_count",
-+	"rx_duplicates", "rx_fragments", "rx_dropped",
-+	"tx_packets", "tx_bytes", "tx_fragments",
-+	"tx_filtered", "tx_retry_failed", "tx_retries",
-+	"beacon_loss"
-+};
-+#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
-+
-+static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       int sset)
-+{
-+	if (sset == ETH_SS_STATS)
-+		return STA_STATS_LEN;
-+
-+	return -EOPNOTSUPP;
-+}
-+
-+static void ieee80211_get_et_stats(struct wiphy *wiphy,
-+				   struct net_device *dev,
-+				   struct ethtool_stats *stats,
-+				   u64 *data)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct sta_info *sta;
-+	struct ieee80211_local *local = sdata->local;
-+	int i;
-+
-+	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-+
-+#define ADD_STA_STATS(sta)				\
-+	do {						\
-+		data[i++] += sta->rx_packets;		\
-+		data[i++] += sta->rx_bytes;		\
-+		data[i++] += sta->wep_weak_iv_count;	\
-+		data[i++] += sta->num_duplicates;	\
-+		data[i++] += sta->rx_fragments;		\
-+		data[i++] += sta->rx_dropped;		\
-+							\
-+		data[i++] += sta->tx_packets;		\
-+		data[i++] += sta->tx_bytes;		\
-+		data[i++] += sta->tx_fragments;		\
-+		data[i++] += sta->tx_filtered_count;	\
-+		data[i++] += sta->tx_retry_failed;	\
-+		data[i++] += sta->tx_retry_count;	\
-+		data[i++] += sta->beacon_loss_count;	\
-+	} while (0)
-+
-+	/* For Managed stations, find the single station based on BSSID
-+	 * and use that.  For interface types, iterate through all available
-+	 * stations and add stats for any station that is assigned to this
-+	 * network device.
-+	 */
-+
-+	rcu_read_lock();
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+		sta = sta_info_get_bss(sdata, sdata->u.mgd.bssid);
-+		if (sta && !WARN_ON(sta->sdata->dev != dev)) {
-+			i = 0;
-+			ADD_STA_STATS(sta);
-+			BUG_ON(i != STA_STATS_LEN);
-+		}
-+	} else {
-+		list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+			/* Make sure this station belongs to the proper dev */
-+			if (sta->sdata->dev != dev)
-+				continue;
-+
-+			i = 0;
-+			ADD_STA_STATS(sta);
-+			BUG_ON(i != STA_STATS_LEN);
-+		}
-+	}
-+
-+	rcu_read_unlock();
-+}
-+
-+static void ieee80211_get_et_strings(struct wiphy *wiphy,
-+				     struct net_device *dev,
-+				     u32 sset, u8 *data)
-+{
-+	if (sset == ETH_SS_STATS) {
-+		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
-+		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
-+	}
-+}
- 
- static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 				 int idx, u8 *mac, struct station_info *sinfo)
-@@ -2775,4 +2863,7 @@ struct cfg80211_ops mac80211_config_ops = {
- #ifdef CONFIG_PM
- 	.set_wakeup = ieee80211_set_wakeup,
- #endif
-+	.get_et_sset_count = ieee80211_get_et_sset_count,
-+	.get_et_stats = ieee80211_get_et_stats,
-+	.get_et_strings = ieee80211_get_et_strings,
- };
--- 
-1.7.3.4
+This will not return anything useful if the hardware implements beacon
+filtering, so it should warn in that case I think. Also in the case
+you're calling it on non-managed interface types.
+
+johannes
 
