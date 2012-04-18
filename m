@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:50329 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756865Ab2DLXrG (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:40915 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754768Ab2DRTiE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 19:47:06 -0400
-Received: by dake40 with SMTP id e40so3105811dak.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 16:47:05 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: javier@cozybit.com, devel@lists.open80211s.org,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [RESEND PATCH 2/2] iw: Show Toffset on station dump
-Date: Thu, 12 Apr 2012 16:46:54 -0700
-Message-Id: <1334274414-17541-2-git-send-email-ashok@cozybit.com> (sfid-20120413_014713_043815_EB0C693F)
-In-Reply-To: <1334274414-17541-1-git-send-email-ashok@cozybit.com>
-References: <1334274414-17541-1-git-send-email-ashok@cozybit.com>
+	Wed, 18 Apr 2012 15:38:04 -0400
+Date: Wed, 18 Apr 2012 15:36:53 -0400 (EDT)
+Message-Id: <20120418.153653.2130740499995307564.davem@davemloft.net> (sfid-20120418_213813_543938_C1CD7AEA)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-04-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120418190521.GB2436@tuxdriver.com>
+References: <20120418190521.GB2436@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
----
- station.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 18 Apr 2012 15:05:22 -0400
 
-diff --git a/station.c b/station.c
-index ef69ea5..75e2369 100644
---- a/station.c
-+++ b/station.c
-@@ -45,6 +45,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
- 		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
-+		[NL80211_STA_INFO_T_OFFSET] = { .type = NLA_U64 },
- 		[NL80211_STA_INFO_TX_BITRATE] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_LLID] = { .type = NLA_U16 },
- 		[NL80211_STA_INFO_PLID] = { .type = NLA_U16 },
-@@ -113,6 +114,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 	if (sinfo[NL80211_STA_INFO_SIGNAL_AVG])
- 		printf("\n\tsignal avg:\t%d dBm",
- 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL_AVG]));
-+	if (sinfo[NL80211_STA_INFO_T_OFFSET])
-+		printf("\n\tToffset:\t%lld us",
-+			(int64_t)nla_get_u64(sinfo[NL80211_STA_INFO_T_OFFSET]));
- 
- 	if (sinfo[NL80211_STA_INFO_TX_BITRATE]) {
- 		if (nla_parse_nested(rinfo, NL80211_RATE_INFO_MAX,
--- 
-1.7.5.4
+> Another batch of wireless updates intended for 3.5...
+> 
+> Highlights include some wl12xx refactoring, NFC HCI and SHDLC updates,
+> an ath6kl pull, some mesh updates, and the usual updates to iwlwifi,
+> ath9k, brcm80211, mwifiex, libertas, and other drivers.
+> 
+> Please let me know if there are problems!
 
+Also pulled, thanks a lot.
