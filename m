@@ -1,105 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:45769 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757411Ab2DXT50 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:44900 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790Ab2DRO26 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 15:57:26 -0400
-Received: by qadc11 with SMTP id c11so355041qad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 12:57:26 -0700 (PDT)
-From: WarheadsSE <max@warheads.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-wireless@vger.kernel.org, WarheadsSE <max@warheads.net>
-Subject: [PATCH] mwifiex: add support for SD8786 sdio
-Date: Tue, 24 Apr 2012 15:57:21 -0400
-Message-Id: <1335297441-11072-1-git-send-email-max@warheads.net> (sfid-20120424_215735_716768_922D818A)
+	Wed, 18 Apr 2012 10:28:58 -0400
+Received: by wejx9 with SMTP id x9so4757416wej.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 07:28:57 -0700 (PDT)
+From: Anisse Astier <anisse@astier.eu>
+To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
+	RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Kevin Chou <kevin.chou@mediatek.com>,
+	John Li <chen-yang.li@mediatek.com>,
+	RA-Jay Hung <Jay_Hung@ralinktech.com>,
+	Anisse Astier <anisse@astier.eu>
+Subject: [PATCH] rt2800: add chipset revision RT5390R support
+Date: Wed, 18 Apr 2012 16:23:59 +0200
+Message-Id: <1334759039-24349-1-git-send-email-anisse@astier.eu> (sfid-20120418_162902_099222_C4C638BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-	modified:   drivers/net/wireless/mwifiex/Kconfig
-	- notate additional chipset
-	modified:   drivers/net/wireless/mwifiex/sdio.c
-	- add definition of id (0x9116)
-	- add to switch for firmware load
-	- add MODULE_FIRMWARE
-	modified:   drivers/net/wireless/mwifiex/sdio.h
-	- add definition of default firmware name
+About 70% of the chips with revision RT5390R initialize incorrectly, using
+the auxiliary antenna instead of the main one. The net result is that
+signal reception is very poor (no AP further than 1M).
 
-Signed-off-by: Jason Plum <max@warheads.net>
+This chipset differs from RT5390 and RT5390F by its support of hardware
+antenna diversity. Therefore antenna selection should be done
+differently, by disabling software features and previously selected
+antenna.
+
+This changeset does just that, and makes all RT5390R work properly.
+
+This is based on Ralink's 2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO
+driver.
+
+Signed-off-by: Anisse Astier <anisse@astier.eu>
 ---
- drivers/net/wireless/mwifiex/Kconfig |    4 ++--
- drivers/net/wireless/mwifiex/sdio.c  |    7 +++++++
- drivers/net/wireless/mwifiex/sdio.h  |    1 +
- 3 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h    |    1 +
+ drivers/net/wireless/rt2x00/rt2800lib.c |   10 ++++++++++
+ 2 files changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
-index 2a078ce..48c4c32 100644
---- a/drivers/net/wireless/mwifiex/Kconfig
-+++ b/drivers/net/wireless/mwifiex/Kconfig
-@@ -10,12 +10,12 @@ config MWIFIEX
- 	  mwifiex.
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 063bfa8..1ce2634 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -83,6 +83,7 @@
+ #define REV_RT3090E			0x0211
+ #define REV_RT3390E			0x0211
+ #define REV_RT5390F			0x0502
++#define REV_RT5390R			0x1502
  
- config MWIFIEX_SDIO
--	tristate "Marvell WiFi-Ex Driver for SD8787/SD8797"
-+	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797"
- 	depends on MWIFIEX && MMC
- 	select FW_LOADER
- 	---help---
- 	  This adds support for wireless adapters based on Marvell
--	  8787/8797 chipsets with SDIO interface.
-+	  8786/8787/8797 chipsets with SDIO interface.
+ /*
+  * Signal information.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index bd19802..6c95101 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -3356,6 +3356,16 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 			rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
+ 		}
  
- 	  If you choose to build it as a module, it will be called
- 	  mwifiex_sdio.
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index f8012e2..74981ab 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -250,6 +250,8 @@ static int mwifiex_sdio_resume(struct device *dev)
- 	return 0;
- }
- 
-+/* Device ID for SD8786 */
-+#define SDIO_DEVICE_ID_MARVELL_8786   (0x9116)
- /* Device ID for SD8787 */
- #define SDIO_DEVICE_ID_MARVELL_8787   (0x9119)
- /* Device ID for SD8797 */
-@@ -257,6 +259,7 @@ static int mwifiex_sdio_resume(struct device *dev)
- 
- /* WLAN IDs */
- static const struct sdio_device_id mwifiex_ids[] = {
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8786)},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8787)},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8797)},
- 	{},
-@@ -1596,6 +1599,9 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	adapter->dev = &func->dev;
- 
- 	switch (func->device) {
-+	case SDIO_DEVICE_ID_MARVELL_8786:
-+		strcpy(adapter->fw_name, SD8786_DEFAULT_FW_NAME);
-+		break;
- 	case SDIO_DEVICE_ID_MARVELL_8797:
- 		strcpy(adapter->fw_name, SD8797_DEFAULT_FW_NAME);
- 		break;
-@@ -1804,5 +1810,6 @@ MODULE_AUTHOR("Marvell International Ltd.");
- MODULE_DESCRIPTION("Marvell WiFi-Ex SDIO Driver version " SDIO_VERSION);
- MODULE_VERSION(SDIO_VERSION);
- MODULE_LICENSE("GPL v2");
-+MODULE_FIRMWARE(SD8786_DEFAULT_FW_NAME);
- MODULE_FIRMWARE(SD8787_DEFAULT_FW_NAME);
- MODULE_FIRMWARE(SD8797_DEFAULT_FW_NAME);
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index a3fb322..572d7dd 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -28,6 +28,7 @@
- 
- #include "main.h"
- 
-+#define SD8786_DEFAULT_FW_NAME "mrvl/sd8786_uapsta.bin"
- #define SD8787_DEFAULT_FW_NAME "mrvl/sd8787_uapsta.bin"
- #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
- 
++		/* This chip has hardware antenna diversity*/
++		if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
++			rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY; /* Unused */
++			rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY; /* Unused */
++
++			rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
++			rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
++			rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
++		}
++
+ 		rt2800_bbp_read(rt2x00dev, 152, &value);
+ 		if (ant == 0)
+ 			rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 1);
 -- 
 1.7.9.4
 
