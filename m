@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:59580 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756301Ab2DIJBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 05:01:17 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net/wireless/wext-core.c: add missing kfree
-Date: Mon,  9 Apr 2012 11:01:09 +0200
-Message-Id: <1333962069-20801-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20120409_110134_766958_4ED14609)
+Received: from he.sipsolutions.net ([78.46.109.217]:37350 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696Ab2DREBU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 00:01:20 -0400
+Message-ID: <1334721645.3672.2.camel@jlt3.sipsolutions.net> (sfid-20120418_060126_805647_32946400)
+Subject: Re: [PATCH v2 2/6] mac80211: Support getting sta_info stats via
+ ethtool.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Apr 2012 21:00:45 -0700
+In-Reply-To: <4F8E3905.70900@candelatech.com>
+References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
+	  <1334684807-14026-3-git-send-email-greearb@candelatech.com>
+	  (sfid-20120417_194716_243783_5644375D) <1334713070.3725.14.camel@jlt3.sipsolutions.net>
+	 <4F8E3905.70900@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+On Tue, 2012-04-17 at 20:46 -0700, Ben Greear wrote:
 
-Free extra as done in the error-handling code just above.
+> >> +	rcu_read_lock();
+> >> +	list_for_each_entry_rcu(sta,&local->sta_list, list) {
+> >
+> > This doesn't seem right -- shouldn't it look up the BSSID or something
+> > and only work on managed interfaces? What if there really are two
+> > stations on this interface -- then it'll just overwrite it and return a
+> > random station's data? That's useless.
+> 
+> Well, its weird at least.
+> 
+> But, if there are multiple stations, like for APs??, then it will
+> add the station's stats together.  Perhaps not horribly useful, but better
+> than nothing.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Oh, right, it's adding, I missed that. But is that really useful?
 
----
- net/wireless/wext-core.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> For managed interface, I *think* they don't have more than one station, right?
 
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index 9f544c9..22adfeb 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -781,8 +781,10 @@ static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
- 		if (cmd == SIOCSIWENCODEEXT) {
- 			struct iw_encode_ext *ee = (void *) extra;
- 
--			if (iwp->length < sizeof(*ee) + ee->key_len)
--				return -EFAULT;
-+			if (iwp->length < sizeof(*ee) + ee->key_len) {
-+				err = -EFAULT;
-+				goto out;
-+			}
- 		}
- 	}
- 
+You can't rely on it. Typically they will, but with TDLS there might be
+multiple.
+
+> And, as for the underlying driver stats and survey stats (in later patches),
+> that is only probed once.  I guess if you somehow had two
+> stations on different channels on the same network device,
+> the survey stats would be a bit dodgy, but it does return
+> the freq for the stats in question, so at least you know
+> what you are getting.
+
+A single netdev is always going to be on a single channel. Actually, I
+take that back, I think TDLS can work out of channel too, but we don't
+support that right now.
+
+johannes
 
