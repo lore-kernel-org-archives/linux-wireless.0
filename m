@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:55949 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755590Ab2DHSr2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53683 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318Ab2DRB63 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Apr 2012 14:47:28 -0400
-Received: by iagz16 with SMTP id z16so5078008iag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Apr 2012 11:47:27 -0700 (PDT)
-Message-ID: <4F81DD3C.5000102@lwfinger.net> (sfid-20120408_204801_278420_9282A937)
-Date: Sun, 08 Apr 2012 13:47:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] rtlwifi: support for Belkin Surf N300 XR
-References: <CAA2SeNKqQQehes3uG3viOLRavcti0A2HbxNC1X26-bptzXyU+w@mail.gmail.com>
-In-Reply-To: <CAA2SeNKqQQehes3uG3viOLRavcti0A2HbxNC1X26-bptzXyU+w@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 17 Apr 2012 21:58:29 -0400
+Message-ID: <1334714275.3725.28.camel@jlt3.sipsolutions.net> (sfid-20120418_035831_464770_92531C7A)
+Subject: Re: [RESEND PATCH 2/2] iw: Show Toffset on station dump
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	devel@lists.open80211s.org
+Date: Tue, 17 Apr 2012 18:57:55 -0700
+In-Reply-To: <1334274414-17541-2-git-send-email-ashok@cozybit.com> (sfid-20120413_014738_360418_9CEC2E31)
+References: <1334274414-17541-1-git-send-email-ashok@cozybit.com>
+	 <1334274414-17541-2-git-send-email-ashok@cozybit.com>
+	 (sfid-20120413_014738_360418_9CEC2E31)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/08/2012 01:12 PM, Lorenzo Bianconi wrote:
-> Added support for Belkin Surf N300 XR wireless usb adapter to rtlwifi driver
->
-> Signed-off-by: Lorenzo Bianconi<lorenzo.bianconi83@gmail.com>
+On Thu, 2012-04-12 at 16:46 -0700, Ashok Nagarajan wrote:
+> Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
 > ---
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -338,6 +338,7 @@
->   	{RTL_USB_DEVICE(0x2019, 0x1201, rtl92cu_hal_cfg)}, /*Planex-Vencer*/
->
->   	/****** 8192CU ********/
-> +	{RTL_USB_DEVICE(0x050d, 0x1004, rtl92cu_hal_cfg)}, /*Belcom-SurfN300*/
->   	{RTL_USB_DEVICE(0x050d, 0x2102, rtl92cu_hal_cfg)}, /*Belcom-Sercomm*/
->   	{RTL_USB_DEVICE(0x050d, 0x2103, rtl92cu_hal_cfg)}, /*Belcom-Edimax*/
->   	{RTL_USB_DEVICE(0x0586, 0x341f, rtl92cu_hal_cfg)}, /*Zyxel -Abocom*/
+>  station.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/station.c b/station.c
+> index ef69ea5..75e2369 100644
+> --- a/station.c
+> +++ b/station.c
+> @@ -45,6 +45,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+>  		[NL80211_STA_INFO_RX_PACKETS] = { .type = NLA_U32 },
+>  		[NL80211_STA_INFO_TX_PACKETS] = { .type = NLA_U32 },
+>  		[NL80211_STA_INFO_SIGNAL] = { .type = NLA_U8 },
+> +		[NL80211_STA_INFO_T_OFFSET] = { .type = NLA_U64 },
+>  		[NL80211_STA_INFO_TX_BITRATE] = { .type = NLA_NESTED },
+>  		[NL80211_STA_INFO_LLID] = { .type = NLA_U16 },
+>  		[NL80211_STA_INFO_PLID] = { .type = NLA_U16 },
+> @@ -113,6 +114,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+>  	if (sinfo[NL80211_STA_INFO_SIGNAL_AVG])
+>  		printf("\n\tsignal avg:\t%d dBm",
+>  			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL_AVG]));
+> +	if (sinfo[NL80211_STA_INFO_T_OFFSET])
+> +		printf("\n\tToffset:\t%lld us",
+> +			(int64_t)nla_get_u64(sinfo[NL80211_STA_INFO_T_OFFSET]));
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+Or maybe this did, that seems more likely.
 
-Thanks,
-
-Larry
+johannes
 
