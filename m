@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4141 "EHLO MMS3.broadcom.com"
+Received: from mga11.intel.com ([192.55.52.93]:29847 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751209Ab2DPIvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 04:51:15 -0400
-Message-ID: <4F8BDD79.6030008@broadcom.com> (sfid-20120416_105118_487304_039AA924)
-Date: Mon, 16 Apr 2012 10:51:05 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1753150Ab2DRMPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 08:15:05 -0400
+Date: Wed, 18 Apr 2012 15:15:52 +0300
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+Message-ID: <20120418121551.GE19228@aemeltch-MOBL1> (sfid-20120418_141510_660841_28412662)
+References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <4F846257.1060807@sipsolutions.net>
+ <1334092668.16897.54.camel@aeonflux>
+ <4F84A422.3030900@sipsolutions.net>
+ <4F84A52A.7050905@sipsolutions.net>
+ <20120411071119.GC17779@aemeltch-MOBL1>
+ <1334714611.3725.34.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Greg KH" <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 0/9] brcm80211: minor bug fixes for broadcom driver
-References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
- <20120413175717.GD2616@tuxdriver.com>
-In-Reply-To: <20120413175717.GD2616@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1334714611.3725.34.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/13/2012 07:57 PM, John W. Linville wrote:
-> On Wed, Apr 11, 2012 at 11:52:42AM +0200, Arend van Spriel wrote:
->
-> In general, when mixing fixes and features/updates into a single
-> series then the fixes should come at the beginning of the series.
-> This helps to avoid dependencies on non-fix patches.
->
-> I'll try to apply patch 9 to the wireless tree, and if that works I
-> won't complain about it... :-)
->
-> John
+Hi Johannes,
 
-Like mentioned on collaboration summit, we may need a bit more education 
-on how to deal with stable fixes. I tagged the patch with cc to stable, 
-but not sure if that is the correct way to do it. The stable rules are 
-written in a generic way so I want know how the picture looks like when 
-moving patches upstream via a maintainer tree.
+On Tue, Apr 17, 2012 at 07:03:31PM -0700, Johannes Berg wrote:
+> > I am new to the wireless code but can new virtual interface separate those
+> > interfaces? They can have different MAC addresses and you can run
+> > wpa_supplicant for each virtual interface separately.
+> 
+> It's never in your best interest to run one supplicant per virtual
+> interface, you want to run one per piece of hardware so it can
+> coordinate between virtual interfaces.
 
-So here is my understanding:
+Do I understand it right that virtual interfaces are like separate devices from
+user point of view? If I create virtual interface and assign MAC I can
+transfer data through it without affecting other interfaces? Then
+wpa_supplicant does not need to know about it at all.
 
-1. submit patch without CC'ing stable against your wireless tree.
-2. patch moves upstream to Dave's net tree.
-3. patch moves further upstream to Linus' tree.
-4. submit patch to stable with upstream commit id.
-
-Is adding the CC to stable in step 1. a shortcut or is step 4. still 
-necessary in that case?
-
-Gr. AvS
-
+Best regards 
+Andrei Emeltchenko 
