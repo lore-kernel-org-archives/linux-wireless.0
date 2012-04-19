@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:52131 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934761Ab2DLWIN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 18:08:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
-References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
- <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
- <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
- <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
- <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
- <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
- <CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com> <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 12 Apr 2012 15:07:52 -0700
-Message-ID: <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com> (sfid-20120413_000829_037763_289C986E)
-Subject: Re: [ 00/78] 3.3.2-stable review
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:39565 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756189Ab2DSTSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 15:18:36 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 4/8] ath9k_hw: increase symbol overlap window for half/quarter channels
+Date: Thu, 19 Apr 2012 21:18:25 +0200
+Message-Id: <1334863109-95726-4-git-send-email-nbd@openwrt.org> (sfid-20120419_211851_341374_C653DE40)
+In-Reply-To: <1334863109-95726-3-git-send-email-nbd@openwrt.org>
+References: <1334863109-95726-1-git-send-email-nbd@openwrt.org>
+ <1334863109-95726-2-git-send-email-nbd@openwrt.org>
+ <1334863109-95726-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 3:04 PM, Felipe Contreras
-<felipe.contreras@gmail.com> wrote:
->
-> Sure, but removing that patch from the stable tree is not going the
-> change that information; we already know the patch is wrong.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |    3 +++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-.. and we wait until it has been fixed in mainline so that we *know*
-that information doesn't get lost.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index be6069b..4c8d0d7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -728,6 +728,10 @@ static void ar9003_hw_set_rfmode(struct ath_hw *ah,
+ 	if (IS_CHAN_HALF_RATE(chan))
+ 		rfMode |= AR_PHY_MODE_HALF;
+ 
++	if (rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF))
++		REG_RMW_FIELD(ah, AR_PHY_FRAME_CTL,
++			      AR_PHY_FRAME_CTL_CF_OVERLAP_WINDOW, 3);
++
+ 	REG_WRITE(ah, AR_PHY_MODE, rfMode);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index d834d97..7268a48 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -468,6 +468,9 @@
+ #define AR_PHY_ADDAC_PARA_CTL    (AR_SM_BASE + 0x150)
+ #define AR_PHY_XPA_CFG           (AR_SM_BASE + 0x158)
+ 
++#define AR_PHY_FRAME_CTL_CF_OVERLAP_WINDOW  3
++#define AR_PHY_FRAME_CTL_CF_OVERLAP_WINDOW_S    0
++
+ #define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A           0x0001FC00
+ #define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_IDX_A_S         10
+ #define AR_PHY_SPUR_MASK_A_CF_PUNC_MASK_A                       0x3FF
+-- 
+1.7.3.2
 
-Exactly like any other patch. Exactly like the rules for -stable says we should.
-
-Stop the idiotic arguing already.
-
-              Linus
