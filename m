@@ -1,70 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:37314 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753216Ab2DFLWc (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:44858 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752665Ab2DSCv5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 07:22:32 -0400
-Received: by eekc41 with SMTP id c41so668640eek.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 04:22:31 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Subject: Re: carl9170: not able to add P2P_GO - add_interface fail with -EBUSY
-Date: Fri, 6 Apr 2012 13:22:26 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <CAFED-jno-531+5TPOjDJ598jAO1zMmFpe6UJOsRt4SfbCU9zDQ@mail.gmail.com>
-In-Reply-To: <CAFED-jno-531+5TPOjDJ598jAO1zMmFpe6UJOsRt4SfbCU9zDQ@mail.gmail.com>
+	Wed, 18 Apr 2012 22:51:57 -0400
+Received: by obbta14 with SMTP id ta14so7484111obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 19:51:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201204061322.26832.chunkeey@googlemail.com> (sfid-20120406_132236_635251_5F588D8B)
+In-Reply-To: <CAEFj987y9787pA-NzU6XTct7=WMhi-UwV24BUHJTri2Bs2-3nw@mail.gmail.com>
+References: <4F630AEA.10703@etit.tu-chemnitz.de> <20120316204547.GG18861@tux>
+ <4F63BA31.1080608@etit.tu-chemnitz.de> <4F856449.3000804@etit.tu-chemnitz.de>
+ <1334203508.3788.12.camel@jlt3.sipsolutions.net> <4F868732.1030401@etit.tu-chemnitz.de>
+ <1334714536.3725.33.camel@jlt3.sipsolutions.net> <CAPjQAd99vzQDO0PzC-0jq1j8h4ekQAP_dRE=g5f=w=6EwcXrDw@mail.gmail.com>
+ <4F8ED849.4020002@sipsolutions.net> <CAPjQAd-4djbAuWtNsALa3n7xBWX1dN9K1wYrF-bPzj6j6fT4jg@mail.gmail.com>
+ <CAEFj987y9787pA-NzU6XTct7=WMhi-UwV24BUHJTri2Bs2-3nw@mail.gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Wed, 18 Apr 2012 19:51:36 -0700
+Message-ID: <CAPjQAd9HXS+0DkLeUcn=aHUr8cnkFu7FzC5_7J49Hn7h8q6waA@mail.gmail.com> (sfid-20120419_045201_098441_5BF5341B)
+Subject: Re: [Greenmesh] [ath9k] mesh powersave hardware sleep + wakeup
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, henry@logout.com,
+	"greenmesh@lists.osll.spb.ru" <greenmesh@lists.osll.spb.ru>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 06 April 2012 12:39:57 Janusz Dziedzic wrote:
-> With latest compat, wpa_supplicant seems p2p_concurent is set for
-> car9170 driver based on information from driver.
-> So, next after p2p_group_add new virtual interface is created for that
-> - p2p-wlan0-0.
-> 
-> Next, carl9170_op_add_interface() return -EBUSY because there is
-> already main_vif (NL80211_IFTYPE_STATION) created by default on
-> startup.
-> Because of that p2p_group_add() always fail with such chipset and
-> p2p_concurent=1.
-> 
-> STEPS:
-> - run wpa_supplicant
-> - run wpa_cli
-> - p2p_group_add
-> FAIL
-> 
-> Is that chipset limitation we could add only new STA interface when
-> main_vif is also STA?
-<http://wireless.kernel.org/en/users/Drivers/carl9170#Multiple_Interfaces>
-no, it's not. But you'll have to go through several hoops to extend
-the driver to switch the "main" interface while the device is up and
-running.
+On Wed, Apr 18, 2012 at 7:41 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+>> Now we know what hardware *not* to use for this :P
+> What is the hardware that you referred to?
+>
+> Please advice. Thanks
 
-good luck!
+Johannes was just explaining that Intel wlan devices would not report
+timing info in the way required for mesh synchronization.  Not a big
+deal considering that they don't support mesh mode.
+My comment should have been interpreted as a joke (and probably I
+should have sent it off-list, sorry!).
 
-> Where could I find HW documentation for carl9170?
-HW documentation for carl9170? There's no such thing.
-But Qualcomm has some docs about the AR9170.
- 
-> I suspect lower change is not acceptable because of HW limitation?
-> 
->         main_vif = carl9170_get_main_vif(ar);
-> 
->         if (main_vif) {
->                 switch (main_vif->type) {
->                 case NL80211_IFTYPE_STATION:
-> -                       if (vif->type == NL80211_IFTYPE_STATION)
-> +                       if ((vif->type == NL80211_IFTYPE_STATION) ||
-> +                           (vif->type == NL80211_IFTYPE_AP))
->                                 break;
-No, it's just the driver can't guarantee that such a configuration
-will be what you think it is.
+Javier
 
-Regards,
-	Chr
+> On Wed, Apr 18, 2012 at 11:16 PM, Javier Cardona <javier@cozybit.com> wrote:
+>> On Wed, Apr 18, 2012 at 8:05 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> On 4/18/2012 7:56 AM, Javier Cardona wrote:
+>>>>
+>>>> On Tue, Apr 17, 2012 at 7:02 PM, Johannes Berg
+>>>> <johannes@sipsolutions.net>  wrote:
+>>>>>
+>>>>> (...)
+>>>>> Keep in mind that TSF == start of TSF field, while rx_status->timestamp
+>>>>> == start of first symbol, which I didn't even remember when you guys did
+>>>>> all the Toffset things, I'm guessing they're all wrong :-)
+>>>>
+>>>>
+>>>> I think you guessed wrong :)
+>>>
+>>>
+>>> Nice! FWIW, our hardware (not that the driver supports mesh now) will give
+>>> the timestamp at the first symbol of the MPDU, so some more offset
+>>> calculations are needed and we don't give valid timestamps today. I started
+>>> working on this but haven't figured out HT preamble duration yet.
+>>
+>> Thanks for letting us know.  Now we know what hardware *not* to use for this :P
+>>
+>> Javier
+>> _______________________________________________
+>> Greenmesh mailing list
+>> Greenmesh@lists.osll.spb.ru
+>> http://lists.osll.spb.ru/mailman/listinfo/greenmesh
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
