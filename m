@@ -1,90 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39318 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756924Ab2DZSIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 14:08:19 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC c 3/9] compat: move br_port_exists
-Date: Thu, 26 Apr 2012 20:07:46 +0200
-Message-Id: <1335463674-13003-6-git-send-email-hauke@hauke-m.de> (sfid-20120426_200825_608498_28D7D424)
-In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
-References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:35223 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865Ab2DSN2I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 09:28:08 -0400
+Message-ID: <4F9012E9.1040409@sipsolutions.net> (sfid-20120419_152813_869196_D0613C64)
+Date: Thu, 19 Apr 2012 06:28:09 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
+References: <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux> <4F84A422.3030900@sipsolutions.net> <4F84A52A.7050905@sipsolutions.net> <20120411071119.GC17779@aemeltch-MOBL1> <1334714611.3725.34.camel@jlt3.sipsolutions.net> <20120418121551.GE19228@aemeltch-MOBL1> <4F8ED1D0.1070401@sipsolutions.net> <20120418145202.GH19228@aemeltch-MOBL1> <4F8ED913.4040807@sipsolutions.net> <20120419063558.GA16002@aemeltch-MOBL1>
+In-Reply-To: <20120419063558.GA16002@aemeltch-MOBL1>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 4/18/2012 11:36 PM, Andrei Emeltchenko wrote:
+>>>> No, this is incorrect. If one device wants to connect on one
+>>>> channel, the other typically has to use the same channel. If one
+>>>> device wants to scan, the other will be affected. Some hardware may
+>>>> support switching around between two channels, but might also
+>>>> support more than 2 virtual interfaces, so again they won't be
+>>>> independent.
+>>>
+>>> BTW: which devices can switch channels?
+>>
+>> None today, I'm working on it.
+>
+> If this is not possible how people setup wireless hotspot using virtual
+> interfaces and run wpa_supplicant and hostapd on each separately.
+> Like here:
+>
+> http://linuxalfi.wordpress.com/2011/11/08/connectify-for-linux-with-single-wireless-interface/
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.36.h |   17 -----------------
- include/linux/if.h            |   28 ++++++++++++++++++++++++++++
- 2 files changed, 28 insertions(+), 17 deletions(-)
- create mode 100644 include/linux/if.h
+Of course it's possible. Are you deliberately misunderstanding me?
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 8f6ecc4..833143e 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -179,23 +179,6 @@ extern unsigned int work_busy(struct work_struct *work);
- #define schedule_delayed_work_on(cpu, dwork, delay) compat_schedule_delayed_work_on(cpu, dwork, delay)
- #define flush_scheduled_work(a) compat_flush_scheduled_work(a)
- 
--#define br_port_exists(dev)	(dev->br_port)
--
--#else
--
--/*
-- * This is not part of The 2.6.37 kernel yet but we
-- * we use it to optimize the backport code we
-- * need to implement. Instead of using ifdefs
-- * to check what version of the check we use
-- * we just replace all checks on current code
-- * with this. I'll submit this upstream too, that
-- * way all we'd have to do is to implement this
-- * for older kernels, then we would not have to
-- * edit the upstrema code for backport efforts.
-- */
--#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
--
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
- 
- #endif /* LINUX_26_36_COMPAT_H */
-diff --git a/include/linux/if.h b/include/linux/if.h
-new file mode 100644
-index 0000000..64cd9e7
---- /dev/null
-+++ b/include/linux/if.h
-@@ -0,0 +1,28 @@
-+#ifndef _COMPAT_LINUX_IF_H
-+#define _COMPAT_LINUX_IF_H
-+
-+#include_next <linux/if.h>
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36))
-+
-+#define br_port_exists(dev)	(dev->br_port)
-+
-+#else
-+
-+/*
-+ * This is not part of The 2.6.37 kernel yet but we
-+ * we use it to optimize the backport code we
-+ * need to implement. Instead of using ifdefs
-+ * to check what version of the check we use
-+ * we just replace all checks on current code
-+ * with this. I'll submit this upstream too, that
-+ * way all we'd have to do is to implement this
-+ * for older kernels, then we would not have to
-+ * edit the upstrema code for backport efforts.
-+ */
-+#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
-+#endif	/* _COMPAT_LINUX_IF_H */
--- 
-1.7.9.5
+You cannot use more than one channel today. We are changing that. To do 
+good channel management, rather than hard-coding it in your config, you 
+want to run a single wpa_s controlling all interfaces.
 
+johannes
