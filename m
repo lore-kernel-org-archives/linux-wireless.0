@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:57807 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757604Ab2DYSuT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21304 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937Ab2DSWcz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 14:50:19 -0400
-Date: Wed, 25 Apr 2012 15:50:12 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: [PATCH RESEND 1/2] Bluetooth: btmrvl: configure default host
- sleep parameters
-Message-ID: <20120425185012.GA2781@joana> (sfid-20120425_205028_524390_6B4863E9)
-References: <1335310301-11600-1-git-send-email-bzhao@marvell.com>
+	Thu, 19 Apr 2012 18:32:55 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH 2/2] ath6kl: only restore supported HT caps
+Date: Thu, 19 Apr 2012 15:31:57 -0700
+Message-ID: <1334874717-7431-2-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120420_003259_087726_E3786CB0)
+In-Reply-To: <1334874717-7431-1-git-send-email-c_tpeder@qca.qualcomm.com>
+References: <1334874717-7431-1-git-send-email-c_tpeder@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1335310301-11600-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
+Now that we know the supported PHY capabilities, only restore supported
+bands / HT capabilities in firmware when stopping AP.
 
-* Bing Zhao <bzhao@marvell.com> [2012-04-24 16:31:40 -0700]:
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   26 +++++++++++++++++++-------
+ 1 files changed, 19 insertions(+), 7 deletions(-)
 
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> Currently debugfs commands "hscfgcmd" and "gpiogap" are provided
-> for host sleep configuration. But if user doesn't configure host
-> sleep parameters using these commands, host sleep activation is
-> failed during suspend (support for suspend and resume handlers is
-> added in next patch).
-> 
-> Default host sleep configuration is done during driver initialisation
-> in this patch.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
-> Last 2 patches were sent to Gustavo's old e-mail address.
-> Resending...
-> 
->  drivers/bluetooth/btmrvl_drv.h  |    1 +
->  drivers/bluetooth/btmrvl_main.c |   53 ++++++++++++++++++++++----------------
->  drivers/bluetooth/btmrvl_sdio.c |    3 ++
->  3 files changed, 35 insertions(+), 22 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b848977..c8147b9 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2477,6 +2477,24 @@ static int ath6kl_set_htcap(struct ath6kl_vif *vif, enum ieee80211_band band,
+ 					band, htcap);
+ }
+ 
++static int ath6kl_restore_htcap(struct ath6kl_vif *vif)
++{
++	struct wiphy *wiphy = vif->ar->wiphy;
++	int band, ret = 0;
++
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++		if (!wiphy->bands[band])
++			continue;
++
++		ret = ath6kl_set_htcap(vif, band,
++				wiphy->bands[band]->ht_cap.ht_supported);
++		if (ret)
++			return ret;
++	}
++
++	return ret;
++}
++
+ static bool ath6kl_is_p2p_ie(const u8 *pos)
+ {
+ 	return pos[0] == WLAN_EID_VENDOR_SPECIFIC && pos[1] >= 4 &&
+@@ -2838,13 +2856,7 @@ static int ath6kl_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	clear_bit(CONNECTED, &vif->flags);
+ 
+ 	/* Restore ht setting in firmware */
+-	if (ath6kl_set_htcap(vif, IEEE80211_BAND_2GHZ, true))
+-		return -EIO;
+-
+-	if (ath6kl_set_htcap(vif, IEEE80211_BAND_5GHZ, true))
+-		return -EIO;
+-
+-	return 0;
++	return ath6kl_restore_htcap(vif);
+ }
+ 
+ static const u8 bcast_addr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+-- 
+1.7.4.1
 
-Patch has been applied to bluetooth-next. Thanks.
-
-	Gustavo
