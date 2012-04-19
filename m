@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46567 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753780Ab2DWHAM convert rfc822-to-8bit (ORCPT
+Received: from mo-p00-ob.rzone.de ([81.169.146.162]:41353 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850Ab2DSEuB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 03:00:12 -0400
-Received: by pbcun15 with SMTP id un15so3525648pbc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2012 00:00:11 -0700 (PDT)
+	Thu, 19 Apr 2012 00:50:01 -0400
+Message-ID: <4F8F9977.9040703@hartkopp.net> (sfid-20120419_065008_126318_61EE9937)
+Date: Thu, 19 Apr 2012 06:49:59 +0200
+From: Oliver Hartkopp <socketcan@hartkopp.net>
 MIME-Version: 1.0
-Date: Mon, 23 Apr 2012 03:00:11 -0400
-Message-ID: <CA+7oygft-wqhnkk5wwondb57WuN2hLkVDKMXwKoaK+p9sZwAcw@mail.gmail.com> (sfid-20120423_090016_855159_2D34EC47)
-Subject: how to configure compat-wireless to force manual firmware load?
-From: George Nychis <gnychis@gmail.com>
-To: linux-wireless@vger.kernel.org
+To: David Miller <davem@davemloft.net>,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: net-next iwlwifi breaks compile - was Re: pull request: wireless-next
+ 2012-04-18
+References: <20120418190521.GB2436@tuxdriver.com> <20120418.153653.2130740499995307564.davem@davemloft.net>
+In-Reply-To: <20120418.153653.2130740499995307564.davem@davemloft.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was using an older version of compat-wireless, specifically a build
-from May 2011.  In that release of compat-wireless, the firmware was
-loaded manually using a filesystem mounted in /sys.
+On 18.04.2012 21:36, David Miller wrote:
 
-I recently downloaded a newer version of compat-wireless:
-compat-wireless-3.0.9-1.  In this version, it appears to spawn a
-kernel thread to check /lib/firmware for the firmware and load it.  If
-it is present, it loads the firmware, otherwise it fails saying that
-it cannot be found.
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 18 Apr 2012 15:05:22 -0400
+> 
+>> Another batch of wireless updates intended for 3.5...
+>>
+>> Highlights include some wl12xx refactoring, NFC HCI and SHDLC updates,
+>> an ath6kl pull, some mesh updates, and the usual updates to iwlwifi,
+>> ath9k, brcm80211, mwifiex, libertas, and other drivers.
+>>
+>> Please let me know if there are problems!
+> 
+> Also pulled, thanks a lot.
 
-I am having trouble with the automatic load:
-<3>[  178.957584] otg_err: in s5pc110_otghcd_urb_dequeue()::00508
-<3>[  178.958650] => fail to cancel_transfer()
-<7>[  178.959879] usb 1-1.2: hcd_unlink_urb d13aa200 fail -1
-<7>[  178.962510] usb 1-1.2: khubd timed out on ep0out len=0/4096
-<3>[  178.963274] usb 1-1.2: ath9k_htc: Firmware - htc_7010.fw download failed
-<4>[  178.971658] ath9k_htc: probe of 1-1.2:1.0 failed with error -22
 
-Is there a way to configure (e.g., config.mk) compat-wireless to use
-the manual way?  So I'd like to give the manual route a shot.
+Commit "iwlwifi: move scan related declarations out of iwl-core.h"
 
-Thanks!
-George
+http://git.kernel.org/?p=linux/kernel/git/davem/net-next.git;a=commitdiff;h=8fb96d6e176cbf0a97b2391fa1fa09e608ee86f8
+
+breaks the compile when CONFIG_IWLWIFI_DEBUGFS is not set, see:
+
+  CC [M]  drivers/net/wireless/iwlwifi/iwl-agn-tt.o
+In file included from drivers/net/wireless/iwlwifi/iwl-agn-tt.c:40:0:
+drivers/net/wireless/iwlwifi/iwl-core.h:97:19: error: static declaration of 'iwl_alloc_traffic_mem' follows non-static declaration
+drivers/net/wireless/iwlwifi/iwl-agn.h:513:5: note: previous declaration of 'iwl_alloc_traffic_mem' was here
+make[4]: *** [drivers/net/wireless/iwlwifi/iwl-agn-tt.o] Error 1
+make[3]: *** [drivers/net/wireless/iwlwifi] Error 2
+make[2]: *** [drivers/net/wireless] Error 2
+make[1]: *** [drivers/net] Error 2
+make: *** [drivers] Error 2
+make: *** Waiting for unfinished jobs....
+
+Please check these kind of source reorganizations with different CONFIG settings too.
+
+Regards,
+Oliver
