@@ -1,152 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22015 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186Ab2DWTPG (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:65306 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754110Ab2DSN5m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 15:15:06 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] mac80211: use queue helpers to suspend/resume transmission
-Date: Tue, 24 Apr 2012 00:45:39 +0530
-Message-ID: <1335208539-31325-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120423_211511_485009_663C6740)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 19 Apr 2012 09:57:42 -0400
+Received: by wgbdr13 with SMTP id dr13so8656426wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 06:57:41 -0700 (PDT)
+From: Anisse Astier <anisse@astier.eu>
+To: Ivo van Doorn <IvDoorn@gmail.com>, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
+Cc: linville@tuxdriver.com, Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Anisse Astier <anisse@astier.eu>
+Subject: [PATCH v3 1/2] rt2x00: debugfs support - allow a register to be empty
+Date: Thu, 19 Apr 2012 15:53:09 +0200
+Message-Id: <1334843590-7920-1-git-send-email-anisse@astier.eu> (sfid-20120419_155746_461265_BE5DB72B)
+In-Reply-To: <CAOZOX0UXc0OwhWOiM0PWbGfyynmrQ4kZRAVFJyxtiHe-veUg=g@mail.gmail.com>
+References: <CAOZOX0UXc0OwhWOiM0PWbGfyynmrQ4kZRAVFJyxtiHe-veUg=g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The powersave notification and scan suspen/resume directly calls
-netif_tx_* functions to stop and wakeup tx queue instead ieee80211
-utils. As the stop queue reason is not set, the transmission can be
-resumed accidentally in the middle of channel set or driver flush.
-So this patch replaces netif_tx_* functions by ieee80211_*_queue helper
-utility functions.
+Allow a register to be unspecified, therefore not creating its debugfs
+file entry.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Anisse Astier <anisse@astier.eu>
 ---
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |    6 ++++--
- net/mac80211/offchannel.c  |   19 +++++--------------
- net/mac80211/tx.c          |   16 ++++++++++++----
- 4 files changed, 22 insertions(+), 20 deletions(-)
+Changes since v2:
+Acked patch not resent (BBP size), and split the second patch in two to
+incorporate changes suggested by Ivo Van Doorn (thanks for the review!) :
+ - first part (this patch) now is only a small rewrite of the code to
+   initialize only the supported register. Any unsupported register wouldn't
+   have its files created.
+ - first patch best viewed ignoring spaces ((git) diff -w)
+ - second part is effectively adding RFCSR support.
+ - we allocate more data for sprintf since we add a new register.
+ - Updated test procedure (see below)
+Changes since v1:
+ - removed initialization in chipsets other than rt2800, we now rely on
+   default initialization.
+ - added comments to make this explicit
+ - fix rfcsr size (64)
+ - fix pre-review bug thanks to Ivo Van Doorn
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index bd7a451..7181e6a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -780,6 +780,7 @@ enum queue_stop_reason {
- 	IEEE80211_QUEUE_STOP_REASON_AGGREGATION,
- 	IEEE80211_QUEUE_STOP_REASON_SUSPEND,
- 	IEEE80211_QUEUE_STOP_REASON_SKB_ADD,
-+	IEEE80211_QUEUE_STOP_REASON_ALLOW_PROBE,
- };
+
+How to test ?
+I'd like feedback on chipsets other than rt2800pci.
+
+Test procedure:
+mount -t debugfs none /sys/kernel/debug/
+cd /sys/kernel/debug/ieee80211/phy0/rt2800pci/
+cat chipset # shouldn't have any "rfcsr" line if not rt2800
+ls register # shouldn't have any rfcsr_* file if not rt2800
+
+---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   73 +++++++++++++++--------------
+ 1 file changed, 38 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 78787fc..ac898c4 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -624,22 +624,21 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+ 	data += sprintf(data, "revision:\t%04x\n", intf->rt2x00dev->chip.rev);
+ 	data += sprintf(data, "\n");
+ 	data += sprintf(data, "register\tbase\twords\twordsize\n");
+-	data += sprintf(data, "csr\t%d\t%d\t%d\n",
+-			debug->csr.word_base,
+-			debug->csr.word_count,
+-			debug->csr.word_size);
+-	data += sprintf(data, "eeprom\t%d\t%d\t%d\n",
+-			debug->eeprom.word_base,
+-			debug->eeprom.word_count,
+-			debug->eeprom.word_size);
+-	data += sprintf(data, "bbp\t%d\t%d\t%d\n",
+-			debug->bbp.word_base,
+-			debug->bbp.word_count,
+-			debug->bbp.word_size);
+-	data += sprintf(data, "rf\t%d\t%d\t%d\n",
+-			debug->rf.word_base,
+-			debug->rf.word_count,
+-			debug->rf.word_size);
++#define RT2X00DEBUGFS_SPRINTF_REGISTER(__name)			\
++{								\
++	if(debug->__name.read)					\
++		data += sprintf(data, __stringify(__name)	\
++				"\t%d\t%d\t%d\n",		\
++				debug->__name.word_base,	\
++				debug->__name.word_count,	\
++				debug->__name.word_size);	\
++}
++	RT2X00DEBUGFS_SPRINTF_REGISTER(csr);
++	RT2X00DEBUGFS_SPRINTF_REGISTER(eeprom);
++	RT2X00DEBUGFS_SPRINTF_REGISTER(bbp);
++	RT2X00DEBUGFS_SPRINTF_REGISTER(rf);
++#undef RT2X00DEBUGFS_SPRINTF_REGISTER
++
+ 	blob->size = strlen(blob->data);
  
- #ifdef CONFIG_MAC80211_LEDS
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c8836fa..82fc068 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1085,7 +1085,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
+ 	return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
+@@ -694,25 +693,29 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ 	if (IS_ERR(intf->register_folder) || !intf->register_folder)
+ 		goto exit;
  
- 	if ((local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK) &&
- 	    !(ifmgd->flags & IEEE80211_STA_NULLFUNC_ACKED)) {
--		netif_tx_stop_all_queues(sdata->dev);
-+		ieee80211_stop_queues_by_reason(&local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_ALLOW_PROBE);
+-#define RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(__intf, __name)	\
+-({								\
+-	(__intf)->__name##_off_entry =				\
+-	    debugfs_create_u32(__stringify(__name) "_offset",	\
+-			       S_IRUSR | S_IWUSR,		\
+-			       (__intf)->register_folder,	\
+-			       &(__intf)->offset_##__name);	\
+-	if (IS_ERR((__intf)->__name##_off_entry)		\
+-			|| !(__intf)->__name##_off_entry)	\
+-		goto exit;					\
+-								\
+-	(__intf)->__name##_val_entry =				\
+-	    debugfs_create_file(__stringify(__name) "_value",	\
+-				S_IRUSR | S_IWUSR,		\
+-				(__intf)->register_folder,	\
+-				(__intf), &rt2x00debug_fop_##__name);\
+-	if (IS_ERR((__intf)->__name##_val_entry)		\
+-			|| !(__intf)->__name##_val_entry)	\
+-		goto exit;					\
++#define RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(__intf, __name)			\
++({										\
++	if(debug->__name.read) {						\
++		(__intf)->__name##_off_entry =					\
++		debugfs_create_u32(__stringify(__name) "_offset",		\
++				       S_IRUSR | S_IWUSR,			\
++				       (__intf)->register_folder,		\
++				       &(__intf)->offset_##__name);		\
++		if (IS_ERR((__intf)->__name##_off_entry)			\
++				|| !(__intf)->__name##_off_entry)		\
++			goto exit;						\
++										\
++		(__intf)->__name##_val_entry =					\
++		debugfs_create_file(__stringify(__name) "_value",		\
++					S_IRUSR | S_IWUSR,			\
++					(__intf)->register_folder,		\
++					(__intf), &rt2x00debug_fop_##__name);	\
++		if (IS_ERR((__intf)->__name##_val_entry)			\
++				|| !(__intf)->__name##_val_entry)		\
++			goto exit;						\
++	} else									\
++		DEBUG(rt2x00dev, "Unsupported register on this device: "	\
++			__stringify(__name) "\n");				\
+ })
  
- 		if (drv_tx_frames_pending(local))
- 			mod_timer(&local->dynamic_ps_timer, jiffies +
-@@ -1107,7 +1108,8 @@ void ieee80211_dynamic_ps_enable_work(struct work_struct *work)
- 	}
- 
- 	if (local->hw.flags & IEEE80211_HW_PS_NULLFUNC_STACK)
--		netif_tx_wake_all_queues(sdata->dev);
-+		ieee80211_wake_queues_by_reason(&local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_ALLOW_PROBE);
- }
- 
- void ieee80211_dynamic_ps_timer(unsigned long data)
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index f054e94..4e14c42 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -128,7 +128,8 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 				sdata, BSS_CHANGED_BEACON_ENABLED);
- 
- 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
--			netif_tx_stop_all_queues(sdata->dev);
-+			ieee80211_stop_queues_by_reason(&local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_ALLOW_PROBE);
- 			if (offchannel_ps_enable &&
- 			    (sdata->vif.type == NL80211_IFTYPE_STATION) &&
- 			    sdata->u.mgd.associated)
-@@ -158,19 +159,9 @@ void ieee80211_offchannel_return(struct ieee80211_local *local,
- 				ieee80211_offchannel_ps_disable(sdata);
- 		}
- 
--		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
--			/*
--			 * This may wake up queues even though the driver
--			 * currently has them stopped. This is not very
--			 * likely, since the driver won't have gotten any
--			 * (or hardly any) new packets while we weren't
--			 * on the right channel, and even if it happens
--			 * it will at most lead to queueing up one more
--			 * packet per queue in mac80211 rather than on
--			 * the interface qdisc.
--			 */
--			netif_tx_wake_all_queues(sdata->dev);
--		}
-+		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+			ieee80211_wake_queues_by_reason(&local->hw,
-+				IEEE80211_QUEUE_STOP_REASON_ALLOW_PROBE);
- 
- 		if (sdata->vif.type == NL80211_IFTYPE_AP ||
- 		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0abbef95..f85d728 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1221,6 +1221,8 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 	skb_queue_walk_safe(skbs, skb, tmp) {
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 		int q = info->hw_queue;
-+		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+		bool defer_tx = false;
- 
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 		if (WARN_ON_ONCE(q >= local->hw.queues)) {
-@@ -1231,7 +1233,16 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- #endif
- 
- 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--		if (local->queue_stop_reasons[q] ||
-+		if (local->queue_stop_reasons[q]) {
-+			defer_tx = true;
-+			if (test_bit(IEEE80211_QUEUE_STOP_REASON_ALLOW_PROBE,
-+					&local->queue_stop_reasons[q]) &&
-+			    (ieee80211_is_probe_req(hdr->frame_control) ||
-+			     ieee80211_is_nullfunc(hdr->frame_control)))
-+				defer_tx = false;
-+		}
-+		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+		if (defer_tx ||
- 		    (!txpending && !skb_queue_empty(&local->pending[q]))) {
- 			/*
- 			 * Since queue is stopped, queue up frames for later
-@@ -1244,11 +1255,8 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 				skb_queue_splice_tail_init(skbs,
- 							   &local->pending[q]);
- 
--			spin_unlock_irqrestore(&local->queue_stop_reason_lock,
--					       flags);
- 			return false;
- 		}
--		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
- 		info->control.vif = vif;
- 		info->control.sta = sta;
+ 	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, csr);
 -- 
-1.7.10
+1.7.9.4
 
