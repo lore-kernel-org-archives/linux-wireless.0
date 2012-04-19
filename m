@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:45854 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205Ab2DVTuv (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52633 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751235Ab2DSCld convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 15:50:51 -0400
-Received: by wgbds11 with SMTP id ds11so2016908wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 12:50:50 -0700 (PDT)
-From: Zefir Kurtisi <zefir.kurtisi@gmail.com>
-To: linville@tuxdriver.com
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	rodrigue@qca.qualcomm.com, achadd@qca.qualcomm.com,
-	chunkeey@googlemail.com, Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH 4/4] ath9k: set radar config if switching to DFS channel
-Date: Sun, 22 Apr 2012 21:50:23 +0200
-Message-Id: <1335124223-15439-5-git-send-email-zefir.kurtisi@gmail.com> (sfid-20120422_215055_525525_0E283525)
-In-Reply-To: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com>
-References: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com>
+	Wed, 18 Apr 2012 22:41:33 -0400
+Received: by iagz16 with SMTP id z16so11269857iag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 19:41:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAPjQAd-4djbAuWtNsALa3n7xBWX1dN9K1wYrF-bPzj6j6fT4jg@mail.gmail.com>
+References: <4F630AEA.10703@etit.tu-chemnitz.de>
+	<20120316204547.GG18861@tux>
+	<4F63BA31.1080608@etit.tu-chemnitz.de>
+	<4F856449.3000804@etit.tu-chemnitz.de>
+	<1334203508.3788.12.camel@jlt3.sipsolutions.net>
+	<4F868732.1030401@etit.tu-chemnitz.de>
+	<1334714536.3725.33.camel@jlt3.sipsolutions.net>
+	<CAPjQAd99vzQDO0PzC-0jq1j8h4ekQAP_dRE=g5f=w=6EwcXrDw@mail.gmail.com>
+	<4F8ED849.4020002@sipsolutions.net>
+	<CAPjQAd-4djbAuWtNsALa3n7xBWX1dN9K1wYrF-bPzj6j6fT4jg@mail.gmail.com>
+Date: Thu, 19 Apr 2012 10:41:33 +0800
+Message-ID: <CAEFj987y9787pA-NzU6XTct7=WMhi-UwV24BUHJTri2Bs2-3nw@mail.gmail.com> (sfid-20120419_044141_218755_2E09AFD3)
+Subject: Re: [Greenmesh] [ath9k] mesh powersave hardware sleep + wakeup
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, henry@logout.com,
+	"greenmesh@lists.osll.spb.ru" <greenmesh@lists.osll.spb.ru>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Hi, Javier
+
+> Now we know what hardware *not* to use for this
+What is the hardware that you referred to?
+
+Please advice. Thanks
+
+Regards,
+Chun-Yeow
 
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3879485..0aeba88 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -371,6 +371,16 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 
- 	r = ath_reset_internal(sc, hchan, false);
- 
-+	if ((r == 0) && (hchan->chan->flags & IEEE80211_CHAN_RADAR)) {
-+		/* set HW specific DFS configuration if on DFS channel */
-+		struct ath_hw *ah = sc->sc_ah;
-+		struct ath_common *common = ath9k_hw_common(ah);
-+
-+		ath9k_hw_set_radar_params(ah);
-+		ath_dbg(common, DFS, "DFS enabled for channel %d\n",
-+			hchan->chan->center_freq);
-+	}
-+
- 	return r;
- }
- 
--- 
-1.7.4.1
-
+On Wed, Apr 18, 2012 at 11:16 PM, Javier Cardona <javier@cozybit.com> wrote:
+> On Wed, Apr 18, 2012 at 8:05 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On 4/18/2012 7:56 AM, Javier Cardona wrote:
+>>>
+>>> On Tue, Apr 17, 2012 at 7:02 PM, Johannes Berg
+>>> <johannes@sipsolutions.net>  wrote:
+>>>>
+>>>> (...)
+>>>> Keep in mind that TSF == start of TSF field, while rx_status->timestamp
+>>>> == start of first symbol, which I didn't even remember when you guys did
+>>>> all the Toffset things, I'm guessing they're all wrong :-)
+>>>
+>>>
+>>> I think you guessed wrong :)
+>>
+>>
+>> Nice! FWIW, our hardware (not that the driver supports mesh now) will give
+>> the timestamp at the first symbol of the MPDU, so some more offset
+>> calculations are needed and we don't give valid timestamps today. I started
+>> working on this but haven't figured out HT preamble duration yet.
+>
+> Thanks for letting us know.  Now we know what hardware *not* to use for this :P
+>
+> Javier
+> _______________________________________________
+> Greenmesh mailing list
+> Greenmesh@lists.osll.spb.ru
+> http://lists.osll.spb.ru/mailman/listinfo/greenmesh
