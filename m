@@ -1,106 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:62165 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102Ab2DRSXj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 14:23:39 -0400
-Received: by dake40 with SMTP id e40so10225479dak.11
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 11:23:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOZOX0WqWJOD3Uv5FuTURzD4W-YAr0mADqpFGZ5SMzkNV1ruiQ@mail.gmail.com>
-References: <1334768863-26839-1-git-send-email-anisse@astier.eu>
- <1334768863-26839-2-git-send-email-anisse@astier.eu> <CAOZOX0WqWJOD3Uv5FuTURzD4W-YAr0mADqpFGZ5SMzkNV1ruiQ@mail.gmail.com>
-From: Anisse Astier <anisse@astier.eu>
-Date: Wed, 18 Apr 2012 20:23:18 +0200
-Message-ID: <CALUN=qLX8Fop06-WshoR8ju3MPi8dHDNJpzk7vJ8S6cUteHPrQ@mail.gmail.com> (sfid-20120418_202342_618983_5B36B2B1)
-Subject: Re: [PATCH RFC 2/2] rt2x00: Add debugfs access for rfcsr register
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:30812 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752277Ab2DSPX3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 11:23:29 -0400
+Message-ID: <1334848982.1980.4.camel@dcbw.foobar.com> (sfid-20120419_172333_189864_C2D22232)
+Subject: Re: [PATCH] libertas CS: convert to asynchronous firmware loading
+From: Dan Williams <dcbw@redhat.com>
+To: Daniel Drake <dsd@laptop.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org
+Date: Thu, 19 Apr 2012 10:23:02 -0500
+In-Reply-To: <20120418190944.A02A69D401E@zog.reactivated.net>
+References: <20120418190944.A02A69D401E@zog.reactivated.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 18, 2012 at 7:23 PM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> Hi,
->
->>  drivers/net/wireless/rt2x00/rt2400pci.c   |    7 +++++++
->>  drivers/net/wireless/rt2x00/rt2500pci.c   |    7 +++++++
->>  drivers/net/wireless/rt2x00/rt2500usb.c   |    7 +++++++
->>  drivers/net/wireless/rt2x00/rt2800.h      |    2 ++
->>  drivers/net/wireless/rt2x00/rt2800lib.c   |    7 +++++++
->>  drivers/net/wireless/rt2x00/rt2x00debug.c |   12 ++++++++++++
->>  drivers/net/wireless/rt2x00/rt2x00debug.h |    1 +
->>  drivers/net/wireless/rt2x00/rt61pci.c     |    7 +++++++
->>  drivers/net/wireless/rt2x00/rt73usb.c     |    7 +++++++
->>  9 files changed, 57 insertions(+)
->
-> Would it be possible to add this regisrer without editing every module?
-Not easy from looking at the code. The implementation lying in
-rt2x00debug is a common thing.
+On Wed, 2012-04-18 at 20:09 +0100, Daniel Drake wrote:
+> Signed-off-by: Daniel Drake <dsd@laptop.org>
+> Tested-by: Dan Williams <dcbw@redhat.com>
 
-I considered using "rf" instead, since this isn't used in rt2800. But
-the rf register has a 32bits word size, while rfcsr has an 8bits word
-size. Also, they do not designate the same thing, even if they're used
-the same way.
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-We could rely on the fact that C struct initialization would be
-zeroed, since we're using per-member designated initialization(C99).
-It works with the current code because the functions
-rt2x00debug_{read,write}_##__name check if the index is > word_count
-before doing anything.
-I didn't like it because it would then be implicit, but it could do the work.
+> ---
+>  drivers/net/wireless/libertas/if_cs.c |   92 ++++++++++++++++++---------------
+>  1 files changed, 51 insertions(+), 41 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+> index bb3deb3..c211b86 100644
+> --- a/drivers/net/wireless/libertas/if_cs.c
+> +++ b/drivers/net/wireless/libertas/if_cs.c
+> @@ -738,6 +738,52 @@ done:
+>  	return ret;
+>  }
+>  
+> +static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
+> +				 const struct firmware *helper,
+> +				 const struct firmware *mainfw)
+> +{
+> +	struct if_cs_card *card = priv->card;
+> +
+> +	if (ret) {
+> +		pr_err("failed to find firmware (%d)\n", ret);
+> +		return;
+> +	}
+> +
+> +	/* Load the firmware */
+> +	ret = if_cs_prog_helper(card, helper);
+> +	if (ret == 0 && (card->model != MODEL_8305))
+> +		ret = if_cs_prog_real(card, mainfw);
+> +	if (ret)
+> +		goto out;
+> +
+> +	/* Now actually get the IRQ */
+> +	ret = request_irq(card->p_dev->irq, if_cs_interrupt,
+> +		IRQF_SHARED, DRV_NAME, card);
+> +	if (ret) {
+> +		pr_err("error in request_irq\n");
+> +		goto out;
+> +	}
+> +
+> +	/*
+> +	 * Clear any interrupt cause that happened while sending
+> +	 * firmware/initializing card
+> +	 */
+> +	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
+> +	if_cs_enable_ints(card);
+> +
+> +	/* And finally bring the card up */
+> +	priv->fw_ready = 1;
+> +	if (lbs_start_card(priv) != 0) {
+> +		pr_err("could not activate card\n");
+> +		free_irq(card->p_dev->irq, card);
+> +	}
+> +
+> +out:
+> +	if (helper)
+> +		release_firmware(helper);
+> +	if (mainfw)
+> +		release_firmware(mainfw);
+> +}
+>  
+> 
+>  /********************************************************************/
+> @@ -809,8 +855,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+>  	unsigned int prod_id;
+>  	struct lbs_private *priv;
+>  	struct if_cs_card *card;
+> -	const struct firmware *helper = NULL;
+> -	const struct firmware *mainfw = NULL;
+>  
+>  	lbs_deb_enter(LBS_DEB_CS);
+>  
+> @@ -890,20 +934,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+>  		goto out2;
+>  	}
+>  
+> -	ret = lbs_get_firmware(&p_dev->dev, card->model, &fw_table[0],
+> -				&helper, &mainfw);
+> -	if (ret) {
+> -		pr_err("failed to find firmware (%d)\n", ret);
+> -		goto out2;
+> -	}
+> -
+> -	/* Load the firmware early, before calling into libertas.ko */
+> -	ret = if_cs_prog_helper(card, helper);
+> -	if (ret == 0 && (card->model != MODEL_8305))
+> -		ret = if_cs_prog_real(card, mainfw);
+> -	if (ret)
+> -		goto out2;
+> -
+>  	/* Make this card known to the libertas driver */
+>  	priv = lbs_add_card(card, &p_dev->dev);
+>  	if (!priv) {
+> @@ -911,37 +941,22 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+>  		goto out2;
+>  	}
+>  
+> -	/* Finish setting up fields in lbs_private */
+> +	/* Set up fields in lbs_private */
+>  	card->priv = priv;
+>  	priv->card = card;
+>  	priv->hw_host_to_card = if_cs_host_to_card;
+>  	priv->enter_deep_sleep = NULL;
+>  	priv->exit_deep_sleep = NULL;
+>  	priv->reset_deep_sleep_wakeup = NULL;
+> -	priv->fw_ready = 1;
+>  
+> -	/* Now actually get the IRQ */
+> -	ret = request_irq(p_dev->irq, if_cs_interrupt,
+> -		IRQF_SHARED, DRV_NAME, card);
+> +	/* Get firmware */
+> +	ret = lbs_get_firmware_async(priv, &p_dev->dev, card->model, fw_table,
+> +				     if_cs_prog_firmware);
+>  	if (ret) {
+> -		pr_err("error in request_irq\n");
+> -		goto out3;
+> -	}
+> -
+> -	/*
+> -	 * Clear any interrupt cause that happened while sending
+> -	 * firmware/initializing card
+> -	 */
+> -	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
+> -	if_cs_enable_ints(card);
+> -
+> -	/* And finally bring the card up */
+> -	if (lbs_start_card(priv) != 0) {
+> -		pr_err("could not activate card\n");
+> +		pr_err("failed to find firmware (%d)\n", ret);
+>  		goto out3;
+>  	}
+>  
+> -	ret = 0;
+>  	goto out;
+>  
+>  out3:
+> @@ -951,11 +966,6 @@ out2:
+>  out1:
+>  	pcmcia_disable_device(p_dev);
+>  out:
+> -	if (helper)
+> -		release_firmware(helper);
+> -	if (mainfw)
+> -		release_firmware(mainfw);
+> -
+>  	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
+>  	return ret;
+>  }
 
->
->> +++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
->> @@ -70,6 +70,7 @@ struct rt2x00debug_intf {
->>         *     - eeprom offset/value files
->>         *     - bbp offset/value files
->>         *     - rf offset/value files
->> +        *     - rfcsr offset/value files
->>         *   - queue folder
->>         *     - frame dump file
->>         *     - queue stats file
->> @@ -89,6 +90,8 @@ struct rt2x00debug_intf {
->>        struct dentry *bbp_val_entry;
->>        struct dentry *rf_off_entry;
->>        struct dentry *rf_val_entry;
->> +       struct dentry *rfcsr_off_entry;
->> +       struct dentry *rfcsr_val_entry;
->>        struct dentry *queue_folder;
->>        struct dentry *queue_frame_dump_entry;
->>        struct dentry *queue_stats_entry;
->> @@ -131,6 +134,7 @@ struct rt2x00debug_intf {
->>        unsigned int offset_eeprom;
->>        unsigned int offset_bbp;
->>        unsigned int offset_rf;
->> +       unsigned int offset_rfcsr;
->>  };
->>
->>  void rt2x00debug_update_crypto(struct rt2x00_dev *rt2x00dev,
->> @@ -525,6 +529,7 @@ RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
->>  RT2X00DEBUGFS_OPS(eeprom, "0x%.4x\n", u16);
->>  RT2X00DEBUGFS_OPS(bbp, "0x%.2x\n", u8);
->>  RT2X00DEBUGFS_OPS(rf, "0x%.8x\n", u32);
->> +RT2X00DEBUGFS_OPS(rfcsr, "0x%.2x\n", u8);
->>
->>  static ssize_t rt2x00debug_read_dev_flags(struct file *file,
->>                                          char __user *buf,
->> @@ -640,6 +645,10 @@ static struct dentry
->> *rt2x00debug_create_file_chipset(const char *name,
->>                        debug->rf.word_base,
->>                        debug->rf.word_count,
->>                        debug->rf.word_size);
->> +       data += sprintf(data, "rfcsr\t%d\t%d\t%d\n",
->> +                       debug->rf.word_base,
->> +                       debug->rf.word_count,
->> +                       debug->rf.word_size);
->>        blob->size = strlen(blob->data);
->
-> Shouldn't this be rfcr?
-Oh. Yes, it should be.
 
-
->
-> Ivo
