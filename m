@@ -1,67 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6075 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757654Ab2DYBGU convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38012 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865Ab2DSNZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 21:06:20 -0400
-From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-To: Norbert Preining <preining@logic.at>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: RE: 3.4-rc2, ilwagn still most of the time completely unusable
-Date: Wed, 25 Apr 2012 01:06:17 +0000
-Message-ID: <4595B4D22AB93C4FABBA84AAD5AA37FD136757@ORSMSX103.amr.corp.intel.com> (sfid-20120425_030637_180899_5D23F70B)
-References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at>
- <20120411023747.GA10126@gamma.logic.tuwien.ac.at>
- <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com>
- <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
- <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com>
- <20120413053858.GA4057@gamma.logic.tuwien.ac.at>
-In-Reply-To: <20120413053858.GA4057@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 19 Apr 2012 09:25:34 -0400
+Message-ID: <4F901224.1040508@sipsolutions.net> (sfid-20120419_152538_234058_25F41FAD)
+Date: Thu, 19 Apr 2012 06:24:52 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
+To: Dominik Feser <dominik.feser@googlemail.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: Re: wlan0 not present
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <4B048FDE-C784-4401-9FEC-16F8CC0B8D59@gmail.com> <CANUX_P0FO-P6ZFow15shNpZg6Z8FAPP7AovJH=xUKPyVEMtoBw@mail.gmail.com> <FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com> <CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com> <816C5F70-E340-46F9-8206-2B230A27F3AD@gmail.com> <CANUX_P3=ttVKdLYBfAdGRhmfDRbPruogw8Eo_d09on0ajdTqUw@mail.gmail.com> <5714877C-2465-4FD5-94A0-9D0806A803C4@gmail.com> <CANUX_P27GoLY2q9jmsWw9Rzn9posf3mCjDa98+q4JP=83wYthg@mail.gmail.com> <8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com> <CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com> <9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com> <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com> <8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com> <CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com> <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> (sfid-20120419_152129_778732_024C8F79)
+In-Reply-To: <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> (sfid-20120419_152129_778732_024C8F79)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Norbert,
+On 4/19/2012 6:20 AM, Dominik Feser wrote:
+> Ah ok, this is what I did several times now. After unpacking there is no .config file. After running the driver-select script and making the driver the first time the .config file appears.
+> Just then it seems to me that f I add the debug line to .config and remake this isn't recognized by the make...
 
->WIth that turned off I *believe* I have better results, but I will tet
->it a bi tmore.
+You should modify config.mk, not .config
 
-[MV] How is this looking now?
-
->> I don't see the invalid station activation error in the log you sent me, so I'm
->guessing it appears only on the other network. Do send us logs for that.
->
->Now I got one ....
->	http://www.logic.at/people/preining/syslog-debug.bz2
->take care, unpacked it is big!
-
-[MV]  I'm going through this log -- don't have a root cause for this yet, but getting closer to it. I see in this log that authentication is timing out. It appears that the driver sent out the authentication frame, and received some frame OTA, but I can't tell what it received from just the dmesg log. I'd like some trace-cmd logs from you. Is it possible for you to collect a trace-cmd log and send over the binary to me?
-
->One more thing, I believe that this happens most of the times
->(but not necessarily exclusively, but I don't have statistics)
->after resume (from suspend to ram).
-
-[MV]  This is good to know. I wonder if this is related to the PCIe l used on your platform. Can you try to use PCIe link state management to L0s in your BIOS and see if the stability of your system improves?
-
->>So saying, it seems that with power_save=0 even if I get several of
->these:
->[ 1601.552069] tx session timer expired on tid 0
->[ 1601.552116] Tx BA session stop requested for 00:24:c4:ab:bd:e0 tid 0
->[ 1601.576292] Stopping Tx BA session for 00:24:c4:ab:bd:e0 tid 0
->[ 1603.470312] Open BA session requested for 00:24:c4:ab:bd:e0 tid 0
->[ 1603.480274] activated addBA response timer on tid 0
->[ 1603.483479] switched off addBA timer for tid 0
->[ 1603.483485] Aggregation is on for tid 0
->the connection does not break down, as before. Well, I am not sure whether
->it is a consequence or coincidence.
-
-[MV] the tx session timer expiry ... hmm... I haven't looked at it. Otherwise, it seems to be Tx Aggregation sessions being turned on and turned off, so perhaps we will reduce the debug level at which it is printed. One of us is looking at the frequency with which these messages are being reported.
-
-Thanks,
-Meenakshi
+johannes
