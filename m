@@ -1,59 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from juliette.telenet-ops.be ([195.130.137.74]:39630 "EHLO
-	juliette.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965892Ab2DLSpo (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:38525 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038Ab2DSFD2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 14:45:44 -0400
-Message-ID: <4F8722D4.5090203@pandora.be> (sfid-20120412_204606_349898_5D7450F0)
-Date: Thu, 12 Apr 2012 20:45:40 +0200
-From: Bart De Schuymer <bdschuym@pandora.be>
+	Thu, 19 Apr 2012 01:03:28 -0400
+Received: by wgbdr13 with SMTP id dr13so8226538wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 22:03:27 -0700 (PDT)
 MIME-Version: 1.0
-To: Wilco Baan Hofman <wilco@baanhofman.nl>
-CC: bridge@lists.linuxfoundation.org, linux-wireless@vger.kernel.org
-Subject: Re: [Bridge] ebtables on mac80211
-References: <1334183679.3337.14.camel@synlap.andoburg.net>
-In-Reply-To: <1334183679.3337.14.camel@synlap.andoburg.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <B31F2BFC-F699-4EC5-92AD-194A4FBC1185@gmail.com>
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+	<4F8DC25E.9090702@broadcom.com>
+	<B9AA983D-A169-497D-9C8E-BDBEF2348BB6@gmail.com>
+	<4F8E0CBE.6010103@sipsolutions.net>
+	<0FC1AE2B-7E32-466B-AC33-F969F4E72B98@gmail.com>
+	<CANUX_P38YDFtL-KzKnFHd0+Ca29SUXoY+mGKaDUjConXaf3c9A@mail.gmail.com>
+	<4B048FDE-C784-4401-9FEC-16F8CC0B8D59@gmail.com>
+	<CANUX_P0FO-P6ZFow15shNpZg6Z8FAPP7AovJH=xUKPyVEMtoBw@mail.gmail.com>
+	<FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com>
+	<CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com>
+	<816C5F70-E340-46F9-8206-2B230A27F3AD@gmail.com>
+	<CANUX_P3=ttVKdLYBfAdGRhmfDRbPruogw8Eo_d09on0ajdTqUw@mail.gmail.com>
+	<5714877C-2465-4FD5-94A0-9D0806A803C4@gmail.com>
+	<CANUX_P27GoLY2q9jmsWw9Rzn9posf3mCjDa98+q4JP=83wYthg@mail.gmail.com>
+	<B31F2BFC-F699-4EC5-92AD-194A4FBC1185@gmail.com>
+Date: Thu, 19 Apr 2012 08:03:27 +0300
+Message-ID: <CANUX_P1YGF3Hcs8+AV7cthhERyqJiwa7_u+vfWiU_K+fv-7Onw@mail.gmail.com> (sfid-20120419_070331_839522_F9A8C210)
+Subject: Re: wlan0 not present
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Dominik Feser <dominik.feser@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Op 12/04/2012 0:34, Wilco Baan Hofman schreef:
-> Hi,
+On Thu, Apr 19, 2012 at 00:17, Dominik Feser
+<dominik.feser@googlemail.com> wrote:
+> One thing I just remembered: I had problems compiling the code and because of that commented some lines in the code out:
 >
-> I'm looking to implement hooks to ebtables in the mac80211 wireless
-> stack.
+> # make
+> ./scripts/gen-compat-autoconf.sh /root/compat-wireless-3.4-rc1-2/.config /root/compat-wireless-3.4-rc1-2/config.mk > include/linux/compat_autoconf.h
+> make -C /lib/modules/2.6.32.12-0.7.1/build M=/root/compat-wireless-3.4-rc1-2 modules
+> make[1]: Entering directory `/mnt/src/redhat/BUILD/kernel-2.6.32.120.7.1'
+>  Updating /root/compat-wireless-3.4-rc1-2/Makefile.xen
+>  CC [M]  /root/compat-wireless-3.4-rc1-2/compat/main.o
+> In file included from include/net/dst.h:13,
+>                 from include/net/sock.h:61,
+>                 from /root/compat-wireless-3.4-rc1-2/include/linux/compat-2.6.35.h:8,
+>                 from /root/compat-wireless-3.4-rc1-2/include/linux/compat-2.6.h:55,
+>                 from <Kommandozeile>:1:
+> include/linux/rtnetlink.h:785: Fehler: Redefinition von »rcu_read_lock_held«
+> /root/compat-wireless-3.4-rc1-2/include/linux/compat-2.6.34.h:291: Fehler: Vorherige Definition von »rcu_read_lock_held« war hier
+> make[3]: *** [/root/compat-wireless-3.4-rc1-2/compat/main.o] Fehler 1
+> make[2]: *** [/root/compat-wireless-3.4-rc1-2/compat] Fehler 2
+> make[1]: *** [_module_/root/compat-wireless-3.4-rc1-2] Fehler 2
+> make[1]: Leaving directory `/mnt/src/redhat/BUILD/kernel-2.6.32.120.7.1'
+> make: *** [modules] Fehler 2
 >
-> I'm trying to find the best approach for doing this.. basically what I
-> want to be able to have is clients being able to communicate, but not
-> ARP spoofing the gateway or setting up a rogue DHCP.
+> I made a change to the file /root/compat-wireless-3.4-rc1-2/include/linux/compat-2.6.34.h line 291 and commented the following lines out:
 >
-> As it's currently implemented, there's some sort of internal bridge
-> functionality within the wireless stack in net/mac80211/rx.c at around
-> ieee802_deliver_skb(), where every ethernet packet essentially gets
-> routed among wireless clients.
+> before:
+> static inline int rcu_read_lock_held(void)
+> {
+>        return 1;
+> }
 >
-> If I understand ebtables correctly, an forward event is triggered for
-> every packet to every interface, right? So essentially, this should do
-> the same, except that for every wireless client would be a forward from
-> the wireless interface to the wireless interface.
+> after:
 >
-> What would be the best way to implement this and in what way would it be
-> acceptable upstream?
-You can add a new ebtables table, requiring minimal changes to the 
-userland tool. You can start by adding a table called something like 
-"filter-wireless" with a built-in chain on NF_BR_FORWARD. See 
-net/bridge/netfilter/ebtable_broute.c: it contains the code that adds 
-the broute table with a built-in chain on NF_BR_BROUTING. This approach 
-has minimal impact since it doesn't use netfilter hooks (no call to 
-nf_register_hooks) and uses a built-in chain that ebtables understands.
-If you want to use the netfilter infrastructure, you'll probably need a 
-new protocol family. See net/bridge/netfilter/ebtable_filter.c in that case.
+> /*
+> static inline int rcu_read_lock_held(void)
+> {
+>        return 1;
+> }
+> */
+>
+> Might that cause the problem? How can I get rid of this error??
+>
 
-cheers,
-Bart
-
-
--- 
-Bart De Schuymer
-www.artinalgorithms.be
-
+Nope. that can't cause the issue.
