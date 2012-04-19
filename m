@@ -1,35 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37098 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752879Ab2DCQTw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567Ab2DSOZO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 12:19:52 -0400
-Message-ID: <4F7B2321.2070005@candelatech.com> (sfid-20120403_181954_945985_DB1358F0)
-Date: Tue, 03 Apr 2012 09:19:45 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 19 Apr 2012 10:25:14 -0400
+Message-ID: <4F90204D.3060801@sipsolutions.net> (sfid-20120419_162518_791232_FF0A5293)
+Date: Thu, 19 Apr 2012 07:25:17 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH 1/3] ath9k: Add tx-failed counter.
-References: <1333469815-26146-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1333469815-26146-1-git-send-email-greearb@candelatech.com>
+To: Tino Keitel <tino.keitel@tikei.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Power saving features for iwl4965
+References: <20120418203543.GA16000@x61.home> (sfid-20120418_224526_110569_61770156)
+In-Reply-To: <20120418203543.GA16000@x61.home> (sfid-20120418_224526_110569_61770156)
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/03/2012 09:16 AM, greearb@candelatech.com wrote:
-> From: Ben Greear<greearb@candelatech.com>
->
-> This counts any failure during getting packets into
-> the DMA buffers, including out-of-memory, etc.
+On 4/18/2012 1:35 PM, Tino Keitel wrote:
+> up to 2.6.38, the iwl4965 driver was able to use power saving features
+> by invoking "iwconfig<interface>  power on", at least when unsetting
+> the broken_powersave variable.
 
-Errr, that should be 1/2.  I can re-send if
-needed..might be other requests for changes
-anyway...
+This isn't quite correct. Yes, power saving was enabled there, but 
+relatively frequently it caused the device to crash. Therefore, it was 
+disabled as a stability fix, not to remove powersaving from you :)
 
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+johannes
