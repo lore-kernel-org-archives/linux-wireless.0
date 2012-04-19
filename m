@@ -1,171 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:62928 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754820Ab2D0S6N (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43462 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268Ab2DSOVL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 14:58:13 -0400
-Date: Fri, 27 Apr 2012 20:58:09 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: sedat.dilek@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
-	Jim Cromie <jim.cromie@gmail.com>
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-Message-ID: <20120427185809.GZ3157@wantstofly.org> (sfid-20120427_205832_653826_D8249D07)
-References: <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
- <20120427094007.GU3157@wantstofly.org>
- <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
- <20120427094637.GV3157@wantstofly.org>
- <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
- <20120427095842.GW3157@wantstofly.org>
- <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
- <20120427101732.GX3157@wantstofly.org>
- <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
- <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
+	Thu, 19 Apr 2012 10:21:11 -0400
+Message-ID: <4F901F51.3000704@sipsolutions.net> (sfid-20120419_162113_929488_23086435)
+Date: Thu, 19 Apr 2012 07:21:05 -0700
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: add option to disable 5GHz band
+References: <1334830280-3019-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1334830280-3019-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 03:29:26PM +0200, Sedat Dilek wrote:
+On 4/19/2012 3:11 AM, Stanislaw Gruszka wrote:
+> There are various problems happened on 5GHz band not observed on
+> 2.4 GHz (microcode errors, queue stuck, etc... ) . Also roaming
+> between 5GHz AP and 2GHz does not work very well. To workaround
+> the problems add option to disable 5GHz support. This will help
+> on environments where APs are dual-band, and devices will not try
+> to associate on band where issues happen.
 
-> >>> >> >> >> Are you planning to or even working on support (for) 8361 devices?
-> >>> >> >> >
-> >>> >> >> > I don't have any such plans, and I don't know of anyone who does.
-> >>> >> >>
-> >>> >> >> Does 8361 require firmware support?
-> >>> >> >
-> >>> >> > What do you mean by that?
-> >>> >>
-> >>> >> IIRC ath5k for example needs no external firmware file.
-> >>> >
-> >>> > The 8361 requires firmware to be loaded into it before it'll do
-> >>> > anything useful.
-> >>> >
-> >>> >
-> >>> >> >> Does a firmware file exist (name?)?
-> >>> >> >
-> >>> >> > There's firmware for the 8361 out there, however, that version of
-> >>> >> > the firmware implements a firmware API that is different from the
-> >>> >> > one that mwl8k currently implements.
-> >>> >> >
-> >>> >> > You could add 8361 support to mwl8k, but then you'd have to go over
-> >>> >> > all the firmware command invocations in mwl8k and make sure that they
-> >>> >> > will work on the 8361 firmware that you're trying to support as well.
-> >>> >>
-> >>> >> Without having a 8361 this will be even harder to walk through.
-> >>> >>
-> >>> >> Anyway, thanks for your detailed explanations.
-> >>> >>
-> >>> >> What's the alternative for such affected users?
-> >>> >> Use ndis-wrapper?
-> >>> >
-> >>> > I'm not sure.  I've never tried to get a 8361 work under Linux.
-> >>>
-> >>> Just found on [1] this same wrong patch in [2] :-).
-> >>> Dunno if [3] worked and from where they have stolen fw-files.
-> >>>
-> >>> - Sedat -
-> >>>
-> >>> [1] https://dev.openwrt.org/ticket/7209
-> >>> [2] https://dev.openwrt.org/attachment/ticket/7209/mwl8k_fix_pci_id.patch
-> >>> [3] https://dev.openwrt.org/attachment/ticket/7209/mwl8k_8361p.patch
-> >>
-> >> I doubt that [3] is really all that's needed to make it work.  But if
-> >> there's someone for whom it works, I'd like them to run some tests on
-> >> mwl8k + [3] on 88w8361p.
-> >
-> > Just asked lautriv to do so (he will do against linux-3.3.3), lets' see.
-> > Also, I refreshed and adapted a bit the instructions (see attachment).
-> >
-> > - Sedat -
-> 
-> [ CC Jim Cromie ]
-> 
-> Now, with extracted firmware files renamed & copied to
-> /lib/firmware/mwl8k/ and applied patch (see attachment) against
-> Linux-3.4-rc4+ I am seeing with modinfo:
-> 
-> $ sudo modinfo mwl8k
-> filename:
-> /lib/modules/3.4.0-rc4-5-generic/kernel/drivers/net/wireless/mwl8k.ko
-> license:        GPL
-> author:         Lennert Buytenhek <buytenh@marvell.com>
-> version:        0.13
-> description:    Marvell TOPDOG(R) 802.11 Wireless Network Driver
-> firmware:       mwl8k/fmimage_8366_ap-2.fw
-> firmware:       mwl8k/fmimage_8366.fw
-> firmware:       mwl8k/helper_8366.fw
-> firmware:       mwl8k/fmimage_8687.fw
-> firmware:       mwl8k/helper_8687.fw
-> firmware:       mwl8k/fmimage_8363.fw
-> firmware:       mwl8k/helper_8363.fw
-> firmware:       mwl8k/fmimage_8361p.fw
-> firmware:       mwl8k/helper_8361p.fw
-> srcversion:     9E1479A05C8D67E6AE90746
-> alias:          pci:v000011ABd00002A43sv*sd*bc*sc*i*
-> alias:          pci:v000011ABd00002A40sv*sd*bc*sc*i*
-> alias:          pci:v000011ABd00002A30sv*sd*bc*sc*i*
-> alias:          pci:v000011ABd00002A2Bsv*sd*bc*sc*i*
-> alias:          pci:v000011ABd00002A24sv*sd*bc*sc*i*
-> alias:          pci:v000011ABd00002A0Csv*sd*bc*sc*i*
-> alias:          pci:v000011ABd00002A0Asv*sd*bc*sc*i*
-> alias:          pci:v000011ABd00002A02sv*sd*bc*sc*i* <--- 8361P:
-> 0x2a02 PCI device-id
-> depends:        mac80211,cfg80211
-> vermagic:       3.4.0-rc4-5-generic SMP mod_unload modversions
-> parm:           ap_mode_default:Set to 1 to make ap mode the default
-> instead of sta mode (bool)
-> 
-> $ ls -l /lib/firmware/mwl8k/
-> insgesamt 456
-> -rw-r--r-- 1 root root  75848 Apr 27 13:49 fmimage_8361p.fw <---
-> 8361P: Firmware image
-> -rw-r--r-- 1 root root 101780 Mär 19 19:32 fmimage_8366_ap-1.fw
-> -rw-r--r-- 1 root root 101976 Mär 19 19:32 fmimage_8366_ap-2.fw
-> -rw-r--r-- 1 root root  96664 Mär 19 19:32 fmimage_8366.fw
-> -rw-r--r-- 1 root root  73252 Feb 23 20:07 fmimage_8687.fw
-> -rw-r--r-- 1 root root   2476 Apr 27 13:49 helper_8361p.fw <--- 8361P:
-> Helper image
-> -rw-r--r-- 1 root root   2476 Mär 19 19:32 helper_8366.fw
-> -rw-r--r-- 1 root root   2476 Feb 23 20:07 helper_8687.fw
-> 
-> As said... ***compile-tested*** only here.
+Would it make sense to somehow do this in cfg80211? Today, our driver 
+may be the only one having this problem (which I've never really heard 
+about?), but is it always going to be?
 
-Which doesn't say much at all, but..
-
-
-> I had a short query with lautriv on #linux-wireless this afternoon:
-> * mwl8k kernel-module was autoloaded
-> * wlan0 interface got fired up
-> * ESSID was accepted
-> * logs reported 802.11bgn support is active
-> * (he tested on Linux-3.3.3)
-> 
-> With WPA/WPA2 lautriv had some problems as his installation was
-> missing wpasupplicant.
-> He setup a classic /etc/network/interfaces.
-> After resetting his router mwl8k worked nicely.
-> 
-> Unfortunately, he was on the run and promised me to send logs and do
-> more testing this evening.
-
-..but this is pretty interesting.  I thought that the only available
-8361p firmware used an incompatible firmware API, and I didn't know
-of the existence of an apparently compatible firmware.
-
-
-> So, Lennert if you want more testing - What? How? etc.
-
-For one, the output of 'iw phy', please.
-
-Also, does monitor mode work?  Do you get plausible channel/rxpower
-values in tcpdump in monitor mode?
-
-Are there any messages in the syslog about failing commands?
-
-
-thanks,
-Lennert
+johannes
