@@ -1,133 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63195 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966090Ab2DLV6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:58:09 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/24] iwlwifi: move iwl_set_flags_for_band to iwl-agn-rxon.c
-Date: Thu, 12 Apr 2012 14:54:07 -0700
-Message-Id: <1334267661-14654-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235818_042216_C5CF3483)
-In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:37174 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756617Ab2DSWvl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 18:51:41 -0400
+Received: by ghrr11 with SMTP id r11so4874914ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 15:51:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1334869564.25074.35.camel@t41.thuisdomein>
+References: <1334869564.25074.35.camel@t41.thuisdomein>
+Date: Fri, 20 Apr 2012 01:51:41 +0300
+Message-ID: <CAFtRNNyNg4gqu16FzERGRzYCbJv_mR00BqwLhAKOXcMtJMhmTQ@mail.gmail.com> (sfid-20120420_005148_419125_25D26BA9)
+Subject: Re: [ath5k-devel] ath5k phy0: failed to warm reset the MAC Chip
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+2012/4/20 Paul Bolle <pebolle@tiscali.nl>:
+> 0) In the logs of a laptop I use I've found error pairs like this error
+> pair:
+>    <3>[13053.997856] ath5k phy0: failed to warm reset the MAC Chip
+>    <3>[13053.997871] ath5k phy0: can't reset hardware (-5)
+>
+> The logs show it for a v3.3 based kernel and for the v3.4-rc2 kernel. I
+> can't say whether or not preceding kernels also triggered it.
+>
+> 1) I only noticed these errors because I tend to check these logs for
+> errors: I cannot link these errors to drops in (the quality of) wireless
+> connectivity.
 
-Moving this as part of iwl-core.c cleanup.
+How frequently do they appear ?
+You do suspend/resume on your laptop ?
+Any other hw issues with your laptop ?
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   23 +++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    5 ++++-
- drivers/net/wireless/iwlwifi/iwl-core.c     |   23 -----------------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |    4 ----
- 4 files changed, 27 insertions(+), 28 deletions(-)
+> 2) The call chain involved should be:
+>
+> drivers/net/wireless/ath/ath5k/base.c:
+> 2737 ath5k_reset(...)
+>     {
+> 2765         ret = ath5k_hw_reset(...);
+> 2766         if (ret) {
+> 2767                 ATH5K_ERR(ah, "can't reset hardware (%d)\n", ret);
+> 2768                 goto err;
+> 2769         }
+>     }
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 2fcc50c..fd09181 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -620,6 +620,29 @@ void iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch,
- 
- }
- 
-+void iwl_set_flags_for_band(struct iwl_priv *priv,
-+			    struct iwl_rxon_context *ctx,
-+			    enum ieee80211_band band,
-+			    struct ieee80211_vif *vif)
-+{
-+	if (band == IEEE80211_BAND_5GHZ) {
-+		ctx->staging.flags &=
-+		    ~(RXON_FLG_BAND_24G_MSK | RXON_FLG_AUTO_DETECT_MSK
-+		      | RXON_FLG_CCK_MSK);
-+		ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
-+	} else {
-+		/* Copied from iwl_post_associate() */
-+		if (vif && vif->bss_conf.use_short_slot)
-+			ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
-+		else
-+			ctx->staging.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
-+
-+		ctx->staging.flags |= RXON_FLG_BAND_24G_MSK;
-+		ctx->staging.flags |= RXON_FLG_AUTO_DETECT_MSK;
-+		ctx->staging.flags &= ~RXON_FLG_CCK_MSK;
-+	}
-+}
-+
- static void iwl_set_rxon_hwcrypto(struct iwl_priv *priv,
- 				  struct iwl_rxon_context *ctx, int hw_decrypt)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 9eec4e6..ecc217c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -130,7 +130,10 @@ void iwlagn_config_ht40(struct ieee80211_conf *conf,
- void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf);
- void iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch,
- 			 struct iwl_rxon_context *ctx);
--
-+void iwl_set_flags_for_band(struct iwl_priv *priv,
-+			    struct iwl_rxon_context *ctx,
-+			    enum ieee80211_band band,
-+			    struct ieee80211_vif *vif);
- /* uCode */
- int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
- void iwl_send_prio_tbl(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index f65f989..fdca7ab 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -43,29 +43,6 @@
- 
- const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
- 
--void iwl_set_flags_for_band(struct iwl_priv *priv,
--			    struct iwl_rxon_context *ctx,
--			    enum ieee80211_band band,
--			    struct ieee80211_vif *vif)
--{
--	if (band == IEEE80211_BAND_5GHZ) {
--		ctx->staging.flags &=
--		    ~(RXON_FLG_BAND_24G_MSK | RXON_FLG_AUTO_DETECT_MSK
--		      | RXON_FLG_CCK_MSK);
--		ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
--	} else {
--		/* Copied from iwl_post_associate() */
--		if (vif && vif->bss_conf.use_short_slot)
--			ctx->staging.flags |= RXON_FLG_SHORT_SLOT_MSK;
--		else
--			ctx->staging.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
--
--		ctx->staging.flags |= RXON_FLG_BAND_24G_MSK;
--		ctx->staging.flags |= RXON_FLG_AUTO_DETECT_MSK;
--		ctx->staging.flags &= ~RXON_FLG_CCK_MSK;
--	}
--}
--
- /*
-  * initialize rxon structure with default values from eeprom
-  */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index b3cbeb2..a2b131a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -78,10 +78,6 @@ struct iwl_cmd;
-  *   L i b                 *
-  ***************************/
- 
--void iwl_set_flags_for_band(struct iwl_priv *priv,
--			    struct iwl_rxon_context *ctx,
--			    enum ieee80211_band band,
--			    struct ieee80211_vif *vif);
- void iwl_connection_init_rx_config(struct iwl_priv *priv,
- 				   struct iwl_rxon_context *ctx);
- void iwl_set_rate(struct iwl_priv *priv);
+Reset is called from reset tasklet (internally, e.g. in case of bad
+phy state) or from the protocol stack (e.g. in case we want to switch
+channels).
+
+> drivers/net/wireless/ath/ath5k/base.c:
+> 1144 ath5k_hw_reset(...)
+>     {
+> 1296         ret = ath5k_hw_nic_wakeup(...);
+> 1297         if (ret)
+> 1298                 return ret;
+>     }
+
+This is the main reset hw routine...
+
+>  667 ath5k_hw_nic_wakeup(...)
+>     {
+>  728                 ret = ath5k_hw_nic_reset(...);
+>  729
+>  730         if (ret) {
+>  731                 ATH5K_ERR(ah, "failed to warm reset the MAC Chip\n");
+>  732                 return -EIO;
+>  733         }
+>     }
+
+This is called to set the reset registers and wait for the card to come back
+
+>  395 ath5k_hw_nic_reset(...)
+>     {
+>  421         ret = ath5k_hw_register_timeout(...);
+>     }
+>
+>  65 ath5k_hw_register_timeout(...)
+>     {
+>  80         return (i <= 0) ? -EAGAIN : 0;
+>     }
+>
+
+And it seems the reset register doesn't come back in time
+
+> Note that the -EAGAIN returned by ath5k_hw_register_timeout() and
+> ath5k_hw_nic_reset() is transformed to -EIO by ath5k_hw_nic_wakeup().
+
+Since ath5k_hw_nic_wakeup is supposed to wakeup the chip during the
+main reset process we want to indicate a failure, that's why we use
+-EIO because usually this is a hardware-related problem.
+
+> 3) Do these message really indicate errors? Or can they perhaps be
+> downgraded to (say) KERN_INFO level (ie, <6> prefix)?
+
+Yup, if your card doesn't come back in time it's usually a hw error,
+it can be the pci bus, the card itself or it might mean that your
+pc/laptop doesn't count the time correctly (it happens e.g. because of
+sleep state changes).
+
+
+If you want to debug this further it'll help if you posted somewhere
+(e.g. pastebin) the dmesg output and lspci output.
+
+
+Thanks for your time ;-)
+
 -- 
-1.7.0.4
-
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
