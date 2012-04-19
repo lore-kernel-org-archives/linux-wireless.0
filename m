@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:39974 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752052Ab2DXOAj (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49133 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756561Ab2DSX35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 10:00:39 -0400
-From: Krzysztof Wilczynski <krzysztof.wilczynski@linux.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] wireless: Release struct returned by cfg80211_inform_bss to avoid potential memory leak.
-Date: Tue, 24 Apr 2012 15:00:34 +0100
-Message-Id: <1335276034-12735-1-git-send-email-krzysztof.wilczynski@linux.com> (sfid-20120424_160057_996762_9A46F8EF)
+	Thu, 19 Apr 2012 19:29:57 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: disallow WoW with multiple vifs
+Date: Thu, 19 Apr 2012 16:29:19 -0700
+Message-ID: <1334878159-7713-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120420_013003_634244_8F84F526)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function cfg80211_inform_bss returns a pointer to a referenced struct cfg80211_bss
-but no information is needed from this struct in function prism2_scan and therefore
-we release it by calling cfg80211_put_bss.
+The ath6kl fw does not have enough memory to support the WoW filters of
+more than one vif. Disallow WoW suspend if this is the case.
 
-Signed-off-by: Krzysztof Wilczynski <krzysztof.wilczynski@linux.com>
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 ---
- drivers/staging/wlan-ng/cfg80211.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
-index 4cd3ba5..8bc562b 100644
---- a/drivers/staging/wlan-ng/cfg80211.c
-+++ b/drivers/staging/wlan-ng/cfg80211.c
-@@ -332,6 +332,7 @@ int prism2_scan(struct wiphy *wiphy, struct net_device *dev,
- 	wlandevice_t *wlandev = dev->ml_priv;
- 	struct p80211msg_dot11req_scan msg1;
- 	struct p80211msg_dot11req_scan_results msg2;
-+	struct cfg80211_bss *bss;
- 	int result;
- 	int err = 0;
- 	int numbss = 0;
-@@ -401,7 +402,7 @@ int prism2_scan(struct wiphy *wiphy, struct net_device *dev,
- 		ie_buf[1] = msg2.ssid.data.len;
- 		ie_len = ie_buf[1] + 2;
- 		memcpy(&ie_buf[2], &(msg2.ssid.data.data), msg2.ssid.data.len);
--		cfg80211_inform_bss(wiphy,
-+		bss = cfg80211_inform_bss(wiphy,
- 			ieee80211_get_channel(wiphy, ieee80211_dsss_chan_to_freq(msg2.dschannel.data)),
- 			(const u8 *) &(msg2.bssid.data.data),
- 			msg2.timestamp.data, msg2.capinfo.data,
-@@ -411,6 +412,13 @@ int prism2_scan(struct wiphy *wiphy, struct net_device *dev,
- 			(msg2.signal.data - 65536) * 100, /* Conversion to signed type */
- 			GFP_KERNEL
- 		);
-+
-+		if (!bss) {
-+			err = -ENOMEM;
-+			goto exit;
-+		}
-+
-+		cfg80211_put_bss(bss);
- 	}
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index a8a7570..7ad03ed 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2059,6 +2059,10 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	u8 index = 0;
+ 	__be32 ips[MAX_IP_ADDRS];
  
- 	if (result)
++	/* The FW currently can't support multi-vif WoW properly. */
++	if (ar->num_vif > 1)
++		return -EIO;
++
+ 	vif = ath6kl_vif_first(ar);
+ 	if (!vif)
+ 		return -EIO;
+@@ -3125,6 +3129,10 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 	if (vif->sme_state != SME_DISCONNECTED)
+ 		return -EBUSY;
+ 
++	/* The FW currently can't support multi-vif WoW properly. */
++	if (ar->num_vif > 1)
++		return -EIO;
++
+ 	ath6kl_cfg80211_scan_complete_event(vif, true);
+ 
+ 	ret = ath6kl_set_probed_ssids(ar, vif, request->ssids,
 -- 
-1.7.2.5
+1.7.4.1
 
