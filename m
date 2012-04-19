@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39571 "EHLO nbd.name"
+Received: from mga01.intel.com ([192.55.52.88]:43485 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756177Ab2DSTSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 15:18:36 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 7/8] ath9k_hw: disable fast channel change when changing from/to half/quarter mode
-Date: Thu, 19 Apr 2012 21:18:28 +0200
-Message-Id: <1334863109-95726-7-git-send-email-nbd@openwrt.org> (sfid-20120419_211841_712432_9D8D4A47)
-In-Reply-To: <1334863109-95726-6-git-send-email-nbd@openwrt.org>
-References: <1334863109-95726-1-git-send-email-nbd@openwrt.org>
- <1334863109-95726-2-git-send-email-nbd@openwrt.org>
- <1334863109-95726-3-git-send-email-nbd@openwrt.org>
- <1334863109-95726-4-git-send-email-nbd@openwrt.org>
- <1334863109-95726-5-git-send-email-nbd@openwrt.org>
- <1334863109-95726-6-git-send-email-nbd@openwrt.org>
+	id S1755495Ab2DSNy6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 09:54:58 -0400
+Subject: Re: [PATCH] iwlwifi: add option to disable 5GHz band
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1334830280-3019-1-git-send-email-sgruszka@redhat.com>
+References: <1334830280-3019-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 19 Apr 2012 06:50:22 -0700
+Message-ID: <1334843422.27767.151.camel@wwguy-huron> (sfid-20120419_155508_379162_01BDB5AB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Hi Stanislaw,
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index e576a92..75fd87f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1687,6 +1687,10 @@ static int ath9k_hw_do_fastcc(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (chan->channel == ah->curchan->channel)
- 		goto fail;
- 
-+	if ((ah->curchan->channelFlags | chan->channelFlags) &
-+	    (CHANNEL_HALF | CHANNEL_QUARTER))
-+		goto fail;
-+
- 	if ((chan->channelFlags & CHANNEL_ALL) !=
- 	    (ah->curchan->channelFlags & CHANNEL_ALL))
- 		goto fail;
--- 
-1.7.3.2
+On Thu, 2012-04-19 at 12:11 +0200, Stanislaw Gruszka wrote:
+> There are various problems happened on 5GHz band not observed on
+> 2.4 GHz (microcode errors, queue stuck, etc... ) . Also roaming
+> between 5GHz AP and 2GHz does not work very well. To workaround
+> the problems add option to disable 5GHz support. This will help
+> on environments where APs are dual-band, and devices will not try
+> to associate on band where issues happen.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+I will push into iwlwifi tree, run regression test, then push together
+with our internal patches if it is ok for you
+
+Thanks
+Wey 
 
