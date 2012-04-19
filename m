@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32825 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755825Ab2DWVw4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 17:52:56 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/29] iwlwifi: include net/mac80211.h to avoid compiler error
-Date: Mon, 23 Apr 2012 14:47:23 -0700
-Message-Id: <1335217660-21950-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235333_917361_BF8D2DE3)
-In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:60547 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932385Ab2DSU0w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 16:26:52 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 19 Apr 2012 13:26:30 -0700
+Message-ID: <CAB=NE6W9dFr4X=nVtwYtGuPv90cZUat2b8vRb90mdM+8AEOf=w@mail.gmail.com> (sfid-20120419_222716_420559_2FF964FF)
+Subject: compat-wireless-3.4-rc3-1.tar.bz2 released
+To: lf_driver_backport@lists.linux-foundation.org
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-without the include, kernel compiling will fail, but not compat.
-this patch need to be merge with iwlwifi-clean-up-iwl-shared.h-includes.patch
+I've kicked out a new compat-wireless release based on 3.4-rc3 [0],
+check out the ChangeLog-3.4-rc3 [1] for more details and if you are
+interested in the build log check out the ckmake-3.4-rc1-2.log.bz2
+[2].  Below are the code metrics and the ckmake log summary:
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 8e36bdc..2153e4c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -63,6 +63,7 @@
- #ifndef __iwl_fw_h__
- #define __iwl_fw_h__
- #include <linux/types.h>
-+#include <net/mac80211.h>
- 
- /**
-  * enum iwl_ucode_tlv_flag - ucode API flags
--- 
-1.7.0.4
+    829063 - Total upstream lines of code being pulled
+      2748 - backport code changes
+      2333 - backport code additions
+       415 - backport code deletions
+      9575 - backport from compat module
+     12323 - total backport code
+    1.4864 - % of code consists of backport work
 
+Base tree: linux-stable.git
+Base tree version: v3.4-rc3
+compat-wireless release: compat-wireless-v3.4-rc3-1
+
+Trying kernel 3.2.2-030202-generic	[OK]
+Trying kernel 3.1.10-030110-generic	[OK]
+Trying kernel 3.0.18-030018-generic	[OK]
+Trying kernel 2.6.39-02063904-generic	[OK]
+Trying kernel 2.6.38-02063808-generic	[OK]
+Trying kernel 2.6.37-02063706-generic	[OK]
+Trying kernel 2.6.36-02063604-generic	[OK]
+Trying kernel 2.6.35-02063512-generic	[OK]
+Trying kernel 2.6.34-02063410-generic	[OK]
+Trying kernel 2.6.33-02063305-generic	[OK]
+Trying kernel 2.6.32-02063255-generic	[OK]
+Trying kernel 2.6.31-02063113-generic	[OK]
+Trying kernel 2.6.30-02063010-generic	[OK]
+Trying kernel 2.6.29-02062906-generic	[OK]
+Trying kernel 2.6.28-02062810-generic	[OK]
+Trying kernel 2.6.27-020627-generic	[OK]
+Trying kernel 2.6.26-020626-generic	[OK]
+Trying kernel 2.6.25-020625-generic	[OK]
+Trying kernel 2.6.24-020624-generic	[OK]
+
+[0] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/compat-wireless-3.4-rc3-1.tar.bz2
+[1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/ChangeLog-3.4-rc3
+[2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/ckmake-3.4-rc1-2.log.bz2
+
+  Luis
