@@ -1,222 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57637 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757840Ab2DLQng (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:34876 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790Ab2DSHzT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 12:43:36 -0400
-Message-ID: <4F8705E3.2010902@openwrt.org> (sfid-20120412_184344_812036_63BF720E)
-Date: Thu, 12 Apr 2012 18:42:11 +0200
-From: Florian Fainelli <florian@openwrt.org>
+	Thu, 19 Apr 2012 03:55:19 -0400
+Received: by mail-lb0-f174.google.com with SMTP id m4so2886181lbo.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 00:55:18 -0700 (PDT)
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 4/5] mac80211: Add more ethtools stats: survey, rates,
- etc
-References: <1334248375-22967-1-git-send-email-greearb@candelatech.com> <1334248375-22967-5-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1334248375-22967-5-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+	<4F8DC25E.9090702@broadcom.com>
+	<B9AA983D-A169-497D-9C8E-BDBEF2348BB6@gmail.com>
+	<4F8E0CBE.6010103@sipsolutions.net>
+	<0FC1AE2B-7E32-466B-AC33-F969F4E72B98@gmail.com>
+	<CANUX_P38YDFtL-KzKnFHd0+Ca29SUXoY+mGKaDUjConXaf3c9A@mail.gmail.com>
+	<4B048FDE-C784-4401-9FEC-16F8CC0B8D59@gmail.com>
+	<CANUX_P0FO-P6ZFow15shNpZg6Z8FAPP7AovJH=xUKPyVEMtoBw@mail.gmail.com>
+	<FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com>
+	<CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com>
+	<816C5F70-E340-46F9-8206-2B230A27F3AD@gmail.com>
+	<CANUX_P3=ttVKdLYBfAdGRhmfDRbPruogw8Eo_d09on0ajdTqUw@mail.gmail.com>
+	<5714877C-2465-4FD5-94A0-9D0806A803C4@gmail.com>
+	<CANUX_P27GoLY2q9jmsWw9Rzn9posf3mCjDa98+q4JP=83wYthg@mail.gmail.com>
+	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
+	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
+	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
+	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
+Date: Thu, 19 Apr 2012 10:55:18 +0300
+Message-ID: <CANUX_P3UaKPfGWaPim-31F34bVfq9UXho2MrxT68DtbFZGb=2g@mail.gmail.com> (sfid-20120419_095522_136307_D0F58B54)
+Subject: Re: wlan0 not present
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Dominik Feser <dominik.feser@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Apr 19, 2012 at 10:54, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Thu, Apr 19, 2012 at 10:49, Dominik Feser
+> <dominik.feser@googlemail.com> wrote:
+>> Here is the output! And by the way, I really appreciate your help! Thank you!
+>>
+>> # modinfo iwlwifi
+>> filename:       /lib/modules/2.6.32.12-0.7.1/updates/drivers/net/wireless/iwlwifi/iwlwifi.ko
+>> alias:          iwlagn
+>> license:        GPL
+>> author:         Copyright(c) 2003-2012 Intel Corporation <ilw@linux.intel.com>
+>> version:        in-tree:
+>> description:    Intel(R) Wireless WiFi Link AGN driver for Linux
+>> firmware:       iwlwifi-5150-2.ucode
+>> firmware:       iwlwifi-5000-5.ucode
+>> firmware:       iwlwifi-6000g2b-6.ucode
+>> firmware:       iwlwifi-6000g2a-6.ucode
+>> firmware:       iwlwifi-6050-5.ucode
+>> firmware:       iwlwifi-6000-4.ucode
+>> firmware:       iwlwifi-100-6.ucode
+>> firmware:       iwlwifi-1000-6.ucode
+>> firmware:       iwlwifi-135-6.ucode
+>> firmware:       iwlwifi-105-6.ucode
+>> firmware:       iwlwifi-2030-6.ucode
+>> firmware:       iwlwifi-2000-6.ucode
+>> srcversion:     169044416CC2B674049889B
+>> alias:          pci:v00008086d00000892sv*sd00000462bc*sc*i*
+>> alias:          pci:v00008086d00000893sv*sd00000262bc*sc*i*
+>> alias:          pci:v00008086d00000892sv*sd00000062bc*sc*i*
+>> alias:          pci:v00008086d00000894sv*sd00000822bc*sc*i*
+>> alias:          pci:v00008086d00000894sv*sd00000422bc*sc*i*
+>> alias:          pci:v00008086d00000895sv*sd00000222bc*sc*i*
+>> alias:          pci:v00008086d00000894sv*sd00000022bc*sc*i*
+>> alias:          pci:v00008086d0000088Esv*sd00004860bc*sc*i*
+>> alias:          pci:v00008086d0000088Esv*sd00004460bc*sc*i*
+>> alias:          pci:v00008086d0000088Fsv*sd00004260bc*sc*i*
+>> alias:          pci:v00008086d0000088Esv*sd00004060bc*sc*i*
+>> alias:          pci:v00008086d00000887sv*sd00004462bc*sc*i*
+>> alias:          pci:v00008086d00000888sv*sd00004262bc*sc*i*
+>> alias:          pci:v00008086d00000887sv*sd00004062bc*sc*i*
+>> alias:          pci:v00008086d00000890sv*sd00004822bc*sc*i*
+>> alias:          pci:v00008086d00000890sv*sd00004422bc*sc*i*
+>> alias:          pci:v00008086d00000891sv*sd00004222bc*sc*i*
+>> alias:          pci:v00008086d00000890sv*sd00004022bc*sc*i*
+>> alias:          pci:v00008086d00000896sv*sd00005027bc*sc*i*
+>> alias:          pci:v00008086d00000896sv*sd00005025bc*sc*i*
+>> alias:          pci:v00008086d00000897sv*sd00005017bc*sc*i*
+>> alias:          pci:v00008086d00000897sv*sd00005015bc*sc*i*
+>> alias:          pci:v00008086d00000896sv*sd00005007bc*sc*i*
+>> alias:          pci:v00008086d00000896sv*sd00005005bc*sc*i*
+>> alias:          pci:v00008086d000008AEsv*sd00001027bc*sc*i*
+>> alias:          pci:v00008086d000008AEsv*sd00001025bc*sc*i*
+>> alias:          pci:v00008086d000008AFsv*sd00001017bc*sc*i*
+>> alias:          pci:v00008086d000008AFsv*sd00001015bc*sc*i*
+>> alias:          pci:v00008086d000008AEsv*sd00001007bc*sc*i*
+>> alias:          pci:v00008086d000008AEsv*sd00001005bc*sc*i*
+>> alias:          pci:v00008086d00000084sv*sd00001316bc*sc*i*
+>> alias:          pci:v00008086d00000084sv*sd00001216bc*sc*i*
+>> alias:          pci:v00008086d00000083sv*sd00001326bc*sc*i*
+>> alias:          pci:v00008086d00000083sv*sd00001226bc*sc*i*
+>> alias:          pci:v00008086d00000083sv*sd00001306bc*sc*i*
+>> alias:          pci:v00008086d00000083sv*sd00001206bc*sc*i*
+>> alias:          pci:v00008086d00000084sv*sd00001315bc*sc*i*
+>> alias:          pci:v00008086d00000084sv*sd00001215bc*sc*i*
+>> alias:          pci:v00008086d00000083sv*sd00001325bc*sc*i*
+>> alias:          pci:v00008086d00000083sv*sd00001225bc*sc*i*
+>> alias:          pci:v00008086d00000083sv*sd00001305bc*sc*i*
+>> alias:          pci:v00008086d00000083sv*sd00001205bc*sc*i*
+>> alias:          pci:v00008086d00000886sv*sd00001317bc*sc*i*
+>> alias:          pci:v00008086d00000886sv*sd00001315bc*sc*i*
+>> alias:          pci:v00008086d00000885sv*sd00001327bc*sc*i*
+>> alias:          pci:v00008086d00000885sv*sd00001325bc*sc*i*
+>> alias:          pci:v00008086d00000885sv*sd00001307bc*sc*i*
+>> alias:          pci:v00008086d00000885sv*sd00001305bc*sc*i*
+>> alias:          pci:v00008086d00000089sv*sd00001316bc*sc*i*
+>> alias:          pci:v00008086d00000089sv*sd00001311bc*sc*i*
+>> alias:          pci:v00008086d00000087sv*sd00001326bc*sc*i*
+>> alias:          pci:v00008086d00000087sv*sd00001321bc*sc*i*
+>> alias:          pci:v00008086d00000087sv*sd00001306bc*sc*i*
+>> alias:          pci:v00008086d00000087sv*sd00001301bc*sc*i*
+>> alias:          pci:v00008086d00000091sv*sd00005226bc*sc*i*
+>> alias:          pci:v00008086d00000091sv*sd00005225bc*sc*i*
+>> alias:          pci:v00008086d00000091sv*sd00005221bc*sc*i*
+>> alias:          pci:v00008086d00000091sv*sd00005207bc*sc*i*
+>> alias:          pci:v00008086d00000091sv*sd00005206bc*sc*i*
+>> alias:          pci:v00008086d00000091sv*sd00005205bc*sc*i*
+>> alias:          pci:v00008086d00000091sv*sd00005201bc*sc*i*
+>> alias:          pci:v00008086d00000090sv*sd00005216bc*sc*i*
+>> alias:          pci:v00008086d00000090sv*sd00005215bc*sc*i*
+>> alias:          pci:v00008086d00000090sv*sd00005211bc*sc*i*
+>> alias:          pci:v00008086d0000008Bsv*sd00005317bc*sc*i*
+>> alias:          pci:v00008086d0000008Bsv*sd00005315bc*sc*i*
+>> alias:          pci:v00008086d0000008Asv*sd00005327bc*sc*i*
+>> alias:          pci:v00008086d0000008Asv*sd00005325bc*sc*i*
+>> alias:          pci:v00008086d0000008Asv*sd00005307bc*sc*i*
+>> alias:          pci:v00008086d0000008Asv*sd00005305bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd00001305bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd00001304bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd00004820bc*sc*i*
+>> alias:          pci:v00008086d00000085sv*sd0000C220bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd0000C020bc*sc*i*
+>> alias:          pci:v00008086d00000085sv*sd00001316bc*sc*i*
+>> alias:          pci:v00008086d00000085sv*sd00001311bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd00001326bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd00001321bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd00001307bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd00001306bc*sc*i*
+>> alias:          pci:v00008086d00000082sv*sd00001301bc*sc*i*
+>> alias:          pci:v00008086d00004239sv*sd00001316bc*sc*i*
+>> alias:          pci:v00008086d00004239sv*sd00001311bc*sc*i*
+>> alias:          pci:v00008086d00004238sv*sd00001111bc*sc*i*
+>> alias:          pci:v00008086d0000422Csv*sd00001326bc*sc*i*
+>> alias:          pci:v00008086d0000422Csv*sd00001321bc*sc*i*
+>> alias:          pci:v00008086d0000422Csv*sd00001307bc*sc*i*
+>> alias:          pci:v00008086d0000422Csv*sd00001306bc*sc*i*
+>> alias:          pci:v00008086d0000422Csv*sd00001301bc*sc*i*
+>> alias:          pci:v00008086d0000422Bsv*sd00001121bc*sc*i*
+>> alias:          pci:v00008086d0000422Bsv*sd00001101bc*sc*i*
+>> alias:          pci:v00008086d0000423Dsv*sd00001316bc*sc*i*
+>> alias:          pci:v00008086d0000423Dsv*sd00001216bc*sc*i*
+>> alias:          pci:v00008086d0000423Dsv*sd00001311bc*sc*i*
+>> alias:          pci:v00008086d0000423Dsv*sd00001211bc*sc*i*
+>> alias:          pci:v00008086d0000423Csv*sd00001321bc*sc*i*
+>> alias:          pci:v00008086d0000423Csv*sd00001221bc*sc*i*
+>> alias:          pci:v00008086d0000423Csv*sd00001306bc*sc*i*
+>> alias:          pci:v00008086d0000423Csv*sd00001206bc*sc*i*
+>> alias:          pci:v00008086d0000423Csv*sd00001301bc*sc*i*
+>> alias:          pci:v00008086d0000423Csv*sd00001201bc*sc*i*
+>> alias:          pci:v00008086d0000423Bsv*sd00001011bc*sc*i*
+>> alias:          pci:v00008086d0000423Asv*sd00001021bc*sc*i*
+>> alias:          pci:v00008086d0000423Asv*sd00001001bc*sc*i*
+>> alias:          pci:v00008086d00004236sv*sd00001114bc*sc*i*
+>> alias:          pci:v00008086d00004236sv*sd00001014bc*sc*i*
+>> alias:          pci:v00008086d00004236sv*sd00001111bc*sc*i*
+>> alias:          pci:v00008086d00004236sv*sd00001011bc*sc*i*
+>> alias:          pci:v00008086d00004235sv*sd00001104bc*sc*i*
+>> alias:          pci:v00008086d00004235sv*sd00001004bc*sc*i*
+>> alias:          pci:v00008086d00004235sv*sd00001101bc*sc*i*
+>> alias:          pci:v00008086d00004235sv*sd00001001bc*sc*i*
+>> alias:          pci:v00008086d00004235sv*sd00001124bc*sc*i*
+>> alias:          pci:v00008086d00004235sv*sd00001024bc*sc*i*
+>> alias:          pci:v00008086d00004235sv*sd00001121bc*sc*i*
+>> alias:          pci:v00008086d00004235sv*sd00001021bc*sc*i*
+>> alias:          pci:v00008086d00004237sv*sd00001316bc*sc*i*
+>> alias:          pci:v00008086d00004237sv*sd00001216bc*sc*i*
+>> alias:          pci:v00008086d00004237sv*sd00001315bc*sc*i*
+>> alias:          pci:v00008086d00004237sv*sd00001215bc*sc*i*
+>> alias:          pci:v00008086d00004237sv*sd00001314bc*sc*i*
+>> alias:          pci:v00008086d00004237sv*sd00001214bc*sc*i*
+>> alias:          pci:v00008086d00004237sv*sd00001311bc*sc*i*
+>> alias:          pci:v00008086d00004237sv*sd00001211bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001326bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001226bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001325bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001225bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001324bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001224bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001321bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001221bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001306bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001206bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001305bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001205bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001304bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001204bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001301bc*sc*i*
+>> alias:          pci:v00008086d00004232sv*sd00001201bc*sc*i*
+>> depends:        mac80211,compat,led-class,cfg80211,compat_firmware_class
+>> vermagic:       2.6.32.12-0.7.1 SMP mod_unload modversions Xen 686
+>> parm:           swcrypto:using crypto in software (default 0 [hardware]) (int)
+>> parm:           11n_disable:disable 11n functionality, bitmap: 1: full, 2: agg TX, 4: agg RX (uint)
+>> parm:           amsdu_size_8K:enable 8K amsdu size (int)
+>> parm:           fw_restart:restart firmware in case of error (int)
+>> parm:           ucode_alternative:specify ucode alternative to use from ucode file (int)
+>> parm:           antenna_coupling:specify antenna coupling in dB (defualt: 0 dB) (int)
+>> parm:           bt_ch_inhibition:Enable BT channel inhibition (default: enable) (bool)
+>> parm:           plcp_check:Check plcp health (default: 1 [enabled]) (bool)
+>> parm:           ack_check:Check ack health (default: 0 [disabled]) (bool)
+>> parm:           wd_disable:Disable stuck queue watchdog timer 0=system default, 1=disable, 2=enable (default: 0) (int)
+>> parm:           bt_coex_active:enable wifi/bt co-exist (default: enable) (bool)
+>> parm:           led_mode:0=system default, 1=On(RF On)/Off(RF Off), 2=blinking, 3=Off (default: 0) (int)
+>> parm:           power_save:enable WiFi power management (default: disable) (bool)
+>> parm:           power_level:default power save level (range from 1 - 5, default: 1) (int)
+>> parm:           auto_agg:enable agg w/o check traffic load (default: enable) (bool)
+>> parm:           no_sleep_autoadjust:don't automatically adjust sleep level according to maximum network latency (default: true) (bool)
+>>
+>
+> All right, no debug in there.
+> I understand that you use compat.
+> Please clean everything:
+>
+> git clean -f -d -x
+>
+> Beware this will remove all the files that you have added there. This
+> won't remove the W/A you made to compile.
 
-Le 04/12/12 18:32, greearb@candelatech.com a Ã©crit :
-> From: Ben Greear<greearb@candelatech.com>
->
-> The signal and noise are forced to be positive since ethtool
-> deals in unsigned 64-bit values and this number should be human
-> readable.  This gives easy access to some of the data formerly
-> exposed in the deprecated /proc/net/wireless file.
-
-Uh, that's misleading, the signal and noise values are typically 
-negative, so one needs to think about mentally adding a minus sign if 
-he/she wants to understand it. Does not ethtool know about 32-bits 
-signed integers?
-
->
-> Signed-off-by: Ben Greear<greearb@candelatech.com>
-> ---
-> :100644 100644 b37fb0d... 99e3597... M	net/mac80211/cfg.c
->   net/mac80211/cfg.c |  155 ++++++++++++++++++++++++++++++++++++++--------------
->   1 files changed, 114 insertions(+), 41 deletions(-)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index b37fb0d..99e3597 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -117,7 +117,9 @@ static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
->   	"rx_duplicates", "rx_fragments", "rx_dropped",
->   	"tx_packets", "tx_bytes", "tx_fragments",
->   	"tx_filtered", "tx_retry_failed", "tx_retries",
-> -	"beacon_loss"
-> +	"beacon_loss", "txrate", "rxrate", "signal",
-> +	"channel", "noise", "ch_time", "ch_time_busy",
-> +	"ch_time_ext_busy", "ch_time_rx", "ch_time_tx"
->   };
->   #define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
->
-> @@ -138,46 +140,6 @@ static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
->   	return rv;
->   }
->
-> -static void ieee80211_get_et_stats(struct wiphy *wiphy,
-> -				   struct net_device *dev,
-> -				   struct ethtool_stats *stats,
-> -				   u64 *data)
-> -{
-> -	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> -	struct sta_info *sta;
-> -	struct ieee80211_local *local = sdata->local;
-> -
-> -	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-> -
-> -	rcu_read_lock();
-> -	list_for_each_entry_rcu(sta,&local->sta_list, list) {
-> -		int i = 0;
-> -
-> -		/* Make sure this station belongs to the proper dev */
-> -		if (sta->sdata->dev != dev)
-> -			continue;
-> -
-> -		data[i++] += sta->rx_packets;
-> -		data[i++] += sta->rx_bytes;
-> -		data[i++] += sta->wep_weak_iv_count;
-> -		data[i++] += sta->num_duplicates;
-> -		data[i++] += sta->rx_fragments;
-> -		data[i++] += sta->rx_dropped;
-> -
-> -		data[i++] += sta->tx_packets;
-> -		data[i++] += sta->tx_bytes;
-> -		data[i++] += sta->tx_fragments;
-> -		data[i++] += sta->tx_filtered_count;
-> -		data[i++] += sta->tx_retry_failed;
-> -		data[i++] += sta->tx_retry_count;
-> -		data[i++] += sta->beacon_loss_count;
-> -		BUG_ON(i != STA_STATS_LEN);
-> -	}
-> -	rcu_read_unlock();
-> -
-> -	drv_get_et_stats(sdata, stats,&(data[STA_STATS_LEN]));
-> -}
-> -
->   static void ieee80211_get_et_strings(struct wiphy *wiphy,
->   				     struct net_device *dev,
->   				     u32 sset, u8 *data)
-> @@ -531,6 +493,117 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
->   		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
->   }
->
-> +static void ieee80211_get_et_stats(struct wiphy *wiphy,
-> +				   struct net_device *dev,
-> +				   struct ethtool_stats *stats,
-> +				   u64 *data)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	struct sta_info *sta;
-> +	struct ieee80211_local *local = sdata->local;
-> +	struct station_info sinfo;
-> +	struct survey_info survey;
-> +	bool do_once = true;
-> +	int i;
-> +#define STA_STATS_SURVEY_LEN 7
-> +
-> +	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
-> +
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(sta,&local->sta_list, list) {
-> +		i = 0;
-> +
-> +		/* Make sure this station belongs to the proper dev */
-> +		if (sta->sdata->dev != dev)
-> +			continue;
-> +
-> +		data[i++] += sta->rx_packets;
-> +		data[i++] += sta->rx_bytes;
-> +		data[i++] += sta->wep_weak_iv_count;
-> +		data[i++] += sta->num_duplicates;
-> +		data[i++] += sta->rx_fragments;
-> +		data[i++] += sta->rx_dropped;
-> +
-> +		data[i++] += sta->tx_packets;
-> +		data[i++] += sta->tx_bytes;
-> +		data[i++] += sta->tx_fragments;
-> +		data[i++] += sta->tx_filtered_count;
-> +		data[i++] += sta->tx_retry_failed;
-> +		data[i++] += sta->tx_retry_count;
-> +		data[i++] += sta->beacon_loss_count;
-> +
-> +		if (!do_once) {
-> +			i += 3;
-> +			goto after_once;
-> +		}
-> +
-> +		do_once = false;
-> +		sinfo.filled = 0;
-> +		sta_set_sinfo(sta,&sinfo);
-> +
-> +		if (sinfo.filled | STATION_INFO_TX_BITRATE)
-> +			data[i] = 100000 *
-> +				cfg80211_calculate_bitrate(&sinfo.txrate);
-> +		i++;
-> +		if (sinfo.filled | STATION_INFO_RX_BITRATE)
-> +			data[i] = 100000 *
-> +				cfg80211_calculate_bitrate(&sinfo.rxrate);
-> +		i++;
-> +
-> +		if (sinfo.filled | STATION_INFO_SIGNAL_AVG)
-> +			data[i] = abs(sinfo.signal_avg);
-> +		i++;
-> +
-> +after_once:
-> +		if (WARN_ON(i != (STA_STATS_LEN - STA_STATS_SURVEY_LEN))) {
-> +			rcu_read_unlock();
-> +			return;
-> +		}
-> +	}
-> +
-> +	i = STA_STATS_LEN - STA_STATS_SURVEY_LEN;
-> +	/* Get survey stats for current channel only */
-> +	survey.filled = 0;
-> +	if (drv_get_survey(local, 0,&survey) != 0) {
-> +		survey.filled = 0;
-> +		data[i++] = 0;
-> +	} else {
-> +		data[i++] = survey.channel->center_freq;
-> +	}
-> +
-> +	if (survey.filled&  SURVEY_INFO_NOISE_DBM)
-> +		data[i++] = abs(survey.noise);
-> +	else
-> +		data[i++] = -1LL;
-> +	if (survey.filled&  SURVEY_INFO_CHANNEL_TIME)
-> +		data[i++] = survey.channel_time;
-> +	else
-> +		data[i++] = -1LL;
-> +	if (survey.filled&  SURVEY_INFO_CHANNEL_TIME_BUSY)
-> +		data[i++] = survey.channel_time_busy;
-> +	else
-> +		data[i++] = -1LL;
-> +	if (survey.filled&  SURVEY_INFO_CHANNEL_TIME_EXT_BUSY)
-> +		data[i++] = survey.channel_time_ext_busy;
-> +	else
-> +		data[i++] = -1LL;
-> +	if (survey.filled&  SURVEY_INFO_CHANNEL_TIME_RX)
-> +		data[i++] = survey.channel_time_rx;
-> +	else
-> +		data[i++] = -1LL;
-> +	if (survey.filled&  SURVEY_INFO_CHANNEL_TIME_TX)
-> +		data[i++] = survey.channel_time_tx;
-> +	else
-> +		data[i++] = -1LL;
-> +
-> +	rcu_read_unlock();
-> +
-> +	if (WARN_ON(i != STA_STATS_LEN))
-> +		return;
-> +
-> +	drv_get_et_stats(sdata, stats,&(data[STA_STATS_LEN]));
-> +}
-> +
->
->   static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
->   				 int idx, u8 *mac, struct station_info *sinfo)
+And of course, recompile plus install after that
