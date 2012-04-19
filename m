@@ -1,183 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:53805 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068Ab2D1XLi convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:50297 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180Ab2DSCXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 19:11:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <CA+icZUVT6kvqj47x26FU2qjbMHc=jr9_Lso=zduf_cmcSrv=UQ@mail.gmail.com>
-References: <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
- <20120427094007.GU3157@wantstofly.org> <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
- <20120427094637.GV3157@wantstofly.org> <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
- <20120427095842.GW3157@wantstofly.org> <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
- <20120427101732.GX3157@wantstofly.org> <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
- <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
- <20120427185809.GZ3157@wantstofly.org> <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
- <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
- <CAJfuBxw7YFAC9CLAGNmg3nM_g2xH2vuiz07D-3xOcyn2XuP5vA@mail.gmail.com> <CA+icZUVT6kvqj47x26FU2qjbMHc=jr9_Lso=zduf_cmcSrv=UQ@mail.gmail.com>
-From: Jim Cromie <jim.cromie@gmail.com>
-Date: Sat, 28 Apr 2012 17:11:06 -0600
-Message-ID: <CAJfuBxwz2PmNY37VB7Wx+GdQcOcS6Y96EM_JNtvs-dyv-imL6g@mail.gmail.com> (sfid-20120429_011220_163769_0789289A)
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-To: sedat.dilek@gmail.com
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	lautriv <admin@coldplug.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 Apr 2012 22:23:50 -0400
+Received: by pbcun15 with SMTP id un15so9656149pbc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 19:23:49 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH 1/2] mac80211: refactor mesh peer initialization
+Date: Wed, 18 Apr 2012 19:23:42 -0700
+Message-Id: <1334802223-4603-1-git-send-email-thomas@cozybit.com> (sfid-20120419_042424_730717_1326424D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 28, 2012 at 4:49 PM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
-> On Sun, Apr 29, 2012 at 12:36 AM, Jim Cromie <jim.cromie@gmail.com> wrote:
+This patch unifies the previous two paths toward mesh peer creation a
+bit. It also fixes a bug where a peer's changing rates or HT mode
+wouldn't register on leaving and then returning to the mesh with a sta
+entry still present.
 
->>>> As already pointed out, no Marwell WLAN hardware here. Marvell comics
->>>> of course :-).
+Also clean up locking and clear possibly stale ht cap.
 
-(I had to leave that one..:-)
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |  126 +++++++++++++++++++++++++-------------------
+ 1 files changed, 72 insertions(+), 54 deletions(-)
 
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 9c836e7..c3a0b0a 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -82,20 +82,14 @@ static inline void mesh_plink_fsm_restart(struct sta_info *sta)
+ }
+ 
+ /*
+- * NOTE: This is just an alias for sta_info_alloc(), see notes
+- *       on it in the lifecycle management section!
++ * Allocate mesh sta entry and insert into station table
+  */
+ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+-					 u8 *hw_addr, u32 rates,
+-					 struct ieee802_11_elems *elems)
++					 u8 *hw_addr)
+ {
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_supported_band *sband;
+ 	struct sta_info *sta;
+ 
+-	sband = local->hw.wiphy->bands[local->oper_channel->band];
+-
+-	if (local->num_sta >= MESH_MAX_PLINKS)
++	if (sdata->local->num_sta >= MESH_MAX_PLINKS)
+ 		return NULL;
+ 
+ 	sta = sta_info_alloc(sdata, hw_addr, GFP_KERNEL);
+@@ -108,12 +102,8 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	set_sta_flag(sta, WLAN_STA_WME);
+ 
+-	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+-	if (elems->ht_cap_elem)
+-		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
+-						  elems->ht_cap_elem,
+-						  &sta->sta.ht_cap);
+-	rate_control_rate_init(sta);
++	if (sta_info_insert(sta))
++		return NULL;
+ 
+ 	return sta;
+ }
+@@ -274,43 +264,76 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
+-void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+-		struct ieee80211_sub_if_data *sdata,
+-		struct ieee802_11_elems *elems)
++/* mesh_peer_init - initialize new mesh peer and return resulting sta_info
++ *
++ * @sdata: local meshif
++ * @addr: peer's address
++ * @rates: station's supported rates
++ * @elems: IEs from beacon or mesh peering frame
++ *
++ * call under RCU
++ */
++static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
++				       u8 *addr, u32 rates,
++				       struct ieee802_11_elems *elems)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_supported_band *sband;
+ 	struct sta_info *sta;
+ 
+-	rcu_read_lock();
++	sband = local->hw.wiphy->bands[local->oper_channel->band];
+ 
+-	sta = sta_info_get(sdata, hw_addr);
++	sta = sta_info_get(sdata, addr);
+ 	if (!sta) {
+-		rcu_read_unlock();
+-		/* Userspace handles peer allocation when security is enabled
+-		 * */
+-		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED)
+-			cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
+-					elems->ie_start, elems->total_len,
+-					GFP_KERNEL);
+-		else
+-			sta = mesh_plink_alloc(sdata, hw_addr, rates, elems);
++		sta = mesh_plink_alloc(sdata, addr);
+ 		if (!sta)
+-			return;
+-		if (sta_info_insert_rcu(sta)) {
+-			rcu_read_unlock();
+-			return;
+-		}
++			return NULL;
+ 	}
+ 
++	spin_lock_bh(&sta->lock);
+ 	sta->last_rx = jiffies;
+ 	sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
++	if (elems->ht_cap_elem)
++		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
++						  elems->ht_cap_elem,
++						  &sta->sta.ht_cap);
++	else
++		memset(&sta->sta.ht_cap, 0, sizeof(sta->sta.ht_cap));
++
++	rate_control_rate_init(sta);
++	spin_unlock_bh(&sta->lock);
++
++	return sta;
++}
++
++void mesh_neighbour_update(u8 *hw_addr, u32 rates,
++			   struct ieee80211_sub_if_data *sdata,
++			   struct ieee802_11_elems *elems)
++{
++	struct sta_info *sta;
++
++	/* Userspace handles peer allocation when security is enabled */
++	if (sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED) {
++		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
++						   elems->ie_start,
++						   elems->total_len,
++						   GFP_KERNEL);
++		return;
++	}
++
++	rcu_read_lock();
++	sta = mesh_peer_init(sdata, hw_addr, rates, elems);
++	if (!sta)
++		goto out;
++
+ 	if (mesh_peer_accepts_plinks(elems) &&
+-			sta->plink_state == NL80211_PLINK_LISTEN &&
+-			sdata->u.mesh.accepting_plinks &&
+-			sdata->u.mesh.mshcfg.auto_open_plinks &&
+-			rssi_threshold_check(sta, sdata))
++	    sta->plink_state == NL80211_PLINK_LISTEN &&
++	    sdata->u.mesh.accepting_plinks &&
++	    sdata->u.mesh.mshcfg.auto_open_plinks &&
++	    rssi_threshold_check(sta, sdata))
+ 		mesh_plink_open(sta);
+ 
++out:
+ 	rcu_read_unlock();
+ }
+ 
+@@ -587,26 +610,13 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		return;
+ 	} else if (!sta) {
+ 		/* ftype == WLAN_SP_MESH_PEERING_OPEN */
+-
+-		rcu_read_unlock();
+-
+ 		if (!mesh_plink_free_count(sdata)) {
+ 			mpl_dbg("Mesh plink error: no more free plinks\n");
+-			return;
+-		}
+-		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, &elems);
+-		if (!sta) {
+-			mpl_dbg("Mesh plink error: plink table full\n");
+-			return;
+-		}
+-		if (sta_info_insert_rcu(sta)) {
+ 			rcu_read_unlock();
+ 			return;
+ 		}
+ 		event = OPN_ACPT;
+-		spin_lock_bh(&sta->lock);
+ 	} else if (matches_local) {
+-		spin_lock_bh(&sta->lock);
+ 		switch (ftype) {
+ 		case WLAN_SP_MESH_PEERING_OPEN:
+ 			if (!mesh_plink_free_count(sdata) ||
+@@ -643,12 +653,19 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 			break;
+ 		default:
+ 			mpl_dbg("Mesh plink: unknown frame subtype\n");
+-			spin_unlock_bh(&sta->lock);
+ 			rcu_read_unlock();
+ 			return;
+ 		}
+-	} else {
+-		spin_lock_bh(&sta->lock);
++	}
++
++	if (event == OPN_ACPT) {
++		/* allocate sta entry if necessary and update info */
++		sta = mesh_peer_init(sdata, mgmt->sa, rates, &elems);
++		if (!sta) {
++			mpl_dbg("Mesh plink: failed to init peer!\n");
++			rcu_read_unlock();
++			return;
++		}
+ 	}
+ 
+ 	mpl_dbg("Mesh plink (peer, state, llid, plid, event): %pM %s %d %d %d\n",
+@@ -656,6 +673,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		le16_to_cpu(sta->llid), le16_to_cpu(sta->plid),
+ 		event);
+ 	reason = 0;
++	spin_lock_bh(&sta->lock);
+ 	switch (sta->plink_state) {
+ 		/* spin_unlock as soon as state is updated at each case */
+ 	case NL80211_PLINK_LISTEN:
+-- 
+1.7.5.4
 
-
->>>
->>> A new tarball from lautriv with same outputs as before, but now tested
->>> with Linux-3.4-rc4.
->>>
->>> - Sedat -
->>
->>
->> heres my logs, using firmware extracted by Sedat's script,
->> and the patch on mwl8k.c
->>
->> bottom-line, it appears to be working.
->>
->> its contents are a bit more pedantic, and includes data for
->> another wifi card (rtl8180 based) also in the box.
->> It was obtained by this script:
->>
->> #!/bin/bash
->>
->> # dmesg (Linux-3.3.3)
->> # e_n_a (/etc/network/interfaces)
->> # ifconfig output
->> # iwconfig output
->> # iw_phy output
->> # ps_axu (WPA) output
->>
->> devs="wlan0 wlan1"
->> apmac=00:14:d1:e8:65:0a
->>
->> loudly () {
->>    echo "# $@"
->>    fname=`echo $@ | sed -e 's/ /-/g'`
->>    $@ 2> $fname-err | tee $fname
->>    [ $? != 0 ] && echo non-zero exit on $fname: $?
->>    [ -s $fname-err ] || rm $fname-err
->> }
->>
->> ( iw --debug event -f > iw-event-f )&
->> pid_event=$!
->>
->> for N in 0 1 ; do
->>    loudly iw dev wlan$N interface add fish$N type monitor # flags none
->>    loudly iw dev fish$N set channel 8
->>    loudly ifconfig fish$N up
->>    ( tcpdump -i fish$N -s 65000 -p -U -w  fish$N.dump )&
->>    pid_dump_fish$N=$!
->> done
->>
->> loudly iw list
->>
->> #loudly iwspy
->> # gives: Interface doesn't support wireless statistic collection
->>
->> for dev in $devs ; do
->>    loudly ifconfig $dev
->>    loudly iwconfig $dev
->>    loudly iwlist $dev scan
->>    loudly iw dev $dev info
->>    loudly iw dev $dev link
->>    loudly iw dev $dev scan
->>    loudly iw dev $dev survey dump
->> done
->>
->> for phy in $phys ; do
->>    loudly iw phy $phy info
->> done
->>
->> # these are unsupported on wlan0
->> loudly iw dev wlan1 survey dump
->> loudly iw dev wlan1 station dump
->> loudly iw dev wlan1 station get $apmac
->>
->>
->> for N in 0 1 ; do
->>    loudly iw dev fish$N del
->> done
->>
->> kill $pid_dump_fish0 $pid_dump_fish0
->> kill $pid_event
->>
->> dmesg > dmesg
->>
->> grep -vE '^#|key' /etc/network/interfaces > e_n_a
->>
->> exit
->
-> Hi Jim,
->
-> thanks for your testing and the nice testcase-script!
->
-> lautriv you wanna run some more tests with Jim's script?
->
-> Jim, how stable/fast/reliable is your WLAN connection?
-> Suspend/resume tested?
-
-I havent tested reliability in any way.
-in fact, I havent tested any data-xfer per se,
-will do an iperf test soon.
-
-That said, bitrate is quite low, I havent looked at why.
-
-jimc@chumly:~/projects/lx/wifi/mwl8k-8361p-logs$ grep -i MBit *
-iw-dev-wlan0-link:	tx bitrate: 11.0 MBit/s
-iw-dev-wlan1-link:	tx bitrate: 1.0 MBit/s
-iw-dev-wlan1-station-dump:	tx bitrate:	1.0 MBit/s
-iw-dev-wlan1-station-get-00:14:d1:e8:65:0a:	tx bitrate:	1.0 MBit/s
-
-my laptop is much faster than both cards in the soekris box, to same AP
-
-Connected to 00:14:d1:e8:65:0a (on wlan0)
-	SSID: yoduh
-	freq: 2447
-	RX: 191134302 bytes (2120068 packets)
-	TX: 17440426 bytes (120666 packets)
-	signal: -45 dBm
-	tx bitrate: 54.0 MBit/s
-
-	bss flags:	
-	dtim period:	0
-	beacon int:	100
-
-
-If you all have some suggestions on this, Id like to hear them.
-And of course, any other testing you'd like too.
-
-
->
-> Hope this helps to get native Linux support for 8361p.
-
-hear hear.
-FWIW,  I pulled this card out of a dead Netgear WNR854T,
-which is linux based (and GPL compliant)
-
-> Regards,
-> - Sedat -
->
-> P.S.: BTW, only to clarify it should be "e_n_i" as short-form for
-> /etc/network/interfaces file, but e_n_a sounds more female and nicer
-> :-).
-
-I caught that, but it wasnt worth "correcting" ;-)
-
-thanks
-Jim
