@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41774 "EHLO nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:52147 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753717Ab2DPM5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 08:57:07 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: fix truncated packets in cooked monitor rx
-Date: Mon, 16 Apr 2012 14:56:48 +0200
-Message-Id: <1334581008-22807-1-git-send-email-nbd@openwrt.org> (sfid-20120416_145711_625361_925CBBCF)
+	id S1752335Ab2DSPTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 11:19:30 -0400
+Message-ID: <1334848754.1980.3.camel@dcbw.foobar.com> (sfid-20120419_171933_883610_E8BEF259)
+Subject: Re: [PATCH] libertas: add missing include
+From: Dan Williams <dcbw@redhat.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	libertas-dev@lists.infradead.org
+Date: Thu, 19 Apr 2012 10:19:14 -0500
+In-Reply-To: <1334836452-75639-1-git-send-email-nbd@openwrt.org>
+References: <1334836452-75639-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cooked monitor rx was recently changed to use ieee80211_add_rx_radiotap_header
-instead of generating only limited radiotap information.
-ieee80211_add_rx_radiotap_header assumes that FCS info is still present if
-the hardware supports receiving it, however when cooked monitor rx packets
-are processed, FCS info has already been stripped.
-Fix this by adding an extra flag indicating FCS presence.
+On Thu, 2012-04-19 at 13:54 +0200, Felix Fietkau wrote:
+> Without it, I get compile errors due to missing TASK_NORMAL,
+> TASK_UNINTERRUPTIBLE and schedule.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rx.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+Yeah, got this too (though on 2.6.4x when testing CS, I don't think I
+got it on 3.3).
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 54a0491..7cbb4aa 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -103,7 +103,7 @@ static void
- ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 				 struct sk_buff *skb,
- 				 struct ieee80211_rate *rate,
--				 int rtap_len)
-+				 int rtap_len, bool has_fcs)
- {
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_radiotap_header *rthdr;
-@@ -134,7 +134,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	}
- 
- 	/* IEEE80211_RADIOTAP_FLAGS */
--	if (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS)
-+	if (has_fcs && (local->hw.flags & IEEE80211_HW_RX_INCLUDES_FCS))
- 		*pos |= IEEE80211_RADIOTAP_F_FCS;
- 	if (status->flag & (RX_FLAG_FAILED_FCS_CRC | RX_FLAG_FAILED_PLCP_CRC))
- 		*pos |= IEEE80211_RADIOTAP_F_BADFCS;
-@@ -294,7 +294,8 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 	}
- 
- 	/* prepend radiotap information */
--	ieee80211_add_rx_radiotap_header(local, skb, rate, needed_headroom);
-+	ieee80211_add_rx_radiotap_header(local, skb, rate, needed_headroom,
-+					 true);
- 
- 	skb_reset_mac_header(skb);
- 	skb->ip_summed = CHECKSUM_UNNECESSARY;
-@@ -2567,7 +2568,8 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
- 		goto out_free_skb;
- 
- 	/* prepend radiotap information */
--	ieee80211_add_rx_radiotap_header(local, skb, rate, needed_headroom);
-+	ieee80211_add_rx_radiotap_header(local, skb, rate, needed_headroom,
-+					 false);
- 
- 	skb_set_mac_header(skb, 0);
- 	skb->ip_summed = CHECKSUM_UNNECESSARY;
--- 
-1.7.3.2
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/libertas/firmware.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
+> index cd23f1a..77f6504 100644
+> --- a/drivers/net/wireless/libertas/firmware.c
+> +++ b/drivers/net/wireless/libertas/firmware.c
+> @@ -5,6 +5,7 @@
+>  #include <linux/firmware.h>
+>  #include <linux/firmware.h>
+>  #include <linux/module.h>
+> +#include <linux/sched.h>
+>  
+>  #include "dev.h"
+>  #include "decl.h"
+
 
