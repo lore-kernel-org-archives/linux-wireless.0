@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3714 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757398Ab2DYOIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 10:08:34 -0400
-Message-ID: <4F980551.3070204@broadcom.com> (sfid-20120425_160838_369019_6F1DCB68)
-Date: Wed, 25 Apr 2012 16:08:17 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Rajkumar Manoharan" <rmanohar@qca.qualcomm.com>
-cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: fix rate control update on 2040 bss change
-References: <1335358909-24905-1-git-send-email-rmanohar@qca.qualcomm.com>
-In-Reply-To: <1335358909-24905-1-git-send-email-rmanohar@qca.qualcomm.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:50297 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751530Ab2DSCYS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Apr 2012 22:24:18 -0400
+Received: by mail-pb0-f46.google.com with SMTP id un15so9656149pbc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 19:24:18 -0700 (PDT)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH 1/2] mac80211: don't set mesh peer ht caps if ht disabled
+Date: Wed, 18 Apr 2012 19:24:13 -0700
+Message-Id: <1334802254-4704-1-git-send-email-thomas@cozybit.com> (sfid-20120419_042427_478071_F2E44A71)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/25/2012 03:01 PM, Rajkumar Manoharan wrote:
-> The rate control updatation never be called on 2040 BSS change.
+Blindly setting ht caps on a mesh peer's station entry would result in
+MCS rates being used by the rate control algorithm even if no ht had
+been configured. Fix this by checking the channel type before assigning
+ht capabilites.
 
-'updatation' == typo?
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/mesh_plink.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> The station should update its rate control on receiving beacon
-> with different HT mode in the HT operation IE. Not doing so,
-> leads to sending frames with higher(ht40) rates whereas AP is
-> running in lower mode (ht20).
->
-> Signed-off-by: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> ---
->   net/mac80211/mlme.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index c8836fa..56128d3 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -210,7 +210,7 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
->   		disable_40 = true;
->
->   	if (sta&&  (!reconfig ||
-> -		    (disable_40 != !!(sta->sta.ht_cap.cap&
-> +		    (disable_40 == !!(sta->sta.ht_cap.cap&
->   					IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
->
->   		if (disable_40)
-
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index c2af7b3..1ff2a5c 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -295,7 +295,8 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
+ 	spin_lock_bh(&sta->lock);
+ 	sta->last_rx = jiffies;
+ 	sta->sta.supp_rates[band] = rates;
+-	if (elems->ht_cap_elem)
++	if (elems->ht_cap_elem &&
++	    sdata->local->_oper_channel_type != NL80211_CHAN_NO_HT)
+ 		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
+ 						  elems->ht_cap_elem,
+ 						  &sta->sta.ht_cap);
+-- 
+1.7.5.4
 
