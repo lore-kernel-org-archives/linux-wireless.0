@@ -1,51 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:52725 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751802Ab2D2GwS (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:59651 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754280Ab2DSJZO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2012 02:52:18 -0400
-Received: by wejx9 with SMTP id x9so1226479wej.19
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Apr 2012 23:52:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P25bU36A0n4YSO1mBUTn9pxYYua28=o9Soo12mVyZNVcQ@mail.gmail.com>
-References: <CAOvK7nAOHqKC8rpFDqGnW7NLCX-G2+syRGih_rv7N5O5rfOUdA@mail.gmail.com>
-	<CANUX_P1t8XJOka-QGzZSYFHb6MLc7rm4madn059Yg4b6hJB49A@mail.gmail.com>
-	<CAOvK7nDO4fS6R5go+ZXYBqyQc8hhbJGun9Weh=-EyX5k11+tXw@mail.gmail.com>
-	<CANUX_P2rzvDCBVLmU2rfaZmUOCMuMDe5=TXE_jwxq4ULrvc=QQ@mail.gmail.com>
-	<CAOvK7nCwRbDNZSnn0EvFMpcQMvX1DmU-tBuFT4kRW1TigwyJDQ@mail.gmail.com>
-	<CANUX_P0JsyA53T_vs5Ea0pE5Ye4G9xRC4xKcdwgAmoC8E63sHg@mail.gmail.com>
-	<CAOvK7nCf6k_ugJ=UBF8y0VBr_kVmESpetfnpn=NW73r_K=kKyw@mail.gmail.com>
-	<CAOvK7nCGwqqqrWNQhPqZoBqs6eT11gQNYbrZhb0bNSPTS-YxEw@mail.gmail.com>
-	<CANUX_P2DDQ-U9Yz2YksEEpOgjyyYO1GnFHR8ogEHNwojKvn3yg@mail.gmail.com>
-	<CAOvK7nB0L9GcnV-cNONndZMrAVLfFf3VaY4T-gPb+FgrNByeSA@mail.gmail.com>
-	<CANUX_P38L7OqBNeK+jO0EPMHf1M3QKxmsTA6o-t+6ujoq1VJ5w@mail.gmail.com>
-	<CAOvK7nB1gnnWcv6HFrn1MhMe-FheRtdTpi+BhCcCYNx6RowaTQ@mail.gmail.com>
-	<CANUX_P3SFmNKqUTt53EHkAjupAoB8ZxQZZP1osm7=JwfHnwbqg@mail.gmail.com>
-	<CANUX_P1ivcpLxm4z5k8SU+hGXG0A1hbSMnps7_i025kaAThyCg@mail.gmail.com>
-	<CAOvK7nBGBDWhQnq8MT51dE=LXUxoQH1FLJ2TNUr42He1KbBurg@mail.gmail.com>
-	<CANUX_P25bU36A0n4YSO1mBUTn9pxYYua28=o9Soo12mVyZNVcQ@mail.gmail.com>
-Date: Sun, 29 Apr 2012 09:52:17 +0300
-Message-ID: <CANUX_P3+4hTGJSoo669LixMmNjxv1pqAwmLgVi16iF+LX7-ebQ@mail.gmail.com> (sfid-20120429_085221_365954_C6B5D3F2)
-Subject: Re: iwlwifi bug
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: dchyan@princeton.edu
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 19 Apr 2012 05:25:14 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so8417888wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 02:25:13 -0700 (PDT)
+From: Anisse Astier <anisse@astier.eu>
+To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Cc: linville@tuxdriver.com, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Anisse Astier <anisse@astier.eu>
+Subject: [PATCH RFC v2 2/2] rt2x00: Add debugfs access for rfcsr register
+Date: Thu, 19 Apr 2012 11:20:33 +0200
+Message-Id: <1334827233-32686-2-git-send-email-anisse@astier.eu> (sfid-20120419_112524_805204_E62EB514)
+In-Reply-To: <1334827233-32686-1-git-send-email-anisse@astier.eu>
+References: <1334827233-32686-1-git-send-email-anisse@astier.eu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach
-egrumbach@gmail.com
+RFCSR is only used in rt2800. For other chipsets, the debug struct
+for rfcsr should be zeroed, so it shouldn't be an issue.
+
+Signed-off-by: Anisse Astier <anisse@astier.eu>
+---
+Changes since v1:
+ - removed initialization in chipsets other than rt2800, we now rely on
+   default initialization.
+ - added comments to make this explicit
+ - fix rfcsr size (64)
+ - fix pre-review bug thanks to Ivo Van Doorn
+---
+Please test this patch, I'd *especially* like feedback on chipsets other
+than rt2800pci.
+
+Test procedure:
+
+mount -t debugfs none /sys/kernel/debug/
+cd /sys/kernel/debug/ieee80211/phy0/rt2800pci/register/
+cat ../chipset
+cat rfcsr_offset
+cat rfcsr_value
+#should fail:
+echo 2 > rfcsr_offset
 
 
-On Sun, Apr 29, 2012 at 09:50, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Sun, Apr 29, 2012 at 09:31, Daniel Chyan <dchyan@princeton.edu> wrote:
->> It was the latest build last week: compat-wireless-2012-04-23. I am
->> currently on compat-wireless-2012-04-26. Should I go back to 04-23?
->>
->
-> ok, no please don't go back
+---
+ drivers/net/wireless/rt2x00/rt2800.h      |    2 ++
+ drivers/net/wireless/rt2x00/rt2800lib.c   |    7 +++++++
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   16 ++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00debug.h |    1 +
+ 4 files changed, 26 insertions(+)
 
-just please send the logs again with the additional flags.
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index d91f4f6..9348521 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -102,6 +102,8 @@
+ #define BBP_SIZE			0x00ff
+ #define RF_BASE				0x0004
+ #define RF_SIZE				0x0010
++#define RFCSR_BASE			0x0000
++#define RFCSR_SIZE			0x0040
+ 
+ /*
+  * Number of TX queues.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 6c95101..0cdbf2b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -836,6 +836,13 @@ const struct rt2x00debug rt2800_rt2x00debug = {
+ 		.word_size	= sizeof(u32),
+ 		.word_count	= RF_SIZE / sizeof(u32),
+ 	},
++	.rfcsr	= {
++		.read		= rt2800_rfcsr_read,
++		.write		= rt2800_rfcsr_write,
++		.word_base	= RFCSR_BASE,
++		.word_size	= sizeof(u8),
++		.word_count	= RFCSR_SIZE / sizeof(u8),
++	},
+ };
+ EXPORT_SYMBOL_GPL(rt2800_rt2x00debug);
+ #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index 78787fc..128dac7 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -70,6 +70,7 @@ struct rt2x00debug_intf {
+ 	 *     - eeprom offset/value files
+ 	 *     - bbp offset/value files
+ 	 *     - rf offset/value files
++	 *     - rfcsr offset/value files
+ 	 *   - queue folder
+ 	 *     - frame dump file
+ 	 *     - queue stats file
+@@ -89,6 +90,8 @@ struct rt2x00debug_intf {
+ 	struct dentry *bbp_val_entry;
+ 	struct dentry *rf_off_entry;
+ 	struct dentry *rf_val_entry;
++	struct dentry *rfcsr_off_entry;
++	struct dentry *rfcsr_val_entry;
+ 	struct dentry *queue_folder;
+ 	struct dentry *queue_frame_dump_entry;
+ 	struct dentry *queue_stats_entry;
+@@ -131,6 +134,7 @@ struct rt2x00debug_intf {
+ 	unsigned int offset_eeprom;
+ 	unsigned int offset_bbp;
+ 	unsigned int offset_rf;
++	unsigned int offset_rfcsr;
+ };
+ 
+ void rt2x00debug_update_crypto(struct rt2x00_dev *rt2x00dev,
+@@ -448,6 +452,8 @@ static ssize_t rt2x00debug_read_##__name(struct file *file,	\
+ 	if (*offset)						\
+ 		return 0;					\
+ 								\
++	/* This is should always be checked first because       \
++	 * debug->__name could be zeroed (when unspecified) */	\
+ 	if (index >= debug->__name.word_count)			\
+ 		return -EINVAL;					\
+ 								\
+@@ -484,6 +490,8 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,	\
+ 	if (*offset)						\
+ 		return 0;					\
+ 								\
++	/* This is should always be checked first because       \
++	 * debug->__name could be zeroed (when unspecified) */	\
+ 	if (index >= debug->__name.word_count)			\
+ 		return -EINVAL;					\
+ 								\
+@@ -525,6 +533,7 @@ RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
+ RT2X00DEBUGFS_OPS(eeprom, "0x%.4x\n", u16);
+ RT2X00DEBUGFS_OPS(bbp, "0x%.2x\n", u8);
+ RT2X00DEBUGFS_OPS(rf, "0x%.8x\n", u32);
++RT2X00DEBUGFS_OPS(rfcsr, "0x%.2x\n", u8);
+ 
+ static ssize_t rt2x00debug_read_dev_flags(struct file *file,
+ 					  char __user *buf,
+@@ -640,6 +649,10 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+ 			debug->rf.word_base,
+ 			debug->rf.word_count,
+ 			debug->rf.word_size);
++	data += sprintf(data, "rfcsr\t%d\t%d\t%d\n",
++			debug->rfcsr.word_base,
++			debug->rfcsr.word_count,
++			debug->rfcsr.word_size);
+ 	blob->size = strlen(blob->data);
+ 
+ 	return debugfs_create_blob(name, S_IRUSR, intf->driver_folder, blob);
+@@ -719,6 +732,7 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+ 	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, eeprom);
+ 	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, bbp);
+ 	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, rf);
++	RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, rfcsr);
+ 
+ #undef RT2X00DEBUGFS_CREATE_REGISTER_ENTRY
+ 
+@@ -770,6 +784,8 @@ void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev)
+ 	debugfs_remove(intf->queue_stats_entry);
+ 	debugfs_remove(intf->queue_frame_dump_entry);
+ 	debugfs_remove(intf->queue_folder);
++	debugfs_remove(intf->rfcsr_val_entry);
++	debugfs_remove(intf->rfcsr_off_entry);
+ 	debugfs_remove(intf->rf_val_entry);
+ 	debugfs_remove(intf->rf_off_entry);
+ 	debugfs_remove(intf->bbp_val_entry);
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.h b/drivers/net/wireless/rt2x00/rt2x00debug.h
+index fa11409..e11d39b 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.h
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.h
+@@ -65,6 +65,7 @@ struct rt2x00debug {
+ 	RT2X00DEBUGFS_REGISTER_ENTRY(eeprom, u16);
+ 	RT2X00DEBUGFS_REGISTER_ENTRY(bbp, u8);
+ 	RT2X00DEBUGFS_REGISTER_ENTRY(rf, u32);
++	RT2X00DEBUGFS_REGISTER_ENTRY(rfcsr, u8);
+ };
+ 
+ #endif /* RT2X00DEBUG_H */
+-- 
+1.7.9.4
 
-thank you
