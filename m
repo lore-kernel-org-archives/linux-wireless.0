@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:42692 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752998Ab2DQOkb convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:52370 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371Ab2DSUbD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 10:40:31 -0400
-From: <Piotr.Nakraszewicz@tieto.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>
-Date: Tue, 17 Apr 2012 17:40:17 +0300
-Subject: [RFC] mac80211: Advertise dtim period to all drivers
-Message-ID: <E50901D4F2CF69428D43141B7C85867929CC14EA67@EXMB03.eu.tieto.com> (sfid-20120417_164035_359369_44106D76)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 19 Apr 2012 16:31:03 -0400
+Date: Thu, 19 Apr 2012 16:27:44 -0400 (EDT)
+Message-Id: <20120419.162744.2197721179697327138.davem@davemloft.net> (sfid-20120419_223112_883903_41E23B13)
+To: wey-yi.w.guy@intel.com
+Cc: meenakshi.venkataraman@intel.com, socketcan@hartkopp.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, david.spinadel@intel.com
+Subject: Re: net-next iwlwifi breaks compile - was Re: pull request:
+ wireless-next 2012-04-18
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1334866241.27767.156.camel@wwguy-huron>
+References: <4595B4D22AB93C4FABBA84AAD5AA37FD1258AA@ORSMSX103.amr.corp.intel.com>
+	<20120419.154954.1322943404183128381.davem@davemloft.net>
+	<1334866241.27767.156.camel@wwguy-huron>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Date: Thu, 19 Apr 2012 13:10:41 -0700
 
-Don't look for IEEE80211_HW_NEED_DTIM_PERIOD flag after association finishes and advertise DTIM period to all drivers.
+> On Thu, 2012-04-19 at 15:49 -0400, David Miller wrote:
+>> From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+>> Date: Thu, 19 Apr 2012 19:47:58 +0000
+>> 
+>> > It was fixed internally in a subsequent patch, but that patch has
+>> > not made it into net-next. I don't see it in the public iwlwifi
+>> > repository either. We'll add the fix to the repository so you can
+>> > pick it up.
+>> 
+>> That's not how this works.
+>> 
+>> You should submit a patch to fix the build directly to me, immediately,
+>> so that I can push it directly into net-next as fast as possible.
+> 
+> The patch "iwlwifi-Remove-inconsistent-and-redundant-declaratio.patch"
+> already being push to John to address this issue
 
-Signed-off-by: Piotr Nakraszewicz <piotr.nakraszewicz@tieto.com>
----
- include/net/mac80211.h |    4 +---
- net/mac80211/mlme.c    |    6 +-----
- 2 files changed, 2 insertions(+), 8 deletions(-)
+You don't understand, that's exactly what I'm telling you I want
+to avoid.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index bebd89f..436267f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -230,9 +230,7 @@ enum ieee80211_rssi_event {
-  *	if the hardware cannot handle this it must set the
-  *	IEEE80211_HW_2GHZ_SHORT_SLOT_INCAPABLE hardware flag
-  * @dtim_period: num of beacons before the next DTIM, for beaconing,
-- *	valid in station mode only while @assoc is true and if also
-- *	requested by %IEEE80211_HW_NEED_DTIM_PERIOD (cf. also hw conf
-- *	@ps_dtim_period)
-+ *	valid in station mode only while @assoc is true
-  * @last_tsf: last beacon's/probe response's TSF timestamp (could be old
-  *	as it may have been received during scanning long ago)
-  * @beacon_int: beacon interval
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c8836fa..39e0912 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1290,11 +1290,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_led_assoc(local, 1);
- 
--	if (local->hw.flags & IEEE80211_HW_NEED_DTIM_PERIOD)
--		bss_conf->dtim_period = bss->dtim_period;
--	else
--		bss_conf->dtim_period = 0;
--
-+	bss_conf->dtim_period = bss->dtim_period;
- 	bss_conf->assoc = 1;
- 
- 	/* Tell the driver to monitor connection quality (if supported) */
--- 
-1.7.0.4
+Then we all have to wait until John takes it, then we have to wait until
+John is able to do a push to me, then we have to wait until I see John's
+request and pull it, and then we have to wait until I am done build
+testing and push the result out.
 
+All of this red tape adds unacceptble time just to fix the build
+regression added to net-next.
 
-IEEE80211_HW_NEED_DTIM_PERIOD description says:
-*	This device needs to know the DTIM period for the BSS before
-*	associating.
-
-This patch is helpful for drivers that don't need to know DTIM period before association, but need it after association for power save reasons and can't accept roaming delays.
-
-I can see that I am not the only one that had such problems:
-http://article.gmane.org/gmane.linux.kernel.wireless.general/60959
-http://article.gmane.org/gmane.linux.kernel.wireless.general/62266
-
-Pozdrawiam / Best regards,
-Piotr
-
+PUSH THIS FIX DIRECTLY TO ME NOW so that the build regression can get
+fixed NOW.
