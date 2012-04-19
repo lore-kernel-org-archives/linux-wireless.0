@@ -1,47 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36786 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751591Ab2DEMMj (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:41557 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400Ab2DSTvJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 08:12:39 -0400
-Message-ID: <1333627956.3494.8.camel@jlt3.sipsolutions.net> (sfid-20120405_141241_975986_DFA5A6A5)
-Subject: warnings/errors compiling compat
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Date: Thu, 05 Apr 2012 14:12:36 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 19 Apr 2012 15:51:09 -0400
+Received: by pbcun15 with SMTP id un15so171148pbc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 12:51:09 -0700 (PDT)
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, stable@kernel.org,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Subject: [PATCH] net/wireless: ipw2200: Fix race condition in the command completion acknowledge
+Date: Thu, 19 Apr 2012 15:55:09 -0400
+Message-Id: <1334865310-4662-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20120419_215114_586779_A74B1115)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm on 3.1.0 on this machine.
+Driver incorrectly validates command completion: instead of waiting
+for a command to be acknowledged it continues execution.  Most of the
+time driver gets acknowledge of the command completion in a tasklet
+before it executes the next one. But sometimes it sends the next
+command before it gets acknowledge for the previous one. In such a
+case one of the following error messages appear in the log:
 
-First I get this:
+Failed to send SYSTEM_CONFIG: Already sending a command.
+Failed to send ASSOCIATE: Already sending a command.
+Failed to send TX_POWER: Already sending a command.
 
-/tmp/compat-wireless-2012-04-04/config.mk:73: "WARNING: You are running a kernel >= 2.6.23, you should enable in it CONFIG_NET_SCHED for 802.11[ne] support"
+After that you need to reload the driver to get it working again.
 
-which doesn't make a lot of sense? We don't need CONFIG_NET_SCHED I
-believe since we always have the FIFO qdisc?
+This bug occurs during roammaping (reported by Sam Varshavchik)
+https://bugzilla.redhat.com/show_bug.cgi?id=738508
+and machine booting (reported by Tom Gundersen and Mads Kiilerich)
+https://bugs.archlinux.org/task/28097
+https://bugzilla.redhat.com/show_bug.cgi?id=802106
 
-Then a few warnings:
+This patch doesn't fix the delay issue during firmware load.
+But at least device now works as usual after boot.
 
-/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:47:1: warning: "__enabled_CONFIG_IP_VS" is not defined [-Wundef]
-/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:47:1: warning: "__enabled_CONFIG_IP_VS_MODULE" is not defined [-Wundef]
-/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:56:1: warning: "__enabled_CONFIG_NETFILTER_XT_TARGET_TRACE" is not defined [-Wundef]
-/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:56:1: warning: "__enabled_CONFIG_NETFILTER_XT_TARGET_TRACE_MODULE" is not defined [-Wundef]
-/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:47:1: warning: "__enabled_CONFIG_IP_VS" is not defined [-Wundef]
-/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:47:1: warning: "__enabled_CONFIG_IP_VS_MODULE" is not defined [-Wundef]
-/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:56:1: warning: "__enabled_CONFIG_NETFILTER_XT_TARGET_TRACE" is not defined [-Wundef]
-/tmp/compat-wireless-2012-04-04/compat/compat-3.3.c:56:1: warning: "__enabled_CONFIG_NETFILTER_XT_TARGET_TRACE_MODULE" is not defined [-Wundef]
+Cc: stable@kernel.org
+Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-
-b44 fails to compile for reasons I don't understand -- shouldn't SSB be
-part of compat? I don't have SSB in the base kernel.
-
-/tmp/compat-wireless-2012-04-04/drivers/net/ethernet/broadcom/b44.c: In function ‘b44_pci_init’:
-/tmp/compat-wireless-2012-04-04/drivers/net/ethernet/broadcom/b44.c:2342:2: error: implicit declaration of function ‘ssb_pcihost_register’ [-Werror=implicit-function-declaration]
-
-johannes
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 4130802..8cbafa5 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -2192,6 +2192,7 @@ static int __ipw_send_cmd(struct ipw_priv *priv, struct host_cmd *cmd)
+ {
+ 	int rc = 0;
+ 	unsigned long flags;
++	unsigned long now, end;
+ 
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	if (priv->status & STATUS_HCMD_ACTIVE) {
+@@ -2233,10 +2234,20 @@ static int __ipw_send_cmd(struct ipw_priv *priv, struct host_cmd *cmd)
+ 	}
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
++	now = jiffies;
++	end = now + HOST_COMPLETE_TIMEOUT;
++again:
+ 	rc = wait_event_interruptible_timeout(priv->wait_command_queue,
+ 					      !(priv->
+ 						status & STATUS_HCMD_ACTIVE),
+-					      HOST_COMPLETE_TIMEOUT);
++					      end - now);
++	if (rc < 0) {
++		now = jiffies;
++		if (time_before(now, end))
++			goto again;
++		rc = 0;
++	}
++
+ 	if (rc == 0) {
+ 		spin_lock_irqsave(&priv->lock, flags);
+ 		if (priv->status & STATUS_HCMD_ACTIVE) {
+-- 
+1.7.2.5
 
