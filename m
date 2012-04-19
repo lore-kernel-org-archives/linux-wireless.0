@@ -1,89 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:65356 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004Ab2DTHDB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 03:03:01 -0400
-Received: by vcqp1 with SMTP id p1so6169591vcq.19
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 00:03:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1334843590-7920-1-git-send-email-anisse@astier.eu>
-References: <CAOZOX0UXc0OwhWOiM0PWbGfyynmrQ4kZRAVFJyxtiHe-veUg=g@mail.gmail.com>
-	<1334843590-7920-1-git-send-email-anisse@astier.eu>
-Date: Fri, 20 Apr 2012 09:03:00 +0200
-Message-ID: <CAOZOX0XppHercdP64G+pOTxrzz6H0UNsr0Bkw6TzkGW_MNZJiw@mail.gmail.com> (sfid-20120420_090307_772913_FDB73886)
-Subject: Re: [PATCH v3 1/2] rt2x00: debugfs support - allow a register to be empty
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Anisse Astier <anisse@astier.eu>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:63045 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751347Ab2DSUPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 16:15:19 -0400
+Subject: Re: net-next iwlwifi breaks compile - was Re: pull request:
+ wireless-next 2012-04-18
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: meenakshi.venkataraman@intel.com, socketcan@hartkopp.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, david.spinadel@intel.com
+In-Reply-To: <20120419.154954.1322943404183128381.davem@davemloft.net>
+References: <20120418.153653.2130740499995307564.davem@davemloft.net>
+	 <4F8F9977.9040703@hartkopp.net>
+	 <4595B4D22AB93C4FABBA84AAD5AA37FD1258AA@ORSMSX103.amr.corp.intel.com>
+	 <20120419.154954.1322943404183128381.davem@davemloft.net>
+Content-Type: multipart/mixed; boundary="=-B2nZZ3zKDzg+6F64Aab2"
+Date: Thu, 19 Apr 2012 13:10:41 -0700
+Message-ID: <1334866241.27767.156.camel@wwguy-huron> (sfid-20120419_221527_259364_B80EDDEB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksCgpJJ20gYWxtb3N0IGNvbXBsZXRlbHkgaGFwcHkgd2l0aCB0aGlzIHBhdGNoLiA6KQoKPiBA
-QCAtNjk0LDI1ICs2OTMsMjkgQEAgdm9pZCBydDJ4MDBkZWJ1Z19yZWdpc3RlcihzdHJ1Y3QgcnQy
-eDAwX2RldiAqcnQyeDAwZGV2KQo+IKAgoCCgIKBpZiAoSVNfRVJSKGludGYtPnJlZ2lzdGVyX2Zv
-bGRlcikgfHwgIWludGYtPnJlZ2lzdGVyX2ZvbGRlcikKPiCgIKAgoCCgIKAgoCCgIKBnb3RvIGV4
-aXQ7Cj4KPiAtI2RlZmluZSBSVDJYMDBERUJVR0ZTX0NSRUFURV9SRUdJU1RFUl9FTlRSWShfX2lu
-dGYsIF9fbmFtZSkgoCCgXAo+IC0oeyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBcCj4gLSCgIKAgoCAoX19pbnRmKS0+X19uYW1lIyNf
-b2ZmX2VudHJ5ID0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoFwKPiAtIKAgoCCgIKAgoCBkZWJ1
-Z2ZzX2NyZWF0ZV91MzIoX19zdHJpbmdpZnkoX19uYW1lKSAiX29mZnNldCIsIKAgXAo+IC0goCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBTX0lSVVNSIHwgU19JV1VTUiwgoCCgIKAgoCCgIKAg
-oCBcCj4gLSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoChfX2ludGYpLT5yZWdpc3Rlcl9m
-b2xkZXIsIKAgoCCgIFwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgJihfX2ludGYp
-LT5vZmZzZXRfIyNfX25hbWUpOyCgIKAgXAo+IC0goCCgIKAgaWYgKElTX0VSUigoX19pbnRmKS0+
-X19uYW1lIyNfb2ZmX2VudHJ5KSCgIKAgoCCgIKAgoCCgIKBcCj4gLSCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgfHwgIShfX2ludGYpLT5fX25hbWUjI19vZmZfZW50cnkpIKAgoCCgIFwKPiAtIKAgoCCg
-IKAgoCCgIKAgZ290byBleGl0OyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-XAo+IC0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCBcCj4gLSCgIKAgoCAoX19pbnRmKS0+X19uYW1lIyNfdmFsX2VudHJ5ID0goCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoFwKPiAtIKAgoCCgIKAgoCBkZWJ1Z2ZzX2NyZWF0ZV9maWxl
-KF9fc3RyaW5naWZ5KF9fbmFtZSkgIl92YWx1ZSIsIKAgXAo+IC0goCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgU19JUlVTUiB8IFNfSVdVU1IsIKAgoCCgIKAgoCCgIKBcCj4gLSCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCAoX19pbnRmKS0+cmVnaXN0ZXJfZm9sZGVyLCCgIKAgoFwK
-PiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIChfX2ludGYpLCAmcnQyeDAwZGVidWdf
-Zm9wXyMjX19uYW1lKTtcCj4gLSCgIKAgoCBpZiAoSVNfRVJSKChfX2ludGYpLT5fX25hbWUjI192
-YWxfZW50cnkpIKAgoCCgIKAgoCCgIKAgoFwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8fCAh
-KF9faW50ZiktPl9fbmFtZSMjX3ZhbF9lbnRyeSkgoCCgIKAgXAo+IC0goCCgIKAgoCCgIKAgoCBn
-b3RvIGV4aXQ7IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gKyNkZWZp
-bmUgUlQyWDAwREVCVUdGU19DUkVBVEVfUkVHSVNURVJfRU5UUlkoX19pbnRmLCBfX25hbWUpIKAg
-oCCgIKAgoCCgIKAgoCCgIKBcCj4gKyh7IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCBp
-ZihkZWJ1Zy0+X19uYW1lLnJlYWQpIHsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIChfX2ludGYpLT5fX25hbWUjI19vZmZf
-ZW50cnkgPSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAg
-oCCgIGRlYnVnZnNfY3JlYXRlX3UzMihfX3N0cmluZ2lmeShfX25hbWUpICJfb2Zmc2V0IiwgoCCg
-IKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgU19J
-UlVTUiB8IFNfSVdVU1IsIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKF9faW50ZiktPnJlZ2lzdGVyX2ZvbGRlciwgoCCgIKAg
-oCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgJihfX2lu
-dGYpLT5vZmZzZXRfIyNfX25hbWUpOyCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIGlm
-IChJU19FUlIoKF9faW50ZiktPl9fbmFtZSMjX29mZl9lbnRyeSkgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8fCAhKF9faW50ZiktPl9f
-bmFtZSMjX29mZl9lbnRyeSkgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgZ290byBleGl0OyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIChfX2ludGYp
-LT5fX25hbWUjI192YWxfZW50cnkgPSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBc
-Cj4gKyCgIKAgoCCgIKAgoCCgIGRlYnVnZnNfY3JlYXRlX2ZpbGUoX19zdHJpbmdpZnkoX19uYW1l
-KSAiX3ZhbHVlIiwgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIFNfSVJVU1IgfCBTX0lXVVNSLCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4g
-KyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIChfX2ludGYpLT5yZWdpc3Rl
-cl9mb2xkZXIsIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIChfX2ludGYpLCAmcnQyeDAwZGVidWdfZm9wXyMjX19uYW1lKTsgoCBcCj4gKyCg
-IKAgoCCgIKAgoCCgIGlmIChJU19FUlIoKF9faW50ZiktPl9fbmFtZSMjX3ZhbF9lbnRyeSkgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8
-fCAhKF9faW50ZiktPl9fbmFtZSMjX3ZhbF9lbnRyeSkgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgZ290byBleGl0OyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCB9IGVsc2UgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCg
-IKAgoCCgIERFQlVHKHJ0MngwMGRldiwgIlVuc3VwcG9ydGVkIHJlZ2lzdGVyIG9uIHRoaXMgZGV2
-aWNlOiAiIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgX19zdHJpbmdpZnkoX19u
-YW1lKSAiXG4iKTsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4goH0pCgpJIGRvbid0
-IHRoaW5rIHdlIG5lZWQgdG8gcHJpbnQgZXJyb3IgbWVzc2FnZXMgdG8gdGhlIGxvZywgdGhpcyB3
-aWxsCm9ubHkgY29uZnVzZSB1c2Vycy4KVGhlIGRyaXZlciBpbnRlbnRpb25hbGx5IGRpZG4ndCBy
-ZWdpc3RlciB0aGUgcmVnaXN0ZXIgdHlwZSwgc28gaXQgaXMKbm90IHdvcnRoIHRoZSB3YXJuaW5n
-IHRvIHRoZSB1c2VyLgoKSXZvCg==
+
+--=-B2nZZ3zKDzg+6F64Aab2
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Hi David,
+
+
+On Thu, 2012-04-19 at 15:49 -0400, David Miller wrote:
+> From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+> Date: Thu, 19 Apr 2012 19:47:58 +0000
+> 
+> > It was fixed internally in a subsequent patch, but that patch has
+> > not made it into net-next. I don't see it in the public iwlwifi
+> > repository either. We'll add the fix to the repository so you can
+> > pick it up.
+> 
+> That's not how this works.
+> 
+> You should submit a patch to fix the build directly to me, immediately,
+> so that I can push it directly into net-next as fast as possible.
+
+The patch "iwlwifi-Remove-inconsistent-and-redundant-declaratio.patch"
+already being push to John to address this issue
+
+Thanks
+Wey 
+
+--=-B2nZZ3zKDzg+6F64Aab2
+Content-Disposition: attachment; filename*0=0012-iwlwifi-Remove-inconsistent-and-redundant-declaratio.pat; filename*1=ch
+Content-Type: text/x-patch; name="0012-iwlwifi-Remove-inconsistent-and-redundant-declaratio.patch"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+>From c27cf685d185cc4604776252fdcaca5ad24abcca Mon Sep 17 00:00:00 2001
+From: David Spinadel <david.spinadel@intel.com>
+Date: Tue, 27 Mar 2012 10:22:29 +0200
+Subject: [PATCH 12/15] iwlwifi: Remove inconsistent and redundant declaration
+
+Remove declaration of iwl_alloc_traffic_mem from iwl-agn.h,
+from methods that was exposed to support MVM.
+
+MVM doesn't have to use this declaration.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 67cd123..3d6f3e2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -510,7 +510,6 @@ void iwl_setup_deferred_work(struct iwl_priv *priv);
+ int iwl_send_wimax_coex(struct iwl_priv *priv);
+ int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
+ void iwl_debug_config(struct iwl_priv *priv);
+-int iwl_alloc_traffic_mem(struct iwl_priv *priv);
+ void iwl_set_hw_params(struct iwl_priv *priv);
+ void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
+ int iwl_init_drv(struct iwl_priv *priv);
+-- 
+1.7.0.4
+
+
+--=-B2nZZ3zKDzg+6F64Aab2--
+
