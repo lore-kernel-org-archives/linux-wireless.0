@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11637 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757187Ab2DMHpz (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:54988 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754648Ab2DSI0X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 03:45:55 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath9k: fix ibss beacon next tbtt
-Date: Fri, 13 Apr 2012 13:16:34 +0530
-Message-ID: <1334303194-7626-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120413_094558_256069_38953C0C)
-In-Reply-To: <1334303194-7626-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1334303194-7626-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Thu, 19 Apr 2012 04:26:23 -0400
+Received: by iagz16 with SMTP id z16so11611557iag.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 01:26:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAKa7sPSOBYmaoCRZZa=R0UT59bD+cxmtSPqxZ6754CmarNfXzA@mail.gmail.com>
+References: <CAKa7sPSOBYmaoCRZZa=R0UT59bD+cxmtSPqxZ6754CmarNfXzA@mail.gmail.com>
+From: Viktar Palstsiuk <viktar.palstsiuk@promwad.com>
+Date: Thu, 19 Apr 2012 11:25:42 +0300
+Message-ID: <CAKa7sPQYpgmh+=nLWGNzaXRL4_wHmpY4pScuwk4kTmYKCyU6dg@mail.gmail.com> (sfid-20120419_102632_506353_EA02EC68)
+Subject: Rtlwifi with hostapd
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sync-up ibss beacon timer with the beacon frame's timestamp. When the
-node acts as joiner, it has to sync with the received beacon timestamp
-instead of reading tsf from hw. As the hw tsf wont wont be update till
-bssid is configured. This patch programs hw tsf with the received beacon
-timestamp if beacon timers are yet to be configured.
+Hello
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    2 ++
- 1 file changed, 2 insertions(+)
+I'm trying to run RTL8192DE-based wifi module in AP mode using hostapd.
+RTL8192DE is connected to Marvell Kirkwood CPU using PCI Express bus.
+But the kernel hangs right after hostapd was started.
+In STA mode it is possible to scan for networks in 2.4 GHz band and it
+discovers ~10 APs.
+Was rtlwifi driver tested to work with hostapd?
+I've tried compat-wireless-2011-12-01 and
+92ce_se_de_linux_mac80211_0005.1230.2011.tar.gz from Realtek site.
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 6264182..719a271 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -650,6 +650,8 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
- 	u32 tsf, intval, nexttbtt;
- 
- 	ath9k_reset_beacon_status(sc);
-+	if (!(sc->sc_flags & SC_OP_BEACONS))
-+		ath9k_hw_settsf64(ah, sc->beacon.bc_tstamp);
- 
- 	intval = TU_TO_USEC(conf->beacon_interval);
- 	tsf = roundup(ath9k_hw_gettsf32(ah) + TU_TO_USEC(FUDGE), intval);
--- 
-1.7.10
-
+--
+Best regards,
+Viktar Palstsiuk
