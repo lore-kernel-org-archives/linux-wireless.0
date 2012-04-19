@@ -1,62 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3911 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754216Ab2DTV2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 17:28:05 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3.4 1/2] brcm80211: fmac: fix SDIO function 0 register
- r/w issue
-Date: Fri, 20 Apr 2012 14:27:48 -0700
-Message-ID: <1334957269-27416-2-git-send-email-frankyl@broadcom.com> (sfid-20120420_232810_370521_932A49FB)
-In-Reply-To: <1334957269-27416-1-git-send-email-frankyl@broadcom.com>
-References: <1334957269-27416-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:1930 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752259Ab2DSVMS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 17:12:18 -0400
+Message-ID: <1334869564.25074.35.camel@t41.thuisdomein> (sfid-20120419_234809_527572_8442B51C)
+Subject: ath5k phy0: failed to warm reset the MAC Chip
+From: Paul Bolle <pebolle@tiscali.nl>
+To: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Thu, 19 Apr 2012 23:06:04 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SDIO stack doesn't have a structure for function 0. The structure
-pointer stored in card->sdio_func[0] is actually for function 1.
-With current implementation the register read/write is applied to
-function 1. This pathch fixes the issue.
+0) In the logs of a laptop I use I've found error pairs like this error
+pair:
+    <3>[13053.997856] ath5k phy0: failed to warm reset the MAC Chip
+    <3>[13053.997871] ath5k phy0: can't reset hardware (-5)
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+The logs show it for a v3.3 based kernel and for the v3.4-rc2 kernel. I
+can't say whether or not preceding kernels also triggered it.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index 4688904..6989916 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -108,9 +108,13 @@ static inline int brcmf_sdioh_f0_write_byte(struct brcmf_sdio_dev *sdiodev,
- 			sdio_release_host(sdfunc);
- 		}
- 	} else if (regaddr == SDIO_CCCR_ABORT) {
-+		sdfunc = kzalloc(sizeof(struct sdio_func), GFP_KERNEL);
-+		memcpy(sdfunc, sdiodev->func[0], sizeof(struct sdio_func));
-+		sdfunc->num = 0;
- 		sdio_claim_host(sdfunc);
- 		sdio_writeb(sdfunc, *byte, regaddr, &err_ret);
- 		sdio_release_host(sdfunc);
-+		kfree(sdfunc);
- 	} else if (regaddr < 0xF0) {
- 		brcmf_dbg(ERROR, "F0 Wr:0x%02x: write disallowed\n", regaddr);
- 		err_ret = -EPERM;
-@@ -486,7 +490,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 			kfree(bus_if);
- 			return -ENOMEM;
- 		}
--		sdiodev->func[0] = func->card->sdio_func[0];
-+		sdiodev->func[0] = func;
- 		sdiodev->func[1] = func;
- 		sdiodev->bus_if = bus_if;
- 		bus_if->bus_priv.sdio = sdiodev;
--- 
-1.7.5.4
+1) I only noticed these errors because I tend to check these logs for
+errors: I cannot link these errors to drops in (the quality of) wireless
+connectivity.
 
+2) The call chain involved should be:
+
+drivers/net/wireless/ath/ath5k/base.c:
+2737 ath5k_reset(...)
+     {
+2765         ret = ath5k_hw_reset(...);
+2766         if (ret) {
+2767                 ATH5K_ERR(ah, "can't reset hardware (%d)\n", ret);
+2768                 goto err;
+2769         }
+     }
+
+drivers/net/wireless/ath/ath5k/base.c:
+1144 ath5k_hw_reset(...)
+     {
+1296         ret = ath5k_hw_nic_wakeup(...);
+1297         if (ret)
+1298                 return ret;
+     }
+
+ 667 ath5k_hw_nic_wakeup(...)
+     {
+ 728                 ret = ath5k_hw_nic_reset(...);
+ 729 
+ 730         if (ret) {
+ 731                 ATH5K_ERR(ah, "failed to warm reset the MAC Chip\n");
+ 732                 return -EIO;
+ 733         }
+     }
+
+ 395 ath5k_hw_nic_reset(...)
+     {
+ 421         ret = ath5k_hw_register_timeout(...);
+     }
+
+  65 ath5k_hw_register_timeout(...)
+     {
+  80         return (i <= 0) ? -EAGAIN : 0;
+     }
+
+Note that the -EAGAIN returned by ath5k_hw_register_timeout() and
+ath5k_hw_nic_reset() is transformed to -EIO by ath5k_hw_nic_wakeup().
+
+3) Do these message really indicate errors? Or can they perhaps be
+downgraded to (say) KERN_INFO level (ie, <6> prefix)?
+
+
+Paul Bolle
 
