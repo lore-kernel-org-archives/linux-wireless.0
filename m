@@ -1,35 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10059 "EHLO mga11.intel.com"
+Received: from nbd.name ([46.4.11.11]:39570 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753283Ab2DTQYp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 12:24:45 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH v2 1/1] mac80211: declare ieee80211_ave_rssi as EXPORT
-Date: Fri, 20 Apr 2012 09:19:59 -0700
-Message-Id: <1334938799-9666-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120420_182448_764013_B1AE3224)
+	id S1756297Ab2DSTSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 15:18:36 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v3 3/8] ath9k_hw: set the PHY mode for half/quarter channels on AR9003
+Date: Thu, 19 Apr 2012 21:18:24 +0200
+Message-Id: <1334863109-95726-3-git-send-email-nbd@openwrt.org> (sfid-20120419_211847_686453_824B9887)
+In-Reply-To: <1334863109-95726-2-git-send-email-nbd@openwrt.org>
+References: <1334863109-95726-1-git-send-email-nbd@openwrt.org>
+ <1334863109-95726-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_ave_rssi need to be declare as export for driver to use it.
-
-This patch need to be merged with "mac80211: add function retrieve average rssi"
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/mac80211/util.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 89c1e5b..c42c49c 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1801,3 +1801,4 @@ int ieee80211_ave_rssi(struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index bbda25f..be6069b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -723,6 +723,10 @@ static void ar9003_hw_set_rfmode(struct ath_hw *ah,
  
- 	return ifmgd->ave_beacon_signal;
+ 	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
+ 		rfMode |= (AR_PHY_MODE_DYNAMIC | AR_PHY_MODE_DYN_CCK_DISABLE);
++	if (IS_CHAN_QUARTER_RATE(chan))
++		rfMode |= AR_PHY_MODE_QUARTER;
++	if (IS_CHAN_HALF_RATE(chan))
++		rfMode |= AR_PHY_MODE_HALF;
+ 
+ 	REG_WRITE(ah, AR_PHY_MODE, rfMode);
  }
-+EXPORT_SYMBOL_GPL(ieee80211_ave_rssi);
 -- 
-1.7.0.4
+1.7.3.2
 
