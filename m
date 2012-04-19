@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:42758 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398Ab2DPSDe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 14:03:34 -0400
-MIME-Version: 1.0
-In-Reply-To: <4F8C59B2.20207@candelatech.com>
-References: <1334248689-23018-1-git-send-email-greearb@candelatech.com>
-	<4F8C57CC.4090505@sipsolutions.net>
-	<4F8C59B2.20207@candelatech.com>
-Date: Mon, 16 Apr 2012 11:03:33 -0700
-Message-ID: <CAJ-VmokfxVEekHSuKP4KxgAGbK6S8z_vuOOYb=W3cERMmHvdKQ@mail.gmail.com> (sfid-20120416_200339_131000_DD3E2682)
-Subject: Re: [PATCH v3] mac80211: Support on-channel scan option.
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:64393 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756184Ab2DSU54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 16:57:56 -0400
+Subject: question on non-kernel patch
+From: Don Fry <donald.h.fry@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 19 Apr 2012 13:56:00 -0700
+Message-ID: <1334868960.7300.10.camel@dfry-linux1> (sfid-20120419_225759_866121_F9B5055C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 April 2012 10:41, Ben Greear <greearb@candelatech.com> wrote:
+Hi John,
+	We have a change to the iwlwifi driver for the near future
+which will dynamically load a different module based on the version
+of microcode installed on the system.  The driver does a
+request_module_nowait after obtaining the firmware file loaded as part
+of modprobe.  This all works fine, however unloading the module is not
+symmetrical/straight forward.
+	It looks like there are capabilities already implemented to
+make this easy.  If I put the following script into /etc/modprobe.d
+then modprobe iwlwifi-r will do the right thing.
+	It is backward compatible with the current iwlwifi driver.
+How do I get this out in the community before we submit the patch that
+would break iwlwifi removal?
 
-> I also tried some manual scans on a fixed frequency.  Those
-> appeared to work, though I got scan results for APs on different
-> channels.  Does that seem right?  I can't see how my patch
-> would affect that sort of thing one way or another...
-
-You'll see off-channel beacons in 11bg mode. :-)
-
-It's actually rather helpful, except that the RSSI reported isn't
-anywhere near as valid as you'd like.
+Thanks,
+Don
 
 
+# /etc/modprobe.d/iwlwifi.conf
+# iwlwifi will dyamically load either iwldvm or iwlmvm depending on the
+# microcode file installed on the system.  When removing iwlwifi, first
+# remove the iwl?vm module and then iwlwifi.
+remove iwlwifi \
+(/sbin/lsmod | grep -o -e ^iwlmvm -e ^iwldvm -e ^iwlwifi | xargs /sbin/rmmod) \
+&& /sbin/modprobe -r mac80211
 
-Adrian
+
