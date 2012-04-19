@@ -1,84 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy9.bluehost.com ([69.89.24.6]:41214 "HELO
-	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932128Ab2DQP3Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 11:29:25 -0400
-Message-ID: <4F8DB687.2090701@xenotime.net> (sfid-20120417_172949_605380_833EAC4E)
-Date: Tue, 17 Apr 2012 11:29:27 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
-References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>	 <4F8C784B.2040402@xenotime.net> <1334640620.27247.7.camel@cumari>
-In-Reply-To: <1334640620.27247.7.camel@cumari>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:53528 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932204Ab2DSUkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Apr 2012 16:40:39 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>,
+	netdev@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH] update for net-next: iwlwifi: Remove inconsistent and redundant declaration
+Date: Thu, 19 Apr 2012 13:36:00 -0700
+Message-Id: <1334867760-2815-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120419_224051_551742_744922F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 10:30 PM, Luciano Coelho wrote:
+From: David Spinadel <david.spinadel@intel.com>
 
-> Hi Randy,
-> 
-> On Mon, 2012-04-16 at 12:51 -0700, Randy Dunlap wrote: 
->> From: Randy Dunlap <rdunlap@xenotime.net>
->>
->> wl12xx build fails with many undefined symbol errors when MAC80211
->> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
->> on MAC80211 (which already depends on CFG80211).
->>
->> Here are a few of the many build errors:
->>
-> 
-> [...]
-> 
->> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
->> Cc:	Luciano Coelho <coelho@ti.com>
->> Cc:	linux-wireless@vger.kernel.org
->> Cc:	"John W. Linville" <linville@tuxdriver.com>
->> ---
-> 
-> Thanks for the patch!
-> 
-> 
->> --- linux-next-20120416.orig/drivers/net/wireless/ti/wl12xx/Kconfig
->> +++ linux-next-20120416/drivers/net/wireless/ti/wl12xx/Kconfig
->> @@ -1,5 +1,6 @@
->>  config WL12XX
->>         tristate "TI wl12xx support"
->> +	depends on MAC80211
->>         select WLCORE
-> 
-> Do we really need this one? wl12xx selects WLCORE which in turn depends
-> on MAC80211 (with your change below).  Maybe we don't need this?
+Remove declaration of iwl_alloc_traffic_mem from iwl-agn.h,
+from methods that was exposed to support MVM.
 
-Hi,
+MVM doesn't have to use this declaration.
 
-[testing...]
+CC: netdev
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-The build fails if either one of these "depends" is omitted.
-
-
->> ---help---
->>  	  This module adds support for wireless adapters based on TI wl1271,
->> --- linux-next-20120416.orig/drivers/net/wireless/ti/wlcore/Kconfig
->> +++ linux-next-20120416/drivers/net/wireless/ti/wlcore/Kconfig
->> @@ -1,6 +1,6 @@
->>  config WLCORE
->>  	tristate "TI wlcore support"
->> -	depends on WL_TI && GENERIC_HARDIRQS
->> +	depends on WL_TI && GENERIC_HARDIRQS && MAC80211
->>  	depends on INET
->>  	select FW_LOADER
->>  	---help---
-> 
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 67cd123..3d6f3e2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -510,7 +510,6 @@ void iwl_setup_deferred_work(struct iwl_priv *priv);
+ int iwl_send_wimax_coex(struct iwl_priv *priv);
+ int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
+ void iwl_debug_config(struct iwl_priv *priv);
+-int iwl_alloc_traffic_mem(struct iwl_priv *priv);
+ void iwl_set_hw_params(struct iwl_priv *priv);
+ void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
+ int iwl_init_drv(struct iwl_priv *priv);
 -- 
-~Randy
+1.7.0.4
+
