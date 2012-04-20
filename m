@@ -1,69 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:44227 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848Ab2DPF52 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59138 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932235Ab2DTWyS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 01:57:28 -0400
-Received: by qcro28 with SMTP id o28so2930858qcr.19
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2012 22:57:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgVdQgMoBNpJcPJuc608+exeVvpvrGRvvmEggf=GTmOkbg@mail.gmail.com>
-References: <20120413142352.3b927516@destiny.ordissimo> <CALUN=qJXckZ+_S90QxyvqEAbeu+Fo=cv9VZ9=AkXRJGsFH3yBQ@mail.gmail.com>
- <CAGRGNgVdQgMoBNpJcPJuc608+exeVvpvrGRvvmEggf=GTmOkbg@mail.gmail.com>
-From: Anisse Astier <anisse@astier.eu>
-Date: Mon, 16 Apr 2012 07:57:07 +0200
-Message-ID: <CALUN=qK65XgtG5B-Da9o6oGaSF38TsN6NuNaK5=9-nQ+TMUvtg@mail.gmail.com> (sfid-20120416_075732_151000_CA4A18D0)
-Subject: Re: RT5390 not working with rt2800pci
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	RA-Jay Hung <Jay_Hung@ralinktech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 20 Apr 2012 18:54:18 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 3/4] mac80211: Framework to get wifi-driver stats via ethtool.
+Date: Fri, 20 Apr 2012 15:53:51 -0700
+Message-Id: <1334962432-18620-3-git-send-email-greearb@candelatech.com> (sfid-20120421_005422_947719_2132AEDA)
+In-Reply-To: <1334962432-18620-1-git-send-email-greearb@candelatech.com>
+References: <1334962432-18620-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 16, 2012 at 1:38 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Anisse,
->
-> On Mon, Apr 16, 2012 at 03:33, Anisse Astier <anisse@astier.eu> wrote:
->> On Fri, Apr 13, 2012 at 2:23 PM, Anisse Astier <anisse@astier.eu> wrote:
->>>
->>> [1] I have many of both, in RT5390(rev 1502) and RT5390F(rev 0502) models. All non working are rev 1502, even if some rev 1502 are working.
->>
->> To clarify, Revs 0502, marked RT5390L are all working, and can be
->> ignored for the purpose of this discussion.
->>
->> The only non-working revs are 1502, which is the model marked
->> "RT5390RL". This model has zero google results apart from this
->> discussion, so I'm guessing it might be new, hence not much tested and
->> not supported.
->
-> This is likely to be the case, I'm sure that the rt2x00 developers
-> will probably have support in the driver once RaLink gives them the
-> code / info needed.
->
->> Why some cards work and others don't is a mystery.
->
-> Not really, old cards generally work, current cards that have been out
-> for a little while generally work, and bleeding edge,
-> just-released-yesterday cards tend not to.
-What I meant is that in the set of RT5390RL cards, some work, some
-don't, consistently, and I cannot find any difference between them.
+From: Ben Greear <greearb@candelatech.com>
 
->
-> In general, the kernel developers only add support for a card once
-> it's been released.
-Indeed, and once someone reports they exist ;-)
+This adds hooks to call into the driver to get additional
+stats for the ethtool API.
 
->
-> Thanks,
->
-> --
-> Julian Calaby
->
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 bebd89f... 95a3ef2... M	include/net/mac80211.h
+:100644 100644 a1d04c8... 6952ff9... M	net/mac80211/cfg.c
+:100644 100644 4a0e559... 6d33a0c... M	net/mac80211/driver-ops.h
+:100644 100644 7c0754b... 6de00b2... M	net/mac80211/driver-trace.h
+ include/net/mac80211.h      |   17 +++++++++++++++++
+ net/mac80211/cfg.c          |   19 ++++++++++++++++---
+ net/mac80211/driver-ops.h   |   37 +++++++++++++++++++++++++++++++++++++
+ net/mac80211/driver-trace.h |   15 +++++++++++++++
+ 4 files changed, 85 insertions(+), 3 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index bebd89f..95a3ef2 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2223,6 +2223,14 @@ enum ieee80211_rate_control_changed {
+  *	The @tids parameter is a bitmap and tells the driver which TIDs the
+  *	frames will be on; it will at most have two bits set.
+  *	This callback must be atomic.
++ *
++ * @get_et_sset_count:  Ethtool API to get string-set count.
++ *
++ * @get_et_stats:  Ethtool API to get a set of u64 stats.
++ *
++ * @get_et_strings:  Ethtool API to get a set of strings to describe stats
++ *	and perhaps other supported types of ethtool data-sets.
++ *
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -2353,6 +2361,15 @@ struct ieee80211_ops {
+ 					u16 tids, int num_frames,
+ 					enum ieee80211_frame_release_type reason,
+ 					bool more_data);
++
++	int	(*get_et_sset_count)(struct ieee80211_hw *hw,
++				     struct ieee80211_vif *vif, int sset);
++	void	(*get_et_stats)(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ethtool_stats *stats, u64 *data);
++	void	(*get_et_strings)(struct ieee80211_hw *hw,
++				  struct ieee80211_vif *vif,
++				  u32 sset, u8 *data);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a1d04c8..6952ff9 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -463,10 +463,17 @@ static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       int sset)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	int rv = 0;
++
+ 	if (sset == ETH_SS_STATS)
+-		return STA_STATS_LEN;
++		rv += STA_STATS_LEN;
+ 
+-	return -EOPNOTSUPP;
++	rv += drv_get_et_sset_count(sdata, sset);
++
++	if (rv == 0)
++		return -EOPNOTSUPP;
++	return rv;
+ }
+ 
+ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+@@ -527,16 +534,22 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+ 	}
+ 
+ 	rcu_read_unlock();
++
++	drv_get_et_stats(sdata, stats, &(data[STA_STATS_LEN]));
+ }
+ 
+ static void ieee80211_get_et_strings(struct wiphy *wiphy,
+ 				     struct net_device *dev,
+ 				     u32 sset, u8 *data)
+ {
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	int sz_sta_stats = 0;
++
+ 	if (sset == ETH_SS_STATS) {
+-		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
++		sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
+ 		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
+ 	}
++	drv_get_et_strings(sdata, sset, &(data[sz_sta_stats]));
+ }
+ 
+ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 4a0e559..6d33a0c 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -35,6 +35,43 @@ static inline void drv_tx_frags(struct ieee80211_local *local,
+ 	local->ops->tx_frags(&local->hw, vif, sta, skbs);
+ }
+ 
++static inline void drv_get_et_strings(struct ieee80211_sub_if_data *sdata,
++				      u32 sset, u8 *data)
++{
++	struct ieee80211_local *local = sdata->local;
++	if (local->ops->get_et_strings) {
++		trace_drv_get_et_strings(local, sset);
++		local->ops->get_et_strings(&local->hw, &sdata->vif, sset, data);
++		trace_drv_return_void(local);
++	}
++}
++
++static inline void drv_get_et_stats(struct ieee80211_sub_if_data *sdata,
++				    struct ethtool_stats *stats,
++				    u64 *data)
++{
++	struct ieee80211_local *local = sdata->local;
++	if (local->ops->get_et_stats) {
++		trace_drv_get_et_stats(local);
++		local->ops->get_et_stats(&local->hw, &sdata->vif, stats, data);
++		trace_drv_return_void(local);
++	}
++}
++
++static inline int drv_get_et_sset_count(struct ieee80211_sub_if_data *sdata,
++					int sset)
++{
++	struct ieee80211_local *local = sdata->local;
++	int rv = 0;
++	if (local->ops->get_et_sset_count) {
++		trace_drv_get_et_sset_count(local, sset);
++		rv = local->ops->get_et_sset_count(&local->hw, &sdata->vif,
++						   sset);
++		trace_drv_return_int(local, rv);
++	}
++	return rv;
++}
++
+ static inline int drv_start(struct ieee80211_local *local)
+ {
+ 	int ret;
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 7c0754b..6de00b2 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -161,6 +161,21 @@ DEFINE_EVENT(local_only_evt, drv_start,
+ 	TP_ARGS(local)
+ );
+ 
++DEFINE_EVENT(local_u32_evt, drv_get_et_strings,
++	     TP_PROTO(struct ieee80211_local *local, u32 sset),
++	     TP_ARGS(local, sset)
++);
++
++DEFINE_EVENT(local_u32_evt, drv_get_et_sset_count,
++	     TP_PROTO(struct ieee80211_local *local, u32 sset),
++	     TP_ARGS(local, sset)
++);
++
++DEFINE_EVENT(local_only_evt, drv_get_et_stats,
++	     TP_PROTO(struct ieee80211_local *local),
++	     TP_ARGS(local)
++);
++
+ DEFINE_EVENT(local_only_evt, drv_suspend,
+ 	TP_PROTO(struct ieee80211_local *local),
+ 	TP_ARGS(local)
+-- 
+1.7.3.4
+
