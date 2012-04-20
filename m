@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:29451 "EHLO mx4.wp.pl"
+Received: from purkki.adurom.net ([80.68.90.206]:42319 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751341Ab2DCBlB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 21:41:01 -0400
-From: Jakub Kicinski <kubakici@wp.pl>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH v2 0/4] rt2800: fix initialization after legacy driver
-Date: Tue,  3 Apr 2012 03:40:46 +0200
-Message-Id: <1333417250-24560-1-git-send-email-kubakici@wp.pl> (sfid-20120403_034106_410024_6AA4C0F9)
+	id S932802Ab2DTSkO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 14:40:14 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] wireless: at76c50x: allocating too much data
+References: <20120420064705.GE22649@elgon.mountain>
+	<CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com>
+	<20120420091449.GI27101@mwanda>
+Date: Fri, 20 Apr 2012 21:14:44 +0300
+In-Reply-To: <20120420091449.GI27101@mwanda> (Dan Carpenter's message of "Fri,
+	20 Apr 2012 12:14:49 +0300")
+Message-ID: <87vcku9sob.fsf@purkki.adurom.net> (sfid-20120420_204021_358458_FFC1E697)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-the main purpose of this set is to make it possible to switch between
-rt2800pci and legacy driver w/o rebooting or suspending whole machine.
-Today rt2800pci will fail to bring the interface up if it was earlier
-operated by legacy drv. I'm sure it happens with rt3090, rt2860 seems
-to work fine.
+> On Fri, Apr 20, 2012 at 06:57:00PM +1000, Julian Calaby wrote:
+>> > -       struct mib_local *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
+>> > +       struct mib_local *m = kmalloc(sizeof(struct mib_local), GFP_KERNEL);
+>> 
+>> Would it be better practice to use sizeof(*m)?
+>> 
+>
+> That was my temptation as well...  But I decided to make it match
+> with the surrounding code.  I'm happy to resend if people want.
 
-First two patches bring back disabling DMA before loading firmware, 
-third and fourth actually fix the take over issue.
+IMHO sizeof(*m) is better and I tend to use it.
 
-Jakub Kicinski (4):
-  rt2800: introduce wpdma_disable function
-  rt2800: add disabling of DMA before loading firmware
-  rt2800: initialize queues before giving up due to DMA error
-  rt2800: zero registers of unused TX rings
-
- drivers/net/wireless/rt2x00/rt2800lib.c |   36 +++++++++++++++++-------------
- drivers/net/wireless/rt2x00/rt2800lib.h |    1 +
- drivers/net/wireless/rt2x00/rt2800pci.c |   26 +++++++++++++---------
- 3 files changed, 36 insertions(+), 27 deletions(-)
+Related to this: I have a bad habit of sometimes dropping '*' from
+sizeof()? Is there a tool which could spot that?
 
 -- 
-1.7.7.6
-
+Kalle Valo
