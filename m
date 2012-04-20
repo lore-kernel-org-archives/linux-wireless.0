@@ -1,94 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58806 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755190Ab2DWVwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 17:52:53 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/29] iwlwifi: make a static inline to read the RF kill register
-Date: Mon, 23 Apr 2012 14:47:12 -0700
-Message-Id: <1335217660-21950-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235259_323868_CAB0F2B3)
-In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:55715 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751266Ab2DTI5W convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 04:57:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <20120420064705.GE22649@elgon.mountain>
+References: <20120420064705.GE22649@elgon.mountain>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 20 Apr 2012 18:57:00 +1000
+Message-ID: <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com> (sfid-20120420_105728_184194_96D3E4E7)
+Subject: Re: [patch] wireless: at76c50x: allocating too much data
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi Dan,
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    3 +--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    9 +++------
- 3 files changed, 10 insertions(+), 8 deletions(-)
+On Fri, Apr 20, 2012 at 16:47, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> This is a cut and paste mistake, sizeof(struct mib_local) was intended
+> instead of sizeof(struct mib_phy).  The call to at76_get_mib() uses
+> sizeof(struct mib_local) correctly.
+>
+> The current code works fine because mib_phy structs are larger than
+> mib_local structs.  But we may as well clean it up.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+> index faa8bcb..0bba5ea 100644
+> --- a/drivers/net/wireless/at76c50x-usb.c
+> +++ b/drivers/net/wireless/at76c50x-usb.c
+> @@ -1122,7 +1122,7 @@ exit:
+>  static void at76_dump_mib_local(struct at76_priv *priv)
+>  {
+>        int ret;
+> -       struct mib_local *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
+> +       struct mib_local *m = kmalloc(sizeof(struct mib_local), GFP_KERNEL);
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index c7f8f40..8a175e0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -430,4 +430,10 @@ trans_pcie_get_cmd_string(struct iwl_trans_pcie *trans_pcie, u8 cmd)
- 	return trans_pcie->command_names[cmd];
- }
- 
-+static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
-+{
-+	return !(iwl_read32(trans, CSR_GP_CNTRL) &
-+		CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
-+}
-+
- #endif /* __iwl_trans_int_pcie_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 47c1f0a..d2239aa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -648,8 +648,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
- 	if (inta & CSR_INT_BIT_RF_KILL) {
- 		bool hw_rfkill;
- 
--		hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
--				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
-+		hw_rfkill = iwl_is_rfkill_set(trans);
- 		IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
- 				hw_rfkill ? "disable radio" : "enable radio");
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index e6401e8..1d9724d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -981,8 +981,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 	}
- 
- 	/* If platform's RF_KILL switch is NOT set to KILL */
--	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
--				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
-+	hw_rfkill = iwl_is_rfkill_set(trans);
- 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 
- 	if (hw_rfkill) {
-@@ -1422,8 +1421,7 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 
- 	iwl_apm_init(trans);
- 
--	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
--				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
-+	hw_rfkill = iwl_is_rfkill_set(trans);
- 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 
- 	return err;
-@@ -1562,8 +1560,7 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
- {
- 	bool hw_rfkill;
- 
--	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
--				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
-+	hw_rfkill = iwl_is_rfkill_set(trans);
- 
- 	if (hw_rfkill)
- 		iwl_enable_rfkill_int(trans);
+Would it be better practice to use sizeof(*m)?
+
+Thanks,
+
 -- 
-1.7.0.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
