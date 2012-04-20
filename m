@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4504 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758776Ab2D1B5P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 21:57:15 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] brcmfmac: check bus state for status
-Date: Fri, 27 Apr 2012 18:56:57 -0700
-Message-ID: <1335578219-4224-3-git-send-email-frankyl@broadcom.com> (sfid-20120428_035722_540146_83A36BEB)
-In-Reply-To: <1335578219-4224-1-git-send-email-frankyl@broadcom.com>
-References: <1335578219-4224-1-git-send-email-frankyl@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:30395 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052Ab2DTIh1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 04:37:27 -0400
+Message-ID: <4F91203E.9090308@qca.qualcomm.com> (sfid-20120420_103742_222234_C167AB3D)
+Date: Fri, 20 Apr 2012 11:37:18 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>,
+	<kernel-janitors@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"Ng, Chilam" <chilamng@qca.qualcomm.com>
+Subject: Re: [patch 1/2] ath6kl: change || to &&
+References: <20120420064328.GC22649@elgon.mountain>
+In-Reply-To: <20120420064328.GC22649@elgon.mountain>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bus state should be the correct flag for bus status. Use it instead
-of result from previous function call for backplane clock switch.
+On 04/20/2012 09:43 AM, Dan Carpenter wrote:
+> The original conditions are always true.  I think && was intended here,
+> but I don't have the hardware to test.  Could you take a look?
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> index 065e615..086a8e1 100644
+> --- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> +++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> @@ -758,7 +758,7 @@ static void ath6kl_htc_tx_bundle(struct htc_endpoint *endpoint,
+>  	u32 txb_mask;
+>  	u8 ac = WMM_NUM_AC;
+>  
+> -	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) ||
+> +	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) &&
+>  	    (WMI_CONTROL_SVC != endpoint->svc_id))
+>  		ac = target->dev->ar->ep2ac_map[endpoint->eid];
+>  
+> @@ -866,7 +866,7 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+>  	 */
+>  	INIT_LIST_HEAD(&txq);
+>  
+> -	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) ||
+> +	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) &&
+>  	    (WMI_CONTROL_SVC != endpoint->svc_id))
+>  		ac = target->dev->ar->ep2ac_map[endpoint->eid];
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Dan, that's a good catch. This is coming from Chilam's patch:
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 12d9dc9..46fc16f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3508,7 +3508,7 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 			       SBSDIO_FUNC1_CHIPCLKCSR, saveclk, &err);
- 
- 	/* If we didn't come up, turn off backplane clock */
--	if (!ret)
-+	if (bus_if->state != BRCMF_BUS_DATA)
- 		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
- 
- exit:
--- 
-1.7.9.5
+https://github.com/kvalo/ath6kl/commit/b29072cc7b0e08ace48ab709c40cf6246fb2e8b0
 
+Chilam, is it safe to take Dan's patch?
 
+Kalle
