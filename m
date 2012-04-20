@@ -1,77 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:65195 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753427Ab2DXMpC convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:44661 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932197Ab2DTPSD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 08:45:02 -0400
-Received: by qatm19 with SMTP id m19so2763653qat.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 05:45:01 -0700 (PDT)
+	Fri, 20 Apr 2012 11:18:03 -0400
+Message-ID: <4F917E26.8060106@lwfinger.net> (sfid-20120420_171808_162628_417EF14E)
+Date: Fri, 20 Apr 2012 10:17:58 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com>
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
-	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
-	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
-	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
-	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
-	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
-	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
-	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
-	<4F901224.1040508@sipsolutions.net>
-	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
-	<4F901F16.6080007@sipsolutions.net>
-	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
-	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
-	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
-	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
-	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
-	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
-	<4F96939B.5030204@erley.org>
-	<CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
-	<D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com>
-Date: Tue, 24 Apr 2012 14:45:01 +0200
-Message-ID: <CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com> (sfid-20120424_144508_049829_59ABF5D9)
-Subject: Re: wlan0 not present
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Dominik Feser <dominik.feser@googlemail.com>
-Cc: Pat Erley <pat-lkml@erley.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Fry, Donald H" <donald.h.fry@intel.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kay@vrfy.org" <kay@vrfy.org>, "jcm@redhat.com" <jcm@redhat.com>,
+	"linux-modules@vger.kernel.org" <linux-modules@vger.kernel.org>
+Subject: Re: question on non-kernel patch
+References: <1334868960.7300.10.camel@dfry-linux1> <20120420140917.GA13844@tuxdriver.com> <193F82CA5D80C84A83D67BB5D5B9FDE548154FE8@ORSMSX101.amr.corp.intel.com>
+In-Reply-To: <193F82CA5D80C84A83D67BB5D5B9FDE548154FE8@ORSMSX101.amr.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 24, 2012 at 2:29 PM, Dominik Feser
-<dominik.feser@googlemail.com> wrote:
-> What does that mean?
+On 04/20/2012 09:41 AM, Fry, Donald H wrote:
+> Today we have wifi devices with stuff implemented in hardware and other things done in microcode.  For example the 6205 device.  Today we do modprobe iwlwifi to install and modprobe iwlwifi -r to remove the module.
 >
+> 'Tomorrow' we use the same hardware but with a different microcode file which changes the driver quite a bit.  The PCI device/vendor id's are the same since the hardware has not changed, however the kernel driver is new.
+>
+> We would like to shield the users from having to know the details of our driver and make things look pretty much like they do today.  What we have been testing, and have done a lot of code refactoring to clean the driver up in preparation for this change is the following:
+>
+> The base/core/common functionality is still called iwlwifi which interacts with the hardware.  On modprobe, the driver tries to find a microcode file to run based on the device/vendor id/sub-id.  While parsing the microcode file, it will indicate which software API it supports, which will indicate which specific module to use, module A (old) or module B (new).  This way the user still uses modprobe iwlwifi to install, and iwlwifi will request the appropriate specific module to make the hardware function.
+>
+> However, since module A (for example) requires iwlwifi, an attempt to modprobe iwlwifi -r results in a message that iwlwifi is still in use.  Module A must be removed first followed by iwlwifi, etc.  While this may be obvious from looking at lsmod for a kernel developer, it is not obvious for most users.  While trying to provide a user friendly way to accomplish this, I found the .conf files described in /etc/modprobe.d.  This is one way to hide the details of what we are doing, and allow most users to continue to install with modprobe iwlwifi and remove with modprobe iwlwifi -r.
+>
+> If there is a better way to do this, I am very open to suggestions.  If this is an acceptable solution, how do we get the iwlwifi.conf file out to the distros and user community before or at the same time as this new change so we do not break things?
 
-Pickup the patch from [2], apply it against a recent compat-wireless
-version, build and test.
-Report here again.
+How large are these two modules? With debugging disabled, iwlwifi is less than 
+250K, which is not that large. Perhaps you could load both, or build both into a 
+monolithic iwlwifi. The appropriate calls can be setup after the fw is read. Any 
+globals in the two routines need to be unique anyway, otherwise the build will 
+fail when iwlwifi is built in and not compiled as a module.
 
-- Sedat -
-
->
-> Am 24.04.2012 um 14:07 schrieb Sedat Dilek:
->
->> On Tue, Apr 24, 2012 at 1:50 PM, Pat Erley <pat-lkml@erley.org> wrote:
->>> Try a newer compat-wireless.  I saw mention of a patch on this ML
->>> that iwlwifi was looking for firmwares that aren't available yet.
->>>
->>> Specifically, it wants a -6 ucode, where you have -5.  I'm not
->>> sure if this has been merged upstream yet.
->>>
->>
->> No, pending for upstream and linux-stable GIT, see [1] and especially
->> "iwlwifi: use correct released ucode version" [2].
->>
->> - Sedat -
->>
->> [1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=shortlog;h=refs/heads/wireless
->> [2] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=patch;h=462156fac4d69483c1d54c6218d019681da8ad74
->
+Larry
