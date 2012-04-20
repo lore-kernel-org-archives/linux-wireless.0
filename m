@@ -1,52 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.multi.fi ([85.134.37.151]:59124 "EHLO smtp.multi.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751771Ab2DUV6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 17:58:08 -0400
-Received: from tmb-laptop.supernet (55863541.cust.multi.fi [85.134.53.65] (may be forged))
-	by smtp.multi.fi (8.14.4/8.14.4) with ESMTP id q3LLiRqu031596
-	for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 00:44:29 +0300
-Message-ID: <4F932A3D.2070701@mageia.org> (sfid-20120421_235812_903118_31B5AB43)
-Date: Sun, 22 Apr 2012 00:44:29 +0300
-From: Thomas Backlund <tmb@mageia.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:53232 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932307Ab2DTPKB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 11:10:01 -0400
+Received: by qcro28 with SMTP id o28so5900937qcr.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 08:10:01 -0700 (PDT)
 MIME-Version: 1.0
+Date: Fri, 20 Apr 2012 18:10:01 +0300
+Message-ID: <CAFE89JyAgkY4v7Hzcy1JJwuA5nCtd9n2+d95UCUPvFiOXrCnGw@mail.gmail.com> (sfid-20120420_171035_963363_F094F35B)
+Subject: need help in compiling compat-wireless
+From: Oleksandr Yeremko <yeremko@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: Missing iwlwifi firmwares ?
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dear Friends,
 
-Hi,
+I have the error described below during my attempts to build the
+latest Linux wireless drivers.
 
-When reviewing our firmware packages I noticed a few missing iwlwifi
-firmwares according to kernel-3,3,1
+Could you, please, be so kind and explain me how to solve the problem?
 
-
-# modinfo iwlwifi
-filename:
-/lib/modules/3.3.1-desktop-2.mga2/kernel/drivers/net/wireless/iwlwifi/iwlwifi.ko.xz
-alias:          iwlagn
-license:        GPL
-author:         Copyright(c) 2003-2011 Intel Corporation
-<ilw@linux.intel.com>
-version:        in-tree:d
-description:    Intel(R) Wireless WiFi Link AGN driver for Linux
-
-[...]
-firmware:       iwlwifi-6000g2a-6.ucode
-firmware:       iwlwifi-100-6.ucode
-firmware:       iwlwifi-1000-6.ucode
-[...]
-
-Theese three are missing from:
-http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git;a=summary
-
-http://intellinuxwireless.org/?n=Downloads
+Thanks in advance,
+Oleksandr
 
 
-The API 5 ucodes are awailable, but the driver expect API 6...
+[root@hq compat-wireless-2012-04-15]# uname -r
+2.6.32-220.7.1.el6.x86_64
 
-So..., when will they be available ?
---
-Thomas
+[root@hq compat-wireless-2012-04-15]# ./scripts/driver-select intel
+Processing new driver-select request...
+Backing up makefile: Makefile.bk
+Backing up makefile: drivers/net/wireless/Makefile.bk
+Backup exists: Makefile.bk
+Backing up makefile: drivers/ssb/Makefile.bk
+Backing up makefile: drivers/bcma/Makefile.bk
+Backing up makefile: drivers/misc/eeprom/Makefile.bk
+Backup exists: Makefile.bk
+
+[root@hq compat-wireless-2012-04-15]# make
+./compat/scripts/gen-compat-config.sh: line 51: KLIB_BUILD: command not found
+grep: /Makefile: No such file or directory
+./scripts/gen-compat-autoconf.sh
+/root/src/compat-wireless-2012-04-15/.config
+/root/src/compat-wireless-2012-04-15/config.mk >
+include/linux/compat_autoconf.h
+make -C /lib/modules/2.6.32-220.7.1.el6.x86_64/build
+M=/root/src/compat-wireless-2012-04-15 modules
+make[1]: Entering directory `/usr/src/kernels/2.6.32-220.7.1.el6.x86_64'
+  CC [M]  /root/src/compat-wireless-2012-04-15/compat/main.o
+In file included from
+/root/src/compat-wireless-2012-04-15/include/linux/compat-2.6.h:55,
+                 from <command-line>:0:
+/root/src/compat-wireless-2012-04-15/include/linux/compat-2.6.35.h:27:
+error: static declaration of ‘irq_set_affinity_hint’ follows
+non-static declaration
+include/linux/interrupt.h:218: note: previous declaration of
+‘irq_set_affinity_hint’ was here
+In file included from
+/root/src/compat-wireless-2012-04-15/include/linux/compat-2.6.h:61,
+                 from <command-line>:0:
+/root/src/compat-wireless-2012-04-15/include/linux/compat-3.1.h:11:
+error: redefinition of ‘__netdev_alloc_skb_ip_align’
+include/linux/skbuff.h:1512: note: previous definition of
+‘__netdev_alloc_skb_ip_align’ was here
+make[3]: *** [/root/src/compat-wireless-2012-04-15/compat/main.o] Error 1
+make[2]: *** [/root/src/compat-wireless-2012-04-15/compat] Error 2
+make[1]: *** [_module_/root/src/compat-wireless-2012-04-15] Error 2
+make[1]: Leaving directory `/usr/src/kernels/2.6.32-220.7.1.el6.x86_64'
+make: *** [modules] Error 2
