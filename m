@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:44348 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755835Ab2DQJHS (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:51649 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754050Ab2DTSAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 05:07:18 -0400
-Date: Tue, 17 Apr 2012 12:07:17 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: colin@cozybit.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: libertas: if_spi, driver for libertas GSPI devices
-Message-ID: <20120417090717.GA2339@elgon.mountain> (sfid-20120417_110744_463685_E9145D7F)
+	Fri, 20 Apr 2012 14:00:08 -0400
+Received: by bkcik5 with SMTP id ik5so7393905bkc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 11:00:07 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Subject: Re: carl9170 - monitor mode TP drop
+Date: Fri, 20 Apr 2012 19:59:54 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com>
+In-Reply-To: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201204201959.56495.chunkeey@googlemail.com> (sfid-20120420_200015_373267_26677699)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Colin,
+On Friday 20 April 2012 09:41:15 Janusz Dziedzic wrote:
+> Hello,
+> 
+> I am using newest compat-wireless + newest-firmware.
+> Next I setup monitor mode + channel and run wireshark - I do that to
+> record TCP flow on the channel.
+> 
+> Before that I had TCP throughput about 30Mbit/s and after run
+> wireshark I see TP drop - about 3Mbit/s (after setting monitor mode).
+> This TP is between AP and other STA on the same channel.
+> 
+> Should I set/check something more to not see this TP drop?
 
-I was going through some old stuff and I had a question about a
-potential overfow in if_spi_c2h_cmd().
+Well, I don't know how you exactly setup the mode. But If
+the monitor interface is set to PROMISC, then it's likely
+that the hardware will be set into a special "sniffer"
+operation mode. This mode is great if you are interested in
+frames with bad PLCPs and FCS but it is not so great for
+throughput because the rx filter won't filter anymore and
+the tons of garbage that usually is dropped early on gets
+passed to the host and on it's way it competes for FIFO
+resources with the data. 
 
-   714          } else if (len > IF_SPI_CMD_BUF_SIZE) {
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^
-We cap "len" at 2400 bytes here.
+(One more thing: Isn't it possible to get the TCP flow,
+from the "ethernet" (as ifconfig calls it) interface of
+the wlan device as well?)
 
-   715                  netdev_err(priv->dev,
-   716                             "%s: error: response packet too large: %d bytes, but maximum is %d\n",
-   717                             __func__, len, IF_SPI_CMD_BUF_SIZE);
-   718                  err = -EINVAL;
-   719                  goto out;
-   720          }
-   721  
-   722          /* Read the data from the WLAN module into our command buffer */
-   723          err = spu_read(card, IF_SPI_CMD_RDWRPORT_REG,
-   724                                  card->cmd_buffer, ALIGN(len, 4));
-   725          if (err)
-   726                  goto out;
-   727  
-   728          spin_lock_irqsave(&priv->driver_lock, flags);
-   729          i = (priv->resp_idx == 0) ? 1 : 0;
-   730          BUG_ON(priv->resp_len[i]);
-   731          priv->resp_len[i] = len;
-   732          memcpy(priv->resp_buf[i], card->cmd_buffer, len);
-                       ^^^^^^^^^^^^^^^^
-But ->resp_buf[i] can only hold LBS_UPLD_SIZE (2312) bytes, so we could
-write past the end of the array.
-
-   733          lbs_notify_command_response(priv, i);
-
-regards,
-dan carpenter
-
+Regards,
+	Christian
