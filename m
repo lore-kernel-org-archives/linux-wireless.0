@@ -1,30 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3099 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088Ab2DWL1J (ORCPT
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:37721 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790Ab2DTHlQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 07:27:09 -0400
-Message-ID: <4F953C88.3030609@qca.qualcomm.com> (sfid-20120423_132742_118421_2717E70F)
-Date: Mon, 23 Apr 2012 14:27:04 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 20 Apr 2012 03:41:16 -0400
+Received: by qadc11 with SMTP id c11so162929qad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 00:41:15 -0700 (PDT)
 MIME-Version: 1.0
-To: Ming Jiang <mjiang@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <rmani@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath6kl clear the MMC_PM_KEEP_POWER for cutpower case
-References: <1334712304-12666-1-git-send-email-mjiang@qca.qualcomm.com>
-In-Reply-To: <1334712304-12666-1-git-send-email-mjiang@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Date: Fri, 20 Apr 2012 09:41:15 +0200
+Message-ID: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com> (sfid-20120420_094119_774719_E2AFC8D6)
+Subject: carl9170 - monitor mode TP drop
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/18/2012 04:25 AM, Ming Jiang wrote:
-> ath6kl: If wow deepsleep pno suspend failure driver will choose cutpower.
-> in this scenario MMC_PM_KEEP_POWER should be cleared so that mmc will power
-> off the ar6000
-> 
-> Signed-off-by: Ming Jiang <mjiang@qca.qualcomm.com>
+Hello,
 
-Thanks, applied. But I removed extra parenthesis.
+I am using newest compat-wireless + newest-firmware.
+Next I setup monitor mode + channel and run wireshark - I do that to
+record TCP flow on the channel.
 
-Kalle
+Before that I had TCP throughput about 30Mbit/s and after run
+wireshark I see TP drop - about 3Mbit/s (after setting monitor mode).
+This TP is between AP and other STA on the same channel.
+
+Should I set/check something more to not see this TP drop?
+
+BR
+Janusz
