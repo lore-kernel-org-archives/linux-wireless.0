@@ -1,83 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58877 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966083Ab2DLV6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:58:08 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/24] iwlwifi: move iwl_free_skb and mark it static
-Date: Thu, 12 Apr 2012 14:54:02 -0700
-Message-Id: <1334267661-14654-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235815_708488_F5FF60C8)
-In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:46398 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751040Ab2DTQxF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 12:53:05 -0400
+Received: by dake40 with SMTP id e40so13246061dak.11
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 09:53:04 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Shinichi Hotori <hotorinn@gmail.com>,
+	Yu Niiro <yu.niiro@gmail.com>,
+	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>,
+	Pavel Zubarev <pavel.zubarev@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org, ashok@cozybit.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: fixup for mesh TSF adjustment latency in Toffset setpoint
+Date: Fri, 20 Apr 2012 09:52:56 -0700
+Message-Id: <1334940776-5048-1-git-send-email-javier@cozybit.com> (sfid-20120420_185309_587755_AFF4328A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+The original patch defined the correction margin but did not apply it.
 
-iwl_free_skb is used only in iwl-agn.c, move
-it there and mark it static.
-
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Shinichi Hotori <hotorinn@gmail.com>
+Signed-off-by: Yu Niiro <yu.niiro@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    9 +++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h  |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.c |    9 ---------
- 3 files changed, 9 insertions(+), 10 deletions(-)
+ net/mac80211/mesh_sync.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 208b827..7398535 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2208,6 +2208,15 @@ void iwlagn_lift_passive_no_rx(struct iwl_priv *priv)
- 	priv->passive_no_rx = false;
- }
+diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
+index ff60d6b..38d30e8 100644
+--- a/net/mac80211/mesh_sync.c
++++ b/net/mac80211/mesh_sync.c
+@@ -195,7 +195,7 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
+ 		spin_unlock_bh(&ifmsh->sync_offset_lock);
  
-+static void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
-+{
-+	struct ieee80211_tx_info *info;
-+
-+	info = IEEE80211_SKB_CB(skb);
-+	kmem_cache_free(iwl_tx_cmd_pool, (info->driver_data[1]));
-+	dev_kfree_skb_any(skb);
-+}
-+
- const struct iwl_op_mode_ops iwl_dvm_ops = {
- 	.start = iwl_op_mode_dvm_start,
- 	.stop = iwl_op_mode_dvm_stop,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 9ee13f3..6e8fd8b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -97,7 +97,6 @@ static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
- void iwl_down(struct iwl_priv *priv);
- void iwl_cancel_deferred_work(struct iwl_priv *priv);
- void iwlagn_prepare_restart(struct iwl_priv *priv);
--void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb);
- int __must_check iwl_rx_dispatch(struct iwl_op_mode *op_mode,
- 				 struct iwl_rx_cmd_buffer *rxb,
- 				 struct iwl_device_cmd *cmd);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 0fde81d..efa6a91 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -794,12 +794,3 @@ void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- 
- 	wiphy_rfkill_set_hw_state(priv->hw->wiphy, state);
- }
--
--void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
--{
--	struct ieee80211_tx_info *info;
--
--	info = IEEE80211_SKB_CB(skb);
--	kmem_cache_free(iwl_tx_cmd_pool, (info->driver_data[1]));
--	dev_kfree_skb_any(skb);
--}
+ 	} else {
+-		sta->t_offset_setpoint = sta->t_offset;
++		sta->t_offset_setpoint = sta->t_offset - TOFFSET_SET_MARGIN;
+ 		set_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN);
+ 		msync_dbg("STA %pM : offset was invalid, "
+ 			  " sta->t_offset=%lld",
 -- 
-1.7.0.4
+1.7.5.4
 
