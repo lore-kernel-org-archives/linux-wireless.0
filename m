@@ -1,121 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:47144 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754571Ab2DFIs6 (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:50893 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932343Ab2DTHDx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 04:48:58 -0400
-Received: by iagz16 with SMTP id z16so2845300iag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Apr 2012 01:48:57 -0700 (PDT)
+	Fri, 20 Apr 2012 03:03:53 -0400
+Received: by vbbff1 with SMTP id ff1so6265870vbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 00:03:52 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4F7E4F2A.1030404@lwfinger.net>
-References: <4F0EEA1B.3040501@wut.de>
-	<4F0FA4DD.5020601@lwfinger.net>
-	<loom.20120405T091556-756@post.gmane.org>
-	<4F7D90AF.2040109@gtri.gatech.edu>
-	<4F7E4F2A.1030404@lwfinger.net>
-Date: Fri, 6 Apr 2012 11:48:57 +0300
-Message-ID: <CAL9MRr=U+CCzjP-cSOkPJpvw=AQuHX23grj1atfkT9uxLzEM4w@mail.gmail.com> (sfid-20120406_104902_976250_C13C17BE)
-Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
-From: Nicu Pavel <npavel@mini-box.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+In-Reply-To: <1334843590-7920-2-git-send-email-anisse@astier.eu>
+References: <CAOZOX0UXc0OwhWOiM0PWbGfyynmrQ4kZRAVFJyxtiHe-veUg=g@mail.gmail.com>
+	<1334843590-7920-1-git-send-email-anisse@astier.eu>
+	<1334843590-7920-2-git-send-email-anisse@astier.eu>
+Date: Fri, 20 Apr 2012 09:03:52 +0200
+Message-ID: <CAOZOX0UxEiMCV3+2h+dhmqq+r5ih0RQ9SzeEn8tbVJPeZrMq7w@mail.gmail.com> (sfid-20120420_090400_452791_93E7415C)
+Subject: Re: [PATCH v3 2/2] rt2x00: Add debugfs access for rfcsr register
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Anisse Astier <anisse@astier.eu>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linville@tuxdriver.com, Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 04/05/2012 07:31 AM, Joshua Roys wrote:
->>
->> On 04/05/2012 03:27 AM, Nicu Pavel wrote:
->>>
->>> After mode debugging with DBG_LOUD I found out that the difference when
->>> the
->>> driver is loaded/modprobed and ifdown/ifup to be a receive configuration
->>> register (RCR) value.
->>>
->>> On bootup/modprobe: ### Set RCR(0xf0002a0e) ###
->>> On ifdown/ifup: ### Set RCR(0xf0002ace) ###
->>>
->>> If I force RCR value to 0x2a0e in rtl92cu_set_hw_reg()inside HW_VAR_RCR
->>> case
->>> everything works ok.
->>>
->>> This seems to work with 3 different vendors USB sticks based on 8192cu
->>> chipset
->>> (Edimax, EDUP and some unknown vendor).
->>>
->>> I tried looking up the bit values meanings from that register but
->>> couldn't find
->>> a proper spec.
->>
->>
->> Hello,
->>
->> I found a header file that seems to have better definitions and comments
->> than
->> what is currently in-tree (I think it's a copy of the Realtek sources). It
->> says
->> that the "8192C (RCR) Receive Configuration Register" BIT 6 and 7 are,
->> respectively: RCR_CBSSID_DATA [Accept BSSID match packet (Data)] and
->> RCR_CBSSID_BCN [Accept BSSID match packet (Rx beacon, probe rsp)].
->> These bits are set/cleared in _rtl92cu_set_check_bssid (it calls
->> set_hw_reg
->> w/HW_VAR_RCR) which is called by rtl92cu_set_network_type. The set/clear
->> choice
->> is made based on the rtlphy->current_io_type which is set in
->> rtl8192c/phy_common.c:rtl92c_phy_scan_operation_backup which in turn is
->> called
->> from core.c:rtl_op_sw_scan_start/_complete.
->> It would be interesting to see the output from rtl8192c/phy_common.c
->> functions
->> rtl92c_phy_set_io_cmd and rtl92c_phy_set_io to see if the current_io_type
->> perhaps isn't being updated properly.
+On Thu, Apr 19, 2012 at 3:53 PM, Anisse Astier <anisse@astier.eu> wrote:
+> RFCSR is only used in rt2800. For other chipsets, the debug struct
+> for rfcsr should be zeroed, which isn't be an issue, since the code
+> can now cope with that.
 >
+> Signed-off-by: Anisse Astier <anisse@astier.eu>
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2800.h      |    2 ++
+>  drivers/net/wireless/rt2x00/rt2800lib.c   |    7 +++++++
+>  drivers/net/wireless/rt2x00/rt2x00debug.c |   11 ++++++++++-
+>  drivers/net/wireless/rt2x00/rt2x00debug.h |    1 +
+>  4 files changed, 20 insertions(+), 1 deletion(-)
 >
-> Attached is a patch that I think will help. The main thing it changes is
-> that routine rtl92cu_set_check_bssid() has been coded to update RCR. The
-> other thing that was changed is to make the RCR setting always log even with
-> the default debug option of 0. That will be temporary and that change will
-> be deleted once we get this problem fixed.
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index d91f4f6..9348521 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -102,6 +102,8 @@
+>  #define BBP_SIZE                       0x00ff
+>  #define RF_BASE                                0x0004
+>  #define RF_SIZE                                0x0010
+> +#define RFCSR_BASE                     0x0000
+> +#define RFCSR_SIZE                     0x0040
 >
-> Let me know if the patch helps.
-[..]
-
-Tried the patch, but didn't help:
-
-<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
-
-----> Driver loaded scanning gets results ok.
-
-<6>rtl8192cu: MAC auto ON okay!
-<6>rtl8192cu: Tx queue select: 0x05
-<7>rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver sleep or unload
-<6>rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
-<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002ace) ###
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
-
-----> ifdown/ifup no scanning results.
-
-<6>rtl8192cu: MAC auto ON okay!
-<6>rtl8192cu: Tx queue select: 0x05
-<7>rtl8192c_common:rtl92c_phy_set_bw_mode():<0-0> FALSE driver sleep or unload
-<6>rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
-<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002ace) ###
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtlwifi:rtl_op_conf_tx():<0-0> queue number -954253944 is incorrect!
-<7>rtl8192cu:rtl92cu_set_hw_reg():<0-0> ### Set RCR(0xf0002a0e) ###
-
-----> ifdown/ifup no scanning results.
-
-Nicu
+>  /*
+>  * Number of TX queues.
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 6c95101..0cdbf2b 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -836,6 +836,13 @@ const struct rt2x00debug rt2800_rt2x00debug = {
+>                .word_size      = sizeof(u32),
+>                .word_count     = RF_SIZE / sizeof(u32),
+>        },
+> +       .rfcsr  = {
+> +               .read           = rt2800_rfcsr_read,
+> +               .write          = rt2800_rfcsr_write,
+> +               .word_base      = RFCSR_BASE,
+> +               .word_size      = sizeof(u8),
+> +               .word_count     = RFCSR_SIZE / sizeof(u8),
+> +       },
+>  };
+>  EXPORT_SYMBOL_GPL(rt2800_rt2x00debug);
+>  #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+> index ac898c4..74f6ed5 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00debug.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+> @@ -70,6 +70,7 @@ struct rt2x00debug_intf {
+>         *     - eeprom offset/value files
+>         *     - bbp offset/value files
+>         *     - rf offset/value files
+> +        *     - rfcsr offset/value files
+>         *   - queue folder
+>         *     - frame dump file
+>         *     - queue stats file
+> @@ -89,6 +90,8 @@ struct rt2x00debug_intf {
+>        struct dentry *bbp_val_entry;
+>        struct dentry *rf_off_entry;
+>        struct dentry *rf_val_entry;
+> +       struct dentry *rfcsr_off_entry;
+> +       struct dentry *rfcsr_val_entry;
+>        struct dentry *queue_folder;
+>        struct dentry *queue_frame_dump_entry;
+>        struct dentry *queue_stats_entry;
+> @@ -131,6 +134,7 @@ struct rt2x00debug_intf {
+>        unsigned int offset_eeprom;
+>        unsigned int offset_bbp;
+>        unsigned int offset_rf;
+> +       unsigned int offset_rfcsr;
+>  };
+>
+>  void rt2x00debug_update_crypto(struct rt2x00_dev *rt2x00dev,
+> @@ -525,6 +529,7 @@ RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
+>  RT2X00DEBUGFS_OPS(eeprom, "0x%.4x\n", u16);
+>  RT2X00DEBUGFS_OPS(bbp, "0x%.2x\n", u8);
+>  RT2X00DEBUGFS_OPS(rf, "0x%.8x\n", u32);
+> +RT2X00DEBUGFS_OPS(rfcsr, "0x%.2x\n", u8);
+>
+>  static ssize_t rt2x00debug_read_dev_flags(struct file *file,
+>                                          char __user *buf,
+> @@ -614,7 +619,7 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+>        const struct rt2x00debug *debug = intf->debug;
+>        char *data;
+>
+> -       data = kzalloc(8 * MAX_LINE_LENGTH, GFP_KERNEL);
+> +       data = kzalloc(9 * MAX_LINE_LENGTH, GFP_KERNEL);
+>        if (!data)
+>                return NULL;
+>
+> @@ -637,6 +642,7 @@ static struct dentry *rt2x00debug_create_file_chipset(const char *name,
+>        RT2X00DEBUGFS_SPRINTF_REGISTER(eeprom);
+>        RT2X00DEBUGFS_SPRINTF_REGISTER(bbp);
+>        RT2X00DEBUGFS_SPRINTF_REGISTER(rf);
+> +       RT2X00DEBUGFS_SPRINTF_REGISTER(rfcsr);
+>  #undef RT2X00DEBUGFS_SPRINTF_REGISTER
+>
+>        blob->size = strlen(blob->data);
+> @@ -722,6 +728,7 @@ void rt2x00debug_register(struct rt2x00_dev *rt2x00dev)
+>        RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, eeprom);
+>        RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, bbp);
+>        RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, rf);
+> +       RT2X00DEBUGFS_CREATE_REGISTER_ENTRY(intf, rfcsr);
+>
+>  #undef RT2X00DEBUGFS_CREATE_REGISTER_ENTRY
+>
+> @@ -773,6 +780,8 @@ void rt2x00debug_deregister(struct rt2x00_dev *rt2x00dev)
+>        debugfs_remove(intf->queue_stats_entry);
+>        debugfs_remove(intf->queue_frame_dump_entry);
+>        debugfs_remove(intf->queue_folder);
+> +       debugfs_remove(intf->rfcsr_val_entry);
+> +       debugfs_remove(intf->rfcsr_off_entry);
+>        debugfs_remove(intf->rf_val_entry);
+>        debugfs_remove(intf->rf_off_entry);
+>        debugfs_remove(intf->bbp_val_entry);
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.h b/drivers/net/wireless/rt2x00/rt2x00debug.h
+> index fa11409..e11d39b 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00debug.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00debug.h
+> @@ -65,6 +65,7 @@ struct rt2x00debug {
+>        RT2X00DEBUGFS_REGISTER_ENTRY(eeprom, u16);
+>        RT2X00DEBUGFS_REGISTER_ENTRY(bbp, u8);
+>        RT2X00DEBUGFS_REGISTER_ENTRY(rf, u32);
+> +       RT2X00DEBUGFS_REGISTER_ENTRY(rfcsr, u8);
+>  };
+>
+>  #endif /* RT2X00DEBUG_H */
+> --
+> 1.7.9.4
+>
