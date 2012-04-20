@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from david.siemens.de ([192.35.17.14]:30634 "EHLO david.siemens.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750895Ab2D1GGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 02:06:54 -0400
-Message-ID: <4F9B8715.9090409@siemens.com> (sfid-20120428_080659_272670_DAE47280)
-Date: Sat, 28 Apr 2012 09:58:45 +0400
-From: Alexander Smirnov <Alexander.Smirnov@siemens.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:57830 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187Ab2DTEoB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 00:44:01 -0400
+Received: by obbta14 with SMTP id ta14so9049194obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 21:44:00 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
- (Barcelona!)
-References: <20120322192406.GB2432@tuxdriver.com> <1332698585.1870.88.camel@aeonflux> <20120326145433.GE13806@tuxdriver.com> <1332774906.1870.98.camel@aeonflux> <20120326152541.GH13806@tuxdriver.com> <20120427174439.GC16207@tuxdriver.com>
-In-Reply-To: <20120427174439.GC16207@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 19 Apr 2012 21:43:40 -0700
+Message-ID: <CAB=NE6Xw2-5vLD-52H2pFtaRkUSKZ1CrBzzU9HA-eDz-8tHw-A@mail.gmail.com> (sfid-20120420_064413_271298_2D9E9CF7)
+Subject: compat-wireless daily snapshots
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi colleagues,
+Hey folks, I updated the patches / scripts on compat-wireless to apply
+patches cleanly based on next-20120419 but compilation now fails with
+the new slew of updates since next-20120410. The ckmake summary log:
 
-On 04/27/2012 09:44 PM, John W. Linville wrote:
-> Just to keep the ball rolling...
->
-> Angela has reserved space for us at the Hotel Fira
-> Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
-> Please note that this will overlap Yocto Dev Days, oVirt Summit and
-> KVM Forum at the same venue.
->
-> Now, we need some talk proposals!  Please post in this thread (or
-> contact me or Marcel directly if necessary) to propose talks.  I would
-> love to see any topics on any relevant technologies, as well as topics
-> about how the projects are being managed, new sub-projects, etc.
-> It seems like a long time away right now, but it is a good time to
-> start thinking... :-)
->
-> Thanks,
->
-> John
+mcgrof@flash ~/devel/compat-wireless (git::master)$ ckmake
+Trying kernel                     3.2.2-030202-generic  [FAILED]
+Trying kernel                    3.1.10-030110-generic  [FAILED]
+Trying kernel                    3.0.18-030018-generic  [OK]
+Trying kernel                  2.6.39-02063904-generic  [OK]
+Trying kernel                  2.6.38-02063808-generic  [OK]
+Trying kernel                  2.6.37-02063706-generic  [OK]
+Trying kernel                  2.6.36-02063604-generic  [OK]
+Trying kernel                  2.6.35-02063512-generic  [FAILED]
+Trying kernel                  2.6.34-02063410-generic  [FAILED]
+Trying kernel                  2.6.33-02063305-generic  [FAILED]
+Trying kernel                  2.6.32-02063255-generic  [FAILED]
+Trying kernel                  2.6.31-02063113-generic  [FAILED]
+Trying kernel                  2.6.30-02063010-generic  [FAILED]
+Trying kernel                  2.6.29-02062906-generic  [FAILED]
+Trying kernel                  2.6.28-02062810-generic  [FAILED]
+Trying kernel                    2.6.27-020627-generic  [FAILED]
+Trying kernel                    2.6.26-020626-generic  [FAILED]
+Trying kernel                    2.6.25-020625-generic  [FAILED]
+Trying kernel                    2.6.24-020624-generic  [FAILED]
 
- From my site I can have a talk about IEEE 802.15.4 Linux stack 
-implementation and IPv6 networking over such a networks, i.e. 6lowpan.
+You can read the detailed warnings (non-fatal) and errors (these need
+to be fixed) here:
 
--- 
-With best regards,
-Alexander Smirnov
+http://bombadil.infradead.org/~mcgrof/2012/04/19/ckmake-compat-wireless-2012-04-19.log.bz2
+
+I don't have time for these right now as I am leaving to the mountains
+Friday-Sunday. I'm thinking a nice alternative from barring the entire
+tarball to be released is to instead to disable the drivers that fail
+compilation, but still haven't figured out a neat clean easy way to do
+this and automate so for now no new daily tarballs are released until
+all the above issues are fixed.
+
+  Luis
