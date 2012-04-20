@@ -1,30 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39686 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639Ab2DRWjl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32148 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750706Ab2DTNnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 18:39:41 -0400
-Message-ID: <4F8F42B0.8010306@sipsolutions.net> (sfid-20120419_003944_511780_51F04DB7)
-Date: Wed, 18 Apr 2012 15:39:44 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 20 Apr 2012 09:43:07 -0400
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH v3] cfg80211: Validate legacy rateset.
+Date: Fri, 20 Apr 2012 19:12:58 +0530
+Message-ID: <1334929378-10899-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120420_154312_258874_AE731753)
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/6] mac80211: Support getting sta_info stats via ethtool.
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>   <1334684807-14026-3-git-send-email-greearb@candelatech.com>   (sfid-20120417_194716_243783_5644375D) <1334713070.3725.14.camel@jlt3.sipsolutions.net>  <4F8E3905.70900@candelatech.com> <1334721645.3672.2.camel@jlt3.sipsolutions.net> <4F8EEB6C.1030605@candelatech.com>
-In-Reply-To: <4F8EEB6C.1030605@candelatech.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/18/2012 9:27 AM, Ben Greear wrote:
->> Oh, right, it's adding, I missed that. But is that really useful?
->
-> It provides a summary for AP, and precise stats for managed station
-> mode (excepting TDLS where it may return sums, it seems).
+Legacy rates are not validated while configuring
+tx rateset using iw. So below cmd is accepted by nl80211.
+sudo iw wlan2 set bitrates legacy-2.4 1 2 3
 
-I just have a feeling that people will rely on it working for managed 
-mode, and will forget about TDLS since it's uncommon now ... so I really 
-don't think this will work well with people's (even yours!) expectations.
+Validate legacy rates and return
+error if any rate in the rateset is not valid.
 
-johannes
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+v2: Allow empty rateset
+v3: Indentation
+ net/wireless/nl80211.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index bcf6f70..140c1d2 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5577,6 +5577,9 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 				sband,
+ 				nla_data(tb[NL80211_TXRATE_LEGACY]),
+ 				nla_len(tb[NL80211_TXRATE_LEGACY]));
++			if ((mask.control[band].legacy == 0) &&
++			    nla_len(tb[NL80211_TXRATE_LEGACY]))
++				return -EINVAL;
+ 		}
+ 		if (tb[NL80211_TXRATE_MCS]) {
+ 			if (!ht_rateset_to_mask(
+-- 
+1.7.4.1
+
