@@ -1,78 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:1369 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750734Ab2DMRRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 13:17:52 -0400
-From: Tim Gardner <tim.gardner@canonical.com>
-To: kvalo@qca.qualcomm.com, linux-kernel@vger.kernel.org
-Cc: Tim Gardner <tim.gardner@canonical.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH linux-next 1/1] ath6k: Normalize use of FW_DIR
-Date: Fri, 13 Apr 2012 11:17:27 -0600
-Message-Id: <1334337448-26270-2-git-send-email-tim.gardner@canonical.com> (sfid-20120413_191814_128722_E51A3605)
-In-Reply-To: <1334337448-26270-1-git-send-email-tim.gardner@canonical.com>
-References: <1334337448-26270-1-git-send-email-tim.gardner@canonical.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40080 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755478Ab2DTORk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 10:17:40 -0400
+Date: Fri, 20 Apr 2012 10:09:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Don Fry <donald.h.fry@intel.com>
+Cc: linux-wireless@vger.kernel.org, kay@vrfy.org, jcm@redhat.com,
+	linux-modules@vger.kernel.org
+Subject: Re: question on non-kernel patch
+Message-ID: <20120420140917.GA13844@tuxdriver.com> (sfid-20120420_161743_955858_9F78A34C)
+References: <1334868960.7300.10.camel@dfry-linux1>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1334868960.7300.10.camel@dfry-linux1>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+On Thu, Apr 19, 2012 at 01:56:00PM -0700, Don Fry wrote:
+> Hi John,
+> 	We have a change to the iwlwifi driver for the near future
+> which will dynamically load a different module based on the version
+> of microcode installed on the system.  The driver does a
+> request_module_nowait after obtaining the firmware file loaded as part
+> of modprobe.  This all works fine, however unloading the module is not
+> symmetrical/straight forward.
+> 	It looks like there are capabilities already implemented to
+> make this easy.  If I put the following script into /etc/modprobe.d
+> then modprobe iwlwifi-r will do the right thing.
+> 	It is backward compatible with the current iwlwifi driver.
+> How do I get this out in the community before we submit the patch that
+> would break iwlwifi removal?
+> 
+> Thanks,
+> Don
+> 
+> 
+> # /etc/modprobe.d/iwlwifi.conf
+> # iwlwifi will dyamically load either iwldvm or iwlmvm depending on the
+> # microcode file installed on the system.  When removing iwlwifi, first
+> # remove the iwl?vm module and then iwlwifi.
+> remove iwlwifi \
+> (/sbin/lsmod | grep -o -e ^iwlmvm -e ^iwldvm -e ^iwlwifi | xargs /sbin/rmmod) \
+> && /sbin/modprobe -r mac80211
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 9d67964..ba81dc8 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -126,9 +126,9 @@ struct ath6kl_fw_ie {
- #define AR6003_HW_2_0_FIRMWARE_FILE		"athwlan.bin.z77"
- #define AR6003_HW_2_0_TCMD_FIRMWARE_FILE	"athtcmd_ram.bin"
- #define AR6003_HW_2_0_PATCH_FILE		"data.patch.bin"
--#define AR6003_HW_2_0_BOARD_DATA_FILE "ath6k/AR6003/hw2.0/bdata.bin"
-+#define AR6003_HW_2_0_BOARD_DATA_FILE AR6003_HW_2_0_FW_DIR "/bdata.bin"
- #define AR6003_HW_2_0_DEFAULT_BOARD_DATA_FILE \
--			"ath6k/AR6003/hw2.0/bdata.SD31.bin"
-+			AR6003_HW_2_0_FW_DIR "/bdata.SD31.bin"
- 
- /* AR6003 3.0 definitions */
- #define AR6003_HW_2_1_1_VERSION                 0x30000582
-@@ -139,25 +139,25 @@ struct ath6kl_fw_ie {
- #define AR6003_HW_2_1_1_UTF_FIRMWARE_FILE	"utf.bin"
- #define AR6003_HW_2_1_1_TESTSCRIPT_FILE	"nullTestFlow.bin"
- #define AR6003_HW_2_1_1_PATCH_FILE		"data.patch.bin"
--#define AR6003_HW_2_1_1_BOARD_DATA_FILE "ath6k/AR6003/hw2.1.1/bdata.bin"
-+#define AR6003_HW_2_1_1_BOARD_DATA_FILE AR6003_HW_2_1_1_FW_DIR "/bdata.bin"
- #define AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE	\
--			"ath6k/AR6003/hw2.1.1/bdata.SD31.bin"
-+			AR6003_HW_2_1_1_FW_DIR "/bdata.SD31.bin"
- 
- /* AR6004 1.0 definitions */
- #define AR6004_HW_1_0_VERSION                 0x30000623
- #define AR6004_HW_1_0_FW_DIR			"ath6k/AR6004/hw1.0"
- #define AR6004_HW_1_0_FIRMWARE_FILE		"fw.ram.bin"
--#define AR6004_HW_1_0_BOARD_DATA_FILE         "ath6k/AR6004/hw1.0/bdata.bin"
-+#define AR6004_HW_1_0_BOARD_DATA_FILE         AR6004_HW_1_0_FW_DIR "/bdata.bin"
- #define AR6004_HW_1_0_DEFAULT_BOARD_DATA_FILE \
--	"ath6k/AR6004/hw1.0/bdata.DB132.bin"
-+	AR6004_HW_1_0_FW_DIR "/bdata.DB132.bin"
- 
- /* AR6004 1.1 definitions */
- #define AR6004_HW_1_1_VERSION                 0x30000001
- #define AR6004_HW_1_1_FW_DIR			"ath6k/AR6004/hw1.1"
- #define AR6004_HW_1_1_FIRMWARE_FILE		"fw.ram.bin"
--#define AR6004_HW_1_1_BOARD_DATA_FILE         "ath6k/AR6004/hw1.1/bdata.bin"
-+#define AR6004_HW_1_1_BOARD_DATA_FILE         AR6004_HW_1_1_FW_DIR "/bdata.bin"
- #define AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE \
--	"ath6k/AR6004/hw1.1/bdata.DB132.bin"
-+	AR6004_HW_1_1_FW_DIR "/bdata.DB132.bin"
- 
- /* Per STA data, used in AP mode */
- #define STA_PS_AWAKE		BIT(0)
+Honestly, I'm not entirely sure -- this seems like a peculiar
+situation.  Can you go into more detail about why this seems necessary?
+
+John
 -- 
-1.7.9.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
