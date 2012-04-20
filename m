@@ -1,59 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44377 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255Ab2DQWTK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 18:19:10 -0400
-From: greearb@candelatech.com
+Received: from leit.jelmoni.net ([78.46.129.73]:49606 "EHLO leit.jelmoni.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751300Ab2DTUxS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 16:53:18 -0400
+Received: from localhost (localhost.jelmoni.net [127.0.0.1])
+	by leit.jelmoni.net (Postfix) with ESMTP id D37E580CF
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 22:43:55 +0200 (CEST)
+Received: from leit.jelmoni.net ([127.0.0.1])
+	by localhost (leit.jelmoni.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Fi1U4ELnu+Ge for <linux-wireless@vger.kernel.org>;
+	Fri, 20 Apr 2012 22:43:55 +0200 (CEST)
+Received: from laptop-beat.swiss-wireless.com.ar (host188.190-229-196.telecom.net.ar [190.229.196.188])
+	(Authenticated sender: genauth@swiss-wireless.com.ar)
+	by leit.jelmoni.net (Postfix) with ESMTPSA id 12B7480CE
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 22:43:54 +0200 (CEST)
+Message-ID: <4F91CA71.4040703@swiss-wireless.com.ar> (sfid-20120420_225322_587827_6849C87E)
+Date: Fri, 20 Apr 2012 17:43:29 -0300
+From: Beat Meier <mbe_ml@swiss-wireless.com.ar>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath9k:  Fix compile warnings when DEBUGFS is disabled.
-Date: Tue, 17 Apr 2012 15:19:03 -0700
-Message-Id: <1334701143-3960-1-git-send-email-greearb@candelatech.com> (sfid-20120418_001914_417767_AEF01BCC)
+Subject: How can I read distance settings from physical device?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hello
 
-This fixes two compile warnings, and removes a useless
-cast when assigning the 'sc' variable.
+How can I get the distance settings from a physical device?
+I can set it with
+   iw phy phy0 set distance 3500
+but how can I read it?
 
-Reported-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 dd4b8f4... 8c827a1... M	drivers/net/wireless/ath/ath9k/hw.h
-:100644 100644 301ef3e... 12b0979... M	drivers/net/wireless/ath/ath9k/recv.c
- drivers/net/wireless/ath/ath9k/hw.h   |    3 ++-
- drivers/net/wireless/ath/ath9k/recv.c |    2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+Thanks
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index dd4b8f4..8c827a1 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -959,7 +959,8 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode);
- #ifdef CONFIG_ATH9K_DEBUGFS
- void ath9k_debug_sync_cause(struct ath_common *common, u32 sync_cause);
- #else
--static void ath9k_debug_sync_cause(struct ath_common *common, u32 sync_cause) {}
-+static inline void ath9k_debug_sync_cause(struct ath_common *common,
-+					  u32 sync_cause) {}
- #endif
- 
- /* Generic hw timer primitives */
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 301ef3e..12b0979 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -907,7 +907,7 @@ static int ath9k_process_rate(struct ath_common *common,
- 	struct ieee80211_supported_band *sband;
- 	enum ieee80211_band band;
- 	unsigned int i = 0;
--	struct ath_softc *sc = (struct ath_softc *) common->priv;
-+	struct ath_softc __maybe_unused *sc = common->priv;
- 
- 	band = hw->conf.channel->band;
- 	sband = hw->wiphy->bands[band];
--- 
-1.7.3.4
-
+Beat
