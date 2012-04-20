@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53884 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754253Ab2DRW7D (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61354 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752827Ab2DTIvz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 18:59:03 -0400
-Message-ID: <4F8F4734.7050201@candelatech.com> (sfid-20120419_005910_683679_B1A87698)
-Date: Wed, 18 Apr 2012 15:59:00 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 20 Apr 2012 04:51:55 -0400
+From: "Ng, Chilam" <chilamng@qca.qualcomm.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: RE: [patch 1/2] ath6kl: change || to &&
+Date: Fri, 20 Apr 2012 08:51:54 +0000
+Message-ID: <E9C82728FE24B247A42E11F27DC051EE0D5EA793@nasanexd02b.na.qualcomm.com> (sfid-20120420_105205_925058_39F978D5)
+References: <20120420064328.GC22649@elgon.mountain>,<4F91203E.9090308@qca.qualcomm.com>
+In-Reply-To: <4F91203E.9090308@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/6] mac80211: Support getting sta_info stats via ethtool.
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>   <1334684807-14026-3-git-send-email-greearb@candelatech.com>   (sfid-20120417_194716_243783_5644375D) <1334713070.3725.14.camel@jlt3.sipsolutions.net>  <4F8E3905.70900@candelatech.com> <1334721645.3672.2.camel@jlt3.sipsolutions.net> <4F8EEB6C.1030605@candelatech.com> <4F8F42B0.8010306@sipsolutions.net>
-In-Reply-To: <4F8F42B0.8010306@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/18/2012 03:39 PM, Johannes Berg wrote:
-> On 4/18/2012 9:27 AM, Ben Greear wrote:
->>> Oh, right, it's adding, I missed that. But is that really useful?
->>
->> It provides a summary for AP, and precise stats for managed station
->> mode (excepting TDLS where it may return sums, it seems).
+Yes, the intention was &&, not ||. Thanks for catching this.
+
+-Chilam
+________________________________________
+From: Valo, Kalle
+Sent: Friday, April 20, 2012 1:37 AM
+To: Dan Carpenter
+Cc: John W. Linville; linux-wireless@vger.kernel.org; kernel-janitors@vger.kernel.org; ath6kl-devel; Ng, Chilam
+Subject: Re: [patch 1/2] ath6kl: change || to &&
+
+On 04/20/2012 09:43 AM, Dan Carpenter wrote:
+> The original conditions are always true.  I think && was intended here,
+> but I don't have the hardware to test.  Could you take a look?
 >
-> I just have a feeling that people will rely on it working for managed mode, and will forget about TDLS since it's uncommon now ... so I really don't think this
-> will work well with people's (even yours!) expectations.
-
-Ok, how about for managed mode, I will find the first non-TDLS station
-matching the netdev, assign the values, and then quit looking for more
-stations.
-
-For all other modes, logic stays the same as it is now
-(add all stations' stats together as long as the station belongs
-to the netdev)?
-
-Thanks,
-Ben
-
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 >
-> johannes
+> diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> index 065e615..086a8e1 100644
+> --- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> +++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> @@ -758,7 +758,7 @@ static void ath6kl_htc_tx_bundle(struct htc_endpoint *endpoint,
+>       u32 txb_mask;
+>       u8 ac = WMM_NUM_AC;
+>
+> -     if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) ||
+> +     if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) &&
+>           (WMI_CONTROL_SVC != endpoint->svc_id))
+>               ac = target->dev->ar->ep2ac_map[endpoint->eid];
+>
+> @@ -866,7 +866,7 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+>        */
+>       INIT_LIST_HEAD(&txq);
+>
+> -     if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) ||
+> +     if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) &&
+>           (WMI_CONTROL_SVC != endpoint->svc_id))
+>               ac = target->dev->ar->ep2ac_map[endpoint->eid];
 
+Dan, that's a good catch. This is coming from Chilam's patch:
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+https://github.com/kvalo/ath6kl/commit/b29072cc7b0e08ace48ab709c40cf6246fb2e8b0
 
+Chilam, is it safe to take Dan's patch?
+
+Kalle
