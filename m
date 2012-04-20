@@ -1,85 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:57969 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797Ab2DONEl convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59136 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932194Ab2DTWyK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 09:04:41 -0400
-Received: by eekc41 with SMTP id c41so1085467eek.19
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Apr 2012 06:04:40 -0700 (PDT)
-References: <1334448592-16391-1-git-send-email-xose.vazquez@gmail.com> <4F8A6CB6.4080006@01019freenet.de> <4F8A92A5.8090707@gmail.com> <4F8AB8F9.4060503@01019freenet.de>
-In-Reply-To: <4F8AB8F9.4060503@01019freenet.de>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <201C9B63-C214-4D44-B3D0-44948F9DE260@gmail.com> (sfid-20120415_150509_995662_2390DAFA)
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"IvDoorn@gmail.com" <IvDoorn@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [rt2x00-users] [PATCH] wireless: rt2x00: rt2800usb add more devices ids
-Date: Sun, 15 Apr 2012 15:04:39 +0200
-To: Andreas Hartmann <andihartmann@01019freenet.de>
+	Fri, 20 Apr 2012 18:54:10 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v3 2/4] mac80211: Support getting sta_info stats via ethtool.
+Date: Fri, 20 Apr 2012 15:53:50 -0700
+Message-Id: <1334962432-18620-2-git-send-email-greearb@candelatech.com> (sfid-20120421_005415_571826_381C8D56)
+In-Reply-To: <1334962432-18620-1-git-send-email-greearb@candelatech.com>
+References: <1334962432-18620-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 apr. 2012, at 14:03, Andreas Hartmann <andihartmann@01019freenet.de> wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> Hello Xose,
-> 
-> sorry for double post - I accidentally pressed the wrong answer button :-(.
-> 
-> Xose Vazquez Perez wrote:
->> On 04/15/2012 08:37 AM, Andreas Hartmann wrote:
->> 
->>> Did you test them? What did you test exactly? What exactly works, what
->>> does not?
->> 
->> NO. NOTHING . I DON'T KNOW. But...
->> 
->>> It doesn't mean anything, if they work with the legacy driver.
->> 
->> ..., the chips in these devices are *identified* . They perform so well
->> or so badly like those that are already in the driver(rt2800usb).
-> 
-> This is an expectation. The mentioned WUSB600Nv2 is one proof, that it
-> isn't (always) enough to successfully identify chips and derive, that it
-> behaves like other brands using the same chip. There have been brands
-> with this chip, which have been working fine (supposedly), but this
-> special brand didn't work at all here - even though it uses an already
-> known chip.
-> 
->>> Linksys WUSB600Nv2 e.g. works fine with the legacy driver, but only
->>> limited (if at all) with rt2800usb yet.
->> 
->> <http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=drivers/net/wireless/rt2x00/Kconfig;h=299c3879582da14e12ca00d7f11184da8c61bed7;hb=HEAD#l83>
->> 
->> config RT2800USB_RT35XX
->>    bool "rt2800usb - Include support for rt35xx devices ( *EXPERIMENTAL* )"
->>    depends on *EXPERIMENTAL*
-> 
-> Chance :-)
-> 
-> rt2860 (PCI) chipset (rt2800pci) isn't experimental but is nevertheless
-> broken since 3.2 [1].
-> 
-> I'm seeing a fundamental problem (but not just here :-)) regarding QA. I
-> can't see any QA if there is done any change. Ok, I don't know all and
-> maybe, I'm blind, too. But I'm willing to learn .
-> 
-> That's why I'm wondering: When are all these appropriate devices going
-> to be tested? I think, a good point would be during development and not
-> after they have been released (means: "experimental" was removed). If
-> the ID's are committed, it should be ensured, that they really behave as
-> expected.
+This lets ethtool print out stats related to stations
+connected to the interface.  Does not yet get stats
+from the underlying driver.
 
-Andreas,
-
-It is impossible to test each and every device that uses a Ralink chipset. Therefore we run tests on the chipsets only, and simply list all devices that contain these chipsets.
-
-Granted, we are having issues with some of the chipsets, but that should not prevent adding other devices that use the same chipset to the driver.
-
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-Gertjan
+
+v3:  Move code so that future patches in this series is smaller.
+     For managed mode, do direct lookup of station by bss.
+     For other modes, continue to add stats for all stations
+      assigned to the netdev.
+
+:100644 100644 510a745... a1d04c8... M	net/mac80211/cfg.c
+ net/mac80211/cfg.c |   91 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 91 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 510a745..a1d04c8 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -450,6 +450,94 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
+ }
+ 
++static const char ieee80211_gstrings_sta_stats[][ETH_GSTRING_LEN] = {
++	"rx_packets", "rx_bytes", "wep_weak_iv_count",
++	"rx_duplicates", "rx_fragments", "rx_dropped",
++	"tx_packets", "tx_bytes", "tx_fragments",
++	"tx_filtered", "tx_retry_failed", "tx_retries",
++	"beacon_loss"
++};
++#define STA_STATS_LEN	ARRAY_SIZE(ieee80211_gstrings_sta_stats)
++
++static int ieee80211_get_et_sset_count(struct wiphy *wiphy,
++				       struct net_device *dev,
++				       int sset)
++{
++	if (sset == ETH_SS_STATS)
++		return STA_STATS_LEN;
++
++	return -EOPNOTSUPP;
++}
++
++static void ieee80211_get_et_stats(struct wiphy *wiphy,
++				   struct net_device *dev,
++				   struct ethtool_stats *stats,
++				   u64 *data)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct sta_info *sta;
++	struct ieee80211_local *local = sdata->local;
++	int i;
++
++	memset(data, 0, sizeof(u64) * STA_STATS_LEN);
++
++#define ADD_STA_STATS(sta)				\
++	do {						\
++		data[i++] += sta->rx_packets;		\
++		data[i++] += sta->rx_bytes;		\
++		data[i++] += sta->wep_weak_iv_count;	\
++		data[i++] += sta->num_duplicates;	\
++		data[i++] += sta->rx_fragments;		\
++		data[i++] += sta->rx_dropped;		\
++							\
++		data[i++] += sta->tx_packets;		\
++		data[i++] += sta->tx_bytes;		\
++		data[i++] += sta->tx_fragments;		\
++		data[i++] += sta->tx_filtered_count;	\
++		data[i++] += sta->tx_retry_failed;	\
++		data[i++] += sta->tx_retry_count;	\
++		data[i++] += sta->beacon_loss_count;	\
++	} while (0)
++
++	/* For Managed stations, find the single station based on BSSID
++	 * and use that.  For interface types, iterate through all available
++	 * stations and add stats for any station that is assigned to this
++	 * network device.
++	 */
++
++	rcu_read_lock();
++
++	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++		sta = sta_info_get_bss(sdata, sdata->u.mgd.bssid);
++		if (sta && !WARN_ON(sta->sdata->dev != dev)) {
++			i = 0;
++			ADD_STA_STATS(sta);
++			BUG_ON(i != STA_STATS_LEN);
++		}
++	} else {
++		list_for_each_entry_rcu(sta, &local->sta_list, list) {
++			/* Make sure this station belongs to the proper dev */
++			if (sta->sdata->dev != dev)
++				continue;
++
++			i = 0;
++			ADD_STA_STATS(sta);
++			BUG_ON(i != STA_STATS_LEN);
++		}
++	}
++
++	rcu_read_unlock();
++}
++
++static void ieee80211_get_et_strings(struct wiphy *wiphy,
++				     struct net_device *dev,
++				     u32 sset, u8 *data)
++{
++	if (sset == ETH_SS_STATS) {
++		int sz_sta_stats = sizeof(ieee80211_gstrings_sta_stats);
++		memcpy(data, *ieee80211_gstrings_sta_stats, sz_sta_stats);
++	}
++}
+ 
+ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 int idx, u8 *mac, struct station_info *sinfo)
+@@ -2775,4 +2863,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ #ifdef CONFIG_PM
+ 	.set_wakeup = ieee80211_set_wakeup,
+ #endif
++	.get_et_sset_count = ieee80211_get_et_sset_count,
++	.get_et_stats = ieee80211_get_et_stats,
++	.get_et_strings = ieee80211_get_et_strings,
+ };
+-- 
+1.7.3.4
+
