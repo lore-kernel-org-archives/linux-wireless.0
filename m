@@ -1,49 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:39134 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751855Ab2DCBlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 21:41:06 -0400
-From: Jakub Kicinski <kubakici@wp.pl>
-To: linville@tuxdriver.com
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:65356 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753004Ab2DTHDB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Apr 2012 03:03:01 -0400
+Received: by vcqp1 with SMTP id p1so6169591vcq.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Apr 2012 00:03:00 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1334843590-7920-1-git-send-email-anisse@astier.eu>
+References: <CAOZOX0UXc0OwhWOiM0PWbGfyynmrQ4kZRAVFJyxtiHe-veUg=g@mail.gmail.com>
+	<1334843590-7920-1-git-send-email-anisse@astier.eu>
+Date: Fri, 20 Apr 2012 09:03:00 +0200
+Message-ID: <CAOZOX0XppHercdP64G+pOTxrzz6H0UNsr0Bkw6TzkGW_MNZJiw@mail.gmail.com> (sfid-20120420_090307_772913_FDB73886)
+Subject: Re: [PATCH v3 1/2] rt2x00: debugfs support - allow a register to be empty
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Anisse Astier <anisse@astier.eu>
 Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH v2 4/4] rt2800: zero registers of unused TX rings
-Date: Tue,  3 Apr 2012 03:40:50 +0200
-Message-Id: <1333417250-24560-5-git-send-email-kubakici@wp.pl> (sfid-20120403_034115_248534_F598CE5F)
-In-Reply-To: <1333417250-24560-1-git-send-email-kubakici@wp.pl>
-References: <1333417250-24560-1-git-send-email-kubakici@wp.pl>
+	linville@tuxdriver.com, Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed if we take over after drivers which use those.
-
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 4366c23..f9f36cf 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -393,6 +393,16 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
- 	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX3, 0);
- 	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX3, 0);
- 
-+	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR4, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT4, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX4, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX4, 0);
-+
-+	rt2x00pci_register_write(rt2x00dev, TX_BASE_PTR5, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_MAX_CNT5, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_CTX_IDX5, 0);
-+	rt2x00pci_register_write(rt2x00dev, TX_DTX_IDX5, 0);
-+
- 	entry_priv = rt2x00dev->rx->entries[0].priv_data;
- 	rt2x00pci_register_write(rt2x00dev, RX_BASE_PTR, entry_priv->desc_dma);
- 	rt2x00pci_register_write(rt2x00dev, RX_MAX_CNT,
--- 
-1.7.7.6
-
+SGksCgpJJ20gYWxtb3N0IGNvbXBsZXRlbHkgaGFwcHkgd2l0aCB0aGlzIHBhdGNoLiA6KQoKPiBA
+QCAtNjk0LDI1ICs2OTMsMjkgQEAgdm9pZCBydDJ4MDBkZWJ1Z19yZWdpc3RlcihzdHJ1Y3QgcnQy
+eDAwX2RldiAqcnQyeDAwZGV2KQo+IKAgoCCgIKBpZiAoSVNfRVJSKGludGYtPnJlZ2lzdGVyX2Zv
+bGRlcikgfHwgIWludGYtPnJlZ2lzdGVyX2ZvbGRlcikKPiCgIKAgoCCgIKAgoCCgIKBnb3RvIGV4
+aXQ7Cj4KPiAtI2RlZmluZSBSVDJYMDBERUJVR0ZTX0NSRUFURV9SRUdJU1RFUl9FTlRSWShfX2lu
+dGYsIF9fbmFtZSkgoCCgXAo+IC0oeyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBcCj4gLSCgIKAgoCAoX19pbnRmKS0+X19uYW1lIyNf
+b2ZmX2VudHJ5ID0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoFwKPiAtIKAgoCCgIKAgoCBkZWJ1
+Z2ZzX2NyZWF0ZV91MzIoX19zdHJpbmdpZnkoX19uYW1lKSAiX29mZnNldCIsIKAgXAo+IC0goCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBTX0lSVVNSIHwgU19JV1VTUiwgoCCgIKAgoCCgIKAg
+oCBcCj4gLSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoChfX2ludGYpLT5yZWdpc3Rlcl9m
+b2xkZXIsIKAgoCCgIFwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgJihfX2ludGYp
+LT5vZmZzZXRfIyNfX25hbWUpOyCgIKAgXAo+IC0goCCgIKAgaWYgKElTX0VSUigoX19pbnRmKS0+
+X19uYW1lIyNfb2ZmX2VudHJ5KSCgIKAgoCCgIKAgoCCgIKBcCj4gLSCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKAgfHwgIShfX2ludGYpLT5fX25hbWUjI19vZmZfZW50cnkpIKAgoCCgIFwKPiAtIKAgoCCg
+IKAgoCCgIKAgZ290byBleGl0OyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+XAo+IC0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCBcCj4gLSCgIKAgoCAoX19pbnRmKS0+X19uYW1lIyNfdmFsX2VudHJ5ID0goCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoFwKPiAtIKAgoCCgIKAgoCBkZWJ1Z2ZzX2NyZWF0ZV9maWxl
+KF9fc3RyaW5naWZ5KF9fbmFtZSkgIl92YWx1ZSIsIKAgXAo+IC0goCCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKAgoCCgIKAgU19JUlVTUiB8IFNfSVdVU1IsIKAgoCCgIKAgoCCgIKBcCj4gLSCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCAoX19pbnRmKS0+cmVnaXN0ZXJfZm9sZGVyLCCgIKAgoFwK
+PiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIChfX2ludGYpLCAmcnQyeDAwZGVidWdf
+Zm9wXyMjX19uYW1lKTtcCj4gLSCgIKAgoCBpZiAoSVNfRVJSKChfX2ludGYpLT5fX25hbWUjI192
+YWxfZW50cnkpIKAgoCCgIKAgoCCgIKAgoFwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8fCAh
+KF9faW50ZiktPl9fbmFtZSMjX3ZhbF9lbnRyeSkgoCCgIKAgXAo+IC0goCCgIKAgoCCgIKAgoCBn
+b3RvIGV4aXQ7IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gKyNkZWZp
+bmUgUlQyWDAwREVCVUdGU19DUkVBVEVfUkVHSVNURVJfRU5UUlkoX19pbnRmLCBfX25hbWUpIKAg
+oCCgIKAgoCCgIKAgoCCgIKBcCj4gKyh7IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCBp
+ZihkZWJ1Zy0+X19uYW1lLnJlYWQpIHsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIChfX2ludGYpLT5fX25hbWUjI19vZmZf
+ZW50cnkgPSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAg
+oCCgIGRlYnVnZnNfY3JlYXRlX3UzMihfX3N0cmluZ2lmeShfX25hbWUpICJfb2Zmc2V0IiwgoCCg
+IKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgU19J
+UlVTUiB8IFNfSVdVU1IsIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKF9faW50ZiktPnJlZ2lzdGVyX2ZvbGRlciwgoCCgIKAg
+oCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgJihfX2lu
+dGYpLT5vZmZzZXRfIyNfX25hbWUpOyCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIGlm
+IChJU19FUlIoKF9faW50ZiktPl9fbmFtZSMjX29mZl9lbnRyeSkgoCCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8fCAhKF9faW50ZiktPl9f
+bmFtZSMjX29mZl9lbnRyeSkgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKAgZ290byBleGl0OyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIChfX2ludGYp
+LT5fX25hbWUjI192YWxfZW50cnkgPSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBc
+Cj4gKyCgIKAgoCCgIKAgoCCgIGRlYnVnZnNfY3JlYXRlX2ZpbGUoX19zdHJpbmdpZnkoX19uYW1l
+KSAiX3ZhbHVlIiwgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIFNfSVJVU1IgfCBTX0lXVVNSLCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4g
+KyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIChfX2ludGYpLT5yZWdpc3Rl
+cl9mb2xkZXIsIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKAgoCCgIChfX2ludGYpLCAmcnQyeDAwZGVidWdfZm9wXyMjX19uYW1lKTsgoCBcCj4gKyCg
+IKAgoCCgIKAgoCCgIGlmIChJU19FUlIoKF9faW50ZiktPl9fbmFtZSMjX3ZhbF9lbnRyeSkgoCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCB8
+fCAhKF9faW50ZiktPl9fbmFtZSMjX3ZhbF9lbnRyeSkgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAg
+oCCgIKAgoCCgIKAgoCCgIKAgZ290byBleGl0OyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
+oCCgIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCB9IGVsc2UgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gKyCgIKAgoCCg
+IKAgoCCgIERFQlVHKHJ0MngwMGRldiwgIlVuc3VwcG9ydGVkIHJlZ2lzdGVyIG9uIHRoaXMgZGV2
+aWNlOiAiIKAgoCCgIKBcCj4gKyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgX19zdHJpbmdpZnkoX19u
+YW1lKSAiXG4iKTsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4goH0pCgpJIGRvbid0
+IHRoaW5rIHdlIG5lZWQgdG8gcHJpbnQgZXJyb3IgbWVzc2FnZXMgdG8gdGhlIGxvZywgdGhpcyB3
+aWxsCm9ubHkgY29uZnVzZSB1c2Vycy4KVGhlIGRyaXZlciBpbnRlbnRpb25hbGx5IGRpZG4ndCBy
+ZWdpc3RlciB0aGUgcmVnaXN0ZXIgdHlwZSwgc28gaXQgaXMKbm90IHdvcnRoIHRoZSB3YXJuaW5n
+IHRvIHRoZSB1c2VyLgoKSXZvCg==
