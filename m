@@ -1,54 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:45937 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757964Ab2DYCOz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 22:14:55 -0400
-Received: by qatm19 with SMTP id m19so3255840qat.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 19:14:55 -0700 (PDT)
-MIME-Version: 1.0
-Date: Tue, 24 Apr 2012 19:14:54 -0700
-Message-ID: <CAJe-LUjzftkutfu8RZ7GbzH7nKv14Sg5orepAXnWdejwhsjwLg@mail.gmail.com> (sfid-20120425_041459_182468_D4F171BC)
-Subject: no 5ghz channels available for hostapd?
-From: Mike Mohr <akihana@gmail.com>
+Received: from nbd.name ([46.4.11.11]:40997 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751756Ab2DUV0m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Apr 2012 17:26:42 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v2 2/2] mac80211: fix num_mcast_sta counting issues
+Date: Sat, 21 Apr 2012 23:26:34 +0200
+Message-Id: <1335043594-30046-2-git-send-email-nbd@openwrt.org> (sfid-20120421_232646_260623_61F3A580)
+In-Reply-To: <1335043594-30046-1-git-send-email-nbd@openwrt.org>
+References: <1335043594-30046-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good evening;
+Moving a STA to an AP VLAN prevents num_mcast_sta from being decremented
+once the STA leaves, because sta->sdata changes. Fix this by checking
+for AP VLANs as well.
 
-I've run into a problem with a wireless card (hardware ids: 168c:0029,
-ath9k) whose regdomain is programmed in the eeprom to 0x00.  'iw list'
-shows all channels in the 5GHz range as either "(passive scanning, no
-IBSS)" or "(disabled)".  I'd used madwifi in the past successfully and
-only started seeing this problem after upgrading to kernel 3.2.5 and
-ath9k.  After some digging I think I've found the culprit:
+Also exclude 4-addr VLAN stations from num_mcast_sta - remote 4-addr
+stations ignore 3-address multicast frames anyway. In a typical bridge
+configuration they receive the same packets as 4-address unicast.
 
-$ iw reg get
-country 00:
-        (2402 - 2472 @ 40), (6, 20)
-        (2457 - 2482 @ 20), (6, 20), PASSIVE-SCAN, NO-IBSS
-        (2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
-        (5170 - 5250 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
-        (5735 - 5835 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/cfg.c      |   17 +++++++++++++++++
+ net/mac80211/sta_info.c |    8 ++++++--
+ 2 files changed, 23 insertions(+), 2 deletions(-)
 
-trying to fix this situation with 'iw reg set' does nothing,
-apparently by design of the driver.  I'm in the US and clearly should
-be able to use at least 1 5GHz channel at some power level.  The
-output of regdbdump tells the sorry tale: country '00' has a heavily
-restricted, 2.4-GHz-only policy.  My guess as to how to proceed is
-twofold:
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 510a745..d2fa66a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1005,6 +1005,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	}
+ 
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
++		bool prev_4addr = false;
++		bool new_4addr = false;
++
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
+ 
+ 		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+@@ -1020,9 +1023,23 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 			}
+ 
+ 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
++			new_4addr = true;
+ 		}
+ 
++		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++		    sta->sdata->u.vlan.sta)
++			prev_4addr = true;
++
+ 		sta->sdata = vlansdata;
++
++		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
++		    prev_4addr != new_4addr) {
++			if (new_4addr)
++				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
++			else
++				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
++		}
++
+ 		ieee80211_send_layer2_update(sta);
+ 	}
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 4c04eb5..eed0df9 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1417,14 +1417,18 @@ int sta_info_move_state(struct sta_info *sta,
+ 		if (sta->sta_state == IEEE80211_STA_AUTH) {
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+ 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+-			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
++			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++			     !sta->sdata->u.vlan.sta))
+ 				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+ 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
+-			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
++			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++			     !sta->sdata->u.vlan.sta))
+ 				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+-- 
+1.7.3.2
 
-1) Find a way to modify the card's EEPROM and set the regdomain to
-whatever value corresponds to the USA.  The probability of success on
-this seems to be low, as I have no idea what tools are capable of
-doing such modifications.
-2) Modify the regulatory.bin file, copying the US values into the '00'
-country and replacing the original regulatory.bin with my modified
-one.
-
-Can someone provide an alternate solution?
-
-Thanks,
-Michael Mohr
