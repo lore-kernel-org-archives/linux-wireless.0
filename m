@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29242 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547Ab2DTJNH (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:21617 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300Ab2DUOtj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 05:13:07 -0400
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	Michael Liang <mliang@qca.qualcomm.com>
-From: <mliang@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 1/1] ath9k: don't strip mic on non-encrypted frames in tkip
-Date: Fri, 20 Apr 2012 17:11:57 +0800
-Message-ID: <1334913117-4037-2-git-send-email-mliang@qca.qualcomm.com> (sfid-20120420_111312_935697_9764F0AB)
-In-Reply-To: <1334913117-4037-1-git-send-email-mliang@qca.qualcomm.com>
-References: <1334913117-4037-1-git-send-email-mliang@qca.qualcomm.com>
+	Sat, 21 Apr 2012 10:49:39 -0400
+Date: Sat, 21 Apr 2012 17:51:41 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Kalle Valo <kvalo@adurom.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] wireless: at76c50x: allocating too much data
+Message-ID: <20120421145140.GU6498@mwanda> (sfid-20120421_164947_166580_5E9988E3)
+References: <20120420064705.GE22649@elgon.mountain>
+ <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com>
+ <20120420091449.GI27101@mwanda>
+ <87vcku9sob.fsf@purkki.adurom.net>
+ <20120421124523.GS6498@mwanda>
+ <alpine.DEB.2.02.1204211548090.1987@hadrien>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.02.1204211548090.1987@hadrien>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Liang <mliang@qca.qualcomm.com>
+On Sat, Apr 21, 2012 at 03:51:44PM +0200, Julia Lawall wrote:
+> Looking for x = ... sizeof(x) ... I get 9 reports.  In most cases it
+> looks like sizeof(x) is coincidentally the same as the size that is
+> wanted.  Two cases that look like they could have some noticible
+> effect are:
+> 
+> arch/xtensa/platforms/iss/network.c, line 789
+> drivers/block/cciss.c, line 4211
+> 
 
-Fix the following bug: in tkip mode, qos-null ps on/off packets
-are dropped due to incorrect packet length so that ath9k softap
-can't handle powersave state transition of peer STA correctly.
+Clever.  You'd need to restrict it to places where x was a  pointer.
+That's better than my check which was specific to kmalloc().  (So
+uh...  I'm going to rewrite mine as well to be more generic.  :P)
 
-Signed-off-by: Michael Liang <mliang@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 301ef3e..48f7a52 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -812,6 +812,7 @@ static bool ath9k_rx_accept(struct ath_common *common,
- 	is_valid_tkip = rx_stats->rs_keyix != ATH9K_RXKEYIX_INVALID &&
- 		test_bit(rx_stats->rs_keyix, common->tkip_keymap);
- 	strip_mic = is_valid_tkip && ieee80211_is_data(fc) &&
-+		ieee80211_has_protected(fc) &&
- 		!(rx_stats->rs_status &
- 		(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
- 		 ATH9K_RXERR_KEYMISS));
--- 
-1.7.0.4
+regards,
+dan carpenter
 
