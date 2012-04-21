@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36302 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756289Ab2DDLv2 (ORCPT
+Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:44396 "EHLO
+	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752412Ab2DUNTn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2012 07:51:28 -0400
-Message-ID: <1333540287.18879.3.camel@jlt3.sipsolutions.net> (sfid-20120404_135131_273602_979479B2)
-Subject: [PATCH] cfg80211: deprecate CFG80211_WEXT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 04 Apr 2012 13:51:27 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 21 Apr 2012 09:19:43 -0400
+Date: Sat, 21 Apr 2012 15:19:22 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+cc: Kalle Valo <kvalo@adurom.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] wireless: at76c50x: allocating too much data
+In-Reply-To: <20120421124523.GS6498@mwanda>
+Message-ID: <alpine.DEB.2.02.1204211518420.1987@hadrien> (sfid-20120421_152020_456895_9DE4D61F)
+References: <20120420064705.GE22649@elgon.mountain> <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com> <20120420091449.GI27101@mwanda> <87vcku9sob.fsf@purkki.adurom.net> <20120421124523.GS6498@mwanda>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323329-863727080-1335014362=:1987"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Almost all wireless tools have transitioned to
-or at least added compatibility with nl80211 so
-there's no real need for CONFIG_CFG80211_WEXT
-any more. Mark it for removal, and also change
-the default to not be enabled.
+--8323329-863727080-1335014362=:1987
+Content-Type: TEXT/PLAIN; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/feature-removal-schedule.txt |   13 +++++++++++++
- net/wireless/Kconfig                       |    1 -
- 2 files changed, 13 insertions(+), 1 deletion(-)
+On Sat, 21 Apr 2012, Dan Carpenter wrote:
 
---- a/Documentation/feature-removal-schedule.txt	2012-04-04 09:17:37.000000000 +0200
-+++ b/Documentation/feature-removal-schedule.txt	2012-04-04 09:17:38.000000000 +0200
-@@ -441,6 +441,19 @@ Who:	Hans Verkuil <hans.verkuil@cisco.co
- 
- ----------------------------
- 
-+What:	CONFIG_CFG80211_WEXT
-+When:	as soon as distributions ship new wireless tools, ie. wpa_supplicant 1.0
-+	and NetworkManager/connman/etc. that are able to use nl80211
-+Why:	Wireless extensions are deprecated, and userland tools are moving to
-+	using nl80211. New drivers are no longer using wireless extensions,
-+	and while there might still be old drivers, both new drivers and new
-+	userland no longer needs them and they can't be used for an feature
-+	developed in the past couple of years. As such, compatibility with
-+	wireless extensions in new drivers will be removed.
-+Who:	Johannes Berg <johannes@sipsolutions.net>
-+
-+----------------------------
-+
- What:	g_file_storage driver
- When:	3.8
- Why:	This driver has been superseded by g_mass_storage.
---- a/net/wireless/Kconfig	2012-04-04 09:17:37.000000000 +0200
-+++ b/net/wireless/Kconfig	2012-04-04 09:17:38.000000000 +0200
-@@ -114,7 +114,6 @@ config CFG80211_WEXT
- 	bool "cfg80211 wireless extensions compatibility"
- 	depends on CFG80211
- 	select WEXT_CORE
--	default y
- 	help
- 	  Enable this option if you need old userspace for wireless
- 	  extensions with cfg80211-based drivers.
+> On Fri, Apr 20, 2012 at 09:14:44PM +0300, Kalle Valo wrote:
+>> Dan Carpenter <dan.carpenter@oracle.com> writes:
+>>
+>>> On Fri, Apr 20, 2012 at 06:57:00PM +1000, Julian Calaby wrote:
+>>>>> -       struct mib_local *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
+>>>>> +       struct mib_local *m = kmalloc(sizeof(struct mib_local), GFP_KERNEL);
+>>>>
+>>>> Would it be better practice to use sizeof(*m)?
+>>>>
+>>>
+>>> That was my temptation as well...  But I decided to make it match
+>>> with the surrounding code.  I'm happy to resend if people want.
+>>
+>> IMHO sizeof(*m) is better and I tend to use it.
+>>
+>> Related to this: I have a bad habit of sometimes dropping '*' from
+>> sizeof()? Is there a tool which could spot that?
+>>
+>
+> That's what I was working on for Smatch when I sent this patch.
+>
+> The odd thing is that I can't find any bugs like this in the kernel.
+> If sizeof(foo) is less than sizeof(*foo), which is probably the
+> normal case, then these get caught early on in testing.
+>
+> Still I think people must have done manual audits as well...  It
+> feels too clean to be natural.
 
+I sent some patches with respect to this.  But that was probably around a 
+year ago.
 
+julia
+--8323329-863727080-1335014362=:1987--
