@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:49064 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762Ab2DQG3H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 02:29:07 -0400
-Date: Tue, 17 Apr 2012 09:28:47 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	Shahar Levi <shahar_levi@ti.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] wlcore: fixup an allocation
-Message-ID: <20120417062847.GA26756@elgon.mountain> (sfid-20120417_082913_535495_14C52D74)
+Received: from smtp.multi.fi ([85.134.37.151]:59124 "EHLO smtp.multi.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751771Ab2DUV6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Apr 2012 17:58:08 -0400
+Received: from tmb-laptop.supernet (55863541.cust.multi.fi [85.134.53.65] (may be forged))
+	by smtp.multi.fi (8.14.4/8.14.4) with ESMTP id q3LLiRqu031596
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 00:44:29 +0300
+Message-ID: <4F932A3D.2070701@mageia.org> (sfid-20120421_235812_903118_31B5AB43)
+Date: Sun, 22 Apr 2012 00:44:29 +0300
+From: Thomas Backlund <tmb@mageia.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: linux-wireless@vger.kernel.org
+Subject: Missing iwlwifi firmwares ?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-GFP_DMA isn't supposed to be used by itself.  This allocation is allowed
-to sleep so it should be ORing it with GFP_KERNEL.
-Also we should check for allocations errors.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-I don't have the hardware to test this.  Sorry.
+Hi,
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 5c4716c..7ea10e1 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -123,7 +123,9 @@ static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl, u32 mask)
- 	unsigned long timeout;
- 	int ret = 0;
- 
--	events_vector = kmalloc(sizeof(*events_vector), GFP_DMA);
-+	events_vector = kmalloc(sizeof(*events_vector), GFP_KERNEL | GFP_DMA);
-+	if (!events_vector)
-+		return -ENOMEM;
- 
- 	timeout = jiffies + msecs_to_jiffies(WL1271_EVENT_TIMEOUT);
- 
+When reviewing our firmware packages I noticed a few missing iwlwifi
+firmwares according to kernel-3,3,1
+
+
+# modinfo iwlwifi
+filename:
+/lib/modules/3.3.1-desktop-2.mga2/kernel/drivers/net/wireless/iwlwifi/iwlwifi.ko.xz
+alias:          iwlagn
+license:        GPL
+author:         Copyright(c) 2003-2011 Intel Corporation
+<ilw@linux.intel.com>
+version:        in-tree:d
+description:    Intel(R) Wireless WiFi Link AGN driver for Linux
+
+[...]
+firmware:       iwlwifi-6000g2a-6.ucode
+firmware:       iwlwifi-100-6.ucode
+firmware:       iwlwifi-1000-6.ucode
+[...]
+
+Theese three are missing from:
+http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git;a=summary
+
+http://intellinuxwireless.org/?n=Downloads
+
+
+The API 5 ucodes are awailable, but the driver expect API 6...
+
+So..., when will they be available ?
+--
+Thomas
