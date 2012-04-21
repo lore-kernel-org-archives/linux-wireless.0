@@ -1,143 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:4753 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753821Ab2DOMZX (ORCPT
+Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:57824 "EHLO
+	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751349Ab2DUPNG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 08:25:23 -0400
-Message-ID: <4F8ABE31.1020708@gmail.com> (sfid-20120415_142526_885401_EFAE94A0)
-Date: Sun, 15 Apr 2012 14:25:21 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sat, 21 Apr 2012 11:13:06 -0400
+Date: Sat, 21 Apr 2012 17:13:06 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+cc: Julia Lawall <julia.lawall@lip6.fr>, Kalle Valo <kvalo@adurom.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] wireless: at76c50x: allocating too much data
+In-Reply-To: <20120421151235.GM27101@mwanda>
+Message-ID: <alpine.DEB.2.02.1204211712270.1987@hadrien> (sfid-20120421_171310_585827_DD770438)
+References: <20120420064705.GE22649@elgon.mountain> <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com> <20120420091449.GI27101@mwanda> <87vcku9sob.fsf@purkki.adurom.net> <20120421124523.GS6498@mwanda> <alpine.DEB.2.02.1204211548090.1987@hadrien>
+ <20120421145140.GU6498@mwanda> <20120421151235.GM27101@mwanda>
 MIME-Version: 1.0
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	IvDoorn@gmail.com, linville@tuxdriver.com,
-	helmut.schaa@googlemail.com
-Subject: Re: [PATCH] wireless: rt2x00: rt2800usb add more devices ids
-References: <1334448592-16391-1-git-send-email-xose.vazquez@gmail.com>
-In-Reply-To: <1334448592-16391-1-git-send-email-xose.vazquez@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/15/12 02:09, Xose Vazquez Perez wrote:
-> They were taken from ralink drivers:
-> 2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
-> 2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO
-> 
-> 0x1eda,0x2210 RT3070 Airties
-> 
-> 0x083a,0xb511 RT3370 Panasonic
-> 0x0471,0x20dd RT3370 Philips
-> 
-> 0x1875,0x7733 RT3573 Air Live
-> 0x7392,0x7733 RT3573 Edimax
-> 0x0e66,0x0021 RT3573 Hawking
-> 0x2019,0xed19 RT3573 Planex
-> 0x148f,0x3573 RT3573 Ralink
-> 0x0df6,0x0067 RT3573 Sitecom
-> 0x1690,0x0764 RT35xx Askey
-> 0x0df6,0x0065 RT35xx Sitecom
-> 0x0df6,0x0066 RT35xx Sitecom
-> 0x0df6,0x0068 RT35xx Sitecom
-> 
-> 0x2001,0x3c1c RT5370 DLink
-> 0x2001,0x3c1d RT5370 DLink
-> 
-> 2001 is D-Link not Alpha
-> 
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Please do not add the RT3573 devices (yet). The RT3573 chipset is not
-supported by rt2x00 at the moment and it is quite a different beast from
-the other chipsets (different EEPROM layout, 3x3 device).
 
-The other ones are OK to add.
+On Sat, 21 Apr 2012, Dan Carpenter wrote:
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |   27 ++++++++++++++++++++++++---
->  1 files changed, 24 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 001735f..c4d7f6f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -922,6 +922,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  	{ USB_DEVICE(0x1482, 0x3c09) },
->  	/* AirTies */
->  	{ USB_DEVICE(0x1eda, 0x2012) },
-> +	{ USB_DEVICE(0x1eda, 0x2210) },
->  	{ USB_DEVICE(0x1eda, 0x2310) },
->  	/* Allwin */
->  	{ USB_DEVICE(0x8516, 0x2070) },
-> @@ -1134,6 +1135,10 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  #ifdef CONFIG_RT2800USB_RT33XX
->  	/* Belkin */
->  	{ USB_DEVICE(0x050d, 0x945b) },
-> +	/* Panasonic */
-> +	{ USB_DEVICE(0x083a, 0xb511) },
-> +	/* Philips */
-> +	{ USB_DEVICE(0x0471, 0x20dd) },
->  	/* Ralink */
->  	{ USB_DEVICE(0x148f, 0x3370) },
->  	{ USB_DEVICE(0x148f, 0x8070) },
-> @@ -1141,38 +1146,54 @@ static struct usb_device_id rt2800usb_device_table[] = {
->  	{ USB_DEVICE(0x0df6, 0x0050) },
->  #endif
->  #ifdef CONFIG_RT2800USB_RT35XX
-> +	/* Air Live */
-> +	{ USB_DEVICE(0x1875, 0x7733) },
->  	/* Allwin */
->  	{ USB_DEVICE(0x8516, 0x3572) },
->  	/* Askey */
->  	{ USB_DEVICE(0x1690, 0x0744) },
-> +	{ USB_DEVICE(0x1690, 0x0764) },
->  	/* Cisco */
->  	{ USB_DEVICE(0x167b, 0x4001) },
-> +	/* Edimax */
-> +	{ USB_DEVICE(0x7392, 0x7733) },
->  	/* EnGenius */
->  	{ USB_DEVICE(0x1740, 0x9801) },
-> +	/* Hawking */
-> +	{ USB_DEVICE(0x0e66, 0x0021) },
->  	/* I-O DATA */
->  	{ USB_DEVICE(0x04bb, 0x0944) },
->  	/* Linksys */
->  	{ USB_DEVICE(0x13b1, 0x002f) },
->  	{ USB_DEVICE(0x1737, 0x0079) },
-> +	/* Planex */
-> +	{ USB_DEVICE(0x2019, 0xed19) },
->  	/* Ralink */
->  	{ USB_DEVICE(0x148f, 0x3572) },
-> +	{ USB_DEVICE(0x148f, 0x3573) },
->  	/* Sitecom */
->  	{ USB_DEVICE(0x0df6, 0x0041) },
->  	{ USB_DEVICE(0x0df6, 0x0062) },
-> +	{ USB_DEVICE(0x0df6, 0x0065) },
-> +	{ USB_DEVICE(0x0df6, 0x0066) },
-> +	{ USB_DEVICE(0x0df6, 0x0067) },
-> +	{ USB_DEVICE(0x0df6, 0x0068) },
->  	/* Toshiba */
->  	{ USB_DEVICE(0x0930, 0x0a07) },
->  	/* Zinwell */
->  	{ USB_DEVICE(0x5a57, 0x0284) },
->  #endif
->  #ifdef CONFIG_RT2800USB_RT53XX
-> -	/* Alpha */
-> -	{ USB_DEVICE(0x2001, 0x3c15) },
-> -	{ USB_DEVICE(0x2001, 0x3c19) },
->  	/* Arcadyan */
->  	{ USB_DEVICE(0x043e, 0x7a12) },
->  	/* Azurewave */
->  	{ USB_DEVICE(0x13d3, 0x3329) },
->  	{ USB_DEVICE(0x13d3, 0x3365) },
-> +	/* D-Link */
-> +	{ USB_DEVICE(0x2001, 0x3c15) },
-> +	{ USB_DEVICE(0x2001, 0x3c19) },
-> +	{ USB_DEVICE(0x2001, 0x3c1c) },
-> +	{ USB_DEVICE(0x2001, 0x3c1d) },
->  	/* LG innotek */
->  	{ USB_DEVICE(0x043e, 0x7a22) },
->  	/* Panasonic */
+> On Sat, Apr 21, 2012 at 05:51:41PM +0300, Dan Carpenter wrote:
+>> On Sat, Apr 21, 2012 at 03:51:44PM +0200, Julia Lawall wrote:
+>>> Looking for x = ... sizeof(x) ... I get 9 reports.  In most cases it
+>>> looks like sizeof(x) is coincidentally the same as the size that is
+>>> wanted.  Two cases that look like they could have some noticible
+>>> effect are:
+>>>
+>>> arch/xtensa/platforms/iss/network.c, line 789
+>>> drivers/block/cciss.c, line 4211
+>>>
+>>
+>> Clever.  You'd need to restrict it to places where x was a  pointer.
+>> That's better than my check which was specific to kmalloc().  (So
+>> uh...  I'm going to rewrite mine as well to be more generic.  :P)
+>>
+>
+> Hm...  Smatch is not really the right tool here.  By the time Sparse
+> gives you the sizeof(foo) information, it just looks like a number
+> 8.
+>
+> I hacked up Sparse a bit so it works for simple expressions which
+> are one token in from the c tokenizer.  So:
+>
+> 	foo = kmalloc(sizeof(foo), GFP_KERNEL); => error.
+> 	foo->bar = kmalloc(sizeof(foo->bar), GFP_KERNEL); => tricky.
+>
+> It's not ideal.  Coccinelle is better for this.
 
----
-Gertjan
+On the other hand, Coccinelle has no idea what the size is, so it doesn't 
+know how important the problem is.
+
+julia
