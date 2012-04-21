@@ -1,57 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:65209 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab2DXIoL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 04:44:11 -0400
-Received: by bkuw12 with SMTP id w12so210559bku.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 01:44:09 -0700 (PDT)
-Message-ID: <4F96677C.40901@openwrt.org> (sfid-20120424_104418_748090_30907B83)
-Date: Tue, 24 Apr 2012 10:42:36 +0200
-From: Florian Fainelli <florian@openwrt.org>
-MIME-Version: 1.0
-To: Jonathan Bither <jonbither@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath5k: add missing iounmap to AHB probe removal
-References: <4F96647F.9060803@gmail.com>
-In-Reply-To: <4F96647F.9060803@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from nbd.name ([46.4.11.11]:40998 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751969Ab2DUV0m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Apr 2012 17:26:42 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v2 1/2] mac80211: rename AP variable num_sta_authorized to num_mcast_sta
+Date: Sat, 21 Apr 2012 23:26:33 +0200
+Message-Id: <1335043594-30046-1-git-send-email-nbd@openwrt.org> (sfid-20120421_232646_778440_431081D5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jonathan,
+It is only used to test for BSS multicast receivers.
 
-Le 04/24/12 10:29, Jonathan Bither a écrit :
-> When our driver device is removed on the AHB bus, our IO memory is never unmapped.
->
-> Signed-off-by: Jonathan Bither<jonbither@gmail.com>
->
-> diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
-> index 8c50d9d..eebf439 100644
-> --- a/drivers/net/wireless/ath/ath5k/ahb.c
-> +++ b/drivers/net/wireless/ath/ath5k/ahb.c
-> @@ -197,12 +197,14 @@ static int ath_ahb_remove(struct platform_device *pdev)
->   	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
->   	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
->   	struct ath5k_hw *ah;
-> +	void __iomem *mem;
->   	u32 reg;
->
->   	if (!hw)
->   		return 0;
->
->   	ah = hw->priv;
-> +	mem = ah->iobase;
->
->   	if (bcfg->devid>= AR5K_SREV_AR2315_R6) {
->   		/* Disable WMAC AHB arbitration */
-> @@ -222,6 +224,7 @@ static int ath_ahb_remove(struct platform_device *pdev)
->   	ath5k_deinit_ah(ah);
->   	platform_set_drvdata(pdev, NULL);
->   	ieee80211_free_hw(hw);
-> +	iounmap(mem);
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/debugfs_netdev.c |    4 ++--
+ net/mac80211/ieee80211_i.h    |    2 +-
+ net/mac80211/sta_info.c       |    4 ++--
+ net/mac80211/tx.c             |    2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-You don't need this temporary variable, just use iounmap(ah->iobase) 
-after ath5k_deinit_ah(ah) just like how it is done in the PCI case.
---
-Florian
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index e7af522..ea0122d 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -394,7 +394,7 @@ static ssize_t ieee80211_if_parse_uapsd_max_sp_len(
+ __IEEE80211_IF_FILE_W(uapsd_max_sp_len);
+ 
+ /* AP attributes */
+-IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
++IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+ IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+ IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
+ 
+@@ -540,7 +540,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ 
+ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ {
+-	DEBUGFS_ADD(num_sta_authorized);
++	DEBUGFS_ADD(num_mcast_sta);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
+ 	DEBUGFS_ADD(num_buffered_multicast);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bd7a451..4404753 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -282,7 +282,7 @@ struct ieee80211_if_ap {
+ 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+ 	struct sk_buff_head ps_bc_buf;
+ 	atomic_t num_sta_ps; /* number of stations in PS mode */
+-	atomic_t num_sta_authorized; /* number of authorized stations */
++	atomic_t num_mcast_sta; /* number of stations receiving multicast */
+ 	int dtim_count;
+ 	bool dtim_bc_mc;
+ };
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 7fd7ac4..4c04eb5 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1418,14 +1418,14 @@ int sta_info_move_state(struct sta_info *sta,
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+ 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+-				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
++				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+ 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+-				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
++				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0abbef95..44001c7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -306,7 +306,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 		}
+ 	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
+ 			    ieee80211_is_data(hdr->frame_control) &&
+-			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
++			    !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
+ 		/*
+ 		 * No associated STAs - no need to send multicast
+ 		 * frames.
+-- 
+1.7.3.2
+
