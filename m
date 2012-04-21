@@ -1,58 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:52390 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363Ab2DSOJb convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52887 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771Ab2DUV6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 10:09:31 -0400
-Received: by bkcik5 with SMTP id ik5so6399434bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 07:09:30 -0700 (PDT)
-Subject: Re: wlan0 not present
-Mime-Version: 1.0 (Apple Message framework v1257)
-Content-Type: text/plain; charset=US-ASCII
-From: Dominik Feser <dominik.feser@googlemail.com>
-In-Reply-To: <4F901224.1040508@sipsolutions.net>
-Date: Thu, 19 Apr 2012 16:09:26 +0200
-Cc: Dominik Feser <dominik.feser@googlemail.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Message-Id: <EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com> (sfid-20120419_160935_311365_A7BC3E05)
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <4B048FDE-C784-4401-9FEC-16F8CC0B8D59@gmail.com> <CANUX_P0FO-P6ZFow15shNpZg6Z8FAPP7AovJH=xUKPyVEMtoBw@mail.gmail.com> <FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com> <CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com> <816C5F70-E340-46F9-8206-2B230A27F3AD@gmail.com> <CANUX_P3=ttVKdLYBfAdGRhmfDRbPruogw8Eo_d09on0ajdTqUw@mail.gmail.com> <5714877C-2465-4FD5-94A0-9D0806A803C4@gmail.com> <CANUX_P27GoLY2q9jmsWw9Rzn9posf3mCjDa98+q4JP=83wYthg@mail.gmail.com> <8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com> <CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com> <9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com> <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com> <8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com> <CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com> <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> (sfid-20120419_152129_778732_024C8F79) <4F901224.1040508@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Sat, 21 Apr 2012 17:58:50 -0400
+Message-ID: <1335045528.6516.7.camel@jlt3.sipsolutions.net> (sfid-20120421_235853_079975_1D697BF7)
+Subject: Re: [PATCH v3 1/2] mac80211: rename AP variable num_sta_authorized
+ to num_mcast_sta
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Sat, 21 Apr 2012 23:58:48 +0200
+In-Reply-To: <1335044533-37359-1-git-send-email-nbd@openwrt.org>
+References: <1335044533-37359-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Finally, here is the output of dmesg after recompiling:
+On Sat, 2012-04-21 at 23:42 +0200, Felix Fietkau wrote:
+> It is only used to test for BSS multicast receivers.
 
-iwlwifi 0000:02:00.0: edd19e18
-iwlwifi 0000:02:00.0: d55c1e18
-iwlwifi 0000:02:00.0: d55c1ddc
-iwlwifi 0000:02:00.0: PCI INT A disabled
-Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
-Copyright(c) 2003-2012 Intel Corporation
-iwlwifi 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwlwifi 0000:02:00.0: setting latency timer to 64
-iwlwifi 0000:02:00.0: pci_resource_len = 0x00002000
-iwlwifi 0000:02:00.0: pci_resource_base = f447c000
-iwlwifi 0000:02:00.0: HW Revision ID = 0x34
-iwlwifi 0000:02:00.0: irq 1277 (277) for MSI/MSI-X
-iwlwifi 0000:02:00.0: U iwl_request_firmware d5b37d70
-iwlwifi 0000:02:00.0: U iwl_request_firmware e09ebdd4
-iwlwifi 0000:02:00.0: ee2afe18
-iwlwifi 0000:02:00.0: U iwl_request_firmware ee2afdd4
-iwlwifi 0000:02:00.0: cc93fe18
-iwlwifi 0000:02:00.0: cc93fddc
-iwlwifi 0000:02:00.0: U iwl_trans_pcie_rx_free cc93fd80
-iwlwifi 0000:02:00.0: PCI INT A disabled
+This is obviously a good thing :-)
 
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-Am 19.04.2012 um 15:24 schrieb Johannes Berg:
-
-> On 4/19/2012 6:20 AM, Dominik Feser wrote:
->> Ah ok, this is what I did several times now. After unpacking there is no .config file. After running the driver-select script and making the driver the first time the .config file appears.
->> Just then it seems to me that f I add the debug line to .config and remake this isn't recognized by the make...
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  net/mac80211/debugfs_netdev.c |    4 ++--
+>  net/mac80211/ieee80211_i.h    |    2 +-
+>  net/mac80211/sta_info.c       |    4 ++--
+>  net/mac80211/tx.c             |    2 +-
+>  4 files changed, 6 insertions(+), 6 deletions(-)
 > 
-> You should modify config.mk, not .config
-> 
-> johannes
+> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+> index e7af522..ea0122d 100644
+> --- a/net/mac80211/debugfs_netdev.c
+> +++ b/net/mac80211/debugfs_netdev.c
+> @@ -394,7 +394,7 @@ static ssize_t ieee80211_if_parse_uapsd_max_sp_len(
+>  __IEEE80211_IF_FILE_W(uapsd_max_sp_len);
+>  
+>  /* AP attributes */
+> -IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
+> +IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+>  IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+>  IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
+>  
+> @@ -540,7 +540,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+>  
+>  static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+>  {
+> -	DEBUGFS_ADD(num_sta_authorized);
+> +	DEBUGFS_ADD(num_mcast_sta);
+>  	DEBUGFS_ADD(num_sta_ps);
+>  	DEBUGFS_ADD(dtim_count);
+>  	DEBUGFS_ADD(num_buffered_multicast);
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index bd7a451..4404753 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -282,7 +282,7 @@ struct ieee80211_if_ap {
+>  	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+>  	struct sk_buff_head ps_bc_buf;
+>  	atomic_t num_sta_ps; /* number of stations in PS mode */
+> -	atomic_t num_sta_authorized; /* number of authorized stations */
+> +	atomic_t num_mcast_sta; /* number of stations receiving multicast */
+>  	int dtim_count;
+>  	bool dtim_bc_mc;
+>  };
+> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> index 7fd7ac4..4c04eb5 100644
+> --- a/net/mac80211/sta_info.c
+> +++ b/net/mac80211/sta_info.c
+> @@ -1418,14 +1418,14 @@ int sta_info_move_state(struct sta_info *sta,
+>  			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+>  		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+>  			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+> -				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
+> +				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
+>  			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+>  		}
+>  		break;
+>  	case IEEE80211_STA_AUTHORIZED:
+>  		if (sta->sta_state == IEEE80211_STA_ASSOC) {
+>  			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+> -				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
+> +				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
+>  			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+>  		}
+>  		break;
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 0abbef95..44001c7 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -306,7 +306,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+>  		}
+>  	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
+>  			    ieee80211_is_data(hdr->frame_control) &&
+> -			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
+> +			    !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
+>  		/*
+>  		 * No associated STAs - no need to send multicast
+>  		 * frames.
+
 
