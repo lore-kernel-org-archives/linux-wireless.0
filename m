@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33836 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708Ab2DRBmx (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:50820 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946Ab2DUMnE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 21:42:53 -0400
-Message-ID: <1334713339.3725.19.camel@jlt3.sipsolutions.net> (sfid-20120418_034255_380637_7FA84E97)
-Subject: Re: [PATCH v2 6/6] mac80211: Add sta_state to ethtool stats.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Apr 2012 18:42:19 -0700
-In-Reply-To: <1334684807-14026-7-git-send-email-greearb@candelatech.com> (sfid-20120417_194724_045118_B502EAFF)
-References: <1334684807-14026-1-git-send-email-greearb@candelatech.com>
-	 <1334684807-14026-7-git-send-email-greearb@candelatech.com>
-	 (sfid-20120417_194724_045118_B502EAFF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 21 Apr 2012 08:43:04 -0400
+Date: Sat, 21 Apr 2012 15:45:23 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] wireless: at76c50x: allocating too much data
+Message-ID: <20120421124523.GS6498@mwanda> (sfid-20120421_144309_032325_BCC732AF)
+References: <20120420064705.GE22649@elgon.mountain>
+ <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com>
+ <20120420091449.GI27101@mwanda>
+ <87vcku9sob.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <87vcku9sob.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-17 at 10:46 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On Fri, Apr 20, 2012 at 09:14:44PM +0300, Kalle Valo wrote:
+> Dan Carpenter <dan.carpenter@oracle.com> writes:
 > 
-> Helps to know how the station is doing in it's association
-> attempt.
+> > On Fri, Apr 20, 2012 at 06:57:00PM +1000, Julian Calaby wrote:
+> >> > -       struct mib_local *m = kmalloc(sizeof(struct mib_phy), GFP_KERNEL);
+> >> > +       struct mib_local *m = kmalloc(sizeof(struct mib_local), GFP_KERNEL);
+> >> 
+> >> Would it be better practice to use sizeof(*m)?
+> >> 
+> >
+> > That was my temptation as well...  But I decided to make it match
+> > with the surrounding code.  I'm happy to resend if people want.
+> 
+> IMHO sizeof(*m) is better and I tend to use it.
+> 
+> Related to this: I have a bad habit of sometimes dropping '*' from
+> sizeof()? Is there a tool which could spot that?
+> 
 
-Since you keep resending, why not roll this into another patch?
+That's what I was working on for Smatch when I sent this patch.
 
-Also you could put the code into the right place so patch 5 doesn't move
-it all.
+The odd thing is that I can't find any bugs like this in the kernel.
+If sizeof(foo) is less than sizeof(*foo), which is probably the
+normal case, then these get caught early on in testing.
 
-johannes
+Still I think people must have done manual audits as well...  It
+feels too clean to be natural.
 
+regards,
+dan carpenter
