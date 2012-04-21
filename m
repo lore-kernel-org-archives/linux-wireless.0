@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fep33.mx.upcmail.net ([62.179.121.51]:41302 "EHLO
-	fep33.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753640Ab2DESlu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 14:41:50 -0400
-Received: from edge03.upcmail.net ([192.168.13.238])
-          by viefep14-int.chello.at
-          (InterMail vM.8.01.05.04 201-2260-151-105-20111014) with ESMTP
-          id <20120405182408.TBYX8105.viefep14-int.chello.at@edge03.upcmail.net>
-          for <linux-wireless@vger.kernel.org>;
-          Thu, 5 Apr 2012 20:24:08 +0200
-Received: from [192.168.111.10] (mithril.odi.ch [192.168.111.10])
-	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by gandalf.odi.ch (Postfix) with ESMTPSA id 63A4346002D
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Apr 2012 20:24:07 +0200 (CEST)
-Message-ID: <4F7DE399.4000304@odi.ch> (sfid-20120405_204154_413597_E79227DD)
-Date: Thu, 05 Apr 2012 20:25:29 +0200
-From: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
+Received: from smtp.multi.fi ([85.134.37.151]:59149 "EHLO smtp.multi.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751022Ab2DUWVg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Apr 2012 18:21:36 -0400
+Received: from tmb-laptop.supernet (55863541.cust.multi.fi [85.134.53.65] (may be forged))
+	by smtp.multi.fi (8.14.4/8.14.4) with ESMTP id q3LMLWjV031920
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 01:21:34 +0300
+Message-ID: <4F9332EE.3030106@mageia.org> (sfid-20120422_002139_361866_CDCD8D88)
+Date: Sun, 22 Apr 2012 01:21:34 +0300
+From: Thomas Backlund <tmb@mageia.org>
 MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Subject: Re: 3.3.1 ath9k regression
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: Re: Missing iwlwifi firmwares ?
+References: <4F932A3D.2070701@mageia.org>  (sfid-20120421_235812_903118_31B5AB43) <1335045596.6516.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1335045596.6516.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am seeing similar symptoms as Michael Leun, using NetworkManager and ath9k 
-built-in (not as a module):
+22.04.2012 00:59, Johannes Berg skrev:
+> On Sun, 2012-04-22 at 00:44 +0300, Thomas Backlund wrote:
+> 
+>> When reviewing our firmware packages I noticed a few missing iwlwifi
+>> firmwares according to kernel-3,3,1
+> 
+>> [...]
+>> firmware:       iwlwifi-6000g2a-6.ucode
+>> firmware:       iwlwifi-100-6.ucode
+>> firmware:       iwlwifi-1000-6.ucode
+>> [...]
+>>
+>> Theese three are missing from:
+>> http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git;a=summary
+>>
+>> http://intellinuxwireless.org/?n=Downloads
+>>
+>>
+>> The API 5 ucodes are awailable, but the driver expect API 6...
+>>
+>> So..., when will they be available ?
+> 
+> We don't really know, but it was really just due to a bug in the driver,
+> it should use MODULE_FIRMWARE with the latest released rather than the
+> latest testing version -- there's a patch in our queue to fix that.
+> 
+> johannes
+> 
 
-Apr  5 20:09:14 mithril NetworkManager[2575]: <info> (wlan0): supplicant 
-connection state:
-   scanning -> associating
-Apr  5 20:09:15 mithril kernel: wlan0: authenticate with xxx (try 1)
-Apr  5 20:09:15 mithril kernel: wlan0: authenticate with xxx (try 2)
-Apr  5 20:09:15 mithril kernel: wlan0: authenticate with xxx (try 3)
-Apr  5 20:09:15 mithril kernel: wlan0: authentication with xxx timed out
-Apr  5 20:09:17 mithril NetworkManager[2575]: <warn> (wlan0): link timed out.
-Apr  5 20:09:25 mithril NetworkManager[2575]: <info> (wlan0): supplicant 
-connection state:
-   associating -> disconnected
-Apr  5 20:09:25 mithril NetworkManager[2575]: <info> (wlan0): supplicant 
-connection state:
-   disconnected -> scanning
-Apr  5 20:09:25 mithril kernel: ath: Failed to stop TX DMA, queues=0x001!
+Any pointers to that patch ?
 
+We are entering RC stage in less than 2 weeks.
 
-Reproducible 100% of the time. Reverting 
-db6a6a78d8602964c9dfb1d8ce18daefd92da0a7 fixes the problem.
-
-Hope that helps,
-
-Ortwin
+--
+Thoma
