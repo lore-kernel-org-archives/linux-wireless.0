@@ -1,75 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52073 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753751Ab2DJI5I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 04:57:08 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Configure 0 as rsn cap when it is not there in rsn ie
-Date: Tue, 10 Apr 2012 14:27:47 +0530
-Message-ID: <1334048267-27256-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120410_105714_206252_DEE0744D)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:49804 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751341Ab2DUUec (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Apr 2012 16:34:32 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 1/2] mac80211: rename AP variable num_sta_authorized to num_mcast_sta
+Date: Sat, 21 Apr 2012 22:34:16 +0200
+Message-Id: <1335040457-11252-1-git-send-email-nbd@openwrt.org> (sfid-20120421_223436_441208_56E133AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently rsn capability is not set when it is not available in
-rsn IE. Set it to 0 in firmware when it is not there in the ie to
-make sure host and target are consistent.
+It is only used to test for BSS multicast receivers.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   20 +++++++++++++-------
- 1 files changed, 13 insertions(+), 7 deletions(-)
+ net/mac80211/debugfs_netdev.c |    4 ++--
+ net/mac80211/ieee80211_i.h    |    2 +-
+ net/mac80211/sta_info.c       |    4 ++--
+ net/mac80211/tx.c             |    2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 707c299..892ece7 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2537,28 +2537,34 @@ static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
- 	/* skip element id and length */
- 	rsn_ie += 2;
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index e7af522..ea0122d 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -394,7 +394,7 @@ static ssize_t ieee80211_if_parse_uapsd_max_sp_len(
+ __IEEE80211_IF_FILE_W(uapsd_max_sp_len);
  
--	/* skip version, group cipher */
--	if (rsn_ie_len < 6)
-+	/* skip version */
-+	if (rsn_ie_len < 2)
- 		return -EINVAL;
--	rsn_ie +=  6;
--	rsn_ie_len -= 6;
-+	rsn_ie +=  2;
-+	rsn_ie_len -= 2;
-+
-+	/* skip group cipher suite */
-+	if (rsn_ie_len < 4)
-+		return 0;
-+	rsn_ie +=  4;
-+	rsn_ie_len -= 4;
+ /* AP attributes */
+-IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
++IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+ IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+ IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
  
- 	/* skip pairwise cipher suite */
- 	if (rsn_ie_len < 2)
--		return -EINVAL;
-+		return 0;
- 	cnt = get_unaligned_le16(rsn_ie);
- 	rsn_ie += (2 + cnt * 4);
- 	rsn_ie_len -= (2 + cnt * 4);
+@@ -540,7 +540,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
  
- 	/* skip akm suite */
- 	if (rsn_ie_len < 2)
--		return -EINVAL;
-+		return 0;
- 	cnt = get_unaligned_le16(rsn_ie);
- 	rsn_ie += (2 + cnt * 4);
- 	rsn_ie_len -= (2 + cnt * 4);
- 
- 	if (rsn_ie_len < 2)
--		return -EINVAL;
-+		return 0;
- 
- 	memcpy(rsn_capab, rsn_ie, 2);
- 
+ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ {
+-	DEBUGFS_ADD(num_sta_authorized);
++	DEBUGFS_ADD(num_mcast_sta);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
+ 	DEBUGFS_ADD(num_buffered_multicast);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bd7a451..4404753 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -282,7 +282,7 @@ struct ieee80211_if_ap {
+ 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+ 	struct sk_buff_head ps_bc_buf;
+ 	atomic_t num_sta_ps; /* number of stations in PS mode */
+-	atomic_t num_sta_authorized; /* number of authorized stations */
++	atomic_t num_mcast_sta; /* number of stations receiving multicast */
+ 	int dtim_count;
+ 	bool dtim_bc_mc;
+ };
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 7fd7ac4..4c04eb5 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1418,14 +1418,14 @@ int sta_info_move_state(struct sta_info *sta,
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+ 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+-				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
++				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+ 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+-				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
++				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0abbef95..44001c7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -306,7 +306,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 		}
+ 	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
+ 			    ieee80211_is_data(hdr->frame_control) &&
+-			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
++			    !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
+ 		/*
+ 		 * No associated STAs - no need to send multicast
+ 		 * frames.
 -- 
-1.7.0.4
+1.7.3.2
 
