@@ -1,49 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.stuge.se ([212.116.89.98]:40654 "HELO foo.stuge.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1754129Ab2DPWfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:35:03 -0400
-Message-ID: <20120416223459.18769.qmail@stuge.se> (sfid-20120417_003526_613947_7D929AE8)
-Date: Tue, 17 Apr 2012 00:34:59 +0200
-From: Peter Stuge <peter@stuge.se>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk
-Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
-References: <20120413105746.10ffb120@stein> <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com> <20120413190819.9469.qmail@stuge.se> <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com> <20120416162710.GA24100@kroah.com> <CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com> <20120416205856.GA22298@kroah.com> <CAMP44s2OdH+1RG2O6+QXkik8Ww_ZSHN=yzEKwD1KvRAcceNSRA@mail.gmail.com> <20120416212718.GA22824@kroah.com> <CAMP44s2bg8AC+jMXRv-GoRaag2qDgttHoVWmKOxH7zTg4-qtLQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s2bg8AC+jMXRv-GoRaag2qDgttHoVWmKOxH7zTg4-qtLQ@mail.gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51665 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752500Ab2DVWDk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Apr 2012 18:03:40 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 5/7] compat-wireless: deactivate CONFIG_BT_RFCOMM_TTY for old kernel versions.
+Date: Mon, 23 Apr 2012 00:03:17 +0200
+Message-Id: <1335132199-21320-5-git-send-email-hauke@hauke-m.de> (sfid-20120423_000343_558872_4D691BF3)
+In-Reply-To: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
+References: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felipe Contreras wrote:
-> With more people using Arch Linux and thus the latest "stable"
-> release, I'd say we might see an increase in these kinds of issues.
+net/bluetooth/rfcomm/tty.c does not build on older kernel versions.
+---
+ config.mk                              |    4 +++-
+ patches/08-rename-config-options.patch |   30 ++++++++++++++++++++++++++++++
+ 2 files changed, 33 insertions(+), 1 deletion(-)
 
-You touch on an important point. Arch has it's own support channels,
-and after a few of these kinds of issues perhaps Arch will decide to
-push a different kernel to their users.
+diff --git a/config.mk b/config.mk
+index a718257..584189b 100644
+--- a/config.mk
++++ b/config.mk
+@@ -194,7 +194,9 @@ export CONFIG_LIB80211_CRYPT_TKIP=m
+ 
+ export CONFIG_BT=m
+ export CONFIG_BT_RFCOMM=m
+-export CONFIG_BT_RFCOMM_TTY=y
++ifndef CONFIG_COMPAT_KERNEL_2_6_33
++export CONFIG_COMPAT_BT_RFCOMM_TTY=y
++endif #CONFIG_COMPAT_KERNEL_2_6_33
+ export CONFIG_BT_BNEP=m
+ export CONFIG_BT_BNEP_MC_FILTER=y
+ export CONFIG_BT_BNEP_PROTO_FILTER=y
+diff --git a/patches/08-rename-config-options.patch b/patches/08-rename-config-options.patch
+index da63989..bb24d7f 100644
+--- a/patches/08-rename-config-options.patch
++++ b/patches/08-rename-config-options.patch
+@@ -133,3 +133,33 @@ CONFIG_BT_HIDP does not build with older kernel versions.
+  int ath_rate_control_register(void);
+  void ath_rate_control_unregister(void);
+  #else
++--- a/net/bluetooth/rfcomm/Makefile
+++++ b/net/bluetooth/rfcomm/Makefile
++@@ -5,4 +5,4 @@
++ obj-$(CONFIG_BT_RFCOMM) += rfcomm.o
++ 
++ rfcomm-y			:= core.o sock.o
++-rfcomm-$(CONFIG_BT_RFCOMM_TTY)	+= tty.o
+++rfcomm-$(CONFIG_COMPAT_BT_RFCOMM_TTY)	+= tty.o
++--- a/include/net/bluetooth/rfcomm.h
+++++ b/include/net/bluetooth/rfcomm.h
++@@ -357,7 +357,7 @@ struct rfcomm_dev_list_req {
++ 
++ int  rfcomm_dev_ioctl(struct sock *sk, unsigned int cmd, void __user *arg);
++ 
++-#ifdef CONFIG_BT_RFCOMM_TTY
+++#ifdef CONFIG_COMPAT_BT_RFCOMM_TTY
++ int  rfcomm_init_ttys(void);
++ void rfcomm_cleanup_ttys(void);
++ #else
++--- a/net/bluetooth/rfcomm/sock.c
+++++ b/net/bluetooth/rfcomm/sock.c
++@@ -873,7 +873,7 @@ static int rfcomm_sock_ioctl(struct sock
++ 	err = bt_sock_ioctl(sock, cmd, arg);
++ 
++ 	if (err == -ENOIOCTLCMD) {
++-#ifdef CONFIG_BT_RFCOMM_TTY
+++#ifdef CONFIG_COMPAT_BT_RFCOMM_TTY
++ 		lock_sock(sk);
++ 		err = rfcomm_dev_ioctl(sk, cmd, (void __user *) arg);
++ 		release_sock(sk);
+-- 
+1.7.9.5
 
-None of the Arch users I know (though only a few) would have had a
-critical problem without wifi.
-
-What kernel to push to users is anyway a distribution problem, so if
-you must discuss then please discuss within the Arch community the
-pros and cons of the various available kernel trees. Maybe they will
-prefer another one than they currently do, after your reasoning.
-
-I personally don't care about what any distribution does; I just use
-Linus' tree, and I might merge some other trees if they have
-important changes which I want before Linus takes them. When I did
-this the first time is btw the time where I really learned to
-appreciate just how powerful git is.
-
-
-//Peter
