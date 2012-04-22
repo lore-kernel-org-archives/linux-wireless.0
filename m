@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44676 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:53241 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752105Ab2DOKPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 06:15:52 -0400
+	id S1751980Ab2DVUAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Apr 2012 16:00:07 -0400
+Message-ID: <4F946340.3020700@openwrt.org> (sfid-20120422_220011_965149_09E11D8D)
+Date: Sun, 22 Apr 2012 22:00:00 +0200
 From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 1/9] ath9k_hw: use lower rx latency values for half/quarter channels
-Date: Sun, 15 Apr 2012 12:15:33 +0200
-Message-Id: <1334484941-27673-1-git-send-email-nbd@openwrt.org> (sfid-20120415_121601_845301_8825A0CE)
+MIME-Version: 1.0
+To: Zefir Kurtisi <zefir.kurtisi@gmail.com>
+CC: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com,
+	achadd@qca.qualcomm.com, chunkeey@googlemail.com,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: Re: [PATCH 2/4] ath9k: set PHYRADAR in RX filter when on DFS channel
+References: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com> <1335124223-15439-3-git-send-email-zefir.kurtisi@gmail.com>
+In-Reply-To: <1335124223-15439-3-git-send-email-zefir.kurtisi@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Visibly improves performance on AR9280 and AR9380 - values obtained from
-register dumps of UBNT NanoStation M2/M5.
+On 2012-04-22 9:50 PM, Zefir Kurtisi wrote:
+> From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> 
+> 
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/recv.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index f4ae3ba..ef45c0c 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -17,6 +17,7 @@
+>  #include <linux/dma-mapping.h>
+>  #include "ath9k.h"
+>  #include "ar9003_mac.h"
+> +#include "dfs.h"
+>  
+>  #define SKB_CB_ATHBUF(__skb)	(*((struct ath_buf **)__skb->cb))
+>  
+> @@ -467,6 +468,11 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+>  		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+>  	}
+>  
+> +	if (sc->sc_ah->curchan->chan->flags & IEEE80211_CHAN_RADAR)
+> +		rfilt |= ATH9K_RX_FILTER_PHYRADAR;
+> +	else
+> +		rfilt &= ~ATH9K_RX_FILTER_PHYRADAR;
+This should only be done in AP mode, maybe mac80211 should have a
+separate flag to tell the driver to enable this. Same comment also
+applies to patch 4/4.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 373cef6..c7faf10 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -994,7 +994,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 
- 	if (IS_CHAN_HALF_RATE(chan)) {
- 		eifs = 175;
--		rx_lat *= 2;
-+		rx_lat = 10;
- 		tx_lat *= 2;
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 11;
-@@ -1003,7 +1003,7 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		sifstime = 32;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
- 		eifs = 340;
--		rx_lat = (rx_lat * 4) - 1;
-+		rx_lat = 20;
- 		tx_lat *= 4;
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
--- 
-1.7.3.2
+- Felix
 
