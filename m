@@ -1,162 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4245 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755531Ab2DWVZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 17:25:15 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:45854 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205Ab2DVTuv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Apr 2012 15:50:51 -0400
+Received: by wgbds11 with SMTP id ds11so2016908wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 12:50:50 -0700 (PDT)
+From: Zefir Kurtisi <zefir.kurtisi@gmail.com>
 To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3.4 V2 2/2] brcm80211: fmac: fix missing completion
- events issue
-Date: Mon, 23 Apr 2012 14:24:53 -0700
-Message-ID: <1335216293-19419-3-git-send-email-frankyl@broadcom.com> (sfid-20120423_232531_944728_93E1B1D5)
-In-Reply-To: <1335216293-19419-1-git-send-email-frankyl@broadcom.com>
-References: <1334957269-27416-1-git-send-email-frankyl@broadcom.com>
- <1335216293-19419-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com, achadd@qca.qualcomm.com,
+	chunkeey@googlemail.com, Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH 4/4] ath9k: set radar config if switching to DFS channel
+Date: Sun, 22 Apr 2012 21:50:23 +0200
+Message-Id: <1335124223-15439-5-git-send-email-zefir.kurtisi@gmail.com> (sfid-20120422_215055_525525_0E283525)
+In-Reply-To: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com>
+References: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dpc takes care of all data packets transmissions for sdio function
-2. It is possible that it misses some completion events when the
-traffic is heavy or it's running on a slow cpu. A linked list is
-introduced to make sure dpc is invoked whenever needed.
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   63 ++++++++++++++++----
- 1 files changed, 51 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 2bf5dda..eb3829b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -574,6 +574,8 @@ struct brcmf_sdio {
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3879485..0aeba88 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -371,6 +371,16 @@ static int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
  
- 	struct task_struct *dpc_tsk;
- 	struct completion dpc_wait;
-+	struct list_head dpc_tsklst;
-+	spinlock_t dpc_tl_lock;
+ 	r = ath_reset_internal(sc, hchan, false);
  
- 	struct semaphore sdsem;
- 
-@@ -2594,29 +2596,58 @@ clkwait:
- 	return resched;
- }
- 
-+static inline void brcmf_sdbrcm_adddpctsk(struct brcmf_sdio *bus)
-+{
-+	struct list_head *new_hd;
-+	unsigned long flags;
++	if ((r == 0) && (hchan->chan->flags & IEEE80211_CHAN_RADAR)) {
++		/* set HW specific DFS configuration if on DFS channel */
++		struct ath_hw *ah = sc->sc_ah;
++		struct ath_common *common = ath9k_hw_common(ah);
 +
-+	if (in_interrupt())
-+		new_hd = kzalloc(sizeof(struct list_head), GFP_ATOMIC);
-+	else
-+		new_hd = kzalloc(sizeof(struct list_head), GFP_KERNEL);
-+	if (new_hd == NULL)
-+		return;
-+
-+	spin_lock_irqsave(&bus->dpc_tl_lock, flags);
-+	list_add_tail(new_hd, &bus->dpc_tsklst);
-+	spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
-+}
-+
- static int brcmf_sdbrcm_dpc_thread(void *data)
- {
- 	struct brcmf_sdio *bus = (struct brcmf_sdio *) data;
-+	struct list_head *cur_hd, *tmp_hd;
-+	unsigned long flags;
- 
- 	allow_signal(SIGTERM);
- 	/* Run until signal received */
- 	while (1) {
- 		if (kthread_should_stop())
- 			break;
--		if (!wait_for_completion_interruptible(&bus->dpc_wait)) {
--			/* Call bus dpc unless it indicated down
--			(then clean stop) */
--			if (bus->sdiodev->bus_if->state != BRCMF_BUS_DOWN) {
--				if (brcmf_sdbrcm_dpc(bus))
--					complete(&bus->dpc_wait);
--			} else {
-+
-+		if (list_empty(&bus->dpc_tsklst))
-+			if (wait_for_completion_interruptible(&bus->dpc_wait))
-+				break;
-+
-+		spin_lock_irqsave(&bus->dpc_tl_lock, flags);
-+		list_for_each_safe(cur_hd, tmp_hd, &bus->dpc_tsklst) {
-+			spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
-+
-+			if (bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) {
- 				/* after stopping the bus, exit thread */
- 				brcmf_sdbrcm_bus_stop(bus->sdiodev->dev);
- 				bus->dpc_tsk = NULL;
- 				break;
- 			}
--		} else
--			break;
-+
-+			if (brcmf_sdbrcm_dpc(bus))
-+				brcmf_sdbrcm_adddpctsk(bus);
-+
-+			spin_lock_irqsave(&bus->dpc_tl_lock, flags);
-+			list_del(cur_hd);
-+			kfree(cur_hd);
-+		}
-+		spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
- 	}
- 	return 0;
- }
-@@ -2669,8 +2700,10 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
- 	/* Schedule DPC if needed to send queued packet(s) */
- 	if (!bus->dpc_sched) {
- 		bus->dpc_sched = true;
--		if (bus->dpc_tsk)
-+		if (bus->dpc_tsk) {
-+			brcmf_sdbrcm_adddpctsk(bus);
- 			complete(&bus->dpc_wait);
-+		}
- 	}
- 
- 	return ret;
-@@ -3514,8 +3547,10 @@ void brcmf_sdbrcm_isr(void *arg)
- 		brcmf_dbg(ERROR, "isr w/o interrupt configured!\n");
- 
- 	bus->dpc_sched = true;
--	if (bus->dpc_tsk)
-+	if (bus->dpc_tsk) {
-+		brcmf_sdbrcm_adddpctsk(bus);
- 		complete(&bus->dpc_wait);
++		ath9k_hw_set_radar_params(ah);
++		ath_dbg(common, DFS, "DFS enabled for channel %d\n",
++			hchan->chan->center_freq);
 +	}
++
+ 	return r;
  }
  
- static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
-@@ -3559,8 +3594,10 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
- 				bus->ipend = true;
- 
- 				bus->dpc_sched = true;
--				if (bus->dpc_tsk)
-+				if (bus->dpc_tsk) {
-+					brcmf_sdbrcm_adddpctsk(bus);
- 					complete(&bus->dpc_wait);
-+				}
- 			}
- 		}
- 
-@@ -3897,6 +3934,8 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 	}
- 	/* Initialize DPC thread */
- 	init_completion(&bus->dpc_wait);
-+	INIT_LIST_HEAD(&bus->dpc_tsklst);
-+	spin_lock_init(&bus->dpc_tl_lock);
- 	bus->dpc_tsk = kthread_run(brcmf_sdbrcm_dpc_thread,
- 				   bus, "brcmf_dpc");
- 	if (IS_ERR(bus->dpc_tsk)) {
 -- 
-1.7.5.4
-
+1.7.4.1
 
