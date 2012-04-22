@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:58912 "EHLO mout2.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752574Ab2DPJOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 05:14:06 -0400
-Message-ID: <4F8BE25B.5030208@01019freenet.de> (sfid-20120416_111413_162608_0A68AD7E)
-Date: Mon, 16 Apr 2012 11:11:55 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: Jakub Kicinski <kubakici@wp.pl>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 0/4] rt2x00: fix initialization after legacy
- driver
-References: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
-In-Reply-To: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51675 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752830Ab2DVWDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Apr 2012 18:03:43 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 7/7] compat-wireless: add an extra include to ath6kl/htc_pipe.c
+Date: Mon, 23 Apr 2012 00:03:19 +0200
+Message-Id: <1335132199-21320-7-git-send-email-hauke@hauke-m.de> (sfid-20120423_000347_266004_C4AE4D45)
+In-Reply-To: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
+References: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jakub,
+---
+ patches/06-header-changes.patch |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-Jakub Kicinski wrote:
-> Hi,
-> 
-> I've been testing these patches for a few weeks and I think it's about 
-> the time to post them.
-> 
-> The main purpose of this set is to make it possible to switch between
-> rt2800pci and legacy driver w/o rebooting or suspending whole machine.
-> Today rt2800pci will fail to bring the interface up if it was earlier
-> operated by legacy drv. I'm sure it happens with rt3090, rt2860 seems
-> to work fine.
+diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
+index c6a1d63..92ed02d 100644
+--- a/patches/06-header-changes.patch
++++ b/patches/06-header-changes.patch
+@@ -4,6 +4,19 @@ made. Some code gets shifted around between headers or
+ new headers are defined. This patch deals with such
+ cases.
+ 
++--- a/drivers/net/wireless/ath/ath6kl/htc_pipe.c
+++++ b/drivers/net/wireless/ath/ath6kl/htc_pipe.c
++@@ -18,6 +18,10 @@
++ #include "debug.h"
++ #include "hif-ops.h"
++ 
+++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+++#include <asm/unaligned.h>
+++#endif
+++
++ #define HTC_PACKET_CONTAINER_ALLOCATION 32
++ #define HTC_CONTROL_BUFFER_SIZE (HTC_MAX_CTRL_MSG_LEN + HTC_HDR_LENGTH)
++ 
+ --- a/drivers/net/wireless/b43/phy_common.h
+ +++ b/drivers/net/wireless/b43/phy_common.h
+ @@ -3,6 +3,9 @@
+-- 
+1.7.9.5
 
-I'm running these patches since a few weeks now. I didn't had the
-problem you tried to fix (because I never used the legacy driver), but I
-had another one, which seems to be fixed with this patchset, too:
-
-Before this set, the device often wasn't usable at all after loading the
-modules and starting of hostapd. No beacon could be seen, although the
-log files didn't show any problem.
-
-With your patchset applied, I face this problem really seldom now, about
-once a week (instead of 3 or 4 times a day).
-
-
-Thanks!
-Regards,
-Andreas
