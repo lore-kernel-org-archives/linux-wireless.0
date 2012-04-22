@@ -1,66 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40841 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752026Ab2DEMdK (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:44440 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017Ab2DVRBO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 08:33:10 -0400
-Message-ID: <1333629184.3494.12.camel@jlt3.sipsolutions.net> (sfid-20120405_143328_054146_12D888BC)
-Subject: Re: [PATCH 4/4] compat: add some tracing backport work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org
-Date: Thu, 05 Apr 2012 14:33:04 +0200
-In-Reply-To: <20120328100027.GA4420@bombadil.infradead.org> (sfid-20120328_120100_045553_52796B2A)
-References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
-	 <1332214021-9716-5-git-send-email-mcgrof@frijolero.org>
-	 <1332245766.3329.14.camel@jlt3.sipsolutions.net>
-	 <CAB=NE6XyDDfzu71K-1ecMQ+F-0Z1iTN4OKCUjJ+E3yxvydks0Q@mail.gmail.com>
-	 <CAB=NE6XXd-T5B37Cc_eCwnWHRk-_UVn0JY0mQjzMQcK+ZcLuWQ@mail.gmail.com>
-	 <1332751768.3511.3.camel@jlt3.sipsolutions.net>
-	 <20120326125822.GA11929@bombadil.infradead.org>
-	 <20120328100027.GA4420@bombadil.infradead.org>
-	 (sfid-20120328_120100_045553_52796B2A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 22 Apr 2012 13:01:14 -0400
+Received: by wibhr17 with SMTP id hr17so1953785wib.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 10:01:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1335110415-12695-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335110415-12695-1-git-send-email-wey-yi.w.guy@intel.com>
+Date: Sun, 22 Apr 2012 20:01:12 +0300
+Message-ID: <CANUX_P3EUTKsJG=J6tqZMNULbm3E+q8hTbtFz3emQyS8bN7sQw@mail.gmail.com> (sfid-20120422_190147_496942_E2822878)
+Subject: Re: [PATCH 1/1] mac80211: check for non-managed interface
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-03-28 at 06:00 -0400, Luis R. Rodriguez wrote:
+On Sun, Apr 22, 2012 at 19:00, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> Average beacon signal only keep tracked by managed interface,
+> give warning and return 0 for the others.
+>
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  net/mac80211/util.c |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 89c1e5b..2cbcb6a 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -1799,5 +1799,10 @@ int ieee80211_ave_rssi(struct ieee80211_vif *vif)
+>        struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+>        struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+>
+> +       if (sdata->vif.type != NL80211_IFTYPE_STATION) {
+> +               /* non-managed type inferfaces */
+> +               WARN_ON(1);
 
-> I've managed to backport tracing it seems, even when CONFIG_TRACEPOINTS
-> is enabled.
+WARN_ON_ONCE ?
+We don't need to flood the kernel log here
 
-Nope, you've managed to completely kill tracing.
-
-
-> +#undef __DECLARE_TRACE
-> +#define __DECLARE_TRACE(name, proto, args, cond, data_proto, data_args) \
-> +	static inline void trace_##name(proto)				\
-> +	{ }								\
-> +	static inline void trace_##name##_rcuidle(proto)		\
-> +	{ }								\
-> +	static inline int						\
-> +	register_trace_##name(void (*probe)(proto))			\
-> +	{								\
-> +		return -ENOSYS;						\
-> +	}								\
-> +	static inline void						\
-> +	unregister_trace_##name(void (*probe)(proto))			\
-> +	{								\
-> +		return -ENOSYS;						\
-> +	}								\
-> +	static inline void check_trace_callback_type_##name(void (*cb)(data_proto)) \
-> +	{								\
-> +	}
-
-All of this simply completely kills tracing. Worse, the tracepoints get
-registered, but their trace_##name functions do nothing, so you can
-think that they're there, but they never record data ...
-
-The old way was much better. Can we just let 2.6.24 and the other
-ancients die in peace?
-
-johannes
-
+> +               return 0;
+> +       }
+>        return ifmgd->ave_beacon_signal;
+>  }
+> --
+> 1.7.0.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
