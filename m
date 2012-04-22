@@ -1,170 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47893 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755583Ab2DWVwy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 17:52:54 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 05/29] iwlwifi: provide proper API to disable all interrupts
-Date: Mon, 23 Apr 2012 14:47:16 -0700
-Message-Id: <1335217660-21950-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235302_137144_B576EE63)
-In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from investici.nine.ch ([217.150.252.179]:47871 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807Ab2DVS2h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Apr 2012 14:28:37 -0400
+Received: from [217.150.252.179] (confino [217.150.252.179]) (Authenticated sender: ordex@autistici.org) by localhost (Postfix) with ESMTPSA id D046CC8E53
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 18:28:34 +0000 (UTC)
+Date: Sun, 22 Apr 2012 20:29:29 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi warn_slowpath with 3.*
+Message-ID: <20120422182928.GA2854@ritirata.org> (sfid-20120422_202844_231348_64CE4858)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ikeVEW9yuYc//A+q"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Since the op_mode may go away, the transport needs to be able to
-be told not to update the op_mode at all (even for RF kill).
-Provide this API and use it in the proper places.
+--ikeVEW9yuYc//A+q
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c        |    3 +-
- drivers/net/wireless/iwlwifi/iwl-mac80211.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   37 +++++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-trans.h      |   10 ++++---
- 4 files changed, 35 insertions(+), 17 deletions(-)
+Hello,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 07df432..3024d8c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1633,7 +1633,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 		goto out_free_traffic_mem;
- 	}
- 	/* Reset chip to save power until we load uCode during "up". */
--	iwl_trans_stop_hw(priv->trans);
-+	iwl_trans_stop_hw(priv->trans, false);
- 
- 	if (iwl_eeprom_check_version(priv))
- 		goto out_free_eeprom;
-@@ -1786,6 +1786,7 @@ void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
- 
- 	dev_kfree_skb(priv->beacon_skb);
- 
-+	iwl_trans_stop_hw(priv->trans, true);
- 	ieee80211_free_hw(priv->hw);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 2d7453d..b309ede 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -355,7 +355,7 @@ void iwlagn_mac_stop(struct ieee80211_hw *hw)
- 	 * even if interface is down, trans->down will leave the RF
- 	 * kill interrupt enabled
- 	 */
--	iwl_trans_stop_hw(priv->trans);
-+	iwl_trans_stop_hw(priv->trans, false);
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 8e1cf97..2a9fb98 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1210,6 +1210,8 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	iwl_disable_interrupts(trans);
- 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 
-+	iwl_enable_rfkill_int(trans);
-+
- 	/* wait to make sure we flush pending tasklet*/
- 	synchronize_irq(trans_pcie->irq);
- 	tasklet_kill(&trans_pcie->irq_tasklet);
-@@ -1436,24 +1438,37 @@ error:
- 	return err;
- }
- 
--static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
-+static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans,
-+				   bool op_mode_leaving)
- {
- 	bool hw_rfkill;
-+	unsigned long flags;
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 	iwl_apm_stop(trans);
- 
--	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
-+	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
-+	iwl_disable_interrupts(trans);
-+	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
- 
--	/* Even if we stop the HW, we still want the RF kill interrupt */
--	iwl_enable_rfkill_int(trans);
-+	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
- 
--	/*
--	 * Check again since the RF kill state may have changed while all the
--	 * interrupts were disabled, in this case we couldn't receive the
--	 * RF kill interrupt and update the state in the op_mode.
--	 */
--	hw_rfkill = iwl_is_rfkill_set(trans);
--	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
-+	if (!op_mode_leaving) {
-+		/*
-+		 * Even if we stop the HW, we still want the RF kill
-+		 * interrupt
-+		 */
-+		iwl_enable_rfkill_int(trans);
-+
-+		/*
-+		 * Check again since the RF kill state may have changed while
-+		 * all the interrupts were disabled, in this case we couldn't
-+		 * receive the RF kill interrupt and update the state in the
-+		 * op_mode.
-+		 */
-+		hw_rfkill = iwl_is_rfkill_set(trans);
-+		iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
-+	}
- }
- 
- static void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 885c036..d7c3032 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -335,7 +335,8 @@ struct iwl_trans;
-  * @start_hw: starts the HW- from that point on, the HW can send interrupts
-  *	May sleep
-  * @stop_hw: stops the HW- from that point on, the HW will be in low power but
-- *	will still issue interrupt if the HW RF kill is triggered.
-+ *	will still issue interrupt if the HW RF kill is triggered unless
-+ *	op_mode_leaving is true.
-  *	May sleep
-  * @start_fw: allocates and inits all the resources for the transport
-  *	layer. Also kick a fw image.
-@@ -379,7 +380,7 @@ struct iwl_trans;
- struct iwl_trans_ops {
- 
- 	int (*start_hw)(struct iwl_trans *iwl_trans);
--	void (*stop_hw)(struct iwl_trans *iwl_trans);
-+	void (*stop_hw)(struct iwl_trans *iwl_trans, bool op_mode_leaving);
- 	int (*start_fw)(struct iwl_trans *trans, const struct fw_img *fw);
- 	void (*fw_alive)(struct iwl_trans *trans);
- 	void (*stop_device)(struct iwl_trans *trans);
-@@ -478,11 +479,12 @@ static inline int iwl_trans_start_hw(struct iwl_trans *trans)
- 	return trans->ops->start_hw(trans);
- }
- 
--static inline void iwl_trans_stop_hw(struct iwl_trans *trans)
-+static inline void iwl_trans_stop_hw(struct iwl_trans *trans,
-+				     bool op_mode_leaving)
- {
- 	might_sleep();
- 
--	trans->ops->stop_hw(trans);
-+	trans->ops->stop_hw(trans, op_mode_leaving);
- 
- 	trans->state = IWL_TRANS_NO_FW;
- }
--- 
-1.7.0.4
+since linux-3.0 (I don't remember if it was the case even before), I'm gett=
+ing
+this output in dmesg:
 
+[   53.662990] ------------[ cut here ]------------
+[   53.663016] WARNING: at drivers/iommu/intel-iommu.c:2911
+intel_unmap_page+0x14b/0x180()
+[   53.663047] Hardware name: Latitude E5420
+[   53.663066] Driver unmaps unmatched page at PFN ffd1a000
+[   53.663091] Modules linked in: usb_storage hid_cherry usbhid uvcvideo
+videobuf2_core videodev v4l2_compat_ioctl32 videobuf2_vmalloc videobuf2_mem=
+ops
+iwlwifi mac80211 cfg80211 snd_hda_codec_hdmi snd_hda_codec_idt psmouse
+snd_hda_intel snd_hda_codec snd_hwdep snd_pcm snd_timer snd soundcore
+snd_page_alloc ehci_hcd usbcore usb_common
+[   53.663106] Pid: 1852, comm: ifconfig Tainted: G        W    3.3.2-pf #1
+[   53.663107] Call Trace:
+[   53.663109]  [<ffffffff8137dc00>] ? intel_unmap_page+0x70/0x180
+[   53.663113]  [<ffffffff8103102b>] ? warn_slowpath_common+0x7b/0xc0
+[   53.663116]  [<ffffffff81031125>] ? warn_slowpath_fmt+0x45/0x50
+[   53.663119]  [<ffffffff814874e3>] ? _raw_spin_unlock_irqrestore+0x13/0x40
+[   53.663121]  [<ffffffff8137dcdb>] ? intel_unmap_page+0x14b/0x180
+[   53.663127]  [<ffffffffa015f32c>] ? iwl_trans_rxq_free_rx_bufs+0x4c/0xf0
+[iwlwifi]
+[   53.663131]  [<ffffffffa016079c>] ? iwl_trans_pcie_start_device+0x17c/0x=
+df0
+[iwlwifi]
+[   53.663135]  [<ffffffffa014dc3d>] ? iwl_load_ucode_wait_alive+0x2d/0x3a0
+[iwlwifi]
+[   53.663138]  [<ffffffff810579e9>] ? get_parent_ip+0x9/0x20
+[   53.663140]  [<ffffffff810579e9>] ? get_parent_ip+0x9/0x20
+[   53.663142]  [<ffffffff81057a87>] ? sub_preempt_count+0x87/0xb0
+[   53.663144]  [<ffffffff814874e3>] ? _raw_spin_unlock_irqrestore+0x13/0x40
+[   53.663147]  [<ffffffffa014c7ee>] ? iwlagn_mac_start+0x12e/0x1f0 [iwlwif=
+i]
+[   53.663154]  [<ffffffffa010fa66>] ? ieee80211_do_open+0x276/0x6a0 [mac80=
+211]
+[   53.663158]  [<ffffffffa010dd12>] ?
+ieee80211_check_concurrent_iface+0x22/0x1a0 [mac80211]
+[   53.663162]  [<ffffffff8139c3c6>] ? __dev_open+0x86/0xd0
+[   53.663164]  [<ffffffff8139c63a>] ? __dev_change_flags+0x9a/0x180
+[   53.663166]  [<ffffffff8139c7d0>] ? dev_change_flags+0x20/0x70
+[   53.663169]  [<ffffffff813f7a8f>] ? devinet_ioctl+0x5bf/0x750
+[   53.663172]  [<ffffffff81383289>] ? sock_do_ioctl+0x29/0x60
+[   53.663174]  [<ffffffff81383323>] ? sock_ioctl+0x63/0x2b0
+[   53.663177]  [<ffffffff8110773e>] ? do_vfs_ioctl+0x8e/0x4f0
+[   53.663179]  [<ffffffff81107c38>] ? sys_ioctl+0x98/0xa0
+[   53.663181]  [<ffffffff81488022>] ? system_call_fastpath+0x16/0x1b
+[   53.663183] ---[ end trace e93713a9d40cd06e ]---
+
+
+I tried to dig a bit but I didn't really understand how this slowpath warni=
+ng
+should be interpreted. However the card seems to work fine. I'm experiencing
+some kernel panic from time to time, but I cannot understand if it is really
+realted to this issue or not.
+
+I hope this output makes sense for someone.
+
+Best regards,
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--ikeVEW9yuYc//A+q
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPlE4IAAoJEFMQTLzJFOZFs4sIAIM2WFXNvknP1HiHjvco7g6w
+k5pnxiOLl/sm9UDGi/OHwastnAPlHUKG529ECMVxGUXJp7rp1UavqJ8M0tDs7UlD
+lRGC/G/lR8L1VWVzqZ1ux90VXpQKLbYlTN30kag61EtGasKdCqn8E7HRfKteIOzF
+YQM87zRaIZ+sv8uF3XnT433sxjRFC/2BGxyM6SKrtbYrUlh3KMuAGGrgR+60kstT
+z4YnpqmegHjFL03s5GUDUa7Vq5mLnK99LlnYclsjgVIMesHqif/WsZViiGzitziD
+zj/3Qk89sNujBsUJLeGoHuXpycvXKSCWFgqyG6Gnb9u9noBRaf/P4K8n6YRheQk=
+=QEnQ
+-----END PGP SIGNATURE-----
+
+--ikeVEW9yuYc//A+q--
