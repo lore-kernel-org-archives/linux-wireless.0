@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36613 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab2DLEEj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 00:04:39 -0400
-Message-ID: <1334203438.3788.11.camel@jlt3.sipsolutions.net> (sfid-20120412_060443_349942_502ECEE8)
-Subject: Re: [PATCH] mac80211: fix an issue in ieee80211_tx_info count field
- management
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Date: Thu, 12 Apr 2012 06:03:58 +0200
-In-Reply-To: <CAA2SeNJNan7uwJ_VELCb-rDX4ddq+=K0Ud3n5mrv6MJ+O-Bb9w@mail.gmail.com> (sfid-20120406_204847_916462_26A238BC)
-References: <CAA2SeNJNan7uwJ_VELCb-rDX4ddq+=K0Ud3n5mrv6MJ+O-Bb9w@mail.gmail.com>
-	 (sfid-20120406_204847_916462_26A238BC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:32706 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752149Ab2DVQFS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Apr 2012 12:05:18 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/1] mac80211: check for non-managed interface
+Date: Sun, 22 Apr 2012 09:00:15 -0700
+Message-Id: <1335110415-12695-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120422_180522_470988_8372D510)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-04-06 at 20:48 +0200, Lorenzo Bianconi wrote:
-> Hi,
-> 
-> I noticed a possible issue in the status count field management of the
-> ieee80211_tx_info data structure. In particular, when the AGGR
-> processing is employed,
-> status.rates[].count is set just for the first frame and not for
-> others belonging to the same burst, leading to wrong statistic data in
-> the mac80211 debug file system.
-> 
-> Regards
-> 
-> Lorenzo
-> 
-> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-> ---
-> --- a/net/mac80211/status.c
-> +++ b/net/mac80211/status.c
-> @@ -355,7 +355,13 @@
->  	int rtap_len;
-> 
->  	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
-> -		if (info->status.rates[i].idx < 0) {
-> +		if ((info->flags & IEEE80211_TX_CTL_AMPDU) &&
-> +		    !(info->flags & IEEE80211_TX_STAT_AMPDU)) {
-> +			/* just the first aggr frame carry status info */
-> +			info->status.rates[i].idx = -1;
-> +			info->status.rates[i].count = 0;
-> +			break;
-> +		} else if (info->status.rates[i].idx < 0) {
+Average beacon signal only keep tracked by managed interface,
+give warning and return 0 for the others.
 
-Is that really the way all drivers do it? I know ath9k seems to do it
-that way, but I don't think all drivers do. ath9k is probably the
-exception rather than the rule, at least today
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ net/mac80211/util.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 89c1e5b..2cbcb6a 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1799,5 +1799,10 @@ int ieee80211_ave_rssi(struct ieee80211_vif *vif)
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
++	if (sdata->vif.type != NL80211_IFTYPE_STATION) {
++		/* non-managed type inferfaces */
++		WARN_ON(1);
++		return 0;
++	}
+ 	return ifmgd->ave_beacon_signal;
+ }
+-- 
+1.7.0.4
 
