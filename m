@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:65068 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752808Ab2DLS5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 14:57:39 -0400
-Date: Thu, 12 Apr 2012 20:40:58 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120412184058.GO8203@1wt.eu> (sfid-20120412_205743_143785_440577EA)
-References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com> <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com> <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com> <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:48528 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752141Ab2DVTuu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Apr 2012 15:50:50 -0400
+Received: by wgbdr13 with SMTP id dr13so11206298wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 12:50:49 -0700 (PDT)
+From: Zefir Kurtisi <zefir.kurtisi@gmail.com>
+To: linville@tuxdriver.com
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com, achadd@qca.qualcomm.com,
+	chunkeey@googlemail.com, Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH 3/4] ath9k: forward pulse events to DFS pulse detector
+Date: Sun, 22 Apr 2012 21:50:22 +0200
+Message-Id: <1335124223-15439-4-git-send-email-zefir.kurtisi@gmail.com> (sfid-20120422_215054_972978_D94EFEEB)
+In-Reply-To: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com>
+References: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 07:49:34PM +0300, Felipe Contreras wrote:
-> On Thu, Apr 12, 2012 at 5:46 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > A revert is the same as a patch.  It needs to be in Linus's tree before
-> > I can add it to the stable releases.
-> 
-> Right, because otherwise people's systems would actually work.
-> 
-> But hey, as I said, following rules is more important, regardless of
-> what the rules are, and why they are there. The rules that actually
-> triggered this issue in v3.3.1, as this is not in v3.3.
-> 
-> You could just accept that the patch should have never landed in
-> v3.3.1 in the first place, but it's much easier to arbitrarily keep
-> stacking patches without thinking too much about them.
-> 
-> I guess I'll better use Linus's releases for now and go to v3.3.
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 
-Felipe, you're unfair to Greg. You're saying this because you don't know
-what it's like to be on the side of the guy who has to decide whether
-to apply a patch or not, which basically means whether to risk breaking
-systems or to leave broken systems as they are.
 
-Most stable users will switch from a stable version to another one
-in a next release, and these users do not want any regression. This
-means that we absolutely don't want to risk that a stable version
-has a fix that is missing from a newer version. Yes this is a crappy
-and annoying process but it's the only way to ensure that fixes don't
-get lost during an upgrade.
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-BTW, it works because if we're discussing this here, it's because
-this final fix or revert appears to be missing from mainline. After
-the discussion I'm sure it will be there.
-
-Last point is that stable maintainers are not your slaves. If you know
-how to patch your mainline kernel to apply a stable patch, you also
-know how to apply the patch you're pointing to. It's quite easy and
-many of us do that. *All* the kernels I'm using are stable + a few
-local patches and I don't see where the problem is. So please be a bit
-more constructive. Make your job by ensuring that the fix you want is
-in mainline then pass the commit ID to Greg so that he can merge it in
-next release. You'll feel relieved and everyone will be glad to benefit
-from this fix.
-
-Willy
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index ef45c0c..f647d0b 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1856,6 +1856,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
+ 			rxs->mactime += 0x100000000ULL;
+ 
++		if (rs.rs_phyerr == ATH9K_PHYERR_RADAR)
++			ath9k_dfs_process_phyerr(sc, hdr, &rs, rxs->mactime);
++
+ 		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
+ 						 rxs, &decrypt_error);
+ 		if (retval)
+-- 
+1.7.4.1
 
