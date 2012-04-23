@@ -1,26 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10646 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:47893 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753113Ab2DEKGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 06:06:06 -0400
-Date: Thu, 5 Apr 2012 12:05:05 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jakub Kicinski <kubakici@wp.pl>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH v2 4/4] rt2800: zero registers of unused TX rings
-Message-ID: <20120405100504.GD2378@redhat.com> (sfid-20120405_120609_504343_E74500BE)
-References: <1333417250-24560-1-git-send-email-kubakici@wp.pl>
- <1333417250-24560-5-git-send-email-kubakici@wp.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1333417250-24560-5-git-send-email-kubakici@wp.pl>
+	id S1755637Ab2DWVw4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:56 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/29] iwlwifi: remove bt_siso_mode declaration
+Date: Mon, 23 Apr 2012 14:47:24 -0700
+Message-Id: <1335217660-21950-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235336_098364_EDC1BADB)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 03, 2012 at 03:40:50AM +0200, Jakub Kicinski wrote:
-> This is needed if we take over after drivers which use those.
-> 
-> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
+From: Johannes Berg <johannes.berg@intel.com>
+
+That variable doesn't exist anywhere.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.h |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 199a0c0..6e5fb78 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -125,9 +125,4 @@ static inline void iwl_update_stats(struct iwl_priv *priv, bool is_tx,
+ #define IWL_TRAFFIC_ENTRIES	(256)
+ #define IWL_TRAFFIC_ENTRY_SIZE  (64)
+ 
+-/*****************************************************
+- *   S e n d i n g     H o s t     C o m m a n d s   *
+- *****************************************************/
+-extern bool bt_siso_mode;
+-
+ #endif /* __iwl_core_h__ */
+-- 
+1.7.0.4
+
