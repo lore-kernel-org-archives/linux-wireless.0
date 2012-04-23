@@ -1,47 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:33084 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754833Ab2DSRjI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 13:39:08 -0400
-Received: by ghrr11 with SMTP id r11so4642182ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 10:39:07 -0700 (PDT)
-Message-ID: <4F904DB7.7030007@lwfinger.net> (sfid-20120419_193920_108510_5F995AC1)
-Date: Thu, 19 Apr 2012 12:39:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Viktar Palstsiuk <viktar.palstsiuk@promwad.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Rtlwifi with hostapd
-References: <CAKa7sPSOBYmaoCRZZa=R0UT59bD+cxmtSPqxZ6754CmarNfXzA@mail.gmail.com> <CAKa7sPQYpgmh+=nLWGNzaXRL4_wHmpY4pScuwk4kTmYKCyU6dg@mail.gmail.com>
-In-Reply-To: <CAKa7sPQYpgmh+=nLWGNzaXRL4_wHmpY4pScuwk4kTmYKCyU6dg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:58806 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755190Ab2DWVwx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:53 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/29] iwlwifi: make a static inline to read the RF kill register
+Date: Mon, 23 Apr 2012 14:47:12 -0700
+Message-Id: <1335217660-21950-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235259_323868_CAB0F2B3)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/19/2012 03:25 AM, Viktar Palstsiuk wrote:
-> Hello
->
-> I'm trying to run RTL8192DE-based wifi module in AP mode using hostapd.
-> RTL8192DE is connected to Marvell Kirkwood CPU using PCI Express bus.
-> But the kernel hangs right after hostapd was started.
-> In STA mode it is possible to scan for networks in 2.4 GHz band and it
-> discovers ~10 APs.
-> Was rtlwifi driver tested to work with hostapd?
-> I've tried compat-wireless-2011-12-01 and
-> 92ce_se_de_linux_mac80211_0005.1230.2011.tar.gz from Realtek site.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-without knowing any details of the kernel hangs, it is impossible to know what 
-might be wrong. If you switch to the logging console immediately upon starting 
-hostapd, is anything reported on the screen?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    9 +++------
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-I have not used the RTL8192DE as an AP, but the SE variety does work. There are 
-some important fixes for AP mode that are not in compat-wireless as old as the 
-one you are using. Please try a version from this week. Those fixes are also not 
-included in the driver on the Realtek site.
-
-What kernel version are you using? Is there a possibility to switch to the 
-kernel from the wireless-testing git tree?
-
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index c7f8f40..8a175e0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -430,4 +430,10 @@ trans_pcie_get_cmd_string(struct iwl_trans_pcie *trans_pcie, u8 cmd)
+ 	return trans_pcie->command_names[cmd];
+ }
+ 
++static inline bool iwl_is_rfkill_set(struct iwl_trans *trans)
++{
++	return !(iwl_read32(trans, CSR_GP_CNTRL) &
++		CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
++}
++
+ #endif /* __iwl_trans_int_pcie_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 47c1f0a..d2239aa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -648,8 +648,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 	if (inta & CSR_INT_BIT_RF_KILL) {
+ 		bool hw_rfkill;
+ 
+-		hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
+-				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
++		hw_rfkill = iwl_is_rfkill_set(trans);
+ 		IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
+ 				hw_rfkill ? "disable radio" : "enable radio");
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index e6401e8..1d9724d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -981,8 +981,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 	}
+ 
+ 	/* If platform's RF_KILL switch is NOT set to KILL */
+-	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
+-				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
++	hw_rfkill = iwl_is_rfkill_set(trans);
+ 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 
+ 	if (hw_rfkill) {
+@@ -1422,8 +1421,7 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+ 
+ 	iwl_apm_init(trans);
+ 
+-	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
+-				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
++	hw_rfkill = iwl_is_rfkill_set(trans);
+ 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 
+ 	return err;
+@@ -1562,8 +1560,7 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
+ {
+ 	bool hw_rfkill;
+ 
+-	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
+-				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
++	hw_rfkill = iwl_is_rfkill_set(trans);
+ 
+ 	if (hw_rfkill)
+ 		iwl_enable_rfkill_int(trans);
+-- 
+1.7.0.4
 
