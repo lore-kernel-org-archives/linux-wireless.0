@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49231 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753150Ab2DRAhg (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:45623 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753017Ab2DWXGO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 20:37:36 -0400
-Message-ID: <4F8E0CBE.6010103@sipsolutions.net> (sfid-20120418_023750_192533_B2C9BEC0)
-Date: Tue, 17 Apr 2012 17:37:18 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
+	Mon, 23 Apr 2012 19:06:14 -0400
+Received: by yenl12 with SMTP id l12so37477yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2012 16:06:13 -0700 (PDT)
 MIME-Version: 1.0
-To: Dominik Feser <dominik.feser@googlemail.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: Re: wlan0 not present
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <4F8DC25E.9090702@broadcom.com> <B9AA983D-A169-497D-9C8E-BDBEF2348BB6@gmail.com> (sfid-20120417_234151_656508_5FC39580)
-In-Reply-To: <B9AA983D-A169-497D-9C8E-BDBEF2348BB6@gmail.com> (sfid-20120417_234151_656508_5FC39580)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4F95D573.4080901@hauke-m.de>
+References: <1335131965-20280-1-git-send-email-hauke@hauke-m.de>
+ <CAB=NE6UbQgYY+KcUt1rD14vyfwJkX9mdbQVKzMPwtgHOC+LEQg@mail.gmail.com> <4F95D573.4080901@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 Apr 2012 16:05:53 -0700
+Message-ID: <CAB=NE6V+2nCacTvcSqm8NE_RvzU5jMS4znxEYqZLyL2FZ0bqyw@mail.gmail.com> (sfid-20120424_010618_281196_726A29EB)
+Subject: Re: [PATCH 1/2] compat: add module_pci_driver
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> iwlwifi 0000:02:00.0: edf81e1c
-> iwlwifi 0000:02:00.0: c9933e1c
-> iwlwifi 0000:02:00.0: c9933de8
-> iwlwifi 0000:02:00.0: PCI INT A disabled
+On Mon, Apr 23, 2012 at 3:19 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 04/23/2012 11:09 PM, Luis R. Rodriguez wrote:
+>> On Sun, Apr 22, 2012 at 2:59 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>> module_pci_driver is needed to register the pci driver to the pci sub system.
+>>
+>> Thanks ! I see no Signed-off-by tag on these though, I use the SOB tag
+>> just as the kernel and other projects us it, the meaning of it is the
+>> same, under the "Developer's Certificate of Origin 1.1":
+>>
+>> http://gerrit.googlecode.com/svn/documentation/2.0/user-signedoffby.html
+>>
+>> Do you SOB these patches?
+>>
+>>   Luis
+> Hi Luis,
+>
+> I SOB these patches and the patches for compat-wireless I send also on
+> that day. I forgot to add the option to generate a SOB line in git
+> format-patch this time. Should I resend them with a SOB line or do you
+> take this late SOB in this mail?
 
-These messages are odd, must be some %pV thing not working correctly.
+I take this late SOB, thanks!
 
-> It did not work before because I had to rebuild the kernel with wireless support and compile compat-wireless for it. This seemed to me as the only way to get the Centrino Advanced-N 6205 to work.
-> Am I wrong? May it be that I am missing the firmware? I tried to copy a ucode file to /lib/firmware but the behavior did not change. Overlooking the dmesg output no module is complaining about missing firmware files...
-
-I think those messages would in fact be complaining about missing 
-firmware if they'd get printed correctly.
-
-johannes
+ Luis
