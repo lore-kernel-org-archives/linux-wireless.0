@@ -1,40 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41467 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754421Ab2DXHMk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 03:12:40 -0400
-Received: by iadi9 with SMTP id i9so592700iad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 00:12:40 -0700 (PDT)
-MIME-Version: 1.0
-From: Andrew Chant <andrew.chant@gmail.com>
-Date: Tue, 24 Apr 2012 00:11:59 -0700
-Message-ID: <CANugF37WSOdHODRXOb6nnBCh5HMTTUqf0VpyPuTDdNK80-LkAQ@mail.gmail.com> (sfid-20120424_091243_797078_2D2A8AAD)
-Subject: AP mode my ath9k broke between 3.3 and 3.4-rc2
-To: Johannes Berg <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:50633 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753504Ab2DWRtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 13:49:13 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v4 1/2] mac80211: rename AP variable num_sta_authorized to num_mcast_sta
+Date: Mon, 23 Apr 2012 19:49:02 +0200
+Message-Id: <1335203343-61999-1-git-send-email-nbd@openwrt.org> (sfid-20120423_194916_456051_C7D52E69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
- my Atheros AR9300 PCIe card (168c:0030) stopped working as an AP on
-the 5GHz band between 3.3 and 3.4-rc2.
-After 14 git bisects, I believe I have narrowed it down to the following patch:
+It is only used to test for BSS multicast receivers.
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=293702a3fb75832613e2af097bdc3ac8ef775b33
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ net/mac80211/debugfs_netdev.c |    4 ++--
+ net/mac80211/ieee80211_i.h    |    2 +-
+ net/mac80211/sta_info.c       |    4 ++--
+ net/mac80211/tx.c             |    2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-mac80211: use common radiotap code for cooked monitors
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index e7af522..ea0122d 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -394,7 +394,7 @@ static ssize_t ieee80211_if_parse_uapsd_max_sp_len(
+ __IEEE80211_IF_FILE_W(uapsd_max_sp_len);
+ 
+ /* AP attributes */
+-IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
++IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+ IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+ IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
+ 
+@@ -540,7 +540,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ 
+ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ {
+-	DEBUGFS_ADD(num_sta_authorized);
++	DEBUGFS_ADD(num_mcast_sta);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
+ 	DEBUGFS_ADD(num_buffered_multicast);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index bd7a451..4404753 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -282,7 +282,7 @@ struct ieee80211_if_ap {
+ 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+ 	struct sk_buff_head ps_bc_buf;
+ 	atomic_t num_sta_ps; /* number of stations in PS mode */
+-	atomic_t num_sta_authorized; /* number of authorized stations */
++	atomic_t num_mcast_sta; /* number of stations receiving multicast */
+ 	int dtim_count;
+ 	bool dtim_bc_mc;
+ };
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 7fd7ac4..4c04eb5 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1418,14 +1418,14 @@ int sta_info_move_state(struct sta_info *sta,
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+ 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+-				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
++				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+ 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+-				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
++				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0abbef95..44001c7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -306,7 +306,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 		}
+ 	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
+ 			    ieee80211_is_data(hdr->frame_control) &&
+-			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
++			    !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
+ 		/*
+ 		 * No associated STAs - no need to send multicast
+ 		 * frames.
+-- 
+1.7.3.2
 
-Prior to this change, everything works.  After this change, an Intel
-Corporation Centrino Advanced-N 6205 is able to see the AP using
-"iwlist wlan0 scan", but the following shows up in dmesg when trying
-to associate (on the intel side):
-
-[ 7636.834579] wlan0: direct probe to 90:f6:52:0d:0a:5e timed out
-[ 7644.201671] wlan0: direct probe to 90:f6:52:0d:0a:5e (try 1/3)
-[ 7644.400767] wlan0: direct probe to 90:f6:52:0d:0a:5e (try 2/3)
-[ 7644.600323] wlan0: direct probe to 90:f6:52:0d:0a:5e (try 3/3)
-
--Andrew
