@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2143 "EHLO MMS3.broadcom.com"
+Received: from cantor2.suse.de ([195.135.220.15]:57869 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751561Ab2D2IN4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Apr 2012 04:13:56 -0400
-Message-ID: <4F9CF839.1040401@broadcom.com> (sfid-20120429_101438_590538_516BA0E9)
-Date: Sun, 29 Apr 2012 10:13:45 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1754812Ab2DWSzr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 14:55:47 -0400
+Message-ID: <4F95A5D6.7060500@suse.cz> (sfid-20120423_205557_818530_20BB1F86)
+Date: Mon, 23 Apr 2012 20:56:22 +0200
+From: Michal Marek <mmarek@suse.cz>
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: "Fry, Donald H" <donald.h.fry@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kay@vrfy.org" <kay@vrfy.org>, "jcm@redhat.com" <jcm@redhat.com>,
+	"linux-modules@vger.kernel.org" <linux-modules@vger.kernel.org>
+Subject: Re: question on non-kernel patch
+References: <1334868960.7300.10.camel@dfry-linux1> <20120420140917.GA13844@tuxdriver.com> <193F82CA5D80C84A83D67BB5D5B9FDE548154FE8@ORSMSX101.amr.corp.intel.com>
+In-Reply-To: <193F82CA5D80C84A83D67BB5D5B9FDE548154FE8@ORSMSX101.amr.corp.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/29/2012 02:50 AM, Hauke Mehrtens wrote:
-> I have not completely runtime tested these patches as I do not have a
-> PCI(e) devices currently supported by brcmsmac. My SoC (BCM4718) and
-> the PCI devices connected to my SoC (BCM43224) are currently not
-> working with brcmsmac, but they are failing much later that without
-> these patches.
+Dne 20.4.2012 16:41, Fry, Donald H napsal(a):
+> The base/core/common functionality is still called iwlwifi which
+> interacts with the hardware.  On modprobe, the driver tries to find a
+> microcode file to run based on the device/vendor id/sub-id.  While
+> parsing the microcode file, it will indicate which software API it
+> supports, which will indicate which specific module to use, module A
+> (old) or module B (new).  This way the user still uses modprobe
+> iwlwifi to install, and iwlwifi will request the appropriate specific
+> module to make the hardware function.
+> 
+> However, since module A (for example) requires iwlwifi, an attempt to
+> modprobe iwlwifi -r results in a message that iwlwifi is still in
+> use.  Module A must be removed first followed by iwlwifi, etc.  While
+> this may be obvious from looking at lsmod for a kernel developer, it
+> is not obvious for most users.
 
-I will test this patch series as well on PCI(e) devices. So you do have 
-a bcm43224 card, but no laptop to fit it in? Just wondering. I will send 
-the results.
+Do users need to remove modules at all? I doubt it. And if they do, they
+will use rmmod, because it is faster to type :). If your concern is
+debugging bugreports from users, then simply instruct them to run
+'modprobe -r iwlwifi_mod1; modprobe -r iwlwifi_mod2; modprobe -r
+iwlwifi' instead of just 'modprobe -r iwlwifi'. Removing a module that
+is not loaded will do nothing, it won't even print an error message.
 
-Gr. AvS
-
+Michal
