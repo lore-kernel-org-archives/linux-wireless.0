@@ -1,75 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60114 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753273Ab2DAVLz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2012 17:11:55 -0400
-Message-ID: <1333314713.22977.2.camel@jlt3.sipsolutions.net> (sfid-20120401_231158_569360_B30B6A44)
-Subject: Re: [RFC] mac80211:  Support on-channel scan option.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Sun, 01 Apr 2012 23:11:53 +0200
-In-Reply-To: <4F78C056.4080307@candelatech.com>
-References: <1333233041-3246-1-git-send-email-greearb@candelatech.com>
-	   (sfid-20120401_003057_469452_61057064) <1333305916.3703.2.camel@jlt3.sipsolutions.net>
-	  <4F78BE67.8090609@candelatech.com>
-	 <1333313357.22977.0.camel@jlt3.sipsolutions.net>
-	 <4F78C056.4080307@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga11.intel.com ([192.55.52.93]:47893 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755190Ab2DWVwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:55 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/29] iwlwifi: properly set basic rates
+Date: Mon, 23 Apr 2012 14:47:18 -0700
+Message-Id: <1335217660-21950-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235357_384771_4DE70475)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-04-01 at 13:53 -0700, Ben Greear wrote:
-> On 04/01/2012 01:49 PM, Johannes Berg wrote:
-> > On Sun, 2012-04-01 at 13:45 -0700, Ben Greear wrote:
-> >> On 04/01/2012 11:45 AM, Johannes Berg wrote:
-> >>> On Sat, 2012-03-31 at 15:30 -0700, greearb@candelatech.com wrote:
-> >>>
-> >>>
-> >>>>    static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
-> >>>>    				  struct cfg80211_scan_request *req)
-> >>>> @@ -438,6 +461,33 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
-> >>>>    	local->scan_req = req;
-> >>>>    	local->scan_sdata = sdata;
-> >>>>
-> >>>> +	/* If we are scanning only on the current channel, then
-> >>>> +	 * we do not need to stop normal activities
-> >>>> +	 */
-> >>>> +	if ((req->n_channels == 1)&&
-> >>>> +	    (req->channels[0]->center_freq ==
-> >>>> +	     local->hw.conf.channel->center_freq)) {
-> >>> ...
-> >>>> +		return 0;
-> >>>> +	}
-> >>>> +
-> >>>>    	if (local->ops->hw_scan)
-> >>>>    		__set_bit(SCAN_HW_SCANNING,&local->scanning);
-> >>>
-> >>> Clearly, you're joking.
-> >>
-> >> That is worthless feedback and gives me no idea what you
-> >> think should be fixed about it.
-> >>
-> >> If you hate the entire idea of optimizing scanning on channel,
-> >> just say so plainly.
-> >
-> > I did quote only the relevant pieces -- you're completely ignoring hw
-> > scan. Why should I care about this patch then?
-> 
-> Well, I was hoping that a simple scan-on-channel wouldn't need to
-> care about the hw-scan logic.
+From: Johannes Berg <johannes.berg@intel.com>
 
-So you thought about it, but didn't document it? This bothers me quite a
-bit -- why should I have to always do the thinking again?
+This fixes a long-standing bug: iwlwifi always assumes
+that the CCK ACK rates are 1 and 2 MBps and the OFDM
+ACK rates are 6, 12 and 24 MBps. Fix this problem by
+using the basic rates the AP (or in AP case hostapd)
+told us to use and add the necessary mandatory rates
+to the mix.
 
-> But, I can change it so that the optimized scan-on-channel only
-> is supported on NICs that do software-scan?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h   |   26 ------
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |  119 +++++++++++++++++++++------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    1 -
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    1 -
+ 4 files changed, 94 insertions(+), 53 deletions(-)
 
-In any case, yes, you'll have to do that. Think about how scanning
-works, and consider that devices may very well chose to filter by BSSID
-when associated etc.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+index 203b1c1..351717a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+@@ -174,32 +174,6 @@ enum {
+ 	IWL_RATE_11M_IEEE = 22,
+ };
+ 
+-#define IWL_CCK_BASIC_RATES_MASK    \
+-       (IWL_RATE_1M_MASK          | \
+-	IWL_RATE_2M_MASK)
+-
+-#define IWL_CCK_RATES_MASK          \
+-       (IWL_CCK_BASIC_RATES_MASK  | \
+-	IWL_RATE_5M_MASK          | \
+-	IWL_RATE_11M_MASK)
+-
+-#define IWL_OFDM_BASIC_RATES_MASK   \
+-	(IWL_RATE_6M_MASK         | \
+-	IWL_RATE_12M_MASK         | \
+-	IWL_RATE_24M_MASK)
+-
+-#define IWL_OFDM_RATES_MASK         \
+-       (IWL_OFDM_BASIC_RATES_MASK | \
+-	IWL_RATE_9M_MASK          | \
+-	IWL_RATE_18M_MASK         | \
+-	IWL_RATE_36M_MASK         | \
+-	IWL_RATE_48M_MASK         | \
+-	IWL_RATE_54M_MASK)
+-
+-#define IWL_BASIC_RATES_MASK         \
+-	(IWL_OFDM_BASIC_RATES_MASK | \
+-	 IWL_CCK_BASIC_RATES_MASK)
+-
+ #define IWL_RATES_MASK ((1 << IWL_RATE_COUNT) - 1)
+ 
+ #define IWL_INVALID_VALUE    -1
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index d950166..8f41543 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -87,11 +87,6 @@ void iwl_connection_init_rx_config(struct iwl_priv *priv,
+ 
+ 	iwl_set_flags_for_band(priv, ctx, priv->band, ctx->vif);
+ 
+-	ctx->staging.ofdm_basic_rates =
+-	    (IWL_OFDM_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
+-	ctx->staging.cck_basic_rates =
+-	    (IWL_CCK_RATES_MASK >> IWL_FIRST_CCK_RATE) & 0xF;
+-
+ 	/* clear both MIX and PURE40 mode flag */
+ 	ctx->staging.flags &= ~(RXON_FLG_CHANNEL_MODE_MIXED |
+ 					RXON_FLG_CHANNEL_MODE_PURE_40);
+@@ -771,19 +766,6 @@ void iwl_set_flags_for_band(struct iwl_priv *priv,
+ 	}
+ }
+ 
+-void iwl_set_rate(struct iwl_priv *priv)
+-{
+-	struct iwl_rxon_context *ctx;
+-
+-	for_each_context(priv, ctx) {
+-		ctx->staging.cck_basic_rates =
+-		    (IWL_CCK_BASIC_RATES_MASK >> IWL_FIRST_CCK_RATE) & 0xF;
+-
+-		ctx->staging.ofdm_basic_rates =
+-		   (IWL_OFDM_BASIC_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
+-	}
+-}
+-
+ static void iwl_set_rxon_hwcrypto(struct iwl_priv *priv,
+ 				  struct iwl_rxon_context *ctx, int hw_decrypt)
+ {
+@@ -959,6 +941,97 @@ void iwl_print_rx_config_cmd(struct iwl_priv *priv,
+ }
+ #endif
+ 
++static void iwl_calc_basic_rates(struct iwl_priv *priv,
++				 struct iwl_rxon_context *ctx)
++{
++	int lowest_present_ofdm = 100;
++	int lowest_present_cck = 100;
++	u8 cck = 0;
++	u8 ofdm = 0;
++
++	if (ctx->vif) {
++		struct ieee80211_supported_band *sband;
++		unsigned long basic = ctx->vif->bss_conf.basic_rates;
++		int i;
++
++		sband = priv->hw->wiphy->bands[priv->hw->conf.channel->band];
++
++		for_each_set_bit(i, &basic, BITS_PER_LONG) {
++			int hw = sband->bitrates[i].hw_value;
++			if (hw >= IWL_FIRST_OFDM_RATE) {
++				ofdm |= BIT(hw - IWL_FIRST_OFDM_RATE);
++				if (lowest_present_ofdm > hw)
++					lowest_present_ofdm = hw;
++			} else {
++				BUILD_BUG_ON(IWL_FIRST_CCK_RATE != 0);
++
++				cck |= BIT(hw);
++				if (lowest_present_cck > hw)
++					lowest_present_cck = hw;
++			}
++		}
++	}
++
++	/*
++	 * Now we've got the basic rates as bitmaps in the ofdm and cck
++	 * variables. This isn't sufficient though, as there might not
++	 * be all the right rates in the bitmap. E.g. if the only basic
++	 * rates are 5.5 Mbps and 11 Mbps, we still need to add 1 Mbps
++	 * and 6 Mbps because the 802.11-2007 standard says in 9.6:
++	 *
++	 *    [...] a STA responding to a received frame shall transmit
++	 *    its Control Response frame [...] at the highest rate in the
++	 *    BSSBasicRateSet parameter that is less than or equal to the
++	 *    rate of the immediately previous frame in the frame exchange
++	 *    sequence ([...]) and that is of the same modulation class
++	 *    ([...]) as the received frame. If no rate contained in the
++	 *    BSSBasicRateSet parameter meets these conditions, then the
++	 *    control frame sent in response to a received frame shall be
++	 *    transmitted at the highest mandatory rate of the PHY that is
++	 *    less than or equal to the rate of the received frame, and
++	 *    that is of the same modulation class as the received frame.
++	 *
++	 * As a consequence, we need to add all mandatory rates that are
++	 * lower than all of the basic rates to these bitmaps.
++	 */
++
++	if (IWL_RATE_24M_INDEX < lowest_present_ofdm)
++		ofdm |= IWL_RATE_24M_MASK >> IWL_FIRST_OFDM_RATE;
++	if (IWL_RATE_12M_INDEX < lowest_present_ofdm)
++		ofdm |= IWL_RATE_12M_MASK >> IWL_FIRST_OFDM_RATE;
++	/* 6M already there or needed so always add */
++	ofdm |= IWL_RATE_6M_MASK >> IWL_FIRST_OFDM_RATE;
++
++	/*
++	 * CCK is a bit more complex with DSSS vs. HR/DSSS vs. ERP.
++	 * Note, however:
++	 *  - if no CCK rates are basic, it must be ERP since there must
++	 *    be some basic rates at all, so they're OFDM => ERP PHY
++	 *    (or we're in 5 GHz, and the cck bitmap will never be used)
++	 *  - if 11M is a basic rate, it must be ERP as well, so add 5.5M
++	 *  - if 5.5M is basic, 1M and 2M are mandatory
++	 *  - if 2M is basic, 1M is mandatory
++	 *  - if 1M is basic, that's the only valid ACK rate.
++	 * As a consequence, it's not as complicated as it sounds, just add
++	 * any lower rates to the ACK rate bitmap.
++	 */
++	if (IWL_RATE_11M_INDEX < lowest_present_ofdm)
++		ofdm |= IWL_RATE_11M_MASK >> IWL_FIRST_CCK_RATE;
++	if (IWL_RATE_5M_INDEX < lowest_present_ofdm)
++		ofdm |= IWL_RATE_5M_MASK >> IWL_FIRST_CCK_RATE;
++	if (IWL_RATE_2M_INDEX < lowest_present_ofdm)
++		ofdm |= IWL_RATE_2M_MASK >> IWL_FIRST_CCK_RATE;
++	/* 1M already there or needed so always add */
++	cck |= IWL_RATE_1M_MASK >> IWL_FIRST_CCK_RATE;
++
++	IWL_DEBUG_RATE(priv, "Set basic rates cck:0x%.2x ofdm:0x%.2x\n",
++		       cck, ofdm);
++
++	/* "basic_rates" is a misnomer here -- should be called ACK rates */
++	ctx->staging.cck_basic_rates = cck;
++	ctx->staging.ofdm_basic_rates = ofdm;
++}
++
+ /**
+  * iwlagn_commit_rxon - commit staging_rxon to hardware
+  *
+@@ -998,6 +1071,9 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	/* always get timestamp with Rx frame */
+ 	ctx->staging.flags |= RXON_FLG_TSF2HOST_MSK;
+ 
++	/* recalculate basic rates */
++	iwl_calc_basic_rates(priv, ctx);
++
+ 	/*
+ 	 * force CTS-to-self frames protection if RTS-CTS is not preferred
+ 	 * one aggregation protection method
+@@ -1186,13 +1262,6 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		}
+ 
+ 		iwl_update_bcast_stations(priv);
+-
+-		/*
+-		 * The list of supported rates and rate mask can be different
+-		 * for each band; since the band may have changed, reset
+-		 * the rate mask to what mac80211 lists.
+-		 */
+-		iwl_set_rate(priv);
+ 	}
+ 
+ 	if (changed & (IEEE80211_CONF_CHANGE_PS |
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 3d6f3e2..bd467c0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -154,7 +154,6 @@ void iwl_set_flags_for_band(struct iwl_priv *priv,
+ 			    struct iwl_rxon_context *ctx,
+ 			    enum ieee80211_band band,
+ 			    struct ieee80211_vif *vif);
+-void iwl_set_rate(struct iwl_priv *priv);
+ 
+ /* uCode */
+ int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index b309ede..8adbbf2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -894,7 +894,6 @@ void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+ 	iwl_set_rxon_ht(priv, ht_conf);
+ 	iwl_set_flags_for_band(priv, ctx, channel->band, ctx->vif);
+ 
+-	iwl_set_rate(priv);
+ 	/*
+ 	 * at this point, staging_rxon has the
+ 	 * configuration for channel switch
+-- 
+1.7.0.4
 
