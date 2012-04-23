@@ -1,100 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:34356 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823Ab2DPGiw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 02:38:52 -0400
-Date: Mon, 16 Apr 2012 08:38:40 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Willy Tarreau <w@1wt.eu>
-Cc: Felipe Contreras <felipe.contreras@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120416063838.GA23628@gmail.com> (sfid-20120416_083940_432516_AE334C3E)
-References: <CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
- <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
- <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com>
- <20120414104733.GA4871@gmail.com>
- <CAMP44s0tBbgmunXTN9Jyw=HHnXFyvRY3qo5Vf-jXETUM4HEGWA@mail.gmail.com>
- <20120415065124.GC29563@gmail.com>
- <CAMP44s3mOsCGG5_gd6zTUeXewTFKeVEmAkt2FvM=wTm-5AEC+w@mail.gmail.com>
- <CA+55aFz8oepgj7W8W=d18qwQt3JUGgv+pCto-_2WS3WJ3ZKqzQ@mail.gmail.com>
- <CAMP44s2vx5cn_=tRD46SqAobRceLiZDfi9-zLUnv_g89wLxryQ@mail.gmail.com>
- <20120416053911.GL27728@1wt.eu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120416053911.GL27728@1wt.eu>
+Received: from mga11.intel.com ([192.55.52.93]:58806 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755826Ab2DWVw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:57 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/29] iwlwifi: move TIME_UNIT
+Date: Mon, 23 Apr 2012 14:47:25 -0700
+Message-Id: <1335217660-21950-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235304_157494_51E65E47)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-* Willy Tarreau <w@1wt.eu> wrote:
+We're getting rid of iwl-core.h, move TIME_UNIT out.
 
-> It's not the user's visibility, it's published code. Once code 
-> is published, you cannot magically fix it without emitting a 
-> new patch for this code and announcing so that users apply it. 
-> These patches are called stable releases. Users want a good 
-> reason to apply these patches, rebuild and reboot, and that's 
-> one reason we absolutely want to have the commit descriptions 
-> from upstream which detail the exact reason for the patch 
-> (even if it's a revert).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.h  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
+ 2 files changed, 1 insertions(+), 2 deletions(-)
 
-Let me also outline why reverts are important and why they are 
-not just 'a patch removed'.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 29d21c8..34900e6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -82,6 +82,7 @@ extern struct iwl_lib_ops iwl6000_lib;
+ extern struct iwl_lib_ops iwl6030_lib;
+ 
+ 
++#define TIME_UNIT		1024
+ 
+ /*****************************************************
+ * DRIVER STATUS FUNCTIONS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 6e5fb78..de7f6cd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -72,8 +72,6 @@
+ struct iwl_host_cmd;
+ struct iwl_cmd;
+ 
+-#define TIME_UNIT		1024
+-
+ /***************************
+  *   L i b                 *
+  ***************************/
+-- 
+1.7.0.4
 
-A revert carries valuable information: we revert a broken commit 
-not just with the terse description that it's broken, but with 
-an exact description about *why* it's broken and how that 
-breakage relates to the original patch.
-
-In the limited 'patch space' nothing happened: a patch was done, 
-then undone.
-
-In the Git 'commit space' the picture is very different: we have 
-a commit that does a change with a justification and we have 
-*another* commit that undoes the code modification with 
-*another* justification.
-
-We got richer by two justifications and the kernel got
-*more stable* in the process even though no actual code
-changed:
-
- - We very likely won't repeat this mistake again, it's 
-   documented for eternity to any developer touching this
-   code in the future. See Linus's arguments about 'monotonic 
-   progress'. Git hashes force the causality of the real 
-   physical world on us, which is *especially* useful when we 
-   make mistakes and would like to use a digital time machine 
-   that whitewashes our shades of grey history.
-
- - In practice developers tend to be more careful with code that
-   sees an above average ration of reverts. It's a red flag - it 
-   shows that the code, the hardware or the development process 
-   maintaining that code is somehow non-obvious and fragile for 
-   one reason or another.
-
- - In most cases a change+revert also spurs further development: 
-   the original justification is likely valid and people want to
-   achieve that advantage but via some other, non-broken means. 
-   In that sense the revert is a persistent TODO entry as well, 
-   for developers.
-
-If the bug was just a report somewhere in a mailing list archive 
-on the web then it would bitrot quickly and people would not 
-have a way to find it and react to it in an organized way.
-
-By making it a Git commit; the change, the fix and all the 
-justifications around it become a permanent part of Linux - 
-which is more than just 15 million lines of code ...
-
-Thanks,
-
-	Ingo
