@@ -1,106 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35039 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756370Ab2DXCgs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 22:36:48 -0400
-Received: by mail-iy0-f174.google.com with SMTP id i9so315300iad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2012 19:36:48 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4245 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755531Ab2DWVZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:25:15 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath6kl: properly use pr_fmt()
-Date: Mon, 23 Apr 2012 19:36:38 -0700
-Message-Id: <1335234998-31547-2-git-send-email-mcgrof@frijolero.org> (sfid-20120424_043651_132967_2EAD612A)
-In-Reply-To: <1335234998-31547-1-git-send-email-mcgrof@frijolero.org>
-References: <1335234998-31547-1-git-send-email-mcgrof@frijolero.org>
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3.4 V2 2/2] brcm80211: fmac: fix missing completion
+ events issue
+Date: Mon, 23 Apr 2012 14:24:53 -0700
+Message-ID: <1335216293-19419-3-git-send-email-frankyl@broadcom.com> (sfid-20120423_232531_944728_93E1B1D5)
+In-Reply-To: <1335216293-19419-1-git-send-email-frankyl@broadcom.com>
+References: <1334957269-27416-1-git-send-email-frankyl@broadcom.com>
+ <1335216293-19419-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+dpc takes care of all data packets transmissions for sdio function
+2. It is possible that it misses some completion events when the
+traffic is heavy or it's running on a slow cpu. A linked list is
+introduced to make sure dpc is invoked whenever needed.
 
-pr_fmt() is either defined or we redefine it. Typically
-drivers define it prior to including printk.h but this
-is done under the assumption that no other subsystem
-it uses has already defined pr_fmt(). In such cases
-pr_fmt() should be undefined and redefined.
-
-Doing this properly shaves down compilation time quite
-considerably.
-
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 ++
- drivers/net/wireless/ath/ath6kl/init.c     |    2 ++
- drivers/net/wireless/ath/ath6kl/main.c     |    3 +++
- drivers/net/wireless/ath/ath6kl/txrx.c     |    3 +++
- 4 files changed, 10 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   63 ++++++++++++++++----
+ 1 files changed, 51 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 28a65d3..db9b7cf 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -15,8 +15,10 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 2bf5dda..eb3829b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -574,6 +574,8 @@ struct brcmf_sdio {
  
-+#undef pr_fmt
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ 	struct task_struct *dpc_tsk;
+ 	struct completion dpc_wait;
++	struct list_head dpc_tsklst;
++	spinlock_t dpc_tl_lock;
  
-+#include <linux/printk.h>
- #include <linux/moduleparam.h>
- #include <linux/inetdevice.h>
- #include <linux/export.h>
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 29ef50e..68af79d 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -16,8 +16,10 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+ 	struct semaphore sdsem;
  
-+#undef pr_fmt
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+@@ -2594,29 +2596,58 @@ clkwait:
+ 	return resched;
+ }
  
-+#include <linux/printk.h>
- #include <linux/moduleparam.h>
- #include <linux/errno.h>
- #include <linux/export.h>
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 4d818f9..c173a78 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -15,8 +15,11 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#undef pr_fmt
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
- 
-+#include <linux/printk.h>
++static inline void brcmf_sdbrcm_adddpctsk(struct brcmf_sdio *bus)
++{
++	struct list_head *new_hd;
++	unsigned long flags;
 +
- #include "core.h"
- #include "hif-ops.h"
- #include "cfg80211.h"
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 82f2f5c..920265e 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -15,8 +15,11 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#undef pr_fmt
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
- 
-+#include <linux/printk.h>
++	if (in_interrupt())
++		new_hd = kzalloc(sizeof(struct list_head), GFP_ATOMIC);
++	else
++		new_hd = kzalloc(sizeof(struct list_head), GFP_KERNEL);
++	if (new_hd == NULL)
++		return;
 +
- #include "core.h"
- #include "debug.h"
- #include "htc-ops.h"
++	spin_lock_irqsave(&bus->dpc_tl_lock, flags);
++	list_add_tail(new_hd, &bus->dpc_tsklst);
++	spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
++}
++
+ static int brcmf_sdbrcm_dpc_thread(void *data)
+ {
+ 	struct brcmf_sdio *bus = (struct brcmf_sdio *) data;
++	struct list_head *cur_hd, *tmp_hd;
++	unsigned long flags;
+ 
+ 	allow_signal(SIGTERM);
+ 	/* Run until signal received */
+ 	while (1) {
+ 		if (kthread_should_stop())
+ 			break;
+-		if (!wait_for_completion_interruptible(&bus->dpc_wait)) {
+-			/* Call bus dpc unless it indicated down
+-			(then clean stop) */
+-			if (bus->sdiodev->bus_if->state != BRCMF_BUS_DOWN) {
+-				if (brcmf_sdbrcm_dpc(bus))
+-					complete(&bus->dpc_wait);
+-			} else {
++
++		if (list_empty(&bus->dpc_tsklst))
++			if (wait_for_completion_interruptible(&bus->dpc_wait))
++				break;
++
++		spin_lock_irqsave(&bus->dpc_tl_lock, flags);
++		list_for_each_safe(cur_hd, tmp_hd, &bus->dpc_tsklst) {
++			spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
++
++			if (bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) {
+ 				/* after stopping the bus, exit thread */
+ 				brcmf_sdbrcm_bus_stop(bus->sdiodev->dev);
+ 				bus->dpc_tsk = NULL;
+ 				break;
+ 			}
+-		} else
+-			break;
++
++			if (brcmf_sdbrcm_dpc(bus))
++				brcmf_sdbrcm_adddpctsk(bus);
++
++			spin_lock_irqsave(&bus->dpc_tl_lock, flags);
++			list_del(cur_hd);
++			kfree(cur_hd);
++		}
++		spin_unlock_irqrestore(&bus->dpc_tl_lock, flags);
+ 	}
+ 	return 0;
+ }
+@@ -2669,8 +2700,10 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 	/* Schedule DPC if needed to send queued packet(s) */
+ 	if (!bus->dpc_sched) {
+ 		bus->dpc_sched = true;
+-		if (bus->dpc_tsk)
++		if (bus->dpc_tsk) {
++			brcmf_sdbrcm_adddpctsk(bus);
+ 			complete(&bus->dpc_wait);
++		}
+ 	}
+ 
+ 	return ret;
+@@ -3514,8 +3547,10 @@ void brcmf_sdbrcm_isr(void *arg)
+ 		brcmf_dbg(ERROR, "isr w/o interrupt configured!\n");
+ 
+ 	bus->dpc_sched = true;
+-	if (bus->dpc_tsk)
++	if (bus->dpc_tsk) {
++		brcmf_sdbrcm_adddpctsk(bus);
+ 		complete(&bus->dpc_wait);
++	}
+ }
+ 
+ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
+@@ -3559,8 +3594,10 @@ static bool brcmf_sdbrcm_bus_watchdog(struct brcmf_sdio *bus)
+ 				bus->ipend = true;
+ 
+ 				bus->dpc_sched = true;
+-				if (bus->dpc_tsk)
++				if (bus->dpc_tsk) {
++					brcmf_sdbrcm_adddpctsk(bus);
+ 					complete(&bus->dpc_wait);
++				}
+ 			}
+ 		}
+ 
+@@ -3897,6 +3934,8 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	}
+ 	/* Initialize DPC thread */
+ 	init_completion(&bus->dpc_wait);
++	INIT_LIST_HEAD(&bus->dpc_tsklst);
++	spin_lock_init(&bus->dpc_tl_lock);
+ 	bus->dpc_tsk = kthread_run(brcmf_sdbrcm_dpc_thread,
+ 				   bus, "brcmf_dpc");
+ 	if (IS_ERR(bus->dpc_tsk)) {
 -- 
-1.7.10.rc1.22.gf5241
+1.7.5.4
+
 
