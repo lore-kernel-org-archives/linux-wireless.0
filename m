@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19443 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752734Ab2DPQZk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 12:25:40 -0400
-Date: Mon, 16 Apr 2012 19:25:35 +0300
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Remove incorrect Probe Response offload support for
- Interworking
-Message-ID: <20120416162535.GA9636@jouni.qca.qualcomm.com> (sfid-20120416_182543_330612_9189AC3B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:58806 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753640Ab2DWVwy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:54 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/29] iwlwifi: first enable RF kill interrupt, then check register
+Date: Mon, 23 Apr 2012 14:47:13 -0700
+Message-Id: <1335217660-21950-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235352_980013_735F4A73)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath6kl does not support Probe Response offloading for Interworking (IEEE
-802.11u), so remove the incorrectly added capability flag for it.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+This can solve a race (very unlikely to happen though).
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   16 +++++++---------
+ 1 files changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 5b988aa..35233eb 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3472,8 +3472,7 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
- 	ar->wiphy->probe_resp_offload =
- 		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
- 		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
--		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P |
--		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_80211U;
-+		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 1d9724d..78aa320 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -980,14 +980,13 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 		return -EIO;
+ 	}
  
- 	ret = wiphy_register(wiphy);
- 	if (ret < 0) {
++	iwl_enable_rfkill_int(trans);
++
+ 	/* If platform's RF_KILL switch is NOT set to KILL */
+ 	hw_rfkill = iwl_is_rfkill_set(trans);
+ 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+-
+-	if (hw_rfkill) {
+-		iwl_enable_rfkill_int(trans);
++	if (hw_rfkill)
+ 		return -ERFKILL;
+-	}
+ 
+ 	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
+ 
+@@ -1560,15 +1559,14 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
+ {
+ 	bool hw_rfkill;
+ 
++	iwl_enable_rfkill_int(trans);
++
+ 	hw_rfkill = iwl_is_rfkill_set(trans);
++	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 
+-	if (hw_rfkill)
+-		iwl_enable_rfkill_int(trans);
+-	else
++	if (!hw_rfkill)
+ 		iwl_enable_interrupts(trans);
+ 
+-	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+-
+ 	return 0;
+ }
+ #endif /* CONFIG_PM_SLEEP */
 -- 
-1.7.5.4
+1.7.0.4
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
