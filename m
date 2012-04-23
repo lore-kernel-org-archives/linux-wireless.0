@@ -1,63 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61746 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642Ab2DJDUD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 23:20:03 -0400
-Received: by iagz16 with SMTP id z16so6758321iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2012 20:20:02 -0700 (PDT)
-Message-ID: <4F83A6DE.7070109@lwfinger.net> (sfid-20120410_052008_360311_9D919FFA)
-Date: Mon, 09 Apr 2012 22:19:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Suspicious RCU usage in mac80211
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:32825 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755855Ab2DWVw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:59 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 24/29] iwlwifi: move OTP defines
+Date: Mon, 23 Apr 2012 14:47:35 -0700
+Message-Id: <1335217660-21950-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235309_649514_C5958421)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running kernel 3.4-rc2 from wireless testing, I got the following logged:
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ 2299.344437] ===============================
-[ 2299.344443] [ INFO: suspicious RCU usage. ]
-[ 2299.344452] 3.4.0-rc2-wl+ #222 Not tainted
-[ 2299.344458] -------------------------------
-[ 2299.344466] net/mac80211/sta_info.h:449 suspicious 
-rcu_dereference_protected() usage!
-[ 2299.344472]
-[ 2299.344474] other info that might help us debug this:
-[ 2299.344477]
-[ 2299.344484]
-[ 2299.344486] rcu_scheduler_active = 1, debug_locks = 0
-[ 2299.344493] 1 lock held by swapper/1/0:
-[ 2299.344499]  #0:  (&tid_tx->session_timer){+.-...}, at: [<ffffffff8104850a>] 
-run_timer_softirq+0xfa/0x6e0
-[ 2299.344533]
-[ 2299.344535] stack backtrace:
-[ 2299.344544] Pid: 0, comm: swapper/1 Not tainted 3.4.0-rc2-wl+ #222
-[ 2299.344551] Call Trace:
-[ 2299.344557]  <IRQ>  [<ffffffff81092fdd>] lockdep_rcu_suspicious+0xfd/0x130
-[ 2299.344651]  [<ffffffffa05db673>] sta_tx_agg_session_timer_expired+0xe3/0x100 
-[mac80211]
-[ 2299.344664]  [<ffffffff81048595>] run_timer_softirq+0x185/0x6e0
-[ 2299.344676]  [<ffffffff8104850a>] ? run_timer_softirq+0xfa/0x6e0
-[ 2299.344714]  [<ffffffffa05db590>] ? ieee80211_stop_tx_ba_session+0x240/0x240 
-[mac80211]
-[ 2299.344732]  [<ffffffff81040156>] __do_softirq+0xc6/0x3f0
-[ 2299.344748]  [<ffffffff8139c934>] ? _raw_spin_lock+0x44/0x50
-[ 2299.344758]  [<ffffffff8139d0f6>] ? _raw_spin_unlock+0x26/0x40
-[ 2299.344771]  [<ffffffff8139f24c>] call_softirq+0x1c/0x30
-[ 2299.344785]  [<ffffffff81004785>] do_softirq+0x85/0xc0
-[ 2299.344795]  [<ffffffff810407b6>] irq_exit+0xa6/0xe0
-[ 2299.344806]  [<ffffffff8100424e>] do_IRQ+0x5e/0xd0
-[ 2299.344816]  [<ffffffff8139d56c>] common_interrupt+0x6c/0x6c
-[ 2299.344823]  <EOI>  [<ffffffff8100c042>] ? default_idle+0x62/0x4f0
-[ 2299.344844]  [<ffffffff8100c040>] ? default_idle+0x60/0x4f0
-[ 2299.344854]  [<ffffffff8100c524>] amd_e400_idle+0x54/0x100
-[ 2299.344864]  [<ffffffff8100ce96>] cpu_idle+0x96/0xe0
-[ 2299.344875]  [<ffffffff8138fbc6>] start_secondary+0x1b7/0x1bb
+Since the PCI core shouldn't include the
+iwl-eeprom.h header file, move the OTP
+definitions into iwl-agn-hw.h which can
+be included.
 
-The wireless driver in use was rtl8192ce.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h |   11 +++++++++++
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |   11 -----------
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
+index c797ab1..7960a52 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hw.h
+@@ -102,6 +102,17 @@
+ 
+ /* EEPROM */
+ #define IWLAGN_EEPROM_IMG_SIZE		2048
++/* OTP */
++/* lower blocks contain EEPROM image and calibration data */
++#define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
++/* high blocks contain PAPD data */
++#define OTP_HIGH_IMAGE_SIZE_6x00        (6 * 512 * sizeof(u16)) /* 6 KB */
++#define OTP_HIGH_IMAGE_SIZE_1000        (0x200 * sizeof(u16)) /* 1024 bytes */
++#define OTP_MAX_LL_ITEMS_1000		(3)	/* OTP blocks for 1000 */
++#define OTP_MAX_LL_ITEMS_6x00		(4)	/* OTP blocks for 6x00 */
++#define OTP_MAX_LL_ITEMS_6x50		(7)	/* OTP blocks for 6x50 */
++#define OTP_MAX_LL_ITEMS_2x00		(4)	/* OTP blocks for 2x00 */
++
+ 
+ #define IWLAGN_NUM_QUEUES		20
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 24279db..64bfd94 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -206,17 +206,6 @@ struct iwl_eeprom_calib_hdr {
+ /* 6000 regulatory - indirect access */
+ #define EEPROM_6000_REG_BAND_24_HT40_CHANNELS  ((0x80)\
+ 		| INDIRECT_ADDRESS | INDIRECT_REGULATORY)   /* 14  bytes */
+-/* OTP */
+-/* lower blocks contain EEPROM image and calibration data */
+-#define OTP_LOW_IMAGE_SIZE		(2 * 512 * sizeof(u16)) /* 2 KB */
+-/* high blocks contain PAPD data */
+-#define OTP_HIGH_IMAGE_SIZE_6x00        (6 * 512 * sizeof(u16)) /* 6 KB */
+-#define OTP_HIGH_IMAGE_SIZE_1000        (0x200 * sizeof(u16)) /* 1024 bytes */
+-#define OTP_MAX_LL_ITEMS_1000		(3)	/* OTP blocks for 1000 */
+-#define OTP_MAX_LL_ITEMS_6x00		(4)	/* OTP blocks for 6x00 */
+-#define OTP_MAX_LL_ITEMS_6x50		(7)	/* OTP blocks for 6x50 */
+-#define OTP_MAX_LL_ITEMS_2x00		(4)	/* OTP blocks for 2x00 */
+-
+ /* 2.4 GHz */
+ extern const u8 iwl_eeprom_band_1[14];
+ 
+-- 
+1.7.0.4
+
