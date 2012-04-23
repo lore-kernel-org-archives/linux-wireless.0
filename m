@@ -1,42 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36621 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750884Ab2DLEFs (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:53505 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752397Ab2DWTuu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 00:05:48 -0400
-Message-ID: <1334203508.3788.12.camel@jlt3.sipsolutions.net> (sfid-20120412_060551_041429_173B455D)
-Subject: Re: [Greenmesh] [ath9k] mesh powersave hardware sleep + wakeup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	javier@cozybit.com, linux-wireless@vger.kernel.org,
-	henry@logout.com,
-	"greenmesh@lists.osll.spb.ru" <greenmesh@lists.osll.spb.ru>
-Date: Thu, 12 Apr 2012 06:05:08 +0200
-In-Reply-To: <4F856449.3000804@etit.tu-chemnitz.de>
-References: <4F630AEA.10703@etit.tu-chemnitz.de>
-	 <20120316204547.GG18861@tux> <4F63BA31.1080608@etit.tu-chemnitz.de>
-	 <4F856449.3000804@etit.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 23 Apr 2012 15:50:50 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v4 1/4] cfg80211: Add framework to support ethtool stats.
+Date: Mon, 23 Apr 2012 12:50:29 -0700
+Message-Id: <1335210632-19958-2-git-send-email-greearb@candelatech.com> (sfid-20120423_215054_041387_809639DA)
+In-Reply-To: <1335210632-19958-1-git-send-email-greearb@candelatech.com>
+References: <1335210632-19958-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-04-11 at 13:00 +0200, Marco Porsch wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> Thus, I think we will need an additional/extended interface 
-> mac80211<->driver here.
-> 
-> I see two possibilities:
-> a) request the next wakeup time from mac80211 each time the hardware is 
-> put to sleep (e.g. from ath9k_ps_restore).
-> b) give a whole list of periodic wakeup events of all vif to the driver. 
-> Then the driver is supposed to sort out the closest event.
-> 
-> What would be the better approach for such an interface? Or maybe a 
-> completely different idea?
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 815dc3f... 27f9561... M	include/net/cfg80211.h
+:100644 100644 9bde4d1... 7eecdf4... M	net/wireless/ethtool.c
+ include/net/cfg80211.h |   17 +++++++++++++++++
+ net/wireless/ethtool.c |   29 +++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 0 deletions(-)
 
-What time units would that be in, and how could you correlate them?
-
-johannes
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 815dc3f..27f9561 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1514,6 +1514,16 @@ struct cfg80211_gtk_rekey_data {
+  *	later passes to cfg80211_probe_status().
+  *
+  * @set_noack_map: Set the NoAck Map for the TIDs.
++ *
++ * @get_et_sset_count:  Ethtool API to get string-set count.
++ *	See @ethtool_ops.get_sset_count
++ *
++ * @get_et_stats:  Ethtool API to get a set of u64 stats.
++ *	See @ethtool_ops.get_ethtool_stats
++ *
++ * @get_et_strings:  Ethtool API to get a set of strings to describe stats
++ *	and perhaps other supported types of ethtool data-sets.
++ *	See @ethtool_ops.get_strings
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1712,6 +1722,13 @@ struct cfg80211_ops {
+ 
+ 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
+ 					       enum nl80211_channel_type *type);
++
++	int	(*get_et_sset_count)(struct wiphy *wiphy,
++				     struct net_device *dev, int sset);
++	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device *dev,
++				struct ethtool_stats *stats, u64 *data);
++	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
++				  u32 sset, u8 *data);
+ };
+ 
+ /*
+diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
+index 9bde4d1..7eecdf4 100644
+--- a/net/wireless/ethtool.c
++++ b/net/wireless/ethtool.c
+@@ -68,6 +68,32 @@ static int cfg80211_set_ringparam(struct net_device *dev,
+ 	return -ENOTSUPP;
+ }
+ 
++static int cfg80211_get_sset_count(struct net_device *dev, int sset)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_sset_count)
++		return rdev->ops->get_et_sset_count(wdev->wiphy, dev, sset);
++	return -EOPNOTSUPP;
++}
++
++static void cfg80211_get_stats(struct net_device *dev,
++			       struct ethtool_stats *stats, u64 *data)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_stats)
++		rdev->ops->get_et_stats(wdev->wiphy, dev, stats, data);
++}
++
++static void cfg80211_get_strings(struct net_device *dev, u32 sset, u8 *data)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
++	if (rdev->ops->get_et_strings)
++		rdev->ops->get_et_strings(wdev->wiphy, dev, sset, data);
++}
++
+ const struct ethtool_ops cfg80211_ethtool_ops = {
+ 	.get_drvinfo = cfg80211_get_drvinfo,
+ 	.get_regs_len = cfg80211_get_regs_len,
+@@ -75,4 +101,7 @@ const struct ethtool_ops cfg80211_ethtool_ops = {
+ 	.get_link = ethtool_op_get_link,
+ 	.get_ringparam = cfg80211_get_ringparam,
+ 	.set_ringparam = cfg80211_set_ringparam,
++	.get_strings = cfg80211_get_strings,
++	.get_ethtool_stats = cfg80211_get_stats,
++	.get_sset_count = cfg80211_get_sset_count,
+ };
+-- 
+1.7.3.4
 
