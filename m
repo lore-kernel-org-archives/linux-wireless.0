@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:60032 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756658Ab2D3UML convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40401 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750945Ab2DWHOA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 16:12:11 -0400
-Received: by wejx9 with SMTP id x9so2024195wej.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 13:12:09 -0700 (PDT)
+	Mon, 23 Apr 2012 03:14:00 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20120430170337.GA2560@tuxdriver.com>
-References: <20120422182928.GA2854@ritirata.org>
-	<20120430145803.GE2630@ritirata.org>
-	<20120430170337.GA2560@tuxdriver.com>
-Date: Mon, 30 Apr 2012 23:12:09 +0300
-Message-ID: <CANUX_P3HvPa_ff-km97m+xqwL_wOtbmPtoMk25HXXCYfvYoKzA@mail.gmail.com> (sfid-20120430_221232_466252_1EDB0A5A)
-Subject: Re: iwlwifi warn_slowpath with 3.*
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Antonio Quartulli <ordex@autistici.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="iso-8859-1"
+Message-ID: <20373.271.262245.296570@gargle.gargle.HOWL> (sfid-20120423_091406_739553_8B80C150)
+Date: Mon, 23 Apr 2012 12:43:19 +0530
+To: George Nychis <gnychis@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: how to configure compat-wireless to force manual firmware load?
+In-Reply-To: <CA+7oygft-wqhnkk5wwondb57WuN2hLkVDKMXwKoaK+p9sZwAcw@mail.gmail.com>
+References: <CA+7oygft-wqhnkk5wwondb57WuN2hLkVDKMXwKoaK+p9sZwAcw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 30, 2012 at 20:03, John W. Linville <linville@tuxdriver.com> wrote:
-> On Mon, Apr 30, 2012 at 04:58:04PM +0200, Antonio Quartulli wrote:
->> On Sun, Apr 22, 2012 at 08:29:29PM +0200, Antonio Quartulli wrote:
->> > Hello,
->> >
->> > since linux-3.0 (I don't remember if it was the case even before), I'm getting
->> > this output in dmesg:
->> >
->> > [   53.662990] ------------[ cut here ]------------
->> > [   53.663016] WARNING: at drivers/iommu/intel-iommu.c:2911
->> > intel_unmap_page+0x14b/0x180()
->> > [   53.663047] Hardware name: Latitude E5420
->> > [   53.663066] Driver unmaps unmatched page at PFN ffd1a000
->>
->>
->> I see that I always get the same addr passed to the unmap function:
->>
->> [   23.950535] Driver unmaps unmatched page at PFN ffd1a000
->>
->> is it a coincidence?
->> I'm running linux-3.3.3 right now. I can try wireless-testing if it would help.
->
-> Just for the record, we are seeing a similar problem on RHEL 6.3
-> (which has an iwlwifi driver derived from linux-3.2).
->
->        https://bugzilla.redhat.com/show_bug.cgi?id=815998
->
+George Nychis wrote:
+> I was using an older version of compat-wireless, specifically a build
+> from May 2011.  In that release of compat-wireless, the firmware was
+> loaded manually using a filesystem mounted in /sys.
+> 
+> I recently downloaded a newer version of compat-wireless:
+> compat-wireless-3.0.9-1.  In this version, it appears to spawn a
+> kernel thread to check /lib/firmware for the firmware and load it.  If
+> it is present, it loads the firmware, otherwise it fails saying that
+> it cannot be found.
+> 
+> I am having trouble with the automatic load:
+> <3>[  178.957584] otg_err: in s5pc110_otghcd_urb_dequeue()::00508
+> <3>[  178.958650] => fail to cancel_transfer()
+> <7>[  178.959879] usb 1-1.2: hcd_unlink_urb d13aa200 fail -1
+> <7>[  178.962510] usb 1-1.2: khubd timed out on ep0out len=0/4096
+> <3>[  178.963274] usb 1-1.2: ath9k_htc: Firmware - htc_7010.fw download failed
+> <4>[  178.971658] ath9k_htc: probe of 1-1.2:1.0 failed with error -22
 
-John I want to hope that this bugzilla would be solved by Johannes
-rework of the locks:
+The FW is found, but transferring it to the device fails for some reason.
+Can you give more details about the platform ?
 
-08ae86ac3f9d9c9a60d2883c82cd72a5c66b94db in wireless-next.
-There are a few patches that completely rewrite the locking model of the driver.
+Sujith
