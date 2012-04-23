@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:57504 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753366Ab2DGV1d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Apr 2012 17:27:33 -0400
-Received: by obbtb18 with SMTP id tb18so4422399obb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Apr 2012 14:27:32 -0700 (PDT)
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:58806 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755573Ab2DWVwy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:54 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH] net/wireless: ipw2x00: remove ssid_context struct
-Date: Sat,  7 Apr 2012 17:31:21 -0400
-Message-Id: <1333834281-23502-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20120407_232810_059707_E6F6A1B1)
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/29] iwlwifi: check RF kill register when interrupts have been disabled
+Date: Mon, 23 Apr 2012 14:47:15 -0700
+Message-Id: <1335217660-21950-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235352_346237_3E81D3C0)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver does not use it any more.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Since the interrupts have been disabled, we may have missed an RF
+kill interrupt. Check the register to be sure the op_mode is in
+sync.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ipw2x00/ipw2100.h |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.h b/drivers/net/wireless/ipw2x00/ipw2100.h
-index 99cba96..18741a4 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.h
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.h
-@@ -135,15 +135,6 @@ enum {
- 	IPW_HW_STATE_ENABLED = 0
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 589037d..8e1cf97 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1438,12 +1438,22 @@ error:
  
--struct ssid_context {
--	char ssid[IW_ESSID_MAX_SIZE + 1];
--	int ssid_len;
--	unsigned char bssid[ETH_ALEN];
--	int port_type;
--	int channel;
--
--};
--
- extern const char *port_type_str[];
- extern const char *band_str[];
+ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
+ {
++	bool hw_rfkill;
++
+ 	iwl_apm_stop(trans);
  
+ 	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
+ 
+ 	/* Even if we stop the HW, we still want the RF kill interrupt */
+ 	iwl_enable_rfkill_int(trans);
++
++	/*
++	 * Check again since the RF kill state may have changed while all the
++	 * interrupts were disabled, in this case we couldn't receive the
++	 * RF kill interrupt and update the state in the op_mode.
++	 */
++	hw_rfkill = iwl_is_rfkill_set(trans);
++	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ }
+ 
+ static void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
 -- 
-1.7.2.5
+1.7.0.4
 
