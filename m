@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51804 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755168Ab2DZSVq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 14:21:46 -0400
-Message-ID: <4F999235.3060007@qca.qualcomm.com> (sfid-20120426_202150_171596_248CCD5F)
-Date: Thu, 26 Apr 2012 21:21:41 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
-References: <1335452174-7093-1-git-send-email-vthiagar@qca.qualcomm.com> <1335452174-7093-2-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1335452174-7093-2-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from plane.gmane.org ([80.91.229.3]:55002 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755884Ab2DWXuG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 19:50:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SMT19-0005Sv-Jw
+	for linux-wireless@vger.kernel.org; Tue, 24 Apr 2012 01:50:03 +0200
+Received: from 178.73.83.240 ([178.73.83.240])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 01:50:03 +0200
+Received: from Sami8519 by 178.73.83.240 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 01:50:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Sami <Sami8519@hotmail.com>
+Subject: Re: Building and Installation errors due to modprobe -l was deprecated
+Date: Mon, 23 Apr 2012 23:45:54 +0000 (UTC)
+Message-ID: <loom.20120424T014108-449@post.gmane.org> (sfid-20120424_015019_187837_BD7E249E)
+References: <4F58D80D.8070905@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/26/2012 05:56 PM, Vasanthakumar Thiagarajan wrote:
-> Return status of ath6kl_htc_tx_issue() is ignored in
-> ath6kl_htc_tx_from_queue(), but failed tx packet is
-> is not cleaned up. To fix memory leak in this case, call
-> completion with error. Also, throw an error debug message
-> when tx fails in ath6kl_sdio_write_async() due to shortage
-> in bus request buffer.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-[...]
+Hi Aaron,
 
->  	bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
->  
-> -	if (!bus_req)
-> +	if (!bus_req) {
-> +		ath6kl_err("Ran out of bus request buffer for tx\n");
->  		return -ENOMEM;
-> +	}
+I have the same problem with building module for bluetooth dongle Asus BT211. 
+Have you found a fix for this issue? Thank you.
 
-I'm not sure about this one. There's a risk that this will spam the log.
-Should it be a debug message instead? Or should we have instead
-ath6kl_err_ratelimit()?
-
-Kalle
