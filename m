@@ -1,167 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:39878 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753955Ab2DRTJt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 15:09:49 -0400
-From: Daniel Drake <dsd@laptop.org>
+Received: from mga11.intel.com ([192.55.52.93]:58806 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755841Ab2DWVw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:59 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com,
-	libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas CS: convert to asynchronous firmware loading
-Message-Id: <20120418190944.A02A69D401E@zog.reactivated.net> (sfid-20120418_210954_111886_A18957EC)
-Date: Wed, 18 Apr 2012 20:09:44 +0100 (BST)
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 21/29] iwlwifi: move watchdog definitions to config
+Date: Mon, 23 Apr 2012 14:47:32 -0700
+Message-Id: <1335217660-21950-22-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235327_354111_630A877A)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
-Tested-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/if_cs.c |   92 ++++++++++++++++++---------------
- 1 files changed, 51 insertions(+), 41 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index bb3deb3..c211b86 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -738,6 +738,52 @@ done:
- 	return ret;
- }
+Since they're used in the config, they
+should be declared in iwl-config.h.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-config.h |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    6 ------
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 71e6285..70a8f9f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -112,6 +112,12 @@ enum iwl_led_mode {
+ #define IWL_MAX_PLCP_ERR_THRESHOLD_MAX		255
+ #define IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE	0
  
-+static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
-+				 const struct firmware *helper,
-+				 const struct firmware *mainfw)
-+{
-+	struct if_cs_card *card = priv->card;
++/* TX queue watchdog timeouts in mSecs */
++#define IWL_WATCHHDOG_DISABLED	0
++#define IWL_DEF_WD_TIMEOUT	2000
++#define IWL_LONG_WD_TIMEOUT	10000
++#define IWL_MAX_WD_TIMEOUT	120000
 +
-+	if (ret) {
-+		pr_err("failed to find firmware (%d)\n", ret);
-+		return;
-+	}
-+
-+	/* Load the firmware */
-+	ret = if_cs_prog_helper(card, helper);
-+	if (ret == 0 && (card->model != MODEL_8305))
-+		ret = if_cs_prog_real(card, mainfw);
-+	if (ret)
-+		goto out;
-+
-+	/* Now actually get the IRQ */
-+	ret = request_irq(card->p_dev->irq, if_cs_interrupt,
-+		IRQF_SHARED, DRV_NAME, card);
-+	if (ret) {
-+		pr_err("error in request_irq\n");
-+		goto out;
-+	}
-+
-+	/*
-+	 * Clear any interrupt cause that happened while sending
-+	 * firmware/initializing card
-+	 */
-+	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
-+	if_cs_enable_ints(card);
-+
-+	/* And finally bring the card up */
-+	priv->fw_ready = 1;
-+	if (lbs_start_card(priv) != 0) {
-+		pr_err("could not activate card\n");
-+		free_irq(card->p_dev->irq, card);
-+	}
-+
-+out:
-+	if (helper)
-+		release_firmware(helper);
-+	if (mainfw)
-+		release_firmware(mainfw);
-+}
  
+ /*
+  * @max_ll_items: max number of OTP blocks
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 80cd942..7994be3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -535,12 +535,6 @@ struct iwl_event_log {
  
- /********************************************************************/
-@@ -809,8 +855,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 	unsigned int prod_id;
- 	struct lbs_private *priv;
- 	struct if_cs_card *card;
--	const struct firmware *helper = NULL;
--	const struct firmware *mainfw = NULL;
+ #define IWL_DELAY_NEXT_FORCE_RF_RESET  (HZ*3)
  
- 	lbs_deb_enter(LBS_DEB_CS);
- 
-@@ -890,20 +934,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 		goto out2;
- 	}
- 
--	ret = lbs_get_firmware(&p_dev->dev, card->model, &fw_table[0],
--				&helper, &mainfw);
--	if (ret) {
--		pr_err("failed to find firmware (%d)\n", ret);
--		goto out2;
--	}
+-/* TX queue watchdog timeouts in mSecs */
+-#define IWL_WATCHHDOG_DISABLED	(0)
+-#define IWL_DEF_WD_TIMEOUT	(2000)
+-#define IWL_LONG_WD_TIMEOUT	(10000)
+-#define IWL_MAX_WD_TIMEOUT	(120000)
 -
--	/* Load the firmware early, before calling into libertas.ko */
--	ret = if_cs_prog_helper(card, helper);
--	if (ret == 0 && (card->model != MODEL_8305))
--		ret = if_cs_prog_real(card, mainfw);
--	if (ret)
--		goto out2;
--
- 	/* Make this card known to the libertas driver */
- 	priv = lbs_add_card(card, &p_dev->dev);
- 	if (!priv) {
-@@ -911,37 +941,22 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 		goto out2;
- 	}
+ /* BT Antenna Coupling Threshold (dB) */
+ #define IWL_BT_ANTENNA_COUPLING_THRESHOLD	(35)
  
--	/* Finish setting up fields in lbs_private */
-+	/* Set up fields in lbs_private */
- 	card->priv = priv;
- 	priv->card = card;
- 	priv->hw_host_to_card = if_cs_host_to_card;
- 	priv->enter_deep_sleep = NULL;
- 	priv->exit_deep_sleep = NULL;
- 	priv->reset_deep_sleep_wakeup = NULL;
--	priv->fw_ready = 1;
- 
--	/* Now actually get the IRQ */
--	ret = request_irq(p_dev->irq, if_cs_interrupt,
--		IRQF_SHARED, DRV_NAME, card);
-+	/* Get firmware */
-+	ret = lbs_get_firmware_async(priv, &p_dev->dev, card->model, fw_table,
-+				     if_cs_prog_firmware);
- 	if (ret) {
--		pr_err("error in request_irq\n");
--		goto out3;
--	}
--
--	/*
--	 * Clear any interrupt cause that happened while sending
--	 * firmware/initializing card
--	 */
--	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
--	if_cs_enable_ints(card);
--
--	/* And finally bring the card up */
--	if (lbs_start_card(priv) != 0) {
--		pr_err("could not activate card\n");
-+		pr_err("failed to find firmware (%d)\n", ret);
- 		goto out3;
- 	}
- 
--	ret = 0;
- 	goto out;
- 
- out3:
-@@ -951,11 +966,6 @@ out2:
- out1:
- 	pcmcia_disable_device(p_dev);
- out:
--	if (helper)
--		release_firmware(helper);
--	if (mainfw)
--		release_firmware(mainfw);
--
- 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
- 	return ret;
- }
 -- 
-1.7.7.6
+1.7.0.4
 
