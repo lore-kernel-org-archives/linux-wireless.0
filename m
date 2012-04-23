@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:60735 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865Ab2DRPhb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 11:37:31 -0400
-Date: Wed, 18 Apr 2012 16:37:28 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Subject: Re: brcmsmac hangs machine if loaded after busmastering disabled
-Message-ID: <20120418153728.GA32224@srcf.ucam.org> (sfid-20120418_173734_424778_992029FC)
-References: <20120319215154.GA18508@srcf.ucam.org>
- <4F856EE9.2040407@broadcom.com>
- <20120411115118.GA3791@srcf.ucam.org>
- <4F8EA657.7020006@broadcom.com>
- <20120418123449.GB26953@srcf.ucam.org>
- <4F8EDDE6.9080802@broadcom.com>
+Received: from nbd.name ([46.4.11.11]:45065 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752746Ab2DWRYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 13:24:11 -0400
+Message-ID: <4F95902E.7040806@openwrt.org> (sfid-20120423_192414_931634_2AA2741A)
+Date: Mon, 23 Apr 2012 19:23:58 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F8EDDE6.9080802@broadcom.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+CC: Zefir Kurtisi <zefir.kurtisi@gmail.com>, linville@tuxdriver.com,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com, achadd@qca.qualcomm.com,
+	chunkeey@googlemail.com
+Subject: Re: [PATCH 2/4] ath9k: set PHYRADAR in RX filter when on DFS channel
+References: <1335124223-15439-1-git-send-email-zefir.kurtisi@gmail.com> <1335124223-15439-3-git-send-email-zefir.kurtisi@gmail.com> <4F946340.3020700@openwrt.org> <4F951D01.60509@neratec.com>
+In-Reply-To: <4F951D01.60509@neratec.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 18, 2012 at 05:29:42PM +0200, Arend van Spriel wrote:
+On 2012-04-23 11:12 AM, Zefir Kurtisi wrote:
+> On 22.04.2012 22:00, Felix Fietkau wrote:
+>> On 2012-04-22 9:50 PM, Zefir Kurtisi wrote:
+>>> From: Zefir Kurtisi<zefir.kurtisi@neratec.com>
+>>>
+>>>
+>>> Signed-off-by: Zefir Kurtisi<zefir.kurtisi@neratec.com>
+>>> ---
+>>>   drivers/net/wireless/ath/ath9k/recv.c |    6 ++++++
+>>>   1 files changed, 6 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+>>> index f4ae3ba..ef45c0c 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>>> @@ -17,6 +17,7 @@
+>>>   #include<linux/dma-mapping.h>
+>>>   #include "ath9k.h"
+>>>   #include "ar9003_mac.h"
+>>> +#include "dfs.h"
+>>>
+>>>   #define SKB_CB_ATHBUF(__skb)	(*((struct ath_buf **)__skb->cb))
+>>>
+>>> @@ -467,6 +468,11 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+>>>   		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+>>>   	}
+>>>
+>>> +	if (sc->sc_ah->curchan->chan->flags&  IEEE80211_CHAN_RADAR)
+>>> +		rfilt |= ATH9K_RX_FILTER_PHYRADAR;
+>>> +	else
+>>> +		rfilt&= ~ATH9K_RX_FILTER_PHYRADAR;
+>> This should only be done in AP mode, maybe mac80211 should have a
+>> separate flag to tell the driver to enable this. Same comment also
+>> applies to patch 4/4.
+>>
+>> - Felix
+>>
+> Are you aware of any issues enabling DFS in client modes? My thinking 
+> was that it won't hurt to detect radars in any mode and let the DFS 
+> management component decide what to do with that events.
+Power consumption (for laptops), performance issues (due to DMA
+descriptor use and interrupts triggered by pulse detection).
 
-> I am not sure, but D3 is a good guess. It is all a workaround as the
-> real fix should be in Apple's UEFI implementation. I think it is
-> unlikely we can make them do that although we probably supplied them
-> the wireless part.
+If the DFS management component decides what to do with the events, why
+not let it decide whether it actually wants events as well ;)
 
-Disabling busmastering and then D3ing the device once in the kernel 
-didn't seem to work, but putting the device in D3 while in the firmware 
-(and leaving busmastering enabled) seems to avoid the problem.
-
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+- Felix
