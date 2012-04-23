@@ -1,44 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:21617 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab2DUOtj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 10:49:39 -0400
-Date: Sat, 21 Apr 2012 17:51:41 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] wireless: at76c50x: allocating too much data
-Message-ID: <20120421145140.GU6498@mwanda> (sfid-20120421_164947_166580_5E9988E3)
-References: <20120420064705.GE22649@elgon.mountain>
- <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com>
- <20120420091449.GI27101@mwanda>
- <87vcku9sob.fsf@purkki.adurom.net>
- <20120421124523.GS6498@mwanda>
- <alpine.DEB.2.02.1204211548090.1987@hadrien>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.02.1204211548090.1987@hadrien>
+Received: from mga11.intel.com ([192.55.52.93]:32825 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755828Ab2DWVw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:57 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 15/29] iwlwifi: move iwl_cmd_echo_test
+Date: Mon, 23 Apr 2012 14:47:26 -0700
+Message-Id: <1335217660-21950-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235322_788187_97B5E701)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 21, 2012 at 03:51:44PM +0200, Julia Lawall wrote:
-> Looking for x = ... sizeof(x) ... I get 9 reports.  In most cases it
-> looks like sizeof(x) is coincidentally the same as the size that is
-> wanted.  Two cases that look like they could have some noticible
-> effect are:
-> 
-> arch/xtensa/platforms/iss/network.c, line 789
-> drivers/block/cciss.c, line 4211
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Clever.  You'd need to restrict it to places where x was a  pointer.
-That's better than my check which was specific to kmalloc().  (So
-uh...  I'm going to rewrite mine as well to be more generic.  :P)
+The function can be static with the only user.
 
-regards,
-dan carpenter
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c    |   17 -----------------
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    1 -
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   17 +++++++++++++++++
+ 3 files changed, 17 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 2a09678..a476397 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -275,20 +275,3 @@ void iwl_update_stats(struct iwl_priv *priv, bool is_tx, __le16 fc, u16 len)
+ 	}
+ }
+ #endif
+-
+-int iwl_cmd_echo_test(struct iwl_priv *priv)
+-{
+-	int ret;
+-	struct iwl_host_cmd cmd = {
+-		.id = REPLY_ECHO,
+-		.len = { 0 },
+-		.flags = CMD_SYNC,
+-	};
+-
+-	ret = iwl_dvm_send_cmd(priv, &cmd);
+-	if (ret)
+-		IWL_ERR(priv, "echo testing fail: 0X%x\n", ret);
+-	else
+-		IWL_DEBUG_INFO(priv, "echo testing pass\n");
+-	return ret;
+-}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index de7f6cd..3ec011b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -76,7 +76,6 @@ struct iwl_cmd;
+  *   L i b                 *
+  ***************************/
+ 
+-int iwl_cmd_echo_test(struct iwl_priv *priv);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ int iwl_alloc_traffic_mem(struct iwl_priv *priv);
+ void iwl_free_traffic_mem(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 11ca48e..f4a9910 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -2383,6 +2383,23 @@ static ssize_t iwl_dbgfs_protection_mode_write(struct file *file,
+ 	return count;
+ }
+ 
++static int iwl_cmd_echo_test(struct iwl_priv *priv)
++{
++	int ret;
++	struct iwl_host_cmd cmd = {
++		.id = REPLY_ECHO,
++		.len = { 0 },
++		.flags = CMD_SYNC,
++	};
++
++	ret = iwl_dvm_send_cmd(priv, &cmd);
++	if (ret)
++		IWL_ERR(priv, "echo testing fail: 0X%x\n", ret);
++	else
++		IWL_DEBUG_INFO(priv, "echo testing pass\n");
++	return ret;
++}
++
+ static ssize_t iwl_dbgfs_echo_test_write(struct file *file,
+ 					const char __user *user_buf,
+ 					size_t count, loff_t *ppos)
+-- 
+1.7.0.4
 
