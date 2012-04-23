@@ -1,59 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60758 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932437Ab2DFUcW (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:34994 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754226Ab2DWJ4X convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Apr 2012 16:32:22 -0400
-Message-ID: <4F7F52BD.7060906@candelatech.com> (sfid-20120406_223237_959008_6D64276E)
-Date: Fri, 06 Apr 2012 13:31:57 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 23 Apr 2012 05:56:23 -0400
+Received: by lbom4 with SMTP id m4so5481421lbo.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2012 02:56:21 -0700 (PDT)
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: Michael Leun <lkml20120218@newton.leun.net>,
-	casteyde.christian@free.fr,
-	Kelly Anderson <kelly@silka.with-linux.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] 3.3.1 ath9k regression
-References: <4F7A8EB7.4060200@silka.with-linux.com> <4F7A923D.5000002@candelatech.com> <CAD2nsn0vKPEOFp08WGYAGh0vEHPbShP4yMo5HzEGc8SrTmTZmQ@mail.gmail.com> <4F7A9D5C.8040402@silka.with-linux.com> <CAD2nsn2ONstURLWBSPkNrDfFOeePWMWGQeGrEUkU3Wh4kUo+sg@mail.gmail.com> <4F7AAAD9.2040307@silka.with-linux.com> <CAD2nsn0G8_vDQug-u=4PRWMwRLPX-zp1z0X5gOVNaxk=V+daWw@mail.gmail.com> <CAD2nsn0kogfuMhCN7tNNkiKF4PN-mG2Fa3gu0CGfw01qj-MWyg@mail.gmail.com> <4F7AB6FE.3080009@silka.with-linux.com> <20120403200306.0afbb48b@xenia.leun.net> <CAD2nsn2k3mKMm3gK=fXqDYcOeKBwkyqGz9RWz1KOe=6=CDyhHA@mail.gmail.com> <CAD2nsn1AshPTYd-FcydV-5HpiXPb0FfqLQPTqFYyw3kJX+fXEA@mail.gmail.com> <20120404235104.682cfad3@xenia.leun.net> <4F7DE3A4.1040705@candelatech.com> <CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
-In-Reply-To: <CAD2nsn16AozFF2QhiY063-48bKiXdyQLmSqJLLHPpsZ3H3JtHQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20120423095001.50af46cf@destiny.ordissimo>
+References: <1334759039-24349-1-git-send-email-anisse@astier.eu>
+	<BD323515-0FC1-4A0C-A5EC-92DBC75153CB@gmail.com>
+	<20120423095001.50af46cf@destiny.ordissimo>
+Date: Mon, 23 Apr 2012 11:56:21 +0200
+Message-ID: <CAL1gcdOT1E3jP=j8-sEEN87WRZ7qG=m0jv3aK6QaP-mBuYtXmw@mail.gmail.com> (sfid-20120423_115627_163286_A1D209B9)
+Subject: Re: [PATCH] rt2800: add chipset revision RT5390R support
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Anisse Astier <anisse@astier.eu>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	RA-ShiangTu <Shiang_Tu@ralinktech.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Kevin Chou <kevin.chou@mediatek.com>,
+	John Li <chen-yang.li@mediatek.com>,
+	RA-Jay Hung <Jay_Hung@ralinktech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/05/2012 10:11 PM, Mohammed Shafi wrote:
-> Hi Ben,
+On Mon, Apr 23, 2012 at 9:50 AM, Anisse Astier <anisse@astier.eu> wrote:
+> On Fri, 20 Apr 2012 19:07:38 +0200, Gertjan van Wingerde <gwingerde@gmail.com> wrote :
 >
-> On Thu, Apr 5, 2012 at 11:55 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> I see the regression on my WPEA-127N systems as well.
+>> Hi Anisse,
 >>
->> With the patch applied to 3.3.1, I see never ending stream of
->> auth timeouts (this log is watching 'iw event' output)
 >>
->> power-management is OFF on my system, and using nohwcrypt,
->> in case that matters.
+>> On 18 apr. 2012, at 16:23, Anisse Astier <anisse@astier.eu> wrote:
+>>
+>> > About 70% of the chips with revision RT5390R initialize incorrectly, using
+>> > the auxiliary antenna instead of the main one. The net result is that
+>> > signal reception is very poor (no AP further than 1M).
+>> >
+>> > This chipset differs from RT5390 and RT5390F by its support of hardware
+>> > antenna diversity. Therefore antenna selection should be done
+>> > differently, by disabling software features and previously selected
+>> > antenna.
+>> >
+>> > This changeset does just that, and makes all RT5390R work properly.
+>> >
+>> > This is based on Ralink's 2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO
+>> > driver.
+>> >
+>> > Signed-off-by: Anisse Astier <anisse@astier.eu>
+>> > ---
+>> > drivers/net/wireless/rt2x00/rt2800.h    |    1 +
+>> > drivers/net/wireless/rt2x00/rt2800lib.c |   10 ++++++++++
+>> > 2 files changed, 11 insertions(+)
+>> >
+>> > diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+>> > index 063bfa8..1ce2634 100644
+>> > --- a/drivers/net/wireless/rt2x00/rt2800.h
+>> > +++ b/drivers/net/wireless/rt2x00/rt2800.h
+>> > @@ -83,6 +83,7 @@
+>> > #define REV_RT3090E            0x0211
+>> > #define REV_RT3390E            0x0211
+>> > #define REV_RT5390F            0x0502
+>> > +#define REV_RT5390R            0x1502
+>> >
+>> > /*
+>> >  * Signal information.
+>> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> > index bd19802..6c95101 100644
+>> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> > @@ -3356,6 +3356,16 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>> >            rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
+>> >        }
+>> >
+>> > +        /* This chip has hardware antenna diversity*/
+>> > +        if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
+>> > +            rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY; /* Unused */
+>> > +            rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY; /* Unused */
+>> > +
+>> > +            rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
+>> > +            rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
+>> > +            rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
+>> > +        }
+>> > +
+>> >        rt2800_bbp_read(rt2x00dev, 152, &value);
+>> >        if (ant == 0)
+>> >            rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 1);
+>>
+>> Thanks for figuring this out. However, I think the default_ant initializations should be put at the place where the other initializations for the same field are (I believe that is somewhere in the rt2800_init_eeprom function (or a function with a similar name).
+>
+> I'm not even sure those are needed. I put them there in case someone
+> would want to use them in the future. What do you think ?
+>
 
-> i think its best for me try to download the 3.3.1 stable kernel and
-> see if this issue happens,
-> i am going to start it now, Ben does this happens with  latest
-> wireless testing tree?
-> its quite weird 3.4-rc1 works as some user reported and while 3.3.1 does not.
-> i will try to come with some suggestion patches
+I would still include them, if only to signal that for these devices
+we are using HW antenna diversity. However, as indicated, please put
+them at the right spot in the code.
 
-I have not tried wireless-testing lately...sort of been waiting for
-it to sync with upstream and become active again before going to the
-effort.
-
-But, I'll try it out soon if you have no luck reproducing the
-problem on 3.3.1.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+---
+Gertjan
