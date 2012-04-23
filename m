@@ -1,67 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:64079 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754488Ab2DPU7A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 16:59:00 -0400
-Received: by dake40 with SMTP id e40so7404113dak.11
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 13:59:00 -0700 (PDT)
-Date: Mon, 16 Apr 2012 13:58:56 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk
-Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
-Message-ID: <20120416205856.GA22298@kroah.com> (sfid-20120416_225906_114402_DE445815)
-References: <20120412144626.GA14868@kroah.com>
- <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
- <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
- <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
- <20120413105746.10ffb120@stein>
- <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
- <20120413190819.9469.qmail@stuge.se>
- <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
- <20120416162710.GA24100@kroah.com>
- <CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:32825 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755745Ab2DWVwz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:55 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/29] iwlwifi: move debugfs registration function declarations
+Date: Mon, 23 Apr 2012 14:47:20 -0700
+Message-Id: <1335217660-21950-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235350_426270_85E1FE1B)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 16, 2012 at 11:11:05PM +0300, Felipe Contreras wrote:
-> On Mon, Apr 16, 2012 at 7:27 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> > Just one minor correction in this looney email thread:
-> >
-> > On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
-> >> v3.3.x on the other hand are *not* stable. They contain patches
-> >> backported from v3.4, but nobody guarantees they will work. There was
-> >> no v3.3.1-rc1, so the first time the patches compromising v3.3.1 were
-> >> generally tested together is in v3.3.1, at which point if somebody
-> >> finds issues, it's too late; bad patches are *not* going to be removed
-> >> in v3.3.2.
-> >
-> > Of course there was a 3.3.1-rc1, see the linux-kernel archives for the
-> > announcemen and the individual patches.  kernel.org has the large patch
-> > itself if you like that format instead.
-> 
-> I don't see it here:
-> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=tags
-> 
-> If you really want people to try it, why not tag it?
+From: Johannes Berg <johannes.berg@intel.com>
 
-That would be because I don't keep it in that tree.  It is in a quilt
-tree you can find in the stable-queue.git repo, and I have never tagged
--rc1 releases there.  No one has ever asked for it before, so in the
-past 6 years of stable releases, I guess no one ever needed it.
+They clearly belong into iwl-agn.h as they have no
+relation to the (generic) debug logging framework.
 
-ketchup and tarballs seem to work well for others, perhaps you can use
-that as well (hint, ketchup on top of the linux-stable tree works just
-fine for testing this.)
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.h   |   13 +++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-debug.h |   15 ---------------
+ 2 files changed, 13 insertions(+), 15 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index bd467c0..1db6bde 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -474,6 +474,19 @@ static inline void iwl_dvm_set_pmi(struct iwl_priv *priv, bool state)
+ 	iwl_trans_set_pmi(priv->trans, state);
+ }
+ 
++#ifdef CONFIG_IWLWIFI_DEBUGFS
++int iwl_dbgfs_register(struct iwl_priv *priv, const char *name);
++void iwl_dbgfs_unregister(struct iwl_priv *priv);
++#else
++static inline int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
++{
++	return 0;
++}
++static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
++{
++}
++#endif /* CONFIG_IWLWIFI_DEBUGFS */
++
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ #define IWL_DEBUG_QUIET_RFKILL(m, fmt, args...)	\
+ do {									\
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 8bae7cc..d3e1783 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -32,8 +32,6 @@
+ #include "iwl-shared.h"
+ #include "iwl-devtrace.h"
+ 
+-struct iwl_priv;
+-
+ void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+ 		const char *fmt, ...);
+ void __iwl_warn(struct device *dev, const char *fmt, ...);
+@@ -80,19 +78,6 @@ do {                                            			\
+ #define iwl_print_hex_dump(m, level, p, len)
+ #endif				/* CONFIG_IWLWIFI_DEBUG */
+ 
+-#ifdef CONFIG_IWLWIFI_DEBUGFS
+-int iwl_dbgfs_register(struct iwl_priv *priv, const char *name);
+-void iwl_dbgfs_unregister(struct iwl_priv *priv);
+-#else
+-static inline int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+-{
+-	return 0;
+-}
+-static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+-{
+-}
+-#endif				/* CONFIG_IWLWIFI_DEBUGFS */
+-
+ /*
+  * To use the debug system:
+  *
+-- 
+1.7.0.4
+
