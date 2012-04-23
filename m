@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:58707 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750931Ab2DXMH7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 08:07:59 -0400
-Received: by qatm19 with SMTP id m19so2742943qat.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 05:07:58 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54504 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752967Ab2DWWTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 18:19:38 -0400
+Message-ID: <4F95D573.4080901@hauke-m.de> (sfid-20120424_001941_541296_7FFAB565)
+Date: Tue, 24 Apr 2012 00:19:31 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <4F96939B.5030204@erley.org>
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
-	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
-	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
-	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
-	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
-	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
-	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
-	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
-	<4F901224.1040508@sipsolutions.net>
-	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
-	<4F901F16.6080007@sipsolutions.net>
-	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
-	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
-	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
-	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
-	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
-	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
-	<4F96939B.5030204@erley.org>
-Date: Tue, 24 Apr 2012 14:07:58 +0200
-Message-ID: <CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com> (sfid-20120424_140803_155587_C5CE1A5F)
-Subject: Re: wlan0 not present
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Pat Erley <pat-lkml@erley.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Dominik Feser <dominik.feser@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] compat: add module_pci_driver
+References: <1335131965-20280-1-git-send-email-hauke@hauke-m.de> <CAB=NE6UbQgYY+KcUt1rD14vyfwJkX9mdbQVKzMPwtgHOC+LEQg@mail.gmail.com>
+In-Reply-To: <CAB=NE6UbQgYY+KcUt1rD14vyfwJkX9mdbQVKzMPwtgHOC+LEQg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 24, 2012 at 1:50 PM, Pat Erley <pat-lkml@erley.org> wrote:
-> Try a newer compat-wireless.  I saw mention of a patch on this ML
-> that iwlwifi was looking for firmwares that aren't available yet.
->
-> Specifically, it wants a -6 ucode, where you have -5.  I'm not
-> sure if this has been merged upstream yet.
->
+On 04/23/2012 11:09 PM, Luis R. Rodriguez wrote:
+> On Sun, Apr 22, 2012 at 2:59 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> module_pci_driver is needed to register the pci driver to the pci sub system.
+> 
+> Thanks ! I see no Signed-off-by tag on these though, I use the SOB tag
+> just as the kernel and other projects us it, the meaning of it is the
+> same, under the "Developer's Certificate of Origin 1.1":
+> 
+> http://gerrit.googlecode.com/svn/documentation/2.0/user-signedoffby.html
+> 
+> Do you SOB these patches?
+> 
+>   Luis
+Hi Luis,
 
-No, pending for upstream and linux-stable GIT, see [1] and especially
-"iwlwifi: use correct released ucode version" [2].
+I SOB these patches and the patches for compat-wireless I send also on
+that day. I forgot to add the option to generate a SOB line in git
+format-patch this time. Should I resend them with a SOB line or do you
+take this late SOB in this mail?
 
-- Sedat -
-
-[1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=shortlog;h=refs/heads/wireless
-[2] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=patch;h=462156fac4d69483c1d54c6218d019681da8ad74
+Hauke
