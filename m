@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from storm.alittletooquiet.net ([67.23.28.199]:41345 "EHLO
-	storm.alittletooquiet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753596Ab2DBR5q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 13:57:46 -0400
-Date: Mon, 2 Apr 2012 13:57:45 -0400
-From: Forest Bond <forest@alittletooquiet.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mga11.intel.com ([192.55.52.93]:32825 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755829Ab2DWVw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:57 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Subject: Re: [PATCH 1/2] rtl8192de: Clean up and fix 92D cut version
- constants and macros.
-Message-ID: <20120402175745.GE20611@alittletooquiet.net> (sfid-20120402_195750_381877_D1D172F9)
-References: <20120402142525.GA20611@alittletooquiet.net>
- <4F79E7B9.7060504@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="eRtJSFbw+EEWtPj3"
-In-Reply-To: <4F79E7B9.7060504@lwfinger.net>
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 18/29] iwlwifi: remove duplicate iwlagn_mod_params declaration
+Date: Mon, 23 Apr 2012 14:47:29 -0700
+Message-Id: <1335217660-21950-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235325_500072_F2670847)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---eRtJSFbw+EEWtPj3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+We only need one declaration, not multiple.
+Keep the one in iwl-shared.h, which will
+probably be renamed to iwl-modparams.h at
+some point in the future.
 
-Hi Larry,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-On Mon, Apr 02, 2012 at 12:54:01PM -0500, Larry Finger wrote:
-> On 04/02/2012 09:25 AM, Forest Bond wrote:
-> >From: Forest Bond<forest.bond@rapidrollout.com>
-> >
-> >The previous definitions included both {B,C,D,E}_CUT_VERSION and
-> >CHIP_92D_{C,D}_CUT with conflicting values for the C and D cut versions,
-> >and literal hex values were used in the IS_92D_{C,D,E}_CUT macros.  So
-> >we clean all this up and in doing so enable cut-specific code paths for
-> >cuts C and D, which would not have been executed because the
-> >CHIP_92D_{C,D}_CUT constants were wrong and the cut version was thus
-> >recorded incorrectly.
-> >
-> >Signed-off-by: Forest Bond<forest.bond@rapidrollout.com>
->=20
-> This patch does not apply to the wireless-testing tree. That is the
-> one you are supposed to use.
->=20
-> Patch #2 also fails to apply. In addition, your mailer mangled a line.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 67e3b40..6853fc7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1019,7 +1019,6 @@ struct iwl_priv {
+ }; /*iwl_priv */
+ 
+ extern struct kmem_cache *iwl_tx_cmd_pool;
+-extern struct iwl_mod_params iwlagn_mod_params;
+ 
+ static inline struct iwl_rxon_context *
+ iwl_rxon_ctx_from_vif(struct ieee80211_vif *vif)
+-- 
+1.7.0.4
 
-Sorry for the trouble.  I'll resend a little later this afternoon.
-
-Thanks,
-Forest
---=20
-Forest Bond
-http://www.alittletooquiet.net
-http://www.rapidrollout.com
-
---eRtJSFbw+EEWtPj3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk956JkACgkQRO4fQQdv5Ax73QCePaoFzvXsL+NWvrySivLkSJcB
-7YwAoL7RAaObpYya1x1F7+DRm+BWgQ6j
-=nBIX
------END PGP SIGNATURE-----
-
---eRtJSFbw+EEWtPj3--
