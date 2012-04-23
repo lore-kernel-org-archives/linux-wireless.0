@@ -1,118 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:46472 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692Ab2DPVuF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:50:05 -0400
-MIME-Version: 1.0
-In-Reply-To: <20120416212718.GA22824@kroah.com>
-References: <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-	<20120413190819.9469.qmail@stuge.se>
-	<CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
-	<20120416162710.GA24100@kroah.com>
-	<CAMP44s1o9kBp8672oBnvna+qH4WpqSqGUsyNpc_C74cfNYcX_g@mail.gmail.com>
-	<20120416205856.GA22298@kroah.com>
-	<CAMP44s2OdH+1RG2O6+QXkik8Ww_ZSHN=yzEKwD1KvRAcceNSRA@mail.gmail.com>
-	<20120416212718.GA22824@kroah.com>
-Date: Tue, 17 Apr 2012 00:50:03 +0300
-Message-ID: <CAMP44s3fMyBM_N0kP7xZbY-assePMrnWouPy-kw-WyHnKmeLWA@mail.gmail.com> (sfid-20120416_235011_320723_1D7B5150)
-Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:47893 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755583Ab2DWVwy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 17:52:54 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/29] iwlwifi: provide proper API to disable all interrupts
+Date: Mon, 23 Apr 2012 14:47:16 -0700
+Message-Id: <1335217660-21950-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120423_235302_137144_B576EE63)
+In-Reply-To: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335217660-21950-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 17, 2012 at 12:27 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Tue, Apr 17, 2012 at 12:18:13AM +0300, Felipe Contreras wrote:
->> On Mon, Apr 16, 2012 at 11:58 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
->> > On Mon, Apr 16, 2012 at 11:11:05PM +0300, Felipe Contreras wrote:
->> >> On Mon, Apr 16, 2012 at 7:27 PM, Greg KH <gregkh@linuxfoundation.org> wrote:
->> >> > Just one minor correction in this looney email thread:
->> >> >
->> >> > On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
->> >> >> v3.3.x on the other hand are *not* stable. They contain patches
->> >> >> backported from v3.4, but nobody guarantees they will work. There was
->> >> >> no v3.3.1-rc1, so the first time the patches compromising v3.3.1 were
->> >> >> generally tested together is in v3.3.1, at which point if somebody
->> >> >> finds issues, it's too late; bad patches are *not* going to be removed
->> >> >> in v3.3.2.
->> >> >
->> >> > Of course there was a 3.3.1-rc1, see the linux-kernel archives for the
->> >> > announcemen and the individual patches.  kernel.org has the large patch
->> >> > itself if you like that format instead.
->> >>
->> >> I don't see it here:
->> >> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=tags
->> >>
->> >> If you really want people to try it, why not tag it?
->> >
->> > That would be because I don't keep it in that tree.  It is in a quilt
->> > tree you can find in the stable-queue.git repo, and I have never tagged
->> > -rc1 releases there.  No one has ever asked for it before, so in the
->> > past 6 years of stable releases, I guess no one ever needed it.
->> >
->> > ketchup and tarballs seem to work well for others, perhaps you can use
->> > that as well (hint, ketchup on top of the linux-stable tree works just
->> > fine for testing this.)
->>
->> Perhaps the current process will be continue to be OK, but I do
->> believe a tagged v3.3.1-rc1 would have catched the ath9k issue.
->
-> How exactly would that have helped here?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-More people would have given it a try. Not that many people read the
-mailing list, and the ones that do certainly might want to avoid
-applying a big series of patches; even if their mail client makes it
-easy (mine (Gmail) doesn't). A tag, and an announcement to give a try
-would make it *much* easier.
+Since the op_mode may go away, the transport needs to be able to
+be told not to update the op_mode at all (even for RF kill).
+Provide this API and use it in the proper places.
 
-> You point out:
->
->> I used to compile my own kernels and use your stable tree, but this a
->> new laptop and I was using Arch Linux which automatically updated to
->> v3.3.1, and with no network I had no way to revert to v3.2.x.
->> Fortunately I had the kernel sources available, but I wonder how many
->> people were completely stuck.
->
-> Arch wouldn't have included a -rc in their kernel (unless they are
-> crazy), so this would not have helped your situation at all.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c        |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c   |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   37 +++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-trans.h      |   10 ++++---
+ 4 files changed, 35 insertions(+), 17 deletions(-)
 
-There's *a lot* of people that got affected by the 3.3.1 release; we
-don't need to break a lot of boxes to figure out there's an issue,
-only a few would suffice, even one.
-
->> If some other 3.x.1 release get broken this way, I would seriously
->> consider tagging v3.x.1-rc1 as well. It works for Linus' tree.
->
-> "this way" was for a very tiny subset of hardware, so odds are, if this
-> happens again, it wouldn't be caught this way either.  That subset just
-> happened to show up in your machine, but, for example, not in the wide
-> range of hardware I test with here, nor the machines that others test
-> with.
-
-It was certainly not just me. I have seen a lot of people mentioning
-"their wifi is broken", a lot of them using Arch Linux,
-coincidentally.
-
-These issues would most likely not be caught before v3.x.1, and which
-point it's too late, they cannot be reverted to v3.x.2 just like that;
-they have to wait for upstream. Hopefully and probably everything
-would go smooth like this time, but maybe not, we'll have to wait and
-see. With more people using Arch Linux and thus the latest "stable"
-release, I'd say we might see an increase in these kinds of issues.
-
-Cheers.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 07df432..3024d8c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1633,7 +1633,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 		goto out_free_traffic_mem;
+ 	}
+ 	/* Reset chip to save power until we load uCode during "up". */
+-	iwl_trans_stop_hw(priv->trans);
++	iwl_trans_stop_hw(priv->trans, false);
+ 
+ 	if (iwl_eeprom_check_version(priv))
+ 		goto out_free_eeprom;
+@@ -1786,6 +1786,7 @@ void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
+ 
+ 	dev_kfree_skb(priv->beacon_skb);
+ 
++	iwl_trans_stop_hw(priv->trans, true);
+ 	ieee80211_free_hw(priv->hw);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 2d7453d..b309ede 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -355,7 +355,7 @@ void iwlagn_mac_stop(struct ieee80211_hw *hw)
+ 	 * even if interface is down, trans->down will leave the RF
+ 	 * kill interrupt enabled
+ 	 */
+-	iwl_trans_stop_hw(priv->trans);
++	iwl_trans_stop_hw(priv->trans, false);
+ 
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 8e1cf97..2a9fb98 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1210,6 +1210,8 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 	iwl_disable_interrupts(trans);
+ 	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 
++	iwl_enable_rfkill_int(trans);
++
+ 	/* wait to make sure we flush pending tasklet*/
+ 	synchronize_irq(trans_pcie->irq);
+ 	tasklet_kill(&trans_pcie->irq_tasklet);
+@@ -1436,24 +1438,37 @@ error:
+ 	return err;
+ }
+ 
+-static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
++static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans,
++				   bool op_mode_leaving)
+ {
+ 	bool hw_rfkill;
++	unsigned long flags;
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+ 	iwl_apm_stop(trans);
+ 
+-	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
++	spin_lock_irqsave(&trans_pcie->irq_lock, flags);
++	iwl_disable_interrupts(trans);
++	spin_unlock_irqrestore(&trans_pcie->irq_lock, flags);
+ 
+-	/* Even if we stop the HW, we still want the RF kill interrupt */
+-	iwl_enable_rfkill_int(trans);
++	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
+ 
+-	/*
+-	 * Check again since the RF kill state may have changed while all the
+-	 * interrupts were disabled, in this case we couldn't receive the
+-	 * RF kill interrupt and update the state in the op_mode.
+-	 */
+-	hw_rfkill = iwl_is_rfkill_set(trans);
+-	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
++	if (!op_mode_leaving) {
++		/*
++		 * Even if we stop the HW, we still want the RF kill
++		 * interrupt
++		 */
++		iwl_enable_rfkill_int(trans);
++
++		/*
++		 * Check again since the RF kill state may have changed while
++		 * all the interrupts were disabled, in this case we couldn't
++		 * receive the RF kill interrupt and update the state in the
++		 * op_mode.
++		 */
++		hw_rfkill = iwl_is_rfkill_set(trans);
++		iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
++	}
+ }
+ 
+ static void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 885c036..d7c3032 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -335,7 +335,8 @@ struct iwl_trans;
+  * @start_hw: starts the HW- from that point on, the HW can send interrupts
+  *	May sleep
+  * @stop_hw: stops the HW- from that point on, the HW will be in low power but
+- *	will still issue interrupt if the HW RF kill is triggered.
++ *	will still issue interrupt if the HW RF kill is triggered unless
++ *	op_mode_leaving is true.
+  *	May sleep
+  * @start_fw: allocates and inits all the resources for the transport
+  *	layer. Also kick a fw image.
+@@ -379,7 +380,7 @@ struct iwl_trans;
+ struct iwl_trans_ops {
+ 
+ 	int (*start_hw)(struct iwl_trans *iwl_trans);
+-	void (*stop_hw)(struct iwl_trans *iwl_trans);
++	void (*stop_hw)(struct iwl_trans *iwl_trans, bool op_mode_leaving);
+ 	int (*start_fw)(struct iwl_trans *trans, const struct fw_img *fw);
+ 	void (*fw_alive)(struct iwl_trans *trans);
+ 	void (*stop_device)(struct iwl_trans *trans);
+@@ -478,11 +479,12 @@ static inline int iwl_trans_start_hw(struct iwl_trans *trans)
+ 	return trans->ops->start_hw(trans);
+ }
+ 
+-static inline void iwl_trans_stop_hw(struct iwl_trans *trans)
++static inline void iwl_trans_stop_hw(struct iwl_trans *trans,
++				     bool op_mode_leaving)
+ {
+ 	might_sleep();
+ 
+-	trans->ops->stop_hw(trans);
++	trans->ops->stop_hw(trans, op_mode_leaving);
+ 
+ 	trans->state = IWL_TRANS_NO_FW;
+ }
 -- 
-Felipe Contreras
+1.7.0.4
+
