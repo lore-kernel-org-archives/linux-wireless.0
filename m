@@ -1,52 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:63873 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754028Ab2DMBck convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50303 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753748Ab2DWGr5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 21:32:40 -0400
-From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-To: Norbert Preining <preining@logic.at>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: RE: 3.4-rc2, ilwagn still most of the time completely unusable
-Date: Fri, 13 Apr 2012 01:32:38 +0000
-Message-ID: <4595B4D22AB93C4FABBA84AAD5AA37FD120BF8@ORSMSX103.amr.corp.intel.com> (sfid-20120413_033257_196714_1299DAD9)
-References: <20120330011734.GH6277@gamma.logic.tuwien.ac.at>
- <20120411023747.GA10126@gamma.logic.tuwien.ac.at>
- <4595B4D22AB93C4FABBA84AAD5AA37FD11DE3C@ORSMSX103.amr.corp.intel.com>
- <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
-In-Reply-To: <20120412000202.GA15286@gamma.logic.tuwien.ac.at>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 23 Apr 2012 02:47:57 -0400
+Message-ID: <1335163675.3928.1.camel@jlt3.sipsolutions.net> (sfid-20120423_084800_522009_51247678)
+Subject: Re: carl9170 - monitor mode TP drop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 23 Apr 2012 08:47:55 +0200
+In-Reply-To: <CAFED-jkFtT2agUpymwWN-srTVH+wkh7bbkgkxQg9e4vy+q-Xvw@mail.gmail.com> (sfid-20120423_062709_111941_72F1C6FE)
+References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com>
+	 <201204201959.56495.chunkeey@googlemail.com>
+	 <CAFED-jkFtT2agUpymwWN-srTVH+wkh7bbkgkxQg9e4vy+q-Xvw@mail.gmail.com>
+	 (sfid-20120423_062709_111941_72F1C6FE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Norbert,
+On Mon, 2012-04-23 at 06:27 +0200, Janusz Dziedzic wrote:
 
->> >	delba from 00:0a:79:eb:56:10 (initiator) tid 0 reason code 39
->> >	Rx BA session stop requested for ...
->> >*IF* it is connected.
->>
->> [MV]  This is actually printed by mac80211 when it stops a block ack session;
->which can happen with bursty traffic. It's not an error per se. You'll see this
->message if you have debugging enabled for mac80211, specifically
->CONFIG_MAC80211_HT_DEBUG. Perhaps you could reduce the debugging
->information you print out for mac80211?
->
->Probably I was asked to activate that at some point ;-) Will disactivate it.
->Thanks.
+> This is a scenario:
+> AP <--> STA1 (channel 6)
+> STA2 == carl_monitor (channel 6)
+> 
+> This is what I can see on STA1:
+> # iperf -c 192.168.254.1 -t 100 -i 5
+> ------------------------------------------------------------
+> Client connecting to 192.168.254.1, TCP port 5001
+> TCP window size:  512 KByte (default)
+> ------------------------------------------------------------
+> [  3] local 192.168.254.181 port 46048 connected with 192.168.254.1 port 5001
+> [ ID] Interval       Transfer     Bandwidth
+> [  3]  0.0- 5.0 sec  17.4 MBytes  29.2 Mbits/sec
+> [  3]  5.0-10.0 sec  19.6 MBytes  32.9 Mbits/sec
+> [  3] 10.0-15.0 sec  20.4 MBytes  34.2 Mbits/sec
+> [  3] 15.0-20.0 sec  19.8 MBytes  33.1 Mbits/sec
+> [  3] 20.0-25.0 sec  19.8 MBytes  33.1 Mbits/sec
+> [  3] 25.0-30.0 sec  19.8 MBytes  33.1 Mbits/sec
+> [  3] 30.0-35.0 sec  19.6 MBytes  32.9 Mbits/sec
+> [  3] 35.0-40.0 sec  18.1 MBytes  30.4 Mbits/sec
+> 
+> =====> here I setup carl monitor on second PC, like this:
+> =====> iw dev wlan0 set type monitor
+> =====> iw dev wlan0 set freq 2437
+> =====> ifconfig wlan0 up
+> 
+> [  3] 40.0-45.0 sec  2.38 MBytes  3.98 Mbits/sec
+> [  3] 45.0-50.0 sec  2.50 MBytes  4.19 Mbits/sec
+> [  3] 50.0-55.0 sec  3.00 MBytes  5.03 Mbits/sec
+> 
+> Seems I don't even need to start wireshark here ... and see this TP drop.
 
-[MV] Well...actually don't turn off this debugging yet. Johannes tells me that these messages could still be due to an issue with the driver. I was looking at the standards, and  Reason code 39 means that the peer (the AP) is requesting this due to a timeout. I  don't see that in the log you sent me, so not sure what timed out. However, I do see Rx BA session stop requests from the AP with reason code 32, which is based on the standard means "disassociated for unspecified QoS related reason".
+FWIW, I have observed this as well (in the past, my ar9170 devices all
+died now)
 
-In your logs I also see missed beacon notifications from the firmware ~every 500 milliseconds. My thought is that it is probably due to turning on power save. I'm not sure if it is affecting the performance of your system overall. Are you using the power save option? And if so, what is the behaviour when power save is turned off?
+johannes
 
-I don't see the invalid station activation error in the log you sent me, so I'm guessing it appears only on the other network. Do send us logs for that. 
-
-If you're up for it, I'd ask you to do one thing  (or three) -- open 3 separate bugs for the issues you're seeing at: bugzilla.intellinuxwireless.org so we can keep track of them separately. The issue of trying to activate an invalid station ID is definitely a new one, and likely due to a different cause than that related to aggregation or the troubles you're having even with 11n disabled. I could do this too, and add you to the CC list. I might need logs for these bugs, but not yet.
-
-Thanks,
-Meenakshi
