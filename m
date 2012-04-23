@@ -1,76 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44969 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755162Ab2D2Avn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 20:51:43 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 09/19] brcmsmac: remove ai_chipcontrl_epa4331
-Date: Sun, 29 Apr 2012 02:50:33 +0200
-Message-Id: <1335660643-26368-10-git-send-email-hauke@hauke-m.de> (sfid-20120429_025148_149465_07001EE6)
-In-Reply-To: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
+Received: from nbd.name ([46.4.11.11]:50634 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752619Ab2DWRtP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 13:49:15 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH v4 2/2] mac80211: fix num_mcast_sta counting issues
+Date: Mon, 23 Apr 2012 19:49:03 +0200
+Message-Id: <1335203343-61999-2-git-send-email-nbd@openwrt.org> (sfid-20120423_194918_420690_CD73B897)
+In-Reply-To: <1335203343-61999-1-git-send-email-nbd@openwrt.org>
+References: <1335203343-61999-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ai_chipcontrl_epa4331 is not referenced by any method in brcmsmac and
-the functionality is already in bcma_chipco_bcm4331_ext_pa_lines_ctl in
-drivers/bcma/driver_chipcommon_pmu.c
+Moving a STA to an AP VLAN prevents num_mcast_sta from being decremented
+once the STA leaves, because sta->sdata changes. Fix this by checking
+for AP VLANs as well.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Also exclude 4-addr VLAN stations from num_mcast_sta - remote 4-addr
+stations ignore 3-address multicast frames anyway. In a typical bridge
+configuration they receive the same packets as 4-address unicast.
+
+This patch also fixes clearing the sdata->u.vlan.sta pointer when the
+STA is removed from a 4-addr VLAN.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   24 ---------------------
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    1 -
- 2 files changed, 25 deletions(-)
+ net/mac80211/cfg.c      |   19 +++++++++++++++++++
+ net/mac80211/sta_info.c |   12 ++++++++----
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index 585a516..ade9d1b 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -865,30 +865,6 @@ u32 ai_gpiocontrol(struct si_pub *sih, u32 mask, u32 val, u8 priority)
- 	return ai_cc_reg(sih, regoff, mask, val);
- }
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 510a745..70b2af2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1005,6 +1005,9 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	}
  
--void ai_chipcontrl_epa4331(struct si_pub *sih, bool on)
--{
--	struct bcma_device *cc;
--	u32 val;
--
--	cc = ai_findcore(sih, CC_CORE_ID, 0);
--
--	if (on) {
--		if (ai_get_chippkg(sih) == 9 || ai_get_chippkg(sih) == 0xb)
--			/* Ext PA Controls for 4331 12x9 Package */
--			bcma_set32(cc, CHIPCREGOFFS(chipcontrol),
--				   CCTRL4331_EXTPA_EN |
--				   CCTRL4331_EXTPA_ON_GPIO2_5);
--		else
--			/* Ext PA Controls for 4331 12x12 Package */
--			bcma_set32(cc, CHIPCREGOFFS(chipcontrol),
--				   CCTRL4331_EXTPA_EN);
--	} else {
--		val &= ~(CCTRL4331_EXTPA_EN | CCTRL4331_EXTPA_ON_GPIO2_5);
--		bcma_mask32(cc, CHIPCREGOFFS(chipcontrol),
--			    ~(CCTRL4331_EXTPA_EN | CCTRL4331_EXTPA_ON_GPIO2_5));
--	}
--}
--
- /* Enable BT-COEX & Ex-PA for 4313 */
- void ai_epa_4313war(struct si_pub *sih)
- {
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index 3994257..7c6108a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -207,7 +207,6 @@ extern void ai_pci_down(struct si_pub *sih);
- extern void ai_pci_up(struct si_pub *sih);
- extern int ai_pci_fixcfg(struct si_pub *sih);
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
++		bool prev_4addr = false;
++		bool new_4addr = false;
++
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
  
--extern void ai_chipcontrl_epa4331(struct si_pub *sih, bool on);
- /* Enable Ex-PA for 4313 */
- extern void ai_epa_4313war(struct si_pub *sih);
+ 		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+@@ -1020,9 +1023,25 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 			}
  
+ 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
++			new_4addr = true;
++		}
++
++		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++		    sta->sdata->u.vlan.sta) {
++			rcu_assign_pointer(sta->sdata->u.vlan.sta, NULL);
++			prev_4addr = true;
+ 		}
+ 
+ 		sta->sdata = vlansdata;
++
++		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
++		    prev_4addr != new_4addr) {
++			if (new_4addr)
++				atomic_dec(&sta->sdata->bss->num_mcast_sta);
++			else
++				atomic_inc(&sta->sdata->bss->num_mcast_sta);
++		}
++
+ 		ieee80211_send_layer2_update(sta);
+ 	}
+ 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 4c04eb5..97a9d66 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1417,15 +1417,19 @@ int sta_info_move_state(struct sta_info *sta,
+ 		if (sta->sta_state == IEEE80211_STA_AUTH) {
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+ 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+-			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+-				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
++			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++			     !sta->sdata->u.vlan.sta))
++				atomic_dec(&sta->sdata->bss->num_mcast_sta);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+ 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
+-			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+-				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
++			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++			     !sta->sdata->u.vlan.sta))
++				atomic_inc(&sta->sdata->bss->num_mcast_sta);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 		}
+ 		break;
 -- 
-1.7.9.5
+1.7.3.2
 
