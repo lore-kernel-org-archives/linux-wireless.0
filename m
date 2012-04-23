@@ -1,132 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39343 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754670Ab2DZSIf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 14:08:35 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [RFC c 5/9] compat: move compat_pci_{suspend,resume}
-Date: Thu, 26 Apr 2012 20:07:50 +0200
-Message-Id: <1335463674-13003-10-git-send-email-hauke@hauke-m.de> (sfid-20120426_200839_201596_3619A5F9)
-In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
-References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46567 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753780Ab2DWHAM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Apr 2012 03:00:12 -0400
+Received: by pbcun15 with SMTP id un15so3525648pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2012 00:00:11 -0700 (PDT)
+MIME-Version: 1.0
+Date: Mon, 23 Apr 2012 03:00:11 -0400
+Message-ID: <CA+7oygft-wqhnkk5wwondb57WuN2hLkVDKMXwKoaK+p9sZwAcw@mail.gmail.com> (sfid-20120423_090016_855159_2D34EC47)
+Subject: how to configure compat-wireless to force manual firmware load?
+From: George Nychis <gnychis@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I was using an older version of compat-wireless, specifically a build
+from May 2011.  In that release of compat-wireless, the firmware was
+loaded manually using a filesystem mounted in /sys.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.29.h |   33 -----------------------------
- include/linux/pci.h           |   47 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 47 insertions(+), 33 deletions(-)
- create mode 100644 include/linux/pci.h
+I recently downloaded a newer version of compat-wireless:
+compat-wireless-3.0.9-1.  In this version, it appears to spawn a
+kernel thread to check /lib/firmware for the firmware and load it.  If
+it is present, it loads the firmware, otherwise it fails saying that
+it cannot be found.
 
-diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
-index c830c7a..c70af3a 100644
---- a/include/linux/compat-2.6.29.h
-+++ b/include/linux/compat-2.6.29.h
-@@ -141,36 +141,6 @@ static inline struct net *read_pnet(struct net * const *pnet)
- 
- extern int		init_dummy_netdev(struct net_device *dev);
- 
--#define compat_pci_suspend(fn)						\
--	int fn##_compat(struct pci_dev *pdev, pm_message_t state) 	\
--	{								\
--		int r;							\
--									\
--		r = fn(&pdev->dev);					\
--		if (r)							\
--			return r;					\
--									\
--		pci_save_state(pdev);					\
--		pci_disable_device(pdev);				\
--		pci_set_power_state(pdev, PCI_D3hot);			\
--									\
--		return 0;						\
--	}
--
--#define compat_pci_resume(fn)						\
--	int fn##_compat(struct pci_dev *pdev)				\
--	{								\
--		int r;							\
--									\
--		pci_set_power_state(pdev, PCI_D0);			\
--		r = pci_enable_device(pdev);				\
--		if (r)							\
--			return r;					\
--		pci_restore_state(pdev);				\
--									\
--		return fn(&pdev->dev);					\
--	}
--
- #else /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
- 
- /* Kernels >= 2.6.29 follows */
-@@ -185,9 +155,6 @@ static inline int ndo_do_ioctl(struct net_device *dev,
- 	return -EOPNOTSUPP;
- }
- 
--#define compat_pci_suspend(fn)
--#define compat_pci_resume(fn)
--
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
- 
- #endif /*  LINUX_26_29_COMPAT_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-new file mode 100644
-index 0000000..fe1a761
---- /dev/null
-+++ b/include/linux/pci.h
-@@ -0,0 +1,47 @@
-+#ifndef _COMPAT_LINUX_PCI_H
-+#define _COMPAT_LINUX_PCI_H
-+
-+#include_next <linux/pci.h>
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
-+
-+#define compat_pci_suspend(fn)						\
-+	int fn##_compat(struct pci_dev *pdev, pm_message_t state) 	\
-+	{								\
-+		int r;							\
-+									\
-+		r = fn(&pdev->dev);					\
-+		if (r)							\
-+			return r;					\
-+									\
-+		pci_save_state(pdev);					\
-+		pci_disable_device(pdev);				\
-+		pci_set_power_state(pdev, PCI_D3hot);			\
-+									\
-+		return 0;						\
-+	}
-+
-+#define compat_pci_resume(fn)						\
-+	int fn##_compat(struct pci_dev *pdev)				\
-+	{								\
-+		int r;							\
-+									\
-+		pci_set_power_state(pdev, PCI_D0);			\
-+		r = pci_enable_device(pdev);				\
-+		if (r)							\
-+			return r;					\
-+		pci_restore_state(pdev);				\
-+									\
-+		return fn(&pdev->dev);					\
-+	}
-+
-+#else /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
-+
-+#define compat_pci_suspend(fn)
-+#define compat_pci_resume(fn)
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
-+
-+#endif	/* _COMPAT_LINUX_PCI_H */
--- 
-1.7.9.5
+I am having trouble with the automatic load:
+<3>[  178.957584] otg_err: in s5pc110_otghcd_urb_dequeue()::00508
+<3>[  178.958650] => fail to cancel_transfer()
+<7>[  178.959879] usb 1-1.2: hcd_unlink_urb d13aa200 fail -1
+<7>[  178.962510] usb 1-1.2: khubd timed out on ep0out len=0/4096
+<3>[  178.963274] usb 1-1.2: ath9k_htc: Firmware - htc_7010.fw download failed
+<4>[  178.971658] ath9k_htc: probe of 1-1.2:1.0 failed with error -22
 
+Is there a way to configure (e.g., config.mk) compat-wireless to use
+the manual way?  So I'd like to give the manual route a shot.
+
+Thanks!
+George
