@@ -1,74 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:46768 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932603Ab2DMI6k (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:46119 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754777Ab2DXPLV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 04:58:40 -0400
-Date: Fri, 13 Apr 2012 10:57:46 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120413105746.10ffb120@stein> (sfid-20120413_105857_067467_41878F8B)
-In-Reply-To: <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 24 Apr 2012 11:11:21 -0400
+Received: by obbta14 with SMTP id ta14so1270188obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 08:11:20 -0700 (PDT)
+Message-ID: <4F96C292.8080902@lwfinger.net> (sfid-20120424_171124_849833_5C44A43E)
+Date: Tue, 24 Apr 2012 10:11:14 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: jorge potosme <jorge_potosme@hotmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Low wireless ratio with RTL8188CE, dont get all wireless AP
+References: <BLU0-SMTP2056B92726653D8AAE3E9EF9A210@phx.gbl> <4F95E825.5060902@lwfinger.net> <BLU0-SMTP371AD602F7E93D9310AF9AF9A260@phx.gbl>
+In-Reply-To: <BLU0-SMTP371AD602F7E93D9310AF9AF9A260@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Apr 12 Felipe Contreras wrote:
-> But this is exactly the opposite; the patch that broke things is in
-> the 'release branch' (3.3.1); it's not in upstream (3.3). Sure, it's
-> also on a later upstream, which is also broken.
-            ^^^^^
-No, upstream /earlier/ than 3.3.1 contains the defect.
+On 04/24/2012 07:26 AM, jorge potosme wrote:
+> The drirver can connect without problems, but i cant get a full list of all
+> access points, i dunno so much about coding drivers but i saw some diferences
+> with the source code of some driver files on linux-3.1.10 and linux-3.3.2, well
+> now ill try with kernel 3.3.3.
+>
+> *kernel 3.1.10*
+> */drivers/net/wireless/rtlwifi/rtl8192ce/hw.c*
+> lines 924,926 and 927 kernel 3.3.2 dont have that lines
+> lines 1202,1213 are diferent on kernel 3.3.2
+>
+> *kernel 3.1.10*
+> */drivers/net/wireless/rtlwifi/rtl8192ce/sw.c*
+>
+> /* request fw */
+> err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
+> rtlpriv->io.dev);
+>
+> *on kernel 3.3.2*
+>
+> /* request fw */
+> if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
+> !IS_92C_SERIAL(rtlhal->version))
+> rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU.bin";
+> else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
+> rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU_B.bin";
+>
+> rtlpriv->max_fw_size = 0x4000;
+> pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+> err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
+> rtlpriv->io.dev, GFP_KERNEL, hw,
+> rtl_fw_cb);
 
-v3.4-rc1 is older than v3.3.1.
+Two points to consider: (1) Unless you are paying for private consulting, never 
+drop any mailing lists from your replies. Use "Reply All", not "Reply". (2) 
+Always use the diff utility with the "-u" option to show differences in source 
+files.
 
-3.3 is not 3.3.y's upstream.  3.3 is the branch point from where 3.3.y
-began.
+Larry
 
-torvalds/linux.git #HEAD is 3.3.y's upstream.
-A git snapshot shortly before v3.4-rc1 was v3.3.1's upstream.
 
-Furthermore, consider this:  You as user of the 3.3.y series are using a
-temporary, dead-end side branch.  Its maintenance will stop at some point,
-and you will be left looking for a different, maintained series to migrate
-to.  You will be most interested in that series /not/ containing any
-regressions that you suffered already through the 3.3.y lifetime.
 
-That other 3.3+n.y kernel to which you will be wanting to migrate to
-should obviously be based on a branch point which does not lack any of the
-fixes which your last 3.3.y already had.
-
-I.e. you require that stable kernels are branched off of good branch
-points.  Mainline releases, i.e. releases of branch points, happen on a
-time-based scheme (as opposed to a feature-based scheme).  So a rule whose
-purpose is to ensure that future stable branch points contain all fixes
-that earlier stable branches had already must necessarily be a time-based
-rule.  This time-based rule is "fix mainline before stable".
-
-The rule is there to protect you, as a user of the stable series, from
-repeated regressions.
--- 
-Stefan Richter
--=====-===-- -=-- -==-=
-http://arcgraph.de/sr/
