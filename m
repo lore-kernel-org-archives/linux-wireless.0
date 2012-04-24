@@ -1,57 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:40958 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762823Ab2DLVck (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:32:40 -0400
-Received: by pbcun15 with SMTP id un15so2840406pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 14:32:40 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Marco Porsch <marco.porsch@s2005.tu-chemnitz.de>,
-	Pavel Zubarev <pavel.zubarev@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org, ashok@cozybit.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] mac80211: Set the correct values for hwmp (1) and airtimeLinkMetric (1)
-Date: Thu, 12 Apr 2012 14:32:20 -0700
-Message-Id: <1334266343-3970-2-git-send-email-javier@cozybit.com> (sfid-20120412_233243_333738_87D8AC7B)
-In-Reply-To: <1334266343-3970-1-git-send-email-javier@cozybit.com>
-References: <1334266343-3970-1-git-send-email-javier@cozybit.com>
+Received: from mga11.intel.com ([192.55.52.93]:39524 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758488Ab2DXXv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 19:51:27 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/11] iwlwifi: add checking for the condition to reduce tx power
+Date: Tue, 24 Apr 2012 16:45:56 -0700
+Message-Id: <1335311164-10252-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015155_748139_21EDE376)
+In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Per sections 8.4.2.100.2 and 8.4.2.100.3 of Std 802.11-2012
+When bluetooth coex is active and certain condition matched,
+driver need to decide should the tx power been reduce or not.
+Adding the logic to manage it.
 
-Reported-by: Shinichi Hotori <hotorinn@gmail.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- include/linux/ieee80211.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   42 +++++++++++++++++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |    1 +
+ 2 files changed, 39 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index db84e2f..ce9af89 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1458,7 +1458,7 @@ enum {
-  * be specified in a vendor specific information element
-  */
- enum {
--	IEEE80211_PATH_PROTOCOL_HWMP = 0,
-+	IEEE80211_PATH_PROTOCOL_HWMP = 1,
- 	IEEE80211_PATH_PROTOCOL_VENDOR = 255,
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 0642186..994a7da 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -541,9 +541,10 @@ static void iwlagn_print_uartmsg(struct iwl_priv *priv,
+ 			BT_UART_MSG_FRAME7CONNECTABLE_POS);
+ }
  
-@@ -1470,7 +1470,7 @@ enum {
-  * specified in a vendor specific information element
-  */
- enum {
--	IEEE80211_PATH_METRIC_AIRTIME = 0,
-+	IEEE80211_PATH_METRIC_AIRTIME = 1,
- 	IEEE80211_PATH_METRIC_VENDOR = 255,
- };
+-static void iwlagn_set_kill_msk(struct iwl_priv *priv,
++static bool iwlagn_set_kill_msk(struct iwl_priv *priv,
+ 				struct iwl_bt_uart_msg *uart_msg)
+ {
++	bool need_update = false;
+ 	u8 kill_msk;
+ 	static const __le32 bt_kill_ack_msg[2] = {
+ 		IWLAGN_BT_KILL_ACK_MASK_DEFAULT,
+@@ -560,10 +561,39 @@ static void iwlagn_set_kill_msk(struct iwl_priv *priv,
+ 		priv->kill_ack_mask = bt_kill_ack_msg[kill_msk];
+ 		priv->bt_valid |= IWLAGN_BT_VALID_KILL_CTS_MASK;
+ 		priv->kill_cts_mask = bt_kill_cts_msg[kill_msk];
++		need_update = true;
++	}
++	return need_update;
++}
  
+-		/* schedule to send runtime bt_config */
+-		queue_work(priv->workqueue, &priv->bt_runtime_config);
++static bool iwlagn_fill_txpower_mode(struct iwl_priv *priv,
++				struct iwl_bt_uart_msg *uart_msg)
++{
++	bool need_update = false;
++
++	if (!priv->reduced_txpower &&
++	    !iwl_is_associated(priv, IWL_RXON_CTX_PAN) &&
++	    (uart_msg->frame3 & (BT_UART_MSG_FRAME3ACL_MSK |
++	    BT_UART_MSG_FRAME3OBEX_MSK)) &&
++	    !(uart_msg->frame3 & (BT_UART_MSG_FRAME3SCOESCO_MSK |
++	    BT_UART_MSG_FRAME3SNIFF_MSK | BT_UART_MSG_FRAME3A2DP_MSK))) {
++		/* enabling reduced tx power */
++		priv->reduced_txpower = true;
++		priv->bt_valid |= IWLAGN_BT_VALID_REDUCED_TX_PWR;
++		need_update = true;
++	} else if (priv->reduced_txpower &&
++		   (iwl_is_associated(priv, IWL_RXON_CTX_PAN) ||
++		   (uart_msg->frame3 & (BT_UART_MSG_FRAME3SCOESCO_MSK |
++		   BT_UART_MSG_FRAME3SNIFF_MSK | BT_UART_MSG_FRAME3A2DP_MSK)) ||
++		   !(uart_msg->frame3 & (BT_UART_MSG_FRAME3ACL_MSK |
++		   BT_UART_MSG_FRAME3OBEX_MSK)))) {
++		/* disable reduced tx power */
++		priv->reduced_txpower = false;
++		priv->bt_valid &= ~IWLAGN_BT_VALID_REDUCED_TX_PWR;
++		need_update = true;
+ 	}
++
++	return need_update;
+ }
+ 
+ int iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
+@@ -611,7 +641,11 @@ int iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
+ 		}
+ 	}
+ 
+-	iwlagn_set_kill_msk(priv, uart_msg);
++	/* schedule to send runtime bt_config */
++	if (iwlagn_set_kill_msk(priv, uart_msg) ||
++	    iwlagn_fill_txpower_mode(priv, uart_msg))
++		queue_work(priv->workqueue, &priv->bt_runtime_config);
++
+ 
+ 	/* FIXME: based on notification, adjust the prio_boost */
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f70219c..7006237 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -921,6 +921,7 @@ struct iwl_priv {
+ 	__le32 kill_ack_mask;
+ 	__le32 kill_cts_mask;
+ 	__le16 bt_valid;
++	bool reduced_txpower;
+ 	u16 bt_on_thresh;
+ 	u16 bt_duration;
+ 	u16 dynamic_frag_thresh;
 -- 
-1.7.5.4
+1.7.0.4
 
