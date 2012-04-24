@@ -1,95 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44927 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754974Ab2D2Av1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 20:51:27 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 03/19] brcmsmac: get board and chip info from bcma
-Date: Sun, 29 Apr 2012 02:50:27 +0200
-Message-Id: <1335660643-26368-4-git-send-email-hauke@hauke-m.de> (sfid-20120429_025145_938898_6CCDED49)
-In-Reply-To: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
+Received: from mga11.intel.com ([192.55.52.93]:17985 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752359Ab2DXLRg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 07:17:36 -0400
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Adds clean sdata helper
+Date: Tue, 24 Apr 2012 14:18:28 +0300
+Message-Id: <1335266308-3286-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20120424_131807_192899_819D1A2C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bcma now provide this data and brcmsmac should get it from there and
-not parse it by its self.
+From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Adds hepler to clean sdata ieee80211_clean_sdata similar way as
+ieee80211_setup_sdata is implemented. The function will be used by other
+interfaces later.
+
+Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   40 +++------------------
- 1 file changed, 5 insertions(+), 35 deletions(-)
+ net/mac80211/iface.c |   19 +++++++++++++++----
+ net/mac80211/mesh.h  |    4 +++-
+ 2 files changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index 441b3cc..d2c8f14 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -542,27 +542,12 @@ ai_buscore_setup(struct si_info *sii, struct bcma_device *cc)
- 	return true;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 401c01f..96f8773 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -907,6 +907,18 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_debugfs_add_netdev(sdata);
  }
  
--/*
-- * get boardtype and boardrev
-- */
--static __used void ai_nvram_process(struct si_info *sii)
--{
--	uint w = 0;
--
--	/* do a pci config read to get subsystem id and subvendor id */
--	pci_read_config_dword(sii->pcibus, PCI_SUBSYSTEM_VENDOR_ID, &w);
--
--	sii->pub.boardvendor = w & 0xffff;
--	sii->pub.boardtype = (w >> 16) & 0xffff;
--}
--
- static struct si_info *ai_doattach(struct si_info *sii,
- 				   struct bcma_bus *pbus)
++static void ieee80211_clean_sdata(struct ieee80211_sub_if_data *sdata)
++{
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_MESH_POINT:
++		mesh_path_flush_by_iface(sdata);
++		break;
++
++	default:
++		break;
++	}
++}
++
+ static int ieee80211_runtime_change_iftype(struct ieee80211_sub_if_data *sdata,
+ 					   enum nl80211_iftype type)
  {
- 	struct si_pub *sih = &sii->pub;
- 	u32 w, savewin;
- 	struct bcma_device *cc;
--	uint socitype;
- 	struct ssb_sprom *sprom = &pbus->sprom;
+@@ -1227,8 +1239,8 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
+ 	list_del_rcu(&sdata->list);
+ 	mutex_unlock(&sdata->local->iflist_mtx);
  
- 	savewin = 0;
-@@ -577,30 +562,15 @@ static struct si_info *ai_doattach(struct si_info *sii,
- 	if (!ai_buscore_prep(sii))
- 		return NULL;
+-	if (ieee80211_vif_is_mesh(&sdata->vif))
+-		mesh_path_flush_by_iface(sdata);
++	/* clean up type-dependent data */
++	ieee80211_clean_sdata(sdata);
  
--	/*
--	 * ChipID recognition.
--	 *   We assume we can read chipid at offset 0 from the regs arg.
--	 *   If we add other chiptypes (or if we need to support old sdio
--	 *   hosts w/o chipcommon), some way of recognizing them needs to
--	 *   be added here.
--	 */
--	w = bcma_read32(cc, CHIPCREGOFFS(chipid));
--	socitype = (w & CID_TYPE_MASK) >> CID_TYPE_SHIFT;
--	/* Might as wll fill in chip id rev & pkg */
--	sih->chip = w & CID_ID_MASK;
--	sih->chiprev = (w & CID_REV_MASK) >> CID_REV_SHIFT;
--	sih->chippkg = (w & CID_PKG_MASK) >> CID_PKG_SHIFT;
--
--	/* scan for cores */
--	if (socitype != SOCI_AI)
--		return NULL;
-+	sih->chip = pbus->chipinfo.id;
-+	sih->chiprev = pbus->chipinfo.rev;
-+	sih->chippkg = pbus->chipinfo.pkg;
-+	sih->boardvendor = pbus->boardinfo.vendor;
-+	sih->boardtype = pbus->boardinfo.type;
+ 	synchronize_rcu();
+ 	unregister_netdevice(sdata->dev);
+@@ -1249,8 +1261,7 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
+ 	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
+ 		list_del(&sdata->list);
  
--	SI_MSG("Found chip type AI (0x%08x)\n", w);
- 	if (!ai_buscore_setup(sii, cc))
- 		goto exit;
+-		if (ieee80211_vif_is_mesh(&sdata->vif))
+-			mesh_path_flush_by_iface(sdata);
++		ieee80211_clean_sdata(sdata);
  
--	ai_nvram_process(sii);
--
- 	/* === NVRAM, clock is ready === */
- 	bcma_write32(cc, CHIPCREGOFFS(gpiopullup), 0);
- 	bcma_write32(cc, CHIPCREGOFFS(gpiopulldown), 0);
+ 		unregister_netdevice_queue(sdata->dev, &unreg_list);
+ 	}
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 8d53b71..5b4f670 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -284,7 +284,6 @@ void mesh_pathtbl_unregister(void);
+ int mesh_path_del(u8 *addr, struct ieee80211_sub_if_data *sdata);
+ void mesh_path_timer(unsigned long data);
+ void mesh_path_flush_by_nexthop(struct sta_info *sta);
+-void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata);
+ void mesh_path_discard_frame(struct sk_buff *skb,
+ 		struct ieee80211_sub_if_data *sdata);
+ void mesh_path_quiesce(struct ieee80211_sub_if_data *sdata);
+@@ -325,6 +324,7 @@ void ieee80211_mesh_quiesce(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_mesh_restart(struct ieee80211_sub_if_data *sdata);
+ void mesh_plink_quiesce(struct sta_info *sta);
+ void mesh_plink_restart(struct sta_info *sta);
++void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata);
+ #else
+ #define mesh_allocated	0
+ static inline void
+@@ -337,6 +337,8 @@ static inline void mesh_plink_quiesce(struct sta_info *sta) {}
+ static inline void mesh_plink_restart(struct sta_info *sta) {}
+ static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
+ { return false; }
++static inline void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
++{}
+ #endif
+ 
+ #endif /* IEEE80211S_H */
 -- 
 1.7.9.5
 
