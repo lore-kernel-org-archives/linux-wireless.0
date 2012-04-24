@@ -1,56 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42042 "EHLO nbd.name"
+Received: from mga11.intel.com ([192.55.52.93]:39524 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756068Ab2DLUgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 16:36:08 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 2/4] ath9k_hw: add support for 8 AP mode interfaces
-Date: Thu, 12 Apr 2012 22:35:56 +0200
-Message-Id: <1334262958-90777-2-git-send-email-nbd@openwrt.org> (sfid-20120412_223614_757553_170F0344)
-In-Reply-To: <1334262958-90777-1-git-send-email-nbd@openwrt.org>
-References: <1334262958-90777-1-git-send-email-nbd@openwrt.org>
+	id S1758589Ab2DXXva (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 19:51:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/11] iwlwifi: use IWL_* instead of dev_printk when possible
+Date: Tue, 24 Apr 2012 16:46:02 -0700
+Message-Id: <1335311164-10252-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015156_781842_3F04567F)
+In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also tweak beacon response times for better stability with the shorter
-timer intervals.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Also remove a debug print when allocation error occurred.
+The kernel will complain anyway.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c    |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   11 +++++------
+ drivers/net/wireless/iwlwifi/iwl-drv.c |    8 ++++----
+ 2 files changed, 9 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0792d87..52142fa 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -369,7 +369,7 @@ struct ath_vif {
-  * number of beacon intervals, the game's up.
-  */
- #define BSTUCK_THRESH           	9
--#define	ATH_BCBUF               	4
-+#define	ATH_BCBUF               	8
- #define ATH_DEFAULT_BINTVAL     	100 /* TU */
- #define ATH_DEFAULT_BMISS_LIMIT 	10
- #define IEEE80211_MS_TO_TU(x)           (((x) * 1000) / 1024)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 6fa8128..373cef6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -388,8 +388,8 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- {
- 	int i;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index b53852d..8f60f28 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1422,32 +1422,31 @@ void iwl_set_hw_params(struct iwl_priv *priv)
  
--	ah->config.dma_beacon_response_time = 2;
--	ah->config.sw_beacon_response_time = 10;
-+	ah->config.dma_beacon_response_time = 1;
-+	ah->config.sw_beacon_response_time = 6;
- 	ah->config.additional_swba_backoff = 0;
- 	ah->config.ack_6mb = 0x0;
- 	ah->config.cwm_ignore_extcca = 0;
+ void iwl_debug_config(struct iwl_priv *priv)
+ {
+-	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_DEBUG "
++	IWL_INFO(priv, "CONFIG_IWLWIFI_DEBUG "
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 		"enabled\n");
+ #else
+ 		"disabled\n");
+ #endif
+-	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_DEBUGFS "
++	IWL_INFO(priv, "CONFIG_IWLWIFI_DEBUGFS "
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 		"enabled\n");
+ #else
+ 		"disabled\n");
+ #endif
+-	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_DEVICE_TRACING "
++	IWL_INFO(priv, "CONFIG_IWLWIFI_DEVICE_TRACING "
+ #ifdef CONFIG_IWLWIFI_DEVICE_TRACING
+ 		"enabled\n");
+ #else
+ 		"disabled\n");
+ #endif
+-
+-	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_DEVICE_TESTMODE "
++	IWL_INFO(priv, "CONFIG_IWLWIFI_DEVICE_TESTMODE "
+ #ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ 		"enabled\n");
+ #else
+ 		"disabled\n");
+ #endif
+-	dev_printk(KERN_INFO, priv->trans->dev, "CONFIG_IWLWIFI_P2P "
++	IWL_INFO(priv, "CONFIG_IWLWIFI_P2P "
+ #ifdef CONFIG_IWLWIFI_P2P
+ 		"enabled\n");
+ #else
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 05302d6..430cca5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -66,6 +66,7 @@
+ #include <linux/module.h>
+ 
+ #include "iwl-drv.h"
++#include "iwl-debug.h"
+ #include "iwl-trans.h"
+ #include "iwl-op-mode.h"
+ #include "iwl-agn-hw.h"
+@@ -892,10 +893,9 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
+ 	int ret;
+ 
+ 	drv = kzalloc(sizeof(*drv), GFP_KERNEL);
+-	if (!drv) {
+-		dev_printk(KERN_ERR, trans->dev, "Couldn't allocate iwl_drv");
++	if (!drv)
+ 		return NULL;
+-	}
++
+ 	drv->trans = trans;
+ 	drv->dev = trans->dev;
+ 	drv->cfg = cfg;
+@@ -905,7 +905,7 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
+ 	ret = iwl_request_firmware(drv, true);
+ 
+ 	if (ret) {
+-		dev_printk(KERN_ERR, trans->dev, "Couldn't request the fw");
++		IWL_ERR(trans, "Couldn't request the fw\n");
+ 		kfree(drv);
+ 		drv = NULL;
+ 	}
 -- 
-1.7.3.2
+1.7.0.4
 
