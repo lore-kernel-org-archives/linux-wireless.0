@@ -1,134 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:33086 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567Ab2DUMyL (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:62991 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754061Ab2DXGl1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 08:54:11 -0400
-Received: by vcqp1 with SMTP id p1so6997473vcq.19
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Apr 2012 05:54:10 -0700 (PDT)
+	Tue, 24 Apr 2012 02:41:27 -0400
+Received: by obbta14 with SMTP id ta14so667297obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2012 23:41:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120420174823.7a0e0921@destiny.ordissimo>
-References: <CAOZOX0UXc0OwhWOiM0PWbGfyynmrQ4kZRAVFJyxtiHe-veUg=g@mail.gmail.com>
-	<1334843590-7920-1-git-send-email-anisse@astier.eu>
-	<CAOZOX0XppHercdP64G+pOTxrzz6H0UNsr0Bkw6TzkGW_MNZJiw@mail.gmail.com>
-	<20120420174823.7a0e0921@destiny.ordissimo>
-Date: Sat, 21 Apr 2012 14:54:10 +0200
-Message-ID: <CAOZOX0X228RUSCvtjYCi-AVNiQGS_WnY0uVGYtSLE=T_nZn0+Q@mail.gmail.com> (sfid-20120421_145416_329752_209D271F)
-Subject: Re: [PATCH v3 1/2] rt2x00: debugfs support - allow a register to be empty
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Anisse Astier <anisse@astier.eu>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1335246611.3447.0.camel@jlt3.sipsolutions.net>
+References: <1335234998-31547-1-git-send-email-mcgrof@frijolero.org> <1335246611.3447.0.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 23 Apr 2012 23:41:04 -0700
+Message-ID: <CAB=NE6VseLtuxLYZcb3c9B+d+834_0bazN-db0EoJdVTBhsSZA@mail.gmail.com> (sfid-20120424_084133_563487_DFAB6B14)
+Subject: Re: [PATCH 1/2] wireless: properly use pr_fmt()
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksCgo+IEZyb206IEFuaXNzZSBBc3RpZXIgPGFuaXNzZUBhc3RpZXIuZXU+Cj4gRGF0ZTogVGh1
-LCAxOSBBcHIgMjAxMiAxNTowNDo1MiArMDIwMAo+IFN1YmplY3Q6IFtQQVRDSCB2NCAxLzJdIHJ0
-MngwMDogZGVidWdmcyBzdXBwb3J0IC0gYWxsb3cgYSByZWdpc3RlciB0byBiZSBlbXB0eQo+Cj4g
-QWxsb3cgYSByZWdpc3RlciB0byBiZSB1bnNwZWNpZmllZCwgdGhlcmVmb3JlIG5vdCBjcmVhdGlu
-ZyBpdHMgZGVidWdmcwo+IGZpbGUgZW50cnkuCj4KPiBTaWduZWQtb2ZmLWJ5OiBBbmlzc2UgQXN0
-aWVyIDxhbmlzc2VAYXN0aWVyLmV1Pgo+IC0tLQo+IENoYW5nZXMgc2luY2UgdjM6Cj4goC0gRG9u
-J3QgcHJpbnQgYSBkZWJ1ZyBtZXNzYWdlIHdoZW4gcmVnaXN0ZXIgdHlwZSBpc24ndCByZWdpc3Rl
-cmVkCj4gLS0tCj4goGRyaXZlcnMvbmV0L3dpcmVsZXNzL3J0MngwMC9ydDJ4MDBkZWJ1Zy5jIHwg
-oCA3MSArKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLQo+IKAxIGZpbGUgY2hhbmdlZCwgMzYg
-aW5zZXJ0aW9ucygrKSwgMzUgZGVsZXRpb25zKC0pCj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvcnQyeDAwL3J0MngwMGRlYnVnLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9y
-dDJ4MDAvcnQyeDAwZGVidWcuYwo+IGluZGV4IDc4Nzg3ZmMuLjViYjEyMjEgMTAwNjQ0Cj4gLS0t
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcnQyeDAwL3J0MngwMGRlYnVnLmMKPiArKysgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9ydDJ4MDAvcnQyeDAwZGVidWcuYwo+IEBAIC02MjQsMjIgKzYyNCwy
-MSBAQCBzdGF0aWMgc3RydWN0IGRlbnRyeSAqcnQyeDAwZGVidWdfY3JlYXRlX2ZpbGVfY2hpcHNl
-dChjb25zdCBjaGFyICpuYW1lLAo+IKAgoCCgIKBkYXRhICs9IHNwcmludGYoZGF0YSwgInJldmlz
-aW9uOlx0JTA0eFxuIiwgaW50Zi0+cnQyeDAwZGV2LT5jaGlwLnJldik7Cj4goCCgIKAgoGRhdGEg
-Kz0gc3ByaW50ZihkYXRhLCAiXG4iKTsKPiCgIKAgoCCgZGF0YSArPSBzcHJpbnRmKGRhdGEsICJy
-ZWdpc3Rlclx0YmFzZVx0d29yZHNcdHdvcmRzaXplXG4iKTsKPiAtIKAgoCCgIGRhdGEgKz0gc3By
-aW50ZihkYXRhLCAiY3NyXHQlZFx0JWRcdCVkXG4iLAo+IC0goCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IGRlYnVnLT5jc3Iud29yZF9iYXNlLAo+IC0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIGRlYnVnLT5j
-c3Iud29yZF9jb3VudCwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBkZWJ1Zy0+Y3NyLndvcmRf
-c2l6ZSk7Cj4gLSCgIKAgoCBkYXRhICs9IHNwcmludGYoZGF0YSwgImVlcHJvbVx0JWRcdCVkXHQl
-ZFxuIiwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBkZWJ1Zy0+ZWVwcm9tLndvcmRfYmFzZSwK
-PiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBkZWJ1Zy0+ZWVwcm9tLndvcmRfY291bnQsCj4gLSCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgZGVidWctPmVlcHJvbS53b3JkX3NpemUpOwo+IC0goCCgIKAg
-ZGF0YSArPSBzcHJpbnRmKGRhdGEsICJiYnBcdCVkXHQlZFx0JWRcbiIsCj4gLSCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgZGVidWctPmJicC53b3JkX2Jhc2UsCj4gLSCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgZGVidWctPmJicC53b3JkX2NvdW50LAo+IC0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIGRlYnVn
-LT5iYnAud29yZF9zaXplKTsKPiAtIKAgoCCgIGRhdGEgKz0gc3ByaW50ZihkYXRhLCAicmZcdCVk
-XHQlZFx0JWRcbiIsCj4gLSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgZGVidWctPnJmLndvcmRfYmFz
-ZSwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBkZWJ1Zy0+cmYud29yZF9jb3VudCwKPiAtIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCBkZWJ1Zy0+cmYud29yZF9zaXplKTsKPiArI2RlZmluZSBSVDJY
-MDBERUJVR0ZTX1NQUklOVEZfUkVHSVNURVIoX19uYW1lKSCgIKAgoCCgIKAgoCCgIKAgXAo+ICt7
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKBcCj4gKyCgIKAgoCBpZihkZWJ1Zy0+X19uYW1lLnJlYWQpIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoFwKPiArIKAgoCCgIKAgoCCgIKAgZGF0YSArPSBzcHJpbnRmKGRhdGEs
-IF9fc3RyaW5naWZ5KF9fbmFtZSkgoCCgIKAgXAo+ICsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgIlx0JWRcdCVkXHQlZFxuIiwgoCCgIKAgoCCgIKAgoCBcCj4gKyCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCBkZWJ1Zy0+X19uYW1lLndvcmRfYmFzZSwgoCCgIKAgoFwKPiArIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIGRlYnVnLT5fX25hbWUud29yZF9jb3VudCwgoCCg
-IKAgXAo+ICsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgZGVidWctPl9fbmFtZS53b3Jk
-X3NpemUpOyCgIKAgoCBcCj4gK30KPiArIKAgoCCgIFJUMlgwMERFQlVHRlNfU1BSSU5URl9SRUdJ
-U1RFUihjc3IpOwo+ICsgoCCgIKAgUlQyWDAwREVCVUdGU19TUFJJTlRGX1JFR0lTVEVSKGVlcHJv
-bSk7Cj4gKyCgIKAgoCBSVDJYMDBERUJVR0ZTX1NQUklOVEZfUkVHSVNURVIoYmJwKTsKPiArIKAg
-oCCgIFJUMlgwMERFQlVHRlNfU1BSSU5URl9SRUdJU1RFUihyZik7Cj4gKyN1bmRlZiBSVDJYMDBE
-RUJVR0ZTX1NQUklOVEZfUkVHSVNURVIKPiArCj4goCCgIKAgoGJsb2ItPnNpemUgPSBzdHJsZW4o
-YmxvYi0+ZGF0YSk7Cj4KPiCgIKAgoCCgcmV0dXJuIGRlYnVnZnNfY3JlYXRlX2Jsb2IobmFtZSwg
-U19JUlVTUiwgaW50Zi0+ZHJpdmVyX2ZvbGRlciwgYmxvYik7Cj4gQEAgLTY5NCwyNSArNjkzLDI3
-IEBAIHZvaWQgcnQyeDAwZGVidWdfcmVnaXN0ZXIoc3RydWN0IHJ0MngwMF9kZXYgKnJ0MngwMGRl
-dikKPiCgIKAgoCCgaWYgKElTX0VSUihpbnRmLT5yZWdpc3Rlcl9mb2xkZXIpIHx8ICFpbnRmLT5y
-ZWdpc3Rlcl9mb2xkZXIpCj4goCCgIKAgoCCgIKAgoCCgZ290byBleGl0Owo+Cj4gLSNkZWZpbmUg
-UlQyWDAwREVCVUdGU19DUkVBVEVfUkVHSVNURVJfRU5UUlkoX19pbnRmLCBfX25hbWUpIKAgoFwK
-PiAtKHsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgXAo+IC0goCCgIKAgKF9faW50ZiktPl9fbmFtZSMjX29mZl9lbnRyeSA9IKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKBcCj4gLSCgIKAgoCCgIKAgZGVidWdmc19jcmVhdGVfdTMyKF9f
-c3RyaW5naWZ5KF9fbmFtZSkgIl9vZmZzZXQiLCCgIFwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgU19JUlVTUiB8IFNfSVdVU1IsIKAgoCCgIKAgoCCgIKAgXAo+IC0goCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAoX19pbnRmKS0+cmVnaXN0ZXJfZm9sZGVyLCCgIKAgoCBcCj4g
-LSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCYoX19pbnRmKS0+b2Zmc2V0XyMjX19uYW1l
-KTsgoCCgIFwKPiAtIKAgoCCgIGlmIChJU19FUlIoKF9faW50ZiktPl9fbmFtZSMjX29mZl9lbnRy
-eSkgoCCgIKAgoCCgIKAgoCCgXAo+IC0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIHx8ICEoX19pbnRm
-KS0+X19uYW1lIyNfb2ZmX2VudHJ5KSCgIKAgoCBcCj4gLSCgIKAgoCCgIKAgoCCgIGdvdG8gZXhp
-dDsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoFwKPiAtIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgXAo+IC0g
-oCCgIKAgKF9faW50ZiktPl9fbmFtZSMjX3ZhbF9lbnRyeSA9IKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKBcCj4gLSCgIKAgoCCgIKAgZGVidWdmc19jcmVhdGVfZmlsZShfX3N0cmluZ2lmeShfX25h
-bWUpICJfdmFsdWUiLCCgIFwKPiAtIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIFNfSVJV
-U1IgfCBTX0lXVVNSLCCgIKAgoCCgIKAgoCCgXAo+IC0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgKF9faW50ZiktPnJlZ2lzdGVyX2ZvbGRlciwgoCCgIKBcCj4gLSCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCAoX19pbnRmKSwgJnJ0MngwMGRlYnVnX2ZvcF8jI19fbmFtZSk7XAo+
-IC0goCCgIKAgaWYgKElTX0VSUigoX19pbnRmKS0+X19uYW1lIyNfdmFsX2VudHJ5KSCgIKAgoCCg
-IKAgoCCgIKBcCj4gLSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfHwgIShfX2ludGYpLT5fX25hbWUj
-I192YWxfZW50cnkpIKAgoCCgIFwKPiAtIKAgoCCgIKAgoCCgIKAgZ290byBleGl0OyCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgXAo+ICsjZGVmaW5lIFJUMlgwMERFQlVHRlNf
-Q1JFQVRFX1JFR0lTVEVSX0VOVFJZKF9faW50ZiwgX19uYW1lKSCgIKAgoCCgIKAgoCCgIKAgoCCg
-XAo+ICsoeyCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgXAo+ICsgoCCgIKAgaWYoZGVidWctPl9fbmFtZS5y
-ZWFkKSB7IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgXAo+
-ICsgoCCgIKAgoCCgIKAgoCAoX19pbnRmKS0+X19uYW1lIyNfb2ZmX2VudHJ5ID0goCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgXAo+ICsgoCCgIKAgoCCgIKAgoCBkZWJ1Z2ZzX2NyZWF0
-ZV91MzIoX19zdHJpbmdpZnkoX19uYW1lKSAiX29mZnNldCIsIKAgoCCgIKAgoCCgIKAgXAo+ICsg
-oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoFNfSVJVU1IgfCBTX0lXVVNSLCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgXAo+ICsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoChfX2ludGYpLT5yZWdpc3Rlcl9mb2xkZXIsIKAgoCCgIKAgoCCgIKAgXAo+ICsgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCYoX19pbnRmKS0+b2Zmc2V0XyMjX19u
-YW1lKTsgoCCgIKAgoCCgIKAgXAo+ICsgoCCgIKAgoCCgIKAgoCBpZiAoSVNfRVJSKChfX2ludGYp
-LT5fX25hbWUjI19vZmZfZW50cnkpIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgXAo+ICsgoCCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfHwgIShfX2ludGYpLT5fX25hbWUjI19vZmZfZW50cnkp
-IKAgoCCgIKAgoCCgIKAgXAo+ICsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIGdvdG8gZXhpdDsgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgXAo+ICsgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgXAo+ICsgoCCgIKAgoCCgIKAgoCAoX19pbnRmKS0+X19uYW1lIyNfdmFsX2Vu
-dHJ5ID0goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgXAo+ICsgoCCgIKAgoCCgIKAg
-oCBkZWJ1Z2ZzX2NyZWF0ZV9maWxlKF9fc3RyaW5naWZ5KF9fbmFtZSkgIl92YWx1ZSIsIKAgoCCg
-IKAgoCCgIKAgXAo+ICsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCBTX0lS
-VVNSIHwgU19JV1VTUiwgoCCgIKAgoCCgIKAgoCCgIKAgoCCgXAo+ICsgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCAoX19pbnRmKS0+cmVnaXN0ZXJfZm9sZGVyLCCgIKAgoCCg
-IKAgoCCgXAo+ICsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCAoX19pbnRm
-KSwgJnJ0MngwMGRlYnVnX2ZvcF8jI19fbmFtZSk7IKAgXAo+ICsgoCCgIKAgoCCgIKAgoCBpZiAo
-SVNfRVJSKChfX2ludGYpLT5fX25hbWUjI192YWxfZW50cnkpIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgXAo+ICsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgfHwgIShfX2ludGYpLT5fX25h
-bWUjI192YWxfZW50cnkpIKAgoCCgIKAgoCCgIKAgXAo+ICsgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IGdvdG8gZXhpdDsgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-XAo+ICsgoCCgIKAgfSCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgXAo+IKB9KQo+Cj4goCCgIKAgoFJUMlgwMERFQlVH
-RlNfQ1JFQVRFX1JFR0lTVEVSX0VOVFJZKGludGYsIGNzcik7CgpBY2tlZC1ieTogSXZvIHZhbiBE
-b29ybiA8SXZEb29ybkBnbWFpbC5jb20+Cg==
+On Mon, Apr 23, 2012 at 10:50 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-04-23 at 19:36 -0700, Luis R. Rodriguez wrote:
+>> From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+>>
+>> pr_fmt() is either defined or we redefine it. Typically
+>> drivers define it prior to including printk.h but this
+>> is done under the assumption that no other subsystem
+>> it uses has already defined pr_fmt(). In such cases
+>> pr_fmt() should be undefined and redefined.
+>>
+>> Doing this properly shaves down compilation time quite
+>> considerably.
+>
+>> --- a/drivers/net/wireless/ath/ath5k/ani.c
+>> +++ b/drivers/net/wireless/ath/ath5k/ani.c
+>> @@ -14,8 +14,11 @@
+>>   * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+>>   */
+>>
+>> +#undef pr_fmt
+>>  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+>
+> I understand this is right for compat, but is it really also needed in
+> mainline?
+
+I've seen drivers do this, drivers/net/wireless/mwifiex/decl.h was
+where I got the hint of doing this actually.
+
+> I was under the impression there we never defined pr_fmt in
+> header files.
+
+I think this is a good assumption, but it can easily and sloppily hold
+to not be true. In fact, I'm thinking it may make sense to add a
+helper to do this uniformly across the kernel.
+
+  Luis
