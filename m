@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:47993 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752168Ab2DPTTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 15:19:15 -0400
-Message-ID: <1334603908.1788.1.camel@joe2Laptop> (sfid-20120416_211919_133270_19602AB6)
-Subject: Re: Checkpatch warnings with pr_fmt()
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 16 Apr 2012 13:18:28 -0600
-In-Reply-To: <4F868445.1030209@qca.qualcomm.com>
-References: <4F868445.1030209@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:58760 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753435Ab2DXM2r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 08:28:47 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SMerL-0005IC-JX
+	for linux-wireless@vger.kernel.org; Tue, 24 Apr 2012 14:28:43 +0200
+Received: from 193.206.22.97 ([193.206.22.97])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 14:28:43 +0200
+Received: from roberto.riggio by 193.206.22.97 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 14:28:43 +0200
+To: linux-wireless@vger.kernel.org
+From: Roberto Riggio <roberto.riggio@create-net.org>
+Subject: Re: [PATCH v2] mac80211: support fixed rate packet injection
+Date: Tue, 24 Apr 2012 12:28:34 +0000 (UTC)
+Message-ID: <loom.20120424T142502-299@post.gmane.org> (sfid-20120424_142851_152346_A3ABD45F)
+References: <20120224173601.2FD1F57EAB@lefflers.sfo.corp.google.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-04-12 at 10:29 +0300, Kalle Valo wrote:
-> due to checkpatch warnings in ath6kl, from a recent pr_fmt() addition, I
-> had to update checkpatch and now I get lots of useless warnings like this:
+Sam Leffler <sleffler@...> writes:
+
 > 
-> drivers/net/wireless/ath/ath6kl/common.h:28: CHECK: Don't begin block
-> comments with only a /* line, use /* comment...
-> drivers/net/wireless/ath/ath6kl/bmi.h:233: CHECK: No space is necessary
-> after a cast
-> 
-> IMHO they are wrong, at least the style I have tried to enforce in
-> ath6kl is totally opposite (I have "/*\n" on multiline comments and a
-> space after a cast). And at least CodingStyle seems to recommend my
-> style for the multiline comments.
+> Support setting the transmit rate, flags, and try count for
+> injected packets by parsing the IEEE80211_RADIOTAP_RATE,
+> IEEE80211_RADIOTAP_DATA_RETRIES, and IEEE80211_RADIOTAP_MCS radiotap tags.
 
-It's the style David Miller prefers for drivers/net.
-I don't much care one way or another.
-
-> Would you consider removing these two warnings? Or maybe add a new check
-> level so that I can easily disable them?
-
-./scripts/checkpatch.pl --ignore=BLOCK_COMMENT_STYLE <foo>
-
-
+The patch is working fine for what concerns MCS and retries. However if I use a 
+radiotap header that specifies in the flags byte the SGI and/or the HT40 options 
+then the frame is not injected. Tested on an ubiquiti SR71A card. If the flags 
+are not specified the frame is injected up to the 15 MCS index.
 
