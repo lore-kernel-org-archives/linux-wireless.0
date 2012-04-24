@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f51.google.com ([209.85.210.51]:60487 "EHLO
-	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756495Ab2DXC64 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:65209 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413Ab2DXIoL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 22:58:56 -0400
-Received: by dadz8 with SMTP id z8so276033dad.10
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Apr 2012 19:58:56 -0700 (PDT)
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH] ath6kl: include in.h explicitly
-Date: Mon, 23 Apr 2012 19:58:50 -0700
-Message-Id: <1335236330-871-1-git-send-email-mcgrof@do-not-panic.com> (sfid-20120424_045859_580248_8BA21A2E)
+	Tue, 24 Apr 2012 04:44:11 -0400
+Received: by bkuw12 with SMTP id w12so210559bku.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 01:44:09 -0700 (PDT)
+Message-ID: <4F96677C.40901@openwrt.org> (sfid-20120424_104418_748090_30907B83)
+Date: Tue, 24 Apr 2012 10:42:36 +0200
+From: Florian Fainelli <florian@openwrt.org>
+MIME-Version: 1.0
+To: Jonathan Bither <jonbither@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath5k: add missing iounmap to AHB probe removal
+References: <4F96647F.9060803@gmail.com>
+In-Reply-To: <4F96647F.9060803@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Hi Jonathan,
 
-Do not assume anyone before us includes it for us.
+Le 04/24/12 10:29, Jonathan Bither a écrit :
+> When our driver device is removed on the AHB bus, our IO memory is never unmapped.
+>
+> Signed-off-by: Jonathan Bither<jonbither@gmail.com>
+>
+> diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+> index 8c50d9d..eebf439 100644
+> --- a/drivers/net/wireless/ath/ath5k/ahb.c
+> +++ b/drivers/net/wireless/ath/ath5k/ahb.c
+> @@ -197,12 +197,14 @@ static int ath_ahb_remove(struct platform_device *pdev)
+>   	struct ar231x_board_config *bcfg = pdev->dev.platform_data;
+>   	struct ieee80211_hw *hw = platform_get_drvdata(pdev);
+>   	struct ath5k_hw *ah;
+> +	void __iomem *mem;
+>   	u32 reg;
+>
+>   	if (!hw)
+>   		return 0;
+>
+>   	ah = hw->priv;
+> +	mem = ah->iobase;
+>
+>   	if (bcfg->devid>= AR5K_SREV_AR2315_R6) {
+>   		/* Disable WMAC AHB arbitration */
+> @@ -222,6 +224,7 @@ static int ath_ahb_remove(struct platform_device *pdev)
+>   	ath5k_deinit_ah(ah);
+>   	platform_set_drvdata(pdev, NULL);
+>   	ieee80211_free_hw(hw);
+> +	iounmap(mem);
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 7c8a997..99c113ab 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -16,6 +16,7 @@
-  */
- 
- #include <linux/ip.h>
-+#include <linux/in.h>
- #include "core.h"
- #include "debug.h"
- #include "testmode.h"
--- 
-1.7.10.rc1.22.gf5241
-
+You don't need this temporary variable, just use iounmap(ah->iobase) 
+after ath5k_deinit_ah(ah) just like how it is done in the PCI case.
+--
+Florian
