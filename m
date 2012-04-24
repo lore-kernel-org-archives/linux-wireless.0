@@ -1,57 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:52370 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751371Ab2DSUbD (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:61598 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756047Ab2DXQMU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 16:31:03 -0400
-Date: Thu, 19 Apr 2012 16:27:44 -0400 (EDT)
-Message-Id: <20120419.162744.2197721179697327138.davem@davemloft.net> (sfid-20120419_223112_883903_41E23B13)
-To: wey-yi.w.guy@intel.com
-Cc: meenakshi.venkataraman@intel.com, socketcan@hartkopp.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, david.spinadel@intel.com
-Subject: Re: net-next iwlwifi breaks compile - was Re: pull request:
- wireless-next 2012-04-18
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1334866241.27767.156.camel@wwguy-huron>
-References: <4595B4D22AB93C4FABBA84AAD5AA37FD1258AA@ORSMSX103.amr.corp.intel.com>
-	<20120419.154954.1322943404183128381.davem@davemloft.net>
-	<1334866241.27767.156.camel@wwguy-huron>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 24 Apr 2012 12:12:20 -0400
+Date: Tue, 24 Apr 2012 13:12:06 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2012-04-24
+Message-ID: <20120424161206.GC9343@joana> (sfid-20120424_181224_562554_AAA071FD)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="61jdw2sOBCFtR2d/"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Date: Thu, 19 Apr 2012 13:10:41 -0700
 
-> On Thu, 2012-04-19 at 15:49 -0400, David Miller wrote:
->> From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
->> Date: Thu, 19 Apr 2012 19:47:58 +0000
->> 
->> > It was fixed internally in a subsequent patch, but that patch has
->> > not made it into net-next. I don't see it in the public iwlwifi
->> > repository either. We'll add the fix to the repository so you can
->> > pick it up.
->> 
->> That's not how this works.
->> 
->> You should submit a patch to fix the build directly to me, immediately,
->> so that I can push it directly into net-next as fast as possible.
-> 
-> The patch "iwlwifi-Remove-inconsistent-and-redundant-declaratio.patch"
-> already being push to John to address this issue
+--61jdw2sOBCFtR2d/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-You don't understand, that's exactly what I'm telling you I want
-to avoid.
+Hi John,
 
-Then we all have to wait until John takes it, then we have to wait until
-John is able to do a push to me, then we have to wait until I see John's
-request and pull it, and then we have to wait until I am done build
-testing and push the result out.
+A few more fixes to 3.4, there is tree new device id supported, a missing
+break and a fix to retain key during the connection.
 
-All of this red tape adds unacceptble time just to fix the build
-regression added to net-next.
+Please pull. Thanks.
 
-PUSH THIS FIX DIRECTLY TO ME NOW so that the build regression can get
-fixed NOW.
+	Gustavo
+
+--
+
+The following changes since commit 66f3b913e68e8e62bd2f9499495eeb6cc81b2662:
+
+  Bluetooth: Fix userspace compatibility issue with mgmt interface (2012-04-05 15:05:51 -0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream
+
+for you to fetch changes up to 985140369be1e886754d8ac0375dd64e4f727311:
+
+  Add Foxconn / Hon Hai IDs for btusb module (2012-04-24 11:38:41 -0300)
+
+----------------------------------------------------------------
+AceLan Kao (2):
+      Bluetooth: Add support for Atheros [13d3:3362]
+      Bluetooth: Add support for AR3012 [0cf3:e004]
+
+Manoj Iyer (1):
+      Bluetooth: btusb: Add vendor specific ID (0489 e042) for BCM20702A0
+
+Steven Harms (1):
+      Add Foxconn / Hon Hai IDs for btusb module
+
+Szymon Janc (1):
+      Bluetooth: Fix missing break in hci_cmd_complete_evt
+
+Vishal Agarwal (2):
+      Bluetooth: hci_persistent_key should return bool
+      Bluetooth: Temporary keys should be retained during connection
+
+ drivers/bluetooth/ath3k.c        |    4 ++++
+ drivers/bluetooth/btusb.c        |    6 ++++++
+ include/net/bluetooth/hci_core.h |    3 ++-
+ net/bluetooth/hci_core.c         |   27 +++++++++++++--------------
+ net/bluetooth/hci_event.c        |    3 +++
+ net/bluetooth/mgmt.c             |    2 +-
+ 6 files changed, 29 insertions(+), 16 deletions(-)
+
+--61jdw2sOBCFtR2d/
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPltDWAAoJEPs3PUX4s20odxIQAIvDhmfZyBmzGTa8KQtXQ/LV
+EkkcLF3eQ2lmgk59U+ugm4FYTZcDG2GuOn7S4lCel7bTtqrgbuh8djKgCoq4wvPa
+KN16XzDRwl1guBY7ncgvG8yzPEMuII+qf6JcuVF2G8SRYF2r4GARQQOtmphVKr31
+5vMDJC4mCtz8V4YdrFG6ZPxBSbclGyjcxvNFgPXnf3Nxb6i2s+UIjicZXLAgeD+b
+f5QlUeERZDTAs6l6bf50Uq+JbKCyMm/ra4/4VIWeBt8zsvZcHWbPaETLlZsGK/hx
+HAwt4SXyBOG3IC0rH/dJ1Eb/IOsRJmxGCX50fuNXHCQgbw2xdhVRuCsuKvBwpcrq
+pw2AMJa6DTDs1+GKgj91ZfYfjqv02CjRCZEpLEeR8B75+GFVnJY2datsI2GIo/Bd
+melp41L1x+7ivdVNjh0k7IOskUat8nBATrbl2V3zeYVGd3/JWwAUPRzqJkEri2Gg
+k+qlZR2Uu8qSjclgJS7IFnIFWMUUsAdMj/ijl0lhcU7B4M6rs2jIBMu3Ew74F8Qr
+rY9KfVAttVO4Bskg+earnwuynvLFcs1rLkg9ZEbYFrWM3X7W0027dGoApp597N/P
+d6LnyfThIoS+S94EpaT+XAJgKg2Z4BTZNZRDsxZiv0Fp5dia5QNpR3c2WN+bRzdl
+SRRRY4uwyt/N/xF+rY0n
+=pgi+
+-----END PGP SIGNATURE-----
+
+--61jdw2sOBCFtR2d/--
