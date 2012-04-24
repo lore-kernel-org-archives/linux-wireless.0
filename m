@@ -1,51 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:65077 "EHLO 1wt.eu"
+Received: from mga11.intel.com ([192.55.52.93]:63306 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934773Ab2DLVj2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:39:28 -0400
-Date: Thu, 12 Apr 2012 23:39:02 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120412213902.GA12807@1wt.eu> (sfid-20120412_233943_190822_F6219025)
-References: <20120411231102.GA6404@kroah.com> <CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com> <20120412002927.GA23167@kroah.com> <CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com> <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com> <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com> <CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com> <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
+	id S1754186Ab2DXNQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 09:16:50 -0400
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [RFCv2 0/6] Draft Software/Virtual AMP80211
+Date: Tue, 24 Apr 2012 16:17:34 +0300
+Message-Id: <1335273460-12682-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20120424_151656_263496_E844E5D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 13, 2012 at 12:20:20AM +0300, Felipe Contreras wrote:
-> The relevant patch, like the thousands of patches in v3.4-rc*, did not
-> exist in v3.3, so if you add one on v3.3.1, and remove it on v3.3.2
-> would be *exactly* the same as if you had not added it at all to the
-> stable series.
+From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 
-Except that thanks to its addition in 3.3.1 we know it has broken some
-setups. Now we know they're broken, there is a good reason to *ensure*
-it is removed in 3.4-rc too. If you revert it from 3.3.2 and forget about
-3.4-rc, you'll end up with the faulty patch present again in 3.4. It is
-*very* important that -stable reflects what next should look like.
+RFC for Software / Virtual _DRAFT_ implementation of Bluetooth High Speed
+by using wireless driver. Currently it can be used for testing Bluetooth
+A2MP protocol.
 
-The only frustration from you that I can understand comes from the
-multi-hop that the patch has to pass through before hitting Linus,
-but for the same reason you want every intermediary maintainer to
-ensure that his own tree is fixed so that the patch is not reintroduced
-in a future batch.
+Changes:
+	RFCv2: Process basic HCI commands and basic data traffic; added skeleton
+	for Netlink comms, took comments from reviewers.
+	RFCv1: Initial release.
 
-Again, why don't you apply it into your tree ? Better, fork 3.3-stable
-and announce 3.3.2-fc which has this patch. It will help other users too.
-Let's just see how long you keep up with out-of-sync fixes.
+TODO:
+	Change names from vamp to <softamp|bt_softamp|etc>
 
-Regards,
-Willy
+Main ideas:
+ - Use existing wireless infrastructure nl80211, mac80211.
+ - Use virtual interface of type NL80211_IFTYPE_BLUETOOTH_AMP. Then all
+drivers supporting virtual interface should work.
+
+After modifying iw it will be enabled by adding new virtual interface.
+
+# iw phy <physical device> interface add vamp type vamp
+# iw dev
+phy#0
+	Interface vamp
+		ifindex 6
+		type Virtual AMP
+...
+# hciconfig 
+hci1:	Type: AMP  Bus: VIRTUAL
+	BD Address: 00:00:00:00:00:00  ACL MTU: 0:0  SCO MTU: 0:0
+	DOWN 
+	RX bytes:0 acl:0 sco:0 events:0 errors:0
+	TX bytes:0 acl:0 sco:0 commands:0 errors:0
+...
+
+Andrei Emeltchenko (6):
+  mac80211: softamp: Adds Bluetooth Software AMP
+  mac80211: softamp: Adds build config option
+  hwsim: Adds support for BT SOFTAMP for testing
+  mac80211: softamp: Handle assoc request
+  mac80211: softamp: Netlink interface to softamp
+  mac80211: softamp: Handle data traffic
+
+ drivers/net/wireless/mac80211_hwsim.c |    3 +-
+ include/linux/ieee80211.h             |   13 +
+ include/linux/nl80211.h               |    1 +
+ net/mac80211/Kconfig                  |    9 +
+ net/mac80211/Makefile                 |    2 +
+ net/mac80211/ieee80211_i.h            |    5 +
+ net/mac80211/iface.c                  |    9 +
+ net/mac80211/rx.c                     |    4 +
+ net/mac80211/sta_info.h               |    4 +
+ net/mac80211/util.c                   |    1 +
+ net/mac80211/virtual_amp.c            |  675 +++++++++++++++++++++++++++++++++
+ net/mac80211/virtual_amp.h            |   96 +++++
+ 12 files changed, 821 insertions(+), 1 deletion(-)
+ create mode 100644 net/mac80211/virtual_amp.c
+ create mode 100644 net/mac80211/virtual_amp.h
+
+-- 
+1.7.9.5
 
