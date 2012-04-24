@@ -1,53 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:42045 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762700Ab2DLUgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 16:36:08 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 1/4] ath9k_hw: remove enable_32kHz_clock
-Date: Thu, 12 Apr 2012 22:35:55 +0200
-Message-Id: <1334262958-90777-1-git-send-email-nbd@openwrt.org> (sfid-20120412_223619_606762_5BCF29E1)
+Received: from li235-22.members.linode.com ([173.255.225.22]:46389 "EHLO
+	erley.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753045Ab2DXL61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 07:58:27 -0400
+Message-ID: <4F96939B.5030204@erley.org> (sfid-20120424_135832_229726_9EC892C3)
+Date: Tue, 24 Apr 2012 07:50:51 -0400
+From: Pat Erley <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Dominik Feser <dominik.feser@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: Re: wlan0 not present
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com> <CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com> <9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com> <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com> <8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com> <CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com> <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> <4F901224.1040508@sipsolutions.net> <EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com> <4F901F16.6080007@sipsolutions.net> <CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com> <CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com> <CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com> <CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com> <04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com> <CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
+In-Reply-To: <CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is unused and useless
+Try a newer compat-wireless.  I saw mention of a patch on this ML
+that iwlwifi was looking for firmwares that aren't available yet.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c |    1 -
- drivers/net/wireless/ath/ath9k/hw.h |    5 -----
- 2 files changed, 0 insertions(+), 6 deletions(-)
+Specifically, it wants a -6 ucode, where you have -5.  I'm not
+sure if this has been merged upstream yet.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index d1345a8..6fa8128 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -445,7 +445,6 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 		AR_STA_ID1_MCAST_KSRCH;
- 	if (AR_SREV_9100(ah))
- 		ah->sta_id1_defaults |= AR_STA_ID1_AR9100_BA_FIX;
--	ah->enable_32kHz_clock = DONT_USE_32KHZ;
- 	ah->slottime = ATH9K_SLOT_TIME_9;
- 	ah->globaltxtimeout = (u32) -1;
- 	ah->power_mode = ATH9K_PM_UNDEFINED;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index aa1680a..d85a8de 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -762,11 +762,6 @@ struct ath_hw {
- 
- 	u32 sta_id1_defaults;
- 	u32 misc_mode;
--	enum {
--		AUTO_32KHZ,
--		USE_32KHZ,
--		DONT_USE_32KHZ,
--	} enable_32kHz_clock;
- 
- 	/* Private to hardware code */
- 	struct ath_hw_private_ops private_ops;
--- 
-1.7.3.2
+On 04/24/2012 01:28 AM, Emmanuel Grumbach wrote:
+> On Tue, Apr 24, 2012 at 00:26, Dominik Feser
+> <dominik.feser@googlemail.com>  wrote:
+>> Hmm, no one?
+>>
+>
+> Apparently, Luis ?
+>
+>> Am 22.04.2012 um 18:53 schrieb Emmanuel Grumbach:
+>>
+>>> On Sun, Apr 22, 2012 at 16:00, Dominik Feser
+>>> <dominik.feser@googlemail.com>  wrote:
+>>>> THX a lot! Here is the dmesg output:
+>>>>
+>>>> Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+>>>> Copyright(c) 2003-2012 Intel Corporation
+>>>> iwlwifi 0000:02:00.0: PCI INT A ->  GSI 17 (level, low) ->  IRQ 17
+>>>> iwlwifi 0000:02:00.0: setting latency timer to 64
+>>>> iwlwifi 0000:02:00.0: pci_resource_len = 0x00002000
+>>>> iwlwifi 0000:02:00.0: pci_resource_base = f4498000
+>>>> iwlwifi 0000:02:00.0: HW Revision ID = 0x34
+>>>> iwlwifi 0000:02:00.0: irq 1277 (277) for MSI/MSI-X
+>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware eebd9d74
+>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware c8ee1dd8
+>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware ed655dd8
+>>>> iwlwifi 0000:02:00.0: d21d7e18
+>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware d21d7dd8
+>>>> iwlwifi 0000:02:00.0: eda37e18
+>>>> iwlwifi 0000:02:00.0: eda37de0
+>>>> iwlwifi 0000:02:00.0: U iwl_trans_pcie_rx_free eda37d80
+>>>> iwlwifi 0000:02:00.0: PCI INT A disabled
+>>>>
+>>>>
+>>>
+>>> Still useless... Gosh... Does someone know to get real prints here ??
+>>> I just use dev_err("WHATEVER %s", "STRING");
+>>>
+>>>>
+>>>>
+>>>> Am 19.04.2012 um 18:19 schrieb Emmanuel Grumbach:
+>>>>
+>>>>> On Thu, Apr 19, 2012 at 18:08, Dominik Feser
+>>>>> <dominik.feser@googlemail.com>  wrote:
+>>>>>> May it be that the fact that Centos 5 doesnt have hotplug causes the issue?
+>>>>>>
+>>>>>
+>>>>> Don't think so.
+>>>>> Can it be a problem in the backport of request_firwamre_no_wait ?
+>>>>> Did I see somewhere that you run 2.6.38 ?
+>>>>> Can you check again after having applied the patch attached ?
+>>>>>
+>>>>> from the main dir of compat:
+>>>>> patch -p1<  print.patch
+>>>>>
+>>>>> Thanks
+>>>>>
+>>>>>> Am 19.04.2012 um 16:20 schrieb Johannes Berg:
+>>>>>>
+>>>>>>> On 4/19/2012 7:09 AM, Dominik Feser wrote:
+>>>>>>>> Finally, here is the output of dmesg after recompiling:
+>>>>>>>>
+>>>>>>>> iwlwifi 0000:02:00.0: edd19e18
+>>>>>>>> iwlwifi 0000:02:00.0: d55c1e18
+>>>>>>>> iwlwifi 0000:02:00.0: d55c1ddc
+>>>>>>>> iwlwifi 0000:02:00.0: PCI INT A disabled
+>>>>>>>> Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+>>>>>>>> Copyright(c) 2003-2012 Intel Corporation
+>>>>>>>> iwlwifi 0000:02:00.0: PCI INT A ->    GSI 17 (level, low) ->    IRQ 17
+>>>>>>>> iwlwifi 0000:02:00.0: setting latency timer to 64
+>>>>>>>> iwlwifi 0000:02:00.0: pci_resource_len = 0x00002000
+>>>>>>>> iwlwifi 0000:02:00.0: pci_resource_base = f447c000
+>>>>>>>> iwlwifi 0000:02:00.0: HW Revision ID = 0x34
+>>>>>>>> iwlwifi 0000:02:00.0: irq 1277 (277) for MSI/MSI-X
+>>>>>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware d5b37d70
+>>>>>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware e09ebdd4
+>>>>>>>> iwlwifi 0000:02:00.0: ee2afe18
+>>>>>>>> iwlwifi 0000:02:00.0: U iwl_request_firmware ee2afdd4
+>>>>>>>> iwlwifi 0000:02:00.0: cc93fe18
+>>>>>>>> iwlwifi 0000:02:00.0: cc93fddc
+>>>>>>>
+>>>>>>> Still pretty useless since you get %pV printed as a pointer rather than a message. Does anyone know how to fix that in compat? But the iwl_request_firmware 3 times probably means it failed?
+>>>>>>>
+>>>>>>> johannes
+>>>>>>
+>>>>> <print.patch>
+>>>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
