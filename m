@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:51869 "EHLO smtp1.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753828Ab2DYI2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 04:28:13 -0400
-Message-ID: <4F97B357.1030609@lri.fr> (sfid-20120425_102821_021371_9CB5E715)
-Date: Wed, 25 Apr 2012 10:18:31 +0200
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:58525 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413Ab2DXIpt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 04:45:49 -0400
+Received: by vcqp1 with SMTP id p1so315280vcq.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 01:45:49 -0700 (PDT)
+Message-ID: <4F96683B.80106@gmail.com> (sfid-20120424_104553_665451_E9A02B24)
+Date: Tue, 24 Apr 2012 04:45:47 -0400
+From: Jonathan Bither <jonbither@gmail.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
-Subject: Re: Strange problem with ath9k and ASUS N66U AP.
-References: <4F972E3F.4020609@candelatech.com> <4F97449F.5040505@candelatech.com> <20120425060853.GA3324@w1.fi> <4F97987B.7050600@candelatech.com>
-In-Reply-To: <4F97987B.7050600@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Florian Fainelli <florian@openwrt.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath5k: add missing iounmap to AHB probe removal
+References: <4F96647F.9060803@gmail.com> <4F96677C.40901@openwrt.org>
+In-Reply-To: <4F96677C.40901@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25/04/2012 08:23, Ben Greear wrote:
-> On 04/24/2012 11:08 PM, Jouni Malinen wrote:
->> Either the AP did not receive the first EAPOL-Key 4/4 or processed it
->> only after retransmitting 3/4. Supplicant side will need to to reply to
->> retransmitted 3/4 to complete the 4-way handshake. If the AP received
->> either of these 4/4 messages, it should be fine with the result. If it
->> didn't receive either, it should disconnect the station. It does not
->> look like either of those happened.
-> 
-> Ok, it seems strange they would have such a lame
-> bug, but maybe they never tried associating several stations at once.
-> (I see around 30% failure rate when using just 15 stations).
-> 
-> We have several off-the-shelf APs and home-grown ones (using ath9k) that work fine,
-> even when associating 100+ stations, so at the least the N66U is weird...
-> 
-> That said, I'll probably need to attempt a work-around for this.  The only
-> obvious thing I see is the extra RX EAPOL (in all error cases I looked at, and none
-> where it associated properly), and the fact that DHCP just fails to acquire a lease.
-> 
-> I'll try adding a hack to detect the duplicate RX EAPOL and bounce the connection
-> if that hits, and see if that helps any...
-> 
+Alright, thanks for the reviewal. I'll submit a V2
 
-It could look like the old bug i had, where the station would send
-EAPOL-Key 4/4 encrypted when associating. Normally, the AP should
-disconnect the station, it would retry and hopefully succeed next time,
-and no one would have noticed anything, except this AP doesn't
-disconnect the station and it doesn't recover.
-
-Basically, wpa_supplicant sends the EAPOL-Key 4/4, then adds the PTK/GTK
-in the kernel, but due to scheduling/queuing/buffering of the EAPOL
-packet, it would be sent encrypted with the PTK ...
-
-If when monitoring, you don't see any plaintext EAPOL-Key 4/4 coming
-from the failed stations, then it could be the same problem.
+On 04/24/2012 04:42 AM, Florian Fainelli wrote:
+> Hi Jonathan,
+> 
+> Le 04/24/12 10:29, Jonathan Bither a écrit :
+>> When our driver device is removed on the AHB bus, our IO memory is never unmapped.
+>>
+>> Signed-off-by: Jonathan Bither<jonbither@gmail.com>
+>>
+>> diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+>> index 8c50d9d..eebf439 100644
+>> --- a/drivers/net/wireless/ath/ath5k/ahb.c
+>> +++ b/drivers/net/wireless/ath/ath5k/ahb.c
+>> @@ -197,12 +197,14 @@ static int ath_ahb_remove(struct platform_device *pdev)
+>>       struct ar231x_board_config *bcfg = pdev->dev.platform_data;
+>>       struct ieee80211_hw *hw = platform_get_drvdata(pdev);
+>>       struct ath5k_hw *ah;
+>> +    void __iomem *mem;
+>>       u32 reg;
+>>
+>>       if (!hw)
+>>           return 0;
+>>
+>>       ah = hw->priv;
+>> +    mem = ah->iobase;
+>>
+>>       if (bcfg->devid>= AR5K_SREV_AR2315_R6) {
+>>           /* Disable WMAC AHB arbitration */
+>> @@ -222,6 +224,7 @@ static int ath_ahb_remove(struct platform_device *pdev)
+>>       ath5k_deinit_ah(ah);
+>>       platform_set_drvdata(pdev, NULL);
+>>       ieee80211_free_hw(hw);
+>> +    iounmap(mem);
+> 
+> You don't need this temporary variable, just use iounmap(ah->iobase) after ath5k_deinit_ah(ah) just like how it is done in the PCI case.
+> -- 
+> Florian
