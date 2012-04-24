@@ -1,99 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44956 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755162Ab2D2Avi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 20:51:38 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com, arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 08/19] brcmsmac: remove ai_pci_setup()
-Date: Sun, 29 Apr 2012 02:50:32 +0200
-Message-Id: <1335660643-26368-9-git-send-email-hauke@hauke-m.de> (sfid-20120429_025146_455266_553A2EE4)
-In-Reply-To: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:58981 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755112Ab2DXPee convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 11:34:34 -0400
+Received: by wibhj6 with SMTP id hj6so4055288wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 08:34:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com>
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
+	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
+	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
+	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
+	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
+	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
+	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
+	<4F901224.1040508@sipsolutions.net>
+	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
+	<4F901F16.6080007@sipsolutions.net>
+	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
+	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
+	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
+	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
+	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
+	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
+	<4F96939B.5030204@erley.org>
+	<CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
+	<D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com>
+	<CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com>
+Date: Tue, 24 Apr 2012 18:34:33 +0300
+Message-ID: <CANUX_P1HQVUFcxFLtWoL+wvEXbNTk0qEJVM+4yJKBbGuhWvZbw@mail.gmail.com> (sfid-20120424_173438_302236_9B90544B)
+Subject: Re: wlan0 not present
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: Dominik Feser <dominik.feser@googlemail.com>,
+	Pat Erley <pat-lkml@erley.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is now done by calling bcma_core_pci_irq_ctl()
+On Tue, Apr 24, 2012 at 15:45, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+> On Tue, Apr 24, 2012 at 2:29 PM, Dominik Feser
+> <dominik.feser@googlemail.com> wrote:
+>> What does that mean?
+>>
+>
+> Pickup the patch from [2], apply it against a recent compat-wireless
+> version, build and test.
+> Report here again.
+>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   23 ---------------------
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    1 -
- drivers/net/wireless/brcm80211/brcmsmac/main.c    |    7 ++-----
- 3 files changed, 2 insertions(+), 29 deletions(-)
+Pretty sure it won't help. True, we were trying to request the wrong
+fw, but then we requested (and got) the good one, so that the only
+effect was that load time was longer that it could be. But here, we
+can't even get anything working. And the prints don't made it to
+kernel log properly
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index fd99e7b..585a516 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -843,29 +843,6 @@ void ai_pci_down(struct si_pub *sih)
- }
- 
- /*
-- * Configure the pci core for pci client (NIC) action
-- * coremask is the bitvec of cores by index to be enabled.
-- */
--void ai_pci_setup(struct si_pub *sih, uint coremask)
--{
--	struct si_info *sii;
--	u32 w;
--
--	sii = (struct si_info *)sih;
--
--	/*
--	 * Enable sb->pci interrupts.  Assume
--	 * PCI rev 2.3 support was added in pci core rev 6 and things changed..
--	 */
--	if (PCIE(sih)) {
--		/* pci config write to set this core bit in PCIIntMask */
--		pci_read_config_dword(sii->pcibus, PCI_INT_MASK, &w);
--		w |= (coremask << PCI_SBIM_SHIFT);
--		pci_write_config_dword(sii->pcibus, PCI_INT_MASK, w);
--	}
--}
--
--/*
-  * Fixup SROMless PCI device's configuration.
-  * The current core may be changed upon return.
-  */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index 4ea166c..3994257 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -196,7 +196,6 @@ extern u32 ai_core_cflags(struct bcma_device *core, u32 mask, u32 val);
- extern struct si_pub *ai_attach(struct bcma_bus *pbus);
- extern void ai_detach(struct si_pub *sih);
- extern uint ai_cc_reg(struct si_pub *sih, uint regoff, u32 mask, u32 val);
--extern void ai_pci_setup(struct si_pub *sih, uint coremask);
- extern void ai_clkctl_init(struct si_pub *sih);
- extern u16 ai_clkctl_fast_pwrup_delay(struct si_pub *sih);
- extern bool ai_clkctl_cc(struct si_pub *sih, uint mode);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index d61e4a0..e2ec333 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -5050,8 +5050,6 @@ static void brcms_b_hw_up(struct brcms_hardware *wlc_hw)
- 
- static int brcms_b_up_prep(struct brcms_hardware *wlc_hw)
- {
--	uint coremask;
--
- 	BCMMSG(wlc_hw->wlc->wiphy, "wl%d\n", wlc_hw->unit);
- 
- 	/*
-@@ -5066,9 +5064,8 @@ static int brcms_b_up_prep(struct brcms_hardware *wlc_hw)
- 	 * Configure pci/pcmcia here instead of in brcms_c_attach()
- 	 * to allow mfg hotswap:  down, hotswap (chip power cycle), up.
- 	 */
--	coremask = (1 << wlc_hw->wlc->core->coreidx);
--
--	ai_pci_setup(wlc_hw->sih, coremask);
-+	bcma_core_pci_irq_ctl(&wlc_hw->d11core->bus->drv_pci, wlc_hw->d11core,
-+			      true);
- 
- 	/*
- 	 * Need to read the hwradio status here to cover the case where the
--- 
-1.7.9.5
-
+> - Sedat -
+>
+>>
+>> Am 24.04.2012 um 14:07 schrieb Sedat Dilek:
+>>
+>>> On Tue, Apr 24, 2012 at 1:50 PM, Pat Erley <pat-lkml@erley.org> wrote:
+>>>> Try a newer compat-wireless.  I saw mention of a patch on this ML
+>>>> that iwlwifi was looking for firmwares that aren't available yet.
+>>>>
+>>>> Specifically, it wants a -6 ucode, where you have -5.  I'm not
+>>>> sure if this has been merged upstream yet.
+>>>>
+>>>
+>>> No, pending for upstream and linux-stable GIT, see [1] and especially
+>>> "iwlwifi: use correct released ucode version" [2].
+>>>
+>>> - Sedat -
+>>>
+>>> [1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=shortlog;h=refs/heads/wireless
+>>> [2] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=patch;h=462156fac4d69483c1d54c6218d019681da8ad74
+>>
