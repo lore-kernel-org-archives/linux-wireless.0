@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s37.blu0.hotmail.com ([65.55.111.112]:49266 "EHLO
-	blu0-omc2-s37.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751985Ab2DZEYb (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:58707 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931Ab2DXMH7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 00:24:31 -0400
-Message-ID: <BLU0-SMTP4586D25B4EA09D116570072AC240@phx.gbl> (sfid-20120426_062438_246246_C8AD2205)
-From: Nathan Hintz <nlhintz@hotmail.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
-	Nathan Hintz <nlhintz@hotmail.com>
-Subject: [PATCH v2 5/6] bcma: Add __devexit to bcma_host_pci_remove
-Date: Wed, 25 Apr 2012 21:23:53 -0700
-In-Reply-To: <1335414234-11424-1-git-send-email-nlhintz@hotmail.com>
-References: <1335414234-11424-1-git-send-email-nlhintz@hotmail.com>
+	Tue, 24 Apr 2012 08:07:59 -0400
+Received: by qatm19 with SMTP id m19so2742943qat.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 05:07:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <4F96939B.5030204@erley.org>
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
+	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
+	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
+	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
+	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
+	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
+	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
+	<4F901224.1040508@sipsolutions.net>
+	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
+	<4F901F16.6080007@sipsolutions.net>
+	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
+	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
+	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
+	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
+	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
+	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
+	<4F96939B.5030204@erley.org>
+Date: Tue, 24 Apr 2012 14:07:58 +0200
+Message-ID: <CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com> (sfid-20120424_140803_155587_C5CE1A5F)
+Subject: Re: wlan0 not present
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Dominik Feser <dominik.feser@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Apr 24, 2012 at 1:50 PM, Pat Erley <pat-lkml@erley.org> wrote:
+> Try a newer compat-wireless.  I saw mention of a patch on this ML
+> that iwlwifi was looking for firmwares that aren't available yet.
+>
+> Specifically, it wants a -6 ucode, where you have -5.  I'm not
+> sure if this has been merged upstream yet.
+>
 
-Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
----
- drivers/bcma/host_pci.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+No, pending for upstream and linux-stable GIT, see [1] and especially
+"iwlwifi: use correct released ucode version" [2].
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index e3928d6..915ab2f 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -222,7 +222,7 @@ err_kfree_bus:
- 	return err;
- }
- 
--static void bcma_host_pci_remove(struct pci_dev *dev)
-+static void __devexit bcma_host_pci_remove(struct pci_dev *dev)
- {
- 	struct bcma_bus *bus = pci_get_drvdata(dev);
- 
-@@ -277,7 +277,7 @@ static struct pci_driver bcma_pci_bridge_driver = {
- 	.name = "bcma-pci-bridge",
- 	.id_table = bcma_pci_bridge_tbl,
- 	.probe = bcma_host_pci_probe,
--	.remove = bcma_host_pci_remove,
-+	.remove = __devexit_p(bcma_host_pci_remove),
- 	.driver.pm = BCMA_PM_OPS,
- };
- 
--- 
-1.7.7.6
+- Sedat -
 
+[1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=shortlog;h=refs/heads/wireless
+[2] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=patch;h=462156fac4d69483c1d54c6218d019681da8ad74
