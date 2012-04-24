@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56203 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757121Ab2DXTut (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 15:50:49 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: check for sband existence when creating scan cmd
-Date: Tue, 24 Apr 2012 12:50:41 -0700
-Message-ID: <1335297041-4328-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120424_215052_981273_FF2F6F6F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:39524 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758540Ab2DXXv3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 19:51:29 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/11] iwlwifi: small define change
+Date: Tue, 24 Apr 2012 16:45:58 -0700
+Message-Id: <1335311164-10252-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015200_645985_37CD6F34)
+In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "ath6kl: support fw reporting phy capabilities" gave the
-firmware the ability to disable certain wiphy supported bands. Check if
-this is the case in ath6kl_wmi_beginscan_cmd to avoid dereferencing a
-NULL pointer.
-
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/wmi.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 2eb771a..9186f8e 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1851,6 +1851,8 @@ int ath6kl_wmi_beginscan_cmd(struct wmi *wmi, u8 if_idx,
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		struct ieee80211_supported_band *sband =
- 		    ar->wiphy->bands[band];
-+		if (!sband)
-+			continue;
- 		u32 ratemask = rates[band];
- 		u8 *supp_rates = sc->supp_rates[band].rates;
- 		num_rates = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 5e02b4f..15e9bfb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -1903,6 +1903,8 @@ struct iwl_bt_cmd {
+ 					IWLAGN_BT_VALID_REDUCED_TX_PWR | \
+ 					IWLAGN_BT_VALID_3W_LUT)
+ 
++#define IWLAGN_BT_DECISION_LUT_SIZE	12
++
+ struct iwl_basic_bt_cmd {
+ 	u8 flags;
+ 	u8 ledtime; /* unused */
+@@ -1913,7 +1915,7 @@ struct iwl_basic_bt_cmd {
+ 	u8 bt3_prio_sample_time;
+ 	u8 bt3_timer_t2_value;
+ 	__le16 bt4_reaction_time; /* unused */
+-	__le32 bt3_lookup_table[12];
++	__le32 bt3_lookup_table[IWLAGN_BT_DECISION_LUT_SIZE];
+ 	__le16 bt4_decision_time; /* unused */
+ 	__le16 valid;
+ };
 -- 
-1.7.4.1
+1.7.0.4
 
