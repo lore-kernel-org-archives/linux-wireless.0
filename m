@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40888 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756869Ab2DKRwf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 13:52:35 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 00/10] Wireless patches for wireless-testing
-Date: Wed, 11 Apr 2012 10:52:08 -0700
-Message-Id: <1334166738-28243-1-git-send-email-greearb@candelatech.com> (sfid-20120411_195246_310207_9F34AD4B)
+Received: from mga09.intel.com ([134.134.136.24]:18604 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754144Ab2DXNQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 09:16:50 -0400
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [RFCv2 2/6] mac80211: softamp: Adds build config option
+Date: Tue, 24 Apr 2012 16:17:36 +0300
+Message-Id: <1335273460-12682-3-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20120424_151701_785673_5613930C)
+In-Reply-To: <1335273460-12682-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+References: <1335273460-12682-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 
-Support Ethtool stats for Wireless, including in-depth
-stats for ath9k, and add some additional ath9k stats
-to debugfs.  Support scanning on-channel.
 
-The basic ethtool patches are little changed from previous
-posted patches.  The others are tweaked at least some, and
-some have not been posted before at all.
+Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+---
+ net/mac80211/Kconfig  |    9 +++++++++
+ net/mac80211/Makefile |    2 ++
+ 2 files changed, 11 insertions(+)
 
-Ben Greear (10):
-  cfg80211: Add framework to support ethtool stats.
-  mac80211: Support getting sta_info stats via ethtool.
-  mac80211: Framework to get wifi-driver stats via ethtool.
-  ath9k: Support ethtool getstats api.
-  mac80211: Add more ethtools stats: survey, rates, etc
-  mac80211: Add sta_state to ethtool stats.
-  ath9k: Add tx-failed counter.
-  mac80211: Support on-channel scan option.
-  ath9k: Add more recv stats.
-  ath9k: Gather and report IRQ sync_cause errors.
-
- drivers/net/wireless/ath/ath9k/ar9002_mac.c |    1 +
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    2 +
- drivers/net/wireless/ath/ath9k/debug.c      |  167 ++++++++++++++-------------
- drivers/net/wireless/ath/ath9k/debug.h      |   43 +++++++
- drivers/net/wireless/ath/ath9k/hw.c         |   49 ++++++++
- drivers/net/wireless/ath/ath9k/hw.h         |    6 +
- drivers/net/wireless/ath/ath9k/main.c       |  135 +++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/recv.c       |   35 ++++--
- include/net/cfg80211.h                      |   17 +++
- include/net/mac80211.h                      |   17 +++
- net/mac80211/cfg.c                          |  160 +++++++++++++++++++++++++
- net/mac80211/driver-ops.h                   |   37 ++++++
- net/mac80211/driver-trace.h                 |   15 +++
- net/mac80211/ieee80211_i.h                  |    3 +
- net/mac80211/main.c                         |    4 +-
- net/mac80211/rx.c                           |    2 +
- net/mac80211/scan.c                         |   92 +++++++++++-----
- net/wireless/ethtool.c                      |   29 +++++
- 18 files changed, 695 insertions(+), 119 deletions(-)
-
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 96ddb72..661b679 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -67,6 +67,15 @@ config MAC80211_RC_DEFAULT_MINSTREL
+ 
+ endchoice
+ 
++config MAC80211_BLUETOOTH_SOFTAMP
++	bool "Bluetooth Soft AMP80211 device"
++	depends on BT
++	---help---
++	  Enable Bluetooth Virtual / Software AMP 80211 controller.
++	  When AMP is common between two devices data may be routed
++	  through fast 80211 connection from standard Bluetooth BR/EDR
++	  connection.
++
+ config MAC80211_RC_DEFAULT
+ 	string
+ 	default "minstrel_ht" if MAC80211_RC_DEFAULT_MINSTREL && MAC80211_RC_MINSTREL_HT
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 1be7a45..ff0131e 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -40,6 +40,8 @@ mac80211-$(CONFIG_MAC80211_MESH) += \
+ 	mesh_plink.o \
+ 	mesh_hwmp.o
+ 
++mac80211-$(CONFIG_MAC80211_BLUETOOTH_SOFTAMP) += virtual_amp.o
++
+ mac80211-$(CONFIG_PM) += pm.o
+ 
+ CFLAGS_driver-trace.o := -I$(src)
 -- 
-1.7.3.4
+1.7.9.5
 
