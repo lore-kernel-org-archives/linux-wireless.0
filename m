@@ -1,114 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44603 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755390Ab2D2AFZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 20:05:25 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mga11.intel.com ([192.55.52.93]:8196 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758590Ab2DXXva (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 19:51:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 5/8] ssb/bcma: fill attribute alpha2 from sprom
-Date: Sun, 29 Apr 2012 02:04:10 +0200
-Message-Id: <1335657853-23925-6-git-send-email-hauke@hauke-m.de> (sfid-20120429_020531_348999_ED66D066)
-In-Reply-To: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
-References: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/11] iwlwifi: add option to disable 5GHz band
+Date: Tue, 24 Apr 2012 16:46:03 -0700
+Message-Id: <1335311164-10252-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015156_263977_0F4EEE13)
+In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The attribute country_code and alpha2 are two different attributes in
-the sprom. country_code contains some code in an 8 bit coding and
-alpha2 contains two chars with the country code. The attributes where
-read out wrongly in the past and country_code is only available on
-sprom version 1.
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+There are various problems happened on 5GHz band not observed on
+2.4 GHz (microcode errors, queue stuck, etc... ) . Also roaming
+between 5GHz AP and 2GHz does not work very well. To workaround
+the problems add option to disable 5GHz support. This will help
+on environments where APs are dual-band, and devices will not try
+to associate on band where issues happen.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/bcma/sprom.c         |    3 ++-
- drivers/ssb/pci.c            |   16 +++++++++++-----
- include/linux/ssb/ssb_regs.h |    1 +
- 3 files changed, 14 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-drv.c       |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-modparams.h |    2 ++
+ 3 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index 3e2a600..1799372 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -243,7 +243,8 @@ static void bcma_sprom_extract_r8(struct bcma_bus *bus, const u16 *sprom)
- 	SPEX(boardflags2_lo, SSB_SPROM8_BFL2LO, ~0, 0);
- 	SPEX(boardflags2_hi, SSB_SPROM8_BFL2HI, ~0, 0);
- 
--	SPEX(country_code, SSB_SPROM8_CCODE, ~0, 0);
-+	SPEX(alpha2[0], SSB_SPROM8_CCODE, 0xff00, 8);
-+	SPEX(alpha2[1], SSB_SPROM8_CCODE, 0x00ff, 0);
- 
- 	/* Extract cores power info info */
- 	for (i = 0; i < ARRAY_SIZE(pwr_info_offset); i++) {
-diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
-index 113208e..82589d4 100644
---- a/drivers/ssb/pci.c
-+++ b/drivers/ssb/pci.c
-@@ -360,8 +360,9 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- 	SPEX(et0mdcport, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET0M, 14);
- 	SPEX(et1mdcport, SSB_SPROM1_ETHPHY, SSB_SPROM1_ETHPHY_ET1M, 15);
- 	SPEX(board_rev, SSB_SPROM1_BINF, SSB_SPROM1_BINF_BREV, 0);
--	SPEX(country_code, SSB_SPROM1_BINF, SSB_SPROM1_BINF_CCODE,
--	     SSB_SPROM1_BINF_CCODE_SHIFT);
-+	if (out->revision == 1)
-+		SPEX(country_code, SSB_SPROM1_BINF, SSB_SPROM1_BINF_CCODE,
-+		     SSB_SPROM1_BINF_CCODE_SHIFT);
- 	SPEX(ant_available_a, SSB_SPROM1_BINF, SSB_SPROM1_BINF_ANTA,
- 	     SSB_SPROM1_BINF_ANTA_SHIFT);
- 	SPEX(ant_available_bg, SSB_SPROM1_BINF, SSB_SPROM1_BINF_ANTBG,
-@@ -387,6 +388,8 @@ static void sprom_extract_r123(struct ssb_sprom *out, const u16 *in)
- 	SPEX(boardflags_lo, SSB_SPROM1_BFLLO, 0xFFFF, 0);
- 	if (out->revision >= 2)
- 		SPEX(boardflags_hi, SSB_SPROM2_BFLHI, 0xFFFF, 0);
-+	SPEX(alpha2[0], SSB_SPROM1_CCODE, 0xff00, 8);
-+	SPEX(alpha2[1], SSB_SPROM1_CCODE, 0x00ff, 0);
- 
- 	/* Extract the antenna gain values. */
- 	out->antenna_gain.a0 = r123_extract_antgain(out->revision, in,
-@@ -456,13 +459,15 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
- 	SPEX(et1phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET1A,
- 	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
- 	if (out->revision == 4) {
--		SPEX(country_code, SSB_SPROM4_CCODE, 0xFFFF, 0);
-+		SPEX(alpha2[0], SSB_SPROM4_CCODE, 0xff00, 8);
-+		SPEX(alpha2[1], SSB_SPROM4_CCODE, 0x00ff, 0);
- 		SPEX(boardflags_lo, SSB_SPROM4_BFLLO, 0xFFFF, 0);
- 		SPEX(boardflags_hi, SSB_SPROM4_BFLHI, 0xFFFF, 0);
- 		SPEX(boardflags2_lo, SSB_SPROM4_BFL2LO, 0xFFFF, 0);
- 		SPEX(boardflags2_hi, SSB_SPROM4_BFL2HI, 0xFFFF, 0);
- 	} else {
--		SPEX(country_code, SSB_SPROM5_CCODE, 0xFFFF, 0);
-+		SPEX(alpha2[0], SSB_SPROM5_CCODE, 0xff00, 8);
-+		SPEX(alpha2[1], SSB_SPROM5_CCODE, 0x00ff, 0);
- 		SPEX(boardflags_lo, SSB_SPROM5_BFLLO, 0xFFFF, 0);
- 		SPEX(boardflags_hi, SSB_SPROM5_BFLHI, 0xFFFF, 0);
- 		SPEX(boardflags2_lo, SSB_SPROM5_BFL2LO, 0xFFFF, 0);
-@@ -525,7 +530,8 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
- 		v = in[SPOFF(SSB_SPROM8_IL0MAC) + i];
- 		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8f60f28..2023dd1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1310,6 +1310,9 @@ static int iwl_init_geos(struct iwl_priv *priv)
+ 		priv->hw_params.sku &= ~EEPROM_SKU_CAP_BAND_52GHZ;
  	}
--	SPEX(country_code, SSB_SPROM8_CCODE, 0xFFFF, 0);
-+	SPEX(alpha2[0], SSB_SPROM8_CCODE, 0xff00, 8);
-+	SPEX(alpha2[1], SSB_SPROM8_CCODE, 0x00ff, 0);
- 	SPEX(boardflags_lo, SSB_SPROM8_BFLLO, 0xFFFF, 0);
- 	SPEX(boardflags_hi, SSB_SPROM8_BFLHI, 0xFFFF, 0);
- 	SPEX(boardflags2_lo, SSB_SPROM8_BFL2LO, 0xFFFF, 0);
-diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
-index 40b1ef8..d33bd8f 100644
---- a/include/linux/ssb/ssb_regs.h
-+++ b/include/linux/ssb/ssb_regs.h
-@@ -228,6 +228,7 @@
- #define  SSB_SPROM1_AGAIN_BG_SHIFT	0
- #define  SSB_SPROM1_AGAIN_A		0xFF00	/* A-PHY */
- #define  SSB_SPROM1_AGAIN_A_SHIFT	8
-+#define SSB_SPROM1_CCODE		0x0076
  
- /* SPROM Revision 2 (inherits from rev 1) */
- #define SSB_SPROM2_BFLHI		0x0038	/* Boardflags (high 16 bits) */
++	if (iwlwifi_mod_params.disable_5ghz)
++		priv->bands[IEEE80211_BAND_5GHZ].n_channels = 0;
++
+ 	IWL_INFO(priv, "Tunable channels: %d 802.11bg, %d 802.11a channels\n",
+ 		   priv->bands[IEEE80211_BAND_2GHZ].n_channels,
+ 		   priv->bands[IEEE80211_BAND_5GHZ].n_channels);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 430cca5..3c72bad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1012,3 +1012,7 @@ module_param_named(auto_agg, iwlwifi_mod_params.auto_agg,
+ 		bool, S_IRUGO);
+ MODULE_PARM_DESC(auto_agg,
+ 		 "enable agg w/o check traffic load (default: enable)");
++
++module_param_named(5ghz_disable, iwlwifi_mod_params.disable_5ghz,
++		bool, S_IRUGO);
++MODULE_PARM_DESC(5ghz_disable, "disable 5GHz band (default: 0 [enabled])");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+index 558b2e6..ca15d9a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
+@@ -103,6 +103,7 @@ enum iwl_power_level {
+  * @ant_coupling: antenna coupling in dB, default = 0
+  * @bt_ch_announce: BT channel inhibition, default = enable
+  * @auto_agg: enable agg. without check, default = true
++ * @disable_5ghz: disable 5GHz capability, default = false
+  */
+ struct iwl_mod_params {
+ 	int sw_crypto;
+@@ -119,6 +120,7 @@ struct iwl_mod_params {
+ 	int ant_coupling;
+ 	bool bt_ch_announce;
+ 	bool auto_agg;
++	bool disable_5ghz;
+ };
+ 
+ #endif /* #__iwl_shared_h__ */
 -- 
-1.7.9.5
+1.7.0.4
 
