@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29242 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973Ab2DTJNF (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:39974 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752052Ab2DXOAj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 05:13:05 -0400
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	rodrigue@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	Michael Liang <mliang@qca.qualcomm.com>
-From: <mliang@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 0/1] ath9k: don't strip mic on non-encrypted frames in tkip mode
-Date: Fri, 20 Apr 2012 17:11:56 +0800
-Message-ID: <1334913117-4037-1-git-send-email-mliang@qca.qualcomm.com> (sfid-20120420_111311_399189_3B869DCD)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 24 Apr 2012 10:00:39 -0400
+From: Krzysztof Wilczynski <krzysztof.wilczynski@linux.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: Release struct returned by cfg80211_inform_bss to avoid potential memory leak.
+Date: Tue, 24 Apr 2012 15:00:34 +0100
+Message-Id: <1335276034-12735-1-git-send-email-krzysztof.wilczynski@linux.com> (sfid-20120424_160057_996762_9A46F8EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michael Liang <mliang@qca.qualcomm.com>
+Function cfg80211_inform_bss returns a pointer to a referenced struct cfg80211_bss
+but no information is needed from this struct in function prism2_scan and therefore
+we release it by calling cfg80211_put_bss.
 
-Hi,
+Signed-off-by: Krzysztof Wilczynski <krzysztof.wilczynski@linux.com>
+---
+ drivers/staging/wlan-ng/cfg80211.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-I found a bug in ath9k driver. It incorrectly stripped mic on non-encrypted frames
-in tkip mode, so that in ap mode, QoS-data-null packets with powersave on/off were
-dropped due to invalid packet length in mac80211, which causes ath9k softap can't
-handle the peer station's powersave state transition correctly.
-
-Please review the patch to fix this issue.
-
-Michael Liang (1):
-  ath9k: don't strip mic on non-encrypted frames in tkip
-
- drivers/net/wireless/ath/ath9k/recv.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+diff --git a/drivers/staging/wlan-ng/cfg80211.c b/drivers/staging/wlan-ng/cfg80211.c
+index 4cd3ba5..8bc562b 100644
+--- a/drivers/staging/wlan-ng/cfg80211.c
++++ b/drivers/staging/wlan-ng/cfg80211.c
+@@ -332,6 +332,7 @@ int prism2_scan(struct wiphy *wiphy, struct net_device *dev,
+ 	wlandevice_t *wlandev = dev->ml_priv;
+ 	struct p80211msg_dot11req_scan msg1;
+ 	struct p80211msg_dot11req_scan_results msg2;
++	struct cfg80211_bss *bss;
+ 	int result;
+ 	int err = 0;
+ 	int numbss = 0;
+@@ -401,7 +402,7 @@ int prism2_scan(struct wiphy *wiphy, struct net_device *dev,
+ 		ie_buf[1] = msg2.ssid.data.len;
+ 		ie_len = ie_buf[1] + 2;
+ 		memcpy(&ie_buf[2], &(msg2.ssid.data.data), msg2.ssid.data.len);
+-		cfg80211_inform_bss(wiphy,
++		bss = cfg80211_inform_bss(wiphy,
+ 			ieee80211_get_channel(wiphy, ieee80211_dsss_chan_to_freq(msg2.dschannel.data)),
+ 			(const u8 *) &(msg2.bssid.data.data),
+ 			msg2.timestamp.data, msg2.capinfo.data,
+@@ -411,6 +412,13 @@ int prism2_scan(struct wiphy *wiphy, struct net_device *dev,
+ 			(msg2.signal.data - 65536) * 100, /* Conversion to signed type */
+ 			GFP_KERNEL
+ 		);
++
++		if (!bss) {
++			err = -ENOMEM;
++			goto exit;
++		}
++
++		cfg80211_put_bss(bss);
+ 	}
+ 
+ 	if (result)
+-- 
+1.7.2.5
 
