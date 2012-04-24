@@ -1,79 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35304 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755955Ab2DNUY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 16:24:58 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:58177 "HELO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754037Ab2DXXSh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 19:18:37 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-bluetooth@vger.kernel.org
 Cc: linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 1/3] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
-Date: Sat, 14 Apr 2012 22:01:57 +0200
-Message-Id: <1334433719-1144-1-git-send-email-juhosg@openwrt.org> (sfid-20120414_222500_573552_7BE89E01)
+	Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <padovan@profusion.mobi>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH RESEND 2/2] Bluetooth: btmrvl: add support for SDIO suspend/resume callbacks
+Date: Tue, 24 Apr 2012 16:18:22 -0700
+Message-Id: <1335309502-10793-2-git-send-email-bzhao@marvell.com> (sfid-20120425_011842_867119_CF23C4A2)
+In-Reply-To: <1335309502-10793-1-git-send-email-bzhao@marvell.com>
+References: <1335309502-10793-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The REDUCE_SCALED_POWER_BY_THREE_CHAIN symbol is
-defined in different eeprom files, and the value
-varies between the different files.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-In eeprom_def.c and in ar9003_eeprom.c the value
-of the symbol is 9, however the comments in these
-files indicates the value should be 10*log10(3)*2
-which is 9.54242509439325. Replace the the value
-to 10 in these files.
+Host sleep is activated using already configured host sleep
+parameters in suspend handler and it is cancelled in resume
+handler.
 
-Also add comments to eeprom_9287.c.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    4 ++--
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |    2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/bluetooth/btmrvl_drv.h  |    2 +
+ drivers/bluetooth/btmrvl_main.c |    3 +-
+ drivers/bluetooth/btmrvl_sdio.c |  100 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 104 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 672b6c9..25a4a02 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -31,7 +31,7 @@
- #define CTL_11G_EXT (CTL_11G | EXT_ADDITIVE)
- #define CTL_11B_EXT (CTL_11B | EXT_ADDITIVE)
- #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
--#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9  /* 10*log10(3)*2 */
-+#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
- #define PWRINCR_3_TO_1_CHAIN      9             /* 10*log(3)*2 */
- #define PWRINCR_3_TO_2_CHAIN      3             /* floor(10*log(3/2)*2) */
- #define PWRINCR_2_TO_1_CHAIN      6             /* 10*log(2)*2 */
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index f272236..604eab8 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -564,8 +564,8 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	(((cfgCtl & ~CTL_MODE_M) | (pCtlMode[ctlMode] & CTL_MODE_M)) == \
- 	 ((pEepData->ctlIndex[i] & CTL_MODE_M) | SD_NO_CTL))
+diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
+index 2c79e76..94f2d65 100644
+--- a/drivers/bluetooth/btmrvl_drv.h
++++ b/drivers/bluetooth/btmrvl_drv.h
+@@ -67,6 +67,7 @@ struct btmrvl_adapter {
+ 	u8 wakeup_tries;
+ 	wait_queue_head_t cmd_wait_q;
+ 	u8 cmd_complete;
++	bool is_suspended;
+ };
  
--#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6
--#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10
-+#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
-+#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+ struct btmrvl_private {
+@@ -142,6 +143,7 @@ int btmrvl_send_module_cfg_cmd(struct btmrvl_private *priv, int subcmd);
+ int btmrvl_send_hscfg_cmd(struct btmrvl_private *priv);
+ int btmrvl_enable_ps(struct btmrvl_private *priv);
+ int btmrvl_prepare_command(struct btmrvl_private *priv);
++int btmrvl_enable_hs(struct btmrvl_private *priv);
  
- 	u16 twiceMaxEdgePower;
- 	int i;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 619b95d..0068627 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -992,7 +992,7 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 						  u16 powerLimit)
+ #ifdef CONFIG_DEBUG_FS
+ void btmrvl_debugfs_init(struct hci_dev *hdev);
+diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
+index a880537..681ca9d 100644
+--- a/drivers/bluetooth/btmrvl_main.c
++++ b/drivers/bluetooth/btmrvl_main.c
+@@ -262,7 +262,7 @@ int btmrvl_enable_ps(struct btmrvl_private *priv)
+ }
+ EXPORT_SYMBOL_GPL(btmrvl_enable_ps);
+ 
+-static int btmrvl_enable_hs(struct btmrvl_private *priv)
++int btmrvl_enable_hs(struct btmrvl_private *priv)
  {
- #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
--#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9 /* 10*log10(3)*2 */
-+#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
+ 	struct sk_buff *skb;
+ 	struct btmrvl_cmd *cmd;
+@@ -298,6 +298,7 @@ static int btmrvl_enable_hs(struct btmrvl_private *priv)
  
- 	struct ar5416_eeprom_def *pEepData = &ah->eeprom.def;
- 	u16 twiceMaxEdgePower;
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(btmrvl_enable_hs);
+ 
+ int btmrvl_prepare_command(struct btmrvl_private *priv)
+ {
+diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
+index f93a7a2..35a3e7c 100644
+--- a/drivers/bluetooth/btmrvl_sdio.c
++++ b/drivers/bluetooth/btmrvl_sdio.c
+@@ -1051,11 +1051,111 @@ static void btmrvl_sdio_remove(struct sdio_func *func)
+ 	}
+ }
+ 
++static int btmrvl_sdio_suspend(struct device *dev)
++{
++	struct sdio_func *func = dev_to_sdio_func(dev);
++	struct btmrvl_sdio_card *card;
++	struct btmrvl_private *priv;
++	mmc_pm_flag_t pm_flags;
++	struct hci_dev *hcidev;
++
++	if (func) {
++		pm_flags = sdio_get_host_pm_caps(func);
++		BT_DBG("%s: suspend: PM flags = 0x%x\n", sdio_func_id(func),
++		       pm_flags);
++		if (!(pm_flags & MMC_PM_KEEP_POWER)) {
++			BT_ERR("%s: cannot remain alive while host is "
++			       "suspended\n", sdio_func_id(func));
++			return -ENOSYS;
++		}
++		card = sdio_get_drvdata(func);
++		if (!card || !card->priv) {
++			BT_ERR("Card or priv structure is not valid\n");
++			return 0;
++		}
++	} else {
++		BT_ERR("sdio_func is not specified\n");
++		return 0;
++	}
++
++	priv = card->priv;
++
++	if (priv->adapter->hs_state != HS_ACTIVATED) {
++		if (btmrvl_enable_hs(priv)) {
++			BT_ERR("HS not actived, suspend fail!\n");
++			return -EBUSY;
++		}
++	}
++	hcidev = priv->btmrvl_dev.hcidev;
++	BT_DBG("%s: SDIO suspend\n", hcidev->name);
++	hci_suspend_dev(hcidev);
++	skb_queue_purge(&priv->adapter->tx_queue);
++
++	priv->adapter->is_suspended = true;
++
++	/* We will keep the power when hs enabled successfully */
++	if (priv->adapter->hs_state == HS_ACTIVATED) {
++		BT_DBG("suspend with MMC_PM_KEEP_POWER\n");
++		return sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
++	} else {
++		BT_DBG("suspend without MMC_PM_KEEP_POWER\n");
++		return 0;
++	}
++}
++
++static int btmrvl_sdio_resume(struct device *dev)
++{
++	struct sdio_func *func = dev_to_sdio_func(dev);
++	struct btmrvl_sdio_card *card;
++	struct btmrvl_private *priv;
++	mmc_pm_flag_t pm_flags;
++	struct hci_dev *hcidev;
++
++	if (func) {
++		pm_flags = sdio_get_host_pm_caps(func);
++		BT_DBG("%s: resume: PM flags = 0x%x\n", sdio_func_id(func),
++		       pm_flags);
++		card = sdio_get_drvdata(func);
++		if (!card || !card->priv) {
++			BT_ERR("Card or priv structure is not valid\n");
++			return 0;
++		}
++	} else {
++		BT_ERR("sdio_func is not specified\n");
++		return 0;
++	}
++	priv = card->priv;
++
++	if (!priv->adapter->is_suspended) {
++		BT_DBG("device already resumed\n");
++		return 0;
++	}
++
++	priv->adapter->is_suspended = false;
++	hcidev = priv->btmrvl_dev.hcidev;
++	BT_DBG("%s: SDIO resume\n", hcidev->name);
++	hci_resume_dev(hcidev);
++	priv->hw_wakeup_firmware(priv);
++	priv->adapter->hs_state = HS_DEACTIVATED;
++	BT_DBG("%s: HS DEACTIVATED in resume!\n", hcidev->name);
++
++	return 0;
++}
++
++static const struct dev_pm_ops btmrvl_sdio_pm_ops = {
++	.suspend	= btmrvl_sdio_suspend,
++	.resume		= btmrvl_sdio_resume,
++};
++
+ static struct sdio_driver bt_mrvl_sdio = {
+ 	.name		= "btmrvl_sdio",
+ 	.id_table	= btmrvl_sdio_ids,
+ 	.probe		= btmrvl_sdio_probe,
+ 	.remove		= btmrvl_sdio_remove,
++	.drv = {
++		.owner = THIS_MODULE,
++		.pm = &btmrvl_sdio_pm_ops,
++	}
+ };
+ 
+ static int __init btmrvl_sdio_init_module(void)
 -- 
-1.7.2.1
+1.7.4.1
 
