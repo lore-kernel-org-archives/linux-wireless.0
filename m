@@ -1,58 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:40659 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937Ab2DQT2D (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 15:28:03 -0400
-Received: by obbta14 with SMTP id ta14so5514874obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 12:28:02 -0700 (PDT)
-Message-ID: <4F8DC439.103@lwfinger.net> (sfid-20120417_212807_723740_378F3BA2)
-Date: Tue, 17 Apr 2012 14:27:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: carl9170 firmware
-References: <4F8DA785.6040608@lwfinger.net> <201204172035.06023.chunkeey@googlemail.com>
-In-Reply-To: <201204172035.06023.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:39524 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758296Ab2DXXv1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 19:51:27 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/11] iwlwifi: remove unused macros
+Date: Tue, 24 Apr 2012 16:45:54 -0700
+Message-Id: <1335311164-10252-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015154_657822_84191929)
+In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/17/2012 01:35 PM, Christian Lamparter wrote:
-> On Tuesday, April 17, 2012 07:25:25 PM Larry Finger wrote:
->> Christian,
->>
->> A question regarding adding carl9170-1.fw to the openSUSE firmware package is
->> being discussed on the oS kernel mailing list; however, I do not see that one
->> in the linux-firmware git repo. Should it be there?
-> Does the repo take source code releases? [much like the work we do for the
-> kernel driver, or have you ever seen a binary release on this ML :D ]. The
-> files on<http://wireless.kernel.org/en/users/Drivers/carl9170#Firmware_binary>
-> are just for convenience.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   69 ----------------------------
+ 1 files changed, 0 insertions(+), 69 deletions(-)
 
-AFAIK, the repo only takes binary files. With the source under GPL2, that should 
-not be a problem; however, the fact that there are two versions with the same 
-name would be trouble. Adding under that name has the possibility of breaking 
-all the systems that use the other version.
-
-Too bad that the newer firmware was not renamed carl9170-2.fw. Then both could 
-be added to the repo and the driver could load whichever one it needed. 
-Unfortunately, making that change now would be difficult to propagate back to 
-all the stable versions, but you might consider it for V3.5 and forward. In 
-conjunction with that change, submit the newer firmware to the firmware repo 
-with the -2 name. That won't break anyone's system. Users for kernels up to 3.4 
-will still see what they did before.
-
->> Is there a legal problem with redistribution?
-> Not that I know of.
-
-With a GPLv2 license, there will be no problem.
-
-Larry
-
-
-> Regards,
-> 	Christian
->
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index e1c2bb8..0642186 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -186,75 +186,6 @@ done:
+ /*
+  * BT coex
+  */
+-/*
+- * Macros to access the lookup table.
+- *
+- * The lookup table has 7 inputs: bt3_prio, bt3_txrx, bt_rf_act, wifi_req,
+-* wifi_prio, wifi_txrx and wifi_sh_ant_req.
+- *
+- * It has three outputs: WLAN_ACTIVE, WLAN_KILL and ANT_SWITCH
+- *
+- * The format is that "registers" 8 through 11 contain the WLAN_ACTIVE bits
+- * one after another in 32-bit registers, and "registers" 0 through 7 contain
+- * the WLAN_KILL and ANT_SWITCH bits interleaved (in that order).
+- *
+- * These macros encode that format.
+- */
+-#define LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, wifi_req, wifi_prio, \
+-		  wifi_txrx, wifi_sh_ant_req) \
+-	(bt3_prio | (bt3_txrx << 1) | (bt_rf_act << 2) | (wifi_req << 3) | \
+-	(wifi_prio << 4) | (wifi_txrx << 5) | (wifi_sh_ant_req << 6))
+-
+-#define LUT_PTA_WLAN_ACTIVE_OP(lut, op, val) \
+-	lut[8 + ((val) >> 5)] op (cpu_to_le32(BIT((val) & 0x1f)))
+-#define LUT_TEST_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
+-				 wifi_prio, wifi_txrx, wifi_sh_ant_req) \
+-	(!!(LUT_PTA_WLAN_ACTIVE_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, \
+-				   bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
+-				   wifi_sh_ant_req))))
+-#define LUT_SET_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
+-				wifi_prio, wifi_txrx, wifi_sh_ant_req) \
+-	LUT_PTA_WLAN_ACTIVE_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, \
+-			       bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
+-			       wifi_sh_ant_req))
+-#define LUT_CLEAR_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
+-				  wifi_req, wifi_prio, wifi_txrx, \
+-				  wifi_sh_ant_req) \
+-	LUT_PTA_WLAN_ACTIVE_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, \
+-			       bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
+-			       wifi_sh_ant_req))
+-
+-#define LUT_WLAN_KILL_OP(lut, op, val) \
+-	lut[(val) >> 4] op (cpu_to_le32(BIT(((val) << 1) & 0x1e)))
+-#define LUT_TEST_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
+-			   wifi_prio, wifi_txrx, wifi_sh_ant_req) \
+-	(!!(LUT_WLAN_KILL_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
+-			     wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
+-#define LUT_SET_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
+-			  wifi_prio, wifi_txrx, wifi_sh_ant_req) \
+-	LUT_WLAN_KILL_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
+-			 wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
+-#define LUT_CLEAR_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
+-			    wifi_prio, wifi_txrx, wifi_sh_ant_req) \
+-	LUT_WLAN_KILL_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
+-			 wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
+-
+-#define LUT_ANT_SWITCH_OP(lut, op, val) \
+-	lut[(val) >> 4] op (cpu_to_le32(BIT((((val) << 1) & 0x1e) + 1)))
+-#define LUT_TEST_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
+-			    wifi_prio, wifi_txrx, wifi_sh_ant_req) \
+-	(!!(LUT_ANT_SWITCH_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
+-			      wifi_req, wifi_prio, wifi_txrx, \
+-			      wifi_sh_ant_req))))
+-#define LUT_SET_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
+-			   wifi_prio, wifi_txrx, wifi_sh_ant_req) \
+-	LUT_ANT_SWITCH_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
+-			  wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
+-#define LUT_CLEAR_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
+-			     wifi_prio, wifi_txrx, wifi_sh_ant_req) \
+-	LUT_ANT_SWITCH_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
+-			  wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
+-
+ static const __le32 iwlagn_def_3w_lookup[12] = {
+ 	cpu_to_le32(0xaaaaaaaa),
+ 	cpu_to_le32(0xaaaaaaaa),
+-- 
+1.7.0.4
 
