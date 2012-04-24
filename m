@@ -1,112 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63195 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966117Ab2DLV6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:58:11 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 23/24] iwlwifi: more generic name for bluetooth command
-Date: Thu, 12 Apr 2012 14:54:20 -0700
-Message-Id: <1334267661-14654-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235826_169932_9448AAB2)
-In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24524 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287Ab2DXEx5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 00:53:57 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20374.12736.687313.945112@gargle.gargle.HOWL> (sfid-20120424_065401_849785_74DDA996)
+Date: Tue, 24 Apr 2012 10:23:20 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath9k: Fix IDLE Powersave
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of hardcode 6000 and 2000, use more generic name
+* PS_WAIT_FOR_TX_ACK is used in network-sleep mode and checking
+  it for handling IDLE transitions is incorrect. Fix this.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+* RX PCU/DMA engines have to be stopped before setting the chip into
+  full-sleep mode - otherwise the chip becomes mute.
+
+* Make things a bit clear by checking explicitly for network-sleep
+  mode in the tx() routine and add a couple of debug statements
+  to aid PS debugging.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   30 ++++++++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-commands.h |    4 +-
- 2 files changed, 20 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |   43 ++++++++++++++++++++-------------
+ 1 file changed, 26 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index b5ee99e..da023fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -307,24 +307,30 @@ void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
- 		.bt3_prio_sample_time = IWLAGN_BT3_PRIO_SAMPLE_DEFAULT,
- 		.bt3_timer_t2_value = IWLAGN_BT3_T2_DEFAULT,
- 	};
--	struct iwl6000_bt_cmd bt_cmd_6000;
--	struct iwl2000_bt_cmd bt_cmd_2000;
-+	struct iwl_bt_cmd_v1 bt_cmd_v1;
-+	struct iwl_bt_cmd_v2 bt_cmd_v2;
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e4bc14b..dfa78e8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -113,21 +113,25 @@ void ath9k_ps_restore(struct ath_softc *sc)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	enum ath9k_power_mode mode;
+ 	unsigned long flags;
++	bool reset;
  
- 	BUILD_BUG_ON(sizeof(iwlagn_def_3w_lookup) !=
- 			sizeof(basic.bt3_lookup_table));
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+ 	if (--sc->ps_usecount != 0)
+ 		goto unlock;
  
- 	if (cfg(priv)->bt_params) {
-+		/*
-+		 * newer generation of devices (2000 series and newer)
-+		 * use the version 2 of the bt command
-+		 * we need to make sure sending the host command
-+		 * with correct data structure to avoid uCode assert
-+		 */
- 		if (cfg(priv)->bt_params->bt_session_2) {
--			bt_cmd_2000.prio_boost = cpu_to_le32(
-+			bt_cmd_v2.prio_boost = cpu_to_le32(
- 				cfg(priv)->bt_params->bt_prio_boost);
--			bt_cmd_2000.tx_prio_boost = 0;
--			bt_cmd_2000.rx_prio_boost = 0;
-+			bt_cmd_v2.tx_prio_boost = 0;
-+			bt_cmd_v2.rx_prio_boost = 0;
- 		} else {
--			bt_cmd_6000.prio_boost =
-+			bt_cmd_v1.prio_boost =
- 				cfg(priv)->bt_params->bt_prio_boost;
--			bt_cmd_6000.tx_prio_boost = 0;
--			bt_cmd_6000.rx_prio_boost = 0;
-+			bt_cmd_v1.tx_prio_boost = 0;
-+			bt_cmd_v1.rx_prio_boost = 0;
+-	if (sc->ps_idle && (sc->ps_flags & PS_WAIT_FOR_TX_ACK))
++	if (sc->ps_idle) {
++		ath9k_hw_setrxabort(sc->sc_ah, 1);
++		ath9k_hw_stopdmarecv(sc->sc_ah, &reset);
+ 		mode = ATH9K_PM_FULL_SLEEP;
+-	else if (sc->ps_enabled &&
+-		 !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
+-			      PS_WAIT_FOR_CAB |
+-			      PS_WAIT_FOR_PSPOLL_DATA |
+-			      PS_WAIT_FOR_TX_ACK)))
++	} else if (sc->ps_enabled &&
++		   !(sc->ps_flags & (PS_WAIT_FOR_BEACON |
++				     PS_WAIT_FOR_CAB |
++				     PS_WAIT_FOR_PSPOLL_DATA |
++				     PS_WAIT_FOR_TX_ACK))) {
+ 		mode = ATH9K_PM_NETWORK_SLEEP;
+-	else
++	} else {
+ 		goto unlock;
++	}
+ 
+ 	spin_lock(&common->cc_lock);
+ 	ath_hw_cycle_counters_update(common);
+@@ -1100,14 +1104,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  		}
- 	} else {
- 		IWL_ERR(priv, "failed to construct BT Coex Config\n");
-@@ -371,15 +377,15 @@ void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
- 		       "full concurrency" : "3-wire");
- 
- 	if (cfg(priv)->bt_params->bt_session_2) {
--		memcpy(&bt_cmd_2000.basic, &basic,
-+		memcpy(&bt_cmd_v2.basic, &basic,
- 			sizeof(basic));
- 		ret = iwl_dvm_send_cmd_pdu(priv, REPLY_BT_CONFIG,
--			CMD_SYNC, sizeof(bt_cmd_2000), &bt_cmd_2000);
-+			CMD_SYNC, sizeof(bt_cmd_v2), &bt_cmd_v2);
- 	} else {
--		memcpy(&bt_cmd_6000.basic, &basic,
-+		memcpy(&bt_cmd_v1.basic, &basic,
- 			sizeof(basic));
- 		ret = iwl_dvm_send_cmd_pdu(priv, REPLY_BT_CONFIG,
--			CMD_SYNC, sizeof(bt_cmd_6000), &bt_cmd_6000);
-+			CMD_SYNC, sizeof(bt_cmd_v1), &bt_cmd_v1);
  	}
- 	if (ret)
- 		IWL_ERR(priv, "failed to send BT Coex Config\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 9ed73e5..296347a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -1918,7 +1918,7 @@ struct iwl_basic_bt_cmd {
- 	__le16 valid;
- };
  
--struct iwl6000_bt_cmd {
-+struct iwl_bt_cmd_v1 {
- 	struct iwl_basic_bt_cmd basic;
- 	u8 prio_boost;
- 	/*
-@@ -1929,7 +1929,7 @@ struct iwl6000_bt_cmd {
- 	__le16 rx_prio_boost;	/* SW boost of WiFi rx priority */
- };
+-	/*
+-	 * Cannot tx while the hardware is in full sleep, it first needs a full
+-	 * chip reset to recover from that
+-	 */
+-	if (unlikely(sc->sc_ah->power_mode == ATH9K_PM_FULL_SLEEP))
+-		goto exit;
+-
+-	if (unlikely(sc->sc_ah->power_mode != ATH9K_PM_AWAKE)) {
++	if (unlikely(sc->sc_ah->power_mode == ATH9K_PM_NETWORK_SLEEP)) {
+ 		/*
+ 		 * We are using PS-Poll and mac80211 can request TX while in
+ 		 * power save mode. Need to wake up hardware for the TX to be
+@@ -1126,12 +1123,21 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		}
+ 		/*
+ 		 * The actual restore operation will happen only after
+-		 * the sc_flags bit is cleared. We are just dropping
++		 * the ps_flags bit is cleared. We are just dropping
+ 		 * the ps_usecount here.
+ 		 */
+ 		ath9k_ps_restore(sc);
+ 	}
  
--struct iwl2000_bt_cmd {
-+struct iwl_bt_cmd_v2 {
- 	struct iwl_basic_bt_cmd basic;
- 	__le32 prio_boost;
- 	/*
++	/*
++	 * Cannot tx while the hardware is in full sleep, it first needs a full
++	 * chip reset to recover from that
++	 */
++	if (unlikely(sc->sc_ah->power_mode == ATH9K_PM_FULL_SLEEP)) {
++		ath_err(common, "TX while HW is in FULL_SLEEP mode\n");
++		goto exit;
++	}
++
+ 	memset(&txctl, 0, sizeof(struct ath_tx_control));
+ 	txctl.txq = sc->tx.txq_map[skb_get_queue_mapping(skb)];
+ 
+@@ -1528,6 +1534,7 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
+ static void ath9k_enable_ps(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	sc->ps_enabled = true;
+ 	if (!(ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
+@@ -1537,11 +1544,13 @@ static void ath9k_enable_ps(struct ath_softc *sc)
+ 		}
+ 		ath9k_hw_setrxabort(ah, 1);
+ 	}
++	ath_dbg(common, PS, "PowerSave enabled\n");
+ }
+ 
+ static void ath9k_disable_ps(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	sc->ps_enabled = false;
+ 	ath9k_hw_setpower(ah, ATH9K_PM_AWAKE);
+@@ -1556,7 +1565,7 @@ static void ath9k_disable_ps(struct ath_softc *sc)
+ 			ath9k_hw_set_interrupts(ah);
+ 		}
+ 	}
+-
++	ath_dbg(common, PS, "PowerSave disabled\n");
+ }
+ 
+ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
 -- 
-1.7.0.4
+1.7.10
 
