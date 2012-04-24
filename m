@@ -1,71 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:54304 "EHLO arrakis.dune.hu"
+Received: from mga09.intel.com ([134.134.136.24]:18604 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753151Ab2DPT1V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 15:27:21 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 3/5] ath9k: simplify ath9k_hw_get_scaled_power function
-Date: Mon, 16 Apr 2012 22:22:48 +0200
-Message-Id: <1334607770-26090-3-git-send-email-juhosg@openwrt.org> (sfid-20120416_212725_830389_B165E365)
-In-Reply-To: <1334607770-26090-1-git-send-email-juhosg@openwrt.org>
-References: <1334607770-26090-1-git-send-email-juhosg@openwrt.org>
+	id S1754300Ab2DXNQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Apr 2012 09:16:51 -0400
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+To: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [RFCv2 3/6] hwsim: Adds support for BT SOFTAMP for testing
+Date: Tue, 24 Apr 2012 16:17:37 +0300
+Message-Id: <1335273460-12682-4-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20120424_151702_337019_38B891BF)
+In-Reply-To: <1335273460-12682-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+References: <1335273460-12682-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/eeprom.c |   21 ++++++++-------------
- 1 files changed, 8 insertions(+), 13 deletions(-)
+From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index 61bad99..6a64dec 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -293,9 +293,7 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
- u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
- 			      u8 antenna_reduction)
- {
--	u16 scaled_power;
--
--	scaled_power = power_limit - antenna_reduction;
-+	u16 reduction = antenna_reduction;
+
+Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index b7ce6a6..bff3699 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1783,7 +1783,8 @@ static int __init init_mac80211_hwsim(void)
+ 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
+ 			BIT(NL80211_IFTYPE_P2P_GO) |
+ 			BIT(NL80211_IFTYPE_ADHOC) |
+-			BIT(NL80211_IFTYPE_MESH_POINT);
++			BIT(NL80211_IFTYPE_MESH_POINT) |
++			BIT(NL80211_IFTYPE_BLUETOOTH_SOFTAMP);
  
- 	/*
- 	 * Reduce scaled Power by number of chains active
-@@ -305,22 +303,19 @@ u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
- 	case 1:
- 		break;
- 	case 2:
--		if (scaled_power > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
--			scaled_power -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
--		else
--			scaled_power = 0;
-+		reduction += REDUCE_SCALED_POWER_BY_TWO_CHAIN;
- 		break;
- 	case 3:
--		if (scaled_power > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
--			scaled_power -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
--		else
--			scaled_power = 0;
-+		reduction += REDUCE_SCALED_POWER_BY_THREE_CHAIN;
- 		break;
- 	}
- 
--	scaled_power = max((u16)0, scaled_power);
-+	if (power_limit > reduction)
-+		power_limit -= reduction;
-+	else
-+		power_limit = 0;
- 
--	return scaled_power;
-+	return power_limit;
- }
- 
- void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
+ 		hw->flags = IEEE80211_HW_MFP_CAPABLE |
+ 			    IEEE80211_HW_SIGNAL_DBM |
 -- 
-1.7.2.1
+1.7.9.5
 
