@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:55551 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab2DBAK0 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:37712 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752894Ab2DXMaA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2012 20:10:26 -0400
-Received: by qafi31 with SMTP id i31so2246804qaf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2012 17:10:25 -0700 (PDT)
-From: Ben Gamari <bgamari.foss@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: wl1271 NVS file loading
-In-Reply-To: <877gxz6n9i.fsf@gmail.com>
-References: <877gxz6n9i.fsf@gmail.com>User-Agent: Notmuch/0.12+70~g9ceacb2 (http://notmuchmail.org) Emacs/23.3.1 (x86_64-pc-linux-gnu)
-Date: Sun, 01 Apr 2012 20:10:23 -0400
-Message-ID: <87pqbrj8nk.fsf@gmail.com> (sfid-20120402_021029_290191_10DF7FD8)
-MIME-Version: 1.0
+	Tue, 24 Apr 2012 08:30:00 -0400
+Received: by bkuw12 with SMTP id w12so392194bku.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 05:29:59 -0700 (PDT)
+Subject: Re: wlan0 not present
+Mime-Version: 1.0 (Apple Message framework v1257)
 Content-Type: text/plain; charset=us-ascii
+From: Dominik Feser <dominik.feser@googlemail.com>
+In-Reply-To: <CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
+Date: Tue, 24 Apr 2012 14:29:55 +0200
+Cc: Pat Erley <pat-lkml@erley.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	Dominik Feser <dominik.feser@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Message-Id: <D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com> (sfid-20120424_143005_356489_39966A55)
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> <8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com> <CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com> <9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com> <CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com> <8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com> <CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com> <37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com> <4F901224.1040508@sipsolutions.net> <EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com> <4F901F16.6080007@sipsolutions.net> <CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com> <CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com> <CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com> <CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com> <04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com> <CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com> <4F96939B.5030204@erley.org> <CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
+To: sedat.dilek@gmail.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Gamari <bgamari.foss@gmail.com> writes:
+What does that mean?
 
-> Hello all,
->
-> I'm running a PandaBoard with Linaro 12.03 and a patched 3.3
-> kernel. While wl1271 works perfectly with the Linaro kernel, it fails to
-> load in the case of my patched kernel with,
->
->      wl12xx: ERROR could not get nvs file ti-connectivity/wl1271-nvs.bin: -2
->
-> What is even more perplexing is the fact that the file in question
-> clearly exists,
->
->         $ ls /lib/firmware/ti-connectivity/*-nvs.bin -l
->         -rw-r--r-- 1 root root  912 2012-03-24 16:28 /lib/firmware/ti-connectivity/wl1271-nvs.bin
->         -rw-r--r-- 1 root root  912 2012-03-24 16:28 /lib/firmware/ti-connectivity/wl127x-nvs.bin
->         -rw-r--r-- 1 root root 1113 2012-03-24 16:28 /lib/firmware/ti-connectivity/wl128x-nvs.bin
->         lrwxrwxrwx 1 root root   14 2012-01-24 13:10 /lib/firmware/ti-connectivity/wl12xx-nvs.bin -> wl127x-nvs.bin
->
-> It seems that there is no easy way to troubleshoot udev's
-> /lib/udev/firmware script, so I have really no way of tracking this down
-> any further. Any ideas what might be going on here?
->
-It turns out I had neglected to compile wl1271 as a module and the
-firmware hadn't made it into the initrd.  I apologize for the noise.
 
-Cheers,
+Am 24.04.2012 um 14:07 schrieb Sedat Dilek:
 
-- Ben
+> On Tue, Apr 24, 2012 at 1:50 PM, Pat Erley <pat-lkml@erley.org> wrote:
+>> Try a newer compat-wireless.  I saw mention of a patch on this ML
+>> that iwlwifi was looking for firmwares that aren't available yet.
+>> 
+>> Specifically, it wants a -6 ucode, where you have -5.  I'm not
+>> sure if this has been merged upstream yet.
+>> 
+> 
+> No, pending for upstream and linux-stable GIT, see [1] and especially
+> "iwlwifi: use correct released ucode version" [2].
+> 
+> - Sedat -
+> 
+> [1] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=shortlog;h=refs/heads/wireless
+> [2] http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=patch;h=462156fac4d69483c1d54c6218d019681da8ad74
 
