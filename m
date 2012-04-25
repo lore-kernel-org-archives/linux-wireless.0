@@ -1,168 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28026 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755613Ab2DPWB3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:01:29 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/16] iwlwifi: move status definitions from iwl-shared
-Date: Mon, 16 Apr 2012 14:57:01 -0700
-Message-Id: <1334613430-30720-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120417_000232_518679_5BFD1312)
-In-Reply-To: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:40552 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758101Ab2DYGHf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2012 02:07:35 -0400
+Received: by wejx9 with SMTP id x9so885567wej.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 23:07:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAOvK7nCwRbDNZSnn0EvFMpcQMvX1DmU-tBuFT4kRW1TigwyJDQ@mail.gmail.com>
+References: <CAOvK7nAOHqKC8rpFDqGnW7NLCX-G2+syRGih_rv7N5O5rfOUdA@mail.gmail.com>
+	<CANUX_P1t8XJOka-QGzZSYFHb6MLc7rm4madn059Yg4b6hJB49A@mail.gmail.com>
+	<CAOvK7nDO4fS6R5go+ZXYBqyQc8hhbJGun9Weh=-EyX5k11+tXw@mail.gmail.com>
+	<CANUX_P2rzvDCBVLmU2rfaZmUOCMuMDe5=TXE_jwxq4ULrvc=QQ@mail.gmail.com>
+	<CAOvK7nCwRbDNZSnn0EvFMpcQMvX1DmU-tBuFT4kRW1TigwyJDQ@mail.gmail.com>
+Date: Wed, 25 Apr 2012 09:07:33 +0300
+Message-ID: <CANUX_P0JsyA53T_vs5Ea0pE5Ye4G9xRC4xKcdwgAmoC8E63sHg@mail.gmail.com> (sfid-20120425_080808_086575_584A5663)
+Subject: Re: iwlwifi bug
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: dchyan@princeton.edu
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On Wed, Apr 25, 2012 at 08:58, Daniel Chyan <dchyan@princeton.edu> wrote:
+> Correct me if I did it incorrectly. I issue "sudo modprobe iwlwifi
+> debug=0x80000000" but I receive an "Unknown symbol in module, or
+> unknown parameter" error.
+>
 
-The code has been changed, move the definitions to the proper file
-being used by the code.
-
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.h            |   18 +++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-shared.h         |   24 ---------------------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    8 +++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    6 ++--
- 6 files changed, 31 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index caef7a9..4485a0c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -82,6 +82,24 @@ extern struct iwl_lib_ops iwl6030_lib;
- 
- 
- 
-+/*****************************************************
-+* DRIVER STATUS FUNCTIONS
-+******************************************************/
-+#define STATUS_RF_KILL_HW	0
-+#define STATUS_CT_KILL		1
-+#define STATUS_ALIVE		2
-+#define STATUS_READY		3
-+#define STATUS_GEO_CONFIGURED	4
-+#define STATUS_EXIT_PENDING	5
-+#define STATUS_STATISTICS	6
-+#define STATUS_SCANNING		7
-+#define STATUS_SCAN_ABORTING	8
-+#define STATUS_SCAN_HW		9
-+#define STATUS_FW_ERROR		10
-+#define STATUS_CHANNEL_SWITCH_PENDING 11
-+#define STATUS_SCAN_COMPLETE	12
-+#define STATUS_POWER_PMI	13
-+
- struct iwl_ucode_capabilities;
- 
- extern struct ieee80211_ops iwlagn_hw_ops;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 2fe3145..82b52da 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -185,28 +185,4 @@ const char *get_cmd_string(u8 cmd);
- 
- #define IWL_CMD(x) case x: return #x
- 
--/*****************************************************
--* DRIVER STATUS FUNCTIONS
--******************************************************/
--#define STATUS_HCMD_ACTIVE	0	/* host command in progress */
--/* 1 is unused (used to be STATUS_HCMD_SYNC_ACTIVE) */
--#define STATUS_INT_ENABLED	2
--#define STATUS_RF_KILL_HW	3
--#define STATUS_CT_KILL		4
--#define STATUS_INIT		5
--#define STATUS_ALIVE		6
--#define STATUS_READY		7
--#define STATUS_TEMPERATURE	8
--#define STATUS_GEO_CONFIGURED	9
--#define STATUS_EXIT_PENDING	10
--#define STATUS_STATISTICS	12
--#define STATUS_SCANNING		13
--#define STATUS_SCAN_ABORTING	14
--#define STATUS_SCAN_HW		15
--#define STATUS_POWER_PMI	16
--#define STATUS_FW_ERROR		17
--#define STATUS_DEVICE_ENABLED	18
--#define STATUS_CHANNEL_SWITCH_PENDING 19
--#define STATUS_SCAN_COMPLETE	20
--
- #endif /* #__iwl_shared_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 731d275..6704dab 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -278,6 +278,14 @@ struct iwl_trans_pcie {
- 	unsigned long wd_timeout;
- };
- 
-+/*****************************************************
-+* DRIVER STATUS FUNCTIONS
-+******************************************************/
-+#define STATUS_HCMD_ACTIVE	0
-+#define STATUS_DEVICE_ENABLED	1
-+#define STATUS_TPOWER_PMI	2
-+#define STATUS_INT_ENABLED	3
-+
- #define IWL_TRANS_GET_PCIE_TRANS(_iwl_trans) \
- 	((struct iwl_trans_pcie *) ((_iwl_trans)->trans_specific))
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 96ca5ad..bf83806 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -150,7 +150,7 @@ void iwl_rx_queue_update_write_ptr(struct iwl_trans *trans,
- 			IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 		/* If power-saving is in use, make sure device is awake */
--		if (test_bit(STATUS_POWER_PMI, &trans_pcie->status)) {
-+		if (test_bit(STATUS_TPOWER_PMI, &trans_pcie->status)) {
- 			reg = iwl_read32(trans, CSR_UCODE_DRV_GP1);
- 
- 			if (reg & CSR_UCODE_DRV_GP1_BIT_MAC_SLEEP) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 2bc2670..21b7ca2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -107,7 +107,7 @@ void iwl_txq_update_write_ptr(struct iwl_trans *trans, struct iwl_tx_queue *txq)
- 		struct iwl_trans_pcie *trans_pcie =
- 			IWL_TRANS_GET_PCIE_TRANS(trans);
- 		/* if we're trying to save power */
--		if (test_bit(STATUS_POWER_PMI, &trans_pcie->status)) {
-+		if (test_bit(STATUS_TPOWER_PMI, &trans_pcie->status)) {
- 			/* wake up nic if it's powered down ...
- 			 * uCode will wake up, and interrupt us again, so next
- 			 * time we'll skip this part. */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 1b7c846..333a278 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1253,7 +1253,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
- 	clear_bit(STATUS_HCMD_ACTIVE, &trans_pcie->status);
- 	clear_bit(STATUS_INT_ENABLED, &trans_pcie->status);
- 	clear_bit(STATUS_DEVICE_ENABLED, &trans_pcie->status);
--	clear_bit(STATUS_POWER_PMI, &trans_pcie->status);
-+	clear_bit(STATUS_TPOWER_PMI, &trans_pcie->status);
- }
- 
- static void iwl_trans_pcie_wowlan_suspend(struct iwl_trans *trans)
-@@ -1574,9 +1574,9 @@ static void iwl_trans_pcie_set_pmi(struct iwl_trans *trans, bool state)
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 
- 	if (state)
--		set_bit(STATUS_POWER_PMI, &trans_pcie->status);
-+		set_bit(STATUS_TPOWER_PMI, &trans_pcie->status);
- 	else
--		clear_bit(STATUS_POWER_PMI, &trans_pcie->status);
-+		clear_bit(STATUS_TPOWER_PMI, &trans_pcie->status);
- }
- 
- #ifdef CONFIG_PM_SLEEP
--- 
-1.7.0.4
-
+All right, please compile with CONFIG_IWLWIFI_DEBUG=y
