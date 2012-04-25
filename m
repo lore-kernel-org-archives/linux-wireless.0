@@ -1,169 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:37892 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756197Ab2DNVWA convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:42494 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752882Ab2DYHcE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 17:22:00 -0400
-Date: Sat, 14 Apr 2012 23:21:24 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [ 00/78] 3.3.2-stable review
-Message-ID: <20120414232124.1ffd7ac9@stein> (sfid-20120414_232221_584667_90F5B8A1)
-In-Reply-To: <CAMP44s0ngzwkbQapTip=oW1b5m2uO5zCzbXHVqHXwT2+Wpgo_A@mail.gmail.com>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com>
-	<CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com>
-	<20120413105746.10ffb120@stein>
-	<CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com>
-	<20120413154216.476a02ac@stein>
-	<CAMP44s10KVwL5pY=Q5hWfyUtU6CvvZZ4Bcg-fEY9dAhSL306aQ@mail.gmail.com>
-	<20120414094137.54a7f213@stein>
-	<CAMP44s2Un-M2OCmuRQGpGsHR21gH=S7oJKx4Ci8tvYVCCSitUw@mail.gmail.com>
-	<20120414195559.3d5ab944@stein>
-	<CAMP44s0ngzwkbQapTip=oW1b5m2uO5zCzbXHVqHXwT2+Wpgo_A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 25 Apr 2012 03:32:04 -0400
+Received: by wibhq7 with SMTP id hq7so1488765wib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 00:32:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P2yiz025rkcDsisNd0uFfEaVV=Gycf0fzWA29ct7R9aDg@mail.gmail.com>
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
+	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
+	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
+	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
+	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
+	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
+	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
+	<4F901224.1040508@sipsolutions.net>
+	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
+	<4F901F16.6080007@sipsolutions.net>
+	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
+	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
+	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
+	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
+	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
+	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
+	<4F96939B.5030204@erley.org>
+	<CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
+	<D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com>
+	<CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com>
+	<CANUX_P1HQVUFcxFLtWoL+wvEXbNTk0qEJVM+4yJKBbGuhWvZbw@mail.gmail.com>
+	<CA+icZUUr9v-fc-86gAppJWF+c2PBE07eG28BNfQf+9ESvHqj=A@mail.gmail.com>
+	<CANUX_P2yiz025rkcDsisNd0uFfEaVV=Gycf0fzWA29ct7R9aDg@mail.gmail.com>
+Date: Wed, 25 Apr 2012 10:32:02 +0300
+Message-ID: <CANUX_P3R-8b=2b-+UqTMDF+hvY20iMbD3aY3_mqgqK38sop25g@mail.gmail.com> (sfid-20120425_093219_405771_67F6C90A)
+Subject: Re: wlan0 not present
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Dominik Feser <dominik.feser@googlemail.com>
+Cc: Pat Erley <pat-lkml@erley.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Content-Type: multipart/mixed; boundary=f46d0435c0620e944704be7bde69
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Apr 14 Felipe Contreras wrote:
-> On Sat, Apr 14, 2012 at 8:55 PM, Stefan Richter
-> <stefanr@s5r6.in-berlin.de> wrote:
-> > Generally, "commit + push out" makes it undroppable.  In case of -stable,
-> > commit/ push out/ tag are close and virtually identical.
-> >
-> > After a change was pushed out, the choice narrows down to add a reverting
-> > change for a subsequent release or to rebase to a point before the
-> > defective commit.  The latter is not done to -stable, obviously.  (3.3.2
-> > is not being restarted from 3.3 if a regression from 3.3 to 3.3.1 was
-> > discovered.)
-> 
-> That's irrelevant; whether you rebase and drop the patch, or you
-> revert it, the resulting code is *exactly* the same. It's also the
-> same if Greg drops it from his quilt queue before pushing (assuming
-> that's what he uses).
+--f46d0435c0620e944704be7bde69
+Content-Type: text/plain; charset=ISO-8859-1
 
-The result may be the same (sometimes it actually isn't), but the way to
-get there is not.
+Out of curisosity Dominik,
 
-> Let's avoid this semantic red herring, by undroppable I mean
-> unrevertable, or undiscardable, or anything that effectively makes the
-> patch not be there.
+can you please try the patch attached ?
 
-How do you "make it not be there"?  By adding a reverting patch.
+thanks
 
-The reverting patch needs to come from somewhere, and the only
-disagreement is basically through which channels the patch should be
-allowed to come, or which qualifications this reverting patch should
-fulfill.
+Emmanuel Grumbach
+egrumbach@gmail.com
 
-> >> But *why*? You say you *really* need to problem to fixed in mainline,
-> >> that's why it cannot be dropped, but that applies also to patches in
-> >> the queue *before* the tag is made, doesn't it? If you find a patch in
-> >> the stable review queue causes problems, why don't you leave it there?
-> >
-> > As Willy wrote, that's actually what is done sometimes.  I didn't know
-> > that.
-> 
-> Don't avoid the question.
 
-Willy answered that, hence I didn't think I have to.  The patch can in
-fact be kept in the stable queue as a reminder, it just should not be
-applied to stable as long as there is no resolution for mainline.
+On Wed, Apr 25, 2012 at 10:26, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Wed, Apr 25, 2012 at 09:23, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+>> On Tue, Apr 24, 2012 at 5:34 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>> On Tue, Apr 24, 2012 at 15:45, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+>>>> On Tue, Apr 24, 2012 at 2:29 PM, Dominik Feser
+>>>> <dominik.feser@googlemail.com> wrote:
+>>>>> What does that mean?
+>>>>>
+>>>>
+>>>> Pickup the patch from [2], apply it against a recent compat-wireless
+>>>> version, build and test.
+>>>> Report here again.
+>>>>
+>>>
+>>> Pretty sure it won't help. True, we were trying to request the wrong
+>>> fw, but then we requested (and got) the good one, so that the only
+>>> effect was that load time was longer that it could be. But here, we
+>>> can't even get anything working. And the prints don't made it to
+>>> kernel log properly
+>>>
+>>
+>> Originally I answered Pat as he asked what's the status with the patch
+>> concerning the firmware-issue.
+>> So, my post was about applying this one (so I understood the open question).
+>> I didn't care about the original concern of the reporter.
+>> BTW, the mentioned patch is now in wireless.git (master-2012-04-24-2).
+>
+> fair enough :-)
+>
+>>
+>> Currently, I have an issue myself on iwlwifi (6230) with Ubuntu
+>> precise, but it looks like a bug in network-manager with 3.4-rc4+ (see
+>> [1]).
+>>
+>> - Sedat -
+>>
+>> [1] https://bugzilla.redhat.com/show_bug.cgi?id=785772
+>>
+>
+> Thanks for that pointer.
 
-> I don't mean just leave it in the queue, I mean leave it so it gets
-> tagged in the release.
+--f46d0435c0620e944704be7bde69
+Content-Type: text/x-patch; charset=US-ASCII; name="ucode.patch"
+Content-Disposition: attachment; filename="ucode.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h1g6oi4a0
 
-That would be even sillier than the discussion which we are having.
-
-> >> You *really* need to problem fixed in mainline, don't you?
-> >>
-> >> So yesterday the priority is stability > 'upstream first', but today
-> >> it's 'upstream first' > stability. Nobody has put forward an argument
-> >> for this shift in priorities--
-> >
-> > Yesterday, folks cared about mainline too.
-> 
-> Who suggested otherwise? Being priority #2 doesn't mean you don't
-> care. We always care about mainline, even for patches that are not
-> proposed for 'stable'.
-> 
-> But if we found yesterday that the patch would break things, it would
-> not make it to the stable release.
-> 
-> You are again avoiding the argument.
-
-The priorities argument is bogus.  The procedure of receiving stable
-patches only as backports from mainline is exactly about stabilization,
-nothing else.
-
-[...]
-> > if a defective change was not dropped but released, and now requires
-> > a fix (e.g. revert) "today:  There are now /two/ bugs:  In the mainline
-> > and in a stable kernel.
-> 
-> What?! So, if an issue has been in the kernel for the last 10 years,
-> and it's just fixed, that means we suddenly have hundreds of bugs?
-
-You would have fixed hundreds of bugs if you released fixes into hundreds
-of kernel branches.
-
-> You are playing with words; it's *one* bug that is present in multiple releases.
-
-Count it as a single bug if you prefer.  The fact is, the bugs or bug
-needs fixes in each affected maintained kernel branch.  So even if you
-count one bug, there are still more than one bug resolutions to be done.
-
-> e) if it gets into Greg's stable queue; it's still *one* bug
-> f) and if it gets into v3.4.1; it's still *one* bug.
-[...]
-> By saying it's "two bugs", you are still avoiding the question of why
-> they are different. *Why* are they two bugs? What is so different
-> between e) and f)
-
-e) requires a fix to be published in the mainline.  f) requires a fix to
-be published in the mainline and another fix to be published in stable.
-
-> that makes bad patches undroppable?
-
-f) makes stable require a reverting patch.
-
-> I appreciate you are exploring this discussion, but I wonder if you
-> accept the possibility that there's actually no good reason for this
-> change in priorities, or if you accept that even a change in
-> priorities is taking place.
-
-Stabilization is the only priority.  There is nothing else.
-
-I stated one reason for the procedure in case of f):
-
-Fixing mainline first and then backporting to stable is always easier and
-safer than fixing stable first and only then start to think about how
-mainline can be fixed.  I and others also explained a bit more why it is
-easier and safer.
-
-I realise that this is not a good enough reason in your opinion, at least
-as far as revert-type fixes are concerned.  Some of the folks who are
-unfortunate enough to be Cc'd on this discussion have quite a bit of
-experience with varying kernel maintenance models though, so I find their
-opinions in these matters well worth thinking about.
--- 
-Stefan Richter
--=====-===-- -=-- -===-
-http://arcgraph.de/sr/
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTYwMDAuYyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTYwMDAuYwppbmRleCA2NDA2MGNkLi5mNWQw
+YjVhIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC02MDAwLmMK
+KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtNjAwMC5jCkBAIC0zMzQsNyAr
+MzM0LDcgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBpd2xfYnRfcGFyYW1zIGl3bDYwMDBfYnRfcGFy
+YW1zID0gewogI2RlZmluZSBJV0xfREVWSUNFXzYwMDUJCQkJCQlcCiAJLmZ3X25hbWVfcHJlID0g
+SVdMNjAwNV9GV19QUkUsCQkJCVwKIAkudWNvZGVfYXBpX21heCA9IElXTDYwMDBHMl9VQ09ERV9B
+UElfTUFYLAkJXAotCS51Y29kZV9hcGlfb2sgPSBJV0w2MDAwRzJfVUNPREVfQVBJX09LLAkJCVwK
+KwkudWNvZGVfYXBpX29rID0gSVdMNjAwMEcyQl9VQ09ERV9BUElfT0ssCQlcCiAJLnVjb2RlX2Fw
+aV9taW4gPSBJV0w2MDAwRzJfVUNPREVfQVBJX01JTiwJCVwKIAkubWF4X2luc3Rfc2l6ZSA9IElX
+TDYwX1JUQ19JTlNUX1NJWkUsCQkJXAogCS5tYXhfZGF0YV9zaXplID0gSVdMNjBfUlRDX0RBVEFf
+U0laRSwJCQlcCg==
+--f46d0435c0620e944704be7bde69--
