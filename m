@@ -1,62 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:47660 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755290Ab2DDC6K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 22:58:10 -0400
-Received: by bkcjk13 with SMTP id jk13so363100bkc.8
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Apr 2012 19:58:08 -0700 (PDT)
-Message-ID: <1333508285.24637.2.camel@cumari> (sfid-20120404_045844_879671_8A1DA190)
-Subject: Re: wl1271 watchdog interrupt
-From: Luciano Coelho <coelho@ti.com>
-To: Troy Kisky <troy.kisky@boundarydevices.com>,
-	Gary Thomas <gary@mlbassoc.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 04 Apr 2012 05:58:05 +0300
-In-Reply-To: <4F7BA34C.2030001@boundarydevices.com>
-References: <4F6A7FD0.8090404@boundarydevices.com>
-	  <4F71CDC7.2010207@mlbassoc.com> <1333355941.16990.23.camel@cumari>
-	 <4F7BA34C.2030001@boundarydevices.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from victor.provo.novell.com ([137.65.250.26]:44879 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755584Ab2DYFbn convert rfc822-to-8bit (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Wed, 25 Apr 2012 01:31:43 -0400
+Received: by bkuw12 with SMTP id w12so1058817bku.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 22:31:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn3-_TEYZiDFEBm9qxdPXgym1JvsY6Hh5jGPFxv-aw+x+Q@mail.gmail.com>
+References: <CALx5=V-adYC0FP5kJyjO3P=G0f2QsZOiTaJFO+mqHvxS_EvS7Q@mail.gmail.com>
+	<CAD2nsn3kZ_Yy=cuanf0erbTtiGEy5vxk0X-zatDaRAAgxWx8DQ@mail.gmail.com>
+	<CALx5=V89y-GuGm16En-E95FXAujRyhULeYn60crZhYKNzAPVpw@mail.gmail.com>
+	<CAD2nsn3-_TEYZiDFEBm9qxdPXgym1JvsY6Hh5jGPFxv-aw+x+Q@mail.gmail.com>
+Date: Wed, 25 Apr 2012 13:31:34 +0800
+Message-ID: <CALx5=V9e86po1enqVFOMOJPF3kf68EQ_z3JKrZbx5YsKGZMU7w@mail.gmail.com> (sfid-20120425_073146_983797_279B6855)
+Subject: Re: New PID to support.
+From: Matt Chen <machen@suse.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jeffrey Cheung <jcheung@suse.com>, joeyli <jlee@suse.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-03 at 18:26 -0700, Troy Kisky wrote: 
-> On 4/2/2012 1:39 AM, Luciano Coelho wrote:
-> >>> wl12xx: ERROR watchdog interrupt received! starting recovery.
-> >>> wl12xx: Reading FW panic log
-> >>> wl12xx: ERROR command complete timeout
-> > This is a firmware bug.  Can you please take the contents
-> > of /sys/bus/platform/drivers/wl12xx_driver/wl12xx/fwlog and send it to
-> > us so we can take a look at what's going on?
-> Sorry, it isn't a firmware bug. It was a configuration problem on my 
-> part. The defconfig
-> file I was using was enabling a TVOUT driver which this board doesn't 
-> have. When
-> the driver wanted to blank the screen, it was turning off my slow clock 
-> to my WL1271.
-> 
-> When the WL1271 later becomes idle, it goes into a low power state which 
-> depends upon
-> slow clock. So please tell your firmware guys, "never mind."
+Hi,
 
-Okay, cool that you found the reason for the problem. :) I thought it
-was a firmware problem because all the symptoms show that the chip
-stopped responding. :)
+2012/4/25 Mohammed Shafi <shafi.wireless@gmail.com>:
+> Hi,
+>
+>>> currently there is no hardware support in the current code.
+>>> soon support for this chip will be added.
+>> It sounds good to me. Any idea when it will be added ? :)
+>
+> not sure about the time line, probably by the end of 2012 :)
+> heard  that this is the next chip we will be supporting once AR9462
+> is completed.
+Oops....
+looks like it would take time for that. :)
+Thanks anyway.
+>>>
+>>>>
+>>>> --
+>>>> Thank you.
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>>
+>>> --
+>>> thanks,
+>>> shafi
+>>>
+>>
+>>
+>>
+>> --
+>> Thank you.
+>
+>
+>
+> --
+> thanks,
+> shafi
+>
 
 
-> >> wl12xx: Hardware recovery in progress. FW ver: Rev 6.3.0.0.77 pc: 0x23923
-> > This tells us where the PC was when the crash happened.  I'll ask our
-> > firmware team to analyze this.
-> "Never mind...."
-
-Cool!
-
-Now, Gary, do you still have the same (or a similar) problem with your
-setup?
 
 -- 
-Cheers,
-Luca.
-
+Thank you.
