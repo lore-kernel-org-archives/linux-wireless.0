@@ -1,67 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8196 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758552Ab2DXXv3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 19:51:29 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from blu0-omc2-s20.blu0.hotmail.com ([65.55.111.95]:47016 "EHLO
+	blu0-omc2-s20.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758075Ab2DYGPj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2012 02:15:39 -0400
+Message-ID: <BLU0-SMTP822240545EFE840A26E035AC270@phx.gbl> (sfid-20120425_081541_663966_7B756771)
+From: Nathan Hintz <nlhintz@hotmail.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 08/11] iwlwifi: add loose coex lut
-Date: Tue, 24 Apr 2012 16:46:01 -0700
-Message-Id: <1335311164-10252-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120425_015202_300218_678E9C4C)
-In-Reply-To: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335311164-10252-1-git-send-email-wey-yi.w.guy@intel.com>
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH 2/6] bcma: Move initialization of SPROM to prevent overwrite
+Date: Tue, 24 Apr 2012 23:15:15 -0700
+In-Reply-To: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com>
+References: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the Loose coex LUT and will use later for better bt coex tpt
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   23 +++++++++++++++++++++--
- 1 files changed, 21 insertions(+), 2 deletions(-)
+ arch/mips/bcm47xx/setup.c |    4 ++++
+ arch/mips/bcm47xx/sprom.c |    2 --
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 9fb4c7d..01dc442 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -186,7 +186,8 @@ done:
- /*
-  * BT coex
-  */
--static const __le32 iwlagn_def_3w_lookup[12] = {
-+/* Notmal TDM */
-+static const __le32 iwlagn_def_3w_lookup[IWLAGN_BT_DECISION_LUT_SIZE] = {
- 	cpu_to_le32(0xaaaaaaaa),
- 	cpu_to_le32(0xaaaaaaaa),
- 	cpu_to_le32(0xaeaaaaaa),
-@@ -201,7 +202,25 @@ static const __le32 iwlagn_def_3w_lookup[12] = {
- 	cpu_to_le32(0xf0005000),
- };
+diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
+index 19780aa..67d3d52 100644
+--- a/arch/mips/bcm47xx/setup.c
++++ b/arch/mips/bcm47xx/setup.c
+@@ -90,6 +90,7 @@ static int bcm47xx_get_sprom_ssb(struct ssb_bus *bus, struct ssb_sprom *out)
+ 	char prefix[10];
  
--static const __le32 iwlagn_concurrent_lookup[12] = {
-+
-+/* Loose Coex */
-+static const __le32 iwlagn_loose_lookup[IWLAGN_BT_DECISION_LUT_SIZE] = {
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaeaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xcc00ff28),
-+	cpu_to_le32(0x0000aaaa),
-+	cpu_to_le32(0xcc00aaaa),
-+	cpu_to_le32(0x0000aaaa),
-+	cpu_to_le32(0x00000000),
-+	cpu_to_le32(0x00000000),
-+	cpu_to_le32(0xf0005000),
-+	cpu_to_le32(0xf0005000),
-+};
-+
-+/* Full concurrency */
-+static const __le32 iwlagn_concurrent_lookup[IWLAGN_BT_DECISION_LUT_SIZE] = {
- 	cpu_to_le32(0xaaaaaaaa),
- 	cpu_to_le32(0xaaaaaaaa),
- 	cpu_to_le32(0xaaaaaaaa),
+ 	if (bus->bustype == SSB_BUSTYPE_PCI) {
++		memset(out, 0, sizeof(struct ssb_sprom));
+ 		snprintf(prefix, sizeof(prefix), "pci/%u/%u/",
+ 			 bus->host_pci->bus->number + 1,
+ 			 PCI_SLOT(bus->host_pci->devfn));
+@@ -118,6 +119,7 @@ static int bcm47xx_get_invariants(struct ssb_bus *bus,
+ 	if (nvram_getenv("boardrev", buf, sizeof(buf)) >= 0)
+ 		iv->boardinfo.rev = (u16)simple_strtoul(buf, NULL, 0);
+ 
++	memset(&iv->sprom, 0, sizeof(struct ssb_sprom));
+ 	bcm47xx_fill_sprom(&iv->sprom, NULL);
+ 
+ 	if (nvram_getenv("cardbus", buf, sizeof(buf)) >= 0)
+@@ -166,12 +168,14 @@ static int bcm47xx_get_sprom_bcma(struct bcma_bus *bus, struct ssb_sprom *out)
+ 
+ 	switch (bus->hosttype) {
+ 	case BCMA_HOSTTYPE_PCI:
++		memset(out, 0, sizeof(struct ssb_sprom));
+ 		snprintf(prefix, sizeof(prefix), "pci/%u/%u/",
+ 			 bus->host_pci->bus->number + 1,
+ 			 PCI_SLOT(bus->host_pci->devfn));
+ 		bcm47xx_fill_sprom(out, prefix);
+ 		return 0;
+ 	case BCMA_HOSTTYPE_SOC:
++		memset(out, 0, sizeof(struct ssb_sprom));
+ 		bcm47xx_fill_sprom_ethernet(out, NULL);
+ 		core = bcma_find_core(bus, BCMA_CORE_80211);
+ 		if (core) {
+diff --git a/arch/mips/bcm47xx/sprom.c b/arch/mips/bcm47xx/sprom.c
+index 5c8dcd2..bc19234 100644
+--- a/arch/mips/bcm47xx/sprom.c
++++ b/arch/mips/bcm47xx/sprom.c
+@@ -555,8 +555,6 @@ void bcm47xx_fill_sprom_ethernet(struct ssb_sprom *sprom, const char *prefix)
+ 
+ void bcm47xx_fill_sprom(struct ssb_sprom *sprom, const char *prefix)
+ {
+-	memset(sprom, 0, sizeof(struct ssb_sprom));
+-
+ 	bcm47xx_fill_sprom_ethernet(sprom, prefix);
+ 
+ 	nvram_read_u8(prefix, NULL, "sromrev", &sprom->revision, 0);
 -- 
-1.7.0.4
+1.7.7.6
 
