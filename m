@@ -1,74 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:52166 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751793Ab2DQIJA convert rfc822-to-8bit (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:45937 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757964Ab2DYCOz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 04:09:00 -0400
-Received: by yenl12 with SMTP id l12so2904774yen.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 01:09:00 -0700 (PDT)
+	Tue, 24 Apr 2012 22:14:55 -0400
+Received: by qatm19 with SMTP id m19so3255840qat.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 19:14:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201204162225.q3GMPTrS006633@mail.maya.org>
-References: <201204162225.q3GMPTrS006633@mail.maya.org>
-Date: Tue, 17 Apr 2012 10:09:00 +0200
-Message-ID: <CAGXE3d8Vdg3VHKVJQ4KLK_Tje1ZCEzjESBFYDTWNAsAMTHsTVg@mail.gmail.com> (sfid-20120417_100907_713298_4C95C643)
-Subject: Re: [PATCH] rt2x00: Don't let mac80211 send a BAR when an AMPDU
- subframe fails
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org
+Date: Tue, 24 Apr 2012 19:14:54 -0700
+Message-ID: <CAJe-LUjzftkutfu8RZ7GbzH7nKv14Sg5orepAXnWdejwhsjwLg@mail.gmail.com> (sfid-20120425_041459_182468_D4F171BC)
+Subject: no 5ghz channels available for hostapd?
+From: Mike Mohr <akihana@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 17, 2012 at 12:25 AM, Andreas Hartmann
-<andihartmann@01019freenet.de> wrote:
-> There are connection stalls or very poor throughputs with rt2800
-> hardware using 802.11n in AP mode since patch "mac80211: retry sending
-> failed BAR frames later instead of tearing down aggr"[1][2].
->
-> Since rt2800 hardware is not able to correctly report the tx status of
-> BAR frames, this patch removes as workaround the existing error handling
-> on AP side, which lets mac80211 send a BAR when an AMPDU subframe fails.
->
-> As a result, most wifi clients (aside from Intel STAs on Windows)
-> instead will timeout now the reorder buffer and request the lost frame
-> again.
->
-> The correct solution would be, to tear down BA session on AP side.
->
-> This patch was born on the basis of "[RFT] rt2x00: Tear down BA
-> session on QoS frame failure"[3].
->
-> Thanks to Helmut Schaa for his support!
->
-> [1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/83297/focus=83304
-> [2] http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commit;h=f0425beda4d404a6e751439b562100b902ba9c98
-> [3] http://thread.gmane.org/gmane.linux.drivers.rt2x00.user/569
->
-> Signed-off-by: Andreas Hartmann <andihartmann@01019freenet.de>
+Good evening;
 
-Thanks for the patch Andreas! Let's use this as a workaround for now.
+I've run into a problem with a wireless card (hardware ids: 168c:0029,
+ath9k) whose regdomain is programmed in the eeprom to 0x00.  'iw list'
+shows all channels in the 5GHz range as either "(passive scanning, no
+IBSS)" or "(disabled)".  I'd used madwifi in the past successfully and
+only started seeing this problem after upgrading to kernel 3.2.5 and
+ath9k.  After some digging I think I've found the culprit:
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+$ iw reg get
+country 00:
+        (2402 - 2472 @ 40), (6, 20)
+        (2457 - 2482 @ 20), (6, 20), PASSIVE-SCAN, NO-IBSS
+        (2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
+        (5170 - 5250 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
+        (5735 - 5835 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
 
-> ---
-> Index: a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> ===================================================================================
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c   2012-02-02 22:12:56.000000000 +0100
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c   2012-04-16 23:26:46.100458775 +0200
-> @@ -387,9 +387,10 @@
->                tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
->                tx_info->status.ampdu_len = 1;
->                tx_info->status.ampdu_ack_len = success ? 1 : 0;
-> -
-> -               if (!success)
-> -                       tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
-> +               /*
-> +                * TODO: Need to tear down BA session here
-> +                * if not successful.
-> +                */
->        }
->
->        if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+trying to fix this situation with 'iw reg set' does nothing,
+apparently by design of the driver.  I'm in the US and clearly should
+be able to use at least 1 5GHz channel at some power level.  The
+output of regdbdump tells the sorry tale: country '00' has a heavily
+restricted, 2.4-GHz-only policy.  My guess as to how to proceed is
+twofold:
+
+1) Find a way to modify the card's EEPROM and set the regdomain to
+whatever value corresponds to the USA.  The probability of success on
+this seems to be low, as I have no idea what tools are capable of
+doing such modifications.
+2) Modify the regulatory.bin file, copying the US values into the '00'
+country and replacing the original regulatory.bin with my modified
+one.
+
+Can someone provide an alternate solution?
+
+Thanks,
+Michael Mohr
