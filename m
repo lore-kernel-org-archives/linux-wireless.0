@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60347 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755292Ab2DPW2e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:28:34 -0400
-Received: by iagz16 with SMTP id z16so8029172iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 15:28:34 -0700 (PDT)
-Message-ID: <4F8C9D0D.6070606@lwfinger.net> (sfid-20120417_002849_460376_844E0FEE)
-Date: Mon, 16 Apr 2012 17:28:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:43451 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750864Ab2DYMZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2012 08:25:27 -0400
+Date: Wed, 25 Apr 2012 14:25:55 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Tino Keitel <tino.keitel@tikei.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Power saving features for iwl4965
+Message-ID: <20120425122554.GD2466@redhat.com> (sfid-20120425_142546_939665_A89EE73D)
+References: <20120418203543.GA16000@x61.home>
 MIME-Version: 1.0
-To: Jan Simonson <jan@simonson.se>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: RTL8192e-pci NIC
-References: <1502184.lhzNHmlX61@ymer> <20120409192630.GB26994@tuxdriver.com> <4F835FB9.5020100@lwfinger.net> <3893847.nxaiIbI8jN@ymer>
-In-Reply-To: <3893847.nxaiIbI8jN@ymer>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120418203543.GA16000@x61.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/11/2012 10:51 AM, Jan Simonson wrote:
->
-> That would be very helpful! I look forward to hear from you again when it's
-> available on your ftp site.
->
-> Thanks again for helping me with this problem.
+On Wed, Apr 18, 2012 at 10:35:43PM +0200, Tino Keitel wrote:
+> up to 2.6.38, the iwl4965 driver was able to use power saving features
+> by invoking "iwconfig <interface> power on", at least when unsetting
+> the broken_powersave variable.
+> 
+> 2.6.39 introduced a new iwlegacy driver for iwl4965 hardware, which was
+> missing power saving.  I was able to port the 2.6.38 driver up to
+> kernel 3.1, but it got too complicated for me with 3.2. 
+> 
+> Are there any plans to fix this power usage regression at some point in
+> the iwlegacy driver? I think there are still a lot of iwl4965 users out
+> there.
+Yes, adding PS support is on my iwlegacy TODO list.
 
-As you saw from the copies of E-mails, my problem was in the configuration of my 
-kernel. The stand-alone source is available from
-
-http://www.lwfinger.com/realtek/rtl8192e_pci_sa.tar.bz2
-
-Download any unpack that file, cd to rtl8192e_sa and do a 'make' followed by 
-'sudo make install'. Your device should then work.
-
-For anyone else reading this thread, this step is needed for Fedora and other 
-distros that do not enable staging drivers.
-
-Larry
-
+Stanislaw
