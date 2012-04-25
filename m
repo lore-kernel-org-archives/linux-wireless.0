@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50970 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752514Ab2DCMsa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37654 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752705Ab2DYNBE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Apr 2012 08:48:30 -0400
-Message-ID: <1333457309.3574.20.camel@jlt3.sipsolutions.net> (sfid-20120403_144848_277475_8E52A86D)
-Subject: Re: [PATCH] mac80211: clean up an ieee80211_do_open error path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Eliad Peller <eliad@wizery.com>
-Date: Tue, 03 Apr 2012 14:48:29 +0200
-In-Reply-To: <1333457154.3574.18.camel@jlt3.sipsolutions.net> (sfid-20120403_144559_919415_04C97E86)
-References: <1333457154.3574.18.camel@jlt3.sipsolutions.net>
-	 (sfid-20120403_144559_919415_04C97E86)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 25 Apr 2012 09:01:04 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [RFC] mac80211: fix rate control update on 2040 bss change
+Date: Wed, 25 Apr 2012 18:31:49 +0530
+Message-ID: <1335358909-24905-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120425_150109_397153_B5FE7644)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-04-03 at 14:45 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Eliad's comment prompted me to look closer at
-> the error paths in ieee80211_do_open() and I
-> found one that should use the error labels.
+The rate control updatation never be called on 2040 BSS change.
+The station should update its rate control on receiving beacon
+with different HT mode in the HT operation IE. Not doing so,
+leads to sending frames with higher(ht40) rates whereas AP is
+running in lower mode (ht20).
 
-Note that in practice it doesn't matter.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ net/mac80211/mlme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +++ b/net/mac80211/iface.c	2012-04-03 14:44:24.000000000 +0200
-> @@ -349,9 +349,8 @@ static int ieee80211_do_open(struct net_
->  		memcpy(dev->perm_addr, dev->dev_addr, ETH_ALEN);
->  
->  		if (!is_valid_ether_addr(dev->dev_addr)) {
-> -			if (!local->open_count)
-> -				drv_stop(local);
-> -			return -EADDRNOTAVAIL;
-> +			res = -EADDRNOTAVAIL;
-> +			goto err_stop;
->  		}
-
-This calls drv_stop() etc, so the only thing we don't clean up here is
-
->  	sdata->bss = NULL;
->  	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
->  		list_del(&sdata->u.vlan.list);
-> +	/* might already be clear but that doesn't matter */
->  	clear_bit(SDATA_STATE_RUNNING, &sdata->state);
-
-the BSS clearing and the state bit. Neither of those can actually be
-relevant though since AP_VLAN interfaces can't be brought up as the
-first ones since they're slaved to an AP interface...
-
-Still better to clean up, but no reason to bother stable.
-
-johannes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c8836fa..56128d3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -210,7 +210,7 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
+ 		disable_40 = true;
+ 
+ 	if (sta && (!reconfig ||
+-		    (disable_40 != !!(sta->sta.ht_cap.cap &
++		    (disable_40 == !!(sta->sta.ht_cap.cap &
+ 					IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
+ 
+ 		if (disable_40)
+-- 
+1.7.10
 
