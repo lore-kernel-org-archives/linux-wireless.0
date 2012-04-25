@@ -1,97 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50633 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753504Ab2DWRtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Apr 2012 13:49:13 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH v4 1/2] mac80211: rename AP variable num_sta_authorized to num_mcast_sta
-Date: Mon, 23 Apr 2012 19:49:02 +0200
-Message-Id: <1335203343-61999-1-git-send-email-nbd@openwrt.org> (sfid-20120423_194916_456051_C7D52E69)
+Received: from mailout2.ltindia.com ([125.18.18.171]:8155 "EHLO
+	mailout2.ltindia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752905Ab2DYQVy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2012 12:21:54 -0400
+From: Girish Bn <Girish.BN@lnties.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: WiFi Direct - P2P Group Owner mode
+Date: Wed, 25 Apr 2012 16:21:50 +0000
+Message-ID: <45566970CF58C74CB52107862E0541CD1D13ABF6@POCITMSEXMB02.LntUniverse.com> (sfid-20120425_182157_601967_93045586)
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is only used to test for BSS multicast receivers.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/debugfs_netdev.c |    4 ++--
- net/mac80211/ieee80211_i.h    |    2 +-
- net/mac80211/sta_info.c       |    4 ++--
- net/mac80211/tx.c             |    2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
+Hi,
+We are backporting the WL1271 driver from Compat Wireless-2.6(2012-02-22) to Linux 2.6.28.2 on LPC313X platform.
+1.      Bootup the system and load all the driver modules
+2.      Started the WPA Supplicant (#./wpa_supplicant -d -Dnl80211 -c /etc/wpa_supplicant.conf -iwlan0 -B)
+3.      Start wpa_cli application
+4.      Run the following commands
+             a.      p2p_find
+             b.      p2p_peers
+             c.      p2p_group_add - Configure the System as Group Owner(GO)
+             d.      wps_pbs - Work in Push Button Mode
+5.      Note down the 8 digit passphrase
+6.      Select the Wi-Fi network name from the iPad and enter the passphrase noted above.
+7.      Check the IP address of the iPad. If the no IP is taken from DHCP, assign a static IP
+8.      Exit the wpa_cli application
+9.      Assign an IP address 169.254.50.100 to System
+10.   Ping between the iPad and System
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index e7af522..ea0122d 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -394,7 +394,7 @@ static ssize_t ieee80211_if_parse_uapsd_max_sp_len(
- __IEEE80211_IF_FILE_W(uapsd_max_sp_len);
- 
- /* AP attributes */
--IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
-+IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
- IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
- IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
- 
-@@ -540,7 +540,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
- 
- static void add_ap_files(struct ieee80211_sub_if_data *sdata)
- {
--	DEBUGFS_ADD(num_sta_authorized);
-+	DEBUGFS_ADD(num_mcast_sta);
- 	DEBUGFS_ADD(num_sta_ps);
- 	DEBUGFS_ADD(dtim_count);
- 	DEBUGFS_ADD(num_buffered_multicast);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index bd7a451..4404753 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -282,7 +282,7 @@ struct ieee80211_if_ap {
- 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
- 	struct sk_buff_head ps_bc_buf;
- 	atomic_t num_sta_ps; /* number of stations in PS mode */
--	atomic_t num_sta_authorized; /* number of authorized stations */
-+	atomic_t num_mcast_sta; /* number of stations receiving multicast */
- 	int dtim_count;
- 	bool dtim_bc_mc;
- };
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 7fd7ac4..4c04eb5 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1418,14 +1418,14 @@ int sta_info_move_state(struct sta_info *sta,
- 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
- 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
- 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
--				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
-+				atomic_dec(&sta->sdata->u.ap.num_mcast_sta);
- 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
- 		}
- 		break;
- 	case IEEE80211_STA_AUTHORIZED:
- 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
- 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
--				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
-+				atomic_inc(&sta->sdata->u.ap.num_mcast_sta);
- 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
- 		}
- 		break;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 0abbef95..44001c7 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -306,7 +306,7 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 		}
- 	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
- 			    ieee80211_is_data(hdr->frame_control) &&
--			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
-+			    !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
- 		/*
- 		 * No associated STAs - no need to send multicast
- 		 * frames.
--- 
-1.7.3.2
+Please note that establishment of connection between System and iPad/iPhone fails may times and if you try again after waiting for 15 to 30mins, the connection happens successfully.
+However, we are able establish the connection immediately to laptop.
+Let us any steps we are missing to successfully establish the connection without waiting.
 
+Thanks
+Girish
+
+
+Thanks & Regards,
+Girish
+L&T IES,
+E-mail ID :Girish.BN@lnties.com
+www.lnties.com
+
+This mail is classified as :
+(  ) L&T IES Proprietary
+(  ) L&T IES Confidential
+(X) L&T IES Internal Use
+( ) L&T IES General Business
+
+Larsen & Toubro Limited
+
+www.larsentoubro.com<https://indmail.lntinfotech.com/owa/redir.aspx?C=2b4a0c51a57b47038127dd84059c7429&URL=http%3a%2f%2fwww.larsentoubro.com>
+
+This Email may contain confidential or privileged information for the intended recipient (s). If you are not the intended recipient, please do not use or disseminate the information, notify the sender and delete it from your system.
+
+ Earth Day. Every Day.
