@@ -1,108 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39177 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762772Ab2DLVVk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:21:40 -0400
-Message-ID: <4F874760.3070900@candelatech.com> (sfid-20120412_232149_900649_F4D82B9D)
-Date: Thu, 12 Apr 2012 14:21:36 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from smtp1.u-psud.fr ([129.175.33.41]:51869 "EHLO smtp1.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753828Ab2DYI2N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2012 04:28:13 -0400
+Message-ID: <4F97B357.1030609@lri.fr> (sfid-20120425_102821_021371_9CB5E715)
+Date: Wed, 25 Apr 2012 10:18:31 +0200
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: Florian Fainelli <florian@openwrt.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 4/5] mac80211: Add more ethtools stats: survey, rates,
- etc
-References: <1334248375-22967-1-git-send-email-greearb@candelatech.com>   <1334248375-22967-5-git-send-email-greearb@candelatech.com>   <4F8705E3.2010902@openwrt.org> <4F870828.4020708@candelatech.com>  <1334259053.2497.18.camel@bwh-desktop.uk.solarflarecom.com>  <4F873F10.6010207@candelatech.com> <1334264733.2497.35.camel@bwh-desktop.uk.solarflarecom.com>
-In-Reply-To: <1334264733.2497.35.camel@bwh-desktop.uk.solarflarecom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"hostap@lists.shmoo.com" <hostap@lists.shmoo.com>
+Subject: Re: Strange problem with ath9k and ASUS N66U AP.
+References: <4F972E3F.4020609@candelatech.com> <4F97449F.5040505@candelatech.com> <20120425060853.GA3324@w1.fi> <4F97987B.7050600@candelatech.com>
+In-Reply-To: <4F97987B.7050600@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/2012 02:05 PM, Ben Hutchings wrote:
-> On Thu, 2012-04-12 at 13:46 -0700, Ben Greear wrote:
->> On 04/12/2012 12:30 PM, Ben Hutchings wrote:
->>> On Thu, 2012-04-12 at 09:51 -0700, Ben Greear wrote:
->>>> On 04/12/2012 09:42 AM, Florian Fainelli wrote:
->>>>> Hi,
->>>>>
->>>>> Le 04/12/12 18:32, greearb@candelatech.com a écrit :
->>>>>> From: Ben Greear<greearb@candelatech.com>
->>>>>>
->>>>>> The signal and noise are forced to be positive since ethtool
->>>>>> deals in unsigned 64-bit values and this number should be human
->>>>>> readable. This gives easy access to some of the data formerly
->>>>>> exposed in the deprecated /proc/net/wireless file.
->>>>>
->>>>> Uh, that's misleading, the signal and noise values are typically negative, so one needs to think about mentally adding a minus sign if he/she wants to
->>>>> understand it. Does not ethtool know about 32-bits signed integers?
->>>>
->>>> Ethtool stats only supports u64.  I think it's easy enough for
->>>> humans or programs to add the negative sign.  Can signal or noise
->>>> ever be>   0?  If so, that could actually break something that depends
->>>> on flipping the value to negative....
->>>
->>> So far as I can see, the ethtool stats were expected to be counters,
->>> which obviously cannot become negative (or fractional).  Maybe it's time
->>> to define another command and string-set to cover other types of status
->>> information.  The ethtool utility could ask for those typed statistics
->>> as well, so 'ethtool -S' would get all of them.
->>
->> One nice thing about ethtool stats API is that it is backwards and forwards
->> compatible for a long while.
->
-> Agreed.
+On 25/04/2012 08:23, Ben Greear wrote:
+> On 04/24/2012 11:08 PM, Jouni Malinen wrote:
+>> Either the AP did not receive the first EAPOL-Key 4/4 or processed it
+>> only after retransmitting 3/4. Supplicant side will need to to reply to
+>> retransmitted 3/4 to complete the 4-way handshake. If the AP received
+>> either of these 4/4 messages, it should be fine with the result. If it
+>> didn't receive either, it should disconnect the station. It does not
+>> look like either of those happened.
+> 
+> Ok, it seems strange they would have such a lame
+> bug, but maybe they never tried associating several stations at once.
+> (I see around 30% failure rate when using just 15 stations).
+> 
+> We have several off-the-shelf APs and home-grown ones (using ath9k) that work fine,
+> even when associating 100+ stations, so at the least the N66U is weird...
+> 
+> That said, I'll probably need to attempt a work-around for this.  The only
+> obvious thing I see is the extra RX EAPOL (in all error cases I looked at, and none
+> where it associated properly), and the fact that DHCP just fails to acquire a lease.
+> 
+> I'll try adding a hack to detect the duplicate RX EAPOL and bounce the connection
+> if that hits, and see if that helps any...
+> 
 
-> Actually it would be:
->
-> foo:s32: 18446744073709551615
->
->> while a new one understand that the s32: prefix is special, do
->> some casting, and could show:
->> foo: -1
->>
->> Both are still at least somewhat human readable,
->
-> I don't think many humans can mentally substract 2^64.
+It could look like the old bug i had, where the station would send
+EAPOL-Key 4/4 encrypted when associating. Normally, the AP should
+disconnect the station, it would retry and hopefully succeed next time,
+and no one would have noticed anything, except this AP doesn't
+disconnect the station and it doesn't recover.
 
-Well, if we add a new API, then anyone on older ethtool
-won't see it at all, which is even more useless than a
-large ugly number.
+Basically, wpa_supplicant sends the EAPOL-Key 4/4, then adds the PTK/GTK
+in the kernel, but due to scheduling/queuing/buffering of the EAPOL
+packet, it would be sent encrypted with the PTK ...
 
-Those of us using ethtool API directly would have to add new
-ioctl calls (and the performance is important to me, even
-if atomicity isn't so important).  That is more work than
-adding some logic to parse suffixes on the strings I think.
-
->> and probably wouldn't confuse anyone that is parsing the output of
->> existing ethtool output.
->
-> I think you have this backwards: printing numbers in two different ways
-> (old and new versions of ethtool) is likely to confuse scripts that are
-> parsing and doing calculations with these numbers.  While I try to avoid
-> gratuitous changes in output formatting, scripts should use the ethtool
-> API if they really want interface stability.  It's not difficult (there
-> are at least Python and Perl bindings available) and it's a lot more
-> efficient.
-
-If the new ethtool -S is going to nicely present things (ie, show "foo: -1"),
-then the negative numbers are there anyway, so maybe the compatibility issue
-for anyone parsing the output of 'ethtool -S' is moot.  Anyone parsing the
-binary API sees no changes, but *could* update code to look at the suffix
-if they cared.
-
-That said, I *would* like a new 'ethool get-stats' API that took a 'verbose'
-argument so that we could return more or less verbose results (dependent on the
-driver to determine what that means).  That way, we could probe easy-to-obtain
-information quickly and often, and if there is something more expensive to obtain,
-that could be probed less often.  If this idea is worth pursuing, then perhaps
-it could also include a new binary API that includes a type identifier.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+If when monitoring, you don't see any plaintext EAPOL-Key 4/4 coming
+from the failed stations, then it could be the same problem.
