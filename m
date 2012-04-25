@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:51224 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750763Ab2DQUB2 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40977 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369Ab2DYAoP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 16:01:28 -0400
-Received: by eekc41 with SMTP id c41so1714816eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 13:01:27 -0700 (PDT)
-Message-ID: <4F8DCC15.8080006@gmail.com> (sfid-20120417_220132_602326_93F97827)
-Date: Tue, 17 Apr 2012 22:01:25 +0200
-From: Mark Baas <mark.baas@gmail.com>
+	Tue, 24 Apr 2012 20:44:15 -0400
+Received: by iadi9 with SMTP id i9so1713268iad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 17:44:14 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CANK3ZEcGEs6xSn8tgniXCGVN50VadYaY2ZvV0Fis236O19nqNQ@mail.gmail.com>
+References: <CANK3ZEcGEs6xSn8tgniXCGVN50VadYaY2ZvV0Fis236O19nqNQ@mail.gmail.com>
+Date: Tue, 24 Apr 2012 17:44:14 -0700
+Message-ID: <CANK3ZEczOgsru2BZ=sLnYxx_3St872y0-qAbYBV-PkhpNioNxQ@mail.gmail.com> (sfid-20120425_024418_641933_D406883B)
+Subject: Re: Survey dump does not seem to work with SONY USB Wireless LAN
+ Adapter UWA-BR100
+From: Aseem Sharma <aseem.sharma19@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: 0489:e03c Foxconn / Hon Hai
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
+Hello,
 
-I have a Acer Timelinex 4830TG with a 0489:e03c Foxconn / Hon Hai 
-Bluetooth usb device. This device usually loads fine, but cannot detect 
-any devices. I believe this is a Atheros (?3012), so I added the device 
-to the btusb.c blacklist and enabled it in ath3k.c. However it won't 
-load as it comes with the error:
-Bluetooth: Error in firmware loading err = -110,len = 0, size = 4096
-ath3k: probe of 1-1.6:1.0 failed with error -110
+I was previously using Cisco Aironet wireless adapter (it uses ath5k
+driver); using which I was able to get the survey dump using the following
+command:
 
-Can it be that the firmware has to be modified to support this device? 
-Or possible it is not a 3012 or 3011 device, however i am quite sure it 
-is a Atheros device: http://listing.driveragent.com/c/usb/0489/e03c
-Can anyone help me figure out what needs to be done to get this device 
-supported?
+root@as75:~# iw phy phy0 interface add mon0 type monitor
+root@as75:~# ifconfig mon0 up
+root@as75:~# iw dev mon0 survey dump
 
-Greetings,
+Survey data from mon0
+        frequency:                      2412 MHz
+        noise:                          -95 dBm
+        channel active time:            11813 ms
+        channel busy time:              300 ms
+        channel receive time:           237 ms
+        channel transmit time:          0 ms
 
-Mark
+However, when I run the same commands after connecting SONY USB Wireless
+LAN Adapter UWA-BR100 (which internally uses ath9k_htc driver) I do not seem
+to get any output. Also, the command is successful (as I am running echo $?
+which returns ‘0’)
 
+My questions:
+1. Is there any other command or proc/sys interface from where I can
+retreive this information?
+2. Is there any other command option that I can use to retreive this
+information?
+3. Is there a patch for the above said driver that I can use?
+
+Any help will be really appreciated.
+
+Thanks in advance,
+Aseem
+(Newbie with Linux drivers)
