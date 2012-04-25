@@ -1,77 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14459 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751274Ab2DROpq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:45:46 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from shards.monkeyblade.net ([198.137.202.13]:53801 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758960Ab2DYUkh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2012 16:40:37 -0400
+Date: Wed, 25 Apr 2012 16:39:26 -0400 (EDT)
+Message-Id: <20120425.163926.2209040699696617525.davem@davemloft.net> (sfid-20120425_224044_793992_B8BB00D8)
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/15] update for 3.5: iwlwifi 2012-04-18
-Date: Wed, 18 Apr 2012 07:41:02 -0700
-Message-Id: <1334760077-5714-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120418_164550_102209_3B264ACF)
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-04-25
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120425191418.GC16900@tuxdriver.com>
+References: <20120425191418.GC16900@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Another batch of the cleanup and refactor work to prepare our up-coming
-new architecture. Two more batch set to come.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 25 Apr 2012 15:14:19 -0400
 
-David Spinadel (3):
-  iwlwifi: Change disable calibration bit-set to enum
-  iwlwifi: Added foreward declaration for iwl_cfg in op_mode
-  iwlwifi: Remove inconsistent and redundant declaration
+> This is another batch of updates intended for 3.5...
+ ...
+> Please let me know if there are problems!
 
-Emmanuel Grumbach (11):
-  iwlwifi: kill shrd->drv, driver points to transport
-  iwlwifi: op_mode holds its pointer to the transport
-  iwlwifi: op_mode holds its pointer to the config
-  iwlwifi: driver holds its pointer to the config
-  iwlwifi: transport holds its pointer to the config
-  iwlwifi: driver holds its pointer to the transport
-  iwlwifi: don't use shared for the logger any more
-  iwlwifi: remove the shared area
-  iwlwifi: remove unneeded includes
-  iwlwifi: split between AGG_ON and AGG_STARTING
-  iwlwifi: move iwl_rxon_context_id to user
+There are:
 
-Johannes Berg (1):
-  iwlwifi: improve TX cache footprint
+>From 792545c7bc5d6b922d3778dc602e557d64c83551 Mon Sep 17 00:00:00 2001
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Mon, 23 Apr 2012 19:55:48 -0700
+Subject: [PATCH 88/88] libertas: include sched.h on firmware.c
 
-these patches are also available from wireless-next branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+Do not assume we have our subsystem including this for us,
+at least for older kernels this is not true. Lets just be
+explicit about this requirement for the usage of wake_up().
 
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |    8 +-
- drivers/net/wireless/iwlwifi/iwl-agn-devices.c    |   24 ++--
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |   25 ++---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    8 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |   13 +--
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |    5 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |   16 ++--
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |   44 ++++++---
- drivers/net/wireless/iwlwifi/iwl-agn.c            |  112 ++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-agn.h            |   11 +-
- drivers/net/wireless/iwlwifi/iwl-core.c           |    3 -
- drivers/net/wireless/iwlwifi/iwl-debug.h          |   12 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |   16 ++--
- drivers/net/wireless/iwlwifi/iwl-dev.h            |   27 ++++--
- drivers/net/wireless/iwlwifi/iwl-drv.c            |   61 ++++++------
- drivers/net/wireless/iwlwifi/iwl-drv.h            |   20 ++--
- drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   62 ++++++------
- drivers/net/wireless/iwlwifi/iwl-io.h             |    1 -
- drivers/net/wireless/iwlwifi/iwl-led.c            |   17 ++--
- drivers/net/wireless/iwlwifi/iwl-mac80211.c       |   41 ++++----
- drivers/net/wireless/iwlwifi/iwl-op-mode.h        |    2 +
- drivers/net/wireless/iwlwifi/iwl-pci.c            |   58 +++++------
- drivers/net/wireless/iwlwifi/iwl-phy-db.c         |    5 +-
- drivers/net/wireless/iwlwifi/iwl-phy-db.h         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-power.c          |   11 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c           |   12 +-
- drivers/net/wireless/iwlwifi/iwl-shared.h         |   55 ----------
- drivers/net/wireless/iwlwifi/iwl-testmode.c       |   26 +++---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   32 ++++---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    8 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   33 +++---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |  107 +++++++-------------
- drivers/net/wireless/iwlwifi/iwl-trans.h          |   19 ++--
- drivers/net/wireless/iwlwifi/iwl-ucode.c          |   24 ++--
- 34 files changed, 424 insertions(+), 498 deletions(-)
+Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
+This is bogus, wake_up() is defined in linux/wait.h, the whole
+point of the linux/sched.h split up is so that linux/sched.h
+includes could be removed and replaced with actual dependencies.
+
+Also, please don't accept any patches from Luis that add those
+#undef pr_fmt things to the atheros drivers.
+
+He tried to add it an ethernet driver, and I asked him to explain
+exactly why he's doing and that if it's appropriate then it's
+appropriate everywhere not just in a few specific drivers.  He failed
+to respond to me, and therefore failed to explain the situation and
+address my concerned.  And then I saw just today that he's submitting
+the same patch to wireless drivers.  That's not acceptable.
+
+Thanks.
