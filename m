@@ -1,82 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44998 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320Ab2DRPjl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25786 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753971Ab2DYOxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 11:39:41 -0400
-Date: Wed, 18 Apr 2012 08:39:31 -0700 (PDT)
-From: Mat Martineau <mathewm@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
-cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-In-Reply-To: <4F8ED913.4040807@sipsolutions.net>
-Message-ID: <alpine.DEB.2.02.1204180818190.25494@mathewm-linux> (sfid-20120418_173945_942293_F6A12A63)
-References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com> <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux> <4F84A422.3030900@sipsolutions.net>
- <4F84A52A.7050905@sipsolutions.net> <20120411071119.GC17779@aemeltch-MOBL1> <1334714611.3725.34.camel@jlt3.sipsolutions.net> <20120418121551.GE19228@aemeltch-MOBL1> <4F8ED1D0.1070401@sipsolutions.net> <20120418145202.GH19228@aemeltch-MOBL1>
- <4F8ED913.4040807@sipsolutions.net>
+	Wed, 25 Apr 2012 10:53:32 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] mac80211: fix rate control update on 2040 bss change
+Date: Wed, 25 Apr 2012 20:24:24 +0530
+Message-ID: <1335365664-2299-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120425_165336_202304_5A48C549)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The rate control updation never be called on 2040 BSS change.
+The station should update its rate control on receiving beacon
+with different HT mode in the HT operation IE. Not doing so,
+leads to sending frames with higher(ht40) rates whereas AP is
+operating in lower mode (ht20).
 
-Andrei and Johannes -
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ net/mac80211/mlme.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Wed, 18 Apr 2012, Johannes Berg wrote:
-
-> Hi Andrei,
->
->>> No, this is incorrect. If one device wants to connect on one
->>> channel, the other typically has to use the same channel. If one
->>> device wants to scan, the other will be affected. Some hardware may
->>> support switching around between two channels, but might also
->>> support more than 2 virtual interfaces, so again they won't be
->>> independent.
->> 
->> BTW: which devices can switch channels?
->
-> None today, I'm working on it.
->
->>> Therefore, you need something managing all this concurrency. This is
->>> in a small part the driver which will enforce restrictions (it will
->>> reject new impossible things), but mostly the supplicant which can
->>> make policy decisions about which usage should win.
->> 
->> This doesn't sound like a rocket science to me. IMO this might be done in
->> drivers. Those drivers which can switch channels why do they need
->> wpa_supplicant involved making this decision?
->
-> I don't think you understand.
->
-> Say our device can do 3 virtual interfaces, on 2 channels. Then if the user 
-> is connected to some managed network (say office network), one interface & 
-> channel is used up. Now the user has AMP running, another channel might be 
-> used up. Now the user wants to do P2P negotiation. Now the supplicant, which 
-> is doing the negotiation, needs to know that it can negotiate only one of 
-> those two channels, not any other. Or maybe P2P should win, then it might 
-> disconnect the AMP or the managed connection. But all those are policy 
-> decisions, so the driver can't really handle them.
-
-I concur with Johannes...
-
-All of the AMP PALs I've seen are restricted to using the current 
-wireless channel if a wireless interface is active.  The consequence 
-is that if you have two BT3.0+HS devices, and their wireless 
-interfaces are associated with different APs on different channels, 
-then they are unable to use AMP.
-
-Trying to manage two active channels with a single-radio wireless 
-devices is non-trivial -- there may be simultaneous beacons on 
-different channels, for example.  I suppose it could be a different 
-situation when a wireless device has independent radios for 2.4GHz and 
-5GHz bands, but there's still a need to make decisions about which 
-channel(s) to use and how they are to be shared.
-
---
-Mat Martineau
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c8836fa..5a1b06e 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -210,7 +210,7 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
+ 		disable_40 = true;
+ 
+ 	if (sta && (!reconfig ||
+-		    (disable_40 != !!(sta->sta.ht_cap.cap &
++		    (disable_40 != !(sta->sta.ht_cap.cap &
+ 					IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
+ 
+ 		if (disable_40)
+-- 
+1.7.10
 
