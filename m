@@ -1,28 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:63320 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759915Ab2D0JkL (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:57023 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756413Ab2DYItG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 05:40:11 -0400
-Date: Fri, 27 Apr 2012 11:40:07 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: sedat.dilek@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-Message-ID: <20120427094007.GU3157@wantstofly.org> (sfid-20120427_114035_518616_5D29594E)
-References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
- <20120427091405.GS3157@wantstofly.org>
- <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
+	Wed, 25 Apr 2012 04:49:06 -0400
+Received: by bkuw12 with SMTP id w12so1162963bku.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 01:49:04 -0700 (PDT)
+Message-ID: <4F97BA1A.6050600@openwrt.org> (sfid-20120425_104914_968556_F20139C4)
+Date: Wed, 25 Apr 2012 10:47:22 +0200
+From: Florian Fainelli <florian@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
+To: Nathan Hintz <nlhintz@hotmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	hauke@hauke-m.de
+Subject: Re: [PATCH 3/6] bcma: Account for variable PCI memory base/size
+References: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com> <BLU0-SMTP82FF4247B6804576EBAE9AAC270@phx.gbl>
+In-Reply-To: <BLU0-SMTP82FF4247B6804576EBAE9AAC270@phx.gbl>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:22:49AM +0200, Sedat Dilek wrote:
+Hi Nathan,
 
-> Are you planning to or even working on support (for) 8361 devices?
+Le 04/25/12 08:15, Nathan Hintz a écrit :
+> ---
+>   drivers/bcma/driver_pci_host.c |    5 +++--
+>   1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+> index d2097a1..3578e1a 100644
+> --- a/drivers/bcma/driver_pci_host.c
+> +++ b/drivers/bcma/driver_pci_host.c
+> @@ -491,8 +491,9 @@ void __devinit bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
+>   	/* Ok, ready to run, register it to the system.
+>   	 * The following needs change, if we want to port hostmode
+>   	 * to non-MIPS platform. */
+> -	io_map_base = (unsigned long)ioremap_nocache(BCMA_SOC_PCI_MEM,
+> -						     0x04000000);
+> +	io_map_base = (unsigned long)ioremap_nocache(pc_host->mem_resource.start,
+> +						     pc_host->mem_resource.end -
+> +						     pc_host->mem_resource.start + 1);
 
-I don't have any such plans, and I don't know of anyone who does.
+Please use resource_size(pc_host->mem_resource) instead of open-coding 
+the size computation here.
+
+>   	pc_host->pci_controller.io_map_base = io_map_base;
+>   	set_io_port_base(pc_host->pci_controller.io_map_base);
+>   	/* Give some time to the PCI controller to configure itself with the new
