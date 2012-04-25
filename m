@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:35861 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932118Ab2DITfI (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:63856 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932454Ab2DYX2V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 15:35:08 -0400
-Date: Mon, 09 Apr 2012 15:34:52 -0400 (EDT)
-Message-Id: <20120409.153452.1284163346306246866.davem@davemloft.net> (sfid-20120409_213516_948058_1F3368F9)
-To: eric.dumazet@gmail.com
-Cc: Larry.Finger@lwfinger.net, marc@merlins.org,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big
- network copies (page allocation failure)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1333998672.3007.245.camel@edumazet-glaptop>
-References: <20120409.143710.879746943062854492.davem@davemloft.net>
-	<4F83316F.20504@lwfinger.net>
-	<1333998672.3007.245.camel@edumazet-glaptop>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 25 Apr 2012 19:28:21 -0400
+Received: by qcro28 with SMTP id o28so403250qcr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 16:28:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120425193614.GD16900@tuxdriver.com>
+References: <1334868960.7300.10.camel@dfry-linux1> <20120420140917.GA13844@tuxdriver.com>
+ <193F82CA5D80C84A83D67BB5D5B9FDE548154FE8@ORSMSX101.amr.corp.intel.com> <20120425193614.GD16900@tuxdriver.com>
+From: Kay Sievers <kay@vrfy.org>
+Date: Thu, 26 Apr 2012 01:28:00 +0200
+Message-ID: <CAPXgP12LXNT8S84uJR01od0Ri39N05dkmo+yxbwDwxmj84avAg@mail.gmail.com> (sfid-20120426_012834_086320_E946D8BA)
+Subject: Re: question on non-kernel patch
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Fry, Donald H" <donald.h.fry@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	"linux-modules@vger.kernel.org" <linux-modules@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Date: Mon, 09 Apr 2012 21:11:12 +0200
+On Wed, Apr 25, 2012 at 21:36, John W. Linville <linville@tuxdriver.com> wrote:
+> Jon, Kay, anyone?
+>
+> Should Intel just proceed with their kernel patch and not worry about
+> the 'modprobe -r' complications, as Michal Marek suggested?
 
-> I think Marc posted stack traces showing problem on transmit side.
- ...
-> I dont really understand how it can happen, with MTU=1500
+Yes, I would just go ahead and wouldn't worry too much about
+additional modules being pulled-in which also need to be unloaded, in
+case something really needs to unloaded.
 
-Depending upon the configuration and the driver, wireless can need
-more headroom.  For encryption an extra 8 bytes are necessary, and the
-driver may request a variable amount of extra headroom via
-->hw.extra_tx_headroom
+We usually do not support module unloading during normal system
+operation. It is mainly a nice and convenient debugging and developing
+tool, which people who use it will figure out how to do it.
 
-What wireless device are we dealing with again?
+Kay
