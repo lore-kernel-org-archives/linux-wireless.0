@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:45291 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab2DEGry convert rfc822-to-8bit (ORCPT
+Received: from blu0-omc2-s2.blu0.hotmail.com ([65.55.111.77]:11638 "EHLO
+	blu0-omc2-s2.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758075Ab2DYGPv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Apr 2012 02:47:54 -0400
-Received: by dake40 with SMTP id e40so1228843dak.11
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2012 23:47:54 -0700 (PDT)
+	Wed, 25 Apr 2012 02:15:51 -0400
+Message-ID: <BLU0-SMTP82EF695554B950971BFA98AC270@phx.gbl> (sfid-20120425_081554_198921_9D60677D)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH 6/6] bcma: Add flush for BCMA_RESET_CTL write
+Date: Tue, 24 Apr 2012 23:15:19 -0700
+In-Reply-To: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com>
+References: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4F7D1382.2080708@lwfinger.net>
-References: <4F7D1382.2080708@lwfinger.net>
-Date: Thu, 5 Apr 2012 08:47:54 +0200
-Message-ID: <CAGXE3d-kg1Nxo49MN147jU4HQTBum4pHQ3n8gUUMuYNntF7Nxg@mail.gmail.com> (sfid-20120405_084757_628777_7918CCEF)
-Subject: Re: Question about setup error in mac80211
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 5, 2012 at 5:37 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> In https://bugzilla.kernel.org/show_bug.cgi?id=43044, driver rtl8192ce is
-> getting an oops due to a NULL pointer dereference due to NULL being returned
-> by ieee80211_get_tx_rate. For reference, the code in question is
->
-> static inline struct ieee80211_rate *
-> ieee80211_get_tx_rate(const struct ieee80211_hw *hw,
->                      const struct ieee80211_tx_info *c)
-> {
->        if (WARN_ON(c->control.rates[0].idx < 0))
->                return NULL;
->        return &hw->wiphy->bands[c->band]->bitrates[c->control.rates[0].idx];
+---
+ drivers/bcma/core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-For MCS rates c->control.rates[0].idx contains the MCS rate itself. So, calling
-ieee80211_get_tx_rate for an MCS rate might actually cause this ...
+diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
+index 893f6e0..c4e6deb 100644
+--- a/drivers/bcma/core.c
++++ b/drivers/bcma/core.c
+@@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
+ 	udelay(10);
+ 
+ 	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
++	bcma_aread32(core, BCMA_RESET_CTL);
+ 	udelay(1);
+ }
+ EXPORT_SYMBOL_GPL(bcma_core_disable);
+-- 
+1.7.7.6
 
-Helmut
