@@ -1,71 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55939 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755267Ab2DQR0L (ORCPT
+Received: from blu0-omc2-s12.blu0.hotmail.com ([65.55.111.87]:63356 "EHLO
+	blu0-omc2-s12.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758075Ab2DYGPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 13:26:11 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q3HHQA3O006633
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 10:26:11 -0700
-Message-ID: <4F8DA7B2.1060303@candelatech.com> (sfid-20120417_192614_210569_3F44B95A)
-Date: Tue, 17 Apr 2012 10:26:10 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 25 Apr 2012 02:15:34 -0400
+Message-ID: <BLU0-SMTP82C0BC8A30291EC08FBF14AC270@phx.gbl> (sfid-20120425_081536_947546_DCC89692)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH 1/6] bcma: Find names of non BCM cores
+Date: Tue, 24 Apr 2012 23:15:14 -0700
+In-Reply-To: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com>
+References: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Kernel splat related to bad rate in latest wireless-testing (3.4.0-rc3-wl+)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This has my ethtool & scan-on-channel patches and Felix's patch to make virtual stations
-work on ath9k again.
+---
+ drivers/bcma/scan.c |   54 +++++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 40 insertions(+), 14 deletions(-)
 
-I had 'reset' a virtual station interface, which basically bounces it and
-tells supplication to re-associate.
-
-Apr 17 10:20:37 localhost kernel: ADDRCONF(NETDEV_UP): sta2: link is not ready
-Apr 17 10:20:39 localhost ntpd[1260]: Deleting interface #23 sta2, fe80::211:22ff:fe99:8802#123, interface stats: received=0, sent=0, dropped=0, active_time=231 
-secs
-Apr 17 10:20:48 localhost kernel: ------------[ cut here ]------------
-Apr 17 10:20:48 localhost kernel: WARNING: at /home/greearb/git/linux.wireless-testing/include/net/mac80211.h:3737 rate_control_send_low+0xc1/0x1a1 [mac80211]()
-Apr 17 10:20:48 localhost kernel: Hardware name: To Be Filled By O.E.M.
-Apr 17 10:20:48 localhost kernel: Modules linked in: xt_CT iptable_raw 8021q garp stp llc fuse macvlan pktgen w83627ehf hwmon_vid nfs lockd fscache auth_rpcgss 
-nfs_acl sunrpc ipv6 uinput snd_hda_codec_realtek arc4 joydev snd_hda_intel snd_hda_codec snd_hwdep snd_seq ath9k coretemp hwmon snd_seq_device mac80211 
-microcode snd_pcm ath9k_common serio_raw i2c_i801 pcspkr iTCO_wdt ath9k_hw iTCO_vendor_support ath snd_timer snd r8169 cfg80211 soundcore snd_page_alloc mii 
-i915 drm_kms_helper drm i2c_algo_bit video [last unloaded: nf_nat]
-Apr 17 10:20:48 localhost kernel: Pid: 36, comm: kworker/u:1 Not tainted 3.4.0-rc3-wl+ #22
-Apr 17 10:20:48 localhost kernel: Call Trace:
-Apr 17 10:20:48 localhost kernel: [<c04273e4>] warn_slowpath_common+0x65/0x7a
-Apr 17 10:20:48 localhost kernel: [<f8c6db23>] ? rate_control_send_low+0xc1/0x1a1 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<c0427408>] warn_slowpath_null+0xf/0x13
-Apr 17 10:20:48 localhost kernel: [<f8c6db23>] rate_control_send_low+0xc1/0x1a1 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<f8d03a91>] ath_get_rate+0x3c/0x2fb [ath9k]
-Apr 17 10:20:48 localhost kernel: [<c0406dc0>] ? sched_clock+0x9/0xd
-Apr 17 10:20:48 localhost kernel: [<c0446287>] ? sched_clock_local+0x17/0x13d
-Apr 17 10:20:48 localhost kernel: [<f8c6e000>] rate_control_get_rate+0x87/0x24b [mac80211]
-Apr 17 10:20:48 localhost kernel: [<f8c762ab>] invoke_tx_handlers+0x750/0xf3d [mac80211]
-Apr 17 10:20:48 localhost kernel: [<c0448c1f>] ? enqueue_task_fair+0x326/0x441
-Apr 17 10:20:48 localhost kernel: [<f8c7749e>] ieee80211_tx+0x73/0x9a [mac80211]
-Apr 17 10:20:48 localhost kernel: [<f8c777af>] ieee80211_xmit+0xae/0xb6 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<f8c777fe>] ieee80211_tx_skb_tid+0x47/0x52 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<f8c7c77b>] ieee80211_send_nullfunc+0x55/0x59 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<f8c7dd33>] ieee80211_mgd_probe_ap_send+0x4d/0xe6 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<f8c7decd>] ieee80211_mgd_probe_ap+0x101/0x110 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<f8c7deeb>] ieee80211_sta_monitor_work+0xf/0x11 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<c0436b66>] process_one_work+0x155/0x204
-Apr 17 10:20:48 localhost kernel: [<f8c7dedc>] ? ieee80211_mgd_probe_ap+0x110/0x110 [mac80211]
-Apr 17 10:20:48 localhost kernel: [<c0438596>] worker_thread+0xf7/0x1fe
-Apr 17 10:20:48 localhost kernel: [<c044193a>] ? complete+0x34/0x3e
-Apr 17 10:20:48 localhost kernel: [<c043849f>] ? manage_workers+0x164/0x164
-Apr 17 10:20:48 localhost kernel: [<c043b101>] kthread+0x67/0x6c
-Apr 17 10:20:48 localhost kernel: [<c0430000>] ? run_timer_softirq+0xd2/0x192
-Apr 17 10:20:48 localhost kernel: [<c043b09a>] ? __init_kthread_worker+0x28/0x28
-Apr 17 10:20:48 localhost kernel: [<c07bdf76>] kernel_thread_helper+0x6/0xd
-Apr 17 10:20:48 localhost kernel: ---[ end trace 6c78af2ddefabddd ]---
-
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index f94cccc..e19e987 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -19,7 +19,14 @@ struct bcma_device_id_name {
+ 	u16 id;
+ 	const char *name;
+ };
+-struct bcma_device_id_name bcma_device_names[] = {
++
++static const struct bcma_device_id_name bcma_arm_device_names[] = {
++	{ BCMA_CORE_ARM_1176, "ARM 1176" },
++	{ BCMA_CORE_ARM_7TDMI, "ARM 7TDMI" },
++	{ BCMA_CORE_ARM_CM3, "ARM CM3" },
++};
++
++static const struct bcma_device_id_name bcma_bcm_device_names[] = {
+ 	{ BCMA_CORE_OOB_ROUTER, "OOB Router" },
+ 	{ BCMA_CORE_INVALID, "Invalid" },
+ 	{ BCMA_CORE_CHIPCOMMON, "ChipCommon" },
+@@ -27,7 +34,6 @@ struct bcma_device_id_name bcma_device_names[] = {
+ 	{ BCMA_CORE_SRAM, "SRAM" },
+ 	{ BCMA_CORE_SDRAM, "SDRAM" },
+ 	{ BCMA_CORE_PCI, "PCI" },
+-	{ BCMA_CORE_MIPS, "MIPS" },
+ 	{ BCMA_CORE_ETHERNET, "Fast Ethernet" },
+ 	{ BCMA_CORE_V90, "V90" },
+ 	{ BCMA_CORE_USB11_HOSTDEV, "USB 1.1 Hostdev" },
+@@ -44,7 +50,6 @@ struct bcma_device_id_name bcma_device_names[] = {
+ 	{ BCMA_CORE_PHY_A, "PHY A" },
+ 	{ BCMA_CORE_PHY_B, "PHY B" },
+ 	{ BCMA_CORE_PHY_G, "PHY G" },
+-	{ BCMA_CORE_MIPS_3302, "MIPS 3302" },
+ 	{ BCMA_CORE_USB11_HOST, "USB 1.1 Host" },
+ 	{ BCMA_CORE_USB11_DEV, "USB 1.1 Device" },
+ 	{ BCMA_CORE_USB20_HOST, "USB 2.0 Host" },
+@@ -58,15 +63,11 @@ struct bcma_device_id_name bcma_device_names[] = {
+ 	{ BCMA_CORE_PHY_N, "PHY N" },
+ 	{ BCMA_CORE_SRAM_CTL, "SRAM Controller" },
+ 	{ BCMA_CORE_MINI_MACPHY, "Mini MACPHY" },
+-	{ BCMA_CORE_ARM_1176, "ARM 1176" },
+-	{ BCMA_CORE_ARM_7TDMI, "ARM 7TDMI" },
+ 	{ BCMA_CORE_PHY_LP, "PHY LP" },
+ 	{ BCMA_CORE_PMU, "PMU" },
+ 	{ BCMA_CORE_PHY_SSN, "PHY SSN" },
+ 	{ BCMA_CORE_SDIO_DEV, "SDIO Device" },
+-	{ BCMA_CORE_ARM_CM3, "ARM CM3" },
+ 	{ BCMA_CORE_PHY_HT, "PHY HT" },
+-	{ BCMA_CORE_MIPS_74K, "MIPS 74K" },
+ 	{ BCMA_CORE_MAC_GBIT, "GBit MAC" },
+ 	{ BCMA_CORE_DDR12_MEM_CTL, "DDR1/DDR2 Memory Controller" },
+ 	{ BCMA_CORE_PCIE_RC, "PCIe Root Complex" },
+@@ -79,16 +80,41 @@ struct bcma_device_id_name bcma_device_names[] = {
+ 	{ BCMA_CORE_SHIM, "SHIM" },
+ 	{ BCMA_CORE_DEFAULT, "Default" },
+ };
+-const char *bcma_device_name(struct bcma_device_id *id)
++
++static const struct bcma_device_id_name bcma_mips_device_names[] = {
++	{ BCMA_CORE_MIPS, "MIPS" },
++	{ BCMA_CORE_MIPS_3302, "MIPS 3302" },
++	{ BCMA_CORE_MIPS_74K, "MIPS 74K" },
++};
++
++static const char *bcma_device_name(const struct bcma_device_id *id)
+ {
+-	int i;
++	const struct bcma_device_id_name *names;
++	int size, i;
++
++	/* search manufacturer specific names */
++	switch (id->manuf) {
++	case BCMA_MANUF_ARM:
++		names = bcma_arm_device_names;
++		size = ARRAY_SIZE(bcma_arm_device_names);
++		break;
++	case BCMA_MANUF_BCM:
++		names = bcma_bcm_device_names;
++		size = ARRAY_SIZE(bcma_bcm_device_names);
++		break;
++	case BCMA_MANUF_MIPS:
++		names = bcma_mips_device_names;
++		size = ARRAY_SIZE(bcma_mips_device_names);
++		break;
++	default:
++		return "UNKNOWN";
++	}
+ 
+-	if (id->manuf == BCMA_MANUF_BCM) {
+-		for (i = 0; i < ARRAY_SIZE(bcma_device_names); i++) {
+-			if (bcma_device_names[i].id == id->id)
+-				return bcma_device_names[i].name;
+-		}
++	for (i = 0; i < size; i++) {
++		if (names[i].id == id->id)
++			return names[i].name;
+ 	}
++
+ 	return "UNKNOWN";
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.7.6
 
