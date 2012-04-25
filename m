@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:39568 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756274Ab2DSTSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 15:18:36 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v3 1/8] ath9k_hw: use standard SIFS time as reference for half/quarter channels
-Date: Thu, 19 Apr 2012 21:18:22 +0200
-Message-Id: <1334863109-95726-1-git-send-email-nbd@openwrt.org> (sfid-20120419_211844_876595_75539D0A)
+Received: from blu0-omc2-s2.blu0.hotmail.com ([65.55.111.77]:11568 "EHLO
+	blu0-omc2-s2.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758075Ab2DYGPt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2012 02:15:49 -0400
+Message-ID: <BLU0-SMTP8289CC6BFFDE40C65F796CAC270@phx.gbl> (sfid-20120425_081551_603104_4CA19755)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH 5/6] bcma: Add __devexit to bcma_host_pci_remove
+Date: Tue, 24 Apr 2012 23:15:18 -0700
+In-Reply-To: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com>
+References: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/hw.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+ drivers/bcma/host_pci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 72c5bcd..a43934f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1041,6 +1041,11 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		rx_lat = 37;
- 	tx_lat = 54;
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index e3928d6..915ab2f 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -222,7 +222,7 @@ err_kfree_bus:
+ 	return err;
+ }
  
-+	if (IS_CHAN_5GHZ(chan))
-+		sifstime = 16;
-+	else
-+		sifstime = 10;
-+
- 	if (IS_CHAN_HALF_RATE(chan)) {
- 		eifs = 175;
- 		rx_lat *= 2;
-@@ -1048,8 +1053,8 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 11;
+-static void bcma_host_pci_remove(struct pci_dev *dev)
++static void __devexit bcma_host_pci_remove(struct pci_dev *dev)
+ {
+ 	struct bcma_bus *bus = pci_get_drvdata(dev);
  
-+		sifstime *= 2;
- 		slottime = 13;
--		sifstime = 32;
- 	} else if (IS_CHAN_QUARTER_RATE(chan)) {
- 		eifs = 340;
- 		rx_lat = (rx_lat * 4) - 1;
-@@ -1057,8 +1062,8 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		    tx_lat += 22;
+@@ -277,7 +277,7 @@ static struct pci_driver bcma_pci_bridge_driver = {
+ 	.name = "bcma-pci-bridge",
+ 	.id_table = bcma_pci_bridge_tbl,
+ 	.probe = bcma_host_pci_probe,
+-	.remove = bcma_host_pci_remove,
++	.remove = __devexit_p(bcma_host_pci_remove),
+ 	.driver.pm = BCMA_PM_OPS,
+ };
  
-+		sifstime *= 4;
- 		slottime = 21;
--		sifstime = 64;
- 	} else {
- 		if (AR_SREV_9287(ah) && AR_SREV_9287_13_OR_LATER(ah)) {
- 			eifs = AR_D_GBL_IFS_EIFS_ASYNC_FIFO;
-@@ -1072,10 +1077,6 @@ void ath9k_hw_init_global_settings(struct ath_hw *ah)
- 		tx_lat = MS(reg, AR_USEC_TX_LAT);
- 
- 		slottime = ah->slottime;
--		if (IS_CHAN_5GHZ(chan))
--			sifstime = 16;
--		else
--			sifstime = 10;
- 	}
- 
- 	/* As defined by IEEE 802.11-2007 17.3.8.6 */
 -- 
-1.7.3.2
+1.7.7.6
 
