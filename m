@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2815 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758346Ab2D1B5L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 21:57:11 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from shards.monkeyblade.net ([198.137.202.13]:53191 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756363Ab2DYTPY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Apr 2012 15:15:24 -0400
+Date: Wed, 25 Apr 2012 15:14:13 -0400 (EDT)
+Message-Id: <20120425.151413.147876040219098157.davem@davemloft.net> (sfid-20120425_211545_467628_A6E5553A)
 To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] brcmfmac: stop releasing sdio host in irq handler
-Date: Fri, 27 Apr 2012 18:56:56 -0700
-Message-ID: <1335578219-4224-2-git-send-email-frankyl@broadcom.com> (sfid-20120428_035715_123378_D48B80EA)
-In-Reply-To: <1335578219-4224-1-git-send-email-frankyl@broadcom.com>
-References: <1335578219-4224-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-04-25
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120425180639.GA16900@tuxdriver.com>
+References: <20120425180639.GA16900@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmf_sdbrcm_isr doesn't access to the dongle through SDIO bus.
-Stop releasing and claiming host in irq handler to eliminate
-any potential risk.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 25 Apr 2012 14:06:39 -0400
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    4 ----
- 1 file changed, 4 deletions(-)
+> This is a batch of fixes intended for 3.4.
+> 
+> The brcmsmac patch from Eldad Zack eliminates some log spam.
+> The mac80211 patch from Eliad Peller fixes a WARNING when removing
+> an interface.  The two patches from Gabor Juhos combine to address
+> a regression with some bad tx power settings for an Atheros chip.
+> Johannes Berg gives us a fix for some bad hardware initializtion in
+> iwlwifi, which resulted in hardware lockups.  Larry Finger gives us
+> a fix for an oops when unloading the rtlwifi modules.  Meenakshi
+> Venkataraman fixes some firmware version values in iwlwifi that
+> result in attempts to load firmware that does not exist in the wild.
+> Stanislav Yakovlev fixes a race condition in the ipw2200 driver.
+> Finally,  Stanislaw Gruszka provides an iwlwifi fix to avoid a NULL
+> pointer access.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index e925290..ea35020 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -45,11 +45,7 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
- 
- 	brcmf_dbg(TRACE, "***IRQHandler\n");
- 
--	sdio_release_host(func);
--
- 	brcmf_sdbrcm_isr(sdiodev->bus);
--
--	sdio_claim_host(func);
- }
- 
- /* dummy handler for SDIO function 2 interrupt */
--- 
-1.7.9.5
-
-
+Pulled, thanks John.
