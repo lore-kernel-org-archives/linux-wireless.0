@@ -1,44 +1,21 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36442 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752097Ab2DBDyt (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:48926 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755406Ab2DYJn4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Apr 2012 23:54:49 -0400
-Received: by iagz16 with SMTP id z16so3575311iag.19
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Apr 2012 20:54:49 -0700 (PDT)
-Message-ID: <4F7922FD.60105@lwfinger.net> (sfid-20120402_055452_910993_3BAACAB5)
-Date: Sun, 01 Apr 2012 22:54:37 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	John Linville <linville@tuxdriver.com>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel Panics from ath9k
-References: <4F789C57.2090903@lwfinger.net> <20345.4134.204942.124914@gargle.gargle.HOWL>
-In-Reply-To: <20345.4134.204942.124914@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 25 Apr 2012 05:43:56 -0400
+Received: by obbta14 with SMTP id ta14so2439807obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 02:43:55 -0700 (PDT)
+From: Aaron Gibson <asgibsonua@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Subject: Ath9k antenna control
+Date: Wed, 25 Apr 2012 02:43:52 -0700
+Message-Id: <54CA294B-EFED-42A2-8F60-C548D7C97EA2@email.arizona.edu> (sfid-20120425_114359_488679_FCBF9D5E)
+To: linux-wireless@vger.kernel.org
+Mime-Version: 1.0 (Apple Message framework v1084)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/01/2012 09:34 PM, Sujith Manoharan wrote:
+For the ath9k driver, (chipset AR9132, on a buffalo WZR-HP-g300nh router), I'd like to be able to turn on and off the TX and RX antennas separately. Is this possible?
 
-> Should be fixed by this patch: http://marc.info/?l=linux-wireless&m=133282325727326&w=2
-
-Yes, that patch does fix the problem.
-
-BTW, that patch should be pushed to 3.4, and it should have a Cc: Stable, at 
-least for 3.3. Make certain that stable gets an E-mail with the commit ID when 
-the patch gets into mainline.
-
-I wonder what the problem was with kernels as far back as 3.1. It must have a 
-different cause that I still need to explore.
-
-Thanks,
-
-Larry
-
-
+Thanks for your help!
