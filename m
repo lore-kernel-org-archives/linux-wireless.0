@@ -1,72 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:55773 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040Ab2DVFXI (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:44876 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757441Ab2DYSYY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 01:23:08 -0400
-Received: by wejx9 with SMTP id x9so6818258wej.19
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Apr 2012 22:23:06 -0700 (PDT)
+	Wed, 25 Apr 2012 14:24:24 -0400
+Received: by qatm19 with SMTP id m19so3699457qat.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 11:24:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <146E772A-F387-4443-99C7-95C6B3BCE74C@gmail.com>
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
-	<FC927BD3-30FD-4DF2-A65C-5BE785FB72BC@gmail.com>
-	<CANUX_P0dR93vJicsrnpxPmOZvaxBvaONHQiFXOTcaP1Ax0LAnQ@mail.gmail.com>
-	<816C5F70-E340-46F9-8206-2B230A27F3AD@gmail.com>
-	<CANUX_P3=ttVKdLYBfAdGRhmfDRbPruogw8Eo_d09on0ajdTqUw@mail.gmail.com>
-	<5714877C-2465-4FD5-94A0-9D0806A803C4@gmail.com>
-	<CANUX_P27GoLY2q9jmsWw9Rzn9posf3mCjDa98+q4JP=83wYthg@mail.gmail.com>
-	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
-	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
-	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
-	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
-	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
-	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
-	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
-	<4F901224.1040508@sipsolutions.net>
-	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
-	<4F901F16.6080007@sipsolutions.net>
-	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
-	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
-	<D17CF50A-2CD7-427A-8159-A7857571823D@gmail.com>
-	<CANUX_P1qCC63adSKHjHUcfufC0=QJLJz+Lqovk7ScHeE_hUuxg@mail.gmail.com>
-	<146E772A-F387-4443-99C7-95C6B3BCE74C@gmail.com>
-Date: Sun, 22 Apr 2012 08:23:06 +0300
-Message-ID: <CANUX_P03Pz-Hi2dUhGq0W3spd0WNzk33EcK0baLh4Srrf0Vm1A@mail.gmail.com> (sfid-20120422_072313_887955_55C4C718)
-Subject: Re: wlan0 not present
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Dominik Feser <dominik.feser@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Content-Type: multipart/mixed; boundary=f46d044287a66ed6ef04be3db71b
+In-Reply-To: <201204251928.21559.chunkeey@googlemail.com>
+References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com>
+	<201204231945.05113.chunkeey@googlemail.com>
+	<CAFED-j=4NWR2mjnooQs4V_T23cV9iPAUi65J-FZ7JjC28aZ=Gw@mail.gmail.com>
+	<201204251928.21559.chunkeey@googlemail.com>
+Date: Wed, 25 Apr 2012 20:24:23 +0200
+Message-ID: <CAFED-j=_kPNmj-OyhFAdi_LM+rqbW6JLHC64BzdTKPyQ3iAMYg@mail.gmail.com> (sfid-20120425_202429_499066_69C40BF1)
+Subject: Re: carl9170 - monitor mode TP drop
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---f46d044287a66ed6ef04be3db71b
-Content-Type: text/plain; charset=ISO-8859-1
-
+W dniu 25 kwietnia 2012 19:28 u¿ytkownik Christian Lamparter
+<chunkeey@googlemail.com> napisa³:
+> On Wednesday, April 25, 2012 07:28:18 AM Janusz Dziedzic wrote:
+>> W dniu 23 kwietnia 2012 19:45 u¿ytkownik Christian Lamparter
+>> <chunkeey@googlemail.com> napisa³:
+>> >> This is what I can see on STA1:
+>> >> # iperf -c 192.168.254.1 -t 100 -i 5
+>> >> [ 3] 10.0-15.0 sec  20.4 MBytes  34.2 Mbits/sec
+>> >>
+>> >> =====> here I setup carl monitor on second PC, like this:
+>> >> =====> iw dev wlan0 set type monitor
+>> >> =====> iw dev wlan0 set freq 2437
+>> >> =====> ifconfig wlan0 up
+>> >>
+>> >> [  3] 40.0-45.0 sec  2.38 MBytes  3.98 Mbits/sec
+>> > Well, there's the "AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER = bit (30)"
+>> > in "AR9170_MAC_REG_RX_CONTROL = (0x1c3c40)".
+>> I disabled this in code.
+>>
+>> -               rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
+>> +//             rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
+>>
+>> After that I don't see any TP drop and can see all packets in
+>> wireshark (as expected).
+>>
+>> Why carl try to ACK rx packets in monitor mode?
+>> Is that a correct behaviour?
+> Well, it depends.
 >
-> I downloaded the latest release from here:
-> http://linuxwireless.org/en/users/Download/stable/ which is
-> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/compat-wireless-3.4-rc3-1.tar.bz2
+> You see without the BIT set, the hardware won't sent any ACKs
+> (Not even those which are directed at this interface - which of
+> course is also bad, or even worse?) and with the BIT set (and if
+> the HW is in Sniffer Mode) then the hardware acks every frames,
+> even if they are for a different stations.
+> So your fix might break someone else's setup.
+>
 
-New patch attached.
+As I understand, some time ago we had wpa_supplicant AP (GO) mode as a
+two interfaces: AP + MONITOR.
+But now MONITOR is not used.
+Do you know other setup?
 
---f46d044287a66ed6ef04be3db71b
-Content-Type: text/x-patch; charset=US-ASCII; name="print.patch"
-Content-Disposition: attachment; filename="print.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h1brqyr00
+So, maybe firmware should ACK  frames with correct destination address
+only (if AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER)?
+Or that is not possible because of HW limitation?
 
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWRydi5jIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtZHJ2LmMKaW5kZXggNmYzMTJjNy4uYzQ1YWI4
-NSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtZHJ2LmMKKysr
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtZHJ2LmMKQEAgLTE4MCw3ICsxODAs
-NyBAQCBzdGF0aWMgaW50IGl3bF9yZXF1ZXN0X2Zpcm13YXJlKHN0cnVjdCBpd2xfZHJ2ICpkcnYs
-IGJvb2wgZmlyc3QpCiAKIAlzcHJpbnRmKGRydi0+ZmlybXdhcmVfbmFtZSwgIiVzJXMlcyIsIG5h
-bWVfcHJlLCB0YWcsICIudWNvZGUiKTsKIAotCUlXTF9ERUJVR19JTkZPKGRydiwgImF0dGVtcHRp
-bmcgdG8gbG9hZCBmaXJtd2FyZSAlcyclcydcbiIsCisJZGV2X2VycihkcnYtPnNocmQtPnRyYW5z
-LT5kZXYsICJhdHRlbXB0aW5nIHRvIGxvYWQgZmlybXdhcmUgJXMnJXMnXG4iLAogCQkgICAgICAg
-KGRydi0+ZndfaW5kZXggPT0gVUNPREVfRVhQRVJJTUVOVEFMX0lOREVYKQogCQkJCT8gIkVYUEVS
-SU1FTlRBTCAiIDogIiIsCiAJCSAgICAgICBkcnYtPmZpcm13YXJlX25hbWUpOwo=
---f46d044287a66ed6ef04be3db71b--
+BR
+Janusz
