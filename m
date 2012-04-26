@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51672 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752500Ab2DVWDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 18:03:41 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 6/7] compat-wireless: build alx for kernel > 2.6.27
-Date: Mon, 23 Apr 2012 00:03:18 +0200
-Message-Id: <1335132199-21320-6-git-send-email-hauke@hauke-m.de> (sfid-20120423_000345_257284_84A8045B)
-In-Reply-To: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
-References: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58012 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932093Ab2DZSrn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 14:47:43 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1SNTjD-0006PP-62
+	for linux-wireless@vger.kernel.org; Thu, 26 Apr 2012 14:47:43 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id q3QIhIat027511
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2012 14:43:18 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id q3QIhHFh027508
+	for linux-wireless@vger.kernel.org; Thu, 26 Apr 2012 14:43:17 -0400
+Date: Thu, 26 Apr 2012 14:43:17 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-next being rebased at commit
+ 94c514fe240fc0dd02187b78facefde8b6744634
+Message-ID: <20120426184317.GH16900@tuxdriver.com> (sfid-20120426_204810_000265_EDE8D946)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When compiling against kernel <= 2.6.27 alx has build errors so use
-atl1c there instead. The logic was wrong before.
----
- config.mk |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+The wireless-next kernel will be rebased at commit
+94c514fe240fc0dd02187b78facefde8b6744634.  I apologize for the
+inconvenience to my downstream maintainers!
 
-diff --git a/config.mk b/config.mk
-index 584189b..e8ee333 100644
---- a/config.mk
-+++ b/config.mk
-@@ -400,13 +400,13 @@ export CONFIG_MWL8K=m
- export CONFIG_ATL1=m
- export CONFIG_ATL2=m
- export CONFIG_ATL1E=m
--ifdef CONFIG_COMPAT_KERNEL_2_6_27
--export CONFIG_ATL1C=n
--export CONFIG_ALX=m
--else #CONFIG_COMPAT_KERNEL_2_6_27
-+ifdef CONFIG_COMPAT_KERNEL_2_6_28
-+export CONFIG_ATL1C=m
-+export CONFIG_ALX=n
-+else #CONFIG_COMPAT_KERNEL_2_6_28
- export CONFIG_ATL1C=n
- export CONFIG_ALX=m
--endif #CONFIG_COMPAT_KERNEL_2_6_27
-+endif #CONFIG_COMPAT_KERNEL_2_6_28
- 
- ifdef CONFIG_WIRELESS_EXT
- export CONFIG_HERMES=m
+John
 -- 
-1.7.9.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
