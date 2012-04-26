@@ -1,133 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:55276 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755437Ab2DYItz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 04:49:55 -0400
-Received: by bkuw12 with SMTP id w12so1163553bku.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Apr 2012 01:49:54 -0700 (PDT)
-Message-ID: <4F97BA55.7080001@openwrt.org> (sfid-20120425_104959_278543_499DD21C)
-Date: Wed, 25 Apr 2012 10:48:21 +0200
-From: Florian Fainelli <florian@openwrt.org>
-MIME-Version: 1.0
-To: Nathan Hintz <nlhintz@hotmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	hauke@hauke-m.de
-Subject: Re: [PATCH 1/6] bcma: Find names of non BCM cores
-References: <1335334519-18820-1-git-send-email-nlhintz@hotmail.com> <BLU0-SMTP82C0BC8A30291EC08FBF14AC270@phx.gbl>
-In-Reply-To: <BLU0-SMTP82C0BC8A30291EC08FBF14AC270@phx.gbl>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39283 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754706Ab2DZSIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 14:08:07 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC 0/9] compat-wireless: restructure header files in compat
+Date: Thu, 26 Apr 2012 20:07:41 +0200
+Message-Id: <1335463674-13003-1-git-send-email-hauke@hauke-m.de> (sfid-20120426_200811_897687_43DE405B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nathan,
+The patch series moves the compat code from include/linux/compat-*.h 
+into new files with the same name as the file where this code is placed 
+in the mainline kernel. With this approach we do not have to include 
+all include/linux/compat-*.h files in the build process any more, but 
+we extend the existing header files by the code needed.
 
-Le 04/25/12 08:15, Nathan Hintz a écrit :
-> ---
->   drivers/bcma/scan.c |   54 +++++++++++++++++++++++++++++++++++++-------------
->   1 files changed, 40 insertions(+), 14 deletions(-)
+This compiles without any warnings for me with kernel 3.2 to 3.4 and 
+fixes the problems with pr_fmt() without the need of any patch.
+Sometimes I had problems compiling compat-wireless, because some header 
+file I would not like to include was included because of compat-2.6.h 
+included mostly every header file available in the kernel.
 
-All of your patches look good, you just forgot to sign them off.
+This patch series is only done to support kernel >= 3.2, supporting the 
+other versions is just more work, but I want to have some responses on 
+this first. There are probably some other problems and some more 
+cleanup is possible.
+In the end we will remove the include/linux/compat-*.h files.
 
->
-> diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-> index f94cccc..e19e987 100644
-> --- a/drivers/bcma/scan.c
-> +++ b/drivers/bcma/scan.c
-> @@ -19,7 +19,14 @@ struct bcma_device_id_name {
->   	u16 id;
->   	const char *name;
->   };
-> -struct bcma_device_id_name bcma_device_names[] = {
-> +
-> +static const struct bcma_device_id_name bcma_arm_device_names[] = {
-> +	{ BCMA_CORE_ARM_1176, "ARM 1176" },
-> +	{ BCMA_CORE_ARM_7TDMI, "ARM 7TDMI" },
-> +	{ BCMA_CORE_ARM_CM3, "ARM CM3" },
-> +};
-> +
-> +static const struct bcma_device_id_name bcma_bcm_device_names[] = {
->   	{ BCMA_CORE_OOB_ROUTER, "OOB Router" },
->   	{ BCMA_CORE_INVALID, "Invalid" },
->   	{ BCMA_CORE_CHIPCOMMON, "ChipCommon" },
-> @@ -27,7 +34,6 @@ struct bcma_device_id_name bcma_device_names[] = {
->   	{ BCMA_CORE_SRAM, "SRAM" },
->   	{ BCMA_CORE_SDRAM, "SDRAM" },
->   	{ BCMA_CORE_PCI, "PCI" },
-> -	{ BCMA_CORE_MIPS, "MIPS" },
->   	{ BCMA_CORE_ETHERNET, "Fast Ethernet" },
->   	{ BCMA_CORE_V90, "V90" },
->   	{ BCMA_CORE_USB11_HOSTDEV, "USB 1.1 Hostdev" },
-> @@ -44,7 +50,6 @@ struct bcma_device_id_name bcma_device_names[] = {
->   	{ BCMA_CORE_PHY_A, "PHY A" },
->   	{ BCMA_CORE_PHY_B, "PHY B" },
->   	{ BCMA_CORE_PHY_G, "PHY G" },
-> -	{ BCMA_CORE_MIPS_3302, "MIPS 3302" },
->   	{ BCMA_CORE_USB11_HOST, "USB 1.1 Host" },
->   	{ BCMA_CORE_USB11_DEV, "USB 1.1 Device" },
->   	{ BCMA_CORE_USB20_HOST, "USB 2.0 Host" },
-> @@ -58,15 +63,11 @@ struct bcma_device_id_name bcma_device_names[] = {
->   	{ BCMA_CORE_PHY_N, "PHY N" },
->   	{ BCMA_CORE_SRAM_CTL, "SRAM Controller" },
->   	{ BCMA_CORE_MINI_MACPHY, "Mini MACPHY" },
-> -	{ BCMA_CORE_ARM_1176, "ARM 1176" },
-> -	{ BCMA_CORE_ARM_7TDMI, "ARM 7TDMI" },
->   	{ BCMA_CORE_PHY_LP, "PHY LP" },
->   	{ BCMA_CORE_PMU, "PMU" },
->   	{ BCMA_CORE_PHY_SSN, "PHY SSN" },
->   	{ BCMA_CORE_SDIO_DEV, "SDIO Device" },
-> -	{ BCMA_CORE_ARM_CM3, "ARM CM3" },
->   	{ BCMA_CORE_PHY_HT, "PHY HT" },
-> -	{ BCMA_CORE_MIPS_74K, "MIPS 74K" },
->   	{ BCMA_CORE_MAC_GBIT, "GBit MAC" },
->   	{ BCMA_CORE_DDR12_MEM_CTL, "DDR1/DDR2 Memory Controller" },
->   	{ BCMA_CORE_PCIE_RC, "PCIe Root Complex" },
-> @@ -79,16 +80,41 @@ struct bcma_device_id_name bcma_device_names[] = {
->   	{ BCMA_CORE_SHIM, "SHIM" },
->   	{ BCMA_CORE_DEFAULT, "Default" },
->   };
-> -const char *bcma_device_name(struct bcma_device_id *id)
-> +
-> +static const struct bcma_device_id_name bcma_mips_device_names[] = {
-> +	{ BCMA_CORE_MIPS, "MIPS" },
-> +	{ BCMA_CORE_MIPS_3302, "MIPS 3302" },
-> +	{ BCMA_CORE_MIPS_74K, "MIPS 74K" },
-> +};
-> +
-> +static const char *bcma_device_name(const struct bcma_device_id *id)
->   {
-> -	int i;
-> +	const struct bcma_device_id_name *names;
-> +	int size, i;
-> +
-> +	/* search manufacturer specific names */
-> +	switch (id->manuf) {
-> +	case BCMA_MANUF_ARM:
-> +		names = bcma_arm_device_names;
-> +		size = ARRAY_SIZE(bcma_arm_device_names);
-> +		break;
-> +	case BCMA_MANUF_BCM:
-> +		names = bcma_bcm_device_names;
-> +		size = ARRAY_SIZE(bcma_bcm_device_names);
-> +		break;
-> +	case BCMA_MANUF_MIPS:
-> +		names = bcma_mips_device_names;
-> +		size = ARRAY_SIZE(bcma_mips_device_names);
-> +		break;
-> +	default:
-> +		return "UNKNOWN";
-> +	}
->
-> -	if (id->manuf == BCMA_MANUF_BCM) {
-> -		for (i = 0; i<  ARRAY_SIZE(bcma_device_names); i++) {
-> -			if (bcma_device_names[i].id == id->id)
-> -				return bcma_device_names[i].name;
-> -		}
-> +	for (i = 0; i<  size; i++) {
-> +		if (names[i].id == id->id)
-> +			return names[i].name;
->   	}
-> +
->   	return "UNKNOWN";
->   }
->
+I have a problem where compat does changes to header files provided by 
+compat-wireless like #define NL80211_FEATURE_SK_TX_STATUS 0 in compat-
+2.6.33.h. To make this work we should add an other include directory in 
+compat-wireless.
+The hierarchy of include directories should be this: 1. include dir 
+from compat, 2. include dir from compat-wireless, 3. the kernel include 
+dir, now the 1. and the 2. are but into one directory.
+
+This patch series or a more recent version can also be found on github:
+https://github.com/hauke/compat/commits/header-new
+https://github.com/hauke/compat-wireless/commits/header-new
+
+Hauke Mehrtens (9):
+  compat: move compat_system_workqueue_{create,destroy} and
+    compat_pm_qos_power_{init,deinit}
+  compat: include compat_autoconf.h
+  compat: move br_port_exists
+  compat: move netdev_attach_ops
+  compat: move compat_pci_{suspend,resume}
+  compat: move simple_open()
+  compat: move code from compat-3.4.h
+  compat: move code from compat-3.3.h
+  compat: do not include compat-2.6.h
+
+ Makefile                        |    1 -
+ compat/compat-2.6.36.c          |    1 +
+ compat/compat.h                 |   66 ++++++++++++
+ compat/main.c                   |    1 +
+ compat/pm_qos_params.c          |    1 +
+ include/generated/autoconf.h    |    2 +
+ include/linux/compat-2.6.25.h   |   39 -------
+ include/linux/compat-2.6.28.h   |    3 -
+ include/linux/compat-2.6.29.h   |  219 ---------------------------------------
+ include/linux/compat-2.6.36.h   |   28 -----
+ include/linux/compat-3.3.h      |   44 --------
+ include/linux/compat-3.4.h      |   67 ------------
+ include/linux/compat-3.5.h      |    2 -
+ include/linux/compat.h          |   21 ++++
+ include/linux/device.h          |   38 +++++++
+ include/linux/etherdevice.h     |   51 +++++++++
+ include/linux/fs.h              |   14 +++
+ include/linux/if.h              |   28 +++++
+ include/linux/netdev_features.h |   22 ++++
+ include/linux/netdevice.h       |  205 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h             |   63 +++++++++++
+ include/linux/rfkill.h          |    2 -
+ include/linux/skbuff.h          |   34 ++++++
+ include/linux/usb.h             |   24 +++++
+ 24 files changed, 571 insertions(+), 405 deletions(-)
+ create mode 100644 compat/compat.h
+ create mode 100644 include/generated/autoconf.h
+ create mode 100644 include/linux/compat.h
+ create mode 100644 include/linux/device.h
+ create mode 100644 include/linux/etherdevice.h
+ create mode 100644 include/linux/fs.h
+ create mode 100644 include/linux/if.h
+ create mode 100644 include/linux/netdev_features.h
+ create mode 100644 include/linux/netdevice.h
+ create mode 100644 include/linux/pci.h
+ create mode 100644 include/linux/skbuff.h
+ create mode 100644 include/linux/usb.h
+
+
+Hauke Mehrtens (4):
+  compat-wireless: fix header of compat-autoconf.h
+  compat-wireless: also copy include/generated/ from compat
+  compat-wireless: do not include linux/compat-2.6.h any more
+  compat-wireless: copy *.h files from compat/compat
+
+ Makefile                       |    1 -
+ patches/53-pr_fmt.patch        |  823 ----------------------------------------
+ scripts/admin-update.sh        |    3 +
+ scripts/gen-compat-autoconf.sh |    4 +-
+ 4 files changed, 4 insertions(+), 827 deletions(-)
+ delete mode 100644 patches/53-pr_fmt.patch
+-- 
+1.7.9.5
+
