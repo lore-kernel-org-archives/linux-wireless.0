@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47285 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750948Ab2DROiN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 10:38:13 -0400
-Message-ID: <4F8ED1D0.1070401@sipsolutions.net> (sfid-20120418_163818_235359_0D59661D)
-Date: Wed, 18 Apr 2012 07:38:08 -0700
-From: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFCv1] mac80211: Adds Software / Virtual AMP 80211
-References: <1334059909-20513-1-git-send-email-Andrei.Emeltchenko.news@gmail.com> <1334059909-20513-2-git-send-email-Andrei.Emeltchenko.news@gmail.com> <4F846257.1060807@sipsolutions.net> <1334092668.16897.54.camel@aeonflux> <4F84A422.3030900@sipsolutions.net> <4F84A52A.7050905@sipsolutions.net> <20120411071119.GC17779@aemeltch-MOBL1> <1334714611.3725.34.camel@jlt3.sipsolutions.net> <20120418121551.GE19228@aemeltch-MOBL1>
-In-Reply-To: <20120418121551.GE19228@aemeltch-MOBL1>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39302 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758247Ab2DZSIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 14:08:15 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC c-w 1/4] compat-wireless: fix header of compat-autoconf.h
+Date: Thu, 26 Apr 2012 20:07:43 +0200
+Message-Id: <1335463674-13003-3-git-send-email-hauke@hauke-m.de> (sfid-20120426_200819_626472_95863FD1)
+In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4/18/2012 5:15 AM, Andrei Emeltchenko wrote:
->> It's never in your best interest to run one supplicant per virtual
->> interface, you want to run one per piece of hardware so it can
->> coordinate between virtual interfaces.
->
-> Do I understand it right that virtual interfaces are like separate devices from
-> user point of view? If I create virtual interface and assign MAC I can
-> transfer data through it without affecting other interfaces? Then
-> wpa_supplicant does not need to know about it at all.
 
-No, this is incorrect. If one device wants to connect on one channel, 
-the other typically has to use the same channel. If one device wants to 
-scan, the other will be affected. Some hardware may support switching 
-around between two channels, but might also support more than 2 virtual 
-interfaces, so again they won't be independent.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/gen-compat-autoconf.sh |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Therefore, you need something managing all this concurrency. This is in 
-a small part the driver which will enforce restrictions (it will reject 
-new impossible things), but mostly the supplicant which can make policy 
-decisions about which usage should win.
+diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
+index c7bdd38..3b49565 100755
+--- a/scripts/gen-compat-autoconf.sh
++++ b/scripts/gen-compat-autoconf.sh
+@@ -130,14 +130,13 @@ function kernel_version_req {
+ }
+ 
+ cat <<EOF
+-#ifndef COMPAT_AUTOCONF_INCLUDED
+-#define COMPAT_AUTOCONF_INCLUDED
+ /*
+  * Automatically generated C config: don't edit
+  * $DATE 
+  * compat-wireless-2.6: $CREL
+  * linux-2.6: $KREL
+  */
++#include <linux/version.h>
+ #define COMPAT_RELEASE "$CREL"
+ #define COMPAT_KERNEL_RELEASE "$KREL"
+ EOF
+@@ -201,4 +200,3 @@ if [ -f $KLIB_BUILD/Makefile ]; then
+ 		rm -f $MULT_DEP_FILE
+ 	fi
+ fi
+-echo "#endif /* COMPAT_AUTOCONF_INCLUDED */"
+-- 
+1.7.9.5
 
-johannes
