@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:51509 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756283Ab2DNWLg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 18:11:36 -0400
-Received: by vcqp1 with SMTP id p1so2678866vcq.19
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Apr 2012 15:11:35 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:47597 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755849Ab2DZLu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 07:50:58 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: "Arend van Spriel" <arend@broadcom.com>
+Cc: "Nathan Hintz" <nlhintz@hotmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, hauke@hauke-m.de
+Subject: Re: [PATCH v2 0/6] BCMA Cumulative patches from OpenWRT
+References: <BLU0-SMTP45859B1CA3415BE44C9024CAC240@phx.gbl>
+	<4F990DC1.4070305@broadcom.com>
+Date: Thu, 26 Apr 2012 14:50:54 +0300
+In-Reply-To: <4F990DC1.4070305@broadcom.com> (Arend van Spriel's message of
+	"Thu, 26 Apr 2012 10:56:33 +0200")
+Message-ID: <87r4vaaezl.fsf@purkki.adurom.net> (sfid-20120426_135101_248519_3EF76078)
 MIME-Version: 1.0
-In-Reply-To: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
-References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Sat, 14 Apr 2012 15:11:15 -0700
-Message-ID: <CALSq=BYgJ-bawvPPb7bcqL2XXQjA8=j3irdr6h41C-G7CE3C=Q@mail.gmail.com> (sfid-20120415_001139_958035_55AAC77F)
-Subject: Re: [PATCH 1/3] ath9k: use consistent value for REDUCE_SCALED_POWER_BY_THREE_CHAIN
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Failed to reply-all originally, sorry:)
+"Arend van Spriel" <arend@broadcom.com> writes:
 
-Erm...
-
-On Sat, Apr 14, 2012 at 1:01 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
+> On 04/26/2012 06:23 AM, Nathan Hintz wrote:
+>> Nathan Hintz (6):
+>>    bcma: Find names of non BCM cores
+>>    bcma: Move initialization of SPROM to prevent overwrite
+>>    bcma: Account for variable PCI memory base/size
+>>    bcma: reads/writes are always 4 bytes, so always map 4 bytes
+>>    bcma: Add __devexit to bcma_host_pci_remove
+>>    bcma: Add flush for BCMA_RESET_CTL write
+>>
+>>   arch/mips/bcm47xx/setup.c      |    4 +++
+>>   arch/mips/bcm47xx/sprom.c      |    2 -
+>>   drivers/bcma/core.c            |    1 +
+>>   drivers/bcma/driver_pci_host.c |   10 +++---
+>>   drivers/bcma/host_pci.c        |    4 +-
+>>   drivers/bcma/scan.c            |   54 +++++++++++++++++++++++++++++----------
+>>   6 files changed, 52 insertions(+), 23 deletions(-)
+>>
 >
-> In eeprom_def.c and in ar9003_eeprom.c the value
-> of the symbol is 9, however the comments in these
-> files indicates the value should be 10*log10(3)*2
-> which is 9.54242509439325. Replace the the value
-> to 10 in these files.
+> None of these patches have any description. Some motivation for the
+> changes would be appreciated like 'reported problem', 'new target
+> support', etc.
 
-So the truncated constant is off by a quarter-dB for 9 or for 10. Do
-the chips care one way or the other? (For comparison, Intel uses 4.5
-dB, i.e. 9 in this notation, to mean "divide-by-3". That's what ath9k
-has now).
+I would say that it's required. Anyone can see the diff and see what was
+changed, but nobody will figure out why the change was made unless it's
+described in the commit log. So it's important to answer the question
+"Why?".
 
-Are you making it consistent with some other file that's not mentioned
-here? If not, why?
-
->  #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
-> -#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   9  /* 10*log10(3)*2 */
-> +#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
->  #define PWRINCR_3_TO_1_CHAIN      9             /* 10*log(3)*2 */
-
-Why only change one of two 9s to a 10? Why not also PWRINCR_3_TO_1_CHAIN?
-
-Dan
+-- 
+Kalle Valo
