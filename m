@@ -1,58 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:59903 "HELO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758467Ab2DJDHf (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:34910 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759200Ab2DZUIF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 23:07:35 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/5] mwifiex: patches for 3.5
-Date: Mon,  9 Apr 2012 20:06:52 -0700
-Message-Id: <1334027217-23724-1-git-send-email-bzhao@marvell.com> (sfid-20120410_050737_334343_17B479D8)
+	Thu, 26 Apr 2012 16:08:05 -0400
+Date: Thu, 26 Apr 2012 16:07:57 -0400 (EDT)
+Message-Id: <20120426.160757.1741140873728970494.davem@davemloft.net> (sfid-20120426_220816_464140_67221EA3)
+To: mcgrof@do-not-panic.com
+Cc: zambrano@broadcom.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	arend@broadcom.com, joe@perches.com
+Subject: Re: [PATCH] b44: properly use pr_fmt()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAB=NE6VR6hPqoUmRH=YVr+MKu+Sn8tq2asv957zfD+SVWzk75A@mail.gmail.com>
+References: <CAB=NE6WBw3aJrch0JvxZ7jGb_rFW5Z4XWvYc1KqsBqBu+G8mjw@mail.gmail.com>
+	<CAB=NE6ViDGHPn=OsqFK1rJb-5J+1xzvf3h9+Rd-MgmWpn-T2fA@mail.gmail.com>
+	<CAB=NE6VR6hPqoUmRH=YVr+MKu+Sn8tq2asv957zfD+SVWzk75A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 26 Apr 2012 08:53:30 -0700
 
-This patch series is intended for 3.5.
+> OK I found no pr_fmt warnings at all for make allmodconfig ; make V=1
+> ; on v3.4-rc4. For this and others reason stated then yes, this patch
+> is simply bogus.
 
-Please note that "[PATCH 5/5] mwifiex: use asynchronous firmware loading"
-depends on "[PATCH 14/26] wireless, mwifiex: drop redundant NULL test
-before call to release_firmware()" (Jesper Juhl).
+This is what I expected, thanks for sorting this out :-)
 
-Thanks,
-Bing
-
----
-Amitkumar Karwar (3):
-  mwifiex: set default regulatory domain
-  mwifiex: display correct country information in debugfs "info"
-  mwifiex: use asynchronous firmware loading
-
-Avinash Patil (1):
-  mwifiex: add support for WPS2.0
-
-Bing Zhao (1):
-  mwifiex: fix typo in RSSI_HIGH event handling
-
- drivers/net/wireless/mwifiex/cfg80211.c  |   27 ++++++++
- drivers/net/wireless/mwifiex/cfp.c       |   31 +++++++++
- drivers/net/wireless/mwifiex/debugfs.c   |    2 +-
- drivers/net/wireless/mwifiex/fw.h        |    1 +
- drivers/net/wireless/mwifiex/init.c      |    2 +
- drivers/net/wireless/mwifiex/ioctl.h     |    3 +-
- drivers/net/wireless/mwifiex/join.c      |   44 +++++++++++++
- drivers/net/wireless/mwifiex/main.c      |  103 ++++++++++++++++--------------
- drivers/net/wireless/mwifiex/main.h      |    4 +
- drivers/net/wireless/mwifiex/pcie.c      |    3 +
- drivers/net/wireless/mwifiex/sdio.c      |    3 +
- drivers/net/wireless/mwifiex/sta_cmd.c   |    2 +-
- drivers/net/wireless/mwifiex/sta_ioctl.c |   37 ++++++++++-
- 13 files changed, 210 insertions(+), 52 deletions(-)
-
+We're in the rally!
