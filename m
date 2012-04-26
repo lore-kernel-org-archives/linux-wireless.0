@@ -1,62 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3222 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755811Ab2DPUmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 16:42:16 -0400
-Message-ID: <4F8C841F.3030908@broadcom.com> (sfid-20120416_224229_573420_C4E7F1D0)
-Date: Mon, 16 Apr 2012 22:42:07 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from blu0-omc2-s5.blu0.hotmail.com ([65.55.111.80]:23785 "EHLO
+	blu0-omc2-s5.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750713Ab2DZEYQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 00:24:16 -0400
+Message-ID: <BLU0-SMTP45859B1CA3415BE44C9024CAC240@phx.gbl> (sfid-20120426_062420_681988_C5C427F9)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH v2 0/6] BCMA Cumulative patches from OpenWRT
+Date: Wed, 25 Apr 2012 21:23:48 -0700
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [RFC PATCH 0/8] brcm80211: smac: rework regulatory support
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 10:17 PM, Seth Forshee wrote:
-> Hi Arnd,
->
-> Here's the latest update to the brcmsmac regulatory rework that I've
-> been working on. I've broken it up into a series of smaller patches,
-> cleaned things up, and finished what changes I can with the information
-> available to me.
+Nathan Hintz (6):
+  bcma: Find names of non BCM cores
+  bcma: Move initialization of SPROM to prevent overwrite
+  bcma: Account for variable PCI memory base/size
+  bcma: reads/writes are always 4 bytes, so always map 4 bytes
+  bcma: Add __devexit to bcma_host_pci_remove
+  bcma: Add flush for BCMA_RESET_CTL write
 
-I will go through the individual patches and comment on them. This code 
-could use some cleanup so it is appreciated.
+ arch/mips/bcm47xx/setup.c      |    4 +++
+ arch/mips/bcm47xx/sprom.c      |    2 -
+ drivers/bcma/core.c            |    1 +
+ drivers/bcma/driver_pci_host.c |   10 +++---
+ drivers/bcma/host_pci.c        |    4 +-
+ drivers/bcma/scan.c            |   54 +++++++++++++++++++++++++++++----------
+ 6 files changed, 52 insertions(+), 23 deletions(-)
 
-> I've attempted to maintain the same high-level behavior that the
-> brcmsmac internal regulatory support currently enforces. I find a couple
-> of these to be questionable however, those being: the setting of the
-> radio disable state based on whether or not there are any channels
-> allowed by regulatory, and the handling of enabling/disabling OFDM.
-> Perhaps you can comment on whether or not these actions are needed.
-
-Regarding questionable things, you mean the transmit mute or is there 
-another radio disable that I have not found yet. I only recall that 
-channel 14 (JP only) does not allow OFDM so it may be to accommodate 
-that. It may not be explicitly needed as mac80211 provides the rate 
-and/or modulation to use for the transmit frame.
-
-> All use of the internal regulatory data has been eliminated except for
-> the use of the MIMO power limits for filling out the txpwr_limits data.
-> I'm anticipating that you'll provide information on how this needs to be
-> handled. Otherwise I think these patches are very nearly complete, so
-> please let me know if you see anything that needs to be changed.
-
-I asked for this internally, but I do not recall getting an answer. I 
-will make another attempt.
-
-> So far these changes are testing well on a MacBook Air 4,1 with BCM43224
-> wireless. I'm now able to see and associate with my AP on channel 52,
-> which was not possible previously.
-
-I will try to organize some regulatory testing over here with your patches.
-
-Gr. AvS
+-- 
+1.7.7.6
 
