@@ -1,61 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:64126 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab2D0J6p (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:43207 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758712Ab2DZSZT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Apr 2012 05:58:45 -0400
-Date: Fri, 27 Apr 2012 11:58:42 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: sedat.dilek@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-Message-ID: <20120427095842.GW3157@wantstofly.org> (sfid-20120427_115904_407031_C73EDCF7)
-References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
- <20120427091405.GS3157@wantstofly.org>
- <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
- <20120427094007.GU3157@wantstofly.org>
- <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
- <20120427094637.GV3157@wantstofly.org>
- <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
+	Thu, 26 Apr 2012 14:25:19 -0400
+Received: by bkuw12 with SMTP id w12so1253049bku.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2012 11:25:18 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Subject: Re: carl9170 - monitor mode TP drop
+Date: Thu, 26 Apr 2012 20:25:12 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com> <201204252054.54123.chunkeey@googlemail.com> <CAFED-jkq58fjv2B+kOr5KJD4p7MUa35Pq6uP=yfCEfMa9Ujp=w@mail.gmail.com>
+In-Reply-To: <CAFED-jkq58fjv2B+kOr5KJD4p7MUa35Pq6uP=yfCEfMa9Ujp=w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Message-Id: <201204262025.12410.chunkeey@googlemail.com> (sfid-20120426_202523_424394_4A6A7CEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:56:00AM +0200, Sedat Dilek wrote:
-
-> >> >> Are you planning to or even working on support (for) 8361 devices?
-> >> >
-> >> > I don't have any such plans, and I don't know of anyone who does.
-> >>
-> >> Does 8361 require firmware support?
-> >
-> > What do you mean by that?
+On Thursday, April 26, 2012 09:45:22 AM Janusz Dziedzic wrote:
+> W dniu 25 kwietnia 2012 20:54 u¿ytkownik Christian Lamparter
+> So, what steps you suggest?
+> I would like to record traffic from channel 6 and would like to not
+> have this SNIFFER ACK.
 > 
-> IIRC ath5k for example needs no external firmware file.
-
-The 8361 requires firmware to be loaded into it before it'll do
-anything useful.
-
-
-> >> Does a firmware file exist (name?)?
-> >
-> > There's firmware for the 8361 out there, however, that version of
-> > the firmware implements a firmware API that is different from the
-> > one that mwl8k currently implements.
-> >
-> > You could add 8361 support to mwl8k, but then you'd have to go over
-> > all the firmware command invocations in mwl8k and make sure that they
-> > will work on the 8361 firmware that you're trying to support as well.
+> This is what I tried:
+> - ifconfig wlan0 up (no matter if up or down)
+> - iw phy phy0 interface add moni0 type monitor
+> - iw phy phy0 set channel 6
+> - ifconfig moni0 up
 > 
-> Without having a 8361 this will be even harder to walk through.
-> 
-> Anyway, thanks for your detailed explanations.
-> 
-> What's the alternative for such affected users?
-> Use ndis-wrapper?
+> After last step I still see TP drop between AP and STA1 on channel6
+Uh that's right. it was:
 
-I'm not sure.  I've never tried to get a 8361 work under Linux.
+iw phy0 interface add moni type monitor flags none
+
+the "flags none" is the important bit.
+
+Regards,
+	Christian
