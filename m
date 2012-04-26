@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36821 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758892Ab2DJPPp (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41453 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756104Ab2DZMF4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 11:15:45 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [WIP 09/11] ath: Add Wake-on-Wireless debug mask
-Date: Tue, 10 Apr 2012 20:43:19 +0530
-Message-ID: <1334070801-21708-10-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120410_171548_169446_14990765)
-In-Reply-To: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
+	Thu, 26 Apr 2012 08:05:56 -0400
+Message-ID: <4F993A1E.8070901@qca.qualcomm.com> (sfid-20120426_140608_066845_D9D9F4B6)
+Date: Thu, 26 Apr 2012 15:05:50 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH V2] ath6kl: Don't advertise HT capability for incapable
+ firmware
+References: <1335337698-7221-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1335337698-7221-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 04/25/2012 10:08 AM, Vasanthakumar Thiagarajan wrote:
+> With firmwares which do not support rsn capability override
+> (ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE) from host would
+> cause 4-way handshake failure when HT cap is advertised.
+> To fix this, do not advertise HT cap with cfg80211 for
+> those fw.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-to help the developers and users to debug/know
-whats happening with WoW
+Thanks, applied.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index c54b7d3..9bd0248 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -215,6 +215,7 @@ void ath_printk(const char *level, const struct ath_common *common,
-  *	used exclusively for WLAN-BT coexistence starting from
-  *	AR9462.
-  * @ATH_DBG_DFS: radar datection
-+ * @ATH_DBG_WOW: Wake on Wireless
-  * @ATH_DBG_ANY: enable all debugging
-  *
-  * The debug level is used to control the amount and type of debugging output
-@@ -242,6 +243,7 @@ enum ATH_DEBUG {
- 	ATH_DBG_BSTUCK		= 0x00008000,
- 	ATH_DBG_MCI		= 0x00010000,
- 	ATH_DBG_DFS		= 0x00020000,
-+	ATH_DBG_WOW		= 0x00040000,
- 	ATH_DBG_ANY		= 0xffffffff
- };
- 
--- 
-1.7.0.4
-
+Kalle
