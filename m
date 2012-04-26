@@ -1,628 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from queueout04-winn.ispmail.ntl.com ([81.103.221.58]:15286 "EHLO
-	queueout04-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755705Ab2DPXYz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58917 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758622Ab2DZTrn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 19:24:55 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org,
-	dcbw@redhat.com
-Subject: [PATCH 1/5] libertas: Firmware loading simplifications
-Message-Id: <20120416225242.6F4D49D401E@zog.reactivated.net> (sfid-20120417_012500_299820_69FE7E65)
-Date: Mon, 16 Apr 2012 23:52:42 +0100 (BST)
+	Thu, 26 Apr 2012 15:47:43 -0400
+Date: Thu, 26 Apr 2012 15:34:44 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: pull request: wireless-next 2012-04-26
+Message-ID: <20120426193444.GI16900@tuxdriver.com> (sfid-20120426_214754_902858_DAE8CADE)
+References: <20120425191418.GC16900@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="pAwQNkOnpTn9IO2O"
+In-Reply-To: <20120425191418.GC16900@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the ability to pass module parameters with firmware filenames
-for USB and SDIO interfaces.
 
-Remove the ability to pass custom "user" filenames to lbs_get_firmware().
+--pAwQNkOnpTn9IO2O
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Remove the ability to reprogram internal device memory with a different
-firmware from the USB driver (we don't know of any users), and simplify
-the OLPC firmware loading quirk to simply placing the OLPC firmware
-at the top of the list (we don't know of any users other than OLPC).
+commit d9b8ae6bd8c3304569a25079fcdbebaa28a48ee4
 
-Move lbs_get_firmware() into its own file.
+(This is the same as yesterday's request, but with the libertas
+sched.h patch from Luis dropped.)
 
-These simplifications should have no real-life effect but make the
-upcoming transition to asynchronous firmware loading considerably less
-painful.
+Dave,
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
-Acked-by: Dan Williams <dcbw@redhat.com>
+This is another batch of updates intended for 3.5...
+
+Nothing too special this round -- highlights include some iwlwifi
+refactoring, some ath9k refactoring, some rtlwifi refactoring, and
+some mac80211 mesh refactoring.  It must be Springtime!  Along with
+all the refactoring, there is the usual variety of random tweaks here
+and there in the wireless stack.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
 ---
- drivers/net/wireless/libertas/Makefile   |    1 +
- drivers/net/wireless/libertas/decl.h     |    3 +-
- drivers/net/wireless/libertas/firmware.c |   79 ++++++++++++++
- drivers/net/wireless/libertas/if_cs.c    |    4 +-
- drivers/net/wireless/libertas/if_sdio.c  |   25 +----
- drivers/net/wireless/libertas/if_spi.c   |    5 +-
- drivers/net/wireless/libertas/if_usb.c   |  169 ++----------------------------
- drivers/net/wireless/libertas/main.c     |  101 ------------------
- 8 files changed, 94 insertions(+), 293 deletions(-)
- create mode 100644 drivers/net/wireless/libertas/firmware.c
 
-diff --git a/drivers/net/wireless/libertas/Makefile b/drivers/net/wireless/libertas/Makefile
-index f7d01bf..eac72f7 100644
---- a/drivers/net/wireless/libertas/Makefile
-+++ b/drivers/net/wireless/libertas/Makefile
-@@ -6,6 +6,7 @@ libertas-y += ethtool.o
- libertas-y += main.o
- libertas-y += rx.o
- libertas-y += tx.o
-+libertas-y += firmware.o
- libertas-$(CONFIG_LIBERTAS_MESH) += mesh.o
- 
- usb8xxx-objs += if_usb.o
-diff --git a/drivers/net/wireless/libertas/decl.h b/drivers/net/wireless/libertas/decl.h
-index bc951ab..2fb2e31 100644
---- a/drivers/net/wireless/libertas/decl.h
-+++ b/drivers/net/wireless/libertas/decl.h
-@@ -66,8 +66,7 @@ int lbs_exit_auto_deep_sleep(struct lbs_private *priv);
- u32 lbs_fw_index_to_data_rate(u8 index);
- u8 lbs_data_rate_to_fw_index(u32 rate);
- 
--int lbs_get_firmware(struct device *dev, const char *user_helper,
--			const char *user_mainfw, u32 card_model,
-+int lbs_get_firmware(struct device *dev, u32 card_model,
- 			const struct lbs_fw_table *fw_table,
- 			const struct firmware **helper,
- 			const struct firmware **mainfw);
-diff --git a/drivers/net/wireless/libertas/firmware.c b/drivers/net/wireless/libertas/firmware.c
-new file mode 100644
-index 0000000..0c8c845
---- /dev/null
-+++ b/drivers/net/wireless/libertas/firmware.c
-@@ -0,0 +1,79 @@
-+/*
-+ * Firmware loading and handling functions.
-+ */
-+
-+#include <linux/firmware.h>
-+#include <linux/module.h>
-+
-+#include "decl.h"
-+
-+/**
-+ *  lbs_get_firmware - Retrieves two-stage firmware
-+ *
-+ *  @dev:     	A pointer to &device structure
-+ *  @card_model: Bus-specific card model ID used to filter firmware table
-+ *		elements
-+ *  @fw_table:	Table of firmware file names and device model numbers
-+ *		terminated by an entry with a NULL helper name
-+ *  @helper:	On success, the helper firmware; caller must free
-+ *  @mainfw:	On success, the main firmware; caller must free
-+ *
-+ *  returns:		0 on success, non-zero on failure
-+ */
-+int lbs_get_firmware(struct device *dev, u32 card_model,
-+			const struct lbs_fw_table *fw_table,
-+			const struct firmware **helper,
-+			const struct firmware **mainfw)
-+{
-+	const struct lbs_fw_table *iter;
-+	int ret;
-+
-+	BUG_ON(helper == NULL);
-+	BUG_ON(mainfw == NULL);
-+
-+	/* Search for firmware to use from the table. */
-+	iter = fw_table;
-+	while (iter && iter->helper) {
-+		if (iter->model != card_model)
-+			goto next;
-+
-+		if (*helper == NULL) {
-+			ret = request_firmware(helper, iter->helper, dev);
-+			if (ret)
-+				goto next;
-+
-+			/* If the device has one-stage firmware (ie cf8305) and
-+			 * we've got it then we don't need to bother with the
-+			 * main firmware.
-+			 */
-+			if (iter->fwname == NULL)
-+				return 0;
-+		}
-+
-+		if (*mainfw == NULL) {
-+			ret = request_firmware(mainfw, iter->fwname, dev);
-+			if (ret) {
-+				/* Clear the helper to ensure we don't have
-+				 * mismatched firmware pairs.
-+				 */
-+				release_firmware(*helper);
-+				*helper = NULL;
-+			}
-+		}
-+
-+		if (*helper && *mainfw)
-+			return 0;
-+
-+  next:
-+		iter++;
-+	}
-+
-+	/* Failed */
-+	release_firmware(*helper);
-+	*helper = NULL;
-+	release_firmware(*mainfw);
-+	*mainfw = NULL;
-+
-+	return -ENOENT;
-+}
-+EXPORT_SYMBOL_GPL(lbs_get_firmware);
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index 171a06b..cee5052 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -890,8 +890,8 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 		goto out2;
- 	}
- 
--	ret = lbs_get_firmware(&p_dev->dev, NULL, NULL, card->model,
--				&fw_table[0], &helper, &mainfw);
-+	ret = lbs_get_firmware(&p_dev->dev, card->model, &fw_table[0],
-+				&helper, &mainfw);
- 	if (ret) {
- 		pr_err("failed to find firmware (%d)\n", ret);
- 		goto out2;
-diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
-index 15bfe2f..6590feb 100644
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -65,12 +65,6 @@ static void if_sdio_interrupt(struct sdio_func *func);
-  */
- static u8 user_rmmod;
- 
--static char *lbs_helper_name = NULL;
--module_param_named(helper_name, lbs_helper_name, charp, 0644);
--
--static char *lbs_fw_name = NULL;
--module_param_named(fw_name, lbs_fw_name, charp, 0644);
--
- static const struct sdio_device_id if_sdio_ids[] = {
- 	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL,
- 			SDIO_DEVICE_ID_MARVELL_LIBERTAS) },
-@@ -124,11 +118,6 @@ struct if_sdio_card {
- 	unsigned long		ioport;
- 	unsigned int		scratch_reg;
- 
--	const char		*helper;
--	const char		*firmware;
--	bool			helper_allocated;
--	bool			firmware_allocated;
--
- 	u8			buffer[65536] __attribute__((aligned(4)));
- 
- 	spinlock_t		lock;
-@@ -725,8 +714,8 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
- 		goto success;
- 	}
- 
--	ret = lbs_get_firmware(&card->func->dev, lbs_helper_name, lbs_fw_name,
--				card->model, &fw_table[0], &helper, &mainfw);
-+	ret = lbs_get_firmware(&card->func->dev, card->model, &fw_table[0],
-+				&helper, &mainfw);
- 	if (ret) {
- 		pr_err("failed to find firmware (%d)\n", ret);
- 		goto out;
-@@ -1242,10 +1231,6 @@ free:
- 		kfree(packet);
- 	}
- 
--	if (card->helper_allocated)
--		kfree(card->helper);
--	if (card->firmware_allocated)
--		kfree(card->firmware);
- 	kfree(card);
- 
- 	goto out;
-@@ -1293,12 +1278,6 @@ static void if_sdio_remove(struct sdio_func *func)
- 		kfree(packet);
- 	}
- 
--	if (card->helper_allocated)
--		kfree(card->helper);
--	if (card->firmware_allocated)
--		kfree(card->firmware);
--	kfree(card);
--
- 	lbs_deb_leave(LBS_DEB_SDIO);
- }
- 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index 7a5df4f..9604a1c 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -1064,9 +1064,8 @@ static int if_spi_init_card(struct if_spi_card *card)
- 			goto out;
- 		}
- 
--		err = lbs_get_firmware(&card->spi->dev, NULL, NULL,
--					card->card_id, &fw_table[0], &helper,
--					&mainfw);
-+		err = lbs_get_firmware(&card->spi->dev, card->card_id,
-+					&fw_table[0], &helper, &mainfw);
- 		if (err) {
- 			netdev_err(priv->dev, "failed to find firmware (%d)\n",
- 				   err);
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 74da5f1..3dde3e0 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -29,9 +29,6 @@
- 
- #define MESSAGE_HEADER_LEN	4
- 
--static char *lbs_fw_name = NULL;
--module_param_named(fw_name, lbs_fw_name, charp, 0644);
--
- MODULE_FIRMWARE("libertas/usb8388_v9.bin");
- MODULE_FIRMWARE("libertas/usb8388_v5.bin");
- MODULE_FIRMWARE("libertas/usb8388.bin");
-@@ -55,10 +52,7 @@ MODULE_DEVICE_TABLE(usb, if_usb_table);
- 
- static void if_usb_receive(struct urb *urb);
- static void if_usb_receive_fwload(struct urb *urb);
--static int __if_usb_prog_firmware(struct if_usb_card *cardp,
--					const char *fwname, int cmd);
--static int if_usb_prog_firmware(struct if_usb_card *cardp,
--					const char *fwname, int cmd);
-+static int if_usb_prog_firmware(struct if_usb_card *cardp);
- static int if_usb_host_to_card(struct lbs_private *priv, uint8_t type,
- 			       uint8_t *payload, uint16_t nb);
- static int usb_tx_block(struct if_usb_card *cardp, uint8_t *payload,
-@@ -67,69 +61,6 @@ static void if_usb_free(struct if_usb_card *cardp);
- static int if_usb_submit_rx_urb(struct if_usb_card *cardp);
- static int if_usb_reset_device(struct if_usb_card *cardp);
- 
--/* sysfs hooks */
--
--/*
-- *  Set function to write firmware to device's persistent memory
-- */
--static ssize_t if_usb_firmware_set(struct device *dev,
--		struct device_attribute *attr, const char *buf, size_t count)
--{
--	struct lbs_private *priv = to_net_dev(dev)->ml_priv;
--	struct if_usb_card *cardp = priv->card;
--	int ret;
--
--	BUG_ON(buf == NULL);
--
--	ret = if_usb_prog_firmware(cardp, buf, BOOT_CMD_UPDATE_FW);
--	if (ret == 0)
--		return count;
--
--	return ret;
--}
--
--/*
-- * lbs_flash_fw attribute to be exported per ethX interface through sysfs
-- * (/sys/class/net/ethX/lbs_flash_fw).  Use this like so to write firmware to
-- * the device's persistent memory:
-- * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_flash_fw
-- */
--static DEVICE_ATTR(lbs_flash_fw, 0200, NULL, if_usb_firmware_set);
--
--/**
-- * if_usb_boot2_set - write firmware to device's persistent memory
-- *
-- * @dev: target device
-- * @attr: device attributes
-- * @buf: firmware buffer to write
-- * @count: number of bytes to write
-- *
-- * returns: number of bytes written or negative error code
-- */
--static ssize_t if_usb_boot2_set(struct device *dev,
--		struct device_attribute *attr, const char *buf, size_t count)
--{
--	struct lbs_private *priv = to_net_dev(dev)->ml_priv;
--	struct if_usb_card *cardp = priv->card;
--	int ret;
--
--	BUG_ON(buf == NULL);
--
--	ret = if_usb_prog_firmware(cardp, buf, BOOT_CMD_UPDATE_BOOT2);
--	if (ret == 0)
--		return count;
--
--	return ret;
--}
--
--/*
-- * lbs_flash_boot2 attribute to be exported per ethX interface through sysfs
-- * (/sys/class/net/ethX/lbs_flash_boot2).  Use this like so to write firmware
-- * to the device's persistent memory:
-- * echo usb8388-5.126.0.p5.bin > /sys/class/net/ethX/lbs_flash_boot2
-- */
--static DEVICE_ATTR(lbs_flash_boot2, 0200, NULL, if_usb_boot2_set);
--
- /**
-  * if_usb_write_bulk_callback - callback function to handle the status
-  * of the URB
-@@ -314,13 +245,10 @@ static int if_usb_probe(struct usb_interface *intf,
- 	}
- 
- 	/* Upload firmware */
--	kparam_block_sysfs_write(fw_name);
--	if (__if_usb_prog_firmware(cardp, lbs_fw_name, BOOT_CMD_FW_BY_USB)) {
--		kparam_unblock_sysfs_write(fw_name);
-+	if (if_usb_prog_firmware(cardp)) {
- 		lbs_deb_usbd(&udev->dev, "FW upload failed\n");
- 		goto err_prog_firmware;
- 	}
--	kparam_unblock_sysfs_write(fw_name);
- 
- 	if (!(priv = lbs_add_card(cardp, &intf->dev)))
- 		goto err_prog_firmware;
-@@ -349,14 +277,6 @@ static int if_usb_probe(struct usb_interface *intf,
- 	usb_get_dev(udev);
- 	usb_set_intfdata(intf, cardp);
- 
--	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_flash_fw))
--		netdev_err(priv->dev,
--			   "cannot register lbs_flash_fw attribute\n");
--
--	if (device_create_file(&priv->dev->dev, &dev_attr_lbs_flash_boot2))
--		netdev_err(priv->dev,
--			   "cannot register lbs_flash_boot2 attribute\n");
--
- 	/*
- 	 * EHS_REMOVE_WAKEUP is not supported on all versions of the firmware.
- 	 */
-@@ -389,9 +309,6 @@ static void if_usb_disconnect(struct usb_interface *intf)
- 
- 	lbs_deb_enter(LBS_DEB_MAIN);
- 
--	device_remove_file(&priv->dev->dev, &dev_attr_lbs_flash_boot2);
--	device_remove_file(&priv->dev->dev, &dev_attr_lbs_flash_fw);
--
- 	cardp->surprise_removed = 1;
- 
- 	if (priv) {
-@@ -912,58 +829,12 @@ static int check_fwfile_format(const uint8_t *data, uint32_t totlen)
- 	return ret;
- }
- 
--
--/**
--*  if_usb_prog_firmware - programs the firmware subject to cmd
--*
--*  @cardp:	the if_usb_card descriptor
--*  @fwname:	firmware or boot2 image file name
--*  @cmd:	either BOOT_CMD_FW_BY_USB, BOOT_CMD_UPDATE_FW,
--*		or BOOT_CMD_UPDATE_BOOT2.
--*  returns:	0 or error code
--*/
--static int if_usb_prog_firmware(struct if_usb_card *cardp,
--				const char *fwname, int cmd)
--{
--	struct lbs_private *priv = cardp->priv;
--	unsigned long flags, caps;
--	int ret;
--
--	caps = priv->fwcapinfo;
--	if (((cmd == BOOT_CMD_UPDATE_FW) && !(caps & FW_CAPINFO_FIRMWARE_UPGRADE)) ||
--	    ((cmd == BOOT_CMD_UPDATE_BOOT2) && !(caps & FW_CAPINFO_BOOT2_UPGRADE)))
--		return -EOPNOTSUPP;
--
--	/* Ensure main thread is idle. */
--	spin_lock_irqsave(&priv->driver_lock, flags);
--	while (priv->cur_cmd != NULL || priv->dnld_sent != DNLD_RES_RECEIVED) {
--		spin_unlock_irqrestore(&priv->driver_lock, flags);
--		if (wait_event_interruptible(priv->waitq,
--				(priv->cur_cmd == NULL &&
--				priv->dnld_sent == DNLD_RES_RECEIVED))) {
--			return -ERESTARTSYS;
--		}
--		spin_lock_irqsave(&priv->driver_lock, flags);
--	}
--	priv->dnld_sent = DNLD_BOOTCMD_SENT;
--	spin_unlock_irqrestore(&priv->driver_lock, flags);
--
--	ret = __if_usb_prog_firmware(cardp, fwname, cmd);
--
--	spin_lock_irqsave(&priv->driver_lock, flags);
--	priv->dnld_sent = DNLD_RES_RECEIVED;
--	spin_unlock_irqrestore(&priv->driver_lock, flags);
--
--	wake_up(&priv->waitq);
--
--	return ret;
--}
--
- /* table of firmware file names */
- static const struct {
- 	u32 model;
- 	const char *fwname;
- } fw_table[] = {
-+	{ MODEL_8388, "libertas/usb8388_olpc.bin" },
- 	{ MODEL_8388, "libertas/usb8388_v9.bin" },
- 	{ MODEL_8388, "libertas/usb8388_v5.bin" },
- 	{ MODEL_8388, "libertas/usb8388.bin" },
-@@ -971,35 +842,10 @@ static const struct {
- 	{ MODEL_8682, "libertas/usb8682.bin" }
- };
- 
--#ifdef CONFIG_OLPC
--
--static int try_olpc_fw(struct if_usb_card *cardp)
--{
--	int retval = -ENOENT;
--
--	/* try the OLPC firmware first; fall back to fw_table list */
--	if (machine_is_olpc() && cardp->model == MODEL_8388)
--		retval = request_firmware(&cardp->fw,
--				"libertas/usb8388_olpc.bin", &cardp->udev->dev);
--	return retval;
--}
--
--#else
--static int try_olpc_fw(struct if_usb_card *cardp) { return -ENOENT; }
--#endif /* !CONFIG_OLPC */
--
--static int get_fw(struct if_usb_card *cardp, const char *fwname)
-+static int get_fw(struct if_usb_card *cardp)
- {
- 	int i;
- 
--	/* Try user-specified firmware first */
--	if (fwname)
--		return request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
--
--	/* Handle OLPC firmware */
--	if (try_olpc_fw(cardp) == 0)
--		return 0;
--
- 	/* Otherwise search for firmware to use */
- 	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
- 		if (fw_table[i].model != cardp->model)
-@@ -1012,8 +858,7 @@ static int get_fw(struct if_usb_card *cardp, const char *fwname)
- 	return -ENOENT;
- }
- 
--static int __if_usb_prog_firmware(struct if_usb_card *cardp,
--					const char *fwname, int cmd)
-+static int if_usb_prog_firmware(struct if_usb_card *cardp)
- {
- 	int i = 0;
- 	static int reset_count = 10;
-@@ -1021,7 +866,7 @@ static int __if_usb_prog_firmware(struct if_usb_card *cardp,
- 
- 	lbs_deb_enter(LBS_DEB_USB);
- 
--	ret = get_fw(cardp, fwname);
-+	ret = get_fw(cardp);
- 	if (ret) {
- 		pr_err("failed to find firmware (%d)\n", ret);
- 		goto done;
-@@ -1053,7 +898,7 @@ restart:
- 	do {
- 		int j = 0;
- 		i++;
--		if_usb_issue_boot_command(cardp, cmd);
-+		if_usb_issue_boot_command(cardp, BOOT_CMD_FW_BY_USB);
- 		/* wait for command response */
- 		do {
- 			j++;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 3b81b70..fa09585 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1177,107 +1177,6 @@ void lbs_notify_command_response(struct lbs_private *priv, u8 resp_idx)
- }
- EXPORT_SYMBOL_GPL(lbs_notify_command_response);
- 
--/**
-- *  lbs_get_firmware - Retrieves two-stage firmware
-- *
-- *  @dev:     	A pointer to &device structure
-- *  @user_helper: User-defined helper firmware file
-- *  @user_mainfw: User-defined main firmware file
-- *  @card_model: Bus-specific card model ID used to filter firmware table
-- *		elements
-- *  @fw_table:	Table of firmware file names and device model numbers
-- *		terminated by an entry with a NULL helper name
-- *  @helper:	On success, the helper firmware; caller must free
-- *  @mainfw:	On success, the main firmware; caller must free
-- *
-- *  returns:		0 on success, non-zero on failure
-- */
--int lbs_get_firmware(struct device *dev, const char *user_helper,
--			const char *user_mainfw, u32 card_model,
--			const struct lbs_fw_table *fw_table,
--			const struct firmware **helper,
--			const struct firmware **mainfw)
--{
--	const struct lbs_fw_table *iter;
--	int ret;
--
--	BUG_ON(helper == NULL);
--	BUG_ON(mainfw == NULL);
--
--	/* Try user-specified firmware first */
--	if (user_helper) {
--		ret = request_firmware(helper, user_helper, dev);
--		if (ret) {
--			dev_err(dev, "couldn't find helper firmware %s\n",
--				user_helper);
--			goto fail;
--		}
--	}
--	if (user_mainfw) {
--		ret = request_firmware(mainfw, user_mainfw, dev);
--		if (ret) {
--			dev_err(dev, "couldn't find main firmware %s\n",
--				user_mainfw);
--			goto fail;
--		}
--	}
--
--	if (*helper && *mainfw)
--		return 0;
--
--	/* Otherwise search for firmware to use.  If neither the helper or
--	 * the main firmware were specified by the user, then we need to
--	 * make sure that found helper & main are from the same entry in
--	 * fw_table.
--	 */
--	iter = fw_table;
--	while (iter && iter->helper) {
--		if (iter->model != card_model)
--			goto next;
--
--		if (*helper == NULL) {
--			ret = request_firmware(helper, iter->helper, dev);
--			if (ret)
--				goto next;
--
--			/* If the device has one-stage firmware (ie cf8305) and
--			 * we've got it then we don't need to bother with the
--			 * main firmware.
--			 */
--			if (iter->fwname == NULL)
--				return 0;
--		}
--
--		if (*mainfw == NULL) {
--			ret = request_firmware(mainfw, iter->fwname, dev);
--			if (ret && !user_helper) {
--				/* Clear the helper if it wasn't user-specified
--				 * and the main firmware load failed, to ensure
--				 * we don't have mismatched firmware pairs.
--				 */
--				release_firmware(*helper);
--				*helper = NULL;
--			}
--		}
--
--		if (*helper && *mainfw)
--			return 0;
--
--  next:
--		iter++;
--	}
--
--  fail:
--	/* Failed */
--	release_firmware(*helper);
--	*helper = NULL;
--	release_firmware(*mainfw);
--	*mainfw = NULL;
--
--	return -ENOENT;
--}
--EXPORT_SYMBOL_GPL(lbs_get_firmware);
--
- static int __init lbs_init_module(void)
- {
- 	lbs_deb_enter(LBS_DEB_MAIN);
--- 
-1.7.7.6
+The following changes since commit 872f24dbc604ef585ea7eec73020dcdfaffd1956:
 
+  tipc: remove inline instances from C source files. (2012-04-24 00:41:03 -=
+0400)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next.git =
+for-davem
+
+Amitkumar Karwar (1):
+      mwifiex: add support for Marvell USB8797 chipset
+
+Andrei Emeltchenko (1):
+      mac80211: Adds clean sdata helper
+
+Anisse Astier (2):
+      rt2800: debugfs register access: BBP is 256 bytes big
+      rt2800: add chipset revision RT5390R support
+
+Bala Shanmugam (1):
+      cfg80211: Validate legacy rateset.
+
+Ben Greear (2):
+      mac80211: Support on-channel scan option.
+      ath9k: Fix compile warnings when DEBUGFS is disabled.
+
+Daniel Drake (1):
+      libertas CS: convert to asynchronous firmware loading
+
+David Spinadel (4):
+      iwlwifi: Change disable calibration bit-set to enum
+      iwlwifi: Added foreward declaration for iwl_cfg in op_mode
+      iwlwifi: Remove inconsistent and redundant declaration
+      iwlwifi: Added debugfs calib disabled write
+
+Don Fry (1):
+      iwlwifi: revert workaround to restore 1000 rx throughput
+
+Emmanuel Grumbach (16):
+      iwlwifi: kill shrd->drv, driver points to transport
+      iwlwifi: op_mode holds its pointer to the transport
+      iwlwifi: op_mode holds its pointer to the config
+      iwlwifi: driver holds its pointer to the config
+      iwlwifi: transport holds its pointer to the config
+      iwlwifi: driver holds its pointer to the transport
+      iwlwifi: don't use shared for the logger any more
+      iwlwifi: remove the shared area
+      iwlwifi: remove unneeded includes
+      iwlwifi: split between AGG_ON and AGG_STARTING
+      iwlwifi: move iwl_rxon_context_id to user
+      iwlwifi: make a static inline to read the RF kill register
+      iwlwifi: first enable RF kill interrupt, then check register
+      iwlwifi: enable RF kill interrupt in start_hw
+      iwlwifi: check RF kill register when interrupts have been disabled
+      iwlwifi: provide proper API to disable all interrupts
+
+Felix Fietkau (12):
+      ath9k: add possible wiphy interface combinations
+      libertas: add missing include
+      ath9k_hw: use standard SIFS time as reference for half/quarter channe=
+ls
+      ath9k_hw: increase ACK timeout for half/quarter channels
+      ath9k_hw: set the PHY mode for half/quarter channels on AR9003
+      ath9k_hw: increase symbol overlap window for half/quarter channels
+      ath9k_hw: fix and clean up PHY activation delay
+      ath9k_hw: disable Tx IQ calibration on half/quarter channels
+      ath9k_hw: disable fast channel change when changing from/to half/quar=
+ter mode
+      ath9k_hw: increase tx abort timeout for half/quarter channels
+      mac80211: rename AP variable num_sta_authorized to num_mcast_sta
+      mac80211: fix num_mcast_sta counting issues
+
+Gabor Juhos (1):
+      ath9k: fix TX power reporting on AR9003 chips
+
+Helmut Schaa (1):
+      rt2x00: Use GFP_KERNEL for rx buffer allocation on USB devices
+
+Javier Cardona (1):
+      mac80211: fixup for mesh TSF adjustment latency in Toffset setpoint
+
+Johannes Berg (22):
+      iwlwifi: improve TX cache footprint
+      iwlwifi: properly set basic rates
+      iwlwifi: remove debugfs logspam
+      iwlwifi: move debugfs registration function declarations
+      iwlwifi: move iwl_have_debug_level
+      iwlwifi: clean up iwl-shared.h includes
+      iwlwifi: remove bt_siso_mode declaration
+      iwlwifi: move TIME_UNIT
+      iwlwifi: move iwl_cmd_echo_test
+      iwlwifi: remove traffic log
+      iwlwifi: remove TX/RX frame statistics
+      iwlwifi: remove duplicate iwlagn_mod_params declaration
+      iwlwifi: move driver defines to iwl-drv.h
+      iwlwifi: move PLCP defines to config
+      iwlwifi: move watchdog definitions to config
+      iwlwifi: move eeprom versions to HW files
+      iwlwifi: move antenna definitions to config
+      iwlwifi: move OTP defines
+      iwlwifi: clean up some hw file includes
+      iwlwifi: use direct calls for transport free
+      iwlwifi: clean up module parameters
+      iwlwifi: use new mac80211 queue scheme
+
+John W. Linville (1):
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-n=
+ext into for-davem
+
+Larry Finger (6):
+      rtlwifi: Move dig_t and ps_t structs
+      rtlwifi: Add dm structs to private structure
+      rtlwifi: rtl8192c: Convert driver to use private dm structs
+      rtlwifi: rtl8192c: Convert driver to use private ps_t struct
+      rtlwifi: rtl8192de: Convert driver to use private dm structs
+      rtlwifi: rtl8192se: Convert driver to use private dm struct
+
+Michael Liang (1):
+      ath9k: don't strip mic on non-encrypted frames in tkip
+
+Rajkumar Manoharan (2):
+      ath9k: simplify beacon configuration for beaconing vifs
+      ath9k_hw: remove ATH_BTCOEX_CFG_MCI
+
+Sujith Manoharan (1):
+      ath9k: Fix IDLE Powersave
+
+Thomas Pedersen (4):
+      mac80211: refactor mesh peer initialization
+      mac80211: refactor mesh peer rate handling
+      mac80211: don't set mesh peer ht caps if ht disabled
+      mac80211: fix STA channel width field
+
+Wey-Yi Guy (3):
+      mac80211: declare ieee80211_ave_rssi as EXPORT
+      iwlwifi: include net/mac80211.h to avoid compiler error
+      mac80211: check for non-managed interface
+
+Xose Vazquez Perez (2):
+      wireless: rt2x00: rt2800usb add more devices ids
+      wireless: rt2x00: rt2800usb more devices were identified
+
+Zefir Kurtisi (2):
+      ath9k: make DFS detector pools SMP safe
+      ath9k: extend DFS detector stats in dfs_debugfs
+
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c        |   17 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c      |   10 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |   64 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |   28 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h        |    3 +
+ drivers/net/wireless/ath/ath9k/beacon.c            |    4 +-
+ drivers/net/wireless/ath/ath9k/btcoex.c            |   14 +-
+ drivers/net/wireless/ath/ath9k/btcoex.h            |    1 -
+ drivers/net/wireless/ath/ath9k/dfs.c               |    4 +
+ drivers/net/wireless/ath/ath9k/dfs_debug.c         |   46 +
+ drivers/net/wireless/ath/ath9k/dfs_debug.h         |   45 +-
+ drivers/net/wireless/ath/ath9k/dfs_pri_detector.c  |  130 ++-
+ drivers/net/wireless/ath/ath9k/gpio.c              |   21 +-
+ drivers/net/wireless/ath/ath9k/hw.c                |   42 +-
+ drivers/net/wireless/ath/ath9k/hw.h                |    5 +-
+ drivers/net/wireless/ath/ath9k/init.c              |   21 +
+ drivers/net/wireless/ath/ath9k/mac.c               |   10 +-
+ drivers/net/wireless/ath/ath9k/main.c              |  105 +--
+ drivers/net/wireless/ath/ath9k/recv.c              |    3 +-
+ drivers/net/wireless/iwlwifi/Makefile              |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c            |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c            |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c            |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c            |   17 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c       |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.h       |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-devices.c     |   25 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h          |   11 +
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c         |   42 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c          |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h          |   36 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c          |   22 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c        |  128 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c         |    1 -
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c          |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c          |   61 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c             |  308 ++----
+ drivers/net/wireless/iwlwifi/iwl-agn.h             |   26 +-
+ drivers/net/wireless/iwlwifi/iwl-config.h          |   28 +
+ drivers/net/wireless/iwlwifi/iwl-core.c            |  297 ------
+ drivers/net/wireless/iwlwifi/iwl-core.h            |  133 ---
+ drivers/net/wireless/iwlwifi/iwl-debug.c           |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debug.h           |   34 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c         |  309 ++-----
+ drivers/net/wireless/iwlwifi/iwl-dev.h             |   99 +--
+ drivers/net/wireless/iwlwifi/iwl-drv.c             |  151 +++-
+ drivers/net/wireless/iwlwifi/iwl-drv.h             |   25 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c          |   64 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h          |   53 -
+ drivers/net/wireless/iwlwifi/iwl-fw.h              |    1 +
+ drivers/net/wireless/iwlwifi/iwl-io.h              |    1 -
+ drivers/net/wireless/iwlwifi/iwl-led.c             |   21 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c        |   88 +-
+ .../iwlwifi/{iwl-shared.h =3D> iwl-modparams.h}      |   78 +--
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h         |    2 +
+ drivers/net/wireless/iwlwifi/iwl-pci.c             |   60 +-
+ drivers/net/wireless/iwlwifi/iwl-phy-db.c          |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-phy-db.h          |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c           |   19 +-
+ drivers/net/wireless/iwlwifi/iwl-power.h           |    9 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c            |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-testmode.c        |   27 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h  |   43 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c   |   11 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c   |   35 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c      |  184 ++--
+ drivers/net/wireless/iwlwifi/iwl-trans.h           |   49 +-
+ drivers/net/wireless/iwlwifi/iwl-ucode.c           |   25 +-
+ drivers/net/wireless/libertas/firmware.c           |    1 +
+ drivers/net/wireless/libertas/if_cs.c              |   88 +-
+ drivers/net/wireless/mwifiex/11n_aggr.c            |   36 +-
+ drivers/net/wireless/mwifiex/Kconfig               |   11 +
+ drivers/net/wireless/mwifiex/Makefile              |    3 +
+ drivers/net/wireless/mwifiex/cmdevt.c              |   63 +-
+ drivers/net/wireless/mwifiex/decl.h                |    1 +
+ drivers/net/wireless/mwifiex/fw.h                  |    5 +
+ drivers/net/wireless/mwifiex/init.c                |   64 +-
+ drivers/net/wireless/mwifiex/main.c                |   26 +-
+ drivers/net/wireless/mwifiex/main.h                |   20 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c             |    2 +-
+ drivers/net/wireless/mwifiex/sta_rx.c              |   15 +-
+ drivers/net/wireless/mwifiex/sta_tx.c              |   12 +-
+ drivers/net/wireless/mwifiex/txrx.c                |   21 +-
+ drivers/net/wireless/mwifiex/usb.c                 | 1052 ++++++++++++++++=
+++++
+ drivers/net/wireless/mwifiex/usb.h                 |   99 ++
+ drivers/net/wireless/mwifiex/util.c                |   22 +
+ drivers/net/wireless/mwifiex/wmm.c                 |   18 +-
+ drivers/net/wireless/rt2x00/rt2800.h               |    3 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c            |   12 +
+ drivers/net/wireless/rt2x00/rt2800usb.c            |   25 +-
+ drivers/net/wireless/rt2x00/rt2x00.h               |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00dev.c            |    4 +-
+ drivers/net/wireless/rt2x00/rt2x00lib.h            |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00pci.c            |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00queue.c          |    6 +-
+ drivers/net/wireless/rt2x00/rt2x00usb.c            |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  290 +++---
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h  |   35 -
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.h        |   35 -
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |  185 ++--
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.h        |   51 -
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |    7 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |  156 ++--
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.h        |   44 -
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |    7 +-
+ drivers/net/wireless/rtlwifi/wifi.h                |   63 ++
+ include/net/mac80211.h                             |    8 +
+ net/mac80211/cfg.c                                 |   19 +
+ net/mac80211/debugfs_netdev.c                      |    4 +-
+ net/mac80211/ieee80211_i.h                         |    5 +-
+ net/mac80211/iface.c                               |   19 +-
+ net/mac80211/main.c                                |    4 +-
+ net/mac80211/mesh.c                                |   19 +-
+ net/mac80211/mesh.h                                |   14 +-
+ net/mac80211/mesh_plink.c                          |  138 ++--
+ net/mac80211/mesh_sync.c                           |    2 +-
+ net/mac80211/rx.c                                  |    2 +
+ net/mac80211/scan.c                                |   95 ++-
+ net/mac80211/sta_info.c                            |   12 +-
+ net/mac80211/tx.c                                  |    2 +-
+ net/mac80211/util.c                                |    9 +-
+ net/wireless/nl80211.c                             |    3 +
+ 123 files changed, 3467 insertions(+), 2565 deletions(-)
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-core.c
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-core.h
+ rename drivers/net/wireless/iwlwifi/{iwl-shared.h =3D> iwl-modparams.h} (6=
+6%)
+ create mode 100644 drivers/net/wireless/mwifiex/usb.c
+ create mode 100644 drivers/net/wireless/mwifiex/usb.h
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--pAwQNkOnpTn9IO2O
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPmaNUAAoJEJctW/TcYTgGH6QP/11d76mU1zfLfrAPGVK63Ag6
+hOIbAn8zcmb5B2TSscPC1RF0e/+nbJHsXqlJ5bkSMfob/AE1MCXh6isRolEBdpvU
+bVS61ymVWZXod4ajWkDwYTNsXKLiOl+3ycswghNvfc2uXNO5q+ffjFd/DrwR67Of
+YX+foz3EUG/u0pCp5vaho6AI1Cc5LpAmm4CiECXdb0JU36Gmni5SVlSu8Txl3UI4
+UwczV95uSGn0ejrxzt2Mh74u/O5zpzqKC02bVMgNhk+lq8iVFPGU7LJDv8+T4KuW
+zgfNSOWEvgn49NjgPNiZ+tlhxGhpzcxXaIQbR8Q5jZ1CKOOdrMYr9C6On5tSf7aJ
+ewXWZWnfzD7kNr4612phkmv0OfEH/jKt7yCw1F3YEpmNmraCT2m+sk9Ha1mZlkqB
+31w1SOZOEKXj9lTyNt0yflu5QZN+8UR0d0/u3D1nSHQCP7HYJDmgqSOCmjNcYnfG
+n2HjmrPc3paFd7kUest1mUtFe1Nl1LSKEC1zKzxpWrwLm3sbGHBV3mLpAwDPHD94
++bqr08C5BjaSmkdmTqG7jsR9Iamma9pPFZys+rTRX/ssloHx0oWW3rcAhGSZM+hO
+xNyYnpnKQGAG5VjJyLCtPJhnr/Dy/jeL3/HjjESLDZLtvoX9Ms3qz/Ufg4gQdmBX
+WjoVLbadR8/vZr48Yikr
+=NKdh
+-----END PGP SIGNATURE-----
+
+--pAwQNkOnpTn9IO2O--
