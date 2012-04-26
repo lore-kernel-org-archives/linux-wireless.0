@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44782 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753201Ab2D2ATS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Apr 2012 20:19:18 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, arend@broadcom.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/4] bcma: implement setting core clock mode to dynamic
-Date: Sun, 29 Apr 2012 02:18:49 +0200
-Message-Id: <1335658732-24351-2-git-send-email-hauke@hauke-m.de> (sfid-20120429_021953_209983_643487FA)
-In-Reply-To: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
-References: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
+Received: from mms2.broadcom.com ([216.31.210.18]:4490 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756307Ab2DZMpG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 08:45:06 -0400
+Message-ID: <4F994349.1040607@broadcom.com> (sfid-20120426_144801_992982_DE90FEAD)
+Date: Thu, 26 Apr 2012 14:44:57 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] wireless: properly use pr_fmt()
+References: <1335234998-31547-1-git-send-email-mcgrof@frijolero.org>
+In-Reply-To: <1335234998-31547-1-git-send-email-mcgrof@frijolero.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is based on code from _ai_clkctl_cc() in brcmsmac.
+On 04/24/2012 04:36 AM, Luis R. Rodriguez wrote:
+> From: "Luis R. Rodriguez"<mcgrof@frijolero.org>
+>
+> pr_fmt() is either defined or we redefine it. Typically
+> drivers define it prior to including printk.h but this
+> is done under the assumption that no other subsystem
+> it uses has already defined pr_fmt(). In such cases
+> pr_fmt() should be undefined and redefined.
+>
+> Doing this properly shaves down compilation time quite
+> considerably.
+>
+> Signed-off-by: Luis R. Rodriguez<mcgrof@frijolero.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Luis,
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 893f6e0..98e243c 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -77,7 +77,7 @@ void bcma_core_set_clockmode(struct bcma_device *core,
- 			pr_err("HT force timeout\n");
- 		break;
- 	case BCMA_CLKMODE_DYNAMIC:
--		pr_warn("Dynamic clockmode not supported yet!\n");
-+		bcma_set32(core, BCMA_CLKCTLST, ~BCMA_CLKCTLST_FORCEHT);
- 		break;
- 	}
- }
--- 
-1.7.9.5
+I actually recall some patches removing inclusion of printk.h sometime 
+ago. Not sure what the motivation was, but I will start digging the git 
+revision logs.
+
+Gr. AvS
+
 
