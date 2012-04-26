@@ -1,244 +1,444 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35311 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755966Ab2DNUY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 16:24:58 -0400
-From: Gabor Juhos <juhosg@openwrt.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 2/3] ath9k: introduce ath9k_hw_get_scaled_power helper
-Date: Sat, 14 Apr 2012 22:01:58 +0200
-Message-Id: <1334433719-1144-2-git-send-email-juhosg@openwrt.org> (sfid-20120414_222502_010682_CFC37B2A)
-In-Reply-To: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
-References: <1334433719-1144-1-git-send-email-juhosg@openwrt.org>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39327 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754670Ab2DZSIZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 14:08:25 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC c 4/9] compat: move netdev_attach_ops
+Date: Thu, 26 Apr 2012 20:07:48 +0200
+Message-Id: <1335463674-13003-8-git-send-email-hauke@hauke-m.de> (sfid-20120426_200830_162556_6DA36612)
+In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The computation of the scaled power value in
-various eeprom files uses identical code. Move
-that code into a helper function and use that
-instead of code duplication.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   28 +------------------
- drivers/net/wireless/ath/ath9k/eeprom.c        |   33 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/eeprom.h        |    5 +++
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |   30 +--------------------
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |   23 +---------------
- 5 files changed, 44 insertions(+), 75 deletions(-)
+ include/linux/compat-2.6.29.h |  186 --------------------------------------
+ include/linux/netdevice.h     |  199 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 199 insertions(+), 186 deletions(-)
+ create mode 100644 include/linux/netdevice.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 25a4a02..d254571 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -30,8 +30,6 @@
- #define CTL_11A_EXT (CTL_11A | EXT_ADDITIVE)
- #define CTL_11G_EXT (CTL_11G | EXT_ADDITIVE)
- #define CTL_11B_EXT (CTL_11B | EXT_ADDITIVE)
--#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
--#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
- #define PWRINCR_3_TO_1_CHAIN      9             /* 10*log(3)*2 */
- #define PWRINCR_3_TO_2_CHAIN      3             /* floor(10*log(3/2)*2) */
- #define PWRINCR_2_TO_1_CHAIN      6             /* 10*log(2)*2 */
-@@ -4789,30 +4787,8 @@ static void ar9003_hw_set_power_per_rate_table(struct ath_hw *ah,
- 	bool is2ghz = IS_CHAN_2GHZ(chan);
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index 48b62e8..c830c7a 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -51,181 +51,6 @@ typedef struct {
  
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
--	scaledPower = powerLimit - antenna_reduction;
--
--	/*
--	 * Reduce scaled Power by number of chains active to get
--	 * to per chain tx power level
--	 */
--	switch (ar5416_get_ntxchains(ah->txchainmask)) {
--	case 1:
--		break;
--	case 2:
--		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
--			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
--		else
--			scaledPower = 0;
--		break;
--	case 3:
--		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
--			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
--		else
--			scaledPower = 0;
--		break;
--	}
--
--	scaledPower = max((u16)0, scaledPower);
-+	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
-+						antenna_reduction);
+ #define  PCI_EXP_LNKCTL_ES     0x0080  /* Extended Synch */
  
- 	/*
- 	 * Get target powers from EEPROM - our baseline for TX Power
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index c435232..61bad99 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -290,6 +290,39 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
- 	return twiceMaxEdgePower;
+-/*
+- * Older kernels do not have struct net_device_ops but what we can
+- * do is just define the data structure and use a caller to let us
+- * set the data structure's routines onto the old netdev, essentially
+- * doing it the old way. This avoids huge deltas on our backports.
+- */
+-
+-/*
+- * This structure defines the management hooks for network devices.
+- * The following hooks can be defined; unless noted otherwise, they are
+- * optional and can be filled with a null pointer.
+- *
+- * int (*ndo_init)(struct net_device *dev);
+- *     This function is called once when network device is registered.
+- *     The network device can use this to any late stage initializaton
+- *     or semantic validattion. It can fail with an error code which will
+- *     be propogated back to register_netdev
+- *
+- * void (*ndo_uninit)(struct net_device *dev);
+- *     This function is called when device is unregistered or when registration
+- *     fails. It is not called if init fails.
+- *
+- * int (*ndo_open)(struct net_device *dev);
+- *     This function is called when network device transistions to the up
+- *     state.
+- *
+- * int (*ndo_stop)(struct net_device *dev);
+- *     This function is called when network device transistions to the down
+- *     state.
+- *
+- * netdev_tx_t (*ndo_start_xmit)(struct sk_buff *skb,
+- *                               struct net_device *dev);
+- *	Called when a packet needs to be transmitted.
+- *	Must return NETDEV_TX_OK , NETDEV_TX_BUSY.
+- *        (can also return NETDEV_TX_LOCKED iff NETIF_F_LLTX)
+- *	Required can not be NULL.
+- *
+- * u16 (*ndo_select_queue)(struct net_device *dev, struct sk_buff *skb);
+- *	Called to decide which queue to when device supports multiple
+- *	transmit queues.
+- *
+- * void (*ndo_change_rx_flags)(struct net_device *dev, int flags);
+- *	This function is called to allow device receiver to make
+- *	changes to configuration when multicast or promiscious is enabled.
+- *
+- * void (*ndo_set_rx_mode)(struct net_device *dev);
+- *	This function is called device changes address list filtering.
+- *
+- * void (*ndo_set_multicast_list)(struct net_device *dev);
+- *	This function is called when the multicast address list changes.
+- *
+- * int (*ndo_set_mac_address)(struct net_device *dev, void *addr);
+- *	This function  is called when the Media Access Control address
+- *	needs to be changed. If this interface is not defined, the
+- *	mac address can not be changed.
+- *
+- * int (*ndo_validate_addr)(struct net_device *dev);
+- *	Test if Media Access Control address is valid for the device.
+- *
+- * int (*ndo_do_ioctl)(struct net_device *dev, struct ifreq *ifr, int cmd);
+- *	Called when a user request an ioctl which can't be handled by
+- *	the generic interface code. If not defined ioctl's return
+- *	not supported error code.
+- *
+- * int (*ndo_set_config)(struct net_device *dev, struct ifmap *map);
+- *	Used to set network devices bus interface parameters. This interface
+- *	is retained for legacy reason, new devices should use the bus
+- *	interface (PCI) for low level management.
+- *
+- * int (*ndo_change_mtu)(struct net_device *dev, int new_mtu);
+- *	Called when a user wants to change the Maximum Transfer Unit
+- *	of a device. If not defined, any request to change MTU will
+- *	will return an error.
+- *
+- * void (*ndo_tx_timeout)(struct net_device *dev);
+- *	Callback uses when the transmitter has not made any progress
+- *	for dev->watchdog ticks.
+- *
+- * struct net_device_stats* (*ndo_get_stats)(struct net_device *dev);
+- *	Called when a user wants to get the network device usage
+- *	statistics. If not defined, the counters in dev->stats will
+- *	be used.
+- *
+- * void (*ndo_vlan_rx_register)(struct net_device *dev, struct vlan_group *grp);
+- *	If device support VLAN receive accleration
+- *	(ie. dev->features & NETIF_F_HW_VLAN_RX), then this function is called
+- *	when vlan groups for the device changes.  Note: grp is NULL
+- *	if no vlan's groups are being used.
+- *
+- * void (*ndo_vlan_rx_add_vid)(struct net_device *dev, unsigned short vid);
+- *	If device support VLAN filtering (dev->features & NETIF_F_HW_VLAN_FILTER)
+- *	this function is called when a VLAN id is registered.
+- *
+- * void (*ndo_vlan_rx_kill_vid)(struct net_device *dev, unsigned short vid);
+- *	If device support VLAN filtering (dev->features & NETIF_F_HW_VLAN_FILTER)
+- *	this function is called when a VLAN id is unregistered.
+- *
+- * void (*ndo_poll_controller)(struct net_device *dev);
+- *
+- *	SR-IOV management functions.
+- * int (*ndo_set_vf_mac)(struct net_device *dev, int vf, u8* mac);
+- * int (*ndo_set_vf_vlan)(struct net_device *dev, int vf, u16 vlan, u8 qos);
+- * int (*ndo_set_vf_tx_rate)(struct net_device *dev, int vf, int rate);
+- * int (*ndo_get_vf_config)(struct net_device *dev,
+- *			    int vf, struct ifla_vf_info *ivf);
+- */
+-#define HAVE_NET_DEVICE_OPS
+-struct net_device_ops {
+-	int			(*ndo_init)(struct net_device *dev);
+-	void			(*ndo_uninit)(struct net_device *dev);
+-	int			(*ndo_open)(struct net_device *dev);
+-	int			(*ndo_stop)(struct net_device *dev);
+-	netdev_tx_t		(*ndo_start_xmit) (struct sk_buff *skb,
+-						   struct net_device *dev);
+-	u16			(*ndo_select_queue)(struct net_device *dev,
+-						    struct sk_buff *skb);
+-	void			(*ndo_change_rx_flags)(struct net_device *dev,
+-						       int flags);
+-	void			(*ndo_set_rx_mode)(struct net_device *dev);
+-	void			(*ndo_set_multicast_list)(struct net_device *dev);
+-	int			(*ndo_set_mac_address)(struct net_device *dev,
+-						       void *addr);
+-	int			(*ndo_validate_addr)(struct net_device *dev);
+-	int			(*ndo_do_ioctl)(struct net_device *dev,
+-					        struct ifreq *ifr, int cmd);
+-	int			(*ndo_set_config)(struct net_device *dev,
+-					          struct ifmap *map);
+-	int			(*ndo_change_mtu)(struct net_device *dev,
+-						  int new_mtu);
+-	int			(*ndo_neigh_setup)(struct net_device *dev,
+-						   struct neigh_parms *);
+-	void			(*ndo_tx_timeout) (struct net_device *dev);
+-
+-	struct net_device_stats* (*ndo_get_stats)(struct net_device *dev);
+-
+-	void			(*ndo_vlan_rx_register)(struct net_device *dev,
+-						        struct vlan_group *grp);
+-	void			(*ndo_vlan_rx_add_vid)(struct net_device *dev,
+-						       unsigned short vid);
+-	void			(*ndo_vlan_rx_kill_vid)(struct net_device *dev,
+-						        unsigned short vid);
+-#ifdef CONFIG_NET_POLL_CONTROLLER
+-	void                    (*ndo_poll_controller)(struct net_device *dev);
+-#endif
+-	int			(*ndo_set_vf_mac)(struct net_device *dev,
+-						  int queue, u8 *mac);
+-	int			(*ndo_set_vf_vlan)(struct net_device *dev,
+-						   int queue, u16 vlan, u8 qos);
+-	int			(*ndo_set_vf_tx_rate)(struct net_device *dev,
+-						      int vf, int rate);
+-/*
+- * The struct ifla_vf_info was added via b280da8d54b8d82b52f368a8703b7ada6c1744d5
+- * on the v2.6.34-rc1~233^2~338 release
+- */
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
+-	int			(*ndo_get_vf_config)(struct net_device *dev,
+-						     int vf,
+-						     struct ifla_vf_info *ivf);
+-#endif
+-#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
+-	int			(*ndo_fcoe_enable)(struct net_device *dev);
+-	int			(*ndo_fcoe_disable)(struct net_device *dev);
+-	int			(*ndo_fcoe_ddp_setup)(struct net_device *dev,
+-						      u16 xid,
+-						      struct scatterlist *sgl,
+-						      unsigned int sgc);
+-	int			(*ndo_fcoe_ddp_done)(struct net_device *dev,
+-						     u16 xid);
+-#define NETDEV_FCOE_WWNN 0
+-#define NETDEV_FCOE_WWPN 1
+-	int			(*ndo_fcoe_get_wwn)(struct net_device *dev,
+-						    u64 *wwn, int type);
+-#endif
+-};
+-
+ static inline int ndo_do_ioctl(struct net_device *dev,
+ 			       struct ifreq *ifr,
+ 			       int cmd)
+@@ -235,10 +60,6 @@ static inline int ndo_do_ioctl(struct net_device *dev,
+ 	return -EOPNOTSUPP;
  }
  
-+u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
-+			      u8 antenna_reduction)
+-
+-void netdev_attach_ops(struct net_device *dev,
+-		       const struct net_device_ops *ops);
+-
+ /**
+  *	skb_queue_is_first - check if skb is the first entry in the queue
+  *	@list: queue head
+@@ -354,13 +175,6 @@ extern int		init_dummy_netdev(struct net_device *dev);
+ 
+ /* Kernels >= 2.6.29 follows */
+ 
+-/* XXX: this can probably just go upstream ! */
+-static inline void netdev_attach_ops(struct net_device *dev,
+-		       const struct net_device_ops *ops)
+-{
+-	dev->netdev_ops = ops;
+-}
+-
+ /* XXX: this can probably just go upstream! */
+ static inline int ndo_do_ioctl(struct net_device *dev,
+ 			       struct ifreq *ifr,
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+new file mode 100644
+index 0000000..6c0582d
+--- /dev/null
++++ b/include/linux/netdevice.h
+@@ -0,0 +1,199 @@
++#ifndef _COMPAT_LINUX_NETDEVICE_H
++#define _COMPAT_LINUX_NETDEVICE_H
++
++#include_next <linux/netdevice.h>
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
++
++/*
++ * Older kernels do not have struct net_device_ops but what we can
++ * do is just define the data structure and use a caller to let us
++ * set the data structure's routines onto the old netdev, essentially
++ * doing it the old way. This avoids huge deltas on our backports.
++ */
++
++/*
++ * This structure defines the management hooks for network devices.
++ * The following hooks can be defined; unless noted otherwise, they are
++ * optional and can be filled with a null pointer.
++ *
++ * int (*ndo_init)(struct net_device *dev);
++ *     This function is called once when network device is registered.
++ *     The network device can use this to any late stage initializaton
++ *     or semantic validattion. It can fail with an error code which will
++ *     be propogated back to register_netdev
++ *
++ * void (*ndo_uninit)(struct net_device *dev);
++ *     This function is called when device is unregistered or when registration
++ *     fails. It is not called if init fails.
++ *
++ * int (*ndo_open)(struct net_device *dev);
++ *     This function is called when network device transistions to the up
++ *     state.
++ *
++ * int (*ndo_stop)(struct net_device *dev);
++ *     This function is called when network device transistions to the down
++ *     state.
++ *
++ * netdev_tx_t (*ndo_start_xmit)(struct sk_buff *skb,
++ *                               struct net_device *dev);
++ *	Called when a packet needs to be transmitted.
++ *	Must return NETDEV_TX_OK , NETDEV_TX_BUSY.
++ *        (can also return NETDEV_TX_LOCKED iff NETIF_F_LLTX)
++ *	Required can not be NULL.
++ *
++ * u16 (*ndo_select_queue)(struct net_device *dev, struct sk_buff *skb);
++ *	Called to decide which queue to when device supports multiple
++ *	transmit queues.
++ *
++ * void (*ndo_change_rx_flags)(struct net_device *dev, int flags);
++ *	This function is called to allow device receiver to make
++ *	changes to configuration when multicast or promiscious is enabled.
++ *
++ * void (*ndo_set_rx_mode)(struct net_device *dev);
++ *	This function is called device changes address list filtering.
++ *
++ * void (*ndo_set_multicast_list)(struct net_device *dev);
++ *	This function is called when the multicast address list changes.
++ *
++ * int (*ndo_set_mac_address)(struct net_device *dev, void *addr);
++ *	This function  is called when the Media Access Control address
++ *	needs to be changed. If this interface is not defined, the
++ *	mac address can not be changed.
++ *
++ * int (*ndo_validate_addr)(struct net_device *dev);
++ *	Test if Media Access Control address is valid for the device.
++ *
++ * int (*ndo_do_ioctl)(struct net_device *dev, struct ifreq *ifr, int cmd);
++ *	Called when a user request an ioctl which can't be handled by
++ *	the generic interface code. If not defined ioctl's return
++ *	not supported error code.
++ *
++ * int (*ndo_set_config)(struct net_device *dev, struct ifmap *map);
++ *	Used to set network devices bus interface parameters. This interface
++ *	is retained for legacy reason, new devices should use the bus
++ *	interface (PCI) for low level management.
++ *
++ * int (*ndo_change_mtu)(struct net_device *dev, int new_mtu);
++ *	Called when a user wants to change the Maximum Transfer Unit
++ *	of a device. If not defined, any request to change MTU will
++ *	will return an error.
++ *
++ * void (*ndo_tx_timeout)(struct net_device *dev);
++ *	Callback uses when the transmitter has not made any progress
++ *	for dev->watchdog ticks.
++ *
++ * struct net_device_stats* (*ndo_get_stats)(struct net_device *dev);
++ *	Called when a user wants to get the network device usage
++ *	statistics. If not defined, the counters in dev->stats will
++ *	be used.
++ *
++ * void (*ndo_vlan_rx_register)(struct net_device *dev, struct vlan_group *grp);
++ *	If device support VLAN receive accleration
++ *	(ie. dev->features & NETIF_F_HW_VLAN_RX), then this function is called
++ *	when vlan groups for the device changes.  Note: grp is NULL
++ *	if no vlan's groups are being used.
++ *
++ * void (*ndo_vlan_rx_add_vid)(struct net_device *dev, unsigned short vid);
++ *	If device support VLAN filtering (dev->features & NETIF_F_HW_VLAN_FILTER)
++ *	this function is called when a VLAN id is registered.
++ *
++ * void (*ndo_vlan_rx_kill_vid)(struct net_device *dev, unsigned short vid);
++ *	If device support VLAN filtering (dev->features & NETIF_F_HW_VLAN_FILTER)
++ *	this function is called when a VLAN id is unregistered.
++ *
++ * void (*ndo_poll_controller)(struct net_device *dev);
++ *
++ *	SR-IOV management functions.
++ * int (*ndo_set_vf_mac)(struct net_device *dev, int vf, u8* mac);
++ * int (*ndo_set_vf_vlan)(struct net_device *dev, int vf, u16 vlan, u8 qos);
++ * int (*ndo_set_vf_tx_rate)(struct net_device *dev, int vf, int rate);
++ * int (*ndo_get_vf_config)(struct net_device *dev,
++ *			    int vf, struct ifla_vf_info *ivf);
++ */
++#define HAVE_NET_DEVICE_OPS
++struct net_device_ops {
++	int			(*ndo_init)(struct net_device *dev);
++	void			(*ndo_uninit)(struct net_device *dev);
++	int			(*ndo_open)(struct net_device *dev);
++	int			(*ndo_stop)(struct net_device *dev);
++	netdev_tx_t		(*ndo_start_xmit) (struct sk_buff *skb,
++						   struct net_device *dev);
++	u16			(*ndo_select_queue)(struct net_device *dev,
++						    struct sk_buff *skb);
++	void			(*ndo_change_rx_flags)(struct net_device *dev,
++						       int flags);
++	void			(*ndo_set_rx_mode)(struct net_device *dev);
++	void			(*ndo_set_multicast_list)(struct net_device *dev);
++	int			(*ndo_set_mac_address)(struct net_device *dev,
++						       void *addr);
++	int			(*ndo_validate_addr)(struct net_device *dev);
++	int			(*ndo_do_ioctl)(struct net_device *dev,
++					        struct ifreq *ifr, int cmd);
++	int			(*ndo_set_config)(struct net_device *dev,
++					          struct ifmap *map);
++	int			(*ndo_change_mtu)(struct net_device *dev,
++						  int new_mtu);
++	int			(*ndo_neigh_setup)(struct net_device *dev,
++						   struct neigh_parms *);
++	void			(*ndo_tx_timeout) (struct net_device *dev);
++
++	struct net_device_stats* (*ndo_get_stats)(struct net_device *dev);
++
++	void			(*ndo_vlan_rx_register)(struct net_device *dev,
++						        struct vlan_group *grp);
++	void			(*ndo_vlan_rx_add_vid)(struct net_device *dev,
++						       unsigned short vid);
++	void			(*ndo_vlan_rx_kill_vid)(struct net_device *dev,
++						        unsigned short vid);
++#ifdef CONFIG_NET_POLL_CONTROLLER
++	void                    (*ndo_poll_controller)(struct net_device *dev);
++#endif
++	int			(*ndo_set_vf_mac)(struct net_device *dev,
++						  int queue, u8 *mac);
++	int			(*ndo_set_vf_vlan)(struct net_device *dev,
++						   int queue, u16 vlan, u8 qos);
++	int			(*ndo_set_vf_tx_rate)(struct net_device *dev,
++						      int vf, int rate);
++/*
++ * The struct ifla_vf_info was added via b280da8d54b8d82b52f368a8703b7ada6c1744d5
++ * on the v2.6.34-rc1~233^2~338 release
++ */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
++	int			(*ndo_get_vf_config)(struct net_device *dev,
++						     int vf,
++						     struct ifla_vf_info *ivf);
++#endif
++#if defined(CONFIG_FCOE) || defined(CONFIG_FCOE_MODULE)
++	int			(*ndo_fcoe_enable)(struct net_device *dev);
++	int			(*ndo_fcoe_disable)(struct net_device *dev);
++	int			(*ndo_fcoe_ddp_setup)(struct net_device *dev,
++						      u16 xid,
++						      struct scatterlist *sgl,
++						      unsigned int sgc);
++	int			(*ndo_fcoe_ddp_done)(struct net_device *dev,
++						     u16 xid);
++#define NETDEV_FCOE_WWNN 0
++#define NETDEV_FCOE_WWPN 1
++	int			(*ndo_fcoe_get_wwn)(struct net_device *dev,
++						    u64 *wwn, int type);
++#endif
++};
++
++void netdev_attach_ops(struct net_device *dev,
++		       const struct net_device_ops *ops);
++
++#else /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
++
++/* XXX: this can probably just go upstream ! */
++static inline void netdev_attach_ops(struct net_device *dev,
++		       const struct net_device_ops *ops)
 +{
-+	u16 scaled_power;
-+
-+	scaled_power = power_limit - antenna_reduction;
-+
-+	/*
-+	 * Reduce scaled Power by number of chains active
-+	 * to get the per chain tx power level.
-+	 */
-+	switch (ar5416_get_ntxchains(ah->txchainmask)) {
-+	case 1:
-+		break;
-+	case 2:
-+		if (scaled_power > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
-+			scaled_power -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
-+		else
-+			scaled_power = 0;
-+		break;
-+	case 3:
-+		if (scaled_power > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
-+			scaled_power -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
-+		else
-+			scaled_power = 0;
-+		break;
-+	}
-+
-+	scaled_power = max((u16)0, scaled_power);
-+
-+	return scaled_power;
++	dev->netdev_ops = ops;
 +}
 +
- void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 5ff7ab9..8d779b4 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -82,6 +82,9 @@
- #define INCREASE_MAXPOW_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
- #define INCREASE_MAXPOW_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
- 
-+#define REDUCE_SCALED_POWER_BY_TWO_CHAIN	6  /* 10*log10(2)*2 */
-+#define REDUCE_SCALED_POWER_BY_THREE_CHAIN	10 /* 10*log10(3)*2 */
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
 +
- /*
-  * For AR9285 and later chipsets, the following bits are not being programmed
-  * in EEPROM and so need to be enabled always.
-@@ -686,6 +689,8 @@ void ath9k_hw_get_target_powers(struct ath_hw *ah,
- 				u16 numRates, bool isHt40Target);
- u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
- 				bool is2GHz, int num_band_edges);
-+u16 ath9k_hw_get_scaled_power(struct ath_hw *ah, u16 power_limit,
-+			      u8 antenna_reduction);
- void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah);
- int ath9k_hw_eeprom_init(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 604eab8..5ab0e6e 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -564,9 +564,6 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	(((cfgCtl & ~CTL_MODE_M) | (pCtlMode[ctlMode] & CTL_MODE_M)) == \
- 	 ((pEepData->ctlIndex[i] & CTL_MODE_M) | SD_NO_CTL))
- 
--#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
--#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
--
- 	u16 twiceMaxEdgePower;
- 	int i;
- 	struct cal_ctl_data_ar9287 *rep;
-@@ -591,29 +588,8 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	tx_chainmask = ah->txchainmask;
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
--	scaledPower = powerLimit - antenna_reduction;
--
--	/*
--	 * Reduce scaled Power by number of chains active
--	 * to get the per chain tx power level.
--	 */
--	switch (ar5416_get_ntxchains(tx_chainmask)) {
--	case 1:
--		break;
--	case 2:
--		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
--			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
--		else
--			scaledPower = 0;
--		break;
--	case 3:
--		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
--			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
--		else
--			scaledPower = 0;
--		break;
--	}
--	scaledPower = max((u16)0, scaledPower);
-+	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
-+						antenna_reduction);
- 
- 	/*
- 	 * Get TX power from EEPROM.
-@@ -786,8 +762,6 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 
- #undef CMP_CTL
- #undef CMP_NO_CTL
--#undef REDUCE_SCALED_POWER_BY_TWO_CHAIN
--#undef REDUCE_SCALED_POWER_BY_THREE_CHAIN
- }
- 
- static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 0068627..3a9c9ed 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -991,9 +991,6 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 						  u16 antenna_reduction,
- 						  u16 powerLimit)
- {
--#define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6  /* 10*log10(2)*2 */
--#define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10 /* 10*log10(3)*2 */
--
- 	struct ar5416_eeprom_def *pEepData = &ah->eeprom.def;
- 	u16 twiceMaxEdgePower;
- 	int i;
-@@ -1027,24 +1024,8 @@ static void ath9k_hw_set_def_power_per_rate_table(struct ath_hw *ah,
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
--	scaledPower = powerLimit - antenna_reduction;
--
--	switch (ar5416_get_ntxchains(tx_chainmask)) {
--	case 1:
--		break;
--	case 2:
--		if (scaledPower > REDUCE_SCALED_POWER_BY_TWO_CHAIN)
--			scaledPower -= REDUCE_SCALED_POWER_BY_TWO_CHAIN;
--		else
--			scaledPower = 0;
--		break;
--	case 3:
--		if (scaledPower > REDUCE_SCALED_POWER_BY_THREE_CHAIN)
--			scaledPower -= REDUCE_SCALED_POWER_BY_THREE_CHAIN;
--		else
--			scaledPower = 0;
--		break;
--	}
-+	scaledPower = ath9k_hw_get_scaled_power(ah, powerLimit,
-+						antenna_reduction);
- 
- 	if (IS_CHAN_2GHZ(chan)) {
- 		numCtlModes = ARRAY_SIZE(ctlModesFor11g) -
++#endif	/* _COMPAT_LINUX_NETDEVICE_H */
 -- 
-1.7.2.1
+1.7.9.5
 
