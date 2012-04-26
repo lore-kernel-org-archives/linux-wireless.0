@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57140 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755592Ab2DPWB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:01:28 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from blu0-omc2-s7.blu0.hotmail.com ([65.55.111.82]:18905 "EHLO
+	blu0-omc2-s7.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751843Ab2DZEYW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 00:24:22 -0400
+Message-ID: <BLU0-SMTP458637A32B10CED41412A7AAC240@phx.gbl> (sfid-20120426_062426_177312_9FC331FF)
+From: Nathan Hintz <nlhintz@hotmail.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Amit Beka <amit.beka@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/16] iwlwifi: added HBUS_TARG_TEST_REG
-Date: Mon, 16 Apr 2012 14:57:00 -0700
-Message-Id: <1334613430-30720-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120417_000248_718101_4A95B9E2)
-In-Reply-To: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334613430-30720-1-git-send-email-wey-yi.w.guy@intel.com>
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH v2 2/6] bcma: Move initialization of SPROM to prevent overwrite
+Date: Wed, 25 Apr 2012 21:23:50 -0700
+In-Reply-To: <1335414234-11424-1-git-send-email-nlhintz@hotmail.com>
+References: <1335414234-11424-1-git-send-email-nlhintz@hotmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amit Beka <amit.beka@intel.com>
 
-This register is used to enable some debug mechanisms.
-
-Signed-off-by: Amit Beka <amit.beka@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-csr.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ arch/mips/bcm47xx/setup.c |    4 ++++
+ arch/mips/bcm47xx/sprom.c |    2 --
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 5f96ce1..5975054 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -430,6 +430,9 @@
- #define HBUS_TARG_PRPH_WDAT     (HBUS_BASE+0x04c)
- #define HBUS_TARG_PRPH_RDAT     (HBUS_BASE+0x050)
+diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
+index 19780aa..67d3d52 100644
+--- a/arch/mips/bcm47xx/setup.c
++++ b/arch/mips/bcm47xx/setup.c
+@@ -90,6 +90,7 @@ static int bcm47xx_get_sprom_ssb(struct ssb_bus *bus, struct ssb_sprom *out)
+ 	char prefix[10];
  
-+/* Used to enable DBGM */
-+#define HBUS_TARG_TEST_REG	(HBUS_BASE+0x05c)
-+
- /*
-  * Per-Tx-queue write pointer (index, really!)
-  * Indicates index to next TFD that driver will fill (1 past latest filled).
+ 	if (bus->bustype == SSB_BUSTYPE_PCI) {
++		memset(out, 0, sizeof(struct ssb_sprom));
+ 		snprintf(prefix, sizeof(prefix), "pci/%u/%u/",
+ 			 bus->host_pci->bus->number + 1,
+ 			 PCI_SLOT(bus->host_pci->devfn));
+@@ -118,6 +119,7 @@ static int bcm47xx_get_invariants(struct ssb_bus *bus,
+ 	if (nvram_getenv("boardrev", buf, sizeof(buf)) >= 0)
+ 		iv->boardinfo.rev = (u16)simple_strtoul(buf, NULL, 0);
+ 
++	memset(&iv->sprom, 0, sizeof(struct ssb_sprom));
+ 	bcm47xx_fill_sprom(&iv->sprom, NULL);
+ 
+ 	if (nvram_getenv("cardbus", buf, sizeof(buf)) >= 0)
+@@ -166,12 +168,14 @@ static int bcm47xx_get_sprom_bcma(struct bcma_bus *bus, struct ssb_sprom *out)
+ 
+ 	switch (bus->hosttype) {
+ 	case BCMA_HOSTTYPE_PCI:
++		memset(out, 0, sizeof(struct ssb_sprom));
+ 		snprintf(prefix, sizeof(prefix), "pci/%u/%u/",
+ 			 bus->host_pci->bus->number + 1,
+ 			 PCI_SLOT(bus->host_pci->devfn));
+ 		bcm47xx_fill_sprom(out, prefix);
+ 		return 0;
+ 	case BCMA_HOSTTYPE_SOC:
++		memset(out, 0, sizeof(struct ssb_sprom));
+ 		bcm47xx_fill_sprom_ethernet(out, NULL);
+ 		core = bcma_find_core(bus, BCMA_CORE_80211);
+ 		if (core) {
+diff --git a/arch/mips/bcm47xx/sprom.c b/arch/mips/bcm47xx/sprom.c
+index 5c8dcd2..bc19234 100644
+--- a/arch/mips/bcm47xx/sprom.c
++++ b/arch/mips/bcm47xx/sprom.c
+@@ -555,8 +555,6 @@ void bcm47xx_fill_sprom_ethernet(struct ssb_sprom *sprom, const char *prefix)
+ 
+ void bcm47xx_fill_sprom(struct ssb_sprom *sprom, const char *prefix)
+ {
+-	memset(sprom, 0, sizeof(struct ssb_sprom));
+-
+ 	bcm47xx_fill_sprom_ethernet(sprom, prefix);
+ 
+ 	nvram_read_u8(prefix, NULL, "sromrev", &sprom->revision, 0);
 -- 
-1.7.0.4
+1.7.7.6
 
