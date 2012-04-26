@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14051 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752598Ab2DZMDq (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:35234 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853Ab2DZVlw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 08:03:46 -0400
-Message-ID: <4F99399C.7000201@qca.qualcomm.com> (sfid-20120426_140549_131373_4DC70199)
-Date: Thu, 26 Apr 2012 15:03:40 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Thu, 26 Apr 2012 17:41:52 -0400
+Received: by iadi9 with SMTP id i9so94858iad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2012 14:41:52 -0700 (PDT)
 MIME-Version: 1.0
-To: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v3] ath6kl: Multicast filter support in wow suspend and
- non-suspend
-References: <1334951216-13792-1-git-send-email-ngangadh@qca.qualcomm.com>
-In-Reply-To: <1334951216-13792-1-git-send-email-ngangadh@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1335472901-12323-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+References: <1335472901-12323-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 26 Apr 2012 14:41:32 -0700
+Message-ID: <CAG6hwVPx5OSJXAz8Kj-=zDbP8MWUaUKJL1VFtyjZVaQ5Jk_6_g@mail.gmail.com> (sfid-20120426_234156_408666_AC67567F)
+Subject: Re: [PATCH] mac80211: mesh: Remove un-needed defines
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/20/2012 10:46 PM, Naveen Gangadharan wrote:
-> This patch enables all multicast packets in non suspend mode
-> and enable multicast filtering in wow suspend mode. This also
-> fixes a bug in multicast where the driver assumed disable
-> multicast-all command disabled/filtered all multicast
-> packets, which was wrong assumption, because firmware will
-> apply the programmed filter.
-> 
-> Multicast requirements
->  - Enable forward all multicast packets(no filtering) in
->       non suspend mode.
->  - Enable multicast filtering in wow suspend mode for both
->       AP and CLIENT.
-> 
-> Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
+Hi Andrei,
 
-Thanks, applied. I just fixed one checkpatch warning.
+On Thu, Apr 26, 2012 at 1:41 PM, Andrei Emeltchenko
+<Andrei.Emeltchenko.news@gmail.com> wrote:
+> From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+>
+> ieee80211_vif_is_mesh is already defined as:
+>
+> <------8<--------------------------------------------------------------
+> |  static inline bool ieee80211_vif_is_mesh(struct ieee80211_vif *vif)
+> |  {
+> |  #ifdef CONFIG_MAC80211_MESH
+> |          return vif->type == NL80211_IFTYPE_MESH_POINT;
+> |  #endif
+> |          return false;
+> |  }
+> |
+> <------8<--------------------------------------------------------------
+>
+> Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com
 
-Kalle
+ACK if you tested w/o CONFIG_MAC80211_MESH.
+
+Thomas
