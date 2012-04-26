@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37654 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752705Ab2DYNBE (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:60668 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439Ab2DZUbL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 09:01:04 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] mac80211: fix rate control update on 2040 bss change
-Date: Wed, 25 Apr 2012 18:31:49 +0530
-Message-ID: <1335358909-24905-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120425_150109_397153_B5FE7644)
+	Thu, 26 Apr 2012 16:31:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20120426.160757.1741140873728970494.davem@davemloft.net>
+References: <CAB=NE6WBw3aJrch0JvxZ7jGb_rFW5Z4XWvYc1KqsBqBu+G8mjw@mail.gmail.com>
+ <CAB=NE6ViDGHPn=OsqFK1rJb-5J+1xzvf3h9+Rd-MgmWpn-T2fA@mail.gmail.com>
+ <CAB=NE6VR6hPqoUmRH=YVr+MKu+Sn8tq2asv957zfD+SVWzk75A@mail.gmail.com> <20120426.160757.1741140873728970494.davem@davemloft.net>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Thu, 26 Apr 2012 13:30:50 -0700
+Message-ID: <CAB=NE6X18E3YtfS=Xzw7oxCHNQGC07Kq6ZhXkiUE3S-DAjNqbg@mail.gmail.com> (sfid-20120426_223121_004138_8E588D79)
+Subject: Re: [PATCH] b44: properly use pr_fmt()
+To: David Miller <davem@davemloft.net>
+Cc: zambrano@broadcom.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	arend@broadcom.com, joe@perches.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rate control updatation never be called on 2040 BSS change.
-The station should update its rate control on receiving beacon
-with different HT mode in the HT operation IE. Not doing so,
-leads to sending frames with higher(ht40) rates whereas AP is
-running in lower mode (ht20).
+On Thu, Apr 26, 2012 at 1:07 PM, David Miller <davem@davemloft.net> wrote:
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> Date: Thu, 26 Apr 2012 08:53:30 -0700
+>
+>> OK I found no pr_fmt warnings at all for make allmodconfig ; make V=1
+>> ; on v3.4-rc4. For this and others reason stated then yes, this patch
+>> is simply bogus.
+>
+> This is what I expected, thanks for sorting this out :-)
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks for kicking me in the balls.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c8836fa..56128d3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -210,7 +210,7 @@ static u32 ieee80211_config_ht_tx(struct ieee80211_sub_if_data *sdata,
- 		disable_40 = true;
- 
- 	if (sta && (!reconfig ||
--		    (disable_40 != !!(sta->sta.ht_cap.cap &
-+		    (disable_40 == !!(sta->sta.ht_cap.cap &
- 					IEEE80211_HT_CAP_SUP_WIDTH_20_40)))) {
- 
- 		if (disable_40)
--- 
-1.7.10
+> We're in the rally!
 
+This is the highlight of my life (8:17) !
+
+  Luis
