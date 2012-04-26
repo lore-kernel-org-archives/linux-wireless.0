@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:50297 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530Ab2DSCYS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 22:24:18 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so9656149pbc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 19:24:18 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH 1/2] mac80211: don't set mesh peer ht caps if ht disabled
-Date: Wed, 18 Apr 2012 19:24:13 -0700
-Message-Id: <1334802254-4704-1-git-send-email-thomas@cozybit.com> (sfid-20120419_042427_478071_F2E44A71)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39315 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758306Ab2DZSIS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 14:08:18 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC c-w 2/4] compat-wireless: also copy include/generated/ from compat
+Date: Thu, 26 Apr 2012 20:07:45 +0200
+Message-Id: <1335463674-13003-5-git-send-email-hauke@hauke-m.de> (sfid-20120426_200823_435891_885FB2C4)
+In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Blindly setting ht caps on a mesh peer's station entry would result in
-MCS rates being used by the rate control algorithm even if no ht had
-been configured. Fix this by checking the channel type before assigning
-ht capabilites.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/mac80211/mesh_plink.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ scripts/admin-update.sh |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index c2af7b3..1ff2a5c 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -295,7 +295,8 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
- 	spin_lock_bh(&sta->lock);
- 	sta->last_rx = jiffies;
- 	sta->sta.supp_rates[band] = rates;
--	if (elems->ht_cap_elem)
-+	if (elems->ht_cap_elem &&
-+	    sdata->local->_oper_channel_type != NL80211_CHAN_NO_HT)
- 		ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
- 						  elems->ht_cap_elem,
- 						  &sta->sta.ht_cap);
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index fd1fa87..7147ff1 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -283,6 +283,7 @@ mkdir -p include/linux/ include/net/ include/linux/usb \
+ 	include/trace \
+ 	include/pcmcia \
+ 	include/crypto \
++	include/generated \
+ 	net/mac80211/ net/wireless/ \
+ 	net/rfkill/ \
+ 	drivers/ssb/ \
+@@ -436,6 +437,7 @@ cp -a $GIT_COMPAT_TREE/include/net/* include/net/
+ cp -a $GIT_COMPAT_TREE/include/trace/* include/trace/
+ cp -a $GIT_COMPAT_TREE/include/pcmcia/* include/pcmcia/
+ cp -a $GIT_COMPAT_TREE/include/crypto/* include/crypto/
++cp -a $GIT_COMPAT_TREE/include/generated/* include/generated/
+ rm -f $COMPAT/*.mod.c
+ 
+ # files we suck in for compat-wireless
 -- 
-1.7.5.4
+1.7.9.5
 
