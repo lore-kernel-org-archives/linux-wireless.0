@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:24097 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751742Ab2DVO0G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 10:26:06 -0400
-Subject: Re: Missing iwlwifi firmwares ?
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Thomas Backlund <tmb@mageia.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4F93D264.6060905@mageia.org>
-References: <4F932A3D.2070701@mageia.org>
-	 (sfid-20120421_235812_903118_31B5AB43) <1335045596.6516.8.camel@jlt3.sipsolutions.net>
-	 <4F9332EE.3030106@mageia.org> <1335054866.27767.172.camel@wwguy-huron>
-	 <4F93D264.6060905@mageia.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 22 Apr 2012 07:21:04 -0700
-Message-ID: <1335104464.27767.173.camel@wwguy-huron> (sfid-20120422_162611_320333_14E8FEA2)
-Mime-Version: 1.0
+Received: from blu0-omc2-s21.blu0.hotmail.com ([65.55.111.96]:5395 "EHLO
+	blu0-omc2-s21.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751919Ab2DZEY2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 00:24:28 -0400
+Message-ID: <BLU0-SMTP458EB4669DE3D988EAAA186AC240@phx.gbl> (sfid-20120426_062437_686948_6C671EAF)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH v2 4/6] bcma: reads/writes are always 4 bytes, so always map 4 bytes
+Date: Wed, 25 Apr 2012 21:23:52 -0700
+In-Reply-To: <1335414234-11424-1-git-send-email-nlhintz@hotmail.com>
+References: <1335414234-11424-1-git-send-email-nlhintz@hotmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-04-22 at 12:41 +0300, Thomas Backlund wrote:
-> 22.04.2012 03:34, Guy, Wey-Yi skrev:
-> > it is already in the iwlwifi tree 
-> >  http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=summary
-> > 
-> > From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-> > Date: Wed, 11 Apr 2012 11:33:36 -0700
-> > Subject: [PATCH 1/1] iwlwifi: use correct released ucode version
-> > 
-> > Report correctly the latest released version
-> > of the iwlwifi firmware for all
-> > iwlwifi-supported devices.
-> > 
-> > Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > 
-> > I will push it to 3.4 tomorrow.
-> > 
-> > Thanks
-> > Wey
-> 
-> 
-> Found it, thanks!
-> 
-> btw, shouldn't that patch have a cc: stable@ for atleast 3.3 ?
-> 
-Yes, I am preparing the patch to push today
 
-Thanks
-Wey
+Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+---
+ drivers/bcma/driver_pci_host.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index 8407b25..b9a86ed 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -119,7 +119,7 @@ static int bcma_extpci_read_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 		if (unlikely(!addr))
+ 			goto out;
+ 		err = -ENOMEM;
+-		mmio = ioremap_nocache(addr, len);
++		mmio = ioremap_nocache(addr, sizeof(val));
+ 		if (!mmio)
+ 			goto out;
+ 
+@@ -171,7 +171,7 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 			addr = pc->core->addr + BCMA_CORE_PCI_PCICFG0;
+ 			addr |= (func << 8);
+ 			addr |= (off & 0xfc);
+-			mmio = ioremap_nocache(addr, len);
++			mmio = ioremap_nocache(addr, sizeof(val));
+ 			if (!mmio)
+ 				goto out;
+ 		}
+@@ -180,7 +180,7 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 		if (unlikely(!addr))
+ 			goto out;
+ 		err = -ENOMEM;
+-		mmio = ioremap_nocache(addr, len);
++		mmio = ioremap_nocache(addr, sizeof(val));
+ 		if (!mmio)
+ 			goto out;
+ 
+-- 
+1.7.7.6
 
