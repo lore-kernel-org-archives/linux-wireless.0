@@ -1,173 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30812 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752277Ab2DSPX3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 11:23:29 -0400
-Message-ID: <1334848982.1980.4.camel@dcbw.foobar.com> (sfid-20120419_172333_189864_C2D22232)
-Subject: Re: [PATCH] libertas CS: convert to asynchronous firmware loading
-From: Dan Williams <dcbw@redhat.com>
-To: Daniel Drake <dsd@laptop.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	libertas-dev@lists.infradead.org
-Date: Thu, 19 Apr 2012 10:23:02 -0500
-In-Reply-To: <20120418190944.A02A69D401E@zog.reactivated.net>
-References: <20120418190944.A02A69D401E@zog.reactivated.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39364 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757042Ab2DZSIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 14:08:42 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC c 8/9] compat: move code from compat-3.3.h
+Date: Thu, 26 Apr 2012 20:07:53 +0200
+Message-Id: <1335463674-13003-13-git-send-email-hauke@hauke-m.de> (sfid-20120426_202904_027086_6582B59B)
+In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-04-18 at 20:09 +0100, Daniel Drake wrote:
-> Signed-off-by: Daniel Drake <dsd@laptop.org>
-> Tested-by: Dan Williams <dcbw@redhat.com>
+compat: move __pskb_copy() and skb_complete_wifi_ack()
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+compat: move netdev_features_t
 
-> ---
->  drivers/net/wireless/libertas/if_cs.c |   92 ++++++++++++++++++---------------
->  1 files changed, 51 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-> index bb3deb3..c211b86 100644
-> --- a/drivers/net/wireless/libertas/if_cs.c
-> +++ b/drivers/net/wireless/libertas/if_cs.c
-> @@ -738,6 +738,52 @@ done:
->  	return ret;
->  }
->  
-> +static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
-> +				 const struct firmware *helper,
-> +				 const struct firmware *mainfw)
-> +{
-> +	struct if_cs_card *card = priv->card;
-> +
-> +	if (ret) {
-> +		pr_err("failed to find firmware (%d)\n", ret);
-> +		return;
-> +	}
-> +
-> +	/* Load the firmware */
-> +	ret = if_cs_prog_helper(card, helper);
-> +	if (ret == 0 && (card->model != MODEL_8305))
-> +		ret = if_cs_prog_real(card, mainfw);
-> +	if (ret)
-> +		goto out;
-> +
-> +	/* Now actually get the IRQ */
-> +	ret = request_irq(card->p_dev->irq, if_cs_interrupt,
-> +		IRQF_SHARED, DRV_NAME, card);
-> +	if (ret) {
-> +		pr_err("error in request_irq\n");
-> +		goto out;
-> +	}
-> +
-> +	/*
-> +	 * Clear any interrupt cause that happened while sending
-> +	 * firmware/initializing card
-> +	 */
-> +	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
-> +	if_cs_enable_ints(card);
-> +
-> +	/* And finally bring the card up */
-> +	priv->fw_ready = 1;
-> +	if (lbs_start_card(priv) != 0) {
-> +		pr_err("could not activate card\n");
-> +		free_irq(card->p_dev->irq, card);
-> +	}
-> +
-> +out:
-> +	if (helper)
-> +		release_firmware(helper);
-> +	if (mainfw)
-> +		release_firmware(mainfw);
-> +}
->  
-> 
->  /********************************************************************/
-> @@ -809,8 +855,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
->  	unsigned int prod_id;
->  	struct lbs_private *priv;
->  	struct if_cs_card *card;
-> -	const struct firmware *helper = NULL;
-> -	const struct firmware *mainfw = NULL;
->  
->  	lbs_deb_enter(LBS_DEB_CS);
->  
-> @@ -890,20 +934,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
->  		goto out2;
->  	}
->  
-> -	ret = lbs_get_firmware(&p_dev->dev, card->model, &fw_table[0],
-> -				&helper, &mainfw);
-> -	if (ret) {
-> -		pr_err("failed to find firmware (%d)\n", ret);
-> -		goto out2;
-> -	}
-> -
-> -	/* Load the firmware early, before calling into libertas.ko */
-> -	ret = if_cs_prog_helper(card, helper);
-> -	if (ret == 0 && (card->model != MODEL_8305))
-> -		ret = if_cs_prog_real(card, mainfw);
-> -	if (ret)
-> -		goto out2;
-> -
->  	/* Make this card known to the libertas driver */
->  	priv = lbs_add_card(card, &p_dev->dev);
->  	if (!priv) {
-> @@ -911,37 +941,22 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
->  		goto out2;
->  	}
->  
-> -	/* Finish setting up fields in lbs_private */
-> +	/* Set up fields in lbs_private */
->  	card->priv = priv;
->  	priv->card = card;
->  	priv->hw_host_to_card = if_cs_host_to_card;
->  	priv->enter_deep_sleep = NULL;
->  	priv->exit_deep_sleep = NULL;
->  	priv->reset_deep_sleep_wakeup = NULL;
-> -	priv->fw_ready = 1;
->  
-> -	/* Now actually get the IRQ */
-> -	ret = request_irq(p_dev->irq, if_cs_interrupt,
-> -		IRQF_SHARED, DRV_NAME, card);
-> +	/* Get firmware */
-> +	ret = lbs_get_firmware_async(priv, &p_dev->dev, card->model, fw_table,
-> +				     if_cs_prog_firmware);
->  	if (ret) {
-> -		pr_err("error in request_irq\n");
-> -		goto out3;
-> -	}
-> -
-> -	/*
-> -	 * Clear any interrupt cause that happened while sending
-> -	 * firmware/initializing card
-> -	 */
-> -	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
-> -	if_cs_enable_ints(card);
-> -
-> -	/* And finally bring the card up */
-> -	if (lbs_start_card(priv) != 0) {
-> -		pr_err("could not activate card\n");
-> +		pr_err("failed to find firmware (%d)\n", ret);
->  		goto out3;
->  	}
->  
-> -	ret = 0;
->  	goto out;
->  
->  out3:
-> @@ -951,11 +966,6 @@ out2:
->  out1:
->  	pcmcia_disable_device(p_dev);
->  out:
-> -	if (helper)
-> -		release_firmware(helper);
-> -	if (mainfw)
-> -		release_firmware(mainfw);
-> -
->  	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
->  	return ret;
->  }
+compat: move module_driver()
 
+compat: move module_usb_driver()
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-3.3.h      |   44 ---------------------------------------
+ include/linux/device.h          |   38 +++++++++++++++++++++++++++++++++
+ include/linux/netdev_features.h |   22 ++++++++++++++++++++
+ include/linux/netdevice.h       |   10 +++++++--
+ include/linux/skbuff.h          |   11 ++++++++++
+ include/linux/usb.h             |   24 +++++++++++++++++++++
+ 6 files changed, 103 insertions(+), 46 deletions(-)
+ create mode 100644 include/linux/device.h
+ create mode 100644 include/linux/netdev_features.h
+ create mode 100644 include/linux/usb.h
+
+diff --git a/include/linux/compat-3.3.h b/include/linux/compat-3.3.h
+index 69bdcd0..ea331f5 100644
+--- a/include/linux/compat-3.3.h
++++ b/include/linux/compat-3.3.h
+@@ -9,52 +9,8 @@
+ #include <linux/nl80211.h>
+ #include <linux/skbuff.h>
+ 
+-extern struct sk_buff *__pskb_copy(struct sk_buff *skb,
+-				   int headroom, gfp_t gfp_mask);
+-
+-static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
+-{
+-	WARN_ON(1);
+-}
+ #define NL80211_FEATURE_SK_TX_STATUS 0
+ 
+-typedef u32 netdev_features_t;
+-
+-/* source include/linux/device.h */
+-/**
+- * module_driver() - Helper macro for drivers that don't do anything
+- * special in module init/exit. This eliminates a lot of boilerplate.
+- * Each module may only use this macro once, and calling it replaces
+- * module_init() and module_exit().
+- *
+- * Use this macro to construct bus specific macros for registering
+- * drivers, and do not use it on its own.
+- */
+-#define module_driver(__driver, __register, __unregister) \
+-static int __init __driver##_init(void) \
+-{ \
+-	return __register(&(__driver)); \
+-} \
+-module_init(__driver##_init); \
+-static void __exit __driver##_exit(void) \
+-{ \
+-	__unregister(&(__driver)); \
+-} \
+-module_exit(__driver##_exit);
+-
+-/* source include/linux/usb.h */
+-/**
+- * module_usb_driver() - Helper macro for registering a USB driver
+- * @__usb_driver: usb_driver struct
+- *
+- * Helper macro for USB drivers which do not do anything special in module
+- * init/exit. This eliminates a lot of boilerplate. Each module may only
+- * use this macro once, and calling it replaces module_init() and module_exit()
+- */
+-#define module_usb_driver(__usb_driver) \
+-	module_driver(__usb_driver, usb_register, \
+-		       usb_deregister)
+-
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)) */
+ 
+ #endif /* LINUX_3_3_COMPAT_H */
+diff --git a/include/linux/device.h b/include/linux/device.h
+new file mode 100644
+index 0000000..e4efd9a
+--- /dev/null
++++ b/include/linux/device.h
+@@ -0,0 +1,38 @@
++#ifndef _COMPAT_LINUX_DEVICE_H
++#define _COMPAT_LINUX_DEVICE_H
++
++#include_next <linux/device.h>
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0))
++
++/**
++ * module_driver() - Helper macro for drivers that don't do anything
++ * special in module init/exit. This eliminates a lot of boilerplate.
++ * Each module may only use this macro once, and calling it replaces
++ * module_init() and module_exit().
++ *
++ * @__driver: driver name
++ * @__register: register function for this driver type
++ * @__unregister: unregister function for this driver type
++ * @...: Additional arguments to be passed to __register and __unregister.
++ *
++ * Use this macro to construct bus specific macros for registering
++ * drivers, and do not use it on its own.
++ */
++#define module_driver(__driver, __register, __unregister, ...) \
++static int __init __driver##_init(void) \
++{ \
++	return __register(&(__driver) , ##__VA_ARGS__); \
++} \
++module_init(__driver##_init); \
++static void __exit __driver##_exit(void) \
++{ \
++	__unregister(&(__driver) , ##__VA_ARGS__); \
++} \
++module_exit(__driver##_exit);
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)) */
++
++#endif	/* _COMPAT_LINUX_DEVICE_H */
+diff --git a/include/linux/netdev_features.h b/include/linux/netdev_features.h
+new file mode 100644
+index 0000000..2b702e9
+--- /dev/null
++++ b/include/linux/netdev_features.h
+@@ -0,0 +1,22 @@
++#ifndef _COMPAT_LINUX_NETDEV_FEATURES_H
++#define _COMPAT_LINUX_NETDEV_FEATURES_H
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0))
++#include <linux/netdevice.h>
++#else
++#include_next <linux/netdev_features.h>
++#endif
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0))
++
++#include <linux/types.h>
++
++typedef u32 netdev_features_t;
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)) */
++
++#endif	/* _COMPAT_LINUX_NETDEV_FEATURES_H */
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index 6c0582d..97153ba 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -1,10 +1,16 @@
+ #ifndef _COMPAT_LINUX_NETDEVICE_H
+ #define _COMPAT_LINUX_NETDEVICE_H
+ 
+-#include_next <linux/netdevice.h>
+-
+ #include <linux/version.h>
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0))
++
++#include <linux/netdev_features.h>
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)) */
++
++#include_next <linux/netdevice.h>
++
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+ 
+ /*
+diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+index e505f6a..8b5188c 100644
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h
+@@ -5,6 +5,17 @@
+ 
+ #include <linux/version.h>
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0))
++
++extern struct sk_buff *__pskb_copy(struct sk_buff *skb,
++				   int headroom, gfp_t gfp_mask);
++
++static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
++{
++	WARN_ON(1);
++}
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)) */
++
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0))
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28))
+diff --git a/include/linux/usb.h b/include/linux/usb.h
+new file mode 100644
+index 0000000..43e0683
+--- /dev/null
++++ b/include/linux/usb.h
+@@ -0,0 +1,24 @@
++#ifndef _COMPAT_LINUX_USB_H
++#define _COMPAT_LINUX_USB_H
++
++#include_next <linux/usb.h>
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0))
++
++/**
++ * module_usb_driver() - Helper macro for registering a USB driver
++ * @__usb_driver: usb_driver struct
++ *
++ * Helper macro for USB drivers which do not do anything special in module
++ * init/exit. This eliminates a lot of boilerplate. Each module may only
++ * use this macro once, and calling it replaces module_init() and module_exit()
++ */
++#define module_usb_driver(__usb_driver) \
++	module_driver(__usb_driver, usb_register, \
++		       usb_deregister)
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)) */
++
++#endif	/* _COMPAT_LINUX_USB_H */
+-- 
+1.7.9.5
 
