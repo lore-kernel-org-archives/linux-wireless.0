@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40970 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752640Ab2DSHzc (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:55473 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755046Ab2DZLqz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 03:55:32 -0400
-Received: by iagz16 with SMTP id z16so11575513iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Apr 2012 00:55:31 -0700 (PDT)
+	Thu, 26 Apr 2012 07:46:55 -0400
 MIME-Version: 1.0
-Date: Thu, 19 Apr 2012 09:55:31 +0200
-Message-ID: <CAG=oC7T88XrVB9qyeAs5QgUQtLrs_fDBdzZ2Vpky1ip40FS7eg@mail.gmail.com> (sfid-20120419_095534_619819_93ECD378)
-Subject: ath3k device
-From: "mark.baas@gmail.com" <mark.baas@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20120425.163926.2209040699696617525.davem@davemloft.net>
+References: <20120425191418.GC16900@tuxdriver.com> <20120425.163926.2209040699696617525.davem@davemloft.net>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 26 Apr 2012 04:46:34 -0700
+Message-ID: <CAB=NE6Xqi42GgDRHg-oPuLgofXYGpBrLm-YPa+AfyQ+NhsK3ww@mail.gmail.com> (sfid-20120426_134700_056946_D66CEACA)
+Subject: Re: pull request: wireless-next 2012-04-25
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry all, I have already sent this message, but I have received no
-replies until now. I changed the subject.
+On Wed, Apr 25, 2012 at 1:39 PM, David Miller <davem@davemloft.net> wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 25 Apr 2012 15:14:19 -0400
+>
+>> This is another batch of updates intended for 3.5...
+>  ...
+>> Please let me know if there are problems!
+>
+> There are:
+>
+> From 792545c7bc5d6b922d3778dc602e557d64c83551 Mon Sep 17 00:00:00 2001
+> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+> Date: Mon, 23 Apr 2012 19:55:48 -0700
+> Subject: [PATCH 88/88] libertas: include sched.h on firmware.c
+>
+> Do not assume we have our subsystem including this for us,
+> at least for older kernels this is not true. Lets just be
+> explicit about this requirement for the usage of wake_up().
+>
+> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> This is bogus, wake_up() is defined in linux/wait.h, the whole
+> point of the linux/sched.h split up is so that linux/sched.h
+> includes could be removed and replaced with actual dependencies.
+>
+> Also, please don't accept any patches from Luis that add those
+> #undef pr_fmt things to the atheros drivers.
+>
+> He tried to add it an ethernet driver, and I asked him to explain
+> exactly why he's doing and that if it's appropriate then it's
+> appropriate everywhere not just in a few specific drivers.  He failed
+> to respond to me, and therefore failed to explain the situation and
+> address my concerned.  And then I saw just today that he's submitting
+> the same patch to wireless drivers.  That's not acceptable.
 
-I have a Acer Timelinex 4830TG with a 0489:e03c Foxconn / Hon Hai
-Bluetooth usb device. This device usually loads fine, but cannot
-detect any devices. I believe this is a Atheros (?3012), so I added
-the device to the btusb.c blacklist and enabled it in ath3k.c. However
-it won't load as it comes with the error:
-Bluetooth: Error in firmware loading err = -110,len = 0, size = 4096
-ath3k: probe of 1-1.6:1.0 failed with error -110
+Sorry about that, I missed your reply, will dig it up and reply.
 
-Can it be that the firmware has to be modified to support this device?
-Or possible it is not a 3012 or 3011 device, however i am quite sure
-it is a Atheros device: http://listing.driveragent.com/c/usb/0489/e03c
-Can anyone help me figure out what needs to be done to get this device
-supported?
-
-Greetings,
-
-Mark
+  Luis
