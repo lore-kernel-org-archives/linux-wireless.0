@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:46055 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966131Ab2DLWo2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 18:44:28 -0400
-Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 2127B21D5D
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Apr 2012 18:44:28 -0400 (EDT)
-Date: Thu, 12 Apr 2012 15:44:26 -0700
-From: Greg KH <greg@kroah.com>
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Google Summer of Code 2012 - 12 student slots for the Linux
- Foundation
-Message-ID: <20120412224426.GA15398@kroah.com> (sfid-20120413_004432_571018_A4000F79)
-References: <4F870597.2010101@gmail.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4646 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755219Ab2DZI4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 04:56:48 -0400
+Message-ID: <4F990DC1.4070305@broadcom.com> (sfid-20120426_105834_140333_71CDEE8F)
+Date: Thu, 26 Apr 2012 10:56:33 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F870597.2010101@gmail.com>
+To: "Nathan Hintz" <nlhintz@hotmail.com>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	hauke@hauke-m.de
+Subject: Re: [PATCH v2 0/6] BCMA Cumulative patches from OpenWRT
+References: <BLU0-SMTP45859B1CA3415BE44C9024CAC240@phx.gbl>
+In-Reply-To: <BLU0-SMTP45859B1CA3415BE44C9024CAC240@phx.gbl>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 12, 2012 at 06:40:55PM +0200, Till Kamppeter wrote:
-> Hi,
-> 
-> the first distribution of the available student slots to the
-> mentoring organizations has been done yesterday. The Linux
-> Foundation got 12 slots.
-> 
-> I will need 3 or 4 for OpenPrinting (we got 4 applications, 2 of
-> them on the same project idea), I hope the rest will server for you
-> to accommodate all good students which applied for your workgroups.
-> 
-> Please sign up as mentor to get access to the applications. I have
-> told in an earlier mail on how to do so.
-> 
-> Please inform me in case of any problems.
+On 04/26/2012 06:23 AM, Nathan Hintz wrote:
+> Nathan Hintz (6):
+>    bcma: Find names of non BCM cores
+>    bcma: Move initialization of SPROM to prevent overwrite
+>    bcma: Account for variable PCI memory base/size
+>    bcma: reads/writes are always 4 bytes, so always map 4 bytes
+>    bcma: Add __devexit to bcma_host_pci_remove
+>    bcma: Add flush for BCMA_RESET_CTL write
+>
+>   arch/mips/bcm47xx/setup.c      |    4 +++
+>   arch/mips/bcm47xx/sprom.c      |    2 -
+>   drivers/bcma/core.c            |    1 +
+>   drivers/bcma/driver_pci_host.c |   10 +++---
+>   drivers/bcma/host_pci.c        |    4 +-
+>   drivers/bcma/scan.c            |   54 +++++++++++++++++++++++++++++----------
+>   6 files changed, 52 insertions(+), 23 deletions(-)
+>
 
-How do we mark an application as "we should accept this one"?
+None of these patches have any description. Some motivation for the 
+changes would be appreciated like 'reported problem', 'new target 
+support', etc.
 
-I'd like to accept:
-	http://www.google-melange.com/gsoc/proposal/review/google/gsoc2012/dvdhrm/14002
-	(KMSCON: a DRM based terminal emulator)
+Gr. AvS
 
-and possibly, if the student gets it together a bit on the application:
-	http://www.google-melange.com/gsoc/proposal/review/google/gsoc2012/jcalvinowens/1
-	(NFS v4.1 and v4.2 features)
-
-thanks,
-
-greg k-h
