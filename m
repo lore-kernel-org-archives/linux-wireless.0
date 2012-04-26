@@ -1,107 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:51122 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753034Ab2DPKno convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 06:43:44 -0400
-Received: by bkcik5 with SMTP id ik5so3503214bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Apr 2012 03:43:43 -0700 (PDT)
-Date: Mon, 16 Apr 2012 12:43:29 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	linville@tuxdriver.com, RA-Shiang Tu <Shiang_Tu@ralinktech.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	RA-Jay Hung <Jay_Hung@ralinktech.com>
-Subject: Re: RT5390 not working with rt2800pci
-Message-ID: <20120416124329.0a825a6c@destiny.ordissimo> (sfid-20120416_124347_370427_D6327F8E)
-In-Reply-To: <CAGRGNgUiUN-pVW0s5CiNevMQBTMT-fgDE=4B4aNJNfv6oTMoGw@mail.gmail.com>
-References: <20120413142352.3b927516@destiny.ordissimo>
-	<CALUN=qJXckZ+_S90QxyvqEAbeu+Fo=cv9VZ9=AkXRJGsFH3yBQ@mail.gmail.com>
-	<CAGRGNgVdQgMoBNpJcPJuc608+exeVvpvrGRvvmEggf=GTmOkbg@mail.gmail.com>
-	<CALUN=qK65XgtG5B-Da9o6oGaSF38TsN6NuNaK5=9-nQ+TMUvtg@mail.gmail.com>
-	<CAGRGNgVJjVC5ZWRXsrjraT17ivT=HAnnZnhczPfwOw2Za_vatA@mail.gmail.com>
-	<20120416090609.6b257455@destiny.ordissimo>
-	<20120416104012.6b735928@destiny.ordissimo>
-	<CAGRGNgUiUN-pVW0s5CiNevMQBTMT-fgDE=4B4aNJNfv6oTMoGw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39343 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754670Ab2DZSIf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Apr 2012 14:08:35 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [RFC c 5/9] compat: move compat_pci_{suspend,resume}
+Date: Thu, 26 Apr 2012 20:07:50 +0200
+Message-Id: <1335463674-13003-10-git-send-email-hauke@hauke-m.de> (sfid-20120426_200839_201596_3619A5F9)
+In-Reply-To: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
+References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 16 Apr 2012 20:11:45 +1000, Julian Calaby <julian.calaby@gmail.com> wrote :
 
-> Hi Anisse
-> 
-[...]
-> >> > Ok, so let's look at this a bit closer: the "iw info" diff you
-> >> > provided before makes me think that there is some form of regulatory
-> >> > setting difference between the working and non-working cards. I would
-> >> > guess that this would be visible in the dmesg output, could you boot
-> >> > with a working card, save the dmesg, then boot with a non-working
-> >> > card, save the dmesg, diff them and reply with that diff? I'm guessing
-> >> > that there would be some lines in there about CRDA or regulatory which
-> >> > would be different.
-> >> I don't think this is related, but I'll try to provide the two dmesg,
-> >> with today's wireless-next.
-> > Full dmesgs are in attachment. I booted both machines with module
-> > rt2800pci blacklisted, and then loaded it manually with modprobe, so the
-> > interesting parts should be at the end.
-> 
-> Thanks for the dmesgs, however it's kinda annoying that there's no
-> real differences between them.
-> 
-> >> This might be polluted by the fact that the "working" card succeded in
-> >> connecting(on channel 6), which then changed the regulatory domain. I'll
-> >> try to get unpolluted results.
-> 
-> You shouldn't be having any regulatory issues connecting to an AP on
-> channel 6. In general, it's channels above 11 (I think) that are
-> occasionally masked by different regulatory settings.
-> 
-> > Almost. The cause was that passive scanning brought a beacon on channel
-> > 13, and this beacon caused regulatory domain change:
-> >
-> > --- 1604-dmesg-NOWORKI-truncated        2012-04-16 10:26:03.000000000 +0200
-> > +++ 1604-dmesg-WORKI-truncated  2012-04-16 10:26:04.000000000 +0200
-> > @@ -45,4 +45,6 @@
-> >  phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 2 - CWmin: 5, CWmax: 10, Aifs: 3, TXop: 0.
-> >  phy0 -> rt2x00mac_conf_tx: Info - Configured TX queue 3 - CWmin: 5, CWmax: 10, Aifs: 7, TXop: 0.
-> >  ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> > +cfg80211: Found new beacon on frequency: 2472 MHz (Ch 13) on phy0
-> > +cfg80211: Pending regulatory request, waiting for it to be processed...
-> >  EXT3-fs (sda5): using internal journal
-> 
-> Not quite, it seems that CRDA never got sent the request, which is
-> odd, however this is on the working card so it doesn't explain the
-> non-working ones.
-> 
-> >> > Also, what channel is your AP on and what region of the world are you
-> >> > in? (I'm guessing Europe from your email address, but which country
-> >> > specifically)
-> >> I'm in France, but using another wireless card, I can scan APs on
-> >> channels 1,2,3,6,8,10,11,13.
-> 
-> That sounds right.
-> 
-> I'm at a loss to explain it any further, which is annoying. At this
-> point, I'm guessing that there's some subtle hardware difference, or
-> something like that. It could be something as complicated as incorrect
-> or broken components, or something as simple as a dry solder join on
-> the antenna connection.
-> 
-> Where did you get the cards?
-I got them inside netbooks we bought from our provider in China. Is that
-really relevant? They're on the market anyway.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.29.h |   33 -----------------------------
+ include/linux/pci.h           |   47 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+), 33 deletions(-)
+ create mode 100644 include/linux/pci.h
 
-I can provide a photo of the chip if anyone is interested (I posted the
-markings in the first message of the discussion).
+diff --git a/include/linux/compat-2.6.29.h b/include/linux/compat-2.6.29.h
+index c830c7a..c70af3a 100644
+--- a/include/linux/compat-2.6.29.h
++++ b/include/linux/compat-2.6.29.h
+@@ -141,36 +141,6 @@ static inline struct net *read_pnet(struct net * const *pnet)
+ 
+ extern int		init_dummy_netdev(struct net_device *dev);
+ 
+-#define compat_pci_suspend(fn)						\
+-	int fn##_compat(struct pci_dev *pdev, pm_message_t state) 	\
+-	{								\
+-		int r;							\
+-									\
+-		r = fn(&pdev->dev);					\
+-		if (r)							\
+-			return r;					\
+-									\
+-		pci_save_state(pdev);					\
+-		pci_disable_device(pdev);				\
+-		pci_set_power_state(pdev, PCI_D3hot);			\
+-									\
+-		return 0;						\
+-	}
+-
+-#define compat_pci_resume(fn)						\
+-	int fn##_compat(struct pci_dev *pdev)				\
+-	{								\
+-		int r;							\
+-									\
+-		pci_set_power_state(pdev, PCI_D0);			\
+-		r = pci_enable_device(pdev);				\
+-		if (r)							\
+-			return r;					\
+-		pci_restore_state(pdev);				\
+-									\
+-		return fn(&pdev->dev);					\
+-	}
+-
+ #else /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
+ 
+ /* Kernels >= 2.6.29 follows */
+@@ -185,9 +155,6 @@ static inline int ndo_do_ioctl(struct net_device *dev,
+ 	return -EOPNOTSUPP;
+ }
+ 
+-#define compat_pci_suspend(fn)
+-#define compat_pci_resume(fn)
+-
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
+ 
+ #endif /*  LINUX_26_29_COMPAT_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+new file mode 100644
+index 0000000..fe1a761
+--- /dev/null
++++ b/include/linux/pci.h
+@@ -0,0 +1,47 @@
++#ifndef _COMPAT_LINUX_PCI_H
++#define _COMPAT_LINUX_PCI_H
++
++#include_next <linux/pci.h>
++
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
++
++#define compat_pci_suspend(fn)						\
++	int fn##_compat(struct pci_dev *pdev, pm_message_t state) 	\
++	{								\
++		int r;							\
++									\
++		r = fn(&pdev->dev);					\
++		if (r)							\
++			return r;					\
++									\
++		pci_save_state(pdev);					\
++		pci_disable_device(pdev);				\
++		pci_set_power_state(pdev, PCI_D3hot);			\
++									\
++		return 0;						\
++	}
++
++#define compat_pci_resume(fn)						\
++	int fn##_compat(struct pci_dev *pdev)				\
++	{								\
++		int r;							\
++									\
++		pci_set_power_state(pdev, PCI_D0);			\
++		r = pci_enable_device(pdev);				\
++		if (r)							\
++			return r;					\
++		pci_restore_state(pdev);				\
++									\
++		return fn(&pdev->dev);					\
++	}
++
++#else /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
++
++#define compat_pci_suspend(fn)
++#define compat_pci_resume(fn)
++
++#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29)) */
++
++#endif	/* _COMPAT_LINUX_PCI_H */
+-- 
+1.7.9.5
 
-> 
-> Does anyone else who's more knowledgeable than me have any idea what's
-> happening here?
-> 
-> Thanks,
-> 
