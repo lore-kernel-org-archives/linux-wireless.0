@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:64550 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932335Ab2DEDhm (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27788 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755508Ab2D0HAu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Apr 2012 23:37:42 -0400
-Received: by iagz16 with SMTP id z16so1197657iag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Apr 2012 20:37:42 -0700 (PDT)
-Message-ID: <4F7D1382.2080708@lwfinger.net> (sfid-20120405_053746_070477_584F52C2)
-Date: Wed, 04 Apr 2012 22:37:38 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 27 Apr 2012 03:00:50 -0400
+To: Kevin Fang <chienf@qca.qualcomm.com>
+Message-ID: <4F9A441D.2050107@qca.qualcomm.com> (sfid-20120427_090053_576852_D5EA4D65)
+Date: Fri, 27 Apr 2012 10:00:45 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Question about setup error in mac80211
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 1/2] ath6kl: handle background(BK) stream properly on
+ htc mbox layer
+References: <1335489482-15565-1-git-send-email-kevin.fang@qca.qualcomm.com>
+In-Reply-To: <1335489482-15565-1-git-send-email-kevin.fang@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In https://bugzilla.kernel.org/show_bug.cgi?id=43044, driver rtl8192ce is 
-getting an oops due to a NULL pointer dereference due to NULL being returned by 
-ieee80211_get_tx_rate. For reference, the code in question is
+On 04/27/2012 04:18 AM, Kevin Fang wrote:
+> Bug description:
+> STA sends huge BK QoS data frame first, then sends BE/VI/VO QoS data frame.
+> The corresponding throughput becomes much lower than
+> that without sends BK QoS data frame before.
+> 
+> The root cause is that when station send BK stream,
+> the tx credits of BK stream don't return back to
+> higher priority QoS stream such as BE, VI, and VO stream.
+> This patch will handle BK stream properly,
+> when there is higher priority QoS stream,
+> it will seek tx credits from BK stream properly.
+> 
+> Signed-off-by: Kevin Fang <kevin.fang@qca.qualcomm.com>
 
-static inline struct ieee80211_rate *
-ieee80211_get_tx_rate(const struct ieee80211_hw *hw,
-                       const struct ieee80211_tx_info *c)
-{
-         if (WARN_ON(c->control.rates[0].idx < 0))
-                 return NULL;
-         return &hw->wiphy->bands[c->band]->bitrates[c->control.rates[0].idx];
-}
+Thanks, both patches applied. I just did minor cosmetic changes to the
+commit log (word wrapping etc).
 
-Any thoughts regarding what might be causing this? I don't have the full log, 
-but I assume that the WARN_ON must have been in the logs.
-
-I can easily protect rtlwifi, but I would like to know the cause.
-
-Thanks,
-
-Larry
+Kalle
