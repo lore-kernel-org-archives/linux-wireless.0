@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4251 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754554Ab2DTV2F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 17:28:05 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3.4 0/2] brcm80211: two fullmac bug fix for 3.4
-Date: Fri, 20 Apr 2012 14:27:47 -0700
-Message-ID: <1334957269-27416-1-git-send-email-frankyl@broadcom.com> (sfid-20120420_232814_943086_7BB18E24)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9115 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755508Ab2D0Gw6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2012 02:52:58 -0400
+Message-ID: <4F9A423B.102@qca.qualcomm.com> (sfid-20120427_085302_589348_6984E7E0)
+Date: Fri, 27 Apr 2012 12:22:43 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/2] ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
+References: <1335452174-7093-1-git-send-email-vthiagar@qca.qualcomm.com> <1335452174-7093-2-git-send-email-vthiagar@qca.qualcomm.com> <4F999235.3060007@qca.qualcomm.com> <4F9A1C0F.2090303@qca.qualcomm.com> <4F9A3DEE.207@qca.qualcomm.com>
+In-Reply-To: <4F9A3DEE.207@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-Here are two bug fix patches for brcmfmac aim for 3.4. One corrects a wrong SDIO function register write access behavior. The other one fixes an issue than dpc could miss completion events in heavy loading system.
-
-Thanks,
-Franky
-
-Franky Lin (2):
-  brcm80211: fmac: fix SDIO function 0 register r/w issue
-  brcm80211: fmac: fix missing completion events issue
-
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    6 ++-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   63 ++++++++++++++++----
- 2 files changed, 56 insertions(+), 13 deletions(-)
-
--- 
-1.7.5.4
 
 
+On Friday 27 April 2012 12:04 PM, Kalle Valo wrote:
+> On 04/27/2012 07:09 AM, Vasanthakumar Thiagarajan wrote:
+>
+>>>>    	bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
+>>>>
+>>>> -	if (!bus_req)
+>>>> +	if (!bus_req) {
+>>>> +		ath6kl_err("Ran out of bus request buffer for tx\n");
+>>>>    		return -ENOMEM;
+>>>> +	}
+>>>
+>>> I'm not sure about this one. There's a risk that this will spam the log.
+>>> Should it be a debug message instead? Or should we have instead
+>>> ath6kl_err_ratelimit()?
+>>
+>> This condition is very rare, I found it only through code review. I'm
+>> pretty sure we don't hit this very often.
+>
+> I'm not worried how often it happens, I'm just worried that _when_ it
+> happens the warning might make things worse. For example, I personally
+> saw a case where flood of warnings prevented watchdog heartbeat from
+> happening which caused the whole system to reboot. Without the warnings
+> system would have worked just fine, just a bit more slowly.
+
+Fair enough.
+
+>
+> Is it ok for you if I change the ath6kl_err() to WARN_ON_ONCE() (or
+> WARN_ONCE() if you prefer to keep the warning message)? This should be a
+> rare event anyway.
+
+I'm fine with that, thanks.
+
+Vasanth
