@@ -1,91 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 1wt.eu ([62.212.114.60]:65137 "EHLO 1wt.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750734Ab2DNGCV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Apr 2012 02:02:21 -0400
-Date: Sat, 14 Apr 2012 08:01:58 +0200
-From: Willy Tarreau <w@1wt.eu>
-To: Felipe Contreras <felipe.contreras@gmail.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	akpm@linux-foundation.org, torvalds@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk
-Subject: Re: [ath9k-devel] [ 00/78] 3.3.2-stable review
-Message-ID: <20120414060158.GD19802@1wt.eu> (sfid-20120414_080321_588248_90650415)
-References: <20120412011313.GA23764@kroah.com> <CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com> <20120412144626.GA14868@kroah.com> <CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com> <CAJ-VmonhwvnXPKa=LNOR4W0ZTXZqWmzw4UrsKLoE0YN_Bu0FzQ@mail.gmail.com> <CAMP44s2JPvhEB6Eb049Z_bToAFncHKMEheuyaxyhC=bnh2GJVg@mail.gmail.com> <20120413105746.10ffb120@stein> <CAMP44s0RohH9tPiM5qCDT57XBV=iO66PZkSjYVxA6Usg1qJPtw@mail.gmail.com> <20120413190819.9469.qmail@stuge.se> <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMP44s02v_OhviaF12Y8LWBJygyVLZk00d3P69GVvKAeJwjiuw@mail.gmail.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23442 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756497Ab2D0QFG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2012 12:05:06 -0400
+From: "Giori, Kathy" <kgiori@qca.qualcomm.com>
+To: Harshal Chhaya <harshal@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: Support for AR9342 in ath9k?
+Date: Fri, 27 Apr 2012 16:05:02 +0000
+Message-ID: <20FE3948A2672041B9064A92744BD275E789D9@nasanexd02b.na.qualcomm.com> (sfid-20120427_180512_374654_3FCA01F9)
+References: <CAJ8GFOjMHjWwq2rAYT+M5cFmkwHL3z_8mPqvpYXwE=C65Y7hag@mail.gmail.com>
+	<20FE3948A2672041B9064A92744BD275E77F23@nasanexd02b.na.qualcomm.com>
+ <CAJ8GFOhBkZ6PYUE+w_R33A9iE38At+iE1FzEj6jeU=8Z5Sedwg@mail.gmail.com>
+In-Reply-To: <CAJ8GFOhBkZ6PYUE+w_R33A9iE38At+iE1FzEj6jeU=8Z5Sedwg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 14, 2012 at 01:53:22AM +0300, Felipe Contreras wrote:
-> No, I don't want the latest fixes, I want the latest *stable* kernel.
-
-You have it, it's 3.3.2.
-
-> v3.3 is stable, v3.4-rcx are not.
-
-v3.3 *aims to be stable*. That's the big difference. A kernel starts
-unstable and converges to something more stable over the time. 2.4 was
-still experiencing minor issues that we didn't have in 2.6 when I did
-the last release. There were even some security issues we decided not
-to fix and to document instead. Still for its users it was considered
-much more stable than 2.6 or 3.x.
-
-> v3.4 would take months to cook,
-> there will be several release candidates, and it won't be released
-> until the known issues decrease to a reasonable level.
+> -----Original Message-----
+> From: Harshal Chhaya [mailto:harshal@gmail.com]
+> Sent: Friday, April 27, 2012 7:26 AM
+> To: Giori, Kathy
+> Cc: linux-wireless
+> Subject: Re: Support for AR9342 in ath9k?
 > 
-> v3.3.x on the other hand are *not* stable.
-
-Nobody said they *are* stable as per the definition of this word.
-"stable" is the name of the branch which defines the longterm goal
-which is achieved as releases are issued. It's the same with longterm
-kernels. They try to maintain even less bugs and try to to introduce
-new ones, eventhough this happens from time to time, development is
-not an exact science.
-
-> They contain patches
-> backported from v3.4, but nobody guarantees they will work. There was
-> no v3.3.1-rc1,
-
-Few people test rc, and not all bugs or regressions can be detected by
-just a build and a boot.
-
-> so the first time the patches compromising v3.3.1 were
-> generally tested together is in v3.3.1, at which point if somebody
-> finds issues, it's too late; bad patches are *not* going to be removed
-> in v3.3.2.
-
-They would have been if the issue was specific to the backport, which it
-was not.
-
-> Once a tag is made, all the patches in it are dependent on
-> the pace of the development of mainline (v3.4-rcx), which is
-> definitely not stable, specially in the first release candidates.
+> On Thu, Apr 26, 2012 at 12:06 PM, Giori, Kathy <kgiori@qca.qualcomm.com>
+> wrote:
+> >> -----Original Message-----
+> >> Hello,
+> >>
+> >> I am looking for information on the level of support for AR9342 chip in 'ath9k'.
+> [..]
+> > Harshal,
+> >
+> > Yes, for AR934x SoCs, Qualcomm Atheros supports both the ath9k upstream
+> driver and a non-Linux-specific (but also runs on Linux) Wi-Fi driver. The ath9k
+> todo page is out of date. Sorry about that -- hopefully we can help clean that up
+> soon. I think the main functionality that is lacking when using the ath9k driver is
+> that for 5GHz channel operation, DFS logic in Linux is incomplete. Zefir Kurtisi did a
+> great job adding DFS support to ath9k (radar detection and pattern matching),
+> but now it needs to connect to logic within mac80211 and above to satisfy the
+> various regional specifications (FCC, ETSI, Japan). TI (Victor G) posted some RFC
+> patches for that upper layer logic several weeks back, but I haven't seen much
+> activity on it for a while. Hopefully DFS support will be available soon.
+> >
+> > In addition to upstream driver support, one of our goals at Qualcomm Atheros
+> is better baseline support of our platforms by implementing upstream BSP code
+> and validating basic board support with OpenWrt. We'd like you to be able to grab
+> any Qualcomm Atheros AP reference design and flash/boot it with the latest
+> stable version of OpenWrt (AA at the moment). Wouldn't that be handy?
+> >
+> > It is important that customers and developers like you ask
+> > specifically about using ath9k (or OpenWrt or whatever it is you need)
+> > and explain why that support is important to you. With that input we
+> > can justify directing more internal developer resources to work on the
+> > upstream Linux components. Suggestions, recommendations, queries
+> > therefore most welcome. :)
+> >
+> > Hope that helps. Let us know how we can do even better.
+> > kathy
 > 
-> IOW, the "stable" branch tries to be stable up to a point, then, it
-> becomes a testing ground for mainline, and a tracking device for
-> certain mainline issues.
+> 
+> Kathy,
+> 
+> Thanks for your helpful response.
+> 
+> Does the non-Linux-specific internal driver implement the DFS logic that's
+> currently missing in ath9k?
 
-No it's the opposite, it tries to be stable past one point. It's well
-known that first stable releases still have a number of bugs, and it's
-the reason why Greg takes time to maintain multiple branches in parallel.
-Please stop playing the fool, everybody understands this and you make it
-appear like bugs are put in stable on purpose, your reasoning really does
-not make sense.
+The internal driver does support DFS. The ath9k component DFS functionality is ready, but up the stack logic in mac80211, hostapd, etc is not. I think it is a rather complex feature that isn't fun to develop and when operational, it can reduce the overall product performance due to the extra scanning. Let's face it, functions that are required only in order to satisfy a govt regulation are not that exciting to work on. It is also very difficult to test and requires special ($$$) equipment, so the fact that Zefir implemented the ath9k changes and he's from the community is quite impressive actually. We still need the logic dev done though, and that's not Zefir's expertise. 
 
-Please fork the kernel and maintain your own "morestable" branch, it will
-be useful, really, because it will mean that whatever you have in your
-branch that is not in stable has to be fixed in mainline, so it will hold
-the information Linus wants not to lose. This is a lot of work but you'll
-get it done without asking anyone else to do it. I'm not kidding, I'd
-probably use it if it's maintained long enough.
+DFS is important though. In the US there have been abuses of high-power point-to-point wireless links operating in 5GHz "radar channels" without DFS compliance and they do interfere with airport weather radar. The FCC has fined several companies for non-conformance.
 
-Willy
+> 
+> Can I use that driver with OpenWRT?
 
+Not easily, but it is possible. You can replace everything in OpenWRT if you want, and we have managed to drop in an old kernel and our internal driver before, but the Qualcomm Atheros internal driver doesn't conform to the standard netlink API, so "iw" can't be used for wireless config. You would need to learn our legacy iwpriv and iwconfig commands. And there's no connection to uci with the internal driver.
+
+> 
+> And what other factors should I consider when deciding which driver to use?
+
+The internal multi-OS driver is licensed under our Technology Licensing Agreement (TLA) and requires an annual fee ($) that wouldn't be palatable to most individual developers or small companies. 
+
+> 
+> Thanks,
+> - Harshal
+
+I'd recommend working with a company that already has ath9k experience with AP solutions as a project starting point, just to get something going quickly. And again, feel free to send me direct comments on what you need outside of the public forum if you need to protect your ideas.
+
+kathy
