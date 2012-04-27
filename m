@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37574 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673Ab2DVRpz (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:64126 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292Ab2D0J6p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 13:45:55 -0400
-Message-ID: <1335116748.3450.0.camel@jlt3.sipsolutions.net> (sfid-20120422_194611_660755_04F73E12)
-Subject: Re: [PATCH 1/1] mac80211: check for non-managed interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Date: Sun, 22 Apr 2012 19:45:48 +0200
-In-Reply-To: <CANUX_P3EUTKsJG=J6tqZMNULbm3E+q8hTbtFz3emQyS8bN7sQw@mail.gmail.com> (sfid-20120422_190147_496942_E2822878)
-References: <1335110415-12695-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <CANUX_P3EUTKsJG=J6tqZMNULbm3E+q8hTbtFz3emQyS8bN7sQw@mail.gmail.com>
-	 (sfid-20120422_190147_496942_E2822878)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 27 Apr 2012 05:58:45 -0400
+Date: Fri, 27 Apr 2012 11:58:42 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: sedat.dilek@gmail.com
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+Message-ID: <20120427095842.GW3157@wantstofly.org> (sfid-20120427_115904_407031_C73EDCF7)
+References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
+ <20120427091405.GS3157@wantstofly.org>
+ <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
+ <20120427094007.GU3157@wantstofly.org>
+ <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
+ <20120427094637.GV3157@wantstofly.org>
+ <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-04-22 at 20:01 +0300, Emmanuel Grumbach wrote:
-> On Sun, Apr 22, 2012 at 19:00, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
-> > Average beacon signal only keep tracked by managed interface,
-> > give warning and return 0 for the others.
+On Fri, Apr 27, 2012 at 11:56:00AM +0200, Sedat Dilek wrote:
+
+> >> >> Are you planning to or even working on support (for) 8361 devices?
+> >> >
+> >> > I don't have any such plans, and I don't know of anyone who does.
+> >>
+> >> Does 8361 require firmware support?
 > >
-> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > ---
-> >  net/mac80211/util.c |    5 +++++
-> >  1 files changed, 5 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> > index 89c1e5b..2cbcb6a 100644
-> > --- a/net/mac80211/util.c
-> > +++ b/net/mac80211/util.c
-> > @@ -1799,5 +1799,10 @@ int ieee80211_ave_rssi(struct ieee80211_vif *vif)
-> >        struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> >        struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-> >
-> > +       if (sdata->vif.type != NL80211_IFTYPE_STATION) {
-> > +               /* non-managed type inferfaces */
-> > +               WARN_ON(1);
+> > What do you mean by that?
 > 
-> WARN_ON_ONCE ?
-> We don't need to flood the kernel log here
+> IIRC ath5k for example needs no external firmware file.
 
-if (WARN_ON_ONCE(...))
+The 8361 requires firmware to be loaded into it before it'll do
+anything useful.
 
-would also be nicer :-)
 
-johannes
+> >> Does a firmware file exist (name?)?
+> >
+> > There's firmware for the 8361 out there, however, that version of
+> > the firmware implements a firmware API that is different from the
+> > one that mwl8k currently implements.
+> >
+> > You could add 8361 support to mwl8k, but then you'd have to go over
+> > all the firmware command invocations in mwl8k and make sure that they
+> > will work on the 8361 firmware that you're trying to support as well.
+> 
+> Without having a 8361 this will be even harder to walk through.
+> 
+> Anyway, thanks for your detailed explanations.
+> 
+> What's the alternative for such affected users?
+> Use ndis-wrapper?
 
+I'm not sure.  I've never tried to get a 8361 work under Linux.
