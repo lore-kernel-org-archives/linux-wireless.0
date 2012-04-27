@@ -1,227 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:30341 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759313Ab2DJPP7 (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:58787 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759603Ab2D0Dsj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 11:15:59 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [WIP 10/11] ath9k: Add debug messages for WoW
-Date: Tue, 10 Apr 2012 20:43:20 +0530
-Message-ID: <1334070801-21708-11-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120410_171610_104667_206B033E)
-In-Reply-To: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 26 Apr 2012 23:48:39 -0400
+Received: by obbta14 with SMTP id ta14so494409obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Apr 2012 20:48:38 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	javier@cozybit.com, devel@lists.open80211s.org,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH 1/4] mac80211: Advertise HT protection mode in IEs
+Date: Thu, 26 Apr 2012 20:48:23 -0700
+Message-Id: <1335498506-9600-1-git-send-email-ashok@cozybit.com> (sfid-20120427_054915_677315_2AE59E4F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-
-add sufficient debug messages in the driver for
-debugging WoW
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Reviewed-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |   91 +++++++++++++++++++++++++++++----
- 1 files changed, 80 insertions(+), 11 deletions(-)
+ net/mac80211/ibss.c        |    2 +-
+ net/mac80211/ieee80211_i.h |    3 ++-
+ net/mac80211/mesh.c        |    3 ++-
+ net/mac80211/util.c        |    9 +++------
+ 4 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7b8b8a9..92637da 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2521,6 +2521,8 @@ void ath9k_wow_add_disassoc_deauth_pattern(struct ath_softc *sc)
- 		dis_deauth_mask[3] = 0xfc;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 61cd391..bb1a3e6 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -164,7 +164,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		pos = ieee80211_ie_build_ht_cap(pos, &sband->ht_cap,
+ 						sband->ht_cap.cap);
+ 		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
+-						 chan, channel_type);
++						 chan, channel_type, 0);
  	}
  
-+	ath_dbg(common, WOW, "Adding disassoc/deauth patterns for WoW\n");
-+
- 	ath9k_hw_wow_apply_pattern(ah, dis_deauth_pattern, dis_deauth_mask,
- 				   pattern_count, byte_cnt);
+ 	if (local->hw.queues >= IEEE80211_NUM_ACS) {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6cd89d4..ae046b5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1497,7 +1497,8 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			      u16 cap);
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+-			       enum nl80211_channel_type channel_type);
++			       enum nl80211_channel_type channel_type,
++			       u16 prot_mode);
  
-@@ -2544,6 +2546,7 @@ void ath9k_wow_add_pattern(struct ath_softc *sc, struct cfg80211_wowlan *wowlan)
- 	struct ath9k_wow_pattern *wow_pattern  = NULL;
- 	struct cfg80211_wowlan_trig_pkt_pattern *patterns = wowlan->patterns;
- 	s8 i = 0;
-+	u16 j = 0;
+ /* internal work items */
+ void ieee80211_work_init(struct ieee80211_local *local);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 598a96a..8a952e0 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -396,7 +396,8 @@ int mesh_add_ht_oper_ie(struct sk_buff *skb,
+ 		return -ENOMEM;
  
- 	/*
- 	 * check for duplicate patterns
-@@ -2553,8 +2556,11 @@ void ath9k_wow_add_pattern(struct ath_softc *sc, struct cfg80211_wowlan *wowlan)
- 			if (!memcmp(wow_pattern->pattern_bytes,
- 				    patterns->pattern, MAX_PATTERN_SIZE) &&
- 			    !memcmp(wow_pattern->mask_bytes,
--				    patterns->mask, MAX_PATTERN_SIZE))
-+				    patterns->mask, MAX_PATTERN_SIZE)) {
-+				ath_dbg(common, WOW, "duplicate WOW pattern"
-+					"detected returning\n");
- 				return;
-+			}
- 		}
+ 	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_operation));
+-	ieee80211_ie_build_ht_oper(pos, ht_cap, channel, channel_type);
++	ieee80211_ie_build_ht_oper(pos, ht_cap, channel, channel_type,
++				   sdata->vif.bss_conf.ht_operation_mode);
  
- 		i++;
-@@ -2567,12 +2573,16 @@ void ath9k_wow_add_pattern(struct ath_softc *sc, struct cfg80211_wowlan *wowlan)
- 
- 	list_for_each_entry(wow_pattern, &wow_info->wow_patterns, list) {
- 
--
-+		/* check if we have free slot for the new pattern */
- 		if (!wow_pattern->slot) {
- 			wow_pattern = kzalloc(sizeof(*wow_pattern), GFP_KERNEL);
- 
--			if (!wow_pattern)
-+			if (!wow_pattern) {
-+				ath_dbg(common, WOW, "memory allocation failed"
-+					"for wow_pattern driver structure\n");
- 				return;
-+			}
-+
- 			memcpy(wow_pattern->pattern_bytes,
- 			       patterns->pattern, MAX_PATTERN_SIZE);
- 			memcpy(wow_pattern->mask_bytes,
-@@ -2582,11 +2592,42 @@ void ath9k_wow_add_pattern(struct ath_softc *sc, struct cfg80211_wowlan *wowlan)
- 			list_add_tail(&wow_pattern->list,
- 				      &wow_info->wow_patterns);
- 
--			wow_info->num_of_patterns = i + 2;
- 			/*
--			 * just need to take care of deauth and
-+			 * need to take care of deauth and
- 			 * disssoc pattern, make sure we don't overwirte
- 			 */
-+			wow_info->num_of_patterns = i + 2;
-+
-+			ath_dbg(common, WOW, "number of WOW patterns"
-+				"configured %u", wow_info->num_of_patterns);
-+
-+			ath_dbg(common, WOW, "WoW pattern_len %u",
-+				wow_pattern->pattern_len);
-+
-+			ath_dbg(common, WOW, "WoW patterns:\n");
-+
-+			for (j = 0; j < MAX_PATTERN_SIZE; j++) {
-+
-+				if (j && !(j % 32))
-+					ath_dbg(common, WOW, "\n");
-+
-+				ath_dbg(common, WOW, "0x%x",
-+					wow_pattern->pattern_bytes[j]);
-+
-+			}
-+
-+			ath_dbg(common, WOW, "WoW mask:\n");
-+
-+			for (j = 0; j < MAX_PATTERN_SIZE; j++) {
-+
-+				if (j && !(j % 32))
-+					ath_dbg(common, WOW, "\n");
-+
-+				ath_dbg(common, WOW, "0x%x",
-+					wow_pattern->mask_bytes[j]);
-+
-+			}
-+
- 
- 			ath9k_hw_wow_apply_pattern(ah,
- 						   wow_pattern->pattern_bytes,
-@@ -2598,8 +2639,11 @@ void ath9k_wow_add_pattern(struct ath_softc *sc, struct cfg80211_wowlan *wowlan)
- 
- 		i++;
- 
--		if (i >= MAX_NUM_USER_PATTERN)
-+		if (i >= MAX_NUM_USER_PATTERN) {
-+			ath_dbg(common, WOW, "no available slot for new"
-+				"WOW pattern\n");
- 			break;
-+		}
- 	}
- 
- }
-@@ -2617,12 +2661,16 @@ static int ath9k_suspend(struct ieee80211_hw *hw,
- 
- 	sc->wow_enabled = false;
- 
--	if (WARN_ON(!wowlan))
-+	if (WARN_ON(!wowlan)) {
-+		ath_dbg(common, WOW, "None of the WoW triggers enabled");
- 		return -EINVAL;
-+	}
- 
- 	ath9k_ps_wakeup(sc);
- 
- 	if (!device_can_wakeup(sc->dev)) {
-+		ath_dbg(common, WOW, "device_can_wakeup failed"
-+			"WoW is not enabled");
- 		ret = 1;
- 		goto fail_wow;
- 	}
-@@ -2634,13 +2682,33 @@ static int ath9k_suspend(struct ieee80211_hw *hw,
- 	 * configure 'keep alive frame' for each
- 	 * STA
- 	 */
--	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF) || (sc->nvifs > 1)) {
-+	if (sc->nvifs > 1) {
-+		ath_dbg(common, WOW, "more than one interfaces"
-+			"Currently WoW for multivif is not handled"
-+			"WoW is not enabled %s\n", __func__);
-+		ret = 1;
-+		goto fail_wow;
-+	}
-+
-+	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF))  {
-+		ath_dbg(common, WOW, "None of the STA vifs are associated"
-+			"WoW is not enabled %s\n", __func__);
- 		ret = 1;
- 		goto fail_wow;
- 	}
- 
-+
- 	wow_triggers_enabled = ath9k_wow_map_triggers(sc, wowlan);
- 
-+	ath_dbg(common, WOW, "WoW triggers enabled 0x%x\n",
-+			      wow_triggers_enabled);
-+
-+	if (!wow_triggers_enabled) {
-+		ath_dbg(common, WOW, "No WoW triggers are configured\n");
-+		ret = 1;
-+		goto fail_wow;
-+	}
-+
- 	if (wow_triggers_enabled & AH_WOW_USER_PATTERN_EN) {
- 		ath9k_wow_add_disassoc_deauth_pattern(sc);
- 		ath9k_wow_add_pattern(sc, wowlan);
-@@ -2678,8 +2746,10 @@ static int ath9k_resume(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&sc->mutex);
- 
--	if (!sc->wow_enabled)
-+	if (!sc->wow_enabled) {
-+		ath_dbg(common, ANY, "WoW not enabled %s\n", __func__);
- 		goto wow_unlock;
-+	}
- 
- 	ath9k_ps_wakeup(sc);
- 	ath9k_hw_disable_interrupts(ah);
-@@ -2703,14 +2773,13 @@ static int ath9k_resume(struct ieee80211_hw *hw)
- 
- 	if (wow_status) {
- 		ath_dbg(common, ANY, "Waking up due to WoW triggers %s"
--			"with WoW status = %x\n",
-+			"with WoW status = 0x%x\n",
- 			ath9k_hw_wow_event_to_string(wow_status), wow_status);
- 	}
- 
- 	ath9k_ps_restore(sc);
- 
- wow_unlock:
--
- 	mutex_unlock(&sc->mutex);
  	return 0;
  }
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d9a747d..22f2216 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1663,7 +1663,8 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+-			       enum nl80211_channel_type channel_type)
++			       enum nl80211_channel_type channel_type,
++			       u16 prot_mode)
+ {
+ 	struct ieee80211_ht_operation *ht_oper;
+ 	/* Build HT Information */
+@@ -1689,11 +1690,7 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 	    channel_type != NL80211_CHAN_HT20)
+ 		ht_oper->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
+ 
+-	/*
+-	 * Note: According to 802.11n-2009 9.13.3.1, HT Protection field and
+-	 * RIFS Mode are reserved in IBSS mode, therefore keep them at 0
+-	 */
+-	ht_oper->operation_mode = 0x0000;
++	ht_oper->operation_mode = cpu_to_le16(prot_mode);
+ 	ht_oper->stbc_param = 0x0000;
+ 
+ 	/* It seems that Basic MCS set and Supported MCS set
 -- 
-1.7.0.4
+1.7.5.4
 
