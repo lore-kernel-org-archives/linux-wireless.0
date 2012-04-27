@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:60547 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932385Ab2DSU0w (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42958 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760485Ab2D0Rrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Apr 2012 16:26:52 -0400
+	Fri, 27 Apr 2012 13:47:49 -0400
+Date: Fri, 27 Apr 2012 13:44:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
+Subject: CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
+ (Barcelona!)
+Message-ID: <20120427174439.GC16207@tuxdriver.com> (sfid-20120427_194754_950690_60A07BB5)
+References: <20120322192406.GB2432@tuxdriver.com>
+ <1332698585.1870.88.camel@aeonflux>
+ <20120326145433.GE13806@tuxdriver.com>
+ <1332774906.1870.98.camel@aeonflux>
+ <20120326152541.GH13806@tuxdriver.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 19 Apr 2012 13:26:30 -0700
-Message-ID: <CAB=NE6W9dFr4X=nVtwYtGuPv90cZUat2b8vRb90mdM+8AEOf=w@mail.gmail.com> (sfid-20120419_222716_420559_2FF964FF)
-Subject: compat-wireless-3.4-rc3-1.tar.bz2 released
-To: lf_driver_backport@lists.linux-foundation.org
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120326152541.GH13806@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've kicked out a new compat-wireless release based on 3.4-rc3 [0],
-check out the ChangeLog-3.4-rc3 [1] for more details and if you are
-interested in the build log check out the ckmake-3.4-rc1-2.log.bz2
-[2].  Below are the code metrics and the ckmake log summary:
+On Mon, Mar 26, 2012 at 11:25:42AM -0400, John W. Linville wrote:
+> On Mon, Mar 26, 2012 at 05:15:06PM +0200, Marcel Holtmann wrote:
+> 
+> > > I don't think that 1 day is enough.  2 might not be enough, depending
+> > > on how we stage it.  Do you think that we would have more than one
+> > > "track" (e.g. separate Blueooth/802.11/NFC sessions)?  A single
+> > > "plenary" session?  Or some mix?
+> > 
+> > so what about 2 days single track and 1 day with breakout sessions. So
+> > we could do 12 talks with morning and afternoon sessions on the 3rd day
+> > as needed.
+> > 
+> > If we have many proposals for presentations, we can always go switch to
+> > 2 tracks. If we require LinuxCon registration, then it should be no
+> > problem to get a second room. If not, I have to negotiate with Angela
+> > next week ;)
+> 
+> My only concern is filling the number of slots.  Will we have 12+
+> presentation poposals?
 
-compat-wireless code metrics
+Just to keep the ball rolling...
 
-    829063 - Total upstream lines of code being pulled
-      2748 - backport code changes
-      2333 - backport code additions
-       415 - backport code deletions
-      9575 - backport from compat module
-     12323 - total backport code
-    1.4864 - % of code consists of backport work
+Angela has reserved space for us at the Hotel Fira
+Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
+Please note that this will overlap Yocto Dev Days, oVirt Summit and
+KVM Forum at the same venue.
 
-Base tree: linux-stable.git
-Base tree version: v3.4-rc3
-compat-wireless release: compat-wireless-v3.4-rc3-1
+Now, we need some talk proposals!  Please post in this thread (or
+contact me or Marcel directly if necessary) to propose talks.  I would
+love to see any topics on any relevant technologies, as well as topics
+about how the projects are being managed, new sub-projects, etc.
+It seems like a long time away right now, but it is a good time to
+start thinking... :-)
 
-Trying kernel 3.2.2-030202-generic	[OK]
-Trying kernel 3.1.10-030110-generic	[OK]
-Trying kernel 3.0.18-030018-generic	[OK]
-Trying kernel 2.6.39-02063904-generic	[OK]
-Trying kernel 2.6.38-02063808-generic	[OK]
-Trying kernel 2.6.37-02063706-generic	[OK]
-Trying kernel 2.6.36-02063604-generic	[OK]
-Trying kernel 2.6.35-02063512-generic	[OK]
-Trying kernel 2.6.34-02063410-generic	[OK]
-Trying kernel 2.6.33-02063305-generic	[OK]
-Trying kernel 2.6.32-02063255-generic	[OK]
-Trying kernel 2.6.31-02063113-generic	[OK]
-Trying kernel 2.6.30-02063010-generic	[OK]
-Trying kernel 2.6.29-02062906-generic	[OK]
-Trying kernel 2.6.28-02062810-generic	[OK]
-Trying kernel 2.6.27-020627-generic	[OK]
-Trying kernel 2.6.26-020626-generic	[OK]
-Trying kernel 2.6.25-020625-generic	[OK]
-Trying kernel 2.6.24-020624-generic	[OK]
+Thanks,
 
-[0] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/compat-wireless-3.4-rc3-1.tar.bz2
-[1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/ChangeLog-3.4-rc3
-[2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.4/ckmake-3.4-rc1-2.log.bz2
-
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
