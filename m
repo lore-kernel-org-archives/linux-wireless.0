@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32148 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27493 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750706Ab2DTNnH (ORCPT
+	with ESMTP id S1750864Ab2D0Ge1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Apr 2012 09:43:07 -0400
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Bala Shanmugam <bkamatch@qca.qualcomm.com>
-Subject: [PATCH v3] cfg80211: Validate legacy rateset.
-Date: Fri, 20 Apr 2012 19:12:58 +0530
-Message-ID: <1334929378-10899-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120420_154312_258874_AE731753)
+	Fri, 27 Apr 2012 02:34:27 -0400
+Message-ID: <4F9A3DEE.207@qca.qualcomm.com> (sfid-20120427_083431_316829_01E3BC3B)
+Date: Fri, 27 Apr 2012 09:34:22 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/2] ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
+References: <1335452174-7093-1-git-send-email-vthiagar@qca.qualcomm.com> <1335452174-7093-2-git-send-email-vthiagar@qca.qualcomm.com> <4F999235.3060007@qca.qualcomm.com> <4F9A1C0F.2090303@qca.qualcomm.com>
+In-Reply-To: <4F9A1C0F.2090303@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Legacy rates are not validated while configuring
-tx rateset using iw. So below cmd is accepted by nl80211.
-sudo iw wlan2 set bitrates legacy-2.4 1 2 3
+On 04/27/2012 07:09 AM, Vasanthakumar Thiagarajan wrote:
 
-Validate legacy rates and return
-error if any rate in the rateset is not valid.
+>>>   	bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
+>>>
+>>> -	if (!bus_req)
+>>> +	if (!bus_req) {
+>>> +		ath6kl_err("Ran out of bus request buffer for tx\n");
+>>>   		return -ENOMEM;
+>>> +	}
+>>
+>> I'm not sure about this one. There's a risk that this will spam the log.
+>> Should it be a debug message instead? Or should we have instead
+>> ath6kl_err_ratelimit()?
+> 
+> This condition is very rare, I found it only through code review. I'm 
+> pretty sure we don't hit this very often.
 
-Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
----
-v2: Allow empty rateset
-v3: Indentation
- net/wireless/nl80211.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+I'm not worried how often it happens, I'm just worried that _when_ it
+happens the warning might make things worse. For example, I personally
+saw a case where flood of warnings prevented watchdog heartbeat from
+happening which caused the whole system to reboot. Without the warnings
+system would have worked just fine, just a bit more slowly.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index bcf6f70..140c1d2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5577,6 +5577,9 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 				sband,
- 				nla_data(tb[NL80211_TXRATE_LEGACY]),
- 				nla_len(tb[NL80211_TXRATE_LEGACY]));
-+			if ((mask.control[band].legacy == 0) &&
-+			    nla_len(tb[NL80211_TXRATE_LEGACY]))
-+				return -EINVAL;
- 		}
- 		if (tb[NL80211_TXRATE_MCS]) {
- 			if (!ht_rateset_to_mask(
--- 
-1.7.4.1
+Is it ok for you if I change the ath6kl_err() to WARN_ON_ONCE() (or
+WARN_ONCE() if you prefer to keep the warning message)? This should be a
+rare event anyway.
 
+Kalle
