@@ -1,176 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaout01-winn.ispmail.ntl.com ([81.103.221.47]:2261 "EHLO
-	mtaout01-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756232Ab2DIUX6 (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:33065 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759926Ab2D0J4B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 16:23:58 -0400
-From: Daniel Drake <dsd@laptop.org>
-To: dcbw@redhat.com
-Cc: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFT] libertas CS: convert to asynchronous firmware loading
-Message-Id: <20120409202355.405269D401E@zog.reactivated.net> (sfid-20120409_222408_728322_82C21335)
-Date: Mon,  9 Apr 2012 21:23:55 +0100 (BST)
+	Fri, 27 Apr 2012 05:56:01 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20120427094637.GV3157@wantstofly.org>
+References: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com>
+	<20120427091405.GS3157@wantstofly.org>
+	<CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
+	<20120427094007.GU3157@wantstofly.org>
+	<CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
+	<20120427094637.GV3157@wantstofly.org>
+Date: Fri, 27 Apr 2012 11:56:00 +0200
+Message-ID: <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com> (sfid-20120427_115626_624659_BF3E767D)
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Daniel Drake <dsd@laptop.org>
----
- drivers/net/wireless/libertas/if_cs.c |   92 ++++++++++++++++++---------------
- 1 files changed, 51 insertions(+), 41 deletions(-)
+On Fri, Apr 27, 2012 at 11:46 AM, Lennert Buytenhek
+<buytenh@wantstofly.org> wrote:
+> On Fri, Apr 27, 2012 at 11:42:54AM +0200, Sedat Dilek wrote:
+>
+>> >> Are you planning to or even working on support (for) 8361 devices?
+>> >
+>> > I don't have any such plans, and I don't know of anyone who does.
+>>
+>> Does 8361 require firmware support?
+>
+> What do you mean by that?
+>
 
-Request for testing.
+IIRC ath5k for example needs no external firmware file.
 
-Requires these patches first:
+>
+>> Does a firmware file exist (name?)?
+>
+> There's firmware for the 8361 out there, however, that version of
+> the firmware implements a firmware API that is different from the
+> one that mwl8k currently implements.
+>
+> You could add 8361 support to mwl8k, but then you'd have to go over
+> all the firmware command invocations in mwl8k and make sure that they
+> will work on the 8361 firmware that you're trying to support as well.
 
-[RFC 1/4] libertas: Firmware loading simplifications
-[RFC 2/4] libertas: harden-up exit paths
-[RFC 3/4] libertas: add asynchronous firmware loading capability
+Without having a 8361 this will be even harder to walk through.
 
-Compile tested only - I don't have the hardware. 
+Anyway, thanks for your detailed explanations.
 
-diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
-index bb3deb3..c211b86 100644
---- a/drivers/net/wireless/libertas/if_cs.c
-+++ b/drivers/net/wireless/libertas/if_cs.c
-@@ -738,6 +738,52 @@ done:
- 	return ret;
- }
- 
-+static void if_cs_prog_firmware(struct lbs_private *priv, int ret,
-+				 const struct firmware *helper,
-+				 const struct firmware *mainfw)
-+{
-+	struct if_cs_card *card = priv->card;
-+
-+	if (ret) {
-+		pr_err("failed to find firmware (%d)\n", ret);
-+		return;
-+	}
-+
-+	/* Load the firmware */
-+	ret = if_cs_prog_helper(card, helper);
-+	if (ret == 0 && (card->model != MODEL_8305))
-+		ret = if_cs_prog_real(card, mainfw);
-+	if (ret)
-+		goto out;
-+
-+	/* Now actually get the IRQ */
-+	ret = request_irq(card->p_dev->irq, if_cs_interrupt,
-+		IRQF_SHARED, DRV_NAME, card);
-+	if (ret) {
-+		pr_err("error in request_irq\n");
-+		goto out;
-+	}
-+
-+	/*
-+	 * Clear any interrupt cause that happened while sending
-+	 * firmware/initializing card
-+	 */
-+	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
-+	if_cs_enable_ints(card);
-+
-+	/* And finally bring the card up */
-+	priv->fw_ready = 1;
-+	if (lbs_start_card(priv) != 0) {
-+		pr_err("could not activate card\n");
-+		free_irq(card->p_dev->irq, card);
-+	}
-+
-+out:
-+	if (helper)
-+		release_firmware(helper);
-+	if (mainfw)
-+		release_firmware(mainfw);
-+}
- 
- 
- /********************************************************************/
-@@ -809,8 +855,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 	unsigned int prod_id;
- 	struct lbs_private *priv;
- 	struct if_cs_card *card;
--	const struct firmware *helper = NULL;
--	const struct firmware *mainfw = NULL;
- 
- 	lbs_deb_enter(LBS_DEB_CS);
- 
-@@ -890,20 +934,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 		goto out2;
- 	}
- 
--	ret = lbs_get_firmware(&p_dev->dev, card->model, &fw_table[0],
--				&helper, &mainfw);
--	if (ret) {
--		pr_err("failed to find firmware (%d)\n", ret);
--		goto out2;
--	}
--
--	/* Load the firmware early, before calling into libertas.ko */
--	ret = if_cs_prog_helper(card, helper);
--	if (ret == 0 && (card->model != MODEL_8305))
--		ret = if_cs_prog_real(card, mainfw);
--	if (ret)
--		goto out2;
--
- 	/* Make this card known to the libertas driver */
- 	priv = lbs_add_card(card, &p_dev->dev);
- 	if (!priv) {
-@@ -911,37 +941,22 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
- 		goto out2;
- 	}
- 
--	/* Finish setting up fields in lbs_private */
-+	/* Set up fields in lbs_private */
- 	card->priv = priv;
- 	priv->card = card;
- 	priv->hw_host_to_card = if_cs_host_to_card;
- 	priv->enter_deep_sleep = NULL;
- 	priv->exit_deep_sleep = NULL;
- 	priv->reset_deep_sleep_wakeup = NULL;
--	priv->fw_ready = 1;
- 
--	/* Now actually get the IRQ */
--	ret = request_irq(p_dev->irq, if_cs_interrupt,
--		IRQF_SHARED, DRV_NAME, card);
-+	/* Get firmware */
-+	ret = lbs_get_firmware_async(priv, &p_dev->dev, card->model, fw_table,
-+				     if_cs_prog_firmware);
- 	if (ret) {
--		pr_err("error in request_irq\n");
--		goto out3;
--	}
--
--	/*
--	 * Clear any interrupt cause that happened while sending
--	 * firmware/initializing card
--	 */
--	if_cs_write16(card, IF_CS_CARD_INT_CAUSE, IF_CS_BIT_MASK);
--	if_cs_enable_ints(card);
--
--	/* And finally bring the card up */
--	if (lbs_start_card(priv) != 0) {
--		pr_err("could not activate card\n");
-+		pr_err("failed to find firmware (%d)\n", ret);
- 		goto out3;
- 	}
- 
--	ret = 0;
- 	goto out;
- 
- out3:
-@@ -951,11 +966,6 @@ out2:
- out1:
- 	pcmcia_disable_device(p_dev);
- out:
--	if (helper)
--		release_firmware(helper);
--	if (mainfw)
--		release_firmware(mainfw);
--
- 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
- 	return ret;
- }
--- 
-1.7.7.6
+What's the alternative for such affected users?
+Use ndis-wrapper?
 
+- Sedat -
