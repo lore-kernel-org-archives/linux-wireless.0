@@ -1,58 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:4804 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756489Ab2DJRfv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 13:35:51 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>,
-	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 12/18] NFC: No need to apply twice the modulo op to LLCP's recv_n
-Date: Tue, 10 Apr 2012 19:43:14 +0200
-Message-Id: <1334079800-10671-13-git-send-email-sameo@linux.intel.com> (sfid-20120410_193554_675792_05605CEF)
-In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
-References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:43253 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753968Ab2D0JJN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2012 05:09:13 -0400
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Sedat Dilek <sedat.dilek@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+Date: Fri, 27 Apr 2012 11:08:31 +0200
+Message-Id: <1335517711-6522-1-git-send-email-sedat.dilek@gmail.com> (sfid-20120427_110939_213067_A2407E82)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-recv_n is set properly when receiving an HDLC frame.
+User lautriv asked for belkin N-1 WLAN device support on IRC.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Further informations from lautriv:
+* marvell 80W8031, card-id 11ab:2a02
+* Debian/sid 3.2.x
+
+On [1] I found a report by Jim Cromie concerning same PCI device-id:
+
+00:0e.0 Ethernet controller [0200]: Marvell Technology Group Ltd.
+88W8361 [TopDog] 802.11n Wireless [11ab:2a02] (rev 03)
+	Subsystem: Marvell Technology Group Ltd. 88W8361 [TopDog] 802.11n Wireless [11ab:2a02]
+
+So, let's add 0x2a02 to PCI device table.
+
+[1] http://www.spinics.net/lists/newbies/msg46601.html
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Sedat Dilek <sedat.dilek@gmail.com>
 ---
- net/nfc/llcp/commands.c |    2 +-
- net/nfc/llcp/llcp.c     |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mwl8k.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
-index ef10ffc..4aa52b8 100644
---- a/net/nfc/llcp/commands.c
-+++ b/net/nfc/llcp/commands.c
-@@ -522,7 +522,7 @@ int nfc_llcp_send_rr(struct nfc_llcp_sock *sock)
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index b48674b..16f0a9a 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5264,6 +5264,7 @@ MODULE_FIRMWARE("mwl8k/fmimage_8366.fw");
+ MODULE_FIRMWARE(MWL8K_8366_AP_FW(MWL8K_8366_AP_FW_API));
  
- 	skb_put(skb, LLCP_SEQUENCE_SIZE);
- 
--	skb->data[2] = sock->recv_n % 16;
-+	skb->data[2] = sock->recv_n;
- 
- 	skb_queue_head(&local->tx_queue, skb);
- 
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index d5e87c3..2cf01e6 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -428,7 +428,7 @@ static u8 nfc_llcp_nr(struct sk_buff *pdu)
- 
- static void nfc_llcp_set_nrns(struct nfc_llcp_sock *sock, struct sk_buff *pdu)
- {
--	pdu->data[2] = (sock->send_n << 4) | (sock->recv_n % 16);
-+	pdu->data[2] = (sock->send_n << 4) | (sock->recv_n);
- 	sock->send_n = (sock->send_n + 1) % 16;
- 	sock->recv_ack_n = (sock->recv_n - 1) % 16;
- }
+ static DEFINE_PCI_DEVICE_TABLE(mwl8k_pci_id_table) = {
++	{ PCI_VDEVICE(MARVELL, 0x2a02), .driver_data = MWL8363, },
+ 	{ PCI_VDEVICE(MARVELL, 0x2a0a), .driver_data = MWL8363, },
+ 	{ PCI_VDEVICE(MARVELL, 0x2a0c), .driver_data = MWL8363, },
+ 	{ PCI_VDEVICE(MARVELL, 0x2a24), .driver_data = MWL8363, },
 -- 
-1.7.9.1
+1.7.9.5
 
