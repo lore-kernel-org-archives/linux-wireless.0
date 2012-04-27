@@ -1,71 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:60332 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab2DQR7R convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:62928 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754820Ab2D0S6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Apr 2012 13:59:17 -0400
-Received: by bkcik5 with SMTP id ik5so4803020bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Apr 2012 10:59:16 -0700 (PDT)
-From: Dominik Feser <dominik.feser@googlemail.com>
+	Fri, 27 Apr 2012 14:58:13 -0400
+Date: Fri, 27 Apr 2012 20:58:09 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: sedat.dilek@gmail.com
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
+	Jim Cromie <jim.cromie@gmail.com>
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+Message-ID: <20120427185809.GZ3157@wantstofly.org> (sfid-20120427_205832_653826_D8249D07)
+References: <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
+ <20120427094007.GU3157@wantstofly.org>
+ <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
+ <20120427094637.GV3157@wantstofly.org>
+ <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
+ <20120427095842.GW3157@wantstofly.org>
+ <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
+ <20120427101732.GX3157@wantstofly.org>
+ <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
+ <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
-Subject: wlan0 not present
-Date: Tue, 17 Apr 2012 19:59:13 +0200
-Message-Id: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com> (sfid-20120417_195921_721980_A794EF8E)
-To: linux-wireless@vger.kernel.org
-Mime-Version: 1.0 (Apple Message framework v1257)
+In-Reply-To: <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
-Maybe someone can help me. I have compiled and installed compat-wireless-3.4-rc1-2 and it seems to load correctly. The thing I am missing is the wlan0 device.
+On Fri, Apr 27, 2012 at 03:29:26PM +0200, Sedat Dilek wrote:
 
-# lspci -kvm
-Device:	02:00.0
-Class:	Network controller
-Vendor:	Intel Corporation
-Device:	Centrino Advanced-N 6205
-SVendor:	Intel Corporation
-SDevice:	Centrino Advanced-N 6205 AGN
-Rev:	34
-Module:	iwlwifi
+> >>> >> >> >> Are you planning to or even working on support (for) 8361 devices?
+> >>> >> >> >
+> >>> >> >> > I don't have any such plans, and I don't know of anyone who does.
+> >>> >> >>
+> >>> >> >> Does 8361 require firmware support?
+> >>> >> >
+> >>> >> > What do you mean by that?
+> >>> >>
+> >>> >> IIRC ath5k for example needs no external firmware file.
+> >>> >
+> >>> > The 8361 requires firmware to be loaded into it before it'll do
+> >>> > anything useful.
+> >>> >
+> >>> >
+> >>> >> >> Does a firmware file exist (name?)?
+> >>> >> >
+> >>> >> > There's firmware for the 8361 out there, however, that version of
+> >>> >> > the firmware implements a firmware API that is different from the
+> >>> >> > one that mwl8k currently implements.
+> >>> >> >
+> >>> >> > You could add 8361 support to mwl8k, but then you'd have to go over
+> >>> >> > all the firmware command invocations in mwl8k and make sure that they
+> >>> >> > will work on the 8361 firmware that you're trying to support as well.
+> >>> >>
+> >>> >> Without having a 8361 this will be even harder to walk through.
+> >>> >>
+> >>> >> Anyway, thanks for your detailed explanations.
+> >>> >>
+> >>> >> What's the alternative for such affected users?
+> >>> >> Use ndis-wrapper?
+> >>> >
+> >>> > I'm not sure.  I've never tried to get a 8361 work under Linux.
+> >>>
+> >>> Just found on [1] this same wrong patch in [2] :-).
+> >>> Dunno if [3] worked and from where they have stolen fw-files.
+> >>>
+> >>> - Sedat -
+> >>>
+> >>> [1] https://dev.openwrt.org/ticket/7209
+> >>> [2] https://dev.openwrt.org/attachment/ticket/7209/mwl8k_fix_pci_id.patch
+> >>> [3] https://dev.openwrt.org/attachment/ticket/7209/mwl8k_8361p.patch
+> >>
+> >> I doubt that [3] is really all that's needed to make it work.  But if
+> >> there's someone for whom it works, I'd like them to run some tests on
+> >> mwl8k + [3] on 88w8361p.
+> >
+> > Just asked lautriv to do so (he will do against linux-3.3.3), lets' see.
+> > Also, I refreshed and adapted a bit the instructions (see attachment).
+> >
+> > - Sedat -
+> 
+> [ CC Jim Cromie ]
+> 
+> Now, with extracted firmware files renamed & copied to
+> /lib/firmware/mwl8k/ and applied patch (see attachment) against
+> Linux-3.4-rc4+ I am seeing with modinfo:
+> 
+> $ sudo modinfo mwl8k
+> filename:
+> /lib/modules/3.4.0-rc4-5-generic/kernel/drivers/net/wireless/mwl8k.ko
+> license:        GPL
+> author:         Lennert Buytenhek <buytenh@marvell.com>
+> version:        0.13
+> description:    Marvell TOPDOG(R) 802.11 Wireless Network Driver
+> firmware:       mwl8k/fmimage_8366_ap-2.fw
+> firmware:       mwl8k/fmimage_8366.fw
+> firmware:       mwl8k/helper_8366.fw
+> firmware:       mwl8k/fmimage_8687.fw
+> firmware:       mwl8k/helper_8687.fw
+> firmware:       mwl8k/fmimage_8363.fw
+> firmware:       mwl8k/helper_8363.fw
+> firmware:       mwl8k/fmimage_8361p.fw
+> firmware:       mwl8k/helper_8361p.fw
+> srcversion:     9E1479A05C8D67E6AE90746
+> alias:          pci:v000011ABd00002A43sv*sd*bc*sc*i*
+> alias:          pci:v000011ABd00002A40sv*sd*bc*sc*i*
+> alias:          pci:v000011ABd00002A30sv*sd*bc*sc*i*
+> alias:          pci:v000011ABd00002A2Bsv*sd*bc*sc*i*
+> alias:          pci:v000011ABd00002A24sv*sd*bc*sc*i*
+> alias:          pci:v000011ABd00002A0Csv*sd*bc*sc*i*
+> alias:          pci:v000011ABd00002A0Asv*sd*bc*sc*i*
+> alias:          pci:v000011ABd00002A02sv*sd*bc*sc*i* <--- 8361P:
+> 0x2a02 PCI device-id
+> depends:        mac80211,cfg80211
+> vermagic:       3.4.0-rc4-5-generic SMP mod_unload modversions
+> parm:           ap_mode_default:Set to 1 to make ap mode the default
+> instead of sta mode (bool)
+> 
+> $ ls -l /lib/firmware/mwl8k/
+> insgesamt 456
+> -rw-r--r-- 1 root root  75848 Apr 27 13:49 fmimage_8361p.fw <---
+> 8361P: Firmware image
+> -rw-r--r-- 1 root root 101780 Mär 19 19:32 fmimage_8366_ap-1.fw
+> -rw-r--r-- 1 root root 101976 Mär 19 19:32 fmimage_8366_ap-2.fw
+> -rw-r--r-- 1 root root  96664 Mär 19 19:32 fmimage_8366.fw
+> -rw-r--r-- 1 root root  73252 Feb 23 20:07 fmimage_8687.fw
+> -rw-r--r-- 1 root root   2476 Apr 27 13:49 helper_8361p.fw <--- 8361P:
+> Helper image
+> -rw-r--r-- 1 root root   2476 Mär 19 19:32 helper_8366.fw
+> -rw-r--r-- 1 root root   2476 Feb 23 20:07 helper_8687.fw
+> 
+> As said... ***compile-tested*** only here.
 
-# dmesg | grep iwlwifi
-iwlwifi 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwlwifi 0000:02:00.0: setting latency timer to 64
-iwlwifi 0000:02:00.0: pci_resource_len = 0x00002000
-iwlwifi 0000:02:00.0: pci_resource_base = f23e0000
-iwlwifi 0000:02:00.0: HW Revision ID = 0x34
-iwlwifi 0000:02:00.0: irq 1277 (277) for MSI/MSI-X
-iwlwifi 0000:02:00.0: edf81e1c
-iwlwifi 0000:02:00.0: c9933e1c
-iwlwifi 0000:02:00.0: c9933de8
-iwlwifi 0000:02:00.0: PCI INT A disabled
+Which doesn't say much at all, but..
 
-# lsmod | grep iwl
-iwlwifi               179689  0 
-mac80211              231218  1 iwlwifi
-compat_firmware_class     5816  1 iwlwifi
-cfg80211              161549  2 iwlwifi,mac80211
-compat                 28095  4 iwlwifi,mac80211,compat_firmware_class,cfg80211
-led_class               2525  2 iwlwifi,compat
 
-# uname -a
-Linux xenserver 2.6.32.12-0.7.1 #6 SMP Mon Apr 16 19:31:06 EDT 2012 i686 i686 i386 GNU/Linux
+> I had a short query with lautriv on #linux-wireless this afternoon:
+> * mwl8k kernel-module was autoloaded
+> * wlan0 interface got fired up
+> * ESSID was accepted
+> * logs reported 802.11bgn support is active
+> * (he tested on Linux-3.3.3)
+> 
+> With WPA/WPA2 lautriv had some problems as his installation was
+> missing wpasupplicant.
+> He setup a classic /etc/network/interfaces.
+> After resetting his router mwl8k worked nicely.
+> 
+> Unfortunately, he was on the run and promised me to send logs and do
+> more testing this evening.
 
-For some reason there is no wlan0 when I run ifconfig -a and when I try to get it up I get:
+..but this is pretty interesting.  I thought that the only available
+8361p firmware used an incompatible firmware API, and I didn't know
+of the existence of an apparently compatible firmware.
 
-# ifconfig wlan0 up
-wlan0: unbekannte Schnittstelle: Kein passendes Gerät gefunden
 
-In proc:
+> So, Lennert if you want more testing - What? How? etc.
 
-# cat /proc/net/wireless 
-Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
- face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
+For one, the output of 'iw phy', please.
 
-Nothing...
+Also, does monitor mode work?  Do you get plausible channel/rxpower
+values in tcpdump in monitor mode?
 
-Maybe some thoughts?
+Are there any messages in the syslog about failing commands?
 
-Cheers,
-Dominik
+
+thanks,
+Lennert
