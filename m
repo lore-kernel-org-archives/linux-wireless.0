@@ -1,63 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:35413 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966124Ab2DLW3s (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:42394 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753064Ab2D1X0N convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 18:29:48 -0400
+	Sat, 28 Apr 2012 19:26:13 -0400
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
-References: <20120411231102.GA6404@kroah.com>
-	<CAJyhjX2KrfSJW64PJMTHou9zSojsfA1iNT-WahinfMBce_B=BA@mail.gmail.com>
-	<20120412002927.GA23167@kroah.com>
-	<CAMP44s3Jh-t07A+i82qbAMQyEN0oWTmKk5BJcst942gFdD0=VA@mail.gmail.com>
-	<20120412011313.GA23764@kroah.com>
-	<CAMP44s2q+bQE3-zsX4bs=sQDt4jf8eE5bwZ8V88UjodjRyAjog@mail.gmail.com>
-	<20120412144626.GA14868@kroah.com>
-	<CAMP44s1T4EVwpzDuV_vV0Zh-5WcPCwdw9eeOfL17Geqp_UFN-Q@mail.gmail.com>
-	<CA+55aFwKYYgZcBX=L-q_6UdvkvFai+yjzgVxq7cA+HLL-Zojhw@mail.gmail.com>
-	<CAMP44s14SQont1wyMeOuWcXUT3U5Tgnoj9mbbgOdVXY_hN0+-w@mail.gmail.com>
-	<CA+55aFyLEJsz1yvu4bYe+RHdhLd-XXEScxtAgje=fyuUM+1XxA@mail.gmail.com>
-	<CAMP44s0yPPqFUO4963MhNb8+c_A=xJi4-eFPJ3s+a1TJ8ZfTtQ@mail.gmail.com>
-	<CA+55aFwaOGbD6S_7So34ZuANG-6fZXZhEah8G0X7McDGhionSg@mail.gmail.com>
-Date: Fri, 13 Apr 2012 01:29:46 +0300
-Message-ID: <CAMP44s06jrPBzf5Lt86-GDxD_PxqcaeJgmYS4tJhcvDdf=J5zA@mail.gmail.com> (sfid-20120413_003007_333057_1509BCB4)
-Subject: Re: [ 00/78] 3.3.2-stable review
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Sergio Correia <lists@uece.net>, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"John W. Linville" <linville@tuxdriver.com>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CAJfuBxwz2PmNY37VB7Wx+GdQcOcS6Y96EM_JNtvs-dyv-imL6g@mail.gmail.com>
+References: <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com>
+	<20120427094007.GU3157@wantstofly.org>
+	<CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
+	<20120427094637.GV3157@wantstofly.org>
+	<CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
+	<20120427095842.GW3157@wantstofly.org>
+	<CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
+	<20120427101732.GX3157@wantstofly.org>
+	<CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
+	<CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
+	<20120427185809.GZ3157@wantstofly.org>
+	<CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
+	<CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
+	<CAJfuBxw7YFAC9CLAGNmg3nM_g2xH2vuiz07D-3xOcyn2XuP5vA@mail.gmail.com>
+	<CA+icZUVT6kvqj47x26FU2qjbMHc=jr9_Lso=zduf_cmcSrv=UQ@mail.gmail.com>
+	<CAJfuBxwz2PmNY37VB7Wx+GdQcOcS6Y96EM_JNtvs-dyv-imL6g@mail.gmail.com>
+Date: Sun, 29 Apr 2012 01:26:10 +0200
+Message-ID: <CA+icZUXrGuY+0GLJCmL9CH7i7vnvXAyAE2vXNAXM_3Q30B4nPA@mail.gmail.com> (sfid-20120429_012619_309906_A80A4FA3)
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Jim Cromie <jim.cromie@gmail.com>
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	lautriv <admin@coldplug.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 13, 2012 at 1:07 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Thu, Apr 12, 2012 at 3:04 PM, Felipe Contreras
-> <felipe.contreras@gmail.com> wrote:
->>
->> Sure, but removing that patch from the stable tree is not going the
->> change that information; we already know the patch is wrong.
+On Sun, Apr 29, 2012 at 1:11 AM, Jim Cromie <jim.cromie@gmail.com> wrote:
+> On Sat, Apr 28, 2012 at 4:49 PM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+>> On Sun, Apr 29, 2012 at 12:36 AM, Jim Cromie <jim.cromie@gmail.com> wrote:
 >
-> .. and we wait until it has been fixed in mainline so that we *know*
-> that information doesn't get lost.
+>>>>> As already pointed out, no Marwell WLAN hardware here. Marvell comics
+>>>>> of course :-).
+>
+> (I had to leave that one..:-)
+>
+>
+>
+>>>>
+>>>> A new tarball from lautriv with same outputs as before, but now tested
+>>>> with Linux-3.4-rc4.
+>>>>
+>>>> - Sedat -
+>>>
+>>>
+>>> heres my logs, using firmware extracted by Sedat's script,
+>>> and the patch on mwl8k.c
+>>>
+>>> bottom-line, it appears to be working.
+>>>
+>>> its contents are a bit more pedantic, and includes data for
+>>> another wifi card (rtl8180 based) also in the box.
+>>> It was obtained by this script:
+>>>
+>>> #!/bin/bash
+>>>
+>>> # dmesg (Linux-3.3.3)
+>>> # e_n_a (/etc/network/interfaces)
+>>> # ifconfig output
+>>> # iwconfig output
+>>> # iw_phy output
+>>> # ps_axu (WPA) output
+>>>
+>>> devs="wlan0 wlan1"
+>>> apmac=00:14:d1:e8:65:0a
+>>>
+>>> loudly () {
+>>>    echo "# $@"
+>>>    fname=`echo $@ | sed -e 's/ /-/g'`
+>>>    $@ 2> $fname-err | tee $fname
+>>>    [ $? != 0 ] && echo non-zero exit on $fname: $?
+>>>    [ -s $fname-err ] || rm $fname-err
+>>> }
+>>>
+>>> ( iw --debug event -f > iw-event-f )&
+>>> pid_event=$!
+>>>
+>>> for N in 0 1 ; do
+>>>    loudly iw dev wlan$N interface add fish$N type monitor # flags none
+>>>    loudly iw dev fish$N set channel 8
+>>>    loudly ifconfig fish$N up
+>>>    ( tcpdump -i fish$N -s 65000 -p -U -w  fish$N.dump )&
+>>>    pid_dump_fish$N=$!
+>>> done
+>>>
+>>> loudly iw list
+>>>
+>>> #loudly iwspy
+>>> # gives: Interface doesn't support wireless statistic collection
+>>>
+>>> for dev in $devs ; do
+>>>    loudly ifconfig $dev
+>>>    loudly iwconfig $dev
+>>>    loudly iwlist $dev scan
+>>>    loudly iw dev $dev info
+>>>    loudly iw dev $dev link
+>>>    loudly iw dev $dev scan
+>>>    loudly iw dev $dev survey dump
+>>> done
+>>>
+>>> for phy in $phys ; do
+>>>    loudly iw phy $phy info
+>>> done
+>>>
+>>> # these are unsupported on wlan0
+>>> loudly iw dev wlan1 survey dump
+>>> loudly iw dev wlan1 station dump
+>>> loudly iw dev wlan1 station get $apmac
+>>>
+>>>
+>>> for N in 0 1 ; do
+>>>    loudly iw dev fish$N del
+>>> done
+>>>
+>>> kill $pid_dump_fish0 $pid_dump_fish0
+>>> kill $pid_event
+>>>
+>>> dmesg > dmesg
+>>>
+>>> grep -vE '^#|key' /etc/network/interfaces > e_n_a
+>>>
+>>> exit
+>>
+>> Hi Jim,
+>>
+>> thanks for your testing and the nice testcase-script!
+>>
+>> lautriv you wanna run some more tests with Jim's script?
+>>
+>> Jim, how stable/fast/reliable is your WLAN connection?
+>> Suspend/resume tested?
+>
+> I havent tested reliability in any way.
+> in fact, I havent tested any data-xfer per se,
+> will do an iperf test soon.
+>
+> That said, bitrate is quite low, I havent looked at why.
+>
+> jimc@chumly:~/projects/lx/wifi/mwl8k-8361p-logs$ grep -i MBit *
+> iw-dev-wlan0-link:      tx bitrate: 11.0 MBit/s
+> iw-dev-wlan1-link:      tx bitrate: 1.0 MBit/s
+> iw-dev-wlan1-station-dump:      tx bitrate:     1.0 MBit/s
+> iw-dev-wlan1-station-get-00:14:d1:e8:65:0a:     tx bitrate:     1.0 MBit/s
+>
+> my laptop is much faster than both cards in the soekris box, to same AP
+>
+> Connected to 00:14:d1:e8:65:0a (on wlan0)
+>        SSID: yoduh
+>        freq: 2447
+>        RX: 191134302 bytes (2120068 packets)
+>        TX: 17440426 bytes (120666 packets)
+>        signal: -45 dBm
+>        tx bitrate: 54.0 MBit/s
+>
+>        bss flags:
+>        dtim period:    0
+>        beacon int:     100
+>
+>
+> If you all have some suggestions on this, Id like to hear them.
+> And of course, any other testing you'd like too.
+>
+>
+>>
+>> Hope this helps to get native Linux support for 8361p.
+>
+> hear hear.
+> FWIW,  I pulled this card out of a dead Netgear WNR854T,
+> which is linux based (and GPL compliant)
+>
+>> Regards,
+>> - Sedat -
+>>
+>> P.S.: BTW, only to clarify it should be "e_n_i" as short-form for
+>> /etc/network/interfaces file, but e_n_a sounds more female and nicer
+>> :-).
+>
+> I caught that, but it wasnt worth "correcting" ;-)
+>
+> thanks
+> Jim
 
-So why don't we pick potentially dangerous patches that might benefit
-from some testing, put them in 'stable', and if there are problems,
-make sure they get fixed in upstream first? Or for that matter totally
-broken patches we want to make sure they get fixed in upstream.
+Unfortunately, [1] says not much about debugging.
+Anyway, Lennert has some new informations.
+Let's see what the experts will say.
 
-Because the priority of the 'stable' tree is *stability*. Is it not?
+- Sedat -
 
-But what you are saying is: *before* the final review, even a hint
-that the patch might cause problems is reason enough to drop it from
-stable, but *after* the review, if we know the patch is totally
-broken, then it's the opposite; we really want it in.
-
--- 
-Felipe Contreras
+[1] http://wireless.kernel.org/en/users/Drivers/mwl8k
