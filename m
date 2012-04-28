@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.watchguard.com ([206.191.171.101]:21935 "EHLO
-	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750992Ab2DBV6R convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 17:58:17 -0400
-From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
-Date: Mon, 2 Apr 2012 21:58:16 +0000
-Message-ID: <82DC76E2-7235-4EF5-BB23-CDFC4B61CBA8@watchguard.com> (sfid-20120402_235821_002212_42290C6E)
-References: <4F57B7E6.1050103@candelatech.com>
- <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com>
- <4F735EF5.3010708@candelatech.com>
-In-Reply-To: <4F735EF5.3010708@candelatech.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mms3.broadcom.com ([216.31.210.19]:4507 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758346Ab2D1B5P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2012 21:57:15 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] brcmfmac: postpone interrupt register function
+Date: Fri, 27 Apr 2012 18:56:58 -0700
+Message-ID: <1335578219-4224-4-git-send-email-frankyl@broadcom.com> (sfid-20120428_035721_999117_21E3B68F)
+In-Reply-To: <1335578219-4224-1-git-send-email-frankyl@broadcom.com>
+References: <1335578219-4224-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+For out of band interrupt which is going to be introduced shortly,
+the interrupt register function must be called after firmware is
+downloaded. This patch moves it from brcmf_sdbrcm_probe to
+brcmf_sdbrcm_bus_init.
 
-On Mar 28, 2012, at 11:56 AM, Ben Greear wrote:
+Reviewed-by: pieter-paul giesberts <pieterpg@broadcom.com>
+Reviewed-by: arend van spriel <arend@broadcom.com>
+Signed-off-by: franky lin <frankyl@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-> On 03/07/2012 11:45 AM, Bryan Phillippe wrote:
->> 
->> Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
-> 
-> I'm still seeing this and related warnings on 3.3.0.  At least some
-> of them comes from calls the 'hostapd' process makes (I printed
-> current->comm in the warning).
-> 
-> I am not having luck writing a simple script that reproduce this,
-> but my application that creates a VAP and bunch of virtual station
-> hits it every time on startup.
-> 
-> Bryan:  Do you have a simple script that reproduces this problem?
-
-Hi Ben.  I apologize for the delay in responding; I was out of town
-for a week.  No, I do not.  Which is frustrating, because it was
-happening pretty reliably for me before, but it's much more
-difficult to force to happen now.  In the past, it was switching
-back and forth between AP and client mode (kill hostapd, start
-wpa_supplicant, for example).  Or restarting hostapd frequently
-in different radio modes.
-
-> Johannes:  Any ideas on likely causes of this problem?  Might help
-> me zero in on the problem quicker...
-
-If I've been following the thread accurately, it looks like some
-headway has been made on this and some fixes checked in?  I'd like
-to retest, if that is the case.  I'm using compat-wireless trees
-downloaded as tarballs - do you have a version you recommend I test
-with?
-
-Thanks,
---
--bp
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 46fc16f..b82edaf 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3507,6 +3507,12 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
+ 	brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+ 			       SBSDIO_FUNC1_CHIPCLKCSR, saveclk, &err);
+ 
++	if (ret == 0) {
++		ret = brcmf_sdcard_intr_reg(bus->sdiodev);
++		if (ret != 0)
++			brcmf_dbg(ERROR, "intr register failed:%d\n", ret);
++	}
++
+ 	/* If we didn't come up, turn off backplane clock */
+ 	if (bus_if->state != BRCMF_BUS_DATA)
+ 		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
+@@ -3967,15 +3973,6 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 		goto fail;
+ 	}
+ 
+-	/* Register interrupt callback, but mask it (not operational yet). */
+-	brcmf_dbg(INTR, "disable SDIO interrupts (not interested yet)\n");
+-	ret = brcmf_sdcard_intr_reg(bus->sdiodev);
+-	if (ret != 0) {
+-		brcmf_dbg(ERROR, "FAILED: sdcard_intr_reg returned %d\n", ret);
+-		goto fail;
+-	}
+-	brcmf_dbg(INTR, "registered SDIO interrupt function ok\n");
+-
+ 	brcmf_dbg(INFO, "completed!!\n");
+ 
+ 	/* if firmware path present try to download and bring up bus */
+-- 
+1.7.9.5
 
 
