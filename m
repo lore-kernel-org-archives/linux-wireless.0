@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44677 "EHLO nbd.name"
+Received: from mms3.broadcom.com ([216.31.210.19]:4504 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752327Ab2DOKPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Apr 2012 06:15:52 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 9/9] ath9k_hw: increase tx abort timeout for half/quarter channels
-Date: Sun, 15 Apr 2012 12:15:41 +0200
-Message-Id: <1334484941-27673-9-git-send-email-nbd@openwrt.org> (sfid-20120415_121606_567419_79706972)
-In-Reply-To: <1334484941-27673-8-git-send-email-nbd@openwrt.org>
-References: <1334484941-27673-1-git-send-email-nbd@openwrt.org>
- <1334484941-27673-2-git-send-email-nbd@openwrt.org>
- <1334484941-27673-3-git-send-email-nbd@openwrt.org>
- <1334484941-27673-4-git-send-email-nbd@openwrt.org>
- <1334484941-27673-5-git-send-email-nbd@openwrt.org>
- <1334484941-27673-6-git-send-email-nbd@openwrt.org>
- <1334484941-27673-7-git-send-email-nbd@openwrt.org>
- <1334484941-27673-8-git-send-email-nbd@openwrt.org>
+	id S1758776Ab2D1B5P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Apr 2012 21:57:15 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] brcmfmac: check bus state for status
+Date: Fri, 27 Apr 2012 18:56:57 -0700
+Message-ID: <1335578219-4224-3-git-send-email-frankyl@broadcom.com> (sfid-20120428_035722_540146_83A36BEB)
+In-Reply-To: <1335578219-4224-1-git-send-email-frankyl@broadcom.com>
+References: <1335578219-4224-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/mac.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+Bus state should be the correct flag for bus status. Use it instead
+of result from previous function call for backplane clock switch.
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index f7bd253..04ef775 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -133,8 +133,16 @@ EXPORT_SYMBOL(ath9k_hw_updatetxtriglevel);
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 12d9dc9..46fc16f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3508,7 +3508,7 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
+ 			       SBSDIO_FUNC1_CHIPCLKCSR, saveclk, &err);
  
- void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
- {
-+	int maxdelay = 1000;
- 	int i, q;
+ 	/* If we didn't come up, turn off backplane clock */
+-	if (!ret)
++	if (bus_if->state != BRCMF_BUS_DATA)
+ 		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
  
-+	if (ah->curchan) {
-+		if (IS_CHAN_HALF_RATE(ah->curchan))
-+			maxdelay *= 2;
-+		else if (IS_CHAN_QUARTER_RATE(ah->curchan))
-+			maxdelay *= 4;
-+	}
-+
- 	REG_WRITE(ah, AR_Q_TXD, AR_Q_TXD_M);
- 
- 	REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
-@@ -142,7 +150,7 @@ void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
- 	REG_SET_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
- 
- 	for (q = 0; q < AR_NUM_QCU; q++) {
--		for (i = 0; i < 1000; i++) {
-+		for (i = 0; i < maxdelay; i++) {
- 			if (i)
- 				udelay(5);
- 
+ exit:
 -- 
-1.7.3.2
+1.7.9.5
+
 
