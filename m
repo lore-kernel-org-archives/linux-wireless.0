@@ -1,56 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40977 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369Ab2DYAoP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 20:44:15 -0400
-Received: by iadi9 with SMTP id i9so1713268iad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 17:44:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANK3ZEcGEs6xSn8tgniXCGVN50VadYaY2ZvV0Fis236O19nqNQ@mail.gmail.com>
-References: <CANK3ZEcGEs6xSn8tgniXCGVN50VadYaY2ZvV0Fis236O19nqNQ@mail.gmail.com>
-Date: Tue, 24 Apr 2012 17:44:14 -0700
-Message-ID: <CANK3ZEczOgsru2BZ=sLnYxx_3St872y0-qAbYBV-PkhpNioNxQ@mail.gmail.com> (sfid-20120425_024418_641933_D406883B)
-Subject: Re: Survey dump does not seem to work with SONY USB Wireless LAN
- Adapter UWA-BR100
-From: Aseem Sharma <aseem.sharma19@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44809 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754882Ab2D2ATW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2012 20:19:22 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, arend@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/4] bcma: add bcma_core_pci_fixcfg()
+Date: Sun, 29 Apr 2012 02:18:51 +0200
+Message-Id: <1335658732-24351-4-git-send-email-hauke@hauke-m.de> (sfid-20120429_021954_233550_E7C8DB05)
+In-Reply-To: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
+References: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+This code is based on code from pcicore_fixcfg() in brcmsmac. This
+patch is part of the move of pci specific code from brcmsmac to bcma.
 
-I was previously using Cisco Aironet wireless adapter (it uses ath5k
-driver); using which I was able to get the survey dump using the following
-command:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_pci.c            |   19 +++++++++++++++++++
+ include/linux/bcma/bcma_driver_pci.h |    5 +++++
+ 2 files changed, 24 insertions(+)
 
-root@as75:~# iw phy phy0 interface add mon0 type monitor
-root@as75:~# ifconfig mon0 up
-root@as75:~# iw dev mon0 survey dump
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index 9492066..472d14f 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -168,12 +168,31 @@ static void bcma_pcicore_serdes_workaround(struct bcma_drv_pci *pc)
+ 		                     tmp & ~BCMA_CORE_PCI_PLL_CTRL_FREQDET_EN);
+ }
+ 
++static void bcma_core_pci_fixcfg(struct bcma_drv_pci *pc)
++{
++	struct bcma_device *core = pc->core;
++	u16 val16, core_index;
++	uint regoff;
++
++	regoff = BCMA_CORE_PCI_SPROM(BCMA_CORE_PCI_SPROM_PI_OFFSET);
++	core_index = (u16)core->core_index;
++
++	val16 = pcicore_read16(pc, regoff);
++	if (((val16 & BCMA_CORE_PCI_SPROM_PI_MASK) >> BCMA_CORE_PCI_SPROM_PI_SHIFT)
++	     != core_index) {
++		val16 = (core_index << BCMA_CORE_PCI_SPROM_PI_SHIFT) |
++			(val16 & ~BCMA_CORE_PCI_SPROM_PI_MASK);
++		pcicore_write16(pc, regoff, val16);
++	}
++}
++
+ /**************************************************
+  * Init.
+  **************************************************/
+ 
+ static void __devinit bcma_core_pci_clientmode_init(struct bcma_drv_pci *pc)
+ {
++	bcma_core_pci_fixcfg(pc);
+ 	bcma_pcicore_serdes_workaround(pc);
+ }
+ 
+diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
+index 20c9f96..5b0542c 100644
+--- a/include/linux/bcma/bcma_driver_pci.h
++++ b/include/linux/bcma/bcma_driver_pci.h
+@@ -87,6 +87,9 @@ struct pci_dev;
+ #define BCMA_CORE_PCI_PCICFG2			0x0600	/* PCI config space 2 (rev >= 8) */
+ #define BCMA_CORE_PCI_PCICFG3			0x0700	/* PCI config space 3 (rev >= 8) */
+ #define BCMA_CORE_PCI_SPROM(wordoffset)		(0x0800 + ((wordoffset) * 2)) /* SPROM shadow area (72 bytes) */
++#define  BCMA_CORE_PCI_SPROM_PI_OFFSET		0	/* first word */
++#define   BCMA_CORE_PCI_SPROM_PI_MASK		0xf000	/* bit 15:12 */
++#define   BCMA_CORE_PCI_SPROM_PI_SHIFT		12	/* bit 15:12 */
+ 
+ /* SBtoPCIx */
+ #define BCMA_CORE_PCI_SBTOPCI_MEM		0x00000000
+@@ -202,7 +205,9 @@ struct bcma_drv_pci {
+ };
+ 
+ /* Register access */
++#define pcicore_read16(pc, offset)		bcma_read16((pc)->core, offset)
+ #define pcicore_read32(pc, offset)		bcma_read32((pc)->core, offset)
++#define pcicore_write16(pc, offset, val)	bcma_write16((pc)->core, offset, val)
+ #define pcicore_write32(pc, offset, val)	bcma_write32((pc)->core, offset, val)
+ 
+ extern void __devinit bcma_core_pci_init(struct bcma_drv_pci *pc);
+-- 
+1.7.9.5
 
-Survey data from mon0
-        frequency:                      2412 MHz
-        noise:                          -95 dBm
-        channel active time:            11813 ms
-        channel busy time:              300 ms
-        channel receive time:           237 ms
-        channel transmit time:          0 ms
-
-However, when I run the same commands after connecting SONY USB Wireless
-LAN Adapter UWA-BR100 (which internally uses ath9k_htc driver) I do not seem
-to get any output. Also, the command is successful (as I am running echo $?
-which returns ‘0’)
-
-My questions:
-1. Is there any other command or proc/sys interface from where I can
-retreive this information?
-2. Is there any other command option that I can use to retreive this
-information?
-3. Is there a patch for the above said driver that I can use?
-
-Any help will be really appreciated.
-
-Thanks in advance,
-Aseem
-(Newbie with Linux drivers)
