@@ -1,67 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:47889 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762Ab2DJEDj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 00:03:39 -0400
-Subject: Re: 3.2.8/amd64 full interrupt hangs and deadlocks under big
- network copies (page allocation failure)
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: Larry.Finger@lwfinger.net, marc@merlins.org,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20120409.153452.1284163346306246866.davem@davemloft.net>
-References: <20120409.143710.879746943062854492.davem@davemloft.net>
-	 <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 Apr 2012 05:56:20 +0200
-Message-ID: <1334030180.13293.98.camel@edumazet-glaptop> (sfid-20120410_060419_812930_E308DB45)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44817 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754933Ab2D2ATY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2012 20:19:24 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, arend@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/4] bcma: add bcma_core_pci_config_fixup()
+Date: Sun, 29 Apr 2012 02:18:52 +0200
+Message-Id: <1335658732-24351-5-git-send-email-hauke@hauke-m.de> (sfid-20120429_021956_510839_214C75F5)
+In-Reply-To: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
+References: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-04-09 at 15:34 -0400, David Miller wrote:
-> From: Eric Dumazet <eric.dumazet@gmail.com>
-> Date: Mon, 09 Apr 2012 21:11:12 +0200
-> 
-> > I think Marc posted stack traces showing problem on transmit side.
->  ...
-> > I dont really understand how it can happen, with MTU=1500
-> 
-> Depending upon the configuration and the driver, wireless can need
-> more headroom.  For encryption an extra 8 bytes are necessary, and the
-> driver may request a variable amount of extra headroom via
-> ->hw.extra_tx_headroom
-> 
-> What wireless device are we dealing with again?
+This code is based on code from pcie_misc_config_fixup() in brcmsmac.
+This patch is part of the move of pci specific code from brcmsmac to
+bcma.
 
-Problem seems related to tailroom needed by mac80211
-(IEEE80211_ENCRYPT_TAILROOM = 18 bytes)
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/driver_pci.c            |   18 ++++++++++++++++++
+ include/linux/bcma/bcma_driver_pci.h |    4 ++++
+ 2 files changed, 22 insertions(+)
 
-So we must reallocate skb->head, thats impressive nobody cares.
-
-[ 3007.249687] ieee80211_skb_resize(skb=ffff8802329846e8) cloned=1 head_need=0 tail_need=18 skb->len=1494 ksize=4096 tailroom=0 headroom=2282
-[ 3007.249693] ieee80211_skb_resize(skb=ffff8802329846e8) cloned=0 head_need=0 tail_need=0 skb->len=1526 ksize=8192 tailroom=64 headroom=2250
-
-Ouch... skb_tailroom() seems wrong ... it seems pskb_expand_head() is really suboptimal.
-
-It appears tcp_sendmsg() tries to fill skb completely, with no available tailroom :
-
-                        if (skb_tailroom(skb) > 0) {
-                                /* We have some space in skb head. Superb! */
-                                if (copy > skb_tailroom(skb))
-                                        copy = skb_tailroom(skb);
-                                err = skb_add_data_nocache(sk, skb, from, copy);
-                                if (err)
-                                        goto do_fault;
-                        } else {
-
-
-Shouldnt we take into account dev->needed_tailroom ?
-
-I'll submit a pskb_expand_head() fix asap.
-
-
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index 472d14f..9a96f14 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -186,6 +186,23 @@ static void bcma_core_pci_fixcfg(struct bcma_drv_pci *pc)
+ 	}
+ }
+ 
++/* Fix MISC config to allow coming out of L2/L3-Ready state w/o PRST */
++/* Needs to happen when coming out of 'standby'/'hibernate' */
++static void bcma_core_pci_config_fixup(struct bcma_drv_pci *pc)
++{
++	u16 val16;
++	uint regoff;
++
++	regoff = BCMA_CORE_PCI_SPROM(BCMA_CORE_PCI_SPROM_MISC_CONFIG);
++
++	val16 = pcicore_read16(pc, regoff);
++
++	if (!(val16 & BCMA_CORE_PCI_SPROM_L23READY_EXIT_NOPERST)) {
++		val16 |= BCMA_CORE_PCI_SPROM_L23READY_EXIT_NOPERST;
++		pcicore_write16(pc, regoff, val16);
++	}
++}
++
+ /**************************************************
+  * Init.
+  **************************************************/
+@@ -194,6 +211,7 @@ static void __devinit bcma_core_pci_clientmode_init(struct bcma_drv_pci *pc)
+ {
+ 	bcma_core_pci_fixcfg(pc);
+ 	bcma_pcicore_serdes_workaround(pc);
++	bcma_core_pci_config_fixup(pc);
+ }
+ 
+ void __devinit bcma_core_pci_init(struct bcma_drv_pci *pc)
+diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
+index 5b0542c..41da581 100644
+--- a/include/linux/bcma/bcma_driver_pci.h
++++ b/include/linux/bcma/bcma_driver_pci.h
+@@ -90,6 +90,10 @@ struct pci_dev;
+ #define  BCMA_CORE_PCI_SPROM_PI_OFFSET		0	/* first word */
+ #define   BCMA_CORE_PCI_SPROM_PI_MASK		0xf000	/* bit 15:12 */
+ #define   BCMA_CORE_PCI_SPROM_PI_SHIFT		12	/* bit 15:12 */
++#define  BCMA_CORE_PCI_SPROM_MISC_CONFIG	5	/* word 5 */
++#define   BCMA_CORE_PCI_SPROM_L23READY_EXIT_NOPERST	0x8000	/* bit 15 */
++#define   BCMA_CORE_PCI_SPROM_CLKREQ_OFFSET_REV5	20	/* word 20 for srom rev <= 5 */
++#define   BCMA_CORE_PCI_SPROM_CLKREQ_ENB	0x0800	/* bit 11 */
+ 
+ /* SBtoPCIx */
+ #define BCMA_CORE_PCI_SBTOPCI_MEM		0x00000000
+-- 
+1.7.9.5
 
