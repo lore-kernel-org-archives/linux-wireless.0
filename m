@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:39270 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752003Ab2DKGIp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 02:08:45 -0400
-Subject: [PATCH] net: allow pskb_expand_head() to get maximum tailroom
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Marc MERLIN <marc@merlins.org>
-Cc: David Miller <davem@davemloft.net>, Larry.Finger@lwfinger.net,
-	bhutchings@solarflare.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-In-Reply-To: <20120411052733.GA17352@merlins.org>
-References: <20120409.143710.879746943062854492.davem@davemloft.net>
-	 <4F83316F.20504@lwfinger.net> <1333998672.3007.245.camel@edumazet-glaptop>
-	 <20120409.153452.1284163346306246866.davem@davemloft.net>
-	 <1334030180.13293.98.camel@edumazet-glaptop>
-	 <20120410051127.GA32048@merlins.org>
-	 <1334038263.2907.1.camel@edumazet-glaptop>
-	 <20120411052733.GA17352@merlins.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 11 Apr 2012 08:08:39 +0200
-Message-ID: <1334124519.5300.2246.camel@edumazet-glaptop> (sfid-20120411_080855_815551_CA3B462E)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44538 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754647Ab2D2AFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2012 20:05:16 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/8] ssb/bcma/bcm47xx: extend boardinfo and sprom
+Date: Sun, 29 Apr 2012 02:04:05 +0200
+Message-Id: <1335657853-23925-1-git-send-email-hauke@hauke-m.de> (sfid-20120429_020520_981380_EB05112F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marc Merlin reported many order-1 allocations failures in TX path on its
-wireless setup, that dont make any sense with MTU=1500 network, and non
-SG capable hardware.
+This patch series fixes the boardinfo for ssb based devices by removing 
+board_rev from the struct, this should be fetched from sprom. In 
+addition a boardinfo struct was added to bcma.
+The pci sprom parsing code was extended for bcma to provide all 
+attributes needed by brcmsmac and that code was also copied to ssb.
 
-Turns out part of the problem comes from pskb_expand_head() not using
-ksize() to get exact head size given by kmalloc(). Doing the same thing
-than __alloc_skb() allows more tailroom in skb and can prevent future
-reallocations.
+This is based on wireless-testing/master.
 
-As a bonus, struct skb_shared_info becomes cache line aligned.
+Hauke Mehrtens (8):
+  ssb: remove rev from boardinfo
+  MIPS: bcm47xx: refactor fetching board data
+  bcma: add boardinfo struct
+  MIPS: bcm47xx: read baordrev without prefix from sprom
+  ssb/bcma: fill attribute alpha2 from sprom
+  ssb: fill board_rev attribute from sprom
+  bcma: read out some additional sprom attributes
+  bcma/ssb: parse new attributes from sprom
 
-Reported-by: Marc MERLIN <marc@merlins.org>
-Tested-by: Marc MERLIN <marc@merlins.org>
-Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
----
- net/core/skbuff.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ arch/mips/bcm47xx/setup.c                    |   11 +-
+ arch/mips/bcm47xx/sprom.c                    |   26 +++++
+ arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    9 ++
+ drivers/bcma/host_pci.c                      |    3 +
+ drivers/bcma/sprom.c                         |  149 +++++++++++++++++++++++++-
+ drivers/net/wireless/b43/bus.c               |    6 +-
+ drivers/net/wireless/b43/main.c              |    4 +-
+ drivers/net/wireless/b43legacy/main.c        |    2 +-
+ drivers/net/wireless/b43legacy/phy.c         |    4 +-
+ drivers/net/wireless/b43legacy/radio.c       |   10 +-
+ drivers/ssb/pci.c                            |   88 +++++++++++++--
+ include/linux/bcma/bcma.h                    |    7 ++
+ include/linux/ssb/ssb.h                      |    1 -
+ include/linux/ssb/ssb_regs.h                 |   61 ++++++++++-
+ 14 files changed, 347 insertions(+), 34 deletions(-)
 
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index baf8d28..e598400 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -952,9 +952,11 @@ int pskb_expand_head(struct sk_buff *skb, int nhead, int ntail,
- 		goto adjust_others;
- 	}
- 
--	data = kmalloc(size + sizeof(struct skb_shared_info), gfp_mask);
-+	data = kmalloc(size + SKB_DATA_ALIGN(sizeof(struct skb_shared_info)),
-+		       gfp_mask);
- 	if (!data)
- 		goto nodata;
-+	size = SKB_WITH_OVERHEAD(ksize(data));
- 
- 	/* Copy only real data... and, alas, header. This should be
- 	 * optimized for the cases when header is void.
-
+-- 
+1.7.9.5
 
