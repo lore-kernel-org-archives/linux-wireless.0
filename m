@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46192 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754422Ab2DJAuV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 20:50:21 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44782 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753201Ab2D2ATS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2012 20:19:18 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/11] iwlwifi: remove unneeded struct declarations
-Date: Mon,  9 Apr 2012 17:46:53 -0700
-Message-Id: <1334018821-30416-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120410_025027_098695_33CE716E)
-In-Reply-To: <1334018821-30416-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334018821-30416-1-git-send-email-wey-yi.w.guy@intel.com>
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, arend@broadcom.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/4] bcma: implement setting core clock mode to dynamic
+Date: Sun, 29 Apr 2012 02:18:49 +0200
+Message-Id: <1335658732-24351-2-git-send-email-hauke@hauke-m.de> (sfid-20120429_021953_209983_643487FA)
+In-Reply-To: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
+References: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch is based on code from _ai_clkctl_cc() in brcmsmac.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/bcma/core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 319f900..a1fc439 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -43,8 +43,6 @@
- #include "iwl-io.h"
- #include "iwl-op-mode.h"
- 
--struct iwl_tx_queue;
--struct iwl_queue;
- struct iwl_host_cmd;
- 
- /*This file includes the declaration that are internal to the
+diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
+index 893f6e0..98e243c 100644
+--- a/drivers/bcma/core.c
++++ b/drivers/bcma/core.c
+@@ -77,7 +77,7 @@ void bcma_core_set_clockmode(struct bcma_device *core,
+ 			pr_err("HT force timeout\n");
+ 		break;
+ 	case BCMA_CLKMODE_DYNAMIC:
+-		pr_warn("Dynamic clockmode not supported yet!\n");
++		bcma_set32(core, BCMA_CLKCTLST, ~BCMA_CLKCTLST_FORCEHT);
+ 		break;
+ 	}
+ }
 -- 
-1.7.0.4
+1.7.9.5
 
