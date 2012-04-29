@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:30887 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750821Ab2DYGcn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 02:32:43 -0400
-Message-ID: <4F979A86.7010809@qca.qualcomm.com> (sfid-20120425_083246_240614_F1793B63)
-Date: Wed, 25 Apr 2012 09:32:38 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: include in.h explicitly
-References: <1335236330-871-1-git-send-email-mcgrof@do-not-panic.com>
-In-Reply-To: <1335236330-871-1-git-send-email-mcgrof@do-not-panic.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45020 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755555Ab2D2AwC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2012 20:52:02 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 19/19] brcmsmac: handle non pci in ai_deviceremoved()
+Date: Sun, 29 Apr 2012 02:50:43 +0200
+Message-Id: <1335660643-26368-20-git-send-email-hauke@hauke-m.de> (sfid-20120429_025209_039843_25762795)
+In-Reply-To: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
+References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/24/2012 05:58 AM, Luis R. Rodriguez wrote:
-> From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-> 
-> Do not assume anyone before us includes it for us.
-> 
-> Signed-off-by: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+This is based on code from the Broadcom SDK.
 
-Thanks, applied.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-Kalle
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index dd4698d..6d8b721 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -816,6 +816,9 @@ bool ai_deviceremoved(struct si_pub *sih)
+ 
+ 	sii = (struct si_info *)sih;
+ 
++	if (sii->icbus->hosttype != BCMA_HOSTTYPE_PCI)
++		return false;
++
+ 	pci_read_config_dword(sii->pcibus, PCI_VENDOR_ID, &w);
+ 	if ((w & 0xFFFF) != PCI_VENDOR_ID_BROADCOM)
+ 		return true;
+-- 
+1.7.9.5
+
