@@ -1,33 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ivanich.tenet.odessa.ua ([85.238.100.22]:44918 "EHLO
-	ivanich.org.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752828Ab2DPWTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 18:19:32 -0400
-Received: from mail.ivanich.od.ua ([85.238.100.22] helo=ivanich.org.ua)
-	by ivanich.org.ua with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <spams@ivanich.org.ua>)
-	id 1SJtqc-0005SQ-Ay
-	for linux-wireless@vger.kernel.org; Tue, 17 Apr 2012 00:52:34 +0300
-From: spams@ivanich.org.ua
-To: linux-wireless@vger.kernel.org
-Subject: Regression in kernel-3.4-rcx with rtl8192ce
-Date: Tue, 17 Apr 2012 00:52:23 +0300
-Message-ID: <2054318.iQACctbcH2@ivanich.org.ua> (sfid-20120417_001936_283344_0382ED37)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46218 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751617Ab2D2NWD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Apr 2012 09:22:03 -0400
+Message-ID: <4F9D4073.200@hauke-m.de> (sfid-20120429_152207_253421_1E9AB011)
+Date: Sun, 29 Apr 2012 15:21:55 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
+References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de> <4F9CF839.1040401@broadcom.com>
+In-Reply-To: <4F9CF839.1040401@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm using rtl8188ce in AP mode with hostapd, after upgrade to 3.4-rcx 
-kernel(tried 3.4-rc2,rc3 and latest source from wireless-next.git) I can't 
-connect to my AP.
-AP Log:
-Apr 16 23:31:39 localhost hostapd: wlan0: STA d8:b3:cf:d1:a0:58 IEEE 802.11: 
-authenticated
-Apr 16 23:31:39 localhost hostapd: wlan0: STA d8:b3:cf:d1:a0:58 IEEE 802.11: 
-Station sent an invalid association request
+On 04/29/2012 10:13 AM, Arend van Spriel wrote:
+> On 04/29/2012 02:50 AM, Hauke Mehrtens wrote:
+>> I have not completely runtime tested these patches as I do not have a
+>> PCI(e) devices currently supported by brcmsmac. My SoC (BCM4718) and
+>> the PCI devices connected to my SoC (BCM43224) are currently not
+>> working with brcmsmac, but they are failing much later that without
+>> these patches.
+> 
+> I will test this patch series as well on PCI(e) devices. So you do have
+> a bcm43224 card, but no laptop to fit it in? Just wondering. I will send
+> the results.
+> 
+> Gr. AvS
+> 
+Hi Arend,
 
-Tried disabling and enabling different options in hostapd.conf but with no 
-luck. With kernels-3.3.x it works just fine.
-Thank you. 
+Thanks for testing these patches. My bcm43224 is directly soldered on
+the main board where also the bcm4718 is on, there is no connector or
+something like that between the bcm4718 and the bcm43224, it is
+impossible to remove the bcm43224 and plug it into a laptop. The bcm4718
+has some problems with the PCIe bus see comment on bcma_wflush16() in
+drivers/net/wireless/brcm80211/brcmsmac/dma.h.
+
+I now finally got the bcm43224 a little bit working, I was able to scan
+for networks, but I was unable to connect to one, I just saw 2 networks
+form devices on my desk, not the other ~15 my Intel card sees. The
+bcm43224 should just be used for 5GHz on my device and the sprom is also
+just configuration for 5GHz operation and I have only some 2.4 GHz
+access points laying around here, so that could be the problem.
+
+The Wifi of the bcm4718 is still not working for me. The wifi core has a
+core rev of 17, I handled it the same as core rev 23, but I am getting
+the following errors and after that the system freezes.
+
+[   80.232000] ieee80211 phy1: wl1: wlc_coreinit: ucode did not
+self-suspend!
+[   80.240000] ieee80211 phy1: wlc_coreinit: txfifo mismatch: ucode size
+111 driver size 28518 index 5
+[   80.380000] ieee80211 phy1: wl1: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   80.388000] ieee80211 phy1: wl1: psmdebug 0x00ff8cd4, phydebug
+0x00000000, psm_brc 0x0000
+... (~6 times the same 2 lines)
+[   81.132000] ieee80211 phy1: wl1: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   81.144000] ieee80211 phy1: wl1: psmdebug 0x00ff8cd4, phydebug
+0x00000000, psm_brc 0x0000
+[   81.156000] ieee80211 phy1: brcms_ops_bss_info_changed: qos enabled:
+false (implement)
+[   81.164000] ieee80211 phy1: brcms_ops_config: change power-save mode:
+false (implement)
+[   81.256000] ieee80211 phy1: wl1: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   81.268000] ieee80211 phy1: wl1: psmdebug 0x00ff8cd4, phydebug
+0x00000000, psm_brc 0x0000
+... (~3 times the same 2 lines)
+[   81.708000] ieee80211 phy1: wl1: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   81.720000] ieee80211 phy1: wl1: psmdebug 0x00ff8cd4, phydebug
+0x00000000, psm_brc 0x0000
+[   81.732000] ieee80211 phy1: wl1: fifo 0: descriptor error
+[   81.736000] ieee80211 phy1: wl1: fatal error, reinitializing
+
+b43 is working in access pint mode with the wifi core of the bcm4718.
+
+Hauke
