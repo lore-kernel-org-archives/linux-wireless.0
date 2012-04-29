@@ -1,180 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3443 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754868Ab2DKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:53:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 1/9] brcm80211: fmac: make brcmf_net_attach() static
-Date: Wed, 11 Apr 2012 11:52:43 +0200
-Message-ID: <1334137971-3972-2-git-send-email-arend@broadcom.com> (sfid-20120411_115334_409874_2EFA4772)
-In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44951 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755155Ab2D2Avg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2012 20:51:36 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 07/19] brcmsmac: remove pcicore_hwup()
+Date: Sun, 29 Apr 2012 02:50:31 +0200
+Message-Id: <1335660643-26368-8-git-send-email-hauke@hauke-m.de> (sfid-20120429_025157_329335_C9369944)
+In-Reply-To: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
+References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_net_attach() is only used within dhd_linux.c so
-it does not need to be extern. This patch makes the function static.
+This is now done by bcma_core_pci_config_fixup() in drivers/bcma/driver_pci.c
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    1 -
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |  116 ++++++++++----------
- 2 files changed, 58 insertions(+), 59 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    1 -
+ drivers/net/wireless/brcm80211/brcmsmac/nicpci.c  |   30 ---------------------
+ drivers/net/wireless/brcm80211/brcmsmac/nicpci.h  |    1 -
+ 3 files changed, 32 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 07686a7..9f63701 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -632,7 +632,6 @@ extern const struct bcmevent_name bcmevent_names[];
- extern uint brcmf_c_mkiovar(char *name, char *data, uint datalen,
- 			  char *buf, uint len);
- 
--extern int brcmf_net_attach(struct brcmf_pub *drvr, int idx);
- extern int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
- 
- extern s32 brcmf_exec_dcmd(struct net_device *dev, u32 cmd, void *arg, u32 len);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 2a1e5ae..153d369 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -843,6 +843,64 @@ static const struct net_device_ops brcmf_netdev_ops_pri = {
- 	.ndo_set_rx_mode = brcmf_netdev_set_multicast_list
- };
- 
-+static int brcmf_net_attach(struct brcmf_pub *drvr, int ifidx)
-+{
-+	struct net_device *ndev;
-+	u8 temp_addr[ETH_ALEN] = {
-+		0x00, 0x90, 0x4c, 0x11, 0x22, 0x33};
-+
-+	brcmf_dbg(TRACE, "ifidx %d\n", ifidx);
-+
-+	ndev = drvr->iflist[ifidx]->ndev;
-+	ndev->netdev_ops = &brcmf_netdev_ops_pri;
-+
-+	/*
-+	 * We have to use the primary MAC for virtual interfaces
-+	 */
-+	if (ifidx != 0) {
-+		/* for virtual interfaces use the primary MAC  */
-+		memcpy(temp_addr, drvr->mac, ETH_ALEN);
-+
-+	}
-+
-+	if (ifidx == 1) {
-+		brcmf_dbg(TRACE, "ACCESS POINT MAC:\n");
-+		/*  ACCESSPOINT INTERFACE CASE */
-+		temp_addr[0] |= 0X02;	/* set bit 2 ,
-+			 - Locally Administered address  */
-+
-+	}
-+	ndev->hard_header_len = ETH_HLEN + drvr->hdrlen;
-+	ndev->ethtool_ops = &brcmf_ethtool_ops;
-+
-+	drvr->rxsz = ndev->mtu + ndev->hard_header_len +
-+			      drvr->hdrlen;
-+
-+	memcpy(ndev->dev_addr, temp_addr, ETH_ALEN);
-+
-+	/* attach to cfg80211 for primary interface */
-+	if (!ifidx) {
-+		drvr->config = brcmf_cfg80211_attach(ndev, drvr->dev, drvr);
-+		if (drvr->config == NULL) {
-+			brcmf_dbg(ERROR, "wl_cfg80211_attach failed\n");
-+			goto fail;
-+		}
-+	}
-+
-+	if (register_netdev(ndev) != 0) {
-+		brcmf_dbg(ERROR, "couldn't register the net device\n");
-+		goto fail;
-+	}
-+
-+	brcmf_dbg(INFO, "%s: Broadcom Dongle Host Driver\n", ndev->name);
-+
-+	return 0;
-+
-+fail:
-+	ndev->netdev_ops = NULL;
-+	return -EBADE;
-+}
-+
- int
- brcmf_add_if(struct device *dev, int ifidx, char *name, u8 *mac_addr)
- {
-@@ -1021,64 +1079,6 @@ int brcmf_bus_start(struct device *dev)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index daa7f25..fd99e7b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -876,7 +876,6 @@ int ai_pci_fixcfg(struct si_pub *sih)
+ 	/* Fixup PI in SROM shadow area to enable the correct PCI core access */
+ 	/* check 'pi' is correct and fix it if not */
+ 	pcicore_fixcfg(sii->pch);
+-	pcicore_hwup(sii->pch);
  	return 0;
  }
  
--int brcmf_net_attach(struct brcmf_pub *drvr, int ifidx)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
+index e57a5b1..c217f8d 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
+@@ -500,28 +500,6 @@ static void pcie_war_serdes(struct pcicore_info *pi)
+ 	}
+ }
+ 
+-/* Fix MISC config to allow coming out of L2/L3-Ready state w/o PRST */
+-/* Needs to happen when coming out of 'standby'/'hibernate' */
+-static void pcie_misc_config_fixup(struct pcicore_info *pi)
 -{
--	struct net_device *ndev;
--	u8 temp_addr[ETH_ALEN] = {
--		0x00, 0x90, 0x4c, 0x11, 0x22, 0x33};
+-	u16 val16;
 -
--	brcmf_dbg(TRACE, "ifidx %d\n", ifidx);
+-	val16 = bcma_read16(pi->core,
+-			    PCIEREGOFFS(sprom[SRSH_PCIE_MISC_CONFIG]));
 -
--	ndev = drvr->iflist[ifidx]->ndev;
--	ndev->netdev_ops = &brcmf_netdev_ops_pri;
--
--	/*
--	 * We have to use the primary MAC for virtual interfaces
--	 */
--	if (ifidx != 0) {
--		/* for virtual interfaces use the primary MAC  */
--		memcpy(temp_addr, drvr->mac, ETH_ALEN);
--
+-	if ((val16 & SRSH_L23READY_EXIT_NOPERST) == 0) {
+-		val16 |= SRSH_L23READY_EXIT_NOPERST;
+-		bcma_write16(pi->core,
+-			     PCIEREGOFFS(sprom[SRSH_PCIE_MISC_CONFIG]), val16);
 -	}
--
--	if (ifidx == 1) {
--		brcmf_dbg(TRACE, "ACCESS POINT MAC:\n");
--		/*  ACCESSPOINT INTERFACE CASE */
--		temp_addr[0] |= 0X02;	/* set bit 2 ,
--			 - Locally Administered address  */
--
--	}
--	ndev->hard_header_len = ETH_HLEN + drvr->hdrlen;
--	ndev->ethtool_ops = &brcmf_ethtool_ops;
--
--	drvr->rxsz = ndev->mtu + ndev->hard_header_len +
--			      drvr->hdrlen;
--
--	memcpy(ndev->dev_addr, temp_addr, ETH_ALEN);
--
--	/* attach to cfg80211 for primary interface */
--	if (!ifidx) {
--		drvr->config = brcmf_cfg80211_attach(ndev, drvr->dev, drvr);
--		if (drvr->config == NULL) {
--			brcmf_dbg(ERROR, "wl_cfg80211_attach failed\n");
--			goto fail;
--		}
--	}
--
--	if (register_netdev(ndev) != 0) {
--		brcmf_dbg(ERROR, "couldn't register the net device\n");
--		goto fail;
--	}
--
--	brcmf_dbg(INFO, "%s: Broadcom Dongle Host Driver\n", ndev->name);
--
--	return 0;
--
--fail:
--	ndev->netdev_ops = NULL;
--	return -EBADE;
 -}
 -
- static void brcmf_bus_detach(struct brcmf_pub *drvr)
+-/* Needs to happen when coming out of 'standby'/'hibernate' */
+-static void pcie_war_pci_setup(struct pcicore_info *pi)
+-{
+-	pcie_misc_config_fixup(pi);
+-}
+-
+ /* ***** Functions called during driver state changes ***** */
+ void pcicore_attach(struct pcicore_info *pi, int state)
  {
- 	brcmf_dbg(TRACE, "Enter\n");
+@@ -531,14 +509,6 @@ void pcicore_attach(struct pcicore_info *pi, int state)
+ 	pcie_war_serdes(pi);
+ }
+ 
+-void pcicore_hwup(struct pcicore_info *pi)
+-{
+-	if (!pi || ai_get_buscoretype(pi->sih) != PCIE_CORE_ID)
+-		return;
+-
+-	pcie_war_pci_setup(pi);
+-}
+-
+ void pcicore_up(struct pcicore_info *pi, int state)
+ {
+ 	if (!pi || ai_get_buscoretype(pi->sih) != PCIE_CORE_ID)
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.h b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.h
+index 21271b4..7d7e5e5 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.h
+@@ -65,7 +65,6 @@ extern struct pcicore_info *pcicore_init(struct si_pub *sih,
+ 					 struct bcma_device *core);
+ extern void pcicore_deinit(struct pcicore_info *pch);
+ extern void pcicore_attach(struct pcicore_info *pch, int state);
+-extern void pcicore_hwup(struct pcicore_info *pch);
+ extern void pcicore_up(struct pcicore_info *pch, int state);
+ extern void pcicore_down(struct pcicore_info *pch, int state);
+ extern u8 pcicore_find_pci_capability(struct pci_dev *dev, u8 req_cap_id,
 -- 
-1.7.5.4
-
+1.7.9.5
 
