@@ -1,63 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51646 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44613 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752500Ab2DVWDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 18:03:35 -0400
+	id S1754882Ab2D2AF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2012 20:05:26 -0400
 From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/7] compat-wireless: ath6kl: add config options for SDIO and USB
-Date: Mon, 23 Apr 2012 00:03:16 +0200
-Message-Id: <1335132199-21320-4-git-send-email-hauke@hauke-m.de> (sfid-20120423_000337_504030_7562C978)
-In-Reply-To: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
-References: <1335132199-21320-1-git-send-email-hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/8] ssb: fill board_rev attribute from sprom
+Date: Sun, 29 Apr 2012 02:04:11 +0200
+Message-Id: <1335657853-23925-7-git-send-email-hauke@hauke-m.de> (sfid-20120429_020534_958793_66AD91C3)
+In-Reply-To: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
+References: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath6kl now supports USB and SDIO based devices, this patch adds the
-config options for them.
----
- config.mk |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+This attribute is now used in b43 driver and should be filled for all
+sprom versions.
 
-diff --git a/config.mk b/config.mk
-index d2373b9..a718257 100644
---- a/config.mk
-+++ b/config.mk
-@@ -265,6 +265,11 @@ export CONFIG_COMPAT_ATH9K_RATE_CONTROL=y
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/ssb/pci.c            |    2 ++
+ include/linux/ssb/ssb_regs.h |    1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/drivers/ssb/pci.c b/drivers/ssb/pci.c
+index 82589d4..2cb604d 100644
+--- a/drivers/ssb/pci.c
++++ b/drivers/ssb/pci.c
+@@ -458,6 +458,7 @@ static void sprom_extract_r45(struct ssb_sprom *out, const u16 *in)
+ 	SPEX(et0phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET0A, 0);
+ 	SPEX(et1phyaddr, SSB_SPROM4_ETHPHY, SSB_SPROM4_ETHPHY_ET1A,
+ 	     SSB_SPROM4_ETHPHY_ET1A_SHIFT);
++	SPEX(board_rev, SSB_SPROM4_BOARDREV, 0xFFFF, 0);
+ 	if (out->revision == 4) {
+ 		SPEX(alpha2[0], SSB_SPROM4_CCODE, 0xff00, 8);
+ 		SPEX(alpha2[1], SSB_SPROM4_CCODE, 0x00ff, 0);
+@@ -530,6 +531,7 @@ static void sprom_extract_r8(struct ssb_sprom *out, const u16 *in)
+ 		v = in[SPOFF(SSB_SPROM8_IL0MAC) + i];
+ 		*(((__be16 *)out->il0mac) + i) = cpu_to_be16(v);
+ 	}
++	SPEX(board_rev, SSB_SPROM8_BOARDREV, 0xFFFF, 0);
+ 	SPEX(alpha2[0], SSB_SPROM8_CCODE, 0xff00, 8);
+ 	SPEX(alpha2[1], SSB_SPROM8_CCODE, 0x00ff, 0);
+ 	SPEX(boardflags_lo, SSB_SPROM8_BFLLO, 0xFFFF, 0);
+diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
+index d33bd8f..543795f 100644
+--- a/include/linux/ssb/ssb_regs.h
++++ b/include/linux/ssb/ssb_regs.h
+@@ -268,6 +268,7 @@
+ #define  SSB_SPROM3_OFDMGPO		0x107A	/* G-PHY OFDM Power Offset (4 bytes, BigEndian) */
  
- export CONFIG_ATH9K_BTCOEX_SUPPORT=y
- 
-+ifndef CONFIG_COMPAT_KERNEL_2_6_27
-+export CONFIG_ATH6KL=m
-+# export CONFIG_ATH6KL_DEBUG=y
-+endif #CONFIG_COMPAT_KERNEL_2_6_27
-+
- # PCI Drivers
- ifdef CONFIG_PCI
- 
-@@ -502,6 +507,8 @@ export CONFIG_COMPAT_USB_URB_THREAD_FIX=y
- export CONFIG_ATH9K_HTC=m
- # export CONFIG_ATH9K_HTC_DEBUGFS=y
- 
-+export CONFIG_ATH6KL_USB=m
-+
- export CONFIG_BRCMFMAC_USB=y
- 
- # RT2500USB does not require firmware
-@@ -588,10 +595,7 @@ export CONFIG_IWM=m
- export CONFIG_BT_HCIBTSDIO=m
- export CONFIG_BT_MRVL_SDIO=m
- 
--ifndef CONFIG_COMPAT_KERNEL_2_6_27
--export CONFIG_ATH6KL=m
--# export CONFIG_ATH6KL_DEBUG=y
--endif #CONFIG_COMPAT_KERNEL_2_6_27
-+export CONFIG_ATH6KL_SDIO=m
- 
- export CONFIG_BRCMFMAC_SDIO=y
- 
+ /* SPROM Revision 4 */
++#define SSB_SPROM4_BOARDREV		0x0042	/* Board revision */
+ #define SSB_SPROM4_BFLLO		0x0044	/* Boardflags (low 16 bits) */
+ #define SSB_SPROM4_BFLHI		0x0046  /* Board Flags Hi */
+ #define SSB_SPROM4_BFL2LO		0x0048	/* Board flags 2 (low 16 bits) */
 -- 
 1.7.9.5
 
