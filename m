@@ -1,118 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:33515 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756791Ab2DXULT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 16:11:19 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: WarheadsSE <max@warheads.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 24 Apr 2012 13:11:09 -0700
-Subject: RE: [PATCH] mwifiex: add support for SD8786 sdio
-Message-ID: <477F20668A386D41ADCC57781B1F7043083A3CC282@SC-VEXCH1.marvell.com> (sfid-20120424_221127_151288_50598296)
-References: <1335297441-11072-1-git-send-email-max@warheads.net>
-In-Reply-To: <1335297441-11072-1-git-send-email-max@warheads.net>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44966 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755082Ab2D2Avm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Apr 2012 20:51:42 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com, arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 10/19] brcmsmac: remove ai_gpiocontrol()
+Date: Sun, 29 Apr 2012 02:50:34 +0200
+Message-Id: <1335660643-26368-11-git-send-email-hauke@hauke-m.de> (sfid-20120429_025216_060021_5BA829D4)
+In-Reply-To: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
+References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jason,
+This is now done by calling bcma_chipco_gpio_control().
 
-Thanks for the patch.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c  |    9 ---------
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.h  |    2 --
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |    2 +-
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |    2 +-
+ 4 files changed, 2 insertions(+), 13 deletions(-)
 
-> 	modified:   drivers/net/wireless/mwifiex/Kconfig
-> 	- notate additional chipset
-> 	modified:   drivers/net/wireless/mwifiex/sdio.c
-> 	- add definition of id (0x9116)
-> 	- add to switch for firmware load
-> 	- add MODULE_FIRMWARE
-> 	modified:   drivers/net/wireless/mwifiex/sdio.h
-> 	- add definition of default firmware name
-> 
-> Signed-off-by: Jason Plum <max@warheads.net>
-
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Thanks,
-Bing
-
-> ---
->  drivers/net/wireless/mwifiex/Kconfig |    4 ++--
->  drivers/net/wireless/mwifiex/sdio.c  |    7 +++++++
->  drivers/net/wireless/mwifiex/sdio.h  |    1 +
->  3 files changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/Kconfig b/drivers/net/wireless/mwifiex/Kconfig
-> index 2a078ce..48c4c32 100644
-> --- a/drivers/net/wireless/mwifiex/Kconfig
-> +++ b/drivers/net/wireless/mwifiex/Kconfig
-> @@ -10,12 +10,12 @@ config MWIFIEX
->  	  mwifiex.
-> 
->  config MWIFIEX_SDIO
-> -	tristate "Marvell WiFi-Ex Driver for SD8787/SD8797"
-> +	tristate "Marvell WiFi-Ex Driver for SD8786/SD8787/SD8797"
->  	depends on MWIFIEX && MMC
->  	select FW_LOADER
->  	---help---
->  	  This adds support for wireless adapters based on Marvell
-> -	  8787/8797 chipsets with SDIO interface.
-> +	  8786/8787/8797 chipsets with SDIO interface.
-> 
->  	  If you choose to build it as a module, it will be called
->  	  mwifiex_sdio.
-> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-> index f8012e2..74981ab 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/mwifiex/sdio.c
-> @@ -250,6 +250,8 @@ static int mwifiex_sdio_resume(struct device *dev)
->  	return 0;
->  }
-> 
-> +/* Device ID for SD8786 */
-> +#define SDIO_DEVICE_ID_MARVELL_8786   (0x9116)
->  /* Device ID for SD8787 */
->  #define SDIO_DEVICE_ID_MARVELL_8787   (0x9119)
->  /* Device ID for SD8797 */
-> @@ -257,6 +259,7 @@ static int mwifiex_sdio_resume(struct device *dev)
-> 
->  /* WLAN IDs */
->  static const struct sdio_device_id mwifiex_ids[] = {
-> +	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8786)},
->  	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8787)},
->  	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8797)},
->  	{},
-> @@ -1596,6 +1599,9 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
->  	adapter->dev = &func->dev;
-> 
->  	switch (func->device) {
-> +	case SDIO_DEVICE_ID_MARVELL_8786:
-> +		strcpy(adapter->fw_name, SD8786_DEFAULT_FW_NAME);
-> +		break;
->  	case SDIO_DEVICE_ID_MARVELL_8797:
->  		strcpy(adapter->fw_name, SD8797_DEFAULT_FW_NAME);
->  		break;
-> @@ -1804,5 +1810,6 @@ MODULE_AUTHOR("Marvell International Ltd.");
->  MODULE_DESCRIPTION("Marvell WiFi-Ex SDIO Driver version " SDIO_VERSION);
->  MODULE_VERSION(SDIO_VERSION);
->  MODULE_LICENSE("GPL v2");
-> +MODULE_FIRMWARE(SD8786_DEFAULT_FW_NAME);
->  MODULE_FIRMWARE(SD8787_DEFAULT_FW_NAME);
->  MODULE_FIRMWARE(SD8797_DEFAULT_FW_NAME);
-> diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-> index a3fb322..572d7dd 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.h
-> +++ b/drivers/net/wireless/mwifiex/sdio.h
-> @@ -28,6 +28,7 @@
-> 
->  #include "main.h"
-> 
-> +#define SD8786_DEFAULT_FW_NAME "mrvl/sd8786_uapsta.bin"
->  #define SD8787_DEFAULT_FW_NAME "mrvl/sd8787_uapsta.bin"
->  #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
-> 
-> --
-> 1.7.9.4
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index ade9d1b..1b7b172 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -856,15 +856,6 @@ int ai_pci_fixcfg(struct si_pub *sih)
+ 	return 0;
+ }
+ 
+-/* mask&set gpiocontrol bits */
+-u32 ai_gpiocontrol(struct si_pub *sih, u32 mask, u32 val, u8 priority)
+-{
+-	uint regoff;
+-
+-	regoff = offsetof(struct chipcregs, gpiocontrol);
+-	return ai_cc_reg(sih, regoff, mask, val);
+-}
+-
+ /* Enable BT-COEX & Ex-PA for 4313 */
+ void ai_epa_4313war(struct si_pub *sih)
+ {
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+index 7c6108a..62c3a63 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+@@ -200,8 +200,6 @@ extern void ai_clkctl_init(struct si_pub *sih);
+ extern u16 ai_clkctl_fast_pwrup_delay(struct si_pub *sih);
+ extern bool ai_clkctl_cc(struct si_pub *sih, uint mode);
+ extern bool ai_deviceremoved(struct si_pub *sih);
+-extern u32 ai_gpiocontrol(struct si_pub *sih, u32 mask, u32 val,
+-			     u8 priority);
+ 
+ extern void ai_pci_down(struct si_pub *sih);
+ extern void ai_pci_up(struct si_pub *sih);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index e2ec333..f8b0e09 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2208,7 +2208,7 @@ static void brcms_c_gpio_init(struct brcms_c_info *wlc)
+ 		gm |= gc |= BOARD_GPIO_PACTRL;
+ 
+ 	/* apply to gpiocontrol register */
+-	ai_gpiocontrol(wlc_hw->sih, gm, gc, GPIO_DRV_PRIORITY);
++	bcma_chipco_gpio_control(&wlc_hw->d11core->bus->drv_cc, gm, gc);
+ }
+ 
+ static void brcms_ucode_write(struct brcms_hardware *wlc_hw,
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+index c26387b..13b2615 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+@@ -21343,7 +21343,7 @@ void wlc_phy_antsel_init(struct brcms_phy_pub *ppi, bool lut_init)
+ 		write_phy_reg(pi, 0xc8, 0x0);
+ 		write_phy_reg(pi, 0xc9, 0x0);
+ 
+-		ai_gpiocontrol(pi->sh->sih, mask, mask, GPIO_DRV_PRIORITY);
++		bcma_chipco_gpio_control(&pi->d11core->bus->drv_cc, mask, mask);
+ 
+ 		mc = bcma_read32(pi->d11core, D11REGOFFS(maccontrol));
+ 		mc &= ~MCTL_GPOUT_SEL_MASK;
+-- 
+1.7.9.5
 
