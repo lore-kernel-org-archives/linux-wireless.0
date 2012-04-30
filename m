@@ -1,56 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:44440 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017Ab2DVRBO convert rfc822-to-8bit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:57396 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751131Ab2D3HaY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Apr 2012 13:01:14 -0400
-Received: by wibhr17 with SMTP id hr17so1953785wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Apr 2012 10:01:12 -0700 (PDT)
+	Mon, 30 Apr 2012 03:30:24 -0400
+Received: by vcqp1 with SMTP id p1so1849508vcq.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 00:30:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1335110415-12695-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1335110415-12695-1-git-send-email-wey-yi.w.guy@intel.com>
-Date: Sun, 22 Apr 2012 20:01:12 +0300
-Message-ID: <CANUX_P3EUTKsJG=J6tqZMNULbm3E+q8hTbtFz3emQyS8bN7sQw@mail.gmail.com> (sfid-20120422_190147_496942_E2822878)
-Subject: Re: [PATCH 1/1] mac80211: check for non-managed interface
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <CANUX_P2r9ifuj6fVmkfgfX21PMa1Cf_NpYXXup1YVdRLX+bH6w@mail.gmail.com>
+References: <CANUX_P2r9ifuj6fVmkfgfX21PMa1Cf_NpYXXup1YVdRLX+bH6w@mail.gmail.com>
+Date: Mon, 30 Apr 2012 13:00:23 +0530
+Message-ID: <CAD2nsn0fHAJB++DfA5M1xW32rHDV2jAFuwqJ_bVdLqyEz=pRAQ@mail.gmail.com> (sfid-20120430_093031_339287_4051228B)
+Subject: Re: bss table corruption
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 22, 2012 at 19:00, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
-> Average beacon signal only keep tracked by managed interface,
-> give warning and return 0 for the others.
->
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> ---
->  net/mac80211/util.c |    5 +++++
->  1 files changed, 5 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index 89c1e5b..2cbcb6a 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -1799,5 +1799,10 @@ int ieee80211_ave_rssi(struct ieee80211_vif *vif)
->        struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
->        struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
->
-> +       if (sdata->vif.type != NL80211_IFTYPE_STATION) {
-> +               /* non-managed type inferfaces */
-> +               WARN_ON(1);
+Hi Emmanuel,
 
-WARN_ON_ONCE ?
-We don't need to flood the kernel log here
-
-> +               return 0;
-> +       }
->        return ifmgd->ave_beacon_signal;
->  }
-> --
-> 1.7.0.4
+On Mon, Apr 30, 2012 at 10:58 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> For quite a while now (not sure I can tell exactly for how long) we
+> see issues in association and scan list.
+> We send probe before authentication, get the probe response but never
+> send the authentication.
+> Moreover a lot of entries in the BSS list are duplicated.
 >
+> I began to look at it and ended up to understand that these 2 issues
+> are related: we just can't find an existing BSS in the BSS table.
+> Obviously this causes the second issue. The reason was it breaks the
+> association is that ieee80211_probe_auth will never be able to find
+> the IEs of the probe response since we couldn't fetch the BSS when we
+> parsed the probe response. In short:
+>
+>        if (auth_data->bss->proberesp_ies) {
+> always return false.... and we fall back to send yet another probe request.
+>
+> As you probably know, the BSS table is implemented with an Red Black
+> Tree which requires its elements to be comparable. The compare
+> function compares the BSSID which is not always unique (there can be
+> several SSIDs on the same BSSID), so all the IEs are also compared.
+> But is this a good idea ?
+> It seems that since the IEs of an BSS may change from time to time
+> this compare function is not consistent...
+>
+> Just for playing I always return a positive value in cmp_bss (to have
+> all the nodes serialized and avoid the possibility to miss a existing
+> node) and don't rebalance the tree after insertion... the bug
+> disappeared.
+>
+> Thought ?
+>
+> Emmanuel Grumbach
+> egrumbach@gmail.com
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+we are comparing the BSSID of the new entry with the old entry (ie) we
+would return positive (with your latest fix)
+if the BSSID of the new entry > BSSID of the old entry, should not we
+do the same for comparing frequency, ie length and
+ie content.
+just got a doubt if this is by design we have things like this.
+
+
+net/wireless/scan.c |    6 +++---
+  1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 70faadf..fda4eef 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -271,7 +271,7 @@ static int cmp_ies(u8 num, u8 *ies1, size_t len1,
+u8 *ies2, size_t len2)
+
+      /* sort by length first, then by contents */
+      if (ie1[1] != ie2[1])
+-        return ie2[1] - ie1[1];
++        return ie1[1] - ie2[1];
+      return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
+  }
+
+@@ -361,7 +361,7 @@ static int cmp_bss_core(struct cfg80211_bss *a,
+      int r;
+
+      if (a->channel != b->channel)
+-        return b->channel->center_freq - a->channel->center_freq;
++        return a->channel->center_freq - b->channel->center_freq;
+
+      if (is_mesh_bss(a)&&  is_mesh_bss(b)) {
+          r = cmp_ies(WLAN_EID_MESH_ID,
+@@ -433,7 +433,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a,
+
+      /* sort by length first, then by contents */
+      if (ie1[1] != ie2[1])
+-        return ie2[1] - ie1[1];
++        return ie1[1] - ie2[1];
+
+      /* zeroed SSID ie is another indication of a hidden bss */
+      for (i = 0; i<  ie2[1]; i++)
+
+
+-- 
+thanks,
+shafi
