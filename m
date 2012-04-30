@@ -1,37 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eazy.amigager.de ([213.239.192.238]:35073 "EHLO
-	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753007Ab2DRUpW (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:46472 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752266Ab2D3NW6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Apr 2012 16:45:22 -0400
-Received: from x61.home (mnch-5d85c5f6.pool.mediaWays.net [93.133.197.246])
-	by eazy.amigager.de (Postfix) with ESMTPA id D8EE7F30046
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Apr 2012 22:35:48 +0200 (CEST)
-Date: Wed, 18 Apr 2012 22:35:43 +0200
-From: Tino Keitel <tino.keitel@tikei.de>
-To: linux-wireless@vger.kernel.org
-Subject: Power saving features for iwl4965
-Message-ID: <20120418203543.GA16000@x61.home> (sfid-20120418_224526_110569_61770156)
+	Mon, 30 Apr 2012 09:22:58 -0400
+Received: by vbbff1 with SMTP id ff1so2016066vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 06:22:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGxPR-8jATq7pOqe58fy3FspMKrE6K6KiA5cDFabv=T-YOzuLg@mail.gmail.com>
+References: <CAGxPR-8jATq7pOqe58fy3FspMKrE6K6KiA5cDFabv=T-YOzuLg@mail.gmail.com>
+Date: Mon, 30 Apr 2012 18:52:57 +0530
+Message-ID: <CAD2nsn2eccmO_Fd0aBv8naLMVwF2qE_+9J7Beiw8pBwgxLW=Og@mail.gmail.com> (sfid-20120430_152302_095219_F630CE5F)
+Subject: Re: AR9285 (ath9k) network adapter often deauthenticates from a
+ certain network
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Bartosz Brachaczek <b.brachaczek@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sat, Apr 28, 2012 at 3:01 AM, Bartosz Brachaczek
+<b.brachaczek@gmail.com> wrote:
+> Hi,
+>
+> I am often deauthenticated from my network at home. When
+> NetworkManager reconnects after this, the connection sometimes is
+> unusable until full reconnect is manually requested. These
+> deauthendications happen only with my home network (I have a custom
+> "Netia Spot" wireless router from my ISP at home), I have no problems
+> with my university networks.
 
-up to 2.6.38, the iwl4965 driver was able to use power saving features
-by invoking "iwconfig <interface> power on", at least when unsetting
-the broken_powersave variable.
+providing some information regarding the difference between your home
+network and university
+network would be useful, like which is more congested and does your
+home network has some
+sort of security.
 
-2.6.39 introduced a new iwlegacy driver for iwl4965 hardware, which was
-missing power saving.  I was able to port the 2.6.38 driver up to
-kernel 3.1, but it got too complicated for me with 3.2. 
+>
+> I'm attaching syslog output which shows kernel and NetworkManager
+> messages. Kernel was compiled with debugging output enabled for
+> mac80211 and Atheros. As can be seen (use `grep '\(Reason:
+> 6\|user-req\)'`), deauthentications happen quite often but only after
+> two of them my connection was unusable - they are followed by manual
+> disconnect+connect through nm-applet.
+>
+> When connection breaks, `ping` running in the background outputs
+> nothing for a while, and then outputs "Destination Host Unreachable"
+> messages. Trying to run `ping` when the connection is already broken
+> ends in ping exiting after timeout or something.
+>
+> I don't have any problems on Windows 7 on the same machine, although I
+> don't know whether it doesn't have problems with deauthentications or
+> if it is able to always quickly restore the connection.
+>
+> I reported it also to NetworkManager as I suppose that
+> deauthentications are driver bug and failures to restore the
+> connection are NetworkManager bug:
+> https://bugzilla.gnome.org/show_bug.cgi?id=674996
 
-Are there any plans to fix this power usage regression at some point in
-the iwlegacy driver? I think there are still a lot of iwl4965 users out
-there.
+if you can disable the NM and see using supplicant with bg scan enabled helps
+also pls try with the latest compat build
+http://linuxwireless.org/en/users/Download#Where_to_download_bleeding_edge
 
-Please include my address in any replies, as I'm not subscribed.
 
-Regards,
-Tino
+>
+> NetworkManager version: 0.9.4.0 (0.9.2.0 had the same problem, earlier
+> not tested)
+> Kernel version: 3.3.3 (3.0 had the same problem, earlier not tested)
+>
+> Wireless network adapter (lspci -vnn):
+> 02:00.0 Network controller [0280]: Atheros Communications Inc. AR9285 Wireless
+> Network Adapter (PCI-Express) [168c:002b] (rev 01)
+>        Subsystem: AzureWave AW-NB037H 802.11bgn Wireless Half-size
+> Mini PCIe Card [AR9002WB-1NGCD] [1a3b:2c37]
+>        Flags: bus master, fast devsel, latency 0, IRQ 17
+>        Memory at dea00000 (64-bit, non-prefetchable) [size=64K]
+>        Capabilities: [40] Power Management version 3
+>        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
+>        Capabilities: [60] Express Legacy Endpoint, MSI 00
+>        Capabilities: [100] Advanced Error Reporting
+>        Capabilities: [140] Virtual Channel
+>        Capabilities: [160] Device Serial Number 00-15-17-ff-ff-24-14-12
+>        Capabilities: [170] Power Budgeting <?>
+>        Kernel driver in use: ath9k
+>
+>
+>
+> Bartosz Brachaczek
+
+
+
+-- 
+thanks,
+shafi
