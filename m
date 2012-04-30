@@ -1,94 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3444 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754911Ab2DKJxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 05:53:30 -0400
-From: "Arend van Spriel" <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	"Franky Lin" <frankyl@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 6/9] brcm80211: fmac: clean up chip id table
-Date: Wed, 11 Apr 2012 11:52:48 +0200
-Message-ID: <1334137971-3972-7-git-send-email-arend@broadcom.com> (sfid-20120411_115347_216020_E529ACD7)
-In-Reply-To: <1334137971-3972-1-git-send-email-arend@broadcom.com>
-References: <1334137971-3972-1-git-send-email-arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43344 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756574Ab2D3TRt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2012 15:17:49 -0400
+Date: Mon, 30 Apr 2012 15:09:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	javier@cozybit.com, devel@lists.open80211s.org
+Subject: Re: [PATCH 3/4] mac80211: Allow nonHT/HT peering in mesh
+Message-ID: <20120430190935.GF2560@tuxdriver.com> (sfid-20120430_211753_827733_7EE619D7)
+References: <1335498506-9600-1-git-send-email-ashok@cozybit.com>
+ <1335498506-9600-3-git-send-email-ashok@cozybit.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1335498506-9600-3-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+On Thu, Apr 26, 2012 at 08:48:25PM -0700, Ashok Nagarajan wrote:
+> Now that we have protection enabled, allow non-HT and HT20 stations to peer
+> with HT40+/- stations. Peering is still disallowed for HT40+/- mismatch.
+> 
+> Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+> Reviewed-by: Thomas Pedersen <thomas@cozybit.com>
 
-Remove unsupported chip ID and rearrange the list in alphabetical
-order
+  CC      net/mac80211/mesh.o
+net/mac80211/mesh.c: In function ‘mesh_matches_local’:
+net/mac80211/mesh.c:79:28: warning: ‘sta_channel_type’ may be used uninitialized in this function
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   |   40 +++++--------------
- 1 files changed, 11 insertions(+), 29 deletions(-)
+Please don't add warnings!
 
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 5fb17d5..333193f 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -17,17 +17,7 @@
- #ifndef	_BRCM_HW_IDS_H_
- #define	_BRCM_HW_IDS_H_
- 
--#define	BCM4325_D11DUAL_ID	0x431b
--#define	BCM4325_D11G_ID		0x431c
--#define	BCM4325_D11A_ID		0x431d
--
--#define BCM4329_D11N2G_ID	0x432f	/* 4329 802.11n 2.4G device */
--#define BCM4329_D11N5G_ID	0x4330	/* 4329 802.11n 5G device */
--#define BCM4329_D11NDUAL_ID	0x432e
--
--#define BCM4319_D11N_ID		0x4337	/* 4319 802.11n dualband device */
--#define BCM4319_D11N2G_ID	0x4338	/* 4319 802.11n 2.4G device */
--#define BCM4319_D11N5G_ID	0x4339	/* 4319 802.11n 5G device */
-+#define BCM4313_D11N2G_ID	0x4727	/* 4313 802.11n 2.4G device */
- 
- #define BCM43224_D11N_ID	0x4353	/* 43224 802.11n dualband device */
- #define BCM43224_D11N_ID_VEN1	0x0576	/* Vendor specific 43224 802.11n db */
-@@ -37,23 +27,15 @@
- #define BCM43236_D11N_ID	0x4346	/* 43236 802.11n dualband device */
- #define BCM43236_D11N2G_ID	0x4347	/* 43236 802.11n 2.4GHz device */
- 
--#define BCM4313_D11N2G_ID	0x4727	/* 4313 802.11n 2.4G device */
--
--/* Chip IDs */
--#define BCM4313_CHIP_ID		0x4313	/* 4313 chip id */
--#define	BCM4319_CHIP_ID		0x4319	/* 4319 chip id */
--
--#define	BCM43224_CHIP_ID	43224	/* 43224 chipcommon chipid */
--#define	BCM43225_CHIP_ID	43225	/* 43225 chipcommon chipid */
--#define	BCM43421_CHIP_ID	43421	/* 43421 chipcommon chipid */
--#define	BCM43235_CHIP_ID	43235	/* 43235 chipcommon chipid */
--#define	BCM43236_CHIP_ID	43236	/* 43236 chipcommon chipid */
--#define	BCM43238_CHIP_ID	43238	/* 43238 chipcommon chipid */
--#define	BCM4329_CHIP_ID		0x4329	/* 4329 chipcommon chipid */
--#define	BCM4325_CHIP_ID		0x4325	/* 4325 chipcommon chipid */
--#define	BCM4331_CHIP_ID		0x4331	/* 4331 chipcommon chipid */
--#define BCM4336_CHIP_ID		0x4336	/* 4336 chipcommon chipid */
--#define BCM4330_CHIP_ID		0x4330	/* 4330 chipcommon chipid */
--#define BCM6362_CHIP_ID		0x6362	/* 6362 chipcommon chipid */
-+/* Chipcommon Core Chip IDs */
-+#define BCM4313_CHIP_ID		0x4313
-+#define BCM43224_CHIP_ID	43224
-+#define BCM43225_CHIP_ID	43225
-+#define BCM43235_CHIP_ID	43235
-+#define BCM43236_CHIP_ID	43236
-+#define BCM43238_CHIP_ID	43238
-+#define BCM4329_CHIP_ID		0x4329
-+#define BCM4330_CHIP_ID		0x4330
-+#define BCM4331_CHIP_ID		0x4331
- 
- #endif				/* _BRCM_HW_IDS_H_ */
+> ---
+>  net/mac80211/mesh.c |   12 +++++++++---
+>  1 files changed, 9 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+> index 8a952e0..d25cb78 100644
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -76,6 +76,7 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+>  	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+>  	struct ieee80211_local *local = sdata->local;
+>  	u32 basic_rates = 0;
+> +	enum nl80211_channel_type sta_channel_type;
+>  
+>  	/*
+>  	 * As support for each feature is added, check for matching
+> @@ -102,10 +103,15 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+>  	if (sdata->vif.bss_conf.basic_rates != basic_rates)
+>  		goto mismatch;
+>  
+> -	/* disallow peering with mismatched channel types for now */
+> +	if (ie->ht_operation)
+> +		sta_channel_type =
+> +			ieee80211_ht_oper_to_channel_type(ie->ht_operation);
+> +
+> +	/* Disallow HT40+/- mismatch */
+>  	if (ie->ht_operation &&
+> -	    (local->_oper_channel_type !=
+> -	     ieee80211_ht_oper_to_channel_type(ie->ht_operation)))
+> +	    local->_oper_channel_type > NL80211_CHAN_HT20 &&
+> +	    sta_channel_type > NL80211_CHAN_HT20 &&
+> +	    local->_oper_channel_type != sta_channel_type)
+>  		goto mismatch;
+>  
+>  	return true;
+> -- 
+> 1.7.5.4
+> 
+> 
+
 -- 
-1.7.5.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
