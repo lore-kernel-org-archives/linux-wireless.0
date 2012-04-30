@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:47769 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750940Ab2DIWQ3 (ORCPT
+Received: from investici.nine.ch ([217.150.252.179]:39807 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752230Ab2D3O5C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Apr 2012 18:16:29 -0400
-Received: by iagz16 with SMTP id z16so6441268iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Apr 2012 15:16:29 -0700 (PDT)
-Message-ID: <4F835FB9.5020100@lwfinger.net> (sfid-20120410_001633_018344_1767724D)
-Date: Mon, 09 Apr 2012 17:16:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 30 Apr 2012 10:57:02 -0400
+Received: from [217.150.252.179] (confino [217.150.252.179]) (Authenticated sender: ordex@autistici.org) by localhost (Postfix) with ESMTPSA id 38833C8ADA
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 14:56:59 +0000 (UTC)
+Date: Mon, 30 Apr 2012 16:58:04 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi warn_slowpath with 3.*
+Message-ID: <20120430145803.GE2630@ritirata.org> (sfid-20120430_165739_918485_542ADA50)
+References: <20120422182928.GA2854@ritirata.org>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jan Simonson <jan@simonson.se>, linux-wireless@vger.kernel.org
-Subject: Re: RTL8192e-pci NIC
-References: <1502184.lhzNHmlX61@ymer> <4F81B9C4.1010901@lwfinger.net> <2210309.p6dWLepooK@ymer> <4F8306CF.4040503@lwfinger.net> <20120409192630.GB26994@tuxdriver.com>
-In-Reply-To: <20120409192630.GB26994@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="cPi+lWm09sJ+d57q"
+In-Reply-To: <20120422182928.GA2854@ritirata.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/09/2012 02:26 PM, John W. Linville wrote:
-> On Mon, Apr 09, 2012 at 10:57:03AM -0500, Larry Finger wrote:
->
->> As I do not use Fedora, I was not aware of Fusion. Perhaps you could
->> get them to reinstate this driver in their package. In addition, you
->> might post a bug at Redhat in hopes that they will change their
->> standard configuration. As a last resort, you could switch to a
->> distro that includes this driver in their standard kernels.
->
-> Yeah, this is reasonable advice.  I don't know why Fusion droped this
-> package, but it might have been due to me making their life harder by
-> integrating compat-wireless directly into the Fedora kernels.  Since I
-> am no longer doing that, they may be willing to reverse that decision.
->
-> I don't really see including a staging driver in Fedora unless it is
-> clearly on the path to the "normal" part of the kernel.  Any chance
-> of that?
 
-Yes, but not likely very soon. This card is relatively rare, and there are 
-several drivers for more common Realtek devices in staging.
+--cPi+lWm09sJ+d57q
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-@Jan - There is one other option. As you can compile drivers, I will prepare a 
-tested copy of the driver that will compile on all recent kernels, and put the 
-source on my ftp site.
+On Sun, Apr 22, 2012 at 08:29:29PM +0200, Antonio Quartulli wrote:
+> Hello,
+>=20
+> since linux-3.0 (I don't remember if it was the case even before), I'm ge=
+tting
+> this output in dmesg:
+>=20
+> [   53.662990] ------------[ cut here ]------------
+> [   53.663016] WARNING: at drivers/iommu/intel-iommu.c:2911
+> intel_unmap_page+0x14b/0x180()
+> [   53.663047] Hardware name: Latitude E5420
+> [   53.663066] Driver unmaps unmatched page at PFN ffd1a000
 
-Larry
 
+I see that I always get the same addr passed to the unmap function:
+
+[   23.950535] Driver unmaps unmatched page at PFN ffd1a000
+
+is it a coincidence?
+I'm running linux-3.3.3 right now. I can try wireless-testing if it would h=
+elp.
+
+Cheers,
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--cPi+lWm09sJ+d57q
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPnqh7AAoJEFMQTLzJFOZFGWgH/jT8KH/j1Val1MAyDf7Q3Gj9
+0VSTI9AFnc2a6qsc6cThGgyvARdgnHaKpdre+WEpm8H8cwLwC1i7FOdkS8d4+6MK
+gaBjvtcfVc7dRB4XOibVHjLQTP45HceedTEmDcYtaoUG/WRRTFVM1mU0j6roZw+O
+ZfESHvLBKLCCVx2WyT+D+iHTXhSpsNS9JkLCQ5Gw2dU92+0aX10iBwGJ8KkDGyhV
+V6cCxxGe+ZQNgtJIBdU2HVADOmeonpQxTRqzvDGrZ5z/Fyv93kpP6yZmUQ1sAEzN
+xC0ufsNla8fyfpARexos1T3Fmluo3plWtm/H84FH6HJnHkk2rt3A2KHxVQJ6vCA=
+=wU4I
+-----END PGP SIGNATURE-----
+
+--cPi+lWm09sJ+d57q--
