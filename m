@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48158 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755382Ab2DPVJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Apr 2012 17:09:34 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 8/8] ath9k_hw: increase tx abort timeout for half/quarter channels
-Date: Mon, 16 Apr 2012 23:09:25 +0200
-Message-Id: <1334610565-37399-8-git-send-email-nbd@openwrt.org> (sfid-20120416_230946_625881_5C359C57)
-In-Reply-To: <1334610565-37399-7-git-send-email-nbd@openwrt.org>
-References: <1334610565-37399-1-git-send-email-nbd@openwrt.org>
- <1334610565-37399-2-git-send-email-nbd@openwrt.org>
- <1334610565-37399-3-git-send-email-nbd@openwrt.org>
- <1334610565-37399-4-git-send-email-nbd@openwrt.org>
- <1334610565-37399-5-git-send-email-nbd@openwrt.org>
- <1334610565-37399-6-git-send-email-nbd@openwrt.org>
- <1334610565-37399-7-git-send-email-nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42023 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753506Ab2D3RRs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2012 13:17:48 -0400
+Date: Mon, 30 Apr 2012 13:03:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi warn_slowpath with 3.*
+Message-ID: <20120430170337.GA2560@tuxdriver.com> (sfid-20120430_191751_861148_4B63B7EF)
+References: <20120422182928.GA2854@ritirata.org>
+ <20120430145803.GE2630@ritirata.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120430145803.GE2630@ritirata.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/mac.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+On Mon, Apr 30, 2012 at 04:58:04PM +0200, Antonio Quartulli wrote:
+> On Sun, Apr 22, 2012 at 08:29:29PM +0200, Antonio Quartulli wrote:
+> > Hello,
+> > 
+> > since linux-3.0 (I don't remember if it was the case even before), I'm getting
+> > this output in dmesg:
+> > 
+> > [   53.662990] ------------[ cut here ]------------
+> > [   53.663016] WARNING: at drivers/iommu/intel-iommu.c:2911
+> > intel_unmap_page+0x14b/0x180()
+> > [   53.663047] Hardware name: Latitude E5420
+> > [   53.663066] Driver unmaps unmatched page at PFN ffd1a000
+> 
+> 
+> I see that I always get the same addr passed to the unmap function:
+> 
+> [   23.950535] Driver unmaps unmatched page at PFN ffd1a000
+> 
+> is it a coincidence?
+> I'm running linux-3.3.3 right now. I can try wireless-testing if it would help.
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index f7bd253..04ef775 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -133,8 +133,16 @@ EXPORT_SYMBOL(ath9k_hw_updatetxtriglevel);
- 
- void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
- {
-+	int maxdelay = 1000;
- 	int i, q;
- 
-+	if (ah->curchan) {
-+		if (IS_CHAN_HALF_RATE(ah->curchan))
-+			maxdelay *= 2;
-+		else if (IS_CHAN_QUARTER_RATE(ah->curchan))
-+			maxdelay *= 4;
-+	}
-+
- 	REG_WRITE(ah, AR_Q_TXD, AR_Q_TXD_M);
- 
- 	REG_SET_BIT(ah, AR_PCU_MISC, AR_PCU_FORCE_QUIET_COLL | AR_PCU_CLEAR_VMF);
-@@ -142,7 +150,7 @@ void ath9k_hw_abort_tx_dma(struct ath_hw *ah)
- 	REG_SET_BIT(ah, AR_D_GBL_IFS_MISC, AR_D_GBL_IFS_MISC_IGNORE_BACKOFF);
- 
- 	for (q = 0; q < AR_NUM_QCU; q++) {
--		for (i = 0; i < 1000; i++) {
-+		for (i = 0; i < maxdelay; i++) {
- 			if (i)
- 				udelay(5);
- 
+Just for the record, we are seeing a similar problem on RHEL 6.3
+(which has an iwlwifi driver derived from linux-3.2).
+
+	https://bugzilla.redhat.com/show_bug.cgi?id=815998
+
+John
 -- 
-1.7.3.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
