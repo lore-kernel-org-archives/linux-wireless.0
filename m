@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:53143 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759972Ab2DKLpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Apr 2012 07:45:08 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1SHvyz-0007GF-QS
-	for linux-wireless@vger.kernel.org; Wed, 11 Apr 2012 13:45:05 +0200
-Received: from 83.137.242.22 ([83.137.242.22])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 13:45:05 +0200
-Received: from hamelg by 83.137.242.22 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Apr 2012 13:45:05 +0200
-To: linux-wireless@vger.kernel.org
-From: hamelg <hamelg@laposte.net>
-Subject: Re: ath5k phy0: gain calibration timeout
-Date: Wed, 11 Apr 2012 11:39:37 +0000 (UTC)
-Message-ID: <loom.20120411T132832-46@post.gmane.org> (sfid-20120411_134519_950633_E8055A5E)
-References: <20120227031232.GA1190@spacedout.fries.net> <4F4B71F2.1020709@openwrt.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-we0-f174.google.com ([74.125.82.174]:37085 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756192Ab2D3Qii (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2012 12:38:38 -0400
+Received: by wejx9 with SMTP id x9so1914879wej.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 09:38:37 -0700 (PDT)
+From: Anisse Astier <anisse@astier.eu>
+To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Cc: Ivo van Doorn <IvDoorn@gmail.com>, linville@tuxdriver.com,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Anisse Astier <anisse@astier.eu>
+Subject: [PATCH v5 1/3] rt2800: debugfs register access: BBP is 256 bytes big
+Date: Mon, 30 Apr 2012 18:33:31 +0200
+Message-Id: <1335803613-1253-2-git-send-email-anisse@astier.eu> (sfid-20120430_183851_701663_2F0BB6BF)
+In-Reply-To: <1335803613-1253-1-git-send-email-anisse@astier.eu>
+References: <1335803613-1253-1-git-send-email-anisse@astier.eu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@...> writes:
+We're already using BBP for values > 128. Make that explicit and allow
+debugfs access.
 
-> 
-> On 2012-02-27 4:12 AM, David Fries wrote:
-> > Wireless network stopped working after 22 hours with ath5k, I have the
-> > following message repeating, suspending to ram and back was enough to
-> > get it talking again.
-> > ath5k phy0: gain calibration timeout (2462MHz)
-> > 
-> > I revered the following two comments and will see if I run into any
-> > more problems.  I can test patches.
-> > ath5k: We always do full calibration on AR5210
-> > dafae6af0336958e9e2eb67cc5e4e31d6d13b308
-> > ath5k: Calibration re-work
-> > ce169aca0d823d38465127023e3d571816e6666c
-> Please try applying the following two patches:
->
-http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/440-ath5k_calibrate_no_queue_stop.patch;hb=HEAD
->
-http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/441-ath5k_no_agc_recalibration.patch;hb=HEAD
+Signed-off-by: Anisse Astier <anisse@astier.eu>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hello,
-archlinux users are affected by this issue after upgrading the linux kernel in
-3.3.1 :
-https://bbs.archlinux.org/viewtopic.php?id=139270
-Do you known if these two patches have been merged in the mainstream branch ?
-thank you
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 1ce2634..d91f4f6 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -99,7 +99,7 @@
+ #define EEPROM_BASE			0x0000
+ #define EEPROM_SIZE			0x0110
+ #define BBP_BASE			0x0000
+-#define BBP_SIZE			0x0080
++#define BBP_SIZE			0x00ff
+ #define RF_BASE				0x0004
+ #define RF_SIZE				0x0010
+ 
+-- 
+1.7.9.4
 
