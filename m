@@ -1,111 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:56644 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751047Ab2DBN0x convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51645 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755055Ab2D3CzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Apr 2012 09:26:53 -0400
-Received: by dake40 with SMTP id e40so2446596dak.11
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Apr 2012 06:26:52 -0700 (PDT)
+	Sun, 29 Apr 2012 22:55:10 -0400
+Received: by iadi9 with SMTP id i9so3557013iad.19
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2012 19:55:09 -0700 (PDT)
+Message-ID: <4F9DFF0A.7080604@lwfinger.net> (sfid-20120430_045548_045027_E9E59D50)
+Date: Sun, 29 Apr 2012 21:55:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1333365666-4413-2-git-send-email-sgruszka@redhat.com>
-References: <1333365666-4413-1-git-send-email-sgruszka@redhat.com>
-	<1333365666-4413-2-git-send-email-sgruszka@redhat.com>
-Date: Mon, 2 Apr 2012 15:26:52 +0200
-Message-ID: <CAGXE3d9HHCYHmJu6-GUTD=9KZxs3vYq9c-qnRa=pHWabYyWuWQ@mail.gmail.com> (sfid-20120402_152656_489934_9D32ABAA)
-Subject: Re: [PATCH 2/2] rt2x00: do not generate seqno in h/w if QOS is disabled
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: simple w8 <simplew8@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+References: <CAKVccoU7CnhVVQ82U23Yuww6VrTMU4FsjWcWVbk16LNKyQfvOQ@mail.gmail.com> <A872091605A443F48DE1814CF6FAFE25@realtek.com.tw> <CAKVccoUfER_m48BtyMjo3pix2_BmqBZ8kxij_RxDhOLEN5Q-9A@mail.gmail.com> <4F9AF76A.4040607@lwfinger.net> <CAKVccoUbcvO-X5w2pOuOyP=DhK+64opsJm5muznjsOWu==MUcQ@mail.gmail.com> <4F9B63CF.4010005@lwfinger.net> <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com> <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com> <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com> <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com> <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com> <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+In-Reply-To: <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 2, 2012 at 1:21 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> This is workaround H/W or F/W bug, see in code comments. Without the fix
-> ping can receive duplicated ICMP frames while associated with legacy AP.
+On 04/29/2012 08:11 PM, simple w8 wrote:
+> 2012/4/30 simple w8<simplew8@gmail.com>:
+>> 2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
+>>> On 04/29/2012 07:51 PM, simple w8 wrote:
+>>>>
+>>>> 2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
+>>>
+>>>
+>>>>> Get
+>>>>>
+>>>>> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2012-04-26.tar.bz2.
+>>>>> That is the "bleeding-edge" version. As I said in the previous message,
+>>>>> it
+>>>>> will build on your kernel!
+>>>>
+>>>>
+>>>> I didnt remove any mail address i simply forgot to hit the reply all
+>>>> button.
+>>>
+>>>
+>>> That IS removing mail addresses.
+>>>
+>>>
+>>>> Previously i tried to build the subdirectory rtlwifi but that wasnt
+>>>> possible, so build the entry tree compat-wireless and installed it,
+>>>> but the problem about having repeated chars when typing and the mouse
+>>>> freeze continues happening.
+>>>>
+>>>> Now a different problem, i noticed that after kernel-3.3.1 it started
+>>>> appearing less wifi networks, where i used to detect about 10 wifi
+>>>> networks, with kernel>    3.3.1 it only detected about 2 or 3 wifi
+>>>> networks, i reported that to the distro and they said was a problem
+>>>> from upstream since they didnt had changed nothing regarding wifi, and
+>>>> after i installed compat-wireless that was solved. Im running
+>>>> kernel-3.3.4 with compat-wireless and it detects again about 10 wifi
+>>>> networks.
+>>>>
+>>>> Should i report this upstream so it can be fixed still in the
+>>>> kkkkkernel 3.3.4 serie or you ccccccan do it?
+>>>
+>>>
+>>> Whatever patch that fixed that problem will be backported to 3.3.X if it can
+>>> be. Not everything qualifies.
+>>>
+>>>
+>>>> By the way see how the characters "k" and "c" got repeated when i was
+>>>> typing last paragraph.
+>>>
+>>>
+>>> I see them, but they do not happen on my machine, thus I have no idea of the
+>>> cause. So far, you can only say that they don't happen when rtl8192ce is not
+>>> loaded; however, you have no network then either. The problem could be
+>>> anywhere in the network stack.
+>>>
+>>> You said earlier that you tried the Ubuntu Live system. Would it be possible
+>>> to download and try the openSUSE 12.1 Live CD as well? As you have used
+>>> Ubunbtu, you should try the Gnome version.
+>>>
+>>> Larry
+>>
+>> These are the distros that i tried so far and all presented the same
+>> problem i have described:
+>> - Mandriva
+>> - Mageia
+>> - Ubuntu
+>> - Kubuntu
+>> - Caixa Magica
 >
-> Reported-by: Walter Goldens <goldenstranger@yahoo.com>
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> What wifi you have?
+> What distro you run?
+> Do you run NetworManager?
 
-I don't have a better idea right now :) so this workaround looks suitable to me.
+You forgot the "Reply All" again!
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+I run openSUSE 12.1 KDE, and I use NetworkManager.
 
-Thanks for tracking this down Stanislaw!
+I have many wifi devices, including both RTL8188CE and RTL8192CE. At the moment, 
+I am running an RTL8188CE, which has been up for nearly 100 hours without 
+dropping the connection, and with no problems with the keyboard. My kernel is 
+from wireless-testing, which means that my wireless stuff is exactly what you 
+got with compat-wireless.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h      |    1 +
->  drivers/net/wireless/rt2x00/rt2x00mac.c   |   10 ++++++++++
->  drivers/net/wireless/rt2x00/rt2x00queue.c |   15 +++++++++++++--
->  3 files changed, 24 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 8de9bfc..5583214 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -693,6 +693,7 @@ enum rt2x00_state_flags {
->        CONFIG_CHANNEL_HT40,
->        CONFIG_POWERSAVING,
->        CONFIG_HT_DISABLED,
-> +       CONFIG_QOS_DISABLED,
->
->        /*
->         * Mark we currently are sequentially reading TX_STA_FIFO register
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index 2df2eb6..b49773e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -709,9 +709,19 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
->                        rt2x00dev->intf_associated--;
->
->                rt2x00leds_led_assoc(rt2x00dev, !!rt2x00dev->intf_associated);
-> +
-> +               clear_bit(CONFIG_QOS_DISABLED, &rt2x00dev->flags);
->        }
->
->        /*
-> +        * Check for access point which do not support 802.11e . We have to
-> +        * generate data frames sequence number in S/W for such AP, because
-> +        * of H/W bug.
-> +        */
-> +       if (changes & BSS_CHANGED_QOS && !bss_conf->qos)
-> +               set_bit(CONFIG_QOS_DISABLED, &rt2x00dev->flags);
-> +
-> +       /*
->         * When the erp information has changed, we should perform
->         * additional configuration steps. For all other changes we are done.
->         */
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> index f7403cf..5019a3e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-> @@ -213,8 +213,19 @@ static void rt2x00queue_create_tx_descriptor_seq(struct rt2x00_dev *rt2x00dev,
->
->        __set_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags);
->
-> -       if (!test_bit(REQUIRE_SW_SEQNO, &rt2x00dev->cap_flags))
-> -               return;
-> +       if (!test_bit(REQUIRE_SW_SEQNO, &rt2x00dev->cap_flags)) {
-> +               /*
-> +                * rt2800 has a H/W (or F/W) bug, device incorrectly increase
-> +                * seqno on retransmited data (non-QOS) frames. To workaround
-> +                * the problem let's generate seqno in software if QOS is
-> +                * disabled.
-> +                */
-> +               if (test_bit(CONFIG_QOS_DISABLED, &rt2x00dev->flags))
-> +                       __clear_bit(ENTRY_TXD_GENERATE_SEQ, &txdesc->flags);
-> +               else
-> +                       /* H/W will generate sequence number */
-> +                       return;
-> +       }
->
->        /*
->         * The hardware is not able to insert a sequence number. Assign a
-> --
-> 1.7.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Larry
