@@ -1,46 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17857 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758998Ab2DJPQL (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:43988 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559Ab2D3HhP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 11:16:11 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [WIP 11/11] ath9k: do not disable hardware while wow is enabled
-Date: Tue, 10 Apr 2012 20:43:21 +0530
-Message-ID: <1334070801-21708-12-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120410_171621_118201_1D906F18)
-In-Reply-To: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1334070801-21708-1-git-send-email-mohammed@qca.qualcomm.com>
+	Mon, 30 Apr 2012 03:37:15 -0400
+Received: by wejx9 with SMTP id x9so1636696wej.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 00:37:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAD2nsn0fHAJB++DfA5M1xW32rHDV2jAFuwqJ_bVdLqyEz=pRAQ@mail.gmail.com>
+References: <CANUX_P2r9ifuj6fVmkfgfX21PMa1Cf_NpYXXup1YVdRLX+bH6w@mail.gmail.com>
+	<CAD2nsn0fHAJB++DfA5M1xW32rHDV2jAFuwqJ_bVdLqyEz=pRAQ@mail.gmail.com>
+Date: Mon, 30 Apr 2012 10:37:13 +0300
+Message-ID: <CANUX_P0aozz7v9imbrTKZP0j69uDehqV2s-SwgjRZjc2TULQnw@mail.gmail.com> (sfid-20120430_093720_017260_B868C731)
+Subject: Re: bss table corruption
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Mon, Apr 30, 2012 at 10:30, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+> Hi Emmanuel,
+>
+> On Mon, Apr 30, 2012 at 10:58 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> For quite a while now (not sure I can tell exactly for how long) we
+>> see issues in association and scan list.
+>> We send probe before authentication, get the probe response but never
+>> send the authentication.
+>> Moreover a lot of entries in the BSS list are duplicated.
+>>
+>> I began to look at it and ended up to understand that these 2 issues
+>> are related: we just can't find an existing BSS in the BSS table.
+>> Obviously this causes the second issue. The reason was it breaks the
+>> association is that ieee80211_probe_auth will never be able to find
+>> the IEs of the probe response since we couldn't fetch the BSS when we
+>> parsed the probe response. In short:
+>>
+>>        if (auth_data->bss->proberesp_ies) {
+>> always return false.... and we fall back to send yet another probe request.
+>>
+>> As you probably know, the BSS table is implemented with an Red Black
+>> Tree which requires its elements to be comparable. The compare
+>> function compares the BSSID which is not always unique (there can be
+>> several SSIDs on the same BSSID), so all the IEs are also compared.
+>> But is this a good idea ?
+>> It seems that since the IEs of an BSS may change from time to time
+>> this compare function is not consistent...
+>>
+>> Just for playing I always return a positive value in cmp_bss (to have
+>> all the nodes serialized and avoid the possibility to miss a existing
+>> node) and don't rebalance the tree after insertion... the bug
+>> disappeared.
+>>
+>> Thought ?
+>>
+>> Emmanuel Grumbach
+>> egrumbach@gmail.com
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> we are comparing the BSSID of the new entry with the old entry (ie) we
+> would return positive (with your latest fix)
+> if the BSSID of the new entry > BSSID of the old entry, should not we
+> do the same for comparing frequency, ie length and
+> ie content.
+> just got a doubt if this is by design we have things like this.
+>
+>
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Frankly I didn't think about this :-), but I think the current
+behavior is correct even if it is not intuitive. All we need a
+consistent comparison operator. But I don't mind folding you
+suggestion retest and resubmit.
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 9b25299..32608ea 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -310,6 +310,9 @@ static int ath_pci_suspend(struct device *device)
- 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
- 	struct ath_softc *sc = hw->priv;
- 
-+	if (sc->wow_enabled)
-+		return 0;
-+
- 	/* The device has to be moved to FULLSLEEP forcibly.
- 	 * Otherwise the chip never moved to full sleep,
- 	 * when no interface is up.
--- 
-1.7.0.4
-
+> net/wireless/scan.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> index 70faadf..fda4eef 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -271,7 +271,7 @@ static int cmp_ies(u8 num, u8 *ies1, size_t len1,
+> u8 *ies2, size_t len2)
+>
+>      /* sort by length first, then by contents */
+>      if (ie1[1] != ie2[1])
+> -        return ie2[1] - ie1[1];
+> +        return ie1[1] - ie2[1];
+>      return memcmp(ie1 + 2, ie2 + 2, ie1[1]);
+>  }
+>
+> @@ -361,7 +361,7 @@ static int cmp_bss_core(struct cfg80211_bss *a,
+>      int r;
+>
+>      if (a->channel != b->channel)
+> -        return b->channel->center_freq - a->channel->center_freq;
+> +        return a->channel->center_freq - b->channel->center_freq;
+>
+>      if (is_mesh_bss(a)&&  is_mesh_bss(b)) {
+>          r = cmp_ies(WLAN_EID_MESH_ID,
+> @@ -433,7 +433,7 @@ static int cmp_hidden_bss(struct cfg80211_bss *a,
+>
+>      /* sort by length first, then by contents */
+>      if (ie1[1] != ie2[1])
+> -        return ie2[1] - ie1[1];
+> +        return ie1[1] - ie2[1];
+>
+>      /* zeroed SSID ie is another indication of a hidden bss */
+>      for (i = 0; i<  ie2[1]; i++)
+>
+>
+> --
+> thanks,
+> shafi
