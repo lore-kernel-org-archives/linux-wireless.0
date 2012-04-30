@@ -1,33 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38172 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42960 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752951Ab2DMSC3 (ORCPT
+	with ESMTP id S1756256Ab2D3Scs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Apr 2012 14:02:29 -0400
-Date: Fri, 13 Apr 2012 13:52:34 -0400
+	Mon, 30 Apr 2012 14:32:48 -0400
+Date: Mon, 30 Apr 2012 14:22:01 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, arik@wizery.com
-Subject: Re: [PATCH 01/16] wireless/wl12xx/wl1251: move TI WLAN modules to a
- common ti subdirectory
-Message-ID: <20120413175234.GC2616@tuxdriver.com> (sfid-20120413_200233_971749_D5C42818)
-References: <1334137083-13490-1-git-send-email-coelho@ti.com>
- <1334137083-13490-2-git-send-email-coelho@ti.com>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	Madhan Jaganathan <madhanj@qca.qualcomm.com>,
+	Kai Shi <kaishi@qca.qualcomm.com>
+Subject: Re: [PATCH] Revert "ath9k_hw: Fix incorrect spur_freq_sd for AR9003"
+Message-ID: <20120430182200.GC2560@tuxdriver.com> (sfid-20120430_203251_706995_06BDA5A2)
+References: <1335594521-1963-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1334137083-13490-2-git-send-email-coelho@ti.com>
+In-Reply-To: <1335594521-1963-1-git-send-email-rmanohar@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 11, 2012 at 12:37:48PM +0300, Luciano Coelho wrote:
-> Move wl12xx and wl1251 modules into a new drivers/net/wireless/ti
-> directory.  Add a TI WLAN Kconfig option and Makefile to support this
-> change.
+On Sat, Apr 28, 2012 at 11:58:41AM +0530, Rajkumar Manoharan wrote:
+> This reverts commit a844adfd7bee4edc66d337de6c33b348e83552a8.
 > 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> Cc: John W. Linville <linville@tuxdriver.com>
+> spur_freq_sd (for self-corr in AGC) is defined with respect to the
+> center of each 20MHz channel while spur_phase_delta (for self-corr
+> in Rx and spur data filter) is defined with respect to the center
+> of current RF channel.
+> 
+> So in short, we need to subtract spur_freq_sd (for self-corr in AGC)
+> by the offset between the center of primary20 and the center of RF
+> channel in SW. This offset could be +/10 MHz for dynamic 40.
+> 
+> Cc: Madhan Jaganathan <madhanj@qca.qualcomm.com>
+> Signed-off-by: Kai Shi <kaishi@qca.qualcomm.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-ACK
+What actual bug is this causing?  Should this be applied to 3.4?
+
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> index 5358553..11abb97 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> @@ -373,7 +373,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
+>  			else
+>  				spur_subchannel_sd = 0;
+>  
+> -			spur_freq_sd = (freq_offset << 9) / 11;
+> +			spur_freq_sd = ((freq_offset + 10) << 9) / 11;
+>  
+>  		} else {
+>  			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
+> @@ -382,7 +382,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
+>  			else
+>  				spur_subchannel_sd = 1;
+>  
+> -			spur_freq_sd = (freq_offset << 9) / 11;
+> +			spur_freq_sd = ((freq_offset - 10) << 9) / 11;
+>  
+>  		}
+>  
+> -- 
+> 1.7.10
+> 
+> 
 
 -- 
 John W. Linville		Someday the world will need a hero, and you
