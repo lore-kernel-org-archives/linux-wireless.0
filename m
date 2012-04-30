@@ -1,58 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:16512 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674Ab2DUPKU (ORCPT
+Received: from mail-pz0-f51.google.com ([209.85.210.51]:56658 "EHLO
+	mail-pz0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756784Ab2D3VUz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Apr 2012 11:10:20 -0400
-Date: Sat, 21 Apr 2012 18:12:35 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] wireless: at76c50x: allocating too much data
-Message-ID: <20120421151235.GM27101@mwanda> (sfid-20120421_171054_824118_1869D4BE)
-References: <20120420064705.GE22649@elgon.mountain>
- <CAGRGNgVgtAYknmpB_8Q0OpcUWFjTxBistG+RNs1ORDZeckGsWw@mail.gmail.com>
- <20120420091449.GI27101@mwanda>
- <87vcku9sob.fsf@purkki.adurom.net>
- <20120421124523.GS6498@mwanda>
- <alpine.DEB.2.02.1204211548090.1987@hadrien>
- <20120421145140.GU6498@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120421145140.GU6498@mwanda>
+	Mon, 30 Apr 2012 17:20:55 -0400
+Received: by dadz8 with SMTP id z8so4574046dad.10
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 14:20:54 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	javier@cozybit.com, devel@lists.open80211s.org,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH v2 1/4] mac80211: Advertise HT protection mode in IEs
+Date: Mon, 30 Apr 2012 14:20:29 -0700
+Message-Id: <1335820832-18887-1-git-send-email-ashok@cozybit.com> (sfid-20120430_232059_048672_2F1E9731)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 21, 2012 at 05:51:41PM +0300, Dan Carpenter wrote:
-> On Sat, Apr 21, 2012 at 03:51:44PM +0200, Julia Lawall wrote:
-> > Looking for x = ... sizeof(x) ... I get 9 reports.  In most cases it
-> > looks like sizeof(x) is coincidentally the same as the size that is
-> > wanted.  Two cases that look like they could have some noticible
-> > effect are:
-> > 
-> > arch/xtensa/platforms/iss/network.c, line 789
-> > drivers/block/cciss.c, line 4211
-> > 
-> 
-> Clever.  You'd need to restrict it to places where x was a  pointer.
-> That's better than my check which was specific to kmalloc().  (So
-> uh...  I'm going to rewrite mine as well to be more generic.  :P)
-> 
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Reviewed-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ net/mac80211/ibss.c        |    2 +-
+ net/mac80211/ieee80211_i.h |    3 ++-
+ net/mac80211/mesh.c        |    3 ++-
+ net/mac80211/util.c        |    9 +++------
+ 4 files changed, 8 insertions(+), 9 deletions(-)
 
-Hm...  Smatch is not really the right tool here.  By the time Sparse
-gives you the sizeof(foo) information, it just looks like a number
-8.
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 61cd391..bb1a3e6 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -164,7 +164,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		pos = ieee80211_ie_build_ht_cap(pos, &sband->ht_cap,
+ 						sband->ht_cap.cap);
+ 		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
+-						 chan, channel_type);
++						 chan, channel_type, 0);
+ 	}
+ 
+ 	if (local->hw.queues >= IEEE80211_NUM_ACS) {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6cd89d4..ae046b5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1497,7 +1497,8 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			      u16 cap);
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+-			       enum nl80211_channel_type channel_type);
++			       enum nl80211_channel_type channel_type,
++			       u16 prot_mode);
+ 
+ /* internal work items */
+ void ieee80211_work_init(struct ieee80211_local *local);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 598a96a..8a952e0 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -396,7 +396,8 @@ int mesh_add_ht_oper_ie(struct sk_buff *skb,
+ 		return -ENOMEM;
+ 
+ 	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_operation));
+-	ieee80211_ie_build_ht_oper(pos, ht_cap, channel, channel_type);
++	ieee80211_ie_build_ht_oper(pos, ht_cap, channel, channel_type,
++				   sdata->vif.bss_conf.ht_operation_mode);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index d9a747d..22f2216 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1663,7 +1663,8 @@ u8 *ieee80211_ie_build_ht_cap(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       struct ieee80211_channel *channel,
+-			       enum nl80211_channel_type channel_type)
++			       enum nl80211_channel_type channel_type,
++			       u16 prot_mode)
+ {
+ 	struct ieee80211_ht_operation *ht_oper;
+ 	/* Build HT Information */
+@@ -1689,11 +1690,7 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 	    channel_type != NL80211_CHAN_HT20)
+ 		ht_oper->ht_param |= IEEE80211_HT_PARAM_CHAN_WIDTH_ANY;
+ 
+-	/*
+-	 * Note: According to 802.11n-2009 9.13.3.1, HT Protection field and
+-	 * RIFS Mode are reserved in IBSS mode, therefore keep them at 0
+-	 */
+-	ht_oper->operation_mode = 0x0000;
++	ht_oper->operation_mode = cpu_to_le16(prot_mode);
+ 	ht_oper->stbc_param = 0x0000;
+ 
+ 	/* It seems that Basic MCS set and Supported MCS set
+-- 
+1.7.5.4
 
-I hacked up Sparse a bit so it works for simple expressions which
-are one token in from the c tokenizer.  So:
-
-	foo = kmalloc(sizeof(foo), GFP_KERNEL); => error.
-	foo->bar = kmalloc(sizeof(foo->bar), GFP_KERNEL); => tricky.
-
-It's not ideal.  Coccinelle is better for this.
-
-regards,
-dan carpenter
