@@ -1,61 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.ltindia.com ([125.18.18.171]:8155 "EHLO
-	mailout2.ltindia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752905Ab2DYQVy convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44456 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756828Ab2D3VU5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Apr 2012 12:21:54 -0400
-From: Girish Bn <Girish.BN@lnties.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: WiFi Direct - P2P Group Owner mode
-Date: Wed, 25 Apr 2012 16:21:50 +0000
-Message-ID: <45566970CF58C74CB52107862E0541CD1D13ABF6@POCITMSEXMB02.LntUniverse.com> (sfid-20120425_182157_601967_93045586)
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+	Mon, 30 Apr 2012 17:20:57 -0400
+Received: by pbbrp8 with SMTP id rp8so3694706pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 14:20:57 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	javier@cozybit.com, devel@lists.open80211s.org,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH v2 3/4] mac80211: Allow nonHT/HT peering in mesh
+Date: Mon, 30 Apr 2012 14:20:31 -0700
+Message-Id: <1335820832-18887-3-git-send-email-ashok@cozybit.com> (sfid-20120430_232104_429286_94E27057)
+In-Reply-To: <1335820832-18887-1-git-send-email-ashok@cozybit.com>
+References: <1335820832-18887-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Now that we have protection enabled, allow non-HT and HT20 stations to peer
+with HT40+/- stations. Peering is still disallowed for HT40+/- mismatch.
 
-Hi,
-We are backporting the WL1271 driver from Compat Wireless-2.6(2012-02-22) to Linux 2.6.28.2 on LPC313X platform.
-1.      Bootup the system and load all the driver modules
-2.      Started the WPA Supplicant (#./wpa_supplicant -d -Dnl80211 -c /etc/wpa_supplicant.conf -iwlan0 -B)
-3.      Start wpa_cli application
-4.      Run the following commands
-             a.      p2p_find
-             b.      p2p_peers
-             c.      p2p_group_add - Configure the System as Group Owner(GO)
-             d.      wps_pbs - Work in Push Button Mode
-5.      Note down the 8 digit passphrase
-6.      Select the Wi-Fi network name from the iPad and enter the passphrase noted above.
-7.      Check the IP address of the iPad. If the no IP is taken from DHCP, assign a static IP
-8.      Exit the wpa_cli application
-9.      Assign an IP address 169.254.50.100 to System
-10.   Ping between the iPad and System
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Reviewed-by: Thomas Pedersen <thomas@cozybit.com>
+---
+v2:
+	Fix compiler warnings (John)
 
-Please note that establishment of connection between System and iPad/iPhone fails may times and if you try again after waiting for 15 to 30mins, the connection happens successfully.
-However, we are able establish the connection immediately to laptop.
-Let us any steps we are missing to successfully establish the connection without waiting.
+ net/mac80211/mesh.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
 
-Thanks
-Girish
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 8a952e0..0fabb8b 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -76,6 +76,7 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u32 basic_rates = 0;
++	enum nl80211_channel_type sta_channel_type = NL80211_CHAN_NO_HT;
+ 
+ 	/*
+ 	 * As support for each feature is added, check for matching
+@@ -102,10 +103,15 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->vif.bss_conf.basic_rates != basic_rates)
+ 		goto mismatch;
+ 
+-	/* disallow peering with mismatched channel types for now */
++	if (ie->ht_operation)
++		sta_channel_type =
++			ieee80211_ht_oper_to_channel_type(ie->ht_operation);
++
++	/* Disallow HT40+/- mismatch */
+ 	if (ie->ht_operation &&
+-	    (local->_oper_channel_type !=
+-	     ieee80211_ht_oper_to_channel_type(ie->ht_operation)))
++	    local->_oper_channel_type > NL80211_CHAN_HT20 &&
++	    sta_channel_type > NL80211_CHAN_HT20 &&
++	    local->_oper_channel_type != sta_channel_type)
+ 		goto mismatch;
+ 
+ 	return true;
+-- 
+1.7.5.4
 
-
-Thanks & Regards,
-Girish
-L&T IES,
-E-mail ID :Girish.BN@lnties.com
-www.lnties.com
-
-This mail is classified as :
-(  ) L&T IES Proprietary
-(  ) L&T IES Confidential
-(X) L&T IES Internal Use
-( ) L&T IES General Business
-
-Larsen & Toubro Limited
-
-www.larsentoubro.com<https://indmail.lntinfotech.com/owa/redir.aspx?C=2b4a0c51a57b47038127dd84059c7429&URL=http%3a%2f%2fwww.larsentoubro.com>
-
-This Email may contain confidential or privileged information for the intended recipient (s). If you are not the intended recipient, please do not use or disseminate the information, notify the sender and delete it from your system.
-
- Earth Day. Every Day.
