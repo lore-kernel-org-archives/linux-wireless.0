@@ -1,33 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:34910 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759200Ab2DZUIF (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41092 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754933Ab2D3BBi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Apr 2012 16:08:05 -0400
-Date: Thu, 26 Apr 2012 16:07:57 -0400 (EDT)
-Message-Id: <20120426.160757.1741140873728970494.davem@davemloft.net> (sfid-20120426_220816_464140_67221EA3)
-To: mcgrof@do-not-panic.com
-Cc: zambrano@broadcom.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	arend@broadcom.com, joe@perches.com
-Subject: Re: [PATCH] b44: properly use pr_fmt()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAB=NE6VR6hPqoUmRH=YVr+MKu+Sn8tq2asv957zfD+SVWzk75A@mail.gmail.com>
-References: <CAB=NE6WBw3aJrch0JvxZ7jGb_rFW5Z4XWvYc1KqsBqBu+G8mjw@mail.gmail.com>
-	<CAB=NE6ViDGHPn=OsqFK1rJb-5J+1xzvf3h9+Rd-MgmWpn-T2fA@mail.gmail.com>
-	<CAB=NE6VR6hPqoUmRH=YVr+MKu+Sn8tq2asv957zfD+SVWzk75A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 29 Apr 2012 21:01:38 -0400
+Received: by iadi9 with SMTP id i9so3470031iad.19
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Apr 2012 18:01:38 -0700 (PDT)
+Message-ID: <4F9DE46E.6030103@lwfinger.net> (sfid-20120430_030143_328420_039BECD1)
+Date: Sun, 29 Apr 2012 20:01:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: simple w8 <simplew8@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+References: <CAKVccoU7CnhVVQ82U23Yuww6VrTMU4FsjWcWVbk16LNKyQfvOQ@mail.gmail.com> <A872091605A443F48DE1814CF6FAFE25@realtek.com.tw> <CAKVccoUfER_m48BtyMjo3pix2_BmqBZ8kxij_RxDhOLEN5Q-9A@mail.gmail.com> <4F9AF76A.4040607@lwfinger.net> <CAKVccoUbcvO-X5w2pOuOyP=DhK+64opsJm5muznjsOWu==MUcQ@mail.gmail.com> <4F9B63CF.4010005@lwfinger.net> <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com> <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com> <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com> <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+In-Reply-To: <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Thu, 26 Apr 2012 08:53:30 -0700
+On 04/29/2012 07:51 PM, simple w8 wrote:
+> 2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
 
-> OK I found no pr_fmt warnings at all for make allmodconfig ; make V=1
-> ; on v3.4-rc4. For this and others reason stated then yes, this patch
-> is simply bogus.
+>> Get
+>> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2012-04-26.tar.bz2.
+>> That is the "bleeding-edge" version. As I said in the previous message, it
+>> will build on your kernel!
+>
+> I didnt remove any mail address i simply forgot to hit the reply all button.
 
-This is what I expected, thanks for sorting this out :-)
+That IS removing mail addresses.
 
-We're in the rally!
+> Previously i tried to build the subdirectory rtlwifi but that wasnt
+> possible, so build the entry tree compat-wireless and installed it,
+> but the problem about having repeated chars when typing and the mouse
+> freeze continues happening.
+>
+> Now a different problem, i noticed that after kernel-3.3.1 it started
+> appearing less wifi networks, where i used to detect about 10 wifi
+> networks, with kernel>  3.3.1 it only detected about 2 or 3 wifi
+> networks, i reported that to the distro and they said was a problem
+> from upstream since they didnt had changed nothing regarding wifi, and
+> after i installed compat-wireless that was solved. Im running
+> kernel-3.3.4 with compat-wireless and it detects again about 10 wifi
+> networks.
+>
+> Should i report this upstream so it can be fixed still in the
+> kkkkkernel 3.3.4 serie or you ccccccan do it?
+
+Whatever patch that fixed that problem will be backported to 3.3.X if it can be. 
+Not everything qualifies.
+
+> By the way see how the characters "k" and "c" got repeated when i was
+> typing last paragraph.
+
+I see them, but they do not happen on my machine, thus I have no idea of the 
+cause. So far, you can only say that they don't happen when rtl8192ce is not 
+loaded; however, you have no network then either. The problem could be anywhere 
+in the network stack.
+
+You said earlier that you tried the Ubuntu Live system. Would it be possible to 
+download and try the openSUSE 12.1 Live CD as well? As you have used Ubunbtu, 
+you should try the Gnome version.
+
+Larry
+
