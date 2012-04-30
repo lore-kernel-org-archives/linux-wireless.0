@@ -1,78 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58877 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966084Ab2DLV6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Apr 2012 17:58:11 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 24/24] iwlwifi: change the default P2P support to "Yes"
-Date: Thu, 12 Apr 2012 14:54:21 -0700
-Message-Id: <1334267661-14654-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120412_235827_509563_E0335D2F)
-In-Reply-To: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1334267661-14654-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from coldplug.net ([109.75.184.172]:59914 "EHLO
+	external.coldplug.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752297Ab2D3JyA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2012 05:54:00 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by external.coldplug.net (Postfix) with ESMTP id 04D583A95C
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 11:55:03 +0200 (CEST)
+Received: from external.coldplug.net ([127.0.0.1])
+	by localhost (external.coldplug.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id fFXBgmmpngOj for <linux-wireless@vger.kernel.org>;
+	Mon, 30 Apr 2012 11:55:02 +0200 (CEST)
+Message-ID: <4F9E611D.2080309@coldplug.net> (sfid-20120430_115407_618420_94995057)
+Date: Mon, 30 Apr 2012 11:53:33 +0200
+From: Helmut Stengele <admin@coldplug.net>
+MIME-Version: 1.0
+To: sedat.dilek@gmail.com
+CC: Sedat Dilek <sedat.dilek@googlemail.com>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+References: <CA+icZUVAK3NHmbG5kR1KhqGe9mAimWWzLz-MfXOXbyry3Sz73w@mail.gmail.com> <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com> <20120427095842.GW3157@wantstofly.org> <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com> <20120427101732.GX3157@wantstofly.org> <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com> <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com> <20120427185809.GZ3157@wantstofly.org> <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com> <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com> <CAJfuBxw7YFAC9CLAGNmg3nM_g2xH2vuiz07D-3xOcyn2XuP5vA@mail.gmail.com> <CA+icZUVT6kvqj47x26FU2qjbMHc=jr9_Lso=zduf_cmcSrv=UQ@mail.gmail.com> <CAJfuBxwz2PmNY37VB7Wx+GdQcOcS6Y96EM_JNtvs-dyv-imL6g@mail.gmail.com> <CA+icZUXrGuY+0GLJCmL9CH7i7vnvXAyAE2vXNAXM_3Q30B4nPA@mail.gmail.com> <4F9D7BB8.4000007@coldplug.net> <CA+icZUUj8utveS7e6wh-BU3A4yk4FsiQ9YGRk6BowL+ex35wFw@mail.gmail.com>
+In-Reply-To: <CA+icZUUj8utveS7e6wh-BU3A4yk4FsiQ9YGRk6BowL+ex35wFw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/Kconfig   |   29 +++++++++++++++--------------
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 2 files changed, 16 insertions(+), 15 deletions(-)
+On 04/29/2012 07:49 PM, Sedat Dilek wrote:
+> On Sun, Apr 29, 2012 at 7:34 PM, admin<admin@coldplug.net>  wrote:
+>> On 04/29/2012 01:26 AM, Sedat Dilek wrote:
+>>> On Sun, Apr 29, 2012 at 1:11 AM, Jim Cromie<jim.cromie@gmail.com>    wrote:
+>>>> On Sat, Apr 28, 2012 at 4:49 PM, Sedat Dilek<sedat.dilek@googlemail.com>
+>>>>   wrote:
+>>>>> On Sun, Apr 29, 2012 at 12:36 AM, Jim Cromie<jim.cromie@gmail.com>
+>>>>>   wrote:
+>>>>>>>> As already pointed out, no Marwell WLAN hardware here. Marvell comics
+>>>>>>>> of course :-).
+>>>> (I had to leave that one..:-)
+>>>>
+>>>>
+>>>>
+>>>>>>> A new tarball from lautriv with same outputs as before, but now tested
+>>>>>>> with Linux-3.4-rc4.
+>>>>>>>
+>>>>>>> - Sedat -
+>>>>>>
+>>>>>> heres my logs, using firmware extracted by Sedat's script,
+>>>>>> and the patch on mwl8k.c
+>>>>>>
+>>>>>> bottom-line, it appears to be working.
+>>>>>>
+>>>>>> its contents are a bit more pedantic, and includes data for
+>>>>>> another wifi card (rtl8180 based) also in the box.
+>>>>>> It was obtained by this script:
+>>>>>>
+>>>>>> #!/bin/bash
+>>>>>>
+>>>>>> # dmesg (Linux-3.3.3)
+>>>>>> # e_n_a (/etc/network/interfaces)
+>>>>>> # ifconfig output
+>>>>>> # iwconfig output
+>>>>>> # iw_phy output
+>>>>>> # ps_axu (WPA) output
+>>>>>>
+>>>>>> devs="wlan0 wlan1"
+>>>>>> apmac=00:14:d1:e8:65:0a
+>>>>>>
+>>>>>> loudly () {
+>>>>>>     echo "# $@"
+>>>>>>     fname=`echo $@ | sed -e 's/ /-/g'`
+>>>>>>     $@ 2>    $fname-err | tee $fname
+>>>>>>     [ $? != 0 ]&&    echo non-zero exit on $fname: $?
+>>>>>>     [ -s $fname-err ] || rm $fname-err
+>>>>>> }
+>>>>>>
+>>>>>> ( iw --debug event -f>    iw-event-f )&
+>>>>>> pid_event=$!
+>>>>>>
+>>>>>> for N in 0 1 ; do
+>>>>>>     loudly iw dev wlan$N interface add fish$N type monitor # flags none
+>>>>>>     loudly iw dev fish$N set channel 8
+>>>>>>     loudly ifconfig fish$N up
+>>>>>>     ( tcpdump -i fish$N -s 65000 -p -U -w  fish$N.dump )&
+>>>>>>     pid_dump_fish$N=$!
+>>>>>> done
+>>>>>>
+>>>>>> loudly iw list
+>>>>>>
+>>>>>> #loudly iwspy
+>>>>>> # gives: Interface doesn't support wireless statistic collection
+>>>>>>
+>>>>>> for dev in $devs ; do
+>>>>>>     loudly ifconfig $dev
+>>>>>>     loudly iwconfig $dev
+>>>>>>     loudly iwlist $dev scan
+>>>>>>     loudly iw dev $dev info
+>>>>>>     loudly iw dev $dev link
+>>>>>>     loudly iw dev $dev scan
+>>>>>>     loudly iw dev $dev survey dump
+>>>>>> done
+>>>>>>
+>>>>>> for phy in $phys ; do
+>>>>>>     loudly iw phy $phy info
+>>>>>> done
+>>>>>>
+>>>>>> # these are unsupported on wlan0
+>>>>>> loudly iw dev wlan1 survey dump
+>>>>>> loudly iw dev wlan1 station dump
+>>>>>> loudly iw dev wlan1 station get $apmac
+>>>>>>
+>>>>>>
+>>>>>> for N in 0 1 ; do
+>>>>>>     loudly iw dev fish$N del
+>>>>>> done
+>>>>>>
+>>>>>> kill $pid_dump_fish0 $pid_dump_fish0
+>>>>>> kill $pid_event
+>>>>>>
+>>>>>> dmesg>    dmesg
+>>>>>>
+>>>>>> grep -vE '^#|key' /etc/network/interfaces>    e_n_a
+>>>>>>
+>>>>>> exit
+>>>>> Hi Jim,
+>>>>>
+>>>>> thanks for your testing and the nice testcase-script!
+>>>>>
+>>>>> lautriv you wanna run some more tests with Jim's script?
+>>>>>
+>>>>> Jim, how stable/fast/reliable is your WLAN connection?
+>>>>> Suspend/resume tested?
+>>>> I havent tested reliability in any way.
+>>>> in fact, I havent tested any data-xfer per se,
+>>>> will do an iperf test soon.
+>>>>
+>>>> That said, bitrate is quite low, I havent looked at why.
+>>>>
+>>>> jimc@chumly:~/projects/lx/wifi/mwl8k-8361p-logs$ grep -i MBit *
+>>>> iw-dev-wlan0-link:      tx bitrate: 11.0 MBit/s
+>>>> iw-dev-wlan1-link:      tx bitrate: 1.0 MBit/s
+>>>> iw-dev-wlan1-station-dump:      tx bitrate:     1.0 MBit/s
+>>>> iw-dev-wlan1-station-get-00:14:d1:e8:65:0a:     tx bitrate:     1.0
+>>>> MBit/s
+>>>>
+>>>> my laptop is much faster than both cards in the soekris box, to same AP
+>>>>
+>>>> Connected to 00:14:d1:e8:65:0a (on wlan0)
+>>>>         SSID: yoduh
+>>>>         freq: 2447
+>>>>         RX: 191134302 bytes (2120068 packets)
+>>>>         TX: 17440426 bytes (120666 packets)
+>>>>         signal: -45 dBm
+>>>>         tx bitrate: 54.0 MBit/s
+>>>>
+>>>>         bss flags:
+>>>>         dtim period:    0
+>>>>         beacon int:     100
+>>>>
+>>>>
+>>>> If you all have some suggestions on this, Id like to hear them.
+>>>> And of course, any other testing you'd like too.
+>>>>
+>>>>
+>>>>> Hope this helps to get native Linux support for 8361p.
+>>>> hear hear.
+>>>> FWIW,  I pulled this card out of a dead Netgear WNR854T,
+>>>> which is linux based (and GPL compliant)
+>>>>
+>>>>> Regards,
+>>>>> - Sedat -
+>>>>>
+>>>>> P.S.: BTW, only to clarify it should be "e_n_i" as short-form for
+>>>>> /etc/network/interfaces file, but e_n_a sounds more female and nicer
+>>>>> :-).
+>>>> I caught that, but it wasnt worth "correcting" ;-)
+>>>>
+>>>> thanks
+>>>> Jim
+>>> Unfortunately, [1] says not much about debugging.
+>>> Anyway, Lennert has some new informations.
+>>> Let's see what the experts will say.
+>>>
+>>> - Sedat -
+>>>
+>>> [1] http://wireless.kernel.org/en/users/Drivers/mwl8k
+>>>
+>> ok, as far as i can see for now, it looks like the actual solution is
+>> ignoring/rejecting any manual command to set parameters, neither iwconfig
+>> nor iw will change any settings. wpa_sup brings the card up and does also
+>> WPA2 but nothing else is tuneable thus a connection via 1Mb/s.
+>>
+>> attaching a tarball from the results of the script which produced 42 files
+>> of output.
+>>
+> Credits for the script go to Jim, not me!
+>
+> - Sedat -
+>
+So i investigated in a bit further testing, where my router was taken 
+into account too.......
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 565611e..db6c6e5 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -113,20 +113,21 @@ config IWLWIFI_DEVICE_TESTMODE
- 	  generic netlink message via NL80211_TESTMODE channel.
- 
- config IWLWIFI_P2P
--       bool "iwlwifi experimental P2P support"
--       depends on IWLWIFI
--       help
--         This option enables experimental P2P support for some devices
--         based on microcode support. Since P2P support is still under
--         development, this option may even enable it for some devices
--         now that turn out to not support it in the future due to
--         microcode restrictions.
--
--         To determine if your microcode supports the experimental P2P
--         offered by this option, check if the driver advertises AP
--         support when it is loaded.
--
--         Say Y only if you want to experiment with P2P.
-+	def_bool y
-+	bool "iwlwifi experimental P2P support"
-+	depends on IWLWIFI
-+	help
-+	  This option enables experimental P2P support for some devices
-+	  based on microcode support. Since P2P support is still under
-+	  development, this option may even enable it for some devices
-+	  now that turn out to not support it in the future due to
-+	  microcode restrictions.
-+
-+	  To determine if your microcode supports the experimental P2P
-+	  offered by this option, check if the driver advertises AP
-+	  support when it is loaded.
-+
-+	  Say Y only if you want to experiment with P2P.
- 
- config IWLWIFI_EXPERIMENTAL_MFP
- 	bool "support MFP (802.11w) even if uCode doesn't advertise"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 09367d4..500eaa3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1564,7 +1564,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	ucode_flags = fw->ucode_capa.flags;
- 
- #ifndef CONFIG_IWLWIFI_P2P
--	ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
-+	ucode_flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
- #endif
- 
- 	if (ucode_flags & IWL_UCODE_TLV_FLAGS_PAN) {
--- 
-1.7.0.4
+Seems the patch/driver/hardware works a bit better than one can see from 
+the output.
 
+i changed my router to different setups with a/b/g/n g/n and n only and 
+even the testbox
+reported always 1Mb/s , my router found the device connected to certain 
+other speeds
+such as 24/84/120/240 depending on his own rules.
+
+When in N-only, the router insisted on AES instead TKIP which may be 
+somewhere defined,
+however the card itself followed the rule silently ( i held wlan0 up ).
+
+speed result was not that magic, gave me an average of 2.2MB/s in mixed 
+mode and
+3.6 MB/s in N-only ( where the router showed a connection with 240 Mb/s 
+) while my signal
+was always between 96 and 100%.
+
+Because this device was made for winblows only, i could imagine they 
+byte-swapped
+or moved an offset and it may be worth to compare some kind of 
+register-dump right after init
+with another topdog like 8363.
+
+Helmut.
