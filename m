@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:40367 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798Ab2DXHWx convert rfc822-to-8bit (ORCPT
+Received: from hermes.mlbassoc.com ([64.234.241.98]:55569 "EHLO
+	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752290Ab2D3NKf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Apr 2012 03:22:53 -0400
-Received: by vcqp1 with SMTP id p1so283559vcq.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Apr 2012 00:22:52 -0700 (PDT)
+	Mon, 30 Apr 2012 09:10:35 -0400
+Message-ID: <4F9E8F49.3080700@mlbassoc.com> (sfid-20120430_151039_705720_66D12F4C)
+Date: Mon, 30 Apr 2012 07:10:33 -0600
+From: Gary Thomas <gary@mlbassoc.com>
 MIME-Version: 1.0
-In-Reply-To: <CALx5=V-adYC0FP5kJyjO3P=G0f2QsZOiTaJFO+mqHvxS_EvS7Q@mail.gmail.com>
-References: <CALx5=V-adYC0FP5kJyjO3P=G0f2QsZOiTaJFO+mqHvxS_EvS7Q@mail.gmail.com>
-Date: Tue, 24 Apr 2012 12:52:52 +0530
-Message-ID: <CAD2nsn3kZ_Yy=cuanf0erbTtiGEy5vxk0X-zatDaRAAgxWx8DQ@mail.gmail.com> (sfid-20120424_092256_814334_A3FDE7C4)
-Subject: Re: New PID to support.
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Matt Chen <machen@suse.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jeffrey Cheung <jcheung@suse.com>, joeyli <jlee@suse.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: wireless <linux-wireless@vger.kernel.org>
+CC: Luciano Coelho <coelho@ti.com>
+Subject: wl1271 woes continue
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 24, 2012 at 12:33 PM, Matt Chen <machen@suse.com> wrote:
-> Hi list,
+Luciano,
 
-Hi Matt,
+I'm still having troubles with the WL1271.  I now have a
+brand new platform - same basic design as before but with
+a DM3730 instead of the DM8148.  I've tried a couple of
+off-the-shelf kernels (3.0.0 and 3.3.0) with it, with mixed
+results.
 
-> I just got a [168c 0036] device, but grep with the latest ath9k of
-> linux-wireless git tree, no found any support for this chip. Is there
-> any patch to support this module ?
+With 3.3.0 I could not get the device to associate with the AP.
+It would get started and then the wl1271 stopped talking and
+the process failed.
 
-currently there is no hardware support in the current code.
-soon support for this chip will be added.
+With 3.0.0, I can get it to work reasonably well.  However, I
+still have to go through the manual steps to get it to associate.
+Anything other than the process below causes the wl1271 to reset
+and die...  I also cannot shut the device down and restart it.
+Attempts at a restart cause the wl1271 to lock up and I have to
+reboot to recover.
 
+Only these steps work for the initial association:
+   # ifconfig wlan0 hw ether 0:1:2:3:4:5
+   # ifconfig wlan0 up
+   # iw wlan0 scan
+   # ifup wlan0
+Note: my AP is using WPA2 so I'm also running wpa_supplicant
 
->
-> --
-> Thank you.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm going to try using the latest compat-wireless, using the
+3.0.0 kernel as overall it is more stable on this platform.
+I also plan to experiment a bit with the Panda (OMAP4) as it
+has the same peripherals (and I assume that it works?)
 
+What can I do to make this work better?
+What data need I provide to help diagnose the failures?
 
+Thanks for your time
 
 -- 
-thanks,
-shafi
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
