@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54332 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756489Ab2DJRfr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Apr 2012 13:35:47 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>,
-	Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 11/18] NFC: Dump LLCP frames
-Date: Tue, 10 Apr 2012 19:43:13 +0200
-Message-Id: <1334079800-10671-12-git-send-email-sameo@linux.intel.com> (sfid-20120410_195903_375942_AEC82249)
-In-Reply-To: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
-References: <1334079800-10671-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:63888 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756156Ab2D3Qid (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2012 12:38:33 -0400
+Received: by wibhj6 with SMTP id hj6so3007101wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 09:38:32 -0700 (PDT)
+From: Anisse Astier <anisse@astier.eu>
+To: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Cc: Ivo van Doorn <IvDoorn@gmail.com>, linville@tuxdriver.com,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Anisse Astier <anisse@astier.eu>
+Subject: [PATCH v5 0/3] rt2800 debug improvements
+Date: Mon, 30 Apr 2012 18:33:30 +0200
+Message-Id: <1335803613-1253-1-git-send-email-anisse@astier.eu> (sfid-20120430_183837_659104_7FF20E0B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At KERN_DEBUG level.
+In there are all the debug facilites I would have liked to have while I was
+trying to understand why chipset revision RT5390R wasn't working (see:
+http://article.gmane.org/gmane.linux.kernel.wireless.general/89561 ).
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/llcp.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Changes since v4:
+ - re-add BBP size patch (first one) in the series
+ - add Ivo's Acked-bys
+Changes since v3:
+ - Don't print a debug message when register type isn't registered
+Changes since v2:
+ - split the second patch in two to incorporate changes suggested by Ivo
+van Doorn (thanks for the review!) :
+ - first part (second patch) is now only a small rewrite of the code to
+   initialize only the supported register. Any unsupported register wouldn't
+   have its files created.
+ - second patch best viewed ignoring spaces ((git) diff -w)
+ - third patch is effectively adding RFCSR support.
+ - we allocate more data for sprintf since we add a new register.
+Changes since v1:
+ - removed initialization in chipsets other than rt2800, we now rely on
+  default initialization.
+ - added comments to make this explicit
+ - fix rfcsr size (64)
+ - fix pre-review bug thanks to Ivo Van Doorn
 
-diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
-index 17a578f..d5e87c3 100644
---- a/net/nfc/llcp/llcp.c
-+++ b/net/nfc/llcp/llcp.c
-@@ -388,6 +388,9 @@ static void nfc_llcp_tx_work(struct work_struct *work)
- 	skb = skb_dequeue(&local->tx_queue);
- 	if (skb != NULL) {
- 		pr_debug("Sending pending skb\n");
-+		print_hex_dump(KERN_DEBUG, "LLCP Tx: ", DUMP_PREFIX_OFFSET,
-+			       16, 1, skb->data, skb->len, true);
-+
- 		nfc_data_exchange(local->dev, local->target_idx,
- 				  skb, nfc_llcp_recv, local);
- 	} else {
-@@ -814,6 +817,10 @@ static void nfc_llcp_rx_work(struct work_struct *work)
- 
- 	pr_debug("ptype 0x%x dsap 0x%x ssap 0x%x\n", ptype, dsap, ssap);
- 
-+	if (ptype != LLCP_PDU_SYMM)
-+		print_hex_dump(KERN_DEBUG, "LLCP Rx: ", DUMP_PREFIX_OFFSET,
-+			       16, 1, skb->data, skb->len, true);
-+
- 	switch (ptype) {
- 	case LLCP_PDU_SYMM:
- 		pr_debug("SYMM\n");
+Anisse Astier (3):
+  rt2800: debugfs register access: BBP is 256 bytes big
+  rt2x00: debugfs support - allow a register to be empty
+  rt2x00: Add debugfs access for rfcsr register
+
+ drivers/net/wireless/rt2x00/rt2800.h      |    4 +-
+ drivers/net/wireless/rt2x00/rt2800lib.c   |    7 +++
+ drivers/net/wireless/rt2x00/rt2x00debug.c |   82 ++++++++++++++++-------------
+ drivers/net/wireless/rt2x00/rt2x00debug.h |    1 +
+ 4 files changed, 57 insertions(+), 37 deletions(-)
+
 -- 
-1.7.9.1
+1.7.9.4
 
