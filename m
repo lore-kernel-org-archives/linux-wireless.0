@@ -1,72 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:59660 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755591Ab2EPVL5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 17:11:57 -0400
-Message-ID: <1337202716.10019.23.camel@joe2Laptop> (sfid-20120516_231200_942226_5482B742)
-Subject: Re: [PATCH 3/3] iwlwifi: add __printf argument checking
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Wed, 16 May 2012 14:11:56 -0700
-In-Reply-To: <1337202227.18519.19.camel@jlt3.sipsolutions.net>
-References: <1337200851-20469-1-git-send-email-johannes@sipsolutions.net>
-	 <1337200851-20469-4-git-send-email-johannes@sipsolutions.net>
-	 <1337201904.10019.21.camel@joe2Laptop>
-	 (sfid-20120516_225829_821547_833CA746) <1337202227.18519.19.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:64540 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757379Ab2EADcV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2012 23:32:21 -0400
+Received: by lahj13 with SMTP id j13so2269885lah.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 20:32:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4F9F55F9.3090800@lwfinger.net>
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
+ <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com>
+ <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
+ <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+ <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
+ <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+ <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
+ <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com> <4F9F55F9.3090800@lwfinger.net>
+From: simple w8 <simplew8@gmail.com>
+Date: Tue, 1 May 2012 04:31:59 +0100
+Message-ID: <CAKVccoXn=UB-RYK4y2T+a2xq6Bw_MURcSOjDyPEhAU6d2hReAA@mail.gmail.com> (sfid-20120501_053252_401041_C013E531)
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-16 at 23:03 +0200, Johannes Berg wrote:
-> On Wed, 2012-05-16 at 13:58 -0700, Joe Perches wrote:
-> 
-> > > Change-Id: I7a2ffcd3f625ff29c65519b0c3d474bace884f9d
-> > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > > Reviewed-on: http://git-mwg.jer.intel.com/gerrit/2022
-> > > Tested-by: Jenkins
-> > > Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > 
-> > Trivial comments:
-> > 
-> > Odd Reviewed-on: and Tested-by: lines.
-> > The intel.com link does not resolve here too.
-> 
-> Meh, second time I've messed this up... It's not supposed to, so I guess
-> that's good. I'll send a new version of this.
-> 
-> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-> > []
-> > > @@ -38,10 +38,10 @@ static inline bool iwl_have_debug_level(u32 level)
-> > >  }
-> > >  
-> > >  void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
-> > > -		const char *fmt, ...);
-> > > -void __iwl_warn(struct device *dev, const char *fmt, ...);
-> > > -void __iwl_info(struct device *dev, const char *fmt, ...);
-> > > -void __iwl_crit(struct device *dev, const char *fmt, ...);
-> > > +		const char *fmt, ...) __printf(4, 5);
-> > > +void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
-> > > +void __iwl_info(struct device *dev, const char *fmt, ...) __printf(2, 3);
-> > > +void __iwl_crit(struct device *dev, const char *fmt, ...) __printf(2, 3);
-> > 
-> > As far as I know, there are very few in-kernel uses of
-> > __printf after the function prototype (6 out of 183).
-> > 
-> > $ git grep -E "\b__printf\s*\(\s*\w+\s*,\s*\w+\s*\)\s*;" | wc -l
-> > 6
-> > $ git grep -E "\b__printf\s*\(\s*\w+\s*,\s*\w+\s*\)" | wc -l
-> > 183
-> > 
-> > I'd prefer to keep the __printf before the return type.
-> 
-> Well, maybe now it's 3 more? :-)
+2012/5/1 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 04/30/2012 09:01 PM, simple w8 wrote:
+>>
+>> 2012/4/30 Forest Bond<forest@alittletooquiet.net>:
+>>>
+>>> Hi,
+>>>
+>>> On Sun, Apr 29, 2012 at 09:55:06PM -0500, Larry Finger wrote:
+>>>>
+>>>> On 04/29/2012 08:11 PM, simple w8 wrote:
+>>>>>
+>>>>> 2012/4/30 simple w8<simplew8@gmail.com>:
+>>>>>>
+>>>>>> 2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
+>>>>>>>
+>>>>>>> On 04/29/2012 07:51 PM, simple w8 wrote:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> 2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>>> Get
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2012-04-26.tar.bz2.
+>>>>>>>>> That is the "bleeding-edge" version. As I said in the previous
+>>>>>>>>> message,
+>>>>>>>>> it
+>>>>>>>>> will build on your kernel!
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> I didnt remove any mail address i simply forgot to hit the reply all
+>>>>>>>> button.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> That IS removing mail addresses.
+>>>>>>>
+>>>>>>>
+>>>>>>>> Previously i tried to build the subdirectory rtlwifi but that wasnt
+>>>>>>>> possible, so build the entry tree compat-wireless and installed it,
+>>>>>>>> but the problem about having repeated chars when typing and the
+>>>>>>>> mouse
+>>>>>>>> freeze continues happening.
+>>>>>>>>
+>>>>>>>> Now a different problem, i noticed that after kernel-3.3.1 it
+>>>>>>>> started
+>>>>>>>> appearing less wifi networks, where i used to detect about 10 wifi
+>>>>>>>> networks, with kernel>      3.3.1 it only detected about 2 or 3 wifi
+>>>>>>>> networks, i reported that to the distro and they said was a problem
+>>>>>>>
+>>>>>>> >from upstream since they didnt had changed nothing regarding wifi,
+>>>>>>> > and
+>>>>>>>>
+>>>>>>>> after i installed compat-wireless that was solved. Im running
+>>>>>>>> kernel-3.3.4 with compat-wireless and it detects again about 10 wifi
+>>>>>>>> networks.
+>>>>>>>>
+>>>>>>>> Should i report this upstream so it can be fixed still in the
+>>>>>>>> kkkkkernel 3.3.4 serie or you ccccccan do it?
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> Whatever patch that fixed that problem will be backported to 3.3.X if
+>>>>>>> it can
+>>>>>>> be. Not everything qualifies.
+>>>>>>>
+>>>>>>>
+>>>>>>>> By the way see how the characters "k" and "c" got repeated when i
+>>>>>>>> was
+>>>>>>>> typing last paragraph.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> I see them, but they do not happen on my machine, thus I have no idea
+>>>>>>> of the
+>>>>>>> cause. So far, you can only say that they don't happen when rtl8192ce
+>>>>>>> is not
+>>>>>>> loaded; however, you have no network then either. The problem could
+>>>>>>> be
+>>>>>>> anywhere in the network stack.
+>>>>>>>
+>>>>>>> You said earlier that you tried the Ubuntu Live system. Would it be
+>>>>>>> possible
+>>>>>>> to download and try the openSUSE 12.1 Live CD as well? As you have
+>>>>>>> used
+>>>>>>> Ubunbtu, you should try the Gnome version.
+>>>>>>>
+>>>>>>> Larry
+>>>>>>
+>>>>>>
+>>>>>> These are the distros that i tried so far and all presented the same
+>>>>>> problem i have described:
+>>>>>> - Mandriva
+>>>>>> - Mageia
+>>>>>> - Ubuntu
+>>>>>> - Kubuntu
+>>>>>> - Caixa Magica
+>>>>>
+>>>>>
+>>>>> What wifi you have?
+>>>>> What distro you run?
+>>>>> Do you run NetworManager?
+>>>>
+>>>>
+>>>> You forgot the "Reply All" again!
+>>>>
+>>>> I run openSUSE 12.1 KDE, and I use NetworkManager.
+>>>>
+>>>> I have many wifi devices, including both RTL8188CE and RTL8192CE. At
+>>>> the moment, I am running an RTL8188CE, which has been up for nearly
+>>>> 100 hours without dropping the connection, and with no problems with
+>>>> the keyboard. My kernel is from wireless-testing, which means that
+>>>> my wireless stuff is exactly what you got with compat-wireless.
+>>>
+>>>
+>>> FWIW, I do recall seeing issues with my USB keyboard when testing with
+>>> rtl8192de.  I believe the problems went away when I disabled power
+>>> management:
+>>>
+>>>  options rtl8192de ips=0 swlps=0 fwlps=0
+>>
+>>
+>> in where can these settings be saved?
+>>
+>> By the way, diddddd you were using any keyboard, mouse from microsoft?
+>
+>
+> Create a file named /etc/modprobe.d/50-rtl8192ce.conf and add the line below
+> to it:
+>
+> options rtl8192ce ips=0 swlps=0 fwlps=0
+>
+> That will disable power saving for driver rtl8192ce.
+>
+> Larry
+>
+>
 
-Hope not.
+By the way when i installed compat-wireless was in kernel-3.3.1 in
+which used to be detected about 10 wifi networks, so when i said that
+fixed the kernel-3.3.4 i was not correct.
 
-You noticed you _have_ to put it before the function
-on the static inlines so why not keep it there in all
-cases?
-
-
+Now i have installed compat-wireless for kernel-3.3.4 and it did not
+changed anything, i continued detecting only 2 wifi networks, like the
+router antenna didnt had any force, but when i boot kernel-3.3.1 i
+have again about 10 wifi networks detected, so this is a problem that
+appeared from kernel-3.3.2 and continues existing upstream.
