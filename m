@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3322 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880Ab2EaRuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 13:50:04 -0400
-Message-ID: <4FC7AF38.3030309@broadcom.com> (sfid-20120531_195009_829631_48B9FFBC)
-Date: Thu, 31 May 2012 19:49:44 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:33980 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750917Ab2EAHWW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2012 03:22:22 -0400
+Received: by lahj13 with SMTP id j13so2332525lah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 00:22:21 -0700 (PDT)
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 4/8] brcm80211: smac: inform mac80211 of the X2
- regulatory domain
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
- <1334607462-5387-5-git-send-email-seth.forshee@canonical.com>
- <4FC008AB.4080107@broadcom.com> <20120526171800.GC11759@ubuntu-mba>
- <4FC21B3F.6090903@broadcom.com> <20120531144642.GB32179@thinkpad-t410>
-In-Reply-To: <20120531144642.GB32179@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <4F9F6B67.5000400@lwfinger.net>
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
+ <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com>
+ <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
+ <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+ <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
+ <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+ <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
+ <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com>
+ <4F9F55F9.3090800@lwfinger.net> <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com>
+ <4F9F6B67.5000400@lwfinger.net>
+From: simple w8 <simplew8@gmail.com>
+Date: Tue, 1 May 2012 08:22:00 +0100
+Message-ID: <CAKVccoVA=Rk8AkD+h0n9aeV95h0iMcnQgM_WMJq3rjzoFvkU-w@mail.gmail.com> (sfid-20120501_092226_382290_B97D9B7F)
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/31/2012 04:46 PM, Seth Forshee wrote:
-> So our options seem to be either calling ieee_hw_init() from
-> brcms_c_attach() or breaking up brcms_c_attach() into two parts and
-> calling ieee_hw_init() in the middle. Or else calling
-> brcms_c_regd_init() from brcms_attach() as I have it now. What's your
-> preference?
+2012/5/1 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 04/30/2012 10:40 PM, simple w8 wrote:
+>>
+>>
+>> Its done, and i have reloaded the module, but how can i be sure/check
+>> about the rtl8192ce parameters?
+>
+>
+> When you 'modprobe -rv rtl8192ce && modprobe -v rtl8192ce', you will see the
+> options listed.
+>
+> I do not use anything from Microsoft.
+>
+> You will need to bisect the differences between 3.3.1 and 3.3.2. I see all
+> the local networks and cannot duplicate your problem. Thus, you will need to
+> see what patch is causing the problem.
 
-I am not in favor of breaking up the code for this. So leave it as you
-have it now.
+Well the problem while typing and having repeated characters and
+sometimes the mouse frozen is gone when i runned that parameters for
+rtl8192ce... finally a solution for that torment... well now you know
+what was the cause and what needs to be fixed :)
 
-Gr. AvS
-
+Regarding the problem of kernel > 3.3.1 detect less wifi networks, i
+will talk with the distro kernel maintainer to see if this can be some
+caused by some patch that he adds to the distro kernel and then ill
+let you know.
