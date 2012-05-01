@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:56567 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753191Ab2EZRup (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:61347 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932069Ab2EAMvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2012 13:50:45 -0400
-Received: by dady13 with SMTP id y13so2511102dad.19
-        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2012 10:50:45 -0700 (PDT)
+	Tue, 1 May 2012 08:51:04 -0400
+Date: Tue, 1 May 2012 14:51:02 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: sedat.dilek@gmail.com
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
+	Jim Cromie <jim.cromie@gmail.com>
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+Message-ID: <20120501125102.GN3157@wantstofly.org> (sfid-20120501_145126_896604_D7945CC0)
+References: <20120427094637.GV3157@wantstofly.org>
+ <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
+ <20120427095842.GW3157@wantstofly.org>
+ <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
+ <20120427101732.GX3157@wantstofly.org>
+ <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
+ <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
+ <20120427185809.GZ3157@wantstofly.org>
+ <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
+ <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <9532BE30-26F1-42CF-9300-C25585B29300@gmail.com>
-References: <4FC04B5A.1070900@candelatech.com>
-	<20416.19680.571601.549629@gargle.gargle.HOWL>
-	<7759D07D-C2C8-48D8-8F44-687C7E85D188@gmail.com>
-	<20416.35246.76971.129331@gargle.gargle.HOWL>
-	<CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com>
-	<4FC0CE2B.9060005@openwrt.org>
-	<9532BE30-26F1-42CF-9300-C25585B29300@gmail.com>
-Date: Sat, 26 May 2012 10:50:44 -0700
-Message-ID: <CAJ-VmomdZ+ww=iXF8R+st5HenGjchaV4De2pzzuY6Bu=6_n1YA@mail.gmail.com> (sfid-20120526_195101_971631_C3094B48)
-Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
-From: Adrian Chadd <adrian@freebsd.org>
-To: Joe Semler <josef.semler@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, Apr 29, 2012 at 12:25:21AM +0200, Sedat Dilek wrote:
 
-If the device EEPROM states that it's a 2x2/3x3 device, it'll TX on
-two/three streams.
+> > On 1st sight, logs look fine:
+> >
+> > [21:52:52] <lautriv> [    6.050967] ieee80211 phy0: 88w8361p v4,
+> > 00173f3bdde3, STA firmware 2.1.4.25
+> >
+> > But WLAN connection is not that fast and stable as lautriv reports
+> > (several abnormalities were observed).
+> >
+> > I requested a tarball which includes:
+> > * dmesg (Linux-3.3.3)
+> > * e_n_a (/etc/network/interfaces)
+> > * ifconfig output
+> > * iwconfig output
+> > * iw_phy output
+> > * ps_axu (WPA) output
+> >
+> > lautriv will be so kind to be around on #linux-wireless/Freenode the
+> > next days (UTC+2: German/Swiss local-time).
+> > Just ping him.
+> >
+> > Hope you have fun, together!
+> >
+> > - Sedat -
+> 
+> A new tarball from lautriv with same outputs as before, but now tested
+> with Linux-3.4-rc4.
 
-If it's something like an AR9281 where it's physically a 1T2R stream
-device, that's what it'll transmit/receive on by default.
+The output looks good enough for me to ACK adding the PCI ID.
 
-If it's something like an AR9285 where it's physically a 1T1R stream
-device with antenna diversity, that's also what you get.
-
-If the device EEPROM lies though, well, that's a problem. :-)
-
-
-Adrian
+Can the firmware being used here be submitted to the linux-firmware
+git tree?
