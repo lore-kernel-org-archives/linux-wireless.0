@@ -1,94 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43756 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933755Ab2EROIB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 10:08:01 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 10/10] ath9k_hw: fix power state for MCI
-Date: Fri, 18 May 2012 19:37:33 +0530
-Message-ID: <1337350053-15491-10-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160806_543160_F6454BC3)
-In-Reply-To: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mga01.intel.com ([192.55.52.88]:31850 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751877Ab2EAQxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2012 12:53:02 -0400
+From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Antonio Quartulli <ordex@autistici.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Emmanuel Grumbach (egrumbach@gmail.com)" <egrumbach@gmail.com>
+Subject: RE: iwlwifi warn_slowpath with 3.*
+Date: Tue, 1 May 2012 16:52:23 +0000
+Message-ID: <4595B4D22AB93C4FABBA84AAD5AA37FD143115@ORSMSX103.amr.corp.intel.com> (sfid-20120501_185306_319082_1B5F2892)
+References: <20120422182928.GA2854@ritirata.org>
+ <20120430145803.GE2630@ritirata.org> <20120430170337.GA2560@tuxdriver.com>
+In-Reply-To: <20120430170337.GA2560@tuxdriver.com>
+Content-Type: multipart/mixed;
+	boundary="_002_4595B4D22AB93C4FABBA84AAD5AA37FD143115ORSMSX103amrcorpi_"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Program MCI related power registers only if MCI interrupts
-are enabled. This could help to reduce power consumptions when
-WLAN alone is enabled in BT coex chips.
+--_002_4595B4D22AB93C4FABBA84AAD5AA37FD143115ORSMSX103amrcorpi_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   25 +++++++++----------------
- 1 file changed, 9 insertions(+), 16 deletions(-)
+Hi John, Antonio,
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 245dec5..7cfbe84 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2006,12 +2006,9 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
- 
- 	if (AR_SREV_9462(ah)) {
--		REG_WRITE(ah, AR_TIMER_MODE,
--			  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
--		REG_WRITE(ah, AR_NDP2_TIMER_MODE,
--			  REG_READ(ah, AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
--		REG_WRITE(ah, AR_SLP32_INC,
--			  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
-+		REG_CLR_BIT(ah, AR_TIMER_MODE, 0xff);
-+		REG_CLR_BIT(ah, AR_NDP2_TIMER_MODE, 0xff);
-+		REG_CLR_BIT(ah, AR_SLP32_INC, 0xfffff);
- 		/* xxx Required for WLAN only case ? */
- 		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
- 		udelay(100);
-@@ -2023,7 +2020,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- 	 */
- 	REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
- 
--	if (AR_SREV_9462(ah))
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		udelay(100);
- 
- 	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
-@@ -2048,7 +2045,6 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- static void ath9k_set_power_network_sleep(struct ath_hw *ah)
- {
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
--	u32 val;
- 
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
- 
-@@ -2067,19 +2063,16 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah)
- 		 * SYS_WAKING and SYS_SLEEPING messages which will make
- 		 * BT CPU to busy to process.
- 		 */
--		if (AR_SREV_9462(ah)) {
--			val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
--				~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
--			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
--		}
-+		if (ath9k_hw_mci_is_enabled(ah))
-+			REG_CLR_BIT(ah, AR_MCI_INTERRUPT_RX_MSG_EN,
-+				    AR_MCI_INTERRUPT_RX_HW_MSG_MASK);
- 		/*
- 		 * Clear the RTC force wake bit to allow the
- 		 * mac to go to sleep.
- 		 */
--		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
--			    AR_RTC_FORCE_WAKE_EN);
-+		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
- 
--		if (AR_SREV_9462(ah))
-+		if (ath9k_hw_mci_is_enabled(ah))
- 			udelay(30);
- 	}
- 
--- 
-1.7.10.2
+Emmanuel found a race condition in rx buffer allocation/deallocation, and a=
+ttached is a patch that fixes it.
 
+>> > since linux-3.0 (I don't remember if it was the case even before),
+>> > I'm getting this output in dmesg:
+>> >
+>> > [   53.662990] ------------[ cut here ]------------
+>> > [   53.663016] WARNING: at drivers/iommu/intel-iommu.c:2911
+>> > intel_unmap_page+0x14b/0x180()
+>> > [   53.663047] Hardware name: Latitude E5420
+>> > [   53.663066] Driver unmaps unmatched page at PFN ffd1a000
+>>
+>>
+>> I see that I always get the same addr passed to the unmap function:
+>>
+>> [   23.950535] Driver unmaps unmatched page at PFN ffd1a000
+>>
+>> is it a coincidence?
+>> I'm running linux-3.3.3 right now. I can try wireless-testing if it woul=
+d help.
+
+[MV] Antonio -- can you try out the patch attached and let us know if you c=
+ontinue to see the problem?
+
+>Just for the record, we are seeing a similar problem on RHEL 6.3 (which ha=
+s an
+>iwlwifi driver derived from linux-3.2).
+>
+>	https://bugzilla.redhat.com/show_bug.cgi?id=3D815998
+
+[MV] John -- I'll update the redhat bugzilla as well.
+
+Thanks
+Meenakshi
+
+--_002_4595B4D22AB93C4FABBA84AAD5AA37FD143115ORSMSX103amrcorpi_
+Content-Type: application/octet-stream;
+	name="0001-iwlwifi-fix-a-potential-race-in-receive-buffer-alloc.patch"
+Content-Description: 0001-iwlwifi-fix-a-potential-race-in-receive-buffer-alloc.patch
+Content-Disposition: attachment;
+	filename="0001-iwlwifi-fix-a-potential-race-in-receive-buffer-alloc.patch";
+	size=1612; creation-date="Tue, 01 May 2012 16:51:07 GMT";
+	modification-date="Tue, 01 May 2012 16:51:07 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbSA1MzUzNDcyMzQ1ZTc2ZGVmZjhjNjc0ZjZkYTM1ZjUwZWY4OThkZjQ0IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBNZWVuYWtzaGkgVmVua2F0YXJhbWFuIDxtZWVuYWtzaGkudmVu
+a2F0YXJhbWFuQGludGVsLmNvbT4KRGF0ZTogTW9uLCAzMCBBcHIgMjAxMiAxNjoyODowOSAtMDcw
+MApTdWJqZWN0OiBbUEFUQ0hdIGl3bHdpZmk6IGZpeCBhIHBvdGVudGlhbCByYWNlIGluIHJlY2Vp
+dmUgYnVmZmVyIGFsbG9jYXRpb24KClRoZSBkcml2ZXIgY2FuIHBvdGVudGlhbGx5IHVubWFwIHBh
+Z2VzIHRoYXQKaGF2ZSBub3QgYmVlbiBtYXBwZWQgeWV0LiBGaXggdGhpcyByYWNlCmNvbmRpdGlv
+bi4KCkNoYW5nZS1JZDogSWRjNjBjZmFhMGQ0ODNiYzgzNWY2OTc4OGRjNjA4NzA4ZGQ2ZjUyNGQK
+Q2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcKUmVwb3J0ZWQtYnk6IEVtbWFudWVsIEdydW1iYWNo
+IDxlbW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+ClNpZ25lZC1vZmYtYnk6IE1lZW5ha3NoaSBW
+ZW5rYXRhcmFtYW4gPG1lZW5ha3NoaS52ZW5rYXRhcmFtYW5AaW50ZWwuY29tPgotLS0KIGRyaXZl
+cnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLXBjaWUtcnguYyB8ICAgIDQgKysrLQog
+MSBmaWxlcyBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pCgpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS1yeC5jIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS1yeC5jCmluZGV4IDQ1
+ZDhjYTkuLjg0ODNlOGEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
+aXdsLXRyYW5zLXBjaWUtcnguYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3
+bC10cmFucy1wY2llLXJ4LmMKQEAgLTMxMyw3ICszMTMsNiBAQCBzdGF0aWMgdm9pZCBpd2xhZ25f
+cnhfYWxsb2NhdGUoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIGdmcF90IHByaW9yaXR5KQogCQlz
+cGluX3VubG9ja19pcnFyZXN0b3JlKCZyeHEtPmxvY2ssIGZsYWdzKTsKIAogCQlCVUdfT04ocnhi
+LT5wYWdlKTsKLQkJcnhiLT5wYWdlID0gcGFnZTsKIAkJLyogR2V0IHBoeXNpY2FsIGFkZHJlc3Mg
+b2YgdGhlIFJCICovCiAJCXJ4Yi0+cGFnZV9kbWEgPSBkbWFfbWFwX3BhZ2UodHJhbnMtPmRldiwg
+cGFnZSwgMCwKIAkJCQlQQUdFX1NJWkUgPDwgdHJhbnNfcGNpZS0+cnhfcGFnZV9vcmRlciwKQEAg
+LTMyMyw2ICszMjIsOSBAQCBzdGF0aWMgdm9pZCBpd2xhZ25fcnhfYWxsb2NhdGUoc3RydWN0IGl3
+bF90cmFucyAqdHJhbnMsIGdmcF90IHByaW9yaXR5KQogCQkvKiBhbmQgYWxzbyAyNTYgYnl0ZSBh
+bGlnbmVkISAqLwogCQlCVUdfT04ocnhiLT5wYWdlX2RtYSAmIERNQV9CSVRfTUFTSyg4KSk7CiAK
+KwkJLyogUGFnZSAqbXVzdCogYmUgbWFwcGVkIGJlZm9yZSBiZWZvcmUgdXBkYXRpbmcgdGhlIHJ4
+Yi4gKi8KKwkJcnhiLT5wYWdlID0gcGFnZTsKKwogCQlzcGluX2xvY2tfaXJxc2F2ZSgmcnhxLT5s
+b2NrLCBmbGFncyk7CiAKIAkJbGlzdF9hZGRfdGFpbCgmcnhiLT5saXN0LCAmcnhxLT5yeF9mcmVl
+KTsKLS0gCjEuNy40LjEKCg==
+
+--_002_4595B4D22AB93C4FABBA84AAD5AA37FD143115ORSMSX103amrcorpi_--
