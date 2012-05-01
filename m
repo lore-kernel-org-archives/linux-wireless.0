@@ -1,260 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:49913 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755776Ab2EPPxs (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:43817 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209Ab2EANhM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 11:53:48 -0400
-Date: Wed, 16 May 2012 12:53:40 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2012-05-16
-Message-ID: <20120516155340.GC1414@joana> (sfid-20120516_175425_203948_340E71A7)
+	Tue, 1 May 2012 09:37:12 -0400
+Received: by lbbgm6 with SMTP id gm6so863810lbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 06:37:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DocE+STaALJfprDB"
+In-Reply-To: <CAKVccoVA=Rk8AkD+h0n9aeV95h0iMcnQgM_WMJq3rjzoFvkU-w@mail.gmail.com>
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
+ <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com>
+ <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
+ <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+ <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
+ <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+ <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
+ <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com>
+ <4F9F55F9.3090800@lwfinger.net> <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com>
+ <4F9F6B67.5000400@lwfinger.net> <CAKVccoVA=Rk8AkD+h0n9aeV95h0iMcnQgM_WMJq3rjzoFvkU-w@mail.gmail.com>
+From: simple w8 <simplew8@gmail.com>
+Date: Tue, 1 May 2012 14:36:50 +0100
+Message-ID: <CAKVccoX=u=qX_OJ8RMSxpNEMGYdGVzimZURJ+ZeNZjhW1jPt6Q@mail.gmail.com> (sfid-20120501_153722_008720_9190B45B)
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2012/5/1 simple w8 <simplew8@gmail.com>:
+> 2012/5/1 Larry Finger <Larry.Finger@lwfinger.net>:
+>> On 04/30/2012 10:40 PM, simple w8 wrote:
+>>>
+>>>
+>>> Its done, and i have reloaded the module, but how can i be sure/check
+>>> about the rtl8192ce parameters?
+>>
+>>
+>> When you 'modprobe -rv rtl8192ce && modprobe -v rtl8192ce', you will see the
+>> options listed.
+>>
+>> I do not use anything from Microsoft.
+>>
+>> You will need to bisect the differences between 3.3.1 and 3.3.2. I see all
+>> the local networks and cannot duplicate your problem. Thus, you will need to
+>> see what patch is causing the problem.
+>
+> Well the problem while typing and having repeated characters and
+> sometimes the mouse frozen is gone when i runned that parameters for
+> rtl8192ce... finally a solution for that torment... well now you know
+> what was the cause and what needs to be fixed :)
+>
+> Regarding the problem of kernel > 3.3.1 detect less wifi networks, i
+> will talk with the distro kernel maintainer to see if this can be some
+> caused by some patch that he adds to the distro kernel and then ill
+> let you know.
 
---DocE+STaALJfprDB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+SEams that was your last fix for rtl8192
+http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commit;h=eb641120479de7ee703fabb5e6ee0ec7947474ba
+  that reduced the wifi force, thus detecting less wifi networks.
 
-Hi John,
-
-A big pull request for inclusion in 3.5. In this set there is some changes
-regarding periodic scan and LE, endian fixes, L2CAP ERTM improvements. There
-is also fixes, clean ups and small improvements all over the tree.
-I also included the patches rejected in the bluetooth pull request.
-
-I checked the whole diff of this pull request for offending coding style
-changes and couldn't spot anything wrong.
-
-I merged wireless/master into this.
-
-Please pull, or let me know of any problems!
-
-	Gustavo
-
----
-
-The following changes since commit 341352d13dae752610342923c53ebe461624ee2c:
-
-  iwlwifi: fix-up some merge damage from commit 0d6c4a2 (2012-05-08 22:18:09 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
-
-for you to fetch changes up to cde5b476786450fb058a23502372d63c3e8629d0:
-
-  Bluetooth: Report proper error number in disconnection (2012-05-16 18:44:35 +0300)
-
-----------------------------------------------------------------
-Amitkumar Karwar (2):
-      Bluetooth: btmrvl: configure default host sleep parameters
-      Bluetooth: btmrvl: add support for SDIO suspend/resume callbacks
-
-Andre Guedes (21):
-      Bluetooth: Check FINDING state in interleaved discovery
-      Bluetooth: Add hci_cancel_le_scan() to hci_core
-      Bluetooth: LE support for MGMT stop discovery
-      Bluetooth: Replace EPERM by EALREADY in hci_cancel_inquiry
-      Bluetooth: Refactor stop_discovery
-      Bluetooth: Add Periodic Inquiry command complete handler
-      Bluetooth: Add HCI_PERIODIC_INQ to dev_flags
-      Bluetooth: Check HCI_PERIODIC_INQ in start_discovery
-      Bluetooth: Ignore inquiry results from periodic inquiry
-      Bluetooth: Add Periodic Inquiry command complete handler
-      Bluetooth: Add HCI_PERIODIC_INQ to dev_flags
-      Bluetooth: Remove MGMT_ADDR_INVALID macro
-      Bluetooth: Remove useless code in hci_connect
-      Bluetooth: Move address type macros to bluetooth.h
-      Bluetooth: Rename link_to_mgmt to link_to_bdaddr
-      Bluetooth: Add address type to struct sockaddr_l2
-      Bluetooth: Rename mgmt_to_le to bdaddr_to_le
-      Bluetooth: Move bdaddr_to_le to hci_core
-      Bluetooth: Add dst_type parameter to hci_connect
-      Bluetooth: Use address type info from user-space
-      Bluetooth: Remove advertising cache
-
-Andrei Emeltchenko (24):
-      Bluetooth: trivial: Correct endian conversion
-      Bluetooth: Correct type for hdev lmp_subver
-      Bluetooth: Correct type for ediv to __le16
-      Bluetooth: Fix extra conversion to __le32
-      Bluetooth: Correct chan->psm endian conversions
-      Bluetooth: Correct ediv in SMP
-      Bluetooth: Correct length calc in L2CAP conf rsp
-      Bluetooth: Correct CID endian notation
-      Bluetooth: Convert error codes to le16
-      Bluetooth: trivial: Fix endian conversion mode
-      Bluetooth: trivial: Correct types
-      Bluetooth: Fix type in cpu_to_le conversion
-      Bluetooth: Fix opcode access in hci_complete
-      Bluetooth: trivial: Remove sparse warnings
-      Bluetooth: Silence sparse warning
-      Bluetooth: Comments and style fixes
-      Bluetooth: Remove unneeded timer clear
-      Bluetooth: Make L2CAP chan_add functions static
-      Bluetooth: Remove unneeded zero initialization
-      Bluetooth: Add Read Local AMP Info to init
-      Bluetooth: Adds set_default function in L2CAP setup
-      Bluetooth: Fix debug printing unallocated name
-      Bluetooth: trivial: Remove empty line
-      Bluetooth: Remove unneeded calculation and magic number
-
-Cristian Chilipirea (1):
-      Bluetooth: Fixed checkpatch warnings
-
-David Herrmann (5):
-      Bluetooth: Remove redundant hdev->parent field
-      Bluetooth: vhci: Ignore return code of nonseekable_open()
-      Bluetooth: Move hci_alloc/free_dev close to hci_register/unregister_dev
-      Bluetooth: Move device initialization to hci_alloc_dev()
-      Bluetooth: Remove unneeded initialization in hci_alloc_dev()
-
-Eldad Zack (1):
-      Bluetooth: bnep: use constant for ethertype
-
-Gustavo Padovan (13):
-      Bluetooth: Remove sk parameter from l2cap_chan_create()
-      Bluetooth: Remove err parameter from alloc_skb()
-      Bluetooth: remove unneeded declaration of sco_conn_del()
-      Bluetooth: Remove unneeded elements from size calculation
-      Bluetooth: Remove hlen variable
-      Bluetooth: notify userspace of security level change
-      Bluetooth: Fix wrong set of skb fragments
-      Bluetooth: Fix packet size provided to the controller
-      Bluetooth: Fix skb length calculation
-      Bluetooth: improve readability of l2cap_seq_list code
-      Bluetooth: report the right security level in getsockopt
-      Bluetooth: Create flags for bt_sk()
-      Bluetooth: Report proper error number in disconnection
-
-Hemant Gupta (5):
-      Bluetooth: Send correct address type for LTK
-      Bluetooth: Fix clearing discovery type when stopping discovery
-      Bluetooth: mgmt: Fix missing connect failed event for LE
-      Bluetooth: mgmt: Fix address type while loading Long Term Key
-      Bluetooth: Don't distribute keys in case of Encryption Failure
-
-Ido Yariv (1):
-      Bluetooth: Search global l2cap channels by src/dst addresses
-
-Jesper Juhl (1):
-      Bluetooth: btmrvl_sdio: remove pointless conditional before release_firmware()
-
-Johan Hedberg (2):
-      Bluetooth: mgmt: Fix device_connected sending order
-      Bluetooth: Fix Inquiry with RSSI event mask
-
-Larry Finger (1):
-      rtlwifi: fix for race condition when firmware is cached
-
-Lukasz Rymanowski (1):
-      Bluetooth: Remove not needed status parameter
-
-Marcel Holtmann (11):
-      Bluetooth: Add TX power tag to EIR data
-      Bluetooth: Handle EIR tags for Device ID
-      Bluetooth: Add management command for setting Device ID
-      Bluetooth: Fix broken usage of put_unaligned_le16
-      Bluetooth: Fix broken usage of get_unaligned_le16
-      Bluetooth: Update management interface revision
-      Bluetooth: Split error handling for L2CAP listen sockets
-      Bluetooth: Split error handling for SCO listen sockets
-      Bluetooth: Don't check source address in SCO bind function
-      Bluetooth: Restrict to one SCO listening socket
-      Bluetooth: Enable Low Energy support by default
-
-Mat Martineau (17):
-      Bluetooth: Add definitions and struct members for new ERTM state machine
-      Bluetooth: Add a structure to carry ERTM data in skb control blocks
-      Bluetooth: Initialize the transmit queue for L2CAP streaming mode
-      Bluetooth: Fix a redundant and problematic incoming MTU check
-      Bluetooth: Restore locking semantics when looking up L2CAP channels
-      Bluetooth: Lock the L2CAP channel when sending
-
-Michael Gruetzner (1):
-      Bluetooth: Add support for Foxconn/Hon Hai AR5BBU22 0489:E03C
-
-Mikel Astiz (3):
-      Bluetooth: Use unsigned int instead of signed int
-      Bluetooth: Remove unnecessary check
-      Bluetooth: btusb: Dynamic alternate setting
-
-Syam Sidhardhan (5):
-      Bluetooth: mgmt: Remove unwanted goto statements
-      Bluetooth: remove header declared but not defined
-      Bluetooth: Remove strtoba header declared but not defined
-      Bluetooth: Remove unused hci_le_ltk_reply()
-      Bluetooth: Remove unused hci_le_ltk_neg_reply()
-
-Szymon Janc (2):
-      Bluetooth: mgmt: Fix some code style and indentation issues
-      Bluetooth: mgmt: Don't allow to set invalid value to DeviceID source
-
-Ulisses Furquim (1):
-      Bluetooth: Fix registering hci with duplicate name
-
-Vinicius Costa Gomes (1):
-      Bluetooth: Add support for reusing the same hci_conn for LE links
-
-Vishal Agarwal (1):
-      Bluetooth: Fix EIR data generation for mgmt_device_found
-
- drivers/bluetooth/ath3k.c          |    6 +
- drivers/bluetooth/btmrvl_drv.h     |    3 +
- drivers/bluetooth/btmrvl_main.c    |   56 +--
- drivers/bluetooth/btmrvl_sdio.c    |  112 +++++-
- drivers/bluetooth/btusb.c          |   16 +-
- drivers/bluetooth/hci_ldisc.c      |    2 +-
- drivers/bluetooth/hci_vhci.c       |    3 +-
- drivers/net/wireless/rtlwifi/pci.c |   16 +-
- drivers/net/wireless/rtlwifi/usb.c |   10 +-
- include/net/bluetooth/bluetooth.h  |   31 +-
- include/net/bluetooth/hci.h        |    8 +-
- include/net/bluetooth/hci_core.h   |   67 ++--
- include/net/bluetooth/l2cap.h      |   93 ++++-
- include/net/bluetooth/mgmt.h       |    9 +
- include/net/bluetooth/smp.h        |    2 +-
- net/bluetooth/af_bluetooth.c       |    8 +-
- net/bluetooth/bnep/core.c          |    2 +-
- net/bluetooth/hci_conn.c           |   56 +--
- net/bluetooth/hci_core.c           |  275 ++++++--------
- net/bluetooth/hci_event.c          |   84 +++--
- net/bluetooth/hci_sysfs.c          |    5 +-
- net/bluetooth/l2cap_core.c         |  765 +++++++++++++++++++++++++++-----------
- net/bluetooth/l2cap_sock.c         |   84 +++--
- net/bluetooth/mgmt.c               |  286 ++++++++------
- net/bluetooth/rfcomm/sock.c        |   14 +-
- net/bluetooth/sco.c                |   75 ++--
- net/bluetooth/smp.c                |    2 +-
- 27 files changed, 1349 insertions(+), 741 deletions(-)
-
-
---DocE+STaALJfprDB
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPs82EAAoJEPs3PUX4s20oTbMP/jH77+OCAsPvx+2KkFUsh2NJ
-49M6j/o6Wx/jIxsX0TvAiU+p33zwp3k5ST/FDhp4swV42/mZ0gROTTfEF01u/tCS
-N7hdI83d07/x7EzwDCZlvtrR78y08UnuotuvrrvXEfvYDgjwM7wZ3DIPxQWJnLy4
-w7Y56YNOfe70VHcU/ZUyDQsKXUzmLmUHHhBfW1EdTEdbqm5sGrKlJ1+BArayiIeQ
-vE7ytVHLRYkgB33xOI9tDCrU/IeoAgKE7QpiHFLyDy0A0dcRhnltwaEsDqX3DCN0
-V/wtPV96BBUCUi7DKlIvsAsMl5hZ+BcoI8bi7B/xzRpQN34T2VApMybeEB8sa3gz
-xhdN1JdqlduQ+YnrW/mUGWspx99EP+9R4F66dj4RP+mczIxmCPGBteI8idXNW2MB
-x2ykOHln/MC5EakN+5yF77C50dZvi8sVAnZN3UI//1D9JVunneLIQwMapxg/NeL/
-rwGnxBGAEiQGS6C3InLZrRIc5wJnMazTVKmlMjPnOQHYQlPU2j/p+CY0t2bqHYWT
-YblQaYThlINw3VyNSw0sFiMg2tAgWrkvkwclc56bZpRa6g8Ap50/AcYKHEGPo9rm
-QXJWOFLqUQebTzNQjK9kXS2md6JHJiqQrxhBB58DK3+Gv9w6NUf/93g/EAp7GA1s
-hrP7aKPqBiYZ7xEAXxCd
-=cOhh
------END PGP SIGNATURE-----
-
---DocE+STaALJfprDB--
+Running without that "fix" the notebook detects more wifi networks,
+seams like the antenna have more force.
