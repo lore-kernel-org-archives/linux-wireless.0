@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:35397
-	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755681Ab2ENLpg (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38735 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288Ab2EAEtt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 07:45:36 -0400
-Date: Mon, 14 May 2012 13:45:33 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: net: wireless: add brcm80211 drivers
-In-Reply-To: <20120514083415.GA16999@mwanda>
-Message-ID: <alpine.DEB.2.02.1205141345101.2160@localhost6.localdomain6> (sfid-20120514_134539_988391_E610BC9D)
-References: <20120513174333.GB4280@elgon.mountain> <4FB0AF4B.9070606@broadcom.com> <20120514083415.GA16999@mwanda>
+	Tue, 1 May 2012 00:49:49 -0400
+Received: by iadi9 with SMTP id i9so5004960iad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 21:49:49 -0700 (PDT)
+Message-ID: <4F9F6B67.5000400@lwfinger.net> (sfid-20120501_065025_605698_9FF4325F)
+Date: Mon, 30 Apr 2012 23:49:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+To: simple w8 <simplew8@gmail.com>
+CC: Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com> <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com> <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com> <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com> <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com> <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com> <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net> <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com> <4F9F55F9.3090800@lwfinger.net> <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com>
+In-Reply-To: <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 14 May 2012, Dan Carpenter wrote:
+On 04/30/2012 10:40 PM, simple w8 wrote:
+>
+> Its done, and i have reloaded the module, but how can i be sure/check
+> about the rtl8192ce parameters?
 
-> On Mon, May 14, 2012 at 09:07:55AM +0200, Arend van Spriel wrote:
->> Thanks for running smatch. I will look in the current code base and fix
->> this. Just out of curiosity: Another static checker used regularly is
->> Coccinelle. What are the pros and cons of smatch compared to Coccinelle?
->>
->> Gr. AvS
->
-> That's a tricky question because of my obvious bias as the author
-> of Smatch, and I'm not an expert on Coccinelle.  ;)
->
-> Smatch works on the preprocessed code and Coccinelle works on .c
-> code.  So some things are easier to check for in Coccinelle.  I've
-> generally found hacks to get the information I need in Smatch but
-> sometimes it's gnarly.  So a one liner in Coccinelle is twenty lines
-> of code in Smatch which require in depth knowledge of Smatch and
-> Sparse.
->
-> Smatch doesn't fix the bugs it finds.
->
-> The other advantage for Coccinelle is that you can run it on other
-> architecture's code without setting up a cross compile environment.
->
-> What Smatch does that Coccinelle doesn't is that it tries to track
-> the values of all the variables.  This means you can detect array
-> overflows, for example.  Smatch tries to track values across
-> function calls as well, with the recent database work.
->
-> That's really the long term goal of Smatch, to track the value of
-> every variable in the kernel.  But there is still a lot of work to
-> do.  :P
+When you 'modprobe -rv rtl8192ce && modprobe -v rtl8192ce', you will see the 
+options listed.
 
-That all seems accurate to me :)
+I do not use anything from Microsoft.
 
-julia
+You will need to bisect the differences between 3.3.1 and 3.3.2. I see all the 
+local networks and cannot duplicate your problem. Thus, you will need to see 
+what patch is causing the problem.
+
+Larry
+
+
+
