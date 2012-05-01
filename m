@@ -1,187 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:37158 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755408Ab2ECHX4 (ORCPT
+Received: from investici.nine.ch ([217.150.252.179]:28417 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754591Ab2EAUzY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:23:56 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	harvey yang <harvey.huawei.yang@gmail.com>
-Subject: [PATCH 15/18] mwifiex: rearrange AP sys configure code
-Date: Thu,  3 May 2012 00:22:37 -0700
-Message-Id: <1336029760-22565-16-git-send-email-bzhao@marvell.com> (sfid-20120503_092413_119262_8E5FFCBB)
-In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
-References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+	Tue, 1 May 2012 16:55:24 -0400
+Date: Tue, 1 May 2012 22:56:17 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi warn_slowpath with 3.*
+Message-ID: <20120501205616.GA2563@ritirata.org> (sfid-20120501_225530_529748_8B8DB7CC)
+References: <20120422182928.GA2854@ritirata.org>
+ <20120430145803.GE2630@ritirata.org>
+ <20120430170337.GA2560@tuxdriver.com>
+ <4595B4D22AB93C4FABBA84AAD5AA37FD143115@ORSMSX103.amr.corp.intel.com>
+ <CANUX_P1Nx4jYbRwehi+qW-2RVy=ntb_cCzBzpYXkJysuPvrCPA@mail.gmail.com>
+ <20120501183415.GG4316@ritirata.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J/dobhs11T7y2rNN"
+In-Reply-To: <20120501183415.GG4316@ritirata.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
 
-This patch takes into account AP config_type
-(bss config/custom ie config) while preparing AP
-sys_configure command buffer.
+--J/dobhs11T7y2rNN
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    5 +-
- drivers/net/wireless/mwifiex/fw.h       |    2 +
- drivers/net/wireless/mwifiex/uap_cmd.c  |   62 +++++++++++++++++++++---------
- 3 files changed, 48 insertions(+), 21 deletions(-)
+On Tue, May 01, 2012 at 08:34:15PM +0200, Antonio Quartulli wrote:
+> On Tue, May 01, 2012 at 08:13:46PM +0300, Emmanuel Grumbach wrote:
+> > Hi,
+> >=20
+> > I am not sure the patch will help because the race is _very_ unlikely.
+> > But I would be glad to know if you can reproduce on latest
+> > compat-wireless.
+> > How reproducible is that on 3.3.3 ? Is that 100% ?
+>=20
+> it seems so. It happens at least once at boot time.
+> I will try wireless-testing and see what happens. Then I will apply your =
+patch.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index da9d975..1077e01 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -502,7 +502,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- 			ret = mwifiex_send_cmd_async(priv,
- 						     HostCmd_CMD_UAP_SYS_CONFIG,
- 						     HostCmd_ACT_GEN_SET,
--						     0, bss_cfg);
-+						     UAP_BSS_PARAMS_I, bss_cfg);
- 
- 			kfree(bss_cfg);
- 
-@@ -983,7 +983,8 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 	}
- 
- 	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
--				   HostCmd_ACT_GEN_SET, 0, bss_cfg)) {
-+				   HostCmd_ACT_GEN_SET,
-+				   UAP_BSS_PARAMS_I, bss_cfg)) {
- 		wiphy_err(wiphy, "Failed to set the SSID\n");
- 		kfree(bss_cfg);
- 		return -1;
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 57fd0ca..4fd7a05 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -93,6 +93,8 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- 
- #define CAL_SNR(RSSI, NF)		((s16)((s16)(RSSI)-(s16)(NF)))
- 
-+#define UAP_BSS_PARAMS_I			0
-+
- #define TLV_TYPE_UAP_SSID			0x0000
- 
- #define PROPRIETARY_TLV_BASE_ID                 0x0100
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 11118eb..4890f5f 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -123,14 +123,12 @@ void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config)
- 	config->retry_limit = 0x7F;
- }
- 
--/* Parse AP config structure and prepare TLV based command structure
-- * to be sent to FW for uAP configuration
-- */
--static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
--				      u16 cmd_action, void *cmd_buf)
-+/* This function parses BSS related parameters from structure
-+ * and prepares TLVs. These TLVs are appended to command buffer.
-+*/
-+static int
-+mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
- {
--	u8 *tlv;
--	struct host_cmd_ds_sys_config *sys_config = &cmd->params.uap_sys_config;
- 	struct host_cmd_tlv_dtim_period *dtim_period;
- 	struct host_cmd_tlv_beacon_period *beacon_period;
- 	struct host_cmd_tlv_ssid *ssid;
-@@ -145,14 +143,7 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
- 	struct host_cmd_tlv_passphrase *passphrase;
- 	struct host_cmd_tlv_akmp *tlv_akmp;
- 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
--	u16 cmd_size;
--
--	cmd->command = cpu_to_le16(HostCmd_CMD_UAP_SYS_CONFIG);
--	cmd_size = ((u16)(sizeof(struct host_cmd_ds_sys_config) + S_DS_GEN));
--
--	sys_config->action = cpu_to_le16(cmd_action);
--
--	tlv = sys_config->tlv;
-+	u16 cmd_size = *param_size;
- 
- 	if (bss_cfg->ssid.ssid_len) {
- 		ssid = (struct host_cmd_tlv_ssid *)tlv;
-@@ -319,7 +310,39 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
- 		tlv += sizeof(struct host_cmd_tlv_encrypt_protocol);
- 	}
- 
--	cmd->size = cpu_to_le16(cmd_size);
-+	*param_size = cmd_size;
-+
-+	return 0;
-+}
-+
-+/* Parse AP config structure and prepare TLV based command structure
-+ * to be sent to FW for uAP configuration
-+ */
-+static int
-+mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd, u16 cmd_action,
-+			   u32 type, void *cmd_buf)
-+{
-+	u8 *tlv;
-+	u16 cmd_size, param_size;
-+	struct host_cmd_ds_sys_config *sys_cfg;
-+
-+	cmd->command = cpu_to_le16(HostCmd_CMD_UAP_SYS_CONFIG);
-+	cmd_size = (u16)(sizeof(struct host_cmd_ds_sys_config) + S_DS_GEN);
-+	sys_cfg = (struct host_cmd_ds_sys_config *)&cmd->params.uap_sys_config;
-+	sys_cfg->action = cpu_to_le16(cmd_action);
-+	tlv = sys_cfg->tlv;
-+
-+	switch (type) {
-+	case UAP_BSS_PARAMS_I:
-+		param_size = cmd_size;
-+		if (mwifiex_uap_bss_param_prepare(tlv, cmd_buf, &param_size))
-+			return -1;
-+		cmd->size = cpu_to_le16(param_size);
-+		break;
-+	default:
-+		return -1;
-+	}
-+
- 	return 0;
- }
- 
-@@ -329,14 +352,14 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
-  * routines based upon the command number.
-  */
- int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
--			    u16 cmd_action, u32 cmd_oid,
-+			    u16 cmd_action, u32 type,
- 			    void *data_buf, void *cmd_buf)
- {
- 	struct host_cmd_ds_command *cmd = cmd_buf;
- 
- 	switch (cmd_no) {
- 	case HostCmd_CMD_UAP_SYS_CONFIG:
--		if (mwifiex_cmd_uap_sys_config(cmd, cmd_action, data_buf))
-+		if (mwifiex_cmd_uap_sys_config(cmd, cmd_action, type, data_buf))
- 			return -1;
- 		break;
- 	case HostCmd_CMD_UAP_BSS_START:
-@@ -371,7 +394,8 @@ int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel)
- 	bss_cfg->channel = channel;
- 
- 	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
--				   HostCmd_ACT_GEN_SET, 0, bss_cfg)) {
-+				   HostCmd_ACT_GEN_SET,
-+				   UAP_BSS_PARAMS_I, bss_cfg)) {
- 		wiphy_err(wiphy, "Failed to set the uAP channel\n");
- 		kfree(bss_cfg);
- 		return -1;
--- 
-1.7.0.2
+The problem is there either with wireless-testing and with
+wireless-testing+your_patch.
 
+If it can somehow help, I also got several stack trace regarding intel_iova
+functions. But then the I got kernel panic and I was not able to copy the
+messages.
+
+
+
+Thanks
+
+> >=20
+> > I guess my machine doesn't have IOMMU, but honestly, I am not sure I
+> > know how to check.
+> >=20
+> > On Tue, May 1, 2012 at 19:52, Venkataraman, Meenakshi
+> > <meenakshi.venkataraman@intel.com> wrote:
+> > >
+> > > Hi John, Antonio,
+> > >
+> > > Emmanuel found a race condition in rx buffer allocation/deallocation,=
+ and
+> > > attached is a patch that fixes it.
+> > >
+> > > >> > since linux-3.0 (I don't remember if it was the case even before=
+),
+> > > >> > I'm getting this output in dmesg:
+> > > >> >
+> > > >> > [ =C2=A0 53.662990] ------------[ cut here ]------------
+> > > >> > [ =C2=A0 53.663016] WARNING: at drivers/iommu/intel-iommu.c:2911
+> > > >> > intel_unmap_page+0x14b/0x180()
+> > > >> > [ =C2=A0 53.663047] Hardware name: Latitude E5420
+> > > >> > [ =C2=A0 53.663066] Driver unmaps unmatched page at PFN ffd1a000
+> > > >>
+> > > >>
+> > > >> I see that I always get the same addr passed to the unmap function:
+> > > >>
+> > > >> [ =C2=A0 23.950535] Driver unmaps unmatched page at PFN ffd1a000
+> > > >>
+> > > >> is it a coincidence?
+> > > >> I'm running linux-3.3.3 right now. I can try wireless-testing if it
+> > > >> would help.
+> > >
+> > > [MV] Antonio -- can you try out the patch attached and let us know if=
+ you
+> > > continue to see the problem?
+> > >
+> > > >Just for the record, we are seeing a similar problem on RHEL 6.3 (wh=
+ich
+> > > > has an
+> > > >iwlwifi driver derived from linux-3.2).
+> > > >
+> > > > =C2=A0 =C2=A0 =C2=A0 https://bugzilla.redhat.com/show_bug.cgi?id=3D=
+815998
+> > >
+> > > [MV] John -- I'll update the redhat bugzilla as well.
+> > >
+> > > Thanks
+> > > Meenakshi
+>=20
+> --=20
+> Antonio Quartulli
+>=20
+> ..each of us alone is worth nothing..
+> Ernesto "Che" Guevara
+
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--J/dobhs11T7y2rNN
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPoE3wAAoJEFMQTLzJFOZFR2MIAKoZn+oRnOhgm86zjtQnv+Hw
+Gcmp5ZoOHPKwghpTzripbhuTpQYjn1LSdIC0RZs48YxGU/ys4uiWZBUHiJiVg5de
+15L1ayoiaDoJwrY5FmfUmR6VerZ8RYYCwc4BLW8dhGcZSLen0fYeM6loZ8Mhaa6P
+eOzt1gvFtS5pKXsNL+RENRG3YODDLMNsUoF6WAtS8/+aT7iGyxZEqzQvDxxxoDkr
+YY4yKb6Af65BIm4UtWMADyu3xcma/ufDGETukvWW1JRS/FbbKcBz6g/y1T22wKBv
+eV1a60xLhNQDH7cqwkEpl7pARGooQHBDnpRZnkE9POye9GcfxPDDr8RfW7+y6dU=
+=ALso
+-----END PGP SIGNATURE-----
+
+--J/dobhs11T7y2rNN--
