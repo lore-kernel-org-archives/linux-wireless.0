@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:45694 "HELO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751977Ab2EQEda (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:63957 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919Ab2EAKBp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 00:33:30 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3/3] mwifiex: fix kernel warning in ibss start/join path
-Date: Wed, 16 May 2012 21:24:56 -0700
-Message-Id: <1337228696-22312-3-git-send-email-bzhao@marvell.com> (sfid-20120517_063333_463261_998602DE)
-In-Reply-To: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
-References: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
+	Tue, 1 May 2012 06:01:45 -0400
+Received: by wgbdr13 with SMTP id dr13so1341341wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 03:01:44 -0700 (PDT)
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devel@lists.open80211s.org, distro11s@cozybit.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211_hwsim: Fix rate control by correctly reporting transmission counts
+Date: Tue,  1 May 2012 03:01:28 -0700
+Message-Id: <1335866488-23244-1-git-send-email-javier@cozybit.com> (sfid-20120501_120149_481306_16C4204B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Drivers need to report the number of transmission attempts for each rate
+as well as to terminate the rate array with -1.  The in-kernel datapath
+of hwsim simulates a perfect medium, therefore the driver only needs to
+report that the first transmission attempt was sucessfully completed at
+the most favorable rate.
 
-Since cfg80211_ibss_joined() is called inside ibss join callback
-routine, following kernel warning is hit while starting/joining
-an ibss network.
+Rate control is working again for this driver.  Tested mesh mode with
+minstrel.
 
-"WARNING: at net/wireless/ibss.c:63 cfg80211_ibss_joined+0x35/0xb6
-[cfg80211]()"
-
-Update "wdev->ssid" and "wdev->ssid_len" in ibss join callback to
-fix this warning.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 015fec3..194a42b 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1294,6 +1294,8 @@ mwifiex_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 				     params->channel, NULL, params->privacy);
- done:
- 	if (!ret) {
-+		memcpy(priv->wdev->ssid, params->ssid, params->ssid_len);
-+		priv->wdev->ssid_len = params->ssid_len;
- 		cfg80211_ibss_joined(priv->netdev, priv->cfg_bssid, GFP_KERNEL);
- 		dev_dbg(priv->adapter->dev,
- 			"info: joined/created adhoc network with bssid"
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 3edd473..840cd53 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -741,6 +741,11 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		hwsim_check_sta_magic(txi->control.sta);
+ 
+ 	ieee80211_tx_info_clear_status(txi);
++
++	/* frame was transmitted at most favorable rate at first attempt */
++	txi->control.rates[0].count = 1;
++	txi->control.rates[1].idx = -1;
++
+ 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
+ 		txi->flags |= IEEE80211_TX_STAT_ACK;
+ 	ieee80211_tx_status_irqsafe(hw, skb);
 -- 
-1.7.0.2
+1.7.5.4
 
