@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:53868 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757700Ab2EaCX5 convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:60310 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756620Ab2EATS7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 22:23:57 -0400
-Received: by lbbgm6 with SMTP id gm6so493976lbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 19:23:56 -0700 (PDT)
+	Tue, 1 May 2012 15:18:59 -0400
+Received: by ghrr11 with SMTP id r11so2281155ghr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 12:18:58 -0700 (PDT)
+Message-ID: <4FA0371E.9040704@lwfinger.net> (sfid-20120501_211902_675736_B3CDEF17)
+Date: Tue, 01 May 2012 14:18:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1338430181-12490-1-git-send-email-yeohchunyeow@gmail.com>
-References: <1338430181-12490-1-git-send-email-yeohchunyeow@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 31 May 2012 12:23:34 +1000
-Message-ID: <CAGRGNgWXF5AMQfSkoCBGWgB1sod6fOEqViDiFCif2hqLx55N0g@mail.gmail.com> (sfid-20120531_042419_616214_239AC8E5)
-Subject: Re: [PATCH] {nl,cfg,mac}80211: implement dot11MeshHWMPconfirmationInterval
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	javier@cozybit.com, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: Suspicious RCU usage in mac80211
+References: <4F83A6DE.7070109@lwfinger.net> <1334201497.3788.1.camel@jlt3.sipsolutions.net> <4F865155.2000202@lwfinger.net> <1334202842.3788.10.camel@jlt3.sipsolutions.net> <4F86FA05.5080404@lwfinger.net> <1334246145.4062.0.camel@jlt3.sipsolutions.net> <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
+In-Reply-To: <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Chun-Yeow,
-
-On Thu, May 31, 2012 at 12:09 PM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
-> As defined in section 13.10.9.3 Case D (802.11-2012), this control variable is used to limit the
-> mesh STA to send only one PREQ to a root mesh STA within this interval of time (in TUs). The
-> default value for this variable is set to 2000 TUs. However, for current implementation, the maximum
-> configurable of dot11MeshHWMPconfirmationInterval is restricted by dot11MeshHWMPactivePathTimeout.
+On 05/01/2012 09:25 AM, Mohammed Shafi wrote:
 >
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
-> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> index a6959f7..14bbf47 100644
-> --- a/include/linux/nl80211.h
-> +++ b/include/linux/nl80211.h
-> @@ -2136,6 +2136,10 @@ enum nl80211_mntr_flags {
->  * @NL80211_MESHCONF_HWMP_RANN_INTERVAL:  The interval of time (in TUs) between
->  * root announcements are transmitted.
->  *
-> + * @NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL: The minimum interval of time
-> + * (in TUs) during which a mesh STA can send only one Action frame containing
-> + * a PREQ element for root path confirmation.
+> i just looked into the code and compared it with
+> sta_addba_resp_timer_expired and thought whether we should do
+> this..
 
-This doesn't make sense.
+Your patch does not help. I still get the following dump in the log:
 
-Is this what you're trying to say?
+===============================
+[ INFO: suspicious RCU usage. ]
+3.4.0-rc5-wl+ #287 Not tainted
+-------------------------------
+net/mac80211/sta_info.h:456 suspicious rcu_dereference_protected() usage!
 
-"Minimum interval of time (in TUs) between sending Action frames
-containing PREQ elements for root path confirmation."
+other info that might help us debug this:
 
-Thanks,
+rcu_scheduler_active = 1, debug_locks = 0
+3 locks held by kmemleak/622:
+#0:  (scan_mutex){+.+...}, at: [<ffffffff8113b0d6>] kmemleak_scan_thread+0x56/0xd0
+#1:  (&tid_tx->session_timer){+.-...}, at: [<ffffffff8104853a>] 
+run_timer_softirq+0xfa/0x6e0
+#2:  (rcu_read_lock){.+.+..}, at: [<ffffffffa0449ff0>] 
+sta_tx_agg_session_timer_expired+0x0/0x2a0 [mac80211]
 
--- 
-Julian Calaby
+stack backtrace:
+Pid: 622, comm: kmemleak Not tainted 3.4.0-rc5-wl+ #287
+Call Trace:
+  <IRQ>  [<ffffffff8109309d>] lockdep_rcu_suspicious+0xfd/0x130
+  [<ffffffffa044a1cf>] sta_tx_agg_session_timer_expired+0x1df/0x2a0 [mac80211]
+  [<ffffffffa0449ff0>] ? ieee80211_start_tx_ba_session+0x450/0x450 [mac80211]
+  [<ffffffff810485c5>] run_timer_softirq+0x185/0x6e0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+As kmemleak seems to be involved, I have added Catalin Marinas to the Cc list.
+
+Larry
+
+
