@@ -1,80 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:5258 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762114Ab2EQQ3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 12:29:41 -0400
-Date: Thu, 17 May 2012 09:29:22 -0700
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	linux-bluetooth@vger.kernel.org,
-	gigaset307x-common@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
-Subject: Re: [RFC 13/13] USB: Disable hub-initiated LPM for comms devices.
-Message-ID: <20120517162922.GC4967@xanatos> (sfid-20120517_182956_542332_128C125E)
-References: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
- <20120516224528.GA25936@xanatos>
- <20120516232019.GA960@kroah.com>
- <20120517045220.GA4772@xanatos>
- <20120517144951.GB27597@kroah.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:53751 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756801Ab2EAUJG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2012 16:09:06 -0400
+Received: by were53 with SMTP id e53so369831wer.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 13:09:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120517144951.GB27597@kroah.com>
+In-Reply-To: <CAOvK7nAOGwdDbwCPPFg+2w4DiUv75ppY0wSK6rjUqaZGHHmk4g@mail.gmail.com>
+References: <CAOvK7nAOHqKC8rpFDqGnW7NLCX-G2+syRGih_rv7N5O5rfOUdA@mail.gmail.com>
+	<CANUX_P1t8XJOka-QGzZSYFHb6MLc7rm4madn059Yg4b6hJB49A@mail.gmail.com>
+	<CAOvK7nDO4fS6R5go+ZXYBqyQc8hhbJGun9Weh=-EyX5k11+tXw@mail.gmail.com>
+	<CANUX_P2rzvDCBVLmU2rfaZmUOCMuMDe5=TXE_jwxq4ULrvc=QQ@mail.gmail.com>
+	<CAOvK7nCwRbDNZSnn0EvFMpcQMvX1DmU-tBuFT4kRW1TigwyJDQ@mail.gmail.com>
+	<CANUX_P0JsyA53T_vs5Ea0pE5Ye4G9xRC4xKcdwgAmoC8E63sHg@mail.gmail.com>
+	<CAOvK7nCf6k_ugJ=UBF8y0VBr_kVmESpetfnpn=NW73r_K=kKyw@mail.gmail.com>
+	<CAOvK7nCGwqqqrWNQhPqZoBqs6eT11gQNYbrZhb0bNSPTS-YxEw@mail.gmail.com>
+	<CANUX_P2DDQ-U9Yz2YksEEpOgjyyYO1GnFHR8ogEHNwojKvn3yg@mail.gmail.com>
+	<CAOvK7nB0L9GcnV-cNONndZMrAVLfFf3VaY4T-gPb+FgrNByeSA@mail.gmail.com>
+	<CANUX_P38L7OqBNeK+jO0EPMHf1M3QKxmsTA6o-t+6ujoq1VJ5w@mail.gmail.com>
+	<CAOvK7nB1gnnWcv6HFrn1MhMe-FheRtdTpi+BhCcCYNx6RowaTQ@mail.gmail.com>
+	<CANUX_P3SFmNKqUTt53EHkAjupAoB8ZxQZZP1osm7=JwfHnwbqg@mail.gmail.com>
+	<CANUX_P1ivcpLxm4z5k8SU+hGXG0A1hbSMnps7_i025kaAThyCg@mail.gmail.com>
+	<CAOvK7nBGBDWhQnq8MT51dE=LXUxoQH1FLJ2TNUr42He1KbBurg@mail.gmail.com>
+	<CANUX_P25bU36A0n4YSO1mBUTn9pxYYua28=o9Soo12mVyZNVcQ@mail.gmail.com>
+	<CANUX_P3+4hTGJSoo669LixMmNjxv1pqAwmLgVi16iF+LX7-ebQ@mail.gmail.com>
+	<CAOvK7nA7=B_=kaQasYpwAegNG21GdxCuTZ5z+T7PMYPNaTxsXA@mail.gmail.com>
+	<CANUX_P3JrvyV7wXCkeXaS4k3GgcRxkSPW_5TGpqXFhrHKp5OYQ@mail.gmail.com>
+	<CAOvK7nAOGwdDbwCPPFg+2w4DiUv75ppY0wSK6rjUqaZGHHmk4g@mail.gmail.com>
+Date: Tue, 1 May 2012 23:09:05 +0300
+Message-ID: <CANUX_P0mfez7RDfAnUQg_rn1Ow1drXiZ4b6G2y6Ph5+Yqot=kA@mail.gmail.com> (sfid-20120501_220911_521904_44DE1E64)
+Subject: Re: iwlwifi bug
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: dchyan@princeton.edu
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 17, 2012 at 07:49:51AM -0700, Greg Kroah-Hartman wrote:
-> On Wed, May 16, 2012 at 09:52:20PM -0700, Sarah Sharp wrote:
-> > On Wed, May 16, 2012 at 04:20:19PM -0700, Greg Kroah-Hartman wrote:
-> > > On Wed, May 16, 2012 at 03:45:28PM -0700, Sarah Sharp wrote:
-> > > > The Intel Windows folks are disabling hub-initiated LPM for all USB
-> > > > communications devices under a xHCI USB 3.0 host.  In order to keep
-> > > > the Linux behavior as close as possible to Windows, we need to do the
-> > > > same in Linux.
-> > > 
-> > > How is the USB core on Windows determining that LPM should be turned off
-> > > for these devices?  Surely they aren't modifying each individual driver
-> > > like this is, right?  Any way we also can do this in the core?
-> > 
-> > No, I don't think they're modifying individual drivers.  Maybe they
-> > placed a shim/filter driver below other drivers?
-> 
-> They can do this in their driver by just watching the device class type.
-> 
-> > Basically, I don't know the exact details of what the Windows folks are
-> > doing.  The recommendation from the Intel Windows team was simply to
-> > turn hub-initiated LPM off for "all communications devices".  Perhaps
-> > the Windows USB core is looking for specific USB class codes?  Or maybe
-> > it has some older API that lets the core know it's a communications
-> > device?
-> > 
-> > I'm not really sure we can do it in the USB core with out basically
-> > duplicating all the class/PID/VID matching in the communications driver.
-> > I think just adding a flag might be the best way.  I'm open to
-> > suggestions though.
-> 
-> You can detect something as "simple" as a class type, which I bet is all
-> that Windows is going to be able to do as well.
-> 
-> > > Or, turn it around the other way, and only enable it if we know it's
-> > > safe to do so, in each driver, but I guess that would be even messier.
-> > 
-> > Yeah, I think it would be messier.
-> 
-> Ok, this is probably the best solution for us as well, sorry for the
-> noise.
+On Tue, May 1, 2012 at 20:52, Daniel Chyan <dchyan@princeton.edu> wrote:
+> Well I believe I can reproduce it by downgrading to an older driver,
+> but I am unable to reproduce it now.
+>
 
-No worries. :)
+I had sent a fix for that, but the driver you were running when you
+reported the issue already included the fix.
 
-One of the problems with this patch is that several mailing lists
-rejected it because of the large number of recipients in the Cc list,
-even when just the mailing lists were on the Cc list.  Should I break it
-up into a series of patches per driver?
-
-Also, do I need to wait on acks from the other maintainers for this
-change?  My instinct is no, since it shouldn't change the behavior of
-their drivers with the USB devices that are out there today, but I don't
-want to step on anyone's toes.
-
-Sarah Sharp
+> On Mon, Apr 30, 2012 at 3:22 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> On Mon, Apr 30, 2012 at 21:41, Daniel Chyan <dchyan@princeton.edu> wrote:
+>>> I am running iwlwifi with the additional flags. Nothing particularly
+>>> alarming has appeared in the logs, but I have attached it.
+>>>
+>>
+>> Yeah... I was hoping you could reliably reproduce the issue but
+>> apparently not :-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
