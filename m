@@ -1,170 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:49360 "EHLO mout2.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755893Ab2EJHXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 03:23:08 -0400
-Received: from [195.4.92.142] (helo=mjail2.freenet.de)
-	by mout2.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1SSNiL-0006cH-N2
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 09:23:05 +0200
-Received: from localhost ([::1]:49385 helo=mjail2.freenet.de)
-	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SSNiL-0003VT-JK
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 09:23:05 +0200
-Received: from [195.4.92.27] (port=44772 helo=17.mx.freenet.de)
-	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SSNfS-00021F-Bu
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 09:20:06 +0200
-Received: from [2002:4fde:1bf:2:5054:ff:feb8:40bd] (port=46884 helo=mail.maya.org)
-	by 17.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1SSNfR-0003mE-GZ
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 09:20:05 +0200
-Message-Id: <201205100719.q4A7JwVl003140@mail.maya.org> (sfid-20120510_092312_902246_F52D3B41)
-Date: Thu, 10 May 2012 09:19:56 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-To: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH][RFC/RFT] rt2800: Implement selectable support for 802.11w
- (MFP)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from latitanza.investici.org ([82.94.249.234]:39449 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756801Ab2EATBf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2012 15:01:35 -0400
+Date: Tue, 1 May 2012 20:34:15 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi warn_slowpath with 3.*
+Message-ID: <20120501183415.GG4316@ritirata.org> (sfid-20120501_210140_004028_369A0A43)
+References: <20120422182928.GA2854@ritirata.org>
+ <20120430145803.GE2630@ritirata.org>
+ <20120430170337.GA2560@tuxdriver.com>
+ <4595B4D22AB93C4FABBA84AAD5AA37FD143115@ORSMSX103.amr.corp.intel.com>
+ <CANUX_P1Nx4jYbRwehi+qW-2RVy=ntb_cCzBzpYXkJysuPvrCPA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="2xeD/fx0+7k8I/QN"
+In-Reply-To: <CANUX_P1Nx4jYbRwehi+qW-2RVy=ntb_cCzBzpYXkJysuPvrCPA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for 802.11w for rt2800. This is achieved by
-using the 802.11w implementation in mac80211.
 
-To get this working, it is necessary to disable hw encryption of
-rt2800pci / rt2800usb, because I don't know of any support in hardware
-for 802.11w and therefore let mac80211 do the whole job.
+--2xeD/fx0+7k8I/QN
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The user can enable 802.11w with the new mod parameter enablemfp.
-Enabling MFP disables hw encryption.
+On Tue, May 01, 2012 at 08:13:46PM +0300, Emmanuel Grumbach wrote:
+> Hi,
+>=20
+> I am not sure the patch will help because the race is _very_ unlikely.
+> But I would be glad to know if you can reproduce on latest
+> compat-wireless.
+> How reproducible is that on 3.3.3 ? Is that 100% ?
 
-802.11w is deactivated per default.
+it seems so. It happens at least once at boot time.
+I will try wireless-testing and see what happens. Then I will apply your pa=
+tch.
 
-Tested with rt2860 and rt3572.
+Thanks a lot!
 
-This is a workaround as long as there isn't hardware support implemented
-in the driver.
+>=20
+> I guess my machine doesn't have IOMMU, but honestly, I am not sure I
+> know how to check.
+>=20
+> On Tue, May 1, 2012 at 19:52, Venkataraman, Meenakshi
+> <meenakshi.venkataraman@intel.com> wrote:
+> >
+> > Hi John, Antonio,
+> >
+> > Emmanuel found a race condition in rx buffer allocation/deallocation, a=
+nd
+> > attached is a patch that fixes it.
+> >
+> > >> > since linux-3.0 (I don't remember if it was the case even before),
+> > >> > I'm getting this output in dmesg:
+> > >> >
+> > >> > [ =C2=A0 53.662990] ------------[ cut here ]------------
+> > >> > [ =C2=A0 53.663016] WARNING: at drivers/iommu/intel-iommu.c:2911
+> > >> > intel_unmap_page+0x14b/0x180()
+> > >> > [ =C2=A0 53.663047] Hardware name: Latitude E5420
+> > >> > [ =C2=A0 53.663066] Driver unmaps unmatched page at PFN ffd1a000
+> > >>
+> > >>
+> > >> I see that I always get the same addr passed to the unmap function:
+> > >>
+> > >> [ =C2=A0 23.950535] Driver unmaps unmatched page at PFN ffd1a000
+> > >>
+> > >> is it a coincidence?
+> > >> I'm running linux-3.3.3 right now. I can try wireless-testing if it
+> > >> would help.
+> >
+> > [MV] Antonio -- can you try out the patch attached and let us know if y=
+ou
+> > continue to see the problem?
+> >
+> > >Just for the record, we are seeing a similar problem on RHEL 6.3 (which
+> > > has an
+> > >iwlwifi driver derived from linux-3.2).
+> > >
+> > > =C2=A0 =C2=A0 =C2=A0 https://bugzilla.redhat.com/show_bug.cgi?id=3D81=
+5998
+> >
+> > [MV] John -- I'll update the redhat bugzilla as well.
+> >
+> > Thanks
+> > Meenakshi
 
-Signed-off-by: Andreas Hartmann <andihartmann@01019freenet.de>
----
-diff -ur compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800lib.c compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800lib.c
---- compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800lib.c	2012-04-26 22:10:30.000000000 +0200
-+++ compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800lib.c	2012-05-09 11:37:48.463278177 +0200
-@@ -4519,6 +4519,15 @@
- 	    IEEE80211_HW_AMPDU_AGGREGATION |
- 	    IEEE80211_HW_REPORTS_TX_ACK_STATUS;
- 
-+	/* 
-+	 * Enable support for 802.11w in mac80211. hwencryption must be disabled
-+	 */
-+	if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags) && rt2x00dev->mfprequested) {
-+		INFO(rt2x00dev, "802.11w support (MFP) enabled.\n");
-+		rt2x00dev->hw->flags |=
-+			IEEE80211_HW_MFP_CAPABLE;
-+	}
-+
- 	/*
- 	 * Don't set IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING for USB devices
- 	 * unless we are capable of sending the buffered frames out after the
-diff -ur compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800pci.c compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800pci.c
---- compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800pci.c	2012-04-26 22:10:30.000000000 +0200
-+++ compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800pci.c	2012-05-09 13:29:47.159979903 +0200
-@@ -54,6 +54,13 @@
- module_param_named(nohwcrypt, modparam_nohwcrypt, bool, S_IRUGO);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- 
-+/*
-+ * Enable support for 802.11w / MFP
-+ */
-+static bool modparam_enablemfp = false;
-+module_param_named(enablemfp, modparam_enablemfp, bool, S_IRUGO);
-+MODULE_PARM_DESC(enablemfp, "Enable 802.11w / MFP support. Hardware encryption gets disabled.");
-+
- static void rt2800pci_mcu_status(struct rt2x00_dev *rt2x00dev, const u8 token)
- {
- 	unsigned int i;
-@@ -989,6 +996,8 @@
- 	if (retval)
- 		return retval;
- 
-+	rt2x00dev->mfprequested = modparam_enablemfp ? 1 : 0;
-+
- 	/*
- 	 * Initialize hw specifications.
- 	 */
-@@ -1018,8 +1027,14 @@
- 	__set_bit(REQUIRE_L2PAD, &rt2x00dev->cap_flags);
- 	__set_bit(REQUIRE_TXSTATUS_FIFO, &rt2x00dev->cap_flags);
- 	__set_bit(REQUIRE_TASKLET_CONTEXT, &rt2x00dev->cap_flags);
--	if (!modparam_nohwcrypt)
-+
-+	if (!modparam_nohwcrypt && !modparam_enablemfp) {
-+		INFO(rt2x00dev, "hw encryption enabled.\n");
- 		__set_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags);
-+		}
-+	else
-+		INFO(rt2x00dev, "hw encryption disabled. See modparams nohwcrypt or enablemfp.\n");
-+
- 	__set_bit(CAPABILITY_LINK_TUNING, &rt2x00dev->cap_flags);
- 	__set_bit(REQUIRE_HT_TX_DESC, &rt2x00dev->cap_flags);
- 
-diff -ur compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800usb.c compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800usb.c
---- compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800usb.c	2012-04-26 22:10:30.000000000 +0200
-+++ compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800usb.c	2012-05-09 13:38:26.633954818 +0200
-@@ -50,6 +50,13 @@
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- 
- /*
-+ * Allow support for 802.11w / MFP to be enabled
-+ */
-+static bool modparam_enablemfp = false;
-+module_param_named(enablemfp, modparam_enablemfp, bool, S_IRUGO);
-+MODULE_PARM_DESC(enablemfp, "Enable 802.11w / MFP support. Hardware encryption gets disabled.");
-+
-+/*
-  * Queue handlers.
-  */
- static void rt2800usb_start_queue(struct data_queue *queue)
-@@ -748,6 +755,8 @@
- 	if (retval)
- 		return retval;
- 
-+	rt2x00dev->mfprequested = modparam_enablemfp ? 1 : 0;
-+
- 	/*
- 	 * Initialize hw specifications.
- 	 */
-@@ -767,8 +776,14 @@
- 	 */
- 	__set_bit(REQUIRE_FIRMWARE, &rt2x00dev->cap_flags);
- 	__set_bit(REQUIRE_L2PAD, &rt2x00dev->cap_flags);
--	if (!modparam_nohwcrypt)
-+
-+	if (!modparam_nohwcrypt && !modparam_enablemfp) {
-+		INFO(rt2x00dev, "hw encryption enabled.\n");
- 		__set_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags);
-+	}
-+	else
-+		INFO(rt2x00dev, "hw encryption disabled. See modparams nohwcrypt or enablemfp.\n");
-+
- 	__set_bit(CAPABILITY_LINK_TUNING, &rt2x00dev->cap_flags);
- 	__set_bit(REQUIRE_HT_TX_DESC, &rt2x00dev->cap_flags);
- 	__set_bit(REQUIRE_TXSTATUS_FIFO, &rt2x00dev->cap_flags);
-diff -ur compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2x00.h compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2x00.h
---- compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2x00.h	2012-04-26 22:10:30.000000000 +0200
-+++ compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2x00.h	2012-05-09 11:10:56.733118518 +0200
-@@ -821,6 +821,11 @@
- 	struct hw_mode_spec spec;
- 
- 	/*
-+	 * 802.11w (MFP) support requested by module parameter
-+	 */
-+	u8 mfprequested;
-+
-+	/*
- 	 * This is the default TX/RX antenna setup as indicated
- 	 * by the device's EEPROM.
- 	 */
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--2xeD/fx0+7k8I/QN
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPoCynAAoJEFMQTLzJFOZFIDYH/iXYdRxp4ituUgxP2vgusYU8
+GYIT2x29ahCExNgmMvrBcPqygpNYPeco5dUWxZx2b9eFX87DtELe83u2ZMHjqAM1
+Q+WRjL0Q0a/kb2ZPRjfYKQj6beZIzFSQ+Zd3gTcs4s0LlRoSCSwWhzd+MvWq3wRx
+HqPpPa9FR5qyEgKVyy1TJcpV3e0eo9nLhPaWyPpaYeK9DkNzU4H5H1C/RgFZjSdS
+459vWX+RLHuKm7mqtZ3hcqt7MLDe0KfKfGnOAgIr+wHwiWUgYOFya9TDwdgwCpBD
+aeQ7Ecie7glmTQEO8F8H4s5yj/3QWulnIyLhU4JMz7/E27TpkPG5SwVi+6Hlg5k=
+=Wj2+
+-----END PGP SIGNATURE-----
+
+--2xeD/fx0+7k8I/QN--
