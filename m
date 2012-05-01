@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39363 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965929Ab2EOWRu (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:51096 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837Ab2EAUmz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 18:17:50 -0400
-Date: Tue, 15 May 2012 18:01:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: pull request: wl12xx 2012-05-03
-Message-ID: <20120515220105.GI24572@tuxdriver.com> (sfid-20120516_001815_173118_E0F9EED9)
-References: <1336050471.12189.37.camel@cumari.coelho.fi>
+	Tue, 1 May 2012 16:42:55 -0400
+Received: by lbbgm6 with SMTP id gm6so1118085lbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 13:42:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1336050471.12189.37.camel@cumari.coelho.fi>
+In-Reply-To: <4F9FF3D3.1020006@lwfinger.net>
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
+ <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com>
+ <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
+ <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+ <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
+ <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+ <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
+ <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com>
+ <4F9F55F9.3090800@lwfinger.net> <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com>
+ <4F9F6B67.5000400@lwfinger.net> <CAKVccoVA=Rk8AkD+h0n9aeV95h0iMcnQgM_WMJq3rjzoFvkU-w@mail.gmail.com>
+ <CAKVccoX=u=qX_OJ8RMSxpNEMGYdGVzimZURJ+ZeNZjhW1jPt6Q@mail.gmail.com> <4F9FF3D3.1020006@lwfinger.net>
+From: simple w8 <simplew8@gmail.com>
+Date: Tue, 1 May 2012 21:42:33 +0100
+Message-ID: <CAKVccoWJPdPZqoLn6L+_PUKdiM0sLZhCBQCAa2aM7i1xgR21DA@mail.gmail.com> (sfid-20120501_224258_910123_65445081)
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 03, 2012 at 04:07:51PM +0300, Luciano Coelho wrote:
-> Hi John,
-> 
-> This is another pull request intended for 3.5.  A few fixes here and
-> there, stuff that has been pending for a while and I hadn't had the time
-> to apply.  Nothing really major.
-> 
-> Please pull or let me know if there's any problem. This tree is based on
-> wireless-next/master and the head I want you to pull from is
-> 422823e85d3957b64c573a2f15c6172d78de1e00. 
-> 
-> Thanks! 
-> 
-> The following changes since commit 0a9b3782ef402d27c3e6d1b116f10076a9dd088c:
-> 
->   {nl,cfg,mac}80211: Allow user to see/configure HT protection mode (2012-05-02 14:30:55 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
-> 
-> for you to fetch changes up to 422823e85d3957b64c573a2f15c6172d78de1e00:
-> 
->   wlcore/wl12xx: implement better beacon loss handling (2012-05-03 15:45:03 +0300)
+2012/5/1 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 05/01/2012 08:36 AM, simple w8 wrote:
+>>
+>>
+>> SEams that was your last fix for rtl8192
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commit;h=eb641120479de7ee703fabb5e6ee0ec7947474ba
+>>   that reduced the wifi force, thus detecting less wifi networks.
+>>
+>> Running without that "fix" the notebook detects more wifi networks,
+>> seams like the antenna have more force.
+>
+>
+> You keep talking about "antenna force". What does that mean?
+>
+> That patch keeps your device from running forever at a maximum of 1 Mbps by
+> adjusting the initial gain of the RX amplifier. You may reverse it if you
+> want so that you can detect more APs when you scan; however, most people
+> prefer to get better performance from the device. That patch will not be
+> reversed.
 
-I used the magic of git to fix this up after last week's rebasing.
-Please do take the opportunity to verify the result.
+Could you please clarify a litle more about the why and the patch fix?
 
-Thanks,
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> As to the problems with power saving, I cannot fix a problem if I cannot
+> duplicate it. The locking in that section has been reviewed by several
+> people, and there are no glaring errors. If disabling power saving makes
+> your box work, then that is what you need to do. That is why those
+> parameters can be set at load time.
+>
+> Larry
+>
+>
