@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:53059 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752572Ab2EJQy4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:54:56 -0400
-Received: by pbbrp8 with SMTP id rp8so2128765pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 09:54:56 -0700 (PDT)
-Date: Thu, 10 May 2012 09:54:51 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	florian.c.schilhabel@googlemail.com, ali@internetdog.org,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 0/3] staging: delete duplicated files/functionality in
- rtl8712
-Message-ID: <20120510165451.GA12958@kroah.com> (sfid-20120510_185505_360966_032CE7D4)
-References: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:57427 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755584Ab2EASVU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2012 14:21:20 -0400
+Message-ID: <4FA02998.4000506@hauke-m.de> (sfid-20120501_202124_418855_347663B8)
+Date: Tue, 01 May 2012 20:21:12 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
+References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de> <4F9CF839.1040401@broadcom.com> <4F9D4073.200@hauke-m.de> <4F9D7032.40507@broadcom.com> <4F9DC495.7060103@hauke-m.de> <4F9FAE48.10102@broadcom.com>
+In-Reply-To: <4F9FAE48.10102@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 09, 2012 at 11:47:18PM -0400, Paul Gortmaker wrote:
-> A git grep happened to lead me into this dir, and once there I couldn't
-> simply leave and pretend I didn't see the stuff that I saw.
+On 05/01/2012 11:35 AM, Arend van Spriel wrote:
+> On 04/30/2012 12:45 AM, Hauke Mehrtens wrote:
+>> On 04/29/2012 06:45 PM, Arend van Spriel wrote:
+>>> What firmware are you using?
+>>
+>> On b43 I am using firmware version 666.2 from wl 5.100.138, but also
+>> older versions are working. On brcmsmac I am using bcm43xx-0.fw and
+>> bcm43xx_hdr-0.fw from the linux-firmware git repo.
+>>
+>> Does the ucode you provide in bcm43xx-0.fw and bcm43xx_hdr-0.fw support
+>> rev 17 ieee80211 cores? For b43 it is the same file for all n-phy based
+>> cores rev>= 16, so for wl it should be the same, but have you added
+>> some special handling into this firmware for brcmsmac?
+>>
+>> Hauke
+>>
 > 
-> There were duplicated basic networking headers like if_ether.h and
-> ip.h (of course, some ancient versions, too).  And a whole whack of
-> boilerplate endian handling functionality duplicated too.
-> 
-> I forced myself to stop looking after that.
+> Yes, the firmware for brcmsmac is specifically for 43224, 43225, and
+> 4313. I have to check with the firmware guys here what is needed for 4718.
+I tried to load the firmware b43 uses (extracted from wl) in version
+666.2 and my bcm43224 device is working with that firmware like with the
+firmware supposed for brcmsmac (bcm43xx-0.fw). after loading the b43
+firmware my bcm4718 does not show the "wl1: wlc_coreinit: ucode did not
+self-suspend!" line any more, but still "wlc_coreinit: txfifo mismatch:
+ucode size 111 driver size 28518 index 5" and crashes the device after
+that with a Data bus error.
 
-Yes, it's a mess, thanks for working on cleaning it up, even a little
-bit, it all helps.
+I am able to connect to a 5GHz AP in client mode with my bcm43224
+connected to the bcm4718 via PCIe with both firmware versions, but I am
+just getting 30.3 Mbits/sec as the maximum speed.
 
-> Anyway, a trivial redirection onto mainline's networking headers
-> in the proper include dir, and a deletion of any references to
-> the endian headers and the thing still happily builds on x86_64
-> and ppc even after shitcanning seven useless files.
-> 
-> These three commits are against May 8th's linux-next tree.  I've
-> used "-D" to hide the line-by-line content of the deletions.
-
-Can you regenerate these with the full deletion content?  There have
-been some spelling fixes in these files, and your patches do not apply
-due to them.  I can hand-edit the patches if you regenerate it.
-
-Or if you rebase on the last linux-next tree, that will pick those
-changes up and then I can apply these properly.
-
-thanks,
-
-greg k-h
+Hauke
