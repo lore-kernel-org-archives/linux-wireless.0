@@ -1,96 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:44469 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756378Ab2EBUL1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 16:11:27 -0400
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-	Wed, 2 May 2012 14:11:25 -0600
-Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id AA1B43E4006F
-	for <linux-wireless@vger.kernel.org>; Wed,  2 May 2012 14:10:14 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q42KA1h7124324
-	for <linux-wireless@vger.kernel.org>; Wed, 2 May 2012 14:10:02 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q42K9vO0023779
-	for <linux-wireless@vger.kernel.org>; Wed, 2 May 2012 14:10:00 -0600
-Date: Wed, 2 May 2012 13:09:55 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Suspicious RCU usage in mac80211
-Message-ID: <20120502200955.GI2450@linux.vnet.ibm.com> (sfid-20120502_221134_129913_2C84C133)
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <4F83A6DE.7070109@lwfinger.net>
- <1334201497.3788.1.camel@jlt3.sipsolutions.net>
- <4F865155.2000202@lwfinger.net>
- <1334202842.3788.10.camel@jlt3.sipsolutions.net>
- <4F86FA05.5080404@lwfinger.net>
- <1334246145.4062.0.camel@jlt3.sipsolutions.net>
- <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
- <4FA0371E.9040704@lwfinger.net>
- <20120502100012.GA8492@arm.com>
- <1335978471.4295.3.camel@jlt3.sipsolutions.net>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:36566 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757769Ab2EAPth convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2012 11:49:37 -0400
+Received: by lahj13 with SMTP id j13so2549058lah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 08:49:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1335978471.4295.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <4F9FF3D3.1020006@lwfinger.net>
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
+ <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com>
+ <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
+ <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+ <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
+ <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+ <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
+ <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com>
+ <4F9F55F9.3090800@lwfinger.net> <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com>
+ <4F9F6B67.5000400@lwfinger.net> <CAKVccoVA=Rk8AkD+h0n9aeV95h0iMcnQgM_WMJq3rjzoFvkU-w@mail.gmail.com>
+ <CAKVccoX=u=qX_OJ8RMSxpNEMGYdGVzimZURJ+ZeNZjhW1jPt6Q@mail.gmail.com> <4F9FF3D3.1020006@lwfinger.net>
+From: simple w8 <simplew8@gmail.com>
+Date: Tue, 1 May 2012 16:49:16 +0100
+Message-ID: <CAKVccoUNwk7zKzckY-bNNvgf0FNDqZhnruzgTPOtxSXRuq3myQ@mail.gmail.com> (sfid-20120501_174946_392100_F0DD2ABE)
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 02, 2012 at 07:07:51PM +0200, Johannes Berg wrote:
-> On Wed, 2012-05-02 at 11:00 +0100, Catalin Marinas wrote:
-> 
-> > > Your patch does not help. I still get the following dump in the log:
-> 
-> The patch is also wrong, we hold the mutex there and can't hold RCU read
-> lock.
-> 
-> > > #0:  (scan_mutex){+.+...}, at: [<ffffffff8113b0d6>] kmemleak_scan_thread+0x56/0xd0
-> > > #1:  (&tid_tx->session_timer){+.-...}, at: [<ffffffff8104853a>] 
-> > > run_timer_softirq+0xfa/0x6e0
-> > > #2:  (rcu_read_lock){.+.+..}, at: [<ffffffffa0449ff0>] 
-> > > sta_tx_agg_session_timer_expired+0x0/0x2a0 [mac80211]
-> > > 
-> > > stack backtrace:
-> > > Pid: 622, comm: kmemleak Not tainted 3.4.0-rc5-wl+ #287
-> > > Call Trace:
-> > >   <IRQ>  [<ffffffff8109309d>] lockdep_rcu_suspicious+0xfd/0x130
-> > >   [<ffffffffa044a1cf>] sta_tx_agg_session_timer_expired+0x1df/0x2a0 [mac80211]
-> > >   [<ffffffffa0449ff0>] ? ieee80211_start_tx_ba_session+0x450/0x450 [mac80211]
-> > >   [<ffffffff810485c5>] run_timer_softirq+0x185/0x6e0
-> > > 
-> > > As kmemleak seems to be involved, I have added Catalin Marinas to the Cc list.
-> 
-> > Looking at the code and the logs, ieee80211_start_tx_ba_session() calls
-> 
-> I'm almost certain that ieee80211_start_tx_ba_session() is a bogus
-> calltrace entry, since we're in a timer and that's not called from a
-> timer.
-> 
-> > rcu_dereference_protected_tid_tx() which calls
-> > rcu_dereference_protected() with the (lockdep_is_held(&sta->lock) ||
-> > lockdep_is_held(&sta->ampdu_mlme.mtx)) condition which is false. As the
-> > kernel log says, none of these locks are held, hence the warning.
-> 
-> So does that just mean we need to add rcu_read_lock_held() to the
-> conditions? I thought that wasn't necessary? +Paul.
+2012/5/1 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 05/01/2012 08:36 AM, simple w8 wrote:
+>>
+>>
+>> SEams that was your last fix for rtl8192
+>>
+>> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commit;h=eb641120479de7ee703fabb5e6ee0ec7947474ba
+>>   that reduced the wifi force, thus detecting less wifi networks.
+>>
+>> Running without that "fix" the notebook detects more wifi networks,
+>> seams like the antenna have more force.
+>
+>
+> You keep talking about "antenna force". What does that mean?
 
-If you are using rcu_dereference_protected(), you really would need
-to add rcu_read_lock_held().  Except that it is not legal to use
-rcu_dereference_protected() within an RCU read-side critical section
-because rcu_dereference_protected() does nothing to protect against
-misordering mischief from the compiler and the CPU.  Actually, that
-sounds like a useful coccinelle check, now that you mention it.
+When i say that to refer to the machine power to capture, the power of
+the wifi card to detect networks.
 
-So you should instead use rcu_dereference_check().  This may be used
-in an RCU read-side critical section, but may also be passed things like
-(lockdep_is_held(&sta->lock) || lockdep_is_held(&sta->ampdu_mlme.mtx)).
+> That patch keeps your device from running forever at a maximum of 1 Mbps by
+> adjusting the initial gain of the RX amplifier. You may reverse it if you
+> want so that you can detect more APs when you scan; however, most people
+> prefer to get better performance from the device. That patch will not be
+> reversed.
 
-							Thanx, Paul
+I see.
 
+> As to the problems with power saving, I cannot fix a problem if I cannot
+> duplicate it. The locking in that section has been reviewed by several
+> people, and there are no glaring errors. If disabling power saving makes
+> your box work, then that is what you need to do. That is why those
+> parameters can be set at load time.
+
+But isnt strange that the wifi driver can interfere in the keyboard
+when typing? and also be capable to interfere with the pointer device?
