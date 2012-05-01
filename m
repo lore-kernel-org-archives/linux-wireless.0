@@ -1,122 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44985 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753298Ab2EXNc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 09:32:59 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@qca.qualcomm.com
-Subject: [PATCH v2] compat: rename compat-3.5.c to compat-3.4.c
-Date: Thu, 24 May 2012 15:32:57 +0200
-Message-Id: <1337866377-12475-1-git-send-email-nbd@openwrt.org> (sfid-20120524_153302_748055_A5D9F27F)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:63898 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751886Ab2EADkj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Apr 2012 23:40:39 -0400
+Received: by lahj13 with SMTP id j13so2272326lah.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 20:40:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4F9F55F9.3090800@lwfinger.net>
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
+ <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com>
+ <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
+ <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+ <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
+ <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+ <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
+ <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com> <4F9F55F9.3090800@lwfinger.net>
+From: simple w8 <simplew8@gmail.com>
+Date: Tue, 1 May 2012 04:40:17 +0100
+Message-ID: <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com> (sfid-20120501_054043_555256_84A53574)
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It only contains simple_open, which is already available on Linux 3.4.
-Fixes duplicate symbol issues on 3.4
+2012/5/1 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 04/30/2012 09:01 PM, simple w8 wrote:
+>>
+>> 2012/4/30 Forest Bond<forest@alittletooquiet.net>:
+>>>
+>>> Hi,
+>>>
+>>> On Sun, Apr 29, 2012 at 09:55:06PM -0500, Larry Finger wrote:
+>>>>
+>>>> On 04/29/2012 08:11 PM, simple w8 wrote:
+>>>>>
+>>>>> 2012/4/30 simple w8<simplew8@gmail.com>:
+>>>>>>
+>>>>>> 2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
+>>>>>>>
+>>>>>>> On 04/29/2012 07:51 PM, simple w8 wrote:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> 2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>>> Get
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2012-04-26.tar.bz2.
+>>>>>>>>> That is the "bleeding-edge" version. As I said in the previous
+>>>>>>>>> message,
+>>>>>>>>> it
+>>>>>>>>> will build on your kernel!
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> I didnt remove any mail address i simply forgot to hit the reply all
+>>>>>>>> button.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> That IS removing mail addresses.
+>>>>>>>
+>>>>>>>
+>>>>>>>> Previously i tried to build the subdirectory rtlwifi but that wasnt
+>>>>>>>> possible, so build the entry tree compat-wireless and installed it,
+>>>>>>>> but the problem about having repeated chars when typing and the
+>>>>>>>> mouse
+>>>>>>>> freeze continues happening.
+>>>>>>>>
+>>>>>>>> Now a different problem, i noticed that after kernel-3.3.1 it
+>>>>>>>> started
+>>>>>>>> appearing less wifi networks, where i used to detect about 10 wifi
+>>>>>>>> networks, with kernel>      3.3.1 it only detected about 2 or 3 wifi
+>>>>>>>> networks, i reported that to the distro and they said was a problem
+>>>>>>>
+>>>>>>> >from upstream since they didnt had changed nothing regarding wifi,
+>>>>>>> > and
+>>>>>>>>
+>>>>>>>> after i installed compat-wireless that was solved. Im running
+>>>>>>>> kernel-3.3.4 with compat-wireless and it detects again about 10 wifi
+>>>>>>>> networks.
+>>>>>>>>
+>>>>>>>> Should i report this upstream so it can be fixed still in the
+>>>>>>>> kkkkkernel 3.3.4 serie or you ccccccan do it?
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> Whatever patch that fixed that problem will be backported to 3.3.X if
+>>>>>>> it can
+>>>>>>> be. Not everything qualifies.
+>>>>>>>
+>>>>>>>
+>>>>>>>> By the way see how the characters "k" and "c" got repeated when i
+>>>>>>>> was
+>>>>>>>> typing last paragraph.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> I see them, but they do not happen on my machine, thus I have no idea
+>>>>>>> of the
+>>>>>>> cause. So far, you can only say that they don't happen when rtl8192ce
+>>>>>>> is not
+>>>>>>> loaded; however, you have no network then either. The problem could
+>>>>>>> be
+>>>>>>> anywhere in the network stack.
+>>>>>>>
+>>>>>>> You said earlier that you tried the Ubuntu Live system. Would it be
+>>>>>>> possible
+>>>>>>> to download and try the openSUSE 12.1 Live CD as well? As you have
+>>>>>>> used
+>>>>>>> Ubunbtu, you should try the Gnome version.
+>>>>>>>
+>>>>>>> Larry
+>>>>>>
+>>>>>>
+>>>>>> These are the distros that i tried so far and all presented the same
+>>>>>> problem i have described:
+>>>>>> - Mandriva
+>>>>>> - Mageia
+>>>>>> - Ubuntu
+>>>>>> - Kubuntu
+>>>>>> - Caixa Magica
+>>>>>
+>>>>>
+>>>>> What wifi you have?
+>>>>> What distro you run?
+>>>>> Do you run NetworManager?
+>>>>
+>>>>
+>>>> You forgot the "Reply All" again!
+>>>>
+>>>> I run openSUSE 12.1 KDE, and I use NetworkManager.
+>>>>
+>>>> I have many wifi devices, including both RTL8188CE and RTL8192CE. At
+>>>> the moment, I am running an RTL8188CE, which has been up for nearly
+>>>> 100 hours without dropping the connection, and with no problems with
+>>>> the keyboard. My kernel is from wireless-testing, which means that
+>>>> my wireless stuff is exactly what you got with compat-wireless.
+>>>
+>>>
+>>> FWIW, I do recall seeing issues with my USB keyboard when testing with
+>>> rtl8192de.  I believe the problems went away when I disabled power
+>>> management:
+>>>
+>>>  options rtl8192de ips=0 swlps=0 fwlps=0
+>>
+>>
+>> in where can these settings be saved?
+>>
+>> By the way, diddddd you were using any keyboard, mouse from microsoft?
+>
+>
+> Create a file named /etc/modprobe.d/50-rtl8192ce.conf and add the line below
+> to it:
+>
+> options rtl8192ce ips=0 swlps=0 fwlps=0
+>
+> That will disable power saving for driver rtl8192ce.
+>
+> Larry
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- compat/Makefile            |    2 +-
- compat/compat-3.4.c        |   20 ++++++++++++++++++++
- compat/compat-3.5.c        |   20 --------------------
- include/linux/compat-3.4.h |    2 ++
- include/linux/compat-3.5.h |    2 --
- 5 files changed, 23 insertions(+), 23 deletions(-)
- create mode 100644 compat/compat-3.4.c
- delete mode 100644 compat/compat-3.5.c
-
-diff --git a/compat/Makefile b/compat/Makefile
-index bda677b..667e727 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -37,7 +37,7 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
- compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
- compat-$(CONFIG_COMPAT_KERNEL_3_2) += compat-3.2.o
- compat-$(CONFIG_COMPAT_KERNEL_3_3) += compat-3.3.o
--compat-$(CONFIG_COMPAT_KERNEL_3_5) += compat-3.5.o
-+compat-$(CONFIG_COMPAT_KERNEL_3_4) += compat-3.4.o
- 
- compat-$(CONFIG_COMPAT_CORDIC) += cordic.o
- compat-$(CONFIG_COMPAT_CRC8) += crc8.o
-diff --git a/compat/compat-3.4.c b/compat/compat-3.4.c
-new file mode 100644
-index 0000000..5d516f0
---- /dev/null
-+++ b/compat/compat-3.4.c
-@@ -0,0 +1,20 @@
-+/*
-+ * Copyright 2012  Luis R. Rodriguez <mcgrof@frijolero.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Compatibility file for Linux wireless for kernels 3.5.
-+ */
-+
-+#include <linux/fs.h>
-+#include <linux/module.h>
-+
-+int simple_open(struct inode *inode, struct file *file)
-+{
-+	if (inode->i_private)
-+		file->private_data = inode->i_private;
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(simple_open);
-diff --git a/compat/compat-3.5.c b/compat/compat-3.5.c
-deleted file mode 100644
-index 5d516f0..0000000
---- a/compat/compat-3.5.c
-+++ /dev/null
-@@ -1,20 +0,0 @@
--/*
-- * Copyright 2012  Luis R. Rodriguez <mcgrof@frijolero.org>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- *
-- * Compatibility file for Linux wireless for kernels 3.5.
-- */
--
--#include <linux/fs.h>
--#include <linux/module.h>
--
--int simple_open(struct inode *inode, struct file *file)
--{
--	if (inode->i_private)
--		file->private_data = inode->i_private;
--	return 0;
--}
--EXPORT_SYMBOL_GPL(simple_open);
-diff --git a/include/linux/compat-3.4.h b/include/linux/compat-3.4.h
-index 1b72374..377d036 100644
---- a/include/linux/compat-3.4.h
-+++ b/include/linux/compat-3.4.h
-@@ -75,6 +75,8 @@ static inline void eth_hw_addr_random(struct net_device *dev)
- 	module_driver(__pci_driver, pci_register_driver, \
- 		       pci_unregister_driver)
- 
-+extern int simple_open(struct inode *inode, struct file *file);
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,4,0)) */
- 
- #endif /* LINUX_5_4_COMPAT_H */
-diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
-index c837deb..0bb35bb 100644
---- a/include/linux/compat-3.5.h
-+++ b/include/linux/compat-3.5.h
-@@ -8,8 +8,6 @@
- 
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(3,5,0))
- 
--extern int simple_open(struct inode *inode, struct file *file);
--
- /* Backports tty_lock: Localise the lock */
- #define tty_lock(__tty) tty_lock()
- #define tty_unlock(__tty) tty_unlock()
--- 
-1.7.3.2
-
+Its done, and i have reloaded the module, but how can i be sure/check
+about the rtl8192ce parameters?
