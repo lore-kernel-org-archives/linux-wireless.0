@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:54274 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932371Ab2ENUNQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45307 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753428Ab2EBRAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 16:13:16 -0400
-Message-ID: <4FB16765.3090602@xenotime.net> (sfid-20120514_221332_543797_AEFF9EAB)
-Date: Mon, 14 May 2012 13:13:25 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-CC: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH -next] nfc: shdlc needs to select CRC_CCITT
-References: <20120514200357.e7448e4ca061c8efe3d4757d@canb.auug.org.au>
-In-Reply-To: <20120514200357.e7448e4ca061c8efe3d4757d@canb.auug.org.au>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 2 May 2012 13:00:21 -0400
+Message-ID: <1335978017.4295.0.camel@jlt3.sipsolutions.net> (sfid-20120502_190025_896172_8D67A376)
+Subject: Re: [PATCH 3.4] mac80211: fix AP mode EAP tx for VLAN stations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Date: Wed, 02 May 2012 19:00:17 +0200
+In-Reply-To: <1335707056-82230-1-git-send-email-nbd@openwrt.org>
+References: <1335707056-82230-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+On Sun, 2012-04-29 at 15:44 +0200, Felix Fietkau wrote:
+> EAP frames for stations in an AP VLAN are sent on the main AP interface
+> to avoid race conditions wrt. moving stations.
+> For that to work properly, sta_info_get_bss must be used instead of
+> sta_info_get when sending EAP packets.
+> Previously this was only done for cooked monitor injected packets, so
+> this patch adds a check for tx->skb->protocol to the same place.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Cc: stable@vger.kernel.org
+> ---
+>  net/mac80211/tx.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 44001c7..d67d36f 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1159,7 +1159,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+>  		tx->sta = rcu_dereference(sdata->u.vlan.sta);
+>  		if (!tx->sta && sdata->dev->ieee80211_ptr->use_4addr)
+>  			return TX_DROP;
+> -	} else if (info->flags & IEEE80211_TX_CTL_INJECTED) {
+> +	} else if (info->flags & IEEE80211_TX_CTL_INJECTED ||
+> +		   tx->sdata->control_port_protocol == tx->skb->protocol) {
+>  		tx->sta = sta_info_get_bss(sdata, hdr->addr1);
 
-Fix build error: SHDLC uses crc_ccitt so it should select CRC_CCITT.
+Just the protocol check is probably sufficient, don't we set it for
+injected frames anyway?
 
-ERROR: "crc_ccitt" [net/nfc/hci/hci.ko] undefined!
+johannes
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-Cc:	Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc:	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc:	Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/hci/Kconfig |    1 +
- 1 file changed, 1 insertion(+)
-
---- linux-next-20120514.orig/net/nfc/hci/Kconfig
-+++ linux-next-20120514/net/nfc/hci/Kconfig
-@@ -11,6 +11,7 @@ config NFC_SHDLC
- 	depends on NFC_HCI
- 	bool "SHDLC link layer for HCI based NFC drivers"
- 	default n
-+	select CRC_CCITT
- 	---help---
- 	  Say yes if you use an NFC HCI driver that requires SHDLC link layer.
- 	  If unsure, say N here.
