@@ -1,78 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33162 "EHLO
-	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S967137Ab2ERT6O (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:64257 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755289Ab2EBI65 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 15:58:14 -0400
-Date: Fri, 18 May 2012 12:58:12 -0700
-From: Greg KH <greg@kroah.com>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: stable@vger.kernel.org, Touko Korpela <touko.korpela@iki.fi>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 3.2.y, 3.3.y] brcm80211: smac: fix endless retry of
- A-MPDU transmissions
-Message-ID: <20120518195812.GE4874@kroah.com> (sfid-20120518_215818_742640_EDD033DF)
-References: <1330018703-2472-1-git-send-email-arend@broadcom.com>
- <1330018703-2472-2-git-send-email-arend@broadcom.com>
- <20120516222824.GA11009@burratino>
+	Wed, 2 May 2012 04:58:57 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120516222824.GA11009@burratino>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20120502023836.GW3157@wantstofly.org>
+References: <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
+	<20120427101732.GX3157@wantstofly.org>
+	<CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
+	<CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
+	<20120427185809.GZ3157@wantstofly.org>
+	<CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
+	<CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
+	<20120501125102.GN3157@wantstofly.org>
+	<CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
+	<4FA089F9.1020602@erley.org>
+	<20120502023836.GW3157@wantstofly.org>
+Date: Wed, 2 May 2012 10:58:56 +0200
+Message-ID: <CA+icZUVLKEs4YAiByqeUpD6cRUyF+bvb2SY=PYebDKU8b+653A@mail.gmail.com> (sfid-20120502_105927_423757_D4D74107)
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Pat Erley <pat-lkml@erley.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 16, 2012 at 05:28:25PM -0500, Jonathan Nieder wrote:
-> From: Arend van Spriel <arend@broadcom.com>
-> Date: Thu, 9 Feb 2012 21:08:58 +0100
-> 
-> commit 5e379203c7788b7af01150bfadbc74d2797a2ef4 upstream.
-> 
-> The A-MPDU code checked against a retry limit, but it was using
-> the wrong variable to do so. This patch fixes this to assure
-> proper retry mechanism.
-> 
-> This problem had a side-effect causing the mac80211 flush callback
-> to remain waiting forever as well. That side effect has been fixed
-> by commit by Stanislaw Gruszka:
-> 
-> commit f96b08a7e6f69c0f0a576554df3df5b1b519c479
-> Date:   Tue Jan 17 12:38:50 2012 +0100
-> 
->     brcmsmac: fix tx queue flush infinite loop
-> 
->     Reference:
->     https://bugzilla.kernel.org/show_bug.cgi?id=42576
-> 
-> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
-> ---
-> Hi Ben and Greg,
-> 
-> Please consider
-> 
->   5e379203c778 brcm80211: smac: fix endless retry of A-MPDU
->                transmissions
-> 
-> for application to the 3.2.y and 3.3.y stable trees.  It is the real
-> fix to the bug worked around by f96b08a7e6f6 (brcmsmac: fix tx queue
-> flush infinite loop, 2012-01-17).  The remaining symptom after that
-> workaround was an assertion failure (WARNING at
-> drivers/net/wireless/brcm80211/brcmsmac/main.c:8241).
-> 
-> Touko Korpela (cc-ed) tested the patch against 3.2.17 + "brcm80211:
-> smac: pass missing argument to 'brcms_b_mute'" and found it to
-> work[1]:
+On Wed, May 2, 2012 at 4:38 AM, Lennert Buytenhek
+<buytenh@wantstofly.org> wrote:
+> On Tue, May 01, 2012 at 09:12:25PM -0400, Pat Erley wrote:
+>
+>> >--- a/drivers/net/wireless/mwl8k.c
+>> >+++ b/drivers/net/wireless/mwl8k.c
+>> >@@ -5225,6 +5225,7 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
+>> >  }
+>> >
+>> >  enum {
+>> >+    MWL8361P = 0,
+>> >     MWL8363 = 0,
+>> >     MWL8687,
+>> >     MWL8366,
+>>
+>> I'm not an expert, but isn't this giving both 8361P and 8363 the
+>> same values in the enum?
+>
+> Yeah, this is broken.
 
-It doesn't apply to the 3.3-stable tree, so it's a bit hard for me to
-apply it...
+Before this email, Helmut pointed me to the enum thingie in a private query.
+As I was busy with OverlayFS the last days, I couldn't give that
+information back.
 
-thanks,
+So, this should be:
+...
+  enum {
+     MWL8361P = 0,
+     MWL8363,
+     MWL8687,
+     MWL8366,
+...
 
-greg k-h
+Shall I cook up a new patch with a proper history and documented
+origin (original patch is from OpenWrt, I refreshed it against
+upstream)?
+...add some Tested-by (Helmut, Jim)...
+...send that to linux-wireless ML for a review?
+
+- Sedat -
