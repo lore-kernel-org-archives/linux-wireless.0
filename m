@@ -1,95 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52699 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756534Ab2EJT62 (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:56227 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822Ab2EBEGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 15:58:28 -0400
-From: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [RFC] ath6kl: Add wow multicast firmware capability support
-Date: Thu, 10 May 2012 12:58:31 -0700
-Message-ID: <1336679911-15763-1-git-send-email-ngangadh@qca.qualcomm.com> (sfid-20120510_215832_928042_53E8FA0F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 2 May 2012 00:06:42 -0400
+Date: Wed, 02 May 2012 00:05:23 -0400 (EDT)
+Message-Id: <20120502.000523.307160882398092059.davem@davemloft.net> (sfid-20120502_060715_001220_768B91D1)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-05-01
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120501183157.GA2987@tuxdriver.com>
+References: <20120501183157.GA2987@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Infrastructure to enable Multicast WOW support based on
-firmware capability added to the driver.This enables
-different customers or chips to control this feature based
-on firmware capability.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 1 May 2012 14:31:58 -0400
 
-kvalo: Firmware capability infrastructure for multicast wow feature.
+> Part of these are Bluetooth -- Gustavo says:
+> 
+> "A few more fixes to 3.4, there is three new device id supported, a missing
+> break and a fix to retain key during the connection."
+> 
+> Along with those, we have some 802.11 fixes.  Felix gives us a fix
+> for sending EAP frames for AP VLAN interfaces.  Franky gives us
+> two brcmfmac fixes, one for missed event completions and another
+> for an improperly initialized function pointer.  Grazvydas Ignotas
+> gives us a couple of wl1251 fixes for some improperly freed memory.
+> Jonathan Bither gives us an ath5k fix for an AHB resource leak.
+> Seth Forshee gives us a b43 fix to avoid a crash when b43 fails to
+> properly initialize.  Finally, Wey-yi gives us a fixup for a previously
+> merged fix to use the correct firmware for certain iwlwifi devices.
+> 
+> The brcmfmac fixes are bigger than I would like to see.  But since
+> they are isolated to that driver and fix real problems, I felt they
+> were still acceptable.
+> 
+> Please let me know if there are problems!
 
-Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++--
- drivers/net/wireless/ath/ath6kl/core.h     |    7 +++++++
- drivers/net/wireless/ath/ath6kl/main.c     |    5 ++++-
- 3 files changed, 17 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index b869a35..937bb15 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2074,7 +2074,9 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	if (wow && (wow->n_patterns > WOW_MAX_FILTERS_PER_LIST))
- 		return -EINVAL;
- 
--	if (!test_bit(NETDEV_MCAST_ALL_ON, &vif->flags)) {
-+	if (!test_bit(NETDEV_MCAST_ALL_ON, &vif->flags) &&
-+		test_bit(ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER,
-+					      ar->fw_capabilities)) {
- 		ret = ath6kl_wmi_mcast_filter_cmd(vif->ar->wmi,
- 						vif->fw_vif_idx, false);
- 		if (ret)
-@@ -2209,7 +2211,9 @@ static int ath6kl_wow_resume(struct ath6kl *ar)
- 
- 	ar->state = ATH6KL_STATE_ON;
- 
--	if (!test_bit(NETDEV_MCAST_ALL_OFF, &vif->flags)) {
-+	if (!test_bit(NETDEV_MCAST_ALL_OFF, &vif->flags) &&
-+		test_bit(ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER,
-+					ar->fw_capabilities)) {
- 		ret = ath6kl_wmi_mcast_filter_cmd(vif->ar->wmi,
- 					vif->fw_vif_idx, true);
- 		if (ret)
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 4d9c6f1..79c7055 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -100,6 +100,13 @@ enum ath6kl_fw_capability {
- 	/* Firmware has support to override rsn cap of rsn ie */
- 	ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
- 
-+	/*
-+	 * Multicast support in WOW and host awake mode.
-+	 * Allow all multicast in host awake mode.
-+	 * Apply multicast filter in WOW mode.
-+	 */
-+	ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER,
-+
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index e552447..64d0f04 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1167,7 +1167,10 @@ static void ath6kl_set_multicast_list(struct net_device *ndev)
- 	else
- 		clear_bit(NETDEV_MCAST_ALL_ON, &vif->flags);
- 
--	mc_all_on = mc_all_on || (vif->ar->state == ATH6KL_STATE_ON);
-+	if (test_bit(ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER,
-+					vif->ar->fw_capabilities)) {
-+		mc_all_on = mc_all_on || (vif->ar->state == ATH6KL_STATE_ON);
-+	}
- 
- 	if (!(ndev->flags & IFF_MULTICAST)) {
- 		mc_all_on = false;
--- 
-1.7.0.4
-
+Pulled, thanks John.
