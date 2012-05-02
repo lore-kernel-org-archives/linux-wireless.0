@@ -1,45 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51974 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757649Ab2EaHvM (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:64947 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754832Ab2EBJJg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 03:51:12 -0400
-Message-ID: <1338450650.4531.6.camel@jlt3.sipsolutions.net> (sfid-20120531_095117_069891_8242755B)
-Subject: Re: iwlwifi: GF was set with SGI:SISO
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cesar Eduardo Barros <cesarb@cesarb.net>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Thu, 31 May 2012 09:50:50 +0200
-In-Reply-To: <4FC17BA8.2050606@cesarb.net> (sfid-20120527_030308_122290_604E4002)
-References: <4FC17BA8.2050606@cesarb.net>
-	 (sfid-20120527_030308_122290_604E4002)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 2 May 2012 05:09:36 -0400
+Received: by lbbgm6 with SMTP id gm6so269240lbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2012 02:09:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FA0507E.6010407@lwfinger.net>
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
+ <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
+ <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+ <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
+ <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+ <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
+ <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com>
+ <4F9F55F9.3090800@lwfinger.net> <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com>
+ <4F9F6B67.5000400@lwfinger.net> <CAKVccoVA=Rk8AkD+h0n9aeV95h0iMcnQgM_WMJq3rjzoFvkU-w@mail.gmail.com>
+ <CAKVccoX=u=qX_OJ8RMSxpNEMGYdGVzimZURJ+ZeNZjhW1jPt6Q@mail.gmail.com>
+ <4F9FF3D3.1020006@lwfinger.net> <CAKVccoWJPdPZqoLn6L+_PUKdiM0sLZhCBQCAa2aM7i1xgR21DA@mail.gmail.com>
+ <4FA0507E.6010407@lwfinger.net>
+From: Simple W <simplew8@gmail.com>
+Date: Wed, 2 May 2012 10:09:15 +0100
+Message-ID: <CAKVccoXK=ktW-xp1=TjZxdbQ77_fwZ1fLiPa3xT_NGLwFta_nQ@mail.gmail.com> (sfid-20120502_110940_935070_70FB851E)
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cesar,
+2012/5/1 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 05/01/2012 03:42 PM, simple w8 wrote:
+>>
+>> 2012/5/1 Larry Finger<Larry.Finger@lwfinger.net>:
+>>>
+>>> On 05/01/2012 08:36 AM, simple w8 wrote:
+>>>>
+>>>>
+>>>>
+>>>> SEams that was your last fix for rtl8192
+>>>>
+>>>>
+>>>> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commit;h=eb641120479de7ee703fabb5e6ee0ec7947474ba
+>>>>   that reduced the wifi force, thus detecting less wifi networks.
+>>>>
+>>>> Running without that "fix" the notebook detects more wifi networks,
+>>>> seams like the antenna have more force.
+>>>
+>>>
+>>>
+>>> You keep talking about "antenna force". What does that mean?
+>>>
+>>> That patch keeps your device from running forever at a maximum of 1 Mbps
+>>> by
+>>> adjusting the initial gain of the RX amplifier. You may reverse it if you
+>>> want so that you can detect more APs when you scan; however, most people
+>>> prefer to get better performance from the device. That patch will not be
+>>> reversed.
+>>
+>>
+>> Could you please clarify a litle more about the why and the patch fix?
+>
+>
+> Before that patch, when the device scanned after the connection was up and
+> running, it set the gain very low. When that happened, the receiver failed
+> to see any info coming from the AP. The AP would retry several times, and
+> then cut its transmit rate to 1 Mbps. That rate would stay until rtl8192xe
+> was unloaded and reloaded. To me, that is a lot bigger problem that what you
+> are seeing, which is why I will not change it back!
+>
+> Larry
+>
 
-On Sat, 2012-05-26 at 21:56 -0300, Cesar Eduardo Barros wrote:
-> I have twice now seen a problem with iwlwifi where rate control gets 
-> "stuck" (the tx bitrate as shown by "iw dev wlan0 link" does not change 
-> anymore), while spamming the kernel log with "iwlwifi 0000:03:00.0: GF 
-> was set with SGI:SISO".
-> 
-> The first time, it was stuck at 48 Mbit/s. This time, it got stuck at 81 
-> Mbit/s MCS 4 40MHz (long GI) [*]. But this time, I went to 
-> /sys/kernel/debug/ieee80211/phy0/netdev:wlan0/stations and got a copy of 
-> the rate_* files.
-> 
-> What I believe is happening is the following scenario:
-[...]
+Ok i have been using only kernel-3.3.4 (with compat wireless) and i
+have been seeing a strange behaviour, it starts by detecting for
+example 6 wifi networks and passed some time the 6 wifi become 1, and
+passed a litle longer NetworkManager reaches the point of not showing
+any Wifi network.
+Then i restart wpa_supplicant and i get back 3 wifi networks.
 
-Unfortunately, I don't have any idea right away right now what's going
-on. Would you file a bug on bugzilla.intellinuxwireless.org so we can
-track it and help you better? We may want to reproduce it and/or ask you
-to collect some tracing information and it's easier to collect all that
-in a bug report.
-
-Thanks,
-johannes
-
+With kernel-3.3.1 i dont remember this ever happened...
