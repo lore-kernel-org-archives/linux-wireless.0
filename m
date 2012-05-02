@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26418 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966982Ab2EPKe2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41821 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755671Ab2EBSRs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 06:34:28 -0400
-Message-ID: <4FB382AA.9030902@qca.qualcomm.com> (sfid-20120516_123431_531708_0F2B0D08)
-Date: Wed, 16 May 2012 13:34:18 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 2 May 2012 14:17:48 -0400
+Date: Wed, 2 May 2012 14:12:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: mesh: Remove un-needed defines
+Message-ID: <20120502181229.GD9285@tuxdriver.com> (sfid-20120502_201752_968581_54FBCE0D)
+References: <1335472901-12323-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <CAG6hwVPx5OSJXAz8Kj-=zDbP8MWUaUKJL1VFtyjZVaQ5Jk_6_g@mail.gmail.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Naveen Singh <navesing@qca.qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Include match ssid list in scheduled scan
-References: <1337164140-16098-1-git-send-email-kvalo@qca.qualcomm.com>
-In-Reply-To: <1337164140-16098-1-git-send-email-kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAG6hwVPx5OSJXAz8Kj-=zDbP8MWUaUKJL1VFtyjZVaQ5Jk_6_g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/16/2012 01:29 PM, Kalle Valo wrote:
+On Thu, Apr 26, 2012 at 02:41:32PM -0700, Thomas Pedersen wrote:
+> Hi Andrei,
+> 
+> On Thu, Apr 26, 2012 at 1:41 PM, Andrei Emeltchenko
+> <Andrei.Emeltchenko.news@gmail.com> wrote:
+> > From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+> >
+> > ieee80211_vif_is_mesh is already defined as:
+> >
+> > <------8<--------------------------------------------------------------
+> > |  static inline bool ieee80211_vif_is_mesh(struct ieee80211_vif *vif)
+> > |  {
+> > |  #ifdef CONFIG_MAC80211_MESH
+> > |          return vif->type == NL80211_IFTYPE_MESH_POINT;
+> > |  #endif
+> > |          return false;
+> > |  }
+> > |
+> > <------8<--------------------------------------------------------------
+> >
+> > Signed-off-by: Andrei Emeltchenko <andrei.emeltchenko@intel.com
+> 
+> ACK if you tested w/o CONFIG_MAC80211_MESH.
 
-> +			if ((match_set[i].ssid.ssid_len ==
-> +			     ssid_list[j].ssid.ssid_len) &&
-> +			    (!memcmp(ssid_list[j].ssid.ssid,
-> +				     match_set[i].ssid.ssid,
-> +				     match_set[i].ssid.ssid_len))) {
-> +				ssid_list[j].flag |= MATCH_SSID_FLAG;
-> +				ssid_found = true;
-> +				break;
-> +			}
+Well...did you??
 
-Do we have a function like ieee80211_is_same_ssid()? I didn't find
-anything like that after a quick search.
-
-I noticed that wlcore had a similar code like we have here. A common
-function in cfg80211.h/ieee80211.h for comparing ssids would be nice and
-less error prone.
-
-Kalle
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
