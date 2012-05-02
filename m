@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:55378 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54187 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423Ab2E2MNY (ORCPT
+	with ESMTP id S1751994Ab2EBJZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 08:13:24 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 2 May 2012 05:25:32 -0400
+From: Vivek Natarajan <nataraja@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl_sdio: Fix the EAPOL out of order issue
+Date: Wed, 2 May 2012 14:55:25 +0530
+Message-ID: <1335950725-15597-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20120502_112559_162055_4B2E6CBE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20420.48433.260465.183715@gargle.gargle.HOWL> (sfid-20120529_141328_380245_C764FA9A)
-Date: Tue, 29 May 2012 17:42:33 +0530
-To: Tvrtko Ursulin <tvrtko.ursulin@onelan.co.uk>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: ath9k stops working (DMA trouble?) shortly after going online
-In-Reply-To: <201205291212.46377.tvrtko.ursulin@onelan.co.uk>
-References: <201205281316.15008.tvrtko.ursulin@onelan.co.uk>
-	<201205281528.15852.tvrtko.ursulin@onelan.co.uk>
-	<20420.41522.130102.644989@gargle.gargle.HOWL>
-	<201205291212.46377.tvrtko.ursulin@onelan.co.uk>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tvrtko Ursulin wrote:
-> I've collected several interesting events but the compressed log is quite 
-> large. Not sure if it will make it to the mailing list, but you should at 
-> least get it privately.
+Send the EAPOL and management frames in the same AC_VO queue. The issue
+happens when the AP supports QOS, the management frames are sent to AC_VO
+queue and EAP frame goes to AC_BE queue. Even though the EAP frame is
+queued before the DEAUTH management frame, as they are queued on different
+h/w queues, order of delivery between these frames cannot be controlled.
 
-Thanks.
+This fixes the connection failure seen in P2P case.
 
-> There are events ranging from short to long connection dropouts (in the light 
-> of that it is possible that the path Mohammed suggested did indeed help, at 
-> least partially to unwedge some situation which would hang it completely 
-> without the patch). There is always mention of the 'DMA' keyword when it 
-> happens, so if you grep for that in my log you will see events happening at, 
-> in printk time:
-> 
-> 118.779362 - 118.795238 (WARN_ON WARNING: at 
-> drivers/net/wireless/ath/ath9k/recv.c:531 ath_stoprecv+0x118/0x130 [ath9k]())
-> 
-> 524.162432 - 524.753750
-> 1544.610658 - 1550.218324
-> 1685.668241 - 1686.991166
-> 1773.268867 - 1804.465933
-> 
-> Hope this helps?
+Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.c |    7 +++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h |    2 ++
+ 2 files changed, 9 insertions(+)
 
-Yes !
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 102477d..ee8ec23 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -290,6 +290,13 @@ int ath6kl_wmi_implicit_create_pstream(struct wmi *wmi, u8 if_idx,
+ 					layer2_priority);
+ 		} else
+ 			usr_pri = layer2_priority & 0x7;
++
++		/*
++		 * Queue the EAPOL frames in the same WMM_AC_VO queue
++		 * as that of management frames.
++		 */
++		if (skb->protocol == cpu_to_be16(ETH_P_PAE))
++			usr_pri = WMI_VOICE_USER_PRIORITY;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 9966140..9076bec 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -106,6 +106,8 @@ struct wmi_data_sync_bufs {
+ #define WMM_AC_VI   2		/* video */
+ #define WMM_AC_VO   3		/* voice */
+ 
++#define WMI_VOICE_USER_PRIORITY		0x7
++
+ struct wmi {
+ 	u16 stream_exist_for_ac[WMM_NUM_AC];
+ 	u8 fat_pipe_exist;
+-- 
+1.7.10
 
-Here are a couple of patches to help narrow down the issue.
-
-http://sujith.github.com/patches/wl/0001-ath9k-Add-some-debug-messages.patch
-http://sujith.github.com/patches/wl/0002-ath9k-Resync-beacons-after-a-reset.patch
-
-The first one adds some messages, the second sets up beacons properly in case
-a HW reset happens. Can you try these and post the log ?
-
-If you are willing to move to a more recent kernel, then current wireless-testing
-would be a good choice since it has various driver fixes. There are a few
-pending ath9k patches which have not been merged yet, you can find it here:
-
-http://sujith.github.com/patches/wl/wl-ath9k-May-29-2012.patch
-
-Sujith
