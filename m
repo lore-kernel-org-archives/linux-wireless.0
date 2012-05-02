@@ -1,34 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56593 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754429Ab2EAVUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 17:20:11 -0400
-From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-To: Antonio Quartulli <ordex@autistici.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: iwlwifi warn_slowpath with 3.*
-Date: Tue, 1 May 2012 21:19:52 +0000
-Message-ID: <4595B4D22AB93C4FABBA84AAD5AA37FD14438A@ORSMSX103.amr.corp.intel.com> (sfid-20120501_232017_270864_DA9B8778)
-References: <20120422182928.GA2854@ritirata.org>
- <20120430145803.GE2630@ritirata.org> <20120430170337.GA2560@tuxdriver.com>
- <4595B4D22AB93C4FABBA84AAD5AA37FD143115@ORSMSX103.amr.corp.intel.com>
- <CANUX_P1Nx4jYbRwehi+qW-2RVy=ntb_cCzBzpYXkJysuPvrCPA@mail.gmail.com>
- <20120501183415.GG4316@ritirata.org> <20120501205616.GA2563@ritirata.org>
-In-Reply-To: <20120501205616.GA2563@ritirata.org>
-Content-Type: text/plain; charset="utf-8"
+Received: from li235-22.members.linode.com ([173.255.225.22]:51643 "EHLO
+	erley.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756556Ab2EBBMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 May 2012 21:12:51 -0400
+Message-ID: <4FA089F9.1020602@erley.org> (sfid-20120502_031255_633946_8E1F7D42)
+Date: Tue, 01 May 2012 21:12:25 -0400
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
+To: sedat.dilek@gmail.com
+CC: Sedat Dilek <sedat.dilek@googlemail.com>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+References: <20120427094637.GV3157@wantstofly.org> <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com> <20120427095842.GW3157@wantstofly.org> <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com> <20120427101732.GX3157@wantstofly.org> <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com> <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com> <20120427185809.GZ3157@wantstofly.org> <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com> <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com> <20120501125102.GN3157@wantstofly.org> <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
+In-Reply-To: <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQW50b25pbywNCg0KPj4gaXQgc2VlbXMgc28uIEl0IGhhcHBlbnMgYXQgbGVhc3Qgb25jZSBh
-dCBib290IHRpbWUuDQo+PiBJIHdpbGwgdHJ5IHdpcmVsZXNzLXRlc3RpbmcgYW5kIHNlZSB3aGF0
-IGhhcHBlbnMuIFRoZW4gSSB3aWxsIGFwcGx5IHlvdXIgcGF0Y2guDQo+DQo+VGhlIHByb2JsZW0g
-aXMgdGhlcmUgZWl0aGVyIHdpdGggd2lyZWxlc3MtdGVzdGluZyBhbmQgd2l0aA0KPndpcmVsZXNz
-LXRlc3RpbmcreW91cl9wYXRjaC4NCj4NCj5JZiBpdCBjYW4gc29tZWhvdyBoZWxwLCBJIGFsc28g
-Z290IHNldmVyYWwgc3RhY2sgdHJhY2UgcmVnYXJkaW5nIGludGVsX2lvdmENCj5mdW5jdGlvbnMu
-IEJ1dCB0aGVuIHRoZSBJIGdvdCBrZXJuZWwgcGFuaWMgYW5kIEkgd2FzIG5vdCBhYmxlIHRvIGNv
-cHkgdGhlDQo+bWVzc2FnZXMuDQoNCltNVl0gRGVwZW5kaW5nIG9uIGhvdyB5b3Ugc2V0IGl0IHVw
-LCBwZXJoYXBzIHRoZSBzdGFjayB0cmFjZSB3YXMgc2F2ZWQgaW4gb25lIG9mIHRoZSBzeXNsb2cg
-ZmlsZXMgaW4gL3Zhci9sb2cvLi4uDQoNClRoYW5rcyENCk1lZW5ha3NoaQ0KDQo=
+On 05/01/2012 09:54 AM, Sedat Dilek wrote:
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -5225,6 +5225,7 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
+>   }
+>
+>   enum {
+> +	MWL8361P = 0,
+>   	MWL8363 = 0,
+>   	MWL8687,
+>   	MWL8366,
+
+I'm not an expert, but isn't this giving both 8361P and 8363 the same values in the enum?
+
+Is that intended?
+
+Pat Erley
