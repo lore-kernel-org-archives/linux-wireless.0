@@ -1,88 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:46680 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757747Ab2EJJP4 (ORCPT
+Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:37863 "EHLO
+	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753059Ab2EBQCJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:15:56 -0400
-Received: by wibhm4 with SMTP id hm4so231590wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:55 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 39/78] wl18xx: implement hw op to read PG version
-Date: Thu, 10 May 2012 12:13:44 +0300
-Message-Id: <1336641263-5761-40-git-send-email-arik@wizery.com> (sfid-20120510_112138_528846_35EFE6FB)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Wed, 2 May 2012 12:02:09 -0400
+Message-ID: <4FA15A70.2020108@stericsson.com> (sfid-20120502_180213_541293_D054C200)
+Date: Wed, 2 May 2012 18:01:52 +0200
+From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+MIME-Version: 1.0
+To: Kevin Groeneveld <kgroeneveld@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
+References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
+In-Reply-To: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Read the HW PG version of the 18xx chip from FUSE.
+Hi Kevin,
 
-Based on an earlier patch by Luciano Coelho <coelho@ti.com>.
+>> Please find below in the patchset implementation of a new driver for
+>> the ST-Ericsson cw1200 wlan device.
+> Hello Dmitry,
+>
+> What firmware version is this driver tested with?  Where can I get the
+> firmware files?
+The driver was tested with WSM_A30.02.0380 (and lot of other releases:)).
+The firmware was available at igloocommunity.org, I will try to find a link.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |   17 +++++++++++++++--
- drivers/net/wireless/ti/wl18xx/reg.h  |    3 +++
- 2 files changed, 18 insertions(+), 2 deletions(-)
+>
+> I have build 328 and 380 but I cannot get the driver to work with
+> either of these.  Everything looks like it is working okay but when I
+> run "iw wlan0 scan" it does not find anything.  The debugfs counters
+> show I am not receiving any valid packets:
+>
+Could you enable following options and send kernel log:
+CW1200_DEBUGFS=y
+CW1200_WSM_DEBUG=y
+CW1200_WSM_DUMPS=y
+CW1200_BH_DEBUG=y
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index ce13249..9aae0af 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -659,8 +659,6 @@ static void wl18xx_boot_soft_reset(struct wl1271 *wl)
- 
- static int wl18xx_pre_boot(struct wl1271 *wl)
- {
--	/* TODO: add hw_pg_ver reading */
--
- 	wl18xx_set_clk(wl);
- 
- 	/* Continue the ELP wake up sequence */
-@@ -946,6 +944,20 @@ static u32 wl18xx_ap_get_mimo_wide_rate_mask(struct wl1271 *wl,
- 	}
- }
- 
-+static s8 wl18xx_get_pg_ver(struct wl1271 *wl)
-+{
-+	u32 fuse;
-+
-+	wlcore_set_partition(wl, &wl->ptable[PART_TOP_PRCM_ELP_SOC]);
-+
-+	fuse = wl1271_read32(wl, WL18XX_REG_FUSE_DATA_1_3);
-+	fuse = (fuse & WL18XX_PG_VER_MASK) >> WL18XX_PG_VER_OFFSET;
-+
-+	wlcore_set_partition(wl, &wl->ptable[PART_BOOT]);
-+
-+	return (s8)fuse;
-+}
-+
- static void wl18xx_conf_init(struct wl1271 *wl)
- {
- 	struct wl18xx_priv *priv = wl->priv;
-@@ -971,6 +983,7 @@ static struct wlcore_ops wl18xx_ops = {
- 	.tx_delayed_compl = NULL,
- 	.hw_init	= wl18xx_hw_init,
- 	.set_tx_desc_csum = wl18xx_set_tx_desc_csum,
-+	.get_pg_ver	= wl18xx_get_pg_ver,
- 	.set_rx_csum = wl18xx_set_rx_csum,
- 	.sta_get_ap_rate_mask = wl18xx_sta_get_ap_rate_mask,
- 	.ap_get_mimo_wide_rate_mask = wl18xx_ap_get_mimo_wide_rate_mask,
-diff --git a/drivers/net/wireless/ti/wl18xx/reg.h b/drivers/net/wireless/ti/wl18xx/reg.h
-index 1ea3393..43c480f 100644
---- a/drivers/net/wireless/ti/wl18xx/reg.h
-+++ b/drivers/net/wireless/ti/wl18xx/reg.h
-@@ -128,6 +128,9 @@
- #define PLLSH_WCS_PLL_SWALLOW_EN_VAL1	0x1
- #define PLLSH_WCS_PLL_SWALLOW_EN_VAL2	0x12
- 
-+#define WL18XX_REG_FUSE_DATA_1_3	0xA0260C
-+#define WL18XX_PG_VER_MASK		0x70
-+#define WL18XX_PG_VER_OFFSET		4
- 
- #define WL18XX_CMD_MBOX_ADDRESS		0xB007B4
- 
--- 
-1.7.9.5
+and also please send content of 
+/sys/kernel/debug/ieee80211/phy0/cw1200/status
 
+Best regards,
+Dmitry
