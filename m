@@ -1,41 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:43977 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754459Ab2ESIO7 (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:61098 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757502Ab2EBCil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2012 04:14:59 -0400
-Received: by yenm10 with SMTP id m10so3477466yen.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 May 2012 01:14:57 -0700 (PDT)
+	Tue, 1 May 2012 22:38:41 -0400
+Date: Wed, 2 May 2012 04:38:36 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: sedat.dilek@gmail.com, Sedat Dilek <sedat.dilek@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
+	Jim Cromie <jim.cromie@gmail.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
+Message-ID: <20120502023836.GW3157@wantstofly.org> (sfid-20120502_043918_828509_FDCDC59E)
+References: <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
+ <20120427101732.GX3157@wantstofly.org>
+ <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
+ <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
+ <20120427185809.GZ3157@wantstofly.org>
+ <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
+ <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
+ <20120501125102.GN3157@wantstofly.org>
+ <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
+ <4FA089F9.1020602@erley.org>
 MIME-Version: 1.0
-In-Reply-To: <20120518162158.GE22418@yumi.tdiedrich.de>
-References: <20120517230400.GB22418@yumi.tdiedrich.de>
-	<CAGXE3d_Yz=-UWO+PiJkRQ7ZSBgh_fdcwsPz6FCig2VjOOoMQOg@mail.gmail.com>
-	<20120518162158.GE22418@yumi.tdiedrich.de>
-Date: Sat, 19 May 2012 10:14:57 +0200
-Message-ID: <CAGXE3d8e+hYo_MT30XUW+r4-Dq6AgqLTJxD_oGnRuR94zjZ7_Q@mail.gmail.com> (sfid-20120519_101524_886939_910FA265)
-Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and
- MAX_A_TXPOWER respectively
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Tobias Diedrich <ranma@tdiedrich.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Hong Wu <Hong.Wu@dspg.com>, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FA089F9.1020602@erley.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 18, 2012 at 6:21 PM, Tobias Diedrich <ranma@tdiedrich.de> wrote:
->> So, maybe we should do it the safe way and just register a safe default
->> of 20dBm for all channels?
->
-> AFAIU that would cap you to 20dBm even if you are in a country that
-> has higher limits (e.g. 27dBm in the US?).
+On Tue, May 01, 2012 at 09:12:25PM -0400, Pat Erley wrote:
 
-Not necessarily because the driver won't allow tx power adjustments at all
-if EEPROM_EIRP_MAX_TX_POWER is unused.
+> >--- a/drivers/net/wireless/mwl8k.c
+> >+++ b/drivers/net/wireless/mwl8k.c
+> >@@ -5225,6 +5225,7 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
+> >  }
+> >
+> >  enum {
+> >+	MWL8361P = 0,
+> >  	MWL8363 = 0,
+> >  	MWL8687,
+> >  	MWL8366,
+> 
+> I'm not an expert, but isn't this giving both 8361P and 8363 the
+> same values in the enum?
 
-For these devices we cannot rely on the tx power output at all and maybe
-it makes sense to register a max power of 0 just to tell mac80211/cfg80211
-that no tx power adjustments are possible on these devices?
-
-Helmut
+Yeah, this is broken.
