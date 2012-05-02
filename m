@@ -1,77 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54412 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755132Ab2EWQ21 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:52809 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751985Ab2EBGN3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 12:28:27 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q4NGSQAP015224
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 09:28:26 -0700
-Message-ID: <4FBD102A.3060906@candelatech.com> (sfid-20120523_182831_867959_52B63B9C)
-Date: Wed, 23 May 2012 09:28:26 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 2 May 2012 02:13:29 -0400
+Received: by were53 with SMTP id e53so142625wer.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 23:13:28 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Kernel splats in 3.3.6+, drv_finish_tx_sync
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CANUX_P0mfez7RDfAnUQg_rn1Ow1drXiZ4b6G2y6Ph5+Yqot=kA@mail.gmail.com>
+References: <CAOvK7nAOHqKC8rpFDqGnW7NLCX-G2+syRGih_rv7N5O5rfOUdA@mail.gmail.com>
+	<CANUX_P1t8XJOka-QGzZSYFHb6MLc7rm4madn059Yg4b6hJB49A@mail.gmail.com>
+	<CAOvK7nDO4fS6R5go+ZXYBqyQc8hhbJGun9Weh=-EyX5k11+tXw@mail.gmail.com>
+	<CANUX_P2rzvDCBVLmU2rfaZmUOCMuMDe5=TXE_jwxq4ULrvc=QQ@mail.gmail.com>
+	<CAOvK7nCwRbDNZSnn0EvFMpcQMvX1DmU-tBuFT4kRW1TigwyJDQ@mail.gmail.com>
+	<CANUX_P0JsyA53T_vs5Ea0pE5Ye4G9xRC4xKcdwgAmoC8E63sHg@mail.gmail.com>
+	<CAOvK7nCf6k_ugJ=UBF8y0VBr_kVmESpetfnpn=NW73r_K=kKyw@mail.gmail.com>
+	<CAOvK7nCGwqqqrWNQhPqZoBqs6eT11gQNYbrZhb0bNSPTS-YxEw@mail.gmail.com>
+	<CANUX_P2DDQ-U9Yz2YksEEpOgjyyYO1GnFHR8ogEHNwojKvn3yg@mail.gmail.com>
+	<CAOvK7nB0L9GcnV-cNONndZMrAVLfFf3VaY4T-gPb+FgrNByeSA@mail.gmail.com>
+	<CANUX_P38L7OqBNeK+jO0EPMHf1M3QKxmsTA6o-t+6ujoq1VJ5w@mail.gmail.com>
+	<CAOvK7nB1gnnWcv6HFrn1MhMe-FheRtdTpi+BhCcCYNx6RowaTQ@mail.gmail.com>
+	<CANUX_P3SFmNKqUTt53EHkAjupAoB8ZxQZZP1osm7=JwfHnwbqg@mail.gmail.com>
+	<CANUX_P1ivcpLxm4z5k8SU+hGXG0A1hbSMnps7_i025kaAThyCg@mail.gmail.com>
+	<CAOvK7nBGBDWhQnq8MT51dE=LXUxoQH1FLJ2TNUr42He1KbBurg@mail.gmail.com>
+	<CANUX_P25bU36A0n4YSO1mBUTn9pxYYua28=o9Soo12mVyZNVcQ@mail.gmail.com>
+	<CANUX_P3+4hTGJSoo669LixMmNjxv1pqAwmLgVi16iF+LX7-ebQ@mail.gmail.com>
+	<CAOvK7nA7=B_=kaQasYpwAegNG21GdxCuTZ5z+T7PMYPNaTxsXA@mail.gmail.com>
+	<CANUX_P3JrvyV7wXCkeXaS4k3GgcRxkSPW_5TGpqXFhrHKp5OYQ@mail.gmail.com>
+	<CAOvK7nAOGwdDbwCPPFg+2w4DiUv75ppY0wSK6rjUqaZGHHmk4g@mail.gmail.com>
+	<CANUX_P0mfez7RDfAnUQg_rn1Ow1drXiZ4b6G2y6Ph5+Yqot=kA@mail.gmail.com>
+Date: Wed, 2 May 2012 09:13:28 +0300
+Message-ID: <CANUX_P2YonE17M5T3ZUGARt6UqcHy4LmPnDvwQJaWJLbv6VibQ@mail.gmail.com> (sfid-20120502_081333_531049_AD455CB3)
+Subject: Re: iwlwifi bug
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: dchyan@princeton.edu
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=f46d0444047af599b604bf079560
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NOTE:  These are against 3.3.6+, not 3.3.7+ as I posted earlier.
+--f46d0444047af599b604bf079560
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-We ran a torture test where we try to associate 130 stations against an AP
-that can only do 128.  The end result is constant resetting of many of the
-virtual station interfaces.
-
-It ran overnight w/out crashing, but spewed quite a few warnings.
-
-I will be happy to test patches or attempt fixes if anyone has suggestions
-for what the cause might be....
-
-------------[ cut here ]------------
-WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:12 drv_finish_tx_sync+0x45/0x6e [mac80211]()
-Hardware name: To be filled by O.E.M.
-sta20:  Failed check-sdata-in-driver check, flags: 0x4
-Modules linked in: aesni_intel cryptd aes_x86_64 aes_generic 8021q garp stp llc fuse macvlan wanlink(PO) pktgen coretemp hwmon sunrpc ipv6 uinput arc4 ath9k 
-snd_hda_codec_realtek mac80211 snd_hda_intel snd_hda_codec snd_hwdep snd_seq ath9k_common ath9k_hw snd_seq_device snd_pcm ath snd_timer e1000e cfg80211 snd 
-microcode ppdev iTCO_wdt soundcore pcspkr mei(C) serio_raw i2c_i801 snd_page_alloc iTCO_vendor_support parport_pc parport i915 drm_kms_helper drm i2c_algo_bit 
-i2c_core video [last unloaded: nf_nat]
-Pid: 31420, comm: kworker/u:0 Tainted: P        WC O 3.3.6+ #43
-Call Trace:
-  [<ffffffff81036ef9>] warn_slowpath_common+0x80/0x98
-  [<ffffffff81036fa5>] warn_slowpath_fmt+0x41/0x43
-  [<ffffffffa023d8ad>] drv_finish_tx_sync+0x45/0x6e [mac80211]
-  [<ffffffffa023f9d9>] ieee80211_assoc_done+0x1b0/0x1c4 [mac80211]
-  [<ffffffff8105d28f>] ? enqueue_task_fair+0x136/0x294
-  [<ffffffff81055cd8>] ? resched_task+0x47/0x67
-  [<ffffffff810e03e3>] ? __slab_free+0xe1/0x22d
-  [<ffffffff8144a718>] ? _raw_spin_unlock_irqrestore+0x3a/0x47
-  [<ffffffffa0242410>] ieee80211_work_work+0xf6f/0xfd9 [mac80211]
-  [<ffffffff81449a93>] ? __schedule+0x499/0x4c8
-  [<ffffffff81057b87>] ? get_parent_ip+0x11/0x41
-  [<ffffffffa02414a1>] ? free_work+0x14/0x14 [mac80211]
-  [<ffffffff810496b5>] process_one_work+0x1a6/0x278
-  [<ffffffff8104b708>] worker_thread+0x136/0x255
-  [<ffffffff8104b5d2>] ? manage_workers+0x190/0x190
-  [<ffffffff8104ed09>] kthread+0x84/0x8c
-  [<ffffffff81450924>] kernel_thread_helper+0x4/0x10
-  [<ffffffff8104ec85>] ? __init_kthread_worker+0x37/0x37
-  [<ffffffff81450920>] ? gs_change+0x13/0x13
----[ end trace d1b4803845952d45 ]---
+On Tue, May 1, 2012 at 11:09 PM, Emmanuel Grumbach <egrumbach@gmail.com> wr=
+ote:
+> On Tue, May 1, 2012 at 20:52, Daniel Chyan <dchyan@princeton.edu> wrote:
+>> Well I believe I can reproduce it by downgrading to an older driver,
+>> but I am unable to reproduce it now.
+>>
+>
+> I had sent a fix for that, but the driver you were running when you
+> reported the issue already included the fix.
 
 
+Patch attached. It should fix it.
+Will be pushed through our maintainer soon.
 
-static inline void check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
-{
-	WARN(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER),
-	     "%s:  Failed check-sdata-in-driver check, flags: 0x%x\n",
-	     sdata->dev->name, sdata->flags);
-}
+>
+>> On Mon, Apr 30, 2012 at 3:22 PM, Emmanuel Grumbach <egrumbach@gmail.com>=
+ wrote:
+>>> On Mon, Apr 30, 2012 at 21:41, Daniel Chyan <dchyan@princeton.edu> wrot=
+e:
+>>>> I am running iwlwifi with the additional flags. Nothing particularly
+>>>> alarming has appeared in the logs, but I have attached it.
+>>>>
+>>>
+>>> Yeah... I was hoping you could reliably reproduce the issue but
+>>> apparently not :-)
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 
+--f46d0444047af599b604bf079560
+Content-Type: application/octet-stream;
+	name="0001-iwlwifi-don-t-disable-AGG-queues-that-are-not-enable.patch"
+Content-Disposition: attachment;
+	filename="0001-iwlwifi-don-t-disable-AGG-queues-that-are-not-enable.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h1pzndlz0
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+RnJvbSBhNmQ4MGJmNTNiNjVjM2VmZmRkNTUzZWRiN2U1ZmIzYThhODdhY2JiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hA
+aW50ZWwuY29tPgpEYXRlOiBXZWQsIDIgTWF5IDIwMTIgMDg6NDU6NDkgKzAzMDAKU3ViamVjdDog
+W1BBVENIIDEvMl0gaXdsd2lmaTogZG9uJ3QgZGlzYWJsZSBBR0cgcXVldWVzIHRoYXQgYXJlIG5v
+dCBlbmFibGVkCgpJZiB0aGUgQkEgc2Vzc2lvbiBpcyB0b3JuIGRvd24gYmVmb3JlIHdlIGhhZCBh
+IGNoYW5jZSB0byBzdGFydCBpdAp3ZSBzaG91bGRuJ3QgZGlzYWJsZSB0aGUgQUdHIHR4IHF1ZXVl
+cyB0aGF0IHdlcmVuJ3QgZW5hYmxlZC4KVGhpcyBjYW4gaGFwcGVuIGluIHR3byBjYXNlczoKCjEp
+IFdlIGdldCBhIGRlbEJBIGJlZm9yZSB3ZSBkcmFpbmVkIG91ciBUeCBxdWV1ZXMgaW4gYWdnIHN0
+YXJ0IGZsb3cKMikgV2UgZGlkbid0IGdldCB0aGUgKHN1Y2Nlc3NmdWxsKSBhZGRCQSByZXNwb25z
+ZSBvbiB0aW1lCgpSZXBvcnRlZC1ieTogRGFuaWVsIENoeWFuIDxkY2h5YW5AcHJpbmNldG9uLmVk
+dT4KU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGlu
+dGVsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1hZ24tdHguYyB8
+ICAgMTMgKysrKysrKysrKy0tLQogMSBmaWxlcyBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCAz
+IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
+aXdsLWFnbi10eC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXR4LmMK
+aW5kZXggZjJlOWYyOS4uMDliYWY2ZiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+aXdsd2lmaS9pd2wtYWduLXR4LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9p
+d2wtYWduLXR4LmMKQEAgLTU5MCwxMSArNTkwLDE4IEBAIHR1cm5fb2ZmOgogCXNwaW5fdW5sb2Nr
+X2JoKCZwcml2LT5zdGFfbG9jayk7CiAKIAlpZiAodGVzdF9iaXQodHhxX2lkLCBwcml2LT5hZ2df
+cV9hbGxvYykpIHsKLQkJLyogSWYgdGhlIHRyYW5zcG9ydCBkaWRuJ3Qga25vdyB0aGF0IHdlIHdh
+bnRlZCB0byBzdGFydAotCQkgKiBhZ3JlZ2dhdGlvbiwgZG9uJ3QgdGVsbCBpdCB0aGF0IHdlIHdh
+bnQgdG8gc3RvcCB0aGVtCisJCS8qCisJCSAqIElmIHRoZSB0cmFuc3BvcnQgZGlkbid0IGtub3cg
+dGhhdCB3ZSB3YW50ZWQgdG8gc3RhcnQKKwkJICogYWdyZWdnYXRpb24sIGRvbid0IHRlbGwgaXQg
+dGhhdCB3ZSB3YW50IHRvIHN0b3AgdGhlbS4KKwkJICogVGhpcyBjYW4gaGFwcGVuIHdoZW4gd2Ug
+ZG9uJ3QgZ2V0IHRoZSBhZGRCQSByZXNwb25zZSBvbgorCQkgKiB0aW1lLgogCQkgKi8KLQkJaWYg
+KGFnZ19zdGF0ZSAhPSBJV0xfQUdHX1NUQVJUSU5HKQorCQlpZiAoYWdnX3N0YXRlID09IElXTF9B
+R0dfT04pCiAJCQlpd2xfdHJhbnNfdHhfYWdnX2Rpc2FibGUocHJpdi0+dHJhbnMsIHR4cV9pZCk7
+CisJCWVsc2UKKwkJCUlXTF9ERUJVR19UWF9RVUVVRVMocHJpdiwgIkRvbid0IGRpc2FibGUgdHgg
+YWdnIHNpbmNlIgorCQkJCQkgICAgIiBBR0cgaGFzbid0IGJlZW4gc3RhcnRlZDoiCisJCQkJCSAg
+ICAiIHN0YXRlICVkXG4iLCBhZ2dfc3RhdGUpOwogCQlpd2xhZ25fZGVhbGxvY19hZ2dfdHhxKHBy
+aXYsIHR4cV9pZCk7CiAJfQogCi0tIAoxLjcuMQoK
+--f46d0444047af599b604bf079560--
