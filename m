@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:57427 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755584Ab2EASVU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 14:21:20 -0400
-Message-ID: <4FA02998.4000506@hauke-m.de> (sfid-20120501_202124_418855_347663B8)
-Date: Tue, 01 May 2012 20:21:12 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:64507 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753561Ab2EBFIK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 May 2012 01:08:10 -0400
+Received: by wgbdr13 with SMTP id dr13so227918wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 22:08:09 -0700 (PDT)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de> <4F9CF839.1040401@broadcom.com> <4F9D4073.200@hauke-m.de> <4F9D7032.40507@broadcom.com> <4F9DC495.7060103@hauke-m.de> <4F9FAE48.10102@broadcom.com>
-In-Reply-To: <4F9FAE48.10102@broadcom.com>
+In-Reply-To: <CA+icZUVEbbG2Wke1p2PxsgCQV+mHny+C+f4jRMnego+gWAVVZg@mail.gmail.com>
+References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
+	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
+	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
+	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
+	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
+	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
+	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
+	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
+	<4F901224.1040508@sipsolutions.net>
+	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
+	<4F901F16.6080007@sipsolutions.net>
+	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
+	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
+	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
+	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
+	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
+	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
+	<4F96939B.5030204@erley.org>
+	<CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
+	<D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com>
+	<CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com>
+	<CANUX_P1HQVUFcxFLtWoL+wvEXbNTk0qEJVM+4yJKBbGuhWvZbw@mail.gmail.com>
+	<CA+icZUUr9v-fc-86gAppJWF+c2PBE07eG28BNfQf+9ESvHqj=A@mail.gmail.com>
+	<CANUX_P2yiz025rkcDsisNd0uFfEaVV=Gycf0fzWA29ct7R9aDg@mail.gmail.com>
+	<CA+icZUXG545mfc9aOYAKiLoNiYmUi3wj+5vkB_R_1jRSNSLk4A@mail.gmail.com>
+	<CA+icZUVEbbG2Wke1p2PxsgCQV+mHny+C+f4jRMnego+gWAVVZg@mail.gmail.com>
+Date: Wed, 2 May 2012 08:08:09 +0300
+Message-ID: <CANUX_P1PqOm4b1F5RGRfnWR_oHqoZ3LHNbVRXcDeQQ+vzh4tjQ@mail.gmail.com> (sfid-20120502_070815_217614_9CEB011D)
+Subject: Re: wlan0 not present
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: Dominik Feser <dominik.feser@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/01/2012 11:35 AM, Arend van Spriel wrote:
-> On 04/30/2012 12:45 AM, Hauke Mehrtens wrote:
->> On 04/29/2012 06:45 PM, Arend van Spriel wrote:
->>> What firmware are you using?
->>
->> On b43 I am using firmware version 666.2 from wl 5.100.138, but also
->> older versions are working. On brcmsmac I am using bcm43xx-0.fw and
->> bcm43xx_hdr-0.fw from the linux-firmware git repo.
->>
->> Does the ucode you provide in bcm43xx-0.fw and bcm43xx_hdr-0.fw support
->> rev 17 ieee80211 cores? For b43 it is the same file for all n-phy based
->> cores rev>= 16, so for wl it should be the same, but have you added
->> some special handling into this firmware for brcmsmac?
->>
->> Hauke
->>
-> 
-> Yes, the firmware for brcmsmac is specifically for 43224, 43225, and
-> 4313. I have to check with the firmware guys here what is needed for 4718.
-I tried to load the firmware b43 uses (extracted from wl) in version
-666.2 and my bcm43224 device is working with that firmware like with the
-firmware supposed for brcmsmac (bcm43xx-0.fw). after loading the b43
-firmware my bcm4718 does not show the "wl1: wlc_coreinit: ucode did not
-self-suspend!" line any more, but still "wlc_coreinit: txfifo mismatch:
-ucode size 111 driver size 28518 index 5" and crashes the device after
-that with a Data bus error.
+This thread has shifted from its original purpose.
+Just to be sure Dominik, I guess you still have issues and still can't
+really the debug messages right ?
 
-I am able to connect to a 5GHz AP in client mode with my bcm43224
-connected to the bcm4718 via PCIe with both firmware versions, but I am
-just getting 30.3 Mbits/sec as the maximum speed.
-
-Hauke
+Emmanuel Grumbach
+egrumbach@gmail.com
