@@ -1,109 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:49537 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751491Ab2EaUlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 16:41:06 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] bcma: make some functions static
-Date: Thu, 31 May 2012 22:40:59 +0200
-Message-Id: <1338496859-16436-1-git-send-email-hauke@hauke-m.de> (sfid-20120531_224111_052005_349EB047)
+Received: from mms3.broadcom.com ([216.31.210.19]:3875 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755500Ab2EBSxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 May 2012 14:53:40 -0400
+Message-ID: <4FA182A8.8080604@broadcom.com> (sfid-20120502_205344_455781_14276639)
+Date: Wed, 2 May 2012 20:53:28 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Kalle Valo" <kvalo@adurom.com>,
+	"Nathan Hintz" <nlhintz@hotmail.com>,
+	linux-wireless@vger.kernel.org, hauke@hauke-m.de
+Subject: Re: [PATCH v2 0/6] BCMA Cumulative patches from OpenWRT
+References: <BLU0-SMTP45859B1CA3415BE44C9024CAC240@phx.gbl>
+ <4F990DC1.4070305@broadcom.com> <87r4vaaezl.fsf@purkki.adurom.net>
+ <20120502181157.GC9285@tuxdriver.com>
+In-Reply-To: <20120502181157.GC9285@tuxdriver.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions and structs are not used in an other file and the
-prototypes are in no header file, just make them static so the compiler
-is able to optimize them better.
+On 05/02/2012 08:11 PM, John W. Linville wrote:
+> On Thu, Apr 26, 2012 at 02:50:54PM +0300, Kalle Valo wrote:
+>> "Arend van Spriel" <arend@broadcom.com> writes:
+>>
+>>> On 04/26/2012 06:23 AM, Nathan Hintz wrote:
+>>>> Nathan Hintz (6):
+>>>>    bcma: Find names of non BCM cores
+>>>>    bcma: Move initialization of SPROM to prevent overwrite
+>>>>    bcma: Account for variable PCI memory base/size
+>>>>    bcma: reads/writes are always 4 bytes, so always map 4 bytes
+>>>>    bcma: Add __devexit to bcma_host_pci_remove
+>>>>    bcma: Add flush for BCMA_RESET_CTL write
+>>>>
+>>>>   arch/mips/bcm47xx/setup.c      |    4 +++
+>>>>   arch/mips/bcm47xx/sprom.c      |    2 -
+>>>>   drivers/bcma/core.c            |    1 +
+>>>>   drivers/bcma/driver_pci_host.c |   10 +++---
+>>>>   drivers/bcma/host_pci.c        |    4 +-
+>>>>   drivers/bcma/scan.c            |   54 +++++++++++++++++++++++++++++----------
+>>>>   6 files changed, 52 insertions(+), 23 deletions(-)
+>>>>
+>>>
+>>> None of these patches have any description. Some motivation for the
+>>> changes would be appreciated like 'reported problem', 'new target
+>>> support', etc.
+>>
+>> I would say that it's required. Anyone can see the diff and see what was
+>> changed, but nobody will figure out why the change was made unless it's
+>> described in the commit log. So it's important to answer the question
+>> "Why?".
+> 
+> Will we be seeing this patchset reposted with better changelogs?
+> 
+> John
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/driver_chipcommon_pmu.c |    6 +++---
- drivers/bcma/host_pci.c              |   11 ++++++-----
- drivers/bcma/host_soc.c              |    2 +-
- 3 files changed, 10 insertions(+), 9 deletions(-)
+Although not strongly stated by me I was certainly expecting a re-post.
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index a058842..ee4d39c 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -96,7 +96,7 @@ static void bcma_pmu_resources_init(struct bcma_drv_cc *cc)
- 		bcma_cc_write32(cc, BCMA_CC_PMU_MAXRES_MSK, max_msk);
- }
- 
--void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
-+static void bcma_pmu_swreg_init(struct bcma_drv_cc *cc)
- {
- 	struct bcma_bus *bus = cc->core->bus;
- 
-@@ -130,7 +130,7 @@ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
- 	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
- }
- 
--void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
-+static void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
- {
- 	struct bcma_bus *bus = cc->core->bus;
- 
-@@ -249,7 +249,7 @@ static u32 bcma_pmu_clock(struct bcma_drv_cc *cc, u32 pll0, u32 m)
- }
- 
- /* query bus clock frequency for PMU-enabled chipcommon */
--u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
-+static u32 bcma_pmu_get_clockcontrol(struct bcma_drv_cc *cc)
- {
- 	struct bcma_bus *bus = cc->core->bus;
- 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 6c05cf4..f7fbae7 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -77,8 +77,8 @@ static void bcma_host_pci_write32(struct bcma_device *core, u16 offset,
- }
- 
- #ifdef CONFIG_BCMA_BLOCKIO
--void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
--			      size_t count, u16 offset, u8 reg_width)
-+static void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
-+				     size_t count, u16 offset, u8 reg_width)
- {
- 	void __iomem *addr = core->bus->mmio + offset;
- 	if (core->bus->mapped_core != core)
-@@ -100,8 +100,9 @@ void bcma_host_pci_block_read(struct bcma_device *core, void *buffer,
- 	}
- }
- 
--void bcma_host_pci_block_write(struct bcma_device *core, const void *buffer,
--			       size_t count, u16 offset, u8 reg_width)
-+static void bcma_host_pci_block_write(struct bcma_device *core,
-+				      const void *buffer, size_t count,
-+				      u16 offset, u8 reg_width)
- {
- 	void __iomem *addr = core->bus->mmio + offset;
- 	if (core->bus->mapped_core != core)
-@@ -139,7 +140,7 @@ static void bcma_host_pci_awrite32(struct bcma_device *core, u16 offset,
- 	iowrite32(value, core->bus->mmio + (1 * BCMA_CORE_SIZE) + offset);
- }
- 
--const struct bcma_host_ops bcma_host_pci_ops = {
-+static const struct bcma_host_ops bcma_host_pci_ops = {
- 	.read8		= bcma_host_pci_read8,
- 	.read16		= bcma_host_pci_read16,
- 	.read32		= bcma_host_pci_read32,
-diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
-index 3c381fb..3475e60 100644
---- a/drivers/bcma/host_soc.c
-+++ b/drivers/bcma/host_soc.c
-@@ -143,7 +143,7 @@ static void bcma_host_soc_awrite32(struct bcma_device *core, u16 offset,
- 	writel(value, core->io_wrap + offset);
- }
- 
--const struct bcma_host_ops bcma_host_soc_ops = {
-+static const struct bcma_host_ops bcma_host_soc_ops = {
- 	.read8		= bcma_host_soc_read8,
- 	.read16		= bcma_host_soc_read16,
- 	.read32		= bcma_host_soc_read32,
--- 
-1.7.9.5
+Gr. AvS
 
