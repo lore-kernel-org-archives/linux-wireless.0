@@ -1,43 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1889 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760709Ab2EJRg1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 13:36:27 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 2/2] NFC: Queue I frame fragments to the LLCP sockets queue tail
-Date: Thu, 10 May 2012 19:45:52 +0200
-Message-Id: <1336671952-22678-3-git-send-email-sameo@linux.intel.com> (sfid-20120510_194237_756553_75B98DD4)
-In-Reply-To: <1336671952-22678-1-git-send-email-sameo@linux.intel.com>
-References: <1336671952-22678-1-git-send-email-sameo@linux.intel.com>
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:42542 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754741Ab2ECAaE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 May 2012 20:30:04 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Wed, 2 May 2012 17:29:28 -0700
+Subject: RE: [PATCH 2/2 v2] Bluetooth: btmrvl: add support for SDIO
+ suspend/resume callbacks
+Message-ID: <477F20668A386D41ADCC57781B1F7043083A4AD379@SC-VEXCH1.marvell.com> (sfid-20120503_023103_999336_E35894DD)
+References: <1335379434-12564-1-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1335379434-12564-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After testing our stack with large SNEP messages, we realized the fragments
-were arriving in reversed order.
+Hi Marcel, Gustavo,
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/llcp/commands.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Host sleep is activated using already configured host sleep
+> parameters in suspend handler and it is cancelled in resume
+> handler.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+> v2: remove '\n' at end of BT_DBG, BT_ERR. (Marcel Holtmann)
 
-diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
-index ef10ffc..1e02a38 100644
---- a/net/nfc/llcp/commands.c
-+++ b/net/nfc/llcp/commands.c
-@@ -488,7 +488,7 @@ int nfc_llcp_send_i_frame(struct nfc_llcp_sock *sock,
- 
- 		memcpy(skb_put(pdu, frag_len), msg_ptr, frag_len);
- 
--		skb_queue_head(&sock->tx_queue, pdu);
-+		skb_queue_tail(&sock->tx_queue, pdu);
- 
- 		lock_sock(sk);
- 
--- 
-1.7.9.1
+Could you please review this v2 patch?
+
+Thanks,
+Bing
+
+> 
+>  drivers/bluetooth/btmrvl_drv.h  |    2 +
+>  drivers/bluetooth/btmrvl_main.c |    3 +-
+>  drivers/bluetooth/btmrvl_sdio.c |  100 +++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 104 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/bluetooth/btmrvl_drv.h b/drivers/bluetooth/btmrvl_drv.h
+> index 2c79e76..94f2d65 100644
+> --- a/drivers/bluetooth/btmrvl_drv.h
+> +++ b/drivers/bluetooth/btmrvl_drv.h
+> @@ -67,6 +67,7 @@ struct btmrvl_adapter {
+>  	u8 wakeup_tries;
+>  	wait_queue_head_t cmd_wait_q;
+>  	u8 cmd_complete;
+> +	bool is_suspended;
+>  };
+> 
+>  struct btmrvl_private {
+> @@ -142,6 +143,7 @@ int btmrvl_send_module_cfg_cmd(struct btmrvl_private *priv, int subcmd);
+>  int btmrvl_send_hscfg_cmd(struct btmrvl_private *priv);
+>  int btmrvl_enable_ps(struct btmrvl_private *priv);
+>  int btmrvl_prepare_command(struct btmrvl_private *priv);
+> +int btmrvl_enable_hs(struct btmrvl_private *priv);
+> 
+>  #ifdef CONFIG_DEBUG_FS
+>  void btmrvl_debugfs_init(struct hci_dev *hdev);
+> diff --git a/drivers/bluetooth/btmrvl_main.c b/drivers/bluetooth/btmrvl_main.c
+> index a880537..681ca9d 100644
+> --- a/drivers/bluetooth/btmrvl_main.c
+> +++ b/drivers/bluetooth/btmrvl_main.c
+> @@ -262,7 +262,7 @@ int btmrvl_enable_ps(struct btmrvl_private *priv)
+>  }
+>  EXPORT_SYMBOL_GPL(btmrvl_enable_ps);
+> 
+> -static int btmrvl_enable_hs(struct btmrvl_private *priv)
+> +int btmrvl_enable_hs(struct btmrvl_private *priv)
+>  {
+>  	struct sk_buff *skb;
+>  	struct btmrvl_cmd *cmd;
+> @@ -298,6 +298,7 @@ static int btmrvl_enable_hs(struct btmrvl_private *priv)
+> 
+>  	return ret;
+>  }
+> +EXPORT_SYMBOL_GPL(btmrvl_enable_hs);
+> 
+>  int btmrvl_prepare_command(struct btmrvl_private *priv)
+>  {
+> diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
+> index d7d8f83..a853244 100644
+> --- a/drivers/bluetooth/btmrvl_sdio.c
+> +++ b/drivers/bluetooth/btmrvl_sdio.c
+> @@ -1046,11 +1046,111 @@ static void btmrvl_sdio_remove(struct sdio_func *func)
+>  	}
+>  }
+> 
+> +static int btmrvl_sdio_suspend(struct device *dev)
+> +{
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+> +	struct btmrvl_sdio_card *card;
+> +	struct btmrvl_private *priv;
+> +	mmc_pm_flag_t pm_flags;
+> +	struct hci_dev *hcidev;
+> +
+> +	if (func) {
+> +		pm_flags = sdio_get_host_pm_caps(func);
+> +		BT_DBG("%s: suspend: PM flags = 0x%x", sdio_func_id(func),
+> +		       pm_flags);
+> +		if (!(pm_flags & MMC_PM_KEEP_POWER)) {
+> +			BT_ERR("%s: cannot remain alive while suspended",
+> +			       sdio_func_id(func));
+> +			return -ENOSYS;
+> +		}
+> +		card = sdio_get_drvdata(func);
+> +		if (!card || !card->priv) {
+> +			BT_ERR("card or priv structure is not valid");
+> +			return 0;
+> +		}
+> +	} else {
+> +		BT_ERR("sdio_func is not specified");
+> +		return 0;
+> +	}
+> +
+> +	priv = card->priv;
+> +
+> +	if (priv->adapter->hs_state != HS_ACTIVATED) {
+> +		if (btmrvl_enable_hs(priv)) {
+> +			BT_ERR("HS not actived, suspend failed!");
+> +			return -EBUSY;
+> +		}
+> +	}
+> +	hcidev = priv->btmrvl_dev.hcidev;
+> +	BT_DBG("%s: SDIO suspend", hcidev->name);
+> +	hci_suspend_dev(hcidev);
+> +	skb_queue_purge(&priv->adapter->tx_queue);
+> +
+> +	priv->adapter->is_suspended = true;
+> +
+> +	/* We will keep the power when hs enabled successfully */
+> +	if (priv->adapter->hs_state == HS_ACTIVATED) {
+> +		BT_DBG("suspend with MMC_PM_KEEP_POWER");
+> +		return sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
+> +	} else {
+> +		BT_DBG("suspend without MMC_PM_KEEP_POWER");
+> +		return 0;
+> +	}
+> +}
+> +
+> +static int btmrvl_sdio_resume(struct device *dev)
+> +{
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+> +	struct btmrvl_sdio_card *card;
+> +	struct btmrvl_private *priv;
+> +	mmc_pm_flag_t pm_flags;
+> +	struct hci_dev *hcidev;
+> +
+> +	if (func) {
+> +		pm_flags = sdio_get_host_pm_caps(func);
+> +		BT_DBG("%s: resume: PM flags = 0x%x", sdio_func_id(func),
+> +		       pm_flags);
+> +		card = sdio_get_drvdata(func);
+> +		if (!card || !card->priv) {
+> +			BT_ERR("card or priv structure is not valid");
+> +			return 0;
+> +		}
+> +	} else {
+> +		BT_ERR("sdio_func is not specified");
+> +		return 0;
+> +	}
+> +	priv = card->priv;
+> +
+> +	if (!priv->adapter->is_suspended) {
+> +		BT_DBG("device already resumed");
+> +		return 0;
+> +	}
+> +
+> +	priv->adapter->is_suspended = false;
+> +	hcidev = priv->btmrvl_dev.hcidev;
+> +	BT_DBG("%s: SDIO resume", hcidev->name);
+> +	hci_resume_dev(hcidev);
+> +	priv->hw_wakeup_firmware(priv);
+> +	priv->adapter->hs_state = HS_DEACTIVATED;
+> +	BT_DBG("%s: HS DEACTIVATED in resume!", hcidev->name);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct dev_pm_ops btmrvl_sdio_pm_ops = {
+> +	.suspend	= btmrvl_sdio_suspend,
+> +	.resume		= btmrvl_sdio_resume,
+> +};
+> +
+>  static struct sdio_driver bt_mrvl_sdio = {
+>  	.name		= "btmrvl_sdio",
+>  	.id_table	= btmrvl_sdio_ids,
+>  	.probe		= btmrvl_sdio_probe,
+>  	.remove		= btmrvl_sdio_remove,
+> +	.drv = {
+> +		.owner = THIS_MODULE,
+> +		.pm = &btmrvl_sdio_pm_ops,
+> +	}
+>  };
+> 
+>  static int __init btmrvl_sdio_init_module(void)
+> --
+> 1.7.0.4
 
