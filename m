@@ -1,67 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19392 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756370Ab2EWHQV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 03:16:21 -0400
-Message-ID: <4FBC8EBF.20404@qca.qualcomm.com> (sfid-20120523_091625_859590_A2769AF4)
-Date: Wed, 23 May 2012 12:46:15 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Fix missing gpio pin 9 configuration
-References: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:64003 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755247Ab2ECV2n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 17:28:43 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2/6] iwlwifi: add documentation for bt reduced tx power
+Date: Thu,  3 May 2012 14:22:02 -0700
+Message-Id: <1336080126-22606-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120503_232854_628176_947DDBE8)
+In-Reply-To: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Change-Id: Ia6294d651dcffdcaf8b62e67bcef52bd8c158dea
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Reviewed-on: http://git-mwg.jer.intel.com/gerrit/1947
+Tested-by: Jenkins
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   22 +++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    6 ++++++
+ 2 files changed, 27 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 9d88565..cb4b31f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -274,9 +274,20 @@ void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
+ 		return;
+ 	}
+ 
++	/*
++	 * Possible situations when BT needs to take over for receive,
++	 * at the same time where STA needs to response to AP's frame(s),
++	 * reduce the tx power of the required response frames, by that,
++	 * allow the concurrent BT receive & WiFi transmit
++	 * (BT - ANT A, WiFi -ANT B), without interference to one another
++	 *
++	 * Reduced tx power apply to control frames only (ACK/Back/CTS)
++	 * when indicated by the BT config command
++	 */
+ 	basic.kill_ack_mask = priv->kill_ack_mask;
+ 	basic.kill_cts_mask = priv->kill_cts_mask;
+-	basic.reduce_txpower = priv->reduced_txpower;
++	if (priv->reduced_txpower)
++		basic.reduce_txpower = IWLAGN_BT_REDUCED_TX_PWR;
+ 	basic.valid = priv->bt_valid;
+ 
+ 	/*
+@@ -590,6 +601,15 @@ static bool iwlagn_set_kill_msk(struct iwl_priv *priv,
+ 	return need_update;
+ }
+ 
++/*
++ * Upon RSSI changes, sends a bt config command with following changes
++ *  1. enable/disable "reduced control frames tx power
++ *  2. update the "kill)ack_mask" and "kill_cts_mask"
++ *
++ * If "reduced tx power" is enabled, uCode shall
++ *  1. ACK/Back/CTS rate shall reduced to 6Mbps
++ *  2. not use duplciate 20/40MHz mode
++ */
+ static bool iwlagn_fill_txpower_mode(struct iwl_priv *priv,
+ 				struct iwl_bt_uart_msg *uart_msg)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 83a6930..2813a0a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -1910,6 +1910,8 @@ enum iwl_bt_kill_idx {
+ 					IWLAGN_BT_VALID_REDUCED_TX_PWR | \
+ 					IWLAGN_BT_VALID_3W_LUT)
+ 
++#define IWLAGN_BT_REDUCED_TX_PWR	BIT(0)
++
+ #define IWLAGN_BT_DECISION_LUT_SIZE	12
+ 
+ struct iwl_basic_bt_cmd {
+@@ -1923,6 +1925,10 @@ struct iwl_basic_bt_cmd {
+ 	u8 bt3_timer_t2_value;
+ 	__le16 bt4_reaction_time; /* unused */
+ 	__le32 bt3_lookup_table[IWLAGN_BT_DECISION_LUT_SIZE];
++	/*
++	 * bit 0: use reduced tx power for control frame
++	 * bit 1 - 7: reserved
++	 */
+ 	u8 reduce_txpower;
+ 	u8 reserved;
+ 	__le16 valid;
+-- 
+1.7.0.4
 
-On Tuesday 22 May 2012 12:52 PM, Vasanthakumar Thiagarajan wrote:
-> GPIO pin 9 also needs to be configured along with other gpio
-> pins to avoid sdio crc errors. I've not experienced any issue
-> with missing this particular gpio pin configuration, found dunring
-> code review. This can potentially improve rx performance.
->
-> Signed-off-by: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath6kl/init.c   |    6 ++++++
->   drivers/net/wireless/ath/ath6kl/target.h |    1 +
->   2 files changed, 7 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-> index 10de132..241febc 100644
-> --- a/drivers/net/wireless/ath/ath6kl/init.c
-> +++ b/drivers/net/wireless/ath/ath6kl/init.c
-> @@ -1392,6 +1392,12 @@ static int ath6kl_init_upload(struct ath6kl *ar)
->   	    ar->version.target_ver == AR6003_HW_2_1_1_VERSION) {
->   		ath6kl_err("temporary war to avoid sdio crc error\n");
->
-> +		param = 0x28;
-> +		address = GPIO_BASE_ADDRESS + GPIO_PIN9_ADDRESS;
-> +		status = ath6kl_bmi_reg_write(ar, address, param);
-> +		if (status)
-> +			return status;
-> +
->   		param = 0x20;
->
->   		address = GPIO_BASE_ADDRESS + GPIO_PIN10_ADDRESS;
-> diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
-> index 78e0ef4..a98c12b 100644
-> --- a/drivers/net/wireless/ath/ath6kl/target.h
-> +++ b/drivers/net/wireless/ath/ath6kl/target.h
-> @@ -45,6 +45,7 @@
->   #define LPO_CAL_ENABLE_S		20
->   #define LPO_CAL_ENABLE			0x00100000
->
-> +#define GPIO_PIN9_ADDRESS		0x0000004c
->   #define GPIO_PIN10_ADDRESS		0x00000050
->   #define GPIO_PIN11_ADDRESS		0x00000054
->   #define GPIO_PIN12_ADDRESS		0x00000058
-
-I hope you are not dropping this one along with the other
-series of two patches sent mistakenly. This is genuine patch.
-
-Vasanth
