@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43998 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752176Ab2E2Wl6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 18:41:58 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/4] compat: misc patches to make it compile again
-Date: Wed, 30 May 2012 00:41:44 +0200
-Message-Id: <1338331308-29732-1-git-send-email-hauke@hauke-m.de> (sfid-20120530_004201_315730_6D6DE5CE)
+Received: from perches-mx.perches.com ([206.117.179.246]:41484 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752474Ab2ECR3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 13:29:48 -0400
+Message-ID: <1336066186.13866.25.camel@joe2Laptop> (sfid-20120503_192953_180410_162E4589)
+Subject: Re: pull request: wireless-next 2012-05-03
+From: Joe Perches <joe@perches.com>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Thu, 03 May 2012 10:29:46 -0700
+In-Reply-To: <20120503.131707.112550136096227430.davem@davemloft.net>
+References: <20120503152206.GL9285@tuxdriver.com>
+	 <20120503.130516.1008806127286088740.davem@davemloft.net>
+	 <20120503.131707.112550136096227430.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series in combination with the series for compat-wireless makes 
-compat-wireless compile again for me on all supported kernel versions.
+On Thu, 2012-05-03 at 13:17 -0400, David Miller wrote:
+>  ...
+> -		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED) {
+> +		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED &&
+> +				hdev->discovery.state == DISCOVERY_FINDING) {
+> 
+> Really, we went through this a million times very recently and I'm
+> not pulling anything into my tree that has garbage like this in it.
 
-Hauke Mehrtens (4):
-  compat: do not include qdisc_cb_private_validate with every kernel
-  comapt: add skb_queue_walk_from
-  compat: remove hci_mon.h
-  compat: add ida_simple_{get,remove}
+Perhaps the bluetooth folk can adopt using
 
- compat/Makefile                 |    1 +
- compat/compat-3.1.c             |   83 +++++++++++++++++++++++++++++++++++++++
- include/linux/compat-2.6.28.h   |    4 ++
- include/linux/compat-3.1.h      |    5 +++
- include/linux/compat-3.3.h      |    2 +
- include/net/bluetooth/hci_mon.h |   51 ------------------------
- 6 files changed, 95 insertions(+), 51 deletions(-)
- create mode 100644 compat/compat-3.1.c
- delete mode 100644 include/net/bluetooth/hci_mon.h
+scripts/checkpatch.pl --strict
 
--- 
-1.7.9.5
+or maybe checkpatch could be changed to use
+--strict on patches in net and drivers/net
+automatically.
+
 
