@@ -1,50 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:37619 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755214Ab2EOOJQ (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:40996 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063Ab2ECRVT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 10:09:16 -0400
-Received: by mail-we0-f174.google.com with SMTP id u7so2512825wey.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 07:09:15 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 06/10] wlcore: flush before stopping AP
-Date: Tue, 15 May 2012 17:08:56 +0300
-Message-Id: <1337090940-13750-6-git-send-email-arik@wizery.com> (sfid-20120515_160925_293095_F43B233D)
-In-Reply-To: <1337090940-13750-1-git-send-email-arik@wizery.com>
-References: <1337090940-13750-1-git-send-email-arik@wizery.com>
+	Thu, 3 May 2012 13:21:19 -0400
+Message-ID: <4FA2BE8D.6090604@gtri.gatech.edu> (sfid-20120503_192122_995250_C6C09251)
+Date: Thu, 3 May 2012 13:21:17 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/9] rtlwifi: avoid race registering with mac80211
+References: <4FA212D9.5020602@gtri.gatech.edu> <4FA21339.8060407@gtri.gatech.edu> <4FA2BC00.9020804@lwfinger.net>
+In-Reply-To: <4FA2BC00.9020804@lwfinger.net>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+	micalg=sha1; boundary="------------ms010504010200050102070208"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+--------------ms010504010200050102070208
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Make sure the deauth bcast gets sent
+On 05/03/2012 01:10 PM, Larry Finger wrote:
+> On 05/03/2012 12:10 AM, Joshua Roys wrote:
+>
+>
+> This patch is totally wrong. It is possible that there is a race
+> condition, and it may be the source of the problem at
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D43187, but this patch fai=
+ls
+> when the firmware is not cached. As a result, it prevents my box from
+> booting.
+>
+> I will try to find a fix for both conditions.
+>
+> Larry
+>
 
-[Make sure we are AP as well before the flush - Arik]
+Hm,
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    4 ++++
- 1 file changed, 4 insertions(+)
+Sorry about that.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 35f6bc1..92478cb 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3964,6 +3964,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (!is_ap && (changed & BSS_CHANGED_ASSOC))
- 		cancel_delayed_work_sync(&wl->connection_loss_work);
- 
-+	if (is_ap && (changed & BSS_CHANGED_BEACON_ENABLED) &&
-+	    !bss_conf->enable_beacon)
-+		wl1271_tx_flush(wl);
-+
- 	mutex_lock(&wl->mutex);
- 
- 	if (unlikely(wl->state == WL1271_STATE_OFF))
--- 
-1.7.9.5
+Do you think I should have moved the
+   set_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status);
+lines also?  Or is the idea of the patch just wrong?
 
+Josh
+
+
+--------------ms010504010200050102070208
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+ljVQ4DhhZsY4PRd4rWZToTfZAAAAAAAA
+--------------ms010504010200050102070208--
