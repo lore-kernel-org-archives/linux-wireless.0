@@ -1,89 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57358 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756812Ab2EOPEP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 11:04:15 -0400
-Received: by eaak11 with SMTP id k11so835229eaa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 08:04:13 -0700 (PDT)
-Date: Tue, 15 May 2012 17:04:05 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce : freeze after connecting to network with FW Power
- Save on
-Message-ID: <20120515170405.7f6510f2@destiny.ordissimo> (sfid-20120515_170419_283725_7E5BA4BD)
-In-Reply-To: <4FB26D6B.2030005@lwfinger.net>
-References: <20120515152951.7cc4f84b@destiny.ordissimo>
-	<4FB26D6B.2030005@lwfinger.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35027 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755430Ab2ECTFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 15:05:38 -0400
+Message-ID: <4FA2D6FC.4030109@hauke-m.de> (sfid-20120503_210540_840957_28757DA1)
+Date: Thu, 03 May 2012 21:05:32 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: mcgrof@gmail.com, lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC c-w 2/4] compat-wireless: also copy include/generated/ from
+ compat
+References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>  <1335463674-13003-5-git-send-email-hauke@hauke-m.de>  (sfid-20120426_200823_435891_885FB2C4) <1336071426.5167.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1336071426.5167.6.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 15 May 2012 09:51:23 -0500, Larry Finger <Larry.Finger@lwfinger.net> wrote :
-
-> On 05/15/2012 08:29 AM, Anisse Astier wrote:
-> > Hi,
-> >
-> > With the rtl8192ce driver, I get freezes a few seconds after connecting
-> > to a network. (see PCI id below) Machine is unusable after hang. I'm
-> > using the linville/wireless-next git tree.
-> >
-> > I've been playing with the different options, and noticed that setting
-> > fwlps=0 fixes the issue.
-> >
-> > I've tried to get more messages with netconsole, but once the lockup
-> > happens I'm unable to get any debug message (regardless of the log level
-> > of the driver).
-> >
-> > Regards,
-> >
-> > Anisse
-> >
-> >
-> > 06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-> > 	Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8212]
-> > 	Flags: bus master, fast devsel, latency 0, IRQ 17
-> > 	I/O ports at 3000 [size=256]
-> > 	Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
-> > 	Capabilities: [40] Power Management version 3
-> > 	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-> > 	Capabilities: [70] Express Endpoint, MSI 00
-> > 	Capabilities: [100] Advanced Error Reporting
-> > 	Capabilities: [140] Virtual Channel
-> > 	Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
-> > 	Kernel driver in use: rtl8192ce
+On 05/03/2012 08:57 PM, Johannes Berg wrote:
+> On Thu, 2012-04-26 at 20:07 +0200, Hauke Mehrtens wrote:
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  scripts/admin-update.sh |    2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+>> index fd1fa87..7147ff1 100755
+>> --- a/scripts/admin-update.sh
+>> +++ b/scripts/admin-update.sh
+>> @@ -283,6 +283,7 @@ mkdir -p include/linux/ include/net/ include/linux/usb \
+>>  	include/trace \
+>>  	include/pcmcia \
+>>  	include/crypto \
+>> +	include/generated \
 > 
-> I have been doing long-term tests with that same card for about one week with no 
-> dropouts and no freezes. I am running wireless-testing, not wireless-next; 
-> however, I have all the rtlwifi and friends patches applied. I think it is safe 
+> Are you sure we want this? It seems to me that most generated things
+> like asm-offsets etc. need to be taken from the *target* kernel.
 
-I'll try wireless-testing then. Are all rtlwifi patches in
-wireless-testing ?
+The directory include/generated/ in compat, just contains
+include/generated/autoconf.h, which will include linux/compat_autoconf.h
+and the original file from the kernel. This way the compat_autoconf.h
+will always be included when autoconf.h gets included.
+See "[RFC c 2/9] compat: include compat_autoconf.h"
 
-(This problem was also reproduced with 3.2.X)
+I do not think there will be any other header in include/generated/ we
+want to extend or overwrite in compat.
 
-
-> to say that I cannot duplicate your results, and that we need to explore the 
-> rest of your system to see what is different.
-> 
-> Is your system 32- or 64-bit? How many cores in your CPU? Have you tried 
-32 bits, SoC is an AMD E1-1200, with 2 cores.
-
-> connecting to more than one AP? What is the make and model of the AP that needs 
-I've tried two different APs, with and without keys (open and WPA2)
-
-> to have power save turned off? What is the mode of operation?
-One is a Linksys WRT54GL with dd-wrt(WPA2), the other(Open) is a
-carrier's set top box/router (Freebox).
-
-> 
-> I am using a 64-bit system with a dual-core CPU. My main AP is a Netgear 
-> WNDR3300 running standard firmware and is encrypted using WPA2-TKIP (AES). The 
-> mode is 802.11n at up to 270 Mbps; however, I have also tested using a Linksys 
-> WRT54GL running openWRT Kamakaze firmware. That one is 802.11g at up to 54 Mbps.
-> 
-> Larry
-
-Anisse
+Hauke
