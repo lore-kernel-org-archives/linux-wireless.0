@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59292 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752145Ab2E1J0N (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:41728 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755746Ab2ECS5Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 05:26:13 -0400
-Received: by bkcji2 with SMTP id ji2so2032405bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2012 02:26:11 -0700 (PDT)
-Message-ID: <4FC344B1.2080700@googlemail.com> (sfid-20120528_112634_678760_F9932DF0)
-Date: Mon, 28 May 2012 11:26:09 +0200
-From: Torsten Zimmermann <flottetotte@googlemail.com>
+	Thu, 3 May 2012 14:57:24 -0400
+Received: by wgbdr13 with SMTP id dr13so2037100wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 11:57:23 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: injected packet channel switch
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+In-Reply-To: <4FA2BF0A.4040307@stericsson.com>
+References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
+	<4FA15A70.2020108@stericsson.com>
+	<CABF+-6XbdG_QMa0iQJMpbOsr4bXCq4mDEB6unkM8jxNGWYwFyQ@mail.gmail.com>
+	<4FA23DA0.3030207@stericsson.com>
+	<CABF+-6WjnVxC55iGHwoaL2zJ+_6oLbkVjaqwwLLrQzZxKwwWxw@mail.gmail.com>
+	<4FA2BF0A.4040307@stericsson.com>
+Date: Thu, 3 May 2012 14:57:23 -0400
+Message-ID: <CABF+-6UgQek50abaLnUsBh3LEccG2Pd1vFQDiLyxgcky-JN4Ag@mail.gmail.com> (sfid-20120503_205737_176930_93439977)
+Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
+From: Kevin Groeneveld <kgroeneveld@gmail.com>
+To: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi,
+Hi Dmitry,
 
-i already posted this on the ath9k list, but maybe this fits more on 
-this list here.
-i'm fairly new to this topic and try to figure out how to switch the
-channel for injected packets based on the information set in the radiotap
-header. this is just for an experiment we are running at our university.
+> It looks like mac80211 tries to monitor beacons and they are filtered by
+> cw1200 device.
+>
+> IEEE80211_HW_CONNECTION_MONITOR and / or IEEE80211_HW_BEACON_FILTER flags
+> (I don't remember, but both of them should be set) should prevent mac80211
+> from
+> monitoring. Please check if they are set in
+> drivers/net/wireless/cw1200/main.c
 
-the goal is to parse the information provided by radiotap header
-in a modified mac80211/tx, set the channel and switch back to the previous
-channel setting after the packet has been transmitted.
+main.c contains the following as in the patches that you posted:
 
-moreover, the packet should - if transmission failed - not be queued. but
-the more important thing right now is the "injected packet channel 
-switch and back after transmission".
+hw->flags = IEEE80211_HW_SIGNAL_DBM |
+		    IEEE80211_HW_SUPPORTS_PS |
+		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
+		    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+		    IEEE80211_HW_SUPPORTS_UAPSD |
+		    IEEE80211_HW_CONNECTION_MONITOR |
+		    IEEE80211_HW_NEED_DTIM_PERIOD;
 
-has someone else already tried such a modification or has some good hints
-were to start ? (i know about the parsing of the header but i am not 
-sure how to solve the channel switching
-for one packet in an elegant way)
+IEEE80211_HW_BEACON_FILTER does not seem to be defined anywhere in the
+header files.  Do I need this?
 
-thanks,
-torsten
+>>> Also I see unexpectedly high rate of IRQs, they should not come every now
+>>> and then..
+>>
+>> Any ideas what could cause this or how I should debug it?
+>
+> Are you running with SDIO or GPIO IRQ?
+
+I am using SDIO IRQ.
+
+
+Thanks,
+
+Kevin
