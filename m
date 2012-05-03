@@ -1,50 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:38527 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752128Ab2EZR4G convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:51819 "HELO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754983Ab2ECHXX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2012 13:56:06 -0400
-Received: by dady13 with SMTP id y13so2513970dad.19
-        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2012 10:56:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FC04B5A.1070900@candelatech.com>
-References: <4FC04B5A.1070900@candelatech.com>
-Date: Sat, 26 May 2012 10:56:05 -0700
-Message-ID: <CAJ-VmomRv-GdRooL=1G5avxAqJ4h3eoAfNkzYit3ok-fXmd25A@mail.gmail.com> (sfid-20120526_195611_817704_2EC17434)
-Subject: Re: Anyone doing WiFi throughput tests?
-From: Adrian Chadd <adrian@freebsd.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 3 May 2012 03:23:23 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	harvey yang <harvey.huawei.yang@gmail.com>
+Subject: [PATCH 04/18] mwifiex: multi-interface support for mwifiex
+Date: Thu,  3 May 2012 00:22:26 -0700
+Message-Id: <1336029760-22565-5-git-send-email-bzhao@marvell.com> (sfid-20120503_092326_014188_65C71AA1)
+In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 May 2012 20:17, Ben Greear <greearb@candelatech.com> wrote:
-> We've been doing some tests using Atheros stations and various APs.  The max
-> throughput
-> we've seen so far is about 237Mbps (received UDP payload on the stations).
-> (Open-Air, AP about 5 feet away, 3x3 MIMO, HT40, 5Ghz, etc).
->
-> We are still running lots of different permutations, but I am interested if
-> anyone else has any numbers to share (official or otherwise).
+From: Avinash Patil <patila@marvell.com>
 
-FWIW, FreeBSD was getting 270MBit/sec one-way UDP and 150MBit one-way
-TCP out of AR9160/AR9280's late last year. I should re-run those tests
-again now that I've fixed a bunch of things and see if I've regressed.
-Those are 2T2R devices w/ a Routerstation Pro (AR7161) as the hostap.
+mwifiex supports STA and AP interfaces which use same phy.
+Indicate this to cfg80211.
 
-At that stage I was maxing out the AR7161 CPU quite badly and filling
-up all kinds of TX/RX paths, to the point that beacon transmission
-stopped being reliable. But I haven't really sat down and run
-performance measurements on MIPS so it's quite possible there's some
-inefficiencies in FreeBSD that I can work around (to reduce the CPU
-overhead, I was happy with the throughput.. :)
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-Sujith, would you mind testing out ath9k/openwrt on a DB120 and see if
-you can get the same results as our internal LSDK builds?
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 55513b6..26a706a 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -20,6 +20,23 @@
+ #include "cfg80211.h"
+ #include "main.h"
+ 
++static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
++	{
++		.max = 1, .types = BIT(NL80211_IFTYPE_STATION),
++	},
++	{
++		.max = 1, .types = BIT(NL80211_IFTYPE_AP),
++	},
++};
++
++static const struct ieee80211_iface_combination mwifiex_iface_comb_ap_sta = {
++	.limits = mwifiex_ap_sta_limits,
++	.num_different_channels = 1,
++	.n_limits = ARRAY_SIZE(mwifiex_ap_sta_limits),
++	.max_interfaces = MWIFIEX_MAX_BSS_NUM,
++	.beacon_int_infra_match = true,
++};
++
+ /*
+  * This function maps the nl802.11 channel type into driver channel type.
+  *
+@@ -1505,6 +1522,9 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	else
+ 		wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
+ 
++	wiphy->iface_combinations = &mwifiex_iface_comb_ap_sta;
++	wiphy->n_iface_combinations = 1;
++
+ 	/* Initialize cipher suits */
+ 	wiphy->cipher_suites = mwifiex_cipher_suites;
+ 	wiphy->n_cipher_suites = ARRAY_SIZE(mwifiex_cipher_suites);
+-- 
+1.7.0.2
 
-Thanks,
-
-
-Adrian
