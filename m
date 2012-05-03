@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:45196 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327Ab2EHRzx (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:45468 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752313Ab2ECRSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 13:55:53 -0400
-Received: by yenm10 with SMTP id m10so5106726yen.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 10:55:52 -0700 (PDT)
-Date: Tue, 8 May 2012 13:55:36 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Vadim <Vadims.Kurmis@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Adding custom channels to ath5k for researching purposes
-Message-ID: <20120508175536.GF25400@localhost> (sfid-20120508_195556_774661_4EE0BD1E)
-References: <loom.20101104T140201-178@post.gmane.org>
- <AANLkTinMSH2Vr=iUTD0Pc_OdaM_LFETDEjsOJn+2ZzVD@mail.gmail.com>
- <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com>
- <20120508163018.GE25400@localhost>
- <CAB=NE6Xx_KKjk5s_CMRopwBuHDxajgn=Jdc_Nbb1DN2s=2QL0A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6Xx_KKjk5s_CMRopwBuHDxajgn=Jdc_Nbb1DN2s=2QL0A@mail.gmail.com>
+	Thu, 3 May 2012 13:18:12 -0400
+Date: Thu, 03 May 2012 13:17:07 -0400 (EDT)
+Message-Id: <20120503.131707.112550136096227430.davem@davemloft.net> (sfid-20120503_191817_480181_706C3A77)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-05-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120503.130516.1008806127286088740.davem@davemloft.net>
+References: <20120503152206.GL9285@tuxdriver.com>
+	<20120503.130516.1008806127286088740.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 08, 2012 at 09:49:22AM -0700, Luis R. Rodriguez wrote:
-> > I still like the idea of exporting more stuff to userspace and letting
-> > CRDA handle the card-based restrictions, but ISTR you had reasons that
-> > didn't work for everything.
-> 
-> What do you mean?
+From: David Miller <davem@davemloft.net>
+Date: Thu, 03 May 2012 13:05:16 -0400 (EDT)
 
-/me digs in the archives...
+> Pulled, thanks John.
 
-http://marc.info/?l=linux-wireless&m=125752855010045&w=2
+Actually, I un-pulled.  The bluetooth guys are sending crap code
+formatting again.
 
-I guess I "still" liked it back then :)
+>From 74e05692c9599866d5c8743764544cf77cd1af87 Mon Sep 17 00:00:00 2001
+From: Andre Guedes <andre.guedes@openbossa.org>
+Date: Tue, 6 Mar 2012 19:37:06 -0300
+Subject: [PATCH 007/160] Bluetooth: Check FINDING state in interleaved
+ discovery
 
-So with that setup people who want to fiddle with the card in 'expert'
-mode could override the card's eeprom reg domain stuff by suitably
-changing crda db instead of recompiling the kernel.
+In order to do interleaved discovery we should be in DISCOVERY_
+FINDING state. Otherwise, discovery should be stopped.
 
-But if I read your follow-ups correctly, going that way wasn't actually
-a big win.  I didn't then (much less now) have the time to explore it
-in actual code.
+Signed-off-by: Andre Guedes <andre.guedes@openbossa.org>
+Signed-off-by: Gustavo F. Padovan <padovan@profusion.mobi>
+ ...
+-		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED) {
++		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED &&
++				hdev->discovery.state == DISCOVERY_FINDING) {
 
-That doesn't cover the person who wanted to use all_channels, but at
-least that is exported by a modparam today.  There are probably other
-things that an 'expert' would want to do beyond these two, though.
+Really, we went through this a million times very recently and I'm
+not pulling anything into my tree that has garbage like this in it.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Sorry.
