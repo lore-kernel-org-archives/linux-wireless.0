@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2223 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754949Ab2ENJGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 05:06:19 -0400
-Message-ID: <4FB0CB01.3000507@broadcom.com> (sfid-20120514_110623_183400_B601A407)
-Date: Mon, 14 May 2012 11:06:09 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>
-cc: linux-wireless@vger.kernel.org, "Julia Lawall" <julia@diku.dk>
-Subject: Re: net: wireless: add brcm80211 drivers
-References: <20120513174333.GB4280@elgon.mountain>
- <4FB0AF4B.9070606@broadcom.com> <20120514083415.GA16999@mwanda>
-In-Reply-To: <20120514083415.GA16999@mwanda>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from shards.monkeyblade.net ([198.137.202.13]:45498 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752063Ab2ECRWc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 13:22:32 -0400
+Date: Thu, 03 May 2012 13:21:26 -0400 (EDT)
+Message-Id: <20120503.132126.1970020317749906187.davem@davemloft.net> (sfid-20120503_192240_900013_758CBF04)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-05-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120503.131707.112550136096227430.davem@davemloft.net>
+References: <20120503152206.GL9285@tuxdriver.com>
+	<20120503.130516.1008806127286088740.davem@davemloft.net>
+	<20120503.131707.112550136096227430.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/14/2012 10:34 AM, Dan Carpenter wrote:
-> On Mon, May 14, 2012 at 09:07:55AM +0200, Arend van Spriel wrote:
->> Thanks for running smatch. I will look in the current code base and fix
->> this. Just out of curiosity: Another static checker used regularly is
->> Coccinelle. What are the pros and cons of smatch compared to Coccinelle?
->>
->> Gr. AvS
-> 
-> That's a tricky question because of my obvious bias as the author
-> of Smatch, and I'm not an expert on Coccinelle.  ;)
+From: David Miller <davem@davemloft.net>
+Date: Thu, 03 May 2012 13:17:07 -0400 (EDT)
 
- ;-)
+> Really, we went through this a million times very recently and I'm
+> not pulling anything into my tree that has garbage like this in it.
 
-> Smatch works on the preprocessed code and Coccinelle works on .c
-> code.  So some things are easier to check for in Coccinelle.  I've
-> generally found hacks to get the information I need in Smatch but
-> sometimes it's gnarly.  So a one liner in Coccinelle is twenty lines
-> of code in Smatch which require in depth knowledge of Smatch and
-> Sparse.
-> 
-> Smatch doesn't fix the bugs it finds.
+BTW, the bluetooth guys owe John Linville a serious apology.
 
-+1 for Coccinelle.
+Because of the crap situation they've created, I can no longer
+trust John's pulls.
 
-> The other advantage for Coccinelle is that you can run it on other
-> architecture's code without setting up a cross compile environment.
-> 
-> What Smatch does that Coccinelle doesn't is that it tries to track
-> the values of all the variables.  This means you can detect array
-> overflows, for example.  Smatch tries to track values across
-> function calls as well, with the recent database work.
+That means I have to baby-sit every pull request he sends me and
+go through every single patch in it looking for these kinds of
+problems.
 
-I guess Oracle knows a thing or two about databases.
+This is _NOT_ how this is supposed to work.
 
-> That's really the long term goal of Smatch, to track the value of
-> every variable in the kernel.  But there is still a lot of work to
-> do.  :P
-
-Enjoy and thanks for taking time to explain.
-
-Gr. AvS
-
+John should be sending me things that are fully vetted and I can
+basically trust to be in good shape.  But because of the bluetooth
+guys that is not the case.
