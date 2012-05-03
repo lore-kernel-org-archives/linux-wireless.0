@@ -1,56 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:32855 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754121Ab2E1Dz7 (ORCPT
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:3277 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755761Ab2ECQPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2012 23:55:59 -0400
-Message-ID: <4FC2F73F.4070701@candelatech.com> (sfid-20120528_055611_102330_E2A2A390)
-Date: Sun, 27 May 2012 20:55:43 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 3 May 2012 12:15:07 -0400
+Message-ID: <4FA2AF04.3080807@gmail.com> (sfid-20120503_181511_496188_0F459B6C)
+Date: Thu, 03 May 2012 18:15:00 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: Anyone doing WiFi throughput tests?
-References: <4FC04B5A.1070900@candelatech.com> <20416.19680.571601.549629@gargle.gargle.HOWL> <4FC0F8CE.1030303@candelatech.com> <20417.972.888113.821079@gargle.gargle.HOWL> <20417.1857.115550.807746@gargle.gargle.HOWL> <4FC2437C.9090106@candelatech.com> <CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com>
-In-Reply-To: <CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Anisse Astier <anisse@astier.eu>
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linville@tuxdriver.com, Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	RA-ShiangTu <Shiang_Tu@ralinktech.com>,
+	RA-Jay Hung <Jay_Hung@ralinktech.com>,
+	John Li <chen-yang.li@mediatek.com>,
+	Kevin Chou <kevin.chou@mediatek.com>
+Subject: Re: [PATCH v2] rt2800: add chipset revision RT5390R support
+References: <CAL1gcdOT1E3jP=j8-sEEN87WRZ7qG=m0jv3aK6QaP-mBuYtXmw@mail.gmail.com> <1335177191-11101-1-git-send-email-anisse@astier.eu> <20120503181003.2c7c6f27@destiny.ordissimo>
+In-Reply-To: <20120503181003.2c7c6f27@destiny.ordissimo>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/27/2012 10:40 AM, Adrian Chadd wrote:
-> On 27 May 2012 08:08, Ben Greear<greearb@candelatech.com>  wrote:
->
->> Do you have a link to anyone selling this AP, or is it just an
->> engineering sample as well?
->
-> The board is an engineering sample but (a) customers and developers
-> can ask for them under NDA, (b) yes, openwrt developers have done this
-> and have the hardware, and (c) the chip is shipping as far as I'm
-> aware.
->
-> It's "just" a MIPS74k + AR9340 (3x3) + on-board AR9580 I think. I'll
-> have to double check. The wireless NIC side of things is pretty
-> standard though, so any Osprey NIC will be fine.
+Hi Anisse,
 
-Ok, I think I understand.  But, "Osprey" returns no useful results
-that I can find, so it must be some internal code name for a project.
+On 05/03/12 18:10, Anisse Astier wrote:
+> Hi,
+> 
+> Any opinon on the patch below ?
+> 
 
-If you can be more specific about exactly what chipsets/NICs
-this includes it would be useful for those of us without NDAs or
-other internal Atheros/Qualcomm connections.
+Since the patch has already been merged by John I didn't think it was
+necessary anymore to comment, as I has no issues with the patch anymore.
 
-As far as shipping chipsets go (perhaps from the list below)
-http://www.qca.qualcomm.com/technology/technology.php?nav1=47
+> On Mon, 23 Apr 2012 12:33:11 +0200, Anisse Astier <anisse@astier.eu> wrote :
+> 
+>> About 70% of the chips with revision RT5390R initialize incorrectly, using
+>> the auxiliary antenna instead of the main one. The net result is that
+>> signal reception is very poor (no AP further than 1M).
+>>
+>> This chipset differs from RT5390 and RT5390F by its support of hardware
+>> antenna diversity. Therefore antenna selection should be done
+>> differently, by disabling software features and previously selected
+>> antenna.
+>>
+>> This changeset does just that, and makes all RT5390R work properly.
+>>
+>> This is based on Ralink's 2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO
+>> driver.
+>>
+>> Signed-off-by: Anisse Astier <anisse@astier.eu>
+>> ---
+>> Changes since v1:
+>>  - moved default_ant inits to proper function, thanks to Gertjan van Wingerde !
+>>
+>> ---
+>>  drivers/net/wireless/rt2x00/rt2800.h    |    1 +
+>>  drivers/net/wireless/rt2x00/rt2800lib.c |   12 ++++++++++++
+>>  2 files changed, 13 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+>> index 063bfa8..1ce2634 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800.h
+>> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+>> @@ -83,6 +83,7 @@
+>>  #define REV_RT3090E			0x0211
+>>  #define REV_RT3390E			0x0211
+>>  #define REV_RT5390F			0x0502
+>> +#define REV_RT5390R			0x1502
+>>  
+>>  /*
+>>   * Signal information.
+>> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> index bd19802..1cd16b4 100644
+>> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+>> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+>> @@ -3356,6 +3356,13 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+>>  			rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
+>>  		}
+>>  
+>> +		/* This chip has hardware antenna diversity*/
+>> +		if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
+>> +			rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
+>> +			rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
+>> +			rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
+>> +		}
+>> +
+>>  		rt2800_bbp_read(rt2x00dev, 152, &value);
+>>  		if (ant == 0)
+>>  			rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 1);
+>> @@ -4291,6 +4298,11 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>>  		rt2x00dev->default_ant.rx = ANTENNA_A;
+>>  	}
+>>  
+>> +	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
+>> +		rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY; /* Unused */
+>> +		rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY; /* Unused */
+>> +	}
+>> +
+>>  	/*
+>>  	 * Determine external LNA informations.
+>>  	 */
+> 
+> 
+> Regards,
+> 
+> Anisse
 
-What is considered the top-end Atheros chip for fastest/best 3x3 MIMO speeds?
-
-Maybe 9390 (EW-DNXA-H1 for instance?) is expected to be better than 9380?
-
-Thanks,
-Ben
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+---
+Gertjan
