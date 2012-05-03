@@ -1,35 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:33088 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759932Ab2EJPNy (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:56180 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377Ab2ECFMv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 11:13:54 -0400
-Received: by qcro28 with SMTP id o28so1193241qcr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 08:13:54 -0700 (PDT)
+	Thu, 3 May 2012 01:12:51 -0400
+Message-ID: <4FA213D1.9030506@gtri.gatech.edu> (sfid-20120503_071254_219549_D93C580C)
+Date: Thu, 3 May 2012 01:12:49 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
 MIME-Version: 1.0
-In-Reply-To: <CAG9cJmmAe-Vvhepj=z8XpfAGwQXs58t51yTT_CQy5=rGcgoRpQ@mail.gmail.com>
-References: <CAG9cJmkDf6koV93NyOo2W8D7Y3G6tapQOucjW5M7FLPDnNhvKQ@mail.gmail.com>
-	<CAG9cJmnV9o3DnZ9XNqYsBi04S=xa_dOmM_ia_6J5iQSgLYL9wA@mail.gmail.com>
-	<CAGRGNgW=SN5dH3egHBzW0ju9eqfixZ59hgTmQrKUYoeHYO2zDA@mail.gmail.com>
-	<CAG9cJmmAe-Vvhepj=z8XpfAGwQXs58t51yTT_CQy5=rGcgoRpQ@mail.gmail.com>
-Date: Thu, 10 May 2012 23:13:54 +0800
-Message-ID: <CAG9cJmkn+p8CptBTBxXjny2=4T1rQA64DyB9UWBsomV0mZBNaw@mail.gmail.com> (sfid-20120510_171414_107469_3B0C190E)
-Subject: Re: how to remove the b43
-From: lina <lina.lastname@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: <linux-wireless@vger.kernel.org>
+CC: <Larry.Finger@lwfinger.net>
+Subject: [PATCH 6/9] rtlwifi: add short circuit in the receive path
+References: <4FA212D9.5020602@gtri.gatech.edu>
+In-Reply-To: <4FA212D9.5020602@gtri.gatech.edu>
+Content-Type: multipart/mixed;
+	boundary="------------060401080204030606050906"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BTW, My current two kernels neither installed from debian repository.
+--------------060401080204030606050906
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-is it going to be abrupt if I install the kernel source from debian
-repository? and use my current .config file to build the headers and
-image.
 
-is headers necessary to install, do I only need install the linux-image,
 
-Sorry for lots lots of things I got insufficient understandings.
+--------------060401080204030606050906
+Content-Type: text/x-patch;
+	name="0006-rtlwifi-add-short-circuit-in-the-receive-path.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="0006-rtlwifi-add-short-circuit-in-the-receive-path.patch"
 
-Best regards,
+>From 78b5e60d9797583172d3e1f755a9f354b5a20759 Mon Sep 17 00:00:00 2001
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Date: Thu, 3 May 2012 00:16:39 -0400
+Subject: [PATCH 6/9] rtlwifi: add short circuit in the receive path
+
+Allow things like C2H events without any actual 802.11 data to avoid
+the rest of the receive path.
+
+Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+---
+ drivers/net/wireless/rtlwifi/usb.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 88dbef0..00e90bc 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -440,7 +440,11 @@ static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
+ 	};
+ 
+ 	skb_pull(skb, RTL_RX_DESC_SIZE);
+-	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
++	if (!rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc,
++	    skb)) {
++		dev_kfree_skb_any(skb);
++		return;
++	}
+ 	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
+ 	hdr = (struct ieee80211_hdr *)(skb->data);
+ 	fc = hdr->frame_control;
+@@ -483,7 +487,11 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+ 	};
+ 
+ 	skb_pull(skb, RTL_RX_DESC_SIZE);
+-	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
++	if (!rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc,
++	    skb)) {
++		dev_kfree_skb_any(skb);
++		return;
++	}
+ 	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
+ 	hdr = (struct ieee80211_hdr *)(skb->data);
+ 	fc = hdr->frame_control;
+-- 
+1.7.7.6
+
+
+--------------060401080204030606050906--
