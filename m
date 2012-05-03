@@ -1,79 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33170 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755532Ab2EDBts (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 21:49:48 -0400
-Message-ID: <4FA33520.6080507@redhat.com> (sfid-20120504_035006_181863_E853B45E)
-Date: Fri, 04 May 2012 09:47:12 +0800
-From: Dave Young <dyoung@redhat.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com
-CC: lkml <linux-kernel@vger.kernel.org>
-Subject: iwlwifi warning (3.4.0-rc5+)
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:56951 "EHLO
+	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752900Ab2ECH5x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 03:57:53 -0400
+Received: by lagv3 with SMTP id v3so1271096lag.41
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 00:57:50 -0700 (PDT)
+Message-ID: <1336031868.12189.24.camel@cumari.coelho.fi> (sfid-20120503_095757_789147_1BC21BD9)
+Subject: Re: [PATCH] wl12xx: Init 80211 items before register irq
+From: Luciano Coelho <coelho@ti.com>
+To: Yingang Fu <yingang.fu@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	yingang.fu@borqs.com
+Date: Thu, 03 May 2012 10:57:48 +0300
+In-Reply-To: <CAHPDcRsY2HN7NrrorBhhqPCiV2nG2BDC_n_eFTxBtGyt5REe4A@mail.gmail.com>
+References: <CAHPDcRsY2HN7NrrorBhhqPCiV2nG2BDC_n_eFTxBtGyt5REe4A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Annoying warnings as below in dmesg, known issue?
+Hi,
 
-[   71.852336] wlan0: authentication with 00:1c:f6:62:f3:03 timed out
-[   71.856985] iwlwifi 0000:03:00.0: ACTIVATE a non DRIVER active
-station id 0 addr 00:1c:f6:62:f3:03
-[   71.857014] ------------[ cut here ]------------
-[   71.857035] WARNING: at
-drivers/net/wireless/iwlwifi/iwl-agn-sta.c:809
-iwl_send_lq_cmd+0xa1/0x115 [iwlwifi]()
-[   71.857039] Hardware name: 4236NUC
-[   71.857041] Modules linked in: fuse rfcomm bnep sunrpc vhost_net
-macvtap macvlan tun kvm_intel kvm uvcvideo videobuf2_core videodev media
-videobuf2_vmalloc videobuf2_memops btusb bluetooth pcspkr iwlwifi
-mac80211 cfg80211 e1000e wmi thinkpad_acpi rfkill firewire_ohci
-firewire_core crc_itu_t sdhci_pci [last unloaded: scsi_wait_scan]
-[   71.857084] Pid: 939, comm: kworker/u:5 Not tainted 3.4.0-rc5+ #277
-[   71.857087] Call Trace:
-[   71.857096]  [<ffffffff81031eed>] warn_slowpath_common+0x80/0x98
-[   71.857101]  [<ffffffff81031f1a>] warn_slowpath_null+0x15/0x17
-[   71.857111]  [<ffffffffa013d817>] iwl_send_lq_cmd+0xa1/0x115 [iwlwifi]
-[   71.857121]  [<ffffffffa013e380>] iwl_restore_stations+0x1b3/0x203
-[iwlwifi]
-[   71.857132]  [<ffffffffa01447d1>] iwlagn_commit_rxon+0x41a/0x604
-[iwlwifi]
-[   71.857141]  [<ffffffffa0144d67>] iwlagn_bss_info_changed+0x31c/0x50f
-[iwlwifi]
-[   71.857148]  [<ffffffff815e51f1>] ? __mutex_unlock_slowpath+0x111/0x124
-[   71.857164]  [<ffffffffa00bfcef>] ?
-ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
-[   71.857171]  [<ffffffff81078a35>] ? trace_hardirqs_on+0xd/0xf
-[   71.857181]  [<ffffffffa00b43b3>]
-ieee80211_bss_info_change_notify+0x195/0x1cb [mac80211]
-[   71.857194]  [<ffffffffa00bfcef>] ?
-ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
-[   71.857210]  [<ffffffffa00defda>]
-ieee80211_destroy_auth_data+0x7a/0x9e [mac80211]
-[   71.857226]  [<ffffffffa00e3508>] ieee80211_sta_work+0xbb/0x9a8
-[mac80211]
-[   71.857231]  [<ffffffff815e758e>] ? _raw_spin_unlock_irqrestore+0x42/0x51
-[   71.857243]  [<ffffffffa00bfcef>] ?
-ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
-[   71.857248]  [<ffffffff81078a35>] ? trace_hardirqs_on+0xd/0xf
-[   71.857260]  [<ffffffffa00bfcef>] ?
-ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
-[   71.857271]  [<ffffffffa00bff80>] ieee80211_iface_work+0x291/0x2aa
-[mac80211]
-[   71.857283]  [<ffffffffa00bfcef>] ?
-ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
-[   71.857288]  [<ffffffff81049f4b>] process_one_work+0x22b/0x393
-[   71.857293]  [<ffffffff81049ebc>] ? process_one_work+0x19c/0x393
-[   71.857298]  [<ffffffff8129eebb>] ? do_raw_spin_lock+0x69/0xea
-[   71.857304]  [<ffffffff8104a1e9>] worker_thread+0x136/0x255
-[   71.857309]  [<ffffffff8104a0b3>] ? process_one_work+0x393/0x393
-[   71.857314]  [<ffffffff81050a2c>] kthread+0x9f/0xa7
-[   71.857319]  [<ffffffff815ef474>] kernel_thread_helper+0x4/0x10
-[   71.857324]  [<ffffffff815e7870>] ? retint_restore_args+0x13/0x13
-[   71.857329]  [<ffffffff8105098d>] ? __init_kthread_worker+0x56/0x56
-[   71.857334]  [<ffffffff815ef470>] ? gs_change+0x13/0x13
-[   71.857337] ---[ end trace d7bea907d4ff9b83 ]---
+On Sat, 2012-03-10 at 12:21 +0800, Yingang Fu wrote:
+> There is a race condition during wl12xx_probe that the interrupt
+> may arrives before the probe completed. An irq could triggers an
+> irq thread to run to process the irq work but the probe process has
+> not finished.
+> ---
+
+The Signed-off-by tag is missing here, so I can't apply this patch.
+Also, there were a bunch of checkpatch warnings, because you have used
+spaces instead of TABs for indentation.
+
+Can you please resend this patch with these fixes?
+
 -- 
-Thanks
-Dave
+Cheers,
+Luca.
+
