@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:63435 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758959Ab2EONrH (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:61285 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754357Ab2ECUXV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 09:47:07 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so5793940wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 06:47:06 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 3/3] wlcore: remove duplicate BUG_ON during recovery
-Date: Tue, 15 May 2012 16:46:58 +0300
-Message-Id: <1337089618-12450-3-git-send-email-arik@wizery.com> (sfid-20120515_154716_510568_2BB52114)
-In-Reply-To: <1337089618-12450-1-git-send-email-arik@wizery.com>
-References: <1337089618-12450-1-git-send-email-arik@wizery.com>
+	Thu, 3 May 2012 16:23:21 -0400
+Received: by obbtb18 with SMTP id tb18so2923537obb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 13:23:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1336074010.5167.19.camel@jlt3.sipsolutions.net>
+References: <1335820832-18887-1-git-send-email-ashok@cozybit.com>
+ <1335820832-18887-3-git-send-email-ashok@cozybit.com> <1336074010.5167.19.camel@jlt3.sipsolutions.net>
+From: Ashok Nagarajan <ashok@cozybit.com>
+Date: Thu, 3 May 2012 13:23:00 -0700
+Message-ID: <CACcxo+rNUbiitNUvZewaNpXnT8BJTtSvJLsgDnZ44+MYAzbVuA@mail.gmail.com> (sfid-20120503_222325_079456_4E810050)
+Subject: Re: [PATCH v2 3/4] mac80211: Allow nonHT/HT peering in mesh
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	javier@cozybit.com, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This BUG_ON also ignored the INTENDED_FW_RECOVERY flag. This would
-result in a BUG() when using the bug_on_recovery module parameter during
-multi-role.
+On Thu, May 3, 2012 at 12:40 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-04-30 at 14:20 -0700, Ashok Nagarajan wrote:
+>
+>> -         (local->_oper_channel_type !=
+>> -          ieee80211_ht_oper_to_channel_type(ie->ht_operation)))
+>> +         local->_oper_channel_type > NL80211_CHAN_HT20 &&
+>> +         sta_channel_type > NL80211_CHAN_HT20 &&
+>> +         local->_oper_channel_type != sta_channel_type)
+>
+> I don't think you should use > operators since we may later have to add
+> other channel types like 5 and 10 MHz.
+>
+Sure. I will send a fix patch reflecting this change.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |    2 --
- 1 file changed, 2 deletions(-)
+> johannes
+>
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 4e71078..f4b036e 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -852,8 +852,6 @@ static void wl1271_recovery_work(struct work_struct *work)
- 		goto out_unlock;
- 	}
- 
--	BUG_ON(bug_on_recovery);
--
- 	/*
- 	 * Advance security sequence number to overcome potential progress
- 	 * in the firmware during recovery. This doens't hurt if the network is
--- 
-1.7.9.5
-
+Thanks,
+Ashok
