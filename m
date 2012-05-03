@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:36087 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065Ab2EUHa6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2012 03:30:58 -0400
-Received: by yhmm54 with SMTP id m54so4107383yhm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2012 00:30:58 -0700 (PDT)
-Message-ID: <4FB9EF2E.3000900@opensuse.org> (sfid-20120521_093102_888035_B222ADB8)
-Date: Mon, 21 May 2012 03:30:54 -0400
-From: =?ISO-8859-1?Q?Cristian_Rodr=EDguez?= <crrodriguez@opensuse.org>
-MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi: Driver unmaps unmatched page at PFN ffe70000
-References: <4FB7F52D.7020904@opensuse.org> <CANUX_P3_LMpXaBXYVwfB+UiqwZeAhZ+1ErLtgXO3ejCMaCtHLw@mail.gmail.com>
-In-Reply-To: <CANUX_P3_LMpXaBXYVwfB+UiqwZeAhZ+1ErLtgXO3ejCMaCtHLw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:46202 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753382Ab2ECVQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 17:16:13 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	stable@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3.4] iwlwifi: fix a potential race in receive buffer allocation
+Date: Thu,  3 May 2012 14:09:24 -0700
+Message-Id: <1336079364-16222-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120503_231624_219438_9CCFD711)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21/05/12 01:12, Emmanuel Grumbach wrote:
-> On Sat, May 19, 2012 at 10:31 PM, Cristian Rodríguez
-> <crrodriguez@opensuse.org>  wrote:
->>
->> On resume, I get the following warning
->>
->> [43265.744510] ------------[ cut here ]------------
->> [43265.744516] WARNING: at
->> /usr/src/linux-3.4.0-rc7-2/drivers/iommu/intel-iommu.c:2922
->> intel_unmap_page+0x15d/0x1c0()
->> [43265.744518] Hardware name: Dell System XPS 15Z
->> [43265.744519] Driver unmaps unmatched page at PFN ffe70000
->> [43265.744520] Modules linked in: fuse rfcomm af_packet bnep arc4 iwlwifi
->> btusb bluetooth mac80211 snd_hda_codec_hdmi snd_hda_codec_realtek
->> dell_laptop dcdbas kvm_intel snd_hda_intel snd_hda_codec kvm cfg80211
->> snd_hwdep uvcvideo snd_pcm snd_timer videobuf2_core snd videodev sr_mod
->> mei(C) edd sg cdrom soundcore videobuf2_vmalloc coretemp rfkill dell_wmi
->> iTCO_wdt i2c_i801 videobuf2_memops microcode snd_page_alloc sparse_keymap
->> battery pcspkr ac iTCO_vendor_support autofs4 sha256_generic dm_crypt dm_mod
->> linear btrfs zlib_deflate libcrc32c nouveau ttm mxm_wmi ghash_clmulni_intel
->> crc32c_intel i915 wmi drm_kms_helper drm i2c_algo_bit xhci_hcd button video
->> aesni_intel cryptd aes_x86_64 fan thermal processor thermal_sys
->> [43265.744560] Pid: 2378, comm: NetworkManager Tainted: G         C
->> 3.4.0-rc7-2-desktop-test #1
->
-> Can you please give a try to this one ?
->
-> http://www.spinics.net/lists/linux-wireless/msg90507.html
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-Hi:
+The driver can potentially unmap pages that
+have not been mapped yet. Fix this race
+condition.
 
-Ok, I applied that patch to this kernel with an slight modification 
-(there are no txq->entries but txq->skbs on this version)
+Cc: stable@vger.kernel.org
+Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+this patch will be also available from wireless branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
 
-the system works, however trying to reproduce this problem again might 
-not be so easy, according to my logs, this warning has happened only 4 
-times in 5 months..
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index aa7aea1..173275f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -310,7 +310,6 @@ static void iwlagn_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 
+ 		BUG_ON(rxb->page);
+-		rxb->page = page;
+ 		/* Get physical address of the RB */
+ 		rxb->page_dma = dma_map_page(trans->dev, page, 0,
+ 				PAGE_SIZE << hw_params(trans).rx_page_order,
+@@ -320,6 +319,9 @@ static void iwlagn_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+ 		/* and also 256 byte aligned! */
+ 		BUG_ON(rxb->page_dma & DMA_BIT_MASK(8));
+ 
++		/* Page *must* be mapped before before updating the rxb. */
++		rxb->page = page;
++
+ 		spin_lock_irqsave(&rxq->lock, flags);
+ 
+ 		list_add_tail(&rxb->list, &rxq->rx_free);
+-- 
+1.7.0.4
 
