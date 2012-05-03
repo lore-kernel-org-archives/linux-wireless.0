@@ -1,99 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:36418 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756822Ab2EWTau (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 15:30:50 -0400
-Received: by ghrr11 with SMTP id r11so1441043ghr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 12:30:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120523135514.GF28713@yumi.tdiedrich.de>
-References: <20120517230400.GB22418@yumi.tdiedrich.de>
-	<CAGXE3d-MTZu16cU1wybd6zehGOudKPadknuHm9MG6JDVRKmDag@mail.gmail.com>
-	<20120522205829.GE28713@yumi.tdiedrich.de>
-	<CAGXE3d-MLFJQ-O8=0ToC3fxx0=eLCi+Kbc-DDf_QaNQ2t42=pQ@mail.gmail.com>
-	<20120523135514.GF28713@yumi.tdiedrich.de>
-Date: Wed, 23 May 2012 21:30:49 +0200
-Message-ID: <CAGXE3d8oAFhw8SO_i6M8TXhFeqQGc5LJ76-t12xdpCYcQDhSUQ@mail.gmail.com> (sfid-20120523_213053_872773_C840CFAC)
-Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and
- MAX_A_TXPOWER respectively
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Hong Wu <Hong.Wu@dspg.com>, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:64003 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758755Ab2ECV2n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 17:28:43 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Amit Beka <amit.beka@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/6] iwlwifi: fix power index handling
+Date: Thu,  3 May 2012 14:22:04 -0700
+Message-Id: <1336080126-22606-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120503_232848_315767_7A01DBC5)
+In-Reply-To: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Amit Beka <amit.beka@intel.com>
 
-On Wed, May 23, 2012 at 3:55 PM, Tobias Diedrich
-<ranma+openwrt@tdiedrich.de> wrote:
-> Helmut Schaa wrote:
->> On Tue, May 22, 2012 at 10:58 PM, Tobias Diedrich
->> <ranma+openwrt@tdiedrich.de> wrote:
->> > Helmut Schaa wrote:
->> >> On Fri, May 18, 2012 at 1:04 AM, Tobias Diedrich
->> >> <ranma+openwrt@tdiedrich.de> wrote:
->> >> > rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
->> >> > respectively, similar to how it is already done in rt2[45]00pci.c
->> >> >
->> >> > rt2800lib.c doesn't initialize max_power and thus after
->> >> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
->> >> > was applied txpower is limited to 0 for these devices.
->> >> >
->> >> > This should be the proper fix compared to the net/wireless/reg.c
->> >> > hack in http://patchwork.openwrt.org/patch/2165/
->> >>
->> >> Btw. Tobias, did this affect the real tx power of the device at all or
->> >> is this just
->> >> a cosmetic issue?
->> >
->> > Hmm, apparently setting txpower has no effect?
->> > Is it not implemented in the driver?
->>
->> It is, but only for devices with correct tx power limit in the eeprom.
->
-> Why?
+The power index that the user gives as module parameter
+in in range 1-5, but we need to decrease it in order
+to create an array index out of it (0-4) for the power
+table command.
 
-Please read [1] for a detailed explanation.
+Signed-off-by: Amit Beka <amit.beka@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-power.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-> Lowering the tx power should never be an issue, right?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index 8352265..544ddf1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -253,6 +253,8 @@ static void iwl_static_sleep_cmd(struct iwl_priv *priv,
+ 
+ 	IWL_DEBUG_POWER(priv, "numSkipDtim = %u, dtimPeriod = %d\n",
+ 			skip, period);
++	/* The power level here is 0-4 (used as array index), but user expects
++	to see 1-5 (according to spec). */
+ 	IWL_DEBUG_POWER(priv, "Sleep command for index %d\n", lvl + 1);
+ }
+ 
+@@ -308,10 +310,12 @@ static void iwl_power_build_cmd(struct iwl_priv *priv,
+ 				     priv->power_data.debug_sleep_level_override,
+ 				     dtimper);
+ 	else {
++		/* Note that the user parameter is 1-5 (according to spec),
++		but we pass 0-4 because it acts as an array index. */
+ 		if (iwlwifi_mod_params.power_level > IWL_POWER_INDEX_1 &&
+-		    iwlwifi_mod_params.power_level <= IWL_POWER_INDEX_5)
++		    iwlwifi_mod_params.power_level <= IWL_POWER_NUM)
+ 			iwl_static_sleep_cmd(priv, cmd,
+-				iwlwifi_mod_params.power_level, dtimper);
++				iwlwifi_mod_params.power_level - 1, dtimper);
+ 		else
+ 			iwl_static_sleep_cmd(priv, cmd,
+ 				IWL_POWER_INDEX_1, dtimper);
+-- 
+1.7.0.4
 
-Yes but only on by percentage since we don't know the tx power the
-device was calibrated for.
-
-> Or are you saying I'm stuck with 0dBm txpower?
-
-No, your stuck with the tx power the device was calibrated for by the
-manufacturer,
-and the manufacturer did not intend to allow users to program arbitrary tx power
-values (in terms of dBm or mW) into the hw.
-
-So, your device might be calibrated to let's say 18dBm but the device
-doesn't provide
-this information to the driver at all. Hence, we cannot apply a tx
-power of 16dBm to the
-device. We could however reduce the real tx power by for example 50%
-(= -3dBm) but
-still we don't know the resulting discrete value. We only know we
-reduced the tx power
-by 3dBm.
-
-> That would be an issue by itself.
-> Why not use min(hw defaults, regulatory limits) as maximum if there is
-> no limit in the eeprom?
-
-See above and [1].
-
-> Do I have to add an eeprom fixup that will insert valid txpower
-> limit bytes as an additional step after the eeprom extraction from flash
-> to make this work?
-
-If you know the tx power limit your device is calibrated for you could actually
-do this. However, I wouldn't suggest to do that ...
-
-Helmut
-
-[1] http://www.spinics.net/lists/linux-wireless/msg90718.html
