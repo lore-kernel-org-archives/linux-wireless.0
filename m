@@ -1,131 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:52617 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754698Ab2EXSze (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:63611 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755621Ab2ECSzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 14:55:34 -0400
-Received: by yhjj63 with SMTP id j63so171250yhj.37
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2012 11:55:33 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <johannes@sipsolutions.net>
-Subject: [PATCH 2/2] mac80211: handle channel times in scan command
-Date: Thu, 24 May 2012 21:52:49 +0300
-Message-Id: <1337885569-32711-2-git-send-email-victorg@ti.com> (sfid-20120524_205538_771713_60F90059)
-In-Reply-To: <1337885569-32711-1-git-send-email-victorg@ti.com>
-References: <1337885569-32711-1-git-send-email-victorg@ti.com>
+	Thu, 3 May 2012 14:55:05 -0400
+Received: by ghrr11 with SMTP id r11so2094789ghr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 11:55:04 -0700 (PDT)
+Message-ID: <4FA2D484.4090103@lwfinger.net> (sfid-20120503_205513_796587_0EEF3CC2)
+Date: Thu, 03 May 2012 13:55:00 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/9] rtlwifi: avoid race registering with mac80211
+References: <4FA212D9.5020602@gtri.gatech.edu> <4FA21339.8060407@gtri.gatech.edu> <4FA2BC00.9020804@lwfinger.net> <4FA2BE8D.6090604@gtri.gatech.edu>
+In-Reply-To: <4FA2BE8D.6090604@gtri.gatech.edu>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the user scan times if those were set, otherwise
-use the default values.
+On 05/03/2012 12:21 PM, Joshua Roys wrote:
+>
+> Do you think I should have moved the
+> set_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status);
+> lines also? Or is the idea of the patch just wrong?
 
-This patch handles both hw_scan and non-offload scan.
+I am still thinking about the problem, but a few things are clear. There can be 
+no ieee80211 callbacks until the firmware has been loaded from the file. On 
+bootup when user-space code is not running, there will be a delay, which is the 
+reason we switched to asynchronous fw loading. Thus, the call to 
+ieee80211_register_hw() must not be done until the firmware is available.
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
- net/mac80211/scan.c |   34 +++++++++++++++++++++++++---------
- 1 files changed, 25 insertions(+), 9 deletions(-)
+If your analysis that the calling of rtl_init_core() is out of order, then the 
+following should fix it:
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 8282284..0757551 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -421,7 +421,7 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
- 	 * After sending probe requests, wait for probe responses
- 	 * on the channel.
- 	 */
--	*next_delay = IEEE80211_CHANNEL_TIME;
-+	*next_delay = local->scan_req->min_ch_time;
- 	local->next_scan_state = SCAN_DECISION;
- }
- 
-@@ -456,6 +456,13 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 
- 		local->hw_scan_req->ssids = req->ssids;
- 		local->hw_scan_req->n_ssids = req->n_ssids;
-+		local->hw_scan_req->max_ch_time = req->max_ch_time;
-+		local->hw_scan_req->min_ch_time = req->min_ch_time;
-+		local->hw_scan_req->max_passive_ch_time =
-+			req->max_passive_ch_time;
-+		local->hw_scan_req->min_passive_ch_time =
-+			req->min_passive_ch_time;
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+@@ -1853,14 +1853,6 @@ int __devinit rtl_pci_probe(struct pci_d
+   	/*like read eeprom and so on */
+   	rtlpriv->cfg->ops->read_eeprom_info(hw);
+
+-	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
+-		err = -ENODEV;
+-		goto fail3;
+-	}
+-
+-	rtlpriv->cfg->ops->init_sw_leds(hw);
+-
+   	/*aspm */
+   	rtl_pci_init_aspm(hw);
+
+@@ -1879,6 +1871,14 @@ int __devinit rtl_pci_probe(struct pci_d
+   		goto fail3;
+   	}
+
++	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
++		err = -ENODEV;
++		goto fail3;
++	}
 +
- 		ies = (u8 *)local->hw_scan_req +
- 			sizeof(*local->hw_scan_req) +
- 			req->n_channels * sizeof(req->channels[0]);
-@@ -475,6 +482,12 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 	local->scan_req = req;
- 	local->scan_sdata = sdata;
- 
-+	if (!local->scan_req->min_passive_ch_time)
-+		local->scan_req->min_passive_ch_time =
-+			IEEE80211_PASSIVE_CHANNEL_TIME;
-+	if (!local->scan_req->min_ch_time)
-+		local->scan_req->min_ch_time = IEEE80211_CHANNEL_TIME;
++	rtlpriv->cfg->ops->init_sw_leds(hw);
 +
- 	if (local->ops->hw_scan) {
- 		__set_bit(SCAN_HW_SCANNING, &local->scanning);
- 	} else if ((req->n_channels == 1) &&
-@@ -502,10 +515,10 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 		if ((req->channels[0]->flags &
- 		     IEEE80211_CHAN_PASSIVE_SCAN) ||
- 		    !local->scan_req->n_ssids) {
--			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
-+			next_delay = local->scan_req->min_passive_ch_time;
- 		} else {
- 			ieee80211_scan_state_send_probe(local, &next_delay);
--			next_delay = IEEE80211_CHANNEL_TIME;
-+			next_delay = local->scan_req->min_ch_time;
- 		}
- 
- 		/* Now, just wait a bit and we are all done! */
-@@ -540,15 +553,16 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- }
- 
- static unsigned long
--ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
-+ieee80211_scan_get_channel_time(struct cfg80211_scan_request *scan_req,
-+				struct ieee80211_channel *chan)
- {
- 	/*
- 	 * TODO: channel switching also consumes quite some time,
- 	 * add that delay as well to get a better estimation
- 	 */
- 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
--		return IEEE80211_PASSIVE_CHANNEL_TIME;
--	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
-+		return scan_req->min_passive_ch_time;
-+	return IEEE80211_PROBE_DELAY + scan_req->min_ch_time;
- }
- 
- static void ieee80211_scan_state_decision(struct ieee80211_local *local,
-@@ -609,12 +623,14 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
- 	 */
- 
- 	bad_latency = time_after(jiffies +
--			ieee80211_scan_get_channel_time(next_chan),
-+			ieee80211_scan_get_channel_time(local->scan_req,
-+							next_chan),
- 			local->leave_oper_channel_time +
- 			usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
- 
- 	listen_int_exceeded = time_after(jiffies +
--			ieee80211_scan_get_channel_time(next_chan),
-+			ieee80211_scan_get_channel_time(local->scan_req,
-+							next_chan),
- 			local->leave_oper_channel_time +
- 			usecs_to_jiffies(min_beacon_int * 1024) *
- 			local->hw.conf.listen_interval);
-@@ -662,7 +678,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
- 	 */
- 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
- 	    !local->scan_req->n_ssids) {
--		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
-+		*next_delay = local->scan_req->min_passive_ch_time;
- 		local->next_scan_state = SCAN_DECISION;
- 		return;
- 	}
--- 
-1.7.5.4
+   	err = sysfs_create_group(&pdev->dev.kobj, &rtl_attribute_group);
+   	if (err) {
+   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+
+This one works on my system, and is being tested against the Bugzilla entry I 
+noted earlier.
+
+Larry
+
 
