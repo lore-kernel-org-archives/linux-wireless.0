@@ -1,126 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:59851 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756623Ab2EGPgv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47886 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754001Ab2ECSic (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 11:36:51 -0400
-Message-ID: <4FA7E041.1070108@fold.natur.cuni.cz> (sfid-20120507_173654_573021_A0E6B36A)
-Date: Mon, 07 May 2012 16:46:25 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: 3.4-rc5: Oops in run_timer_softirq()
-Content-Type: text/plain; charset=UTF-8
+	Thu, 3 May 2012 14:38:32 -0400
+Message-ID: <1336070304.5167.4.camel@jlt3.sipsolutions.net> (sfid-20120503_203859_273923_6ECFC1C8)
+Subject: Re: Suspicious RCU usage in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: paulmck@linux.vnet.ibm.com
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 03 May 2012 20:38:24 +0200
+In-Reply-To: <20120502200955.GI2450@linux.vnet.ibm.com>
+References: <4F83A6DE.7070109@lwfinger.net>
+	 <1334201497.3788.1.camel@jlt3.sipsolutions.net>
+	 <4F865155.2000202@lwfinger.net>
+	 <1334202842.3788.10.camel@jlt3.sipsolutions.net>
+	 <4F86FA05.5080404@lwfinger.net>
+	 <1334246145.4062.0.camel@jlt3.sipsolutions.net>
+	 <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
+	 <4FA0371E.9040704@lwfinger.net> <20120502100012.GA8492@arm.com>
+	 <1335978471.4295.3.camel@jlt3.sipsolutions.net>
+	 <20120502200955.GI2450@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-  I have enabled my wifi in the Dell Vostro 3550 laptop by the hardware button combination
-Fn+F2 and disabled it back again after few seconds. The following crash happened, and is
-quite reproducible. Is that to be fixed by the patch in 
-"Re: Suspicious RCU usage in mac80211" thread from this email list?
+On Wed, 2012-05-02 at 13:09 -0700, Paul E. McKenney wrote:
+> On Wed, May 02, 2012 at 07:07:51PM +0200, Johannes Berg wrote:
+> > On Wed, 2012-05-02 at 11:00 +0100, Catalin Marinas wrote:
+> > 
+> > > > Your patch does not help. I still get the following dump in the log:
+> > 
+> > The patch is also wrong, we hold the mutex there and can't hold RCU read
+> > lock.
+> > 
+> > > > #0:  (scan_mutex){+.+...}, at: [<ffffffff8113b0d6>] kmemleak_scan_thread+0x56/0xd0
+> > > > #1:  (&tid_tx->session_timer){+.-...}, at: [<ffffffff8104853a>] 
+> > > > run_timer_softirq+0xfa/0x6e0
+> > > > #2:  (rcu_read_lock){.+.+..}, at: [<ffffffffa0449ff0>] 
+> > > > sta_tx_agg_session_timer_expired+0x0/0x2a0 [mac80211]
+> > > > 
+> > > > stack backtrace:
+> > > > Pid: 622, comm: kmemleak Not tainted 3.4.0-rc5-wl+ #287
+> > > > Call Trace:
+> > > >   <IRQ>  [<ffffffff8109309d>] lockdep_rcu_suspicious+0xfd/0x130
+> > > >   [<ffffffffa044a1cf>] sta_tx_agg_session_timer_expired+0x1df/0x2a0 [mac80211]
+> > > >   [<ffffffffa0449ff0>] ? ieee80211_start_tx_ba_session+0x450/0x450 [mac80211]
+> > > >   [<ffffffff810485c5>] run_timer_softirq+0x185/0x6e0
+> > > > 
+> > > > As kmemleak seems to be involved, I have added Catalin Marinas to the Cc list.
+> > 
+> > > Looking at the code and the logs, ieee80211_start_tx_ba_session() calls
+> > 
+> > I'm almost certain that ieee80211_start_tx_ba_session() is a bogus
+> > calltrace entry, since we're in a timer and that's not called from a
+> > timer.
+> > 
+> > > rcu_dereference_protected_tid_tx() which calls
+> > > rcu_dereference_protected() with the (lockdep_is_held(&sta->lock) ||
+> > > lockdep_is_held(&sta->ampdu_mlme.mtx)) condition which is false. As the
+> > > kernel log says, none of these locks are held, hence the warning.
+> > 
+> > So does that just mean we need to add rcu_read_lock_held() to the
+> > conditions? I thought that wasn't necessary? +Paul.
+> 
+> If you are using rcu_dereference_protected(), you really would need
+> to add rcu_read_lock_held().  Except that it is not legal to use
+> rcu_dereference_protected() within an RCU read-side critical section
+> because rcu_dereference_protected() does nothing to protect against
+> misordering mischief from the compiler and the CPU.  Actually, that
+> sounds like a useful coccinelle check, now that you mention it.
+> 
+> So you should instead use rcu_dereference_check().  This may be used
+> in an RCU read-side critical section, but may also be passed things like
+> (lockdep_is_held(&sta->lock) || lockdep_is_held(&sta->ampdu_mlme.mtx)).
 
-[  385.231175] BUG: unable to handle kernel NULL pointer dereference at           (null)
-[  385.231226] IP: [<          (null)>]           (null)
-[  385.231245] PGD 0 
-[  385.231257] Oops: 0010 [#1] SMP 
-[  385.231273] CPU 3 
-[  385.231283] Modules linked in: iwlwifi i2c_i801 usb_storage
-[  385.231308] 
-[  385.231317] Pid: 0, comm: swapper/3 Not tainted 3.4.0-rc5-default #5 Dell Inc. Vostro 3550/0JGC48
-[  385.231350] RIP: 0010:[<0000000000000000>]  [<          (null)>]           (null)
-[  385.231383] RSP: 0018:ffff88041fb83e78  EFLAGS: 00010286
-[  385.231402] RAX: ffff88041fb83eb0 RBX: 0000000000000100 RCX: 0000000000000838
-[  385.231426] RDX: ffff88041fb83eb0 RSI: dead000000200200 RDI: 0000000000000000
-[  385.231449] RBP: ffff88041fb83ef0 R08: ffff88041fb83eb8 R09: 0000000000000001
-[  385.231480] R10: 0000000000000400 R11: ffffffff816074a5 R12: ffff88040f3b8000
-[  385.231503] R13: ffff88040f3c1fd8 R14: ffff88041fb83eb0 R15: 0000000000000000
-[  385.231526] FS:  0000000000000000(0000) GS:ffff88041fb80000(0000) knlGS:0000000000000000
-[  385.231552] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  385.231570] CR2: 0000000000000000 CR3: 0000000001913000 CR4: 00000000000407e0
-[  385.231592] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  385.231614] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  385.231638] Process swapper/3 (pid: 0, threadinfo ffff88040f3c0000, task ffff88040f3bd350)
-[  385.231663] Stack:
-[  385.231673]  ffffffff81083f91 ffff88040f3c1fd8 ffff88040f3b9c20 ffff88040f3b9820
-[  385.231702]  ffff88040f3b9420 ffff88040f3b9020 0000000000000000 ffff88041fb83eb0
-[  385.231730]  ffff88041fb83eb0 ffffffff81043e21 ffffffff8190c088 ffff88040f3c1fd8
-[  385.231759] Call Trace:
-[  385.231770]  <IRQ> 
-[  385.231784]  [<ffffffff81083f91>] ? run_timer_softirq+0x191/0x223
-[  385.231806]  [<ffffffff81043e21>] ? lapic_next_event+0x10/0x14
-[  385.231827]  [<ffffffff8107fbcc>] __do_softirq+0x83/0x10d
-[  385.231846]  [<ffffffff810ae18f>] ? tick_program_event+0x1f/0x21
-[  385.231869]  [<ffffffff815e2a8c>] call_softirq+0x1c/0x30
-[  385.231889]  [<ffffffff8102e042>] do_softirq+0x33/0x69
-[  385.231907]  [<ffffffff8107fe05>] irq_exit+0x3f/0x9a
-[  385.231926]  [<ffffffff8104417c>] smp_apic_timer_interrupt+0x77/0x85
-[  385.231948]  [<ffffffff815e2307>] apic_timer_interrupt+0x67/0x70
-[  385.231967]  <EOI> 
-[  385.231979]  [<ffffffff8109a149>] ? wake_up_process+0x10/0x12
-[  385.231999]  [<ffffffff810aebce>] ? tick_nohz_idle_exit+0x135/0x13c
-[  385.232020]  [<ffffffff81033fcd>] cpu_idle+0x78/0x7f
-[  385.232039]  [<ffffffff815daf6b>] start_secondary+0x18f/0x193
-[  385.232057] Code:  Bad RIP value.
-[  385.232075] RIP  [<          (null)>]           (null)
-[  385.232093]  RSP <ffff88041fb83e78>
-[  385.232107] CR2: 0000000000000000
-[  385.232309] [drm] Changing LVDS panel from (-hsync, -vsync) to (+hsync, -vsync)
-[  385.593328] ---[ end trace e3eed09b44fc9be3 ]---
+Oops, of course, I should have seen that, thanks for pointing it out!
 
+Now that I look at it, the problem actually seems to be something else
+entirely though: the rcu_dereference (whichever type) in
+sta_tx_agg_session_timer_expired() itself isn't protected at all,
+something like the patch below is needed. Larry, can you try that?
 
+johannes
 
-09:00.0 Network controller: Intel Corporation Centrino Wireless-N 1030 (rev 34)
-        Subsystem: Intel Corporation Centrino Wireless-N 1030 BGN
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 53
-        Region 0: Memory at f7e00000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: [c8] Power Management version 3
-                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-                Address: 00000000fee003f8  Data: 0000
-        Capabilities: [e0] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <32us
-                        ClockPM+ Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
-        Capabilities: [140 v1] Device Serial Number 4c-80-93-ff-ff-15-e6-c7
-        Kernel driver in use: iwlwifi
-        Kernel modules: iwlwifi
-00: 86 80 8a 00 06 00 10 00 34 00 80 02 10 00 00 00
-10: 04 00 e0 f7 00 00 00 00 00 00 00 00 00 00 00 00
-20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 25 53
-30: 00 00 00 00 c8 00 00 00 00 00 00 00 0a 01 00 00
-40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-c0: 00 00 00 00 00 00 00 00 01 d0 23 c8 00 00 00 0d
-d0: 05 e0 81 00 f8 03 e0 fe 00 00 00 00 00 00 00 00
-e0: 10 00 01 00 c0 8e 00 10 00 08 19 00 11 ec 06 00
-f0: 40 00 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 5b7053c..40d3ff4 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -421,16 +421,22 @@ static void sta_tx_agg_session_timer_expired(unsigned long data)
+ 	struct tid_ampdu_tx *tid_tx;
+ 	unsigned long timeout;
+ 
+-	tid_tx = rcu_dereference_protected_tid_tx(sta, *ptid);
+-	if (!tid_tx)
++	rcu_read_lock();
++	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[*ptid]);
++	if (!tid_tx) {
++		rcu_read_unlock();
+ 		return;
++	}
+ 
+ 	timeout = tid_tx->last_tx + TU_TO_JIFFIES(tid_tx->timeout);
+ 	if (time_is_after_jiffies(timeout)) {
+ 		mod_timer(&tid_tx->session_timer, timeout);
++		rcu_read_unlock();
+ 		return;
+ 	}
+ 
++	rcu_read_unlock();
++
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "tx session timer expired on tid %d\n", (u16)*ptid);
+ #endif
 
 
-Thanks,
-Martin
