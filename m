@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64656 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756246Ab2EUQsl (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:50734 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752818Ab2ECMzA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2012 12:48:41 -0400
-Received: by yenm10 with SMTP id m10so4503431yen.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 May 2012 09:48:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FBA6CD3.8020201@candelatech.com>
-References: <4FB6D114.4050802@candelatech.com>
-	<CAB3XZEem=2P36WgWXynoscemAhMrcgh0mKFocBbGhy8C-cJigQ@mail.gmail.com>
-	<4FBA6CD3.8020201@candelatech.com>
-Date: Mon, 21 May 2012 19:48:40 +0300
-Message-ID: <CAB3XZEeFOQmZAbM-Er6u3Y7-ZbENdPUg-LiY_5RfyFN30vJFwA@mail.gmail.com> (sfid-20120521_184847_807230_EF9924B7)
-Subject: Re: lockdep splat related to wifi regulatory in 3.3.6+
-From: Eliad Peller <eliad@wizery.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 3 May 2012 08:55:00 -0400
+Received: by lagw12 with SMTP id w12so249910lag.24
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 05:54:57 -0700 (PDT)
+Message-ID: <1336049695.12189.29.camel@cumari.coelho.fi> (sfid-20120503_145514_219707_15B5AF56)
+Subject: Re: [patch] wlcore: fixup an allocation
+From: Luciano Coelho <coelho@ti.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	Shahar Levi <shahar_levi@ti.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date: Thu, 03 May 2012 15:54:55 +0300
+In-Reply-To: <20120417062847.GA26756@elgon.mountain>
+References: <20120417062847.GA26756@elgon.mountain>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 21, 2012 at 7:26 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 05/19/2012 03:42 PM, Eliad Peller wrote:
->
-> Thanks, I will try your patch.
->
-> But, it has a fairly scary comment about race conditions.
-> Any idea why sort of symptoms I might see from this potential
-> race?
->
-i think that in the worst case it will cause a wrong regulatory domain
-to be used (i.e. the global regulatory settings will be restored
-although a new regdomain was set). however, it's pretty unlinely, and
-probably still better than deadlocking...
+On Tue, 2012-04-17 at 09:28 +0300, Dan Carpenter wrote:
+> GFP_DMA isn't supposed to be used by itself.  This allocation is allowed
+> to sleep so it should be ORing it with GFP_KERNEL.
+> Also we should check for allocations errors.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> I don't have the hardware to test this.  Sorry.
 
-Eliad.
+Applied, thanks! I ran some very basic tests on it.
+
