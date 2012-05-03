@@ -1,178 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:63203 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755807Ab2EJDsK (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:44492 "HELO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752948Ab2ECHXP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 23:48:10 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
+	Thu, 3 May 2012 03:23:15 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: florian.c.schilhabel@googlemail.com, ali@internetdog.org,
-	netdev@vger.kernel.org,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 3/3] staging: delete all duplicated endian crap from rtl8712 driver
-Date: Wed,  9 May 2012 23:47:21 -0400
-Message-Id: <1336621641-15467-4-git-send-email-paul.gortmaker@windriver.com> (sfid-20120510_054827_013649_10E93441)
-In-Reply-To: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	harvey yang <harvey.huawei.yang@gmail.com>
+Subject: [PATCH 00/18] mwifiex: add AP support
+Date: Thu,  3 May 2012 00:22:22 -0700
+Message-Id: <1336029760-22565-1-git-send-email-bzhao@marvell.com> (sfid-20120503_092320_498826_95B00732)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver had headers like big_endian.h, little_endian.h, swab.h
-and yet we can throw them all in the trash can and the thing
-still builds on x86-64 and ppc, just by deleting the references
-to the deleted files.
+This patch series adds support for micro-AP (uAP) mode to mwifiex driver.
 
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Tested with hostapd devel v2. Simultaneous AP-STA functionality works fine.
+
+Thanks,
+Bing
+
 ---
- drivers/staging/rtl8712/big_endian.h        |   94 --------------
- drivers/staging/rtl8712/generic.h           |  178 ---------------------------
- drivers/staging/rtl8712/hal_init.c          |    1 -
- drivers/staging/rtl8712/little_endian.h     |   94 --------------
- drivers/staging/rtl8712/osdep_service.h     |    2 -
- drivers/staging/rtl8712/rtl8712_cmd.c       |    1 -
- drivers/staging/rtl8712/rtl8712_xmit.c      |    1 -
- drivers/staging/rtl8712/rtl871x_byteorder.h |   32 -----
- drivers/staging/rtl8712/rtl871x_cmd.c       |    1 -
- drivers/staging/rtl8712/rtl871x_xmit.c      |    1 -
- drivers/staging/rtl8712/swab.h              |  131 --------------------
- drivers/staging/rtl8712/usb_ops.c           |    1 -
- drivers/staging/rtl8712/wifi.h              |    1 -
- drivers/staging/rtl8712/xmit_linux.c        |    1 -
- 14 files changed, 0 insertions(+), 539 deletions(-)
- delete mode 100644 drivers/staging/rtl8712/big_endian.h
- delete mode 100644 drivers/staging/rtl8712/generic.h
- delete mode 100644 drivers/staging/rtl8712/little_endian.h
- delete mode 100644 drivers/staging/rtl8712/rtl871x_byteorder.h
- delete mode 100644 drivers/staging/rtl8712/swab.h
+Avinash Patil (18):
+  mwifiex: allocate space for one more mwifiex_private structure
+  mwifiex: handle station specific commands on STA interface only
+  mwifiex: support for creation of AP interface
+  mwifiex: multi-interface support for mwifiex
+  mwifiex: save adapter pointer in wiphy_priv
+  mwifiex: append peer mac address TLV in key material command to
+    firmware
+  mwifiex: add bss start and bss stop commands for AP
+  mwifiex: add AP command sys_config and set channel
+  mwifiex: stop BSS in deauthentication handling
+  mwifiex: handle interface type changes correctly
+  mwifiex: common set_wiphy_params cfg80211 handler for AP and STA
+    interface
+  mwifiex: add cfg80211 start_ap and stop_ap handlers
+  mwifiex: add AP event handling framework
+  mwifiex: add WPA2 support for AP
+  mwifiex: rearrange AP sys configure code
+  mwifiex: add custom IE framework
+  mwifiex: parse beacon, probe response and assoc response IEs from
+    start_ap
+  mwifiex: delete IEs when stop_ap
 
-diff --git a/drivers/staging/rtl8712/big_endian.h b/drivers/staging/rtl8712/big_endian.h
-deleted file mode 100644
-index b16f8ec..0000000
-diff --git a/drivers/staging/rtl8712/generic.h b/drivers/staging/rtl8712/generic.h
-deleted file mode 100644
-index 8868c9f..0000000
-diff --git a/drivers/staging/rtl8712/hal_init.c b/drivers/staging/rtl8712/hal_init.c
-index cc893c0..cb9d4cf 100644
---- a/drivers/staging/rtl8712/hal_init.c
-+++ b/drivers/staging/rtl8712/hal_init.c
-@@ -36,7 +36,6 @@
- 
- #include "osdep_service.h"
- #include "drv_types.h"
--#include "rtl871x_byteorder.h"
- #include "usb_osintf.h"
- 
- #define FWBUFF_ALIGN_SZ 512
-diff --git a/drivers/staging/rtl8712/little_endian.h b/drivers/staging/rtl8712/little_endian.h
-deleted file mode 100644
-index cd57d6c..0000000
-diff --git a/drivers/staging/rtl8712/osdep_service.h b/drivers/staging/rtl8712/osdep_service.h
-index cabf774..f1ccc7e 100644
---- a/drivers/staging/rtl8712/osdep_service.h
-+++ b/drivers/staging/rtl8712/osdep_service.h
-@@ -106,8 +106,6 @@ static inline void _set_workitem(_workitem *pwork)
- 	schedule_work(pwork);
- }
- 
--#include "rtl871x_byteorder.h"
--
- #ifndef BIT
- 	#define BIT(x)	(1 << (x))
- #endif
-diff --git a/drivers/staging/rtl8712/rtl8712_cmd.c b/drivers/staging/rtl8712/rtl8712_cmd.c
-index 9f6ebc4..b518505 100644
---- a/drivers/staging/rtl8712/rtl8712_cmd.c
-+++ b/drivers/staging/rtl8712/rtl8712_cmd.c
-@@ -50,7 +50,6 @@
- #include "drv_types.h"
- #include "recv_osdep.h"
- #include "mlme_osdep.h"
--#include "rtl871x_byteorder.h"
- #include "rtl871x_ioctl_set.h"
- 
- static void check_hw_pbc(struct _adapter *padapter)
-diff --git a/drivers/staging/rtl8712/rtl8712_xmit.c b/drivers/staging/rtl8712/rtl8712_xmit.c
-index 6933319..3d23514 100644
---- a/drivers/staging/rtl8712/rtl8712_xmit.c
-+++ b/drivers/staging/rtl8712/rtl8712_xmit.c
-@@ -30,7 +30,6 @@
- 
- #include "osdep_service.h"
- #include "drv_types.h"
--#include "rtl871x_byteorder.h"
- #include "wifi.h"
- #include "osdep_intf.h"
- #include "usb_ops.h"
-diff --git a/drivers/staging/rtl8712/rtl871x_byteorder.h b/drivers/staging/rtl8712/rtl871x_byteorder.h
-deleted file mode 100644
-index bd3703b..0000000
-diff --git a/drivers/staging/rtl8712/rtl871x_cmd.c b/drivers/staging/rtl8712/rtl871x_cmd.c
-index d77388b..659683e 100644
---- a/drivers/staging/rtl8712/rtl871x_cmd.c
-+++ b/drivers/staging/rtl8712/rtl871x_cmd.c
-@@ -50,7 +50,6 @@
- #include "drv_types.h"
- #include "recv_osdep.h"
- #include "mlme_osdep.h"
--#include "rtl871x_byteorder.h"
- 
- /*
- Caller and the r8712_cmd_thread can protect cmd_q by spin_lock.
-diff --git a/drivers/staging/rtl8712/rtl871x_xmit.c b/drivers/staging/rtl8712/rtl871x_xmit.c
-index aa57e77..1d3f8b7 100644
---- a/drivers/staging/rtl8712/rtl871x_xmit.c
-+++ b/drivers/staging/rtl8712/rtl871x_xmit.c
-@@ -30,7 +30,6 @@
- 
- #include "osdep_service.h"
- #include "drv_types.h"
--#include "rtl871x_byteorder.h"
- #include "wifi.h"
- #include "osdep_intf.h"
- #include "usb_ops.h"
-diff --git a/drivers/staging/rtl8712/swab.h b/drivers/staging/rtl8712/swab.h
-deleted file mode 100644
-index f127818..0000000
-diff --git a/drivers/staging/rtl8712/usb_ops.c b/drivers/staging/rtl8712/usb_ops.c
-index 5a8b0eb..c03508d 100644
---- a/drivers/staging/rtl8712/usb_ops.c
-+++ b/drivers/staging/rtl8712/usb_ops.c
-@@ -33,7 +33,6 @@
- #include "osdep_intf.h"
- #include "usb_ops.h"
- #include "recv_osdep.h"
--#include "rtl871x_byteorder.h"
- 
- static u8 usb_read8(struct intf_hdl *pintfhdl, u32 addr)
- {
-diff --git a/drivers/staging/rtl8712/wifi.h b/drivers/staging/rtl8712/wifi.h
-index 277398c..793443e 100644
---- a/drivers/staging/rtl8712/wifi.h
-+++ b/drivers/staging/rtl8712/wifi.h
-@@ -26,7 +26,6 @@
- #ifndef _WIFI_H_
- #define _WIFI_H_
- 
--#include "rtl871x_byteorder.h"
- #include <linux/compiler.h>
- 
- #ifdef BIT
-diff --git a/drivers/staging/rtl8712/xmit_linux.c b/drivers/staging/rtl8712/xmit_linux.c
-index c6943c5..65542cb 100644
---- a/drivers/staging/rtl8712/xmit_linux.c
-+++ b/drivers/staging/rtl8712/xmit_linux.c
-@@ -35,7 +35,6 @@
- #include "osdep_service.h"
- #include "drv_types.h"
- 
--#include "rtl871x_byteorder.h"
- #include "wifi.h"
- #include "mlme_osdep.h"
- #include "xmit_osdep.h"
--- 
-1.7.9.1
+ drivers/net/wireless/mwifiex/Makefile      |    2 +
+ drivers/net/wireless/mwifiex/cfg80211.c    |  485 +++++++++++++++++++++-------
+ drivers/net/wireless/mwifiex/cfg80211.h    |    2 +-
+ drivers/net/wireless/mwifiex/cmdevt.c      |   21 ++-
+ drivers/net/wireless/mwifiex/decl.h        |   13 +-
+ drivers/net/wireless/mwifiex/fw.h          |  159 +++++++++-
+ drivers/net/wireless/mwifiex/ie.c          |  447 +++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/init.c        |    1 +
+ drivers/net/wireless/mwifiex/ioctl.h       |   32 ++
+ drivers/net/wireless/mwifiex/join.c        |    4 +
+ drivers/net/wireless/mwifiex/main.c        |   57 ++--
+ drivers/net/wireless/mwifiex/main.h        |   27 ++-
+ drivers/net/wireless/mwifiex/sta_cmd.c     |   64 +++--
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |    8 +
+ drivers/net/wireless/mwifiex/sta_event.c   |   51 +++-
+ drivers/net/wireless/mwifiex/sta_ioctl.c   |    9 +-
+ drivers/net/wireless/mwifiex/uap_cmd.c     |  432 +++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/wmm.c         |    4 +
+ 18 files changed, 1643 insertions(+), 175 deletions(-)
+ create mode 100644 drivers/net/wireless/mwifiex/ie.c
+ create mode 100644 drivers/net/wireless/mwifiex/uap_cmd.c
 
