@@ -1,39 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:44357 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751456Ab2EMNqT (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:38416 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753428Ab2ECQrp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2012 09:46:19 -0400
-Received: by wgbdr13 with SMTP id dr13so3832382wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2012 06:46:18 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Harry <Habstinat@gmail.com>
-Subject: Re: carl9170 - Unable to see interface despite module being loaded
-Date: Sun, 13 May 2012 15:46:13 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <loom.20120513T054053-18@post.gmane.org>
-In-Reply-To: <loom.20120513T054053-18@post.gmane.org>
+	Thu, 3 May 2012 12:47:45 -0400
+Message-ID: <4FA2B6AC.4060800@gtri.gatech.edu> (sfid-20120503_184749_154820_7351F97A)
+Date: Thu, 3 May 2012 12:47:40 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201205131546.13765.chunkeey@googlemail.com> (sfid-20120513_154623_767633_4E43950D)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/9] rtlwifi: fix the selection of the bulk in endpoint
+References: <4FA212D9.5020602@gtri.gatech.edu> <4FA21392.5060401@gtri.gatech.edu> <4FA2AD36.3010005@lwfinger.net>
+In-Reply-To: <4FA2AD36.3010005@lwfinger.net>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature";
+	micalg=sha1; boundary="------------ms010109090907050604020406"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 13 May 2012 05:59:01 Harry wrote:
-> I own a "Bus 001 Device 002: ID 0cf3:7015 Atheros Communications, Inc. TP-Link
-> TL-WN821N v3 802.11n [Atheros AR7010+AR9287]", according to lsusb. I'm
-> attempting to get the carl9170 (
-> http://linuxwireless.org/en/users/Drivers/carl9170 ) driver to work with it, as
-> should be possible according to h-node ( http://www.h-node.org/wifi/view/en/253/
-> ) in Parabola GNU/Linux.
+--------------ms010109090907050604020406
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Well looks like you figured it out already?!
-Anyway, TP-Link changed the chipset with the v3 series.
- - the 3-4 years old V1 and V2 revisions have the AR9170
-	chip and are supported by carl9170.
- - V3 and newer need a different driver: ath9k_htc
-	<http://wireless.kernel.org/en/users/Drivers/ath9k_htc>
+On 05/03/2012 12:07 PM, Larry Finger wrote:
+> On 05/03/2012 12:11 AM, Joshua Roys wrote:
+>
+> I am still reviewing the patches; however, the build fails after this
+> patch with
+>
+> CC [M] drivers/net/wireless/rtlwifi/rtl8192cu/trx.o
+> drivers/net/wireless/rtlwifi/rtl8192cu/trx.c: In function
+> =91rtl8192cu_endpoint_mapping=92:
+> drivers/net/wireless/rtlwifi/rtl8192cu/trx.c:206:27: error: =91usb_priv=
+=92
+> undeclared (first use in this function)
+> drivers/net/wireless/rtlwifi/rtl8192cu/trx.c:206:27: note: each
+> undeclared identifier is reported only once for each function it appear=
+s in
+> make[2]: *** [drivers/net/wireless/rtlwifi/rtl8192cu/trx.o] Error 1
+> make[1]: *** [drivers/net/wireless/rtlwifi/rtl8192cu] Error 2
+> make: *** [drivers/net/wireless/rtlwifi/] Error 2
+>
+> You are missing a
+>
+> struct rtl_usb_priv *usb_priv =3D rtl_usbpriv(hw);
+>
+> ahead of line 206.
+>
+> I also had some compilation problems with patch 9. The problem there wa=
+s
+> that you are basing your changes on the wrong tree. All changes to
+> wireless drivers should be from the wireless-testing git tree at
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing=
+=2Egit
+>
+> and not from the mainline tree.
+>
+> Larry
 
-Regards,
-	Chr
+OK, thanks.  I'll rebase them all later tonight.
+
+Josh
+
+
+--------------ms010109090907050604020406
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+96CEZ5MJvJdhywpwTa+Ja+aaAAAAAAAA
+--------------ms010109090907050604020406--
