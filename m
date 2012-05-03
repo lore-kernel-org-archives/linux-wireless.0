@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9338 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757170Ab2ECPav (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 11:30:51 -0400
-Subject: Re: [PATCH 2/2] tcp: cleanup tcp_try_coalesce
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Miller <davem@davemloft.net>, eric.dumazet@gmail.com,
-	alexander.duyck@gmail.com, alexander.h.duyck@intel.com,
-	netdev@vger.kernel.org, edumazet@google.com,
-	jeffrey.t.kirsher@intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20120503151418.GJ9285@tuxdriver.com>
-References: <1336017985.12425.9.camel@edumazet-glaptop>
-	 <4FA21087.1080801@gmail.com> <1336022373.12425.24.camel@edumazet-glaptop>
-	 <20120503.012502.44731688706812861.davem@davemloft.net>
-	 <20120503151418.GJ9285@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 May 2012 08:24:19 -0700
-Message-ID: <1336058659.27487.80.camel@wwguy-huron> (sfid-20120503_173059_798452_DAAC5F1E)
-Mime-Version: 1.0
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:55943 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab2ECFW4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 01:22:56 -0400
+Date: Thu, 3 May 2012 02:22:48 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: Re: [PATCH 2/2 v2] Bluetooth: btmrvl: add support for SDIO
+ suspend/resume callbacks
+Message-ID: <20120503052248.GF16030@joana> (sfid-20120503_072301_477175_C05AEA16)
+References: <1335379434-12564-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1335379434-12564-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi Bing,
 
-On Thu, 2012-05-03 at 11:14 -0400, John W. Linville wrote:
-> On Thu, May 03, 2012 at 01:25:02AM -0400, David Miller wrote:
-> > From: Eric Dumazet <eric.dumazet@gmail.com>
-> > Date: Thu, 03 May 2012 07:19:33 +0200
-> > 
-> > > My last patch against iwlwifi is still waiting to make its way into
-> > > official tree.
-> > > 
-> > > http://www.spinics.net/lists/netdev/msg192629.html
-> > 
-> > John, please rectify this situation.
-> > 
-> > The Intel Wireless folks said they would test it, but that was more
-> > than a month ago.
-> > 
-> > It's not acceptable to let bug fixes rot for that long, I don't care
-> > what their special internal testing procedure is.
-> > 
-> > If they give you further pushback, please just ignore them and apply
-> > Eric's fix directly.
-> > 
-> > Thank you.
+* Bing Zhao <bzhao@marvell.com> [2012-04-25 11:43:54 -0700]:
+
+> From: Amitkumar Karwar <akarwar@marvell.com>
 > 
-> I imagine that this somehow got lost in the shuffle during the
-> merge window.  That doesn't excuse it, of course.
+> Host sleep is activated using already configured host sleep
+> parameters in suspend handler and it is cancelled in resume
+> handler.
 > 
-> It has waited long enough already, so I'll just go ahead and take it.
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+> v2: remove '\n' at end of BT_DBG, BT_ERR. (Marcel Holtmann)
 > 
-it is my mistake to lost this patch during the iwlwifi re-factor work,
-the patch is no longer apply and I ask Eric to rebase the patch.
+>  drivers/bluetooth/btmrvl_drv.h  |    2 +
+>  drivers/bluetooth/btmrvl_main.c |    3 +-
+>  drivers/bluetooth/btmrvl_sdio.c |  100 +++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 104 insertions(+), 1 deletions(-)
 
-Sorry again for the mistake
+Patch has been applied to bluetooth-next. Thanks.
 
-Thanks
-Wey
-
-
+	Gustavo
