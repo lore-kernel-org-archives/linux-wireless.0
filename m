@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:43761 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753118Ab2EUMxS convert rfc822-to-8bit (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:56058 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752116Ab2ECFIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2012 08:53:18 -0400
+	Thu, 3 May 2012 01:08:44 -0400
+Message-ID: <4FA212D9.5020602@gtri.gatech.edu> (sfid-20120503_070848_327037_C46C0620)
+Date: Thu, 3 May 2012 01:08:41 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
 MIME-Version: 1.0
-In-Reply-To: <CAFub=KS1_Bj=b2OVTf33VHtQ7BKY2k3Wd1oGwmVVJNgbexZ=6w@mail.gmail.com>
-References: <CAFub=KS1_Bj=b2OVTf33VHtQ7BKY2k3Wd1oGwmVVJNgbexZ=6w@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 21 May 2012 05:52:55 -0700
-Message-ID: <CAB=NE6VFghHT6zvGfW+9-Vsik39A_4Df=U3J1OtFFpM8LKDzvw@mail.gmail.com> (sfid-20120521_145331_686269_D2EEE79A)
-Subject: Re: [Lf_driver_backport] scripts in compat tree
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
-	linux-kernel@vger.kernel.org, Andy Whitcroft <apw@canonical.com>
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: <linux-wireless@vger.kernel.org>
+CC: <Larry.Finger@lwfinger.net>
+Subject: [WIP] rtlwifi: rtl8192su subdriver
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 21, 2012 at 5:32 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
-> Hi,
->
-> I will be working on the GSoC project to prepare compat graphics drivers.
->
-> Looking at the scripts (ckmake and get-compat-kernels) in the compat tree, I
-> see that they are only handling Ubuntu systems. First of all, should they
-> really be distro-aware?
+Hello all,
 
-When I wrote this I posted the patch to lkml [0] for wider review and
-naturally I got the same reaction from folks. I wrote it originally
-with the goal to do something distro-agnostic and in fact it is, its
-just that I haven't figured out a quick way to make this work across
-the board.
+I would like to submit the work I have done so far on a native mac80211 
+driver for the RTL8192SU family of chips (91SU/88SU also).  It builds 
+off of the rtlwifi driver, especially the rtl8192se subdriver, as well 
+as the r8712u and the deleted rtl8192su staging drivers.
 
-[0] https://lkml.org/lkml/2012/2/7/501
+The first few patches are enhancements or bug fixes to the rtlwifi core 
+which I would like to get pulled upstream after review.  The second to 
+last patch is an ugly hack to allow subdrivers to register new/different 
+features with mac80211 (hardware scanning, for instance).  And the last 
+patch adds the work done so far on rtl8192su.
 
-More below.
+As of now, the rtl8192su subdriver can initialize the hardware, load the 
+firmware, setup bulk communication, and configure the RF/BB/PHY.  There 
+are a handful of FIXMEs scattered around the code, and many of the new 
+FW commands still need to be implemented.  The site survey FW command 
+works quite well and returns available BSSIDs in the area.  However, the 
+firmware currently eats beacons and returns the scan results in a struct 
+that will require some work to feed into mac80211.
 
-> Why not to download the tarballs from kernel.org?
-> Isn't it a more generic approach?
+(I'm too tired to setup git-send-email tonight, so please pardon the 
+following manually sent patches which are not inlined.)
 
-Well kernel.org does not have already built kernels. Ubuntu's PPA
-kernels *are* vanilla kernels, in fact that is why they were put up,
-they are guaranteed to be built on vanilla kernels. We couldn't get a
-more generic approach then. The only thing though is -- the PPA
-kernels obviously have the kernels integrated on .debs. There are a
-few options here:
+Joshua Roys
 
-  1) If Ubuntu can dpkg -x the kernels for us onto tarballs that'd be swell
-  2) We could write our own script to do this with C code that does
-the dpkg -x for us
-
-There are ways to do 2) suggested in the thread above.
-
-> If this makes sense, I'd like to extend those scripts to handle vanilla
-> kernels with a cmdline switch which won't care at all about lsb_release. I
-> will hardcode end-of-life products and parse kernel.org to dynamically
-> detect new versions, download and extract them under /lib/modules if they
-> don't exist in there, etc.
-
-That'd be amazing!
-
-> I'm waiting for your feedback :)
-
-Thanks!
-
-  Luis
