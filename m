@@ -1,60 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60370 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756103Ab2EKGj6 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62039 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab2ECNJY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 02:39:58 -0400
-Message-ID: <1336718395.4310.3.camel@jlt3.sipsolutions.net> (sfid-20120511_084002_500462_209E8438)
-Subject: Re: [RFC 1/2] mac80211: move ieee80211_set_channel function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 11 May 2012 08:39:55 +0200
-In-Reply-To: <4FACB379.2000001@tieto.com>
-References: <20120510203021.240931880@sipsolutions.net>
-	 <20120510203304.679354639@sipsolutions.net> <4FACB379.2000001@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 3 May 2012 09:09:24 -0400
+From: "Lee, Youngsin" <youngsin@qualcomm.com>
+To: "Natarajan, Vivekanandan" <nataraja@qca.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"Kwak, Steven" <sskwak@qualcomm.com>,
+	"Kim, Kyle" <kkim@qualcomm.com>,
+	"Byun, Matt" <mattbyun@qualcomm.com>,
+	"Lee, Ryan (QCA KR)" <ryanlee@qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>,
+	"Kim, Sunny" <sunnykim@qualcomm.com>,
+	"Huang, Karen (Karen Huang_QCA TW)" <yahuan@qca.qualcomm.com>,
+	"Lee, HG" <honglee@qualcomm.com>, "Kim, Cj" <cjkim@qualcomm.com>,
+	"Kim, Taek-Soo (Henry)" <henrykim@qualcomm.com>
+Subject: RE: [PATCH] ath6kl_sdio: Fix the EAPOL out of order issue
+Date: Thu, 3 May 2012 13:09:21 +0000
+Message-ID: <CD6CCE71FC934142A137CF091F64707B2854C3ED@nasanexd02c.na.qualcomm.com> (sfid-20120503_150928_702771_03072F11)
+References: <1335950725-15597-1-git-send-email-nataraja@qca.qualcomm.com>
+In-Reply-To: <1335950725-15597-1-git-send-email-nataraja@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-05-11 at 08:36 +0200, Michal Kazior wrote:
-> Johannes Berg wrote:
-> > +static int ieee80211_set_channel(struct wiphy *wiphy,
-> > +				 struct net_device *netdev,
-> > +				 struct ieee80211_channel *chan,
-> > +				 enum nl80211_channel_type channel_type)
-> > +{
-> > +	struct ieee80211_local *local = wiphy_priv(wiphy);
-> > +	struct ieee80211_sub_if_data *sdata = NULL;
-> > +
-> > +	if (netdev)
-> > +		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
-> > +
-> > +	switch (ieee80211_get_channel_mode(local, NULL)) {
-> > +	case CHAN_MODE_HOPPING:
-> > +		return -EBUSY;
-> > +	case CHAN_MODE_FIXED:
-> > +		if (local->oper_channel != chan)
-> > +			return -EBUSY;
-> 
-> 
-> > +		if (!sdata&&  local->_oper_channel_type == channel_type)
-> > +			return 0;
-> 
-> Do we need to keep this part? If not we could remove it in your:
->    [RFC] mac80211: clean up ieee80211_set_channel
++ More folks.
 
-I think we do need to keep it.
+Steven, Please also check this patch for CR346620.
 
-> I think we could even remove the whole `ieee80211_get_channel_mode` 
-> thing now since we enforce interface combinations, right? We just need 
-> to adjust the interface combinations verification to refuse mixing ibss 
-> with anything else for the moment. That shouldn't be bad, or is it?
+Thanks a lot,
+Youngsin.
 
-Somebody is going to complain if we never allow IBSS+anything any more
-because IBSS has a fixed-channel mode in mac80211 which can cooperate
-better.
+-----Original Message-----
+From: Natarajan, Vivekanandan 
+Sent: Wednesday, May 02, 2012 6:25 PM
+To: Valo, Kalle
+Cc: linux-wireless@vger.kernel.org; ath6kl-devel
+Subject: [PATCH] ath6kl_sdio: Fix the EAPOL out of order issue
 
-johannes
+Send the EAPOL and management frames in the same AC_VO queue. The issue happens when the AP supports QOS, the management frames are sent to AC_VO queue and EAP frame goes to AC_BE queue. Even though the EAP frame is queued before the DEAUTH management frame, as they are queued on different h/w queues, order of delivery between these frames cannot be controlled.
+
+This fixes the connection failure seen in P2P case.
+
+Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.c |    7 +++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h |    2 ++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 102477d..ee8ec23 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -290,6 +290,13 @@ int ath6kl_wmi_implicit_create_pstream(struct wmi *wmi, u8 if_idx,
+ 					layer2_priority);
+ 		} else
+ 			usr_pri = layer2_priority & 0x7;
++
++		/*
++		 * Queue the EAPOL frames in the same WMM_AC_VO queue
++		 * as that of management frames.
++		 */
++		if (skb->protocol == cpu_to_be16(ETH_P_PAE))
++			usr_pri = WMI_VOICE_USER_PRIORITY;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 9966140..9076bec 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -106,6 +106,8 @@ struct wmi_data_sync_bufs {
+ #define WMM_AC_VI   2		/* video */
+ #define WMM_AC_VO   3		/* voice */
+ 
++#define WMI_VOICE_USER_PRIORITY		0x7
++
+ struct wmi {
+ 	u16 stream_exist_for_ac[WMM_NUM_AC];
+ 	u8 fat_pipe_exist;
+--
+1.7.10
 
