@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:42193 "EHLO
+Received: from shards.monkeyblade.net ([198.137.202.13]:45351 "EHLO
 	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754203Ab2EFSyQ (ORCPT
+	with ESMTP id S1754501Ab2ECRGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 14:54:16 -0400
-Date: Sun, 06 May 2012 14:53:04 -0400 (EDT)
-Message-Id: <20120506.145304.1998242927519675381.davem@davemloft.net> (sfid-20120506_205421_496402_52AC9851)
-To: dh.herrmann@googlemail.com
-Cc: gustavo@padovan.org, linville@tuxdriver.com,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Bluetooth: Fix coding style
+	Thu, 3 May 2012 13:06:22 -0400
+Date: Thu, 03 May 2012 13:05:16 -0400 (EDT)
+Message-Id: <20120503.130516.1008806127286088740.davem@davemloft.net> (sfid-20120503_190631_627087_72DED537)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-05-03
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
-References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
-	<20120506.123656.1335354317428258137.davem@davemloft.net>
-	<CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
+In-Reply-To: <20120503152206.GL9285@tuxdriver.com>
+References: <20120503152206.GL9285@tuxdriver.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Herrmann <dh.herrmann@googlemail.com>
-Date: Sun, 6 May 2012 19:46:46 +0200
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 3 May 2012 11:22:06 -0400
 
-> Whose rules are they?
+> This is a batch of updates intended for 3.5.  It also includes a pull
+> from the wireless tree which resolved some build dependencies.
+> 
+> Highlights of this pull request include some refactoring in the
+> bluetooth directories, some HT enhancements for mac80211, an expansion
+> of the ethtool support for cfg80211- and mac80211-based drivers,
+> and some more iwlwifi refactoring.
+> 
+> It looks like some of the bluetooth device ID patches got committed
+> on both the bluetooth and the bluetooth-next trees.  I'll ask them to
+> be more careful about that, but I didn't think it was worth asking
+> for rebases since that would be disruptive to the downstream trees
+> and since git handles the situation reasonably well already.
 
-Find me an example in another major core subsystem, let's use
-mm/memory.c as an example as that file gets hit by a lot of people,
-that uses the multi-line conditional TAB-only crap you guys seem to
-keep using.
-
-They don't.  All the examples you'll find are of the form:
-
-	if (a &&
-	    b)
-
-not:
-
-	if (a &&
-			b)
-
-like I see happening in bluetooth all the time.
-
-How did you think they figured that out?  Did they read someone's
-mind?
+Pulled, thanks John.
