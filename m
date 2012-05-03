@@ -1,50 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:53305 "EHLO
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:47116 "EHLO
 	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757851Ab2EOLxP (ORCPT
+	with ESMTP id S1755430Ab2ECTEv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 07:53:15 -0400
-Received: by wgbdr13 with SMTP id dr13so5684845wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 04:53:14 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: send beacon loss events to userspace
-Date: Tue, 15 May 2012 14:53:17 +0300
-Message-Id: <1337082797-25423-1-git-send-email-eliad@wizery.com> (sfid-20120515_135318_825684_E87993AB)
+	Thu, 3 May 2012 15:04:51 -0400
+Received: by wgbdr13 with SMTP id dr13so2042915wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 12:04:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120503065351.GB2307@ritirata.org>
+References: <20120430145803.GE2630@ritirata.org>
+	<20120430170337.GA2560@tuxdriver.com>
+	<4595B4D22AB93C4FABBA84AAD5AA37FD143115@ORSMSX103.amr.corp.intel.com>
+	<CANUX_P1Nx4jYbRwehi+qW-2RVy=ntb_cCzBzpYXkJysuPvrCPA@mail.gmail.com>
+	<20120501183415.GG4316@ritirata.org>
+	<20120501205616.GA2563@ritirata.org>
+	<4595B4D22AB93C4FABBA84AAD5AA37FD14438A@ORSMSX103.amr.corp.intel.com>
+	<CANUX_P0UYx_-PS8BUGO10Cwrm6LuhMu4Vyhad4RL-Jn6YqE-Pg@mail.gmail.com>
+	<20120502153914.GA9285@tuxdriver.com>
+	<20120502162100.GA2528@ritirata.org>
+	<20120503065351.GB2307@ritirata.org>
+Date: Thu, 3 May 2012 22:04:49 +0300
+Message-ID: <CANUX_P03yeuU7gpXbdPVeUBnco4Cz8v78e00x+SgYbhD5K8B5w@mail.gmail.com> (sfid-20120503_210454_257155_E57E0D2C)
+Subject: Re: iwlwifi warn_slowpath with 3.*
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Send beacon loss events to userspace, so it will be
-able to initiate roaming before disconnection
+Please enable CONFIG_FRAME_POINTERS
+Emmanuel Grumbach
+egrumbach@gmail.com
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-depends on "nl80211: add new rssi event to indicate beacon loss"
 
- drivers/net/wireless/ti/wlcore/event.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
-index 4ed83579..c976f04 100644
---- a/drivers/net/wireless/ti/wlcore/event.c
-+++ b/drivers/net/wireless/ti/wlcore/event.c
-@@ -156,6 +156,15 @@ static int wl1271_event_process(struct wl1271 *wl)
- 		 */
- 		ieee80211_queue_delayed_work(wl->hw, &wl->connection_loss_work,
- 					     msecs_to_jiffies(delay));
-+
-+		wl12xx_for_each_wlvif_sta(wl, wlvif) {
-+			vif = wl12xx_wlvif_to_vif(wlvif);
-+
-+			ieee80211_cqm_rssi_notify(
-+					vif,
-+					NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
-+					GFP_KERNEL);
-+		}
- 	}
- 
- 	if (vector & REGAINED_BSS_EVENT_ID) {
--- 
-1.7.6.401.g6a319
-
+On Thu, May 3, 2012 at 9:53 AM, Antonio Quartulli <ordex@autistici.org> wrote:
+> On Wed, May 02, 2012 at 06:21:02PM +0200, Antonio Quartulli wrote:
+>> On Wed, May 02, 2012 at 11:39:14AM -0400, John W. Linville wrote:
+>> > On Wed, May 02, 2012 at 10:08:46AM +0300, Emmanuel Grumbach wrote:
+>> > > On Wed, May 2, 2012 at 12:19 AM, Venkataraman, Meenakshi
+>> > > <meenakshi.venkataraman@intel.com> wrote:
+>> > > > Hi Antonio,
+>> > > >
+>> > > >>> it seems so. It happens at least once at boot time.
+>> > > >>> I will try wireless-testing and see what happens. Then I will apply your patch.
+>> > > >>
+>> > > >>The problem is there either with wireless-testing and with
+>> > > >>wireless-testing+your_patch.
+>> > > >>
+>> > > >>If it can somehow help, I also got several stack trace regarding intel_iova
+>> > > >>functions. But then the I got kernel panic and I was not able to copy the
+>> > > >>messages.
+>> > > >
+>> > > > [MV] Depending on how you set it up, perhaps the stack trace was saved in one of the syslog files in /var/log/...
+>> > > >
+>> > > > Thanks!
+>> > > > Meenakshi
+>> > > >
+>> > >
+>> > > Can you please re-run with debug=1 and send the whole log ?
+>> > > This will give a better indication on when the issue occurs.
+>> >
+>> > Does this help?
+>> >
+>> >     https://bugzilla.redhat.com/show_bug.cgi?id=815998#c18
+>>
+>> I applied patch in comment 17 on linux-3.3.4. IT didn't help but this time I got
+>> the WARNING even with debug=1. Log is attached.
+>>
+>
+>
+> Is there any particular kernel debugging option I could enable to make the log
+> more verbose?
+>
+>
+> Cheers,
+>
+>
+>
+> --
+> Antonio Quartulli
+>
+> ..each of us alone is worth nothing..
+> Ernesto "Che" Guevara
