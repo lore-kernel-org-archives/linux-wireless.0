@@ -1,50 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:49439 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753132Ab2EOPQd (ORCPT
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:40067 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752388Ab2ECDCQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 11:16:33 -0400
-Date: Tue, 15 May 2012 11:16:25 -0400
-From: Jouni Malinen <j@w1.fi>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: retry auth and assoc on error 17
-Message-ID: <20120515151625.GA1306@w1.fi> (sfid-20120515_171637_662472_1950305E)
-References: <1337091676-29441-1-git-send-email-eliad@wizery.com>
- <1337092228.15553.0.camel@jlt3.sipsolutions.net>
- <CAB3XZEd49R_KSAMRwM-B9PW_yzmK7aS9zzFVueA=nrFM7odC=w@mail.gmail.com>
+	Wed, 2 May 2012 23:02:16 -0400
+Received: by ghrr11 with SMTP id r11so1401257ghr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2012 20:02:16 -0700 (PDT)
+Message-ID: <4FA1F534.8040601@lwfinger.net> (sfid-20120503_050220_315906_3FAB000F)
+Date: Wed, 02 May 2012 22:02:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB3XZEd49R_KSAMRwM-B9PW_yzmK7aS9zzFVueA=nrFM7odC=w@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Catalin Marinas <catalin.marinas@arm.com>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: Suspicious RCU usage in mac80211
+References: <4F83A6DE.7070109@lwfinger.net>  <1334201497.3788.1.camel@jlt3.sipsolutions.net>  <4F865155.2000202@lwfinger.net>  <1334202842.3788.10.camel@jlt3.sipsolutions.net>  <4F86FA05.5080404@lwfinger.net>  <1334246145.4062.0.camel@jlt3.sipsolutions.net>  <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>  <4FA0371E.9040704@lwfinger.net> <20120502100012.GA8492@arm.com> <1335978471.4295.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1335978471.4295.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 15, 2012 at 05:40:17PM +0300, Eliad Peller wrote:
-> On Tue, May 15, 2012 at 5:30 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Tue, 2012-05-15 at 17:21 +0300, Eliad Peller wrote:
-> >> In some congested environments APs return
-> >> WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA on auth/assoc
-> >> attempt. Instead of failing immediately, retry again
-> >> in 200 msec.
-> >
-> > I think this should be in wpa_supplicant?
-> >
-> it behaves similarly to WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY, which
-> handled by mac80211, so i thought it would be fine to handle it as
-> well (and this way it can also be used by iw).
+On 05/02/2012 12:07 PM, Johannes Berg wrote:
+> On Wed, 2012-05-02 at 11:00 +0100, Catalin Marinas wrote:
+>
+>>> Your patch does not help. I still get the following dump in the log:
+>
+> The patch is also wrong, we hold the mutex there and can't hold RCU read
+> lock.
+>
+>>> #0:  (scan_mutex){+.+...}, at: [<ffffffff8113b0d6>] kmemleak_scan_thread+0x56/0xd0
+>>> #1:  (&tid_tx->session_timer){+.-...}, at: [<ffffffff8104853a>]
+>>> run_timer_softirq+0xfa/0x6e0
+>>> #2:  (rcu_read_lock){.+.+..}, at: [<ffffffffa0449ff0>]
+>>> sta_tx_agg_session_timer_expired+0x0/0x2a0 [mac80211]
+>>>
+>>> stack backtrace:
+>>> Pid: 622, comm: kmemleak Not tainted 3.4.0-rc5-wl+ #287
+>>> Call Trace:
+>>>    <IRQ>   [<ffffffff8109309d>] lockdep_rcu_suspicious+0xfd/0x130
+>>>    [<ffffffffa044a1cf>] sta_tx_agg_session_timer_expired+0x1df/0x2a0 [mac80211]
+>>>    [<ffffffffa0449ff0>] ? ieee80211_start_tx_ba_session+0x450/0x450 [mac80211]
+>>>    [<ffffffff810485c5>] run_timer_softirq+0x185/0x6e0
+>>>
+>>> As kmemleak seems to be involved, I have added Catalin Marinas to the Cc list.
+>
+>> Looking at the code and the logs, ieee80211_start_tx_ba_session() calls
+>
+> I'm almost certain that ieee80211_start_tx_ba_session() is a bogus
+> calltrace entry, since we're in a timer and that's not called from a
+> timer.
+>
+>> rcu_dereference_protected_tid_tx() which calls
+>> rcu_dereference_protected() with the (lockdep_is_held(&sta->lock) ||
+>> lockdep_is_held(&sta->ampdu_mlme.mtx)) condition which is false. As the
+>> kernel log says, none of these locks are held, hence the warning.
+>
+> So does that just mean we need to add rcu_read_lock_held() to the
+> conditions? I thought that wasn't necessary? +Paul.
 
-WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY is a special case in which the AP
-provides a clear expectation of the association succeeding after the
-specified amount of time. WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA is
-quite different since it can be used by APs to enforce load balancing.
-It does not sound like a good idea to enforce mac80211 to retry
-association with the same AP unconditionally in this case. I would also
-leave this for wpa_supplicant which has already been optimized to handle
-the load balancing case without this type of extra latency added.
-Disabling this functionality would not be good for many enterprise
-networks.
+If you meant the following
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Index: wireless-testing-new/net/mac80211/sta_info.h
+===================================================================
+--- wireless-testing-new.orig/net/mac80211/sta_info.h
++++ wireless-testing-new/net/mac80211/sta_info.h
+@@ -453,7 +453,8 @@ rcu_dereference_protected_tid_tx(struct
+  {
+         return rcu_dereference_protected(sta->ampdu_mlme.tid_tx[tid],
+                                          lockdep_is_held(&sta->lock) ||
+-                                        lockdep_is_held(&sta->ampdu_mlme.mtx));
++                                        lockdep_is_held(&sta->ampdu_mlme.mtx) ||
++                                        rcu_read_lock_held());
+  }
+
+  #define STA_HASH_SIZE 256
+
+It does not help.
+
+Larry
+
