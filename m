@@ -1,99 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58232 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754841Ab2E3OuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 10:50:09 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:45263 "HELO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753668Ab2ECHXP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 03:23:15 -0400
+From: Bing Zhao <bzhao@marvell.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes.berg@intel.com
-Subject: [PATCH 3.5] mac80211: add missing rcu_read_lock/unlock in agg-rx session timer
-Date: Wed, 30 May 2012 15:32:24 +0200
-Message-Id: <1338384744-74509-1-git-send-email-nbd@openwrt.org> (sfid-20120530_165017_372694_FAC2E5D4)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	harvey yang <harvey.huawei.yang@gmail.com>
+Subject: [PATCH 01/18] mwifiex: allocate space for one more mwifiex_private structure
+Date: Thu,  3 May 2012 00:22:23 -0700
+Message-Id: <1336029760-22565-2-git-send-email-bzhao@marvell.com> (sfid-20120503_092320_845402_5F45688B)
+In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes a lockdep warning:
+From: Avinash Patil <patila@marvell.com>
 
-===================================================
-[ INFO: suspicious rcu_dereference_check() usage. ]
----------------------------------------------------
-net/mac80211/agg-rx.c:148 invoked rcu_dereference_check() without protection!
+Reserve space for one more priv structure.
+This will be used by AP interface.
 
-other info that might help us debug this:
-
-rcu_scheduler_active = 1, debug_locks = 1
-1 lock held by arecord/11226:
- #0:  (&tid_agg_rx->session_timer){+.-...}, at: [<ffffffff81066bb0>] call_timer_fn+0x0/0x360
-
-stack backtrace:
-Pid: 11226, comm: arecord Not tainted 3.1.0-kml #16
-Call Trace:
- <IRQ>  [<ffffffff81093454>] lockdep_rcu_dereference+0xa4/0xc0
- [<ffffffffa02778c9>] sta_rx_agg_session_timer_expired+0xc9/0x110 [mac80211]
- [<ffffffffa0277800>] ? ieee80211_process_addba_resp+0x220/0x220 [mac80211]
- [<ffffffff81066c3a>] call_timer_fn+0x8a/0x360
- [<ffffffff81066bb0>] ? init_timer_deferrable_key+0x30/0x30
- [<ffffffff81477bb0>] ? _raw_spin_unlock_irq+0x30/0x70
- [<ffffffff81067049>] run_timer_softirq+0x139/0x310
- [<ffffffff81091d5e>] ? put_lock_stats.isra.25+0xe/0x40
- [<ffffffff810922ac>] ? lock_release_holdtime.part.26+0xdc/0x160
- [<ffffffffa0277800>] ? ieee80211_process_addba_resp+0x220/0x220 [mac80211]
- [<ffffffff8105cb78>] __do_softirq+0xc8/0x3c0
- [<ffffffff8108f088>] ? tick_dev_program_event+0x48/0x110
- [<ffffffff8108f16f>] ? tick_program_event+0x1f/0x30
- [<ffffffff81153b15>] ? putname+0x35/0x50
- [<ffffffff8147a43c>] call_softirq+0x1c/0x30
- [<ffffffff81004c55>] do_softirq+0xa5/0xe0
- [<ffffffff8105d1ee>] irq_exit+0xae/0xe0
- [<ffffffff8147ac6b>] smp_apic_timer_interrupt+0x6b/0x98
- [<ffffffff81479ab3>] apic_timer_interrupt+0x73/0x80
- <EOI>  [<ffffffff8146aac6>] ? free_debug_processing+0x1a1/0x1d5
- [<ffffffff81153b15>] ? putname+0x35/0x50
- [<ffffffff8146ab2b>] __slab_free+0x31/0x2ca
- [<ffffffff81477c3a>] ? _raw_spin_unlock_irqrestore+0x4a/0x90
- [<ffffffff81253b8f>] ? __debug_check_no_obj_freed+0x15f/0x210
- [<ffffffff81097054>] ? lock_release_nested+0x84/0xc0
- [<ffffffff8113ec55>] ? kmem_cache_free+0x105/0x250
- [<ffffffff81153b15>] ? putname+0x35/0x50
- [<ffffffff81153b15>] ? putname+0x35/0x50
- [<ffffffff8113ed8f>] kmem_cache_free+0x23f/0x250
- [<ffffffff81153b15>] putname+0x35/0x50
- [<ffffffff81146d8d>] do_sys_open+0x16d/0x1d0
- [<ffffffff81146e10>] sys_open+0x20/0x30
- [<ffffffff81478f42>] system_call_fastpath+0x16/0x1b
-
-Reported-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/mac80211/agg-rx.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/net/wireless/mwifiex/decl.h |    2 +-
+ drivers/net/wireless/mwifiex/main.c |   33 ++++++++++++++++++---------------
+ drivers/net/wireless/mwifiex/wmm.c  |    4 ++++
+ 3 files changed, 23 insertions(+), 16 deletions(-)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index a070d4f..4b6d2ff 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -145,15 +145,20 @@ static void sta_rx_agg_session_timer_expired(unsigned long data)
- 	struct tid_ampdu_rx *tid_rx;
- 	unsigned long timeout;
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index d04aba4..6b8f912 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -28,7 +28,7 @@
+ #include <linux/ieee80211.h>
  
-+	rcu_read_lock();
- 	tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[*ptid]);
--	if (!tid_rx)
-+	if (!tid_rx) {
-+		rcu_read_unlock();
- 		return;
+ 
+-#define MWIFIEX_MAX_BSS_NUM         (1)
++#define MWIFIEX_MAX_BSS_NUM         (2)
+ 
+ #define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
+ 					 *   + 4 byte alignment
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index be0f0e5..5ac0059 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -64,17 +64,17 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
+ 
+ 	adapter->priv_num = 0;
+ 
+-	/* Allocate memory for private structure */
+-	adapter->priv[0] = kzalloc(sizeof(struct mwifiex_private), GFP_KERNEL);
+-	if (!adapter->priv[0]) {
+-		dev_err(adapter->dev,
+-			"%s: failed to alloc priv[0]\n", __func__);
+-		goto error;
+-	}
+-
+-	adapter->priv_num++;
++	for (i = 0; i < MWIFIEX_MAX_BSS_NUM; i++) {
++		/* Allocate memory for private structure */
++		adapter->priv[i] =
++			kzalloc(sizeof(struct mwifiex_private), GFP_KERNEL);
++		if (!adapter->priv[i])
++			goto error;
+ 
+-	adapter->priv[0]->adapter = adapter;
++		adapter->priv[i]->adapter = adapter;
++		adapter->priv[i]->bss_priority = i;
++		adapter->priv_num++;
 +	}
+ 	mwifiex_init_lock_list(adapter);
  
- 	timeout = tid_rx->last_rx + TU_TO_JIFFIES(tid_rx->timeout);
- 	if (time_is_after_jiffies(timeout)) {
- 		mod_timer(&tid_rx->session_timer, timeout);
-+		rcu_read_unlock();
- 		return;
+ 	init_timer(&adapter->cmd_timer);
+@@ -836,13 +836,16 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
  	}
-+	rcu_read_unlock();
  
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
+ 	priv = adapter->priv[0];
+-	if (!priv)
++	if (!priv || !priv->wdev)
+ 		goto exit_remove;
+ 
+-	if (priv->wdev) {
+-		wiphy_unregister(priv->wdev->wiphy);
+-		wiphy_free(priv->wdev->wiphy);
+-		kfree(priv->wdev);
++	wiphy_unregister(priv->wdev->wiphy);
++	wiphy_free(priv->wdev->wiphy);
++
++	for (i = 0; i < adapter->priv_num; i++) {
++		priv = adapter->priv[i];
++		if (priv)
++			kfree(priv->wdev);
+ 	}
+ 
+ 	mwifiex_terminate_workqueue(adapter);
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 429a1de..f3fc655 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -885,6 +885,10 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 				tid_ptr = &(priv_tmp)->wmm.
+ 					tid_tbl_ptr[tos_to_tid[i]];
+ 
++				/* For non-STA ra_list_curr may be NULL */
++				if (!tid_ptr->ra_list_curr)
++					continue;
++
+ 				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
+ 						  flags);
+ 				is_list_empty =
 -- 
-1.7.3.2
+1.7.0.2
 
