@@ -1,113 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout6.freenet.de ([195.4.92.96]:33153 "EHLO mout6.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751372Ab2EJOXp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 10:23:45 -0400
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout6.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1SSUHP-0001mO-JJ
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 16:23:43 +0200
-Received: from localhost ([::1]:34794 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SSUHP-0003P6-A0
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 16:23:43 +0200
-Received: from [195.4.92.26] (port=55813 helo=16.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SSUEz-0001vx-AR
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 16:21:13 +0200
-Received: from [2002:4fde:1051:2:5054:ff:feb8:40bd] (port=46540 helo=mail.maya.org)
-	by 16.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1SSUEy-0000F9-Rd
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 16:21:13 +0200
-Message-ID: <4FABCECC.30709@01019freenet.de> (sfid-20120510_162348_978703_67E5BF76)
-Date: Thu, 10 May 2012 16:21:00 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:56115 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab2ECFLt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 01:11:49 -0400
+Message-ID: <4FA21392.5060401@gtri.gatech.edu> (sfid-20120503_071151_736143_C99D03B8)
+Date: Thu, 3 May 2012 01:11:46 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
 MIME-Version: 1.0
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-CC: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [rt2x00-users] [PATCH][RFC/RFT] rt2800: Implement selectable
- support for 802.11w (MFP)
-References: <201205100719.q4A7JwVl003140@mail.maya.org> <CAOZOX0VfLrqBwfcqf5qsSnA4EH00-6tmG8te3M-WVAR8NqcFSw@mail.gmail.com> <4FAB9EAE.9090403@01019freenet.de> <CAOZOX0Vax7HTsND=vi+c6vamtvWaWW9omWu1CM-=vWsrAf4fgQ@mail.gmail.com>
-In-Reply-To: <CAOZOX0Vax7HTsND=vi+c6vamtvWaWW9omWu1CM-=vWsrAf4fgQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: <linux-wireless@vger.kernel.org>
+CC: <Larry.Finger@lwfinger.net>
+Subject: [PATCH 4/9] rtlwifi: fix the selection of the bulk in endpoint
+References: <4FA212D9.5020602@gtri.gatech.edu>
+In-Reply-To: <4FA212D9.5020602@gtri.gatech.edu>
+Content-Type: multipart/mixed;
+	boundary="------------090909030207070901060809"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ivo,
-
-Ivo Van Doorn wrote:
-> Hi,
-> 
-> On Thu, May 10, 2012 at 12:55 PM, Andreas Hartmann
-> <andihartmann@01019freenet.de> wrote:
->> Hello!
->>
->> Ivo Van Doorn schrieb:
->>> Hi,
->>>
->>> On Thu, May 10, 2012 at 9:19 AM, Andreas Hartmann
->>> <andihartmann@01019freenet.de> wrote:
->>>> This patch adds support for 802.11w for rt2800. This is achieved by
->>>> using the 802.11w implementation in mac80211.
->>>>
->>>> To get this working, it is necessary to disable hw encryption of
->>>> rt2800pci / rt2800usb, because I don't know of any support in hardware
->>>> for 802.11w and therefore let mac80211 do the whole job.
->>>>
->>>> The user can enable 802.11w with the new mod parameter enablemfp.
->>>> Enabling MFP disables hw encryption.
->>>>
->>>> 802.11w is deactivated per default.
->>>>
->>>> Tested with rt2860 and rt3572.
->>>>
->>>> This is a workaround as long as there isn't hardware support implemented
->>>> in the driver.
->>>>
->>>> Signed-off-by: Andreas Hartmann <andihartmann@01019freenet.de>
->>>> ---
->>>> diff -ur compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800lib.c compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800lib.c
->>>> --- compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800lib.c     2012-04-26 22:10:30.000000000 +0200
->>>> +++ compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800lib.c  2012-05-09 11:37:48.463278177 +0200
->>>> @@ -4519,6 +4519,15 @@
->>>>            IEEE80211_HW_AMPDU_AGGREGATION |
->>>>            IEEE80211_HW_REPORTS_TX_ACK_STATUS;
->>>>
->>>> +       /*
->>>> +        * Enable support for 802.11w in mac80211. hwencryption must be disabled
->>>> +        */
->>>> +       if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags) && rt2x00dev->mfprequested) {
->>>> +               INFO(rt2x00dev, "802.11w support (MFP) enabled.\n");
->>>> +               rt2x00dev->hw->flags |=
->>>> +                       IEEE80211_HW_MFP_CAPABLE;
->>>> +       }
->>>
->>> Can't the whole patch be simplified into
->>>
->>> if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags)) {
->>>                INFO(rt2x00dev, "802.11w support (MFP) enabled.\n");
->>>                rt2x00dev->hw->flags |=
->>>                        IEEE80211_HW_MFP_CAPABLE;
->>> }
->>
->> This would surely be possible, but it wouldn't be possible any more to
->> run the driver w/o MFP support as long as hw encryption is disabled.
->>
->> Additionally, I would like to have an additional comment added to
->> nohwcrypt, which mentions, that activating nohwcrypt enables MFP, like:
->> "Disable hardware encryption, enable MFP." to let the user know, how to
->> enable MFP.
-> 
-> I am wondering what the usecase would be for having an option to disable MFP?
-> Isn't that a feature which technically should be enabled by default and in the
-> userspace you have the configuration to use it or not?
-
-It's the same idea as behind the nohwcrypt switch. If there are problems
-with the feature in a special case, you have the possibility to disable it.
-My understanding of nohwcrypt is to have a fallback mode, which I didn't
-want to touch. That's all.
+--------------090909030207070901060809
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
-Regards,
-Andreas
+
+--------------090909030207070901060809
+Content-Type: text/x-patch;
+	name="0004-rtlwifi-fix-the-selection-of-the-bulk-in-endpoint.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="0004-rtlwifi-fix-the-selection-of-the-bulk-in-endpoint.patch"
+
+>From 750c8403c86edc794999de6330ee7390f923cf6a Mon Sep 17 00:00:00 2001
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Date: Thu, 3 May 2012 00:12:48 -0400
+Subject: [PATCH 4/9] rtlwifi: fix the selection of the bulk in endpoint
+
+The endpoint number is not always the same as the number of bulk in
+endpoints.  I don't actually have a CU card, but I can only assume
+that the bulk in endpoint number is 1.
+
+Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2 ++
+ drivers/net/wireless/rtlwifi/usb.c           |    1 -
+ 2 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+index 9e01f96..32dc884 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+@@ -203,7 +203,9 @@ err_out:
+ int  rtl8192cu_endpoint_mapping(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
+ 	int error = 0;
++	rtlusb->in_ep = 0x01;
+ 	if (likely(IS_NORMAL_CHIP(rtlhal->version)))
+ 		error = _ConfigVerNOutEP(hw);
+ 	else
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 91969ee..88dbef0 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -302,7 +302,6 @@ static int _rtl_usb_init_rx(struct ieee80211_hw *hw)
+ 
+ 	rtlusb->rx_max_size = rtlpriv->cfg->usb_interface_cfg->rx_max_size;
+ 	rtlusb->rx_urb_num = rtlpriv->cfg->usb_interface_cfg->rx_urb_num;
+-	rtlusb->in_ep = rtlpriv->cfg->usb_interface_cfg->in_ep_num;
+ 	rtlusb->usb_rx_hdl = rtlpriv->cfg->usb_interface_cfg->usb_rx_hdl;
+ 	rtlusb->usb_rx_segregate_hdl =
+ 		rtlpriv->cfg->usb_interface_cfg->usb_rx_segregate_hdl;
+-- 
+1.7.7.6
+
+
+--------------090909030207070901060809--
