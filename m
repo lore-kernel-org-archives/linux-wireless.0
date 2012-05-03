@@ -1,36 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49985 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751066Ab2E2MgP (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:48833 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754494Ab2ECMz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 08:36:15 -0400
-Message-ID: <1338294968.4342.32.camel@jlt3.sipsolutions.net> (sfid-20120529_143618_289253_9F26EE39)
-Subject: Re: [PATCH v2 09/22] ath9k: Handle fatal interrupts properly
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Tue, 29 May 2012 14:36:08 +0200
-In-Reply-To: <4FC4C12A.1050804@openwrt.org> (sfid-20120529_142944_112351_CE560AC4)
-References: <20413.45797.72462.431840@gargle.gargle.HOWL>
-	 <4FC4C12A.1050804@openwrt.org> (sfid-20120529_142944_112351_CE560AC4)
+	Thu, 3 May 2012 08:55:59 -0400
+Received: by lbbgg6 with SMTP id gg6so1800922lbb.22
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 05:55:57 -0700 (PDT)
+Message-ID: <1336049755.12189.30.camel@cumari.coelho.fi> (sfid-20120503_145604_644918_7F861676)
+Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
+From: Luciano Coelho <coelho@ti.com>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 03 May 2012 15:55:55 +0300
+In-Reply-To: <4F8C784B.2040402@xenotime.net>
+References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>
+	 <4F8C784B.2040402@xenotime.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-29 at 14:29 +0200, Felix Fietkau wrote:
-> On 2012-05-24 6:02 AM, Sujith Manoharan wrote:
-> > When a fatal interrupt is received or it is detected that the baseband
-> > has hung, the chip has to be reset immediately.  Otherwise, we end up
-> > processing spurious interrupts. Ensure that we bail out properly in
-> > the ISR when the reset work hasn't completed yet.
-> > 
-> > Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> Wouldn't it be much easier to just use a bool variable instead of the
-> combination of lock+flag? A simple variable assignment is atomic...
+On Mon, 2012-04-16 at 12:51 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@xenotime.net>
+> 
+> wl12xx build fails with many undefined symbol errors when MAC80211
+> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
+> on MAC80211 (which already depends on CFG80211).
+> 
+> Here are a few of the many build errors:
+> 
+> drivers/built-in.o: In function `wl1271_register_hw':
+> main.c:(.text+0x4197cd): undefined reference to `ieee80211_register_hw'
+> drivers/built-in.o: In function `wl1271_rx_streaming_timer':
+> main.c:(.text+0x419818): undefined reference to `ieee80211_queue_work'
+> drivers/built-in.o: In function `wl1271_flush_deferred_work':
+> main.c:(.text+0x419910): undefined reference to `ieee80211_rx'
+> main.c:(.text+0x419938): undefined reference to `ieee80211_tx_status'
+> drivers/built-in.o: In function `wl12xx_op_channel_switch':
+> main.c:(.text+0x419afc): undefined reference to `ieee80211_chswitch_done'
+> drivers/built-in.o: In function `wl1271_ssid_set':
+> drivers/built-in.o: In function `wl1271_event_process':
+> event.c:(.text+0x41fec4): undefined reference to `ieee80211_sched_scan_stopped'
+> event.c:(.text+0x41ff88): undefined reference to `ieee80211_cqm_rssi_notify'
+> event.c:(.text+0x42000d): undefined reference to `ieee80211_stop_rx_ba_session'
+> event.c:(.text+0x420048): undefined reference to `ieee80211_stop_rx_ba_session'
+> event.c:(.text+0x4200b8): undefined reference to `ieee80211_chswitch_done'
+> event.c:(.text+0x4201ae): undefined reference to `ieee80211_find_sta'
+> event.c:(.text+0x4201ba): undefined reference to `ieee80211_report_low_ack'
+> event.c:(.text+0x42021b): undefined reference to `ieee80211_connection_loss'
+> drivers/built-in.o: In function `wl1271_tx_complete_packet':
+> tx.c:(.text+0x4206a6): undefined reference to `ieee80211_get_hdrlen_from_skb'
+> drivers/built-in.o: In function `wl1271_tx_fill_hdr':
+> tx.c:(.text+0x4208ca): undefined reference to `ieee80211_hdrlen'
+> drivers/built-in.o: In function `wl1271_handle_tx_low_watermark':
+> (.text+0x420e25): undefined reference to `ieee80211_wake_queue'
+> drivers/built-in.o: In function `wl12xx_rearm_rx_streaming':
+> (.text+0x420ed9): undefined reference to `ieee80211_queue_work'
+> drivers/built-in.o: In function `wl1271_tx_work_locked':
+> (.text+0x421008): undefined reference to `ieee80211_free_txskb'
+> drivers/built-in.o: In function `wl1271_rx_status.clone.2':
+> rx.c:(.text+0x421593): undefined reference to `ieee80211_channel_to_frequency'
+> drivers/built-in.o: In function `wl1271_ps_filter_frames':
+> ps.c:(.text+0x421a41): undefined reference to `ieee80211_tx_status'
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+> Cc:	Luciano Coelho <coelho@ti.com>
+> Cc:	linux-wireless@vger.kernel.org
+> Cc:	"John W. Linville" <linville@tuxdriver.com>
+> ---
 
-Is that guaranteed for bool variables?
+Applied! Thanks Randy, and sorry for the delay in pushing this through
+my tree.
 
-johannes
 
