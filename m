@@ -1,101 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53741 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897Ab2E2HNx (ORCPT
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:40843 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753726Ab2ECIr0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 03:13:53 -0400
-Message-ID: <1338275635.4342.24.camel@jlt3.sipsolutions.net> (sfid-20120529_091356_723050_716274E1)
-Subject: RE: [PATCH 3/3] mwifiex: fix kernel warning in ibss start/join path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Tue, 29 May 2012 09:13:55 +0200
-In-Reply-To: <477F20668A386D41ADCC57781B1F7043083A64BA49@SC-VEXCH1.marvell.com>
-References: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
-	 <1337228696-22312-3-git-send-email-bzhao@marvell.com>
-	 (sfid-20120517_063333_463261_998602DE) <1337238333.4524.1.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F7043083A64B448@SC-VEXCH1.marvell.com>
-	 <1337284374.4687.6.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F7043083A64BA49@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 3 May 2012 04:47:26 -0400
+Date: Thu, 3 May 2012 09:47:02 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: Suspicious RCU usage in mac80211
+Message-ID: <20120503084701.GA27872@arm.com> (sfid-20120503_104732_049935_8E551D9C)
+References: <1334201497.3788.1.camel@jlt3.sipsolutions.net>
+ <4F865155.2000202@lwfinger.net>
+ <1334202842.3788.10.camel@jlt3.sipsolutions.net>
+ <4F86FA05.5080404@lwfinger.net>
+ <1334246145.4062.0.camel@jlt3.sipsolutions.net>
+ <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
+ <4FA0371E.9040704@lwfinger.net>
+ <20120502100012.GA8492@arm.com>
+ <1335978471.4295.3.camel@jlt3.sipsolutions.net>
+ <4FA1F534.8040601@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FA1F534.8040601@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-05-21 at 19:43 -0700, Bing Zhao wrote:
-> Hi Johannes,
+On Thu, May 03, 2012 at 04:02:12AM +0100, Larry Finger wrote:
+> On 05/02/2012 12:07 PM, Johannes Berg wrote:
+> > On Wed, 2012-05-02 at 11:00 +0100, Catalin Marinas wrote:
+> >
+> >>> Your patch does not help. I still get the following dump in the log:
+> >
+> > The patch is also wrong, we hold the mutex there and can't hold RCU read
+> > lock.
+> >
+> >>> #0:  (scan_mutex){+.+...}, at: [<ffffffff8113b0d6>] kmemleak_scan_thread+0x56/0xd0
+> >>> #1:  (&tid_tx->session_timer){+.-...}, at: [<ffffffff8104853a>]
+> >>> run_timer_softirq+0xfa/0x6e0
+> >>> #2:  (rcu_read_lock){.+.+..}, at: [<ffffffffa0449ff0>]
+> >>> sta_tx_agg_session_timer_expired+0x0/0x2a0 [mac80211]
+> >>>
+> >>> stack backtrace:
+> >>> Pid: 622, comm: kmemleak Not tainted 3.4.0-rc5-wl+ #287
+> >>> Call Trace:
+> >>>    <IRQ>   [<ffffffff8109309d>] lockdep_rcu_suspicious+0xfd/0x130
+> >>>    [<ffffffffa044a1cf>] sta_tx_agg_session_timer_expired+0x1df/0x2a0 [mac80211]
+> >>>    [<ffffffffa0449ff0>] ? ieee80211_start_tx_ba_session+0x450/0x450 [mac80211]
+> >>>    [<ffffffff810485c5>] run_timer_softirq+0x185/0x6e0
+> >>>
+> >>> As kmemleak seems to be involved, I have added Catalin Marinas to the Cc list.
+> >
+> >> Looking at the code and the logs, ieee80211_start_tx_ba_session() calls
+> >
+> > I'm almost certain that ieee80211_start_tx_ba_session() is a bogus
+> > calltrace entry, since we're in a timer and that's not called from a
+> > timer.
+> >
+> >> rcu_dereference_protected_tid_tx() which calls
+> >> rcu_dereference_protected() with the (lockdep_is_held(&sta->lock) ||
+> >> lockdep_is_held(&sta->ampdu_mlme.mtx)) condition which is false. As the
+> >> kernel log says, none of these locks are held, hence the warning.
+> >
+> > So does that just mean we need to add rcu_read_lock_held() to the
+> > conditions? I thought that wasn't necessary? +Paul.
 > 
-> > > In .join_ibss handler, mwifiex driver sends a command to firmware to start/join an IBSS network.
-> > > This command is a synchronous call. When the command response comes
-> > > back we have started/joined it successfully, otherwise an error code
-> > > will be returned. However, we are still inside .join_ibss handler at
-> > > this moment. Calling cfg80211_ibss_joined() gives us the warning
-> > > because ssid_len hasn't been set by cfg80211 yet.
-> > 
-> > Hmm. Interesting, because I would think that could potentially take
-> > quite a while?
-> > 
-> > It's interesting though because it points out that even if you do call
-> > it asynchronously, there's no guarantee that it actually happens before
-> > the function call returns. Maybe we should just move the assignment in
-> > cfg80211 instead?
+> If you meant the following
 > 
-> Can we use "sme_state != CFG80211_SME_CONNECTING" check for ibss path too?
+> Index: wireless-testing-new/net/mac80211/sta_info.h
+> ===================================================================
+> --- wireless-testing-new.orig/net/mac80211/sta_info.h
+> +++ wireless-testing-new/net/mac80211/sta_info.h
+> @@ -453,7 +453,8 @@ rcu_dereference_protected_tid_tx(struct
+>   {
+>          return rcu_dereference_protected(sta->ampdu_mlme.tid_tx[tid],
 
-I don't think that variable is updated for IBSS at all?
+IIUC, Paul suggested that you should use rcu_dereference_check() here
+instead as the protected one is not safe in this context.
 
-> diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-> index 30f20fe..3d0930d 100644
-> --- a/net/wireless/ibss.c
-> +++ b/net/wireless/ibss.c
-> @@ -42,6 +42,7 @@ void __cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid)
->  	cfg80211_hold_bss(bss_from_pub(bss));
->  	wdev->current_bss = bss_from_pub(bss);
->  
-> +	wdev->sme_state = CFG80211_SME_CONNECTED;
->  	cfg80211_upload_connect_keys(wdev);
->  
->  	nl80211_send_ibss_bssid(wiphy_to_dev(wdev->wiphy), dev, bssid,
-> @@ -60,7 +61,7 @@ void cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid, gfp_t gfp)
->  	struct cfg80211_event *ev;
->  	unsigned long flags;
->  
-> -	CFG80211_DEV_WARN_ON(!wdev->ssid_len);
-> +	CFG80211_DEV_WARN_ON(wdev->sme_state != CFG80211_SME_CONNECTING);
->  
->  	ev = kzalloc(sizeof(*ev), gfp);
->  	if (!ev)
-> @@ -115,9 +116,11 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
->  #ifdef CONFIG_CFG80211_WEXT
->  	wdev->wext.ibss.channel = params->channel;
->  #endif
-> +	wdev->sme_state = CFG80211_SME_CONNECTING;
->  	err = rdev->ops->join_ibss(&rdev->wiphy, dev, params);
->  	if (err) {
->  		wdev->connect_keys = NULL;
-> +		wdev->sme_state = CFG80211_SME_IDLE;
->  		return err;
->  	}
->  
-> @@ -169,6 +172,7 @@ static void __cfg80211_clear_ibss(struct net_device *dev, bool nowext)
->  	}
->  
->  	wdev->current_bss = NULL;
-> +	wdev->sme_state = CFG80211_SME_IDLE;
->  	wdev->ssid_len = 0;
->  #ifdef CONFIG_CFG80211_WEXT
->  	if (!nowext)
-
-Ah, you're updating it now.
-
-Hmm, interesting. Seems reasonable to me.
-
-johannes
-
+-- 
+Catalin
