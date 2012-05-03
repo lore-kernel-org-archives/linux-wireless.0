@@ -1,98 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:44430 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754485Ab2EJNSc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34326 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209Ab2ECH6b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 09:18:32 -0400
-Received: by bkcji2 with SMTP id ji2so1275090bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 06:18:31 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3] mac80211: allow low-level drivers to set netdev feature bits
-Date: Thu, 10 May 2012 16:18:26 +0300
-Message-Id: <1336655906-31960-1-git-send-email-arik@wizery.com> (sfid-20120510_151836_869906_090342BD)
+	Thu, 3 May 2012 03:58:31 -0400
+Message-ID: <1336031908.3459.4.camel@jlt3.sipsolutions.net> (sfid-20120503_095834_702323_C18DF261)
+Subject: Re: carl9170 - monitor mode TP drop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 03 May 2012 09:58:28 +0200
+In-Reply-To: <201204251928.21559.chunkeey@googlemail.com> (sfid-20120425_192840_070867_199F0B3E)
+References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com>
+	 <201204231945.05113.chunkeey@googlemail.com>
+	 <CAFED-j=4NWR2mjnooQs4V_T23cV9iPAUi65J-FZ7JjC28aZ=Gw@mail.gmail.com>
+	 <201204251928.21559.chunkeey@googlemail.com>
+	 (sfid-20120425_192840_070867_199F0B3E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Low level drivers can now set certain netdev feature bits in
-netdev_features member of the ieee80211_hw struct. These will be
-propagated to every netdev created from this HW.
+On Wed, 2012-04-25 at 19:28 +0200, Christian Lamparter wrote:
+> On Wednesday, April 25, 2012 07:28:18 AM Janusz Dziedzic wrote:
+> > W dniu 23 kwietnia 2012 19:45 użytkownik Christian Lamparter
+> > <chunkeey@googlemail.com> napisał:
+> > >> This is what I can see on STA1:
+> > >> # iperf -c 192.168.254.1 -t 100 -i 5
+> > >> [ 3] 10.0-15.0 sec  20.4 MBytes  34.2 Mbits/sec
+> > >>
+> > >> =====> here I setup carl monitor on second PC, like this:
+> > >> =====> iw dev wlan0 set type monitor
+> > >> =====> iw dev wlan0 set freq 2437
+> > >> =====> ifconfig wlan0 up
+> > >>
+> > >> [  3] 40.0-45.0 sec  2.38 MBytes  3.98 Mbits/sec
+> > > Well, there's the "AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER = bit (30)"
+> > > in "AR9170_MAC_REG_RX_CONTROL = (0x1c3c40)".
+> > I disabled this in code.
+> > 
+> > -               rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
+> > +//             rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
+> > 
+> > After that I don't see any TP drop and can see all packets in
+> > wireshark (as expected).
+> > 
+> > Why carl try to ACK rx packets in monitor mode?
+> > Is that a correct behaviour?
+> Well, it depends.
+> 
+> You see without the BIT set, the hardware won't sent any ACKs
+> (Not even those which are directed at this interface - which of
+> course is also bad, or even worse?) and with the BIT set (and if
+> the HW is in Sniffer Mode) then the hardware acks every frames,
+> even if they are for a different stations.
+> So your fix might break someone else's setup.
 
-The white-listed features currently include only ones related to HW
-checksumming.
+You may want to implement the new monitor-mode-vif-to-driver thing in
+mac80211 which tells you when you're in *pure* monitor mode.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
-v2->3: fix accidental comment damage
-
-include/net/mac80211.h |    5 +++++
- net/mac80211/iface.c   |    2 ++
- net/mac80211/main.c    |    7 +++++++
- 3 files changed, 14 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4d6e6c6..decf6e3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1288,6 +1288,10 @@ enum ieee80211_hw_flags {
-  *
-  * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
-  *	(if %IEEE80211_HW_QUEUE_CONTROL is set)
-+ *
-+ * @netdev_features: netdev features to be set in each netdev created
-+ *	from this HW. Note only HW checksum features are currently
-+ *	compatible with mac80211. Other feature bits will be rejected.
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -1309,6 +1313,7 @@ struct ieee80211_hw {
- 	u8 max_rx_aggregation_subframes;
- 	u8 max_tx_aggregation_subframes;
- 	u8 offchannel_tx_hw_queue;
-+	netdev_features_t netdev_features;
- };
- 
- /**
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 3e05a8b..c2ad78a 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1350,6 +1350,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 			sdata->u.mgd.use_4addr = params->use_4addr;
- 	}
- 
-+	ndev->features |= local->hw.netdev_features;
-+
- 	ret = register_netdevice(ndev);
- 	if (ret)
- 		goto fail;
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index b70f7f0..5b3bb8c 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -679,6 +679,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	enum ieee80211_band band;
- 	int channels, max_bitrates;
- 	bool supp_ht;
-+	netdev_features_t feature_whitelist;
- 	static const u32 cipher_suites[] = {
- 		/* keep WEP first, it may be removed below */
- 		WLAN_CIPHER_SUITE_WEP40,
-@@ -705,6 +706,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if ((hw->flags & IEEE80211_HW_SCAN_WHILE_IDLE) && !local->ops->hw_scan)
- 		return -EINVAL;
- 
-+	/* Only HW csum features are currently compatible with mac80211 */
-+	feature_whitelist = NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM |
-+			    NETIF_F_HW_CSUM;
-+	if (WARN_ON(hw->netdev_features & ~feature_whitelist))
-+		return -EINVAL;
-+
- 	if (hw->max_report_rates == 0)
- 		hw->max_report_rates = hw->max_rates;
- 
--- 
-1.7.9.5
+johannes
 
