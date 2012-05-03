@@ -1,47 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34889 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757183Ab2EJIDA (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:33070 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754456Ab2ECUId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 04:03:00 -0400
-Message-ID: <1336636975.4334.9.camel@jlt3.sipsolutions.net> (sfid-20120510_100306_007666_C9C0097D)
-Subject: Re: [PATCH 1/7] mac80211: add tracking of temporary offchannel sdata
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 10 May 2012 10:02:55 +0200
-In-Reply-To: <4FAB74FD.7080004@tieto.com>
-References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
-	  <1336632282-2278-2-git-send-email-michal.kazior@tieto.com>
-	 <1336634791.4334.5.camel@jlt3.sipsolutions.net>
-	 <4FAB74FD.7080004@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 3 May 2012 16:08:33 -0400
+Received: by vbbff1 with SMTP id ff1so1573903vbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 13:08:32 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 3 May 2012 16:08:31 -0400
+Message-ID: <CABF+-6U8=HCG9w6UZbzXF3nEUL76pAtJ4+3DcXa83e_iQHz1Hw@mail.gmail.com> (sfid-20120503_220836_549500_C4E69001)
+Subject: Re: [PATCHv2 15/21] cw1200: debug.*, implementation of the driver's debugfs.
+From: Kevin Groeneveld <kgroeneveld@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 09:57 +0200, Michal Kazior wrote:
+Hi Dmitry,
 
-> >>   	/* Temporary remain-on-channel for off-channel operations */
-> >> +	struct ieee80211_sub_if_data *tmp_sdata;
-> >>   	struct ieee80211_channel *tmp_channel;
-> >>   	enum nl80211_channel_type tmp_channel_type;
-> >
-> > Do you actually need this? I'm still tempted to not worry about any of
-> > this and force drivers to implement remain-on-channel in the driver or
-> > device for multi-channel, and this temporary thing is only used for
-> > remain-on-channel operations now.
-> 
-> No I don't. But if it's not done we break the whole thing (sw 
-> offchannel/scan) with my next patch. We might as well just remove all 
-> the sw offchannel/scan code.
-> 
-> How many drivers are there that still depend on sw offchannel? Can we 
-> just go ahead and break them?
+There seems to be a small problem in this patch.  If
+CONFIG_CW1200_DEBUGFS is not defined then compilation fails with
+"multiple definition of `cw1200_print_fw_version'".
 
-Unfortunately we can't, a lot of them require it for P2P.
+>+int cw1200_print_fw_version(struct cw1200_common *priv, u8 *buf, size_t len)
+>+{
+>+}
 
-I guess I need to look at this in more detail.
+The above code near the end of debug.h should probably just be a
+function prototype and not include a function body.
 
-johannes
 
+Best regards,
+
+Kevin
