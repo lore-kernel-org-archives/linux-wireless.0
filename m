@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:57416 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692Ab2E1Ry6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 13:54:58 -0400
-MIME-Version: 1.0
-Date: Mon, 28 May 2012 19:54:56 +0200
-Message-ID: <CAMuHMdVv+g=+A1HHNmWWcsFBQjRXNNA437V6-g80cYq7zRJ78g@mail.gmail.com> (sfid-20120528_195523_051472_E6D3DBDF)
-Subject: wlcore.ko undefined symbols
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Eyal Shapira <eyal@wizery.com>, Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Linux-Next <linux-next@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:64003 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755247Ab2ECV2m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 17:28:42 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/6] update for 3.5: iwlwifi 2012-05-03
+Date: Thu,  3 May 2012 14:22:00 -0700
+Message-Id: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120503_232845_967537_82F8BE54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-m68k allmodconfig:
+We fix a index mistake in the power module parameter. We also fix an
+aggregation bug reported by Daniel Chyan from community. And we add
+documentation to explain the bluetooth reduce tx power feature
 
-ERROR: "wl1271_rx_filter_get_fields_size"
-[drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
-ERROR: "wl1271_rx_filter_flatten_fields"
-[drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
+Amit Beka (1):
+  iwlwifi: fix power index handling
 
-drivers/net/wireless/ti/wlcore/acx.c needs both functions unconditionally, but
-drivers/net/wireless/ti/wlcore/main.c has both functions inside #ifdef
-CONFIG_PM.
+Emmanuel Grumbach (2):
+  iwlwifi: don't flood logs when HT debug flag is set
+  iwlwifi: don't disable AGG queues that are not enabled
 
-This is in -next, but I believe all relevant code was merged in
-mainline in the mean time.
-Sorry for not noticing earlier, due to a longstanding unrelated build
-issue in -next.
+Wey-Yi Guy (3):
+  iwlwifi: include rssi as part of decision making for reduce txpower
+  iwlwifi: add documentation for bt reduced tx power
+  iwlwifi: make sure reduced tx power bit is valid
 
-Gr{oetje,eeting}s,
+these patches are also available from wireless-next branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
 
-                        Geert
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   37 ++++++++++++++++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |   19 ++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    6 ++++
+ drivers/net/wireless/iwlwifi/iwl-power.c    |    8 ++++-
+ 4 files changed, 58 insertions(+), 12 deletions(-)
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
