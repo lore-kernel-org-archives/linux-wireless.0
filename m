@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:63957 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751919Ab2EAKBp (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:47866 "HELO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752138Ab2ECHXl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 06:01:45 -0400
-Received: by wgbdr13 with SMTP id dr13so1341341wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 03:01:44 -0700 (PDT)
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	devel@lists.open80211s.org, distro11s@cozybit.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211_hwsim: Fix rate control by correctly reporting transmission counts
-Date: Tue,  1 May 2012 03:01:28 -0700
-Message-Id: <1335866488-23244-1-git-send-email-javier@cozybit.com> (sfid-20120501_120149_481306_16C4204B)
+	Thu, 3 May 2012 03:23:41 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	Bing Zhao <bzhao@marvell.com>,
+	harvey yang <harvey.huawei.yang@gmail.com>
+Subject: [PATCH 09/18] mwifiex: stop BSS in deauthentication handling
+Date: Thu,  3 May 2012 00:22:31 -0700
+Message-Id: <1336029760-22565-10-git-send-email-bzhao@marvell.com> (sfid-20120503_092345_193633_75DD5094)
+In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers need to report the number of transmission attempts for each rate
-as well as to terminate the rate array with -1.  The in-kernel datapath
-of hwsim simulates a perfect medium, therefore the driver only needs to
-report that the first transmission attempt was sucessfully completed at
-the most favorable rate.
+From: Avinash Patil <patila@marvell.com>
 
-Rate control is working again for this driver.  Tested mesh mode with
-minstrel.
+While in AP mode, we should stop BSS in deauthentication handler.
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/net/wireless/mwifiex/join.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 3edd473..840cd53 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -741,6 +741,11 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 		hwsim_check_sta_magic(txi->control.sta);
- 
- 	ieee80211_tx_info_clear_status(txi);
-+
-+	/* frame was transmitted at most favorable rate at first attempt */
-+	txi->control.rates[0].count = 1;
-+	txi->control.rates[1].idx = -1;
-+
- 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
- 		txi->flags |= IEEE80211_TX_STAT_ACK;
- 	ieee80211_tx_status_irqsafe(hw, skb);
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index aeb0b3f..d6b4fb0 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -1374,6 +1374,7 @@ static int mwifiex_deauthenticate_infra(struct mwifiex_private *priv, u8 *mac)
+  *
+  * In case of infra made, it sends deauthentication request, and
+  * in case of ad-hoc mode, a stop network request is sent to the firmware.
++ * In AP mode, a command to stop bss is sent to firmware.
+  */
+ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+ {
+@@ -1387,6 +1388,9 @@ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+ 		return mwifiex_send_cmd_sync(priv,
+ 					     HostCmd_CMD_802_11_AD_HOC_STOP,
+ 					     HostCmd_ACT_GEN_SET, 0, NULL);
++	case NL80211_IFTYPE_AP:
++		return mwifiex_send_cmd_sync(priv, HostCmd_CMD_UAP_BSS_STOP,
++					     HostCmd_ACT_GEN_SET, 0, NULL);
+ 	default:
+ 		break;
+ 	}
 -- 
-1.7.5.4
+1.7.0.2
 
