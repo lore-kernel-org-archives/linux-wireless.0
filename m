@@ -1,96 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.watchguard.com ([206.191.171.101]:11556 "EHLO
-	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760723Ab2EPXGZ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60811 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754237Ab2ECOTJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 19:06:25 -0400
-From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: AP mode my ath9k broke between 3.3 and 3.4-rc2
-Date: Wed, 16 May 2012 22:55:22 +0000
-Message-ID: <AA421655-0DA6-47F5-BA24-847AAD0D02BA@watchguard.com> (sfid-20120517_010630_038014_0701CEAA)
-References: <CANugF37WSOdHODRXOb6nnBCh5HMTTUqf0VpyPuTDdNK80-LkAQ@mail.gmail.com>
- <CANugF37wdS3=u7grT3H6WAJM=XxTukZoWdj70SXLL8k_6t1b6A@mail.gmail.com>
- <4F9679AB.6010103@01019freenet.de> <20120424125429.GB3770@tuxdriver.com>
- <4F983795.3070906@openwrt.org>
- <80FFDD6E-923A-4348-AEC0-2C85C60A0D22@watchguard.com>
-In-Reply-To: <80FFDD6E-923A-4348-AEC0-2C85C60A0D22@watchguard.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 3 May 2012 10:19:09 -0400
+Message-ID: <1336054745.5167.0.camel@jlt3.sipsolutions.net> (sfid-20120503_161913_221658_087A47DB)
+Subject: Re: [PATCH 17/18] mwifiex: parse beacon, probe response and assoc
+ response IEs from start_ap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>,
+	harvey yang <harvey.huawei.yang@gmail.com>
+Date: Thu, 03 May 2012 16:19:05 +0200
+In-Reply-To: <1336029760-22565-18-git-send-email-bzhao@marvell.com> (sfid-20120503_092407_448446_1D53B766)
+References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+	 <1336029760-22565-18-git-send-email-bzhao@marvell.com>
+	 (sfid-20120503_092407_448446_1D53B766)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2012-05-03 at 00:22 -0700, Bing Zhao wrote:
+> From: Avinash Patil <patila@marvell.com>
+> 
+> Add logic for parsing tail IEs, beacon IEs, probe response IEs
+> and assoc response IEs from cfg80211_ap_settings parameter of
+> start_ap handler.
+> 
+> This patch also implements functionality to retrieve RSN IE from
+> tail IE and send it to FW.
 
-It seems like 3.4-rc3-1 is still the latest package available for download on the website, even though
-it's not usable as an AP.  Is there an ETA for an update that works as an AP?
+This doesn't seem right -- you should use AP SME mode and get much more
+detail in other attributes? Look at ath6kl?
 
-Thanks,
---
--bp
-
-
-On Apr 25, 2012, at 4:46 PM, Bryan Phillippe wrote:
-
-> 
-> On Apr 25, 2012, at 10:42 AM, Felix Fietkau wrote:
-> 
->> On 2012-04-24 2:54 PM, John W. Linville wrote:
->>> On Tue, Apr 24, 2012 at 12:00:11PM +0200, Andreas Hartmann wrote:
->>>> Andrew Chant wrote:
->>>>> 3.4-rc4 doesn't work either.
->>>>> If I revert the patch on 3.4-rc4, the Intel card is able to associate again.
->>>>> -Andrew
->>>>> 
->>>>> On Tue, Apr 24, 2012 at 12:11 AM, Andrew Chant <andrew.chant@gmail.com> wrote:
->>>>>> Hello,
->>>>>> my Atheros AR9300 PCIe card (168c:0030) stopped working as an AP on
->>>>>> the 5GHz band between 3.3 and 3.4-rc2.
->>>>>> After 14 git bisects, I believe I have narrowed it down to the following patch:
->>>>>> 
->>>>>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=293702a3fb75832613e2af097bdc3ac8ef775b33
->>>>>> 
->>>>>> mac80211: use common radiotap code for cooked monitors
->>>> 
->>>> Same problem here with ar9285 / 2.4GHz / eap-tls / 802.11n / hostapd
->>>> 0.7.3 / compat-wireless-3.4-rc3-1.tar.bz2
->>>> 
->>>> Removing "mac80211: use common radiotap code for cooked monitors" solves
->>>> the problem here, too.
->>>> 
->>>> Using rt2860 as AP seems not to be a problem.
->>> 
->>> Sounds like we may need to revert it upstream.  Johannes, any comments?
->> That's a known bug, which I submitted a fix for. When looking at the
->> 3.4-rc4 log, I don't see my fix in there. It was submitted as
->> "[PATCH] mac80211: fix truncated packets in cooked monitor rx"
-> 
-> 
-> Just as another data-point, I'm using ath9k for an AR9300 Rev:3 chipset
-> with compat-wireless-v3.4-rc3-1, and it doesn't work as an AP in any case:
-> 
-> Stock code:
->  fails
-> Reverting [PATCH] mac80211: use common radiotap code for cooked monitors:
->  fails
-> Leaving the above in place and applying Felix's radiotap patch:
->  fails
-> 
-> I get a lot of these logs from hostapd:
-> 
-> 1335397090.413064: Could not parse ProbeReq from 00:24:44:f5:e3:c2
-> 
-> I'm using hostapd 0.7.3.  If I rewind to an earlier "stable", it works -
-> at least the AP works; there is a bug in client mode when connecting to
-> a WEP AP, which is fixed in v3.4-rc3-1.
-> 
-> Should I try switching from "stable" to "next"?
-> 
-> --
-> -bp
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+johannes
 
