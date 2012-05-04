@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:41138 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755466Ab2ENOAs (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:38628 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750747Ab2EDEi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 10:00:48 -0400
-Received: by dady13 with SMTP id y13so5951776dad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 07:00:48 -0700 (PDT)
-MIME-Version: 1.0
-Date: Mon, 14 May 2012 10:00:48 -0400
-Message-ID: <CALGY4fvUmHmFbYAH2044qCBOozOqmOCBcmB8acV-Qivd3PpFgQ@mail.gmail.com> (sfid-20120514_160052_465054_559DF6AB)
-Subject: iwlwifi regression: disconnections
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 4 May 2012 00:38:27 -0400
+Received: by pbbrp8 with SMTP id rp8so3337957pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 21:38:26 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] fix the increment of unicast/multicast counters for forwarded PREQ
+Date: Fri,  4 May 2012 12:36:55 +0800
+Message-Id: <1336106215-7431-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120504_063831_413619_21ED1BFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+Forwarded PREQ is either unicast or multicast. The appropriate counters
+should be incremented accordingly.
 
-  I have Intel 5300 card. It works fine with 3.2.16. When I try 3.3.6
-or 3.4.0rc6 I get connection drops often - once 5-10 mins. With 3.2.16
-such disconnects happen once-twice a day. AP - ath9k based router and
-it doesn't change. I'm using kernels from ubuntu kernel ppa.
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/mesh_hwmp.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-  Here is what I see in logs during disconnect:
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 503016f..f0695e5 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -603,7 +603,10 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				hopcount, ttl, cpu_to_le32(lifetime),
+ 				cpu_to_le32(metric), cpu_to_le32(preq_id),
+ 				sdata);
+-		ifmsh->mshstats.fwded_mcast++;
++		if (da != broadcast_addr)
++			ifmsh->mshstats.fwded_unicast++;
++		else
++			ifmsh->mshstats.fwded_mcast++;
+ 		ifmsh->mshstats.fwded_frames++;
+ 	}
+ }
+--
+1.7.0.4
 
-[ 1024.296004] ICMPv6 RA: ndisc_router_discovery() failed to add default route.
-[ 1259.209166] wlan1: deauthenticating from XX:XX:XX:XX:XX:XX by local
-choice (reason=3)
-[ 1259.277831] cfg80211: All devices are disconnected, going to
-restore regulatory settings
-[ 1259.277842] cfg80211: Restoring regulatory settings
-[ 1259.277851] cfg80211: Calling CRDA to update world regulatory domain
-[ 1259.293624] cfg80211: Ignoring regulatory request Set by core since
-the driver uses its own custom regulatory domain
-[ 1259.293629] cfg80211: World regulatory domain updated:
-[ 1259.293632] cfg80211:   (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-[ 1259.293636] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[ 1259.293640] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
-(300 mBi, 2000 mBm)
-[ 1259.293644] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
-(300 mBi, 2000 mBm)
-[ 1259.293647] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[ 1259.293651] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[ 1265.296158] wlan1: authenticate with XX:XX:XX:XX:XX:XX
-[ 1265.297450] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 1/3)
-[ 1265.500053] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 2/3)
-[ 1265.502380] wlan1: authenticated
-[ 1265.504080] wlan1: associate with XX:XX:XX:XX:XX:XX (try 1/3)
-[ 1265.507624] wlan1: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x411
-status=0 aid=1)
-[ 1265.507632] wlan1: associated
-
-
-I'll be happy to help with any additional information of debugging.
-Thanks!
-
--- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
