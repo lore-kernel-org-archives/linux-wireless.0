@@ -1,98 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:45408 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758277Ab2EEAMu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 20:12:50 -0400
-Date: Fri, 4 May 2012 21:12:43 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth 2012-05-04
-Message-ID: <20120505001243.GC23728@joana> (sfid-20120505_021306_651209_4FB64898)
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:61244 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750907Ab2EDGsV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 May 2012 02:48:21 -0400
+Received: by vcqp1 with SMTP id p1so1831041vcq.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 23:48:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="k1lZvvs/B4yU6o8G"
+In-Reply-To: <CAD2nsn2kgk9P3zTNP0zVRb-tx3A2p3Nb+FLsTC=TGy9MoXMwtw@mail.gmail.com>
+References: <4F83A6DE.7070109@lwfinger.net>
+	<1334201497.3788.1.camel@jlt3.sipsolutions.net>
+	<4F865155.2000202@lwfinger.net>
+	<1334202842.3788.10.camel@jlt3.sipsolutions.net>
+	<4F86FA05.5080404@lwfinger.net>
+	<1334246145.4062.0.camel@jlt3.sipsolutions.net>
+	<CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
+	<4FA0371E.9040704@lwfinger.net>
+	<20120502100012.GA8492@arm.com>
+	<1335978471.4295.3.camel@jlt3.sipsolutions.net>
+	<20120502200955.GI2450@linux.vnet.ibm.com>
+	<1336070304.5167.4.camel@jlt3.sipsolutions.net>
+	<4FA37461.6050304@lwfinger.net>
+	<CAD2nsn2kgk9P3zTNP0zVRb-tx3A2p3Nb+FLsTC=TGy9MoXMwtw@mail.gmail.com>
+Date: Fri, 4 May 2012 12:18:21 +0530
+Message-ID: <CAD2nsn1s32uTOf7PQrzuskvQaLOnwpSLghHyJN8m7QJL2DyxNQ@mail.gmail.com> (sfid-20120504_084825_553557_CBF5DDD6)
+Subject: Re: Suspicious RCU usage in mac80211
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, May 4, 2012 at 12:10 PM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> Hi Larry,
+>
+> On Fri, May 4, 2012 at 11:47 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 05/03/2012 01:38 PM, Johannes Berg wrote:
+>>>
+>>> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+>>> index 5b7053c..40d3ff4 100644
+>>> --- a/net/mac80211/agg-tx.c
+>>> +++ b/net/mac80211/agg-tx.c
+>>> @@ -421,16 +421,22 @@ static void
+>>> sta_tx_agg_session_timer_expired(unsigned long data)
+>>>        struct tid_ampdu_tx *tid_tx;
+>>>        unsigned long timeout;
+>>>
+>>> -       tid_tx = rcu_dereference_protected_tid_tx(sta, *ptid);
+>>> -       if (!tid_tx)
+>>> +       rcu_read_lock();
+>>> +       tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[*ptid]);
 
---k1lZvvs/B4yU6o8G
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Larry, Johannes seems to use rcu_dereference straight way just like in
+'sta_addba_resp_timer_expired'
+and have it protected by rcu_read_locks
 
-Hi John,
-
-A few more patch to 3.4. There is 3 fixes from Mat Martineau, a fix for
-a incoming MTU check that was breaking ERTM, still on ERTM there is a
-patch that fixes concurrency with one of our locks. His third patch is
-related to lock fixes too.
-Besides that Johan fixed a wrong bit set in the Inquiry code, Vishal
-Agarwal added a EIR fix and finally we have support for one more usb id.
-
-Please pull or let me know of any problems!
-
-	Gustavo
-
----
-
-The following changes since commit 985140369be1e886754d8ac0375dd64e4f727311:
-
-  Add Foxconn / Hon Hai IDs for btusb module (2012-04-24 11:38:41 -0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream
-
-for you to fetch changes up to 78521bdb4a42770c4c2d48317c00ec0d7f451a08:
-
-  Bluetooth: Lock the L2CAP channel when sending (2012-05-04 20:56:29 -0300)
-
-----------------------------------------------------------------
-Johan Hedberg (1):
-      Bluetooth: Fix Inquiry with RSSI event mask
-
-Mat Martineau (3):
-      Bluetooth: Fix a redundant and problematic incoming MTU check
-      Bluetooth: Restore locking semantics when looking up L2CAP channels
-      Bluetooth: Lock the L2CAP channel when sending
-
-Michael Gruetzner (1):
-      bluetooth: Add support for Foxconn/Hon Hai AR5BBU22 0489:E03C
-
-Vishal Agarwal (1):
-      Bluetooth: Fix EIR data generation for mgmt_device_found
-
- drivers/bluetooth/ath3k.c         |    6 ++++++
- drivers/bluetooth/btusb.c         |    3 +++
- include/net/bluetooth/bluetooth.h |    2 --
- include/net/bluetooth/hci_core.h  |   17 +++++++++++++++++
- net/bluetooth/hci_event.c         |    6 ++++--
- net/bluetooth/l2cap_core.c        |   30 +++---------------------------
- net/bluetooth/l2cap_sock.c        |   19 +++++++++++--------
- 7 files changed, 44 insertions(+), 39 deletions(-)
+>>> +       if (!tid_tx) {
+>>> +               rcu_read_unlock();
+>>>                return;
+>>> +       }
+>>>
+>>>        timeout = tid_tx->last_tx + TU_TO_JIFFIES(tid_tx->timeout);
+>>>        if (time_is_after_jiffies(timeout)) {
+>>>                mod_timer(&tid_tx->session_timer, timeout);
+>>> +               rcu_read_unlock();
+>>>                return;
+>>>        }
+>>>
+>>> +       rcu_read_unlock();
+>>> +
+>>>  #ifdef CONFIG_MAC80211_HT_DEBUG
+>>>        printk(KERN_DEBUG "tx session timer expired on tid %d\n",
+>>> (u16)*ptid);
+>>>  #endif
+>>
+>>
+>> This patch is the same as was proposed by Mohammed on May 1. I must have
+>> messed up the testing as I thought it failed; however, it is now working.
+>
+> honestly i am not sure about the technical details, but Johannes patch
+> seems to follow almost similar
+> what's is done in 'sta_addba_resp_timer_expired'. while thought that
+> is being also with mutex under hold
+> but the difference is  the lock is unhold before
+> ieee80211_stop_tx_ba_session is called.
+>
+>>
+>> Mohammed - I plan on submitting this to John with a "From:" from you along
+>> with your s-o-b. Is that OK. It will be submitted for inclusion in 3.5.
+>>
+>> Larry
+>>
+>
+>
+> --
+> thanks,
+> shafi
 
 
---k1lZvvs/B4yU6o8G
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPpHB7AAoJEPs3PUX4s20oDGEQAKO2ZR5q735Yi+gGkqww68It
-r1zGCHFsyGRlq4egeCwuC8bzjKIYhVz7TuC8DqN1dX0BHjtoBWtyCahktj1gOhU8
-30XccbBJNLPnTJKceTueF+/54q53mVguQiypDn+Kjfgokbpw2cZAT0yuSHfBYmYF
-4t9RL1OIdl4LM9sDsnE0zAP7dRlKLB5zaw3NdHvxJqaQtjfnp9gOyZBX8J4ccZUB
-VJ4Nhq8IJ63TvnsRKuTbwFGoVezMYXmglnNioCslsQMLLH70SVCiNTnoDiedAmjb
-KECCl5NQOPloKemm2mSIMb3xutbCfB1m8NJFcXrhrNFsjx1piRrcd//8QnDXY8pZ
-aHVuX45aqC08nnQyZAxANxDuzCKJKQJGTT/yMxYNWotA9GSAbjkM93JQ/+jB6ULd
-dVZdzLLtFP1u8aPgQfdXdixBEALDyHx8iIu8nBX86xPorhj6ckKbNE+ByNSWVqYo
-gpp9sWjjCJFwBIATl0gT1JSL3BRcKSNnJs/QLaTbUB4yQyevPqb80vyiVPau0/GM
-BM6m7RtTiUFT792t43WWd3o3FocvrKXU9EImxiJBvlBmUeXsZ05mqdKL9obAVzLV
-MYa9PDDuMwkI4vjv1isJ5V9mSqd/Wf8xrMsnTEFqUIQQohFe9RPho3RmKarFoUWh
-lw5F6CdX5WrRARSSyPAx
-=TY3/
------END PGP SIGNATURE-----
-
---k1lZvvs/B4yU6o8G--
+-- 
+thanks,
+shafi
