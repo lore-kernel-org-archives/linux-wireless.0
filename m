@@ -1,47 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51061 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932092Ab2EJK5s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 06:57:48 -0400
-Message-ID: <1336647466.4334.16.camel@jlt3.sipsolutions.net> (sfid-20120510_125752_362456_81225E06)
-Subject: Re: [PATCH 5/7] cfg80211: extend get_channel to take wdev argument
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 10 May 2012 12:57:46 +0200
-In-Reply-To: <4FAB84EA.4060306@tieto.com>
-References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
-	  <1336632282-2278-6-git-send-email-michal.kazior@tieto.com>
-	 <1336634995.4334.7.camel@jlt3.sipsolutions.net>
-	 <4FAB84EA.4060306@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:33170 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755532Ab2EDBts (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 May 2012 21:49:48 -0400
+Message-ID: <4FA33520.6080507@redhat.com> (sfid-20120504_035006_181863_E853B45E)
+Date: Fri, 04 May 2012 09:47:12 +0800
+From: Dave Young <dyoung@redhat.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com
+CC: lkml <linux-kernel@vger.kernel.org>
+Subject: iwlwifi warning (3.4.0-rc5+)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 11:05 +0200, Michal Kazior wrote:
-> Johannes Berg wrote:
-> >
-> >>   	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
-> >> -					       enum nl80211_channel_type *type);
-> >> +						 struct wireless_dev *wdev,
-> >> +						 enum nl80211_channel_type *type);
-> >
-> > Hmm. This is mostly used for monitor mode, and there we would have to
-> > return NULL anyway while using multiple channels at the same time. Is it
-> > really worth the complexity?
-> 
-> Would we really have to return NULL? With my last patch that moves 
-> oper_channel to sdata it can return proper channel.
-> 
-> But then monitor mode.. ugh.
+Hi, Annoying warnings as below in dmesg, known issue?
 
-Well, we could return something proper for everything but monitor, but
-we probably don't really care much in those cases?
-
-For monitor we should return something if there's just a single channel
-in use, and NULL otherwise I guess.
-
-johannes
-
+[   71.852336] wlan0: authentication with 00:1c:f6:62:f3:03 timed out
+[   71.856985] iwlwifi 0000:03:00.0: ACTIVATE a non DRIVER active
+station id 0 addr 00:1c:f6:62:f3:03
+[   71.857014] ------------[ cut here ]------------
+[   71.857035] WARNING: at
+drivers/net/wireless/iwlwifi/iwl-agn-sta.c:809
+iwl_send_lq_cmd+0xa1/0x115 [iwlwifi]()
+[   71.857039] Hardware name: 4236NUC
+[   71.857041] Modules linked in: fuse rfcomm bnep sunrpc vhost_net
+macvtap macvlan tun kvm_intel kvm uvcvideo videobuf2_core videodev media
+videobuf2_vmalloc videobuf2_memops btusb bluetooth pcspkr iwlwifi
+mac80211 cfg80211 e1000e wmi thinkpad_acpi rfkill firewire_ohci
+firewire_core crc_itu_t sdhci_pci [last unloaded: scsi_wait_scan]
+[   71.857084] Pid: 939, comm: kworker/u:5 Not tainted 3.4.0-rc5+ #277
+[   71.857087] Call Trace:
+[   71.857096]  [<ffffffff81031eed>] warn_slowpath_common+0x80/0x98
+[   71.857101]  [<ffffffff81031f1a>] warn_slowpath_null+0x15/0x17
+[   71.857111]  [<ffffffffa013d817>] iwl_send_lq_cmd+0xa1/0x115 [iwlwifi]
+[   71.857121]  [<ffffffffa013e380>] iwl_restore_stations+0x1b3/0x203
+[iwlwifi]
+[   71.857132]  [<ffffffffa01447d1>] iwlagn_commit_rxon+0x41a/0x604
+[iwlwifi]
+[   71.857141]  [<ffffffffa0144d67>] iwlagn_bss_info_changed+0x31c/0x50f
+[iwlwifi]
+[   71.857148]  [<ffffffff815e51f1>] ? __mutex_unlock_slowpath+0x111/0x124
+[   71.857164]  [<ffffffffa00bfcef>] ?
+ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
+[   71.857171]  [<ffffffff81078a35>] ? trace_hardirqs_on+0xd/0xf
+[   71.857181]  [<ffffffffa00b43b3>]
+ieee80211_bss_info_change_notify+0x195/0x1cb [mac80211]
+[   71.857194]  [<ffffffffa00bfcef>] ?
+ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
+[   71.857210]  [<ffffffffa00defda>]
+ieee80211_destroy_auth_data+0x7a/0x9e [mac80211]
+[   71.857226]  [<ffffffffa00e3508>] ieee80211_sta_work+0xbb/0x9a8
+[mac80211]
+[   71.857231]  [<ffffffff815e758e>] ? _raw_spin_unlock_irqrestore+0x42/0x51
+[   71.857243]  [<ffffffffa00bfcef>] ?
+ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
+[   71.857248]  [<ffffffff81078a35>] ? trace_hardirqs_on+0xd/0xf
+[   71.857260]  [<ffffffffa00bfcef>] ?
+ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
+[   71.857271]  [<ffffffffa00bff80>] ieee80211_iface_work+0x291/0x2aa
+[mac80211]
+[   71.857283]  [<ffffffffa00bfcef>] ?
+ieee80211_teardown_sdata+0xd6/0xd6 [mac80211]
+[   71.857288]  [<ffffffff81049f4b>] process_one_work+0x22b/0x393
+[   71.857293]  [<ffffffff81049ebc>] ? process_one_work+0x19c/0x393
+[   71.857298]  [<ffffffff8129eebb>] ? do_raw_spin_lock+0x69/0xea
+[   71.857304]  [<ffffffff8104a1e9>] worker_thread+0x136/0x255
+[   71.857309]  [<ffffffff8104a0b3>] ? process_one_work+0x393/0x393
+[   71.857314]  [<ffffffff81050a2c>] kthread+0x9f/0xa7
+[   71.857319]  [<ffffffff815ef474>] kernel_thread_helper+0x4/0x10
+[   71.857324]  [<ffffffff815e7870>] ? retint_restore_args+0x13/0x13
+[   71.857329]  [<ffffffff8105098d>] ? __init_kthread_worker+0x56/0x56
+[   71.857334]  [<ffffffff815ef470>] ? gs_change+0x13/0x13
+[   71.857337] ---[ end trace d7bea907d4ff9b83 ]---
+-- 
+Thanks
+Dave
