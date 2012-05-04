@@ -1,120 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:20170 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755977Ab2EGKcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 06:32:10 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Eric Lapuyade <eric.lapuyade@intel.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 05/20] NFC: Add HCI/SHDLC support to let driver check for tag presence
-Date: Mon,  7 May 2012 12:31:16 +0200
-Message-Id: <1336386691-24840-6-git-send-email-sameo@linux.intel.com> (sfid-20120507_123214_370379_CE520E33)
-In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
-References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:63880 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757577Ab2EDOgA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 May 2012 10:36:00 -0400
+Received: by vbbff1 with SMTP id ff1so2065969vbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 May 2012 07:35:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FA3DD87.7030004@lwfinger.net>
+References: <4F83A6DE.7070109@lwfinger.net>
+	<1334201497.3788.1.camel@jlt3.sipsolutions.net>
+	<4F865155.2000202@lwfinger.net>
+	<1334202842.3788.10.camel@jlt3.sipsolutions.net>
+	<4F86FA05.5080404@lwfinger.net>
+	<1334246145.4062.0.camel@jlt3.sipsolutions.net>
+	<CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
+	<4FA0371E.9040704@lwfinger.net>
+	<20120502100012.GA8492@arm.com>
+	<1335978471.4295.3.camel@jlt3.sipsolutions.net>
+	<20120502200955.GI2450@linux.vnet.ibm.com>
+	<1336070304.5167.4.camel@jlt3.sipsolutions.net>
+	<4FA37461.6050304@lwfinger.net>
+	<CAD2nsn2kgk9P3zTNP0zVRb-tx3A2p3Nb+FLsTC=TGy9MoXMwtw@mail.gmail.com>
+	<CAD2nsn1s32uTOf7PQrzuskvQaLOnwpSLghHyJN8m7QJL2DyxNQ@mail.gmail.com>
+	<4FA3DD87.7030004@lwfinger.net>
+Date: Fri, 4 May 2012 20:05:59 +0530
+Message-ID: <CAD2nsn2xMg0oUwtzYbLTv1vjJSnyHnrvhvNSCQL-4qRJ4cLPUg@mail.gmail.com> (sfid-20120504_163604_862166_C5A1DCA9)
+Subject: Re: Suspicious RCU usage in mac80211
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Lapuyade <eric.lapuyade@intel.com>
+On Fri, May 4, 2012 at 7:15 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/04/2012 01:48 AM, Mohammed Shafi wrote:
+>>
+>> On Fri, May 4, 2012 at 12:10 PM, Mohammed Shafi
+>> <shafi.wireless@gmail.com>  wrote:
+>>>
+>>> Hi Larry,
+>>>
+>>> On Fri, May 4, 2012 at 11:47 AM, Larry Finger<Larry.Finger@lwfinger.net>
+>>>  wrote:
+>>>>
+>>>> On 05/03/2012 01:38 PM, Johannes Berg wrote:
+>>>>>
+>>>>>
+>>>>> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+>>>>> index 5b7053c..40d3ff4 100644
+>>>>> --- a/net/mac80211/agg-tx.c
+>>>>> +++ b/net/mac80211/agg-tx.c
+>>>>> @@ -421,16 +421,22 @@ static void
+>>>>> sta_tx_agg_session_timer_expired(unsigned long data)
+>>>>>        struct tid_ampdu_tx *tid_tx;
+>>>>>        unsigned long timeout;
+>>>>>
+>>>>> -       tid_tx = rcu_dereference_protected_tid_tx(sta, *ptid);
+>>>>> -       if (!tid_tx)
+>>>>> +       rcu_read_lock();
+>>>>> +       tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[*ptid]);
+>>
+>>
+>> Larry, Johannes seems to use rcu_dereference straight way just like in
+>> 'sta_addba_resp_timer_expired'
+>> and have it protected by rcu_read_locks
+>
+>
+> Sorry. I missed that subtle difference. Submitted "from Johannes".
 
-Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- include/net/nfc/hci.h   |    2 ++
- include/net/nfc/shdlc.h |    2 ++
- net/nfc/hci/core.c      |   12 ++++++++++++
- net/nfc/hci/shdlc.c     |   12 ++++++++++++
- 4 files changed, 28 insertions(+), 0 deletions(-)
+no problem thanks! yeah but it seems my gmail seems to be identify those
+changes!!
 
-diff --git a/include/net/nfc/hci.h b/include/net/nfc/hci.h
-index 95fc0c2..ae04200 100644
---- a/include/net/nfc/hci.h
-+++ b/include/net/nfc/hci.h
-@@ -39,6 +39,8 @@ struct nfc_hci_ops {
- 	int (*data_exchange) (struct nfc_hci_dev *hdev,
- 			      struct nfc_target *target,
- 			      struct sk_buff *skb, struct sk_buff **res_skb);
-+	int (*check_presence)(struct nfc_hci_dev *hdev,
-+			      struct nfc_target *target);
- };
- 
- #define NFC_HCI_MAX_CUSTOM_GATES	15
-diff --git a/include/net/nfc/shdlc.h b/include/net/nfc/shdlc.h
-index 1071987..ab06afd 100644
---- a/include/net/nfc/shdlc.h
-+++ b/include/net/nfc/shdlc.h
-@@ -35,6 +35,8 @@ struct nfc_shdlc_ops {
- 	int (*data_exchange) (struct nfc_shdlc *shdlc,
- 			      struct nfc_target *target,
- 			      struct sk_buff *skb, struct sk_buff **res_skb);
-+	int (*check_presence)(struct nfc_shdlc *shdlc,
-+			      struct nfc_target *target);
- };
- 
- enum shdlc_state {
-diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
-index ef5cd5c9..f7e4f5a 100644
---- a/net/nfc/hci/core.c
-+++ b/net/nfc/hci/core.c
-@@ -574,6 +574,17 @@ static int hci_data_exchange(struct nfc_dev *nfc_dev, struct nfc_target *target,
- 	return 0;
- }
- 
-+static int hci_check_presence(struct nfc_dev *nfc_dev,
-+			      struct nfc_target *target)
-+{
-+	struct nfc_hci_dev *hdev = nfc_get_drvdata(nfc_dev);
-+
-+	if (hdev->ops->check_presence)
-+		return hdev->ops->check_presence(hdev, target);
-+
-+	return 0;
-+}
-+
- struct nfc_ops hci_nfc_ops = {
- 	.dev_up = hci_dev_up,
- 	.dev_down = hci_dev_down,
-@@ -582,6 +593,7 @@ struct nfc_ops hci_nfc_ops = {
- 	.activate_target = hci_activate_target,
- 	.deactivate_target = hci_deactivate_target,
- 	.data_exchange = hci_data_exchange,
-+	.check_presence = hci_check_presence,
- };
- 
- struct nfc_hci_dev *nfc_hci_allocate_device(struct nfc_hci_ops *ops,
-diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
-index 923bdf7..5665dc6 100644
---- a/net/nfc/hci/shdlc.c
-+++ b/net/nfc/hci/shdlc.c
-@@ -816,6 +816,17 @@ static int nfc_shdlc_data_exchange(struct nfc_hci_dev *hdev,
- 	return -EPERM;
- }
- 
-+static int nfc_shdlc_check_presence(struct nfc_hci_dev *hdev,
-+				    struct nfc_target *target)
-+{
-+	struct nfc_shdlc *shdlc = nfc_hci_get_clientdata(hdev);
-+
-+	if (shdlc->ops->check_presence)
-+		return shdlc->ops->check_presence(shdlc, target);
-+
-+	return 0;
-+}
-+
- static struct nfc_hci_ops shdlc_ops = {
- 	.open = nfc_shdlc_open,
- 	.close = nfc_shdlc_close,
-@@ -825,6 +836,7 @@ static struct nfc_hci_ops shdlc_ops = {
- 	.target_from_gate = nfc_shdlc_target_from_gate,
- 	.complete_target_discovered = nfc_shdlc_complete_target_discovered,
- 	.data_exchange = nfc_shdlc_data_exchange,
-+	.check_presence = nfc_shdlc_check_presence,
- };
- 
- struct nfc_shdlc *nfc_shdlc_allocate(struct nfc_shdlc_ops *ops,
 -- 
-1.7.9.1
-
+thanks,
+shafi
