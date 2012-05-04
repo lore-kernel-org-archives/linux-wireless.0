@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54855 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758044Ab2EHCTB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 22:19:01 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-To: <linux-wireless@vger.kernel.org>
-CC: <Larry.Finger@lwfinger.net>
-Subject: [PATCH 7/9] rtlwifi: mimic rtl_pci_stop and disable LEDs
-Date: Mon, 7 May 2012 22:18:39 -0400
-Message-ID: <1336443521-15299-8-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041910_232973_79FA4C9E)
-In-Reply-To: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
-References: <4FA212D9.5020602@gtri.gatech.edu>
- <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
+Received: from mms3.broadcom.com ([216.31.210.19]:1150 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753056Ab2EDI5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 May 2012 04:57:18 -0400
+Message-ID: <4FA399E1.5080708@broadcom.com> (sfid-20120504_105726_516261_31111428)
+Date: Fri, 4 May 2012 10:57:05 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Joe Perches" <joe@perches.com>
+cc: "David Miller" <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-05-03
+References: <20120503152206.GL9285@tuxdriver.com>
+ <20120503.130516.1008806127286088740.davem@davemloft.net>
+ <20120503.131707.112550136096227430.davem@davemloft.net>
+ <1336066186.13866.25.camel@joe2Laptop>
+In-Reply-To: <1336066186.13866.25.camel@joe2Laptop>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joshua Roys <roysjosh@gmail.com>
+On 05/03/2012 07:29 PM, Joe Perches wrote:
+> On Thu, 2012-05-03 at 13:17 -0400, David Miller wrote:
+>>  ...
+>> -		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED) {
+>> +		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED &&
+>> +				hdev->discovery.state == DISCOVERY_FINDING) {
+>>
+>> Really, we went through this a million times very recently and I'm
+>> not pulling anything into my tree that has garbage like this in it.
+> 
+> Perhaps the bluetooth folk can adopt using
+> 
+> scripts/checkpatch.pl --strict
+> 
+> or maybe checkpatch could be changed to use
+> --strict on patches in net and drivers/net
+> automatically.
 
-Signed-off-by: Joshua Roys <roysjosh@gmail.com>
----
- drivers/net/wireless/rtlwifi/usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+When the --strict option was added it made me wonder if that meant we
+should add this option in Documentation/SubmittingPatches. I do not see
+why the patches for net subsystem should have a different check level.
+So why not do --strict by default and get rid of the option flag.
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 686af86..64f7464 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -739,6 +739,7 @@ static void rtl_usb_stop(struct ieee80211_hw *hw)
- 	SET_USB_STOP(rtlusb);
- 	rtl_usb_deinit(hw);
- 	rtlpriv->cfg->ops->hw_disable(hw);
-+	rtlpriv->cfg->ops->led_control(hw, LED_CTL_POWER_OFF);
- }
- 
- static void _rtl_submit_tx_urb(struct ieee80211_hw *hw, struct urb *_urb)
--- 
-1.7.4.1
+Gr. AvS
 
