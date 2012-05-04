@@ -1,69 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56090 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753324Ab2E2HRe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 03:17:34 -0400
-Message-ID: <1338275857.4342.27.camel@jlt3.sipsolutions.net> (sfid-20120529_091751_607115_E51257D3)
-Subject: Re: [PATCH] mac80211: use offchannel queue only when supported
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 29 May 2012 09:17:37 +0200
-In-Reply-To: <1336916826-22462-1-git-send-email-eliad@wizery.com> (sfid-20120513_154740_384276_F977E330)
-References: <1336916826-22462-1-git-send-email-eliad@wizery.com>
-	 (sfid-20120513_154740_384276_F977E330)
+Received: from mga11.intel.com ([192.55.52.93]:60670 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750869Ab2EDEmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 May 2012 00:42:07 -0400
+Subject: Re: linux-next: manual merge of the net-next tree with the
+ wireless tree
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	alexander.duyck@gmail.com, alexander.h.duyck@intel.com,
+	jeffrey.t.kirsher@intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20120504132138.d0142070434e502dfcb8a980@canb.auug.org.au>
+References: <20120504132138.d0142070434e502dfcb8a980@canb.auug.org.au>
 Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 May 2012 21:35:30 -0700
+Message-ID: <1336106130.11261.5.camel@wwguy-huron> (sfid-20120504_064226_815153_95D26FE1)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-05-13 at 16:47 +0300, Eliad Peller wrote:
-> Commit 3a25a8c ("mac80211: add improved HW queue control")
-> added support for offchannel queue mapping. However, this
-> mapping is only valid when the driver supports
-> IEEE80211_HW_QUEUE_CONTROL.
+On Fri, 2012-05-04 at 13:21 +1000, Stephen Rothwell wrote:
+> Hi all,
 > 
-> Check whether the driver supports IEEE80211_HW_QUEUE_CONTROL
-> before setting the hw_queue to the mapped offchannel queue.
+> Today's linux-next merge of the net-next tree got conflicts in
+> drivers/net/wireless/iwlwifi/iwl-trans.h,
+> drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c, and
+> drivers/net/wireless/iwlwifi/iwl-agn-rx.c between commit ed90542b0ce5
+> ("iwlwifi: fix skb truesize underestimation") from the wireless tree and
+> various commits from the net-next tree.
 > 
-> (This patch doesn't have any actual effect, because
-> hw_queue is overridden in ieee80211_tx() anyway,
-> so this is merely some cleanup)
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> This was anticipated and I have applied the fix supplied by John (see
+> below just to check).  Thanks to John for this!
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Thanks everyone to help address this, it is my miss to cause all these trouble
 
-> ---
->  net/mac80211/cfg.c |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 6a82ae3..6b60593 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -2303,7 +2303,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
->  
->  	IEEE80211_SKB_CB(skb)->flags = flags;
->  
-> -	if (flags & IEEE80211_TX_CTL_TX_OFFCHAN)
-> +	if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL &&
-> +	    flags & IEEE80211_TX_CTL_TX_OFFCHAN)
->  		IEEE80211_SKB_CB(skb)->hw_queue =
->  			local->hw.offchannel_tx_hw_queue;
->  
-> @@ -2348,8 +2349,9 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
->  		/* modify cookie to prevent API mismatches */
->  		*cookie ^= 2;
->  		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
-> -		IEEE80211_SKB_CB(skb)->hw_queue =
-> -			local->hw.offchannel_tx_hw_queue;
-> +		if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
-> +			IEEE80211_SKB_CB(skb)->hw_queue =
-> +				local->hw.offchannel_tx_hw_queue;
->  		local->hw_roc_skb = skb;
->  		local->hw_roc_skb_for_status = skb;
->  		mutex_unlock(&local->mtx);
+Wey
 
 
