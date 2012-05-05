@@ -1,80 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12253 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754910Ab2E3QKb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 12:10:31 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<stable@vger.kernel.org>
-Subject: [RFC] ath9k: Fix softlockup in AR9485
-Date: Wed, 30 May 2012 21:40:22 +0530
-Message-ID: <1338394222-10274-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120530_181036_428681_2E86F6AD)
+Received: from mms3.broadcom.com ([216.31.210.19]:4337 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751996Ab2EEUk3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2012 16:40:29 -0400
+Message-ID: <4FA5902E.8080308@broadcom.com> (sfid-20120505_224033_356706_0E9EE101)
+Date: Sat, 5 May 2012 22:40:14 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "Nathan Hintz" <nlhintz@hotmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 6/6] bcma: Add flush for BCMA_RESET_CTL write
+References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
+ <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl>
+ <4FA4C2CA.8000401@broadcom.com>
+ <BLU0-SMTP3963C1457D4A5496FC3C3A3AC2D0@phx.gbl>
+ <4FA51FFE.4070100@hauke-m.de>
+In-Reply-To: <4FA51FFE.4070100@hauke-m.de>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 05/05/2012 02:41 PM, Hauke Mehrtens wrote:
+> On 05/05/2012 09:50 AM, Nathan Hintz wrote:
+>> On Sat, 2012-05-05 at 08:03 +0200, Arend van Spriel wrote:
+>>> On 05/05/2012 06:56 AM, Nathan Hintz wrote:
+>>>> Adds a missing read to flush the previous write (per the Broadcom SDK).
+>>>>
+>>>> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+>>>> ---
+>>>>  drivers/bcma/core.c |    1 +
+>>>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>>>
+>>>> diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
+>>>> index 893f6e0..c4e6deb 100644
+>>>> --- a/drivers/bcma/core.c
+>>>> +++ b/drivers/bcma/core.c
+>>>> @@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
+>>>>  	udelay(10);
+>>>>  
+>>>>  	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
+>>>> +	bcma_aread32(core, BCMA_RESET_CTL);
+>>>>  	udelay(1);
+>>>>  }
+>>>>  EXPORT_SYMBOL_GPL(bcma_core_disable);
+>>>
+>>> Hi Nathan,
+>>>
+>>> The read after write is only needed on (certain) SoCs. As bcma is not
+>>> being used just for these SoCs I suggest to make the flush conditional.
+>>> In brcmsmac we introduced "flushed write" function, which does the read
+>>> only for those SoCs.
+>>>
+>>> Gr. AvS
+>>>
+>>>
+>> There are several other occurrences in core.c that are the same
+>> implementation as what was added in this patch.  Is there a reason
+>> why the existing code isn't the way you have suggested already?
+>> Would it be better to submit your suggestion as a separate patch, or
+>> just roll it all into this one?
+>>
+>> Nathan
+> 
+> In some older versions of the Broadcom SDK (e.g. version with wl
+> 5.10.147.0 and the version brcmsmac seams to be based on) this read is
+> not included in ai_core_disable(), but in more recent versions (e.g.
+> version including wl 5.100.138.9) this read is included unconditionally.
+> 
+> @Arend For what SoCs should we read after this write?
+> When you are speaking of (certain) SoCs are you talking about this code
+> and comment from brcmsmac?
+> 
+> #ifdef CONFIG_BCM47XX
+> /*
+>  * bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
+>  * transactions. As a fix, a read after write is performed on certain places
+>  * in the code. Older chips and the newer 5357 family don't require this
+> fix.
+>  */
+> #define bcma_wflush16(c, o, v) \
+> 	({ bcma_write16(c, o, v); (void)bcma_read16(c, o); })
+> 
+> 
+> Hauke
+> 
 
-steps to recreate:
-load latest ath9k driver with AR9485
-stop the network-manager and wpa_supplicant
-bring the interface up
+Yes, Those are indeed the SoCs I meant. I was being to lazy to look it
+up, so thanks for making the effort ;-)
 
-	Call Trace:
-	[<ffffffffa0517490>] ? ath_hw_check+0xe0/0xe0 [ath9k]
-	[<ffffffff812cd1e8>] __const_udelay+0x28/0x30
-	[<ffffffffa03bae7a>] ar9003_get_pll_sqsum_dvc+0x4a/0x80 [ath9k_hw]
-	[<ffffffffa05174eb>] ath_hw_pll_work+0x5b/0xe0 [ath9k]
-	[<ffffffff810744fe>] process_one_work+0x11e/0x470
-	[<ffffffff8107530f>] worker_thread+0x15f/0x360
-	[<ffffffff810751b0>] ? manage_workers+0x230/0x230
-	[<ffffffff81079af3>] kthread+0x93/0xa0
-	[<ffffffff815fd3a4>] kernel_thread_helper+0x4/0x10
-	[<ffffffff81079a60>] ? kthread_freezable_should_stop+0x70/0x70
-	[<ffffffff815fd3a0>] ? gs_change+0x13/0x13
-
-before the STA is associated PLL4(0x1618c) always seem to dump
-zero, which causes a softlockup as we keep on polling infinitely
-PLL4's 8th bit. Once PLL4'S 8th bit is set indicates we can take
-PLL3(0x16188) readings which tells us whether PLL is locked or not.
-if the PLL is not locked we have a rx hang.
-It does not looks safe to poll PLL4 before the STA is associated.
-so it is safe to check this  rx hang after association, where we might
-have a possibility of rx hang under stress testing. digging into the
-PLL stuff did not yield anything much better.
-
-previously the register dumped 0xdeadbeef and the hw_pll_work
-itself is cancelled by ath_radio_disable(obselete)
-
-fixes https://bugzilla.redhat.com/show_bug.cgi?id=811142
-
-Reported-by: Rolf Offermanns <rolf.offermanns@gmx.net>
-Cc: stable@vger.kernel.org
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dfa78e8..a03ad3e 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -970,6 +970,9 @@ void ath_hw_pll_work(struct work_struct *work)
- 					    hw_pll_work.work);
- 	u32 pll_sqsum;
- 
-+	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF))
-+		return;
-+
- 	if (AR_SREV_9485(sc->sc_ah)) {
- 
- 		ath9k_ps_wakeup(sc);
--- 
-1.7.0.4
+Gr. AvS
 
