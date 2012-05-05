@@ -1,88 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:64704 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753701Ab2E1LTj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 07:19:39 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 06/14] cfg80211: introduce cfg80211_get_used_channel
-Date: Mon, 28 May 2012 13:18:54 +0200
-Message-ID: <1338203942-5667-7-git-send-email-michal.kazior@tieto.com> (sfid-20120528_132034_751387_8FE7EE5C)
-In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+Received: from blu0-omc2-s17.blu0.hotmail.com ([65.55.111.92]:45307 "EHLO
+	blu0-omc2-s17.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750789Ab2EEE51 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2012 00:57:27 -0400
+Message-ID: <BLU0-SMTP19859353614C6D8E5AA91CCAC2D0@phx.gbl> (sfid-20120505_065731_179056_C0AD62DB)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH v3 5/6] bcma: Add __devexit to bcma_host_pci_remove
+Date: Fri, 4 May 2012 21:56:35 -0700
+In-Reply-To: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
+References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helper function for finding out which channel is
-used by a given interface.
+Add missing __devexit attribute to bcma_host_pci_remove.
 
-Will be used for matching interface combinations.
-
-Change-Id: Ic9e5a68d66aaa26e73901648b04a6e9b465430d0
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
 ---
- net/wireless/chan.c |   31 +++++++++++++++++++++++++++++++
- net/wireless/core.h |    4 ++++
- 2 files changed, 35 insertions(+), 0 deletions(-)
+ drivers/bcma/host_pci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index c1999e4..45b28ab 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -92,3 +92,34 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
- 
- 	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
- }
-+
-+struct ieee80211_channel *
-+cfg80211_get_used_channel(struct cfg80211_registered_device *rdev,
-+			  struct wireless_dev *wdev)
-+{
-+	ASSERT_RDEV_LOCK(rdev);
-+	ASSERT_WDEV_LOCK(wdev);
-+
-+	switch (wdev->iftype) {
-+	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_STATION:
-+	case NL80211_IFTYPE_P2P_CLIENT:
-+		if (wdev->current_bss)
-+			return wdev->current_bss->pub.channel;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_MESH_POINT:
-+		return wdev->channel;
-+	case NL80211_IFTYPE_MONITOR:
-+	case NL80211_IFTYPE_AP_VLAN:
-+	case NL80211_IFTYPE_WDS:
-+		/* these interface types don't really have a channel */
-+		return NULL;
-+	case NL80211_IFTYPE_UNSPECIFIED:
-+	case NUM_NL80211_IFTYPES:
-+		WARN_ON(1);
-+	}
-+
-+	return NULL;
-+}
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index a366ffd..54c24de 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -446,6 +446,10 @@ cfg80211_can_add_interface(struct cfg80211_registered_device *rdev,
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index e3928d6..915ab2f 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -222,7 +222,7 @@ err_kfree_bus:
+ 	return err;
  }
  
- struct ieee80211_channel *
-+cfg80211_get_used_channel(struct cfg80211_registered_device *rdev,
-+			  struct wireless_dev *wdev);
-+
-+struct ieee80211_channel *
- rdev_freq_to_chan(struct cfg80211_registered_device *rdev,
- 		  int freq, enum nl80211_channel_type channel_type);
- int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+-static void bcma_host_pci_remove(struct pci_dev *dev)
++static void __devexit bcma_host_pci_remove(struct pci_dev *dev)
+ {
+ 	struct bcma_bus *bus = pci_get_drvdata(dev);
+ 
+@@ -277,7 +277,7 @@ static struct pci_driver bcma_pci_bridge_driver = {
+ 	.name = "bcma-pci-bridge",
+ 	.id_table = bcma_pci_bridge_tbl,
+ 	.probe = bcma_host_pci_probe,
+-	.remove = bcma_host_pci_remove,
++	.remove = __devexit_p(bcma_host_pci_remove),
+ 	.driver.pm = BCMA_PM_OPS,
+ };
+ 
 -- 
-1.7.0.4
+1.7.7.6
 
