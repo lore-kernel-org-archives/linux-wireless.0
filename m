@@ -1,126 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41677 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759249Ab2EPV4H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 17:56:07 -0400
-Message-ID: <1337204599.18519.22.camel@jlt3.sipsolutions.net> (sfid-20120516_235611_735261_C13DE6EE)
-Subject: [PATCH] mac80211: simplify association HT parameters
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 16 May 2012 23:43:19 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:1403 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758440Ab2EEB1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 May 2012 21:27:50 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/11] brcmfmac: remove function brcmf_sdcard_regfail
+Date: Fri, 4 May 2012 18:27:37 -0700
+Message-ID: <1336181258-7305-11-git-send-email-frankyl@broadcom.com> (sfid-20120505_032830_636723_2098A1FB)
+In-Reply-To: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
+References: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The new interface brcmf_sdio_regr/w provides result of access
+attempts. It is no longer necessary to use dedicated variable
+and function to provide enquiry for failure.
 
-Instead of passing around the entire HT information
-IE, extract only the HT parameters field and disable
-HT if the HT information IE isn't present and well-
-formed.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
-I'm convinced I sent this, seems it got lost somewhere :)
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    8 +---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   46 ++++++++++----------
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    4 --
+ 3 files changed, 24 insertions(+), 34 deletions(-)
 
- net/mac80211/ieee80211_i.h |    3 ++-
- net/mac80211/mlme.c        |   26 +++++++++++---------------
- 2 files changed, 13 insertions(+), 16 deletions(-)
-
---- a/net/mac80211/ieee80211_i.h	2012-05-15 20:14:44.000000000 +0200
-+++ b/net/mac80211/ieee80211_i.h	2012-05-15 20:14:51.000000000 +0200
-@@ -399,7 +399,6 @@ struct ieee80211_mgd_auth_data {
- struct ieee80211_mgd_assoc_data {
- 	struct cfg80211_bss *bss;
- 	const u8 *supp_rates;
--	const u8 *ht_operation_ie;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index cd5f7d7..aec1bd6 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -237,8 +237,7 @@ brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 						       func_num, addr, data, 4);
+ 	} while (ret != 0 && retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
  
- 	unsigned long timeout;
- 	int tries;
-@@ -414,6 +413,8 @@ struct ieee80211_mgd_assoc_data {
- 	bool sent_assoc;
- 	bool synced;
+-	sdiodev->regfail = (ret != 0);
+-	if (sdiodev->regfail)
++	if (ret != 0)
+ 		brcmf_dbg(ERROR, "failed with %d\n", ret);
  
-+	u8 ap_ht_param;
-+
- 	size_t ie_len;
- 	u8 ie[];
- };
---- a/net/mac80211/mlme.c	2012-05-15 20:14:44.000000000 +0200
-+++ b/net/mac80211/mlme.c	2012-05-15 20:14:51.000000000 +0200
-@@ -258,12 +258,11 @@ static int ieee80211_compatible_rates(co
+ 	return ret;
+@@ -298,11 +297,6 @@ void brcmf_sdio_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		*ret = retval;
  }
  
- static void ieee80211_add_ht_ie(struct ieee80211_sub_if_data *sdata,
--				struct sk_buff *skb, const u8 *ht_oper_ie,
-+				struct sk_buff *skb, u8 ap_ht_param,
- 				struct ieee80211_supported_band *sband,
- 				struct ieee80211_channel *channel,
- 				enum ieee80211_smps_mode smps)
+-bool brcmf_sdcard_regfail(struct brcmf_sdio_dev *sdiodev)
+-{
+-	return sdiodev->regfail;
+-}
+-
+ static int brcmf_sdcard_recv_prepare(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 				     uint flags, uint width, u32 *addr)
  {
--	struct ieee80211_ht_operation *ht_oper;
- 	u8 *pos;
- 	u32 flags = channel->flags;
- 	u16 cap;
-@@ -271,21 +270,13 @@ static void ieee80211_add_ht_ie(struct i
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 5338f57..1dbf2be 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -1026,9 +1026,9 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 	/* Wait until the packet has been flushed (device/FIFO stable) */
+ 	for (lastrbc = retries = 0xffff; retries > 0; retries--) {
+ 		hi = brcmf_sdio_regrb(bus->sdiodev,
+-				      SBSDIO_FUNC1_RFRAMEBCHI, NULL);
++				      SBSDIO_FUNC1_RFRAMEBCHI, &err);
+ 		lo = brcmf_sdio_regrb(bus->sdiodev,
+-				      SBSDIO_FUNC1_RFRAMEBCLO, NULL);
++				      SBSDIO_FUNC1_RFRAMEBCLO, &err);
+ 		bus->f1regdata += 2;
  
- 	BUILD_BUG_ON(sizeof(ht_cap) != sizeof(sband->ht_cap));
+ 		if ((hi == 0) && (lo == 0))
+@@ -1060,7 +1060,7 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
+ 	bus->nextlen = 0;
  
--	if (!ht_oper_ie)
--		return;
--
--	if (ht_oper_ie[1] < sizeof(struct ieee80211_ht_operation))
--		return;
--
- 	memcpy(&ht_cap, &sband->ht_cap, sizeof(ht_cap));
- 	ieee80211_apply_htcap_overrides(sdata, &ht_cap);
+ 	/* If we can't reach the device, signal failure */
+-	if (err || brcmf_sdcard_regfail(bus->sdiodev))
++	if (err)
+ 		bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
+ }
  
--	ht_oper = (struct ieee80211_ht_operation *)(ht_oper_ie + 2);
--
- 	/* determine capability flags */
- 	cap = ht_cap.cap;
+@@ -2221,10 +2221,11 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 		/* In poll mode, need to check for other events */
+ 		if (!bus->intr && cnt) {
+ 			/* Check device status, signal pending interrupt */
+-			r_sdreg32(bus, &intstatus,
+-				  offsetof(struct sdpcmd_regs, intstatus));
++			ret = r_sdreg32(bus, &intstatus,
++					offsetof(struct sdpcmd_regs,
++						 intstatus));
+ 			bus->f2txdata++;
+-			if (brcmf_sdcard_regfail(bus->sdiodev))
++			if (ret != 0)
+ 				break;
+ 			if (intstatus & bus->hostintmask)
+ 				bus->ipend = true;
+@@ -2347,6 +2348,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
+ 	uint framecnt = 0;	/* Temporary counter of tx/rx frames */
+ 	bool rxdone = true;	/* Flag for no more read data */
+ 	bool resched = false;	/* Flag indicating resched wanted */
++	int err;
  
--	switch (ht_oper->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
-+	switch (ap_ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
- 	case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
- 		if (flags & IEEE80211_CHAN_NO_HT40PLUS) {
- 			cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-@@ -509,7 +500,7 @@ static void ieee80211_send_assoc(struct
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -2357,7 +2359,6 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
+ 
+ 	/* If waiting for HTAVAIL, check status */
+ 	if (bus->clkstate == CLK_PENDING) {
+-		int err;
+ 		u8 clkctl, devctl = 0;
+ 
+ #ifdef DEBUG
+@@ -2414,16 +2415,17 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
+ 	/* Pending interrupt indicates new device status */
+ 	if (bus->ipend) {
+ 		bus->ipend = false;
+-		r_sdreg32(bus, &newstatus,
+-			  offsetof(struct sdpcmd_regs, intstatus));
++		err = r_sdreg32(bus, &newstatus,
++				offsetof(struct sdpcmd_regs, intstatus));
+ 		bus->f1regdata++;
+-		if (brcmf_sdcard_regfail(bus->sdiodev))
++		if (err != 0)
+ 			newstatus = 0;
+ 		newstatus &= bus->hostintmask;
+ 		bus->fcstate = !!(newstatus & I_HMB_FC_STATE);
+ 		if (newstatus) {
+-			w_sdreg32(bus, newstatus,
+-				  offsetof(struct sdpcmd_regs, intstatus));
++			err = w_sdreg32(bus, newstatus,
++					offsetof(struct sdpcmd_regs,
++						 intstatus));
+ 			bus->f1regdata++;
+ 		}
  	}
+@@ -2438,11 +2440,11 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
+ 	 */
+ 	if (intstatus & I_HMB_FC_CHANGE) {
+ 		intstatus &= ~I_HMB_FC_CHANGE;
+-		w_sdreg32(bus, I_HMB_FC_CHANGE,
+-			  offsetof(struct sdpcmd_regs, intstatus));
++		err = w_sdreg32(bus, I_HMB_FC_CHANGE,
++				offsetof(struct sdpcmd_regs, intstatus));
  
- 	if (!(ifmgd->flags & IEEE80211_STA_DISABLE_11N))
--		ieee80211_add_ht_ie(sdata, skb, assoc_data->ht_operation_ie,
-+		ieee80211_add_ht_ie(sdata, skb, assoc_data->ap_ht_param,
- 				    sband, local->oper_channel, ifmgd->ap_smps);
+-		r_sdreg32(bus, &newstatus,
+-			  offsetof(struct sdpcmd_regs, intstatus));
++		err = r_sdreg32(bus, &newstatus,
++				offsetof(struct sdpcmd_regs, intstatus));
+ 		bus->f1regdata += 2;
+ 		bus->fcstate =
+ 		    !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE));
+@@ -2513,17 +2515,17 @@ clkwait:
+ 			brcmf_sdcard_abort(bus->sdiodev, SDIO_FUNC_2);
  
- 	/* if present, add any custom non-vendor IEs that go after HT */
-@@ -3276,7 +3267,7 @@ int ieee80211_mgd_assoc(struct ieee80211
- 	struct ieee80211_bss *bss = (void *)req->bss->priv;
- 	struct ieee80211_mgd_assoc_data *assoc_data;
- 	struct ieee80211_supported_band *sband;
--	const u8 *ssidie;
-+	const u8 *ssidie, *ht_ie;
- 	int i, err;
+ 			brcmf_sdio_regwb(bus->sdiodev, SBSDIO_FUNC1_FRAMECTRL,
+-					 SFC_WF_TERM, NULL);
++					 SFC_WF_TERM, &err);
+ 			bus->f1regdata++;
  
- 	ssidie = ieee80211_bss_get_ie(req->bss, WLAN_EID_SSID);
-@@ -3363,8 +3354,13 @@ int ieee80211_mgd_assoc(struct ieee80211
- 			  (local->hw.queues >= IEEE80211_NUM_ACS);
- 	assoc_data->supp_rates = bss->supp_rates;
- 	assoc_data->supp_rates_len = bss->supp_rates_len;
--	assoc_data->ht_operation_ie =
--		ieee80211_bss_get_ie(req->bss, WLAN_EID_HT_OPERATION);
-+
-+	ht_ie = ieee80211_bss_get_ie(req->bss, WLAN_EID_HT_OPERATION);
-+	if (ht_ie && ht_ie[1] >= sizeof(struct ieee80211_ht_operation))
-+		assoc_data->ap_ht_param =
-+			((struct ieee80211_ht_operation *)(ht_ie + 2))->ht_param;
-+	else
-+		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
+ 			for (i = 0; i < 3; i++) {
+ 				u8 hi, lo;
+ 				hi = brcmf_sdio_regrb(bus->sdiodev,
+ 						      SBSDIO_FUNC1_WFRAMEBCHI,
+-						      NULL);
++						      &err);
+ 				lo = brcmf_sdio_regrb(bus->sdiodev,
+ 						      SBSDIO_FUNC1_WFRAMEBCLO,
+-						      NULL);
++						      &err);
+ 				bus->f1regdata += 2;
+ 				if ((hi == 0) && (lo == 0))
+ 					break;
+@@ -2550,10 +2552,8 @@ clkwait:
+ 		 else await next interrupt */
+ 	/* On failed register access, all bets are off:
+ 		 no resched or interrupts */
+-	if ((bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) ||
+-	    brcmf_sdcard_regfail(bus->sdiodev)) {
+-		brcmf_dbg(ERROR, "failed backplane access over SDIO, halting operation %d\n",
+-			  brcmf_sdcard_regfail(bus->sdiodev));
++	if ((bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) || (err != 0)) {
++		brcmf_dbg(ERROR, "failed backplane access over SDIO, halting operation\n");
+ 		bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
+ 		bus->intstatus = 0;
+ 	} else if (bus->clkstate == CLK_PENDING) {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index a147535..6d2e665 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -146,7 +146,6 @@ struct brcmf_sdio_dev {
+ 	u8 num_funcs;			/* Supported funcs on client */
+ 	u32 func_cis_ptr[SDIOD_MAX_IOFUNCS];
+ 	u32 sbwad;			/* Save backplane window address */
+-	bool regfail;			/* status of last reg_r/w call */
+ 	void *bus;
+ 	atomic_t suspend;		/* suspend flag */
+ 	wait_queue_head_t request_byte_wait;
+@@ -176,9 +175,6 @@ extern void brcmf_sdio_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ extern void brcmf_sdio_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 			     u32 data, int *ret);
  
- 	if (bss->wmm_used && bss->uapsd_supported &&
- 	    (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_UAPSD)) {
+-/* Indicate if last reg read/write failed */
+-extern bool brcmf_sdcard_regfail(struct brcmf_sdio_dev *sdiodev);
+-
+ /* Buffer transfer to/from device (client) core via cmd53.
+  *   fn:       function number
+  *   addr:     backplane address (i.e. >= regsva from attach)
+-- 
+1.7.9.5
 
 
