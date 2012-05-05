@@ -1,84 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:58630 "HELO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with SMTP id S1752728Ab2E2Wj3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 18:39:29 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] cfg80211: use sme_state in ibss start/join path
-Date: Tue, 29 May 2012 15:39:06 -0700
-Message-Id: <1338331146-13540-3-git-send-email-bzhao@marvell.com> (sfid-20120530_003943_184809_FFE847E8)
-In-Reply-To: <1338331146-13540-1-git-send-email-bzhao@marvell.com>
-References: <1338331146-13540-1-git-send-email-bzhao@marvell.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1809 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751519Ab2EEGEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2012 02:04:14 -0400
+Message-ID: <4FA4C2CA.8000401@broadcom.com> (sfid-20120505_080417_798344_A3AF9EC1)
+Date: Sat, 5 May 2012 08:03:54 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Nathan Hintz" <nlhintz@hotmail.com>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	hauke@hauke-m.de
+Subject: Re: [PATCH v3 6/6] bcma: Add flush for BCMA_RESET_CTL write
+References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
+ <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl>
+In-Reply-To: <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 05/05/2012 06:56 AM, Nathan Hintz wrote:
+> Adds a missing read to flush the previous write (per the Broadcom SDK).
+> 
+> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+> ---
+>  drivers/bcma/core.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
+> index 893f6e0..c4e6deb 100644
+> --- a/drivers/bcma/core.c
+> +++ b/drivers/bcma/core.c
+> @@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
+>  	udelay(10);
+>  
+>  	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
+> +	bcma_aread32(core, BCMA_RESET_CTL);
+>  	udelay(1);
+>  }
+>  EXPORT_SYMBOL_GPL(bcma_core_disable);
 
-CFG80211_DEV_WARN_ON() at "net/wireless/ibss.c line 63"
-is unnecessarily triggered even after successful connection,
-when cfg80211_ibss_joined() is called by driver inside
-.join_ibss handler.
+Hi Nathan,
 
-This patch fixes the problem by changing 'sme_state' in ibss path
-and having WARN_ON() check for 'sme_state' similar to infra
-association.
+The read after write is only needed on (certain) SoCs. As bcma is not
+being used just for these SoCs I suggest to make the flush conditional.
+In brcmsmac we introduced "flushed write" function, which does the read
+only for those SoCs.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- net/wireless/ibss.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index 30f20fe..3d0930d 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -42,6 +42,7 @@ void __cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid)
- 	cfg80211_hold_bss(bss_from_pub(bss));
- 	wdev->current_bss = bss_from_pub(bss);
- 
-+	wdev->sme_state = CFG80211_SME_CONNECTED;
- 	cfg80211_upload_connect_keys(wdev);
- 
- 	nl80211_send_ibss_bssid(wiphy_to_dev(wdev->wiphy), dev, bssid,
-@@ -60,7 +61,7 @@ void cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid, gfp_t gfp)
- 	struct cfg80211_event *ev;
- 	unsigned long flags;
- 
--	CFG80211_DEV_WARN_ON(!wdev->ssid_len);
-+	CFG80211_DEV_WARN_ON(wdev->sme_state != CFG80211_SME_CONNECTING);
- 
- 	ev = kzalloc(sizeof(*ev), gfp);
- 	if (!ev)
-@@ -115,9 +116,11 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- #ifdef CONFIG_CFG80211_WEXT
- 	wdev->wext.ibss.channel = params->channel;
- #endif
-+	wdev->sme_state = CFG80211_SME_CONNECTING;
- 	err = rdev->ops->join_ibss(&rdev->wiphy, dev, params);
- 	if (err) {
- 		wdev->connect_keys = NULL;
-+		wdev->sme_state = CFG80211_SME_IDLE;
- 		return err;
- 	}
- 
-@@ -169,6 +172,7 @@ static void __cfg80211_clear_ibss(struct net_device *dev, bool nowext)
- 	}
- 
- 	wdev->current_bss = NULL;
-+	wdev->sme_state = CFG80211_SME_IDLE;
- 	wdev->ssid_len = 0;
- #ifdef CONFIG_CFG80211_WEXT
- 	if (!nowext)
--- 
-1.7.0.2
+Gr. AvS
 
