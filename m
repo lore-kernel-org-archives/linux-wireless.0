@@ -1,273 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1334 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754856Ab2EEB1p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 21:27:45 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 02/11] brcmfmac: remove unused parameter of
- brcmf_sdcard_reg_write
-Date: Fri, 4 May 2012 18:27:29 -0700
-Message-ID: <1336181258-7305-3-git-send-email-frankyl@broadcom.com> (sfid-20120505_032825_018747_FD0061D2)
-In-Reply-To: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
-References: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:54313 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753101Ab2EEHUo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2012 03:20:44 -0400
+Received: by qadb17 with SMTP id b17so1476459qad.19
+        for <linux-wireless@vger.kernel.org>; Sat, 05 May 2012 00:20:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CABF+-6U8100oTnpaU=anEYtzkktPLvNqp_bm5M+7Yp_Hajv3+w@mail.gmail.com>
+References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
+	<4FA15A70.2020108@stericsson.com>
+	<CABF+-6XbdG_QMa0iQJMpbOsr4bXCq4mDEB6unkM8jxNGWYwFyQ@mail.gmail.com>
+	<4FA23DA0.3030207@stericsson.com>
+	<CABF+-6WjnVxC55iGHwoaL2zJ+_6oLbkVjaqwwLLrQzZxKwwWxw@mail.gmail.com>
+	<4FA2BF0A.4040307@stericsson.com>
+	<CABF+-6UgQek50abaLnUsBh3LEccG2Pd1vFQDiLyxgcky-JN4Ag@mail.gmail.com>
+	<CAFED-jkzELRHGy7pwqDznLqPzhandwZLQEoCEFvw5F6ogMxiYA@mail.gmail.com>
+	<CABF+-6WvgwjkrD6WG8GxcXQ+JM7szugFWZbLN6ssJ8589Q7-BA@mail.gmail.com>
+	<CABF+-6U8100oTnpaU=anEYtzkktPLvNqp_bm5M+7Yp_Hajv3+w@mail.gmail.com>
+Date: Sat, 5 May 2012 09:20:43 +0200
+Message-ID: <CAFED-jn+L0oik5aNtz5xukiYn=W7McXp1sB=+SLPHj=Gdk5SBA@mail.gmail.com> (sfid-20120505_092047_925115_E39D919D)
+Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Kevin Groeneveld <kgroeneveld@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The size parameter for brcmf_sdcard_reg_write is always 4. Remove it
-to make the code cleaner.
+2012/5/4 Kevin Groeneveld <kgroeneveld@gmail.com>:
+>>> So, you should configure this in cw1200_add_interface() for new
+>>> compat-wireless:
+>>>
+>>>        vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
+>>>                             IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+>
+> I tried adding the above code today and I can now connect in station mode.
+>
+> While connected in station mode I get a lot of the following warnings
+> in the log:
+>
+> ieee80211 phy1: Slowpath: tailroom is not big enough. Req: 8, got: 0.
+>
+> Is that anything to worry about?
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   16 ++++----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 +--
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   39 ++++++++++----------
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    3 +-
- 4 files changed, 29 insertions(+), 34 deletions(-)
+Yes we have patch for this in mac80211. I can send you on monday.
+cw1200 firmware required pre-allocated IVs.
+Without that performance will be very poor.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 9966cf2..7c9bc2b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -254,15 +254,14 @@ u32 brcmf_sdcard_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr)
- 	}
- }
- 
--u32 brcmf_sdcard_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr, uint size,
--			   u32 data)
-+u32 brcmf_sdcard_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data)
- {
- 	int status;
- 	uint bar0 = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
- 	int err = 0;
- 
--	brcmf_dbg(INFO, "fun = 1, addr = 0x%x, uint%ddata = 0x%x\n",
--		  addr, size * 8, data);
-+	brcmf_dbg(INFO, "fun = 1, addr = 0x%x, uint32data = 0x%x\n",
-+		  addr, data);
- 
- 	if (bar0 != sdiodev->sbwad) {
- 		err = brcmf_sdcard_set_sbaddr_window(sdiodev, bar0);
-@@ -273,18 +272,17 @@ u32 brcmf_sdcard_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr, uint size,
- 	}
- 
- 	addr &= SBSDIO_SB_OFT_ADDR_MASK;
--	if (size == 4)
--		addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 	status =
- 	    brcmf_sdioh_request_word(sdiodev, SDIOH_WRITE, SDIO_FUNC_1,
--				     addr, &data, size);
-+				     addr, &data, 4);
- 	sdiodev->regfail = (status != 0);
- 
- 	if (status == 0)
- 		return 0;
- 
--	brcmf_dbg(ERROR, "error writing 0x%08x to addr 0x%04x size %d\n",
--		  data, addr, size);
-+	brcmf_dbg(ERROR, "error writing 0x%08x to addr 0x%04x\n",
-+		  data, addr);
- 	return 0xFFFFFFFF;
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 0d1f3b8..7ed215d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -656,7 +656,7 @@ w_sdreg32(struct brcmf_sdio *bus, u32 regval, u32 reg_offset, u32 *retryvar)
- 	do {
- 		brcmf_sdcard_reg_write(bus->sdiodev,
- 				       bus->ci->c_inf[idx].base + reg_offset,
--				       sizeof(u32), regval);
-+				       regval);
- 	} while (brcmf_sdcard_regfail(bus->sdiodev) &&
- 		 (++(*retryvar) <= retry_limit));
- 	if (*retryvar) {
-@@ -3782,8 +3782,7 @@ brcmf_sdbrcm_probe_attach(struct brcmf_sdio *bus, u32 regsva)
- 	reg_addr = bus->ci->c_inf[idx].base +
- 		   offsetof(struct sdpcmd_regs, corecontrol);
- 	reg_val = brcmf_sdcard_reg_read(bus->sdiodev, reg_addr);
--	brcmf_sdcard_reg_write(bus->sdiodev, reg_addr, sizeof(u32),
--			       reg_val | CC_BPRESEN);
-+	brcmf_sdcard_reg_write(bus->sdiodev, reg_addr, reg_val | CC_BPRESEN);
- 
- 	brcmu_pktq_init(&bus->txq, (PRIOMASK + 1), TXQLEN);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index b5688a7..3ced613 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -171,7 +171,7 @@ brcmf_sdio_sb_coredisable(struct brcmf_sdio_dev *sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbtmstatelow));
- 		brcmf_sdcard_reg_write(sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbtmstatelow),
--				4, regdata | SSB_TMSLOW_REJECT);
-+				regdata | SSB_TMSLOW_REJECT);
- 
- 		regdata = brcmf_sdcard_reg_read(sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbtmstatelow));
-@@ -192,7 +192,7 @@ brcmf_sdio_sb_coredisable(struct brcmf_sdio_dev *sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbimstate)) |
- 				SSB_IMSTATE_REJECT;
- 			brcmf_sdcard_reg_write(sdiodev,
--				CORE_SB(ci->c_inf[idx].base, sbimstate), 4,
-+				CORE_SB(ci->c_inf[idx].base, sbimstate),
- 				regdata);
- 			regdata = brcmf_sdcard_reg_read(sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbimstate));
-@@ -204,7 +204,7 @@ brcmf_sdio_sb_coredisable(struct brcmf_sdio_dev *sdiodev,
- 
- 		/* set reset and reject while enabling the clocks */
- 		brcmf_sdcard_reg_write(sdiodev,
--			CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4,
-+			CORE_SB(ci->c_inf[idx].base, sbtmstatelow),
- 			(SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK |
- 			SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET));
- 		regdata = brcmf_sdcard_reg_read(sdiodev,
-@@ -219,14 +219,14 @@ brcmf_sdio_sb_coredisable(struct brcmf_sdio_dev *sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbimstate)) &
- 				~SSB_IMSTATE_REJECT;
- 			brcmf_sdcard_reg_write(sdiodev,
--				CORE_SB(ci->c_inf[idx].base, sbimstate), 4,
-+				CORE_SB(ci->c_inf[idx].base, sbimstate),
- 				regdata);
- 		}
- 	}
- 
- 	/* leave reset and reject asserted */
- 	brcmf_sdcard_reg_write(sdiodev,
--		CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4,
-+		CORE_SB(ci->c_inf[idx].base, sbtmstatelow),
- 		(SSB_TMSLOW_REJECT | SSB_TMSLOW_RESET));
- 	udelay(1);
- }
-@@ -246,14 +246,13 @@ brcmf_sdio_ai_coredisable(struct brcmf_sdio_dev *sdiodev,
- 	if ((regdata & BCMA_RESET_CTL_RESET) != 0)
- 		return;
- 
--	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_IOCTL,
--			       4, 0);
-+	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_IOCTL, 0);
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 					ci->c_inf[idx].wrapbase+BCMA_IOCTL);
- 	udelay(10);
- 
- 	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_RESET_CTL,
--			       4, BCMA_RESET_CTL_RESET);
-+			       BCMA_RESET_CTL_RESET);
- 	udelay(1);
- }
- 
-@@ -278,7 +277,7 @@ brcmf_sdio_sb_resetcore(struct brcmf_sdio_dev *sdiodev,
- 	 * forcing them on throughout the core
- 	 */
- 	brcmf_sdcard_reg_write(sdiodev,
--			CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4,
-+			CORE_SB(ci->c_inf[idx].base, sbtmstatelow),
- 			SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK | SSB_TMSLOW_RESET);
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbtmstatelow));
-@@ -289,18 +288,18 @@ brcmf_sdio_sb_resetcore(struct brcmf_sdio_dev *sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbtmstatehigh));
- 	if (regdata & SSB_TMSHIGH_SERR)
- 		brcmf_sdcard_reg_write(sdiodev,
--			CORE_SB(ci->c_inf[idx].base, sbtmstatehigh), 4, 0);
-+			CORE_SB(ci->c_inf[idx].base, sbtmstatehigh), 0);
- 
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbimstate));
- 	if (regdata & (SSB_IMSTATE_IBE | SSB_IMSTATE_TO))
- 		brcmf_sdcard_reg_write(sdiodev,
--			CORE_SB(ci->c_inf[idx].base, sbimstate), 4,
-+			CORE_SB(ci->c_inf[idx].base, sbimstate),
- 			regdata & ~(SSB_IMSTATE_IBE | SSB_IMSTATE_TO));
- 
- 	/* clear reset and allow it to propagate throughout the core */
- 	brcmf_sdcard_reg_write(sdiodev,
--		CORE_SB(ci->c_inf[idx].base, sbtmstatelow), 4,
-+		CORE_SB(ci->c_inf[idx].base, sbtmstatelow),
- 		SSB_TMSLOW_FGC | SSB_TMSLOW_CLOCK);
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbtmstatelow));
-@@ -309,7 +308,7 @@ brcmf_sdio_sb_resetcore(struct brcmf_sdio_dev *sdiodev,
- 	/* leave clock enabled */
- 	brcmf_sdcard_reg_write(sdiodev,
- 			       CORE_SB(ci->c_inf[idx].base, sbtmstatelow),
--			       4, SSB_TMSLOW_CLOCK);
-+			       SSB_TMSLOW_CLOCK);
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 				CORE_SB(ci->c_inf[idx].base, sbtmstatelow));
- 	udelay(1);
-@@ -329,15 +328,15 @@ brcmf_sdio_ai_resetcore(struct brcmf_sdio_dev *sdiodev,
- 
- 	/* now do initialization sequence */
- 	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_IOCTL,
--			       4, BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
-+			       BCMA_IOCTL_FGC | BCMA_IOCTL_CLK);
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 					ci->c_inf[idx].wrapbase+BCMA_IOCTL);
- 	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_RESET_CTL,
--			       4, 0);
-+			       0);
- 	udelay(1);
- 
- 	brcmf_sdcard_reg_write(sdiodev, ci->c_inf[idx].wrapbase+BCMA_IOCTL,
--			       4, BCMA_IOCTL_CLK);
-+			       BCMA_IOCTL_CLK);
- 	regdata = brcmf_sdcard_reg_read(sdiodev,
- 					ci->c_inf[idx].wrapbase+BCMA_IOCTL);
- 	udelay(1);
-@@ -522,9 +521,9 @@ int brcmf_sdio_chip_attach(struct brcmf_sdio_dev *sdiodev,
- 	brcmf_sdio_chip_buscoresetup(sdiodev, ci);
- 
- 	brcmf_sdcard_reg_write(sdiodev,
--		CORE_CC_REG(ci->c_inf[0].base, gpiopullup), 4, 0);
-+		CORE_CC_REG(ci->c_inf[0].base, gpiopullup), 0);
- 	brcmf_sdcard_reg_write(sdiodev,
--		CORE_CC_REG(ci->c_inf[0].base, gpiopulldown), 4, 0);
-+		CORE_CC_REG(ci->c_inf[0].base, gpiopulldown), 0);
- 
- 	*ci_ptr = ci;
- 	return 0;
-@@ -591,7 +590,7 @@ brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
- 
- 		brcmf_sdcard_reg_write(sdiodev,
- 			CORE_CC_REG(ci->c_inf[0].base, chipcontrol_addr),
--			4, 1);
-+			1);
- 		cc_data_temp = brcmf_sdcard_reg_read(sdiodev,
- 			CORE_CC_REG(ci->c_inf[0].base, chipcontrol_addr));
- 		cc_data_temp &= ~str_mask;
-@@ -599,7 +598,7 @@ brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
- 		cc_data_temp |= drivestrength_sel;
- 		brcmf_sdcard_reg_write(sdiodev,
- 			CORE_CC_REG(ci->c_inf[0].base, chipcontrol_addr),
--			4, cc_data_temp);
-+			cc_data_temp);
- 
- 		brcmf_dbg(INFO, "SDIO: %dmA drive strength selected, set to 0x%08x\n",
- 			  drivestrength, cc_data_temp);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index a5670c4..6df06cf 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -184,8 +184,7 @@ extern u32
- brcmf_sdcard_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr);
- 
- extern u32
--brcmf_sdcard_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr, uint size,
--		       u32 data);
-+brcmf_sdcard_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data);
- 
- /* Indicate if last reg read/write failed */
- extern bool brcmf_sdcard_regfail(struct brcmf_sdio_dev *sdiodev);
+There is similar patch in community code - but seems not fullfill all
+our requirements.
+
+>
+> The driver did seem to crash on me once today spewing out a lot of
+> WARNINGs and trace info to the log.  Unfortunately I didn't save the
+> log.  I will try to pay more attention to it if it happens again.
+>
+> I also did a bit more testing in AP mode.  After changing hostapd to
+> 802.11g mode I got much better throughput.  However, I did see quite a
+> few warnings in the log such as the following:
+>
+> [  296.854219] ieee80211 phy2: Missed interrupt?
+
+This is critical and this is firmware issue.
+After that driver can do recovery ...
+So, logs after that are not important much ...
+
+
+> [  297.104219] ieee80211 phy2: Multicast delivery timeout.
+> [  254.194450] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000002
+> [   34.731942] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
+> asleep: 0x00000002
+> [  462.159614] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000002
+> [  482.560642] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000002
+> [  482.568372] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
+> asleep: 0x00000002
+> [  482.601447] ieee80211 phy2: Multicast delivery timeout.
+> [  482.736948] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000006
+> [  482.879955] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
+> asleep: 0x00000006
+> [  483.052676] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000006
+> [  483.570836] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
+> asleep: 0x00000006
+> [  483.578685] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
+> asleep: 0x00000006
+> [  483.765740] ieee80211 phy2: Requeue for link_id 1 (try 2). STAs
+> asleep: 0x00000006
+> [  483.773462] ieee80211 phy2: Requeue for link_id 1 (try 2). STAs
+> asleep: 0x00000006
+> [  484.340904] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000006
+> [  484.348626] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
+> asleep: 0x00000006
+> [  484.356344] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
+> asleep: 0x00000006
+> [  484.670846] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
+> asleep: 0x00000006
+> [  484.903498] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000006
+> [    2.101774] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000000
+> [    2.109569] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000000
+> [    2.119271] ieee80211 phy2: Requeue for link_id 0 (try 2). STAs
+> asleep: 0x00000000
+> [    2.128483] ieee80211 phy2: Requeue for link_id 0 (try 2). STAs
+> asleep: 0x00000004
+> [    2.137894] ieee80211 phy2: Requeue for link_id 0 (try 3). STAs
+> asleep: 0x00000004
+> [    5.629055] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000004
+> [   81.020541] ieee80211 phy2: Missed interrupt?
+> [   85.050556] ieee80211 phy2: Missed interrupt?
+> [   96.410571] ieee80211 phy2: Missed interrupt?
+> [  100.410560] ieee80211 phy2: Missed interrupt?
+> [  105.700565] ieee80211 phy2: Missed interrupt?
+> [  119.410573] ieee80211 phy2: Missed interrupt?
+> [  140.050548] ieee80211 phy2: Missed interrupt?
+> [  156.993680] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000004
+> [  157.001679] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
+> asleep: 0x00000004
+> [  157.240546] ieee80211 phy2: Multicast delivery timeout.
+> [  167.400528] ieee80211 phy2: Missed interrupt?
+>
+> Should I be worried about these?
+>
+Yes :)
+
+
 -- 
-1.7.9.5
-
-
+Janusz Dziedzic
