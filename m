@@ -1,114 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:51856 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755179Ab2EREqy (ORCPT
+Received: from blu0-omc2-s18.blu0.hotmail.com ([65.55.111.93]:23891 "EHLO
+	blu0-omc2-s18.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750789Ab2EEE50 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 00:46:54 -0400
-Received: by weyu7 with SMTP id u7so1565076wey.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 21:46:53 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 4/5] wlcore: stop queues on Tx flush
-Date: Fri, 18 May 2012 07:46:39 +0300
-Message-Id: <1337316400-23875-5-git-send-email-arik@wizery.com> (sfid-20120518_064658_308616_E8076E7A)
-In-Reply-To: <1337316400-23875-1-git-send-email-arik@wizery.com>
-References: <1337316400-23875-1-git-send-email-arik@wizery.com>
+	Sat, 5 May 2012 00:57:26 -0400
+Message-ID: <BLU0-SMTP1987E82C091C976034235C0AC2D0@phx.gbl> (sfid-20120505_065729_881637_ACC321BD)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH v3 4/6] bcma: reads/writes are always 4 bytes, so always map 4 bytes
+Date: Fri, 4 May 2012 21:56:34 -0700
+In-Reply-To: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
+References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stop network queues during Tx flush, and also drop other internal
-mac80211 packets (mgmt) that may arrive when the queues are stopped.
+Modify ioremap_nocache calls to reflect the number of bytes read/written.
 
-When flush is done all driver queues are clear, forcefully if needed.
-
-Protect the Tx flush operation with a new mutex, to prevent concurrency
-that can mess us queue state.
-
-Based on a patch by Eliad Peller <eliad@wizery.com>
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
 ---
- drivers/net/wireless/ti/wlcore/main.c   |    1 +
- drivers/net/wireless/ti/wlcore/tx.c     |   11 ++++++++++-
- drivers/net/wireless/ti/wlcore/tx.h     |    1 +
- drivers/net/wireless/ti/wlcore/wlcore.h |    3 +++
- 4 files changed, 15 insertions(+), 1 deletion(-)
+ drivers/bcma/driver_pci_host.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 6e6926b..1daaf1d 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5151,6 +5151,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size)
- 	wl->state = WL1271_STATE_OFF;
- 	wl->fw_type = WL12XX_FW_TYPE_NONE;
- 	mutex_init(&wl->mutex);
-+	mutex_init(&wl->flush_mutex);
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index 8407b25..b9a86ed 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -119,7 +119,7 @@ static int bcma_extpci_read_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 		if (unlikely(!addr))
+ 			goto out;
+ 		err = -ENOMEM;
+-		mmio = ioremap_nocache(addr, len);
++		mmio = ioremap_nocache(addr, sizeof(val));
+ 		if (!mmio)
+ 			goto out;
  
- 	order = get_order(WL1271_AGGR_BUFFER_SIZE);
- 	wl->aggr_buf = (u8 *)__get_free_pages(GFP_KERNEL, order);
-diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
-index f68567b..78bf1b9 100644
---- a/drivers/net/wireless/ti/wlcore/tx.c
-+++ b/drivers/net/wireless/ti/wlcore/tx.c
-@@ -1024,6 +1024,11 @@ void wl1271_tx_flush(struct wl1271 *wl)
- 	int i;
- 	timeout = jiffies + usecs_to_jiffies(WL1271_TX_FLUSH_TIMEOUT);
- 
-+	/* only one flush should be in progress, for consistent queue state */
-+	mutex_lock(&wl->flush_mutex);
-+
-+	wlcore_stop_queues(wl, WLCORE_QUEUE_STOP_REASON_FLUSH);
-+
- 	while (!time_after(jiffies, timeout)) {
- 		mutex_lock(&wl->mutex);
- 		wl1271_debug(DEBUG_TX, "flushing tx buffer: %d %d",
-@@ -1032,7 +1037,7 @@ void wl1271_tx_flush(struct wl1271 *wl)
- 		if ((wl->tx_frames_cnt == 0) &&
- 		    (wl1271_tx_total_queue_count(wl) == 0)) {
- 			mutex_unlock(&wl->mutex);
--			return;
-+			goto out;
+@@ -171,7 +171,7 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 			addr = pc->core->addr + BCMA_CORE_PCI_PCICFG0;
+ 			addr |= (func << 8);
+ 			addr |= (off & 0xfc);
+-			mmio = ioremap_nocache(addr, len);
++			mmio = ioremap_nocache(addr, sizeof(val));
+ 			if (!mmio)
+ 				goto out;
  		}
- 		mutex_unlock(&wl->mutex);
- 		msleep(1);
-@@ -1045,6 +1050,10 @@ void wl1271_tx_flush(struct wl1271 *wl)
- 	for (i = 0; i < WL12XX_MAX_LINKS; i++)
- 		wl1271_tx_reset_link_queues(wl, i);
- 	mutex_unlock(&wl->mutex);
-+
-+out:
-+	wlcore_wake_queues(wl, WLCORE_QUEUE_STOP_REASON_FLUSH);
-+	mutex_unlock(&wl->flush_mutex);
- }
+@@ -180,7 +180,7 @@ static int bcma_extpci_write_config(struct bcma_drv_pci *pc, unsigned int dev,
+ 		if (unlikely(!addr))
+ 			goto out;
+ 		err = -ENOMEM;
+-		mmio = ioremap_nocache(addr, len);
++		mmio = ioremap_nocache(addr, sizeof(val));
+ 		if (!mmio)
+ 			goto out;
  
- u32 wl1271_tx_min_rate_get(struct wl1271 *wl, u32 rate_set)
-diff --git a/drivers/net/wireless/ti/wlcore/tx.h b/drivers/net/wireless/ti/wlcore/tx.h
-index 6bf6956..e058a55 100644
---- a/drivers/net/wireless/ti/wlcore/tx.h
-+++ b/drivers/net/wireless/ti/wlcore/tx.h
-@@ -187,6 +187,7 @@ struct wl1271_tx_hw_res_if {
- enum wlcore_queue_stop_reason {
- 	WLCORE_QUEUE_STOP_REASON_WATERMARK,
- 	WLCORE_QUEUE_STOP_REASON_FW_RESTART,
-+	WLCORE_QUEUE_STOP_REASON_FLUSH,
- };
- 
- static inline int wl1271_tx_get_queue(int queue)
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 94b79d5..c065ea6 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -379,6 +379,9 @@ struct wl1271 {
- 
- 	/* the current channel type */
- 	enum nl80211_channel_type channel_type;
-+
-+	/* mutex for protecting the tx_flush function */
-+	struct mutex flush_mutex;
- };
- 
- int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
 -- 
-1.7.9.5
+1.7.7.6
 
