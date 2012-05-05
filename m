@@ -1,105 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42300 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757940Ab2EKIiS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 04:38:18 -0400
-Message-Id: <20120511083720.739540203@sipsolutions.net> (sfid-20120511_103831_145287_106F870B)
-Date: Fri, 11 May 2012 10:34:15 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] cfg80211: simplify cfg80211_can_beacon_sec_chan API
-References: <20120511083413.778117363@sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39454 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755452Ab2EEMmb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 May 2012 08:42:31 -0400
+Message-ID: <4FA51FFE.4070100@hauke-m.de> (sfid-20120505_144234_976518_A3B4B033)
+Date: Sat, 05 May 2012 14:41:34 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Nathan Hintz <nlhintz@hotmail.com>
+CC: Arend van Spriel <arend@broadcom.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3 6/6] bcma: Add flush for BCMA_RESET_CTL write
+References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>  <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl>  <4FA4C2CA.8000401@broadcom.com> <BLU0-SMTP3963C1457D4A5496FC3C3A3AC2D0@phx.gbl>
+In-Reply-To: <BLU0-SMTP3963C1457D4A5496FC3C3A3AC2D0@phx.gbl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 05/05/2012 09:50 AM, Nathan Hintz wrote:
+> On Sat, 2012-05-05 at 08:03 +0200, Arend van Spriel wrote:
+>> On 05/05/2012 06:56 AM, Nathan Hintz wrote:
+>>> Adds a missing read to flush the previous write (per the Broadcom SDK).
+>>>
+>>> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
+>>> ---
+>>>  drivers/bcma/core.c |    1 +
+>>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
+>>> index 893f6e0..c4e6deb 100644
+>>> --- a/drivers/bcma/core.c
+>>> +++ b/drivers/bcma/core.c
+>>> @@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
+>>>  	udelay(10);
+>>>  
+>>>  	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
+>>> +	bcma_aread32(core, BCMA_RESET_CTL);
+>>>  	udelay(1);
+>>>  }
+>>>  EXPORT_SYMBOL_GPL(bcma_core_disable);
+>>
+>> Hi Nathan,
+>>
+>> The read after write is only needed on (certain) SoCs. As bcma is not
+>> being used just for these SoCs I suggest to make the flush conditional.
+>> In brcmsmac we introduced "flushed write" function, which does the read
+>> only for those SoCs.
+>>
+>> Gr. AvS
+>>
+>>
+> There are several other occurrences in core.c that are the same
+> implementation as what was added in this patch.  Is there a reason
+> why the existing code isn't the way you have suggested already?
+> Would it be better to submit your suggestion as a separate patch, or
+> just roll it all into this one?
+> 
+> Nathan
 
-Change cfg80211_can_beacon_sec_chan() to return true
-if there is no secondary channel to simplify all the
-current users of it. They all check the channel type
-before calling the function because it returns false
-if there's no secondary channel.
+In some older versions of the Broadcom SDK (e.g. version with wl
+5.10.147.0 and the version brcmsmac seams to be based on) this read is
+not included in ai_core_disable(), but in more recent versions (e.g.
+version including wl 5.100.138.9) this read is included unconditionally.
 
-Also actually document the return value.
+@Arend For what SoCs should we read after this write?
+When you are speaking of (certain) SoCs are you talking about this code
+and comment from brcmsmac?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |    5 ++++-
- net/mac80211/ibss.c    |    3 +--
- net/wireless/chan.c    |   22 ++++++----------------
- 3 files changed, 11 insertions(+), 19 deletions(-)
-
---- a/include/net/cfg80211.h	2012-05-11 10:22:59.000000000 +0200
-+++ b/include/net/cfg80211.h	2012-05-11 10:23:50.000000000 +0200
-@@ -3359,11 +3359,14 @@ void cfg80211_report_obss_beacon(struct
- 				 const u8 *frame, size_t len,
- 				 int freq, int sig_dbm, gfp_t gfp);
- 
--/*
-+/**
-  * cfg80211_can_beacon_sec_chan - test if ht40 on extension channel can be used
-  * @wiphy: the wiphy
-  * @chan: main channel
-  * @channel_type: HT mode
-+ *
-+ * This function returns true if there is no secondary channel or the secondary
-+ * channel can be used for beaconing (i.e. is not a radar channel etc.)
-  */
- bool cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
- 				  struct ieee80211_channel *chan,
---- a/net/mac80211/ibss.c	2012-05-10 08:54:21.000000000 +0200
-+++ b/net/mac80211/ibss.c	2012-05-11 10:24:13.000000000 +0200
-@@ -82,8 +82,7 @@ static void __ieee80211_sta_join_ibss(st
- 
- 	local->oper_channel = chan;
- 	channel_type = ifibss->channel_type;
--	if (channel_type > NL80211_CHAN_HT20 &&
--	    !cfg80211_can_beacon_sec_chan(local->hw.wiphy, chan, channel_type))
-+	if (!cfg80211_can_beacon_sec_chan(local->hw.wiphy, chan, channel_type))
- 		channel_type = NL80211_CHAN_HT20;
- 	if (!ieee80211_set_channel_type(local, sdata, channel_type)) {
- 		/* can only fail due to HT40+/- mismatch */
---- a/net/wireless/chan.c	2012-05-11 10:22:59.000000000 +0200
-+++ b/net/wireless/chan.c	2012-05-11 10:25:12.000000000 +0200
-@@ -60,7 +60,7 @@ bool cfg80211_can_beacon_sec_chan(struct
- 		diff = -20;
- 		break;
- 	default:
--		return false;
-+		return true;
- 	}
- 
- 	sec_chan = ieee80211_get_channel(wiphy, chan->center_freq + diff);
-@@ -107,21 +107,11 @@ int cfg80211_set_freq(struct cfg80211_re
- 		     wdev->iftype == NL80211_IFTYPE_AP ||
- 		     wdev->iftype == NL80211_IFTYPE_AP_VLAN ||
- 		     wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
--		     wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
--		switch (channel_type) {
--		case NL80211_CHAN_HT40PLUS:
--		case NL80211_CHAN_HT40MINUS:
--			if (!cfg80211_can_beacon_sec_chan(&rdev->wiphy, chan,
--							  channel_type)) {
--				printk(KERN_DEBUG
--				       "cfg80211: Secondary channel not "
--				       "allowed to initiate communication\n");
--				return -EINVAL;
--			}
--			break;
--		default:
--			break;
--		}
-+		     wdev->iftype == NL80211_IFTYPE_P2P_GO) &&
-+	    !cfg80211_can_beacon_sec_chan(&rdev->wiphy, chan, channel_type)) {
-+		printk(KERN_DEBUG
-+		       "cfg80211: Secondary channel not allowed to beacon\n");
-+		return -EINVAL;
- 	}
- 
- 	result = rdev->ops->set_channel(&rdev->wiphy,
+#ifdef CONFIG_BCM47XX
+/*
+ * bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
+ * transactions. As a fix, a read after write is performed on certain places
+ * in the code. Older chips and the newer 5357 family don't require this
+fix.
+ */
+#define bcma_wflush16(c, o, v) \
+	({ bcma_write16(c, o, v); (void)bcma_read16(c, o); })
 
 
+Hauke
