@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39010 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755470Ab2ECTjY (ORCPT
+Received: from blu0-omc2-s18.blu0.hotmail.com ([65.55.111.93]:23765 "EHLO
+	blu0-omc2-s18.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750789Ab2EEE5S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 15:39:24 -0400
-Message-ID: <1336073962.5167.18.camel@jlt3.sipsolutions.net> (sfid-20120503_213927_315687_D9518930)
-Subject: Re: [PATCH v2 2/4] mac80211: Implement HT mixed protection mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org
-Date: Thu, 03 May 2012 21:39:22 +0200
-In-Reply-To: <1335820832-18887-2-git-send-email-ashok@cozybit.com> (sfid-20120430_232128_748335_8B027146)
-References: <1335820832-18887-1-git-send-email-ashok@cozybit.com>
-	 <1335820832-18887-2-git-send-email-ashok@cozybit.com>
-	 (sfid-20120430_232128_748335_8B027146)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 5 May 2012 00:57:18 -0400
+Message-ID: <BLU0-SMTP198B72D051A29761F548916AC2D0@phx.gbl> (sfid-20120505_065722_963308_86D01059)
+From: Nathan Hintz <nlhintz@hotmail.com>
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
+	Nathan Hintz <nlhintz@hotmail.com>
+Subject: [PATCH v3 0/6] BCMA Cumulative patches from OpenWRT
+Date: Fri, 4 May 2012 21:56:30 -0700
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-04-30 at 14:20 -0700, Ashok Nagarajan wrote:
+Submit OpenWRT BCMA patches upstream
 
-> +/** mesh_set_ht_prot_mode - set correct HT protection mode
+Nathan Hintz (6):
+  bcma: Find names of non BCM cores
+  bcma: Move initialization of SPROM to prevent overwrite
+  bcma: Account for variable PCI memory base/size
+  bcma: reads/writes are always 4 bytes, so always map 4 bytes
+  bcma: Add __devexit to bcma_host_pci_remove
+  bcma: Add flush for BCMA_RESET_CTL write
 
-I think you need a newline before the function name, but this isn't
-really valid kernel-doc anyway so please just don't use **
+ arch/mips/bcm47xx/setup.c      |    4 +++
+ arch/mips/bcm47xx/sprom.c      |    2 -
+ drivers/bcma/core.c            |    1 +
+ drivers/bcma/driver_pci_host.c |   10 +++---
+ drivers/bcma/host_pci.c        |    4 +-
+ drivers/bcma/scan.c            |   54 +++++++++++++++++++++++++++++----------
+ 6 files changed, 52 insertions(+), 23 deletions(-)
 
-> + *
-> + * Section 9.23.3.5 of IEEE 80211s standard
-
-There's no 80211s standard. 802.11s is an amendment, please correct the
-reference to the -2012 version.
-
-> +	rcu_read_lock();
-> +	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-> +		if (sdata == sta->sdata &&
-> +		    sta->plink_state == NL80211_PLINK_ESTAB) {
-
-there would be less indentation if you'd add a continue for the mismatch
-cases :-)
-
-johannes
+-- 
+1.7.7.6
 
