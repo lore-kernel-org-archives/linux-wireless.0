@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39791 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932533Ab2ERRQd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 13:16:33 -0400
-Message-ID: <1337361387.4802.6.camel@jlt3.sipsolutions.net> (sfid-20120518_191641_106614_D561BA33)
-Subject: Re: rt28xx AP-mode problem with commit
- 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
- carrier state"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 18 May 2012 19:16:27 +0200
-In-Reply-To: <20120518011829.GD22418@yumi.tdiedrich.de>
-References: <20120509105719.GA24457@yumi.tdiedrich.de>
-	 <1336564773.4323.19.camel@jlt3.sipsolutions.net>
-	 <20120509121827.GD5472@yumi.tdiedrich.de>
-	 <20120509210448.GE5472@yumi.tdiedrich.de>
-	 <1336637726.4334.13.camel@jlt3.sipsolutions.net>
-	 <1336638453.4334.15.camel@jlt3.sipsolutions.net>
-	 <20120518011829.GD22418@yumi.tdiedrich.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:1387 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756771Ab2EEB1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 May 2012 21:27:50 -0400
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/11] brcmfmac: unify register access interface
+Date: Fri, 4 May 2012 18:27:27 -0700
+Message-ID: <1336181258-7305-1-git-send-email-frankyl@broadcom.com> (sfid-20120505_032840_321188_F038195F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[dropping openwrt list, it keeps bothering me that I should subscribe]
+Hi John,
 
-On Fri, 2012-05-18 at 03:18 +0200, Tobias Diedrich wrote:
+This patch series cleans up the WiFi dongle register access by
+introducing a unified interface. With the new interface the user
+who wants to read/write registers on the dongle only needs to
+provide the register address. The helper function will handle
+everything else.
 
-> One more clue:
-> I think this has to do with the order in which the OpenWRT wifi
-> script does things:
-> 
-> hostapd -P /var/run/wifi-phy0.pid -B /var/run/hostapd-phy0.conf
-> hostapd_ctrl=/var/run/hostapd-phy0/wlan0
-> ifconfig wlan0
-> ifconfig wlan0 down
-> ifconfig wlan0 hw ether 1c:af:f7:49:50:56 up
-> ifconfig wlan0 0.0.0.0
-> ifconfig wlan0
-> ifconfig br-lan
-> ifconfig wlan0 0.0.0.0
-> ifconfig wlan0 hw ether 1c:af:f7:49:50:56 up
-> iw dev wlan0 set txpower fixed 2000
+Thanks,
+Franky
 
-Wow, ok, setting the interface down while the AP is up really isn't a
-valid use of it. I'm actually amazed that it ever works at all when you
-do this. Either this should be done the other way around, or hostapd
-needs to get some smarts about it. For example, with the start-AP
-function transition, I'm not sure even *beacon* after you do this...
+Franky Lin (11):
+  brcmfmac: remove unused parameter of brcmf_sdcard_reg_read
+  brcmfmac: remove unused parameter of brcmf_sdcard_reg_write
+  brcmfmac: decouple set_sbaddr_window from register write interface
+  brcmfmac: introduce unified register access interface for SDIO
+  brcmfmac: replace brcmf_sdcard_cfg_read with brcmf_sdio_regrb
+  brcmfmac: replace brcmf_sdcard_cfg_write with brcmf_sdio_regwb
+  brcmfmac: replace brcmf_sdcard_reg_read with brcmf_sdio_regrl
+  brcmfmac: replace brcmf_sdcard_reg_write with brcmf_sdio_regwl
+  brcmfmac: remove redundant retries for SDIO core register access
+  brcmfmac: remove function brcmf_sdcard_regfail
+  brcmfmac: replace brcmf_sdioh_card_regread with brcmf_sdio_regrl
 
-johannes
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  244 +++++++-------
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   32 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  350 ++++++++------------
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |  265 ++++++++-------
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   37 +--
+ 5 files changed, 416 insertions(+), 512 deletions(-)
+
+-- 
+1.7.9.5
+
 
