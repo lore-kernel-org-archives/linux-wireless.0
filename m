@@ -1,38 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:41468 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753960Ab2EFQiF (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45408 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758277Ab2EEAMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 12:38:05 -0400
-Date: Sun, 06 May 2012 12:36:56 -0400 (EDT)
-Message-Id: <20120506.123656.1335354317428258137.davem@davemloft.net> (sfid-20120506_183810_933173_A03ADAA6)
-To: gustavo@padovan.org
-Cc: linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Bluetooth: Fix coding style
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
-References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 4 May 2012 20:12:50 -0400
+Date: Fri, 4 May 2012 21:12:43 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2012-05-04
+Message-ID: <20120505001243.GC23728@joana> (sfid-20120505_021306_651209_4FB64898)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="k1lZvvs/B4yU6o8G"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gustavo Padovan <gustavo@padovan.org>
-Date: Fri,  4 May 2012 15:59:48 -0300
 
-> Fix offending styles all over the tree. This is in conformance David
-> Miller's style rules.
+--k1lZvvs/B4yU6o8G
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-They aren't just my style rules.
+Hi John,
 
-And, if your plan is to patch things up afterwards so you don't
-have to change existing commits in your tree, think again.
+A few more patch to 3.4. There is 3 fixes from Mat Martineau, a fix for
+a incoming MTU check that was breaking ERTM, still on ERTM there is a
+patch that fixes concurrency with one of our locks. His third patch is
+related to lock fixes too.
+Besides that Johan fixed a wrong bit set in the Inquiry code, Vishal
+Agarwal added a EIR fix and finally we have support for one more usb id.
 
-I absolutely will not pull a tree from John that has commits in
-it that add the bad indentation.
+Please pull or let me know of any problems!
 
-You have to respin your tree with fixed commits.
+	Gustavo
 
-The bluetooth folks have to understand that they are on an extremely
-short leash right now.
+---
+
+The following changes since commit 985140369be1e886754d8ac0375dd64e4f727311:
+
+  Add Foxconn / Hon Hai IDs for btusb module (2012-04-24 11:38:41 -0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth for-upstream
+
+for you to fetch changes up to 78521bdb4a42770c4c2d48317c00ec0d7f451a08:
+
+  Bluetooth: Lock the L2CAP channel when sending (2012-05-04 20:56:29 -0300)
+
+----------------------------------------------------------------
+Johan Hedberg (1):
+      Bluetooth: Fix Inquiry with RSSI event mask
+
+Mat Martineau (3):
+      Bluetooth: Fix a redundant and problematic incoming MTU check
+      Bluetooth: Restore locking semantics when looking up L2CAP channels
+      Bluetooth: Lock the L2CAP channel when sending
+
+Michael Gruetzner (1):
+      bluetooth: Add support for Foxconn/Hon Hai AR5BBU22 0489:E03C
+
+Vishal Agarwal (1):
+      Bluetooth: Fix EIR data generation for mgmt_device_found
+
+ drivers/bluetooth/ath3k.c         |    6 ++++++
+ drivers/bluetooth/btusb.c         |    3 +++
+ include/net/bluetooth/bluetooth.h |    2 --
+ include/net/bluetooth/hci_core.h  |   17 +++++++++++++++++
+ net/bluetooth/hci_event.c         |    6 ++++--
+ net/bluetooth/l2cap_core.c        |   30 +++---------------------------
+ net/bluetooth/l2cap_sock.c        |   19 +++++++++++--------
+ 7 files changed, 44 insertions(+), 39 deletions(-)
+
+
+--k1lZvvs/B4yU6o8G
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPpHB7AAoJEPs3PUX4s20oDGEQAKO2ZR5q735Yi+gGkqww68It
+r1zGCHFsyGRlq4egeCwuC8bzjKIYhVz7TuC8DqN1dX0BHjtoBWtyCahktj1gOhU8
+30XccbBJNLPnTJKceTueF+/54q53mVguQiypDn+Kjfgokbpw2cZAT0yuSHfBYmYF
+4t9RL1OIdl4LM9sDsnE0zAP7dRlKLB5zaw3NdHvxJqaQtjfnp9gOyZBX8J4ccZUB
+VJ4Nhq8IJ63TvnsRKuTbwFGoVezMYXmglnNioCslsQMLLH70SVCiNTnoDiedAmjb
+KECCl5NQOPloKemm2mSIMb3xutbCfB1m8NJFcXrhrNFsjx1piRrcd//8QnDXY8pZ
+aHVuX45aqC08nnQyZAxANxDuzCKJKQJGTT/yMxYNWotA9GSAbjkM93JQ/+jB6ULd
+dVZdzLLtFP1u8aPgQfdXdixBEALDyHx8iIu8nBX86xPorhj6ckKbNE+ByNSWVqYo
+gpp9sWjjCJFwBIATl0gT1JSL3BRcKSNnJs/QLaTbUB4yQyevPqb80vyiVPau0/GM
+BM6m7RtTiUFT792t43WWd3o3FocvrKXU9EImxiJBvlBmUeXsZ05mqdKL9obAVzLV
+MYa9PDDuMwkI4vjv1isJ5V9mSqd/Wf8xrMsnTEFqUIQQohFe9RPho3RmKarFoUWh
+lw5F6CdX5WrRARSSyPAx
+=TY3/
+-----END PGP SIGNATURE-----
+
+--k1lZvvs/B4yU6o8G--
