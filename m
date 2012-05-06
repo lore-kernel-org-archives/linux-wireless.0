@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([80.75.119.105]:44384 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755668Ab2EGJpO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 05:45:14 -0400
-Message-ID: <4FA799A7.9020101@neratec.com> (sfid-20120507_114519_749905_9DF05870)
-Date: Mon, 07 May 2012 11:45:11 +0200
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:5560 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754597Ab2EFVBI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 May 2012 17:01:08 -0400
+Date: Sun, 06 May 2012 16:01:05 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] b43legacy: Fix error due to MMIO access with SSB
+ unpowered
+Message-ID: <4fa6e691.07pJDEPTzATe9gO6%Larry.Finger@lwfinger.net> (sfid-20120506_230113_292713_49408AD2)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Kalle Valo <kvalo@adurom.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] [trivial] nl80211: fix typos in comments
-References: <1336382519-6093-1-git-send-email-zefir.kurtisi@neratec.com>  <87d36g9vv6.fsf@purkki.adurom.net> (sfid-20120507_113549_851799_74F1107A) <1336383672.4325.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1336383672.4325.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/07/2012 11:41 AM, Johannes Berg wrote:
-> On Mon, 2012-05-07 at 12:35 +0300, Kalle Valo wrote:
->> Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
->>
->>> - * @NL80211_DFS_FCC_: Country follows DFS master rules from FCC
->>> - * @NL80211_DFS_FCC_: Country follows DFS master rules from ETSI
->>> - * @NL80211_DFS_JP_: Country follows DFS master rules from JP/MKK/Telec
->>> + * @NL80211_DFS_FCC: Country follows DFS master rules from FCC
->>> + * @NL80211_DFS_ETSI: Country follows DFS master rules from ETSI
->>> + * @NL80211_DFS_JP: Country follows DFS master rules from JP/MKK/Telec
->>
->> Are there any user space applications which use these enums? If there are,
->> this change will break them which is bad (tm).
-> 
-> No, it actually just fixes kernel-doc .. the constant names are spelled
-> wrong in the comment.
-> 
-> johannes
-> 
-Yep, 'trivial' since only C&P typos fixed. Or is there a better tag for
-non functional modifications (comments, indentation, etc.)?
+There is a dummy read of a PCI MMIO register that occurs before the SSB bus
+has been powered, which is an error. This bug has not been seen earlier,
+but was apparently exposed when udev was updated to version 182.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: stable <stable@vger.kernel.org>
+---
+
+John,
+
+This fix should be applied to 3.4.
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/b43legacy/main.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/b43legacy/main.c
++++ wireless-testing-new/drivers/net/wireless/b43legacy/main.c
+@@ -1573,8 +1573,6 @@ static void b43legacy_request_firmware(s
+ 	const char *filename;
+ 	int err;
+ 
+-	/* do dummy read */
+-	ssb_read32(dev->dev, SSB_TMSHIGH);
+ 	if (!fw->ucode) {
+ 		if (rev == 2)
+ 			filename = "ucode2";
