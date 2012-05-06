@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34424 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753206Ab2EWOfh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 10:35:37 -0400
-Received: by bkcji2 with SMTP id ji2so6029805bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 07:35:36 -0700 (PDT)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:37688 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752148Ab2EFIOL convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 May 2012 04:14:11 -0400
+Received: by lahj13 with SMTP id j13so2843913lah.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 May 2012 01:14:08 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <87ipfn6koz.fsf@purkki.adurom.net>
-References: <1337760813-27055-1-git-send-email-arik@wizery.com>
- <87wr436utp.fsf@purkki.adurom.net> <CA+XVXfeju02Ou=jZ=eyq+0e4Rm1-5=b6-m8bMyZ8kAWO6F-sXQ@mail.gmail.com>
- <87mx4z6u4n.fsf@purkki.adurom.net> <CA+XVXfc3R8CrMfercPpRfYGjvKDdDkwJax+oLiaMrQQPwLCc0Q@mail.gmail.com>
- <87ipfn6koz.fsf@purkki.adurom.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 23 May 2012 17:35:20 +0300
-Message-ID: <CA+XVXfcZAE0Drbn_JTBt1p0GAaFrsxZfHNE1Syp=1G=PNsvkbQ@mail.gmail.com> (sfid-20120523_163541_572439_88E57E9C)
-Subject: Re: [PATCH] mac80211: allow setting default U-APSD queues/max_sp_len
- for STA
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <4FA60D43.1010202@Magitekindustries.com>
+References: <4FA60D43.1010202@Magitekindustries.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 6 May 2012 18:13:48 +1000
+Message-ID: <CAGRGNgXJ5Nk_7cf_meHRP9uL1iNTER+Snuzg-8rrp-=-jTjhaQ@mail.gmail.com> (sfid-20120506_101417_584741_A651DF7D)
+Subject: Re: Intel 2200BG/Linux
+To: DC <DC@magitekindustries.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 23, 2012 at 5:22 PM, Kalle Valo <kvalo@adurom.com> wrote:
->> We just enable the driver to override a default value, which is used
->> by mac80211.
->
-> You are moving logic from mac80211 to the driver but it should be the
-> opposite, the driver should be dumb and mac80211 should control
-> everything. Didn't we have a similar discussion last year when talking
-> about controlling dynamic power save?
+Hi,
 
-I disagree. Not all mac80211 drivers are like ath9k. The
-FW/lower-driver can be just as smart in certain areas (BA sessions for
-instance).
-Also, let's stay practical here. This is not a large and complex
-feature like dynamic power save.
+On Sun, May 6, 2012 at 3:33 PM, DC <DC@magitekindustries.com> wrote:
+>    I'm having the hardest time in the world getting this card to work
+> with Linux. Can you help me?
 
-It's interesting to hear Johannes' take on this.
+You need to use the ipw2200 driver, and you need the firmware.
 
-Arik
+The driver should already be in your distro's kernel, and the firmware
+should be available through it's package repository.
+
+E.g. in Debian, the firmware is available in the firmware-ipw2x00 package.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
