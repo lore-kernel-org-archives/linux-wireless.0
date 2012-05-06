@@ -1,139 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:64704 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751859Ab2E1LTk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 07:19:40 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 08/14] mac80211: refactor virtual monitor code
-Date: Mon, 28 May 2012 13:18:56 +0200
-Message-ID: <1338203942-5667-9-git-send-email-michal.kazior@tieto.com> (sfid-20120528_131946_756536_C444F8CB)
-In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from shards.monkeyblade.net ([198.137.202.13]:42193 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754203Ab2EFSyQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 May 2012 14:54:16 -0400
+Date: Sun, 06 May 2012 14:53:04 -0400 (EDT)
+Message-Id: <20120506.145304.1998242927519675381.davem@davemloft.net> (sfid-20120506_205421_496402_52AC9851)
+To: dh.herrmann@googlemail.com
+Cc: gustavo@padovan.org, linville@tuxdriver.com,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
+References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
+	<20120506.123656.1335354317428258137.davem@davemloft.net>
+	<CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use cfg80211 the new .set_monitor_enabled instead
-of tracking it inside mac80211.
+From: David Herrmann <dh.herrmann@googlemail.com>
+Date: Sun, 6 May 2012 19:46:46 +0200
 
-Change-Id: I2e881ab09294711aeec24d567b7fcf1bd19bee20
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/cfg.c         |   11 +++++++++++
- net/mac80211/ieee80211_i.h |    4 ++++
- net/mac80211/iface.c       |   16 ++--------------
- 3 files changed, 17 insertions(+), 14 deletions(-)
+> Whose rules are they?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 20a5910..07218cd 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2899,6 +2899,16 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy,
- 	return local->oper_channel;
- }
- 
-+static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	if (enabled)
-+		WARN_ON(!ieee80211_add_virtual_monitor(local));
-+	else
-+		ieee80211_del_virtual_monitor(local);
-+}
-+
- #ifdef CONFIG_PM
- static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
- {
-@@ -2974,6 +2984,7 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.probe_client = ieee80211_probe_client,
- 	.get_channel = ieee80211_wiphy_get_channel,
- 	.set_noack_map = ieee80211_set_noack_map,
-+	.set_monitor_enabled = ieee80211_set_monitor_enabled,
- #ifdef CONFIG_PM
- 	.set_wakeup = ieee80211_set_wakeup,
- #endif
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d8a266e..826b98f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1504,6 +1504,10 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       enum nl80211_channel_type channel_type,
- 			       u16 prot_mode);
- 
-+/* virtual monitor */
-+int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
-+void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
-+
- /* internal work items */
- void ieee80211_work_init(struct ieee80211_local *local);
- void ieee80211_add_work(struct ieee80211_work *wk);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index c550945..25037ec 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -214,7 +214,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
- 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
- }
- 
--static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
-+int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 	int ret;
-@@ -255,7 +255,7 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
- 	return 0;
- }
- 
--static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
-+void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
-@@ -371,12 +371,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 			break;
- 		}
- 
--		if (local->monitors == 0 && local->open_count == 0) {
--			res = ieee80211_add_virtual_monitor(local);
--			if (res)
--				goto err_stop;
--		}
--
- 		/* must be before the call to ieee80211_configure_filter */
- 		local->monitors++;
- 		if (local->monitors == 1) {
-@@ -391,8 +385,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
- 		break;
- 	default:
- 		if (coming_up) {
--			ieee80211_del_virtual_monitor(local);
--
- 			res = drv_add_interface(local, sdata);
- 			if (res)
- 				goto err_stop;
-@@ -630,7 +622,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		if (local->monitors == 0) {
- 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
- 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
--			ieee80211_del_virtual_monitor(local);
- 		}
- 
- 		ieee80211_adjust_monitor_flags(sdata, -1);
-@@ -704,9 +695,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--
--	if (local->monitors == local->open_count && local->monitors > 0)
--		ieee80211_add_virtual_monitor(local);
- }
- 
- static int ieee80211_stop(struct net_device *dev)
--- 
-1.7.0.4
+Find me an example in another major core subsystem, let's use
+mm/memory.c as an example as that file gets hit by a lot of people,
+that uses the multi-line conditional TAB-only crap you guys seem to
+keep using.
 
+They don't.  All the examples you'll find are of the form:
+
+	if (a &&
+	    b)
+
+not:
+
+	if (a &&
+			b)
+
+like I see happening in bluetooth all the time.
+
+How did you think they figured that out?  Did they read someone's
+mind?
