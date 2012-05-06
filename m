@@ -1,156 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53179 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751202Ab2EFJZw (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:2776 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751472Ab2EFHR5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 05:25:52 -0400
-Received: by lahj13 with SMTP id j13so2858675lah.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 May 2012 02:25:50 -0700 (PDT)
+	Sun, 6 May 2012 03:17:57 -0400
+Message-ID: <4FA62585.7070306@broadcom.com> (sfid-20120506_091835_255574_30B313CB)
+Date: Sun, 6 May 2012 09:17:25 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20120506091526.GA2086@ritirata.org>
-References: <20120504002136.GA4201@ritirata.org>
-	<CANUX_P1Ji6H0zaA_kMHx2F1AD+czB=XtrDhjEvR8t1aCDpZhUQ@mail.gmail.com>
-	<20120504063644.GA2912@ritirata.org>
-	<CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
-	<20120504142006.GA2040@ritirata.org>
-	<CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com>
-	<CANUX_P0ygFyDjOo1Thygw_dEiHKPPiH4=GDKN4ncX3vwy0ujrw@mail.gmail.com>
-	<20120506075433.GA1288@ritirata.org>
-	<CANUX_P09Bx=kZ+OoHLTdZgJy_rJOQvutg3yVrBLHzPzV=KMQsg@mail.gmail.com>
-	<20120506085637.GB1288@ritirata.org>
-	<20120506091526.GA2086@ritirata.org>
-Date: Sun, 6 May 2012 12:25:50 +0300
-Message-ID: <CANUX_P1Sg6=NNYoRJ+zOHyjiyKXfY=q+R4eDpqLtTC3DaodbfQ@mail.gmail.com> (sfid-20120506_112554_823298_FC24877F)
-Subject: Re: iwlwifi warn_slowpath with 3.*
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=e89a8f23509749237404bf5abd71
+To: "tommy.hong" <hongjiujing@126.com>
+cc: frankyl@broadcom.com, linville@tuxdriver.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	sleffler@chromium.org
+Subject: Re: about SDIO WIFI Stack Test
+References: <430427b9.58da.1371cf6d747.Coremail.hongjiujing@126.com>
+ <4FA5A270.5060101@broadcom.com>
+ <34ae4b6.b0dd.1371f6e83cf.Coremail.hongjiujing@126.com>
+In-Reply-To: <34ae4b6.b0dd.1371f6e83cf.Coremail.hongjiujing@126.com>
+Content-Type: text/plain;
+ charset=gbk
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---e89a8f23509749237404bf5abd71
-Content-Type: text/plain; charset=ISO-8859-1
+On 05/06/2012 01:56 AM, tommy.hong wrote:
+> thanks,Arend,if i want to use wireless-testing,that means my SDIO WIFI driver should write under wireless-testing framework?
 
-On Sun, May 6, 2012 at 12:15 PM, Antonio Quartulli <ordex@autistici.org> wrote:
-> On Sun, May 06, 2012 at 10:56:38AM +0200, Antonio Quartulli wrote:
->> On Sun, May 06, 2012 at 11:26:32 +0300, Emmanuel Grumbach wrote:
->> > All right,
->> >
->> > Can you please test the patch I sent to you (which was good but not enough)
->> > And add this one too ?
+First a general remark on top-posting email replies. More explanation
+can be found all over the internet so copy-paste the question in your
+fav search engine.
+
+A: Because it messes up the order in which people normally read text.
+Q: Why is top-posting such a bad thing?
+
+Again, wireless-testing is not a testing framework. It is one out of
+three repositories provided by John Linville. Each of which serves its
+purpose.
+
+If you look for a kernel testing framework you could try Autotest (see
+[1]). I have not tried it, but there has been a presentation on a
+wireless summit couple of years ago by Sam Leffler.
+
+Gr. AvS
+
+[1] http://autotest.github.com/
+
+> ÔÚ 2012-05-06 05:58:08£¬"Arend van Spriel" <arend@broadcom.com> Ð´µÀ£º
+>> On 05/05/2012 02:26 PM, tommy.hong wrote:
+>>> Dear All:
+>>>              Hi,I have watched http://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git,I recently join in a sdio wifi chip project,can there some good way to test SDIO WIFI Stack,which can output the wii driver/stack work routine,and are  there some good tools to test WIFI chip in general way?
+>>>              Hope all of you can share,sorry to interrupt.
 >>
->> Ok, I'll also leave the print.patch.
->> I'll report the result.
+>> I had to ready your email over a couple of times and probably still do
+>> not understand what you are asking. Let me try anyway.
 >>
->
-> The WARNING is gone :)
->
-> I attached the dmesg log anyway (debug was off, but there
-> are all the prints you introduced).
->
-> To be sure, I also removed all the IWL_ERR you added and tried to reboot (in
-> order to see whether the printings were affecting synchronization).
->
+>> Not sure why you are referring to wireless-testing. It is a source
+>> repository containing the latest wireless code on laster release
+>> candidate. It does not contain a test framework although you could see
+>> the kernel itself as such.
+>>
+>> So to test your driver you have to rely on standard wireless and
+>> networking tools. It all depends on what your test scenarios need
+>> (throughput, rate vs. range, suspend/resume). In order to get output
+>>from the driver a printk works miracles and debugfs can also make a lot
+>> of driver data available in user-space.
+>>
+>> Hope it helps.
+>>
+>> Gr. AvS
+>>
+> 
+> 
+> 
+> 
+> --
+>  Best Regards
+>  Embedded Linux Software Developer in China
+>  In theory, there is no difference between theory and practice. But, in practice, there is.
+>  Follow me:
+>  Sina WeiBo:http://weibo.com/hongjiujin
+>  Linkedin:http://cn.linkedin.com/in/hongjiujin
+>  Tel:+86 13675148249
+>  Email:
+>  Tommy.hong@Nanjing(hongjiujing@126.com)
+> 
+> 
+>    
 
-Glad to hear.
 
-You can also remove everything. Reapply the second patch, and here is
-a new version of this patch after cleaning.
-
---e89a8f23509749237404bf5abd71
-Content-Type: application/octet-stream;
-	name="0001-iwlwifi-fix-the-TFD-rings.patch"
-Content-Disposition: attachment;
-	filename="0001-iwlwifi-fix-the-TFD-rings.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h1vwaqsr2
-
-RnJvbSBiYjk4NTIzZWI0MmExM2I1M2Q3YWVjNmYyMTk3ZmRhYzVlOGY3NDE5IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hA
-aW50ZWwuY29tPgpEYXRlOiBTdW4sIDYgTWF5IDIwMTIgMTE6Mzg6MzUgKzAzMDAKU3ViamVjdDog
-W1BBVENIXSBpd2x3aWZpOiBmaXggdGhlIFRGRCByaW5ncwoKVGhlIGxvZ2ljIHRoYXQgYWxsb3dz
-IHRvIGhhdmUgYSBzaG9ydCBURkQgcXVldWUgd2FzIGNvbXBsZXRlbHkgd3JvbmcuCldlIGRvIG1h
-aW50YWluIDI1NiBUcmFuc21pdCBGcmFtZSBEZXNjcmlwdG9yLCBidXQgdGhleSBwb2ludCB0bwpy
-ZWN5Y2xlZCBidWZmZXJzLiBXZSB1c2VkIHRvIGF0dGFjaCBhbmQgZGUtYXR0YWNoIGRpZmZlcmVu
-dCBURkRzIGZvcgp0aGUgc2FtZSBidWZmZXIgYW5kIGl0IHdvcmtlZCBzaW5jZSB0aGV5IHBvaW50
-ZWQgdG8gdGhlIHNhbWUgYnVmZmVyLgoKU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwgR3J1bWJhY2gg
-PGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9p
-d2x3aWZpL2l3bC10cmFucy1wY2llLWludC5oIHwgICAgNCArLQogZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS10eC5jICB8ICAgMjYgKysrKysrKysrKysrKy0tLS0t
-LS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLmMgICAgIHwg
-ICAgNCArLS0KIDMgZmlsZXMgY2hhbmdlZCwgMTkgaW5zZXJ0aW9ucygrKSwgMTUgZGVsZXRpb25z
-KC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMt
-cGNpZS1pbnQuaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLXBjaWUt
-aW50LmgKaW5kZXggNjIxM2MwNS4uY2NiOTdiOSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS1pbnQuaAorKysgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLWludC5oCkBAIC0zNDYsOCArMzQ2LDggQEAgdm9p
-ZCBpd2xfdHJhbnNfdHhfcXVldWVfc2V0X3N0YXR1cyhzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywK
-IAkJCQkgICBpbnQgdHhfZmlmb19pZCwgYm9vbCBhY3RpdmUpOwogdm9pZCBpd2xfdHJhbnNfcGNp
-ZV90eF9hZ2dfc2V0dXAoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIGludCBxdWV1ZSwgaW50IGZp
-Zm8sCiAJCQkJIGludCBzdGFfaWQsIGludCB0aWQsIGludCBmcmFtZV9saW1pdCwgdTE2IHNzbik7
-Ci12b2lkIGl3bGFnbl90eHFfZnJlZV90ZmQoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIHN0cnVj
-dCBpd2xfdHhfcXVldWUgKnR4cSwKLQlpbnQgaW5kZXgsIGVudW0gZG1hX2RhdGFfZGlyZWN0aW9u
-IGRtYV9kaXIpOwordm9pZCBpd2xfdHhxX2ZyZWVfdGZkKHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5z
-LCBzdHJ1Y3QgaXdsX3R4X3F1ZXVlICp0eHEsCisJCSAgICAgIGVudW0gZG1hX2RhdGFfZGlyZWN0
-aW9uIGRtYV9kaXIpOwogaW50IGl3bF90eF9xdWV1ZV9yZWNsYWltKHN0cnVjdCBpd2xfdHJhbnMg
-KnRyYW5zLCBpbnQgdHhxX2lkLCBpbnQgaW5kZXgsCiAJCQkgc3RydWN0IHNrX2J1ZmZfaGVhZCAq
-c2ticyk7CiBpbnQgaXdsX3F1ZXVlX3NwYWNlKGNvbnN0IHN0cnVjdCBpd2xfcXVldWUgKnEpOwpk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS10
-eC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS10eC5jCmlu
-ZGV4IDE4ZmNjZjcuLjU3ZmUxOTYgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3
-bHdpZmkvaXdsLXRyYW5zLXBjaWUtdHguYworKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
-aWZpL2l3bC10cmFucy1wY2llLXR4LmMKQEAgLTIwOSwzMCArMjA5LDM2IEBAIHN0YXRpYyB2b2lk
-IGl3bGFnbl91bm1hcF90ZmQoc3RydWN0IGl3bF90cmFucyAqdHJhbnMsIHN0cnVjdCBpd2xfY21k
-X21ldGEgKm1ldGEsCiB9CiAKIC8qKgotICogaXdsYWduX3R4cV9mcmVlX3RmZCAtIEZyZWUgYWxs
-IGNodW5rcyByZWZlcmVuY2VkIGJ5IFRGRCBbdHhxLT5xLnJlYWRfcHRyXQorICogaXdsX3R4cV9m
-cmVlX3RmZCAtIEZyZWUgYWxsIGNodW5rcyByZWZlcmVuY2VkIGJ5IHRoZSBURkQgYXQKKyAqIHEt
-PnJlYWRfcG9pbnRlcgogICogQHRyYW5zIC0gdHJhbnNwb3J0IHByaXZhdGUgZGF0YQogICogQHR4
-cSAtIHR4IHF1ZXVlCi0gKiBAaW5kZXggLSB0aGUgaW5kZXggb2YgdGhlIFRGRCB0byBiZSBmcmVl
-ZAotICpAZG1hX2RpciAtIHRoZSBkaXJlY3Rpb24gb2YgdGhlIERNQSBtYXBwaW5nCisgKiBAaW5k
-ZXggLSB0aGUgaW5kZXggb2YgdGhlIFRGRCB0byBiZSBmcmVlZC4gQm91bmQgYnkgbl9iZCBhbmQg
-X25vdF8gbl93aW5kb3cuCisgKiBAZG1hX2RpciAtIHRoZSBkaXJlY3Rpb24gb2YgdGhlIERNQSBt
-YXBwaW5nCiAgKgogICogRG9lcyBOT1QgYWR2YW5jZSBhbnkgVEZEIGNpcmN1bGFyIGJ1ZmZlciBy
-ZWFkL3dyaXRlIGluZGV4ZXMKICAqIERvZXMgTk9UIGZyZWUgdGhlIFRGRCBpdHNlbGYgKHdoaWNo
-IGlzIHdpdGhpbiBjaXJjdWxhciBidWZmZXIpCiAgKi8KLXZvaWQgaXdsYWduX3R4cV9mcmVlX3Rm
-ZChzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywgc3RydWN0IGl3bF90eF9xdWV1ZSAqdHhxLAotCWlu
-dCBpbmRleCwgZW51bSBkbWFfZGF0YV9kaXJlY3Rpb24gZG1hX2RpcikKK3ZvaWQgaXdsX3R4cV9m
-cmVlX3RmZChzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywgc3RydWN0IGl3bF90eF9xdWV1ZSAqdHhx
-LAorCQkgICAgICBlbnVtIGRtYV9kYXRhX2RpcmVjdGlvbiBkbWFfZGlyKQogewogCXN0cnVjdCBp
-d2xfdGZkICp0ZmRfdG1wID0gdHhxLT50ZmRzOworCWludCByZF9wdHIgPSB0eHEtPnEucmVhZF9w
-dHI7CisJaW50IGlkeCA9IGdldF9jbWRfaW5kZXgoJnR4cS0+cSwgcmRfcHRyKTsKKworCS8qIHJk
-X3B0ciBpcyBib3VuZCBieSBuX2JkIGFuZCBpZHggaXMgYm91bmQgYnkgaWR4ICovCiAKIAlsb2Nr
-ZGVwX2Fzc2VydF9oZWxkKCZ0eHEtPmxvY2spOwogCi0JaXdsYWduX3VubWFwX3RmZCh0cmFucywg
-JnR4cS0+ZW50cmllc1tpbmRleF0ubWV0YSwKLQkJCSAmdGZkX3RtcFtpbmRleF0sIGRtYV9kaXIp
-OworCS8qIFdlIGhhdmUgb25seSBxLT5uX3dpbmRvdyB0eHEtPmVudHJpZXMsIGJ1dCB3ZSB1c2Ug
-cS0+bl9iZCB0ZmRzICovCisJaXdsYWduX3VubWFwX3RmZCh0cmFucywgJnR4cS0+ZW50cmllc1tp
-ZHhdLm1ldGEsCisJCQkgJnRmZF90bXBbcmRfcHRyXSwgZG1hX2Rpcik7CiAKIAkvKiBmcmVlIFNL
-QiAqLwogCWlmICh0eHEtPmVudHJpZXMpIHsKIAkJc3RydWN0IHNrX2J1ZmYgKnNrYjsKIAotCQlz
-a2IgPSB0eHEtPmVudHJpZXNbaW5kZXhdLnNrYjsKKwkJc2tiID0gdHhxLT5lbnRyaWVzW2lkeF0u
-c2tiOwogCiAJCS8qIENhbiBiZSBjYWxsZWQgZnJvbSBpcnFzLWRpc2FibGVkIGNvbnRleHQKIAkJ
-ICogSWYgc2tiIGlzIG5vdCBOVUxMLCBpdCBtZWFucyB0aGF0IHRoZSB3aG9sZSBxdWV1ZSBpcyBi
-ZWluZwpAQCAtMjQwLDcgKzI0Niw3IEBAIHZvaWQgaXdsYWduX3R4cV9mcmVlX3RmZChzdHJ1Y3Qg
-aXdsX3RyYW5zICp0cmFucywgc3RydWN0IGl3bF90eF9xdWV1ZSAqdHhxLAogCQkgKi8KIAkJaWYg
-KHNrYikgewogCQkJaXdsX29wX21vZGVfZnJlZV9za2IodHJhbnMtPm9wX21vZGUsIHNrYik7Ci0J
-CQl0eHEtPmVudHJpZXNbaW5kZXhdLnNrYiA9IE5VTEw7CisJCQl0eHEtPmVudHJpZXNbaWR4XS5z
-a2IgPSBOVUxMOwogCQl9CiAJfQogfQpAQCAtOTc1LDcgKzk4MSw3IEBAIGludCBpd2xfdHhfcXVl
-dWVfcmVjbGFpbShzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucywgaW50IHR4cV9pZCwgaW50IGluZGV4
-LAogCiAJCWl3bGFnbl90eHFfaW52YWxfYnl0ZV9jbnRfdGJsKHRyYW5zLCB0eHEpOwogCi0JCWl3
-bGFnbl90eHFfZnJlZV90ZmQodHJhbnMsIHR4cSwgdHhxLT5xLnJlYWRfcHRyLCBETUFfVE9fREVW
-SUNFKTsKKwkJaXdsX3R4cV9mcmVlX3RmZCh0cmFucywgdHhxLCBETUFfVE9fREVWSUNFKTsKIAkJ
-ZnJlZWQrKzsKIAl9CiAKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-aXdsLXRyYW5zLXBjaWUuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5z
-LXBjaWUuYwppbmRleCBlMTc2MWM1Li5mYzNmYTM3IDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93
-aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS5jCkBAIC00MzUsOSArNDM1LDcgQEAgc3RhdGljIHZv
-aWQgaXdsX3R4X3F1ZXVlX3VubWFwKHN0cnVjdCBpd2xfdHJhbnMgKnRyYW5zLCBpbnQgdHhxX2lk
-KQogCiAJc3Bpbl9sb2NrX2JoKCZ0eHEtPmxvY2spOwogCXdoaWxlIChxLT53cml0ZV9wdHIgIT0g
-cS0+cmVhZF9wdHIpIHsKLQkJLyogVGhlIHJlYWRfcHRyIG5lZWRzIHRvIGJvdW5kIGJ5IHEtPm5f
-d2luZG93ICovCi0JCWl3bGFnbl90eHFfZnJlZV90ZmQodHJhbnMsIHR4cSwgZ2V0X2NtZF9pbmRl
-eChxLCBxLT5yZWFkX3B0ciksCi0JCQkJICAgIGRtYV9kaXIpOworCQlpd2xfdHhxX2ZyZWVfdGZk
-KHRyYW5zLCB0eHEsIGRtYV9kaXIpOwogCQlxLT5yZWFkX3B0ciA9IGl3bF9xdWV1ZV9pbmNfd3Jh
-cChxLT5yZWFkX3B0ciwgcS0+bl9iZCk7CiAJfQogCXNwaW5fdW5sb2NrX2JoKCZ0eHEtPmxvY2sp
-OwotLSAKMS43LjEKCg==
---e89a8f23509749237404bf5abd71--
