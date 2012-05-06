@@ -1,80 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46069 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759247Ab2ERTNF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 15:13:05 -0400
-Message-ID: <4FB69F25.3040707@hauke-m.de> (sfid-20120518_211311_161428_664A3CC6)
-Date: Fri, 18 May 2012 21:12:37 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from investici.nine.ch ([217.150.252.179]:46527 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369Ab2EFI7H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 May 2012 04:59:07 -0400
+Date: Sun, 6 May 2012 10:59:03 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi warn_slowpath with 3.*
+Message-ID: <20120506085902.GC1288@ritirata.org> (sfid-20120506_105910_493222_EB62CABE)
+References: <CANUX_P0DL+_V8RO-CNXQx=oHF0T-opO=uw-ukYOjjVgo_OyfUw@mail.gmail.com>
+ <20120504002136.GA4201@ritirata.org>
+ <CANUX_P1Ji6H0zaA_kMHx2F1AD+czB=XtrDhjEvR8t1aCDpZhUQ@mail.gmail.com>
+ <20120504063644.GA2912@ritirata.org>
+ <CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
+ <20120504142006.GA2040@ritirata.org>
+ <CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com>
+ <CANUX_P0ygFyDjOo1Thygw_dEiHKPPiH4=GDKN4ncX3vwy0ujrw@mail.gmail.com>
+ <20120506075433.GA1288@ritirata.org>
+ <CANUX_P09Bx=kZ+OoHLTdZgJy_rJOQvutg3yVrBLHzPzV=KMQsg@mail.gmail.com>
 MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: brcmsmac: use sprom from bcma
-References: <20120517191339.GA17018@elgon.mountain>
-In-Reply-To: <20120517191339.GA17018@elgon.mountain>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="sHrvAb52M6C8blB9"
+In-Reply-To: <CANUX_P09Bx=kZ+OoHLTdZgJy_rJOQvutg3yVrBLHzPzV=KMQsg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/17/2012 09:13 PM, Dan Carpenter wrote:
-> Hello Hauke, Arend,
-> 
-> The patch 898d3c3b2462: "brcmsmac: use sprom from bcma" from Apr 29, 
-> 2012, leads to the following warning:
-> drivers/net/wireless/brcm80211/brcmsmac/channel.c:645 
-> brcms_c_country_valid()
-> 	 error: buffer overflow 'ccode' 2 <= 2
-> 
-> -       if (ccode && brcms_c_country_valid(ccode))
-> -               strncpy(wlc->pub->srom_ccode, ccode, BRCM_CNTRY_BUF_SZ - 1);
-> +       if (sprom->alpha2 && brcms_c_country_valid(sprom->alpha2))
->                                                    ^^^^^^^^^^^^^
-> This is a two character array.  It's not NULL terminated.
-> 
-> +               strncpy(wlc->pub->srom_ccode, sprom->alpha2, sizeof(sprom->alpha2));
-> 
-> But in brcms_c_country_valid() we check for the NULL terminator.
-> 
->    637  static bool brcms_c_country_valid(const char *ccode)
->    638  {
->    639          /*
->    640           * only allow ascii alpha uppercase for the first 2
->    641           * chars.
->    642           */
->    643          if (!((0x80 & ccode[0]) == 0 && ccode[0] >= 0x41 && ccode[0] <= 0x5A &&
->    644                (0x80 & ccode[1]) == 0 && ccode[1] >= 0x41 && ccode[1] <= 0x5A &&
->    645                ccode[2] == '\0'))
->                       ^^^^^^^^^^^^^^^^
-> Here.
-> 
->    646                  return false;
-> 
-> My guess is that this works because -> leddc_on_time is mostly zero.
-> 
-> regards,
-> dan carpenter
-> 
-Hi Dan,
 
-your guess is probably right, but I do not know want is the best
-solution to fix this. I set this to 2 byte as there are just two bytes
-memory for this in the sprom. In the nvram of some SoC I also found a 3
-letter code ccode=US2 and an other wrong two letter code ccode=Q2. What
-is the way we should handle this?
+--sHrvAb52M6C8blB9
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-1. just read the first 2 bytes and ignore the rest -> change
-brcms_c_country_valid() and some SoC parsing code.
+On Sun, May 06, 2012 at 11:26:32 +0300, Emmanuel Grumbach wrote:
+> All right,
+>=20
+> Can you please test the patch I sent to you (which was good but not enoug=
+h)
+> And add this one too ?
 
-2. read the first 2 bytes and reject longer codes as completely invalid
-(probably just found in nvram on SoCs) -> change brcms_c_country_valid()
+What branch are these patches based on?
+I'm applying them onto wireless-testing, but I always messages like:
 
-3. read 4 (or more) bytes and let brcmsmac decide what is a valid code
--> change sprom struct and some more code
+patching file drivers/net/wireless/iwlwifi/iwl-debugfs.c
+Hunk #1 succeeded at 2211 (offset 1 line).
 
-I would vote for number 2.
+The patches apply anyway, but just to be sure I'm testing the correct branch
 
-@Arend by the way how should the code EU or 0 be handled? It is used on
-all my recent SoCs.
 
-Hauke
+Cheers,
+
+>=20
+> Thanks
+>=20
+> Emmanuel Grumbach
+> egrumbach@gmail.com
+>=20
+>=20
+> On Sun, May 6, 2012 at 10:54 AM, Antonio Quartulli <ordex@autistici.org> =
+wrote:
+> > On Sun, May 06, 2012 at 08:49:52 +0300, Emmanuel Grumbach wrote:
+> >> wait - I just noticed that this one introduced another issue...
+> >
+> > ok, I'll drop this patch
+> >
+> >>
+> >> Emmanuel Grumbach
+> >> egrumbach@gmail.com
+> >>
+> >>
+> >> On Sat, May 5, 2012 at 9:49 PM, Emmanuel Grumbach <egrumbach@gmail.com=
+> wrote:
+> >> > Well,
+> >> >
+> >> > this is not the same warning as before.
+> >> > Can you try the patch attached ?
+> >> > I have submitted it internally.
+> >> >
+> >> > thanks
+> >> >
+> >> > Emmanuel Grumbach
+> >> > egrumbach@gmail.com
+> >> >
+> >> >
+> >> > On Fri, May 4, 2012 at 5:20 PM, Antonio Quartulli <ordex@autistici.o=
+rg> wrote:
+> >> >> On Fri, May 04, 2012 at 09:58:30 +0300, Emmanuel Grumbach wrote:
+> >> >>> This can't be with my patch, is it ?
+> >> >>
+> >> >> here is the log. Some pieces are missing at the beginning, didn't c=
+heck why.
+> >> >> However the WARNING comes up later, so it should be ok. Tell me if =
+I can do
+> >> >> something else!
+> >> >>
+> >> >> Cheers,
+> >> >>
+> >> >>
+> >> >> --
+> >> >> Antonio Quartulli
+> >> >>
+> >> >> ..each of us alone is worth nothing..
+> >> >> Ernesto "Che" Guevara
+> >
+> > --
+> > Antonio Quartulli
+> >
+> > ..each of us alone is worth nothing..
+> > Ernesto "Che" Guevara
+
+
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--sHrvAb52M6C8blB9
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPpj1WAAoJEFMQTLzJFOZFZSwH/3z/7b3BySsxeXnixVKYvW/z
+FBg0Un9g6ApcuLXKtqwYqvm/PBpEtXrkGoH+LypdFH+/f7D4rrHrYebVCJsggie/
+EEDeha2vcfCVZXY0c7x46L6zBUNqOhzuJKRxDOC/MXblag0eQXg+ydJ2Gio+K8lo
+vselec/vGnmDtYeeZBe5eWFt89429sfHxaq8yrfI66QGtast4llXYJ1/7iH4JX9H
+6DA6dJKMQ4tpoQ6Xpyar9OZmWA1uJ3oHs6nF3Xgz1ptYO9z3wfcDRLJtI6stRz6F
+yL5SaR5Wjtj7YPdfUHGgrCFVMpX0NIpEdpGAvT/3ThKuW02Rvle8CcjKrsLlNSk=
+=64L6
+-----END PGP SIGNATURE-----
+
+--sHrvAb52M6C8blB9--
