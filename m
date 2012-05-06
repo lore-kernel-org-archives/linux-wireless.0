@@ -1,100 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46023 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760292Ab2EKQQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 12:16:47 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/6] atheros-initvals: drop the "turbo" column for older chipsets, it is unused and unsupported
-Date: Fri, 11 May 2012 18:16:39 +0200
-Message-Id: <1336753001-29583-4-git-send-email-nbd@openwrt.org> (sfid-20120511_181653_010385_0DCF5984)
-In-Reply-To: <1336753001-29583-3-git-send-email-nbd@openwrt.org>
-References: <1336753001-29583-1-git-send-email-nbd@openwrt.org>
- <1336753001-29583-2-git-send-email-nbd@openwrt.org>
- <1336753001-29583-3-git-send-email-nbd@openwrt.org>
+Received: from investici.nine.ch ([217.150.252.179]:46272 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752275Ab2EFJkt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 May 2012 05:40:49 -0400
+Date: Sun, 6 May 2012 11:40:49 +0200
+From: Antonio Quartulli <ordex@autistici.org>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi warn_slowpath with 3.*
+Message-ID: <20120506094048.GA21716@ritirata.org> (sfid-20120506_114053_141730_17DA017F)
+References: <CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
+ <20120504142006.GA2040@ritirata.org>
+ <CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com>
+ <CANUX_P0ygFyDjOo1Thygw_dEiHKPPiH4=GDKN4ncX3vwy0ujrw@mail.gmail.com>
+ <20120506075433.GA1288@ritirata.org>
+ <CANUX_P09Bx=kZ+OoHLTdZgJy_rJOQvutg3yVrBLHzPzV=KMQsg@mail.gmail.com>
+ <20120506085637.GB1288@ritirata.org>
+ <20120506091526.GA2086@ritirata.org>
+ <CANUX_P1Sg6=NNYoRJ+zOHyjiyKXfY=q+R4eDpqLtTC3DaodbfQ@mail.gmail.com>
+ <CANUX_P0g5TAQ=+VO0EXUvVhNOf6zy-h7KQLocLY0RaVAaJo2FQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="pf9I7BMVVzbSWLtt"
+In-Reply-To: <CANUX_P0g5TAQ=+VO0EXUvVhNOf6zy-h7KQLocLY0RaVAaJo2FQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- initvals.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
 
-diff --git a/initvals.c b/initvals.c
-index 17a7ab0..8c06690 100644
---- a/initvals.c
-+++ b/initvals.c
-@@ -283,7 +283,6 @@ typedef long long unsigned int u64;
- 						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
--		printf("static const u32 "#_array"[][%d] = {\n", (int) ARRAY_SIZE((_array)[0])); \
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
- 				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
- 	} \
-@@ -296,7 +295,6 @@ typedef long long unsigned int u64;
- 						ARRAY_SIZE(_array), 1); \
- 		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
--		printf("static const u32 "#_array"[] = {\n"); \
- 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
- 				       ARRAY_SIZE(_array), 1, true); \
- 	} \
-@@ -339,6 +337,7 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
- 
- static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
- {
-+	u32 p_columns = columns > 5 ? 5 : columns;
- 	u32 col, row;
- 
- 	/*
-@@ -350,7 +349,12 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
- 	if (columns > 6)
- 		return;
- 
--	switch (columns) {
-+	if (onedim)
-+		printf("static const u32 %s[] = {\n", name);
-+	else
-+		printf("static const u32 %s[][%d] = {\n", name, p_columns);
-+
-+	switch (p_columns) {
- 	case 5:
- 		printf("\t/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */\n");
- 		break;
-@@ -368,7 +372,7 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
- 	}
- 
- 	for (row = 0; row < rows; row++) {
--		for (col = 0; col < columns; col++) {
-+		for (col = 0; col < p_columns; col++) {
- 			u32 idx;
- 			u32 val;
- 			if (!col)
-@@ -379,7 +383,7 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
- 				val = ath9k_patch_initval(idx, val);
- 			}
- 			printf("0x%08x", val);
--			if (col + 1 < columns)
-+			if (col + 1 < p_columns)
- 				printf(", ");
- 		}
- 		printf("%s,\n", onedim ? "" : "}");
-@@ -392,11 +396,12 @@ static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns)
- 	SHA1_CTX ctx;
- 	unsigned char digest[SHA1_DIGEST_SIZE];
- 	static char buf[64];
-+	u32 p_columns = columns > 5 ? 5 : columns;
- 	u32 col, row;
- 
- 	SHA1_Init(&ctx);
- 	for (row = 0; row < rows; row++) {
--		for (col = 0; col < columns; col++) {
-+		for (col = 0; col < p_columns; col++) {
- 			unsigned char sha1_buf[4];
- 			u32 val;
- 
--- 
-1.7.3.2
+--pf9I7BMVVzbSWLtt
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Sun, May 06, 2012 at 12:26:38PM +0300, Emmanuel Grumbach wrote:
+> >>> >
+> >>> > Can you please test the patch I sent to you (which was good but not=
+ enough)
+> >>> > And add this one too ?
+> >>>
+> >>> Ok, I'll also leave the print.patch.
+> >>> I'll report the result.
+> >>>
+> >>
+> >> The WARNING is gone :)
+> >>
+> >> I attached the dmesg log anyway (debug was off, but there
+> >> are all the prints you introduced).
+> >>
+> >> To be sure, I also removed all the IWL_ERR you added and tried to rebo=
+ot (in
+> >> order to see whether the printings were affecting synchronization).
+> >>
+> >
+> > Glad to hear.
+> >
+> > You can also remove everything. Reapply the second patch, and here is
+> > a new version of this patch after cleaning.
+>=20
+> I meant, reapply the first patch (the one that zeroes the TBs).
+
+Ok, I will :) Thank you!
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+--=20
+Antonio Quartulli
+
+=2E.each of us alone is worth nothing..
+Ernesto "Che" Guevara
+
+--pf9I7BMVVzbSWLtt
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPpkcgAAoJEFMQTLzJFOZF4ikIAIiWGGuRPh6tRw0jA6HMrhMA
+JhOzBI16ghq+kZkA5s8H+2z6afOv5s0vGFU7MJBReZE6RC1nl7F9xYk66Npdxc42
+xurvMBvEPDW+iQcIUs9cuy3BUxNGI0gv9JdMGThKMvBXpoqt4+G8OhSxBpkIOzWF
+qMRK5KBSWY1tediHmUrYafen3e0u6pl31+Xog/ng9bYodZvDd8+J2UzIowoNGuqM
+pmixRSrlpPVhu9nNQK28X9OG9Fs6WHfwmS+WZrBGj5ZIK7uYu7lP3psVH+n/lew4
+fHTKIWdXeibjqmWy+XBdGIvDEPWVTDY3FD8WsVmpQ37i7kmV9KSo/7dkUXyzgls=
+=0v40
+-----END PGP SIGNATURE-----
+
+--pf9I7BMVVzbSWLtt--
