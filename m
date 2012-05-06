@@ -1,37 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:63778 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753237Ab2E3AEC (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:49300 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752860Ab2EFJ6S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 20:04:02 -0400
-Received: by yhmm54 with SMTP id m54so2830107yhm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 17:04:02 -0700 (PDT)
+	Sun, 6 May 2012 05:58:18 -0400
+Received: by lahj13 with SMTP id j13so2865550lah.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 May 2012 02:58:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XuJKkZTAABX614eih7Okn68hj_RD_MSLv1Xg18Jy1d4g@mail.gmail.com>
-References: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
- <1338331182-29589-2-git-send-email-hauke@hauke-m.de> <CAB=NE6XuJKkZTAABX614eih7Okn68hj_RD_MSLv1Xg18Jy1d4g@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 29 May 2012 17:03:41 -0700
-Message-ID: <CAB=NE6WgLbv+vx2V2nZ-W+8wtz_1JfooYxF99oDaLH8q33Np8Q@mail.gmail.com> (sfid-20120530_020410_599728_B9A03EFD)
-Subject: Re: [PATCH 1/8] compat-wireless: make patches apply again
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20120506095750.GB21716@ritirata.org>
+References: <CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
+	<20120504142006.GA2040@ritirata.org>
+	<CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com>
+	<CANUX_P0ygFyDjOo1Thygw_dEiHKPPiH4=GDKN4ncX3vwy0ujrw@mail.gmail.com>
+	<20120506075433.GA1288@ritirata.org>
+	<CANUX_P09Bx=kZ+OoHLTdZgJy_rJOQvutg3yVrBLHzPzV=KMQsg@mail.gmail.com>
+	<20120506085637.GB1288@ritirata.org>
+	<20120506091526.GA2086@ritirata.org>
+	<CANUX_P1Sg6=NNYoRJ+zOHyjiyKXfY=q+R4eDpqLtTC3DaodbfQ@mail.gmail.com>
+	<CANUX_P0g5TAQ=+VO0EXUvVhNOf6zy-h7KQLocLY0RaVAaJo2FQ@mail.gmail.com>
+	<20120506095750.GB21716@ritirata.org>
+Date: Sun, 6 May 2012 12:58:17 +0300
+Message-ID: <CANUX_P25q-CM8WX7R2v5XsPaLa6B72rGFC95dTeaz_EqxLoZ0Q@mail.gmail.com> (sfid-20120506_115821_466006_18EAFA20)
+Subject: Re: iwlwifi warn_slowpath with 3.*
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Antonio Quartulli <ordex@autistici.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 29, 2012 at 4:16 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, May 29, 2012 at 3:39 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> >>> > Can you please test the patch I sent to you (which was good but not enough)
+>> >>> > And add this one too ?
+>> >>>
+>> >>> Ok, I'll also leave the print.patch.
+>> >>> I'll report the result.
+>> >>>
+>> >>
+>> >> The WARNING is gone :)
+>> >>
+>> >> I attached the dmesg log anyway (debug was off, but there
+>> >> are all the prints you introduced).
+>> >>
+>> >> To be sure, I also removed all the IWL_ERR you added and tried to reboot (in
+>> >> order to see whether the printings were affecting synchronization).
+>> >>
+>> >
+>> > Glad to hear.
+>> >
+>> > You can also remove everything. Reapply the second patch, and here is
+>> > a new version of this patch after cleaning.
 >>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> I meant, reapply the first patch (the one that zeroes the TBs).
 >
-> Oops, I had just pushed out some changes to make patches apply but --
-> I hadn't started to address compilation yet, I think just patch 1
-> addresses application of patches, the rest seem to address compilation
-> so I'll try to apply the rest of the series. If you can rebase that'd
-> be great, I'll stop doing stuff right away.
+> Do you think thise patches should be backported for stable? Doesn't seem to be
+> trivial..
+>
 
-Actually I managed to apply them all, test compiling now!
-
-  Luis
+Well.... it seems that they need to... I will see what to do. For this
+kind of things, I have a maintainer :-)
