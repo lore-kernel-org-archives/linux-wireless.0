@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:64507 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561Ab2EBFIK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 01:08:10 -0400
-Received: by wgbdr13 with SMTP id dr13so227918wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 22:08:09 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:2144 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754418Ab2EGHzb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 03:55:31 -0400
+Message-ID: <4FA77FE7.5030303@broadcom.com> (sfid-20120507_095535_836257_C6D452C8)
+Date: Mon, 7 May 2012 09:55:19 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+icZUVEbbG2Wke1p2PxsgCQV+mHny+C+f4jRMnego+gWAVVZg@mail.gmail.com>
-References: <2F08FF0B-5C29-4827-AA5F-B0F3847D0B83@gmail.com>
-	<8FBCAE90-FAE9-430D-888E-F055091E6683@gmail.com>
-	<CANUX_P1OxH7rmYWxizEaf2DnPSTK0npNtZ2Q9Rm5dksnmFKD8g@mail.gmail.com>
-	<9D52D4AD-58DC-4896-97FC-7248E1FD2614@gmail.com>
-	<CANUX_P1ZX_e+0qs4sa7vdAqHvOQjO6+9PiFhDbW8ybE4ax80gQ@mail.gmail.com>
-	<8EE08C44-8618-45EC-B890-B5B12B661FB6@gmail.com>
-	<CANUX_P0O0-6sOaN59V_RxLj_DbiTdNdwq0zze6B6vMe1hfQuqA@mail.gmail.com>
-	<37926591-261D-4C3E-A1D9-4A8AB3364F5D@gmail.com>
-	<4F901224.1040508@sipsolutions.net>
-	<EA757D90-2CCE-48A1-AF35-7F65EB45F7EE@gmail.com>
-	<4F901F16.6080007@sipsolutions.net>
-	<CAC79F14-24F2-4F90-8A47-B9B2744F5AE3@gmail.com>
-	<CANUX_P2t86v0L=DDaaBdW-6Yb5ffSscv2aSy+jQ5dFc0TqWB_Q@mail.gmail.com>
-	<CBC6370A-C51D-4CF6-99CE-AE8C35C467FB@gmail.com>
-	<CANUX_P0RUv_d+A+uY5AZcb4Yo81+ihw_tPr4u2btAz66Pt_=0Q@mail.gmail.com>
-	<04B86DB4-284B-4FA0-916F-75BF75863A5E@gmail.com>
-	<CANUX_P2HP1PkPWR6=qW12bbRDtJpDY+5oYMbNajAXmJHjyjjuA@mail.gmail.com>
-	<4F96939B.5030204@erley.org>
-	<CA+icZUVWLyvSuGHUWsNZVmEZj84p4EppnZYTeaaU9-WF8g4AGw@mail.gmail.com>
-	<D90BDD59-B256-445F-B9A3-F5481D57A5A7@gmail.com>
-	<CA+icZUVmO7Ehim0FHVAEL37PMNSGhVNismAu1DoOwAbt1Rphzg@mail.gmail.com>
-	<CANUX_P1HQVUFcxFLtWoL+wvEXbNTk0qEJVM+4yJKBbGuhWvZbw@mail.gmail.com>
-	<CA+icZUUr9v-fc-86gAppJWF+c2PBE07eG28BNfQf+9ESvHqj=A@mail.gmail.com>
-	<CANUX_P2yiz025rkcDsisNd0uFfEaVV=Gycf0fzWA29ct7R9aDg@mail.gmail.com>
-	<CA+icZUXG545mfc9aOYAKiLoNiYmUi3wj+5vkB_R_1jRSNSLk4A@mail.gmail.com>
-	<CA+icZUVEbbG2Wke1p2PxsgCQV+mHny+C+f4jRMnego+gWAVVZg@mail.gmail.com>
-Date: Wed, 2 May 2012 08:08:09 +0300
-Message-ID: <CANUX_P1PqOm4b1F5RGRfnWR_oHqoZ3LHNbVRXcDeQQ+vzh4tjQ@mail.gmail.com> (sfid-20120502_070815_217614_9CEB011D)
-Subject: Re: wlan0 not present
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: Dominik Feser <dominik.feser@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"John Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: WARNING: at net/mac80211/iface.c:162
+References: <4FA709B3.4030404@lwfinger.net> (
+ sfid-20120507_013135_141792_546F01AB)
+ <1336372450.4325.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1336372450.4325.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This thread has shifted from its original purpose.
-Just to be sure Dominik, I guess you still have issues and still can't
-really the debug messages right ?
+On 05/07/2012 08:34 AM, Johannes Berg wrote:
+> On Sun, 2012-05-06 at 18:30 -0500, Larry Finger wrote:
+>> Hi,
+>>
+>> I am getting the following warning from the latest wireless-testing system:
+>>
+>>   ------------[ cut here ]------------
+>>   WARNING: at net/mac80211/iface.c:162 ieee80211_check_queues+0x119/0x130 
+>> [mac80211]()
+> 
+> 
+>>       if (WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+>>
+>> The warning is triggered for i, n_queues, and sdata->vif.hw_queue[i] all equal to 1.
+> 
+> Is this a driver with just a single queue by any chance? I never tested
+> that and probably forgot to set those up correctly.
+> 
 
-Emmanuel Grumbach
-egrumbach@gmail.com
+The bug report Larry mentions is with iwlwifi driver:
+
+pci, iwlwifi, NETWORK, Centrino Wireless-N 130 BGN
+
+Gr. AvS
+
