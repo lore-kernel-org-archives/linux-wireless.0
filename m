@@ -1,86 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59931 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751670Ab2EKHq1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 03:46:27 -0400
-Received: by bkcji2 with SMTP id ji2so1991501bkc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2012 00:46:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1336474934-22069-3-git-send-email-yoni.divinsky@ti.com>
-References: <1336474934-22069-1-git-send-email-yoni.divinsky@ti.com> <1336474934-22069-3-git-send-email-yoni.divinsky@ti.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Fri, 11 May 2012 10:46:10 +0300
-Message-ID: <CA+XVXfcD3nh-ucNHiJRX8ypKE+Ln4Ejz5m3Woe+-LCzntV=wjg@mail.gmail.com> (sfid-20120511_094631_636982_350E0FB8)
-Subject: Re: [PATCH 3/4] wlcore: do not send stop fwlog cmd if fw is hanged
-To: Yoni Divinsky <yoni.divinsky@ti.com>
-Cc: linux-wireless@vger.kernel.org, coelho@ti.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:20170 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755977Ab2EGKcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 06:32:10 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Eric Lapuyade <eric.lapuyade@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 05/20] NFC: Add HCI/SHDLC support to let driver check for tag presence
+Date: Mon,  7 May 2012 12:31:16 +0200
+Message-Id: <1336386691-24840-6-git-send-email-sameo@linux.intel.com> (sfid-20120507_123214_370379_CE520E33)
+In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 8, 2012 at 2:02 PM, Yoni Divinsky <yoni.divinsky@ti.com> wrote:
-> If the driver received a watchdog interrupt then the
-> assumption is that the fw is hanged. Avoid sending
-> the stop fwlog command in case of a watchdog recovey
-> to avoid waiting for the 2 seconds timeout of the command.
->
-> Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
-> ---
->  drivers/net/wireless/ti/wlcore/main.c   |    9 +++++++--
->  drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
->  2 files changed, 8 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index 45fe911..b8dcef3 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -582,6 +582,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
->                if (unlikely(intr & WL1271_ACX_INTR_WATCHDOG)) {
->                        wl1271_error("watchdog interrupt received! "
->                                     "starting recovery.");
-> +                       wl->watchdog_recovery = true;
->                        wl12xx_queue_recovery_work(wl);
->
->                        /* restarting the chip. ignore any other interrupt. */
-> @@ -820,10 +821,12 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
->
->        /*
->         * Make sure the chip is awake and the logger isn't active.
-> -        * This might fail if the firmware hanged.
-> +        * Do not send a stop fwlog command if the fw is hanged.
->         */
-> -       if (!wl1271_ps_elp_wakeup(wl))
-> +       if (!wl1271_ps_elp_wakeup(wl) && !wl->watchdog_recovery)
->                wl12xx_cmd_stop_fwlog(wl);
-> +       else
-> +               goto out;
->
->        /* Read the first memory block address */
->        wl12xx_fw_status(wl, wl->fw_status);
-> @@ -926,6 +929,7 @@ static void wl1271_recovery_work(struct work_struct *work)
->         * to restart the HW.
->         */
->        ieee80211_wake_queues(wl->hw);
-> +       wl->watchdog_recovery = false;
->        return;
+From: Eric Lapuyade <eric.lapuyade@intel.com>
 
-Please change watchdog_recovery only inside the wl->mutex.
+Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ include/net/nfc/hci.h   |    2 ++
+ include/net/nfc/shdlc.h |    2 ++
+ net/nfc/hci/core.c      |   12 ++++++++++++
+ net/nfc/hci/shdlc.c     |   12 ++++++++++++
+ 4 files changed, 28 insertions(+), 0 deletions(-)
 
->  out_unlock:
->        mutex_unlock(&wl->mutex);
+diff --git a/include/net/nfc/hci.h b/include/net/nfc/hci.h
+index 95fc0c2..ae04200 100644
+--- a/include/net/nfc/hci.h
++++ b/include/net/nfc/hci.h
+@@ -39,6 +39,8 @@ struct nfc_hci_ops {
+ 	int (*data_exchange) (struct nfc_hci_dev *hdev,
+ 			      struct nfc_target *target,
+ 			      struct sk_buff *skb, struct sk_buff **res_skb);
++	int (*check_presence)(struct nfc_hci_dev *hdev,
++			      struct nfc_target *target);
+ };
+ 
+ #define NFC_HCI_MAX_CUSTOM_GATES	15
+diff --git a/include/net/nfc/shdlc.h b/include/net/nfc/shdlc.h
+index 1071987..ab06afd 100644
+--- a/include/net/nfc/shdlc.h
++++ b/include/net/nfc/shdlc.h
+@@ -35,6 +35,8 @@ struct nfc_shdlc_ops {
+ 	int (*data_exchange) (struct nfc_shdlc *shdlc,
+ 			      struct nfc_target *target,
+ 			      struct sk_buff *skb, struct sk_buff **res_skb);
++	int (*check_presence)(struct nfc_shdlc *shdlc,
++			      struct nfc_target *target);
+ };
+ 
+ enum shdlc_state {
+diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+index ef5cd5c9..f7e4f5a 100644
+--- a/net/nfc/hci/core.c
++++ b/net/nfc/hci/core.c
+@@ -574,6 +574,17 @@ static int hci_data_exchange(struct nfc_dev *nfc_dev, struct nfc_target *target,
+ 	return 0;
+ }
+ 
++static int hci_check_presence(struct nfc_dev *nfc_dev,
++			      struct nfc_target *target)
++{
++	struct nfc_hci_dev *hdev = nfc_get_drvdata(nfc_dev);
++
++	if (hdev->ops->check_presence)
++		return hdev->ops->check_presence(hdev, target);
++
++	return 0;
++}
++
+ struct nfc_ops hci_nfc_ops = {
+ 	.dev_up = hci_dev_up,
+ 	.dev_down = hci_dev_down,
+@@ -582,6 +593,7 @@ struct nfc_ops hci_nfc_ops = {
+ 	.activate_target = hci_activate_target,
+ 	.deactivate_target = hci_deactivate_target,
+ 	.data_exchange = hci_data_exchange,
++	.check_presence = hci_check_presence,
+ };
+ 
+ struct nfc_hci_dev *nfc_hci_allocate_device(struct nfc_hci_ops *ops,
+diff --git a/net/nfc/hci/shdlc.c b/net/nfc/hci/shdlc.c
+index 923bdf7..5665dc6 100644
+--- a/net/nfc/hci/shdlc.c
++++ b/net/nfc/hci/shdlc.c
+@@ -816,6 +816,17 @@ static int nfc_shdlc_data_exchange(struct nfc_hci_dev *hdev,
+ 	return -EPERM;
+ }
+ 
++static int nfc_shdlc_check_presence(struct nfc_hci_dev *hdev,
++				    struct nfc_target *target)
++{
++	struct nfc_shdlc *shdlc = nfc_hci_get_clientdata(hdev);
++
++	if (shdlc->ops->check_presence)
++		return shdlc->ops->check_presence(shdlc, target);
++
++	return 0;
++}
++
+ static struct nfc_hci_ops shdlc_ops = {
+ 	.open = nfc_shdlc_open,
+ 	.close = nfc_shdlc_close,
+@@ -825,6 +836,7 @@ static struct nfc_hci_ops shdlc_ops = {
+ 	.target_from_gate = nfc_shdlc_target_from_gate,
+ 	.complete_target_discovered = nfc_shdlc_complete_target_discovered,
+ 	.data_exchange = nfc_shdlc_data_exchange,
++	.check_presence = nfc_shdlc_check_presence,
+ };
+ 
+ struct nfc_shdlc *nfc_shdlc_allocate(struct nfc_shdlc_ops *ops,
+-- 
+1.7.9.1
 
-Please change watchdog_recovery to false here as well.
-
-> @@ -1049,6 +1053,7 @@ int wl1271_plt_start(struct wl1271 *wl)
->
->                wl->plt = true;
->                wl->state = WL1271_STATE_ON;
-> +               wl->watchdog_recovery = false;
->                wl1271_notice("firmware booted in PLT mode (%s)",
->                              wl->chip.fw_ver_str);
-
-This is not needed here once watchdog_recovery is always set to false
-indie recovery_work().
-
-Arik
