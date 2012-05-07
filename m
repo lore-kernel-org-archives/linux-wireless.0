@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3435 "EHLO MMS3.broadcom.com"
+Received: from mga01.intel.com ([192.55.52.88]:21850 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754524Ab2ENHIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 03:08:09 -0400
-Message-ID: <4FB0AF4B.9070606@broadcom.com> (sfid-20120514_090813_622392_38919A13)
-Date: Mon, 14 May 2012 09:07:55 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: net: wireless: add brcm80211 drivers
-References: <20120513174333.GB4280@elgon.mountain>
-In-Reply-To: <20120513174333.GB4280@elgon.mountain>
-Content-Type: text/plain;
- charset=iso-8859-1
+	id S1754378Ab2EGKby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 06:31:54 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 01/20] NFC: Fix up for NLA_PUT_ api changes
+Date: Mon,  7 May 2012 12:31:12 +0200
+Message-Id: <1336386691-24840-2-git-send-email-sameo@linux.intel.com> (sfid-20120507_123157_680398_949BBB49)
+In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/2012 07:43 PM, Dan Carpenter wrote:
-> Hi Arend,
-> 
-> This code is not really new, but I thought I would email you anyway
-> because I know you are responsive.  :)
+From: Stephen Rothwell <sfr@canb.auug.org.au>
 
-Dito ;-)
+Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/netlink.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> The patch 5b435de0d786: "net: wireless: add brcm80211 drivers" from 
-> Oct 5, 2011, leads to the following Smatch complaint:
-> 
-> drivers/net/wireless/brcm80211/brcmsmac/ampdu.c:741 brcms_c_sendampdu()
-> 	 warn: variable dereferenced before check 'p' (see line 739)
-> 
-> drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
->    733                  /*
->    734                   * check to see if the next pkt is
->    735                   * a candidate for aggregation
->    736                   */
->    737                  p = pktq_ppeek(&qi->q, prec);
->    738			/* tx_info must be checked with current p */
->    739			tx_info = IEEE80211_SKB_CB(p);
->                                   ^^^^^^^^^^^^^^^^
-> "p" is dereferenced inside the call to IEEE80211_SKB_CB().
-> 
->    740	
->    741			if (p) {
->                            ^^^
-> Checked too late.
-> 
->    742				if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
->    743				    ((u8) (p->priority) == tid)) {
-> 
-> regards,
-> dan carpenter
-> 
-> 
-
-Thanks for running smatch. I will look in the current code base and fix
-this. Just out of curiosity: Another static checker used regularly is
-Coccinelle. What are the pros and cons of smatch compared to Coccinelle?
-
-Gr. AvS
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index ebdb605..6c558bc 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -197,8 +197,10 @@ int nfc_genl_target_lost(struct nfc_dev *dev, u32 target_idx)
+ 	if (!hdr)
+ 		goto free_msg;
+ 
+-	NLA_PUT_STRING(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev));
+-	NLA_PUT_U32(msg, NFC_ATTR_TARGET_INDEX, target_idx);
++	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)))
++		goto nla_put_failure;
++	if (nla_put_u32(msg, NFC_ATTR_TARGET_INDEX, target_idx))
++		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+-- 
+1.7.9.1
 
