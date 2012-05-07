@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:33412 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064Ab2EaQwK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 12:52:10 -0400
-Message-ID: <1338483124.1817.53.camel@aeonflux> (sfid-20120531_185214_596190_614D5A27)
-Subject: Re: Master mode support in iwlagn?
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Erwin Van de Velde <erwin.vandevelde@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Florian Fainelli <florian@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 31 May 2012 18:52:04 +0200
-In-Reply-To: <1338474236.2242.1.camel@dcbw.foobar.com>
-References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be>
-	 <5625918.SuzapvkoUg@sylvesterjr.cmi.ua.ac.be>
-	 <4FC75DA4.2090909@broadcom.com>
-	 <1999855.FUDAX7EfOH@sylvesterjr.cmi.ua.ac.be> <4FC76389.70600@broadcom.com>
-	 <1338474236.2242.1.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:26259 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756148Ab2EGKcZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 06:32:25 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 09/20] NFC: Update the LLCP poll mask
+Date: Mon,  7 May 2012 12:31:20 +0200
+Message-Id: <1336386691-24840-10-git-send-email-sameo@linux.intel.com> (sfid-20120507_123232_648062_A289B117)
+In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Fix the poll mask depending on the socket state. POLLOUT was missing
+for example.
 
-> > > I have one ethernet connection and want to share that connection over 
-> > > wireless, preferably in AP mode although I guess ad hoc mode is possible too. 
-> > > Just not sure if NetworkManager supports that.
-> > 
-> > NetworkManager does support ad-hoc, but your hardware need to support
-> > beacon transmission for that as well. You could consider buying an AP.
-> > They are not that expensive ;-)
-> 
-> The problem with Ad-Hoc as "hotspot" is that many devices like Android
-> phones simply ignore adhoc networks due to security issues (as stupid as
-> that may be, since anyone can set up an AP-mode network too).  Which is
-> why real AP mode is nice, but clearly not all wifi hardware is going to
-> support it.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/llcp/sock.c |   15 ++++++++++++++-
+ 1 files changed, 14 insertions(+), 1 deletions(-)
 
-the security issue is the missing proper encryption for IBSS networks.
-Even while in theory you can have RSN, but who is really supporting this
-on the other end.
-
-For example ConnMan ignores IBSS networks as well for the exact above
-reason. And it only provides Tethering via AP mode with RSN. If the
-hardware does not support it, then you can not use Tethering.
-
-We have enough crappy Windows machines and printers trying to play IBSS
-tricks all the time. We do not need any extra ones ;)
-
-Regards
-
-Marcel
-
+diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+index 99196d3..3f339b1 100644
+--- a/net/nfc/llcp/sock.c
++++ b/net/nfc/llcp/sock.c
+@@ -340,11 +340,24 @@ static unsigned int llcp_sock_poll(struct file *file, struct socket *sock,
+ 		mask |= POLLERR;
+ 
+ 	if (!skb_queue_empty(&sk->sk_receive_queue))
+-		mask |= POLLIN;
++		mask |= POLLIN | POLLRDNORM;
+ 
+ 	if (sk->sk_state == LLCP_CLOSED)
+ 		mask |= POLLHUP;
+ 
++	if (sk->sk_shutdown & RCV_SHUTDOWN)
++		mask |= POLLRDHUP | POLLIN | POLLRDNORM;
++
++	if (sk->sk_shutdown == SHUTDOWN_MASK)
++		mask |= POLLHUP;
++
++	if (sock_writeable(sk))
++		mask |= POLLOUT | POLLWRNORM | POLLWRBAND;
++	else
++		set_bit(SOCK_ASYNC_NOSPACE, &sk->sk_socket->flags);
++
++	pr_debug("mask 0x%x\n", mask);
++
+ 	return mask;
+ }
+ 
+-- 
+1.7.9.1
 
