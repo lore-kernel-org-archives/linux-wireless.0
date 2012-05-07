@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:51481 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933560Ab2ERNjt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 09:39:49 -0400
-Date: Fri, 18 May 2012 09:39:35 -0400
-From: Jouni Malinen <j@w1.fi>
-To: Amit SHAKYA <amit.shakya@stericsson.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless (linux-wireless@vger.kernel.org)"
-	<linux-wireless@vger.kernel.org>,
-	"Johannes Berg (johannes@sipsolutions.net)"
-	<johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Handle race condition in replay handling
-Message-ID: <20120518133935.GA13088@w1.fi> (sfid-20120518_153953_380001_17039993)
-References: <ECD438FDEF6BD742895E554C24725A4022946BBD16@EXDCVYMBSTM005.EQ1STM.local>
+Received: from mms2.broadcom.com ([216.31.210.18]:2776 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757596Ab2EGUOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 16:14:15 -0400
+Message-ID: <4FA82D09.3010001@broadcom.com> (sfid-20120507_221420_477753_99E763F0)
+Date: Mon, 7 May 2012 22:14:01 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ECD438FDEF6BD742895E554C24725A4022946BBD16@EXDCVYMBSTM005.EQ1STM.local>
+To: "David Miller" <davem@davemloft.net>
+cc: lucas.demarchi@profusion.mobi, andrei.emeltchenko.news@gmail.com,
+	dh.herrmann@googlemail.com, gustavo@padovan.org,
+	linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+References: <20120507081411.GA19002@aemeltch-MOBL1>
+ <20120507.115228.1171858914064928263.davem@davemloft.net>
+ <CAMOw1v474CTigis2xNBF53YP-NMt2XmMR_zvqNAeN8kmEQjxGA@mail.gmail.com>
+ <20120507.160609.1784484093679983272.davem@davemloft.net>
+In-Reply-To: <20120507.160609.1784484093679983272.davem@davemloft.net>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 17, 2012 at 11:40:16AM +0200, Amit SHAKYA wrote:
-> Added fix for the issue where the Rx throughput use to get stuck,
-> with unicast key rotation feature enabled in the Cisco AP.
-> The issue is that due to race condition during EAPOL key
-> handshake and packet reception, the PN gets reset at MAC, while
-> it still receives previous PN range packets for a while from AP.
-
-How would that happen? I would assume the previous PN range is still
-used with the old key and as such, the PN updates should not be accepted
-for the new key.
-
-> At MAC, there is a memcpy of the PN from the received PN
-> and as a result the maintained PN is overwritten with the
-> previous PN sequence value after being reset at the time, new
-> key is plumbed by supplicant.
+On 05/07/2012 10:06 PM, David Miller wrote:
+> From: Lucas De Marchi <lucas.demarchi@profusion.mobi>
+> Date: Mon, 7 May 2012 16:49:16 -0300
 > 
-> As a result, when this change in sequence number happens, the
-> replay detection handling in MAC gets triggered, causing the
-> traffic to stops for some while till PN re-match, with the
-> one last updated at MAC.
+>> Doing so also means we don't create our own rules and impose them on
+>> others, like happened some time ago
+>> (https://lkml.org/lkml/2012/4/16/473).
 > 
-> The fix takes care of selectively updating the Rx PN during
-> this transition phase.
+> You conveniently forgot to show that Linus said that it's OK for a
+> subsystem maintainer to request that kind of coding style, it's just
+> not OK to impose it tree-wide.
 
-This sounds incorrect.. I don't really like the idea of adding the extra
-hack here and the additional memcmp() calls either.
+Actually, checkpatch.pl does validate the rule being discussed here.
+That could be regarded as imposing it. The SubmittingPatches document
+states the following:
 
-Would you be able to provide more detailed description on how the PN
-values are used based on the key (old/new) and how the PN value for the
-new key gets updated based on the old range?
+"At a minimum you should check your patches with the patch style
+checker prior to submission (scripts/checkpatch.pl).  You should
+be able to justify all violations that remain in your patch."
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Gr. AvS
+
+
+
