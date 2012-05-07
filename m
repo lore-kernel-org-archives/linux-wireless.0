@@ -1,39 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:58830 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752109Ab2EaM3K convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 08:29:10 -0400
-Received: by lagy4 with SMTP id y4so702402lag.29
-        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 05:29:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1338464568.9102.2.camel@jlt3.sipsolutions.net>
-References: <1338463991-7741-1-git-send-email-victorg@ti.com>
-	<1338464568.9102.2.camel@jlt3.sipsolutions.net>
-Date: Thu, 31 May 2012 15:29:07 +0300
-Message-ID: <CAK80WHa3F2XBAO+BexgwB4oZKkQTD8UT3G6tEZTOk_Dq2pO-KQ@mail.gmail.com> (sfid-20120531_142914_158826_78E58BE0)
-Subject: Re: [PATCH v2] mac80211: add command to get current rssi
-From: "Goldenshtein, Victor" <victorg@ti.com>
+Received: from mga09.intel.com ([134.134.136.24]:28533 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755434Ab2EGLzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 07:55:04 -0400
+Date: Mon, 7 May 2012 14:56:10 +0300
+From: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFCv2 1/6] mac80211: softamp: Adds Bluetooth Software AMP
+Message-ID: <20120507115608.GD19002@aemeltch-MOBL1> (sfid-20120507_135511_371184_57E7985E)
+References: <1335273460-12682-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <1335273460-12682-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+ <1336390879.4325.18.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1336390879.4325.18.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 31, 2012 at 2:42 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-05-31 at 14:33 +0300, Victor Goldenshtein wrote:
->
->> -             sinfo->signal = (s8)sta->last_signal;
->> +             if (!local->ops->get_rssi ||
->> +                     drv_get_rssi(local, sdata, &sta->sta, &sinfo->signal))
->> +                     sinfo->signal = (s8)sta->last_signal;
->
-> Please fix the indentation here
->
+Hi Johannes,
 
-will send v3 in a minute.
+On Mon, May 07, 2012 at 01:41:19PM +0200, Johannes Berg wrote:
+> On Tue, 2012-04-24 at 16:17 +0300, Andrei Emeltchenko wrote:
+> 
+> > --- a/include/linux/nl80211.h
+> > +++ b/include/linux/nl80211.h
+> > @@ -1546,6 +1546,7 @@ enum nl80211_iftype {
+> >  	NL80211_IFTYPE_MESH_POINT,
+> >  	NL80211_IFTYPE_P2P_CLIENT,
+> >  	NL80211_IFTYPE_P2P_GO,
+> > +	NL80211_IFTYPE_BLUETOOTH_SOFTAMP,
+> 
+> That should probably be a separate patch also updating cfg80211 (and
+> maybe mac80211) where needed (at least to suppress the warnings you
+> saw). Also documentation is needed.
+> 
+> > @@ -211,6 +212,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+> >  	case NL80211_IFTYPE_STATION:
+> >  	case NL80211_IFTYPE_MONITOR:
+> >  	case NL80211_IFTYPE_ADHOC:
+> > +	case NL80211_IFTYPE_BLUETOOTH_SOFTAMP:
+> >  		/* no special treatment */
+> >  		break;
+> 
+> You should never be able to come here with this interface type -- maybe
+> make it a warning or something.
+> 
+> > +static int vamp_send_frame(struct sk_buff *skb)
+> > +{
+> > +	struct hci_dev *hdev = (struct hci_dev *) skb->dev;
+> > +	struct vamp_data *data;
+> > +
+> > +	BT_DBG("%s", hdev->name);
+> > +
+> > +	if (!hdev) {
+> > +		BT_ERR("Frame for unknown HCI device (hdev=NULL)");
+> > +		return -ENODEV;
+> > +	}
+> > +
+> > +	if (!test_bit(HCI_RUNNING, &hdev->flags))
+> > +		return -EBUSY;
+> > +
+> > +	data = hci_get_drvdata(hdev);
+> > +
+> > +	skb_queue_tail(&data->txq, skb);
+> > +
+> > +	schedule_work(&data->work);
+> 
+> I don't understand the need for the asynchronous handling.
 
--- 
-Thanks,
-Victor.
+This is standard way for hci dev. Can be changed so that skb is handled
+right here.
+
+Best regards 
+Andrei Emeltchenko 
