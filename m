@@ -1,108 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2857 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751913Ab2EBIAm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 04:00:42 -0400
-Message-ID: <4FA0E962.7040402@broadcom.com> (sfid-20120502_100105_873654_D10A207A)
-Date: Wed, 2 May 2012 09:59:30 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55582 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752795Ab2EGLKb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 07:10:31 -0400
+Received: by yhmm54 with SMTP id m54so4011123yhm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 04:10:30 -0700 (PDT)
 MIME-Version: 1.0
-To: sedat.dilek@gmail.com
-cc: "Sedat Dilek" <sedat.dilek@googlemail.com>,
-	"Lennert Buytenhek" <buytenh@wantstofly.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
-	"Jim Cromie" <jim.cromie@gmail.com>,
-	"Ben Hutchings" <ben@decadent.org.uk>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Xose Vazquez Perez" <xose.vazquez@gmail.com>
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-References: <20120427094637.GV3157@wantstofly.org>
- <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
- <20120427095842.GW3157@wantstofly.org>
- <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
- <20120427101732.GX3157@wantstofly.org>
- <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
- <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
- <20120427185809.GZ3157@wantstofly.org>
- <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
- <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
- <20120501125102.GN3157@wantstofly.org>
- <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
-In-Reply-To: <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <4FA7A13D.6020405@01019freenet.de>
+References: <4FA75983.9040003@01019freenet.de>
+	<201205070702.q4772uem002960@mail.maya.org>
+	<4FA7A13D.6020405@01019freenet.de>
+Date: Mon, 7 May 2012 13:04:29 +0200
+Message-ID: <CAGXE3d-pwTraDvC6yOKt7hHPTXL5LtaHFovD_SFmaPgajJbS9g@mail.gmail.com> (sfid-20120507_131034_591594_8EF80298)
+Subject: Re: [rt2x00-users] [rt2800pci (AP) - ath9k] 802.11w: broken
+ aggregation handling?
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	hostap@lists.shmoo.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/01/2012 03:54 PM, Sedat Dilek wrote:
-> On Tue, May 1, 2012 at 2:51 PM, Lennert Buytenhek
-> <buytenh@wantstofly.org>  wrote:
->> On Sun, Apr 29, 2012 at 12:25:21AM +0200, Sedat Dilek wrote:
->>
->>>> On 1st sight, logs look fine:
->>>>
->>>> [21:52:52]<lautriv>  [    6.050967] ieee80211 phy0: 88w8361p v4,
->>>> 00173f3bdde3, STA firmware 2.1.4.25
->>>>
->>>> But WLAN connection is not that fast and stable as lautriv reports
->>>> (several abnormalities were observed).
->>>>
->>>> I requested a tarball which includes:
->>>> * dmesg (Linux-3.3.3)
->>>> * e_n_a (/etc/network/interfaces)
->>>> * ifconfig output
->>>> * iwconfig output
->>>> * iw_phy output
->>>> * ps_axu (WPA) output
->>>>
->>>> lautriv will be so kind to be around on #linux-wireless/Freenode the
->>>> next days (UTC+2: German/Swiss local-time).
->>>> Just ping him.
->>>>
->>>> Hope you have fun, together!
->>>>
->>>> - Sedat -
->>>
->>> A new tarball from lautriv with same outputs as before, but now tested
->>> with Linux-3.4-rc4.
->
-> [ CC hauke (OpenWrt) and Ben Hutchings (linux-firmware maintainer) ]
->
->> The output looks good enough for me to ACK adding the PCI ID.
->>
->> Can the firmware being used here be submitted to the linux-firmware
->> git tree?
->
-> I can't say much about the firmware [1] inclusion or the procedure of
-> it into linux-firmware [2].
-> Maybe, Ben can explain the procedure and what has to be considered
-> before inclusion in linux-firmware.
-> The original firmware and helper images were extracted from a Netgear
-> Windows driver [1].
->
->  From what I read in the OpenWrt forum posting [3]: You wanted to care
-> for inclusion:
->
-> "Firmware isn't included in the kernel tree anymore, there's the
-> linux-firmware git tree for that these days. I will contact some
-> people at Marvell to ask whether 8361P firmware can be included
-> there."
+Hi,
 
-Basically, all firmware in linux-firmware repository should be 
-accompanied with license information. Also you are signing off the patch 
-to add the firmware to the repository so you are bound to the 
-Developer's Certificate of Origin 1.1 in [1]. Having the firmware 
-extracted from a windows driver does not fall under that statement, 
-unless Marvell is ok with its redistribution. Recently a patch was 
-submitted for a README in the linux-firmware repository about the 
-process. It must be a binary patch. Easiest way is to use 'git 
-format-patch -B'.
+On Mon, May 7, 2012 at 12:17 PM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> The attached patch seems to enable 802.11w for rt2800pci (AP). It does
+> not work for rt2800usb (rt3572 SUPP), even if the set_key error
+> disappears (originally the flag IEEE80211_HW_MFP_CAPABLE was set
+> unconditionally).
 
-Gr. AvS
+I'm fine with enabling MFP in rt2800pci but I don't know enough about the
+necessary requirements.
 
-[1] http://lxr.linux.no/linux+v3.3.4/Documentation/SubmittingPatches
-[2] https://lkml.org/lkml/2012/4/21/177
+Jouni, are there any special requirements for MFP?
 
+Thanks,
+Helmut
