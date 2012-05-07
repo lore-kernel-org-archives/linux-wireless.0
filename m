@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:52209 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754872Ab2ESWmn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2012 18:42:43 -0400
-Received: by obbtb18 with SMTP id tb18so5911684obb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 May 2012 15:42:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FB6D114.4050802@candelatech.com>
-References: <4FB6D114.4050802@candelatech.com>
-Date: Sun, 20 May 2012 01:42:42 +0300
-Message-ID: <CAB3XZEem=2P36WgWXynoscemAhMrcgh0mKFocBbGhy8C-cJigQ@mail.gmail.com> (sfid-20120520_004247_251937_588CE5A1)
-Subject: Re: lockdep splat related to wifi regulatory in 3.3.6+
-From: Eliad Peller <eliad@wizery.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45131 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932479Ab2EGVFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 17:05:23 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, m@bues.ch,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] ssb: add PCI IDs 0x4322 and 0xa8d6
+Date: Mon,  7 May 2012 23:04:53 +0200
+Message-Id: <1336424693-25926-1-git-send-email-hauke@hauke-m.de> (sfid-20120507_230527_278246_1D0BC5AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Ben,
+The 0x4322 ID is found on the BCM4322 used on some SoCs like the
+Linksys WRT610N V1 connected to a BCM4705. The 0xa8d6 ID is found on
+the BCM43222 used on some other SoCs like the D-Link DSL-2760U
+connected to a BCM63xx.
 
-On Sat, May 19, 2012 at 1:45 AM, Ben Greear <greearb@candelatech.com> wrote:
-> This appears to be this bug:
->
-> https://bugzilla.redhat.com/show_bug.cgi?id=734519
->
-> Test case was to create 40 (virtual) stations against an AP that can only
-> handle
-> 30, so the remaining 10 constantly try to re-associate, get DHCP if
-> they manage, etc....
->
->
-> cfg80211: Calling CRDA for country: US
->
-> ======================================================
-> [ INFO: possible circular locking dependency detected ]
-> 3.3.6+ #1 Tainted: G        WC O
-> -------------------------------------------------------
-> kworker/1:2/62 is trying to acquire lock:
->  (cfg80211_mutex){+.+.+.}, at: [<ffffffffa00f7ced>]
-> restore_regulatory_settings+0x2c/0x4af [cfg80211]
->
-> but task is already holding lock:
->  ((reg_timeout).work){+.+...}, at: [<ffffffff8104c5c1>]
-> process_one_work+0x1c2/0x35a
->
-> which lock already depends on the new lock.
->
-Try this:
-http://www.spinics.net/lists/linux-wireless/msg90322.html
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/ssb/b43_pci_bridge.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Eliad.
+diff --git a/drivers/ssb/b43_pci_bridge.c b/drivers/ssb/b43_pci_bridge.c
+index bad7ba5..f824fec 100644
+--- a/drivers/ssb/b43_pci_bridge.c
++++ b/drivers/ssb/b43_pci_bridge.c
+@@ -29,11 +29,13 @@ static const struct pci_device_id b43_pci_bridge_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4319) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4320) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4321) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4322) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4324) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4325) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4328) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4329) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x432b) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0xa8d6) },
+ 	{ 0, },
+ };
+ MODULE_DEVICE_TABLE(pci, b43_pci_bridge_tbl);
+-- 
+1.7.9.5
+
