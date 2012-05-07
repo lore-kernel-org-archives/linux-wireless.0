@@ -1,31 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57018 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757479Ab2ERPt1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 11:49:27 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from purkki.adurom.net ([80.68.90.206]:53596 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755938Ab2EGJfq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 05:35:46 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] [trivial] nl80211: fix typos in comments
+References: <1336382519-6093-1-git-send-email-zefir.kurtisi@neratec.com>
+Date: Mon, 07 May 2012 12:35:41 +0300
+In-Reply-To: <1336382519-6093-1-git-send-email-zefir.kurtisi@neratec.com>
+	(Zefir Kurtisi's message of "Mon, 7 May 2012 11:21:59 +0200")
+Message-ID: <87d36g9vv6.fsf@purkki.adurom.net> (sfid-20120507_113549_851799_74F1107A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20406.28492.196848.41247@gargle.gargle.HOWL> (sfid-20120518_174938_860743_53E14062)
-Date: Fri, 18 May 2012 21:18:28 +0530
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 05/10] ath9k_hw: add AR9462 initval for Global WLAN, BT settings
-In-Reply-To: <1337350053-15491-5-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<1337350053-15491-5-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan wrote:
-> +static const u32 ar9462_2p0_glb_wlan_bt[][2] = {
-> +	/* Addr      allmodes  */
-> +	{0x0002002c, 0x00000003},
-> +};
-> +
+Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
 
-Since this is just a single register, it would be much simpler to
-just program it directly instead of having an initval array.
+> - * @NL80211_DFS_FCC_: Country follows DFS master rules from FCC
+> - * @NL80211_DFS_FCC_: Country follows DFS master rules from ETSI
+> - * @NL80211_DFS_JP_: Country follows DFS master rules from JP/MKK/Telec
+> + * @NL80211_DFS_FCC: Country follows DFS master rules from FCC
+> + * @NL80211_DFS_ETSI: Country follows DFS master rules from ETSI
+> + * @NL80211_DFS_JP: Country follows DFS master rules from JP/MKK/Telec
 
-Sujith
+Are there any user space applications which use these enums? If there are,
+this change will break them which is bad (tm).
+
+-- 
+Kalle Valo
