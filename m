@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:41017 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757203Ab2EGRd4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 13:33:56 -0400
-Message-ID: <1336412033.20924.6.camel@joe2Laptop> (sfid-20120507_193359_861058_4ECAE3CC)
-Subject: Re: [PATCH] ath9k: Support ethtool getstats api.
-From: Joe Perches <joe@perches.com>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
-Date: Mon, 07 May 2012 10:33:53 -0700
-In-Reply-To: <1336411437-16653-1-git-send-email-greearb@candelatech.com>
-References: <1336411437-16653-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from yumi.tdiedrich.de ([85.10.210.183]:52018 "EHLO mx.tdiedrich.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753941Ab2EGTGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 15:06:54 -0400
+Date: Mon, 7 May 2012 21:06:48 +0200
+From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt28xx: Revert
+ eccc068e8e84c8fe997115629925e0422a98e4de which causes txpower to be stuck
+ at 0
+Message-ID: <20120507190648.GA5472@yumi.tdiedrich.de> (sfid-20120507_210658_330271_C1D6818B)
+References: <20120506153806.GF2774@yumi.tdiedrich.de>
+ <CAGXE3d8X3FLoUEjmg+13ggCzVdDHncpr7uwwLweSb+4r87jRpQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d8X3FLoUEjmg+13ggCzVdDHncpr7uwwLweSb+4r87jRpQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-05-07 at 10:23 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+Helmut Schaa wrote:
+> Luis, with rt2800 we are not really able to provide an accurate max tx power :(
+> so, can we restore the previous behavior in reg.c? Or maybe do something like
 > 
-> This returns many of the values that formerly could
-> only be obtained from debugfs.  This should be an
-> improvement when trying to access these counters
-> programatically.  Currently this support is only
-> enabled when DEBUGFS is enabled because otherwise
-> these stats are not accumulated.
+> if (chan->max_reg_power)
+>   chan->max_power = min(chan->max_power, chan->max_reg_power);
+> 
+> Tobias, does that work for you as well?
 
-trivia:
+Nope, the problem is that chan->max_power is 0, so this will work:
 
-[]
-> +#define ATH9K_SSTATS_LEN ARRAY_SIZE(ath9k_gstrings_stats)
+if (chan->max_power == 0)
+  chan->max_power = chan->max_reg_power;
+else
+  chan->max_power = min(chan->max_power, chan->max_reg_power);
 
-I think there's not much value in this #define
+Also, in the if-branch above that chan->max_reg_power is never set, I
+wonder if that should be
 
-> +static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
-> +				   struct ieee80211_vif *vif, int sset)
-> +{
-> +	if (sset == ETH_SS_STATS)
-> +		return ATH9K_SSTATS_LEN;
-> +	return 0;
-> +}
+chan->max_power = chan->orig_mpwr = chan->max_reg_power =
+  (int) MBM_TO_DBM(power_rule->max_eirp);
 
-Is this the only use?
+instead of
 
+chan->max_power = chan->orig_mpwr =
+  (int) MBM_TO_DBM(power_rule->max_eirp);
+
+(But I don't seem to hit that if-block juding from some printks I added)
+
+-- 
+Tobias						PGP: http://8ef7ddba.uguu.de
