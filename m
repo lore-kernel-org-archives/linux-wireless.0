@@ -1,104 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25775 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753730Ab2ENBxz (ORCPT
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:49664 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755991Ab2EGMBs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2012 21:53:55 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 7 May 2012 08:01:48 -0400
+Received: by qabj40 with SMTP id j40so3647409qab.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 05:01:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20400.25989.591750.213731@gargle.gargle.HOWL> (sfid-20120514_035357_717918_D50E86D5)
-Date: Mon, 14 May 2012 07:23:09 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/7] ath9k: Handle ASPM properly
+In-Reply-To: <CA+XVXff+4SLy6y2xbDONDOg_j9CNYd1rkLgtdvHEKpprBW5zog@mail.gmail.com>
+References: <1319350901-31178-1-git-send-email-arik@wizery.com>
+	<4EA7DA0F.7050603@sipsolutions.net>
+	<CA+XVXff+4SLy6y2xbDONDOg_j9CNYd1rkLgtdvHEKpprBW5zog@mail.gmail.com>
+Date: Mon, 7 May 2012 14:01:48 +0200
+Message-ID: <CAFED-jku-zGtTvYwGpwCastRJZAfQf9uyJAeqtevGVRn22Qygg@mail.gmail.com> (sfid-20120507_140152_158792_B9E4AA27)
+Subject: Re: [PATCH] mac80211: support adding IV-room in the skb for CCMP keys
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ASPM has to be disabled when BTCOEX is in use, do this properly
-by calling the bus-specific ASPM init routine after the
-BTCOEX scheme has been determined.
+2011/10/26 Arik Nemtsov <arik@wizery.com>:
+> On Wed, Oct 26, 2011 at 11:59, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On 10/23/2011 8:21 AM, Arik Nemtsov wrote:
+>>>
+>>> Some cards can generate CCMP IVs in HW, but require the space for the IV
+>>> to be pre-allocated in the frame at the correct offset. Add a key flag
+>>> that allows us to achieve this.
+>>
+>> Is it really that expensive to generate the IV and then not use it that this
+>> is worth the extra complexity? This not just makes it more complex but also
+>> more expensive in the other case.
+>>
+>
+> Some of the platforms with this chip are pretty weak (host CPU is the
+> bottleneck).
+>
+> We add another "if" for the other case (for a value that's likely in
+> the cacheline already). I don't think that's too bad.
+>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c   |   11 -----------
- drivers/net/wireless/ath/ath9k/init.c |    3 +++
- drivers/net/wireless/ath/ath9k/pci.c  |    5 +++++
- 3 files changed, 8 insertions(+), 11 deletions(-)
+Hello,
+Why this is only done for CCMP?
+Our firmware require such IVs allocation for all modes and currently
+we have common code that do that in the driver based on:
+iv_len = tx_info->control.hw_key->iv_len
+icv_len = tx_info->control.hw_key->icv_len
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index abe05ec..02ce524 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -390,14 +390,6 @@ static void ath9k_hw_disablepcie(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_PCIE_SERDES2, 0x00000000);
- }
- 
--static void ath9k_hw_aspm_init(struct ath_hw *ah)
--{
--	struct ath_common *common = ath9k_hw_common(ah);
--
--	if (common->bus_ops->aspm_init)
--		common->bus_ops->aspm_init(common);
--}
--
- /* This should work for all families including legacy */
- static bool ath9k_hw_chip_test(struct ath_hw *ah)
- {
-@@ -693,9 +685,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	if (r)
- 		return r;
- 
--	if (ah->is_pciexpress)
--		ath9k_hw_aspm_init(ah);
--
- 	r = ath9k_hw_init_macaddr(ah);
- 	if (r) {
- 		ath_err(common, "Failed to initialize MAC address\n");
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 3e22839..9dfce1a 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -597,6 +597,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	ath9k_cmn_init_crypto(sc->sc_ah);
- 	ath9k_init_misc(sc);
- 
-+	if (common->bus_ops->aspm_init)
-+		common->bus_ops->aspm_init(common);
-+
- 	return 0;
- 
- err_btcoex:
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index a856b51..6ec9f88 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -115,6 +115,9 @@ static void ath_pci_aspm_init(struct ath_common *common)
- 	int pos;
- 	u8 aspm;
- 
-+	if (!ah->is_pciexpress)
-+		return;
-+
- 	pos = pci_pcie_cap(pdev);
- 	if (!pos)
- 		return;
-@@ -138,6 +141,7 @@ static void ath_pci_aspm_init(struct ath_common *common)
- 		aspm &= ~(PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1);
- 		pci_write_config_byte(parent, pos + PCI_EXP_LNKCTL, aspm);
- 
-+		ath_info(common, "Disabling ASPM since BTCOEX is enabled\n");
- 		return;
- 	}
- 
-@@ -147,6 +151,7 @@ static void ath_pci_aspm_init(struct ath_common *common)
- 		ah->aspm_enabled = true;
- 		/* Initialize PCIe PM and SERDES registers. */
- 		ath9k_hw_configpcipowersave(ah, false);
-+		ath_info(common, "ASPM enabled: 0x%x\n", aspm);
- 	}
- }
- 
--- 
-1.7.10.2
+/* cw1200 driver */
+skb_push(t->skb, iv_len);
+memmove(newhdr, newhdr + iv_len, t->hdrlen);
+skb_put(t->skb, icv_len);
+....
 
+Isn't better to handle all modes in mac80211 base on
+IEEE80211_KEY_FLAG_PUT_IV_SPACE or just leave this for the driver?
+
+I know this is easy to fix in our driver but still we have to remember
+that in case of CCMP mac80211 will already do it for us and will not
+do that in case of other modes.
+So, my proposal is to remove all changes from net/mac80211/wpa.c file
+and remember that driver should care about it - in such case
+PUT_IV_SPACE will be more generic.
+
+
+BR
+Janusz
