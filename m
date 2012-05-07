@@ -1,72 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:52632 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139Ab2EYQ3r convert rfc822-to-8bit (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:34252 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757683Ab2EGVXJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 12:29:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAJivULpmLp9JK+PQZ9RkrvvYHNk=uA33=A-ffftroigivy1_NQ@mail.gmail.com>
-References: <1337934071-29342-1-git-send-email-qasimj@gmail.com>
-	<CAEFj985HxSrOwOoevDjG1jxPxobLda-X_LZUtj6LgwXZwozBog@mail.gmail.com>
-	<CAJivULpmLp9JK+PQZ9RkrvvYHNk=uA33=A-ffftroigivy1_NQ@mail.gmail.com>
-Date: Sat, 26 May 2012 00:29:46 +0800
-Message-ID: <CAEFj984efuO12nSPsZ2A0Q0nwPLesYJ8gDHwgh=0e1VO3_UtGw@mail.gmail.com> (sfid-20120525_183011_068812_F5E7BAAC)
-Subject: Re: [RFC] mac80211: Use correct originator sequence number in a Path Reply
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: devel@lists.open80211s.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ravip@utdallas.edu
-Content-Type: text/plain; charset=windows-1252
+	Mon, 7 May 2012 17:23:09 -0400
+Message-ID: <1336425731.5970.124.camel@aeonflux> (sfid-20120507_232316_153494_54203E9F)
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+From: Marcel Holtmann <marcel@holtmann.org>
+To: David Miller <davem@davemloft.net>
+Cc: dh.herrmann@googlemail.com, gustavo@padovan.org,
+	linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Date: Mon, 07 May 2012 14:22:11 -0700
+In-Reply-To: <20120507.135547.704675228233645115.davem@davemloft.net>
+References: <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
+	 <20120506.145304.1998242927519675381.davem@davemloft.net>
+	 <1336410360.5970.103.camel@aeonflux>
+	 <20120507.135547.704675228233645115.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> No. I am referring to the originator sequence number in PREP because
-> when the PREP reaches the originator of the PREQ, the originator
-> sequence number in the PREP and the value of the metric is used to
-> determine which PREP will be accepted. If the originator sequence
-> numbers in the PREPs are different, then the PREP with the higher
-> sequence number will be accepted irrespective of the value of the
-> metric. Only if the originator sequence numbers in the PREP are equal
-> will the metric values in the PREPs be examined.
+Hi Dave,
 
-Based on the "Table 11C-17—Contents of a PREP element in Case A", the
-originator HWMP sequence number is the HWMP sequence number of the
-originator mesh STA. So this value (orig_sn in
-hwmp_preq_frame_process) is unchanged in the generated PREP element
-upon receiving the PREQ element.
+> > When it comes to function declaration and function calls, the style in
+> > mm/memory.c is mixed. We can start counting, but for both other
+> > multi-line cases it seems that tab-only indentation is predominant.
+> 
+> Fair enough.
+> 
+> But you know what the real issue is?
+> 
+> I have told the bluetooth folks this matters to me, repeatedly.
+> 
+> And then when I pushback when some unacceptable changes slip through,
+> they put a bullseye on my head and say I'm being unreasonable.
+> 
+> What's unreasonable about a maintainer telling you multiple times
+> to do things a certain way and then getting mad when you still
+> don't listen?
 
-The target HWMP sequence number is the HWMP sequence number of the
-target mesh STA or target proxy mesh gate after it has been updated
-according to 11C.9.8.3. So this value is changed based on target_sn in
-hwmp_preq_frame_process.
+I have no problem in getting these fixed and you actually imposing this
+coding style on all networking subsystem. That is your prerogative.
 
-I think that the confusion is in the hwmp_route_info_get,
+However I do have a problem if this is not documented in CodingStyle or
+somewhere else as part of the kernel source. It should be documented and
+people pointing out the lack of this are full in their right to do so. I
+personally would expect the maintainer enforcing this rule to ensure
+that it is properly documented. Especially after such a confusion has
+arisen.
 
-case MPATH_PREP:
-                /* Originator here refers to the MP that was the target in the
-                 * Path Request. We divert from the nomenclature in the draft
-                 * so that we can easily use a single function to gather path
-                 * information from both PREQ and PREP frames.
-                 */
-                orig_sn = PREP_IE_TARGET_SN(hwmp_ie);
+That checkpatch.pl needs an extra command line called --subjective or
+-strict to have this easily tested is really not intuitive. I would love
+to see the idea realized that checkpatch.pl does the enabling/disabling
+of coding style warnings automatically based on the path.
 
-orig_sn here is actually the target HWMP sequence number of PREP
-element generated by hwmp_preq_frame_process.
+Anyway, these are my view points on this.
 
-> Please notice that in hwmp_preq_frame_process, target_sn ends up being
-> used as orig_sn for the PREP. This is probably what is causing the
-> confusion in your case.
+Regards
 
-I think that the PREQ element has originator sequence number at the
-end but the PREQ element has the target sequence number at the end.
-This is what mesh_path_sel_frame_tx is doing.
+Marcel
 
-> Your patch is definitely not what I was pointing out, in fact it
-> diverts from the standard functionality since it removes the check for
-> HWMPNetDiameterTraversalTime.
 
-I thought that this is only for originator sequence number which is
-done by mesh_path_start_discovery.
-
-Regards,
-Chun-Yeow
