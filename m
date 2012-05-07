@@ -1,33 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:48342 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751436Ab2ECRKa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 13:10:30 -0400
-Received: by ghrr11 with SMTP id r11so1976941ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 10:10:30 -0700 (PDT)
-Message-ID: <4FA2BC00.9020804@lwfinger.net> (sfid-20120503_191034_422656_DAC1E22C)
-Date: Thu, 03 May 2012 12:10:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/9] rtlwifi: avoid race registering with mac80211
-References: <4FA212D9.5020602@gtri.gatech.edu> <4FA21339.8060407@gtri.gatech.edu>
-In-Reply-To: <4FA21339.8060407@gtri.gatech.edu>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:23070 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754378Ab2EGKcC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 06:32:02 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Eric Lapuyade <eric.lapuyade@intel.com>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 03/20] NFC: Remove useless HCI private nfc target table
+Date: Mon,  7 May 2012 12:31:14 +0200
+Message-Id: <1336386691-24840-4-git-send-email-sameo@linux.intel.com> (sfid-20120507_123206_018725_96F03ED2)
+In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2012 12:10 AM, Joshua Roys wrote:
+From: Eric Lapuyade <eric.lapuyade@intel.com>
 
+Signed-off-by: Eric Lapuyade <eric.lapuyade@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ include/net/nfc/hci.h |    2 --
+ net/nfc/hci/core.c    |    7 -------
+ 2 files changed, 0 insertions(+), 9 deletions(-)
 
-This patch is totally wrong. It is possible that there is a race condition, and 
-it may be the source of the problem at
-https://bugzilla.kernel.org/show_bug.cgi?id=43187, but this patch fails when the 
-firmware is not cached. As a result, it prevents my box from booting.
-
-I will try to find a fix for both conditions.
-
-Larry
+diff --git a/include/net/nfc/hci.h b/include/net/nfc/hci.h
+index aca65a5..95fc0c2 100644
+--- a/include/net/nfc/hci.h
++++ b/include/net/nfc/hci.h
+@@ -83,8 +83,6 @@ struct nfc_hci_dev {
+ 	u8 gate2pipe[NFC_HCI_MAX_GATES];
+ 
+ 	bool poll_started;
+-	struct nfc_target *targets;
+-	int target_count;
+ 
+ 	u8 sw_romlib;
+ 	u8 sw_patch;
+diff --git a/net/nfc/hci/core.c b/net/nfc/hci/core.c
+index 545c19f..ef5cd5c9 100644
+--- a/net/nfc/hci/core.c
++++ b/net/nfc/hci/core.c
+@@ -235,13 +235,6 @@ static int nfc_hci_target_discovered(struct nfc_hci_dev *hdev, u8 gate)
+ 	targets->hci_reader_gate = gate;
+ 
+ 	r = nfc_targets_found(hdev->ndev, targets, 1);
+-	if (r < 0)
+-		goto exit;
+-
+-	kfree(hdev->targets);
+-	hdev->targets = targets;
+-	targets = NULL;
+-	hdev->target_count = 1;
+ 
+ exit:
+ 	kfree(targets);
+-- 
+1.7.9.1
 
