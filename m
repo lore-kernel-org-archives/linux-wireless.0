@@ -1,92 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4962 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753833Ab2E3VXU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 17:23:20 -0400
-Message-ID: <4FC68FBD.6080908@broadcom.com> (sfid-20120530_232325_093824_AEB20A36)
-Date: Wed, 30 May 2012 23:23:09 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:57908 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755779Ab2EGJZP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 05:25:15 -0400
+Received: by yhmm54 with SMTP id m54so3965240yhm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 02:25:14 -0700 (PDT)
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>
-Subject: Re: brcmsmac connection stalls (was Re: )
-References: <20120530202547.GE30697@thinkpad-t410>
- <4FC687C1.6090800@broadcom.com> <20120530210538.GG30697@thinkpad-t410>
-In-Reply-To: <20120530210538.GG30697@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <20120506153806.GF2774@yumi.tdiedrich.de>
+References: <20120506153806.GF2774@yumi.tdiedrich.de>
+Date: Mon, 7 May 2012 11:25:14 +0200
+Message-ID: <CAGXE3d8X3FLoUEjmg+13ggCzVdDHncpr7uwwLweSb+4r87jRpQ@mail.gmail.com> (sfid-20120507_112520_322167_2C4D1BD4)
+Subject: Re: [OpenWrt-Devel] [PATCH] rt28xx: Revert eccc068e8e84c8fe997115629925e0422a98e4de
+ which causes txpower to be stuck at 0
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: OpenWrt Development List <openwrt-devel@lists.openwrt.org>
+Cc: linux-wireless@vger.kernel.org, Luis Rodriguez <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2012 11:05 PM, Seth Forshee wrote:
-> On Wed, May 30, 2012 at 10:49:05PM +0200, Arend van Spriel wrote:
->> If you can provide me as much detail as possible on the AP settings I
->> can dive into it over here.
-> 
-> The AP is a Linksys E3000 running dd-wrt. Here's what iw says about it.
-> Let me know if there's any more information you'd like to have or
-> anything else I can do to help.
+On Sun, May 6, 2012 at 5:38 PM, Tobias Diedrich
+<ranma+openwrt@tdiedrich.de> wrote:
+> Revert eccc068e8e84c8fe997115629925e0422a98e4de which causes txpower
+> to be stuck at 0.
+>
+> Recent OpenWRT has txpower stuck at 0 for at least rt28xx, and I
+> found this commit as the root cause:
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
+>
+> Before reverting this "iw phy phy0 info" would show "0.0 dBm" as
+> maximum transmit power for all frequencies.
+>
+> After reverting this (and with regdomain set to CH) it is back to
+> the expected 20 dBm.
+>
+>
+> Signed-off-by: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
 
-This will do nicely. Thanks.
+Ok, the problem seems to come from the fact that rt2800 doesn't
+register a per channel
+max power to mac80211.
 
-Gr. AvS
+Luis, with rt2800 we are not really able to provide an accurate max tx power :(
+so, can we restore the previous behavior in reg.c? Or maybe do something like
 
->         TSF: 80992461200 usec (0d, 22:29:52)
->         freq: 2412
->         beacon interval: 100
->         capability: ESS Privacy ShortSlotTime (0x0411)
->         signal: -35.00 dBm
->         last seen: 10192 ms ago
->         Information elements from Probe Response frame:
->         SSID: Kailia
->         Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0 54.0 
->         DS Parameter set: channel 1
->         ERP: <no flags>
->         RSN:     * Version: 1
->                  * Group cipher: CCMP
->                  * Pairwise ciphers: CCMP
->                  * Authentication suites: PSK
->                  * Capabilities: 16-PTKSA-RC (0x000c)
->         Extended supported rates: 6.0 9.0 12.0 48.0 
->         HT capabilities:
->                 Capabilities: 0x187e
->                         HT20/HT40
->                         SM Power Save disabled
->                         RX Greenfield
->                         RX HT20 SGI
->                         RX HT40 SGI
->                         No RX STBC
->                         Max AMSDU length: 7935 bytes
->                         DSSS/CCK HT40
->                 Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
->                 Minimum RX AMPDU time spacing: 8 usec (0x06)
->                 HT RX MCS rate indexes supported: 0-15, 32
->                 HT TX MCS rate indexes are undefined
->         HT operation:
->                  * primary channel: 1
->                  * secondary channel offset: above
->                  * STA channel width: any
->                  * RIFS: 1
->                  * HT protection: nonmember
->                  * non-GF present: 0
->                  * OBSS non-GF present: 1
->                  * dual beacon: 0
->                  * dual CTS protection: 0
->                  * STBC beacon: 0
->                  * L-SIG TXOP Prot: 0
->                  * PCO active: 0
->                  * PCO phase: 0
->         WMM:     * Parameter version 1
->                  * u-APSD
->                  * BE: CW 15-1023, AIFSN 3
->                  * BK: CW 15-1023, AIFSN 7
->                  * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
->                  * VO: acm CW 3-7, AIFSN 2, TXOP 1504 usec
-> 
-> 
+if (chan->max_reg_power)
+  chan->max_power = min(chan->max_power, chan->max_reg_power);
 
+Tobias, does that work for you as well?
 
+Thanks,
+Helmut
