@@ -1,73 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:35453 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750757Ab2EMEbc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2012 00:31:32 -0400
-Date: Sun, 13 May 2012 07:31:21 +0300
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: bluetooth 2012-05-04
-Message-ID: <20120513043121.GA22845@x220.P-661HNU-F1> (sfid-20120513_063241_198416_D5186A29)
-References: <20120505001243.GC23728@joana>
- <20120508070211.GB11843@joana>
- <20120511201620.GD7620@joana>
- <20120512182227.GA30574@tuxdriver.com>
- <20120512190900.GA15956@joana>
+Received: from mga02.intel.com ([134.134.136.20]:49140 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755583Ab2EGI2l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 04:28:41 -0400
+Date: Mon, 7 May 2012 11:29:47 +0300
+From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: David Miller <davem@davemloft.net>, dh.herrmann@googlemail.com,
+	gustavo@padovan.org, linville@tuxdriver.com,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+Message-ID: <20120507082945.GB19002@aemeltch-MOBL1> (sfid-20120507_102846_674699_38DCD179)
+References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
+ <20120506.123656.1335354317428258137.davem@davemloft.net>
+ <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
+ <20120506.145304.1998242927519675381.davem@davemloft.net>
+ <20120507081411.GA19002@aemeltch-MOBL1>
+ <4FA78618.4050203@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120512190900.GA15956@joana>
+In-Reply-To: <4FA78618.4050203@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Arend,
 
-On Sat, May 12, 2012, Gustavo Padovan wrote:
-> In my point of view there are two commits there that are really necessary:
+On Mon, May 07, 2012 at 10:21:44AM +0200, Arend van Spriel wrote:
+> On 05/07/2012 10:14 AM, Andrei Emeltchenko wrote:
+> >> They don't.  All the examples you'll find are of the form:
+> >> > 
+> >> > 	if (a &&
+> >> > 	    b)
+> >> > 
+> >> > not:
+> >> > 
+> >> > 	if (a &&
+> >> > 			b)
+> > Actually it does not look like this, otherwise "b" would be placed in the
+> > same line, don't it?
 > 
-> Gustavo Padovan (2):
->       Bluetooth: report the right security level in getsockopt
+> Let me rephrase Dave's remark so you may understand:
 > 
-> Johan Hedberg (2):
->       Bluetooth: mgmt: Fix device_connected sending order
+> 	if (a_has_to_be_long_enough_to_make_you_understand &&
+> 	    you_do_not_care_about_code_readability)
 > 
-> They fix a userspace breakage caused by:
-> 
-> Author: Marcel Holtmann <marcel@holtmann.org>
-> Date:   Mon Feb 20 21:24:37 2012 +0100
-> 
->     Bluetooth: Always enable management interface
->     
->     The management interface API has reached stable version 1.0 and thus
->     it can now be always enabled. All future changes will be made backwards
->     compatible.
->     
->     Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
->     Signed-off-by: Johan Hedberg <johan.hedberg@intel.com>
-> 
-> 
-> This cause no crash, but it make bluetooth keyboards stop to work with Linux.
-> This a serious breakage IMO. I really would like to see at least these two
-> patches in. The other fixes can wait.
+> and not:
+> 	if (a_has_to_be_long_enough_to_make_you_understand &&
+> 			you_do_not_care_about_code_readability)
 
-I'd just like to add some further background since I don't think it's
-that obvious how these are regression fixes:
+You seems to forgot to reply to the main question about Codying Style.
 
-The device_connected fix should be quite self-explanatory, but it's
-actually a wider issue than just for keyboards. All profiles that do
-incoming connection authorization (e.g. headsets) will break without it
-with specific hardware. The reason it wasn't caught earlier is that it
-only occurs with specific Bluetooth adapters.
+Best regards 
+Andrei Emeltchenko 
 
-As for the security level patch, this fixes L2CAP socket based security
-level elevation during a connection. The HID profile needs this (for
-keyboards) and it is the only way to achieve the security level
-elevation when using the management interface to talk to the kernel
-(hence the management enabling patch being the one that exposes this
-issue).
-
-Johan
