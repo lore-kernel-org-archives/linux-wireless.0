@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f179.google.com ([209.85.160.179]:49791 "EHLO
-	mail-gy0-f179.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755902Ab2EGLCb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 07:02:31 -0400
-Received: by ghbg19 with SMTP id g19so780701ghb.10
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 04:02:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <874nrs9sth.fsf@purkki.adurom.net>
-References: <1336106215-7431-1-git-send-email-yeohchunyeow@gmail.com>
-	<1336376603.4325.3.camel@jlt3.sipsolutions.net>
-	<CAEFj9857DWGCcnF20nKYEDb0_p1K_iYLR1F=oLNAx6NjwPQE9w@mail.gmail.com>
-	<1336382462.4325.4.camel@jlt3.sipsolutions.net>
-	<CAEFj9855PG1Qv5RBWPJJc5tyKRz5LZZaY8qRU7oAwryH5G8L7A@mail.gmail.com>
-	<874nrs9sth.fsf@purkki.adurom.net>
-Date: Mon, 7 May 2012 18:54:38 +0800
-Message-ID: <CAEFj985aZR3mh3J96m_fCwMVWaY4di8CGS=REUnzydh9h+7tCw@mail.gmail.com> (sfid-20120507_130235_539423_AF245037)
-Subject: Re: [PATCH] fix the increment of unicast/multicast counters for
- forwarded PREQ
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:49251 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756452Ab2EGLlW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 07:41:22 -0400
+Message-ID: <1336390879.4325.18.camel@jlt3.sipsolutions.net> (sfid-20120507_134151_405321_CE269C26)
+Subject: Re: [RFCv2 1/6] mac80211: softamp: Adds Bluetooth Software AMP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Mon, 07 May 2012 13:41:19 +0200
+In-Reply-To: <1335273460-12682-2-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20120424_151757_538854_521E8B0B)
+References: <1335273460-12682-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1335273460-12682-2-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 (sfid-20120424_151757_538854_521E8B0B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Kalle,
+On Tue, 2012-04-24 at 16:17 +0300, Andrei Emeltchenko wrote:
 
-Appreciate your explanation. I understand my mistake.
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -1546,6 +1546,7 @@ enum nl80211_iftype {
+>  	NL80211_IFTYPE_MESH_POINT,
+>  	NL80211_IFTYPE_P2P_CLIENT,
+>  	NL80211_IFTYPE_P2P_GO,
+> +	NL80211_IFTYPE_BLUETOOTH_SOFTAMP,
 
-Thanks
+That should probably be a separate patch also updating cfg80211 (and
+maybe mac80211) where needed (at least to suppress the warnings you
+saw). Also documentation is needed.
 
-Regards,
-Chun-Yeow
+> @@ -211,6 +212,7 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+>  	case NL80211_IFTYPE_STATION:
+>  	case NL80211_IFTYPE_MONITOR:
+>  	case NL80211_IFTYPE_ADHOC:
+> +	case NL80211_IFTYPE_BLUETOOTH_SOFTAMP:
+>  		/* no special treatment */
+>  		break;
 
-On Mon, May 7, 2012 at 6:41 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
->
->> Hi, Johannes
->>
->>>> >> +             if (da != broadcast_addr)
->>>
->>> will never be false.
->>
->> Hmm, but I have a check on this and it works. The previous line will
->> set the da either as broadcast addr or unicast addr.
->
-> You are comparing pointers, not addresses. If you do that on purpose
-> then it's very confusing.
->
-> --
-> Kalle Valo
+You should never be able to come here with this interface type -- maybe
+make it a warning or something.
+
+> +static int vamp_send_frame(struct sk_buff *skb)
+> +{
+> +	struct hci_dev *hdev = (struct hci_dev *) skb->dev;
+> +	struct vamp_data *data;
+> +
+> +	BT_DBG("%s", hdev->name);
+> +
+> +	if (!hdev) {
+> +		BT_ERR("Frame for unknown HCI device (hdev=NULL)");
+> +		return -ENODEV;
+> +	}
+> +
+> +	if (!test_bit(HCI_RUNNING, &hdev->flags))
+> +		return -EBUSY;
+> +
+> +	data = hci_get_drvdata(hdev);
+> +
+> +	skb_queue_tail(&data->txq, skb);
+> +
+> +	schedule_work(&data->work);
+
+I don't understand the need for the asynchronous handling.
+
+johannes
+
