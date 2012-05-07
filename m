@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:40777 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757682Ab2EKGW3 convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37513 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750995Ab2EGR51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 02:22:29 -0400
+	Mon, 7 May 2012 13:57:27 -0400
+Message-ID: <4FA80D02.404@candelatech.com> (sfid-20120507_195729_749339_8F7579D1)
+Date: Mon, 07 May 2012 10:57:22 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1336712810.12189.146.camel@cumari.coelho.fi>
-References: <1336711194-26883-1-git-send-email-levinsasha928@gmail.com> <1336712810.12189.146.camel@cumari.coelho.fi>
-From: Sasha Levin <levinsasha928@gmail.com>
-Date: Fri, 11 May 2012 08:22:08 +0200
-Message-ID: <CA+1xoqeF=101srmTNVZkP+K+SwkOr=GKS_GaMnd2G5aq95FMvA@mail.gmail.com> (sfid-20120511_082307_273287_2C56EFD1)
-Subject: Re: [PATCH] wlcore: wlcore should depend on MAC80211
-To: Luciano Coelho <coelho@ti.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Joe Perches <joe@perches.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH] ath9k: Support ethtool getstats api.
+References: <1336411437-16653-1-git-send-email-greearb@candelatech.com> <1336412033.20924.6.camel@joe2Laptop>
+In-Reply-To: <1336412033.20924.6.camel@joe2Laptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 11, 2012 at 7:06 AM, Luciano Coelho <coelho@ti.com> wrote:
-> On Fri, 2012-05-11 at 06:39 +0200, Sasha Levin wrote:
->> wlcore can't be built if MAC80211 isn't set.
+On 05/07/2012 10:33 AM, Joe Perches wrote:
+> On Mon, 2012-05-07 at 10:23 -0700, greearb@candelatech.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
 >>
->> Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
->> ---
+>> This returns many of the values that formerly could
+>> only be obtained from debugfs.  This should be an
+>> improvement when trying to access these counters
+>> programatically.  Currently this support is only
+>> enabled when DEBUGFS is enabled because otherwise
+>> these stats are not accumulated.
 >
-> Thanks for your patch, Sasha! But this change was already submitted and
-> has been applied in the wl12xx.git tree.  I've sent a pull request with
-> it already, but it hasn't been pulled into wireless-next and up.
+> trivia:
 >
-> http://www.spinics.net/lists/linux-next/msg19910.html
-> http://www.spinics.net/lists/linux-wireless/msg89583.html
+> []
+>> +#define ATH9K_SSTATS_LEN ARRAY_SIZE(ath9k_gstrings_stats)
+>
+> I think there's not much value in this #define
+>
+>> +static int ath9k_get_et_sset_count(struct ieee80211_hw *hw,
+>> +				   struct ieee80211_vif *vif, int sset)
+>> +{
+>> +	if (sset == ETH_SS_STATS)
+>> +		return ATH9K_SSTATS_LEN;
+>> +	return 0;
+>> +}
+>
+> Is this the only use?
 
-Ah, no worries.
+No, there is a check later that does a BUG_ON if our
+we have screwed up the indexing of the stats.
 
-Can you consider adding the next branch of the wl12xx git tree to linux-next?
+That helps catch trivial problems with adding a stat
+but not the string, or vice versa.
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
