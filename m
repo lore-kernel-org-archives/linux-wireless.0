@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:35047 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752081Ab2EJQi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:38:26 -0400
-Message-ID: <1336667905.22495.18.camel@joe2Laptop> (sfid-20120510_183830_919218_6D85B843)
-Subject: Re: [PATCH 1/4] iwlwifi: Add __printf argument checking to __iwl_dbg
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 10 May 2012 09:38:25 -0700
-In-Reply-To: <1336665952-24363-2-git-send-email-johannes@sipsolutions.net>
-References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
-	 <1336665952-24363-2-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gh0-f179.google.com ([209.85.160.179]:49791 "EHLO
+	mail-gy0-f179.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755902Ab2EGLCb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 07:02:31 -0400
+Received: by ghbg19 with SMTP id g19so780701ghb.10
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 04:02:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <874nrs9sth.fsf@purkki.adurom.net>
+References: <1336106215-7431-1-git-send-email-yeohchunyeow@gmail.com>
+	<1336376603.4325.3.camel@jlt3.sipsolutions.net>
+	<CAEFj9857DWGCcnF20nKYEDb0_p1K_iYLR1F=oLNAx6NjwPQE9w@mail.gmail.com>
+	<1336382462.4325.4.camel@jlt3.sipsolutions.net>
+	<CAEFj9855PG1Qv5RBWPJJc5tyKRz5LZZaY8qRU7oAwryH5G8L7A@mail.gmail.com>
+	<874nrs9sth.fsf@purkki.adurom.net>
+Date: Mon, 7 May 2012 18:54:38 +0800
+Message-ID: <CAEFj985aZR3mh3J96m_fCwMVWaY4di8CGS=REUnzydh9h+7tCw@mail.gmail.com> (sfid-20120507_130235_539423_AF245037)
+Subject: Re: [PATCH] fix the increment of unicast/multicast counters for
+ forwarded PREQ
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add gcc format and argument printf checking
-to reduce future defect introduction.
+Hi, Kalle,
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/iwlwifi/iwl-debug.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Appreciate your explanation. I understand my mistake.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 8376b84..d0c7c9e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -50,10 +50,12 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
- #define IWL_CRIT(m, f, a...) __iwl_crit((m)->dev, f, ## a)
- 
- #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
-+__printf(5, 6)
- void __iwl_dbg(struct device *dev,
- 	       u32 level, bool limit, const char *function,
- 	       const char *fmt, ...);
- #else
-+__printf(5, 6)
- static inline void
- __iwl_dbg(struct device *dev,
- 	  u32 level, bool limit, const char *function,
+Thanks
 
+Regards,
+Chun-Yeow
 
-
-
+On Mon, May 7, 2012 at 6:41 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
+>
+>> Hi, Johannes
+>>
+>>>> >> +             if (da != broadcast_addr)
+>>>
+>>> will never be false.
+>>
+>> Hmm, but I have a check on this and it works. The previous line will
+>> set the da either as broadcast addr or unicast addr.
+>
+> You are comparing pointers, not addresses. If you do that on purpose
+> then it's very confusing.
+>
+> --
+> Kalle Valo
