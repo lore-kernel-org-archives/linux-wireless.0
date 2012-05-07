@@ -1,50 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:55754 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758872Ab2EONiw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 09:38:52 -0400
-Received: by wgbds11 with SMTP id ds11so4371717wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 06:38:51 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 1/3] wlcore: flush tx on CHANGE_CHANNEL
-Date: Tue, 15 May 2012 16:38:44 +0300
-Message-Id: <1337089126-11570-1-git-send-email-arik@wizery.com> (sfid-20120515_153856_428184_2D8669AC)
+Received: from mga01.intel.com ([192.55.52.88]:34704 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756148Ab2EGKcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 06:32:21 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 08/20] NFC: LLCP connect must wait for a CC frame
+Date: Mon,  7 May 2012 12:31:19 +0200
+Message-Id: <1336386691-24840-9-git-send-email-sameo@linux.intel.com> (sfid-20120507_123228_098383_F308323B)
+In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Blocking sockets should sleep on a CC (Connection Complete) reception
+from the connect() call.
 
-On CHANGE_CHANNEL indication, we should flush all the
-queued tx frames, so they will be sent on the correct
-(current) channel.
-
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
-These patches apply on top of the 18xx patch series.
+ net/nfc/llcp/llcp.c |    7 +++++++
+ net/nfc/llcp/sock.c |   42 +++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 48 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/ti/wlcore/main.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index ebbedbf..4e71078 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -2553,8 +2553,9 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 	 * frames, such as the deauth. To make sure those frames reach the air,
- 	 * wait here until the TX queue is fully flushed.
- 	 */
--	if ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
--	    (conf->flags & IEEE80211_CONF_IDLE))
-+	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) ||
-+	    ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
-+	     (conf->flags & IEEE80211_CONF_IDLE)))
- 		wl1271_tx_flush(wl);
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 92988aa..42994fa 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -448,6 +448,8 @@ static struct nfc_llcp_sock *nfc_llcp_sock_get(struct nfc_llcp_local *local,
+ {
+ 	struct nfc_llcp_sock *sock, *llcp_sock, *n;
  
- 	mutex_lock(&wl->mutex);
++	pr_debug("ssap dsap %d %d\n", ssap, dsap);
++
+ 	if (ssap == 0 && dsap == 0)
+ 		return NULL;
+ 
+@@ -783,6 +785,7 @@ static void nfc_llcp_recv_disc(struct nfc_llcp_local *local,
+ static void nfc_llcp_recv_cc(struct nfc_llcp_local *local, struct sk_buff *skb)
+ {
+ 	struct nfc_llcp_sock *llcp_sock;
++	struct sock *sk;
+ 	u8 dsap, ssap;
+ 
+ 	dsap = nfc_llcp_dsap(skb);
+@@ -801,10 +804,14 @@ static void nfc_llcp_recv_cc(struct nfc_llcp_local *local, struct sk_buff *skb)
+ 	}
+ 
+ 	llcp_sock->dsap = ssap;
++	sk = &llcp_sock->sk;
+ 
+ 	nfc_llcp_parse_tlv(local, &skb->data[LLCP_HEADER_SIZE],
+ 			   skb->len - LLCP_HEADER_SIZE);
+ 
++	sk->sk_state = LLCP_CONNECTED;
++	sk->sk_state_change(sk);
++
+ 	nfc_llcp_sock_put(llcp_sock);
+ }
+ 
+diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+index c13e02e..99196d3 100644
+--- a/net/nfc/llcp/sock.c
++++ b/net/nfc/llcp/sock.c
+@@ -27,6 +27,42 @@
+ #include "../nfc.h"
+ #include "llcp.h"
+ 
++static int sock_wait_state(struct sock *sk, int state, unsigned long timeo)
++{
++	DECLARE_WAITQUEUE(wait, current);
++	int err = 0;
++
++	pr_debug("sk %p", sk);
++
++	add_wait_queue(sk_sleep(sk), &wait);
++	set_current_state(TASK_INTERRUPTIBLE);
++
++	while (sk->sk_state != state) {
++		if (!timeo) {
++			err = -EINPROGRESS;
++			break;
++		}
++
++		if (signal_pending(current)) {
++			err = sock_intr_errno(timeo);
++			break;
++		}
++
++		release_sock(sk);
++		timeo = schedule_timeout(timeo);
++		lock_sock(sk);
++		set_current_state(TASK_INTERRUPTIBLE);
++
++		err = sock_error(sk);
++		if (err)
++			break;
++	}
++
++	__set_current_state(TASK_RUNNING);
++	remove_wait_queue(sk_sleep(sk), &wait);
++	return err;
++}
++
+ static struct proto llcp_sock_proto = {
+ 	.name     = "NFC_LLCP",
+ 	.owner    = THIS_MODULE,
+@@ -462,9 +498,13 @@ static int llcp_sock_connect(struct socket *sock, struct sockaddr *_addr,
+ 	if (ret)
+ 		goto put_dev;
+ 
+-	sk->sk_state = LLCP_CONNECTED;
++	ret = sock_wait_state(sk, LLCP_CONNECTED,
++			      sock_sndtimeo(sk, flags & O_NONBLOCK));
++	if (ret)
++		goto put_dev;
+ 
+ 	release_sock(sk);
++
+ 	return 0;
+ 
+ put_dev:
 -- 
-1.7.9.5
+1.7.9.1
 
