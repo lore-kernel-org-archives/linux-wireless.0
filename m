@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52443 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757153Ab2E3I0d (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:44351 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756571Ab2EGN73 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 04:26:33 -0400
-Message-ID: <4FC5D9B4.6060803@qca.qualcomm.com> (sfid-20120530_102638_447897_B8B9BC39)
-Date: Wed, 30 May 2012 11:26:28 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 7 May 2012 09:59:29 -0400
+Date: Mon, 7 May 2012 16:59:17 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: hostap@lists.shmoo.com,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [rt2x00-users] [rt2800pci (AP) - ath9k] 802.11w: broken
+ aggregation handling?
+Message-ID: <20120507135917.GB19222@w1.fi> (sfid-20120507_155932_768233_6A1EFD9F)
+References: <4FA75983.9040003@01019freenet.de>
+ <201205070702.q4772uem002960@mail.maya.org>
 MIME-Version: 1.0
-To: Etay Luz <eluz@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: support changing dtim period on AP mode
-References: <1338363787-12314-1-git-send-email-kvalo@qca.qualcomm.com> <4FC5CFF6.2090101@qca.qualcomm.com>
-In-Reply-To: <4FC5CFF6.2090101@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201205070702.q4772uem002960@mail.maya.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2012 10:44 AM, Kalle Valo wrote:
-> On 05/30/2012 10:43 AM, Kalle Valo wrote:
->> From: Etay Luz <eluz@qca.qualcomm.com>
->>
->> This patch adds support for dtim_period configuration in beacon.
->>
->> kvalo: add a comment about ignoring the error
->>
->> Signed-off-by: Etay Luz <eluz@qca.qualcomm.com>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> Applied, thanks.
+On Mon, May 07, 2012 at 09:02:58AM +0200, Andreas Hartmann wrote:
+> - Why is the authentication started here at all, regardless of an error?
 
-Actually, I withdraw that. Joe found an issue and Vasanth privately
-reported me about vif index problem.
+I don't think that hostapd would verify driver capabilities for 802.11w
+at the moment, so it does not know that it should have rejected the
+configuration here.. Same for wpa_supplicant and station mode, I'd
+guess.
 
-I'll send v2 instead.
+> - Why does TLS succeed? (802.11g is "working"). 
 
-Kalle
+If you are using SHA-1 -based AKM, the initial association, 4-way
+handshake, and data TX/RX are almost identical..
+
+> - Why does set_key fail?
+
+The driver did not support configuration of IGTK for BIP (i.e., key to
+protect group-addressed robust management frames).
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
