@@ -1,76 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ip-relay-001.utdallas.edu ([129.110.20.111]:63131 "EHLO
-	ip-relay-001.utdallas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850Ab2EYE5e (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:63521 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757850Ab2EGTkW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 00:57:34 -0400
-From: Qasim Javed <qasimj@gmail.com>
-To: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ravip@utdallas.edu, Qasim Javed <qasimj@gmail.com>
-Subject: [RFC] mac80211: Use correct originator sequence number in a Path Reply
-Date: Fri, 25 May 2012 03:21:11 -0500
-Message-Id: <1337934071-29342-1-git-send-email-qasimj@gmail.com> (sfid-20120525_065842_543822_4C409978)
+	Mon, 7 May 2012 15:40:22 -0400
+Received: by gglu4 with SMTP id u4so471567ggl.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 12:40:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120506.145304.1998242927519675381.davem@davemloft.net>
+References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
+ <20120506.123656.1335354317428258137.davem@davemloft.net> <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
+ <20120506.145304.1998242927519675381.davem@davemloft.net>
+From: Lucas De Marchi <lucas.demarchi@profusion.mobi>
+Date: Mon, 7 May 2012 16:40:01 -0300
+Message-ID: <CAMOw1v7LGZ9jN3BdRSuw5iBNWUNOff+aaUCcXaz+YShpxjLLHA@mail.gmail.com> (sfid-20120507_214034_857610_8DB06D90)
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+To: David Miller <davem@davemloft.net>
+Cc: dh.herrmann@googlemail.com, gustavo@padovan.org,
+	linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry for the duplicate email. As suggested by Julian I have marked this as RFC (was PATCH previously), so that people can comment on it.
+On Sun, May 6, 2012 at 3:53 PM, David Miller <davem@davemloft.net> wrote:
+> From: David Herrmann <dh.herrmann@googlemail.com>
+> Date: Sun, 6 May 2012 19:46:46 +0200
+>
+>> Whose rules are they?
+>
+> Find me an example in another major core subsystem, let's use
 
-I have been doing some experiments using the 802.11s functionality in the mac80211 stack. Today I stumbled across something which I believe is a critical bug in the usage of originator sequence number for a Path Reply message upon the reception of a Path Request message.
+The ones he pointed out, coming from Linus aren't enough?
 
-Consider the following topology:
 
-                    +---+
-                    | S |
-                    +---+
-                  /      \
-                 /        \
-            +---+          +---+
-            | A |          | B |
-            +---+          +---+
-                 \         /
-                  \       /
-                    +---+
-                    | D |
-                    +---+
+> mm/memory.c as an example as that file gets hit by a lot of people,
+> that uses the multi-line conditional TAB-only crap you guys seem to
+> keep using.
 
-Node S is the source node and D the destination. Clearly there are two possible paths from S to D namely S->A->D and S->B->D. When S wants to communicate with D, it will broadcast a Path Request (PREQ) where the originator will be S and target will be D. On receiving the PREQ, both A and B will broadcast it further to D. Let us assume that aggregate value of the metric for path D->B->S denoted by cost(DBS) is greater than cost(DAS). Notice that according to HWMP operation, when the PREQ is propagating from S to D, the cost on the "reverse" path is aggregated, that is why I used cost(DB) + cost(BS) for cost(DBS) and did not consider cost(SBD). Suppose also that smaller the metric the better it is which is the case for the default airtime link metric used by the 802.11s stack.
+Look again at this file and you'll see there is mixed style.
 
-Let us suppose that the PREQ which passes through B arrives first at D and as mentioned earlier has a larger (worse) value than the soon to be received PREQ through the intermediate hop A. When D receives a PREQ from B, since it has not received any other PREQ, it generates a Path Reply (PREP). More specifically, the function hwmp_preq_frame_process generates the PREP. The PREQ contains originator and target sequence numbers which are used to avoid loops and ascertain the freshness of route information. On receiving a PREQ at D, the above mentioned function checks whether dot11MeshHWMPnetDiameterTraversalTime has elapsed since the last sequence number update (stored in ifmsh->last_sn_update). So suppose this is true when the first PREQ via B is received at D. So, in this case the originator sequence number in PREP is incremented (that is becomes one more than the target sequence number in the PREQ).
 
-Let us look at an example at this point. Suppose, the the originator sequence number in the PREQ is 1 and the target sequence number is 2. When this PREQ is received at D via B, and considering that dot11MeshHWMPnetDiameterTraversalTime have passed since the last sequence number update, we will increment the target sequence number which now becomes 3. Now for the PREP, the originator sequence number of PREQ, 1 in this case, becomes the target sequence number of PREP and the target sequence number of the PREQ (which has been updated and its value is 3) becomes the originator sequence number of the PREP.
+>
+> They don't.  All the examples you'll find are of the form:
+>
+>        if (a &&
+>            b)
+>
+> not:
+>
+>        if (a &&
+>                        b)
+>
+> like I see happening in bluetooth all the time.
+>
+> How did you think they figured that out?  Did they read someone's
+> mind?
 
-As this PREQ which was received at D via B has a larger metric, we know that when the PREQ from S is received via A, it will have a lower (better) metric, hence we will also generate a PREP for that PREQ. Suppose the second PREQ via A is received at D within dot11MeshHWMPnetDiameterTraversalTime (currently 50ms). This is a reasonable assumption since the PREQ is broadcast by S and further broadcast by A and B in some order. There is very less likelihood that the time difference between the PREQ from A and B would be greater than 50ms since this is a lot of time in 802.11 speak where the nodes are contending for the channel on the order of hundreds of microseconds (typically). In short, it is very likely (confirmed through experiments) that this difference is less than 50ms.
+No, they used the default in emacs or another editor that has this as
+default, i.e. mix tabs and spaces
 
-So, when the PREQ from S arrives a D via A, since most likely this event happens within 50ms if the PREQ via B, the target sequence number will not be updated. Therefore, the originator sequence number stays at 1 and the target sequence number remains 2. It is very important to note that the code in hwmp_preq_frame_process just "swaps" the originator and target sequence numbers for use in the PREP. More specifically as mentioned earlier, the second PREP will have an originator sequence number of 2 and a target sequence number of 1.
 
-At this point, we have two PREPs in flight, one via B and one via A.
-
-PREP via B: originator sequence number = 3, target sequence number = 1
-PREP via A: originator sequence number = 2, target sequence number = 1
-
-The net effect is that when these PREPs reach S, irrespective of the order in which they arrive, the PREP via A will be ignored! This is very wrong since the reason we sent the PREP via A in the first place was that it had a better metric (albeit on the reverse path).
-
-I have not tested the patch yet. This is more of a heads up email to let everyone know.
-
-Signed-off-by: Qasim Javed <qasimj@gmail.com>
----
- net/mac80211/mesh_hwmp.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 70ac7d1..a13b593 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -543,6 +543,8 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 		    time_before(jiffies, ifmsh->last_sn_update)) {
- 			target_sn = ++ifmsh->sn;
- 			ifmsh->last_sn_update = jiffies;
-+		} else {
-+			target_sn = ifmsh->sn;
- 		}
- 	} else {
- 		rcu_read_lock();
--- 
-1.7.1
-
+Regards,
+Lucas De Marchi
