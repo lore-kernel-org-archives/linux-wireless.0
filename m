@@ -1,66 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:47359 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755924Ab2ENNUc (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:36555 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755580Ab2EGI6M convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 09:20:32 -0400
-Received: by qadb17 with SMTP id b17so2658650qad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 06:20:31 -0700 (PDT)
+	Mon, 7 May 2012 04:58:12 -0400
+Received: by yenm10 with SMTP id m10so3456260yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 01:58:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1335189878.27767.175.camel@wwguy-huron>
-References: <CAFE89JyMHthxBuTcoMN_kOerrW+5yt8Sv1JyQRZATd-mzSwjvA@mail.gmail.com>
-	<1335189878.27767.175.camel@wwguy-huron>
-Date: Mon, 14 May 2012 16:20:30 +0300
-Message-ID: <CAFE89JyAdTwTyWHmk0u7aQECWPREJUcDy_H5Bs5ySMTJAG4pgA@mail.gmail.com> (sfid-20120514_152059_843962_34BE83E7)
-Subject: Re: laptop hangs while connecting to open wifi network
-From: Oleksandr Yeremko <yeremko@gmail.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1336376603.4325.3.camel@jlt3.sipsolutions.net>
+References: <1336106215-7431-1-git-send-email-yeohchunyeow@gmail.com>
+	<1336376603.4325.3.camel@jlt3.sipsolutions.net>
+Date: Mon, 7 May 2012 16:58:11 +0800
+Message-ID: <CAEFj9857DWGCcnF20nKYEDb0_p1K_iYLR1F=oLNAx6NjwPQE9w@mail.gmail.com> (sfid-20120507_105816_074718_5AE6DC15)
+Subject: Re: [PATCH] fix the increment of unicast/multicast counters for
+ forwarded PREQ
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guy,
+Hi, Johannes
 
-thank you very much for your letter. Sorry for my long silence.
+If the destination address is not broadcast frame, the number of
+forwarded unicast frame is increased. And the other way round. Not
+correct?
 
-I solved the problem by moving to Ubuntu 12 with 3.2.0 kernel version.
++		if (!is_multicast_ether_addr(da))
++			ifmsh->mshstats.fwded_unicast++;
++		else
++			ifmsh->mshstats.fwded_mcast++;
 
-Actually the problem was not only with wireless but with cardreader,
-touchpad and screen brightness also. I think kernel 2.6.x does not
-support chipset of Dell XPS notebook fully. And kernel 3.2.0 does
-support.
+Regards,
+Chun-Yeow
 
-Thank you very much again for your time.
-
-Best regards,
-Oleksandr
-
-
-On Mon, Apr 23, 2012 at 5:04 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi Oleksandr,
+On Mon, May 7, 2012 at 3:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-05-04 at 12:36 +0800, Chun-Yeow Yeoh wrote:
+>> Forwarded PREQ is either unicast or multicast. The appropriate counters
+>> should be incremented accordingly.
+>>
+>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>> ---
+>>  net/mac80211/mesh_hwmp.c |    5 ++++-
+>>  1 files changed, 4 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+>> index 503016f..f0695e5 100644
+>> --- a/net/mac80211/mesh_hwmp.c
+>> +++ b/net/mac80211/mesh_hwmp.c
+>> @@ -603,7 +603,10 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+>>                               hopcount, ttl, cpu_to_le32(lifetime),
+>>                               cpu_to_le32(metric), cpu_to_le32(preq_id),
+>>                               sdata);
+>> -             ifmsh->mshstats.fwded_mcast++;
+>> +             if (da != broadcast_addr)
 >
-> On Mon, 2012-04-23 at 13:06 +0300, Oleksandr Yeremko wrote:
->> Dear All,
->>
->> I have Dell XPS laptop with Intel Corporation Centrino Wireless-N 1030 (rev 34).
->>
->> I use CentOS 6 with 2.6.32-220.7.1.el6.x86_64 kernel and iwlagn module.
->>
->> The problem is:
->> when I try to connect to any open wifi network my laptop hangs
->> (switching off is needed) and screen looses colors (like it is
->> switched to 256-colors mode).
->>
->> Does somebody have an idea how to solve this?
->>
-> Could you provide more information, such as dmesg, lspci, ...
-> also the configuration on your device, (open/secure, band,
-> channel, ....)
+> In addition to what Javier said. Err. Think about this comparison again.
 >
-> without more detail information, I am not sure how to help.
->
-> Thanks
-> Wey
->
+> johannes
 >
