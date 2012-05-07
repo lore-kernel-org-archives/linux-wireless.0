@@ -1,76 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62033 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751962Ab2EXDx6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54042 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755898Ab2EGJa1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:53:58 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45191.757047.170415@gargle.gargle.HOWL> (sfid-20120524_055403_465276_3C9AB217)
-Date: Thu, 24 May 2012 09:22:39 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 01/22] ath9k: Prune ath9k_init_device
+	Mon, 7 May 2012 05:30:27 -0400
+Message-ID: <1336383024.4325.6.camel@jlt3.sipsolutions.net> (sfid-20120507_113030_238264_C85BF802)
+Subject: Re: [PATCH] cfg80211: Remove compile warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Date: Mon, 07 May 2012 11:30:24 +0200
+In-Reply-To: <CAMXE1-qniMzGi97U2oDPxyvSsms7nZpy6QfZVZPpnrC0WcNMqQ@mail.gmail.com> (sfid-20120504_104453_127145_540640EF)
+References: <1335357955-28089-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1336071617.5167.9.camel@jlt3.sipsolutions.net>
+	 <CAMXE1-qniMzGi97U2oDPxyvSsms7nZpy6QfZVZPpnrC0WcNMqQ@mail.gmail.com>
+	 (sfid-20120504_104453_127145_540640EF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of cluttering ath9k_init_device() with 'ath_softc'
-specific initialization code, use ath9k_init_softc() to
-setup driver-specific work routines, timers etc.
+On Fri, 2012-05-04 at 11:44 +0300, Andrei Emeltchenko wrote:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c |   15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+> >> -             case NL80211_IFTYPE_UNSPECIFIED:
+> >> -             case NUM_NL80211_IFTYPES:
+> >> +             default:
+> >
+> > When did this warning start occurring? I was pretty sure it didn't use
+> > to? I think we should explicitly list the cases here though because we
+> > want the compiler to warn here when we add something to the interface
+> > type list so we catch this place that may have to be modified.
+> 
+> I think warning occurs when I added new interface type since it is
+> also not handled.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index dee9e09..3e22839 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -489,6 +489,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 
- 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
- 
-+	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 	sc->config.txpowlimit = ATH_TXPOWER_MAX;
- 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
- 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
-@@ -560,6 +561,12 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
- 		     (unsigned long)sc);
- 
-+	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
-+	INIT_WORK(&sc->hw_check_work, ath_hw_check);
-+	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
-+	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
-+	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
-+
- 	/*
- 	 * Cache line size is used to size and align various
- 	 * structures used to communicate with the hardware.
-@@ -782,11 +789,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		ARRAY_SIZE(ath9k_tpt_blink));
- #endif
- 
--	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
--	INIT_WORK(&sc->hw_check_work, ath_hw_check);
--	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
--	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
--
- 	/* Register with mac80211 */
- 	error = ieee80211_register_hw(hw);
- 	if (error)
-@@ -805,9 +807,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 			goto error_world;
- 	}
- 
--	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
--	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
--
- 	ath_init_leds(sc);
- 	ath_start_rfkill_poll(sc);
- 
--- 
-1.7.10.2
+Well, but in that case the warning is supposed to happen to tell you
+that you need to think about that code for your new interface type.
+
+John, please revert this patch.
+
+johannes
 
