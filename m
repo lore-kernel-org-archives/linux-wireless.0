@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:57408 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932254Ab2ERQmW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47646 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756235Ab2EGMFQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 12:42:22 -0400
-Received: by wgbdr13 with SMTP id dr13so2954151wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2012 09:42:21 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alex Alouit <alexandre.alouit@gmail.com>
-Subject: Re: Module Carl9170, firmware won't load properly
-Date: Fri, 18 May 2012 18:42:15 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <loom.20120517T011514-623@post.gmane.org> <201205171207.40795.chunkeey@googlemail.com> <loom.20120518T173625-20@post.gmane.org>
-In-Reply-To: <loom.20120518T173625-20@post.gmane.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201205181842.16358.chunkeey@googlemail.com> (sfid-20120518_184246_525624_81EF32E4)
+	Mon, 7 May 2012 08:05:16 -0400
+Message-ID: <1336392314.4325.26.camel@jlt3.sipsolutions.net> (sfid-20120507_140521_367567_08CA6B43)
+Subject: Re: [PATCH] mac80211: support adding IV-room in the skb for CCMP
+ keys
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
+Date: Mon, 07 May 2012 14:05:14 +0200
+In-Reply-To: <CAFED-jku-zGtTvYwGpwCastRJZAfQf9uyJAeqtevGVRn22Qygg@mail.gmail.com> (sfid-20120507_140219_605554_7A5D6519)
+References: <1319350901-31178-1-git-send-email-arik@wizery.com>
+	 <4EA7DA0F.7050603@sipsolutions.net>
+	 <CA+XVXff+4SLy6y2xbDONDOg_j9CNYd1rkLgtdvHEKpprBW5zog@mail.gmail.com>
+	 <CAFED-jku-zGtTvYwGpwCastRJZAfQf9uyJAeqtevGVRn22Qygg@mail.gmail.com>
+	 (sfid-20120507_140219_605554_7A5D6519)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 18 May 2012 17:41:41 Alex Alouit wrote:
-> Christian Lamparter <chunkeey@...> writes:
-> > > (carl9170-1.fw in /usr/local/lib/firmware version 1.9.2 (kernel 3.0.23)) 
-> > > but it seems that the module doesn't load correctly the firmware. 
-> > that's pretty old. you can go with compat-wireless and a more recent firmware.
->
-> Same things with Debian Wheezy (kernel 3.2.0-2-amd64) 
-> with firmware 1.9.4 and 1.9.5.
-> They are more recent.
+On Mon, 2012-05-07 at 14:01 +0200, Janusz Dziedzic wrote:
+> 2011/10/26 Arik Nemtsov <arik@wizery.com>:
+> > On Wed, Oct 26, 2011 at 11:59, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >> On 10/23/2011 8:21 AM, Arik Nemtsov wrote:
+> >>>
+> >>> Some cards can generate CCMP IVs in HW, but require the space for the IV
+> >>> to be pre-allocated in the frame at the correct offset. Add a key flag
+> >>> that allows us to achieve this.
+> >>
+> >> Is it really that expensive to generate the IV and then not use it that this
+> >> is worth the extra complexity? This not just makes it more complex but also
+> >> more expensive in the other case.
+> >>
+> >
+> > Some of the platforms with this chip are pretty weak (host CPU is the
+> > bottleneck).
+> >
+> > We add another "if" for the other case (for a value that's likely in
+> > the cacheline already). I don't think that's too bad.
+> >
 > 
-> [57471.355695] usb 1-1: driver   API: 1.9.4 2011-08-15 [1-1]
-> [57471.355707] usb 1-1: firmware API: 1.9.5 2012-03-14
-> [57471.456617] usb 1-1: firmware upload failed (-110)
+> Hello,
+> Why this is only done for CCMP?
+> Our firmware require such IVs allocation for all modes and currently
+> we have common code that do that in the driver based on:
+> iv_len = tx_info->control.hw_key->iv_len
+> icv_len = tx_info->control.hw_key->icv_len
 > 
-> What do you think I should do?
-Depends on what are you doing. From the "-110" consistency
-it sounds like you are trying to get the device working 
-within a VM (mere USB emulation is known not to work,
-if you want to use it in a VM you need a dedicated ehci
-for that)
+> /* cw1200 driver */
+> skb_push(t->skb, iv_len);
+> memmove(newhdr, newhdr + iv_len, t->hdrlen);
+> skb_put(t->skb, icv_len);
+> ....
+> 
+> Isn't better to handle all modes in mac80211 base on
+> IEEE80211_KEY_FLAG_PUT_IV_SPACE or just leave this for the driver?
+> 
+> I know this is easy to fix in our driver but still we have to remember
+> that in case of CCMP mac80211 will already do it for us and will not
+> do that in case of other modes.
+> So, my proposal is to remove all changes from net/mac80211/wpa.c file
+> and remember that driver should care about it - in such case
+> PUT_IV_SPACE will be more generic.
 
-If that's not the case, you could check what's going on
-on the usb protocol level. For Linux the easiest way
-is probably to load the "usbmon" module and monitor the
-traffic between the device and the driver.
-(If you don't want to deal with the usb log yourself,
-you can capture the data and sent the email to me
-(without cc'ing the ML).)
+I suggest the opposite, make it more generic in mac80211.
 
-Reagards,
-	Christian  
+johannes
+
