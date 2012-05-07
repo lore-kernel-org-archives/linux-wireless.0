@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40446 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302Ab2EVSrL (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:49675 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320Ab2EGR47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 14:47:11 -0400
-Message-ID: <1337712399.4470.5.camel@jlt3.sipsolutions.net> (sfid-20120522_204715_537995_8E04FA9F)
-Subject: Re: [PATCH] rfkill: Add handling when rfkill's type is
- RFKILL_TYPE_ALL.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Hung <alex.hung@canonical.com>
-Cc: linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Tue, 22 May 2012 20:46:39 +0200
-In-Reply-To: <1337589439-14605-1-git-send-email-alex.hung@canonical.com>
-References: <1337589439-14605-1-git-send-email-alex.hung@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 7 May 2012 13:56:59 -0400
+Date: Mon, 07 May 2012 13:55:47 -0400 (EDT)
+Message-Id: <20120507.135547.704675228233645115.davem@davemloft.net> (sfid-20120507_195705_594108_33CAB0FC)
+To: marcel@holtmann.org
+Cc: dh.herrmann@googlemail.com, gustavo@padovan.org,
+	linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1336410360.5970.103.camel@aeonflux>
+References: <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
+	<20120506.145304.1998242927519675381.davem@davemloft.net>
+	<1336410360.5970.103.camel@aeonflux>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-05-21 at 16:37 +0800, Alex Hung wrote:
-> This rfkill type is supposed to be able to toggles the status of all wireless
-> devices; however, no wireless devices will register itself with type 
-> RFKILL_TYPE_ALL and thus it was previously ignored in __rfkill_switch_all.
-> 
-> Signed-off-by: Alex Hung <alex.hung@canonical.com>
-> ---
->  net/rfkill/core.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index 5be1957..84dd71a 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -324,7 +324,7 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
->  
->  	rfkill_global_states[type].cur = blocked;
->  	list_for_each_entry(rfkill, &rfkill_list, node) {
-> -		if (rfkill->type != type)
-> +		if (rfkill->type != type && type != RFKILL_TYPE_ALL)
->  			continue;
+From: Marcel Holtmann <marcel@holtmann.org>
+Date: Mon, 07 May 2012 10:06:00 -0700
 
-Sorry, I accidentally replied to this in private and then Alex replied
-but it all got lost.
+> When it comes to function declaration and function calls, the style in
+> mm/memory.c is mixed. We can start counting, but for both other
+> multi-line cases it seems that tab-only indentation is predominant.
 
-He said he was going to change the eeepc use KEY_RFKILL instead of
-KEY_WLAN to switch all types...
+Fair enough.
 
-So I guess what this change really does is make __rfkill_switch_all() be
-able to not only switch all devices of a given type, but also be able to
-switch all devices of all types.
+But you know what the real issue is?
 
-Alex, can you please rewrite the commit log to make that clearer?
+I have told the bluetooth folks this matters to me, repeatedly.
 
-johannes
+And then when I pushback when some unacceptable changes slip through,
+they put a bullseye on my head and say I'm being unreasonable.
 
+What's unreasonable about a maintainer telling you multiple times
+to do things a certain way and then getting mad when you still
+don't listen?
