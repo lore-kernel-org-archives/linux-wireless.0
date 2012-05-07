@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:55176 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932264Ab2E3I6k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 04:58:40 -0400
-Message-ID: <1338368319.28696.3.camel@joe2Laptop> (sfid-20120530_105842_973061_355A5E06)
-Subject: [PATCH] ath6kl: Add missing newline terminations
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com,
-	Etay Luz <eluz@qca.qualcomm.com>
-Date: Wed, 30 May 2012 01:58:39 -0700
-In-Reply-To: <4FC5D73A.9040807@qca.qualcomm.com>
-References: <1338363787-12314-1-git-send-email-kvalo@qca.qualcomm.com>
-	 <1338365645.28696.0.camel@joe2Laptop> <4FC5D73A.9040807@qca.qualcomm.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:39327 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756404Ab2EGLmC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 07:42:02 -0400
+Message-ID: <1336390921.4325.19.camel@jlt3.sipsolutions.net> (sfid-20120507_134209_117801_7A38BBE1)
+Subject: Re: [RFCv2 4/6] mac80211: softamp: Handle assoc request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrei Emeltchenko <Andrei.Emeltchenko.news@gmail.com>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Mon, 07 May 2012 13:42:01 +0200
+In-Reply-To: <1335273460-12682-5-git-send-email-Andrei.Emeltchenko.news@gmail.com> (sfid-20120424_151656_805125_63BCA33F)
+References: <1335273460-12682-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 <1335273460-12682-5-git-send-email-Andrei.Emeltchenko.news@gmail.com>
+	 (sfid-20120424_151656_805125_63BCA33F)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Messages without newlines can be interleaved.
-Avoid this by adding terminations.
+On Tue, 2012-04-24 at 16:17 +0300, Andrei Emeltchenko wrote:
+> From: Andrei Emeltchenko <andrei.emeltchenko@intel.com>
+> 
+> Handle AMP assoc request.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+This needs knowledge about channel preferences etc. I think it should be
+done in wpa_supplicant.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index b869a35..d1a5436 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -943,7 +943,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 				       WMI_FRAME_PROBE_REQ,
- 				       request->ie, request->ie_len);
- 	if (ret) {
--		ath6kl_err("failed to set Probe Request appie for scan");
-+		ath6kl_err("failed to set Probe Request appie for scan\n");
- 		return ret;
- 	}
- 
-@@ -3185,7 +3185,7 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
- 				       WMI_FRAME_PROBE_REQ,
- 				       request->ie, request->ie_len);
- 	if (ret) {
--		ath6kl_warn("Failed to set probe request IE for scheduled scan: %d",
-+		ath6kl_warn("Failed to set probe request IE for scheduled scan: %d\n",
- 			    ret);
- 		return ret;
- 	}
-
+johannes
 
