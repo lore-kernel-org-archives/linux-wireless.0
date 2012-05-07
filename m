@@ -1,198 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:43685 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758702Ab2EJJQz (ORCPT
+Received: from fold.natur.cuni.cz ([195.113.57.32]:59851 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756623Ab2EGPgv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:55 -0400
-Received: by wibhn19 with SMTP id hn19so250127wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:54 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 65/78] wlcore: create private static_data area and add operation to parse it
-Date: Thu, 10 May 2012 12:14:10 +0300
-Message-Id: <1336641263-5761-66-git-send-email-arik@wizery.com> (sfid-20120510_111747_073282_EC2FB27B)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Mon, 7 May 2012 11:36:51 -0400
+Message-ID: <4FA7E041.1070108@fold.natur.cuni.cz> (sfid-20120507_173654_573021_A0E6B36A)
+Date: Mon, 07 May 2012 16:46:25 +0200
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: 3.4-rc5: Oops in run_timer_softirq()
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+Hi,
+  I have enabled my wifi in the Dell Vostro 3550 laptop by the hardware button combination
+Fn+F2 and disabled it back again after few seconds. The following crash happened, and is
+quite reproducible. Is that to be fixed by the patch in 
+"Re: Suspicious RCU usage in mac80211" thread from this email list?
 
-The wl18xx firmware has more information in the static_data than
-wl12xx.  To be able to parse that in an abstracted way, this patch
-adds a priv area to the static data struct and an operation that
-allows the lower driver to parse it if necessary.
+[  385.231175] BUG: unable to handle kernel NULL pointer dereference at           (null)
+[  385.231226] IP: [<          (null)>]           (null)
+[  385.231245] PGD 0 
+[  385.231257] Oops: 0010 [#1] SMP 
+[  385.231273] CPU 3 
+[  385.231283] Modules linked in: iwlwifi i2c_i801 usb_storage
+[  385.231308] 
+[  385.231317] Pid: 0, comm: swapper/3 Not tainted 3.4.0-rc5-default #5 Dell Inc. Vostro 3550/0JGC48
+[  385.231350] RIP: 0010:[<0000000000000000>]  [<          (null)>]           (null)
+[  385.231383] RSP: 0018:ffff88041fb83e78  EFLAGS: 00010286
+[  385.231402] RAX: ffff88041fb83eb0 RBX: 0000000000000100 RCX: 0000000000000838
+[  385.231426] RDX: ffff88041fb83eb0 RSI: dead000000200200 RDI: 0000000000000000
+[  385.231449] RBP: ffff88041fb83ef0 R08: ffff88041fb83eb8 R09: 0000000000000001
+[  385.231480] R10: 0000000000000400 R11: ffffffff816074a5 R12: ffff88040f3b8000
+[  385.231503] R13: ffff88040f3c1fd8 R14: ffff88041fb83eb0 R15: 0000000000000000
+[  385.231526] FS:  0000000000000000(0000) GS:ffff88041fb80000(0000) knlGS:0000000000000000
+[  385.231552] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  385.231570] CR2: 0000000000000000 CR3: 0000000001913000 CR4: 00000000000407e0
+[  385.231592] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  385.231614] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  385.231638] Process swapper/3 (pid: 0, threadinfo ffff88040f3c0000, task ffff88040f3bd350)
+[  385.231663] Stack:
+[  385.231673]  ffffffff81083f91 ffff88040f3c1fd8 ffff88040f3b9c20 ffff88040f3b9820
+[  385.231702]  ffff88040f3b9420 ffff88040f3b9020 0000000000000000 ffff88041fb83eb0
+[  385.231730]  ffff88041fb83eb0 ffffffff81043e21 ffffffff8190c088 ffff88040f3c1fd8
+[  385.231759] Call Trace:
+[  385.231770]  <IRQ> 
+[  385.231784]  [<ffffffff81083f91>] ? run_timer_softirq+0x191/0x223
+[  385.231806]  [<ffffffff81043e21>] ? lapic_next_event+0x10/0x14
+[  385.231827]  [<ffffffff8107fbcc>] __do_softirq+0x83/0x10d
+[  385.231846]  [<ffffffff810ae18f>] ? tick_program_event+0x1f/0x21
+[  385.231869]  [<ffffffff815e2a8c>] call_softirq+0x1c/0x30
+[  385.231889]  [<ffffffff8102e042>] do_softirq+0x33/0x69
+[  385.231907]  [<ffffffff8107fe05>] irq_exit+0x3f/0x9a
+[  385.231926]  [<ffffffff8104417c>] smp_apic_timer_interrupt+0x77/0x85
+[  385.231948]  [<ffffffff815e2307>] apic_timer_interrupt+0x67/0x70
+[  385.231967]  <EOI> 
+[  385.231979]  [<ffffffff8109a149>] ? wake_up_process+0x10/0x12
+[  385.231999]  [<ffffffff810aebce>] ? tick_nohz_idle_exit+0x135/0x13c
+[  385.232020]  [<ffffffff81033fcd>] cpu_idle+0x78/0x7f
+[  385.232039]  [<ffffffff815daf6b>] start_secondary+0x18f/0x193
+[  385.232057] Code:  Bad RIP value.
+[  385.232075] RIP  [<          (null)>]           (null)
+[  385.232093]  RSP <ffff88041fb83e78>
+[  385.232107] CR2: 0000000000000000
+[  385.232309] [drm] Changing LVDS panel from (-hsync, -vsync) to (+hsync, -vsync)
+[  385.593328] ---[ end trace e3eed09b44fc9be3 ]---
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/boot.c   |   53 +++++++++++++++++--------------
- drivers/net/wireless/ti/wlcore/boot.h   |    1 +
- drivers/net/wireless/ti/wlcore/hw_ops.h |    9 ++++++
- drivers/net/wireless/ti/wlcore/wlcore.h |    6 ++++
- 4 files changed, 46 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
-index 9b98230..ed718f7 100644
---- a/drivers/net/wireless/ti/wlcore/boot.c
-+++ b/drivers/net/wireless/ti/wlcore/boot.c
-@@ -45,10 +45,17 @@ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
- 	wlcore_write_reg(wl, REG_ECPU_CONTROL, cpu_ctrl);
- }
- 
--static int wlcore_parse_fw_ver(struct wl1271 *wl)
-+static int wlcore_boot_parse_fw_ver(struct wl1271 *wl,
-+				    struct wl1271_static_data *static_data)
- {
- 	int ret;
- 
-+	strncpy(wl->chip.fw_ver_str, static_data->fw_version,
-+		sizeof(wl->chip.fw_ver_str));
-+
-+	/* make sure the string is NULL-terminated */
-+	wl->chip.fw_ver_str[sizeof(wl->chip.fw_ver_str) - 1] = '\0';
-+
- 	ret = sscanf(wl->chip.fw_ver_str + 4, "%u.%u.%u.%u.%u",
- 		     &wl->chip.fw_ver[0], &wl->chip.fw_ver[1],
- 		     &wl->chip.fw_ver[2], &wl->chip.fw_ver[3],
-@@ -57,43 +64,43 @@ static int wlcore_parse_fw_ver(struct wl1271 *wl)
- 	if (ret != 5) {
- 		wl1271_warning("fw version incorrect value");
- 		memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
--		return -EINVAL;
-+		ret = -EINVAL;
-+		goto out;
- 	}
- 
- 	ret = wlcore_identify_fw(wl);
- 	if (ret < 0)
--		return ret;
--
--	return 0;
-+		goto out;
-+out:
-+	return ret;
- }
- 
--static int wlcore_boot_fw_version(struct wl1271 *wl)
-+static int wlcore_boot_static_data(struct wl1271 *wl)
- {
- 	struct wl1271_static_data *static_data;
-+	size_t len = sizeof(*static_data) + wl->static_data_priv_len;
- 	int ret;
- 
--	static_data = kmalloc(sizeof(*static_data), GFP_KERNEL | GFP_DMA);
-+	static_data = kmalloc(len, GFP_KERNEL);
- 	if (!static_data) {
--		wl1271_error("Couldn't allocate memory for static data!");
--		return -ENOMEM;
-+		ret = -ENOMEM;
-+		goto out;
- 	}
- 
--	wl1271_read(wl, wl->cmd_box_addr, static_data, sizeof(*static_data),
--		    false);
-+	wl1271_read(wl, wl->cmd_box_addr, static_data, len, false);
- 
--	strncpy(wl->chip.fw_ver_str, static_data->fw_version,
--		sizeof(wl->chip.fw_ver_str));
--
--	kfree(static_data);
--
--	/* make sure the string is NULL-terminated */
--	wl->chip.fw_ver_str[sizeof(wl->chip.fw_ver_str) - 1] = '\0';
-+	ret = wlcore_boot_parse_fw_ver(wl, static_data);
-+	if (ret < 0)
-+		goto out_free;
- 
--	ret = wlcore_parse_fw_ver(wl);
-+	ret = wlcore_handle_static_data(wl, static_data);
- 	if (ret < 0)
--		return ret;
-+		goto out_free;
- 
--	return 0;
-+out_free:
-+	kfree(static_data);
-+out:
-+	return ret;
- }
- 
- static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
-@@ -400,9 +407,9 @@ int wlcore_boot_run_firmware(struct wl1271 *wl)
- 	wl1271_debug(DEBUG_MAILBOX, "MBOX ptrs: 0x%x 0x%x",
- 		     wl->mbox_ptr[0], wl->mbox_ptr[1]);
- 
--	ret = wlcore_boot_fw_version(wl);
-+	ret = wlcore_boot_static_data(wl);
- 	if (ret < 0) {
--		wl1271_error("couldn't boot firmware");
-+		wl1271_error("error getting static data");
- 		return ret;
- 	}
- 
-diff --git a/drivers/net/wireless/ti/wlcore/boot.h b/drivers/net/wireless/ti/wlcore/boot.h
-index 094981d..a525225 100644
---- a/drivers/net/wireless/ti/wlcore/boot.h
-+++ b/drivers/net/wireless/ti/wlcore/boot.h
-@@ -40,6 +40,7 @@ struct wl1271_static_data {
- 	u8 fw_version[WL1271_FW_VERSION_MAX_LEN];
- 	u32 hw_version;
- 	u8 tx_power_table[WL1271_NO_SUBBANDS][WL1271_NO_POWER_LEVELS];
-+	u8 priv[0];
- };
- 
- /* number of times we try to read the INIT interrupt */
-diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
-index 1555c3e..c590b6f 100644
---- a/drivers/net/wireless/ti/wlcore/hw_ops.h
-+++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
-@@ -158,4 +158,13 @@ wlcore_debugfs_init(struct wl1271 *wl, struct dentry *rootdir)
- 	return 0;
- }
- 
-+static inline int
-+wlcore_handle_static_data(struct wl1271 *wl, void *static_data)
-+{
-+	if (wl->ops->handle_static_data)
-+		return wl->ops->handle_static_data(wl, static_data);
-+
-+	return 0;
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 85fd3d9..1967873 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -26,6 +26,7 @@
- 
- #include "wlcore_i.h"
- #include "event.h"
-+#include "boot.h"
- 
- /* The maximum number of Tx descriptors in all chip families */
- #define WLCORE_MAX_TX_DESCRIPTORS 32
-@@ -72,6 +73,8 @@ struct wlcore_ops {
- 	u32 (*ap_get_mimo_wide_rate_mask)(struct wl1271 *wl,
- 					  struct wl12xx_vif *wlvif);
- 	int (*debugfs_init)(struct wl1271 *wl, struct dentry *rootdir);
-+	int (*handle_static_data)(struct wl1271 *wl,
-+				  struct wl1271_static_data *static_data);
- };
- 
- enum wlcore_partitions {
-@@ -373,6 +376,9 @@ struct wl1271 {
- 	/* RX Data filter rule state - enabled/disabled */
- 	bool rx_filter_enabled[WL1271_MAX_RX_FILTERS];
- 
-+	/* size of the private static data */
-+	size_t static_data_priv_len;
-+
- 	/* the current channel type */
- 	enum nl80211_channel_type channel_type;
- };
--- 
-1.7.9.5
 
+09:00.0 Network controller: Intel Corporation Centrino Wireless-N 1030 (rev 34)
+        Subsystem: Intel Corporation Centrino Wireless-N 1030 BGN
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 53
+        Region 0: Memory at f7e00000 (64-bit, non-prefetchable) [size=8K]
+        Capabilities: [c8] Power Management version 3
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+                Address: 00000000fee003f8  Data: 0000
+        Capabilities: [e0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <32us
+                        ClockPM+ Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+        Capabilities: [140 v1] Device Serial Number 4c-80-93-ff-ff-15-e6-c7
+        Kernel driver in use: iwlwifi
+        Kernel modules: iwlwifi
+00: 86 80 8a 00 06 00 10 00 34 00 80 02 10 00 00 00
+10: 04 00 e0 f7 00 00 00 00 00 00 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 25 53
+30: 00 00 00 00 c8 00 00 00 00 00 00 00 0a 01 00 00
+40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 01 d0 23 c8 00 00 00 0d
+d0: 05 e0 81 00 f8 03 e0 fe 00 00 00 00 00 00 00 00
+e0: 10 00 01 00 c0 8e 00 10 00 08 19 00 11 ec 06 00
+f0: 40 00 11 10 00 00 00 00 00 00 00 00 00 00 00 00
+
+
+Thanks,
+Martin
