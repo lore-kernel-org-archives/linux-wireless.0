@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757912Ab2EJJO5 (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:48765 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756382Ab2EGP6B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:14:57 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:14:57 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 12/78] wl18xx: implement hw op for calculating hw block count per packet
-Date: Thu, 10 May 2012 12:13:17 +0300
-Message-Id: <1336641263-5761-13-git-send-email-arik@wizery.com> (sfid-20120510_111501_733107_82225D49)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Mon, 7 May 2012 11:58:01 -0400
+Date: Mon, 07 May 2012 11:56:55 -0400 (EDT)
+Message-Id: <20120507.115655.1099092499206396209.davem@davemloft.net> (sfid-20120507_175807_373033_9599931B)
+To: gustavo@padovan.org
+Cc: linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120507152113.GA5192@joana>
+References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
+	<20120506.123656.1335354317428258137.davem@davemloft.net>
+	<20120507152113.GA5192@joana>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement the calc_tx_blocks op for the 18xx family.
+From: Gustavo Padovan <gustavo@padovan.org>
+Date: Mon, 7 May 2012 12:24:05 -0300
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+> * David Miller <davem@davemloft.net> [2012-05-06 12:36:56 -0400]:
+> 
+>> From: Gustavo Padovan <gustavo@padovan.org>
+>> Date: Fri,  4 May 2012 15:59:48 -0300
+>> 
+>> > Fix offending styles all over the tree. This is in conformance David
+>> > Miller's style rules.
+>> 
+>> They aren't just my style rules.
+>> 
+>> And, if your plan is to patch things up afterwards so you don't
+>> have to change existing commits in your tree, think again.
+>> 
+>> I absolutely will not pull a tree from John that has commits in
+>> it that add the bad indentation.
+>> 
+>> You have to respin your tree with fixed commits.
+> 
+> John, can you please unpull the bluetooth tree from wireless-next? I'll be
+> fixing he affected commits and the send you a new pull request. Thanks.
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 70683ad..055b194 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -34,6 +34,7 @@
- 
- #define WL18XX_TX_HW_BLOCK_SPARE        1
- #define WL18XX_TX_HW_GEM_BLOCK_SPARE    2
-+#define WL18XX_TX_HW_BLOCK_SIZE         268
- 
- static struct wl18xx_conf wl18xx_default_conf = {
- 	.phy = {
-@@ -305,11 +306,18 @@ static void wl18xx_ack_event(struct wl1271 *wl)
- 	wlcore_write_reg(wl, REG_INTERRUPT_TRIG, WL18XX_INTR_TRIG_EVENT_ACK);
- }
- 
-+static u32 wl18xx_calc_tx_blocks(struct wl1271 *wl, u32 len, u32 spare_blks)
-+{
-+	u32 blk_size = WL18XX_TX_HW_BLOCK_SIZE;
-+	return (len + blk_size - 1) / blk_size + spare_blks;
-+}
-+
- static struct wlcore_ops wl18xx_ops = {
- 	.identify_chip	= wl18xx_identify_chip,
- 	.boot		= wl18xx_boot,
- 	.trigger_cmd	= wl18xx_trigger_cmd,
- 	.ack_event	= wl18xx_ack_event,
-+	.calc_tx_blocks = wl18xx_calc_tx_blocks,
- };
- 
- int __devinit wl18xx_probe(struct platform_device *pdev)
--- 
-1.7.9.5
+And John also make sure these guys don't add unreasonable commit log
+messages saying things like that this multi-line condition style thing
+is my specific coding style.  It's not.
 
