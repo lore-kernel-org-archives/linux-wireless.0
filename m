@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54840 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758044Ab2EHCS7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 22:18:59 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-To: <linux-wireless@vger.kernel.org>
-CC: <Larry.Finger@lwfinger.net>
-Subject: [PATCH 5/9] rtlwifi: add short circuit in the receive path
-Date: Mon, 7 May 2012 22:18:37 -0400
-Message-ID: <1336443521-15299-6-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041903_774971_E340E229)
-In-Reply-To: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
-References: <4FA212D9.5020602@gtri.gatech.edu>
- <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([143.182.124.37]:61541 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756106Ab2EGKcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 06:32:43 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	H Hartley Sweeten <hartleys@visionengravers.com>,
+	H Hartley Sweeten <hsweeten@visionengravers.com>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: [PATCH 14/20] NFC: Include nci_core.h to nci/lib.c
+Date: Mon,  7 May 2012 12:31:25 +0200
+Message-Id: <1336386691-24840-15-git-send-email-sameo@linux.intel.com> (sfid-20120507_123246_278417_2EA4C19B)
+In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow things like C2H events without any actual 802.11 data to avoid
-the rest of the receive path.
+From: H Hartley Sweeten <hartleys@visionengravers.com>
 
-Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Include the header to pickup the exported symbol prototype.
+
+Quites the sparse warning:
+
+warning: symbol 'nci_to_errno' was not declared. Should it be static?
+
+Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+CC: Samuel Ortiz <sameo@linux.intel.com>
+CC: "David S. Miller" <davem@davemloft.net>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/rtlwifi/usb.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+ net/nfc/nci/lib.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 471a112..d9a0a9f 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -440,7 +440,11 @@ static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
- 	};
+diff --git a/net/nfc/nci/lib.c b/net/nfc/nci/lib.c
+index 6a63e5e..6b7fd26 100644
+--- a/net/nfc/nci/lib.c
++++ b/net/nfc/nci/lib.c
+@@ -31,6 +31,7 @@
+ #include <linux/errno.h>
  
- 	skb_pull(skb, RTL_RX_DESC_SIZE);
--	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
-+	if (!rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc,
-+	    skb)) {
-+		dev_kfree_skb_any(skb);
-+		return;
-+	}
- 	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
- 	hdr = (struct ieee80211_hdr *)(skb->data);
- 	fc = hdr->frame_control;
-@@ -483,7 +487,11 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
- 	};
+ #include <net/nfc/nci.h>
++#include <net/nfc/nci_core.h>
  
- 	skb_pull(skb, RTL_RX_DESC_SIZE);
--	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
-+	if (!rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc,
-+	    skb)) {
-+		dev_kfree_skb_any(skb);
-+		return;
-+	}
- 	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
- 	hdr = (struct ieee80211_hdr *)(skb->data);
- 	fc = hdr->frame_control;
+ /* NCI status codes to Unix errno mapping */
+ int nci_to_errno(__u8 code)
 -- 
-1.7.4.1
+1.7.9.1
 
