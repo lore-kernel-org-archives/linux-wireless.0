@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9217 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755528Ab2EOE2h (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:35981 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756076Ab2EGPYW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 00:28:37 -0400
-Message-ID: <4FB1DB6A.8080303@qca.qualcomm.com> (sfid-20120515_062847_120900_9B2D6538)
-Date: Tue, 15 May 2012 07:28:26 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 7 May 2012 11:24:22 -0400
+Date: Mon, 7 May 2012 12:24:05 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+Message-ID: <20120507152113.GA5192@joana> (sfid-20120507_172426_881294_1858F14D)
+References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
+ <20120506.123656.1335354317428258137.davem@davemloft.net>
 MIME-Version: 1.0
-To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-CC: Joe Perches <joe@perches.com>, <linux-wireless@vger.kernel.org>,
-	<ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2] ath6kl: enable enhanced bmiss detection
-References: <1337017652-3962-1-git-send-email-c_tpeder@qca.qualcomm.com> <1337018219.29436.24.camel@joe2Laptop> <20120514180339.GA4030@pista> <4FB14A4D.1030002@qca.qualcomm.com> <20120514183124.GA4057@pista>
-In-Reply-To: <20120514183124.GA4057@pista>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120506.123656.1335354317428258137.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/14/2012 09:31 PM, Pedersen, Thomas wrote:
-> On Mon, May 14, 2012 at 09:09:17PM +0300, Kalle Valo wrote:
->> On 05/14/2012 09:03 PM, Pedersen, Thomas wrote:
->>> On Mon, May 14, 2012 at 10:56:59AM -0700, Joe Perches wrote:
->>>
->>>> Why 2 messages when 1 message might do?
->>>>
->>>> 	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
->>>> 					       vif->fw_vif_idx, enable);
->>>> 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
->>>> 		   "%s enhanced fw bmiss detection: %s\n",
->>>> 		   enable ? "enable" : "disable",
->>>> 		   err ? "OK" : "failed");
->>>
->>> OK that seems nicer. Should we still print the error code, or maybe it
->>> doesn't really matter?
->>
->> I missed this in the original review, but it's actually better to not
->> use ath6kl_dbg() for error messages. They are more difficult to notice
->> that way.
->>
->> Or did you have a specific reason for using ath6kl_dbg()?
-> 
-> No, you're right. However, if we consolidate these messages they will
-> both be under ath6kl_dbg() or ath6kl_err(), and neither one would be
-> correct.
-> 
-> How about just keeping these separate and printing the error through
-> ath6kl_err()?
+* David Miller <davem@davemloft.net> [2012-05-06 12:36:56 -0400]:
 
-Sounds good to me. And if you can, try to print the error value in
-ath6kl_err().
+> From: Gustavo Padovan <gustavo@padovan.org>
+> Date: Fri,  4 May 2012 15:59:48 -0300
+> 
+> > Fix offending styles all over the tree. This is in conformance David
+> > Miller's style rules.
+> 
+> They aren't just my style rules.
+> 
+> And, if your plan is to patch things up afterwards so you don't
+> have to change existing commits in your tree, think again.
+> 
+> I absolutely will not pull a tree from John that has commits in
+> it that add the bad indentation.
+> 
+> You have to respin your tree with fixed commits.
 
-Kalle
+John, can you please unpull the bluetooth tree from wireless-next? I'll be
+fixing he affected commits and the send you a new pull request. Thanks.
+
+	Gustavo
