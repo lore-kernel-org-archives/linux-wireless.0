@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53752 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753108Ab2E2HQR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 03:16:17 -0400
-Message-ID: <1338275778.4342.26.camel@jlt3.sipsolutions.net> (sfid-20120529_091623_300773_2E6C482F)
-Subject: Re: brcmsmac still woes, possible regression?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>
-Date: Tue, 29 May 2012 09:16:18 +0200
-In-Reply-To: <20120516201521.GA22946@thinkpad-t410>
-References: <20120402215005.GA13969@burratino>
-	 <4F7B179F.7070502@broadcom.com> <20120509094111.GA2333@burratino>
-	 <4FAA45AF.8050201@broadcom.com> <20120509174106.GA7189@ubuntu-mba>
-	 <4FAAB0FE.601@broadcom.com> <1336587054.1121.2.camel@jlt3.sipsolutions.net>
-	 <20120510163525.GB32040@ubuntu-mba>
-	 <1336728772.4310.6.camel@jlt3.sipsolutions.net>
-	 <20120511173149.GA20232@ubuntu-mba> <20120516201521.GA22946@thinkpad-t410>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1246 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755997Ab2EGKGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 06:06:30 -0400
+Message-ID: <4FA79E99.9020900@broadcom.com> (sfid-20120507_120635_886317_5DE21537)
+Date: Mon, 7 May 2012 12:06:17 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Andrei Emeltchenko" <andrei.emeltchenko.news@gmail.com>,
+	"David Miller" <davem@davemloft.net>, dh.herrmann@googlemail.com,
+	gustavo@padovan.org, linville@tuxdriver.com,
+	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Bluetooth: Fix coding style
+References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
+ <20120506.123656.1335354317428258137.davem@davemloft.net>
+ <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
+ <20120506.145304.1998242927519675381.davem@davemloft.net>
+ <20120507081411.GA19002@aemeltch-MOBL1> <4FA78618.4050203@broadcom.com>
+ <20120507082945.GB19002@aemeltch-MOBL1>
+In-Reply-To: <20120507082945.GB19002@aemeltch-MOBL1>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-16 at 15:15 -0500, Seth Forshee wrote:
-
-> > > This isn't implemented in mac80211, and since some HW (e.g. ours)
-> > > implements it in lower levels, I don't think you can just generally say
-> > > it has to be in mac80211 now.
-> > 
-> > I guess I need to familiarize myself with the situation for other
-> > hardware then, which I will do next week when I'm not at a conference.
-> > It just seems to me that if we want to enforce consistent regulatory
-> > behavior for all HW then mac80211 is the logical place to implement it.
+On 05/07/2012 10:29 AM, Andrei Emeltchenko wrote:
+> Hi Arend,
 > 
-> I had a look at iwlwifi, and I see how passive channels are being
-> handled. I don't understand though how having this functionality in
-> mac80211 would hurt iwlwifi, but perhaps we can find an acceptible
-> solution.
+> On Mon, May 07, 2012 at 10:21:44AM +0200, Arend van Spriel wrote:
+>> On 05/07/2012 10:14 AM, Andrei Emeltchenko wrote:
+>>>> They don't.  All the examples you'll find are of the form:
+>>>>>
+>>>>> 	if (a &&
+>>>>> 	    b)
+>>>>>
+>>>>> not:
+>>>>>
+>>>>> 	if (a &&
+>>>>> 			b)
+>>> Actually it does not look like this, otherwise "b" would be placed in the
+>>> same line, don't it?
+>>
+>> Let me rephrase Dave's remark so you may understand:
+>>
+>> 	if (a_has_to_be_long_enough_to_make_you_understand &&
+>> 	    you_do_not_care_about_code_readability)
+>>
+>> and not:
+>> 	if (a_has_to_be_long_enough_to_make_you_understand &&
+>> 			you_do_not_care_about_code_readability)
+> 
+> You seems to forgot to reply to the main question about Codying Style.
+> 
+> Best regards 
+> Andrei Emeltchenko 
 
-I'm just thinking that having both would make it have a bigger delay or
-so. Since mac80211 can't really know our device's internal state (even
-the driver can't really keep track easily) we couldn't remove the
-iwlwifi pieces.
+True. But you explicitly addressed that one to David. The alignment rule
+is indeed not stated in CodingStyle document, but using a seemingly
+random amount of tabs is obviously not improving readability. I suppose
+the alignment rule with an example could be added to the CodingStyle.
 
-> Actually the support already present for regulatory beacon hints would
-> probably suit this purpose fairly well, and in fact it already does seem
-> to work for some channels. But for reasons I don't understand the beacon
-> hints are only processed for channels with IEEE80211_CHAN_RADAR cleared,
-> making it ineffective for most of the 5 GHz band. If this was changed to
-> at least give the driver some indication that a beacon has been seen on
-> the channel (even just setting chan->beacon_found) then drivers should
-> be able to use it to know when tx can be enabled on passive channels.
+Gr. AvS
 
-RADAR channels have specific time requirements, the beacon hints are
-used for something like "geography detection".
-
-johannes
 
