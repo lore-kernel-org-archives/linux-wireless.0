@@ -1,103 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:29624 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751929Ab2EFHy1 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:34142 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755872Ab2EGPMs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 03:54:27 -0400
-Date: Sun, 6 May 2012 09:54:33 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi warn_slowpath with 3.*
-Message-ID: <20120506075433.GA1288@ritirata.org> (sfid-20120506_095500_887568_2F2A2062)
-References: <CANUX_P0zRjSy9LOVzkWtboqAsvkD4O6EcEXLo11W1Sbb307OJQ@mail.gmail.com>
- <20120503200948.GC11326@ritirata.org>
- <CANUX_P0DL+_V8RO-CNXQx=oHF0T-opO=uw-ukYOjjVgo_OyfUw@mail.gmail.com>
- <20120504002136.GA4201@ritirata.org>
- <CANUX_P1Ji6H0zaA_kMHx2F1AD+czB=XtrDhjEvR8t1aCDpZhUQ@mail.gmail.com>
- <20120504063644.GA2912@ritirata.org>
- <CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
- <20120504142006.GA2040@ritirata.org>
- <CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com>
- <CANUX_P0ygFyDjOo1Thygw_dEiHKPPiH4=GDKN4ncX3vwy0ujrw@mail.gmail.com>
+	Mon, 7 May 2012 11:12:48 -0400
+Received: by yenm10 with SMTP id m10so3730935yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 08:12:47 -0700 (PDT)
+Message-ID: <4FA7E66B.5090500@lwfinger.net> (sfid-20120507_171251_317473_6E6E2B3A)
+Date: Mon, 07 May 2012 10:12:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="envbJBWh7q8WU6mo"
-In-Reply-To: <CANUX_P0ygFyDjOo1Thygw_dEiHKPPiH4=GDKN4ncX3vwy0ujrw@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend van Spriel <arend@broadcom.com>,
+	John Linville <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: WARNING: at net/mac80211/iface.c:162
+References: <4FA709B3.4030404@lwfinger.net>  ( sfid-20120507_013135_141792_546F01AB) <1336372450.4325.0.camel@jlt3.sipsolutions.net>  <4FA77FE7.5030303@broadcom.com> <1336390146.4325.14.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1336390146.4325.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 05/07/2012 06:29 AM, Johannes Berg wrote:
+> On Mon, 2012-05-07 at 09:55 +0200, Arend van Spriel wrote:
+>> On 05/07/2012 08:34 AM, Johannes Berg wrote:
+>>> On Sun, 2012-05-06 at 18:30 -0500, Larry Finger wrote:
+>>>> Hi,
+>>>>
+>>>> I am getting the following warning from the latest wireless-testing system:
+>>>>
+>>>>    ------------[ cut here ]------------
+>>>>    WARNING: at net/mac80211/iface.c:162 ieee80211_check_queues+0x119/0x130
+>>>> [mac80211]()
+>>>
+>>>
+>>>>        if (WARN_ON_ONCE(sdata->vif.hw_queue[i]>= n_queues))
+>>>>
+>>>> The warning is triggered for i, n_queues, and sdata->vif.hw_queue[i] all equal to 1.
+>>>
+>>> Is this a driver with just a single queue by any chance? I never tested
+>>> that and probably forgot to set those up correctly.
+>>>
+>>
+>> The bug report Larry mentions is with iwlwifi driver:
+>>
+>> pci, iwlwifi, NETWORK, Centrino Wireless-N 130 BGN
+>
+> No, the bug report says rtl8187, the user said this happened when
+> plugging in the USB device.
+>
+> I think this will fix it:
+>
+> --- a/net/mac80211/iface.c
+> +++ b/net/mac80211/iface.c
+> @@ -206,8 +206,10 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
+>   	for (i = 0; i<  IEEE80211_NUM_ACS; i++) {
+>   		if (local->hw.flags&  IEEE80211_HW_QUEUE_CONTROL)
+>   			sdata->vif.hw_queue[i] = IEEE80211_INVAL_HW_QUEUE;
+> -		else
+> +		else if (local->hw.queues>= IEEE80211_NUM_ACS)
+>   			sdata->vif.hw_queue[i] = i;
+> +		else
+> +			sdata->vif.hw_queue[i] = 0;
+>   	}
+>   	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
+>   }
 
---envbJBWh7q8WU6mo
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes, this patch fixes the problem.
 
-On Sun, May 06, 2012 at 08:49:52 +0300, Emmanuel Grumbach wrote:
-> wait - I just noticed that this one introduced another issue...
+Reported-and-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-ok, I'll drop this patch
+Once you post the patch, I will update that entry at bugzilla.redhat.com.
 
->=20
-> Emmanuel Grumbach
-> egrumbach@gmail.com
->=20
->=20
-> On Sat, May 5, 2012 at 9:49 PM, Emmanuel Grumbach <egrumbach@gmail.com> w=
-rote:
-> > Well,
-> >
-> > this is not the same warning as before.
-> > Can you try the patch attached ?
-> > I have submitted it internally.
-> >
-> > thanks
-> >
-> > Emmanuel Grumbach
-> > egrumbach@gmail.com
-> >
-> >
-> > On Fri, May 4, 2012 at 5:20 PM, Antonio Quartulli <ordex@autistici.org>=
- wrote:
-> >> On Fri, May 04, 2012 at 09:58:30 +0300, Emmanuel Grumbach wrote:
-> >>> This can't be with my patch, is it ?
-> >>
-> >> here is the log. Some pieces are missing at the beginning, didn't chec=
-k why.
-> >> However the WARNING comes up later, so it should be ok. Tell me if I c=
-an do
-> >> something else!
-> >>
-> >> Cheers,
-> >>
-> >>
-> >> --
-> >> Antonio Quartulli
-> >>
-> >> ..each of us alone is worth nothing..
-> >> Ernesto "Che" Guevara
+Thanks,
 
---=20
-Antonio Quartulli
+Larry
 
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---envbJBWh7q8WU6mo
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAEBAgAGBQJPpi45AAoJEFMQTLzJFOZF3LQH/3lNzAC9ljLlNtQzc0T9/NVN
-twwgEAoRer+lKQv/cAF0P2FGqLU8COX2pcc2SoJkC/6NVrBUyR1iznXSuvez1quC
-B3n8IHakm2jQuAxw5gWXfvdtlfslDHcnwP6Zr2OA5/CnPIBp1byvA5t8QdacJ9+r
-X3yw9Nejd7d9duHON23YanLWawCkXSd4iInWOYL8uIl0YPKXTxVxaniegWzSwTR1
-KbkOE0IW8Wpvd0gBIzEDBVy7ueEvw7TN+1EyofQNRQjAzHzt3pNQFhZdu81K7/wd
-PPkb3P4qJ3ZHUMqr/Hs6TRwNoSWr0n7biEowUoKn3NU4xBNo+gsGIQds/Uy7rl4=
-=Moko
------END PGP SIGNATURE-----
-
---envbJBWh7q8WU6mo--
