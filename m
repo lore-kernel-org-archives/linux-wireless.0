@@ -1,72 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26657 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932706Ab2ESIni (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2012 04:43:38 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 05/10] ath9k_hw: configure ar9462 switching regulator discontinuous mode
-Date: Sat, 19 May 2012 14:13:51 +0530
-Message-ID: <1337417036-1431-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120519_104358_502222_DA969008)
-In-Reply-To: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
+Received: from mout6.freenet.de ([195.4.92.96]:43620 "EHLO mout6.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751417Ab2EGFOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 01:14:35 -0400
+Received: from [195.4.92.142] (helo=mjail2.freenet.de)
+	by mout6.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1SRGHK-0005jI-5P
+	for linux-wireless@vger.kernel.org; Mon, 07 May 2012 07:14:34 +0200
+Received: from localhost ([::1]:41840 helo=mjail2.freenet.de)
+	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1SRGHK-0003zT-1f
+	for linux-wireless@vger.kernel.org; Mon, 07 May 2012 07:14:34 +0200
+Received: from [195.4.92.22] (port=59523 helo=12.mx.freenet.de)
+	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1SRGEa-0003Yf-FB
+	for linux-wireless@vger.kernel.org; Mon, 07 May 2012 07:11:44 +0200
+Received: from [2002:4fde:1e5:2:5054:ff:feb8:40bd] (port=48708 helo=mail.maya.org)
+	by 12.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1SRGEa-00032S-05
+	for linux-wireless@vger.kernel.org; Mon, 07 May 2012 07:11:44 +0200
+Message-ID: <4FA75983.9040003@01019freenet.de> (sfid-20120507_071439_281155_215096E7)
+Date: Mon, 07 May 2012 07:11:31 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [rt2800pci (AP) - ath9k] 802.11w: broken aggregation handling?
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable WLAN and BT mode for switching regulator discontinuous
-orverride for AR9462 chips.
+Hello!
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++++
- drivers/net/wireless/ath/ath9k/hw.h         |    1 -
- drivers/net/wireless/ath/ath9k/reg.h        |    2 ++
- 3 files changed, 6 insertions(+), 1 deletion(-)
+I switched on 802.11w on my AP (rt2860) in hostapd with ieee80211w=1 and
+in wpa_supplicant with ieee80211w=2 (ath9k). key_mgmt is WPA-EAP (TLS) /
+CCMP for both pairwise and group.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 11abb97..d6baf69 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -676,6 +676,10 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	if (chan->channel == 2484)
- 		ar9003_hw_prog_ini(ah, &ah->ini_japan2484, 1);
- 
-+	if (AR_SREV_9462(ah))
-+		REG_WRITE(ah, AR_GLB_SWREG_DISCONT_MODE,
-+			  AR_GLB_SWREG_DISCONT_EN_BT_WLAN);
-+
- 	ah->modes_index = modesIndex;
- 	ar9003_hw_override_ini(ah);
- 	ar9003_hw_set_channel_regs(ah, chan);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 3740aab..03d5909 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -824,7 +824,6 @@ struct ath_hw {
- 	struct ar5416IniArray ini_japan2484;
- 	struct ar5416IniArray iniModes_9271_ANI_reg;
- 	struct ar5416IniArray ini_radio_post_sys2ant;
--	struct ar5416IniArray ini_BTCOEX_MAX_TXPWR;
- 
- 	struct ar5416IniArray iniMac[ATH_INI_NUM_SPLIT];
- 	struct ar5416IniArray iniBB[ATH_INI_NUM_SPLIT];
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 458f81b..560d6ef 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -2211,5 +2211,7 @@ enum {
- #define AR_BTCOEX_CTRL3_CONT_INFO_TIMEOUT	0x00000fff
- #define AR_BTCOEX_CTRL3_CONT_INFO_TIMEOUT_S	0
- 
-+#define AR_GLB_SWREG_DISCONT_MODE         0x2002c
-+#define AR_GLB_SWREG_DISCONT_EN_BT_WLAN   0x3
- 
- #endif
--- 
-1.7.10.2
+On both machines, compat-wireless-2012-04-26 (or
+compat-wireless-3.4-rc3) is running.
 
+Directly after authorization, dhcp is started and therefore the opening
+of the BA session is started by the AP but times out because of no
+answer of the supplicant:
+
+AP:
+[63010.267285] Open BA session requested for 48:5d:60:33:aa:11 tid 0
+[63010.279073] activated addBA response timer on tid 0
+[63011.280107] addBA response timer expired on tid 0
+[63011.280134] Tx BA session stop requested for 48:5d:60:33:aa:11 tid 0
+[63011.289149] Stopping Tx BA session for 48:5d:60:33:aa:11 tid 0
+
+[63013.270550] Open BA session requested for 48:5d:60:33:aa:11 tid 0
+[63013.285059] activated addBA response timer on tid 0
+[63014.288104] addBA response timer expired on tid 0
+[63014.288130] Tx BA session stop requested for 48:5d:60:33:aa:11 tid 0
+[63014.301131] Stopping Tx BA session for 48:5d:60:33:aa:11 tid 0
+
+
+
+The ath9k supplicant gets the BA session request, but times out, too:
+
+[75492.707613] Open BA session requested for ec:2c:69:57:01:dd tid 0
+[75492.718195] activated addBA response timer on tid 0
+[75493.719577] addBA response timer expired on tid 0
+[75493.719633] Tx BA session stop requested for ec:2c:69:57:01:dd tid 0
+[75493.728655] Stopping Tx BA session for ec:2c:69:57:01:dd tid 0
+
+[75495.709051] Open BA session requested for ec:2c:69:57:01:dd tid 0
+[75495.720317] activated addBA response timer on tid 0
+[75496.721801] addBA response timer expired on tid 0
+[75496.721825] Tx BA session stop requested for ec:2c:69:57:01:dd tid 0
+[75496.730775] Stopping Tx BA session for ec:2c:69:57:01:dd tid 0
+
+[75496.731299] Open BA session requested for ec:2c:69:57:01:dd tid 0
+[75496.743795] activated addBA response timer on tid 0
+[75497.745162] addBA response timer expired on tid 0
+[75497.745198] Tx BA session stop requested for ec:2c:69:57:01:dd tid 0
+[75497.754246] Stopping Tx BA session for ec:2c:69:57:01:dd tid 0
+
+[75497.754775] Open BA session requested for ec:2c:69:57:01:dd tid 0
+[75497.755097] Open BA session requested for ec:2c:69:57:01:dd tid 0
+[75497.755102] BA request denied - session is not idle on tid 0
+
+
+I can see in the air trace, that the supplicant seems to answer fine to
+the BA request of the AP, but the AP seems not to understand the package.
+
+
+
+It looks like this (AP), if it's working fine (w/o 802.11n):
+[62405.350620] Open BA session requested for 48:5d:60:33:aa:11 tid 0
+[62405.364062] activated addBA response timer on tid 0
+[62405.365389] Rx A-MPDU request on tid 0 result 0
+[62405.365644] switched off addBA timer for tid 0
+[62405.365648] Aggregation is on for tid 0
+
+
+
+
+The deauth request from wpa_supplicant -> AP isn't recognized on the AP,
+too.
+
+
+
+Any idea?
+
+Thanks,
+kind regards,
+Andreas
