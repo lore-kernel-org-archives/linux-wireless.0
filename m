@@ -1,200 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:50831 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757815Ab2EJJOm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54079 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755497Ab2EGJVH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:14:42 -0400
-Received: by wibhn19 with SMTP id hn19so247958wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:14:41 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 05/78] wl18xx: add register table
-Date: Thu, 10 May 2012 12:13:10 +0300
-Message-Id: <1336641263-5761-6-git-send-email-arik@wizery.com> (sfid-20120510_111445_838421_EA9FCE10)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Mon, 7 May 2012 05:21:07 -0400
+Message-ID: <1336382462.4325.4.camel@jlt3.sipsolutions.net> (sfid-20120507_112120_926904_344811C4)
+Subject: Re: [PATCH] fix the increment of unicast/multicast counters for
+ forwarded PREQ
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+Date: Mon, 07 May 2012 11:21:02 +0200
+In-Reply-To: <CAEFj9857DWGCcnF20nKYEDb0_p1K_iYLR1F=oLNAx6NjwPQE9w@mail.gmail.com> (sfid-20120507_105843_577233_4BE81F52)
+References: <1336106215-7431-1-git-send-email-yeohchunyeow@gmail.com>
+	 <1336376603.4325.3.camel@jlt3.sipsolutions.net>
+	 <CAEFj9857DWGCcnF20nKYEDb0_p1K_iYLR1F=oLNAx6NjwPQE9w@mail.gmail.com>
+	 (sfid-20120507_105843_577233_4BE81F52)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+Hi,
 
-Add the register table with the appropriate values for wl18xx.
+> If the destination address is not broadcast frame, the number of
+> forwarded unicast frame is increased. And the other way round. Not
+> correct?
+> 
+> +		if (!is_multicast_ether_addr(da))
+> +			ifmsh->mshstats.fwded_unicast++;
+> +		else
+> +			ifmsh->mshstats.fwded_mcast++;
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |   23 +++++++
- drivers/net/wireless/ti/wl18xx/reg.h  |  112 +++++++++++++++++++++++++++++++++
- 2 files changed, 135 insertions(+)
- create mode 100644 drivers/net/wireless/ti/wl18xx/reg.h
+No, your new code is fine, but this
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index f3a164a..88fd934 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -25,6 +25,8 @@
- #include "../wlcore/wlcore.h"
- #include "../wlcore/debug.h"
- 
-+#include "reg.h"
-+
- static struct wlcore_ops wl18xx_ops = {
- };
- 
-@@ -62,6 +64,26 @@ static const struct wlcore_partition_set wl18xx_ptable[PART_TABLE_LEN] = {
- 	},
- };
- 
-+static const int wl18xx_rtable[REG_TABLE_LEN] = {
-+	[REG_ECPU_CONTROL]		= WL18XX_REG_ECPU_CONTROL,
-+	[REG_INTERRUPT_NO_CLEAR]	= WL18XX_REG_INTERRUPT_NO_CLEAR,
-+	[REG_INTERRUPT_ACK]		= WL18XX_REG_INTERRUPT_ACK,
-+	[REG_COMMAND_MAILBOX_PTR]	= WL18XX_REG_COMMAND_MAILBOX_PTR,
-+	[REG_EVENT_MAILBOX_PTR]		= WL18XX_REG_EVENT_MAILBOX_PTR,
-+	[REG_INTERRUPT_TRIG]		= WL18XX_REG_INTERRUPT_TRIG_H,
-+	[REG_INTERRUPT_MASK]		= WL18XX_REG_INTERRUPT_MASK,
-+	[REG_PC_ON_RECOVERY]		= 0, /* TODO: where is the PC? */
-+	[REG_CHIP_ID_B]			= WL18XX_REG_CHIP_ID_B,
-+	[REG_CMD_MBOX_ADDRESS]		= WL18XX_CMD_MBOX_ADDRESS,
-+
-+	/* data access memory addresses, used with partition translation */
-+	[REG_SLV_MEM_DATA]		= WL18XX_SLV_MEM_DATA,
-+	[REG_SLV_REG_DATA]		= WL18XX_SLV_REG_DATA,
-+
-+	/* raw data access memory addresses */
-+	[REG_RAW_FW_STATUS_ADDR]	= WL18XX_FW_STATUS_ADDR,
-+};
-+
- int __devinit wl18xx_probe(struct platform_device *pdev)
- {
- 	struct wl1271 *wl;
-@@ -76,6 +98,7 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
- 	wl = hw->priv;
- 	wl->ops = &wl18xx_ops;
- 	wl->ptable = wl18xx_ptable;
-+	wl->rtable = wl18xx_rtable;
- 
- 	return wlcore_probe(wl, pdev);
- }
-diff --git a/drivers/net/wireless/ti/wl18xx/reg.h b/drivers/net/wireless/ti/wl18xx/reg.h
-new file mode 100644
-index 0000000..9af0c83
---- /dev/null
-+++ b/drivers/net/wireless/ti/wl18xx/reg.h
-@@ -0,0 +1,112 @@
-+/*
-+ * This file is part of wlcore
-+ *
-+ * Copyright (C) 2011 Texas Instruments Inc.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
-+ */
-+
-+#ifndef __REG_H__
-+#define __REG_H__
-+
-+#define WL18XX_REGISTERS_BASE      0x00800000
-+#define WL18XX_CODE_BASE           0x00000000
-+#define WL18XX_DATA_BASE           0x00400000
-+#define WL18XX_DOUBLE_BUFFER_BASE  0x00600000
-+#define WL18XX_MCU_KEY_SEARCH_BASE 0x00700000
-+#define WL18XX_PHY_BASE            0x00900000
-+#define WL18XX_TOP_OCP_BASE        0x00A00000
-+#define WL18XX_PACKET_RAM_BASE     0x00B00000
-+#define WL18XX_HOST_BASE           0x00C00000
-+
-+#define WL18XX_REGISTERS_DOWN_SIZE 0x0000B000
-+
-+#define WL18XX_REG_BOOT_PART_START 0x00802000
-+#define WL18XX_REG_BOOT_PART_SIZE  0x00014578
-+
-+#define WL18XX_PHY_INIT_MEM_ADDR   0x80926000
-+
-+#define WL18XX_SDIO_WSPI_BASE		(WL18XX_REGISTERS_BASE)
-+#define WL18XX_REG_CONFIG_BASE		(WL18XX_REGISTERS_BASE + 0x02000)
-+#define WL18XX_WGCM_REGS_BASE		(WL18XX_REGISTERS_BASE + 0x03000)
-+#define WL18XX_ENC_BASE			(WL18XX_REGISTERS_BASE + 0x04000)
-+#define WL18XX_INTERRUPT_BASE		(WL18XX_REGISTERS_BASE + 0x05000)
-+#define WL18XX_UART_BASE		(WL18XX_REGISTERS_BASE + 0x06000)
-+#define WL18XX_WELP_BASE		(WL18XX_REGISTERS_BASE + 0x07000)
-+#define WL18XX_TCP_CKSM_BASE		(WL18XX_REGISTERS_BASE + 0x08000)
-+#define WL18XX_FIFO_BASE		(WL18XX_REGISTERS_BASE + 0x09000)
-+#define WL18XX_OCP_BRIDGE_BASE		(WL18XX_REGISTERS_BASE + 0x0A000)
-+#define WL18XX_PMAC_RX_BASE		(WL18XX_REGISTERS_BASE + 0x14800)
-+#define WL18XX_PMAC_ACM_BASE		(WL18XX_REGISTERS_BASE + 0x14C00)
-+#define WL18XX_PMAC_TX_BASE		(WL18XX_REGISTERS_BASE + 0x15000)
-+#define WL18XX_PMAC_CSR_BASE		(WL18XX_REGISTERS_BASE + 0x15400)
-+
-+#define WL18XX_REG_ECPU_CONTROL		(WL18XX_REGISTERS_BASE + 0x02004)
-+#define WL18XX_REG_INTERRUPT_NO_CLEAR	(WL18XX_REGISTERS_BASE + 0x050E8)
-+#define WL18XX_REG_INTERRUPT_ACK	(WL18XX_REGISTERS_BASE + 0x050F0)
-+#define WL18XX_REG_INTERRUPT_TRIG	(WL18XX_REGISTERS_BASE + 0x5074)
-+#define WL18XX_REG_INTERRUPT_TRIG_H	(WL18XX_REGISTERS_BASE + 0x5078)
-+#define WL18XX_REG_INTERRUPT_MASK	(WL18XX_REGISTERS_BASE + 0x0050DC)
-+
-+#define WL18XX_REG_CHIP_ID_B		(WL18XX_REGISTERS_BASE + 0x01542C)
-+
-+#define WL18XX_SLV_MEM_DATA		(WL18XX_HOST_BASE + 0x0018)
-+#define WL18XX_SLV_REG_DATA		(WL18XX_HOST_BASE + 0x0008)
-+
-+/* Scratch Pad registers*/
-+#define WL18XX_SCR_PAD0			(WL18XX_REGISTERS_BASE + 0x0154EC)
-+#define WL18XX_SCR_PAD1			(WL18XX_REGISTERS_BASE + 0x0154F0)
-+#define WL18XX_SCR_PAD2			(WL18XX_REGISTERS_BASE + 0x0154F4)
-+#define WL18XX_SCR_PAD3			(WL18XX_REGISTERS_BASE + 0x0154F8)
-+#define WL18XX_SCR_PAD4			(WL18XX_REGISTERS_BASE + 0x0154FC)
-+#define WL18XX_SCR_PAD4_SET		(WL18XX_REGISTERS_BASE + 0x015504)
-+#define WL18XX_SCR_PAD4_CLR		(WL18XX_REGISTERS_BASE + 0x015500)
-+#define WL18XX_SCR_PAD5			(WL18XX_REGISTERS_BASE + 0x015508)
-+#define WL18XX_SCR_PAD5_SET		(WL18XX_REGISTERS_BASE + 0x015510)
-+#define WL18XX_SCR_PAD5_CLR		(WL18XX_REGISTERS_BASE + 0x01550C)
-+#define WL18XX_SCR_PAD6			(WL18XX_REGISTERS_BASE + 0x015514)
-+#define WL18XX_SCR_PAD7			(WL18XX_REGISTERS_BASE + 0x015518)
-+#define WL18XX_SCR_PAD8			(WL18XX_REGISTERS_BASE + 0x01551C)
-+#define WL18XX_SCR_PAD9			(WL18XX_REGISTERS_BASE + 0x015520)
-+
-+/* Spare registers*/
-+#define WL18XX_SPARE_A1			(WL18XX_REGISTERS_BASE + 0x002194)
-+#define WL18XX_SPARE_A2			(WL18XX_REGISTERS_BASE + 0x002198)
-+#define WL18XX_SPARE_A3			(WL18XX_REGISTERS_BASE + 0x00219C)
-+#define WL18XX_SPARE_A4			(WL18XX_REGISTERS_BASE + 0x0021A0)
-+#define WL18XX_SPARE_A5			(WL18XX_REGISTERS_BASE + 0x0021A4)
-+#define WL18XX_SPARE_A6			(WL18XX_REGISTERS_BASE + 0x0021A8)
-+#define WL18XX_SPARE_A7			(WL18XX_REGISTERS_BASE + 0x0021AC)
-+#define WL18XX_SPARE_A8			(WL18XX_REGISTERS_BASE + 0x0021B0)
-+#define WL18XX_SPARE_B1			(WL18XX_REGISTERS_BASE + 0x015524)
-+#define WL18XX_SPARE_B2			(WL18XX_REGISTERS_BASE + 0x015528)
-+#define WL18XX_SPARE_B3			(WL18XX_REGISTERS_BASE + 0x01552C)
-+#define WL18XX_SPARE_B4			(WL18XX_REGISTERS_BASE + 0x015530)
-+#define WL18XX_SPARE_B5			(WL18XX_REGISTERS_BASE + 0x015534)
-+#define WL18XX_SPARE_B6			(WL18XX_REGISTERS_BASE + 0x015538)
-+#define WL18XX_SPARE_B7			(WL18XX_REGISTERS_BASE + 0x01553C)
-+#define WL18XX_SPARE_B8			(WL18XX_REGISTERS_BASE + 0x015540)
-+
-+#define WL18XX_REG_COMMAND_MAILBOX_PTR	(WL18XX_SCR_PAD0)
-+#define WL18XX_REG_EVENT_MAILBOX_PTR	(WL18XX_SCR_PAD1)
-+
-+#define WL18XX_CMD_MBOX_ADDRESS		0xB007B4
-+
-+#define WL18XX_FW_STATUS_ADDR		0x50F8
-+
-+#define CHIP_ID_185x_PG10              (0x06030101)
-+
-+#endif /* __REG_H__ */
--- 
-1.7.9.5
+> >> +             if (da != broadcast_addr)
+
+will never be false.
+
+johannes
 
