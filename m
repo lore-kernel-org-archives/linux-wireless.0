@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:40803 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757455Ab2EJRbz (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:62863 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754612Ab2EGMxa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 13:31:55 -0400
-Date: Thu, 10 May 2012 13:31:39 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: <linux-wireless@vger.kernel.org>,
-	<florian.c.schilhabel@googlemail.com>, <ali@internetdog.org>,
-	<netdev@vger.kernel.org>, Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 0/3] staging: delete duplicated files/functionality in
- rtl8712
-Message-ID: <20120510173139.GA16704@windriver.com> (sfid-20120510_193206_694889_005906FC)
-References: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
- <20120510165451.GA12958@kroah.com>
+	Mon, 7 May 2012 08:53:30 -0400
+Received: by yenm10 with SMTP id m10so3581168yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 05:53:30 -0700 (PDT)
+Date: Mon, 7 May 2012 08:53:16 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 09/21] cw1200: txrx.*, implementation of datapath.
+Message-ID: <20120507125316.GA25400@localhost> (sfid-20120507_145335_155304_CF4C2FEF)
+References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
+ <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+ <1330652495-25837-10-git-send-email-dmitry.tarnyagin@stericsson.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20120510165451.GA12958@kroah.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1330652495-25837-10-git-send-email-dmitry.tarnyagin@stericsson.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Re: [PATCH 0/3] staging: delete duplicated files/functionality in rtl8712] On 10/05/2012 (Thu 09:54) Greg Kroah-Hartman wrote:
+Hi Dmitry,
 
-[...]
+A couple of other quick notes follow.  I'll make and send on those
+other patches sometime this week as I get time.
 
-> Can you regenerate these with the full deletion content?  There have
-> been some spelling fixes in these files, and your patches do not apply
-> due to them.  I can hand-edit the patches if you regenerate it.
-> 
-> Or if you rebase on the last linux-next tree, that will pick those
-> changes up and then I can apply these properly.
+On Fri, Mar 02, 2012 at 02:41:23AM +0100, Dmitry Tarnyagin wrote:
+> +	/* minstrel is buggy a little bit, so distille
+> +	 * incoming rates first. */
 
-I've rebased it onto your staging-next of today, so it should be
-hopefully seamless for you now.
+Can you elaborate a bit on the bugs?  It may be worth fixing them
+in minstrel so that everyone benefits.  From your code it looks
+like you want to reorder them from fastest->slowest, eliminate
+duplicate rates, and change retry counts to respect total retry
+limits.  I agree that the last two are problematic and should
+probably be fixed in minstrel.
 
-Thanks,
-Paul.
----
+Changing the rate order may have adverse affects (I'm not sure).
+Minstrel often puts 'probe' rates in early MRR slots to update
+its statistics, these may well be lower than the current rate.
 
-The following changes since commit 0e545f6d165ad0180b0d04fe1291f6f6268047ff:
+> +	/* Sort rates in descending order. */
+> +	for (i = 1; i < count; ++i) {
+> +		if (rates[i].idx < 0) {
+> +			count = i;
+> +			break;
+> +		}
+> +		if (rates[i].idx > rates[i - 1].idx) {
+> +			struct ieee80211_tx_rate tmp = rates[i - 1];
+> +			rates[i - 1] = rates[i];
+> +			rates[i] = tmp;
+> +		}
+> +	}
 
-  staging: rts5139: remove unused variable option.ww_enable (2012-05-10 09:57:21 -0700)
+This sort seems to be missing an inner loop.  E.g. if input was 2-3-5-4,
+I think you would end up with 2-5-4-3 instead of 5-4-3-2.
 
-are available in the git repository at:
+> +		/* ">> 1" is an equivalent of "/ 2", but faster */
+> +		int mid_rate = (rates[0].idx + 4) >> 1;
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/paulg/linux.git rtl8712-staging-next
+(This is true, but it's only by a couple of instructions for signed
+division since compilers still change divide-by-power-of-two to shifts.
+Unsigned /2 typically has the same code as >> 1.  I tend to prefer /2
+for readability unless it's a super hot path, but that's your call.)
 
-for you to fetch changes up to 9a0fbbb52ab08017ac51aceef76514799837f4b0:
-
-  staging: delete all duplicated endian crap from rtl8712 driver (2012-05-10 13:10:03 -0400)
-
-----------------------------------------------------------------
-Paul Gortmaker (3):
-      staging: wean rtl8712 off of its ancient duplicate of if_ether.h
-      staging: wean rtl8712 off of its ancient duplicate of ip.h
-      staging: delete all duplicated endian crap from rtl8712 driver
-
- drivers/staging/rtl8712/big_endian.h        |   94 --------------
- drivers/staging/rtl8712/generic.h           |  178 ---------------------------
- drivers/staging/rtl8712/hal_init.c          |    1 -
- drivers/staging/rtl8712/if_ether.h          |  141 ---------------------
- drivers/staging/rtl8712/ip.h                |  137 --------------------
- drivers/staging/rtl8712/little_endian.h     |   94 --------------
- drivers/staging/rtl8712/osdep_service.h     |    2 -
- drivers/staging/rtl8712/rtl8712_cmd.c       |    1 -
- drivers/staging/rtl8712/rtl8712_recv.c      |    5 +-
- drivers/staging/rtl8712/rtl8712_xmit.c      |    1 -
- drivers/staging/rtl8712/rtl871x_byteorder.h |   32 -----
- drivers/staging/rtl8712/rtl871x_cmd.c       |    1 -
- drivers/staging/rtl8712/rtl871x_recv.c      |    4 +-
- drivers/staging/rtl8712/rtl871x_xmit.c      |    1 -
- drivers/staging/rtl8712/swab.h              |  131 --------------------
- drivers/staging/rtl8712/usb_ops.c           |    1 -
- drivers/staging/rtl8712/wifi.h              |    1 -
- drivers/staging/rtl8712/xmit_linux.c        |    6 +-
- 18 files changed, 7 insertions(+), 824 deletions(-)
- delete mode 100644 drivers/staging/rtl8712/big_endian.h
- delete mode 100644 drivers/staging/rtl8712/generic.h
- delete mode 100644 drivers/staging/rtl8712/if_ether.h
- delete mode 100644 drivers/staging/rtl8712/ip.h
- delete mode 100644 drivers/staging/rtl8712/little_endian.h
- delete mode 100644 drivers/staging/rtl8712/rtl871x_byteorder.h
- delete mode 100644 drivers/staging/rtl8712/swab.h
-
+-- 
+Bob Copeland %% www.bobcopeland.com
