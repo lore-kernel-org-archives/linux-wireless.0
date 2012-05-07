@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:58403 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614Ab2E3Op1 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36241 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753105Ab2EGHAc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 10:45:27 -0400
-Received: by qadb17 with SMTP id b17so1909231qad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 07:45:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1338385542.4511.19.camel@jlt3.sipsolutions.net>
-References: <1338385542.4511.19.camel@jlt3.sipsolutions.net>
-Date: Wed, 30 May 2012 17:45:26 +0300
-Message-ID: <CAB3XZEdXbxnKVXkvtHASVhFj+M1u6iA636dF0oyc=SEt+=AP5g@mail.gmail.com> (sfid-20120530_164531_083470_672E435B)
-Subject: Re: [RFC] cfg80211: don't allow WoWLAN support without CONFIG_PM
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 7 May 2012 03:00:32 -0400
+Message-ID: <1336374030.4325.2.camel@jlt3.sipsolutions.net> (sfid-20120507_090037_204415_54FEF07C)
+Subject: Re: carl9170 - monitor mode TP drop
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 07 May 2012 09:00:30 +0200
+In-Reply-To: <201205032344.17313.chunkeey@googlemail.com> (sfid-20120503_234452_333071_DDB27FCC)
+References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com>
+	 <201204251928.21559.chunkeey@googlemail.com>
+	 <1336031908.3459.4.camel@jlt3.sipsolutions.net>
+	 <201205032344.17313.chunkeey@googlemail.com>
+	 (sfid-20120503_234452_333071_DDB27FCC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 30, 2012 at 4:45 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When CONFIG_PM is enabled, no device can possibly
-> support WoWLAN since it can't go to sleep to start
-> with. Due to this, mac80211 had even rejected the
-> hardware registration. By making all the code and
-> data for WoWLAN depend on CONFIG_PM we can promote
-> this runtime error to a compile-time error.
->
-> Add #ifdef around all WoWLAN code to remove it in
-> systems that don't need it as they never suspend.
->
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: Luciano Coelho <coelho@ti.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-[...]
+On Thu, 2012-05-03 at 23:44 +0200, Christian Lamparter wrote:
 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-> index acef933..d7cd9b5 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -5301,6 +5301,7 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
->                goto out_free_hw;
->        }
->
-> +#ifdef CONFIG_PM
->        ret = enable_irq_wake(wl->irq);
->        if (!ret) {
->                wl->irq_wake_enabled = true;
-> @@ -5315,6 +5316,7 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
->                }
->        }
->        disable_irq(wl->irq);
-> +#endif
+> > > You see without the BIT set, the hardware won't sent any ACKs
+> > > (Not even those which are directed at this interface - which of
+> > > course is also bad, or even worse?) and with the BIT set (and if
+> > > the HW is in Sniffer Mode) then the hardware acks every frames,
+> > > even if they are for a different stations.
+> > > So your fix might break someone else's setup.
+> > 
+> > You may want to implement the new monitor-mode-vif-to-driver thing in
+> > mac80211 which tells you when you're in *pure* monitor mode.
+> 
+> "the new monitor-mode-vif-to-driver"?
+> Do you mean like adding a new IFTYPE flag? Or more like a FIF_* flag
+> (probably)? for the "pure" monitor/sniffer mode?
 
-i think disable_irq should be outside the ifdef.
+No, see 4b6f1dd6a6faf4ed8d209bbd548e78b15e55aee8
 
-Eliad.
+johannes
+
