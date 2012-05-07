@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18801 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750730Ab2EXEDR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 00:03:17 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45764.567137.804050@gargle.gargle.HOWL> (sfid-20120524_060334_529109_978161D8)
-Date: Thu, 24 May 2012 09:32:12 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 04/22] ath9k_hw: Fix AR_RTC_KEEP_AWAKE usage
+Received: from mga03.intel.com ([143.182.124.21]:1818 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756214Ab2EGKcb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 06:32:31 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 11/20] NFC: Send device index instead of its name when target is lost
+Date: Mon,  7 May 2012 12:31:22 +0200
+Message-Id: <1336386691-24840-12-git-send-email-sameo@linux.intel.com> (sfid-20120507_123234_999536_9A3BF6D9)
+In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The default value that is being programmed to AR_RTC_KEEP_AWAKE
-is 0x2, there is no need to program it manually in various
-functions.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |    1 -
- drivers/net/wireless/ath/ath9k/hw.c         |   11 -----------
- 2 files changed, 12 deletions(-)
+ net/nfc/netlink.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index ffbb180..9331d73 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -330,7 +330,6 @@ void ar9003_mci_set_full_sleep(struct ath_hw *ah)
- 	}
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index cc89e4f..747c6b3 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -197,7 +197,7 @@ int nfc_genl_target_lost(struct nfc_dev *dev, u32 target_idx)
+ 	if (!hdr)
+ 		goto free_msg;
  
- 	mci->ready = false;
--	REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
- }
- 
- static void ar9003_mci_disable_interrupt(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 02ce524..8698589 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1432,9 +1432,6 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
- 		break;
- 	}
- 
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
--		REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
--
- 	return ret;
- }
- 
-@@ -2164,10 +2161,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 	switch (mode) {
- 	case ATH9K_PM_AWAKE:
- 		status = ath9k_hw_set_power_awake(ah, setChip);
--
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
--			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
--
- 		break;
- 	case ATH9K_PM_FULL_SLEEP:
- 		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-@@ -2177,10 +2170,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 		ah->chip_fullsleep = true;
- 		break;
- 	case ATH9K_PM_NETWORK_SLEEP:
--
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
--			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
--
- 		ath9k_set_power_network_sleep(ah, setChip);
- 		break;
- 	default:
+-	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)))
++	if (nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx))
+ 		goto nla_put_failure;
+ 	if (nla_put_u32(msg, NFC_ATTR_TARGET_INDEX, target_idx))
+ 		goto nla_put_failure;
 -- 
-1.7.10.2
+1.7.9.1
 
