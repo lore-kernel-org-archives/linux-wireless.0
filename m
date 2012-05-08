@@ -1,80 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:63271 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760405Ab2EQDgC convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:39248 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754991Ab2EHO73 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 23:36:02 -0400
-Received: by pbbrp8 with SMTP id rp8so1958175pbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 20:36:01 -0700 (PDT)
+	Tue, 8 May 2012 10:59:29 -0400
+Received: by yhmm54 with SMTP id m54so5401420yhm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 07:59:29 -0700 (PDT)
+Message-ID: <4FA9352F.6070405@gmail.com> (sfid-20120508_165933_908708_81002855)
+Date: Tue, 08 May 2012 11:01:03 -0400
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+7oygcX6_d4anpCKGRG1f7ugcr4Pm19O_+Vogbj13W55PuczA@mail.gmail.com>
-References: <CA+7oygccmq9DY+dR-=__4z_rZ4Sa9d8zmz+6=zX-xsTKdWkFWQ@mail.gmail.com>
-	<CAOpc7mEKLM1wjKmdde3YqTuB0edoOFBcH=dK5s5V1y5t7v=wMQ@mail.gmail.com>
-	<CA+7oygftxidR_r-t16K1g9CNPhL+EkMdPyKftkWoSk+Fzf+Rog@mail.gmail.com>
-	<CA+7oygddbQpoPmc=A05AGyPfq9YyhdeejwYfpS0sGXD=9CeZqA@mail.gmail.com>
-	<CA+7oygcX6_d4anpCKGRG1f7ugcr4Pm19O_+Vogbj13W55PuczA@mail.gmail.com>
-Date: Wed, 16 May 2012 23:36:01 -0400
-Message-ID: <CA+7oygenvx9nMSbFimbkzmyBuc+mPV4ot-UmBuor3Zc2BLQLGg@mail.gmail.com> (sfid-20120517_053637_721038_792EFEFA)
-Subject: Re: AR9280 reported signal strengths are flat (comparison with
- bcm4322 included)
-From: George Nychis <gnychis@gmail.com>
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+CC: Bob Copeland <me@bobcopeland.com>, Vadim <Vadims.Kurmis@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Adding custom channels to ath5k for researching purposes
+References: <loom.20101104T140201-178@post.gmane.org> <AANLkTinMSH2Vr=iUTD0Pc_OdaM_LFETDEjsOJn+2ZzVD@mail.gmail.com> <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com>
+In-Reply-To: <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Well, I believe that I forced ANI to be disabled and I still see this
-same behavior.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-To disable ANI on my AR9280, I added this to __ath9k_hw_init() in hw.c
-  if (AR_SREV_9280(ah))
-    ah->config.enable_ani = false;
+On 05/08/12 10:50, Luis R. Rodriguez wrote:
+> On Thu, Nov 4, 2010 at 7:47 AM, Bob Copeland <me@bobcopeland.com> wrote:
+>> On Thu, Nov 4, 2010 at 9:03 AM, Vadim <Vadims.Kurmis@gmail.com> wrote:
+>>> I need to enable 802.11p standard frequencies. How can I accomplish this? I
+>>> found that CRDA is responsible for allowed channels.
+>>
+>> Partially -- the channel list is exported by the driver but CRDA
+>> adds additional regulatory restrictions.  The driver also imposes
+>> certain regulatory restrictions based on the EEPROM data.
+>>
+>>> So, where can I get binary
+>>> frequency/channel database to use my hardware for researching purposes ?
+>>
+>> You can create your own database, but you may need to modify the driver to
+>> disregard the EEPROM settings, with the usual disclaimers: we won't support
+>> it and if it breaks you get to keep both pieces.
+>>
+>> Also note that ath5k only advertises a partial channel list; you can
+>> get more via all_channels=1 modparam.  We don't do this by default
+>> because they make scanning take forever and exceed channel list limits
+>> in netlink.
+> 
+> I'm thinking it may make sense to add CONFIG_WIRELESS_EXPERT where we
+> can stuff some of this stuff under. It may be useful for other
+> regulatory testing / certification stuff.
 
-I believe this works because in ath9k_hw_post_init() I have checked
-that ah->config.enable_ani is set to false.  Therefore,
-ath9k_hw_ani_setup() and ath9k_hw_ani_init() are never called.
++1
 
-Unfortunately, I still see this same flat line trend without strong
-signal strengths near the device.
+In my personal opinion an option like that which enables ONLY crda (or
+obviously firmware for those intel guys) to enforce regulatory
+compliance it would then be trivial for people who needed other
+frequencies to modify their own personal wireless regdb.  Also this
+keeps some manner of sanity as with an unmodified wireless regdb nothing
+bad happens.
 
+Anyway, my 0.02$
 
-On Wed, May 16, 2012 at 2:35 PM, George Nychis <gnychis@gmail.com> wrote:
->
-> BTW- is ANI _not_ applied on broadcast traffic?  I notice that
-> monitoring the signal strength of beacons does not show this behavior.
->  Maybe not applied for localization reasons?
->
-> - George
->
->
-> On Wed, May 16, 2012 at 2:32 PM, George Nychis <gnychis@gmail.com> wrote:
-> > Hi Holger,
-> >
-> > Thanks a bunch for your response!  I had read about ANI before on the
-> > list, it would be interesting to know if this is the cause for this.
-> > It definitely seems plausible. I will dig around the ath9k code and
-> > see if I can narrow down this to the cause.
-> >
-> >
-> > On Wed, May 16, 2012 at 2:31 PM, George Nychis <gnychis@gmail.com> wrote:
-> >>
-> >> Hi Holger,
-> >>
-> >> Thanks a bunch for your response!  I had read about ANI before on the
-> >> list, it would be interesting to know if this is the cause for this.  It
-> >> definitely seems plausible. I will dig around the ath9k code and see if I
-> >> can narrow down this to the cause.
-> >>
-> >> - George
-> >>
-> >>
-> >> On Wed, May 16, 2012 at 2:08 AM, Holger Schurig
-> >> <holgerschurig@googlemail.com> wrote:
-> >>>
-> >>> This is probably due to ANI (adapative noise immunity). I think ath9k
-> >>> does too much here, in other words: it doesn't just kick in if there
-> >>> are too strong signals there. Instead it seems to always adjust the
-> >>> input attenuator, needed or not.
-> >>
-> >>
+Thanks,
+Rick
+
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJPqTUvAAoJEKXdFCfdEflKMAAP/ReW3KZEv+ABsWmf2E+iLSex
+E10zB2Nmr7lE7I9duECYfWxe9ahm6DFwp6FMD9AJkuxPa8n0K96fKe9PrfRJWi/R
+40A78VsW4zTUSfM07IHdTk7ACjrP3G0z+9Wfyd8QcWesHfAhqWzyr3lh9XV0g3hk
+LOQcFIwEU8vSTki9QiyVLqltBgtPkPfwQ6KsYdqb9TK2SmSjisKHS63myNHEPTQH
+3Y7FO6drRsbCLsNXmMcSZITmFRSXHtYunH9gXwKtQEYH0coS7bdBAETeFHOo9xcO
+7xG66ftILniMQ1fAUpASHATP1uT+qQaSX7eTNlerVTBNmF5zLJq+8obrYipvL4gn
+0uy3ZOgeG1tUidYTLBUeCbozkkPYrnH6338WQyjHA145Jv9pjkv+TWG9DTwjIVXE
+UNjZPG3GbQLx5rGFlFKKumxqHDM3RgwhfEwjIyHX0mJr/Ae9oypwR5TjFbGFazMN
+vQBSZE60OcnoPKV2EqpCP5/IINGUjtNWCxeLSefHaO1nDzComH5wR2cbbBGWTJ8P
+6v7N7unfexhybGQifWHDWgXrwvh+RQNDo+zaXmWU1Yys34ByhVShU2j5YmzbARav
+9byhrxgY/ABIFOc/r86tDwRqZJpVpFKpP1/uUbAQYkMpYfsUajIJFq/piigCYNKs
+X9pGsDRw9vpH//uGpCzT
+=bfUG
+-----END PGP SIGNATURE-----
