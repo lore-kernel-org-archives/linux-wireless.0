@@ -1,73 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48334 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932419Ab2EOSkw (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54811 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758044Ab2EHCS4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 14:40:52 -0400
-Message-ID: <1337107245.15553.14.camel@jlt3.sipsolutions.net> (sfid-20120515_204119_150071_DB4977A7)
-Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: joe@perches.com, netdev@vger.kernel.org,
-	linux-decnet-user@lists.sourceforge.net,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
-	dev@openvswitch.org, linux-sctp@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 15 May 2012 20:40:45 +0200
-In-Reply-To: <20120515.142922.1434224550630736456.davem@davemloft.net>
-References: <20120515.134531.530903973750646107.davem@davemloft.net>
-	 <1337104765.7050.24.camel@joe2Laptop>
-	 <1337106430.15553.6.camel@jlt3.sipsolutions.net>
-	 <20120515.142922.1434224550630736456.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 7 May 2012 22:18:56 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+To: <linux-wireless@vger.kernel.org>
+CC: <Larry.Finger@lwfinger.net>
+Subject: [PATCH 1/9] rtlwifi: don't pass a null pointer to fill_tx_desc
+Date: Mon, 7 May 2012 22:18:33 -0400
+Message-ID: <1336443521-15299-2-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041903_203306_E8CBEF21)
+In-Reply-To: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
+References: <4FA212D9.5020602@gtri.gatech.edu>
+ <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-15 at 14:29 -0400, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Tue, 15 May 2012 20:27:10 +0200
-> 
-> > On Tue, 2012-05-15 at 10:59 -0700, Joe Perches wrote:
-> > 
-> >> OK, but fyi, there's a possible issue with !CONFIG_DEBUG
-> >> builds because these patches converted some uses of
-> >> 	if (net_ratelimit())
-> >> 		printk(KERN_DEBUG ...
-> >> to
-> >> 	net_dbg_ratelimited()
-> >> 
-> >> These messages are no longer emitted when DEBUG isn't defined
-> >> and not using dynamic_debug.  I'm not sure that's a real
-> >> problem, but it's a difference.
-> >> 
-> >> I could produce a net_printk_ratelimited that would keep
-> >> the original behavior if necessary.
-> >> 
-> >> 	net_printk_ratelimited(KERN_DEBUG etc...)
-> > 
-> > Btw, what would the difference be to just plain printk_ratelimited()?
-> 
-> printk_ratelimited() drops a local ratelimit cookie into each call-site,
-> whereas we have a global one for the networking which these new interfaces
-> use.
-> 
-> Joe explained this completely in his 0/2 patch posting.
+Take care of "allocating" the txdesc in the usb core, rather than in
+each subdriver.  This also avoids passing a rather useless null argument
+to fill_tx_desc.
 
-I don't see that explicitly mentioned, but it doesn't matter much
-anyway.
+Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    4 +---
+ drivers/net/wireless/rtlwifi/usb.c           |    6 ++++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-In the mac80211 case, messages are warnings/hints to the user, we just
-don't want them to flood the logs too much. I'd rather have that kind of
-change (limit cookie per callsite) in the rate limiting semantics than
-the change in the when it gets printed at all.
-
-I simply feel that obscuring the debugging even further wouldn't be a
-good thing to do right now. I'd rather have somebody convert all of it
-to the new debugging infrastructure but that seems a lot more effort
-than changing these back to something that isn't impacted by dynamic
-printk.
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+index 21bc827..9e01f96 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+@@ -513,12 +513,10 @@ void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
+ 	u16 pktlen = skb->len;
+ 	enum rtl_desc_qsel fw_qsel = _rtl8192cu_mq_to_descq(hw, fc,
+ 						skb_get_queue_mapping(skb));
+-	u8 *txdesc;
++	u8 *txdesc = pdesc_tx;
+ 
+ 	seq_number = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
+ 	rtl_get_tcb_desc(hw, info, sta, skb, tcb_desc);
+-	txdesc = (u8 *)skb_push(skb, RTL_TX_HEADER_SIZE);
+-	memset(txdesc, 0, RTL_TX_HEADER_SIZE);
+ 	SET_TX_DESC_PKT_SIZE(txdesc, pktlen);
+ 	SET_TX_DESC_LINIP(txdesc, 0);
+ 	SET_TX_DESC_PKT_OFFSET(txdesc, RTL_DUMMY_OFFSET);
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index a6049d7..8dd588b 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -850,7 +850,7 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct rtl_tx_desc *pdesc = NULL;
++	u8 *pdesc = NULL;
+ 	struct rtl_tcb_desc tcb_desc;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)(skb->data);
+ 	__le16 fc = hdr->frame_control;
+@@ -887,7 +887,9 @@ static void _rtl_usb_tx_preprocess(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		seq_number += 1;
+ 		seq_number <<= 4;
+ 	}
+-	rtlpriv->cfg->ops->fill_tx_desc(hw, hdr, (u8 *)pdesc, info, skb,
++	pdesc = (u8 *)skb_push(skb, RTL_TX_HEADER_SIZE);
++	memset(pdesc, 0, RTL_TX_HEADER_SIZE);
++	rtlpriv->cfg->ops->fill_tx_desc(hw, hdr, pdesc, info, skb,
+ 					hw_queue, &tcb_desc);
+ 	if (!ieee80211_has_morefrags(hdr->frame_control)) {
+ 		if (qc)
+-- 
+1.7.4.1
 
