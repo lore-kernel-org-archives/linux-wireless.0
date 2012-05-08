@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34505 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752773Ab2EaLPt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 07:15:49 -0400
-Message-ID: <1338462946.9102.1.camel@jlt3.sipsolutions.net> (sfid-20120531_131553_206436_686BF185)
-Subject: Re: iwlwifi: GF was set with SGI:SISO
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cesar Eduardo Barros <cesarb@cesarb.net>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Date: Thu, 31 May 2012 13:15:46 +0200
-In-Reply-To: <4FC74B3C.1090501@cesarb.net>
-References: <4FC17BA8.2050606@cesarb.net>
-	  (sfid-20120527_030308_122290_604E4002) <1338450650.4531.6.camel@jlt3.sipsolutions.net>
-	 <4FC74B3C.1090501@cesarb.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from plane.gmane.org ([80.91.229.3]:49104 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752484Ab2EHKzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 06:55:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SRi4O-0002nG-77
+	for linux-wireless@vger.kernel.org; Tue, 08 May 2012 12:55:05 +0200
+Received: from 202.131.115.146 ([202.131.115.146])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 12:55:04 +0200
+Received: from upadhyay61 by 202.131.115.146 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 12:55:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Tejas <upadhyay61@gmail.com>
+Subject: Is there MII loopback possible in AR7240 based AP91 board?
+Date: Tue, 8 May 2012 10:50:02 +0000 (UTC)
+Message-ID: <loom.20120508T124840-31@post.gmane.org> (sfid-20120508_125511_464523_F59D7DDC)
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-31 at 07:43 -0300, Cesar Eduardo Barros wrote:
-> Em 31-05-2012 04:50, Johannes Berg escreveu:
-> > On Sat, 2012-05-26 at 21:56 -0300, Cesar Eduardo Barros wrote:
-> >> I have twice now seen a problem with iwlwifi where rate control gets
-> >> "stuck" (the tx bitrate as shown by "iw dev wlan0 link" does not change
-> >> anymore), while spamming the kernel log with "iwlwifi 0000:03:00.0: GF
-> >> was set with SGI:SISO".
-> >>
-> >> What I believe is happening is the following scenario:
-> > [...]
-> >
-> > Unfortunately, I don't have any idea right away right now what's going
-> > on. Would you file a bug on bugzilla.intellinuxwireless.org so we can
-> > track it and help you better? We may want to reproduce it and/or ask you
-> > to collect some tracing information and it's easier to collect all that
-> > in a bug report.
-> 
-> Filed as http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2361.
+we are trying MII loopback in AR7240 based AP91 board. We configure
+PORT_CONTROL_REGISTER with (12th bit = MAC_LOOP_BACK = Setting this bit to 1
+enables the MAC Loop back function on the MII interface). But the packets are
+not getting looped back, we see packets getting forwarded to ethernet ports,
+instead of getting looped back.
 
-Thanks, I'll follow up there.
-
-johannes
+Can anyone give us any clue weather MII loopback is possible in AR7240 or not? 
 
