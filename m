@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1628 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751846Ab2EAMO0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 08:14:26 -0400
-Message-ID: <4F9FD376.5060400@broadcom.com> (sfid-20120501_141434_568466_C2ABE686)
-Date: Tue, 1 May 2012 14:13:42 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [RFC PATCH 0/8] brcm80211: smac: rework regulatory support
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
- <4F9067F6.90001@broadcom.com> <20120430171210.GB20105@thinkpad-t410>
-In-Reply-To: <20120430171210.GB20105@thinkpad-t410>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:50541 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753181Ab2EHGe3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 02:34:29 -0400
+Message-ID: <1336458864.4328.3.camel@jlt3.sipsolutions.net> (sfid-20120508_083432_871955_CF239592)
+Subject: Re: [rt2x00-users] [rt2800pci (AP) - ath9k] 802.11w: broken
+ aggregation handling?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Jouni Malinen <j@w1.fi>, hostap@lists.shmoo.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Date: Tue, 08 May 2012 08:34:24 +0200
+In-Reply-To: <4FA8BD11.3080703@01019freenet.de>
+References: <4FA75983.9040003@01019freenet.de>
+	 <201205070702.q4772uem002960@mail.maya.org>
+	 <4FA7A13D.6020405@01019freenet.de>
+	 <CAGXE3d-pwTraDvC6yOKt7hHPTXL5LtaHFovD_SFmaPgajJbS9g@mail.gmail.com>
+	 <20120507135533.GA19222@w1.fi> <4FA8BD11.3080703@01019freenet.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/30/2012 07:12 PM, Seth Forshee wrote:
-> On Thu, Apr 19, 2012 at 09:31:02PM +0200, Arend van Spriel wrote:
->> On 04/16/2012 10:17 PM, Seth Forshee wrote:
->>> Hi Arnd,
->>>
->>> Here's the latest update to the brcmsmac regulatory rework that I've
->>> been working on. I've broken it up into a series of smaller patches,
->>> cleaned things up, and finished what changes I can with the information
->>> available to me.
->>>
->>
->> Hi Seth,
->>
->> Just to indicate what we are doing with regard to your patches. I
->> organized a review internally for these patches. Waiting for one
->> more to sent back comments. Just pinged him today. So end of this
->> week I can probably sent you the collected comments.
->
-> Hi Arend,
->
-> Any feedback yet from your internal review/testing?
->
-> Thanks,
-> Seth
->
+On Tue, 2012-05-08 at 08:28 +0200, Andreas Hartmann wrote:
 
-Hi Seth,
+> This means for rt2x00: to get 11w working with hw encryption enabled,
+> there needs to be some differentiation for the encryption of management
+> frames: if management frame, let mac80211 do the job - all other frames
+> should be encrypted by hw.
+> Correct?
 
-I was about to respond to each patch with collected comments. However, 
-one of the comments mentioned I should involve compliance staff on these 
-changes so I have to explain the general ideas behind your patches to 
-them. Sorry for the delay.
+That might not be sufficient -- you might have control over TX, but if
+the hardware attempts to decrypt encrypted mgmt frames you're out of
+luck entirely.
 
-Gr. AvS
+johannes
 
