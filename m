@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34453 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752996Ab2E1GVa (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:50061 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141Ab2EHEAt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 02:21:30 -0400
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] ath6kl: Fix typo in htc mbox debug print msg
-Date: Mon, 28 May 2012 11:51:13 +0530
-Message-ID: <1338186073-4986-2-git-send-email-rmani@qca.qualcomm.com> (sfid-20120528_082132_501774_33FCC508)
-In-Reply-To: <1338186073-4986-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1338186073-4986-1-git-send-email-rmani@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 8 May 2012 00:00:49 -0400
+Received: by yhmm54 with SMTP id m54so4930006yhm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 21:00:49 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	javier@cozybit.com, devel@lists.open80211s.org,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH 4/4] mac80211: Add debugfs entry for mesh ht_opmode
+Date: Mon,  7 May 2012 21:00:32 -0700
+Message-Id: <1336449632-9057-4-git-send-email-ashok@cozybit.com> (sfid-20120508_060116_741460_F6DC500A)
+In-Reply-To: <1336449632-9057-1-git-send-email-ashok@cozybit.com>
+References: <1336449632-9057-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
-
-Add missing ZERO (x%x to 0x%x) in the format specifier
-while printing hex value in htc module.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
 ---
- drivers/net/wireless/ath/ath6kl/htc_mbox.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/debugfs_netdev.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-index 2798624..cd0e1ba 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-@@ -1309,7 +1309,7 @@ static int ath6kl_htc_rx_packet(struct htc_target *target,
- 	}
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index ea0122d..7ed433c 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -509,6 +509,7 @@ IEEE80211_IF_FILE(dot11MeshHWMPRannInterval,
+ 		u.mesh.mshcfg.dot11MeshHWMPRannInterval, DEC);
+ IEEE80211_IF_FILE(dot11MeshForwarding, u.mesh.mshcfg.dot11MeshForwarding, DEC);
+ IEEE80211_IF_FILE(rssi_threshold, u.mesh.mshcfg.rssi_threshold, DEC);
++IEEE80211_IF_FILE(ht_opmode, u.mesh.mshcfg.ht_opmode, DEC);
+ #endif
  
- 	ath6kl_dbg(ATH6KL_DBG_HTC,
--		   "htc rx 0x%p hdr x%x len %d mbox 0x%x\n",
-+		   "htc rx 0x%p hdr 0x%x len %d mbox 0x%x\n",
- 		   packet, packet->info.rx.exp_hdr,
- 		   padded_len, dev->ar->mbox_info.htc_addr);
- 
+ #define DEBUGFS_ADD_MODE(name, mode) \
+@@ -608,6 +609,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
+ 	MESHPARAMS_ADD(dot11MeshHWMPRannInterval);
+ 	MESHPARAMS_ADD(dot11MeshGateAnnouncementProtocol);
+ 	MESHPARAMS_ADD(rssi_threshold);
++	MESHPARAMS_ADD(ht_opmode);
+ #undef MESHPARAMS_ADD
+ }
+ #endif
 -- 
-1.7.1
+1.7.5.4
 
