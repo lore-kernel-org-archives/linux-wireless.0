@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50169 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753872Ab2E2K6n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 06:58:43 -0400
-Message-ID: <4FC4ABDF.7060105@openwrt.org> (sfid-20120529_125847_008682_53CD80FF)
-Date: Tue, 29 May 2012 12:58:39 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54833 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758111Ab2EHCS6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 May 2012 22:18:58 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+To: <linux-wireless@vger.kernel.org>
+CC: <Larry.Finger@lwfinger.net>
+Subject: [PATCH 4/9] rtlwifi: check for all 8192Sx-family cards for efuse operations
+Date: Mon, 7 May 2012 22:18:36 -0400
+Message-ID: <1336443521-15299-5-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041917_712268_E91D7E78)
+In-Reply-To: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
+References: <4FA212D9.5020602@gtri.gatech.edu>
+ <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
 MIME-Version: 1.0
-To: Josef Semler <josef.semler@gmail.com>
-CC: Adrian Chadd <adrian@freebsd.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
-References: <4FC04B5A.1070900@candelatech.com> <20416.19680.571601.549629@gargle.gargle.HOWL> <7759D07D-C2C8-48D8-8F44-687C7E85D188@gmail.com> <20416.35246.76971.129331@gargle.gargle.HOWL> <CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com> <4FC0CE2B.9060005@openwrt.org> <9532BE30-26F1-42CF-9300-C25585B29300@gmail.com> <CAJ-VmomdZ+ww=iXF8R+st5HenGjchaV4De2pzzuY6Bu=6_n1YA@mail.gmail.com> <CAPsaeQNwWmAyzgGa3KjVv=nzwL3QHCDN-kHtaQWxKHOS4P+paA@mail.gmail.com>
-In-Reply-To: <CAPsaeQNwWmAyzgGa3KjVv=nzwL3QHCDN-kHtaQWxKHOS4P+paA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-05-29 12:24 PM, Josef Semler wrote:
-> 
-> 
-> 2012/5/26 Adrian Chadd <adrian@freebsd.org <mailto:adrian@freebsd.org>>
-> 
->     Hi,
-> 
->     If the device EEPROM states that it's a 2x2/3x3 device, it'll TX on
->     two/three streams.
-> 
->     If it's something like an AR9281 where it's physically a 1T2R stream
->     device, that's what it'll transmit/receive on by default.
-> 
->     If it's something like an AR9285 where it's physically a 1T1R stream
->     device with antenna diversity, that's also what you get.
-> 
->     If the device EEPROM lies though, well, that's a problem. :-)
-> 
-> Installed OpenWRT für ubnt-nano on a Nanobridge. Well, NanoBridge should
-> be 2x2 MIMO, but the device shows me AR7240 rev.2
-> Is this a a EEPROM-lie and how can I correct it?
-AR7240 is the CPU, not the wifi chip.
+Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+---
+ drivers/net/wireless/rtlwifi/efuse.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/rtlwifi/efuse.c b/drivers/net/wireless/rtlwifi/efuse.c
+index 1f14380..fef3727 100644
+--- a/drivers/net/wireless/rtlwifi/efuse.c
++++ b/drivers/net/wireless/rtlwifi/efuse.c
+@@ -1102,8 +1102,7 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
+ 	u8 tempval;
+ 	u16 tmpV16;
+ 
+-	if (pwrstate && (rtlhal->hw_type !=
+-		HARDWARE_TYPE_RTL8192SE)) {
++	if (pwrstate && (!IS_HARDWARE_TYPE_8192S(rtlhal))) {
+ 		tmpV16 = rtl_read_word(rtlpriv,
+ 				       rtlpriv->cfg->maps[SYS_ISO_CTRL]);
+ 		if (!(tmpV16 & rtlpriv->cfg->maps[EFUSE_PWC_EV12V])) {
+@@ -1137,7 +1136,7 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
+ 						rtlpriv->cfg->maps[EFUSE_TEST] +
+ 						3);
+ 
+-			if (rtlhal->hw_type != HARDWARE_TYPE_RTL8192SE) {
++			if (!IS_HARDWARE_TYPE_8192S(rtlhal)) {
+ 				tempval &= 0x0F;
+ 				tempval |= (VOLTAGE_V25 << 4);
+ 			}
+@@ -1147,7 +1146,7 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
+ 				       (tempval | 0x80));
+ 		}
+ 
+-		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE) {
++		if (IS_HARDWARE_TYPE_8192S(rtlhal)) {
+ 			rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_CLK],
+ 						0x03);
+ 		}
+@@ -1162,7 +1161,7 @@ static void efuse_power_switch(struct ieee80211_hw *hw, u8 write, u8 pwrstate)
+ 				       (tempval & 0x7F));
+ 		}
+ 
+-		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE) {
++		if (IS_HARDWARE_TYPE_8192S(rtlhal)) {
+ 			rtl_write_byte(rtlpriv, rtlpriv->cfg->maps[EFUSE_CLK],
+ 						0x02);
+ 		}
+-- 
+1.7.4.1
+
