@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail138c0.megamailservers.com ([69.49.121.248]:48077 "EHLO
-	mail138c0.megamailservers.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932108Ab2EKUGQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 16:06:16 -0400
-Message-ID: <4FAD2B8D.8090104@microhardcorp.com> (sfid-20120511_220620_211450_F02F6481)
-Date: Fri, 11 May 2012 09:09:01 -0600
-From: Bin Zeng <bzeng@microhardcorp.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33174 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755815Ab2EHOFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 10:05:53 -0400
+Date: Tue, 8 May 2012 16:05:56 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 3.4] iwlwifi: fix a potential race in receive buffer
+ allocation
+Message-ID: <20120508140555.GA4412@redhat.com> (sfid-20120508_160605_486916_A718CD29)
+References: <1336079364-16222-1-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-To: Thomas Pedersen <thomas@cozybit.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: MESH only works at 54Mbps link rate or below?
-References: <4FAC2B98.6040100@microhardcorp.com> <CAG6hwVPanDNoWCK-dA2V3gpz8cJhQ-5oJZLXng0rrUXQngPPww@mail.gmail.com>
-In-Reply-To: <CAG6hwVPanDNoWCK-dA2V3gpz8cJhQ-5oJZLXng0rrUXQngPPww@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1336079364-16222-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thomas,
+On Thu, May 03, 2012 at 02:09:24PM -0700, Wey-Yi Guy wrote:
+> From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+> 
+> The driver can potentially unmap pages that
+> have not been mapped yet. Fix this race
+> condition.
+> 
+> Cc: stable@vger.kernel.org
+> Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+> this patch will be also available from wireless branch on
+>  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+> 
+>  drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+> index aa7aea1..173275f 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+> @@ -310,7 +310,6 @@ static void iwlagn_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+>  		spin_unlock_irqrestore(&rxq->lock, flags);
+>  
+>  		BUG_ON(rxb->page);
+> -		rxb->page = page;
+>  		/* Get physical address of the RB */
+>  		rxb->page_dma = dma_map_page(trans->dev, page, 0,
+>  				PAGE_SIZE << hw_params(trans).rx_page_order,
+> @@ -320,6 +319,9 @@ static void iwlagn_rx_allocate(struct iwl_trans *trans, gfp_t priority)
+>  		/* and also 256 byte aligned! */
+>  		BUG_ON(rxb->page_dma & DMA_BIT_MASK(8));
+>  
+> +		/* Page *must* be mapped before before updating the rxb. */
+> +		rxb->page = page;
+> +
+>  		spin_lock_irqsave(&rxq->lock, flags);
+>  
+>  		list_add_tail(&rxb->list, &rxq->rx_free);
 
-Yes, I did like that.
-iw phy phy0 interface add mesh0 type mp mesh_id mymesh
-iw dev mesh0 set channel 48 HT20
-ifconfig mesh0 up
+This patch make no sense. Nothing stops compiler or CPU to write
+->page into memory before ->page_dma .
 
-However, if I use iw to set bitrate, something like that "iw mesh0 set 
-bitrates legacy-5 54 mcs-5 15". Then use "iw dev mesh0 station dump" to 
-check bitrate. It seems like only show 54Mbps or below bitrates. HT mcs 
-rate can not be controlled?
-
-
-Any help appreciate.
-
-Thanks,
-
-Bin
-
-
-
-
-
-On 05/10/2012 06:20 PM, Thomas Pedersen wrote:
-> Hey Bin,
->
-> On Thu, May 10, 2012 at 1:56 PM, Bin Zeng<bzeng@microhardcorp.com>  wrote:
->> Hi
->>
->> I created a MESH network by using 802.11n supported cards, however, MESH
->> only works at 54Mbps link rate or below.
->>
->> Can anyone tell me how to active the 802.11n ht mode in mesh?
-> Just set the channel type to HT, something like:
->
-> iw wlan0 set channel 1 HT20
->
-> Before joining the mesh.
->
-> Thomas
->
->
-
+Stanislaw
