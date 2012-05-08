@@ -1,46 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:46888 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933203Ab2EQQja (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54807 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756778Ab2EHCSz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 12:39:30 -0400
-Received: by pbbrp8 with SMTP id rp8so2744104pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 09:39:29 -0700 (PDT)
-Date: Thu, 17 May 2012 09:39:25 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	linux-bluetooth@vger.kernel.org,
-	gigaset307x-common@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
-Subject: Re: [RFC 13/13] USB: Disable hub-initiated LPM for comms devices.
-Message-ID: <20120517163925.GA14877@kroah.com> (sfid-20120517_183937_234146_CFF5BC38)
-References: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
- <20120516224528.GA25936@xanatos>
- <20120516232019.GA960@kroah.com>
- <20120517045220.GA4772@xanatos>
- <20120517144951.GB27597@kroah.com>
- <20120517162922.GC4967@xanatos>
+	Mon, 7 May 2012 22:18:55 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+To: <linux-wireless@vger.kernel.org>
+CC: <Larry.Finger@lwfinger.net>
+Subject: [WIP v2] rtlwifi: rtl8192su subdriver
+Date: Mon, 7 May 2012 22:18:32 -0400
+Message-ID: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041859_445441_7ECF79A6)
+In-Reply-To: <4FA212D9.5020602@gtri.gatech.edu>
+References: <4FA212D9.5020602@gtri.gatech.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120517162922.GC4967@xanatos>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 17, 2012 at 09:29:22AM -0700, Sarah Sharp wrote:
-> One of the problems with this patch is that several mailing lists
-> rejected it because of the large number of recipients in the Cc list,
-> even when just the mailing lists were on the Cc list.  Should I break it
-> up into a series of patches per driver?
+Hello,
 
-No need to do that, I can just take it.
+A few things have changed between this and the previous version.  Larry Finger's patch for handling the race condition with mac80211 and the firmware callback is used instead (rtlwifi: fix for race condition when firmware is cached), and a new patch for disabling the LEDs in the usb core is added (mirroring rtl_pci_stop).  All patches were rebased on wireless-testing from the 3rd.  The subdriver handles shutdown much better, although there is still room for improvement.  Some differences from rtl8192se were eliminated, although all PHY/BB/RF reg commands are still commented out.  When any of those regs were accessed directly, the device would die.  When accessed through the IOCMD regs, the firmware on the device would seem to disable automatic control of some important functions causing a large drop in receive sensitivity and general performance.
+I discovered the RXFILTERMAP registers were set by the firmware after download causing the firmware to handle many management frames; allowing everything but beacons through still does not allow an association/authentication against a WPA2-PSK AP to succeed.  The AP sees a probe request and sends a probe response, but the driver never sees the response.  There are firmware commands available for offloading the joining of a BSS and the authentication bits which are likely the easiest solution.  Also needing fixing are a few WARNs, for example if you happen to unload the module during a scan.  Finally, the site survey results are now properly handed off to cfg80211.
 
-> Also, do I need to wait on acks from the other maintainers for this
-> change?  My instinct is no, since it shouldn't change the behavior of
-> their drivers with the USB devices that are out there today, but I don't
-> want to step on anyone's toes.
+Thanks,
 
-Don't worry about it, we change USB drivers in other trees all the time :)
+Josh
 
-greg k-h
