@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1387 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756771Ab2EEB1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 21:27:50 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/11] brcmfmac: unify register access interface
-Date: Fri, 4 May 2012 18:27:27 -0700
-Message-ID: <1336181258-7305-1-git-send-email-frankyl@broadcom.com> (sfid-20120505_032840_321188_F038195F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:54038 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751121Ab2EHRoD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 13:44:03 -0400
+Message-ID: <1336499039.29640.29.camel@joe2Laptop> (sfid-20120508_194408_603832_597652E6)
+Subject: Re: [PATCH] ath9k: Support ethtool getstats api.
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net
+Date: Tue, 08 May 2012 10:43:59 -0700
+In-Reply-To: <87zk9j85ue.fsf@purkki.adurom.net>
+References: <1336411437-16653-1-git-send-email-greearb@candelatech.com>
+	 <1336412033.20924.6.camel@joe2Laptop> <4FA80D02.404@candelatech.com>
+	 <87zk9j85ue.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, 2012-05-08 at 10:55 +0300, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+> 
+> > No, there is a check later that does a BUG_ON if our
+> > we have screwed up the indexing of the stats.
+> 
+> Please, no BUG_ON() calls in wifi drivers. They just make users life
+> miserable. WARN_ON() with a safe bailout is enough.
 
-This patch series cleans up the WiFi dongle register access by
-introducing a unified interface. With the new interface the user
-who wants to read/write registers on the dongle only needs to
-provide the register address. The helper function will handle
-everything else.
+$ git grep -w -E "BUG|BUG_ON" drivers/net/wireless | wc -l
+209
+$ git grep -w -E "BUG_ON" drivers/net/wireless | wc -l
+183
+$ git grep -w -E "BUG_ON" drivers/net/wireless/ath | wc -l
+34
 
-Thanks,
-Franky
-
-Franky Lin (11):
-  brcmfmac: remove unused parameter of brcmf_sdcard_reg_read
-  brcmfmac: remove unused parameter of brcmf_sdcard_reg_write
-  brcmfmac: decouple set_sbaddr_window from register write interface
-  brcmfmac: introduce unified register access interface for SDIO
-  brcmfmac: replace brcmf_sdcard_cfg_read with brcmf_sdio_regrb
-  brcmfmac: replace brcmf_sdcard_cfg_write with brcmf_sdio_regwb
-  brcmfmac: replace brcmf_sdcard_reg_read with brcmf_sdio_regrl
-  brcmfmac: replace brcmf_sdcard_reg_write with brcmf_sdio_regwl
-  brcmfmac: remove redundant retries for SDIO core register access
-  brcmfmac: remove function brcmf_sdcard_regfail
-  brcmfmac: replace brcmf_sdioh_card_regread with brcmf_sdio_regrl
-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  244 +++++++-------
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   32 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  350 ++++++++------------
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |  265 ++++++++-------
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   37 +--
- 5 files changed, 416 insertions(+), 512 deletions(-)
-
--- 
-1.7.9.5
-
+Maybe something for you to look at?
 
