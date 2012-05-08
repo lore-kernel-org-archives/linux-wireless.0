@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:41440 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758221Ab2ECTCk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 15:02:40 -0400
-Received: by ghrr11 with SMTP id r11so2102877ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 12:02:39 -0700 (PDT)
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:38678 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756328Ab2EHQto convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 12:49:44 -0400
+Received: by yhmm54 with SMTP id m54so5522266yhm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 09:49:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1336071305.5167.5.camel@jlt3.sipsolutions.net>
-References: <1335477667-1625-1-git-send-email-thomas@cozybit.com>
- <1335477667-1625-2-git-send-email-thomas@cozybit.com> <1336071305.5167.5.camel@jlt3.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 3 May 2012 12:02:18 -0700
-Message-ID: <CAG6hwVO1j=Yt1pHXaW_svYS_4rUVcDa_1PzuohhNKt+cWsyKGQ@mail.gmail.com> (sfid-20120503_210243_110518_3A86D72F)
-Subject: Re: [PATCH 2/2] mac80211: don't transmit 40MHz frames to 20MHz peer
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20120508163018.GE25400@localhost>
+References: <loom.20101104T140201-178@post.gmane.org> <AANLkTinMSH2Vr=iUTD0Pc_OdaM_LFETDEjsOJn+2ZzVD@mail.gmail.com>
+ <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com> <20120508163018.GE25400@localhost>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 8 May 2012 09:49:22 -0700
+Message-ID: <CAB=NE6Xx_KKjk5s_CMRopwBuHDxajgn=Jdc_Nbb1DN2s=2QL0A@mail.gmail.com> (sfid-20120508_184947_661526_2481DFE1)
+Subject: Re: Adding custom channels to ath5k for researching purposes
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Vadim <Vadims.Kurmis@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 3, 2012 at 11:55 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-04-26 at 15:01 -0700, Thomas Pedersen wrote:
->> If a mesh peer indicates it is operating as 20MHz-only in its HT
->> operation IE, have the rate control algorithm respect this by disabling
->> the equivalent bit in the ieee80211_sta HT capabilities.
->>
->> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
->> ---
->>  net/mac80211/mesh_plink.c |    6 ++++++
->>  1 files changed, 6 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
->> index f4124d7..6209327 100644
->> --- a/net/mac80211/mesh_plink.c
->> +++ b/net/mac80211/mesh_plink.c
->> @@ -302,6 +302,12 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
->>       else
->>               memset(&sta->sta.ht_cap, 0, sizeof(sta->sta.ht_cap));
->>
->> +     if (elems->ht_operation)
->> +             if (!(elems->ht_operation->ht_param &
->> +                   IEEE80211_HT_PARAM_CHAN_WIDTH_ANY))
->> +                     sta->sta.ht_cap.cap &=
->> +                                         ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+On Tue, May 8, 2012 at 9:30 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Tue, May 08, 2012 at 07:50:06AM -0700, Luis R. Rodriguez wrote:
+>> I'm thinking it may make sense to add CONFIG_WIRELESS_EXPERT where we
+>> can stuff some of this stuff under. It may be useful for other
+>> regulatory testing / certification stuff.
 >
-> The double if is a bit odd, why not use && to clean up all the
-> formatting?
+> No objection here, so long as this kind of config opt wouldn't become
+> a dumping ground (cf. CONFIG_EMBEDDED). Â "EXPERT" could mean different
+> things to different people.
 
-Good point, but later Ashok adds a patch which takes the same branch anyway.
+Well it should depend on CONFIG_EXPERT but yeah -- I was surprised to
+learn recently even Ubuntu is shipping with CONFIG_EXPERT, so WTF.
+Localizing the expert config to wireless might make more sense.
 
-Thomas
+> I still like the idea of exporting more stuff to userspace and letting
+> CRDA handle the card-based restrictions, but ISTR you had reasons that
+> didn't work for everything.
+
+What do you mean?
+
+  Luis
