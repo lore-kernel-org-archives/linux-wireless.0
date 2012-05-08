@@ -1,55 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40411 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755434Ab2EGINI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 04:13:08 -0400
-Date: Mon, 7 May 2012 11:14:13 +0300
-From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: dh.herrmann@googlemail.com, gustavo@padovan.org,
-	linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Bluetooth: Fix coding style
-Message-ID: <20120507081411.GA19002@aemeltch-MOBL1> (sfid-20120507_101314_994650_4C488C31)
-References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
- <20120506.123656.1335354317428258137.davem@davemloft.net>
- <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
- <20120506.145304.1998242927519675381.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120506.145304.1998242927519675381.davem@davemloft.net>
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:49654 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752965Ab2EHLH2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 07:07:28 -0400
+Received: by obbwd18 with SMTP id wd18so13248853obb.14
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 04:07:27 -0700 (PDT)
+From: Yoni Divinsky <yoni.divinsky@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <arik@wizery.com>, <coelho@ti.com>
+Subject: [PATCH 2/4] wl12xx: set the irq polarity before loading the fw
+Date: Tue,  8 May 2012 14:02:12 +0300
+Message-Id: <1336474934-22069-2-git-send-email-yoni.divinsky@ti.com> (sfid-20120508_130733_044083_83A9ACC0)
+In-Reply-To: <1336474934-22069-1-git-send-email-yoni.divinsky@ti.com>
+References: <1336474934-22069-1-git-send-email-yoni.divinsky@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+The polarity should be set before the firmware is loaded
+since the firmware touches the same register. Access
+of the firmware and driver to the same register will
+cause a collision since there is no exclusion scheme.
 
-On Sun, May 06, 2012 at 02:53:04PM -0400, David Miller wrote:
-> From: David Herrmann <dh.herrmann@googlemail.com>
-> Date: Sun, 6 May 2012 19:46:46 +0200
-> 
-> > Whose rules are they?
-> 
-> Find me an example in another major core subsystem, let's use
-> mm/memory.c as an example as that file gets hit by a lot of people,
-> that uses the multi-line conditional TAB-only crap you guys seem to
-> keep using.
+Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
+---
+ drivers/net/wireless/ti/wl12xx/main.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-If you think that Documentation/CodingStyle is a crap why don't you send a
-patch to fix it?
-
-> They don't.  All the examples you'll find are of the form:
-> 
-> 	if (a &&
-> 	    b)
-> 
-> not:
-> 
-> 	if (a &&
-> 			b)
-
-Actually it does not look like this, otherwise "b" would be placed in the
-same line, don't it?
-
-Best regards 
-Andrei Emeltchenko 
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index d7dd3de..d2ea424 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -989,7 +989,7 @@ out:
+ 
+ static void wl12xx_pre_upload(struct wl1271 *wl)
+ {
+-	u32 tmp;
++	u32 tmp, polarity;
+ 
+ 	/* write firmware's last address (ie. it's length) to
+ 	 * ACX_EEPROMLESS_IND_REG */
+@@ -1009,18 +1009,18 @@ static void wl12xx_pre_upload(struct wl1271 *wl)
+ 
+ 	if (wl->chip.id == CHIP_ID_1283_PG20)
+ 		wl12xx_top_reg_write(wl, SDIO_IO_DS, HCI_IO_DS_6MA);
+-}
+-
+-static void wl12xx_enable_interrupts(struct wl1271 *wl)
+-{
+-	u32 polarity;
+ 
++	/* polarity must be set before the firmware is loaded */
+ 	polarity = wl12xx_top_reg_read(wl, OCP_REG_POLARITY);
+ 
+ 	/* We use HIGH polarity, so unset the LOW bit */
+ 	polarity &= ~POLARITY_LOW;
+ 	wl12xx_top_reg_write(wl, OCP_REG_POLARITY, polarity);
+ 
++}
++
++static void wl12xx_enable_interrupts(struct wl1271 *wl)
++{
+ 	wlcore_write_reg(wl, REG_INTERRUPT_MASK, WL1271_ACX_ALL_EVENTS_VECTOR);
+ 
+ 	wlcore_enable_interrupts(wl);
+-- 
+1.7.0.4
 
