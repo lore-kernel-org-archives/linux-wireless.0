@@ -1,146 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:33572 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754586Ab2ECUJA (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54862 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758123Ab2EHCTC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 16:09:00 -0400
-Date: Thu, 3 May 2012 22:09:49 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi warn_slowpath with 3.*
-Message-ID: <20120503200948.GC11326@ritirata.org> (sfid-20120503_220904_658174_6D205B57)
-References: <CANUX_P1Nx4jYbRwehi+qW-2RVy=ntb_cCzBzpYXkJysuPvrCPA@mail.gmail.com>
- <20120501183415.GG4316@ritirata.org>
- <20120501205616.GA2563@ritirata.org>
- <4595B4D22AB93C4FABBA84AAD5AA37FD14438A@ORSMSX103.amr.corp.intel.com>
- <CANUX_P0UYx_-PS8BUGO10Cwrm6LuhMu4Vyhad4RL-Jn6YqE-Pg@mail.gmail.com>
- <20120502153914.GA9285@tuxdriver.com>
- <20120502162100.GA2528@ritirata.org>
- <20120503065351.GB2307@ritirata.org>
- <CANUX_P03yeuU7gpXbdPVeUBnco4Cz8v78e00x+SgYbhD5K8B5w@mail.gmail.com>
- <CANUX_P0zRjSy9LOVzkWtboqAsvkD4O6EcEXLo11W1Sbb307OJQ@mail.gmail.com>
+	Mon, 7 May 2012 22:19:02 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+To: <linux-wireless@vger.kernel.org>
+CC: <Larry.Finger@lwfinger.net>
+Subject: [PATCH 8/9] rtlwifi: ugly hack to enable feature disparity between subdrivers
+Date: Mon, 7 May 2012 22:18:40 -0400
+Message-ID: <1336443521-15299-9-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041912_921286_B7DB6E9F)
+In-Reply-To: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
+References: <4FA212D9.5020602@gtri.gatech.edu>
+ <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="69pVuxX8awAiJ7fD"
-In-Reply-To: <CANUX_P0zRjSy9LOVzkWtboqAsvkD4O6EcEXLo11W1Sbb307OJQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+---
+ drivers/net/wireless/rtlwifi/core.c |    2 +-
+ drivers/net/wireless/rtlwifi/core.h |    2 +-
+ drivers/net/wireless/rtlwifi/usb.c  |    7 ++++++-
+ drivers/net/wireless/rtlwifi/wifi.h |    1 +
+ 4 files changed, 9 insertions(+), 3 deletions(-)
 
---69pVuxX8awAiJ7fD
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index 278e9f9..3b1108c 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -1171,7 +1171,7 @@ static void rtl_op_flush(struct ieee80211_hw *hw, bool drop)
+ 		rtlpriv->intf_ops->flush(hw, drop);
+ }
+ 
+-const struct ieee80211_ops rtl_ops = {
++struct ieee80211_ops rtl_ops = {
+ 	.start = rtl_op_start,
+ 	.stop = rtl_op_stop,
+ 	.tx = rtl_op_tx,
+diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
+index 2fe46a1..a1d8227 100644
+--- a/drivers/net/wireless/rtlwifi/core.h
++++ b/drivers/net/wireless/rtlwifi/core.h
+@@ -39,7 +39,7 @@
+ 
+ #define RTL_SUPPORTED_CTRL_FILTER	0xFF
+ 
+-extern const struct ieee80211_ops rtl_ops;
++extern struct ieee80211_ops rtl_ops;
+ void rtl_fw_cb(const struct firmware *firmware, void *context);
+ 
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 64f7464..15ffb97d 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -953,6 +953,11 @@ int __devinit rtl_usb_probe(struct usb_interface *intf,
+ 	struct rtl_priv *rtlpriv = NULL;
+ 	struct usb_device	*udev;
+ 	struct rtl_usb_priv *usb_priv;
++	struct rtl_hal_cfg *hal_cfg;
++
++	hal_cfg = (struct rtl_hal_cfg *)(id->driver_info);
++	if (hal_cfg->ops->modify_ieee80211_ops)
++		hal_cfg->ops->modify_ieee80211_ops(&rtl_ops);
+ 
+ 	hw = ieee80211_alloc_hw(sizeof(struct rtl_priv) +
+ 				sizeof(struct rtl_usb_priv), &rtl_ops);
+@@ -977,7 +982,7 @@ int __devinit rtl_usb_probe(struct usb_interface *intf,
+ 	usb_set_intfdata(intf, hw);
+ 	/* init cfg & intf_ops */
+ 	rtlpriv->rtlhal.interface = INTF_USB;
+-	rtlpriv->cfg = (struct rtl_hal_cfg *)(id->driver_info);
++	rtlpriv->cfg = hal_cfg;
+ 	rtlpriv->intf_ops = &rtl_usb_ops;
+ 	rtl_dbgp_flag_init(hw);
+ 	/* Init IO handler */
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index bd816ae..618f09c 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1386,6 +1386,7 @@ struct rtl_tcb_desc {
+ };
+ 
+ struct rtl_hal_ops {
++	void (*modify_ieee80211_ops) (struct ieee80211_ops *ops);
+ 	int (*init_sw_vars) (struct ieee80211_hw *hw);
+ 	void (*deinit_sw_vars) (struct ieee80211_hw *hw);
+ 	void (*read_chip_version)(struct ieee80211_hw *hw);
+-- 
+1.7.4.1
 
-On Thu, May 03, 2012 at 10:55:12PM +0300, Emmanuel Grumbach wrote:
-> Hi
->=20
-> can you please apply the patch attached against wireless-testing ?
-
-which patch? If you refer to the patch attached to the bugreport, it doesn't
-apply on wireless-testing.
-
-
-Cheers,
-
->=20
-> You will have quite a lot of prints, so you will probably need to send
-> /var/log/syslog or messages
->=20
->=20
-> Thanks
->=20
-> Emmanuel Grumbach
-> egrumbach@gmail.com
->=20
->=20
-> On Thu, May 3, 2012 at 10:04 PM, Emmanuel Grumbach <egrumbach@gmail.com> =
-wrote:
-> > Please enable CONFIG_FRAME_POINTERS
-> > Emmanuel Grumbach
-> > egrumbach@gmail.com
-> >
-> >
-> > On Thu, May 3, 2012 at 9:53 AM, Antonio Quartulli <ordex@autistici.org>=
- wrote:
-> >> On Wed, May 02, 2012 at 06:21:02PM +0200, Antonio Quartulli wrote:
-> >>> On Wed, May 02, 2012 at 11:39:14AM -0400, John W. Linville wrote:
-> >>> > On Wed, May 02, 2012 at 10:08:46AM +0300, Emmanuel Grumbach wrote:
-> >>> > > On Wed, May 2, 2012 at 12:19 AM, Venkataraman, Meenakshi
-> >>> > > <meenakshi.venkataraman@intel.com> wrote:
-> >>> > > > Hi Antonio,
-> >>> > > >
-> >>> > > >>> it seems so. It happens at least once at boot time.
-> >>> > > >>> I will try wireless-testing and see what happens. Then I will=
- apply your patch.
-> >>> > > >>
-> >>> > > >>The problem is there either with wireless-testing and with
-> >>> > > >>wireless-testing+your_patch.
-> >>> > > >>
-> >>> > > >>If it can somehow help, I also got several stack trace regardin=
-g intel_iova
-> >>> > > >>functions. But then the I got kernel panic and I was not able t=
-o copy the
-> >>> > > >>messages.
-> >>> > > >
-> >>> > > > [MV] Depending on how you set it up, perhaps the stack trace wa=
-s saved in one of the syslog files in /var/log/...
-> >>> > > >
-> >>> > > > Thanks!
-> >>> > > > Meenakshi
-> >>> > > >
-> >>> > >
-> >>> > > Can you please re-run with debug=3D1 and send the whole log ?
-> >>> > > This will give a better indication on when the issue occurs.
-> >>> >
-> >>> > Does this help?
-> >>> >
-> >>> > =C2=A0 =C2=A0 https://bugzilla.redhat.com/show_bug.cgi?id=3D815998#=
-c18
-> >>>
-> >>> I applied patch in comment 17 on linux-3.3.4. IT didn't help but this=
- time I got
-> >>> the WARNING even with debug=3D1. Log is attached.
-> >>>
-> >>
-> >>
-> >> Is there any particular kernel debugging option I could enable to make=
- the log
-> >> more verbose?
-> >>
-> >>
-> >> Cheers,
-> >>
-> >>
-> >>
-> >> --
-> >> Antonio Quartulli
-> >>
-> >> ..each of us alone is worth nothing..
-> >> Ernesto "Che" Guevara
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---69pVuxX8awAiJ7fD
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAEBAgAGBQJPouYMAAoJEFMQTLzJFOZFyVcH/jFtXAAJuTdZDR5Bo5rQiN+y
-XdrHdoemWG0ifI7485Mvd+0W/y4tXhXI5MYGmg3kXp/yy8l16ona81q1bNTKSXnR
-YyZj0EuSpDohxBx8TqfCP4w46j5EcYyJaOM+WAPRLEFOgLA8pdhNjCevINk+UYiK
-MN6kWRtzqZYIHebOFQn6d3gUDy8zv6+8CLfNJ6VgDt6TdYE3Hy4fM1aRnC7VHFNe
-OMEiTpLzdRH7x34GGtNsjAFh5RwNM2KMX9poZTz8eYTUPy678JjCWUXpEXZW6V6r
-uaVUeVMw8+bIDFzZYusjOTR8xvBXuFQioWxaftrbZa/0qAYQOfCF+KCzP8TouDE=
-=lSzc
------END PGP SIGNATURE-----
-
---69pVuxX8awAiJ7fD--
