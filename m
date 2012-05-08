@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:60813 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808Ab2EXFcb (ORCPT
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:60448 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752965Ab2EHLHc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 01:32:31 -0400
-Received: by bkcji2 with SMTP id ji2so6590440bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 22:32:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87ehqa6u2d.fsf@purkki.adurom.net>
-References: <1337760813-27055-1-git-send-email-arik@wizery.com>
- <87wr436utp.fsf@purkki.adurom.net> <CA+XVXfeju02Ou=jZ=eyq+0e4Rm1-5=b6-m8bMyZ8kAWO6F-sXQ@mail.gmail.com>
- <87mx4z6u4n.fsf@purkki.adurom.net> <CA+XVXfc3R8CrMfercPpRfYGjvKDdDkwJax+oLiaMrQQPwLCc0Q@mail.gmail.com>
- <87ipfn6koz.fsf@purkki.adurom.net> <CA+XVXfcZAE0Drbn_JTBt1p0GAaFrsxZfHNE1Syp=1G=PNsvkbQ@mail.gmail.com>
- <87ehqa6u2d.fsf@purkki.adurom.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 24 May 2012 08:32:14 +0300
-Message-ID: <CA+XVXffb3tZ2_kWwx0wBWUac-y0BPTT_KBJ5yhxNjPVp4U7HGw@mail.gmail.com> (sfid-20120524_073235_192890_71AF6709)
-Subject: Re: [PATCH] mac80211: allow setting default U-APSD queues/max_sp_len
- for STA
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 8 May 2012 07:07:32 -0400
+Received: by obbuo13 with SMTP id uo13so577547obb.15
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 04:07:31 -0700 (PDT)
+From: Yoni Divinsky <yoni.divinsky@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <arik@wizery.com>, <coelho@ti.com>
+Subject: [PATCH 4/4] wlcore: fix the CONF_TX_AC_ANY_TID to be 0xff
+Date: Tue,  8 May 2012 14:02:14 +0300
+Message-Id: <1336474934-22069-4-git-send-email-yoni.divinsky@ti.com> (sfid-20120508_130735_513557_EC5F97DC)
+In-Reply-To: <1336474934-22069-1-git-send-email-yoni.divinsky@ti.com>
+References: <1336474934-22069-1-git-send-email-yoni.divinsky@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 24, 2012 at 8:12 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> But this was a workaround for an IOP problem with certain APs, right?
-> How is firmware going to be smart in that case?
->
-> It would help to see what you are exactly planning to do on wl12xx with
-> this interface. Currently I'm just guessing what your plans really are.
+In the enum conf_tx_ac CONF_TX_AC_ANY_TID should
+be 0xff to match the firmware's implementation.
 
-The plan is to enable only VO as U-APSD (as I wrote in a previous
-email). We've had problems with some APs (can't remember the models)
-that assume non-VO ACs always use legacy PS. This would lead to
-problems - our driver would never wake up. In that sense the problem
-is general.
+Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/conf.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-But in wl12xx the FW handles network PS on its own (PS-poll etc.), so
-it may just be a bug with our FW. So hard-coding this into mac80211
-seems a bit of an overkill.
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index fef0db4..dbea4db 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -504,7 +504,7 @@ enum conf_tx_ac {
+ 	CONF_TX_AC_VI = 2,         /* video */
+ 	CONF_TX_AC_VO = 3,         /* voice */
+ 	CONF_TX_AC_CTS2SELF = 4,   /* fictitious AC, follows AC_VO */
+-	CONF_TX_AC_ANY_TID = 0x1f
++	CONF_TX_AC_ANY_TID = 0xff
+ };
+ 
+ struct conf_tx_ac_category {
+-- 
+1.7.0.4
 
-Maybe you can offer a better solution?
-
-Arik
