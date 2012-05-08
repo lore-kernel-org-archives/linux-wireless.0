@@ -1,112 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759686Ab2EPUyi (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:51455 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121Ab2EHEAr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 16:54:38 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/9] iwlwifi: move notification wait into core
-Date: Wed, 16 May 2012 22:54:28 +0200
-Message-Id: <1337201670-21604-8-git-send-email-johannes@sipsolutions.net> (sfid-20120516_225452_741942_61F6FD06)
-In-Reply-To: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
-References: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 8 May 2012 00:00:47 -0400
+Received: by mail-ob0-f174.google.com with SMTP id tb18so9215680obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 21:00:47 -0700 (PDT)
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	javier@cozybit.com, devel@lists.open80211s.org,
+	Ashok Nagarajan <ashok@cozybit.com>
+Subject: [PATCH 3/4] mac80211: Modify mesh_set_ht_prot_mode() to have less identation
+Date: Mon,  7 May 2012 21:00:31 -0700
+Message-Id: <1336449632-9057-3-git-send-email-ashok@cozybit.com> (sfid-20120508_060116_203551_C981DC7E)
+In-Reply-To: <1336449632-9057-1-git-send-email-ashok@cozybit.com>
+References: <1336449632-9057-1-git-send-email-ashok@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Determining types of peers is modified to have less indentation. This change is
+suggested by Johannes. This patch also corrects the reference in comment to
+IEEE 802.11-2012 version.
 
-This code is a library to be used by multiple
-opmodes, so move it into the iwlwifi module.
-
-Reviewed-by: Donald H Fry <donald.h.fry@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/Makefile         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-notif-wait.c |    8 +++++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ net/mac80211/mesh_plink.c |   47 +++++++++++++++++++++++----------------------
+ 1 files changed, 24 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index f284ea8..9310027 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -7,7 +7,6 @@ iwldvm-objs		+= iwl-agn-tt.o iwl-agn-sta.o iwl-agn-rx.o
- iwldvm-objs		+= iwl-eeprom.o iwl-power.o
- iwldvm-objs		+= iwl-scan.o iwl-led.o
- iwldvm-objs		+= iwl-agn-rxon.o iwl-agn-devices.o
--iwldvm-objs		+= iwl-notif-wait.o
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 8cc8461..9744c51 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -105,15 +105,15 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ 	return sta;
+ }
  
- iwldvm-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
- iwldvm-$(CONFIG_IWLWIFI_DEVICE_TESTMODE) += iwl-testmode.o
-@@ -24,6 +23,7 @@ iwlwifi-objs		+= iwl-io.o
- iwlwifi-objs		+= iwl-pci.o
- iwlwifi-objs		+= iwl-drv.o
- iwlwifi-objs		+= iwl-debug.o
-+iwlwifi-objs		+= iwl-notif-wait.o
- iwlwifi-objs		+= iwl-trans-pcie.o iwl-trans-pcie-rx.o iwl-trans-pcie-tx.o
- 
- iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
-diff --git a/drivers/net/wireless/iwlwifi/iwl-notif-wait.c b/drivers/net/wireless/iwlwifi/iwl-notif-wait.c
-index 0066b89..5cfed29 100644
---- a/drivers/net/wireless/iwlwifi/iwl-notif-wait.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-notif-wait.c
-@@ -61,6 +61,7 @@
+-/** mesh_set_ht_prot_mode - set correct HT protection mode
++/*
++ * mesh_set_ht_prot_mode - set correct HT protection mode
   *
-  *****************************************************************************/
- #include <linux/sched.h>
-+#include <linux/export.h>
- 
- #include "iwl-notif-wait.h"
- 
-@@ -71,6 +72,7 @@ void iwl_notification_wait_init(struct iwl_notif_wait_data *notif_wait)
- 	INIT_LIST_HEAD(&notif_wait->notif_waits);
- 	init_waitqueue_head(&notif_wait->notif_waitq);
- }
-+EXPORT_SYMBOL_GPL(iwl_notification_wait_init);
- 
- void iwl_notification_wait_notify(struct iwl_notif_wait_data *notif_wait,
- 				  struct iwl_rx_packet *pkt)
-@@ -115,6 +117,7 @@ void iwl_notification_wait_notify(struct iwl_notif_wait_data *notif_wait,
- 	if (triggered)
- 		wake_up_all(&notif_wait->notif_waitq);
- }
-+EXPORT_SYMBOL_GPL(iwl_notification_wait_notify);
- 
- void iwl_abort_notification_waits(struct iwl_notif_wait_data *notif_wait)
+- * Section 9.23.3.5 of IEEE 80211s standard describes the protection rules for
+- * HT mesh STA in a MBSS. Three HT protection modes are supported for now,
+- * non-HT mixed mode, 20MHz-protection and no-protection mode. non-HT mixed
+- * mode is selected if any non-HT peers are present in our MBSS.
+- * 20MHz-protection mode is selected if all peers in our 20/40MHz MBSS support
+- * HT and atleast one HT20 peer is present. Otherwise no-protection mode is
+- * selected.
++ * Section 9.23.3.5 of IEEE 80211-2012 describes the protection rules for HT
++ * mesh STA in a MBSS. Three HT protection modes are supported for now, non-HT
++ * mixed mode, 20MHz-protection and no-protection mode. non-HT mixed mode is
++ * selected if any non-HT peers are present in our MBSS.  20MHz-protection mode
++ * is selected if all peers in our 20/40MHz MBSS support HT and atleast one
++ * HT20 peer is present. Otherwise no-protection mode is selected.
+  */
+ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
  {
-@@ -128,7 +131,7 @@ void iwl_abort_notification_waits(struct iwl_notif_wait_data *notif_wait)
+@@ -128,21 +128,22 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
  
- 	wake_up_all(&notif_wait->notif_waitq);
- }
--
-+EXPORT_SYMBOL_GPL(iwl_abort_notification_waits);
- 
- void
- iwl_init_notification_wait(struct iwl_notif_wait_data *notif_wait,
-@@ -152,6 +155,7 @@ iwl_init_notification_wait(struct iwl_notif_wait_data *notif_wait,
- 	list_add(&wait_entry->list, &notif_wait->notif_waits);
- 	spin_unlock_bh(&notif_wait->notif_wait_lock);
- }
-+EXPORT_SYMBOL_GPL(iwl_init_notification_wait);
- 
- int iwl_wait_notification(struct iwl_notif_wait_data *notif_wait,
- 			  struct iwl_notification_wait *wait_entry,
-@@ -175,6 +179,7 @@ int iwl_wait_notification(struct iwl_notif_wait_data *notif_wait,
- 		return -ETIMEDOUT;
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(iwl_wait_notification);
- 
- void iwl_remove_notification(struct iwl_notif_wait_data *notif_wait,
- 			     struct iwl_notification_wait *wait_entry)
-@@ -183,3 +188,4 @@ void iwl_remove_notification(struct iwl_notif_wait_data *notif_wait,
- 	list_del(&wait_entry->list);
- 	spin_unlock_bh(&notif_wait->notif_wait_lock);
- }
-+EXPORT_SYMBOL_GPL(iwl_remove_notification);
+ 	rcu_read_lock();
+ 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+-		if (sdata == sta->sdata &&
+-		    sta->plink_state == NL80211_PLINK_ESTAB) {
+-			switch (sta->ch_type) {
+-			case NL80211_CHAN_NO_HT:
+-				mpl_dbg("mesh_plink %pM: nonHT sta (%pM) is present",
+-					sdata->vif.addr, sta->sta.addr);
+-				non_ht_sta = true;
+-				goto out;
+-			case NL80211_CHAN_HT20:
+-				mpl_dbg("mesh_plink %pM: HT20 sta (%pM) is present",
+-					sdata->vif.addr, sta->sta.addr);
+-				ht20_sta = true;
+-			default:
+-				break;
+-			}
++		if (sdata != sta->sdata ||
++		    sta->plink_state != NL80211_PLINK_ESTAB)
++			continue;
++
++		switch (sta->ch_type) {
++		case NL80211_CHAN_NO_HT:
++			mpl_dbg("mesh_plink %pM: nonHT sta (%pM) is present",
++				sdata->vif.addr, sta->sta.addr);
++			non_ht_sta = true;
++			goto out;
++		case NL80211_CHAN_HT20:
++			mpl_dbg("mesh_plink %pM: HT20 sta (%pM) is present",
++				sdata->vif.addr, sta->sta.addr);
++			ht20_sta = true;
++		default:
++			break;
+ 		}
+ 	}
+ out:
 -- 
-1.7.10
+1.7.5.4
 
