@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2360 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1466 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751754Ab2E0Lvp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2012 07:51:45 -0400
-Message-ID: <4FC2153F.4020501@broadcom.com> (sfid-20120527_135149_321442_AA41466A)
-Date: Sun, 27 May 2012 13:51:27 +0200
+	id S1755129Ab2EHMkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 08:40:14 -0400
+Message-ID: <4FA9141B.3020008@broadcom.com> (sfid-20120508_144020_104588_C64F0962)
+Date: Tue, 8 May 2012 14:39:55 +0200
 From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [RFC PATCH 3/8] brcm80211: smac: clean up channel.c
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
- <1334607462-5387-4-git-send-email-seth.forshee@canonical.com>
- <4FC008A1.9060005@broadcom.com> <20120526171749.GB11759@ubuntu-mba>
-In-Reply-To: <20120526171749.GB11759@ubuntu-mba>
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
+References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
+ <4F9CF839.1040401@broadcom.com> <4FA0CF03.9060307@broadcom.com>
+ <4FA1B66A.4060901@hauke-m.de>
+In-Reply-To: <4FA1B66A.4060901@hauke-m.de>
 Content-Type: text/plain;
  charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/2012 07:17 PM, Seth Forshee wrote:
-> On Sat, May 26, 2012 at 12:33:05AM +0200, Arend van Spriel wrote:
->> We are not supporting 40MHz right now, but it is on our roadmap. I would
->> prefer to keep it, but git can recover it for me when that roadmap item
->> is due.
+On 05/03/2012 12:34 AM, Hauke Mehrtens wrote:
+> Hi Arend,
 > 
-> The argument against keeping it is that it will be utterly broken by all
-> of the other changes. I could try to rework it along with the rest of
-> the code I guess, but I'd obviously be unable to test it.
+> thanks for testing.
 > 
-> I'll keep it in if you prefer, but I should probably add a comment
-> warning that the code needs some attention before it can be used.
+> Have you tried suspend/resume and hibernate/resume? I think some of the
+> workaround in drivers/bcma/driver_pci.c should be called in the resume
+> path and not only in the initialization path.
+> 
+> Hauke
+> 
 
-Rethinking it I propose to get rid of it. 40MHz support is not complete
-throughout the driver so it is not worth to keep this.
+Hi Hauke,
+
+The patches have been in regression testing here for a couple of nights
+without issue. Tested chips: bcm43224 and bcm4313. platforms: x86,
+x86_64 and ppc64.
+
+I also did a suspend/resume test performing 10 cycles. Have to look in
+the logs to get more info. Not tried hibernate/resume testing yet.
 
 Gr. AvS
 
