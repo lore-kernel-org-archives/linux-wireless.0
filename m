@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1993 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755497Ab2EGIV5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 04:21:57 -0400
-Message-ID: <4FA78618.4050203@broadcom.com> (sfid-20120507_102202_980071_4E0697E8)
-Date: Mon, 7 May 2012 10:21:44 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:41312 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756376Ab2EHQae (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 12:30:34 -0400
+Received: by gglu4 with SMTP id u4so972834ggl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 09:30:34 -0700 (PDT)
+Date: Tue, 8 May 2012 12:30:18 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Vadim <Vadims.Kurmis@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Adding custom channels to ath5k for researching purposes
+Message-ID: <20120508163018.GE25400@localhost> (sfid-20120508_183038_201696_19A85632)
+References: <loom.20101104T140201-178@post.gmane.org>
+ <AANLkTinMSH2Vr=iUTD0Pc_OdaM_LFETDEjsOJn+2ZzVD@mail.gmail.com>
+ <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com>
 MIME-Version: 1.0
-To: "Andrei Emeltchenko" <andrei.emeltchenko.news@gmail.com>,
-	"David Miller" <davem@davemloft.net>, dh.herrmann@googlemail.com,
-	gustavo@padovan.org, linville@tuxdriver.com,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Bluetooth: Fix coding style
-References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
- <20120506.123656.1335354317428258137.davem@davemloft.net>
- <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
- <20120506.145304.1998242927519675381.davem@davemloft.net>
- <20120507081411.GA19002@aemeltch-MOBL1>
-In-Reply-To: <20120507081411.GA19002@aemeltch-MOBL1>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/07/2012 10:14 AM, Andrei Emeltchenko wrote:
->> They don't.  All the examples you'll find are of the form:
->> > 
->> > 	if (a &&
->> > 	    b)
->> > 
->> > not:
->> > 
->> > 	if (a &&
->> > 			b)
-> Actually it does not look like this, otherwise "b" would be placed in the
-> same line, don't it?
+On Tue, May 08, 2012 at 07:50:06AM -0700, Luis R. Rodriguez wrote:
+> I'm thinking it may make sense to add CONFIG_WIRELESS_EXPERT where we
+> can stuff some of this stuff under. It may be useful for other
+> regulatory testing / certification stuff.
 
-Let me rephrase Dave's remark so you may understand:
+No objection here, so long as this kind of config opt wouldn't become
+a dumping ground (cf. CONFIG_EMBEDDED).  "EXPERT" could mean different
+things to different people.
 
-	if (a_has_to_be_long_enough_to_make_you_understand &&
-	    you_do_not_care_about_code_readability)
+I still like the idea of exporting more stuff to userspace and letting
+CRDA handle the card-based restrictions, but ISTR you had reasons that
+didn't work for everything.
 
-and not:
-	if (a_has_to_be_long_enough_to_make_you_understand &&
-			you_do_not_care_about_code_readability)
-
-Hope it helps.
-
-Gr. AvS
-
+-- 
+Bob Copeland %% www.bobcopeland.com
