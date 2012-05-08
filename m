@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:44922 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760685Ab2EQVer convert rfc822-to-8bit (ORCPT
+Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54840 "EHLO
+	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758044Ab2EHCS7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 17:34:47 -0400
-Received: by yhmm54 with SMTP id m54so2350791yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 14:34:46 -0700 (PDT)
+	Mon, 7 May 2012 22:18:59 -0400
+From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+To: <linux-wireless@vger.kernel.org>
+CC: <Larry.Finger@lwfinger.net>
+Subject: [PATCH 5/9] rtlwifi: add short circuit in the receive path
+Date: Mon, 7 May 2012 22:18:37 -0400
+Message-ID: <1336443521-15299-6-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041903_774971_E340E229)
+In-Reply-To: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
+References: <4FA212D9.5020602@gtri.gatech.edu>
+ <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
 MIME-Version: 1.0
-In-Reply-To: <1337284032.4687.1.camel@jlt3.sipsolutions.net>
-References: <1337270768-22719-1-git-send-email-eliad@wizery.com>
-	<1337284032.4687.1.camel@jlt3.sipsolutions.net>
-Date: Fri, 18 May 2012 00:34:46 +0300
-Message-ID: <CAB3XZEcWGYAsPpuxs7Fs3a5c8ufkJOeEpJ3FgWyWttos6dYdKQ@mail.gmail.com> (sfid-20120517_233451_897166_AAC2E97A)
-Subject: Re: [PATCH] cfg80211: fix memory leak/corruption of bss_list
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 17, 2012 at 10:47 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-05-17 at 19:06 +0300, Eliad Peller wrote:
->> cfg80211_dev_free() calls cfg80211_put_bss() directly on all
->> the remaining bss entries, skipping the proper bss entry
->> cleanup that usually made by __cfg80211_unlink_bss(), and
->> leaving the bss_list and the rb_tree with dangling pointers.
->
->>       list_for_each_entry_safe(scan, tmp, &rdev->bss_list, list)
->> -             cfg80211_put_bss(&scan->pub);
->> +             cfg80211_unlink_bss(&rdev->wiphy, &scan->pub);
->>       kfree(rdev);
->
-> I don't see why we care, we free rdev anyway.
->
-yeah, you have a point here...
+Allow things like C2H events without any actual 802.11 data to avoid
+the rest of the receive path.
 
-we got a crash report for an older kernel with some custom patches,
-that indicated a possible write-after-free on the bss release. i was
-probably too rushed to blame this code.
+Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+---
+ drivers/net/wireless/rtlwifi/usb.c |   12 ++++++++++--
+ 1 files changed, 10 insertions(+), 2 deletions(-)
 
-thanks,
-Eliad.
+diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
+index 471a112..d9a0a9f 100644
+--- a/drivers/net/wireless/rtlwifi/usb.c
++++ b/drivers/net/wireless/rtlwifi/usb.c
+@@ -440,7 +440,11 @@ static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
+ 	};
+ 
+ 	skb_pull(skb, RTL_RX_DESC_SIZE);
+-	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
++	if (!rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc,
++	    skb)) {
++		dev_kfree_skb_any(skb);
++		return;
++	}
+ 	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
+ 	hdr = (struct ieee80211_hdr *)(skb->data);
+ 	fc = hdr->frame_control;
+@@ -483,7 +487,11 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
+ 	};
+ 
+ 	skb_pull(skb, RTL_RX_DESC_SIZE);
+-	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
++	if (!rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc,
++	    skb)) {
++		dev_kfree_skb_any(skb);
++		return;
++	}
+ 	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
+ 	hdr = (struct ieee80211_hdr *)(skb->data);
+ 	fc = hdr->frame_control;
+-- 
+1.7.4.1
+
