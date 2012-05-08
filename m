@@ -1,80 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:51299 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757Ab2EQIgr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 04:36:47 -0400
-Received: by yhmm54 with SMTP id m54so1598500yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 01:36:47 -0700 (PDT)
+Received: from mout4.freenet.de ([195.4.92.94]:57396 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753198Ab2EHGbA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 May 2012 02:31:00 -0400
+Message-ID: <4FA8BD11.3080703@01019freenet.de> (sfid-20120508_083105_563970_E32F8325)
+Date: Tue, 08 May 2012 08:28:33 +0200
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <CAEZZmbEExFr6=7G6kQb_bbpt=wfiNDuoR+U4_Eu_wLdair=SrA@mail.gmail.com>
-References: <1336479518-23006-1-git-send-email-yoni.divinsky@ti.com>
-	<1336485961.4320.1.camel@jlt3.sipsolutions.net>
-	<CANJm+iAoVkPOO61ufrM3mxzsURFZzuNcMm9N6Y=3xUbSCaC1+w@mail.gmail.com>
-	<1337072920.4546.0.camel@jlt3.sipsolutions.net>
-	<CANJm+iDif1+KREB=CJ_wYbo+Hzxo=nJL6fUxbBTQ5_C8Tz0E9Q@mail.gmail.com>
-	<CANJm+iDU1ahy3B9u6nn=0E4d0Pge+OubaNE9bPaE1EXYGahOUA@mail.gmail.com>
-	<CAEZZmbEExFr6=7G6kQb_bbpt=wfiNDuoR+U4_Eu_wLdair=SrA@mail.gmail.com>
-Date: Thu, 17 May 2012 14:06:46 +0530
-Message-ID: <CAEZZmbF6wa3JF48KsCiyg4T7OsBS73OnzAMVYPkPdPro9EYUtg@mail.gmail.com> (sfid-20120517_103653_559210_BF230AEA)
-Subject: Re: [PATCH] mac80211: add op to configure default key id to driver
-From: Ravi Sharma <sharmaravi.lx@gmail.com>
-To: "Divinsky, Yonatan" <yoni.divinsky@ti.com>
-Cc: linux-wireless@vger.kernel.org
+To: Helmut Schaa <helmut.schaa@googlemail.com>, Jouni Malinen <j@w1.fi>
+CC: hostap@lists.shmoo.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: [rt2x00-users] [rt2800pci (AP) - ath9k] 802.11w: broken aggregation
+ handling?
+References: <4FA75983.9040003@01019freenet.de> <201205070702.q4772uem002960@mail.maya.org> <4FA7A13D.6020405@01019freenet.de> <CAGXE3d-pwTraDvC6yOKt7hHPTXL5LtaHFovD_SFmaPgajJbS9g@mail.gmail.com> <20120507135533.GA19222@w1.fi>
+In-Reply-To: <20120507135533.GA19222@w1.fi>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All
-I know this use case is quite trivial looking regarding WEP (Since it
-is going to be deprecated), we faced a issue with minap (softap) in
-WEP security with auth mode as shared. Since the default key is not
-passed to driver, we can not program firmware default key idx (default
-key is programmed when data packet exchange started, looking into type
-of encryption) and the handshake failed in shared auth mode. In open
-mode, there is no need for this.
+Hi Jouni, hi Helmut,
 
-Personally, i dont like WEP in miniAP mode but sometime we dont have the choice!
+Jouni Malinen wrote:
+> On Mon, May 07, 2012 at 01:04:29PM +0200, Helmut Schaa wrote:
+>> I'm fine with enabling MFP in rt2800pci but I don't know enough about the
+>> necessary requirements.
+>>
+>> Jouni, are there any special requirements for MFP?
+> 
+> The main requirements:
+> - support CCMP encryption/decryption of unicast robust management frames
+>   (subset of Action frames, Deauthentication, Disassociation)
 
-Rsh.
+I tested WPA-EAP-SHA256 with group key ccmp.
 
->
->
->
-> On Thu, May 17, 2012 at 1:55 PM, Divinsky, Yonatan <yoni.divinsky@ti.com> wrote:
->>
->> ---------- Forwarded message ----------
->> From: Divinsky, Yonatan <yoni.divinsky@ti.com>
->> Date: Tue, May 15, 2012 at 1:59 PM
->> Subject: Re: [PATCH] mac80211: add op to configure default key id to driver
->> To: Johannes Berg <johannes@sipsolutions.net>
->>
->>
->> On Tue, May 15, 2012 at 12:08 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Tue, 2012-05-15 at 11:46 +0300, Divinsky, Yonatan wrote:
->> >> On Tue, May 8, 2012 at 5:06 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >> > On Tue, 2012-05-08 at 15:18 +0300, Yoni Divinsky wrote:
->> >> >> When hw_accel is enabled and encryption type is set to WEP,
->> >> >> the driver should get the default key index from mac80211.
->> >> >
->> >> > Well, why?
->> >> >
->> >> If the WEP encryption is done by the HW, then then low level driver
->> >> needs to know the defualt key index in
->> >> case there is more than one WEP key configured.
->> >
->> > I don't see why, for every packet mac80211 tells you what key to use.
->>
->> If the HW supports auto ARP responses, then it will need to have the correct
->> key id in order to encrypt the ARP response.
->>
->> >
->> > johannes
->> >
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+> - support BIP and IGTK configuration for group addressed robust
+>   management frames (TX-only for AP, RX-only for STA); I would expect
+>   most drivers to use software implementation on the host CPU for this
+>   taken into account that there is only very limited use of group
+>   addressed robust management frames
+
+The IGTK is a single key (shared key). There are a maximum of 4 shared
+keys designated in rt2x00mac.c for each BSS for use with hw encryption.
+
+Since rt2800usb is working fine with nohwcrypt=1 (but not with
+encryption done in hw), I assume, that there is no differentiation
+between the encryption / decryption of different frame types. If hw
+encryption is turned on, all types of frames are encrypted / decrypted
+by hardware and vice versa.
+
+I'm not sure how BIP is secured if hw encryption is enabled. BIP is
+implemented in mac80211 as part of decryption. Is BIP done during hw
+encryption, too? Or is it done by mac80211 w/ enabled hw encryption, too?
+
+Grrr. Now I know, why I had to disable hw encryption for rt2800usb.
+Because it was disabled for rt2800pci (AP), too. If mac80211 is doing
+the job, 11w works fine. If encryption is done by hardware (AP), 11w is
+broken: the ath9k station doesn't work any more, regardless if hw
+encryption is switched on or off for ath9k.
+
+11w		rt2800pci (AP)	ath9k sta		rt2800usb sta
+---------------------------------------------------------------------
+1,3		nohwcrypt=1	nohwcrypt=[0|1]		nohwcrypt=1
+2,4		nohwcrypt=0	nohwcrypt=[0|1]		nohwcrypt=1
+2,5		nohwcrypt=0	nohwcrypt=[0|1]		nohwcrypt=0
+
+
+1 = ath9k fine
+2 = ath9k broken
+3 = rt2800usb fine
+4 = rt2800usb broken
+5 = rt2800usb seems to work
+
+This means for rt2x00: to get 11w working with hw encryption enabled,
+there needs to be some differentiation for the encryption of management
+frames: if management frame, let mac80211 do the job - all other frames
+should be encrypted by hw.
+Correct?
+
+> - SA Query mechanism (mac80211-based drivers get this pretty much
+>   automatically from hostapd for AP mode and mac80211 for STA)
+> - ability to configure RSN capabilities into RSN element and to
+>   provide the received element to user space (again, most mac80211-based
+>   drivers should work as-is)
+
+Thank you very much for your explanations, Jouni!
+
+
+Regards,
+Andreas
