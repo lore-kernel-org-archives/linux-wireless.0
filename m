@@ -1,61 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:57934 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755846Ab2ENTLL (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:34625 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982Ab2EHHIA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 15:11:11 -0400
-Received: by obbtb18 with SMTP id tb18so7798516obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 12:11:11 -0700 (PDT)
-Message-ID: <4FB158CB.2010704@lwfinger.net> (sfid-20120514_211115_553819_73A55ABD)
-Date: Mon, 14 May 2012 14:11:07 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 8 May 2012 03:08:00 -0400
+Date: Tue, 8 May 2012 04:07:54 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth 2012-05-04
+Message-ID: <20120508070211.GB11843@joana> (sfid-20120508_090819_148048_7E8DE15F)
+References: <20120505001243.GC23728@joana>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix single queue drivers
-References: <1336405529.4325.31.camel@jlt3.sipsolutions.net> <4FAF3AB8.90900@lwfinger.net> <20120514175603.GB2428@tuxdriver.com>
-In-Reply-To: <20120514175603.GB2428@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lCAWRPmW1mITcIfM"
+In-Reply-To: <20120505001243.GC23728@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/14/2012 12:56 PM, John W. Linville wrote:
-> On Sat, May 12, 2012 at 11:38:16PM -0500, Larry Finger wrote:
->> On 05/07/2012 10:45 AM, Johannes Berg wrote:
->>> From: Johannes Berg<johannes.berg@intel.com>
->>>
->>> My queue management rework broke drivers that don't
->>> have multiple AC queues and register a single queue
->>> only, causing a warning:
->>>
->>> WARNING: at net/mac80211/iface.c:162 ieee80211_check_queues
->>>
->>> This was due to filling the queues wrongly and then
->>> noticing the error when checking later.
->>>
->>> Reported-and-Tested-by: Larry Finger<Larry.Finger@lwfinger.net>
->>> Signed-off-by: Johannes Berg<johannes.berg@intel.com>
->>
->> John,
->>
->> I know you have been busy and that Linus is restricting the patches
->> to be added after 3.4-rc7; however, this one really needs to get
->> into 3.4. If it does not make it, every wireless device with only
->> one hardware queue will break.
->>
->> Larry
->
-> Actually, it doesn't seem to apply in 3.4.  The original commit that
-> causes the problem (3a25a8c8) seems to only exist in wireless-next.
->
-> Is there some other version of this patch to apply for 3.4?
 
-I got confused about that one. Sorry for the noise.
+--lCAWRPmW1mITcIfM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The one that does need to be in 3.4 is "[PATCH] rtlwifi: fix for race condition 
-when firmware is cached". The original commit (b0302ab) is in mainline, but this 
-fix is not.
+Hi John,
 
-Larry
+* Gustavo Padovan <gustavo@padovan.org> [2012-05-04 21:12:43 -0300]:
 
+> Hi John,
+>=20
+> A few more patch to 3.4. There is 3 fixes from Mat Martineau, a fix for
+> a incoming MTU check that was breaking ERTM, still on ERTM there is a
+> patch that fixes concurrency with one of our locks. His third patch is
+> related to lock fixes too.
+> Besides that Johan fixed a wrong bit set in the Inquiry code, Vishal
+> Agarwal added a EIR fix and finally we have support for one more usb id.
+>=20
+> Please pull or let me know of any problems!
+
+I saw that you didn't pull this yet, so I decided to re-do this pull reques=
+t.
+We have more 3 important fixes to go in. They fix a regression that was
+preventing Bluetooth keyboard to work. I'll re-do the whole pull request
+message, so you can copy and paste it easily:
+
+A few more patch to 3.4. There is 3 fixes from Mat Martineau, a fix for a
+incoming MTU check that was breaking ERTM, still on ERTM there is a patch t=
+hat
+fixes concurrency with one of our locks. His third patch is related to lock
+fixes too.
+Besides that Johan fixed a wrong bit set in the Inquiry code, Vishal Agarwal
+added a EIR fix and finally we have support for one more usb id.  Finally
+Johan and I fixed a regression that was preventing bluetooth keyboard to wo=
+rk.
+
+Please pull or let me know of any problems!
+
+	Gustavo
+
+---
+
+The following changes since commit 985140369be1e886754d8ac0375dd64e4f727311:
+
+  Add Foxconn / Hon Hai IDs for btusb module (2012-04-24 11:38:41 -0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for=
+-upstream
+
+for you to fetch changes up to fbcb6a061652b38257a1d8bcf6ebd70fc1771549:
+
+  Bluetooth: mgmt: Fix device_connected sending order (2012-05-07 20:56:30 =
++0300)
+
+----------------------------------------------------------------
+Gustavo Padovan (2):
+      Bluetooth: notify userspace of security level change
+      Bluetooth: report the right security level in getsockopt
+
+Johan Hedberg (2):
+      Bluetooth: Fix Inquiry with RSSI event mask
+      Bluetooth: mgmt: Fix device_connected sending order
+
+Mat Martineau (3):
+      Bluetooth: Fix a redundant and problematic incoming MTU check
+      Bluetooth: Restore locking semantics when looking up L2CAP channels
+      Bluetooth: Lock the L2CAP channel when sending
+
+Michael Gruetzner (1):
+      bluetooth: Add support for Foxconn/Hon Hai AR5BBU22 0489:E03C
+
+Vishal Agarwal (1):
+      Bluetooth: Fix EIR data generation for mgmt_device_found
+
+ drivers/bluetooth/ath3k.c         |    6 ++++++
+ drivers/bluetooth/btusb.c         |    3 +++
+ include/net/bluetooth/bluetooth.h |    3 +--
+ include/net/bluetooth/hci_core.h  |   17 +++++++++++++++++
+ net/bluetooth/af_bluetooth.c      |    2 +-
+ net/bluetooth/hci_core.c          |    8 ++++++++
+ net/bluetooth/hci_event.c         |   17 +++++++++++++----
+ net/bluetooth/l2cap_core.c        |   35 ++++++++-------------------------=
+--
+ net/bluetooth/l2cap_sock.c        |   39 +++++++++++++++++++++++++--------=
+------
+ 9 files changed, 82 insertions(+), 48 deletions(-)
+
+--lCAWRPmW1mITcIfM
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPqMZKAAoJEPs3PUX4s20owrEP/3fRjmR3d8E5nEzJUMg+LHtN
+t6vbBpi61YN6pb7cJMCWTTfKrMO58qWt2BhMe7SymoTjoxq5Z2g2j2T9cv0MVbUy
+/hokx/GN9c/lKyBUt90sbxOTOW/whnJhuv1T9G6KmVseewNDciEZugNFNlnPlI7Z
+gLZogCR15v9B/H4iA4B4baJuMEon3+A9U1wKPACRFwZYf1QGvwyiwbiYxmdgZudx
+WDcdTe9zCDfiwibStcv1/DzOo3peTHHxSnURlbs3R80DwPS3SDBN3e8xOIF155gl
+ltbXUOgicPyWRYcpbeJHlyI0ueEJTydWU9tNTDSPFImW0sO68UJVx9EeNcFi+Zzk
+BGOIP9hd3HqMD3ULoeWZpcckTNeGZfDQzb+NEF11+jdihRpUT3DPSVN3Ofj8vVrq
+6LuSYucZ6jWUrOv5S76slnlQp61KkyuLnHnD1R4zDpBZsqN+6calr+HCqaea3uYk
+zza6HAdkXM4gstXBX1HqA2qiYAYH8I0aBQOm0mM02PJJLCQD+akfqqAQulS/9gqj
+UFFS8lY0xJFEXOcBIEMEAxf6htIwHe8JqxUhH3kwzZV9xBDMhu7f3ZNzQ7i80N2i
+B6P2RtdIW56LFMMd5ufwisyu4FjWvobCBnqVyx02W40Qf7nGYtfZi1RcYnAYfH5b
+k6yYm2BvaDPoxoLIfQu2
+=tEYg
+-----END PGP SIGNATURE-----
+
+--lCAWRPmW1mITcIfM--
