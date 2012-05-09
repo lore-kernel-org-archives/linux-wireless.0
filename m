@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:65125 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755822Ab2EHSj1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36090 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752521Ab2EICy6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 14:39:27 -0400
-Received: by bkcji2 with SMTP id ji2so4903813bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 11:39:26 -0700 (PDT)
+	Tue, 8 May 2012 22:54:58 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1SRx3J-0002Cu-Dg
+	for linux-wireless@vger.kernel.org; Tue, 08 May 2012 22:54:57 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id q492q9eZ018663
+	for <linux-wireless@vger.kernel.org>; Tue, 8 May 2012 22:52:09 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id q492q9uE018662
+	for linux-wireless@vger.kernel.org; Tue, 8 May 2012 22:52:09 -0400
+Date: Tue, 8 May 2012 22:52:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: wireless-next rebased from 94c514fe
+Message-ID: <20120509025208.GA15753@tuxdriver.com> (sfid-20120509_045502_172223_FC907AD3)
+References: <20120509024300.GC2533@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFED-jk73hMn-ryTPgP4tpowZEXa1SL4XWbjrX43mpR7kQ0CKA@mail.gmail.com>
-References: <1319350901-31178-1-git-send-email-arik@wizery.com>
- <4EA7DA0F.7050603@sipsolutions.net> <CA+XVXff+4SLy6y2xbDONDOg_j9CNYd1rkLgtdvHEKpprBW5zog@mail.gmail.com>
- <CAFED-jku-zGtTvYwGpwCastRJZAfQf9uyJAeqtevGVRn22Qygg@mail.gmail.com>
- <1336392314.4325.26.camel@jlt3.sipsolutions.net> <CA+XVXfdHiCMo6Ro1BVRen1qbFQAhd0cGKWk2ZSsFeHG01eZxig@mail.gmail.com>
- <CAFED-jk73hMn-ryTPgP4tpowZEXa1SL4XWbjrX43mpR7kQ0CKA@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 8 May 2012 21:39:10 +0300
-Message-ID: <CA+XVXfd3BYOik5d=F_pOEXOwo7wG_LMkj6bEsWe9Hha-dYLRXA@mail.gmail.com> (sfid-20120508_203939_808794_C4958435)
-Subject: Re: [PATCH] mac80211: support adding IV-room in the skb for CCMP keys
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120509024300.GC2533@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 8, 2012 at 12:23 PM, Janusz Dziedzic
-<janusz.dziedzic@gmail.com> wrote:
->
-> Patch proposal:
-> Verified with cw1200 + WEP, TKIP, CCMP.
-> As I understand correctly selection (PUT_IV_SPACE flag) will be done
-> in set_key() driver callback, so driver could select if need this
-> based on cipher param.
+On Tue, May 08, 2012 at 10:43:01PM -0400, John W. Linville wrote:
 
-You're right of course. The flag is harmless if we don't it in the
-appropriate key_conf->flags. Patch looks good to me.
+> Regrettably, I found it necessary to rebase the wireless-next tree
+> starting from commit 94c514fe.  If you maintain a tree derived from
+> wireless-next then you may need to adjust your tree accordingly.
+> 
+> I apologize for the inconvenience!
 
-Arik
+I should note that I pulled back from net-next into wireless-next as
+part of this process.  This was necessary to resolve some continuing
+merge issues related to the NLA_PUT_* removal.  This also means that
+net-next bits have made their way into wireless-testing much earlier
+than they usually would have done so.
+
+Again, I apologize for the inconvenience and/or confusion that this
+might cause.  Please bear through this with me.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
