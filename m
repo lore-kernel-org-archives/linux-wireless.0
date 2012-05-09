@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:60818 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933285Ab2EOU2G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 16:28:06 -0400
-Received: by gglu4 with SMTP id u4so10281ggl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 13:28:05 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52169 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932494Ab2EIWRs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 18:17:48 -0400
+Message-ID: <4FAAED03.4090008@hauke-m.de> (sfid-20120510_001752_853655_866922E3)
+Date: Thu, 10 May 2012 00:17:39 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Date: Tue, 15 May 2012 13:28:04 -0700
-Message-ID: <CAOcc+SB7Tr_AAAB4aQK_-8MWhKo7NQuap65FLd8omuou6XFctQ@mail.gmail.com> (sfid-20120515_222811_880072_F35515FE)
-Subject: Significant amount of packet loss observed after creating second
- virtual interface on ath9k
-From: Chih-Chieh Chou <ccchou@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Hauke Mehrtens <hauke@hauke-m.de>, zajec5@gmail.com
+CC: linville@tuxdriver.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, arend@broadcom.com
+Subject: Re: [PATCH 0/4] bcma: add PCI functions from brcmsmac
+References: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+On 04/29/2012 02:18 AM, Hauke Mehrtens wrote:
+> This patch series contains the functions regarding the PCIe core from 
+> brcmsmac for the supported PCIe core revisions.
+> 
+> Some of these functions have to be called on resume after suspend, but 
+> I do not know which or if all have to be called. I do not have a PCIe 
+> based device supported by brcmsmac, so I can not test this. Could 
+> someone which such a device do some tests and create a patch with the 
+> functions, which have to be called on resume.
+> 
+> The goal of theses patches is to remove the PCIe code from brcmsmac to 
+> get one step ahead in making brcmsmac support non pcie based devices.
+> 
+> This is based on wireless-testing/master.
+> 
+> Hauke Mehrtens (4):
+>   bcma: implement setting core clock mode to dynamic
+>   bcma: add bcma_core_pci_extend_L1timer
+>   bcma: add bcma_core_pci_fixcfg()
+>   bcma: add bcma_core_pci_config_fixup()
+> 
+>  drivers/bcma/core.c                  |    2 +-
+>  drivers/bcma/driver_pci.c            |   53 ++++++++++++++++++++++++++++++++--
+>  include/linux/bcma/bcma_driver_pci.h |   11 +++++++
+>  3 files changed, 63 insertions(+), 3 deletions(-)
+> 
 
-  I ran into a weird issue that I couldn't find any answers on the
-Internet. My aim is to setup a wireless hotspot, sharing my existing
-internet connection on the same single wireless interface card. The
-following shows the step of doing it.
+Hi Rafał,
 
-    iw phy phy0 interface add wlan1 type __ap
-    iw phy phy0 interface add wlan2 type station
+could you give me an ack or a nack about this patch series and the other
+(ssb/bcma/bcm47xx: extend boardinfo and sprom).
 
-    ifconfig wlan1 hw ether 52:54:00:11:22:33
-    ifconfig wlan1 192.168.77.1 netmask 255.255.255.0 up
+I have tested them with b43 and brcmsmac on bcma and ssb based SoCs
+(bcm4718 + bcm43224, bcm4705 + 2x bcm4322, bcm4704 + bcm4318)  and have
+not found any problems.
 
-    dnsmasq -C dnsmasq.conf    # start dnsmasq
-    hostapd -d hostapd.conf -B   # start hostapd
-    wpa_supplicant -i wlan2 -c wpa_supplicant.conf -B
-
-    echo 1 > /proc/sys/net/ipv4/ip_forward
-    # NAT rules
-    iptables --table nat --append POSTROUTING --out-interface new0 -j MASQUERADE
-
-  When I use a laptop connecting to the network broadcast by the
-hotspot, there's no problem with it. I got an IP address assigned and
-can ping the access point, here 192.168.77.1. However, I observed
-significant amount of packet loss during pinging (I used ping -t
-192.168.77.1). I also found that if I create only one virtual
-interface on ath9k, it works pretty well (no packet loss from ping).
-If I create one more virtual interface, there's about 10% packet loss
-and 40% packet loss right after starting wpa_supplicant. Could anyone
-have good insight to this issue?
-
-Thanks and Best Regards,
-C.C
+Hauke
