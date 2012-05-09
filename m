@@ -1,40 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17374 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402Ab2EZDZT (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:58114 "HELO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756670Ab2EIBc7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 23:25:19 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20416.19680.571601.549629@gargle.gargle.HOWL> (sfid-20120526_052554_530852_F8139138)
-Date: Sat, 26 May 2012 08:54:16 +0530
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Anyone doing WiFi throughput tests?
-In-Reply-To: <4FC04B5A.1070900@candelatech.com>
-References: <4FC04B5A.1070900@candelatech.com>
+	Tue, 8 May 2012 21:32:59 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 04/18] mwifiex: multi-interface support for mwifiex
+Date: Tue,  8 May 2012 18:30:16 -0700
+Message-Id: <1336527030-2045-5-git-send-email-bzhao@marvell.com> (sfid-20120509_033304_362445_F517341D)
+In-Reply-To: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
+References: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> We've been doing some tests using Atheros stations and various APs.  The max throughput
-> we've seen so far is about 237Mbps (received UDP payload on the stations).
-> (Open-Air, AP about 5 feet away, 3x3 MIMO, HT40, 5Ghz, etc).
-> 
-> We are still running lots of different permutations, but I am interested if
-> anyone else has any numbers to share (official or otherwise).
+From: Avinash Patil <patila@marvell.com>
 
-Which card/chip ?
+mwifiex supports STA and AP interfaces which use same phy.
+Indicate this to cfg80211.
 
-With a XB112 card (3x3) in HT40 mode, 5Ghz, TX throughput (TCP) can reach 290 Mbps.
-Sample iperf run:
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-[  3] 28.0-29.0 sec  34.1 MBytes   286 Mbits/sec
-[  3] 29.0-30.0 sec  34.6 MBytes   290 Mbits/sec
-[  3] 30.0-31.0 sec  34.8 MBytes   292 Mbits/sec
-[  3] 31.0-32.0 sec  34.8 MBytes   292 Mbits/sec
-[  3] 32.0-33.0 sec  34.9 MBytes   293 Mbits/sec
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 38d5191..4532393 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -20,6 +20,23 @@
+ #include "cfg80211.h"
+ #include "main.h"
+ 
++static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
++	{
++		.max = 1, .types = BIT(NL80211_IFTYPE_STATION),
++	},
++	{
++		.max = 1, .types = BIT(NL80211_IFTYPE_AP),
++	},
++};
++
++static const struct ieee80211_iface_combination mwifiex_iface_comb_ap_sta = {
++	.limits = mwifiex_ap_sta_limits,
++	.num_different_channels = 1,
++	.n_limits = ARRAY_SIZE(mwifiex_ap_sta_limits),
++	.max_interfaces = MWIFIEX_MAX_BSS_NUM,
++	.beacon_int_infra_match = true,
++};
++
+ /*
+  * This function maps the nl802.11 channel type into driver channel type.
+  *
+@@ -1505,6 +1522,9 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	else
+ 		wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
+ 
++	wiphy->iface_combinations = &mwifiex_iface_comb_ap_sta;
++	wiphy->n_iface_combinations = 1;
++
+ 	/* Initialize cipher suits */
+ 	wiphy->cipher_suites = mwifiex_cipher_suites;
+ 	wiphy->n_cipher_suites = ARRAY_SIZE(mwifiex_cipher_suites);
+-- 
+1.7.0.2
 
-Sujith
