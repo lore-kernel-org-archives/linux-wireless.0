@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:49722 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751009Ab2EXGjM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 02:39:12 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: allow setting default U-APSD queues/max_sp_len for STA
-References: <1337760813-27055-1-git-send-email-arik@wizery.com>
-	<87wr436utp.fsf@purkki.adurom.net>
-	<CA+XVXfeju02Ou=jZ=eyq+0e4Rm1-5=b6-m8bMyZ8kAWO6F-sXQ@mail.gmail.com>
-	<87mx4z6u4n.fsf@purkki.adurom.net>
-	<CA+XVXfc3R8CrMfercPpRfYGjvKDdDkwJax+oLiaMrQQPwLCc0Q@mail.gmail.com>
-	<87ipfn6koz.fsf@purkki.adurom.net>
-	<CA+XVXfcZAE0Drbn_JTBt1p0GAaFrsxZfHNE1Syp=1G=PNsvkbQ@mail.gmail.com>
-	<87ehqa6u2d.fsf@purkki.adurom.net>
-	<CA+XVXffb3tZ2_kWwx0wBWUac-y0BPTT_KBJ5yhxNjPVp4U7HGw@mail.gmail.com>
-	<CAFED-jmwuA2f3joC-V_cf7RACMraR3sLH2pF5e+8b8cka0ovZA@mail.gmail.com>
-Date: Thu, 24 May 2012 09:39:11 +0300
-In-Reply-To: <CAFED-jmwuA2f3joC-V_cf7RACMraR3sLH2pF5e+8b8cka0ovZA@mail.gmail.com>
-	(Janusz Dziedzic's message of "Thu, 24 May 2012 08:05:41 +0200")
-Message-ID: <8762bm6q28.fsf@purkki.adurom.net> (sfid-20120524_083914_616295_5C00AF36)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:50343 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630Ab2EIJur (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 05:50:47 -0400
+Message-ID: <1336557043.4323.15.camel@jlt3.sipsolutions.net> (sfid-20120509_115121_807895_E469EBA6)
+Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Wed, 09 May 2012 11:50:43 +0200
+In-Reply-To: <4FAA3BD2.9070203@tieto.com>
+References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>
+	  (sfid-20120427_002914_313709_1CC9F96D) <1336554945.4323.12.camel@jlt3.sipsolutions.net>
+	 <4FAA3BD2.9070203@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@gmail.com> writes:
+On Wed, 2012-05-09 at 11:41 +0200, Michal Kazior wrote:
+> Johannes Berg wrote:
 
-> 2012/5/24 Arik Nemtsov <arik@wizery.com>:
->
->> Maybe you can offer a better solution?
->>
->
-> I am not sure this is better.
-> We do this litte bit different.
-> So disable all ACs by default in mac80211.
->
-> Next we are using wpa_supplicant:
-> p2p_set client_apsd - and pass required params via nl80211 to mac80211.
-> So, we could decide which ACs set.
-> Reassoc from supplicat is required after that.
+> > I don't think this patch is correct -- mac80211 will get updated even if
+> > the device isn't even started which will likely cause trouble. Even if
+> > not though, this all doesn't match any kind of multi-channel concept. We
+> > treat the channel as part of the temporary setup, e.g. part of the
+> > association. AP and mesh are the only ones that are different today I
+> > think.
+> 
+> What about monitor mode?
 
-I was also thinking of something similar:
+It's ... special and confusing, unfortunately.
+Basically, it's handled in mac80211 today, it rejects monitor channel
+setting unless it's otherwise idle, and overrides it freely if other
+requests come in.
 
-Be concervative in mac80211 and only enable U-APSD for VO, just like
-Arik was planning to do only for wl12xx. And then add a userspace
-interface for making it possible to control this and enable/disable
-classes individually.
 
-Or do we already have a user space interface for that?
+> > We should do the same for AP mode as well, since the channel really
+> > becomes relevant only upon start_ap(), before that there's no real
+> > concept of a channel since you don't use it yet anyway.
+> 
+> Maybe we should do the same with monitor interface type, i.e. introduce 
+> start_monitor() and have it pass the channel.
 
--- 
-Kalle Valo
+No, that's the special case that doesn't work that way -- monitor mode
+interfaces are also great for debugging when they're just concurrently
+running with other interfaces and don't have their own channel setting.
+
+> But then I'm thinking we shouldn't really be changing interface types 
+> explicitly, since they would be set implicitly by start_ap() and such. 
+> We could then use the NL80211_IFTYPE_UNSPECIFIED when we're not associated.
+
+>From some point of view, it should work that way, yes.
+
+Given how entrenched interface types are we definitely can't get rid of
+them though, and they're still needed to do concurrency management etc.
+But changing everything to have explicit start/stop operations makes
+on-the-fly interface type changes much easier.
+
+johannes
+
