@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:19269 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751865Ab2EMRnl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2012 13:43:41 -0400
-Date: Sun, 13 May 2012 20:43:33 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: arend@broadcom.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: net: wireless: add brcm80211 drivers
-Message-ID: <20120513174333.GB4280@elgon.mountain> (sfid-20120513_194344_849388_ED62FB9E)
+Received: from ebb05.tieto.com ([131.207.168.36]:57356 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752663Ab2EIKQT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 06:16:19 -0400
+Message-ID: <4FAA43F0.6050401@tieto.com> (sfid-20120509_121623_489268_1658A785)
+Date: Wed, 9 May 2012 12:16:16 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Thomas Pedersen <thomas@cozybit.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
+References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>   (sfid-20120427_002914_313709_1CC9F96D) <1336554945.4323.12.camel@jlt3.sipsolutions.net>  <4FAA3BD2.9070203@tieto.com> <1336557043.4323.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1336557043.4323.15.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Johannes Berg wrote:
+>>> We should do the same for AP mode as well, since the channel really
+>>> becomes relevant only upon start_ap(), before that there's no real
+>>> concept of a channel since you don't use it yet anyway.
+>>
+>> Maybe we should do the same with monitor interface type, i.e. introduce
+>> start_monitor() and have it pass the channel.
+>
+> No, that's the special case that doesn't work that way -- monitor mode
+> interfaces are also great for debugging when they're just concurrently
+> running with other interfaces and don't have their own channel setting.
 
-This code is not really new, but I thought I would email you anyway
-because I know you are responsive.  :)
+We can make monitor interface to be a slave to other non-monitor 
+interface by passing an extra parameter in start_monitor(). We could 
+then have such a monitor interface follow channel changes of a given 
+non-monitor interface (or rather it wouldn't be using a channel on it's 
+own).
 
-The patch 5b435de0d786: "net: wireless: add brcm80211 drivers" from 
-Oct 5, 2011, leads to the following Smatch complaint:
 
-drivers/net/wireless/brcm80211/brcmsmac/ampdu.c:741 brcms_c_sendampdu()
-	 warn: variable dereferenced before check 'p' (see line 739)
+>> But then I'm thinking we shouldn't really be changing interface types
+>> explicitly, since they would be set implicitly by start_ap() and such.
+>> We could then use the NL80211_IFTYPE_UNSPECIFIED when we're not associated.
+>
+>  From some point of view, it should work that way, yes.
+>
+> Given how entrenched interface types are we definitely can't get rid of
+> them though, and they're still needed to do concurrency management etc.
 
-drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-   733                  /*
-   734                   * check to see if the next pkt is
-   735                   * a candidate for aggregation
-   736                   */
-   737                  p = pktq_ppeek(&qi->q, prec);
-   738			/* tx_info must be checked with current p */
-   739			tx_info = IEEE80211_SKB_CB(p);
-                                  ^^^^^^^^^^^^^^^^
-"p" is dereferenced inside the call to IEEE80211_SKB_CB().
+Well, I don't think we can get completely rid of them, too. Or do you 
+mean something else?
 
-   740	
-   741			if (p) {
-                           ^^^
-Checked too late.
 
-   742				if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
-   743				    ((u8) (p->priority) == tid)) {
-
-regards,
-dan carpenter
-
+-- 
+Pozdrawiam / Best regards, Michal Kazior.
