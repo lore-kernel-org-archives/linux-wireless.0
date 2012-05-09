@@ -1,82 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47156 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727Ab2EXEDK (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:32933 "HELO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756417Ab2EIBdq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 00:03:10 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45758.748897.392749@gargle.gargle.HOWL> (sfid-20120524_060338_903966_664C45A8)
-Date: Thu, 24 May 2012 09:32:06 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 03/22] ath9k: Setup MCI interrupts properly
+	Tue, 8 May 2012 21:33:46 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 10/18] mwifiex: handle interface type changes correctly
+Date: Tue,  8 May 2012 18:30:22 -0700
+Message-Id: <1336527030-2045-11-git-send-email-bzhao@marvell.com> (sfid-20120509_035905_330429_8A1F5312)
+In-Reply-To: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
+References: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MCI interrupts have to be enabled only when BTCOEX is
-actually in use.
+From: Avinash Patil <patila@marvell.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+mlan0: managed or ibss
+The iftype can be changed from STATION to ADHOC, and vice versa.
+
+uap0: AP only
+The iftype cannot be changed.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    3 +--
- drivers/net/wireless/ath/ath9k/mci.c  |   11 +++++++++++
- drivers/net/wireless/ath/ath9k/mci.h  |   11 ++++++++++-
- 3 files changed, 22 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |   64 ++++++++++++++++++++++---------
+ 1 files changed, 46 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index dfa78e8..3f79923 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1044,8 +1044,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
- 		ah->imask |= ATH9K_INT_CST;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index f3465fc..a8fa5cb 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -497,31 +497,59 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 	int ret;
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
  
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
--		ah->imask |= ATH9K_INT_MCI;
-+	ath_mci_enable(sc);
+-	if (priv->bss_mode == type) {
+-		wiphy_warn(wiphy, "already set to required type\n");
+-		return 0;
+-	}
+-
+-	priv->bss_mode = type;
+-
+-	switch (type) {
++	switch (dev->ieee80211_ptr->iftype) {
+ 	case NL80211_IFTYPE_ADHOC:
+-		dev->ieee80211_ptr->iftype = NL80211_IFTYPE_ADHOC;
+-		wiphy_dbg(wiphy, "info: setting interface type to adhoc\n");
++		switch (type) {
++		case NL80211_IFTYPE_STATION:
++			break;
++		case NL80211_IFTYPE_UNSPECIFIED:
++			wiphy_warn(wiphy, "%s: kept type as IBSS\n", dev->name);
++		case NL80211_IFTYPE_ADHOC:	/* This shouldn't happen */
++			return 0;
++		case NL80211_IFTYPE_AP:
++		default:
++			wiphy_err(wiphy, "%s: changing to %d not supported\n",
++				  dev->name, type);
++			return -EOPNOTSUPP;
++		}
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+-		dev->ieee80211_ptr->iftype = NL80211_IFTYPE_STATION;
+-		wiphy_dbg(wiphy, "info: setting interface type to managed\n");
++		switch (type) {
++		case NL80211_IFTYPE_ADHOC:
++			break;
++		case NL80211_IFTYPE_UNSPECIFIED:
++			wiphy_warn(wiphy, "%s: kept type as STA\n", dev->name);
++		case NL80211_IFTYPE_STATION:	/* This shouldn't happen */
++			return 0;
++		case NL80211_IFTYPE_AP:
++		default:
++			wiphy_err(wiphy, "%s: changing to %d not supported\n",
++				  dev->name, type);
++			return -EOPNOTSUPP;
++		}
++		break;
++	case NL80211_IFTYPE_AP:
++		switch (type) {
++		case NL80211_IFTYPE_UNSPECIFIED:
++			wiphy_warn(wiphy, "%s: kept type as AP\n", dev->name);
++		case NL80211_IFTYPE_AP:		/* This shouldn't happen */
++			return 0;
++		case NL80211_IFTYPE_ADHOC:
++		case NL80211_IFTYPE_STATION:
++		default:
++			wiphy_err(wiphy, "%s: changing to %d not supported\n",
++				  dev->name, type);
++			return -EOPNOTSUPP;
++		}
+ 		break;
+-	case NL80211_IFTYPE_UNSPECIFIED:
+-		dev->ieee80211_ptr->iftype = NL80211_IFTYPE_STATION;
+-		wiphy_dbg(wiphy, "info: setting interface type to auto\n");
+-		return 0;
+ 	default:
+-		wiphy_err(wiphy, "unknown interface type: %d\n", type);
+-		return -EINVAL;
++		wiphy_err(wiphy, "%s: unknown iftype: %d\n",
++			  dev->name, dev->ieee80211_ptr->iftype);
++		return -EOPNOTSUPP;
+ 	}
  
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 	sc->sc_ah->is_monitoring = false;
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 29fe52d..7b553f6 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -538,3 +538,14 @@ void ath_mci_intr(struct ath_softc *sc)
- 		mci_int &= ~(AR_MCI_INTERRUPT_RX_INVALID_HDR |
- 			     AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT);
- }
-+
-+void ath_mci_enable(struct ath_softc *sc)
-+{
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	if (!common->btcoex_enabled)
-+		return;
-+
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+		sc->sc_ah->imask |= ATH9K_INT_MCI;
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index c841444..fc14eea 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -130,4 +130,13 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci);
- int ath_mci_setup(struct ath_softc *sc);
- void ath_mci_cleanup(struct ath_softc *sc);
- void ath_mci_intr(struct ath_softc *sc);
--#endif
-+
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+void ath_mci_enable(struct ath_softc *sc);
-+#else
-+static inline void ath_mci_enable(struct ath_softc *sc)
-+{
-+}
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
-+
-+#endif /* MCI_H*/
++	dev->ieee80211_ptr->iftype = type;
++	priv->bss_mode = type;
+ 	mwifiex_deauthenticate(priv, NULL);
+ 
+ 	priv->sec_info.authentication_mode = NL80211_AUTHTYPE_OPEN_SYSTEM;
 -- 
-1.7.10.2
+1.7.0.2
 
