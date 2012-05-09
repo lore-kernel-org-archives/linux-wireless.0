@@ -1,38 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39002 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758492Ab2ECTgg (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:52598 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755761Ab2EIQdB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 15:36:36 -0400
-Message-ID: <1336073794.5167.15.camel@jlt3.sipsolutions.net> (sfid-20120503_213643_382368_FEA2B261)
-Subject: Re: [PATCH v2 1/4] mac80211: Advertise HT protection mode in IEs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org
-Date: Thu, 03 May 2012 21:36:34 +0200
-In-Reply-To: <1335820832-18887-1-git-send-email-ashok@cozybit.com> (sfid-20120430_232127_377222_6BE61350)
-References: <1335820832-18887-1-git-send-email-ashok@cozybit.com>
-	 (sfid-20120430_232127_377222_6BE61350)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 9 May 2012 12:33:01 -0400
+Received: by vbbff1 with SMTP id ff1so463274vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 09:33:00 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 9 May 2012 12:33:00 -0400
+Message-ID: <CABF+-6UWRy+KZMOFo12z3n7hPjWH-mUN203nQq_0rNb1Yjj7dg@mail.gmail.com> (sfid-20120509_183307_249290_38873003)
+Subject: [PATCHv2 12/21] cw1200: sta.*, mac80211 STA callbacks.
+From: Kevin Groeneveld <kgroeneveld@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-04-30 at 14:20 -0700, Ashok Nagarajan wrote:
+Hi Dmitry,
 
->  		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
-> -						 chan, channel_type);
-> +						 chan, channel_type, 0);
+>+			priv->conf_listen_interval =
+>+				(*((u16 *)pElement->data+1) >> 7) & 0x1F;
 
-> -	/*
-> -	 * Note: According to 802.11n-2009 9.13.3.1, HT Protection field and
-> -	 * RIFS Mode are reserved in IBSS mode, therefore keep them at 0
-> -	 */
-> -	ht_oper->operation_mode = 0x0000;
-> +	ht_oper->operation_mode = cpu_to_le16(prot_mode);
+The above code in the cw1200_parse_SDD_file function does not appear
+to take into account the endianess of the host.  Is this a problem?
 
-Please move the comment to the now correct place instead of deleting it.
 
-johannes
+Best regards,
 
+Kevin
