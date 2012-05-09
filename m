@@ -1,169 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog105.obsmtp.com ([207.126.144.119]:50659 "EHLO
-	eu1sys200aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755502Ab2EVHiB (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:40298 "HELO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757795Ab2EIBdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 03:38:01 -0400
-From: Amit Shakya <amit.shakya@stericsson.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Amit Shakya <amit.shakya@stericsson.com>
-Subject: [PATCH v1] mac80211: Handle race condition in replay handling
-Date: Tue, 22 May 2012 13:07:19 +0530
-Message-ID: <1337672239-27902-1-git-send-email-amit.shakya@stericsson.com> (sfid-20120522_093809_042355_68F18523)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 8 May 2012 21:33:50 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 15/18] mwifiex: rearrange AP sys configure code
+Date: Tue,  8 May 2012 18:30:27 -0700
+Message-Id: <1336527030-2045-16-git-send-email-bzhao@marvell.com> (sfid-20120509_035905_435086_2264C9EA)
+In-Reply-To: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
+References: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added fix for the issue where the Rx throughput use to get stuck,
-with unicast key rotation feature enabled in the Cisco AP. In
-this architecture, packet decryption is done at FW and reordering
-and replay detection is done by MAC.
+From: Avinash Patil <patila@marvell.com>
 
-The issue is that due to race condition during EAPOL key
-handshake and packet reception, the PN gets reset at MAC, while
-it still receives previous PN range packets for a while.
+This patch takes into account AP config_type
+(bss config/custom ie config) while preparing AP
+sys_configure command buffer.
 
-The race condition is due to delay, when the EAPOL is received by
-supplicant till new key applied (PN reset at MAC) at FW. During
-this period, due to ongoing high throughput, some packets are
-received, which are decrypted by FW with old key and had been
-handed over to host driver but not yet delivered to MAC or are
-in transit from FW to the host driver to be finally delivered to
-MAC. They have been decrypted successfully by the FW using the
-old key during this phase but not yet received by MAC.
-
-In this race condition scenario, MAC's __ieee80211_key_replace
-function is invoked to apply the new keys. It replaces the key
-entry in sta->ptk to the new key entry (PN reset to 0). Note,
-the sta is connected all this while and just the PTK is renewed.
-However due to race condition mentioned earlier, it is still
-receiving old PN packets from driver. At this point of time on
-receiving old PN packets, ieee80211_rx_h_decrypt will just
-dereference the new key entry from rx->sta->ptk and store it
-in rx->key.
-
-Refer code
-	if (rx->sta)
-		sta_ptk = rcu_dereference(rx->sta->ptk);
-
-...
-	if (!is_multicast_ether_addr(hdr->addr1) && sta_ptk) {
-		rx->key = sta_ptk;
-
-
-Now within ieee80211_crypto_ccmp_decrypt function, this key is
-dereferenced and used for key replay detection as well as the
-received PN is also updated in it.
-
-Refer code
- 	memcpy(key->u.ccmp.rx_pn[queue], pn, CCMP_PN_LEN);
-
-This triggers the issue wherein the PN gets updated with the
-old PN.
-
-As a result, when this change in sequence number happens, the
-replay detection handling in MAC gets triggered, causing the
-traffic to stops for some while till PN re-match, with the
-one last updated at MAC.
-
-The fix takes care of selectively updating the Rx PN during
-this transition phase.
-
-Signed-off-by: Amit Shakya <amit.shakya@stericsson.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/mac80211/key.c |    9 +++++++++
- net/mac80211/key.h |    1 +
- net/mac80211/wpa.c |   35 ++++++++++++++++++++++++++++++++++-
- 3 files changed, 44 insertions(+), 1 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |    5 +-
+ drivers/net/wireless/mwifiex/fw.h       |    2 +
+ drivers/net/wireless/mwifiex/uap_cmd.c  |   62 +++++++++++++++++++++---------
+ 3 files changed, 48 insertions(+), 21 deletions(-)
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 5bb600d..461bb7c 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -278,6 +278,15 @@ static void __ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		list_add_tail(&new->list, &sdata->key_list);
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 6c34321..d305b37 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -502,7 +502,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 			ret = mwifiex_send_cmd_async(priv,
+ 						     HostCmd_CMD_UAP_SYS_CONFIG,
+ 						     HostCmd_ACT_GEN_SET,
+-						     0, bss_cfg);
++						     UAP_BSS_PARAMS_I, bss_cfg);
  
- 	if (sta && pairwise) {
-+		if (old && new &&
-+			(new->conf.cipher == WLAN_CIPHER_SUITE_CCMP)) {
-+			int i;
-+			for (i = 0; i < NUM_RX_DATA_QUEUES + 1; i++) {
-+				memcpy(new->u.ccmp.prev_rx_pn[i],
-+				old->u.ccmp.prev_rx_pn[i], CCMP_PN_LEN);
-+			}
-+		}
-+
- 		rcu_assign_pointer(sta->ptk, new);
- 	} else if (sta) {
- 		if (old)
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index 7d4e31f..e0d9728 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -93,6 +93,7 @@ struct ieee80211_key {
- 			 * Management frames.
- 			 */
- 			u8 rx_pn[NUM_RX_DATA_QUEUES + 1][CCMP_PN_LEN];
-+			u8 prev_rx_pn[NUM_RX_DATA_QUEUES + 1][CCMP_PN_LEN];
- 			struct crypto_cipher *tfm;
- 			u32 replays; /* dot11RSNAStatsCCMPReplays */
- 		} ccmp;
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 0ae23c6..e1c3612 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -482,6 +482,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- 	u8 pn[CCMP_PN_LEN];
- 	int data_len;
- 	int queue;
-+	static const u8 zero_pn[6] = {0};
+ 			kfree(bss_cfg);
  
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
-@@ -523,7 +524,39 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
- 			return RX_DROP_UNUSABLE;
+@@ -983,7 +983,8 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
  	}
  
--	memcpy(key->u.ccmp.rx_pn[queue], pn, CCMP_PN_LEN);
-+	/* As long as u.ccmp.rx_pn and u.ccmp.prev_rx_pn are equal, no
-+	race condition induced.
-+	It is seen that with Cisco AP and with PTK re-negotiation feature
-+	enabled on Cisco to do key-negotiaton periodically, even after the
-+	RX PN is reset by the supplicant, at MAC, we still keep getting
-+	previous RX PN packets.
-+	This is due to race condition when this feature is enabled with
-+	throughput test and is introduced because of the combination of
-+	different TIDs used for data and EAPOL packets and aggregation.
-+	The RX PN gets reset to lower value after a while and at that time
-+	the RX PN value becomes lower then the maintained current PN at MAC.
-+	As a result, the replay detection code chips in and starts dropping all
-+	packets till the PN re-match. This causes throughput to stall
-+	intermittently for the duration till RX PN match with current PN.
-+	So to take care of this we maintain u.ccmp.prev_rx_pn, which doesn't get
-+	reset when new PTK is plumbed by supplicant and use it for detecting
-+	this transition i.e. from higher PN to lower PN and once this situation
-+	happens start updating u.ccmp.rx_pn and thereafter u.ccmp.rx_pn and
-+	u.ccmp.prev_rx_pn should be same. In normal scenario, i.e. no new key
-+	plumbed both counters should be same. */
-+	if ((memcmp(key->u.ccmp.prev_rx_pn[queue],
-+		key->u.ccmp.rx_pn[queue], CCMP_PN_LEN) == 0) ||
-+		(memcmp(key->u.ccmp.prev_rx_pn[queue], pn, CCMP_PN_LEN) > 0)) {
-+		memcpy(key->u.ccmp.rx_pn[queue], pn, CCMP_PN_LEN);
-+		memcpy(key->u.ccmp.prev_rx_pn[queue], pn, CCMP_PN_LEN);
+ 	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
+-				   HostCmd_ACT_GEN_SET, 0, bss_cfg)) {
++				   HostCmd_ACT_GEN_SET,
++				   UAP_BSS_PARAMS_I, bss_cfg)) {
+ 		wiphy_err(wiphy, "Failed to set the SSID\n");
+ 		kfree(bss_cfg);
+ 		return -1;
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 57fd0ca..4fd7a05 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -93,6 +93,8 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ 
+ #define CAL_SNR(RSSI, NF)		((s16)((s16)(RSSI)-(s16)(NF)))
+ 
++#define UAP_BSS_PARAMS_I			0
++
+ #define TLV_TYPE_UAP_SSID			0x0000
+ 
+ #define PROPRIETARY_TLV_BASE_ID                 0x0100
+diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
+index 0cfe888..e43bcaa 100644
+--- a/drivers/net/wireless/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/mwifiex/uap_cmd.c
+@@ -123,14 +123,12 @@ void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config)
+ 	config->retry_limit = 0x7F;
+ }
+ 
+-/* Parse AP config structure and prepare TLV based command structure
+- * to be sent to FW for uAP configuration
+- */
+-static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
+-				      u16 cmd_action, void *cmd_buf)
++/* This function parses BSS related parameters from structure
++ * and prepares TLVs. These TLVs are appended to command buffer.
++*/
++static int
++mwifiex_uap_bss_param_prepare(u8 *tlv, void *cmd_buf, u16 *param_size)
+ {
+-	u8 *tlv;
+-	struct host_cmd_ds_sys_config *sys_config = &cmd->params.uap_sys_config;
+ 	struct host_cmd_tlv_dtim_period *dtim_period;
+ 	struct host_cmd_tlv_beacon_period *beacon_period;
+ 	struct host_cmd_tlv_ssid *ssid;
+@@ -145,14 +143,7 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
+ 	struct host_cmd_tlv_passphrase *passphrase;
+ 	struct host_cmd_tlv_akmp *tlv_akmp;
+ 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
+-	u16 cmd_size;
+-
+-	cmd->command = cpu_to_le16(HostCmd_CMD_UAP_SYS_CONFIG);
+-	cmd_size = (u16)(sizeof(struct host_cmd_ds_sys_config) + S_DS_GEN);
+-
+-	sys_config->action = cpu_to_le16(cmd_action);
+-
+-	tlv = sys_config->tlv;
++	u16 cmd_size = *param_size;
+ 
+ 	if (bss_cfg->ssid.ssid_len) {
+ 		ssid = (struct host_cmd_tlv_ssid *)tlv;
+@@ -319,7 +310,39 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
+ 		tlv += sizeof(struct host_cmd_tlv_encrypt_protocol);
+ 	}
+ 
+-	cmd->size = cpu_to_le16(cmd_size);
++	*param_size = cmd_size;
++
++	return 0;
++}
++
++/* Parse AP config structure and prepare TLV based command structure
++ * to be sent to FW for uAP configuration
++ */
++static int
++mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd, u16 cmd_action,
++			   u32 type, void *cmd_buf)
++{
++	u8 *tlv;
++	u16 cmd_size, param_size;
++	struct host_cmd_ds_sys_config *sys_cfg;
++
++	cmd->command = cpu_to_le16(HostCmd_CMD_UAP_SYS_CONFIG);
++	cmd_size = (u16)(sizeof(struct host_cmd_ds_sys_config) + S_DS_GEN);
++	sys_cfg = (struct host_cmd_ds_sys_config *)&cmd->params.uap_sys_config;
++	sys_cfg->action = cpu_to_le16(cmd_action);
++	tlv = sys_cfg->tlv;
++
++	switch (type) {
++	case UAP_BSS_PARAMS_I:
++		param_size = cmd_size;
++		if (mwifiex_uap_bss_param_prepare(tlv, cmd_buf, &param_size))
++			return -1;
++		cmd->size = cpu_to_le16(param_size);
++		break;
++	default:
++		return -1;
 +	}
 +
-+	/* If u.ccmp.rx_pn gets reset to zero due to PTK re-negotiaton then
-+	don't update it and just keep updating the u.ccmp.prev_rx_pn.
-+	This is to detect the transition that will happen later i.e. from higher
-+	RX PN to lower RX PN in case of race condition scenario. */
-+	if (memcmp(key->u.ccmp.rx_pn[queue], zero_pn, CCMP_PN_LEN) == 0)
-+		memcpy(key->u.ccmp.prev_rx_pn[queue], pn, CCMP_PN_LEN);
+ 	return 0;
+ }
  
- 	/* Remove CCMP header and MIC */
- 	if (pskb_trim(skb, skb->len - CCMP_MIC_LEN))
+@@ -329,14 +352,14 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
+  * routines based upon the command number.
+  */
+ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
+-			    u16 cmd_action, u32 cmd_oid,
++			    u16 cmd_action, u32 type,
+ 			    void *data_buf, void *cmd_buf)
+ {
+ 	struct host_cmd_ds_command *cmd = cmd_buf;
+ 
+ 	switch (cmd_no) {
+ 	case HostCmd_CMD_UAP_SYS_CONFIG:
+-		if (mwifiex_cmd_uap_sys_config(cmd, cmd_action, data_buf))
++		if (mwifiex_cmd_uap_sys_config(cmd, cmd_action, type, data_buf))
+ 			return -1;
+ 		break;
+ 	case HostCmd_CMD_UAP_BSS_START:
+@@ -371,7 +394,8 @@ int mwifiex_uap_set_channel(struct mwifiex_private *priv, int channel)
+ 	bss_cfg->channel = channel;
+ 
+ 	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_UAP_SYS_CONFIG,
+-				   HostCmd_ACT_GEN_SET, 0, bss_cfg)) {
++				   HostCmd_ACT_GEN_SET,
++				   UAP_BSS_PARAMS_I, bss_cfg)) {
+ 		wiphy_err(wiphy, "Failed to set the uAP channel\n");
+ 		kfree(bss_cfg);
+ 		return -1;
 -- 
-1.7.0.4
+1.7.0.2
 
