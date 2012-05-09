@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:64947 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754714Ab2EaSWj (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36052 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752373Ab2EICqU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 14:22:39 -0400
-Received: by eeit10 with SMTP id t10so583009eei.19
-        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 11:22:38 -0700 (PDT)
-From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Florian Fainelli <florian@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: Master mode support in iwlagn?
-Date: Thu, 31 May 2012 20:22:35 +0200
-Message-ID: <1956850.etBVsmC5xH@sylvesterjr.cmi.ua.ac.be> (sfid-20120531_202243_140868_BE5C8F25)
-In-Reply-To: <4FC76389.70600@broadcom.com>
-References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be> <1999855.FUDAX7EfOH@sylvesterjr.cmi.ua.ac.be> <4FC76389.70600@broadcom.com>
+	Tue, 8 May 2012 22:46:20 -0400
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1SRwux-0002As-IO
+	for linux-wireless@vger.kernel.org; Tue, 08 May 2012 22:46:19 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id q492d7ls011269
+	for <linux-wireless@vger.kernel.org>; Tue, 8 May 2012 22:39:07 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id q492d79s011268
+	for linux-wireless@vger.kernel.org; Tue, 8 May 2012 22:39:07 -0400
+Date: Tue, 8 May 2012 22:39:07 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 3.4 needs to be posted _now_
+Message-ID: <20120509023907.GB2533@tuxdriver.com> (sfid-20120509_044655_421555_68F60494)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 31 May 2012 14:26:49 Arend van Spriel wrote:
-> 
-> NetworkManager does support ad-hoc, but your hardware need to support
-> beacon transmission for that as well. You could consider buying an AP.
-> They are not that expensive ;-)
+You may have noticed that Linus has released 3.4-rc6, and "we're
+getting close to final 3.4".  So, the merge window is around the
+corner!
 
-True, but I have enough to carry around already :-) And what if the MAC 
-address needs to be registered first? From my point of view, it would be a lot 
-easier if AP mode was supported... But you already guessed that probably, 
-otherwise I would not have asked it in the first place, would I? ;-)
+For those that need a reminder, the opening of the merge window is
+a _deadline_ for new features.  Once the merge window opens, only
+fixes will be accepted for 3.5.  In fact, any non-fix patches need to
+already be in wireless-next when the merge window opens if you want
+them in 3.5.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-It is still (too) hard for Linux users to find a laptop with a wireless card 
-that supports monitor mode, AP mode, decent packet injection, etc.
+You have been warned...this means you!
 
-If you are wondering why I need that, I give a course about wireless 
-networking and it is easier if I can test things from my own machine instead 
-of having to run to the lab all the time :-)
+John
 
-Grz,
-Erwin
+P.S.  A combination of personal and business commitments and the
+recent kerfuffle regarding bluetooth patches have conspired against my
+normal merging duties and habits.  I will do what I can to get back
+on track, but if Linus does not release an -rc7 then there is a very
+good chance that anything not already merged in wireless-next will not
+make it for the 3.5 merge window.  I apologize for the inconvenience,
+but please do plan accordingly.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
