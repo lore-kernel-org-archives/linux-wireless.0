@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:50831 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757799Ab2EJJPI (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41260 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071Ab2EILkN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:15:08 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hn19so247958wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:07 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 17/78] wl18xx: set Rx block-size alignment quirk
-Date: Thu, 10 May 2012 12:13:22 +0300
-Message-Id: <1336641263-5761-18-git-send-email-arik@wizery.com> (sfid-20120510_111517_571151_5DB0DED5)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Wed, 9 May 2012 07:40:13 -0400
+Message-ID: <1336563608.4323.16.camel@jlt3.sipsolutions.net> (sfid-20120509_134018_257914_FEF6D30C)
+Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Thomas Pedersen <thomas@cozybit.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Date: Wed, 09 May 2012 13:40:08 +0200
+In-Reply-To: <4FAA43F0.6050401@tieto.com>
+References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>
+	   (sfid-20120427_002914_313709_1CC9F96D) <1336554945.4323.12.camel@jlt3.sipsolutions.net>
+	  <4FAA3BD2.9070203@tieto.com>
+	 <1336557043.4323.15.camel@jlt3.sipsolutions.net>
+	 <4FAA43F0.6050401@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 18xx FW sends Rx blocks with aligned length.
+On Wed, 2012-05-09 at 12:16 +0200, Michal Kazior wrote:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> > No, that's the special case that doesn't work that way -- monitor mode
+> > interfaces are also great for debugging when they're just concurrently
+> > running with other interfaces and don't have their own channel setting.
+> 
+> We can make monitor interface to be a slave to other non-monitor 
+> interface by passing an extra parameter in start_monitor(). We could 
+> then have such a monitor interface follow channel changes of a given 
+> non-monitor interface (or rather it wouldn't be using a channel on it's 
+> own).
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 4a5ef6e..a074d81 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -243,7 +243,8 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
- 		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (185x PG10)",
- 			     wl->chip.id);
- 		wl->sr_fw_name = WL18XX_FW_NAME;
--		wl->quirks |= WLCORE_QUIRK_NO_ELP;
-+		wl->quirks |= WLCORE_QUIRK_NO_ELP |
-+			      WLCORE_QUIRK_RX_BLOCKSIZE_ALIGN;
- 
- 		/* TODO: need to blocksize alignment for RX/TX separately? */
- 		break;
--- 
-1.7.9.5
+That's not how it works though, a monitor interface will simply report
+all frames mac80211 receives, globally.
+
+> >> But then I'm thinking we shouldn't really be changing interface types
+> >> explicitly, since they would be set implicitly by start_ap() and such.
+> >> We could then use the NL80211_IFTYPE_UNSPECIFIED when we're not associated.
+> >
+> >  From some point of view, it should work that way, yes.
+> >
+> > Given how entrenched interface types are we definitely can't get rid of
+> > them though, and they're still needed to do concurrency management etc.
+> 
+> Well, I don't think we can get completely rid of them, too. Or do you 
+> mean something else?
+
+We can't even implicitly change them due to concurrency management etc.
+
+johannes
 
