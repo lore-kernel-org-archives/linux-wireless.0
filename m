@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44100 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755836Ab2ENNRu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 09:17:50 -0400
-Date: Mon, 14 May 2012 09:14:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
-Subject: Re: CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
- (Barcelona!)
-Message-ID: <20120514131444.GA2428@tuxdriver.com> (sfid-20120514_151755_172896_7CBE1C0F)
-References: <20120322192406.GB2432@tuxdriver.com>
- <1332698585.1870.88.camel@aeonflux>
- <20120326145433.GE13806@tuxdriver.com>
- <1332774906.1870.98.camel@aeonflux>
- <20120326152541.GH13806@tuxdriver.com>
- <20120427174439.GC16207@tuxdriver.com>
- <1336979924.4303.5.camel@jlt3.sipsolutions.net>
+Received: from mms2.broadcom.com ([216.31.210.18]:3561 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751462Ab2EIKcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 06:32:35 -0400
+Message-ID: <4FAA47B4.5090002@broadcom.com> (sfid-20120509_123238_864710_4544DB39)
+Date: Wed, 9 May 2012 12:32:20 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1336979924.4303.5.camel@jlt3.sipsolutions.net>
+To: "Jonathan Nieder" <jrnieder@gmail.com>
+cc: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>,
+	"Seth Forshee" <seth.forshee@canonical.com>
+Subject: Re: brcmsmac still woes, possible regression?
+References: <20120328112657.GA6114@stt008.linux.site>
+ <4F7302D9.8070009@broadcom.com>
+ <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
+ <4F744DD8.8010004@broadcom.com>
+ <20120329133835.GA5196@stt008.linux.site>
+ <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
+ <20120402215005.GA13969@burratino> <4F7B179F.7070502@broadcom.com>
+ <20120509094111.GA2333@burratino> <4FAA45AF.8050201@broadcom.com>
+ <20120509102926.GD3499@burratino>
+In-Reply-To: <20120509102926.GD3499@burratino>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 14, 2012 at 09:18:44AM +0200, Johannes Berg wrote:
-> On Fri, 2012-04-27 at 13:44 -0400, John W. Linville wrote:
+On 05/09/2012 12:29 PM, Jonathan Nieder wrote:
 > 
-> > Angela has reserved space for us at the Hotel Fira
-> > Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
+> Thanks for explaining.  That makes sense.
 > 
-> FWIW, I will not be able to attend.
+> Is the short term fix badc4f07622f ("brcm80211: smac: resume transmit
+> fifo upon receiving frames", 2012-04-11)?
+> 
+> Thanks,
+> Jonathan
+> 
 
-Yeah, I was afraid that would be the case -- I'm sorry.  But, I hope
-that this will motivate others in the group to step-up with discussion
-topics and/or presentations.
+Yep. I remember because the SHA1 start with 'bad', which felt like a
+certain kind of omen to me ;-)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Gr. AvS
+
