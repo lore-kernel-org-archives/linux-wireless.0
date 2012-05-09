@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50343 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752630Ab2EIJur (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 05:50:47 -0400
-Message-ID: <1336557043.4323.15.camel@jlt3.sipsolutions.net> (sfid-20120509_115121_807895_E469EBA6)
-Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Thomas Pedersen <thomas@cozybit.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Date: Wed, 09 May 2012 11:50:43 +0200
-In-Reply-To: <4FAA3BD2.9070203@tieto.com>
-References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>
-	  (sfid-20120427_002914_313709_1CC9F96D) <1336554945.4323.12.camel@jlt3.sipsolutions.net>
-	 <4FAA3BD2.9070203@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52253 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756346Ab2EIW1m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 18:27:42 -0400
+Message-ID: <4FAAEF58.3080302@hauke-m.de> (sfid-20120510_002745_627040_1DCD27A9)
+Date: Thu, 10 May 2012 00:27:36 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
+References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de> <4F9CF839.1040401@broadcom.com> <4FA0CF03.9060307@broadcom.com> <4FA1B66A.4060901@hauke-m.de> <4FA9141B.3020008@broadcom.com> <4FAA322C.1070303@hauke-m.de> <4FAA3837.8090401@broadcom.com>
+In-Reply-To: <4FAA3837.8090401@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-09 at 11:41 +0200, Michal Kazior wrote:
-> Johannes Berg wrote:
-
-> > I don't think this patch is correct -- mac80211 will get updated even if
-> > the device isn't even started which will likely cause trouble. Even if
-> > not though, this all doesn't match any kind of multi-channel concept. We
-> > treat the channel as part of the temporary setup, e.g. part of the
-> > association. AP and mesh are the only ones that are different today I
-> > think.
+On 05/09/2012 11:26 AM, Arend van Spriel wrote:
+> On 05/09/2012 11:00 AM, Hauke Mehrtens wrote:
+>> Hi Arend,
+>>
+>> I would like to see these patches in kernel 3.5. John said that stuff
+>> for that release has to be posted now. Could you look into the
+>> suspend/resume log today and give an Ack for the patches if it works?
+>> You tested the two patch series for bcma and the patches for brcmsmac
+>> all together?
+>>
+>> Hauke
+>>
 > 
-> What about monitor mode?
-
-It's ... special and confusing, unfortunately.
-Basically, it's handled in mac80211 today, it rejects monitor channel
-setting unless it's otherwise idle, and overrides it freely if other
-requests come in.
-
-
-> > We should do the same for AP mode as well, since the channel really
-> > becomes relevant only upon start_ap(), before that there's no real
-> > concept of a channel since you don't use it yet anyway.
+> I tested with patches from 3 series applied:
 > 
-> Maybe we should do the same with monitor interface type, i.e. introduce 
-> start_monitor() and have it pass the channel.
+> ssb/bcma/bcm47xx: extend boardinfo and sprom
+> bcma: add PCI functions from brcmsmac
+> brcmsmac: use sprom and PCIe code from bcma
 
-No, that's the special case that doesn't work that way -- monitor mode
-interfaces are also great for debugging when they're just concurrently
-running with other interfaces and don't have their own channel setting.
+Thanks
 
-> But then I'm thinking we shouldn't really be changing interface types 
-> explicitly, since they would be set implicitly by start_ap() and such. 
-> We could then use the NL80211_IFTYPE_UNSPECIFIED when we're not associated.
+> Unfortunately, I am working from home and I did not bring my test
+> laptop. I have not very good experience testing suspend/resume over a
+> ssh connection. So I can do not do it sooner than tomorrow.
 
->From some point of view, it should work that way, yes.
+Ok, remote suspend resume testing without a special test environment is
+not easily possible.
 
-Given how entrenched interface types are we definitely can't get rid of
-them though, and they're still needed to do concurrency management etc.
-But changing everything to have explicit start/stop operations makes
-on-the-fly interface type changes much easier.
+> Has b43 been tested against these patches on bcma? Also Rafał is still
+> the bcma maintainer. Did he Ack the patches already?
 
-johannes
+I tested bcma and ssb with b43 with the devices I have and have not
+found any new problems. Rafał is quite silent in the last months and I
+have not heard from him anything about these patches. I just send an
+extra mail, hopefully he will answer.
 
+Hauke
