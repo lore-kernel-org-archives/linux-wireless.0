@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41423 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932657Ab2ESIoq (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:1466 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751494Ab2EISB6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2012 04:44:46 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 09/10] ath9k: always perform ani calibration at poll interval
-Date: Sat, 19 May 2012 14:13:55 +0530
-Message-ID: <1337417036-1431-9-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120519_104453_785835_D3BAA9E0)
-In-Reply-To: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
+	Wed, 9 May 2012 14:01:58 -0400
+Message-ID: <4FAAB0FE.601@broadcom.com> (sfid-20120509_200201_882591_9FB5A317)
+Date: Wed, 9 May 2012 20:01:34 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: "Jonathan Nieder" <jrnieder@gmail.com>,
+	=?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: brcmsmac still woes, possible regression?
+References: <20120328112657.GA6114@stt008.linux.site>
+ <4F7302D9.8070009@broadcom.com>
+ <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
+ <4F744DD8.8010004@broadcom.com>
+ <20120329133835.GA5196@stt008.linux.site>
+ <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
+ <20120402215005.GA13969@burratino> <4F7B179F.7070502@broadcom.com>
+ <20120509094111.GA2333@burratino> <4FAA45AF.8050201@broadcom.com>
+ <20120509174106.GA7189@ubuntu-mba>
+In-Reply-To: <20120509174106.GA7189@ubuntu-mba>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Skiping the ani based on power state is delaying the ani cycles
-further on an idle state. And also as the power state is updated
-in different contexts, let us not skip the ani calibration.
+On 05/09/2012 07:41 PM, Seth Forshee wrote:
+> On Wed, May 09, 2012 at 12:23:43PM +0200, Arend van Spriel wrote:
+>> On 05/09/2012 11:41 AM, Jonathan Nieder wrote:
+>>> Hi Arend,
+>>>
+>>> Arend van Spriel wrote, about a month ago[1]:
+>>>
+>>>> I sent the patch to Camaleón to test it before sending out the
+>>>> patch. So the answer it definitely no. I wanted to get it into rc1,
+>>>> but we missed that.
+>>>
+>>> Any news?  If there's a patch that goes in the right direction with
+>>> known problems I'd still be interested in it, among other reasons
+>>> because it would make the bug more concrete and make it easier to
+>>> think about possible fixes.
+>>
+>> Well, there is the short term fix, which is already upstream and moved
+>> to stable. The long term fix for which Seth Forshee (Canonical) did a
+>> great job is reviewed over here, but it involves regulatory related code
+>> so it needs discussions with our compliance team and supervisor. So that
+>> causes some lag time.
+> 
+> The patches I sent still relies on the transmit-after-beacon fix, as I
+> preserved the behavior of muting tx if the channel is passive scan. I
+> *think* this isn't actually necessary, but I'd have to investigate a
+> little further to be certain.
+> 
+> Seth
+> 
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    5 -----
- 1 file changed, 5 deletions(-)
+As part of the discussion over here I am proposing to get rid of the tx
+muting in brcmsmac as mac80211 already has that behaviour for passive
+channels if I am not mistaken (is this true, Johannes?).
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 66ea3df..8be8243 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -549,10 +549,6 @@ void ath_ani_calibrate(unsigned long data)
- 	short_cal_interval = (ah->opmode == NL80211_IFTYPE_AP) ?
- 		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
- 
--	/* Only calibrate if awake */
--	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
--		goto set_timer;
--
- 	ath9k_ps_wakeup(sc);
- 
- 	/* Long calibration runs independently of short calibration. */
-@@ -608,7 +604,6 @@ void ath_ani_calibrate(unsigned long data)
- 
- 	ath9k_ps_restore(sc);
- 
--set_timer:
- 	/*
- 	* Set timer interval based on previous results.
- 	* The interval must be the shortest necessary to satisfy ANI,
--- 
-1.7.10.2
+Gr. AvS
 
