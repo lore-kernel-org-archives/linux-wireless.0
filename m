@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:60050 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758954Ab2EJVZP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 17:25:15 -0400
-Message-ID: <4FAC3249.3060107@xenotime.net> (sfid-20120510_232534_837584_96F0F44A)
-Date: Thu, 10 May 2012 14:25:29 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
+Received: from yumi.tdiedrich.de ([85.10.210.183]:59909 "EHLO mx.tdiedrich.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932263Ab2EIV3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 17:29:02 -0400
+Date: Wed, 9 May 2012 23:28:59 +0200
+From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt28xx AP-mode problem with commit
+ 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
+ carrier state"
+Message-ID: <20120509212859.GF5472@yumi.tdiedrich.de> (sfid-20120509_232907_401388_3B88D606)
+References: <20120509105719.GA24457@yumi.tdiedrich.de>
+ <1336564773.4323.19.camel@jlt3.sipsolutions.net>
+ <20120509121827.GD5472@yumi.tdiedrich.de>
+ <20120509210448.GE5472@yumi.tdiedrich.de>
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
-References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>	 <4F8C784B.2040402@xenotime.net> <1336049755.12189.30.camel@cumari.coelho.fi>
-In-Reply-To: <1336049755.12189.30.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120509210448.GE5472@yumi.tdiedrich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2012 05:55 AM, Luciano Coelho wrote:
-
-> On Mon, 2012-04-16 at 12:51 -0700, Randy Dunlap wrote:
->> From: Randy Dunlap <rdunlap@xenotime.net>
->>
->> wl12xx build fails with many undefined symbol errors when MAC80211
->> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
->> on MAC80211 (which already depends on CFG80211).
->>
->> Here are a few of the many build errors:
->>
->> drivers/built-in.o: In function `wl1271_register_hw':
->> main.c:(.text+0x4197cd): undefined reference to `ieee80211_register_hw'
->> drivers/built-in.o: In function `wl1271_rx_streaming_timer':
->> main.c:(.text+0x419818): undefined reference to `ieee80211_queue_work'
->> drivers/built-in.o: In function `wl1271_flush_deferred_work':
->> main.c:(.text+0x419910): undefined reference to `ieee80211_rx'
->> main.c:(.text+0x419938): undefined reference to `ieee80211_tx_status'
->> drivers/built-in.o: In function `wl12xx_op_channel_switch':
->> main.c:(.text+0x419afc): undefined reference to `ieee80211_chswitch_done'
->> drivers/built-in.o: In function `wl1271_ssid_set':
->> drivers/built-in.o: In function `wl1271_event_process':
->> event.c:(.text+0x41fec4): undefined reference to `ieee80211_sched_scan_stopped'
->> event.c:(.text+0x41ff88): undefined reference to `ieee80211_cqm_rssi_notify'
->> event.c:(.text+0x42000d): undefined reference to `ieee80211_stop_rx_ba_session'
->> event.c:(.text+0x420048): undefined reference to `ieee80211_stop_rx_ba_session'
->> event.c:(.text+0x4200b8): undefined reference to `ieee80211_chswitch_done'
->> event.c:(.text+0x4201ae): undefined reference to `ieee80211_find_sta'
->> event.c:(.text+0x4201ba): undefined reference to `ieee80211_report_low_ack'
->> event.c:(.text+0x42021b): undefined reference to `ieee80211_connection_loss'
->> drivers/built-in.o: In function `wl1271_tx_complete_packet':
->> tx.c:(.text+0x4206a6): undefined reference to `ieee80211_get_hdrlen_from_skb'
->> drivers/built-in.o: In function `wl1271_tx_fill_hdr':
->> tx.c:(.text+0x4208ca): undefined reference to `ieee80211_hdrlen'
->> drivers/built-in.o: In function `wl1271_handle_tx_low_watermark':
->> (.text+0x420e25): undefined reference to `ieee80211_wake_queue'
->> drivers/built-in.o: In function `wl12xx_rearm_rx_streaming':
->> (.text+0x420ed9): undefined reference to `ieee80211_queue_work'
->> drivers/built-in.o: In function `wl1271_tx_work_locked':
->> (.text+0x421008): undefined reference to `ieee80211_free_txskb'
->> drivers/built-in.o: In function `wl1271_rx_status.clone.2':
->> rx.c:(.text+0x421593): undefined reference to `ieee80211_channel_to_frequency'
->> drivers/built-in.o: In function `wl1271_ps_filter_frames':
->> ps.c:(.text+0x421a41): undefined reference to `ieee80211_tx_status'
->>
->> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
->> Cc:	Luciano Coelho <coelho@ti.com>
->> Cc:	linux-wireless@vger.kernel.org
->> Cc:	"John W. Linville" <linville@tuxdriver.com>
->> ---
-> 
-> Applied! Thanks Randy, and sorry for the delay in pushing this through
-> my tree.
+Tobias Diedrich wrote:
+> Tobias Diedrich wrote:
+> > Johannes Berg wrote:
+> > > On Wed, 2012-05-09 at 12:57 +0200, Tobias Diedrich wrote:
+> > > 
+> > > > I've bisected a problem with running rt3052-based APs on recent
+> > > > OpenWRT down to this commit: 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63
+> > > > "mac80211: manage AP netdev carrier state"
+> > > > 
+> > > > If I revert this commit (and also fix the max_power issue), AP-mode
+> > > > works fine, but if I leave it in, association to the AP times out.
 
 
+This seems to be the crucial hunk (and it conveniently ermoves a
+check against NL80211_IFTYPE_AP), if I revert just this it works for
+me:
 
-Ping.
-
-This patch is still needed in linux-next of 20120510.
+Index: compat-wireless-2012-04-17/net/mac80211/iface.c
+===================================================================
+--- compat-wireless-2012-04-17.orig/net/mac80211/iface.c	2012-05-09 01:00:39.197975402 +0200
++++ compat-wireless-2012-04-17/net/mac80211/iface.c	2012-05-09 01:02:32.514918371 +0200
+@@ -411,8 +407,7 @@
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+ 
+ 		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
+-		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
+-		    sdata->vif.type == NL80211_IFTYPE_AP)
++		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
+ 			netif_carrier_off(dev);
+ 		else
+ 			netif_carrier_on(dev);
 
 
 -- 
-~Randy
+Tobias						PGP: http://8ef7ddba.uguu.de
