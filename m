@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:47151 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932209Ab2ERH02 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 03:26:28 -0400
-Message-ID: <4FB5F99D.1040707@tieto.com> (sfid-20120518_092636_173567_CCF16370)
-Date: Fri, 18 May 2012 09:26:21 +0200
-From: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:34792 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753490Ab2EISYj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 14:24:39 -0400
+Received: by dady13 with SMTP id y13so628597dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 11:24:39 -0700 (PDT)
 MIME-Version: 1.0
-To: Marek Lindner <lindner_marek@yahoo.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 0/2] bind RTS threshold to vif.
-References: <1337248723-10946-1-git-send-email-lukasz.kucharczyk@tieto.com> <201205171940.42671.lindner_marek@yahoo.de>
-In-Reply-To: <201205171940.42671.lindner_marek@yahoo.de>
-Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
+In-Reply-To: <CABF+-6VjWxN6mP4E+7WoR=RZxmSU70GPbua77Vmw+z=JnnKcUg@mail.gmail.com>
+References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
+	<4FA15A70.2020108@stericsson.com>
+	<CABF+-6VjWxN6mP4E+7WoR=RZxmSU70GPbua77Vmw+z=JnnKcUg@mail.gmail.com>
+Date: Wed, 9 May 2012 20:24:38 +0200
+Message-ID: <CAMG6FYgcep04reRKFe6vjpW+THbCT=+FnJ_-eLrcgE7+3UJEfA@mail.gmail.com> (sfid-20120509_202443_360152_9162C333)
+Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
+From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+To: Kevin Groeneveld <kgroeneveld@gmail.com>
+Cc: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/17/2012 01:40 PM, Marek Lindner wrote:
-> On Thursday, May 17, 2012 17:58:41 Lukasz Kucharczyk wrote:
->> following patches bind rts threshold to vif.
->> I think it might be useful in multi channel operation
->> (one chip handling multiple virtual interfaces on different
->> channels).
->>
->> RTS threshold is still set with NL80211_CMD_SET_WIPHY, and can
->> be now executed for both hw and vif, so it's backward compatible
->> (from userspace).
+Hi Kevin,
+
+> What are the sdd files for and why would they be different?
 >
-> As much as I like the idea of having per vif rts/cts settings, the rts/cts
-> user space API is useless as long as these settings are bluntly ignored by
-> certain rate control algorithms. I already had to explain to a dozen people
-> who turned rts/cts off via this API does not really turn it off.
-> Therefore, I suggest to remove the rts/cts API altogether, so that nobody
-> falls into the trap of believing this does anything useful.
+SDD files contains some kind of radio calibration data and Bluetooth
+arbitrage tables.
+They must be aligned with particular RF design and presence of Bluetooth PTA.
+If you are using PTA is your design, you should have SDD with PTA tables in.
 
-Oops, I totally missed IEEE80211_TX_RC_USE_RTS_CTS. Thanks for comment!
+> I noticed the driver parses some information directly from the sdd
+> file in the cw1200_parse_SDD_file function.  Does the file get used
+> for anything else?
+>
+It is downloaded to firmware and the firmware uses data from it.
 
-BR,
-Lukasz
+> If a PTA element is found the code always sets priv->is_BT_Present =
+> true.  If I do not have Blue Tooth in my system should this still be
+> set?
+>
+Yes if you share antenna and use PTA (Bluetooth arbitrage) in your design.
+But in this case you should have SDD with PTA entry in.
+
+Dmitry
