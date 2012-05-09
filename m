@@ -1,93 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757883Ab2EJJQQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42976 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753308Ab2EIJIl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:16 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:15 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 48/78] wl18xx: add module parameter to disable TCP checksum
-Date: Thu, 10 May 2012 12:13:53 +0300
-Message-Id: <1336641263-5761-49-git-send-email-arik@wizery.com> (sfid-20120510_112045_609920_2E805307)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Wed, 9 May 2012 05:08:41 -0400
+Message-ID: <1336554519.4323.7.camel@jlt3.sipsolutions.net> (sfid-20120509_110845_326411_F49D3B7C)
+Subject: [RFC] mac80211: add time synchronisation with BSS for assoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <ivdoorn@gmail.com>,
+	Helmut Schaa <Helmut.Schaa@gmx.de>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Date: Wed, 09 May 2012 11:08:39 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add a new module parameter to disable TCP checksum offload.
+Some drivers (iwlegacy, iwlwifi and rt2x00) today use the
+bss_conf.last_tsf value. By itself though that value is
+completely worthless since it may be ancient. What really
+is needed is synchronisation between some device time and
+the TSF.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+To clarify this, rename bss_conf.last_tsf to sync_tsf and
+add sync_device_ts which is obtained from rx_status which
+gets a new field device_timestamp for this purpose. This
+is intentionally not using the mactime field since that
+is used for other things and in IBSS is expected to sync
+with the IBSS's TSF which isn't necessarily true for the
+device timestamp.
+
+Also, since we have the information and it's useful even
+before the connection has been established, give all the
+timing details to the driver before authenticating.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c |   22 +++++++++++++++++++---
- 1 file changed, 19 insertions(+), 3 deletions(-)
+I note that rt2x00 is completely broken since it mixes last_tsf (now
+sync_tsf) with jiffies ... what??
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 2f0cbf8..b76b6ac 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -47,6 +47,7 @@ static char *board_type_param;
- static bool dc2dc_param = false;
- static int n_antennas_2_param = 1;
- static int n_antennas_5_param = 1;
-+static bool checksum_param = true;
+ Documentation/networking/mac80211-auth-assoc-deauth.txt |    2 +-
+ drivers/net/wireless/iwlegacy/common.c                  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c             |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00config.c              |    2 +-
+ include/net/mac80211.h                                  |    9 +++++++--
+ net/mac80211/driver-trace.h                             |    6 ++++--
+ net/mac80211/ieee80211_i.h                              |    2 ++
+ net/mac80211/mlme.c                                     |   15 ++++++++-------
+ net/mac80211/scan.c                                     |    3 ++-
+ 9 files changed, 27 insertions(+), 16 deletions(-)
+
+--- a/include/net/mac80211.h	2012-05-09 09:05:52.000000000 +0200
++++ b/include/net/mac80211.h	2012-05-09 09:06:12.000000000 +0200
+@@ -233,8 +233,10 @@ enum ieee80211_rssi_event {
+  *	valid in station mode only while @assoc is true and if also
+  *	requested by %IEEE80211_HW_NEED_DTIM_PERIOD (cf. also hw conf
+  *	@ps_dtim_period)
+- * @last_tsf: last beacon's/probe response's TSF timestamp (could be old
++ * @sync_tsf: last beacon's/probe response's TSF timestamp (could be old
+  *	as it may have been received during scanning long ago)
++ * @sync_device_ts: the device timestamp corresponding to the sync_tsf,
++ *	the driver/device can use this to calculate synchronisation
+  * @beacon_int: beacon interval
+  * @assoc_capability: capabilities taken from assoc resp
+  * @basic_rates: bitmap of basic rates, each bit stands for an
+@@ -281,7 +283,7 @@ struct ieee80211_bss_conf {
+ 	u8 dtim_period;
+ 	u16 beacon_int;
+ 	u16 assoc_capability;
+-	u64 last_tsf;
++	u64 sync_tsf, sync_device_ts;
+ 	u32 basic_rates;
+ 	int mcast_rate[IEEE80211_NUM_BANDS];
+ 	u16 ht_operation_mode;
+@@ -692,6 +694,8 @@ enum mac80211_rx_flags {
+  *
+  * @mactime: value in microseconds of the 64-bit Time Synchronization Function
+  * 	(TSF) timer when the first data symbol (MPDU) arrived at the hardware.
++ * @device_timestamp: arbitrary timestamp for the device, mac80211 doesn't use
++ *	it but can store it and pass it back to the driver for synchronisation
+  * @band: the active band when this frame was received
+  * @freq: frequency the radio was tuned to when receiving this frame, in MHz
+  * @signal: signal strength when receiving this frame, either in dBm, in dB or
+@@ -705,6 +709,7 @@ enum mac80211_rx_flags {
+  */
+ struct ieee80211_rx_status {
+ 	u64 mactime;
++	u64 device_timestamp;
+ 	enum ieee80211_band band;
+ 	int freq;
+ 	int signal;
+--- a/drivers/net/wireless/iwlegacy/common.c	2012-05-09 09:05:52.000000000 +0200
++++ b/drivers/net/wireless/iwlegacy/common.c	2012-05-09 09:05:53.000000000 +0200
+@@ -5360,7 +5360,7 @@ il_mac_bss_info_changed(struct ieee80211
+ 	if (changes & BSS_CHANGED_ASSOC) {
+ 		D_MAC80211("ASSOC %d\n", bss_conf->assoc);
+ 		if (bss_conf->assoc) {
+-			il->timestamp = bss_conf->last_tsf;
++			il->timestamp = bss_conf->sync_tsf;
  
- static const u8 wl18xx_rate_to_idx_2ghz[] = {
- 	/* MCS rates are used only with 11n */
-@@ -865,9 +866,11 @@ static int wl18xx_hw_init(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
+ 			if (!il_is_rfkill(il))
+ 				il->ops->post_associate(il);
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c	2012-05-09 09:05:52.000000000 +0200
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c	2012-05-09 09:05:53.000000000 +0200
+@@ -1463,7 +1463,7 @@ void iwlagn_bss_info_changed(struct ieee
  
--	ret = wl18xx_acx_set_checksum_state(wl);
--	if (ret != 0)
--		return ret;
-+	if (checksum_param) {
-+		ret = wl18xx_acx_set_checksum_state(wl);
-+		if (ret != 0)
-+			return ret;
-+	}
+ 	if (changes & BSS_CHANGED_ASSOC) {
+ 		if (bss_conf->assoc) {
+-			priv->timestamp = bss_conf->last_tsf;
++			priv->timestamp = bss_conf->sync_tsf;
+ 			ctx->staging.filter_flags |= RXON_FILTER_ASSOC_MSK;
+ 		} else {
+ 			/*
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c	2012-05-09 09:05:52.000000000 +0200
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c	2012-05-09 09:05:53.000000000 +0200
+@@ -102,7 +102,7 @@ void rt2x00lib_config_erp(struct rt2x00_
  
- 	return ret;
- }
-@@ -879,6 +882,11 @@ static void wl18xx_set_tx_desc_csum(struct wl1271 *wl,
- 	u32 ip_hdr_offset;
- 	struct iphdr *ip_hdr;
+ 	/* Update the AID, this is needed for dynamic PS support */
+ 	rt2x00dev->aid = bss_conf->assoc ? bss_conf->aid : 0;
+-	rt2x00dev->last_beacon = bss_conf->last_tsf;
++	rt2x00dev->last_beacon = bss_conf->sync_tsf;
  
-+	if (!checksum_param) {
-+		desc->wl18xx_checksum_data = 0;
-+		return;
-+	}
+ 	/* Update global beacon interval time, this is needed for PS support */
+ 	rt2x00dev->beacon_int = bss_conf->beacon_int;
+--- a/net/mac80211/driver-trace.h	2012-05-09 09:05:52.000000000 +0200
++++ b/net/mac80211/driver-trace.h	2012-05-09 09:05:53.000000000 +0200
+@@ -306,7 +306,8 @@ TRACE_EVENT(drv_bss_info_changed,
+ 		__field(u8, dtimper)
+ 		__field(u16, bcnint)
+ 		__field(u16, assoc_cap)
+-		__field(u64, timestamp)
++		__field(u64, sync_tsf)
++		__field(u64, sync_device_ts)
+ 		__field(u32, basic_rates)
+ 		__field(u32, changed)
+ 		__field(bool, enable_beacon)
+@@ -325,7 +326,8 @@ TRACE_EVENT(drv_bss_info_changed,
+ 		__entry->dtimper = info->dtim_period;
+ 		__entry->bcnint = info->beacon_int;
+ 		__entry->assoc_cap = info->assoc_capability;
+-		__entry->timestamp = info->last_tsf;
++		__entry->sync_tsf = info->sync_tsf;
++		__entry->sync_device_ts = info->sync_device_ts;
+ 		__entry->basic_rates = info->basic_rates;
+ 		__entry->enable_beacon = info->enable_beacon;
+ 		__entry->ht_operation_mode = info->ht_operation_mode;
+--- a/net/mac80211/ieee80211_i.h	2012-05-09 09:05:52.000000000 +0200
++++ b/net/mac80211/ieee80211_i.h	2012-05-09 09:05:53.000000000 +0200
+@@ -77,6 +77,8 @@ struct ieee80211_fragment_entry {
+ 
+ 
+ struct ieee80211_bss {
++	u64 device_ts;
 +
- 	if (skb->ip_summed != CHECKSUM_PARTIAL) {
- 		desc->wl18xx_checksum_data = 0;
- 		return;
-@@ -1065,6 +1073,11 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
+ 	/* don't want to look up all the time */
+ 	size_t ssid_len;
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+--- a/net/mac80211/mlme.c	2012-05-09 09:05:52.000000000 +0200
++++ b/net/mac80211/mlme.c	2012-05-09 09:07:31.000000000 +0200
+@@ -1259,11 +1259,6 @@ static void ieee80211_set_associated(str
+ 	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
  
-+	if (!checksum_param) {
-+		wl18xx_ops.set_rx_csum = NULL;
-+		wl18xx_ops.init_vif = NULL;
-+	}
+ 	bss_info_changed |= BSS_CHANGED_ASSOC;
+-	/* set timing information */
+-	bss_conf->beacon_int = cbss->beacon_interval;
+-	bss_conf->last_tsf = cbss->tsf;
+-
+-	bss_info_changed |= BSS_CHANGED_BEACON_INT;
+ 	bss_info_changed |= ieee80211_handle_bss_capability(sdata,
+ 		cbss->capability, bss->has_erp_value, bss->erp_value);
+ 
+@@ -3141,9 +3136,15 @@ static int ieee80211_prep_connection(str
+ 
+ 		memcpy(ifmgd->bssid, cbss->bssid, ETH_ALEN);
+ 
+-		/* tell driver about BSSID and basic rates */
++		/* set timing information */
++		sdata->vif.bss_conf.beacon_int = cbss->beacon_interval;
++		sdata->vif.bss_conf.sync_tsf = cbss->tsf;
++		sdata->vif.bss_conf.sync_device_ts = bss->device_ts;
 +
- 	wl18xx_conf_init(wl);
++		/* tell driver about BSSID, basic rates and timing */
+ 		ieee80211_bss_info_change_notify(sdata,
+-			BSS_CHANGED_BSSID | BSS_CHANGED_BASIC_RATES);
++			BSS_CHANGED_BSSID | BSS_CHANGED_BASIC_RATES |
++			BSS_CHANGED_BEACON_INT);
  
- 	return wlcore_probe(wl, pdev);
-@@ -1114,6 +1127,9 @@ MODULE_PARM_DESC(n_antennas_2, "Number of installed 2.4GHz antennas: 1 (default)
- module_param_named(n_antennas_5, n_antennas_5_param, uint, S_IRUSR);
- MODULE_PARM_DESC(n_antennas_5, "Number of installed 5GHz antennas: 1 (default) or 2");
+ 		if (assoc)
+ 			sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
+--- a/net/mac80211/scan.c	2012-05-09 09:05:52.000000000 +0200
++++ b/net/mac80211/scan.c	2012-05-09 09:05:53.000000000 +0200
+@@ -83,13 +83,14 @@ ieee80211_bss_info_update(struct ieee802
  
-+module_param_named(checksum, checksum_param, bool, S_IRUSR);
-+MODULE_PARM_DESC(checksum, "Enable TCP checksum: boolean (defaults to true)");
+ 	cbss = cfg80211_inform_bss_frame(local->hw.wiphy, channel,
+ 					 mgmt, len, signal, GFP_ATOMIC);
+-
+ 	if (!cbss)
+ 		return NULL;
+ 
+ 	cbss->free_priv = ieee80211_rx_bss_free;
+ 	bss = (void *)cbss->priv;
+ 
++	bss->device_ts = rx_status->device_timestamp;
 +
- MODULE_LICENSE("GPL v2");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_FIRMWARE(WL18XX_FW_NAME);
--- 
-1.7.9.5
+ 	if (elems->parse_error) {
+ 		if (beacon)
+ 			bss->corrupt_data |= IEEE80211_BSS_CORRUPT_BEACON;
+--- a/Documentation/networking/mac80211-auth-assoc-deauth.txt	2012-04-12 05:40:25.000000000 +0200
++++ b/Documentation/networking/mac80211-auth-assoc-deauth.txt	2012-05-09 09:16:47.000000000 +0200
+@@ -24,7 +24,7 @@ end note
+ end
+ 
+ mac80211->driver: config(channel, channel type)
+-mac80211->driver: bss_info_changed(set BSSID, basic rate bitmap)
++mac80211->driver: bss_info_changed(set BSSID, basic rate bitmap, timings)
+ mac80211->driver: sta_state(AP, exists)
+ 
+ alt no probe request data known
+
 
