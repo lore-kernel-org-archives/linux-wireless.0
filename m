@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53489 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645Ab2EXDzk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:55:40 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from yumi.tdiedrich.de ([85.10.210.183]:52326 "EHLO mx.tdiedrich.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756711Ab2EIK5X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 06:57:23 -0400
+Date: Wed, 9 May 2012 12:57:19 +0200
+From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+To: Johannes Berg <johannes.berg@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	linux-wireless@vger.kernel.org
+Subject: rt28xx AP-mode problem with commit
+ 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
+ carrier state"
+Message-ID: <20120509105719.GA24457@yumi.tdiedrich.de> (sfid-20120509_125732_300096_BB4CA746)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45306.652684.670869@gargle.gargle.HOWL> (sfid-20120524_055543_750355_8BB778B2)
-Date: Thu, 24 May 2012 09:24:34 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 19/22] ath: do not update cycle counters with sleep mode
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-When the chip is waking up from sleep state, the cycle counters
-might have incorrect readings. So it is better not to update those
-readings with software counters.
+I've bisected a problem with running rt3052-based APs on recent
+OpenWRT down to this commit: 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63
+"mac80211: manage AP netdev carrier state"
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    1 +
- 1 file changed, 1 insertion(+)
+If I revert this commit (and also fix the max_power issue), AP-mode
+works fine, but if I leave it in, association to the AP times out.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 02a8010..3e8bef8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -101,6 +101,7 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
- 		spin_lock(&common->cc_lock);
- 		ath_hw_cycle_counters_update(common);
- 		memset(&common->cc_survey, 0, sizeof(common->cc_survey));
-+		memset(&common->cc_ani, 0, sizeof(common->cc_ani));
- 		spin_unlock(&common->cc_lock);
- 	}
- 
+(The AP-side hostapd claims WPA authentication was successful, but
+the client never connects)
+
+(Note: I haven't gotten around to testing a non-rt28xx based AP yet,
+so I'm only assuming this affects only rt28xx, maybe it does affect
+other chipsets as well)
+
+See also "rt28xx: Revert eccc068e8e84c8fe997115629925e0422a98e4de
+which causes txpower to be stuck at 0" on the openwrt list:
+http://www.spinics.net/lists/linux-wireless/msg89732.html
+
+Cheers,
+
 -- 
-1.7.10.2
-
+Tobias						PGP: http://8ef7ddba.uguu.de
