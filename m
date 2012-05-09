@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:51785 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485Ab2EHXvo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 19:51:44 -0400
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id E960C3EE0C0
-	for <linux-wireless@vger.kernel.org>; Wed,  9 May 2012 08:51:42 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id D023345DEB2
-	for <linux-wireless@vger.kernel.org>; Wed,  9 May 2012 08:51:42 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id B86AB45DEA6
-	for <linux-wireless@vger.kernel.org>; Wed,  9 May 2012 08:51:42 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id AD2361DB803E
-	for <linux-wireless@vger.kernel.org>; Wed,  9 May 2012 08:51:42 +0900 (JST)
-Received: from m1000.s.css.fujitsu.com (m1000.s.css.fujitsu.com [10.240.81.136])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 674031DB803C
-	for <linux-wireless@vger.kernel.org>; Wed,  9 May 2012 08:51:42 +0900 (JST)
-Message-ID: <4FA9B170.2000704@jp.fujitsu.com> (sfid-20120509_015148_383193_01448F28)
-Date: Wed, 09 May 2012 08:51:12 +0900
-From: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4538 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757184Ab2EIHZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 03:25:50 -0400
+Message-ID: <4FAA1BEF.10704@broadcom.com> (sfid-20120509_092554_255229_2CB795B7)
+Date: Wed, 9 May 2012 09:25:35 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH] b43: use pci_is_pcie() instead of obsolete pci_dev.is_pcie
-References: <20120508232732.19543.37241.stgit@bhelgaas.mtv.corp.google.com>
-In-Reply-To: <20120508232732.19543.37241.stgit@bhelgaas.mtv.corp.google.com>
-Content-Type: text/plain; charset=ISO-2022-JP
+To: "Brent Roman" <brent@mbari.org>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: After Kernel 3.3, brcmsmac won't work on mid-2010 Mac Mini
+References: <4FA9A8FE.5000102@mbari.org>
+In-Reply-To: <4FA9A8FE.5000102@mbari.org>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reviewed-by: Kenji Kaneshige <kaneshige.kenji@jp.fujitsu.com>
+On 05/09/2012 01:15 AM, Brent Roman wrote:
+> Hi,
+> 
+> When I updated to Linux Kernel 3.3.5 on my mid-2010 Aluminum Unibody Mac
+> Mini,
+> its built-in wireless was no longer recognized:
+> 
+> 03:00.0 Network controller [0280]: Broadcom Corporation BCM43224
+> 802.11a/b/g/n [14e4:4353] (rev 01)
+>     Subsystem: Apple Computer Inc. Device [106b:0093]
+>     Flags: bus master, fast devsel, latency 0, IRQ 22
+>     Memory at d3300000 (64-bit, non-prefetchable) [size=16K]
+>     Capabilities: [40] Power Management version 3
+>     Capabilities: [58] Vendor Specific Information: Len=78 <?>
+>     Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
+>     Capabilities: [d0] Express Endpoint, MSI 00
+>     Capabilities: [100] Advanced Error Reporting
+>     Capabilities: [13c] Virtual Channel
+>     Capabilities: [160] Device Serial Number 54-70-4b-ff-ff-0c-60-33
+>     Capabilities: [16c] Power Budgeting <?>
+>     Kernel driver in use: brcmsmac
+> 
+> I tried kernel 3.3.0 with the same negative result.
+> When I reverted to 3.2.16, the chip was immediately recognized.
+> The driver in 3.3+ is loading the bcma module.
+> 
+> I've fine with running 3.2.16 for now.
+> Is this a known problem?  A configuration error on my part?
+> 
+> Just let me know if you'd like me to try anything to help debug this
+> (possible) regression.
+> 
 
-Regards,
-Kenji Kaneshige
+Any log on 3.3 kernel may help. Do you have bcma blacklisted in your
+system? Do you have built the kernel yourself? Can you sent the .config
+for both kernels?
 
-
-(2012/05/09 8:27), Bjorn Helgaas wrote:
-> Use pci_is_pcie() instead of looking at obsolete is_pcie field in
-> struct pci_dev.
-> 
-> CC: Stefano Brivio<stefano.brivio@polimi.it>
-> CC: b43-dev@lists.infradead.org
-> CC: Kenji Kaneshige<kaneshige.kenji@jp.fujitsu.com>
-> Signed-off-by: Bjorn Helgaas<bhelgaas@google.com>
-> ---
->   drivers/net/wireless/b43/dma.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-> index b5f1b91..777cd74 100644
-> --- a/drivers/net/wireless/b43/dma.c
-> +++ b/drivers/net/wireless/b43/dma.c
-> @@ -1109,7 +1109,7 @@ static bool b43_dma_translation_in_low_word(struct b43_wldev *dev,
->   #ifdef CONFIG_B43_SSB
->   	if (dev->dev->bus_type == B43_BUS_SSB&&
->   	dev->dev->sdev->bus->bustype == SSB_BUSTYPE_PCI&&
-> -	    !(dev->dev->sdev->bus->host_pci->is_pcie&&
-> +	    !(pci_is_pcie(dev->dev->sdev->bus->host_pci)&&
->   	ssb_read32(dev->dev->sdev, SSB_TMSHIGH)&  SSB_TMSHIGH_DMA64))
->   			return 1;
->   #endif
-> 
-> 
+Gr. AvS
 
