@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39392 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754792Ab2E2VOe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 17:14:34 -0400
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q4TLEYLF018082
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 14:14:34 -0700
-Message-ID: <4FC53C3A.1080001@candelatech.com> (sfid-20120529_231438_421874_8495B5A3)
-Date: Tue, 29 May 2012 14:14:34 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from yumi.tdiedrich.de ([85.10.210.183]:53302 "EHLO mx.tdiedrich.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758646Ab2EIMSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 08:18:31 -0400
+Date: Wed, 9 May 2012 14:18:27 +0200
+From: Tobias Diedrich <ranma@tdiedrich.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt28xx AP-mode problem with commit
+ 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
+ carrier state"
+Message-ID: <20120509121827.GD5472@yumi.tdiedrich.de> (sfid-20120509_141836_304930_E3F2762B)
+References: <20120509105719.GA24457@yumi.tdiedrich.de>
+ <1336564773.4323.19.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Is there no upper limit on mac80211 pending xmit queue size?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1336564773.4323.19.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tx pending queues doesn't seem to be limitted, allowing
-run-away memory usage when something like pktgen is
-sending packets faster than the system can actually
-send them.
+Johannes Berg wrote:
+> On Wed, 2012-05-09 at 12:57 +0200, Tobias Diedrich wrote:
+> 
+> > I've bisected a problem with running rt3052-based APs on recent
+> > OpenWRT down to this commit: 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63
+> > "mac80211: manage AP netdev carrier state"
+> > 
+> > If I revert this commit (and also fix the max_power issue), AP-mode
+> > works fine, but if I leave it in, association to the AP times out.
+> > 
+> > (The AP-side hostapd claims WPA authentication was successful, but
+> > the client never connects)
+> > 
+> > (Note: I haven't gotten around to testing a non-rt28xx based AP yet,
+> > so I'm only assuming this affects only rt28xx, maybe it does affect
+> > other chipsets as well)
+> 
+> Works fine here, but I don't see how that patch could affect rt2x00
+> only.
+> 
+> You're going to have to give us more details about the failure, like the
+> version of hostapd at least. The output of "ip monitor" would also be
+> helpful.
 
-[root@ct520-2011 ~]# cat /debug/ieee80211/wiphy0/queues
-00: 0x00000000/0
-01: 0x00000000/0
-02: 0x00000001/40076
-03: 0x00000000/0
-[root@ct520-2011 ~]# cat /debug/ieee80211/wiphy0/queues
-00: 0x00000000/0
-01: 0x00000000/0
-02: 0x00000001/52649
-03: 0x00000000/0
-[root@ct520-2011 ~]# cat /debug/ieee80211/wiphy0/queues
-00: 0x00000000/0
-01: 0x00000000/0
-02: 0x00000001/107939
-03: 0x00000000/0
+The hostapd package Makefile says:
 
-I think this is what is causing my OOM issues when sending
-with (my hacked version of) pktgen.
+PKG_NAME:=hostapd
+PKG_VERSION:=20120428
+PKG_RELEASE:=1
+PKG_REV:=1f0cc27eb98f7d1af9c64d0752238184cbdb9a24
 
-Shouldn't there be an upper limit on the number of pending frames
-that mac80211 will queue?
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:=git://w1.fi/srv/git/hostap.git
 
-Thanks,
-Ben
-
+Can't look at ip output right now as I'm still at work and the
+AP is switched off.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Tobias						PGP: http://8ef7ddba.uguu.de
