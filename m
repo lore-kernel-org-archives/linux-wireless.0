@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50526 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758514Ab2EPRRt (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:61878 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757560Ab2EIRDf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 13:17:49 -0400
-Date: Wed, 16 May 2012 13:06:58 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi updates 2012-05-11
-Message-ID: <20120516170657.GD3508@tuxdriver.com> (sfid-20120516_191755_097164_43086E1B)
-References: <1336726398-13200-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 9 May 2012 13:03:35 -0400
+Received: by vbbff1 with SMTP id ff1so493469vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 10:03:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1336726398-13200-1-git-send-email-johannes@sipsolutions.net>
+In-Reply-To: <4FA15A70.2020108@stericsson.com>
+References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
+	<4FA15A70.2020108@stericsson.com>
+Date: Wed, 9 May 2012 13:03:33 -0400
+Message-ID: <CABF+-6VjWxN6mP4E+7WoR=RZxmSU70GPbua77Vmw+z=JnnKcUg@mail.gmail.com> (sfid-20120509_190339_307422_A40F29B7)
+Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
+From: Kevin Groeneveld <kgroeneveld@gmail.com>
+To: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 11, 2012 at 10:53:14AM +0200, Johannes Berg wrote:
-> Here are some more iwlwifi updates :-)
-> 
-> David Spinadel worked on scanning and got rid of the extra
-> wildcard probe. This is at the expense of some probe request
-> IE space, but due to the sizing bug that he also fixed the
-> IE space was previously actually advertised wrongly, we'd
-> already fail at 40 bytes less than advertised.
-> 
-> I also include a patch to make use of the explicit monitor
-> interface to use sniffer mode and hopefully keep injection
-> working with the HW queue changes.
-> 
-> johannes
+Hi Dmitry,
 
-Oddly enough, these all applied...
+> The driver was tested with WSM_A30.02.0380 (and lot of other releases:)).
+> The firmware was available at igloocommunity.org, I will try to find a link.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I found cw1200 firmware files within the following:
+http://releases.linaro.org/12.04/ubuntu/leb-snowball/hwpack_linaro-lt-snowball-x11-base_20120424-15_armhf_supported.tar.gz
+
+The wsm_xx.bin files from that tarball are identical to the ones I
+already had for build 380.  However, the sdd_xx.bin files are
+different.  When I use the sdd files from snowball nothing seems to
+work.  I cannot scan or make any connections.
+
+What are the sdd files for and why would they be different?
+
+I noticed the driver parses some information directly from the sdd
+file in the cw1200_parse_SDD_file function.  Does the file get used
+for anything else?
+
+With both sdd files I have the log shows:
+
+    PTA element found.
+    Listen Interval 5
+
+If a PTA element is found the code always sets priv->is_BT_Present =
+true.  If I do not have Blue Tooth in my system should this still be
+set?
+
+
+Thanks,
+
+Kevin
