@@ -1,98 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:60073 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045Ab2E2HPJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39106 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754122Ab2EIH0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 03:15:09 -0400
-Received: by pbbrp8 with SMTP id rp8so5554212pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 00:15:08 -0700 (PDT)
-From: Eyal Shapira <eyal@wizery.com>
+	Wed, 9 May 2012 03:26:11 -0400
+Message-ID: <4FAA1C0C.1080804@qca.qualcomm.com> (sfid-20120509_092615_383363_E399662D)
+Date: Wed, 9 May 2012 10:26:04 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-next@vger.kernel.org>, Luciano Coelho <coelho@ti.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH] wlcore: fix undefined symbols when CONFIG_PM is not defined
-Date: Tue, 29 May 2012 00:15:03 -0700
-Message-Id: <1338275703-28103-1-git-send-email-eyal@wizery.com> (sfid-20120529_091537_144776_E51148F9)
-In-Reply-To: <CAMuHMdVv+g=+A1HHNmWWcsFBQjRXNNA437V6-g80cYq7zRJ78g@mail.gmail.com>
-References: <CAMuHMdVv+g=+A1HHNmWWcsFBQjRXNNA437V6-g80cYq7zRJ78g@mail.gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Pull request: ath6kl 20120509
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 5063c201d7b799d6cb36d3edfc2c2c3db3b400e5
-"wl12xx: add RX filters ACX commands" breaks the build
-when CONFIG_PM isn't defined:
+Hi John,
 
-ERROR: "wl1271_rx_filter_get_fields_size"
-[drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
-ERROR: "wl1271_rx_filter_flatten_fields"
-[drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
+here's an ath6kl pull request for 3.5, I hope there's enough time still
+to get this in.
 
-code in drivers/net/wireless/ti/wlcore/acx.c is using these
-functions unconditionally while they are #ifdefed CONFIG_PM.
-Fix it by ifdefing all relevant RX filters code with CONFIG_PM.
+There's not anything exciting here, lots of small fixes everywhere. The
+only patch standing out is Ray Chen's patch adding support to our newest
+baby AR6004 hw1.2, and even that is just adding a new item to struct
+ath6kl_hw list.
 
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
----
-Geert - Thanks!
+Oddly enough the original diffstat from git merge-request was really
+scary, it claimed that this merge request was adding htc_pipe.c to
+ath6kl. I do have actually submitted that already earlier, I don't know
+what went wrong but I just added a new diffstat manually. Please let me
+know if there are any problems.
 
- drivers/net/wireless/ti/wlcore/acx.c |    2 ++
- drivers/net/wireless/ti/wlcore/acx.h |    4 +++-
- drivers/net/wireless/ti/wlcore/rx.c  |    2 ++
- 3 files changed, 7 insertions(+), 1 deletions(-)
+The following changes since commit 341352d13dae752610342923c53ebe461624ee2c:
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index 0fd78a0..755b225 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -1715,6 +1715,7 @@ out:
- 
- }
- 
-+#ifdef CONFIG_PM
- /* Set the global behaviour of RX filters - On/Off + default action */
- int wl1271_acx_default_rx_filter_enable(struct wl1271 *wl, bool enable,
- 					enum rx_filter_action action)
-@@ -1793,3 +1794,4 @@ out:
- 	kfree(acx);
- 	return ret;
- }
-+#endif /* CONFIG_PM */
-diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
-index 8106b2e..e6a7486 100644
---- a/drivers/net/wireless/ti/wlcore/acx.h
-+++ b/drivers/net/wireless/ti/wlcore/acx.h
-@@ -1330,9 +1330,11 @@ int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
- int wl1271_acx_fm_coex(struct wl1271 *wl);
- int wl12xx_acx_set_rate_mgmt_params(struct wl1271 *wl);
- int wl12xx_acx_config_hangover(struct wl1271 *wl);
-+
-+#ifdef CONFIG_PM
- int wl1271_acx_default_rx_filter_enable(struct wl1271 *wl, bool enable,
- 					enum rx_filter_action action);
- int wl1271_acx_set_rx_filter(struct wl1271 *wl, u8 index, bool enable,
- 			     struct wl12xx_rx_filter *filter);
--
-+#endif /* CONFIG_PM */
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index 1f1d948..d6a3c6b 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -279,6 +279,7 @@ void wl12xx_rx(struct wl1271 *wl, struct wl_fw_status *status)
- 	wl12xx_rearm_rx_streaming(wl, active_hlids);
- }
- 
-+#ifdef CONFIG_PM
- int wl1271_rx_filter_enable(struct wl1271 *wl,
- 			    int index, bool enable,
- 			    struct wl12xx_rx_filter *filter)
-@@ -314,3 +315,4 @@ void wl1271_rx_filter_clear_all(struct wl1271 *wl)
- 		wl1271_rx_filter_enable(wl, i, 0, NULL);
- 	}
- }
-+#endif /* CONFIG_PM */
--- 
-1.7.4.1
+  iwlwifi: fix-up some merge damage from commit 0d6c4a2 (2012-05-08
+22:18:09 -0400)
+
+are available in the git repository at:
+  git://github.com/kvalo/ath6kl.git for-linville
+
+Dan Carpenter (3):
+      ath6kl: list_first_entry() is never NULL
+      ath6kl: change || to &&
+      ath6kl: fix an indenting issue
+
+Jesper Juhl (1):
+      ath6kl: fix memory leak in ath6kl_fwlog_block_read()
+
+Jouni Malinen (2):
+      ath6kl: Remove incorrect Probe Response offload support for
+Interworking
+      ath6kl: Configure probed SSID list consistently
+
+Kalle Valo (2):
+      Merge remote branch 'wireless-next/master' into ath6kl-next
+      ath6kl: merge split format strings into one
+
+Kevin Fang (2):
+      ath6kl: handle background(BK) stream properly on htc mbox layer
+      ath6kl: assign Tx packet drop threshold per endpoint on htc pipe layer
+
+Luis R. Rodriguez (1):
+      ath6kl: include in.h explicitly
+
+Ming Jiang (2):
+      ath6kl: allow deepsleep_suspend function when wlan interface down
+      ath6kl clear the MMC_PM_KEEP_POWER for cutpower case
+
+Naveen Gangadharan (1):
+      ath6kl: Multicast filter support in wow suspend and non-suspend
+
+Raja Mani (1):
+      ath6kl: Retain bg scan period value modified by the user
+
+Ray Chen (2):
+      ath6kl: Add AR6004 1.2 support for USB and SDIO
+      ath6kl: Fix system crash sometimes for USB hotplug
+
+Subramania Sharma Thandaveswaran (1):
+      ath6kl: Fix bug in bg scan configuration in schedule scan
+
+Thomas Pedersen (6):
+      ath6kl: handle concurrent AP-STA channel switches
+      ath6kl: support fw reporting phy capabilities
+      ath6kl: only restore supported HT caps
+      ath6kl: disallow WoW with multiple vifs
+      ath6kl: unblock fwlog_block_read() on exit
+      ath6kl: check for sband existence when creating scan cmd
+
+Tim Gardner (1):
+      ath6kl: Normalize use of FW_DIR
+
+Vasanthakumar Thiagarajan (6):
+      ath6kl: Fix possible unaligned memory access in ath6kl_get_rsn_capab()
+      ath6kl: Configure 0 as rsn cap when it is not there in rsn ie
+      ath6kl: Don't advertise HT capability for incapable firmware
+      ath6kl: Fix bss filter setting while scanning
+      ath6kl: Update netstats for some of the tx failrues in
+ath6kl_data_tx()
+      ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
+
+Vivek Natarajan (1):
+      ath6kl_sdio: Fix the EAPOL out of order issue
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  238
++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +
+ drivers/net/wireless/ath/ath6kl/core.h     |   33 +++-
+ drivers/net/wireless/ath/ath6kl/debug.c    |   12 ++-
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |   45 ++++--
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |   11 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |   29 +++-
+ drivers/net/wireless/ath/ath6kl/main.c     |  104 ++++++++++--
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   17 ++-
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   12 +-
+ drivers/net/wireless/ath/ath6kl/usb.c      |   12 ++
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   94 +++++++-----
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   24 +++
+ 13 files changed, 455 insertions(+), 178 deletions(-)
 
