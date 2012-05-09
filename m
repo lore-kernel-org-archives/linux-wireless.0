@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30294 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751501Ab2E2KE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 06:04:57 -0400
-Date: Tue, 29 May 2012 11:21:56 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Initializing iwl3945 error
-Message-ID: <20120529092154.GA2441@redhat.com> (sfid-20120529_120519_405792_4DDAF295)
-References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
- <20120313081235.GC15333@redhat.com>
- <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
- <CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com>
- <20120528140448.GA22783@redhat.com>
- <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="sm4nu43k4a2Rpi4c"
-In-Reply-To: <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:37451 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756947Ab2EIGLK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 02:11:10 -0400
+Message-ID: <1336543867.4323.1.camel@jlt3.sipsolutions.net> (sfid-20120509_081123_778502_B32C3E1F)
+Subject: Re: [PATCH 2/2] mac80211: allow low-level drivers to set netdev
+ feature bits
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 09 May 2012 08:11:07 +0200
+In-Reply-To: <1336506821-23709-2-git-send-email-arik@wizery.com> (sfid-20120508_215421_663017_FEC8F401)
+References: <1336506821-23709-1-git-send-email-arik@wizery.com>
+	 <1336506821-23709-2-git-send-email-arik@wizery.com>
+	 (sfid-20120508_215421_663017_FEC8F401)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2012-05-08 at 22:53 +0300, Arik Nemtsov wrote:
+> Allow low-level drivers to change the feature bit for a vif's underlying
+> net_device struct.
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+What are you planning to use this for? I'm not really sure I see the
+need for an exported function? Is it not going to just be set the same
+for all interfaces?
 
-On Mon, May 28, 2012 at 12:21:34PM -0600, Bjorn Helgaas wrote:
-> linked in vs. loaded as a module after boot?  What if you add a long
-> delay in the driver probe routine?
+Out of the many netdev feature bits, we can handle maybe a handful in
+mac80211, so I'm worried this API will suggest to people they can look
+at netdev_features.h...
 
-I'm attaching patch which add 200 ms delay after pci_enable_device() in
-->probe routine.
+johannes
 
-Stanislaw
 
---sm4nu43k4a2Rpi4c
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="iwl3945_pci_probe_delay.patch"
-
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index faec404..96fe43d 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3635,6 +3635,8 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto out_ieee80211_free_hw;
- 	}
- 
-+	msleep(200);
-+
- 	pci_set_master(pdev);
- 
- 	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
-
---sm4nu43k4a2Rpi4c--
