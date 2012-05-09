@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:45225 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751027Ab2ENIbl (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:39713 "HELO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757605Ab2EIBdR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 04:31:41 -0400
-Date: Mon, 14 May 2012 11:34:15 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, Julia Lawall <julia@diku.dk>
-Subject: Re: net: wireless: add brcm80211 drivers
-Message-ID: <20120514083415.GA16999@mwanda> (sfid-20120514_103144_832842_DB5381C2)
-References: <20120513174333.GB4280@elgon.mountain>
- <4FB0AF4B.9070606@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FB0AF4B.9070606@broadcom.com>
+	Tue, 8 May 2012 21:33:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH v2 09/18] mwifiex: stop BSS in deauthentication handling
+Date: Tue,  8 May 2012 18:30:21 -0700
+Message-Id: <1336527030-2045-10-git-send-email-bzhao@marvell.com> (sfid-20120509_033323_183120_373B643E)
+In-Reply-To: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
+References: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 14, 2012 at 09:07:55AM +0200, Arend van Spriel wrote:
-> Thanks for running smatch. I will look in the current code base and fix
-> this. Just out of curiosity: Another static checker used regularly is
-> Coccinelle. What are the pros and cons of smatch compared to Coccinelle?
-> 
-> Gr. AvS
+From: Avinash Patil <patila@marvell.com>
 
-That's a tricky question because of my obvious bias as the author
-of Smatch, and I'm not an expert on Coccinelle.  ;)
+While in AP mode, we should stop BSS in deauthentication handler.
 
-Smatch works on the preprocessed code and Coccinelle works on .c
-code.  So some things are easier to check for in Coccinelle.  I've
-generally found hacks to get the information I need in Smatch but
-sometimes it's gnarly.  So a one liner in Coccinelle is twenty lines
-of code in Smatch which require in depth knowledge of Smatch and
-Sparse.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/join.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Smatch doesn't fix the bugs it finds.
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index aeb0b3f..d6b4fb0 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -1374,6 +1374,7 @@ static int mwifiex_deauthenticate_infra(struct mwifiex_private *priv, u8 *mac)
+  *
+  * In case of infra made, it sends deauthentication request, and
+  * in case of ad-hoc mode, a stop network request is sent to the firmware.
++ * In AP mode, a command to stop bss is sent to firmware.
+  */
+ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+ {
+@@ -1387,6 +1388,9 @@ int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
+ 		return mwifiex_send_cmd_sync(priv,
+ 					     HostCmd_CMD_802_11_AD_HOC_STOP,
+ 					     HostCmd_ACT_GEN_SET, 0, NULL);
++	case NL80211_IFTYPE_AP:
++		return mwifiex_send_cmd_sync(priv, HostCmd_CMD_UAP_BSS_STOP,
++					     HostCmd_ACT_GEN_SET, 0, NULL);
+ 	default:
+ 		break;
+ 	}
+-- 
+1.7.0.2
 
-The other advantage for Coccinelle is that you can run it on other
-architecture's code without setting up a cross compile environment.
-
-What Smatch does that Coccinelle doesn't is that it tries to track
-the values of all the variables.  This means you can detect array
-overflows, for example.  Smatch tries to track values across
-function calls as well, with the recent database work.
-
-That's really the long term goal of Smatch, to track the value of
-every variable in the kernel.  But there is still a lot of work to
-do.  :P
-
-regards,
-dan carpenter
