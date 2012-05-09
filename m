@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:62362 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750982Ab2EHGmV (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44179 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932068Ab2EIG27 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 02:42:21 -0400
-Received: by dady13 with SMTP id y13so2251526dad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 23:42:21 -0700 (PDT)
-From: Il Han <corone.il.han@gmail.com>
-To: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>, linux-wireless@vger.kernel.org,
-	Il Han <corone.il.han@gmail.com>
-Subject: [PATCH] brcm80211: Remove an unused variable.
-Date: Tue,  8 May 2012 15:35:47 +0900
-Message-Id: <1336458947-20698-1-git-send-email-corone.il.han@gmail.com> (sfid-20120508_084225_624594_2996C43B)
+	Wed, 9 May 2012 02:28:59 -0400
+Received: by pbbrp8 with SMTP id rp8so88197pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 23:28:59 -0700 (PDT)
+MIME-Version: 1.0
+Date: Wed, 9 May 2012 14:28:59 +0800
+Message-ID: <CAFCUKTSjvKk3DPfjkYUQ+zc=81OFF8hfJ6gzbYe+V-jA9FjSwA@mail.gmail.com> (sfid-20120509_082918_282199_67CF9480)
+Subject: If AP mode with MLME/SME implemented in firmware gets supported in
+ linux 3.0
+From: harvey yang <harvey.huawei.yang@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variable val is not used afterward.
-Remove the declaration and the assignment line of it.
+Hi Johannes,
 
-Signed-off-by: Il Han <corone.il.han@gmail.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+I am working on a fullmac driver using cfg80211, which has AP mode
+with MLME/SME implemented in firmware. I want to port it to linux 3.0
+to work with android , but I am afraid that the kernel do not support
+this kind of implementation and it will not work with hostapd
+properly. I am not sure about that, could you please give me some
+hints?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index c93ea35..f79b526 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -1141,7 +1141,6 @@ u32 ai_gpiocontrol(struct si_pub *sih, u32 mask, u32 val, u8 priority)
- void ai_chipcontrl_epa4331(struct si_pub *sih, bool on)
- {
- 	struct bcma_device *cc;
--	u32 val;
- 
- 	cc = ai_findcore(sih, CC_CORE_ID, 0);
- 
-@@ -1156,7 +1155,6 @@ void ai_chipcontrl_epa4331(struct si_pub *sih, bool on)
- 			bcma_set32(cc, CHIPCREGOFFS(chipcontrol),
- 				   CCTRL4331_EXTPA_EN);
- 	} else {
--		val &= ~(CCTRL4331_EXTPA_EN | CCTRL4331_EXTPA_ON_GPIO2_5);
- 		bcma_mask32(cc, CHIPCREGOFFS(chipcontrol),
- 			    ~(CCTRL4331_EXTPA_EN | CCTRL4331_EXTPA_ON_GPIO2_5));
- 	}
--- 
-1.7.4.1
-
+Thanks
+Harvey
