@@ -1,46 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:56206 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759467Ab2EVDjO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2012 23:39:14 -0400
-Message-ID: <4FBB0A5E.4010007@lwfinger.net> (sfid-20120522_053920_311858_AA3718FE)
-Date: Mon, 21 May 2012 22:39:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from yumi.tdiedrich.de ([85.10.210.183]:59618 "EHLO mx.tdiedrich.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932347Ab2EIVEw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 May 2012 17:04:52 -0400
+Date: Wed, 9 May 2012 23:04:48 +0200
+From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt28xx AP-mode problem with commit
+ 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
+ carrier state"
+Message-ID: <20120509210448.GE5472@yumi.tdiedrich.de> (sfid-20120509_230456_194214_7AC2A5E3)
+References: <20120509105719.GA24457@yumi.tdiedrich.de>
+ <1336564773.4323.19.camel@jlt3.sipsolutions.net>
+ <20120509121827.GD5472@yumi.tdiedrich.de>
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Network kernel panics with wireless-testing 3.4-rc7
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120509121827.GD5472@yumi.tdiedrich.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am getting kernel panics on one of my boxes from the b43legacy driver due to a 
-"Fatal exception in interrupt".
+Tobias Diedrich wrote:
+> Johannes Berg wrote:
+> > On Wed, 2012-05-09 at 12:57 +0200, Tobias Diedrich wrote:
+> > 
+> > > I've bisected a problem with running rt3052-based APs on recent
+> > > OpenWRT down to this commit: 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63
+> > > "mac80211: manage AP netdev carrier state"
+> > > 
+> > > If I revert this commit (and also fix the max_power issue), AP-mode
+> > > works fine, but if I leave it in, association to the AP times out.
+> > > 
+> > > (The AP-side hostapd claims WPA authentication was successful, but
+> > > the client never connects)
+> > > 
+> > > (Note: I haven't gotten around to testing a non-rt28xx based AP yet,
+> > > so I'm only assuming this affects only rt28xx, maybe it does affect
+> > > other chipsets as well)
+> > 
+> > Works fine here, but I don't see how that patch could affect rt2x00
+> > only.
+> > 
+> > You're going to have to give us more details about the failure, like the
+> > version of hostapd at least. The output of "ip monitor" would also be
+> > helpful.
+> 
+> The hostapd package Makefile says:
+> 
+> PKG_NAME:=hostapd
+> PKG_VERSION:=20120428
+> PKG_RELEASE:=1
+> PKG_REV:=1f0cc27eb98f7d1af9c64d0752238184cbdb9a24
+> 
+> PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+> PKG_SOURCE_URL:=git://w1.fi/srv/git/hostap.git
+> 
+> Can't look at ip output right now as I'm still at work and the
+> AP is switched off.
 
-This particular one happened 50K seconds after bootup, but it has happened 
-nearly as soon as the network connection was completed. The hand-transcribed 
-traceback is as follows:
+root@OpenWrt:/# hostapd -v
+hostapd v2.0-devel
+User space daemon for IEEE 802.11 AP management,
+IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator
+Copyright (c) 2002-2012, Jouni Malinen <j@w1.fi> and contributors
 
-__nefif_schedule+0x13/0xa0
-ieee80211_propagate_queue_wake+0x166/0x1c0
-__ieee80211_wake_queue+0x13b/0x2d0
-? __ieee80211_wake_queue++0xc0/0x2d0
-ieee80211_wake_queue_by_reason+0x45/0x70
-ieee80211_wake_queue+0xb/0x10
-b43legacy_dma_handle_txstatus+0x3f9/0x4b0
-? _raw_spin_unlock+0x26/0x40
-b43legacy_handle_txstatus+0x64/0x90
-b43legacy_handle_hwtxstatus+0x66/0x70
-b43legacy_dma_rx+0x354/0x610
 
-The offsets are for an x86_64 architecture.
+When associating to the AP works (3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 reverted):
+root@OpenWrt:/# ip monitor
+dev eth0.1 lladdr 00:50:5b:04:05:7e REACHABLE
+dev wlan0 lladdr a0:0b:ba:c6:9f:88 REACHABLE
+root@OpenWrt:/# logread
+[...]
+Sep  8 15:44:52 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: authenticated
+Sep  8 15:44:52 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: associated (aid 1)
+Sep  8 15:44:52 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 WPA: pairwise key handshake completed (RSN)
+[...]
+[switching phone back to different working AP]
+Sep  8 15:45:01 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: disassociated
+Sep  8 15:45:02 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: deauthenticated due to inactivity
+(timer)
 
-These crashes never happen when I use a USB device running the rtl8187 driver, 
-thus it appears to arise in b43legacy. Any suggestions on what might cause the 
-problem would be helpful. Sorry I don't have the register dumps, etc.
 
-The code dump at the point of the crash is as follows:
-ec 10 4c 89 65 f8 48 89 5d f0 49 89 fc <3c> 0f ba af 80 00 00 00 00
+When associating fails:
+root@OpenWrt:/# ip monitor
+dev eth0.1 lladdr 00:50:5b:04:05:7e REACHABLE
+root@OpenWrt:/# logread
+[...]
+Sep  8 15:44:59 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: authenticated
+Sep  8 15:44:59 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: associated (aid 1)
+Sep  8 15:45:05 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: authenticated
+Sep  8 15:45:05 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: associated (aid 1)
+Sep  8 15:45:12 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: authenticated
+Sep  8 15:45:12 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: associated (aid 1)
+Sep  8 15:45:18 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: authenticated
+Sep  8 15:45:18 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: associated (aid 1)
+Sep  8 15:45:24 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: authenticated
+Sep  8 15:45:24 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: associated (aid 1)
+Sep  8 15:45:31 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: authenticated
+Sep  8 15:45:31 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: associated (aid 1)
+Sep  8 15:45:37 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: authenticated
+Sep  8 15:45:37 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: associated (aid 1)
+[...]
+[switching phone back to different working AP]
+Sep  8 15:47:40 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: disassociated
+Sep  8 15:47:41 OpenWrt daemon.info hostapd: wlan0: STA
+a0:0b:ba:c6:9f:88 IEEE 802.11: deauthenticated due to inactivity
+(timer)
+[...]
 
-Larry
+
+
+Aaand now I was trying to take traffic capture on the AP, but it
+also works as long as the tcpdump is running.
+Adding the monitor device by itself doesn't help, but actually
+starting tcpdump does make it suddenly work (regardless of -p).
+
+Also /usr/sbin/hostapd -dd /var/run/hostapd-phy0.conf seems to work,
+while
+hostapd -P /var/run/wifi-phy0.pid -B /var/run/hostapd-phy0.conf
+doesn't.
+
+Some sort of subtle timing issue maybe?
+
+-- 
+Tobias						PGP: http://8ef7ddba.uguu.de
