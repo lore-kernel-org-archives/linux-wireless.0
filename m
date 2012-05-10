@@ -1,50 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58475 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965135Ab2EPH7i (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:53689 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018Ab2EJMfP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 03:59:38 -0400
-Message-ID: <1337155171.4367.2.camel@jlt3.sipsolutions.net> (sfid-20120516_095958_912857_319585F0)
-Subject: Re: [PATCH 0/3] net: mac80211: Neaten debugging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: joe@perches.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 16 May 2012 09:59:31 +0200
-In-Reply-To: <20120516.012319.1903390658912592000.davem@davemloft.net>
-References: <1337106548.15553.8.camel@jlt3.sipsolutions.net>
-	 <cover.1337116578.git.joe@perches.com>
-	 <20120516.012319.1903390658912592000.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 10 May 2012 08:35:15 -0400
+Received: by gglu4 with SMTP id u4so877331ggl.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 05:35:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1336652854-16163-1-git-send-email-gwingerde@gmail.com>
+References: <1336652854-16163-1-git-send-email-gwingerde@gmail.com>
+Date: Thu, 10 May 2012 14:35:14 +0200
+Message-ID: <CAOZOX0VZtMZRWJQOkqPQEmoV1E2bX71bs=UzKE2g7TxwUpwufg@mail.gmail.com> (sfid-20120510_143521_134050_D0BAF322)
+Subject: Re: [PATCH] rt2x00: Add support for RT5360 based PCI devices.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	=?ISO-8859-1?Q?Alex_Villac=ED=ADs_Lasso?=
+	<a_villacis@palosanto.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-16 at 01:23 -0400, David Miller wrote:
-> From: Joe Perches <joe@perches.com>
-> Date: Tue, 15 May 2012 14:20:29 -0700
-> 
-> > Always use pr_debug variants instead of printk(KERN_DEBUG...)
-> > 
-> > Joe Perches (3):
-> >   net: mac80211: Convert printk(KERN_DEBUG to pr_debug
-> >   net: mac80211: Add and use ht_vdbg debugging macro
-> >   net: mac80211: Add and use ibss_vdbg debugging macro
-> 
-> I really think this is the right thing to do and I hope the wireless
-> folks integrate this.
-> 
-> I am well aware that you guys intend for some of these messages to be
-> indications and notifications the user is intended to SEE, but in the
-> cases where that is true KERN_DEBUG is absolutely not appropriate.
-> 
-> You should be using KERN_INFO or KERN_WARN in those situations
-> instead.
+On Thu, May 10, 2012 at 2:27 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> From: Alex Villací­s Lasso <a villacis@palosanto.com>
+>
+> This chip is used at least by the D-Link DWA-525 adapter.
+>
+> Signed-off-by: Alex Villac<ED>s Lasso <a_villacis@palosanto.com>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Yeah, makes sense. I wonder if it makes sense to leave these under
-#ifdef though? Why #ifdef something if it's going to be invisible most
-of the time anyway?
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-johannes
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800.h    |    1 +
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++++
+>  drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
+>  3 files changed, 7 insertions(+)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index 9348521..02f8773 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -51,6 +51,7 @@
+>  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
+>  * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
+>  * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+> + * RF5360 2.4G 1T1R
+>  * RF5370 2.4G 1T1R
+>  * RF5390 2.4G 1T1R
+>  */
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index dfc90d3..11488e7 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2060,6 +2060,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+>        case RF3052:
+>                rt2800_config_channel_rf3052(rt2x00dev, conf, rf, info);
+>                break;
+> +       case RF5360:
+>        case RF5370:
+>        case RF5372:
+>        case RF5390:
+> @@ -2549,6 +2550,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
+>                rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
+>                rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
+>                break;
+> +       case RF5360:
+>        case RF5370:
+>        case RF5372:
+>        case RF5390:
+> @@ -4263,6 +4265,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>        case RF3022:
+>        case RF3052:
+>        case RF3320:
+> +       case RF5360:
+>        case RF5370:
+>        case RF5372:
+>        case RF5390:
+> @@ -4577,6 +4580,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>                   rt2x00_rf(rt2x00dev, RF3021) ||
+>                   rt2x00_rf(rt2x00dev, RF3022) ||
+>                   rt2x00_rf(rt2x00dev, RF3320) ||
+> +                  rt2x00_rf(rt2x00dev, RF5360) ||
+>                   rt2x00_rf(rt2x00dev, RF5370) ||
+>                   rt2x00_rf(rt2x00dev, RF5372) ||
+>                   rt2x00_rf(rt2x00dev, RF5390)) {
+> @@ -4662,6 +4666,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+>        case RF3022:
+>        case RF3320:
+>        case RF3052:
+> +       case RF5360:
+>        case RF5370:
+>        case RF5372:
+>        case RF5390:
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 931331d..4da36c8 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -1188,6 +1188,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+>        { PCI_DEVICE(0x1814, 0x3593) },
+>  #endif
+>  #ifdef CONFIG_RT2800PCI_RT53XX
+> +       { PCI_DEVICE(0x1814, 0x5360) },
+>        { PCI_DEVICE(0x1814, 0x5362) },
+>        { PCI_DEVICE(0x1814, 0x5390) },
+>        { PCI_DEVICE(0x1814, 0x5392) },
+> --
+> 1.7.10
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
