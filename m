@@ -1,103 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:3528 "EHLO
-	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751018Ab2EJMdt (ORCPT
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:64105 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754998Ab2EJUDy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 08:33:49 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	=?UTF-8?q?Alex=20Villac=C3=AD=C2=ADs=20Lasso?=
-	<a_villacis@palosanto.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH] rt2x00: Add support for RT5360 based PCI devices.
-Date: Thu, 10 May 2012 14:27:33 +0200
-Message-Id: <1336652854-16163-1-git-send-email-gwingerde@gmail.com> (sfid-20120510_143354_432561_B1249890)
+	Thu, 10 May 2012 16:03:54 -0400
+Received: by vbbff1 with SMTP id ff1so1928370vbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 13:03:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20120510130711.GA15533@shaftnet.org>
+References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
+	<4FA15A70.2020108@stericsson.com>
+	<CABF+-6VjWxN6mP4E+7WoR=RZxmSU70GPbua77Vmw+z=JnnKcUg@mail.gmail.com>
+	<CAMG6FYgcep04reRKFe6vjpW+THbCT=+FnJ_-eLrcgE7+3UJEfA@mail.gmail.com>
+	<CABF+-6XSA8OOjwuQqM-iDKHVTriJ04BzfA-VN0MqVAiN_ZrsEA@mail.gmail.com>
+	<20120509203730.GE17416@shaftnet.org>
+	<CABF+-6VUMoueQTA5_JUEOjiya5eQY=bAzt=cnr23HJ=ssedQSw@mail.gmail.com>
+	<20120510130711.GA15533@shaftnet.org>
+Date: Thu, 10 May 2012 16:03:53 -0400
+Message-ID: <CABF+-6Uymww9qK4o1=XP_MLcvpa-rpugW6SMLaXUBr21z=dkBg@mail.gmail.com> (sfid-20120510_220358_685876_D4C751FC)
+Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
+From: Kevin Groeneveld <kgroeneveld@gmail.com>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
+	Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alex Villací­s Lasso <a villacis@palosanto.com>
+Hi Solomon,
 
-This chip is used at least by the D-Link DWA-525 adapter.
+> I don't believe it will cause any problems, as the bluetooth pins aren't
+> hooked up on the SG901-1091 module. �That said, the PTA record on the
+> current Sagrad SDD files for the 1091/1098 modules specifies that BT
+> coexistence is disabled (ePTA mode = 0), so it should be functionally
+> equivalent to no PTA record being present.
 
-Signed-off-by: Alex Villac<ED>s Lasso <a_villacis@palosanto.com>
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h    |    1 +
- drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++++
- drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
- 3 files changed, 7 insertions(+)
+It is good to know the Sagrad SDD file is disabling PTA in the
+hardware even though there is a PTA record present.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 9348521..02f8773 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -51,6 +51,7 @@
-  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
-  * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
-  * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
-+ * RF5360 2.4G 1T1R
-  * RF5370 2.4G 1T1R
-  * RF5390 2.4G 1T1R
-  */
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index dfc90d3..11488e7 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2060,6 +2060,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	case RF3052:
- 		rt2800_config_channel_rf3052(rt2x00dev, conf, rf, info);
- 		break;
-+	case RF5360:
- 	case RF5370:
- 	case RF5372:
- 	case RF5390:
-@@ -2549,6 +2550,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 		rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
- 		rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
- 		break;
-+	case RF5360:
- 	case RF5370:
- 	case RF5372:
- 	case RF5390:
-@@ -4263,6 +4265,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RF3022:
- 	case RF3052:
- 	case RF3320:
-+	case RF5360:
- 	case RF5370:
- 	case RF5372:
- 	case RF5390:
-@@ -4577,6 +4580,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 		   rt2x00_rf(rt2x00dev, RF3021) ||
- 		   rt2x00_rf(rt2x00dev, RF3022) ||
- 		   rt2x00_rf(rt2x00dev, RF3320) ||
-+		   rt2x00_rf(rt2x00dev, RF5360) ||
- 		   rt2x00_rf(rt2x00dev, RF5370) ||
- 		   rt2x00_rf(rt2x00dev, RF5372) ||
- 		   rt2x00_rf(rt2x00dev, RF5390)) {
-@@ -4662,6 +4666,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	case RF3022:
- 	case RF3320:
- 	case RF3052:
-+	case RF5360:
- 	case RF5370:
- 	case RF5372:
- 	case RF5390:
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 931331d..4da36c8 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1188,6 +1188,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
- 	{ PCI_DEVICE(0x1814, 0x3593) },
- #endif
- #ifdef CONFIG_RT2800PCI_RT53XX
-+	{ PCI_DEVICE(0x1814, 0x5360) },
- 	{ PCI_DEVICE(0x1814, 0x5362) },
- 	{ PCI_DEVICE(0x1814, 0x5390) },
- 	{ PCI_DEVICE(0x1814, 0x5392) },
--- 
-1.7.10
+Although, at least with the driver Dmitry posted on this mailing list,
+the driver is taking action simply on the presence of the PTA record.
+I can easily disable this for my testing.
 
+I wonder if the parsing of the SDD file in the driver could be a
+little smarter to detect that the PTA record is actually disabling PTA
+and not assume the existence of a PTA record means PTA is being used.
+
+
+Kevin
