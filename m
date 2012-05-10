@@ -1,39 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:40562 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754656Ab2EORqw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41793 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755612Ab2EJH36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 13:46:52 -0400
-Date: Tue, 15 May 2012 13:45:31 -0400 (EDT)
-Message-Id: <20120515.134531.530903973750646107.davem@davemloft.net> (sfid-20120515_194720_254948_1D84987C)
-To: joe@perches.com
-Cc: netdev@vger.kernel.org, linux-decnet-user@lists.sourceforge.net,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
-	dev@openvswitch.org, linux-sctp@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <cover.1336981915.git.joe@perches.com>
-References: <cover.1336981915.git.joe@perches.com>
+	Thu, 10 May 2012 03:29:58 -0400
+Message-ID: <1336634995.4334.7.camel@jlt3.sipsolutions.net> (sfid-20120510_093001_410873_9EB26F12)
+Subject: Re: [PATCH 5/7] cfg80211: extend get_channel to take wdev argument
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 10 May 2012 09:29:55 +0200
+In-Reply-To: <1336632282-2278-6-git-send-email-michal.kazior@tieto.com>
+References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
+	 <1336632282-2278-6-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
-Date: Mon, 14 May 2012 00:56:24 -0700
 
-> net_ratelimit() like __ratelimit() is too easy to misuse.
-> 
-> Add simplifying macros similar to pr_<level>_ratelimited
-> that combines the test of net_ratelimit and logging.
-> 
-> Joe Perches (2):
->   net: Add net_ratelimited_function and net_<level>_ratelimited macros
->   net: Convert net_ratelimit uses to net_<level>_ratelimited
+>  	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
+> -					       enum nl80211_channel_type *type);
+> +						 struct wireless_dev *wdev,
+> +						 enum nl80211_channel_type *type);
 
-These look fine to me so I've applied them to net-next and am
-sanity checking the build right now.
+Hmm. This is mostly used for monitor mode, and there we would have to
+return NULL anyway while using multiple channels at the same time. Is it
+really worth the complexity?
 
-Thanks Joe.
+johannes
+
