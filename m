@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:54576 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932126Ab2EGVMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 17:12:21 -0400
-Date: Mon, 7 May 2012 23:11:56 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linville@tuxdriver.com, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ssb: add PCI IDs 0x4322 and 0xa8d6
-Message-ID: <20120507231156.22350d39@milhouse> (sfid-20120507_231225_255819_1D1FBDE2)
-In-Reply-To: <1336424693-25926-1-git-send-email-hauke@hauke-m.de>
-References: <1336424693-25926-1-git-send-email-hauke@hauke-m.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/7uTLwK2NRCQDyYCZzEX_dj_"; protocol="application/pgp-signature"
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:50831 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758371Ab2EJJQX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 05:16:23 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hn19so247958wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:22 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 51/78] wl18xx: add a module parameter to control 11a support
+Date: Thu, 10 May 2012 12:13:56 +0300
+Message-Id: <1336641263-5761-52-git-send-email-arik@wizery.com> (sfid-20120510_111638_424995_9B061DB7)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/7uTLwK2NRCQDyYCZzEX_dj_
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Luciano Coelho <coelho@ti.com>
 
-On Mon,  7 May 2012 23:04:53 +0200
-Hauke Mehrtens <hauke@hauke-m.de> wrote:
+In wl18xx we don't have an NVS yet, so we need to control whether 11a
+is supported with a module parameter for now.  11a support is enabled
+by default and can be changed by setting enable_11a to false when
+loading the module.
 
-> The 0x4322 ID is found on the BCM4322 used on some SoCs like the
-> Linksys WRT610N V1 connected to a BCM4705. The 0xa8d6 ID is found on
-> the BCM43222 used on some other SoCs like the D-Link DSL-2760U
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-It would probably make more sense, if we wrote the 0xa8d6 in decimal.
-Which is 43222.
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 52d63ff..d4e331f 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -48,6 +48,7 @@ static bool dc2dc_param = false;
+ static int n_antennas_2_param = 1;
+ static int n_antennas_5_param = 1;
+ static bool checksum_param = true;
++static bool enable_11a_param = true;
+ 
+ static const u8 wl18xx_rate_to_idx_2ghz[] = {
+ 	/* MCS rates are used only with 11n */
+@@ -1097,6 +1098,8 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		wl18xx_ops.init_vif = NULL;
+ 	}
+ 
++	wl->enable_11a = enable_11a_param;
++
+ 	wl18xx_conf_init(wl);
+ 
+ 	return wlcore_probe(wl, pdev);
+@@ -1149,6 +1152,9 @@ MODULE_PARM_DESC(n_antennas_5, "Number of installed 5GHz antennas: 1 (default) o
+ module_param_named(checksum, checksum_param, bool, S_IRUSR);
+ MODULE_PARM_DESC(checksum, "Enable TCP checksum: boolean (defaults to true)");
+ 
++module_param_named(enable_11a, enable_11a_param, bool, S_IRUSR);
++MODULE_PARM_DESC(enable_11a, "Enable 11a (5GHz): boolean (defaults to true)");
++
+ MODULE_LICENSE("GPL v2");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_FIRMWARE(WL18XX_FW_NAME);
+-- 
+1.7.9.5
 
---=20
-Greetings, Michael.
-
-PGP encryption is encouraged / 908D8B0E
-
---Sig_/7uTLwK2NRCQDyYCZzEX_dj_
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPqDqcAAoJEPUyvh2QjYsOr+UQAM1uWisWHpQD/RWmTXIdtKvC
-WquKYEJ+nSSnj9J/SdOLDMKN/9x3McnuirfL6Dk58FEihB9f2BlUURsDzJ85oPBp
-uh8q1KWQ1UDrFoQYehHTykoAlEO0wmk8jgODBJtSh3ypadzbaIccN3kyE0m2QMwj
-ZpK8BU/BOw2dmUuvdlz/JTSF314J2+0AIrt2qdDfo0+7FZ/yMebj8SvnhnLsGK5+
-QS2GLXe2UBaGZAfY8zYGjFg7ho3kUAR8CYP+P/ds330uDU19LCQ/wWTmYwieK/GO
-EIFbNQIDAZpb/Xr+bjnP2RJGwT5WSuYQPxpc01U9X5fQGJN88kehQlSidh/lMCZT
-Wuo1NMcMBowIbO940CBqv30n4EX20JOdTaAJfuBvCm4K0FB9gBmQpeQ/O5uwfDfJ
-dYSEgJMI/B9/rhlm5jGq9ARHvSpZzHAzIWWSrvdUOJzOMVGagaAmByYrHLXLmZFc
-/ziVRaXjdsf9G8ujBq9HfBM26S3gXevN4w4L4wCNSu5ohc3n2wBVkkWdzXM/V1u+
-sP0Eii9NeU89NjHkOQq+W7LeFnYt/hkQS0ZAVdoI7jxx95Gobdvq4KQhwq7myFOh
-sBP9wJfk4up+nwo7AM/RUKq3kd6p2sWC2wIjnxoJLdufL5bzWgzC3bFkBixe1m05
-TBQ7BJqCVyOzrS694ksu
-=aZ7Z
------END PGP SIGNATURE-----
-
---Sig_/7uTLwK2NRCQDyYCZzEX_dj_--
