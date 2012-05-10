@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:62806 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966266Ab2EOTIN convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:51924 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755777Ab2EJQfZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 15:08:13 -0400
-Received: by bkcji2 with SMTP id ji2so5129389bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 12:08:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FB1C6F8.7060902@lwfinger.net>
-References: <1337036779-16348-1-git-send-email-stas.yakovlev@gmail.com>
-	<4FB1C6F8.7060902@lwfinger.net>
-Date: Tue, 15 May 2012 12:08:11 -0700
-Message-ID: <CA++WF2MFg4fA11hxKE=9FSf-V6QH2bBEshKoM8Z9G_8AO80KsA@mail.gmail.com> (sfid-20120515_210817_800488_36A3AA2A)
-Subject: Re: [PATCH] net/wireless: ipw2100: Fix WARN_ON occurring in
- wiphy_register called by ipw2100_pci_init_one
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 10 May 2012 12:35:25 -0400
+Date: Thu, 10 May 2012 12:33:53 -0400 (EDT)
+Message-Id: <20120510.123353.1458740731067514606.davem@davemloft.net> (sfid-20120510_183550_745733_BBD2DA4D)
+To: joe@perches.com
+Cc: jussi.kivilinna@mbnet.fi, linville@tuxdriver.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] drivers/net: Convert compare_ether_addr to
+ ether_addr_equal
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1336666288.22495.14.camel@joe2Laptop>
+References: <7c9881a67c52c2f218480b6742155b6d6928122d.1336618708.git.joe@perches.com>
+	<20120510173201.16131du3cg90nybo@www.81.fi>
+	<1336666288.22495.14.camel@joe2Laptop>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 May 2012 20:01, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/14/2012 06:06 PM, Stanislav Yakovlev wrote:
->>
->> The problem was found by Larry Finger:
->> http://marc.info/?l=linux-wireless&m=133702401700614&w=2
->>
->> The problem is identical to the one for ipw2200 which is already fixed:
->> http://marc.info/?l=linux-wireless&m=133457257407196&w=2
->>
->> [   17.766431] ------------[ cut here ]------------
->> [   17.766467] WARNING: at net/wireless/core.c:562
->> ...
->> [   17.766769] ---[ end trace 559898c6bb0d1c75 ]---
->> [   17.767093] ipw2100: probe of 0000:02:03.0 failed with error -5
->>
->> This warning appears only if we apply Ben Hutchings' fix
->> http://marc.info/?l=linux-wireless&m=132720204412667&w=2
->> for the bug reported by Cesare Leonardi
->> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=656813
->> with cfg80211 warning during device registration
->> ("cfg80211: failed to add phy80211 symlink to netdev!").
->>
->> We separate device bring up and registration with network stack
->> to avoid the problem.
->>
->> Signed-off-by: Stanislav Yakovlev<stas.yakovlev@gmail.com>
->> ---
->>
->> Larry, can you test it once again?
->
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
->
-> Yes, this patch fixes the problem.
+From: Joe Perches <joe@perches.com>
+Date: Thu, 10 May 2012 09:11:28 -0700
 
-Thanks!
+> (cc's trimmed)
+> 
+> On Thu, 2012-05-10 at 17:32 +0300, Jussi Kivilinna wrote:
+>> Quoting Joe Perches <joe@perches.com>:
+>> > Use the new bool function ether_addr_equal to add
+>> > some clarity and reduce the likelihood for misuse
+>> > of compare_ether_addr for sorting.
+> []
+>> > diff --git a/drivers/net/wireless/rndis_wlan.c
+> []
+>> > @@ -2139,7 +2139,7 @@ resize_buf:
+>> >  	while (check_bssid_list_item(bssid, bssid_len, buf, len)) {
+>> >  		if (rndis_bss_info_update(usbdev, bssid) && match_bssid &&
+>> >  		    matched) {
+>> > -			if (compare_ether_addr(bssid->mac, match_bssid))
+>> > +			if (!ether_addr_equal(bssid->mac, match_bssid))
+>> 
+>> While reviewing this, noticed that above original code is wrong. It  
+>> should be !compare_ether_addr. So do I push patch fixing this through  
+>> wireless-testing althought it will later cause conflict with this patch?
+>> 
+>> -Jussi
+>> 
+>> >  				*matched = true;
+>> >  		}
+>> >
+> 
+> Up to John.
+> 
+> Here's the patch I would send against net-next
+> updating the test and the style a little.
 
-Stanislav.
+I think in this specific case it's better to push this one directly
+through net-next.  But yes, it's up to John.
+
