@@ -1,76 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:64257 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755289Ab2EBI65 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19132 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757077Ab2EJId2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 04:58:57 -0400
+	Thu, 10 May 2012 04:33:28 -0400
+Message-ID: <4FAB7D52.6060803@qca.qualcomm.com> (sfid-20120510_103334_537008_82A89612)
+Date: Thu, 10 May 2012 11:33:22 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20120502023836.GW3157@wantstofly.org>
-References: <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
-	<20120427101732.GX3157@wantstofly.org>
-	<CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
-	<CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
-	<20120427185809.GZ3157@wantstofly.org>
-	<CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
-	<CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
-	<20120501125102.GN3157@wantstofly.org>
-	<CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
-	<4FA089F9.1020602@erley.org>
-	<20120502023836.GW3157@wantstofly.org>
-Date: Wed, 2 May 2012 10:58:56 +0200
-Message-ID: <CA+icZUVLKEs4YAiByqeUpD6cRUyF+bvb2SY=PYebDKU8b+653A@mail.gmail.com> (sfid-20120502_105927_423757_D4D74107)
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: Pat Erley <pat-lkml@erley.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+To: Jonathan Bagg <jbagg@lenbrook.com>
+CC: Anthony Ginger <mapfly@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: ath6kl hostapd
+References: <CAK0tYSKLhALwUca2LPiRLfXTK-Qt3Oh3Lvk=V272AXdb=aAP7w@mail.gmail.com> <4F4B25F5.4090204@qca.qualcomm.com> <4F8546C7.40703@qca.qualcomm.com> <4FA036B6.7040002@lenbrook.com> <4FA03939.4080307@qca.qualcomm.com> <4FA0535D.2060907@lenbrook.com> <4FA21468.6060909@qca.qualcomm.com> <4FA43C79.6020202@lenbrook.com>
+In-Reply-To: <4FA43C79.6020202@lenbrook.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 2, 2012 at 4:38 AM, Lennert Buytenhek
-<buytenh@wantstofly.org> wrote:
-> On Tue, May 01, 2012 at 09:12:25PM -0400, Pat Erley wrote:
->
->> >--- a/drivers/net/wireless/mwl8k.c
->> >+++ b/drivers/net/wireless/mwl8k.c
->> >@@ -5225,6 +5225,7 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
->> >  }
->> >
->> >  enum {
->> >+    MWL8361P = 0,
->> >     MWL8363 = 0,
->> >     MWL8687,
->> >     MWL8366,
+On 05/04/2012 11:30 PM, Jonathan Bagg wrote:
+> On 12-05-03 01:15 AM, Kalle Valo wrote:
 >>
->> I'm not an expert, but isn't this giving both 8361P and 8363 the
->> same values in the enum?
->
-> Yeah, this is broken.
+>> That might be challenging. I think it's easier if you add debug messages
+>> and try to pinpoint where it is failing. For example
+>> ath6kl_cfg80211_change_iface() is a good place to start debugging.
+> 
+> I tried again and it appears that sometimes (< 10 %) I can make 
+> connections to the ath6kl in AP mode.
 
-Before this email, Helmut pointed me to the enum thingie in a private query.
-As I was busy with OverlayFS the last days, I couldn't give that
-information back.
+What exactly happens when a connection fails? What client device are you
+using?
 
-So, this should be:
-...
-  enum {
-     MWL8361P = 0,
-     MWL8363,
-     MWL8687,
-     MWL8366,
-...
+> Just to rule out any issues with 
+> my configs & tools, I setup a cw1200 sdio using the same software 
+> stack.  The cw1200 is working fine for me in AP mode and the output of 
+> hostapd is richer.
 
-Shall I cook up a new patch with a proper history and documented
-origin (original patch is from OpenWrt, I refreshed it against
-upstream)?
-...add some Tested-by (Helmut, Jim)...
-...send that to linux-wireless ML for a review?
+cw1200 is a mac80211 driver and the interface to user space is different
+compared to fullmac devices like ath6kl. That's why the log output is
+different.
 
-- Sedat -
+> Any clues from the ath6kl hostapd output?
+> 
+> 
+> --------hostapd output using ath6kl-------
+> 
+> nl80211: Event message available
+> nl80211: New station d8:a2:5e:08:89:56
+> nl80211: Assoc Req IEs - hexdump(len=55): 00 09 4e 31 35 30 2d 66 30 30 
+> 32 01 08 82 84 8b 96 24 30 48 6c 21 02 08 10 24 02 01 0e 32 04 0c 12 18 
+> 60 dd 09 00 10 18 02 00 00 01 00 00 dd 07 00 50 f2 02 00 01 00
+> wlan0: Event ASSOC (0) received
+> wlan0: STA d8:a2:5e:08:89:56 IEEE 802.11: associated
+> STA did not include WPS/RSN/WPA IE in (Re)AssocReq
+>    New STA
+> ap_sta_add: register ap_handle_timer timeout for d8:a2:5e:08:89:56 (300 
+> seconds - ap_max_inactivity)
+> wlan0: STA d8:a2:5e:08:89:56 RADIUS: starting accounting session 
+> 00000B62-00000000
+> IEEE 802.1X: Ignore STA - 802.1X not enabled or forced for WPS
+> hostapd_new_assoc_sta: reschedule ap_handle_timer timeout for 
+> d8:a2:5e:08:89:56 (300 seconds - ap_max_inactivity)
+> Sending OFFER of 192.168.5.80
+> Sending OFFER of 192.168.5.80
+> Sending ACK to 192.168.5.80
+> Sending ACK to 192.168.5.80
+> Sending ACK to 192.168.5.80
+> random: Got 8/20 bytes from /dev/random
+> nl80211: Event message available
+
+Is this from a failing case? From a quick look I don't see anything
+wrong in the logs.
+
+What are the symptoms when the connection fails? Did you check that this
+isn't a higher level problem (wrong IP address etc)?
+
+Kalle
