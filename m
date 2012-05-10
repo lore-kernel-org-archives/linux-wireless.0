@@ -1,55 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:35716 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756112Ab2EAVHO (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:44430 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754485Ab2EJNSc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 17:07:14 -0400
-Received: by yenl12 with SMTP id l12so2392379yen.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 14:07:13 -0700 (PDT)
-Message-ID: <4FA0507E.6010407@lwfinger.net> (sfid-20120501_230719_356193_C43BAA22)
-Date: Tue, 01 May 2012 16:07:10 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: simple w8 <simplew8@gmail.com>
-CC: Forest Bond <forest@alittletooquiet.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
-References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com> <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com> <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com> <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com> <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com> <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net> <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com> <4F9F55F9.3090800@lwfinger.net> <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com> <4F9F6B67.5000400@lwfinger.net> <CAKVccoVA=Rk8AkD+h0n9aeV95h0iMcnQgM_WMJq3rjzoFvkU-w@mail.gmail.com> <CAKVccoX=u=qX_OJ8RMSxpNEMGYdGVzimZURJ+ZeNZjhW1jPt6Q@mail.gmail.com> <4F9FF3D3.1020006@lwfinger.net> <CAKVccoWJPdPZqoLn6L+_PUKdiM0sLZhCBQCAa2aM7i1xgR21DA@mail.gmail.com>
-In-Reply-To: <CAKVccoWJPdPZqoLn6L+_PUKdiM0sLZhCBQCAa2aM7i1xgR21DA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 10 May 2012 09:18:32 -0400
+Received: by bkcji2 with SMTP id ji2so1275090bkc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 06:18:31 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3] mac80211: allow low-level drivers to set netdev feature bits
+Date: Thu, 10 May 2012 16:18:26 +0300
+Message-Id: <1336655906-31960-1-git-send-email-arik@wizery.com> (sfid-20120510_151836_869906_090342BD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/01/2012 03:42 PM, simple w8 wrote:
-> 2012/5/1 Larry Finger<Larry.Finger@lwfinger.net>:
->> On 05/01/2012 08:36 AM, simple w8 wrote:
->>>
->>>
->>> SEams that was your last fix for rtl8192
->>>
->>> http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commit;h=eb641120479de7ee703fabb5e6ee0ec7947474ba
->>>    that reduced the wifi force, thus detecting less wifi networks.
->>>
->>> Running without that "fix" the notebook detects more wifi networks,
->>> seams like the antenna have more force.
->>
->>
->> You keep talking about "antenna force". What does that mean?
->>
->> That patch keeps your device from running forever at a maximum of 1 Mbps by
->> adjusting the initial gain of the RX amplifier. You may reverse it if you
->> want so that you can detect more APs when you scan; however, most people
->> prefer to get better performance from the device. That patch will not be
->> reversed.
->
-> Could you please clarify a litle more about the why and the patch fix?
+Low level drivers can now set certain netdev feature bits in
+netdev_features member of the ieee80211_hw struct. These will be
+propagated to every netdev created from this HW.
 
-Before that patch, when the device scanned after the connection was up and 
-running, it set the gain very low. When that happened, the receiver failed to 
-see any info coming from the AP. The AP would retry several times, and then cut 
-its transmit rate to 1 Mbps. That rate would stay until rtl8192xe was unloaded 
-and reloaded. To me, that is a lot bigger problem that what you are seeing, 
-which is why I will not change it back!
+The white-listed features currently include only ones related to HW
+checksumming.
 
-Larry
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+v2->3: fix accidental comment damage
+
+include/net/mac80211.h |    5 +++++
+ net/mac80211/iface.c   |    2 ++
+ net/mac80211/main.c    |    7 +++++++
+ 3 files changed, 14 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4d6e6c6..decf6e3 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1288,6 +1288,10 @@ enum ieee80211_hw_flags {
+  *
+  * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
+  *	(if %IEEE80211_HW_QUEUE_CONTROL is set)
++ *
++ * @netdev_features: netdev features to be set in each netdev created
++ *	from this HW. Note only HW checksum features are currently
++ *	compatible with mac80211. Other feature bits will be rejected.
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1309,6 +1313,7 @@ struct ieee80211_hw {
+ 	u8 max_rx_aggregation_subframes;
+ 	u8 max_tx_aggregation_subframes;
+ 	u8 offchannel_tx_hw_queue;
++	netdev_features_t netdev_features;
+ };
+ 
+ /**
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 3e05a8b..c2ad78a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1350,6 +1350,8 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 			sdata->u.mgd.use_4addr = params->use_4addr;
+ 	}
+ 
++	ndev->features |= local->hw.netdev_features;
++
+ 	ret = register_netdevice(ndev);
+ 	if (ret)
+ 		goto fail;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b70f7f0..5b3bb8c 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -679,6 +679,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	enum ieee80211_band band;
+ 	int channels, max_bitrates;
+ 	bool supp_ht;
++	netdev_features_t feature_whitelist;
+ 	static const u32 cipher_suites[] = {
+ 		/* keep WEP first, it may be removed below */
+ 		WLAN_CIPHER_SUITE_WEP40,
+@@ -705,6 +706,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if ((hw->flags & IEEE80211_HW_SCAN_WHILE_IDLE) && !local->ops->hw_scan)
+ 		return -EINVAL;
+ 
++	/* Only HW csum features are currently compatible with mac80211 */
++	feature_whitelist = NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM |
++			    NETIF_F_HW_CSUM;
++	if (WARN_ON(hw->netdev_features & ~feature_whitelist))
++		return -EINVAL;
++
+ 	if (hw->max_report_rates == 0)
+ 		hw->max_report_rates = hw->max_rates;
+ 
+-- 
+1.7.9.5
 
