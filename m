@@ -1,33 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:46257 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754310Ab2E3U0D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 16:26:03 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: linux-can@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/4] treewide: Fix likely misuses of | for &
-Date: Wed, 30 May 2012 13:25:53 -0700
-Message-Id: <cover.1338408931.git.joe@perches.com> (sfid-20120530_222749_373490_95B5D64C)
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757933Ab2EJJQm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 05:16:42 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:42 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 60/78] wlcore: use all AP basic rates as default
+Date: Thu, 10 May 2012 12:14:05 +0300
+Message-Id: <1336641263-5761-61-git-send-email-arik@wizery.com> (sfid-20120510_111840_246331_E35E7A71)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-| with a non-zero constant is always true.
-Likely these should have been &.
+From: Luciano Coelho <coelho@ti.com>
 
-Joe Perches (4):
-  mac80211: Fix likely misuse of | for &
-  can: cc770: Fix likely misuse of | for &
-  brcmfmac: Fix likely misuse of | for &
-  usb: gadget: pch_udc: Fix likely misuse of | for &
+Sometimes we get a BSS_CHANGED_BEACON_ENABLED event before the basic
+rates have been properly set.  To avoid problems with the firmware not
+expecting to receive frames at rates that are not set during
+CMD_START_ROLE, we now start with all basic rates by default.
 
- drivers/net/can/cc770/cc770_platform.c           |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    4 ++--
- drivers/usb/gadget/pch_udc.c                     |    2 +-
- net/mac80211/cfg.c                               |    6 +++---
- 4 files changed, 7 insertions(+), 7 deletions(-)
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |   15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index f952098..1d9c11c 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1845,6 +1845,9 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 		wl12xx_allocate_rate_policy(wl, &wlvif->sta.basic_rate_idx);
+ 		wl12xx_allocate_rate_policy(wl, &wlvif->sta.ap_rate_idx);
+ 		wl12xx_allocate_rate_policy(wl, &wlvif->sta.p2p_rate_idx);
++		wlvif->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
++		wlvif->basic_rate = CONF_TX_RATE_MASK_BASIC;
++		wlvif->rate_set = CONF_TX_RATE_MASK_BASIC;
+ 	} else {
+ 		/* init ap data */
+ 		wlvif->ap.bcast_hlid = WL12XX_INVALID_LINK_ID;
+@@ -1854,13 +1857,19 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 		for (i = 0; i < CONF_TX_MAX_AC_COUNT; i++)
+ 			wl12xx_allocate_rate_policy(wl,
+ 						&wlvif->ap.ucast_rate_idx[i]);
++		wlvif->basic_rate_set = CONF_TX_AP_ENABLED_RATES;
++		/*
++		 * TODO: check if basic_rate shouldn't be
++		 * wl1271_tx_min_rate_get(wl, wlvif->basic_rate_set);
++		 * instead (the same thing for STA above).
++		*/
++		wlvif->basic_rate = CONF_TX_AP_ENABLED_RATES;
++		/* TODO: this seems to be used only for STA, check it */
++		wlvif->rate_set = CONF_TX_AP_ENABLED_RATES;
+ 	}
+ 
+ 	wlvif->bitrate_masks[IEEE80211_BAND_2GHZ] = wl->conf.tx.basic_rate;
+ 	wlvif->bitrate_masks[IEEE80211_BAND_5GHZ] = wl->conf.tx.basic_rate_5;
+-	wlvif->basic_rate_set = CONF_TX_RATE_MASK_BASIC;
+-	wlvif->basic_rate = CONF_TX_RATE_MASK_BASIC;
+-	wlvif->rate_set = CONF_TX_RATE_MASK_BASIC;
+ 	wlvif->beacon_int = WL1271_DEFAULT_BEACON_INT;
+ 
+ 	/*
 -- 
-1.7.8.111.gad25c.dirty
+1.7.9.5
 
