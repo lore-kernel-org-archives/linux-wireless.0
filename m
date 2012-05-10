@@ -1,84 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40840 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932706Ab2ESIoN (ORCPT
+Received: from mail.windriver.com ([147.11.1.11]:63151 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755807Ab2EJDrz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2012 04:44:13 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 06/10] ath9k_hw: fix BT RF performance
-Date: Sat, 19 May 2012 14:13:52 +0530
-Message-ID: <1337417036-1431-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120519_104419_059813_34CDA098)
-In-Reply-To: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 9 May 2012 23:47:55 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: florian.c.schilhabel@googlemail.com, ali@internetdog.org,
+	netdev@vger.kernel.org,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 0/3] staging: delete duplicated files/functionality in rtl8712
+Date: Wed,  9 May 2012 23:47:18 -0400
+Message-Id: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com> (sfid-20120510_054805_113513_DFD7E7E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When software rfkill is triggered, before put the chip in reset
-state, give LNA and SPDT control to BT to make sure BT can have
-good RF performance.
+A git grep happened to lead me into this dir, and once there I couldn't
+simply leave and pretend I didn't see the stuff that I saw.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+There were duplicated basic networking headers like if_ether.h and
+ip.h (of course, some ancient versions, too).  And a whole whack of
+boilerplate endian handling functionality duplicated too.
+
+I forced myself to stop looking after that.
+
+Anyway, a trivial redirection onto mainline's networking headers
+in the proper include dir, and a deletion of any references to
+the endian headers and the thing still happily builds on x86_64
+and ppc even after shitcanning seven useless files.
+
+These three commits are against May 8th's linux-next tree.  I've
+used "-D" to hide the line-by-line content of the deletions.
+
+Paul.
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |   16 ++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 +
- drivers/net/wireless/ath/ath9k/hw.c         |    3 +++
- 3 files changed, 20 insertions(+)
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 4ebe4a2..e31461b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1391,3 +1391,19 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 	return value;
- }
- EXPORT_SYMBOL(ar9003_mci_state);
-+
-+void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+
-+	ath_dbg(common, MCI, "Give LNA and SPDT control to BT\n");
-+
-+	REG_SET_BIT(ah, AR_PHY_GLB_CONTROL, AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
-+	mci->is_2g = false;
-+	mci->update_2g5g = true;
-+	ar9003_mci_send_2g5g_status(ah, true);
-+
-+	/* Force another 2g5g update at next scanning */
-+	mci->update_2g5g = true;
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 652ab8c..f4a6a44 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -266,6 +266,7 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
- void ar9003_mci_cleanup(struct ath_hw *ah);
- void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- 			      u32 *rx_msg_intr);
-+void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
- 
- /*
-  * These functions are used by ath9k_hw.
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 53c5dea..9e8fef2 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2734,6 +2734,9 @@ EXPORT_SYMBOL(ath9k_hw_setrxfilter);
- 
- bool ath9k_hw_phy_disable(struct ath_hw *ah)
- {
-+	if (ath9k_hw_mci_is_enabled(ah))
-+		ar9003_mci_bt_gain_ctrl(ah);
-+
- 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_WARM))
- 		return false;
- 
+Paul Gortmaker (3):
+  staging: wean rtl8712 off of its ancient duplicate of if_ether.h
+  staging: wean rtl8712 off of its ancient duplicate of ip.h
+  staging: delete all duplicated endian crap from rtl8712 driver
+
+ drivers/staging/rtl8712/big_endian.h        |   94 --------------
+ drivers/staging/rtl8712/generic.h           |  178 ---------------------------
+ drivers/staging/rtl8712/hal_init.c          |    1 -
+ drivers/staging/rtl8712/if_ether.h          |  141 ---------------------
+ drivers/staging/rtl8712/ip.h                |  137 --------------------
+ drivers/staging/rtl8712/little_endian.h     |   94 --------------
+ drivers/staging/rtl8712/osdep_service.h     |    2 -
+ drivers/staging/rtl8712/rtl8712_cmd.c       |    1 -
+ drivers/staging/rtl8712/rtl8712_recv.c      |    5 +-
+ drivers/staging/rtl8712/rtl8712_xmit.c      |    1 -
+ drivers/staging/rtl8712/rtl871x_byteorder.h |   32 -----
+ drivers/staging/rtl8712/rtl871x_cmd.c       |    1 -
+ drivers/staging/rtl8712/rtl871x_recv.c      |    4 +-
+ drivers/staging/rtl8712/rtl871x_xmit.c      |    1 -
+ drivers/staging/rtl8712/swab.h              |  131 --------------------
+ drivers/staging/rtl8712/usb_ops.c           |    1 -
+ drivers/staging/rtl8712/wifi.h              |    1 -
+ drivers/staging/rtl8712/xmit_linux.c        |    6 +-
+ 18 files changed, 7 insertions(+), 824 deletions(-)
+ delete mode 100644 drivers/staging/rtl8712/big_endian.h
+ delete mode 100644 drivers/staging/rtl8712/generic.h
+ delete mode 100644 drivers/staging/rtl8712/if_ether.h
+ delete mode 100644 drivers/staging/rtl8712/ip.h
+ delete mode 100644 drivers/staging/rtl8712/little_endian.h
+ delete mode 100644 drivers/staging/rtl8712/rtl871x_byteorder.h
+ delete mode 100644 drivers/staging/rtl8712/swab.h
+
 -- 
-1.7.10.2
+1.7.9.1
 
