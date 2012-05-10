@@ -1,63 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754054Ab2EJJPo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:15:44 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:43 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 34/78] wl18xx: read FW pc on recovery
-Date: Thu, 10 May 2012 12:13:39 +0300
-Message-Id: <1336641263-5761-35-git-send-email-arik@wizery.com> (sfid-20120510_112226_900346_63245D39)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:48058 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756132Ab2EJGpK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 02:45:10 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/7] mac80211: introduce ieee80211_oper_channel_type
+Date: Thu, 10 May 2012 08:44:39 +0200
+Message-ID: <1336632282-2278-5-git-send-email-michal.kazior@tieto.com> (sfid-20120510_084518_555193_41F9F567)
+In-Reply-To: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
+References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Define the FW pc in the 18xx register translation table. This specific
-register is only valid in the boot partition, so change the momentarily
-change partitions. This doesn't damage 12xx cards, where the FW pc is
-accessible via boot partition as well.
+Prepares for _oper_channel_type removal.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Change-Id: I161842005dd195ad0935b6f4ba14740724ab9846
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c |    2 +-
- drivers/net/wireless/ti/wlcore/main.c |    3 +++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ net/mac80211/chan.c        |   14 +++++++++++---
+ net/mac80211/ieee80211_i.h |    3 +++
+ 2 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 5214334..82403e3 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -549,7 +549,7 @@ static const int wl18xx_rtable[REG_TABLE_LEN] = {
- 	[REG_EVENT_MAILBOX_PTR]		= WL18XX_REG_EVENT_MAILBOX_PTR,
- 	[REG_INTERRUPT_TRIG]		= WL18XX_REG_INTERRUPT_TRIG_H,
- 	[REG_INTERRUPT_MASK]		= WL18XX_REG_INTERRUPT_MASK,
--	[REG_PC_ON_RECOVERY]		= 0, /* TODO: where is the PC? */
-+	[REG_PC_ON_RECOVERY]		= WL18XX_SCR_PAD4,
- 	[REG_CHIP_ID_B]			= WL18XX_REG_CHIP_ID_B,
- 	[REG_CMD_MBOX_ADDRESS]		= WL18XX_CMD_MBOX_ADDRESS,
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 3234ad1..8513f70 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -66,14 +66,15 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
  
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index c98958f..cbe94ed 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -872,9 +872,12 @@ static void wl1271_recovery_work(struct work_struct *work)
+ static enum nl80211_channel_type
+ ieee80211_get_superchan(struct ieee80211_local *local,
+-			struct ieee80211_sub_if_data *sdata)
++			struct ieee80211_sub_if_data *sdata,
++			bool ignore_self)
+ {
+ 	struct ieee80211_sub_if_data *tmp;
+ 	enum nl80211_channel_type superchan = NL80211_CHAN_NO_HT;
  
- 	wl12xx_read_fwlog_panic(wl);
+ 	mutex_lock(&local->iflist_mtx);
+ 	list_for_each_entry(tmp, &local->interfaces, list) {
+-		if (tmp == sdata)
++		if (ignore_self && tmp == sdata)
+ 			continue;
  
-+	/* change partitions momentarily so we can read the FW pc */
-+	wlcore_set_partition(wl, &wl->ptable[PART_BOOT]);
- 	wl1271_info("Hardware recovery in progress. FW ver: %s pc: 0x%x",
- 		    wl->chip.fw_ver_str,
- 		    wlcore_read_reg(wl, REG_PC_ON_RECOVERY));
-+	wlcore_set_partition(wl, &wl->ptable[PART_WORK]);
+ 		if (!ieee80211_sdata_running(tmp))
+@@ -135,13 +136,20 @@ static bool ieee80211_channel_types_are_compatible(
+ 	return result;
+ }
  
- 	BUG_ON(bug_on_recovery &&
- 	       !test_bit(WL1271_FLAG_INTENDED_FW_RECOVERY, &wl->flags));
++enum nl80211_channel_type
++ieee80211_oper_channel_type(struct ieee80211_local *local,
++			    struct ieee80211_sub_if_data *sdata)
++{
++	return ieee80211_get_superchan(local, sdata, 0);
++}
++
+ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+ 				enum nl80211_channel_type chantype)
+ {
+ 	enum nl80211_channel_type superchan;
+ 
+-	superchan = ieee80211_get_superchan(local, sdata);
++	superchan = ieee80211_get_superchan(local, sdata, 1);
+ 	if (!ieee80211_channel_types_are_compatible(superchan, chantype))
+ 		return false;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 122717f..e40cd06 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1527,6 +1527,9 @@ enum ieee80211_chan_mode {
+ enum ieee80211_chan_mode
+ ieee80211_get_channel_mode(struct ieee80211_local *local,
+ 			   struct ieee80211_sub_if_data *ignore);
++enum nl80211_channel_type
++ieee80211_oper_channel_type(struct ieee80211_local *local,
++			    struct ieee80211_sub_if_data *sdata);
+ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata,
+ 				enum nl80211_channel_type chantype);
 -- 
-1.7.9.5
+1.7.0.4
 
