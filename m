@@ -1,93 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:43398 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760761Ab2EWSgi convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41782 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756134Ab2EJH0e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 14:36:38 -0400
-Received: by vbbff1 with SMTP id ff1so4857185vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 11:36:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CA+7oygenvx9nMSbFimbkzmyBuc+mPV4ot-UmBuor3Zc2BLQLGg@mail.gmail.com>
-References: <CA+7oygccmq9DY+dR-=__4z_rZ4Sa9d8zmz+6=zX-xsTKdWkFWQ@mail.gmail.com>
-	<CAOpc7mEKLM1wjKmdde3YqTuB0edoOFBcH=dK5s5V1y5t7v=wMQ@mail.gmail.com>
-	<CA+7oygftxidR_r-t16K1g9CNPhL+EkMdPyKftkWoSk+Fzf+Rog@mail.gmail.com>
-	<CA+7oygddbQpoPmc=A05AGyPfq9YyhdeejwYfpS0sGXD=9CeZqA@mail.gmail.com>
-	<CA+7oygcX6_d4anpCKGRG1f7ugcr4Pm19O_+Vogbj13W55PuczA@mail.gmail.com>
-	<CA+7oygenvx9nMSbFimbkzmyBuc+mPV4ot-UmBuor3Zc2BLQLGg@mail.gmail.com>
-Date: Wed, 23 May 2012 14:36:38 -0400
-Message-ID: <CA+7oygeU+7LKp3q1_S1UUtjS8SFOthC_q54pQAGAhR1jBBzavw@mail.gmail.com> (sfid-20120523_203701_408983_CB87F86A)
-Subject: Re: AR9280 reported signal strengths are flat (comparison with
- bcm4322 included)
-From: George Nychis <gnychis@gmail.com>
-To: Holger Schurig <holgerschurig@googlemail.com>
+	Thu, 10 May 2012 03:26:34 -0400
+Message-ID: <1336634791.4334.5.camel@jlt3.sipsolutions.net> (sfid-20120510_092639_619325_A4E11E6F)
+Subject: Re: [PATCH 1/7] mac80211: add tracking of temporary offchannel sdata
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Thu, 10 May 2012 09:26:31 +0200
+In-Reply-To: <1336632282-2278-2-git-send-email-michal.kazior@tieto.com>
+References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
+	 <1336632282-2278-2-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Might anyone else have some insight here? I've tried digging through
-the code to see if AGC is not properly taken in to consideration
-during the RSSI calculation, but I think this is done in the firmware
-which is out of view of my eyes.
+Hi Michal,
 
-On Wed, May 16, 2012 at 11:36 PM, George Nychis <gnychis@gmail.com> wrote:
->
-> Well, I believe that I forced ANI to be disabled and I still see this
-> same behavior.
->
-> To disable ANI on my AR9280, I added this to __ath9k_hw_init() in hw.c
->  if (AR_SREV_9280(ah))
->    ah->config.enable_ani = false;
->
-> I believe this works because in ath9k_hw_post_init() I have checked
-> that ah->config.enable_ani is set to false.  Therefore,
-> ath9k_hw_ani_setup() and ath9k_hw_ani_init() are never called.
->
-> Unfortunately, I still see this same flat line trend without strong
-> signal strengths near the device.
->
->
-> On Wed, May 16, 2012 at 2:35 PM, George Nychis <gnychis@gmail.com> wrote:
-> >
-> > BTW- is ANI _not_ applied on broadcast traffic?  I notice that
-> > monitoring the signal strength of beacons does not show this behavior.
-> >  Maybe not applied for localization reasons?
-> >
-> > - George
-> >
-> >
-> > On Wed, May 16, 2012 at 2:32 PM, George Nychis <gnychis@gmail.com>
-> > wrote:
-> > > Hi Holger,
-> > >
-> > > Thanks a bunch for your response!  I had read about ANI before on the
-> > > list, it would be interesting to know if this is the cause for this.
-> > > It definitely seems plausible. I will dig around the ath9k code and
-> > > see if I can narrow down this to the cause.
-> > >
-> > >
-> > > On Wed, May 16, 2012 at 2:31 PM, George Nychis <gnychis@gmail.com>
-> > > wrote:
-> > >>
-> > >> Hi Holger,
-> > >>
-> > >> Thanks a bunch for your response!  I had read about ANI before on the
-> > >> list, it would be interesting to know if this is the cause for this.
-> > >>  It
-> > >> definitely seems plausible. I will dig around the ath9k code and see
-> > >> if I
-> > >> can narrow down this to the cause.
-> > >>
-> > >> - George
-> > >>
-> > >>
-> > >> On Wed, May 16, 2012 at 2:08 AM, Holger Schurig
-> > >> <holgerschurig@googlemail.com> wrote:
-> > >>>
-> > >>> This is probably due to ANI (adapative noise immunity). I think
-> > >>> ath9k
-> > >>> does too much here, in other words: it doesn't just kick in if there
-> > >>> are too strong signals there. Instead it seems to always adjust the
-> > >>> input attenuator, needed or not.
-> > >>
-> > >>
+> This is necessary if we want to have a sdata-based
+> channel recalculation.
+> 
+> Change-Id: I223e052146893b3ae1ca46de7d90c54ffc589f1b
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  net/mac80211/ieee80211_i.h |    1 +
+>  net/mac80211/work.c        |    2 ++
+>  2 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index b5e491b..c109960 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -997,6 +997,7 @@ struct ieee80211_local {
+>  	struct ieee80211_channel *oper_channel, *csa_channel;
+>  
+>  	/* Temporary remain-on-channel for off-channel operations */
+> +	struct ieee80211_sub_if_data *tmp_sdata;
+>  	struct ieee80211_channel *tmp_channel;
+>  	enum nl80211_channel_type tmp_channel_type;
+
+Do you actually need this? I'm still tempted to not worry about any of
+this and force drivers to implement remain-on-channel in the driver or
+device for multi-channel, and this temporary thing is only used for
+remain-on-channel operations now.
+
+johannes
+
