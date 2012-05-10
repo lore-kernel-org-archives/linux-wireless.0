@@ -1,39 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53502 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751165Ab2E2Mvq (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758173Ab2EJJPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 08:51:46 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20420.50737.885895.629888@gargle.gargle.HOWL> (sfid-20120529_145150_870155_12D298BC)
-Date: Tue, 29 May 2012 18:20:57 +0530
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 09/22] ath9k: Handle fatal interrupts properly
-In-Reply-To: <4FC4C47A.50006@openwrt.org>
-References: <20413.45797.72462.431840@gargle.gargle.HOWL>
-	<4FC4C12A.1050804@openwrt.org>
-	<1338294968.4342.32.camel@jlt3.sipsolutions.net>
-	<4FC4C47A.50006@openwrt.org>
+	Thu, 10 May 2012 05:15:39 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:39 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 32/78] wl18xx: add board type module argument
+Date: Thu, 10 May 2012 12:13:37 +0300
+Message-Id: <1336641263-5761-33-git-send-email-arik@wizery.com> (sfid-20120510_111554_883937_DADC1E1F)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau wrote:
-> Hm, good point. Maybe use u32 then. Either way, the lock in this patch
-> does almost nothing to protect against race conditions, since it doesn't
-> apply to other places in the code that change sc->sc_flags.
-> Maybe we should change that entire thing to just use set_bit/test_bit
-> instead.
+From: Luciano Coelho <coelho@ti.com>
 
-That is because the locking for all the other flags has to be cleaned up.
-Especially the powersave/beacon flags, and the usage of other locks
-are hazy (sc_pcu_lock etc.). We can clean all of them, but I think it
-will be an involved process - and the watchdog race is a crippling issue
-as far as general usage is concerned. Disconnects occur in regular usage
-quite frequently, breaking stress tests.
+Different board types (ie. FPGA, HDK and DVP/EVB) require slightly
+different init configuration options.  Since we cannot probe the type
+of board from the actual hardware, we need to pass it as an option
+during module load.
 
-Sujith
+This patch adds a module parameters that accepts the 3 different board
+types, with DVP/EVB as the default, and uses this value where needed.
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c   |   26 ++++++++++++++++++++++++--
+ drivers/net/wireless/ti/wl18xx/wl18xx.h |    2 ++
+ 2 files changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 17792e2..e5ebf4a 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -42,6 +42,7 @@
+ #define WL18XX_RX_CHECKSUM_MASK      0x40
+ 
+ static char *ht_mode_param;
++static char *board_type_param;
+ 
+ static const u8 wl18xx_rate_to_idx_2ghz[] = {
+ 	/* MCS rates are used only with 11n */
+@@ -680,8 +681,7 @@ static void wl18xx_set_mac_and_phy(struct wl1271 *wl)
+ 	params.secondary_clock_setting_time =
+ 		phy->secondary_clock_setting_time;
+ 
+-	/* TODO: hardcoded for now */
+-	params.board_type = BOARD_TYPE_DVP_EVB_18XX;
++	params.board_type = priv->board_type;
+ 
+ 	wlcore_set_partition(wl, &wl->ptable[PART_PHY_INIT]);
+ 	wl1271_write(wl, WL18XX_PHY_INIT_MEM_ADDR, (u8 *)&params,
+@@ -964,6 +964,7 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	wl = hw->priv;
++	priv = wl->priv;
+ 	wl->ops = &wl18xx_ops;
+ 	wl->ptable = wl18xx_ptable;
+ 	wl->rtable = wl18xx_rtable;
+@@ -979,6 +980,24 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		memcpy(&wl->ht_cap, &wl18xx_mimo_ht_cap,
+ 		       sizeof(wl18xx_mimo_ht_cap));
+ 
++	if (!board_type_param) {
++		board_type_param = kstrdup("dvp_evb", GFP_KERNEL);
++		priv->board_type = BOARD_TYPE_DVP_EVB_18XX;
++	} else {
++		if (!strcmp(board_type_param, "fpga"))
++			priv->board_type = BOARD_TYPE_FPGA_18XX;
++		else if (!strcmp(board_type_param, "hdk"))
++			priv->board_type = BOARD_TYPE_HDK_18XX;
++		else if (!strcmp(board_type_param, "dvp_evb"))
++			priv->board_type = BOARD_TYPE_DVP_EVB_18XX;
++		else {
++			wl1271_error("invalid board type '%s'",
++				     board_type_param);
++			wlcore_free_hw(wl);
++			return -EINVAL;
++		}
++	}
++
+ 	wl18xx_conf_init(wl);
+ 
+ 	return wlcore_probe(wl, pdev);
+@@ -1015,6 +1034,9 @@ module_exit(wl18xx_exit);
+ module_param_named(ht_mode, ht_mode_param, charp, S_IRUSR);
+ MODULE_PARM_DESC(ht_mode, "Force HT mode: wide or mimo");
+ 
++module_param_named(board_type, board_type_param, charp, S_IRUSR);
++MODULE_PARM_DESC(board_type, "Board type: fpga, hdk or dvp_evb (default)");
++
+ MODULE_LICENSE("GPL v2");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_FIRMWARE(WL18XX_FW_NAME);
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index c9bf5c6..5bcc7f0 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -34,6 +34,8 @@ struct wl18xx_priv {
+ 
+ 	/* Index of last released Tx desc in FW */
+ 	u8 last_fw_rls_idx;
++
++	u8 board_type;
+ };
+ 
+ #define WL18XX_FW_MAX_TX_STATUS_DESC 33
+-- 
+1.7.9.5
+
