@@ -1,78 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18762 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696Ab2EXECw (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757815Ab2EJJOi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 00:02:52 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45731.73274.592904@gargle.gargle.HOWL> (sfid-20120524_060330_117413_C6553CFB)
-Date: Thu, 24 May 2012 09:31:39 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 00/22] ath9k updates
+	Thu, 10 May 2012 05:14:38 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:14:38 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 04/78] wl18xx: add partition table
+Date: Thu, 10 May 2012 12:13:09 +0300
+Message-Id: <1336641263-5761-5-git-send-email-arik@wizery.com> (sfid-20120510_111442_929865_EAA8F322)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: Luciano Coelho <coelho@ti.com>
 
-These are the pending patches for ath9k, rebased over
-current -wt.
+Define and add the partition table in the wlcore struct.
 
-v2 -- Add proper From: headers
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |   35 +++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
-Sujith
-
-Rajkumar Manoharan (11):
-  ath9k_hw: update ar9462 initval table to fix rx nfcal
-  ath9k: cleanup MCI indentation
-  ath9k_hw: fix IQ calibration chain index
-  ath9k_hw: program BT to control SPDT
-  ath9k_hw: configure ar9462 switching regulator discontinuous mode
-  ath9k_hw: fix BT RF performance
-  ath9k: BT coex performance tuning for AR9462
-  ath: do not update cycle counters with sleep mode results
-  ath9k: always perform ani calibration at poll interval
-  ath9k_hw: fix power state for MCI
-  ath9k: improve BT FTP/PAN performance
-
-Sujith Manoharan (11):
-  ath9k: Prune ath9k_init_device
-  ath9k: Handle ASPM properly
-  ath9k: Setup MCI interrupts properly
-  ath9k_hw: Fix AR_RTC_KEEP_AWAKE usage
-  ath9k_hw: Fix MCI usage
-  ath9k_hw: Cleanup power mode API
-  ath9k: Add MCI interrupt to debugfs statistics
-  ath9k_hw: Fix variable usage
-  ath9k: Handle fatal interrupts properly
-  ath9k: Remove SC_OP_OFFCHANNEL
-  ath9k: Use separate operational flags for BTCOEX
-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c      |   20 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |    1 +
- drivers/net/wireless/ath/ath9k/ar9003_mci.c        |  457 ++++++++++----------
- drivers/net/wireless/ath/ath9k/ar9003_mci.h        |   10 +-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |    4 +
- .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |    4 +-
- drivers/net/wireless/ath/ath9k/ath9k.h             |   19 +-
- drivers/net/wireless/ath/ath9k/btcoex.c            |   10 +-
- drivers/net/wireless/ath/ath9k/btcoex.h            |    4 +
- drivers/net/wireless/ath/ath9k/debug.c             |    3 +
- drivers/net/wireless/ath/ath9k/debug.h             |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c              |   30 +-
- drivers/net/wireless/ath/ath9k/hw.c                |  212 ++++-----
- drivers/net/wireless/ath/ath9k/hw.h                |   10 +-
- drivers/net/wireless/ath/ath9k/init.c              |   19 +-
- drivers/net/wireless/ath/ath9k/main.c              |   34 +-
- drivers/net/wireless/ath/ath9k/mci.c               |   65 ++-
- drivers/net/wireless/ath/ath9k/mci.h               |   11 +-
- drivers/net/wireless/ath/ath9k/pci.c               |    5 +
- drivers/net/wireless/ath/ath9k/recv.c              |    5 +-
- drivers/net/wireless/ath/ath9k/reg.h               |    2 +
- 21 files changed, 493 insertions(+), 433 deletions(-)
-
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 3fa9298..f3a164a 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -28,6 +28,40 @@
+ static struct wlcore_ops wl18xx_ops = {
+ };
+ 
++static const struct wlcore_partition_set wl18xx_ptable[PART_TABLE_LEN] = {
++	[PART_TOP_PRCM_ELP_SOC] = {
++		.mem  = { .start = 0x00A02000, .size  = 0x00010000 },
++		.reg  = { .start = 0x00807000, .size  = 0x00005000 },
++		.mem2 = { .start = 0x00800000, .size  = 0x0000B000 },
++		.mem3 = { .start = 0x00000000, .size  = 0x00000000 },
++	},
++	[PART_DOWN] = {
++		.mem  = { .start = 0x00000000, .size  = 0x00014000 },
++		.reg  = { .start = 0x00810000, .size  = 0x0000BFFF },
++		.mem2 = { .start = 0x00000000, .size  = 0x00000000 },
++		.mem3 = { .start = 0x00000000, .size  = 0x00000000 },
++	},
++	[PART_BOOT] = {
++		.mem  = { .start = 0x00700000, .size = 0x0000030c },
++		.reg  = { .start = 0x00802000, .size = 0x00014578 },
++		.mem2 = { .start = 0x00B00404, .size = 0x00001000 },
++		.mem3 = { .start = 0x00C00000, .size = 0x00000400 },
++	},
++	[PART_WORK] = {
++		.mem  = { .start = 0x00800000, .size  = 0x000050FC },
++		.reg  = { .start = 0x00B00404, .size  = 0x00001000 },
++		.mem2 = { .start = 0x00C00000, .size  = 0x00000400 },
++		.mem3 = { .start = 0x00000000, .size  = 0x00000000 },
++	},
++	[PART_PHY_INIT] = {
++		/* TODO: use the phy_conf struct size here */
++		.mem  = { .start = 0x80926000, .size = 252 },
++		.reg  = { .start = 0x00000000, .size = 0x00000000 },
++		.mem2 = { .start = 0x00000000, .size = 0x00000000 },
++		.mem3 = { .start = 0x00000000, .size = 0x00000000 },
++	},
++};
++
+ int __devinit wl18xx_probe(struct platform_device *pdev)
+ {
+ 	struct wl1271 *wl;
+@@ -41,6 +75,7 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 
+ 	wl = hw->priv;
+ 	wl->ops = &wl18xx_ops;
++	wl->ptable = wl18xx_ptable;
+ 
+ 	return wlcore_probe(wl, pdev);
+ }
 -- 
-1.7.10.2
+1.7.9.5
 
