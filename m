@@ -1,40 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:9101 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752621Ab2E1GcR (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:40505 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758738Ab2EJJRM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 02:32:17 -0400
-Message-ID: <4FC31BDC.1050401@qca.qualcomm.com> (sfid-20120528_083247_792442_159A6803)
-Date: Mon, 28 May 2012 12:01:56 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: net_ratelimit few aggregation related messages
-References: <1337960224-7428-1-git-send-email-mohammed@qca.qualcomm.com>	 <1337976166.30100.6.camel@joe2Laptop> <4FC3180F.1060902@qca.qualcomm.com> <1338186413.2202.16.camel@joe2Laptop>
-In-Reply-To: <1338186413.2202.16.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Thu, 10 May 2012 05:17:12 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1111470wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:17:11 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 73/78] wl18xx: export pwr_limit_reference_11_abg value as a module parameter
+Date: Thu, 10 May 2012 12:14:18 +0300
+Message-Id: <1336641263-5761-74-git-send-email-arik@wizery.com> (sfid-20120510_111720_529406_D6BF22FA)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 28 May 2012 11:56 AM, Joe Perches wrote:
-> On Mon, 2012-05-28 at 11:45 +0530, Mohammed Shafi Shajakhan wrote:
->> just today saw this link where you had introduced net_dbg_ratelimited
->> http://www.digipedia.pl/usenet/thread/18978/31017/
->> so should i send the v2 patch using net_dbg_ratelimited to net-next
->> rather than wireless-testing tree ?
->
-> Yes, but you should wait until net-next opens
-> for patches (after Linus' -rc1 is released)
->
->
+From: Luciano Coelho <coelho@ti.com>
 
-Joe, once Linus release rc1, will your changes will be updated in 
-wireless-testing , so that i can send a patch directly to John/linux 
-wireless ? thank you.
+Yet another temporary module parameter requested by the firmware team.
+This will be replaced by the conf binary.
 
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 6baeb26b..524f44c 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -53,6 +53,7 @@ static int low_band_component = -1;
+ static int low_band_component_type = -1;
+ static int high_band_component = -1;
+ static int high_band_component_type = -1;
++static int pwr_limit_reference_11_abg = -1;
+ 
+ static const u8 wl18xx_rate_to_idx_2ghz[] = {
+ 	/* MCS rates are used only with 11n */
+@@ -1190,6 +1191,13 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		priv->conf.phy.high_band_component_type =
+ 			high_band_component_type;
+ 
++	if (pwr_limit_reference_11_abg == -1)
++		pwr_limit_reference_11_abg =
++			priv->conf.phy.pwr_limit_reference_11_abg;
++	else
++		priv->conf.phy.pwr_limit_reference_11_abg =
++			pwr_limit_reference_11_abg;
++
+ 	if (!checksum_param) {
+ 		wl18xx_ops.set_rx_csum = NULL;
+ 		wl18xx_ops.init_vif = NULL;
+@@ -1270,6 +1278,10 @@ module_param(high_band_component_type, uint, S_IRUSR);
+ MODULE_PARM_DESC(high_band_component_type, "High band component type: u8 "
+ 		 "(default is 0x09)");
+ 
++module_param(pwr_limit_reference_11_abg, uint, S_IRUSR);
++MODULE_PARM_DESC(pwr_limit_reference_11_abg, "Power limit reference: u8 "
++		 "(default is 0xc8)");
++
+ MODULE_LICENSE("GPL v2");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_FIRMWARE(WL18XX_FW_NAME);
 -- 
-thanks,
-shafi
+1.7.9.5
+
