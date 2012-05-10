@@ -1,83 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:43813 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030207Ab2ERMDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 08:03:21 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 4/6] mac80211: use channel context notifications
-Date: Fri, 18 May 2012 14:03:07 +0200
-Message-ID: <1337342589-10617-5-git-send-email-michal.kazior@tieto.com> (sfid-20120518_140334_335661_1C4E0BDD)
-In-Reply-To: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
-References: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:40505 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758409Ab2EJJQV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 05:16:21 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1111470wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:20 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 50/78] wl18xx: derive the MAC address from the BD_ADDR in fuse ROM
+Date: Thu, 10 May 2012 12:13:55 +0300
+Message-Id: <1336641263-5761-51-git-send-email-arik@wizery.com> (sfid-20120510_111930_080082_ED395465)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channel context pointer will be accessiable on
-both assign and unassign events.
+From: Luciano Coelho <coelho@ti.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Add the get_mac operation in order to fetch the BD_ADDR from fuse ROM,
+so that we can derive the WLAN MAC addresses from it.
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- net/mac80211/chan.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ti/wl18xx/main.c |   18 ++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/reg.h  |    3 +++
+ 2 files changed, 21 insertions(+)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index e9b0f3e..32b7088 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -5,6 +5,7 @@
- #include <linux/nl80211.h>
- #include <net/cfg80211.h>
- #include "ieee80211_i.h"
-+#include "driver-ops.h"
- 
- static enum ieee80211_chan_mode
- __ieee80211_get_channel_mode(struct ieee80211_local *local,
-@@ -181,6 +182,8 @@ ieee80211_new_channel_context(struct ieee80211_local *local,
- 	ctx->channel_type = channel_type;
- 	INIT_LIST_HEAD(&ctx->vif_list);
- 
-+	drv_add_channel_context(local, ctx);
-+
- 	return ctx;
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index df407be..52d63ff 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -975,6 +975,23 @@ static int wl18xx_plt_init(struct wl1271 *wl)
+ 	return wl->ops->boot(wl);
  }
  
-@@ -191,6 +194,8 @@ ieee80211_free_channel_context(struct ieee80211_local *local,
- 	if (WARN_ON(!list_empty(&ctx->vif_list)))
- 		return;
++static void wl18xx_get_mac(struct wl1271 *wl)
++{
++	u32 mac1, mac2;
++
++	wlcore_set_partition(wl, &wl->ptable[PART_TOP_PRCM_ELP_SOC]);
++
++	mac1 = wl1271_read32(wl, WL18XX_REG_FUSE_BD_ADDR_1);
++	mac2 = wl1271_read32(wl, WL18XX_REG_FUSE_BD_ADDR_2);
++
++	/* these are the two parts of the BD_ADDR */
++	wl->fuse_oui_addr = ((mac2 & 0xffff) << 8) +
++		((mac1 & 0xff000000) >> 24);
++	wl->fuse_nic_addr = (mac1 & 0xffffff);
++
++	wlcore_set_partition(wl, &wl->ptable[PART_DOWN]);
++}
++
+ static struct wlcore_ops wl18xx_ops = {
+ 	.identify_chip	= wl18xx_identify_chip,
+ 	.boot		= wl18xx_boot,
+@@ -994,6 +1011,7 @@ static struct wlcore_ops wl18xx_ops = {
+ 	.set_rx_csum = wl18xx_set_rx_csum,
+ 	.sta_get_ap_rate_mask = wl18xx_sta_get_ap_rate_mask,
+ 	.ap_get_mimo_wide_rate_mask = wl18xx_ap_get_mimo_wide_rate_mask,
++	.get_mac	= wl18xx_get_mac,
+ };
  
-+	drv_remove_channel_context(local, ctx);
-+
- 	ctx->channel = NULL;
- }
+ /* HT cap appropriate for wide channels */
+diff --git a/drivers/net/wireless/ti/wl18xx/reg.h b/drivers/net/wireless/ti/wl18xx/reg.h
+index aaedf91..43863d3 100644
+--- a/drivers/net/wireless/ti/wl18xx/reg.h
++++ b/drivers/net/wireless/ti/wl18xx/reg.h
+@@ -132,6 +132,9 @@
+ #define WL18XX_PG_VER_MASK		0x70
+ #define WL18XX_PG_VER_OFFSET		4
  
-@@ -198,14 +203,22 @@ static void
- ieee80211_assign_vif_channel_context(struct ieee80211_sub_if_data *sdata,
- 				     struct ieee80211_channel_context *ctx)
- {
-+	struct ieee80211_local *local = sdata->local;
++#define WL18XX_REG_FUSE_BD_ADDR_1	0xA02602
++#define WL18XX_REG_FUSE_BD_ADDR_2	0xA02606
 +
- 	list_add(&sdata->vif.list, &ctx->vif_list);
- 	sdata->vif.channel_context = ctx;
-+
-+	drv_assign_vif_channel_context(local, sdata, ctx);
- }
+ #define WL18XX_CMD_MBOX_ADDRESS		0xB007B4
  
- static void
- ieee80211_unassign_vif_channel_context(struct ieee80211_sub_if_data *sdata,
- 				       struct ieee80211_channel_context *ctx)
- {
-+	struct ieee80211_local *local = sdata->local;
-+
-+	drv_unassign_vif_channel_context(local, sdata, ctx);
-+
- 	sdata->vif.channel_context = NULL;
- 	list_del(&sdata->vif.list);
- }
+ #define WL18XX_FW_STATUS_ADDR		0x50F8
 -- 
-1.7.0.4
+1.7.9.5
 
