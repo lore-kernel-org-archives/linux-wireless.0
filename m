@@ -1,88 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:34406 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753815Ab2EHHJY convert rfc822-to-8bit (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:65425 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018Ab2EJMeb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 03:09:24 -0400
-Received: by dady13 with SMTP id y13so2278999dad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 00:09:24 -0700 (PDT)
+	Thu, 10 May 2012 08:34:31 -0400
+Received: by gglu4 with SMTP id u4so876799ggl.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 05:34:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120507125316.GA25400@localhost>
-References: <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-	<1330652495-25837-10-git-send-email-dmitry.tarnyagin@stericsson.com>
-	<20120507125316.GA25400@localhost>
-Date: Tue, 8 May 2012 09:09:24 +0200
-Message-ID: <CAMG6FYgQLexa=VAqrLmMxscef=bDyqPo6mThYAeZGqB6p5Zo_g@mail.gmail.com> (sfid-20120508_090927_604950_C17FC506)
-Subject: Re: [PATCH 09/21] cw1200: txrx.*, implementation of datapath.
-From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <4FAB9EAE.9090403@01019freenet.de>
+References: <201205100719.q4A7JwVl003140@mail.maya.org>
+	<CAOZOX0VfLrqBwfcqf5qsSnA4EH00-6tmG8te3M-WVAR8NqcFSw@mail.gmail.com>
+	<4FAB9EAE.9090403@01019freenet.de>
+Date: Thu, 10 May 2012 14:34:30 +0200
+Message-ID: <CAOZOX0Vax7HTsND=vi+c6vamtvWaWW9omWu1CM-=vWsrAf4fgQ@mail.gmail.com> (sfid-20120510_143434_652615_4D6405A7)
+Subject: Re: [rt2x00-users] [PATCH][RFC/RFT] rt2800: Implement selectable
+ support for 802.11w (MFP)
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bob,
+Hi,
 
->> +     /* minstrel is buggy a little bit, so distille
->> +      * incoming rates first. */
+On Thu, May 10, 2012 at 12:55 PM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> Hello!
 >
-> Can you elaborate a bit on the bugs?  It may be worth fixing them
-> in minstrel so that everyone benefits.  From your code it looks
-> like you want to reorder them from fastest->slowest, eliminate
-> duplicate rates, and change retry counts to respect total retry
-> limits.  I agree that the last two are problematic and should
-> probably be fixed in minstrel.
+> Ivo Van Doorn schrieb:
+>> Hi,
+>>
+>> On Thu, May 10, 2012 at 9:19 AM, Andreas Hartmann
+>> <andihartmann@01019freenet.de> wrote:
+>>> This patch adds support for 802.11w for rt2800. This is achieved by
+>>> using the 802.11w implementation in mac80211.
+>>>
+>>> To get this working, it is necessary to disable hw encryption of
+>>> rt2800pci / rt2800usb, because I don't know of any support in hardware
+>>> for 802.11w and therefore let mac80211 do the whole job.
+>>>
+>>> The user can enable 802.11w with the new mod parameter enablemfp.
+>>> Enabling MFP disables hw encryption.
+>>>
+>>> 802.11w is deactivated per default.
+>>>
+>>> Tested with rt2860 and rt3572.
+>>>
+>>> This is a workaround as long as there isn't hardware support implemented
+>>> in the driver.
+>>>
+>>> Signed-off-by: Andreas Hartmann <andihartmann@01019freenet.de>
+>>> ---
+>>> diff -ur compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800lib.c compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800lib.c
+>>> --- compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800lib.c     2012-04-26 22:10:30.000000000 +0200
+>>> +++ compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800lib.c  2012-05-09 11:37:48.463278177 +0200
+>>> @@ -4519,6 +4519,15 @@
+>>>            IEEE80211_HW_AMPDU_AGGREGATION |
+>>>            IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+>>>
+>>> +       /*
+>>> +        * Enable support for 802.11w in mac80211. hwencryption must be disabled
+>>> +        */
+>>> +       if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags) && rt2x00dev->mfprequested) {
+>>> +               INFO(rt2x00dev, "802.11w support (MFP) enabled.\n");
+>>> +               rt2x00dev->hw->flags |=
+>>> +                       IEEE80211_HW_MFP_CAPABLE;
+>>> +       }
+>>
+>> Can't the whole patch be simplified into
+>>
+>> if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags)) {
+>>                INFO(rt2x00dev, "802.11w support (MFP) enabled.\n");
+>>                rt2x00dev->hw->flags |=
+>>                        IEEE80211_HW_MFP_CAPABLE;
+>> }
 >
-Yes, correct, you mentioned all the 3 problems with the minstrel.
-"Buggy" is not the best word here, minstrel just behaves in this way,
-and the behavior is specified. It can be changed (at least last two),
-but carefully and with respect to other minstrel clients.
+> This would surely be possible, but it wouldn't be possible any more to
+> run the driver w/o MFP support as long as hw encryption is disabled.
+>
+> Additionally, I would like to have an additional comment added to
+> nohwcrypt, which mentions, that activating nohwcrypt enables MFP, like:
+> "Disable hardware encryption, enable MFP." to let the user know, how to
+> enable MFP.
 
-> Changing the rate order may have adverse affects (I'm not sure).
-> Minstrel often puts 'probe' rates in early MRR slots to update
-> its statistics, these may well be lower than the current rate.
->
-Correct, lower rates does not have /good/ statistics - probes are
-screened by higher rates. However, it is not a problem, as
-verification shown. /Some/ statistics is always collected.
+I am wondering what the usecase would be for having an option to disable MFP?
+Isn't that a feature which technically should be enabled by default and in the
+userspace you have the configuration to use it or not?
 
->> +     /* Sort rates in descending order. */
->> +     for (i = 1; i < count; ++i) {
->> +             if (rates[i].idx < 0) {
->> +                     count = i;
->> +                     break;
->> +             }
->> +             if (rates[i].idx > rates[i - 1].idx) {
->> +                     struct ieee80211_tx_rate tmp = rates[i - 1];
->> +                     rates[i - 1] = rates[i];
->> +                     rates[i] = tmp;
->> +             }
->> +     }
->
-> This sort seems to be missing an inner loop.  E.g. if input was 2-3-5-4,
-> I think you would end up with 2-5-4-3 instead of 5-4-3-2.
->
-The algorithm is intended to eliminate one and only one out-of-order rate
-from minstrel input. It will not work as a generic purpose sort.
-GP-sort would be slower, but cleaner. I'm not sure what is better here.
+Ivo
 
->> +             /* ">> 1" is an equivalent of "/ 2", but faster */
->> +             int mid_rate = (rates[0].idx + 4) >> 1;
+>>
+>> Why need a extra moduleflag when all it does is toggle the nohwcrypto
+>> module parameter?
 >
-> (This is true, but it's only by a couple of instructions for signed
-> division since compilers still change divide-by-power-of-two to shifts.
+> Because I wanted to achieve the old behaviour of the driver w/o hw
+> encryption.
+> If you think, this isn't necessary, I'm absolutely fine with removing it.
 >
-As I remember compiler changes divide to a shift only for
-unsigned divisions, isn't it? Or do modern gcc-s changes it for signed
-divs as well?
-
-> Unsigned /2 typically has the same code as >> 1.  I tend to prefer /2
-> for readability unless it's a super hot path, but that's your call.)
 >
-Well, it's datapath. This code is executed for every SDU in data traffic,
-with frequency ~3kHz on target throughput. For me it's a good reason
-to explicitly eliminate divisions :)
-
---
-Dmitry Tarnyagin
+> Andreas
