@@ -1,36 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gretel.risen.be ([78.46.99.137]:48248 "EHLO gretel.risen.be"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755772Ab2EXCpn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 22:45:43 -0400
-Message-ID: <4FBDA0A9.4020303@aquazul.com> (sfid-20120524_044547_894529_07DF6297)
-Date: Thu, 24 May 2012 04:44:57 +0200
-From: Mourad De Clerck <bugs-wireless@aquazul.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61456 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760739Ab2EJSMA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 14:12:00 -0400
+Received: by pbbrp8 with SMTP id rp8so2209887pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 11:12:00 -0700 (PDT)
+Date: Thu, 10 May 2012 11:11:55 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	florian.c.schilhabel@googlemail.com, ali@internetdog.org,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 0/3] staging: delete duplicated files/functionality in
+ rtl8712
+Message-ID: <20120510181155.GA8307@kroah.com> (sfid-20120510_201212_783604_F901CBFC)
+References: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
+ <20120510165451.GA12958@kroah.com>
+ <20120510173139.GA16704@windriver.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: firmware loading fails for b43 using linux 3.4?
-References: <4FBD7772.6070305@aquazul.com> <4FBD8B42.5020708@lwfinger.net>
-In-Reply-To: <4FBD8B42.5020708@lwfinger.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120510173139.GA16704@windriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24/05/12 03:13, Larry Finger wrote:
->> The only obvious change is 6b6fa5868eec26bdc6a83543cebb8cf832a2645a
->> by Larry Finger. I don't know if it matters, but b43 is statically
->> compiled in the kernel.
->>
->> Am I missing something?
->
-> I do not know. I am building a system with b43 built in. Have you tried
-> using b43 as a module?
+On Thu, May 10, 2012 at 01:31:39PM -0400, Paul Gortmaker wrote:
+> [Re: [PATCH 0/3] staging: delete duplicated files/functionality in rtl8712] On 10/05/2012 (Thu 09:54) Greg Kroah-Hartman wrote:
+> 
+> [...]
+> 
+> > Can you regenerate these with the full deletion content?  There have
+> > been some spelling fixes in these files, and your patches do not apply
+> > due to them.  I can hand-edit the patches if you regenerate it.
+> > 
+> > Or if you rebase on the last linux-next tree, that will pick those
+> > changes up and then I can apply these properly.
+> 
+> I've rebased it onto your staging-next of today, so it should be
+> hopefully seamless for you now.
 
-I just did – exact same config, just b43 as a module. And indeed, now 
-the firmware loads fine.
+Yes, that was even easier, now pulled and pushed out, thanks.
 
-I suppose this isn't intentional… this was working in 3.3, btw.
-
-Thanks,
-
--- Mourad DC
+greg k-h
