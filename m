@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:44350 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968267Ab2ESBUm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 21:20:42 -0400
-Received: by mail-lb0-f174.google.com with SMTP id gm6so2456747lbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2012 18:20:41 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:3565 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756492Ab2EJMOX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 08:14:23 -0400
+Message-ID: <4FABB112.5040900@broadcom.com> (sfid-20120510_141426_499144_C2DCDB81)
+Date: Thu, 10 May 2012 14:14:10 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <dbxgdp08gmmvuwimst0weboh.1337380158309@email.android.com>
-References: <dbxgdp08gmmvuwimst0weboh.1337380158309@email.android.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 19 May 2012 11:20:20 +1000
-Message-ID: <CAGRGNgV7ph0BRb7V79rXtfGjcMOyYWS+TCyNNsrp_NvttLVwgQ@mail.gmail.com> (sfid-20120519_032048_168101_68C8533C)
-Subject: Re: Intel 2200BG/Linux
-To: D <dc@magitekindustries.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
+References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
+ <4F9CF839.1040401@broadcom.com> <4FA0CF03.9060307@broadcom.com>
+ <4FA1B66A.4060901@hauke-m.de> <4FA9141B.3020008@broadcom.com>
+ <4FAA322C.1070303@hauke-m.de> <4FAA3837.8090401@broadcom.com>
+ <4FAAEF58.3080302@hauke-m.de>
+In-Reply-To: <4FAAEF58.3080302@hauke-m.de>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 05/10/2012 12:27 AM, Hauke Mehrtens wrote:
+> On 05/09/2012 11:26 AM, Arend van Spriel wrote:
+>> On 05/09/2012 11:00 AM, Hauke Mehrtens wrote:
+>>> Hi Arend,
+>>>
+>>> I would like to see these patches in kernel 3.5. John said that stuff
+>>> for that release has to be posted now. Could you look into the
+>>> suspend/resume log today and give an Ack for the patches if it works?
+>>> You tested the two patch series for bcma and the patches for brcmsmac
+>>> all together?
+>>>
+>>> Hauke
+>>>
+>>
+>> I tested with patches from 3 series applied:
+>>
+>> ssb/bcma/bcm47xx: extend boardinfo and sprom
+>> bcma: add PCI functions from brcmsmac
+>> brcmsmac: use sprom and PCIe code from bcma
 
-On Sat, May 19, 2012 at 8:29 AM, D <dc@magitekindustries.com> wrote:
-> Apt-get didn't find it
+I performed suspend/resume and hibernate/resume testing for bcm43224
+PCIe card. In one run I observed the WARN_ONCE in
+brcms_c_wait_for_tx_completion(). Have to dive into that to see what
+happens in resume scenario to trigger this. No reason to stop your
+patches though.
 
-You can use apt-cache to search for it.
+So for the series listed above:
+Tested-by: Arend van Spriel <arend@broadcom.com>
 
-Thanks,
+Gr. AvS
 
--- 
-Julian Calaby
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
