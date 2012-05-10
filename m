@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4570 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932279Ab2EOOYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 10:24:33 -0400
-Message-ID: <4FB26714.6020008@broadcom.com> (sfid-20120515_162448_104040_DC7F43E1)
-Date: Tue, 15 May 2012 16:24:20 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] brcm80211: remove an unneeded NULL check
-References: <20120514205729.GD20836@elgon.mountain>
-In-Reply-To: <20120514205729.GD20836@elgon.mountain>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758487Ab2EJJQe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 05:16:34 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:33 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 56/78] wl18xx: change low_band_component_type value for COM8
+Date: Thu, 10 May 2012 12:14:01 +0300
+Message-Id: <1336641263-5761-57-git-send-email-arik@wizery.com> (sfid-20120510_111905_025605_83A571EE)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/14/2012 10:57 PM, Dan Carpenter wrote:
-> This code causes a static checker warning because "pi" gets dereferenced
-> before it is checked.  The dereference is inside the write_phy_reg()
-> function which is called from wlc_phy_write_txmacreg_nphy().
-> 
-> This code is only called from wlc_phy_init_nphy() and "pi" is a
-> valid pointer so we can remove the check for NULL.
+From: Luciano Coelho <coelho@ti.com>
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
+Like HDK, COM8 uses 0x06 for the low_band_component_type as well.
+Hardcode the value for COM8 until this configuration can be done in
+the external configuration binary (to be implemented).
 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-> index 812b6e3..d6380f3 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-> @@ -14358,7 +14358,7 @@ void wlc_phy_nphy_tkip_rifs_war(struct brcms_phy *pi, u8 rifs)
->  
->  	wlc_phy_write_txmacreg_nphy(pi, holdoff, delay);
->  
-> -	if (pi && pi->sh && (pi->sh->_rifs_phy != rifs))
-> +	if (pi->sh && (pi->sh->_rifs_phy != rifs))
->  		pi->sh->_rifs_phy = rifs;
->  }
->  
-> 
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index aa227a1..6047a6d 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1086,6 +1086,8 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		priv->board_type = BOARD_TYPE_EVB_18XX;
+ 	} else if (!strcmp(board_type_param, "com8")) {
+ 		priv->board_type = BOARD_TYPE_COM8_18XX;
++		/* HACK! Just for now we hardcode COM8 to 0x06 */
++		priv->conf.phy.low_band_component_type = 0x06;
+ 	} else {
+ 		wl1271_error("invalid board type '%s'", board_type_param);
+ 		wlcore_free_hw(wl);
+-- 
+1.7.9.5
 
