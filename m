@@ -1,322 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:37004 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755359Ab2ECHXu (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:64514 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753319Ab2EJCdW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:23:50 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	harvey yang <harvey.huawei.yang@gmail.com>
-Subject: [PATCH 11/18] mwifiex: common set_wiphy_params cfg80211 handler for AP and STA interface
-Date: Thu,  3 May 2012 00:22:33 -0700
-Message-Id: <1336029760-22565-12-git-send-email-bzhao@marvell.com> (sfid-20120503_092403_993491_5BCFE69B)
-In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
-References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+	Wed, 9 May 2012 22:33:22 -0400
+Received: by mail-yw0-f46.google.com with SMTP id m54so1006656yhm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 19:33:21 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: dmitry.tarnyagin@stericsson.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/3] cw1200: use list_for_each_entry_safe and friends
+Date: Wed,  9 May 2012 22:32:35 -0400
+Message-Id: <1336617155-7455-3-git-send-email-me@bobcopeland.com> (sfid-20120510_043326_412290_F0BAE029)
+In-Reply-To: <1336617155-7455-1-git-send-email-me@bobcopeland.com>
+References: <1336617155-7455-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+This saves a few lines of code over the equivalent while() loop.
 
-Add support for setting fragmentation threshold, RTS threshold
-and retry limit.
-Since wiphy parameters are properties of physical device,
-appropriate function to set phy parameters is invoked depending
-upon bss_type(STA or AP) for each virtual interface.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |  101 ++++++++++++++++++++++++-------
- drivers/net/wireless/mwifiex/decl.h     |    1 +
- drivers/net/wireless/mwifiex/fw.h       |   18 ++++++
- drivers/net/wireless/mwifiex/ioctl.h    |    3 +
- drivers/net/wireless/mwifiex/main.h     |    2 +
- drivers/net/wireless/mwifiex/uap_cmd.c  |   47 ++++++++++++++
- 6 files changed, 151 insertions(+), 21 deletions(-)
+ drivers/staging/cw1200/queue.c |   23 +++++++++--------------
+ drivers/staging/cw1200/sta.c   |    6 ++----
+ 2 files changed, 11 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index ff34fc6..41958b3 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -428,18 +428,13 @@ mwifiex_cfg80211_set_channel(struct wiphy *wiphy, struct net_device *dev,
- static int
- mwifiex_set_frag(struct mwifiex_private *priv, u32 frag_thr)
+diff --git a/drivers/staging/cw1200/queue.c b/drivers/staging/cw1200/queue.c
+index 014e6b2..969456e 100644
+--- a/drivers/staging/cw1200/queue.c
++++ b/drivers/staging/cw1200/queue.c
+@@ -70,11 +70,9 @@ static inline u32 cw1200_queue_make_packet_id(u8 queue_generation, u8 queue_id,
+ static void cw1200_queue_post_gc(struct cw1200_queue_stats *stats,
+ 				 struct list_head *gc_list)
  {
--	int ret;
--
- 	if (frag_thr < MWIFIEX_FRAG_MIN_VALUE ||
- 	    frag_thr > MWIFIEX_FRAG_MAX_VALUE)
--		return -EINVAL;
--
--	/* Send request to firmware */
--	ret = mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_SNMP_MIB,
--				    HostCmd_ACT_GEN_SET, FRAG_THRESH_I,
--				    &frag_thr);
-+		frag_thr = MWIFIEX_FRAG_MAX_VALUE;
+-	struct cw1200_queue_item *item;
++	struct cw1200_queue_item *item, *tmp;
  
--	return ret;
-+	return mwifiex_send_cmd_sync(priv, HostCmd_CMD_802_11_SNMP_MIB,
-+				     HostCmd_ACT_GEN_SET, FRAG_THRESH_I,
-+				     &frag_thr);
- }
- 
- /*
-@@ -469,20 +464,84 @@ static int
- mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+-	while (!list_empty(gc_list)) {
+-		item = list_first_entry(
+-			gc_list, struct cw1200_queue_item, head);
++	list_for_each_entry_safe(item, tmp, gc_list, head) {
+ 		list_del(&item->head);
+ 		stats->skb_dtor(stats->priv, item->skb, &item->txpriv);
+ 		kfree(item);
+@@ -97,12 +95,10 @@ static void __cw1200_queue_gc(struct cw1200_queue *queue,
+ 			      bool unlock)
  {
- 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
--	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
--							MWIFIEX_BSS_ROLE_STA);
--	int ret = 0;
-+	struct mwifiex_private *priv;
-+	struct mwifiex_uap_bss_param *bss_cfg;
-+	int ret, bss_started, i;
-+
-+	for (i = 0; i < adapter->priv_num; i++) {
-+		priv = adapter->priv[i];
-+
-+		switch (priv->bss_role) {
-+		case MWIFIEX_BSS_ROLE_UAP:
-+			bss_cfg = kzalloc(sizeof(struct mwifiex_uap_bss_param),
-+					  GFP_KERNEL);
-+			if (!bss_cfg)
-+				return -ENOMEM;
-+
-+			mwifiex_set_sys_config_invalid_data(bss_cfg);
-+
-+			if (changed & WIPHY_PARAM_RTS_THRESHOLD)
-+				bss_cfg->rts_threshold = wiphy->rts_threshold;
-+			if (changed & WIPHY_PARAM_FRAG_THRESHOLD)
-+				bss_cfg->frag_threshold = wiphy->frag_threshold;
-+			if (changed & WIPHY_PARAM_RETRY_LONG)
-+				bss_cfg->retry_limit = wiphy->retry_long;
-+
-+			bss_started = priv->bss_started;
-+
-+			ret = mwifiex_send_cmd_sync(priv,
-+						    HostCmd_CMD_UAP_BSS_STOP,
-+						    HostCmd_ACT_GEN_SET, 0,
-+						    NULL);
-+			if (ret) {
-+				wiphy_err(wiphy, "Failed to stop the BSS\n");
-+				kfree(bss_cfg);
-+				return ret;
-+			}
+ 	struct cw1200_queue_stats *stats = queue->stats;
+-	struct cw1200_queue_item *item = NULL;
++	struct cw1200_queue_item *item = NULL, *tmp;
+ 	bool wakeup_stats = false;
  
--	if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
--		ret = mwifiex_set_rts(priv, wiphy->rts_threshold);
--		if (ret)
--			return ret;
--	}
-+			ret = mwifiex_send_cmd_async(priv,
-+						     HostCmd_CMD_UAP_SYS_CONFIG,
-+						     HostCmd_ACT_GEN_SET,
-+						     0, bss_cfg);
+-	while (!list_empty(&queue->queue)) {
+-		item = list_first_entry(
+-			&queue->queue, struct cw1200_queue_item, head);
++	list_for_each_entry_safe(item, tmp, &queue->queue, head) {
+ 		if (jiffies - item->queue_timestamp < queue->ttl)
+ 			break;
+ 		--queue->num_queued;
+@@ -212,13 +208,12 @@ int cw1200_queue_clear(struct cw1200_queue *queue)
+ 	int i;
+ 	LIST_HEAD(gc_list);
+ 	struct cw1200_queue_stats *stats = queue->stats;
++	struct cw1200_queue_item *item, *tmp;
  
--	if (changed & WIPHY_PARAM_FRAG_THRESHOLD)
--		ret = mwifiex_set_frag(priv, wiphy->frag_threshold);
-+			kfree(bss_cfg);
+ 	spin_lock_bh(&queue->lock);
+ 	queue->generation++;
+ 	list_splice_tail_init(&queue->queue, &queue->pending);
+-	while (!list_empty(&queue->pending)) {
+-		struct cw1200_queue_item *item = list_first_entry(
+-			&queue->pending, struct cw1200_queue_item, head);
++	list_for_each_entry_safe(item, tmp, &queue->pending, head) {
+ 		WARN_ON(!item->skb);
+ 		cw1200_queue_register_post_gc(&gc_list, item);
+ 		item->skb = NULL;
+@@ -421,11 +416,11 @@ int cw1200_queue_requeue(struct cw1200_queue *queue, u32 packetID)
  
--	return ret;
-+			if (ret) {
-+				wiphy_err(wiphy, "Failed to set bss config\n");
-+				return ret;
-+			}
+ int cw1200_queue_requeue_all(struct cw1200_queue *queue)
+ {
++	struct cw1200_queue_item *item, *tmp;
+ 	struct cw1200_queue_stats *stats = queue->stats;
+ 	spin_lock_bh(&queue->lock);
+-	while (!list_empty(&queue->pending)) {
+-		struct cw1200_queue_item *item = list_entry(
+-			queue->pending.prev, struct cw1200_queue_item, head);
 +
-+			if (!bss_started)
-+				break;
-+
-+			ret = mwifiex_send_cmd_async(priv,
-+						     HostCmd_CMD_UAP_BSS_START,
-+						     HostCmd_ACT_GEN_SET, 0,
-+						     NULL);
-+			if (ret) {
-+				wiphy_err(wiphy, "Failed to start BSS\n");
-+				return ret;
-+			}
-+
-+			break;
-+		case MWIFIEX_BSS_ROLE_STA:
-+			if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
-+				ret = mwifiex_set_rts(priv,
-+						      wiphy->rts_threshold);
-+				if (ret)
-+					return ret;
-+			}
-+			if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
-+				ret = mwifiex_set_frag(priv,
-+						       wiphy->frag_threshold);
-+				if (ret)
-+					return ret;
-+			}
-+			break;
-+		}
-+	}
-+
-+	return 0;
- }
++	list_for_each_entry_safe_reverse(item, tmp, &queue->pending, head) {
  
- /*
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index 6b8f912..31dc2ba 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -60,6 +60,7 @@
- #define MWIFIEX_FRAG_MIN_VALUE             (256)
- #define MWIFIEX_FRAG_MAX_VALUE             (2346)
+ 		--queue->num_pending;
+ 		++queue->link_map_cache[item->txpriv.link_id];
+diff --git a/drivers/staging/cw1200/sta.c b/drivers/staging/cw1200/sta.c
+index 42bca38..a379f11 100644
+--- a/drivers/staging/cw1200/sta.c
++++ b/drivers/staging/cw1200/sta.c
+@@ -28,10 +28,8 @@
  
-+#define MWIFIEX_RETRY_LIMIT                14
- #define MWIFIEX_SDIO_BLOCK_SIZE            256
- 
- #define MWIFIEX_BUF_FLAG_REQUEUED_PKT      BIT(0)
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index a3e9c28..a4c2fc3 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -106,9 +106,12 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define TLV_TYPE_AUTH_TYPE          (PROPRIETARY_TLV_BASE_ID + 31)
- #define TLV_TYPE_STA_MAC_ADDR       (PROPRIETARY_TLV_BASE_ID + 32)
- #define TLV_TYPE_CHANNELBANDLIST    (PROPRIETARY_TLV_BASE_ID + 42)
-+#define TLV_TYPE_UAP_RTS_THRESHOLD  (PROPRIETARY_TLV_BASE_ID + 51)
-+#define TLV_TYPE_UAP_FRAG_THRESHOLD (PROPRIETARY_TLV_BASE_ID + 70)
- #define TLV_TYPE_RATE_DROP_CONTROL  (PROPRIETARY_TLV_BASE_ID + 82)
- #define TLV_TYPE_RATE_SCOPE         (PROPRIETARY_TLV_BASE_ID + 83)
- #define TLV_TYPE_POWER_GROUP        (PROPRIETARY_TLV_BASE_ID + 84)
-+#define TLV_TYPE_UAP_RETRY_LIMIT    (PROPRIETARY_TLV_BASE_ID + 93)
- #define TLV_TYPE_WAPI_IE            (PROPRIETARY_TLV_BASE_ID + 94)
- #define TLV_TYPE_MGMT_IE            (PROPRIETARY_TLV_BASE_ID + 105)
- #define TLV_TYPE_AUTO_DS_PARAM      (PROPRIETARY_TLV_BASE_ID + 113)
-@@ -1117,6 +1120,21 @@ struct host_cmd_ds_sys_config {
- 	u8 tlv[0];
- };
- 
-+struct host_cmd_tlv_frag_threshold {
-+	struct host_cmd_tlv tlv;
-+	__le16 frag_thr;
-+} __packed;
-+
-+struct host_cmd_tlv_rts_threshold {
-+	struct host_cmd_tlv tlv;
-+	__le16 rts_thr;
-+} __packed;
-+
-+struct host_cmd_tlv_retry_limit {
-+	struct host_cmd_tlv tlv;
-+	u8 limit;
-+} __packed;
-+
- struct host_cmd_tlv_mac_addr {
- 	struct host_cmd_tlv tlv;
- 	u8 mac_addr[ETH_ALEN];
-diff --git a/drivers/net/wireless/mwifiex/ioctl.h b/drivers/net/wireless/mwifiex/ioctl.h
-index 50e9b77..535a57a 100644
---- a/drivers/net/wireless/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/mwifiex/ioctl.h
-@@ -66,6 +66,9 @@ enum {
- struct mwifiex_uap_bss_param {
- 	u8 channel;
- 	u8 band_cfg;
-+	u16 rts_threshold;
-+	u16 frag_threshold;
-+	u8 retry_limit;
- };
- 
- enum {
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 014a13f..acea8d4 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -993,6 +993,8 @@ struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 					u32 *flags, struct vif_params *params);
- int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct net_device *dev);
- 
-+void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config);
-+
- u8 *mwifiex_11d_code_2_region(u8 code);
- 
- #ifdef CONFIG_DEBUG_FS
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index a3e57d3..047559a 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -19,6 +19,17 @@
- 
- #include "main.h"
- 
-+/* This function initializes some of mwifiex_uap_bss_param variables.
-+ * This helps FW in ignoring invalid values. These values may or may not
-+ * be get updated to valid ones at later stage.
-+ */
-+void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config)
-+{
-+	config->rts_threshold = 0x7FFF;
-+	config->frag_threshold = 0x7FFF;
-+	config->retry_limit = 0x7F;
-+}
-+
- /* Parse AP config structure and prepare TLV based command structure
-  * to be sent to FW for uAP configuration
-  */
-@@ -28,6 +39,9 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
- 	u8 *tlv;
- 	struct host_cmd_ds_sys_config *sys_config = &cmd->params.uap_sys_config;
- 	struct host_cmd_tlv_channel_band *chan_band;
-+	struct host_cmd_tlv_frag_threshold *frag_threshold;
-+	struct host_cmd_tlv_rts_threshold *rts_threshold;
-+	struct host_cmd_tlv_retry_limit *retry_limit;
- 	struct mwifiex_uap_bss_param *bss_cfg = cmd_buf;
- 	u16 cmd_size;
- 
-@@ -49,6 +63,39 @@ static int mwifiex_cmd_uap_sys_config(struct host_cmd_ds_command *cmd,
- 		cmd_size += sizeof(struct host_cmd_tlv_channel_band);
- 		tlv += sizeof(struct host_cmd_tlv_channel_band);
+ static inline void __cw1200_free_event_queue(struct list_head *list)
+ {
+-	while (!list_empty(list)) {
+-		struct cw1200_wsm_event *event =
+-			list_first_entry(list, struct cw1200_wsm_event,
+-			link);
++	struct cw1200_wsm_event *event, *tmp;
++	list_for_each_entry_safe(event, tmp, list, link) {
+ 		list_del(&event->link);
+ 		kfree(event);
  	}
-+	if (bss_cfg->rts_threshold <= MWIFIEX_RTS_MAX_VALUE) {
-+		rts_threshold = (struct host_cmd_tlv_rts_threshold *)tlv;
-+		rts_threshold->tlv.type =
-+					cpu_to_le16(TLV_TYPE_UAP_RTS_THRESHOLD);
-+		rts_threshold->tlv.len =
-+			cpu_to_le16(sizeof(struct host_cmd_tlv_rts_threshold) -
-+				    sizeof(struct host_cmd_tlv));
-+		rts_threshold->rts_thr = cpu_to_le16(bss_cfg->rts_threshold);
-+		cmd_size += sizeof(struct host_cmd_tlv_frag_threshold);
-+		tlv += sizeof(struct host_cmd_tlv_frag_threshold);
-+	}
-+	if ((bss_cfg->frag_threshold >= MWIFIEX_FRAG_MIN_VALUE) &&
-+	    (bss_cfg->frag_threshold <= MWIFIEX_FRAG_MAX_VALUE)) {
-+		frag_threshold = (struct host_cmd_tlv_frag_threshold *)tlv;
-+		frag_threshold->tlv.type =
-+				cpu_to_le16(TLV_TYPE_UAP_FRAG_THRESHOLD);
-+		frag_threshold->tlv.len =
-+			cpu_to_le16(sizeof(struct host_cmd_tlv_frag_threshold) -
-+				    sizeof(struct host_cmd_tlv));
-+		frag_threshold->frag_thr = cpu_to_le16(bss_cfg->frag_threshold);
-+		cmd_size += sizeof(struct host_cmd_tlv_frag_threshold);
-+		tlv += sizeof(struct host_cmd_tlv_frag_threshold);
-+	}
-+	if (bss_cfg->retry_limit <= MWIFIEX_RETRY_LIMIT) {
-+		retry_limit = (struct host_cmd_tlv_retry_limit *)tlv;
-+		retry_limit->tlv.type = cpu_to_le16(TLV_TYPE_UAP_RETRY_LIMIT);
-+		retry_limit->tlv.len =
-+			cpu_to_le16(sizeof(struct host_cmd_tlv_retry_limit) -
-+				    sizeof(struct host_cmd_tlv));
-+		retry_limit->limit = (u8)bss_cfg->retry_limit;
-+		cmd_size += sizeof(struct host_cmd_tlv_retry_limit);
-+		tlv += sizeof(struct host_cmd_tlv_retry_limit);
-+	}
- 
- 	cmd->size = cpu_to_le16(cmd_size);
- 	return 0;
 -- 
-1.7.0.2
+1.7.6
 
