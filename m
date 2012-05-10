@@ -1,29 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:41795 "HELO
-	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758222Ab2ERWnQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 18:43:16 -0400
-Date: Fri, 18 May 2012 18:29:18 -0400
-Subject: Re: Intel 2200BG/Linux
-Message-ID: <dbxgdp08gmmvuwimst0weboh.1337380158309@email.android.com> (sfid-20120519_004320_553005_21B59194)
-From: D <dc@magitekindustries.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from perches-mx.perches.com ([206.117.179.246]:36628 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751783Ab2EJGyV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 02:54:21 -0400
+Message-ID: <1336632860.22495.6.camel@joe2Laptop> (sfid-20120510_085441_236331_94537C40)
+Subject: Re: [PATCH 00/13] net: Add and use ether_addr_equal
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
+	netfilter@vger.kernel.org, coreteam@netfilter.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org
+Date: Wed, 09 May 2012 23:54:20 -0700
+In-Reply-To: <1336632528.4334.1.camel@jlt3.sipsolutions.net>
+References: <cover.1336538937.git.joe@perches.com>
+	 <20120509.212110.437114897180819434.davem@davemloft.net>
+	 (sfid-20120510_032248_153593_581BC374) <1336632528.4334.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QXB0LWdldCBkaWRuJ3QgZmluZCBpdAoKSnVsaWFuIENhbGFieSA8anVsaWFuLmNhbGFieUBnbWFp
-bC5jb20+IHdyb3RlOgoKPkhpLAo+Cj5Zb3UgZHJvcHBlZCB0aGUgQ0NzIGFnYWluLgo+Cj5PbiBT
-YXQsIE1heSAxOSwgMjAxMiBhdCAxMjo1NyBBTSwgRCA8ZGNAbWFnaXRla2luZHVzdHJpZXMuY29t
-PiB3cm90ZToKPj4gQ29weWluZyB0aGUgZm9sZGVyIHRvIGxpYiBhbmQgbGliXGZpcm13YXJlIGRp
-ZG4ndCB3b3JrLiDCoGhvdyBkbyBJIEluc3RhbGwgdGhhdCBwYWNrYWdlPwo+Cj5Zb3Ugc2hvdWxk
-IGJlIGNvcHlpbmcgdGhlIGZpbGVzIG5vdCB0aGUgZm9sZGVyLgo+Cj5Vc2UgYSBwYWNrYWdlIG1h
-bmFnZXIgLSBzYXksIHN5bmFwdGljLCBzb2Z0d2FyZSBjZW50ZXIsIGFwdGl0dWRlLAo+YXB0LWdl
-dCBvciBzb21ldGhpbmcgZXF1aXZhbGVudC4KPgo+VGhhbmtzLAo+Cj4tLSAKPkp1bGlhbiBDYWxh
-YnkKPgo+RW1haWw6IGp1bGlhbi5jYWxhYnlAZ21haWwuY29tCj5Qcm9maWxlOiBodHRwOi8vd3d3
-Lmdvb2dsZS5jb20vcHJvZmlsZXMvanVsaWFuLmNhbGFieS8KPi5QbGFuOiBodHRwOi8vc2l0ZXMu
-Z29vZ2xlLmNvbS9zaXRlL2p1bGlhbmNhbGFieS8K
+On Thu, 2012-05-10 at 08:48 +0200, Johannes Berg wrote:
+> On Wed, 2012-05-09 at 21:21 -0400, David Miller wrote:
+> 
+> > That case you didn't convert in mac80211 is probably the
+> > bug Johannes was talking about which started this whole
+> > discussion.
+> 
+> The bug case that started it all is in net/wireless/scan.c and Emmanuel
+> has since changed it back to memcmp(). Not sure if that's the one you
+> were referring to or not :-)
+
+That's the one that I left alone.
+
+Post patch:
+$ git grep -n -w compare_ether_addr net
+net/batman-adv/main.h:198: * note: can't use compare_ether_addr() as it requires aligned memory
+net/wireless/scan.c:381:        return compare_ether_addr(a->bssid, b->bssid);
+
 
