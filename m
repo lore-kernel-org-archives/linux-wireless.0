@@ -1,52 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33087 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933560Ab2EROGc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47548 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976Ab2EJUTD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 10:06:32 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 01/10] ath9k_hw: update ar9462 initval table to fix rx nfcal
-Date: Fri, 18 May 2012 19:37:24 +0530
-Message-ID: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160636_831636_F87486B6)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 10 May 2012 16:19:03 -0400
+Message-ID: <1336681142.4334.36.camel@jlt3.sipsolutions.net> (sfid-20120510_221908_481440_FB4D8DC1)
+Subject: [RFC] mac80211: clean up ieee80211_set_channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 10 May 2012 22:19:02 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wrong ADC sample phase that happen between awake and
-network/full sleep will lead to improper rx noisefloor
-calibration.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+There's no need for ieee80211_set_channel to check
+whether a change in configuration happened since
+ieee80211_hw_config() auto-detects it.
+
+Additionally, it's wrong to pretend the HT config
+for the BSS changed, it didn't, the BSS can't be
+up & running (AP beaconing etc.) when the channel
+type is changed anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/cfg.c |   18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index 1d6658e..a10ece0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -958,7 +958,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
- 	{0x0001604c, 0x2699e04f},
- 	{0x00016050, 0x6db6db6c},
- 	{0x00016058, 0x6c200000},
--	{0x00016080, 0x00040000},
-+	{0x00016080, 0x000c0000},
- 	{0x00016084, 0x9a68048c},
- 	{0x00016088, 0x54214514},
- 	{0x0001608c, 0x1203040b},
-@@ -981,7 +981,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
- 	{0x00016144, 0x02084080},
- 	{0x00016148, 0x000080c0},
- 	{0x00016280, 0x050a0001},
--	{0x00016284, 0x3d841400},
-+	{0x00016284, 0x3d841418},
- 	{0x00016288, 0x00000000},
- 	{0x0001628c, 0xe3000000},
- 	{0x00016290, 0xa1005080},
--- 
-1.7.10.2
+--- a/net/mac80211/cfg.c	2012-05-10 21:46:37.000000000 +0200
++++ b/net/mac80211/cfg.c	2012-05-10 21:47:12.000000000 +0200
+@@ -1684,9 +1684,6 @@ static int ieee80211_set_channel(struct
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+-	struct ieee80211_channel *old_oper;
+-	enum nl80211_channel_type old_oper_type;
+-	enum nl80211_channel_type old_vif_oper_type= NL80211_CHAN_NO_HT;
+ 
+ 	if (netdev)
+ 		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
+@@ -1704,24 +1701,13 @@ static int ieee80211_set_channel(struct
+ 		break;
+ 	}
+ 
+-	if (sdata)
+-		old_vif_oper_type = sdata->vif.bss_conf.channel_type;
+-	old_oper_type = local->_oper_channel_type;
+-
+ 	if (!ieee80211_set_channel_type(local, sdata, channel_type))
+ 		return -EBUSY;
+ 
+-	old_oper = local->oper_channel;
+ 	local->oper_channel = chan;
+ 
+-	/* Update driver if changes were actually made. */
+-	if ((old_oper != local->oper_channel) ||
+-	    (old_oper_type != local->_oper_channel_type))
+-		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
+-
+-	if (sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+-	    old_vif_oper_type != sdata->vif.bss_conf.channel_type)
+-		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_HT);
++	/* auto-detects changes */
++	ieee80211_hw_config(local, 0);
+ 
+ 	return 0;
+ }
+
 
