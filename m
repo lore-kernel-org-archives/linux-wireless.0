@@ -1,60 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:54597 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755378Ab2EHSZV convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:40505 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757999Ab2EJJP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 14:25:21 -0400
-Received: by qcro28 with SMTP id o28so2974581qcr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 11:25:20 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120508175536.GF25400@localhost>
-References: <loom.20101104T140201-178@post.gmane.org> <AANLkTinMSH2Vr=iUTD0Pc_OdaM_LFETDEjsOJn+2ZzVD@mail.gmail.com>
- <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com>
- <20120508163018.GE25400@localhost> <CAB=NE6Xx_KKjk5s_CMRopwBuHDxajgn=Jdc_Nbb1DN2s=2QL0A@mail.gmail.com>
- <20120508175536.GF25400@localhost>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 8 May 2012 11:24:59 -0700
-Message-ID: <CAB=NE6Wbc_U+6dWTx3kc5qdMTSbhSDw=dWH0BWd2ioPQAO8Bag@mail.gmail.com> (sfid-20120508_202530_981217_A6ED5522)
-Subject: Re: Adding custom channels to ath5k for researching purposes
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Vadim <Vadims.Kurmis@gmail.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 10 May 2012 05:15:26 -0400
+Received: by wgbdr13 with SMTP id dr13so1111470wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:25 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 25/78] wlcore: track current channel type per vif
+Date: Thu, 10 May 2012 12:13:30 +0300
+Message-Id: <1336641263-5761-26-git-send-email-arik@wizery.com> (sfid-20120510_111533_967330_040B3729)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 8, 2012 at 10:55 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Tue, May 08, 2012 at 09:49:22AM -0700, Luis R. Rodriguez wrote:
->> > I still like the idea of exporting more stuff to userspace and letting
->> > CRDA handle the card-based restrictions, but ISTR you had reasons that
->> > didn't work for everything.
->>
->> What do you mean?
->
-> /me digs in the archives...
->
-> http://marc.info/?l=linux-wireless&m=125752855010045&w=2
->
-> I guess I "still" liked it back then :)
->
-> So with that setup people who want to fiddle with the card in 'expert'
-> mode could override the card's eeprom reg domain stuff by suitably
-> changing crda db instead of recompiling the kernel.
->
-> But if I read your follow-ups correctly, going that way wasn't actually
-> a big win.  I didn't then (much less now) have the time to explore it
-> in actual code.
->
-> That doesn't cover the person who wanted to use all_channels, but at
-> least that is exported by a modparam today.  There are probably other
-> things that an 'expert' would want to do beyond these two, though.
+Track the current 802.11 channel type, defaulting to a NO_HT channel.
+Update the channel type element when changed by mac80211.
 
-I don't think at that point the idea of CONFIG_EXPERT went through my
-mind, I think its reasonable now to start considering this. For
-example we could start off first with replacing that module parameter
-under a CONFIG_WIRELESS_EXPERT. The goal of such flag is to not have
-everyone enabling it and by everyone I mean every Linux distribution.
-If we can work toward that I think this is a win given that there is
-code we can add that otherwise is introduced by crap module parameters
-or crap external patches.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c   |    9 ++++++++-
+ drivers/net/wireless/ti/wlcore/wl12xx.h |    1 +
+ drivers/net/wireless/ti/wlcore/wlcore.h |    3 +++
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 45fe911..3cd2ddd 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1766,6 +1766,7 @@ static void wl1271_op_stop(struct ieee80211_hw *hw)
+ 
+ 	wl->rx_counter = 0;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
++	wl->channel_type = NL80211_CHAN_NO_HT;
+ 	wl->tx_blocks_available = 0;
+ 	wl->tx_allocated_blocks = 0;
+ 	wl->tx_results_count = 0;
+@@ -1918,6 +1919,7 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
+ 	wlvif->band = wl->band;
+ 	wlvif->channel = wl->channel;
+ 	wlvif->power_level = wl->power_level;
++	wlvif->channel_type = wl->channel_type;
+ 
+ 	INIT_WORK(&wlvif->rx_streaming_enable_work,
+ 		  wl1271_rx_streaming_enable_work);
+@@ -2468,11 +2470,13 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	/* if the channel changes while joined, join again */
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL &&
+ 	    ((wlvif->band != conf->channel->band) ||
+-	     (wlvif->channel != channel))) {
++	     (wlvif->channel != channel) ||
++	     (wlvif->channel_type != conf->channel_type))) {
+ 		/* send all pending packets */
+ 		wl1271_tx_work_locked(wl);
+ 		wlvif->band = conf->channel->band;
+ 		wlvif->channel = channel;
++		wlvif->channel_type = conf->channel_type;
+ 
+ 		if (!is_ap) {
+ 			/*
+@@ -2592,6 +2596,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+ 		wl->band = conf->channel->band;
+ 		wl->channel = channel;
++		wl->channel_type = conf->channel_type;
+ 	}
+ 
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER)
+@@ -3703,6 +3708,7 @@ sta_not_found:
+ 			u32 rates;
+ 			int ieoffset;
+ 			wlvif->aid = bss_conf->aid;
++			wlvif->channel_type = bss_conf->channel_type;
+ 			wlvif->beacon_int = bss_conf->beacon_int;
+ 			do_join = true;
+ 			set_assoc = true;
+@@ -5116,6 +5122,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size)
+ 	wl->rx_counter = 0;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->band = IEEE80211_BAND_2GHZ;
++	wl->channel_type = NL80211_CHAN_NO_HT;
+ 	wl->flags = 0;
+ 	wl->sg_enabled = true;
+ 	wl->hw_pg_ver = -1;
+diff --git a/drivers/net/wireless/ti/wlcore/wl12xx.h b/drivers/net/wireless/ti/wlcore/wl12xx.h
+index f12bdf7..05e6f74 100644
+--- a/drivers/net/wireless/ti/wlcore/wl12xx.h
++++ b/drivers/net/wireless/ti/wlcore/wl12xx.h
+@@ -367,6 +367,7 @@ struct wl12xx_vif {
+ 	/* The current band */
+ 	enum ieee80211_band band;
+ 	int channel;
++	enum nl80211_channel_type channel_type;
+ 
+ 	u32 bitrate_masks[IEEE80211_NUM_BANDS];
+ 	u32 basic_rate_set;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 2922d8a..83c43c9 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -362,6 +362,9 @@ struct wl1271 {
+ 
+ 	/* RX Data filter rule state - enabled/disabled */
+ 	bool rx_filter_enabled[WL1271_MAX_RX_FILTERS];
++
++	/* the current channel type */
++	enum nl80211_channel_type channel_type;
+ };
+ 
+ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
+-- 
+1.7.9.5
+
