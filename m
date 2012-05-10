@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:63611 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756601Ab2EAPtb (ORCPT
+Received: from mail10c0.megamailservers.com ([216.251.36.21]:56622 "EHLO
+	mail10c0.megamailservers.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932781Ab2EJW6R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 11:49:31 -0400
-Date: Tue, 1 May 2012 17:49:27 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: sedat.dilek@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-Message-ID: <20120501154927.GR3157@wantstofly.org> (sfid-20120501_174951_432106_B613DA4C)
-References: <20120427095842.GW3157@wantstofly.org>
- <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
- <20120427101732.GX3157@wantstofly.org>
- <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
- <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
- <20120427185809.GZ3157@wantstofly.org>
- <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
- <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
- <20120501125102.GN3157@wantstofly.org>
- <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
+	Thu, 10 May 2012 18:58:17 -0400
+Received: from [192.168.1.153] ([184.71.46.126])
+	(authenticated bits=0)
+	by mail10c0.megamailservers.com (8.13.6/8.13.1) with ESMTP id q4AKuuaT032419
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 16:56:57 -0400
+Message-ID: <4FAC2B98.6040100@microhardcorp.com> (sfid-20120511_005839_363918_B9479591)
+Date: Thu, 10 May 2012 14:56:56 -0600
+From: Bin Zeng <bzeng@microhardcorp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: MESH only works at 54Mbps link rate or below?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 01, 2012 at 03:54:49PM +0200, Sedat Dilek wrote:
+Hi
 
-> Some more concerns...
-> Dunno, if [4] is really correct and how to use one and same device-id
-> for 8363 ***and*** 8361P:
-> ...
-> { PCI_VDEVICE(MARVELL, 0x2a02), .driver_data = MWL8363, },
+I created a MESH network by using 802.11n supported cards, however, MESH only works at 54Mbps link rate or below.
 
-No, you'll have to add a MWL8361P to the enum, and add a
-mwl8k_device_info table entry for that, and then add the PCI ID
-table entry with the MWL8361P identifier.
+Can anyone tell me how to active the 802.11n ht mode in mesh?
+
+Thanks!
+
+
+Binary
+
+
