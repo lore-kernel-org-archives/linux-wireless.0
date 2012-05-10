@@ -1,147 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:58731 "HELO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757827Ab2EIBeI (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:50831 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757932Ab2EJJPB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 21:34:08 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 18/18] mwifiex: delete IEs when stop_ap
-Date: Tue,  8 May 2012 18:30:30 -0700
-Message-Id: <1336527030-2045-19-git-send-email-bzhao@marvell.com> (sfid-20120509_035905_260843_C6316268)
-In-Reply-To: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
-References: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
+	Thu, 10 May 2012 05:15:01 -0400
+Received: by mail-wi0-f178.google.com with SMTP id hn19so247958wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:01 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 14/78] wl18xx: implement hw op for setting frame length in tx_hw_desc
+Date: Thu, 10 May 2012 12:13:19 +0300
+Message-Id: <1336641263-5761-15-git-send-email-arik@wizery.com> (sfid-20120510_112552_665595_6C444981)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Set the frame length during Tx in a way compatible with the 18xx FW.
 
-Delete custom IEs set by start_ap cfg80211 handler when stop_ap
-handler is called for AP interface.
-IE index required for deletion is stored in mwifiex_private
-structure.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |    3 +
- drivers/net/wireless/mwifiex/ie.c       |   71 +++++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/main.h     |    1 +
- 3 files changed, 75 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ti/wl18xx/main.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 2d0952d..f315ffc 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -929,6 +929,9 @@ static int mwifiex_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 
-+	if (mwifiex_del_mgmt_ies(priv))
-+		wiphy_err(wiphy, "Failed to delete mgmt IEs!\n");
-+
- 	if (mwifiex_send_cmd_sync(priv, HostCmd_CMD_UAP_BSS_STOP,
- 				  HostCmd_ACT_GEN_SET, 0, NULL)) {
- 		wiphy_err(wiphy, "Failed to stop the BSS\n");
-diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
-index ca9ebcf..ceb82cd 100644
---- a/drivers/net/wireless/mwifiex/ie.c
-+++ b/drivers/net/wireless/mwifiex/ie.c
-@@ -323,3 +323,74 @@ done:
- 
- 	return ret;
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index c85492e..0a5422c 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -321,6 +321,19 @@ wl18xx_set_tx_desc_blocks(struct wl1271 *wl, struct wl1271_tx_hw_descr *desc,
+ 	desc->wl18xx_mem.reserved = 0;
  }
-+
-+/* This function removes management IE set */
-+int mwifiex_del_mgmt_ies(struct mwifiex_private *priv)
+ 
++static void
++wl18xx_set_tx_desc_data_len(struct wl1271 *wl, struct wl1271_tx_hw_descr *desc,
++			    struct sk_buff *skb)
 +{
-+	struct mwifiex_ie *beacon_ie = NULL, *pr_ie = NULL;
-+	struct mwifiex_ie *ar_ie = NULL, *rsn_ie = NULL;
-+	int ret = 0;
++	desc->length = cpu_to_le16(skb->len);
 +
-+	if (priv->rsn_idx != MWIFIEX_AUTO_IDX_MASK) {
-+		rsn_ie = kmalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
-+		if (!rsn_ie)
-+			return -ENOMEM;
-+
-+		rsn_ie->ie_index = cpu_to_le16(priv->rsn_idx);
-+		rsn_ie->mgmt_subtype_mask = cpu_to_le16(MWIFIEX_DELETE_MASK);
-+		rsn_ie->ie_length = 0;
-+		if (mwifiex_update_uap_custom_ie(priv, rsn_ie, &priv->rsn_idx,
-+						 NULL, &priv->proberesp_idx,
-+						 NULL, &priv->assocresp_idx)) {
-+			ret = -1;
-+			goto done;
-+		}
-+
-+		priv->rsn_idx = MWIFIEX_AUTO_IDX_MASK;
-+	}
-+
-+	if (priv->beacon_idx != MWIFIEX_AUTO_IDX_MASK) {
-+		beacon_ie = kmalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
-+		if (!beacon_ie) {
-+			ret = -ENOMEM;
-+			goto done;
-+		}
-+		beacon_ie->ie_index = cpu_to_le16(priv->beacon_idx);
-+		beacon_ie->mgmt_subtype_mask = cpu_to_le16(MWIFIEX_DELETE_MASK);
-+		beacon_ie->ie_length = 0;
-+	}
-+	if (priv->proberesp_idx != MWIFIEX_AUTO_IDX_MASK) {
-+		pr_ie = kmalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
-+		if (!pr_ie) {
-+			ret = -ENOMEM;
-+			goto done;
-+		}
-+		pr_ie->ie_index = cpu_to_le16(priv->proberesp_idx);
-+		pr_ie->mgmt_subtype_mask = cpu_to_le16(MWIFIEX_DELETE_MASK);
-+		pr_ie->ie_length = 0;
-+	}
-+	if (priv->assocresp_idx != MWIFIEX_AUTO_IDX_MASK) {
-+		ar_ie = kmalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
-+		if (!ar_ie) {
-+			ret = -ENOMEM;
-+			goto done;
-+		}
-+		ar_ie->ie_index = cpu_to_le16(priv->assocresp_idx);
-+		ar_ie->mgmt_subtype_mask = cpu_to_le16(MWIFIEX_DELETE_MASK);
-+		ar_ie->ie_length = 0;
-+	}
-+
-+	if (beacon_ie || pr_ie || ar_ie)
-+		ret = mwifiex_update_uap_custom_ie(priv,
-+						   beacon_ie, &priv->beacon_idx,
-+						   pr_ie, &priv->proberesp_idx,
-+						   ar_ie, &priv->assocresp_idx);
-+
-+done:
-+	kfree(beacon_ie);
-+	kfree(pr_ie);
-+	kfree(ar_ie);
-+	kfree(rsn_ie);
-+
-+	return ret;
++	wl1271_debug(DEBUG_TX, "tx_fill_hdr: hlid: %d "
++		     "len: %d life: %d mem: %d", desc->hlid,
++		     le16_to_cpu(desc->length),
++		     le16_to_cpu(desc->life_time),
++		     desc->wl18xx_mem.total_mem_blocks);
 +}
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 7d882ee..bd3b0bf 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1007,6 +1007,7 @@ void mwifiex_set_sys_config_invalid_data(struct mwifiex_uap_bss_param *config);
++
+ static struct wlcore_ops wl18xx_ops = {
+ 	.identify_chip	= wl18xx_identify_chip,
+ 	.boot		= wl18xx_boot,
+@@ -328,6 +341,7 @@ static struct wlcore_ops wl18xx_ops = {
+ 	.ack_event	= wl18xx_ack_event,
+ 	.calc_tx_blocks = wl18xx_calc_tx_blocks,
+ 	.set_tx_desc_blocks = wl18xx_set_tx_desc_blocks,
++	.set_tx_desc_data_len = wl18xx_set_tx_desc_data_len,
+ };
  
- int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- 			 struct cfg80211_ap_settings *params);
-+int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
- u8 *mwifiex_11d_code_2_region(u8 code);
- 
- #ifdef CONFIG_DEBUG_FS
+ int __devinit wl18xx_probe(struct platform_device *pdev)
 -- 
-1.7.0.2
+1.7.9.5
 
