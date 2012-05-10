@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:37904 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756134Ab2EaJ6H (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:39464 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756865Ab2EJKZd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 05:58:07 -0400
-Received: by wgbdr13 with SMTP id dr13so723484wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 02:58:05 -0700 (PDT)
-From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Florian Fainelli <florian@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: Master mode support in iwlagn?
-Date: Thu, 31 May 2012 11:57:59 +0200
-Message-ID: <5625918.SuzapvkoUg@sylvesterjr.cmi.ua.ac.be> (sfid-20120531_115812_044221_7D0C4C4B)
-In-Reply-To: <4932187.SWLxM4x7cN@flexo>
-References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be> <1338455399.7328.0.camel@jlt3.sipsolutions.net> <4932187.SWLxM4x7cN@flexo>
+	Thu, 10 May 2012 06:25:33 -0400
+Received: by bkcji2 with SMTP id ji2so1114609bkc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 03:25:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87ehqs8hqy.fsf@purkki.adurom.net>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+ <87ipg48ivh.fsf@purkki.adurom.net> <CA+XVXfcFx3ZDiPrwmDHbVbHs=_V0wsJasNvXAE9XrPodr_xVTg@mail.gmail.com>
+ <87ehqs8hqy.fsf@purkki.adurom.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 10 May 2012 13:25:16 +0300
+Message-ID: <CA+XVXffbZ03ANuagfnYQow6y4L07gVb=wP3SDTWKsnF5RDKnZw@mail.gmail.com> (sfid-20120510_122535_476025_225D4916)
+Subject: Re: [PATCH 00/78] 18xx chip support
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 31 May 2012 11:20:49 Florian Fainelli wrote:
-> Hi,
-> 
-> On Thursday 31 May 2012 11:09:59 Johannes Berg wrote:
-> > Please don't top-post.
-> > 
-> > On Thu, 2012-05-31 at 11:03 +0200, Erwin Van de Velde wrote:
-> > > What is the reasoning behind it? Why provide it for some wireless NICs
-> > > and
-> 
-> not
-> 
-> > > for others? Seems quite odd for me and features like Internet sharing
-> > > over
-> > > wireless are not that exotic, are they?
-> > 
-> > This features requires extensive testing, space in the firmware that not
-> > all devices have, integration, etc. It's not trivial to port to
-> > different devices.
-> 
-> It certainly is not, but you can get some help from the software mac with
-> that regard. Since your device is capable of beaconing for P2P and GO
-> modes, Erwin's question is perfectly legitimate with respect to AP support.
-> I suppose that you could get it working without too much firmware work.
-> 
-> At the same time, since Intel's iwlwifi series are targetted at the laptop
-> market, and not AP/router solutions, it certainly was not in a roadmap to
-> get AP mode supported. Apart from pleasing people, that won't make you sell
-> more adapters.
-> 
+On Thu, May 10, 2012 at 1:15 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Arik Nemtsov <arik@wizery.com> writes:
+>
+>> On Thu, May 10, 2012 at 12:50 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>>> Arik Nemtsov <arik@wizery.com> writes:
+>>>
+>>>> This series adds initial support for the 18xx chip family. The new
+>>>> module uses wlcore for functionality common with the 12xx family.
+>>>
+>>> You do know that sending 78 patches in one patchset is very much
+>>> frowned upon? No sane person (outside of wl12xx) is going to review
+>>> all of these.
+>>
+>> Yea I don't like it as well, but it took this amount of patches to get
+>> the card up and running. Posting some skeleton code seems kind of
+>> useless.
+>
+> You can always submit patches in smaller (10-15 patches) chunks.
 
-I am unable to give an opinion about the difficulty of this request, since I 
-have never had a look at the code :-) However, theoretically I would expect 
-that it is very similar to what is being done for other wireless drivers, but 
-I can be wrong...
+We'll try to better split stuff in the future.
 
-The interface may be targeted for the laptop market, but as I said, Internet 
-sharing is quite handy sometimes and that is why I was looking for the AP 
-mode.
-I do not understand the last sentence... If you please customers, does that 
-not lead to selling more of  your products? So, the question is: how many 
-people would like to have this feature? And considering the availability of 
-this option in other drivers, software like e.g. NetworkManager, other OSs 
-like e.g. Max OSX, etc. I would like to argue that there is indeed a need for 
-this feature in the market.
-
-Best regards,
-Erwin
-
+Arik
