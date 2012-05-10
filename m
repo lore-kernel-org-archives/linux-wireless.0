@@ -1,38 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:41312 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756376Ab2EHQae (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758061Ab2EJJP1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 12:30:34 -0400
-Received: by gglu4 with SMTP id u4so972834ggl.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 09:30:34 -0700 (PDT)
-Date: Tue, 8 May 2012 12:30:18 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Vadim <Vadims.Kurmis@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: Adding custom channels to ath5k for researching purposes
-Message-ID: <20120508163018.GE25400@localhost> (sfid-20120508_183038_201696_19A85632)
-References: <loom.20101104T140201-178@post.gmane.org>
- <AANLkTinMSH2Vr=iUTD0Pc_OdaM_LFETDEjsOJn+2ZzVD@mail.gmail.com>
- <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com>
+	Thu, 10 May 2012 05:15:27 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:27 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 26/78] wl18xx: send channel type to FW on role start
+Date: Thu, 10 May 2012 12:13:31 +0300
+Message-Id: <1336641263-5761-27-git-send-email-arik@wizery.com> (sfid-20120510_112253_492885_B9DDF159)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 08, 2012 at 07:50:06AM -0700, Luis R. Rodriguez wrote:
-> I'm thinking it may make sense to add CONFIG_WIRELESS_EXPERT where we
-> can stuff some of this stuff under. It may be useful for other
-> regulatory testing / certification stuff.
+Translate the NL80211 channel type to a FW-specific channel type and send
+it to the FW as part of the role-start command. For wl12xx this has no
+effect - this element is treated as padding.
 
-No objection here, so long as this kind of config opt wouldn't become
-a dumping ground (cf. CONFIG_EMBEDDED).  "EXPERT" could mean different
-things to different people.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/cmd.c |   19 +++++++++++++++++++
+ drivers/net/wireless/ti/wlcore/cmd.h |   11 ++++++++++-
+ 2 files changed, 29 insertions(+), 1 deletion(-)
 
-I still like the idea of exporting more stuff to userspace and letting
-CRDA handle the card-based restrictions, but ISTR you had reasons that
-didn't work for everything.
-
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 5b128a9..8450f0e 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -291,6 +291,23 @@ static int wl12xx_get_new_session_id(struct wl1271 *wl,
+ 	return wlvif->session_counter;
+ }
+ 
++static u8 wlcore_get_native_channel_type(u8 nl_channel_type)
++{
++	switch (nl_channel_type) {
++	case NL80211_CHAN_NO_HT:
++		return WLCORE_CHAN_NO_HT;
++	case NL80211_CHAN_HT20:
++		return WLCORE_CHAN_HT20;
++	case NL80211_CHAN_HT40MINUS:
++		return WLCORE_CHAN_HT40MINUS;
++	case NL80211_CHAN_HT40PLUS:
++		return WLCORE_CHAN_HT40PLUS;
++	default:
++		WARN_ON(1);
++		return WLCORE_CHAN_NO_HT;
++	}
++}
++
+ static int wl12xx_cmd_role_start_dev(struct wl1271 *wl,
+ 				     struct wl12xx_vif *wlvif)
+ {
+@@ -407,6 +424,7 @@ int wl12xx_cmd_role_start_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	memcpy(cmd->sta.ssid, wlvif->ssid, wlvif->ssid_len);
+ 	memcpy(cmd->sta.bssid, vif->bss_conf.bssid, ETH_ALEN);
+ 	cmd->sta.local_rates = cpu_to_le32(wlvif->rate_set);
++	cmd->channel_type = wlcore_get_native_channel_type(wlvif->channel_type);
+ 
+ 	if (wlvif->sta.hlid == WL12XX_INVALID_LINK_ID) {
+ 		ret = wl12xx_allocate_link(wl, wlvif, &wlvif->sta.hlid);
+@@ -519,6 +537,7 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	/* FIXME: Change when adding DFS */
+ 	cmd->ap.reset_tsf = 1;  /* By default reset AP TSF */
+ 	cmd->channel = wlvif->channel;
++	cmd->channel_type = wlcore_get_native_channel_type(wlvif->channel_type);
+ 
+ 	if (!bss_conf->hidden_ssid) {
+ 		/* take the SSID from the beacon for backward compatibility */
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index a46ae07..2aafe3d 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -266,13 +266,22 @@ enum wlcore_band {
+ 	WLCORE_BAND_MAX_RADIO		= 0x7F,
+ };
+ 
++enum wlcore_channel_type {
++	WLCORE_CHAN_NO_HT,
++	WLCORE_CHAN_HT20,
++	WLCORE_CHAN_HT40MINUS,
++	WLCORE_CHAN_HT40PLUS
++};
++
+ struct wl12xx_cmd_role_start {
+ 	struct wl1271_cmd_header header;
+ 
+ 	u8 role_id;
+ 	u8 band;
+ 	u8 channel;
+-	u8 padding;
++
++	/* enum wlcore_channel_type */
++	u8 channel_type;
+ 
+ 	union {
+ 		struct {
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.9.5
+
