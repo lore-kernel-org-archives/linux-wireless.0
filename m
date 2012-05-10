@@ -1,138 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:46527 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752369Ab2EFI7H (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757799Ab2EJJPE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 04:59:07 -0400
-Date: Sun, 6 May 2012 10:59:03 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi warn_slowpath with 3.*
-Message-ID: <20120506085902.GC1288@ritirata.org> (sfid-20120506_105910_493222_EB62CABE)
-References: <CANUX_P0DL+_V8RO-CNXQx=oHF0T-opO=uw-ukYOjjVgo_OyfUw@mail.gmail.com>
- <20120504002136.GA4201@ritirata.org>
- <CANUX_P1Ji6H0zaA_kMHx2F1AD+czB=XtrDhjEvR8t1aCDpZhUQ@mail.gmail.com>
- <20120504063644.GA2912@ritirata.org>
- <CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
- <20120504142006.GA2040@ritirata.org>
- <CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com>
- <CANUX_P0ygFyDjOo1Thygw_dEiHKPPiH4=GDKN4ncX3vwy0ujrw@mail.gmail.com>
- <20120506075433.GA1288@ritirata.org>
- <CANUX_P09Bx=kZ+OoHLTdZgJy_rJOQvutg3yVrBLHzPzV=KMQsg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="sHrvAb52M6C8blB9"
-In-Reply-To: <CANUX_P09Bx=kZ+OoHLTdZgJy_rJOQvutg3yVrBLHzPzV=KMQsg@mail.gmail.com>
+	Thu, 10 May 2012 05:15:04 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:03 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 15/78] wl18xx: define HW-rate translation elements/tables
+Date: Thu, 10 May 2012 12:13:20 +0300
+Message-Id: <1336641263-5761-16-git-send-email-arik@wizery.com> (sfid-20120510_111511_058473_E21C2480)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Define HW-rate conversion tables for the 18xx chip. Initialize
+the appropriate wlcore elements with these tables and values to allow
+conversion of HW-rates.
 
---sHrvAb52M6C8blB9
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |  115 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wlcore/conf.h |   10 ++-
+ 2 files changed, 124 insertions(+), 1 deletion(-)
 
-On Sun, May 06, 2012 at 11:26:32 +0300, Emmanuel Grumbach wrote:
-> All right,
->=20
-> Can you please test the patch I sent to you (which was good but not enoug=
-h)
-> And add this one too ?
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 0a5422c..7dcb832 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -37,6 +37,118 @@
+ #define WL18XX_TX_HW_GEM_BLOCK_SPARE    2
+ #define WL18XX_TX_HW_BLOCK_SIZE         268
+ 
++static const u8 wl18xx_rate_to_idx_2ghz[] = {
++	/* MCS rates are used only with 11n */
++	15,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS15 */
++	14,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS14 */
++	13,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS13 */
++	12,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS12 */
++	11,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS11 */
++	10,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS10 */
++	9,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS9 */
++	8,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS8 */
++	7,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS7 */
++	6,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS6 */
++	5,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS5 */
++	4,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS4 */
++	3,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS3 */
++	2,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS2 */
++	1,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS1 */
++	0,                             /* WL18XX_CONF_HW_RXTX_RATE_MCS0 */
++
++	11,                            /* WL18XX_CONF_HW_RXTX_RATE_54   */
++	10,                            /* WL18XX_CONF_HW_RXTX_RATE_48   */
++	9,                             /* WL18XX_CONF_HW_RXTX_RATE_36   */
++	8,                             /* WL18XX_CONF_HW_RXTX_RATE_24   */
++
++	/* TI-specific rate */
++	CONF_HW_RXTX_RATE_UNSUPPORTED, /* WL18XX_CONF_HW_RXTX_RATE_22   */
++
++	7,                             /* WL18XX_CONF_HW_RXTX_RATE_18   */
++	6,                             /* WL18XX_CONF_HW_RXTX_RATE_12   */
++	3,                             /* WL18XX_CONF_HW_RXTX_RATE_11   */
++	5,                             /* WL18XX_CONF_HW_RXTX_RATE_9    */
++	4,                             /* WL18XX_CONF_HW_RXTX_RATE_6    */
++	2,                             /* WL18XX_CONF_HW_RXTX_RATE_5_5  */
++	1,                             /* WL18XX_CONF_HW_RXTX_RATE_2    */
++	0                              /* WL18XX_CONF_HW_RXTX_RATE_1    */
++};
++
++static const u8 wl18xx_rate_to_idx_5ghz[] = {
++	/* MCS rates are used only with 11n */
++	15,                           /* WL18XX_CONF_HW_RXTX_RATE_MCS15 */
++	14,                           /* WL18XX_CONF_HW_RXTX_RATE_MCS14 */
++	13,                           /* WL18XX_CONF_HW_RXTX_RATE_MCS13 */
++	12,                           /* WL18XX_CONF_HW_RXTX_RATE_MCS12 */
++	11,                           /* WL18XX_CONF_HW_RXTX_RATE_MCS11 */
++	10,                           /* WL18XX_CONF_HW_RXTX_RATE_MCS10 */
++	9,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS9 */
++	8,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS8 */
++	7,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS7 */
++	6,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS6 */
++	5,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS5 */
++	4,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS4 */
++	3,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS3 */
++	2,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS2 */
++	1,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS1 */
++	0,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS0 */
++
++	7,                             /* WL18XX_CONF_HW_RXTX_RATE_54   */
++	6,                             /* WL18XX_CONF_HW_RXTX_RATE_48   */
++	5,                             /* WL18XX_CONF_HW_RXTX_RATE_36   */
++	4,                             /* WL18XX_CONF_HW_RXTX_RATE_24   */
++
++	/* TI-specific rate */
++	CONF_HW_RXTX_RATE_UNSUPPORTED, /* WL18XX_CONF_HW_RXTX_RATE_22   */
++
++	3,                             /* WL18XX_CONF_HW_RXTX_RATE_18   */
++	2,                             /* WL18XX_CONF_HW_RXTX_RATE_12   */
++	CONF_HW_RXTX_RATE_UNSUPPORTED, /* WL18XX_CONF_HW_RXTX_RATE_11   */
++	1,                             /* WL18XX_CONF_HW_RXTX_RATE_9    */
++	0,                             /* WL18XX_CONF_HW_RXTX_RATE_6    */
++	CONF_HW_RXTX_RATE_UNSUPPORTED, /* WL18XX_CONF_HW_RXTX_RATE_5_5  */
++	CONF_HW_RXTX_RATE_UNSUPPORTED, /* WL18XX_CONF_HW_RXTX_RATE_2    */
++	CONF_HW_RXTX_RATE_UNSUPPORTED, /* WL18XX_CONF_HW_RXTX_RATE_1    */
++};
++
++static const u8 *wl18xx_band_rate_to_idx[] = {
++	[IEEE80211_BAND_2GHZ] = wl18xx_rate_to_idx_2ghz,
++	[IEEE80211_BAND_5GHZ] = wl18xx_rate_to_idx_5ghz
++};
++
++enum wl18xx_hw_rates {
++	WL18XX_CONF_HW_RXTX_RATE_MCS15 = 0,
++	WL18XX_CONF_HW_RXTX_RATE_MCS14,
++	WL18XX_CONF_HW_RXTX_RATE_MCS13,
++	WL18XX_CONF_HW_RXTX_RATE_MCS12,
++	WL18XX_CONF_HW_RXTX_RATE_MCS11,
++	WL18XX_CONF_HW_RXTX_RATE_MCS10,
++	WL18XX_CONF_HW_RXTX_RATE_MCS9,
++	WL18XX_CONF_HW_RXTX_RATE_MCS8,
++	WL18XX_CONF_HW_RXTX_RATE_MCS7,
++	WL18XX_CONF_HW_RXTX_RATE_MCS6,
++	WL18XX_CONF_HW_RXTX_RATE_MCS5,
++	WL18XX_CONF_HW_RXTX_RATE_MCS4,
++	WL18XX_CONF_HW_RXTX_RATE_MCS3,
++	WL18XX_CONF_HW_RXTX_RATE_MCS2,
++	WL18XX_CONF_HW_RXTX_RATE_MCS1,
++	WL18XX_CONF_HW_RXTX_RATE_MCS0,
++	WL18XX_CONF_HW_RXTX_RATE_54,
++	WL18XX_CONF_HW_RXTX_RATE_48,
++	WL18XX_CONF_HW_RXTX_RATE_36,
++	WL18XX_CONF_HW_RXTX_RATE_24,
++	WL18XX_CONF_HW_RXTX_RATE_22,
++	WL18XX_CONF_HW_RXTX_RATE_18,
++	WL18XX_CONF_HW_RXTX_RATE_12,
++	WL18XX_CONF_HW_RXTX_RATE_11,
++	WL18XX_CONF_HW_RXTX_RATE_9,
++	WL18XX_CONF_HW_RXTX_RATE_6,
++	WL18XX_CONF_HW_RXTX_RATE_5_5,
++	WL18XX_CONF_HW_RXTX_RATE_2,
++	WL18XX_CONF_HW_RXTX_RATE_1,
++	WL18XX_CONF_HW_RXTX_RATE_MAX,
++};
++
+ static struct wl18xx_conf wl18xx_default_conf = {
+ 	.phy = {
+ 		.phy_standalone			= 0x00,
+@@ -363,6 +475,9 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 	wl->num_tx_desc = 32;
+ 	wl->normal_tx_spare = WL18XX_TX_HW_BLOCK_SPARE;
+ 	wl->gem_tx_spare = WL18XX_TX_HW_GEM_BLOCK_SPARE;
++	wl->band_rate_to_idx = wl18xx_band_rate_to_idx;
++	wl->hw_tx_rate_tbl_size = WL18XX_CONF_HW_RXTX_RATE_MAX;
++	wl->hw_min_ht_rate = WL18XX_CONF_HW_RXTX_RATE_MCS0;
+ 
+ 	return wlcore_probe(wl, pdev);
+ }
+diff --git a/drivers/net/wireless/ti/wlcore/conf.h b/drivers/net/wireless/ti/wlcore/conf.h
+index fef0db4..0798c1e 100644
+--- a/drivers/net/wireless/ti/wlcore/conf.h
++++ b/drivers/net/wireless/ti/wlcore/conf.h
+@@ -45,7 +45,15 @@ enum {
+ 	CONF_HW_BIT_RATE_MCS_4   = BIT(17),
+ 	CONF_HW_BIT_RATE_MCS_5   = BIT(18),
+ 	CONF_HW_BIT_RATE_MCS_6   = BIT(19),
+-	CONF_HW_BIT_RATE_MCS_7   = BIT(20)
++	CONF_HW_BIT_RATE_MCS_7   = BIT(20),
++	CONF_HW_BIT_RATE_MCS_8   = BIT(21),
++	CONF_HW_BIT_RATE_MCS_9   = BIT(22),
++	CONF_HW_BIT_RATE_MCS_10  = BIT(23),
++	CONF_HW_BIT_RATE_MCS_11  = BIT(24),
++	CONF_HW_BIT_RATE_MCS_12  = BIT(25),
++	CONF_HW_BIT_RATE_MCS_13  = BIT(26),
++	CONF_HW_BIT_RATE_MCS_14  = BIT(27),
++	CONF_HW_BIT_RATE_MCS_15  = BIT(28),
+ };
+ 
+ enum {
+-- 
+1.7.9.5
 
-What branch are these patches based on?
-I'm applying them onto wireless-testing, but I always messages like:
-
-patching file drivers/net/wireless/iwlwifi/iwl-debugfs.c
-Hunk #1 succeeded at 2211 (offset 1 line).
-
-The patches apply anyway, but just to be sure I'm testing the correct branch
-
-
-Cheers,
-
->=20
-> Thanks
->=20
-> Emmanuel Grumbach
-> egrumbach@gmail.com
->=20
->=20
-> On Sun, May 6, 2012 at 10:54 AM, Antonio Quartulli <ordex@autistici.org> =
-wrote:
-> > On Sun, May 06, 2012 at 08:49:52 +0300, Emmanuel Grumbach wrote:
-> >> wait - I just noticed that this one introduced another issue...
-> >
-> > ok, I'll drop this patch
-> >
-> >>
-> >> Emmanuel Grumbach
-> >> egrumbach@gmail.com
-> >>
-> >>
-> >> On Sat, May 5, 2012 at 9:49 PM, Emmanuel Grumbach <egrumbach@gmail.com=
-> wrote:
-> >> > Well,
-> >> >
-> >> > this is not the same warning as before.
-> >> > Can you try the patch attached ?
-> >> > I have submitted it internally.
-> >> >
-> >> > thanks
-> >> >
-> >> > Emmanuel Grumbach
-> >> > egrumbach@gmail.com
-> >> >
-> >> >
-> >> > On Fri, May 4, 2012 at 5:20 PM, Antonio Quartulli <ordex@autistici.o=
-rg> wrote:
-> >> >> On Fri, May 04, 2012 at 09:58:30 +0300, Emmanuel Grumbach wrote:
-> >> >>> This can't be with my patch, is it ?
-> >> >>
-> >> >> here is the log. Some pieces are missing at the beginning, didn't c=
-heck why.
-> >> >> However the WARNING comes up later, so it should be ok. Tell me if =
-I can do
-> >> >> something else!
-> >> >>
-> >> >> Cheers,
-> >> >>
-> >> >>
-> >> >> --
-> >> >> Antonio Quartulli
-> >> >>
-> >> >> ..each of us alone is worth nothing..
-> >> >> Ernesto "Che" Guevara
-> >
-> > --
-> > Antonio Quartulli
-> >
-> > ..each of us alone is worth nothing..
-> > Ernesto "Che" Guevara
-
-
-
---=20
-Antonio Quartulli
-
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
-
---sHrvAb52M6C8blB9
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAEBAgAGBQJPpj1WAAoJEFMQTLzJFOZFZSwH/3z/7b3BySsxeXnixVKYvW/z
-FBg0Un9g6ApcuLXKtqwYqvm/PBpEtXrkGoH+LypdFH+/f7D4rrHrYebVCJsggie/
-EEDeha2vcfCVZXY0c7x46L6zBUNqOhzuJKRxDOC/MXblag0eQXg+ydJ2Gio+K8lo
-vselec/vGnmDtYeeZBe5eWFt89429sfHxaq8yrfI66QGtast4llXYJ1/7iH4JX9H
-6DA6dJKMQ4tpoQ6Xpyar9OZmWA1uJ3oHs6nF3Xgz1ptYO9z3wfcDRLJtI6stRz6F
-yL5SaR5Wjtj7YPdfUHGgrCFVMpX0NIpEdpGAvT/3ThKuW02Rvle8CcjKrsLlNSk=
-=64L6
------END PGP SIGNATURE-----
-
---sHrvAb52M6C8blB9--
