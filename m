@@ -1,41 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53110 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756202Ab2EHTgU (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:64514 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753319Ab2EJCdP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 15:36:20 -0400
-Message-ID: <1336505780.4320.6.camel@jlt3.sipsolutions.net> (sfid-20120508_213632_280765_109C27FC)
-Subject: [PATCH] cfg80211: add warning when calculating MCS rates >= 32
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 08 May 2012 21:36:20 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 9 May 2012 22:33:15 -0400
+Received: by yhmm54 with SMTP id m54so1006656yhm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 19:33:14 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: dmitry.tarnyagin@stericsson.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/3] cw1200: use round_up instead of open-coding it
+Date: Wed,  9 May 2012 22:32:33 -0400
+Message-Id: <1336617155-7455-1-git-send-email-me@bobcopeland.com> (sfid-20120510_043319_211698_C9D47D27)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Replace a few instances of rounding (one of them buggy) with the
+built-in kernel macro.
 
-cfg80211_calculate_bitrate() doesn't work for MCS
-rates 32 or higher, and it has always returned 0
-in that case. Warn if it ever really happens.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- net/wireless/util.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/net/wireless/util.c	2012-05-08 21:33:50.000000000 +0200
-+++ b/net/wireless/util.c	2012-05-08 21:33:54.000000000 +0200
-@@ -879,7 +879,7 @@ u16 cfg80211_calculate_bitrate(struct ra
- 		return rate->legacy;
- 
- 	/* the formula below does only work for MCS values smaller than 32 */
--	if (rate->mcs >= 32)
-+	if (WARN_ON_ONCE(rate->mcs >= 32))
- 		return 0;
- 
- 	modulation = rate->mcs & 7;
+Hi Dmitry, these patches are compile-tested only, let me know if
+there are any problems.
 
+ drivers/staging/cw1200/bh.c  |    9 ++-------
+ drivers/staging/cw1200/wsm.c |    6 +-----
+ 2 files changed, 3 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/staging/cw1200/bh.c b/drivers/staging/cw1200/bh.c
+index 427f3e2..edfb85d 100644
+--- a/drivers/staging/cw1200/bh.c
++++ b/drivers/staging/cw1200/bh.c
+@@ -400,9 +400,7 @@ rx:
+ 					priv->sbus_priv, read_len);
+ #else /* CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES */
+ 			/* Platform's SDIO workaround */
+-			alloc_len = read_len & ~(SDIO_BLOCK_SIZE - 1);
+-			if (read_len & (SDIO_BLOCK_SIZE - 1))
+-				alloc_len += SDIO_BLOCK_SIZE;
++			alloc_len = round_up(read_len, SDIO_BLOCK_SIZE);
+ #endif /* CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES */
+ 
+ 			/* Check if not exceeding CW1200 capabilities */
+@@ -537,10 +535,7 @@ tx:
+ 				* It is also supported by upper layer:
+ 				* there is always enough space at the
+ 				* end of the buffer. */
+-				if (tx_len & (SDIO_BLOCK_SIZE - 1)) {
+-					tx_len &= ~(SDIO_BLOCK_SIZE - 1);
+-					tx_len += SDIO_BLOCK_SIZE;
+-				}
++				tx_len = round_up(tx_len, SDIO_BLOCK_SIZE);
+ #endif /* CONFIG_CW1200_NON_POWER_OF_TWO_BLOCKSIZES */
+ 
+ 				/* Check if not exceeding CW1200
+diff --git a/drivers/staging/cw1200/wsm.c b/drivers/staging/cw1200/wsm.c
+index 3cf5370..b657568 100644
+--- a/drivers/staging/cw1200/wsm.c
++++ b/drivers/staging/cw1200/wsm.c
+@@ -1816,11 +1816,7 @@ static int wsm_buf_reserve(struct wsm_buf *buf, size_t extra_size)
+ 	size_t pos = buf->data - buf->begin;
+ 	size_t size = pos + extra_size;
+ 
+-
+-	if (size & (SDIO_BLOCK_SIZE - 1)) {
+-		size &= SDIO_BLOCK_SIZE;
+-		size += SDIO_BLOCK_SIZE;
+-	}
++	size = round_up(size, SDIO_BLOCK_SIZE);
+ 
+ 	buf->begin = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
+ 	if (buf->begin) {
+-- 
+1.7.6
 
