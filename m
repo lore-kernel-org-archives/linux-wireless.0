@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:34276 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708Ab2EINzG (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58173 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760725Ab2EJRkQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 09:55:06 -0400
-Received: by yenm10 with SMTP id m10so274088yen.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 06:55:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1336554064.4323.6.camel@jlt3.sipsolutions.net>
-References: <1336553772-7519-1-git-send-email-helmut.schaa@googlemail.com>
-	<1336554064.4323.6.camel@jlt3.sipsolutions.net>
-Date: Wed, 9 May 2012 15:55:06 +0200
-Message-ID: <CAGXE3d-TRGs=H_8HioSWr=J3zPWsoFRdOm5vc9MgSrbqZJMcUQ@mail.gmail.com> (sfid-20120509_155512_061522_9B69ECD4)
-Subject: Re: [PATCH] mac80211: Fix race between tx path and ___ieee80211_stop_tx_ba_session
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 10 May 2012 13:40:16 -0400
+Message-ID: <1336671612.4334.25.camel@jlt3.sipsolutions.net> (sfid-20120510_194033_942177_9B203746)
+Subject: Re: [PATCH 1/4] iwlwifi: Add __printf argument checking to __iwl_dbg
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Thu, 10 May 2012 19:40:12 +0200
+In-Reply-To: <1336671240.22495.20.camel@joe2Laptop>
+References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
+	 <1336665952-24363-2-git-send-email-johannes@sipsolutions.net>
+	 <1336667905.22495.18.camel@joe2Laptop>
+	 <1336668634.4334.23.camel@jlt3.sipsolutions.net>
+	 <1336671240.22495.20.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 9, 2012 at 11:01 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2012-05-09 at 10:56 +0200, Helmut Schaa wrote:
->> ___ieee80211_stop_tx_ba_session first deletes the tx aggregation session
->> timer and afterwards clears HT_AGG_STATE_OPERATIONAL. Hence, there is a
->> small time window where the tx path can call mod_timer after
->> del_timer_sync.
->>
->> When ieee80211_start_tx_ba_session runs before the timer the call to
->> init_timer will cause a BUG_ON:
->
-> This may have been fixed by my other patch where I check the state?
+On Thu, 2012-05-10 at 10:34 -0700, Joe Perches wrote:
+> On Thu, 2012-05-10 at 18:50 +0200, Johannes Berg wrote:
+> > On Thu, 2012-05-10 at 09:38 -0700, Joe Perches wrote:
+> > > Add gcc format and argument printf checking
+> > > to reduce future defect introduction.
+> []
+> > >  #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
+> > > +__printf(5, 6)
+> > >  void __iwl_dbg(struct device *dev,
+> > >  	       u32 level, bool limit, const char *function,
+> > >  	       const char *fmt, ...);
+> > 
+> > But that looks a bit odd to me? It would seem more natural to me to put
+> > the attribute after the parameter list?
+> 
+> It's an attribute of the function and
+> this style is used almost everywhere
+> in the kernel.
 
-I'll have to try but I'm not sure if these are two different issues ...
-Helmut
+I also found that for the inline, it *has* to be there. Checkpatch
+doesn't like it though if I put it in the same line as "static inline
+void" ;-)
+
+johannes
+
