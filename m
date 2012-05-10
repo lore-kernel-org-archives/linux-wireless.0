@@ -1,42 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:52458 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755028Ab2E1UHl (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758512Ab2EJJQg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 16:07:41 -0400
-Received: by pbbrp8 with SMTP id rp8so5001069pbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2012 13:07:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20419.9719.160216.124618@gargle.gargle.HOWL>
-References: <4FC04B5A.1070900@candelatech.com>
-	<20416.19680.571601.549629@gargle.gargle.HOWL>
-	<4FC0F8CE.1030303@candelatech.com>
-	<20417.972.888113.821079@gargle.gargle.HOWL>
-	<20417.1857.115550.807746@gargle.gargle.HOWL>
-	<4FC2437C.9090106@candelatech.com>
-	<CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com>
-	<4FC2F73F.4070701@candelatech.com>
-	<CAJ-VmonMtRUZpidJERT7hRUDJNgyoMdVovXoG5WdStH6zk7yFQ@mail.gmail.com>
-	<20419.9719.160216.124618@gargle.gargle.HOWL>
-Date: Mon, 28 May 2012 13:07:40 -0700
-Message-ID: <CAJ-Vmokf+EfpQ9m_8W6q3q-nsKgMMTn0w7=BgnW26AWh5vZB2g@mail.gmail.com> (sfid-20120528_220812_996022_69FEA6C3)
-Subject: Re: Anyone doing WiFi throughput tests?
-From: Adrian Chadd <adrian@freebsd.org>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 10 May 2012 05:16:36 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:35 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 57/78] wlcore: reorder identify_chip and get_hw_info
+Date: Thu, 10 May 2012 12:14:02 +0300
+Message-Id: <1336641263-5761-58-git-send-email-arik@wizery.com> (sfid-20120510_111848_474427_CCC097B6)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Heh. 228MBit is more reasonable, but I'm getting it up around
-235/240MBit at the present moment. I'm hitting queue overruns though,
-so I think I've messed something up in the driver, or someone broke
-the scheduler in weird/wonderful ways.
+From: Luciano Coelho <coelho@ti.com>
 
-I'll let you know when it's at 250MBit again. :)
+We can do get the HW information and identify the chip already at
+probe time.  This makes it easier to mangle with the parameters during
+identify chip before registering the hardware with mac80211.
 
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |   20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 2c78057..9b8f6a2 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -962,10 +962,6 @@ static int wl12xx_chip_wakeup(struct wl1271 *wl, bool plt)
+ 	if (wl1271_set_block_size(wl))
+ 		wl->quirks |= WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN;
+ 
+-	ret = wl->ops->identify_chip(wl);
+-	if (ret < 0)
+-		goto out;
+-
+ 	/* TODO: make sure the lower driver has set things up correctly */
+ 
+ 	ret = wl1271_setup(wl);
+@@ -4871,12 +4867,6 @@ static int wl1271_register_hw(struct wl1271 *wl)
+ 	if (wl->mac80211_registered)
+ 		return 0;
+ 
+-	ret = wl12xx_get_hw_info(wl);
+-	if (ret < 0) {
+-		wl1271_error("couldn't get hw info");
+-		goto out;
+-	}
+-
+ 	ret = wl1271_fetch_nvs(wl);
+ 	if (ret == 0) {
+ 		/* NOTE: The wl->nvs->nvs element must be first, in
+@@ -5281,6 +5271,16 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
+ 	}
+ 	disable_irq(wl->irq);
+ 
++	ret = wl12xx_get_hw_info(wl);
++	if (ret < 0) {
++		wl1271_error("couldn't get hw info");
++		goto out;
++	}
++
++	ret = wl->ops->identify_chip(wl);
++	if (ret < 0)
++		goto out;
++
+ 	ret = wl1271_init_ieee80211(wl);
+ 	if (ret)
+ 		goto out_irq;
+-- 
+1.7.9.5
 
-Adrian
