@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58609 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037Ab2E2LVn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46364 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757988Ab2EJQF5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 07:21:43 -0400
-Message-ID: <4FC4B132.60209@qca.qualcomm.com> (sfid-20120529_132146_963003_BF5C08AE)
-Date: Tue, 29 May 2012 16:51:22 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2 1/2] ath6kl: Fix race in aggregation reorder logic
-References: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com> <4FC4AF40.3060702@qca.qualcomm.com>
-In-Reply-To: <4FC4AF40.3060702@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Thu, 10 May 2012 12:05:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/4] iwlwifi: fix prints in iwl_rx_handle
+Date: Thu, 10 May 2012 18:05:49 +0200
+Message-Id: <1336665952-24363-2-git-send-email-johannes@sipsolutions.net> (sfid-20120510_180602_348662_B04FB76A)
+In-Reply-To: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
+References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 29 May 2012 04:43 PM, Kalle Valo wrote:
-> On 05/25/2012 01:19 PM, Vasanthakumar Thiagarajan wrote:
->> There are many places where tid data are accessed without
->> the lock (rxtid->lock), this can lead to a race condition
->> when the timeout handler for aggregatin reorder and the
->> receive function are getting executed at the same time.
->> Fix this race, but still there are races which can not
->> be fixed without rewriting the whole aggregation reorder
->> logic, for now fix the obvious ones.
->>
->> Signed-off-by: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
->
-> [...]
->
->> @@ -1188,6 +1189,7 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
->>   		rxtid->progress = true;
->>   	else
->>   		for (idx = 0 ; idx<  rxtid->hold_q_sz; idx++) {
->> +			spin_lock_bh(&rxtid->lock);
->>   			if (rxtid->hold_q[idx].skb) {
->>   				/*
->>   				 * There is a frame in the queue and no
->> @@ -1201,8 +1203,10 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
->>   					   HZ * (AGGR_RX_TIMEOUT) / 1000));
->>   				rxtid->progress = false;
->>   				rxtid->timer_mon = true;
->> +				spin_unlock_bh(&rxtid->lock);
->>   				break;
->>   			}
->> +			spin_unlock_bh(&rxtid->lock);
->>   		}
->
-> Here you take and release the lock multiple times inside the loop. Why
-> not take the lock before the loop?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Sounds better to acquire the lock before loop and releasing it after
-the loop. I was kind of thinking about protecting the data only
-in critical section, but in this case we can bring the loop
-in the lock, it is not going to make much difference. I'll change
-this, thanks.
+The debug prints were wrong and buggy. The HW pointer wasn't printed
+correctly, it was mixed up with the pointer to the rxbuf.
 
-Vasanth
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index d7b5e66..9191143 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -499,7 +499,7 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 
+ 	/* Rx interrupt, but nothing sent from uCode */
+ 	if (i == r)
+-		IWL_DEBUG_RX(trans, "r = %d, i = %d\n", r, i);
++		IWL_DEBUG_RX(trans, "HW = SW = %d\n", r);
+ 
+ 	/* calculate total frames need to be restock after handling RX */
+ 	total_empty = r - rxq->write_actual;
+@@ -515,7 +515,8 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 		rxb = rxq->queue[i];
+ 		rxq->queue[i] = NULL;
+ 
+-		IWL_DEBUG_RX(trans, "rxbuf: r = %d, i = %d (%p)\n", rxb);
++		IWL_DEBUG_RX(trans, "rxbuf: HW = %d, SW = %d (%p)\n",
++			     r, i, rxb);
+ 		iwl_rx_handle_rxbuf(trans, rxb);
+ 
+ 		i = (i + 1) & RX_QUEUE_MASK;
+-- 
+1.7.10
+
