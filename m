@@ -1,43 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1609 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952Ab2ECGSX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 02:18:23 -0400
-Message-ID: <4FA22325.2030104@broadcom.com> (sfid-20120503_081826_773312_3BAF1FB0)
-Date: Thu, 3 May 2012 08:18:13 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52699 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756534Ab2EJT62 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 15:58:28 -0400
+From: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [RFC] ath6kl: Add wow multicast firmware capability support
+Date: Thu, 10 May 2012 12:58:31 -0700
+Message-ID: <1336679911-15763-1-git-send-email-ngangadh@qca.qualcomm.com> (sfid-20120510_215832_928042_53E8FA0F)
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
- <4F9CF839.1040401@broadcom.com> <4FA0CF03.9060307@broadcom.com>
- <4FA1B66A.4060901@hauke-m.de>
-In-Reply-To: <4FA1B66A.4060901@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2012 12:34 AM, Hauke Mehrtens wrote:
-> 
-> Hi Arend,
-> 
-> thanks for testing.
-> 
-> Have you tried suspend/resume and hibernate/resume? I think some of the
-> workaround in drivers/bcma/driver_pci.c should be called in the resume
-> path and not only in the initialization path.
-> 
-> Hauke
-> 
+Infrastructure to enable Multicast WOW support based on
+firmware capability added to the driver.This enables
+different customers or chips to control this feature based
+on firmware capability.
 
-Regarding using brcmsmac on bcm4718 soc, I think we cleaned up a bit too
-much during mainline process. There was some chip specific stuff in
-coreinit function and quite a few things in phy code, but those had to
-do with the write flush, I believe. However, the tx fifo size mismatch
-is detected before the chip specific setting in coreinit so I am not
-sure if it is going to help us. I will create a patch for you to try.
+kvalo: Firmware capability infrastructure for multicast wow feature.
 
-Gr. AvS
+Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++--
+ drivers/net/wireless/ath/ath6kl/core.h     |    7 +++++++
+ drivers/net/wireless/ath/ath6kl/main.c     |    5 ++++-
+ 3 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b869a35..937bb15 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2074,7 +2074,9 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	if (wow && (wow->n_patterns > WOW_MAX_FILTERS_PER_LIST))
+ 		return -EINVAL;
+ 
+-	if (!test_bit(NETDEV_MCAST_ALL_ON, &vif->flags)) {
++	if (!test_bit(NETDEV_MCAST_ALL_ON, &vif->flags) &&
++		test_bit(ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER,
++					      ar->fw_capabilities)) {
+ 		ret = ath6kl_wmi_mcast_filter_cmd(vif->ar->wmi,
+ 						vif->fw_vif_idx, false);
+ 		if (ret)
+@@ -2209,7 +2211,9 @@ static int ath6kl_wow_resume(struct ath6kl *ar)
+ 
+ 	ar->state = ATH6KL_STATE_ON;
+ 
+-	if (!test_bit(NETDEV_MCAST_ALL_OFF, &vif->flags)) {
++	if (!test_bit(NETDEV_MCAST_ALL_OFF, &vif->flags) &&
++		test_bit(ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER,
++					ar->fw_capabilities)) {
+ 		ret = ath6kl_wmi_mcast_filter_cmd(vif->ar->wmi,
+ 					vif->fw_vif_idx, true);
+ 		if (ret)
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 4d9c6f1..79c7055 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -100,6 +100,13 @@ enum ath6kl_fw_capability {
+ 	/* Firmware has support to override rsn cap of rsn ie */
+ 	ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
+ 
++	/*
++	 * Multicast support in WOW and host awake mode.
++	 * Allow all multicast in host awake mode.
++	 * Apply multicast filter in WOW mode.
++	 */
++	ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER,
++
+ 	/* this needs to be last */
+ 	ATH6KL_FW_CAPABILITY_MAX,
+ };
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index e552447..64d0f04 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1167,7 +1167,10 @@ static void ath6kl_set_multicast_list(struct net_device *ndev)
+ 	else
+ 		clear_bit(NETDEV_MCAST_ALL_ON, &vif->flags);
+ 
+-	mc_all_on = mc_all_on || (vif->ar->state == ATH6KL_STATE_ON);
++	if (test_bit(ATH6KL_FW_CAPABILITY_WOW_MULTICAST_FILTER,
++					vif->ar->fw_capabilities)) {
++		mc_all_on = mc_all_on || (vif->ar->state == ATH6KL_STATE_ON);
++	}
+ 
+ 	if (!(ndev->flags & IFF_MULTICAST)) {
+ 		mc_all_on = false;
+-- 
+1.7.0.4
 
