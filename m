@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.serverraum.org ([78.47.150.89]:51916 "EHLO
-	mail.serverraum.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757746Ab2ENTrg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 15:47:36 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail.serverraum.org (Postfix) with ESMTP id 0A3353EFF8
-	for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 21:39:11 +0200 (CEST)
-Received: from mail.serverraum.org ([127.0.0.1])
-	by localhost (web.serverraum.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id pXrvoNGEtFp6 for <linux-wireless@vger.kernel.org>;
-	Mon, 14 May 2012 21:39:10 +0200 (CEST)
-Received: from mail-gg0-f174.google.com (mail-gg0-f174.google.com [209.85.161.174])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(No client certificate requested)
-	by mail.serverraum.org (Postfix) with ESMTPSA id 8A5C83EFF5
-	for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 21:39:10 +0200 (CEST)
-Received: by gglu4 with SMTP id u4so3486999ggl.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 12:39:09 -0700 (PDT)
+Received: from mms2.broadcom.com ([216.31.210.18]:3958 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757877Ab2EJLBs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 07:01:48 -0400
+Message-ID: <4FABA007.2080203@broadcom.com> (sfid-20120510_130151_871150_2B3DD4AF)
+Date: Thu, 10 May 2012 13:01:27 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Date: Mon, 14 May 2012 21:39:09 +0200
-Message-ID: <CADYPuQ5U-TeJvaWdLA=kTgLRacMRyEPoi2aoB=PV-cx_YDXotg@mail.gmail.com> (sfid-20120514_214740_072818_62355BDA)
-Subject: frequent disconnects with iwlwifi
-From: Philipp Dreimann <philipp@dreimann.net>
-To: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
-	ilw@linux.intel.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Brent Roman" <brent@mbari.org>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: After Kernel 3.3, brcmsmac won't work on mid-2010 Mac Mini
+References: <4FA9A8FE.5000102@mbari.org> <4FAA1BEF.10704@broadcom.com>
+ <4FAB0E12.7020006@mbari.org>
+In-Reply-To: <4FAB0E12.7020006@mbari.org>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 05/10/2012 02:38 AM, Brent Roman wrote:
+> 
+> Thanks for the quick response.
+> 
+> I've not blacklisted bcma for either 3.2 or 3.3 kernels.
+> Yes, I built the kernels myself.  The mac mini runs a Debian Mint 11.
+> The brcmsmac driver in 3.3 seems to have dependencies on bcma, It won't
+> load without it.
+> When I reverte to 3.2.16, I just unconfigured the bcma driver, so it
+> never built.
+> the kernel .config for 3.2 and 3.3 are attached.
+> Let me know if you need me to reboot the box with the 3.3 kernel and
+> post dmesg or other logs.
+> 
+> - brent
+> 
+> 
 
-my wifi connection is unstable with the 3.4-rc-kernels. Kernel 3.2 works fine.
+The kernel configurations you sent me look fine. I noticed you have
+debugging enabled for bcma and brcmsmac so can you sent me a dmesg for
+the 3.3 kernel. lspci should show bcma as the driver for the device.
+Unfortunately, there is no lsbcma.
 
-The first symptom was: "deauthenticating from 00:1f:3f:d0:65:73 by
-local choice (reason=3)"
+Gr. AvS
 
-Then, by using debug=0x43fff as a module parameter, messages like the
-following are in the log file before the disconnect:
-I iwl_enqueue_hcmd Sending command SENSITIVITY_CMD (#a8), seq: 0x09CD,
-52 bytes at 205[13]:9
-I iwl_enqueue_hcmd Sending command SENSITIVITY_CMD (#a8), seq: 0x09CE,
-52 bytes at 206[14]:9
-I iwl_enqueue_hcmd Sending command SENSITIVITY_CMD (#a8), seq: 0x09CF,
-52 bytes at 207[15]:9
-I iwl_enqueue_hcmd Sending command SENSITIVITY_CMD (#a8), seq: 0x09D0,
-52 bytes at 208[16]:9
-I iwl_enqueue_hcmd Sending command SENSITIVITY_CMD (#a8), seq: 0x09D1,
-52 bytes at 209[17]:9
-
-Another thing I noticed is that the disconnects are happening (most of
-the time) every 20 minutes and 18 seconds. The connection is
-established immediately after the disconnect. This is also not
-happening with every access point, but unfortunately with the one at
-home. The logfile of the AP states that my client did not respond in
-time and ie being disconnected because of that.
-
-The access point settings are wpa2 psk, ccmp, channel 1, 11n enabled.
-According to the iwlwifi module, my card is a 6205AGN, REV=0xB0 .
-Please let me know if I can help  with more information.
-
-Best,
- Philipp Dreimann
