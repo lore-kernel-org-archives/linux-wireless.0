@@ -1,71 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29710 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751989Ab2E2LNM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 07:13:12 -0400
-Message-ID: <4FC4AF40.3060702@qca.qualcomm.com> (sfid-20120529_131315_641267_BF663F91)
-Date: Tue, 29 May 2012 14:13:04 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from purkki.adurom.net ([80.68.90.206]:46242 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755612Ab2EJHLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 03:11:25 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Soumik DAS <soumik.das@stericsson.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Increment probe_send_count earlier
+References: <2E48302EED53D048A7BA72B0A307FB511FB9009098@EXDCVYMBSTM005.EQ1STM.local>
+Date: Thu, 10 May 2012 10:11:21 +0300
+In-Reply-To: <2E48302EED53D048A7BA72B0A307FB511FB9009098@EXDCVYMBSTM005.EQ1STM.local>
+	(Soumik DAS's message of "Thu, 10 May 2012 07:46:40 +0200")
+Message-ID: <87vck48q92.fsf@purkki.adurom.net> (sfid-20120510_091129_622637_97D7F93F)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2 1/2] ath6kl: Fix race in aggregation reorder logic
-References: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2012 01:19 PM, Vasanthakumar Thiagarajan wrote:
-> There are many places where tid data are accessed without
-> the lock (rxtid->lock), this can lead to a race condition
-> when the timeout handler for aggregatin reorder and the
-> receive function are getting executed at the same time.
-> Fix this race, but still there are races which can not
-> be fixed without rewriting the whole aggregation reorder
-> logic, for now fix the obvious ones.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Hi Soumik,
 
-[...]
+Soumik DAS <soumik.das@stericsson.com> writes:
 
-> @@ -1188,6 +1189,7 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
->  		rxtid->progress = true;
->  	else
->  		for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
-> +			spin_lock_bh(&rxtid->lock);
->  			if (rxtid->hold_q[idx].skb) {
->  				/*
->  				 * There is a frame in the queue and no
-> @@ -1201,8 +1203,10 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
->  					   HZ * (AGGR_RX_TIMEOUT) / 1000));
->  				rxtid->progress = false;
->  				rxtid->timer_mon = true;
-> +				spin_unlock_bh(&rxtid->lock);
->  				break;
->  			}
-> +			spin_unlock_bh(&rxtid->lock);
->  		}
+> At times, null frame gets transmitted and acked before mac80211
+> gets to increment probe_send_count. This leads to a situation
+> where mac80211 waits for ack to null frame, but no ack comes
+> causing unnecessary disconnection.
 
-Here you take and release the lock multiple times inside the loop. Why
-not take the lock before the loop?
+Can explain a bit more about the scenario when this happens, please?
+It's not clear for me from the patch.
 
-> @@ -1627,12 +1631,15 @@ static void aggr_timeout(unsigned long arg)
->  
->  		if (rxtid->aggr && rxtid->hold_q) {
->  			for (j = 0; j < rxtid->hold_q_sz; j++) {
-> +				spin_lock_bh(&rxtid->lock);
->  				if (rxtid->hold_q[j].skb) {
->  					aggr_conn->timer_scheduled = true;
->  					rxtid->timer_mon = true;
->  					rxtid->progress = false;
-> +					spin_unlock_bh(&rxtid->lock);
->  					break;
->  				}
-> +				spin_unlock_bh(&rxtid->lock);
->  			}
-
-Same here.
-
-Kalle
+-- 
+Kalle Valo
