@@ -1,107 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog112.obsmtp.com ([207.126.144.133]:32824 "EHLO
-	eu1sys200aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753064Ab2EUMmy convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2012 08:42:54 -0400
-From: Amit SHAKYA <amit.shakya@stericsson.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless (linux-wireless@vger.kernel.org)"
-	<linux-wireless@vger.kernel.org>,
-	"Johannes Berg (johannes@sipsolutions.net)"
-	<johannes@sipsolutions.net>
-Date: Mon, 21 May 2012 14:42:31 +0200
-Subject: RE: [PATCH] mac80211: Handle race condition in replay handling
-Message-ID: <ECD438FDEF6BD742895E554C24725A40229472E062@EXDCVYMBSTM005.EQ1STM.local> (sfid-20120521_144258_446611_72AD02E8)
-References: <ECD438FDEF6BD742895E554C24725A4022946BBD16@EXDCVYMBSTM005.EQ1STM.local>
- <20120518133935.GA13088@w1.fi>
-In-Reply-To: <20120518133935.GA13088@w1.fi>
-Content-Type: text/plain; charset="us-ascii"
+Received: from purkki.adurom.net ([80.68.90.206]:33114 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755449Ab2EJKPD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 06:15:03 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+Subject: Re: [PATCH 00/78] 18xx chip support
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	<87ipg48ivh.fsf@purkki.adurom.net>
+	<CA+XVXfcFx3ZDiPrwmDHbVbHs=_V0wsJasNvXAE9XrPodr_xVTg@mail.gmail.com>
+Date: Thu, 10 May 2012 13:15:01 +0300
+In-Reply-To: <CA+XVXfcFx3ZDiPrwmDHbVbHs=_V0wsJasNvXAE9XrPodr_xVTg@mail.gmail.com>
+	(Arik Nemtsov's message of "Thu, 10 May 2012 13:11:58 +0300")
+Message-ID: <87ehqs8hqy.fsf@purkki.adurom.net> (sfid-20120510_121507_565337_1B69BC26)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+Arik Nemtsov <arik@wizery.com> writes:
 
-My comments inline [AS]:
+> On Thu, May 10, 2012 at 12:50 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>> Arik Nemtsov <arik@wizery.com> writes:
+>>
+>>> This series adds initial support for the 18xx chip family. The new
+>>> module uses wlcore for functionality common with the 12xx family.
+>>
+>> You do know that sending 78 patches in one patchset is very much
+>> frowned upon? No sane person (outside of wl12xx) is going to review
+>> all of these.
+>
+> Yea I don't like it as well, but it took this amount of patches to get
+> the card up and running. Posting some skeleton code seems kind of
+> useless.
 
------Original Message-----
-From: Jouni Malinen [mailto:j@w1.fi] 
-Sent: Friday, May 18, 2012 7:10 PM
-To: Amit SHAKYA
-Cc: John W. Linville; linux-wireless (linux-wireless@vger.kernel.org); Johannes Berg (johannes@sipsolutions.net)
-Subject: Re: [PATCH] mac80211: Handle race condition in replay handling
-
-On Thu, May 17, 2012 at 11:40:16AM +0200, Amit SHAKYA wrote:
-> Added fix for the issue where the Rx throughput use to get stuck,
-> with unicast key rotation feature enabled in the Cisco AP.
-> The issue is that due to race condition during EAPOL key
-> handshake and packet reception, the PN gets reset at MAC, while
-> it still receives previous PN range packets for a while from AP.
-
-How would that happen? I would assume the previous PN range is still
-used with the old key and as such, the PN updates should not be accepted
-for the new key.
-
-[AS] What I mean here is that the during the period when the EAPOL is
-received by supplicant till new key is applied (PN reset) at FW, there is
-some delay. During which, due to ongoing high throughput, some packets are
-received which are decrypted by FW with old key and had been handed
-over to host driver but not yet delivered to MAC or are in transit from
-FW to the host driver to be finally delivered to MAC. They have been
-decrypted successfully by the FW using the old key during this phase
-but not yet received by MAC.
-
-> At MAC, there is a memcpy of the PN from the received PN
-> and as a result the maintained PN is overwritten with the
-> previous PN sequence value after being reset at the time, new
-> key is plumbed by supplicant.
-> 
-> As a result, when this change in sequence number happens, the
-> replay detection handling in MAC gets triggered, causing the
-> traffic to stops for some while till PN re-match, with the
-> one last updated at MAC.
-> 
-> The fix takes care of selectively updating the Rx PN during
-> this transition phase.
-
-This sounds incorrect.. I don't really like the idea of adding the extra
-hack here and the additional memcmp() calls either.
-
-Would you be able to provide more detailed description on how the PN
-values are used based on the key (old/new) and how the PN value for the
-new key gets updated based on the old range?
-
-[AS] In the race condition scenario, i.e. new key updated at MAC and
-MAC receiving packets from driver, __ieee80211_key_replace function is invoked
-to apply the new keys. It replaces the key entry in sta->ptk to the new key
-entry (PN reset to 0). Note the sta is connected all this while and just the
-PTK is renewed.
-However due to race condition mentioned above, it is still receiving old PN
-packets from driver. At this point of time on receiving old PN packets, 
-ieee80211_rx_h_decrypt will just dereference the new key entry from
-rx->sta->ptk and store it in rx->key.
-
-
-Refer code
-	if (rx->sta)
-		sta_ptk = rcu_dereference(rx->sta->ptk);
-
-...
-	if (!is_multicast_ether_addr(hdr->addr1) && sta_ptk) {
-		rx->key = sta_ptk;
-
-
-Now within ieee80211_crypto_ccmp_decrypt function, this key is dereferenced and
-used for key replay detection as well as the received PN is also updated in it.
- 	memcpy(key->u.ccmp.rx_pn[queue], pn, CCMP_PN_LEN);
-
-This triggers the issue wherein the PN gets updated with the old PN and mentioned
-issue happens.
-
-Hope this explains. 
-Please let me know, in case more details are required.
+You can always submit patches in smaller (10-15 patches) chunks.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
