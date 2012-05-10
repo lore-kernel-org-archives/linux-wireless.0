@@ -1,60 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yumi.tdiedrich.de ([85.10.210.183]:59909 "EHLO mx.tdiedrich.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932263Ab2EIV3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 17:29:02 -0400
-Date: Wed, 9 May 2012 23:28:59 +0200
-From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt28xx AP-mode problem with commit
- 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
- carrier state"
-Message-ID: <20120509212859.GF5472@yumi.tdiedrich.de> (sfid-20120509_232907_401388_3B88D606)
-References: <20120509105719.GA24457@yumi.tdiedrich.de>
- <1336564773.4323.19.camel@jlt3.sipsolutions.net>
- <20120509121827.GD5472@yumi.tdiedrich.de>
- <20120509210448.GE5472@yumi.tdiedrich.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120509210448.GE5472@yumi.tdiedrich.de>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757912Ab2EJJO5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 05:14:57 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:14:57 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 12/78] wl18xx: implement hw op for calculating hw block count per packet
+Date: Thu, 10 May 2012 12:13:17 +0300
+Message-Id: <1336641263-5761-13-git-send-email-arik@wizery.com> (sfid-20120510_111501_733107_82225D49)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tobias Diedrich wrote:
-> Tobias Diedrich wrote:
-> > Johannes Berg wrote:
-> > > On Wed, 2012-05-09 at 12:57 +0200, Tobias Diedrich wrote:
-> > > 
-> > > > I've bisected a problem with running rt3052-based APs on recent
-> > > > OpenWRT down to this commit: 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63
-> > > > "mac80211: manage AP netdev carrier state"
-> > > > 
-> > > > If I revert this commit (and also fix the max_power issue), AP-mode
-> > > > works fine, but if I leave it in, association to the AP times out.
+Implement the calc_tx_blocks op for the 18xx family.
 
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-This seems to be the crucial hunk (and it conveniently ermoves a
-check against NL80211_IFTYPE_AP), if I revert just this it works for
-me:
-
-Index: compat-wireless-2012-04-17/net/mac80211/iface.c
-===================================================================
---- compat-wireless-2012-04-17.orig/net/mac80211/iface.c	2012-05-09 01:00:39.197975402 +0200
-+++ compat-wireless-2012-04-17/net/mac80211/iface.c	2012-05-09 01:02:32.514918371 +0200
-@@ -411,8 +407,7 @@
- 		ieee80211_bss_info_change_notify(sdata, changed);
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 70683ad..055b194 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -34,6 +34,7 @@
  
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
--		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
--		    sdata->vif.type == NL80211_IFTYPE_AP)
-+		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
- 			netif_carrier_off(dev);
- 		else
- 			netif_carrier_on(dev);
-
-
+ #define WL18XX_TX_HW_BLOCK_SPARE        1
+ #define WL18XX_TX_HW_GEM_BLOCK_SPARE    2
++#define WL18XX_TX_HW_BLOCK_SIZE         268
+ 
+ static struct wl18xx_conf wl18xx_default_conf = {
+ 	.phy = {
+@@ -305,11 +306,18 @@ static void wl18xx_ack_event(struct wl1271 *wl)
+ 	wlcore_write_reg(wl, REG_INTERRUPT_TRIG, WL18XX_INTR_TRIG_EVENT_ACK);
+ }
+ 
++static u32 wl18xx_calc_tx_blocks(struct wl1271 *wl, u32 len, u32 spare_blks)
++{
++	u32 blk_size = WL18XX_TX_HW_BLOCK_SIZE;
++	return (len + blk_size - 1) / blk_size + spare_blks;
++}
++
+ static struct wlcore_ops wl18xx_ops = {
+ 	.identify_chip	= wl18xx_identify_chip,
+ 	.boot		= wl18xx_boot,
+ 	.trigger_cmd	= wl18xx_trigger_cmd,
+ 	.ack_event	= wl18xx_ack_event,
++	.calc_tx_blocks = wl18xx_calc_tx_blocks,
+ };
+ 
+ int __devinit wl18xx_probe(struct platform_device *pdev)
 -- 
-Tobias						PGP: http://8ef7ddba.uguu.de
+1.7.9.5
+
