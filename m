@@ -1,137 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62995 "EHLO ebb06.tieto.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:48058 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753703Ab2E1LTj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 07:19:39 -0400
+	id S1756104Ab2EJGpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 02:45:08 -0400
 From: Michal Kazior <michal.kazior@tieto.com>
 To: <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>,
 	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 07/14] cfg80211: track monitor interfaces count
-Date: Mon, 28 May 2012 13:18:55 +0200
-Message-ID: <1338203942-5667-8-git-send-email-michal.kazior@tieto.com> (sfid-20120528_132046_407011_ABB7DCFF)
-In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+Subject: [PATCH 1/7] mac80211: add tracking of temporary offchannel sdata
+Date: Thu, 10 May 2012 08:44:36 +0200
+Message-ID: <1336632282-2278-2-git-send-email-michal.kazior@tieto.com> (sfid-20120510_084517_056570_CAB492E8)
+In-Reply-To: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
+References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implements .set_monitor_enabled(wiphy, enabled).
+This is necessary if we want to have a sdata-based
+channel recalculation.
 
-Notifies driver upon change of interface layout.
-
-If only monitor interfaces become present it is
-called with 2nd argument being true. If
-non-monitor interface appears then 2nd argument
-is false. Driver is notified only upon change.
-
-This makes it more obvious about the fact that
-cfg80211 supports single monitor channel. Once we
-implement multi-channel we don't want to allow
-setting monitor channel while other interface
-types are running. Otherwise it would be ambiguous
-once we start considering num_different_channels.
-
-Change-Id: Ibd82a70c256c2de584eb541ea2c36663a59f09d4
+Change-Id: I223e052146893b3ae1ca46de7d90c54ffc589f1b
 Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/net/cfg80211.h |    4 ++++
- net/wireless/core.c    |   18 ++++++++++++++++++
- net/wireless/core.h    |    9 +++++++++
- 3 files changed, 31 insertions(+), 0 deletions(-)
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/work.c        |    2 ++
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 0f9d7b4..e2da8e4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1428,6 +1428,8 @@ struct cfg80211_gtk_rekey_data {
-  *	interfaces are active this callback should reject the configuration.
-  *	If no interfaces are active or the device is down, the channel should
-  *	be stored for when a monitor interface becomes active.
-+ * @set_monitor_enabled: Notify driver that there are only monitor
-+ *	interfaces running.
-  * @get_channel: Get the current operating channel, should return %NULL if
-  *	there's no single defined operating channel if for example the
-  *	device implements channel hopping for multi-channel virtual interfaces.
-@@ -1746,6 +1748,8 @@ struct cfg80211_ops {
- 				struct ethtool_stats *stats, u64 *data);
- 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
- 				  u32 sset, u8 *data);
-+
-+	void (*set_monitor_enabled)(struct wiphy *wiphy, bool enabled);
- };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b5e491b..c109960 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -997,6 +997,7 @@ struct ieee80211_local {
+ 	struct ieee80211_channel *oper_channel, *csa_channel;
  
- /*
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 46a33ea..5b37047 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -776,6 +776,22 @@ static struct device_type wiphy_type = {
- 	.name	= "wlan",
- };
+ 	/* Temporary remain-on-channel for off-channel operations */
++	struct ieee80211_sub_if_data *tmp_sdata;
+ 	struct ieee80211_channel *tmp_channel;
+ 	enum nl80211_channel_type tmp_channel_type;
  
-+static void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
-+				      struct wireless_dev *wdev, int num)
-+{
-+	bool has_monitors_only_old = cfg80211_has_monitors_only(rdev);
-+	bool has_monitors_only_new;
-+
-+	rdev->num_running_ifaces += num;
-+	if (wdev->iftype == NL80211_IFTYPE_MONITOR)
-+		rdev->num_running_monitor_ifaces += num;
-+
-+	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
-+	if (has_monitors_only_new != has_monitors_only_old)
-+		rdev->ops->set_monitor_enabled(&rdev->wiphy,
-+					       has_monitors_only_new);
-+}
-+
- static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 					 unsigned long state,
- 					 void *ndev)
-@@ -879,6 +895,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		break;
- 	case NETDEV_DOWN:
- 		dev_hold(dev);
-+		cfg80211_update_iface_num(rdev, wdev, -1);
- 		queue_work(cfg80211_wq, &wdev->cleanup_work);
- 		break;
- 	case NETDEV_UP:
-@@ -986,6 +1003,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
- 		if (ret)
- 			return notifier_from_errno(ret);
-+		cfg80211_update_iface_num(rdev, wdev, 1);
- 		break;
+diff --git a/net/mac80211/work.c b/net/mac80211/work.c
+index b2650a9..2a0b252 100644
+--- a/net/mac80211/work.c
++++ b/net/mac80211/work.c
+@@ -152,6 +152,7 @@ static void ieee80211_work_work(struct work_struct *work)
+ 		if (!started && !local->tmp_channel) {
+ 			ieee80211_offchannel_stop_vifs(local, true);
+ 
++			local->tmp_sdata = wk->sdata;
+ 			local->tmp_channel = wk->chan;
+ 			local->tmp_channel_type = wk->chan_type;
+ 
+@@ -219,6 +220,7 @@ static void ieee80211_work_work(struct work_struct *work)
  	}
  
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 54c24de..79e27b1 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -56,6 +56,9 @@ struct cfg80211_registered_device {
- 
- 	u32 ap_beacons_nlpid;
- 
-+	int num_running_ifaces;
-+	int num_running_monitor_ifaces;
-+
- 	/* BSSes/scanning */
- 	spinlock_t bss_lock;
- 	struct list_head bss_list;
-@@ -220,6 +223,12 @@ static inline void wdev_unlock(struct wireless_dev *wdev)
- 	mutex_unlock(&wdev->mtx);
- }
- 
-+static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
-+{
-+	return rdev->num_running_ifaces == rdev->num_running_monitor_ifaces &&
-+	       rdev->num_running_ifaces > 0;
-+}
-+
- #define ASSERT_RDEV_LOCK(rdev) lockdep_assert_held(&(rdev)->mtx)
- #define ASSERT_WDEV_LOCK(wdev) lockdep_assert_held(&(wdev)->mtx)
+ 	if (!remain_off_channel && local->tmp_channel) {
++		local->tmp_sdata = NULL;
+ 		local->tmp_channel = NULL;
+ 		ieee80211_hw_config(local, 0);
  
 -- 
 1.7.0.4
