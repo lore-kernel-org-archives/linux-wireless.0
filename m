@@ -1,60 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:53751 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756801Ab2EAUJG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 16:09:06 -0400
-Received: by were53 with SMTP id e53so369831wer.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 May 2012 13:09:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOvK7nAOGwdDbwCPPFg+2w4DiUv75ppY0wSK6rjUqaZGHHmk4g@mail.gmail.com>
-References: <CAOvK7nAOHqKC8rpFDqGnW7NLCX-G2+syRGih_rv7N5O5rfOUdA@mail.gmail.com>
-	<CANUX_P1t8XJOka-QGzZSYFHb6MLc7rm4madn059Yg4b6hJB49A@mail.gmail.com>
-	<CAOvK7nDO4fS6R5go+ZXYBqyQc8hhbJGun9Weh=-EyX5k11+tXw@mail.gmail.com>
-	<CANUX_P2rzvDCBVLmU2rfaZmUOCMuMDe5=TXE_jwxq4ULrvc=QQ@mail.gmail.com>
-	<CAOvK7nCwRbDNZSnn0EvFMpcQMvX1DmU-tBuFT4kRW1TigwyJDQ@mail.gmail.com>
-	<CANUX_P0JsyA53T_vs5Ea0pE5Ye4G9xRC4xKcdwgAmoC8E63sHg@mail.gmail.com>
-	<CAOvK7nCf6k_ugJ=UBF8y0VBr_kVmESpetfnpn=NW73r_K=kKyw@mail.gmail.com>
-	<CAOvK7nCGwqqqrWNQhPqZoBqs6eT11gQNYbrZhb0bNSPTS-YxEw@mail.gmail.com>
-	<CANUX_P2DDQ-U9Yz2YksEEpOgjyyYO1GnFHR8ogEHNwojKvn3yg@mail.gmail.com>
-	<CAOvK7nB0L9GcnV-cNONndZMrAVLfFf3VaY4T-gPb+FgrNByeSA@mail.gmail.com>
-	<CANUX_P38L7OqBNeK+jO0EPMHf1M3QKxmsTA6o-t+6ujoq1VJ5w@mail.gmail.com>
-	<CAOvK7nB1gnnWcv6HFrn1MhMe-FheRtdTpi+BhCcCYNx6RowaTQ@mail.gmail.com>
-	<CANUX_P3SFmNKqUTt53EHkAjupAoB8ZxQZZP1osm7=JwfHnwbqg@mail.gmail.com>
-	<CANUX_P1ivcpLxm4z5k8SU+hGXG0A1hbSMnps7_i025kaAThyCg@mail.gmail.com>
-	<CAOvK7nBGBDWhQnq8MT51dE=LXUxoQH1FLJ2TNUr42He1KbBurg@mail.gmail.com>
-	<CANUX_P25bU36A0n4YSO1mBUTn9pxYYua28=o9Soo12mVyZNVcQ@mail.gmail.com>
-	<CANUX_P3+4hTGJSoo669LixMmNjxv1pqAwmLgVi16iF+LX7-ebQ@mail.gmail.com>
-	<CAOvK7nA7=B_=kaQasYpwAegNG21GdxCuTZ5z+T7PMYPNaTxsXA@mail.gmail.com>
-	<CANUX_P3JrvyV7wXCkeXaS4k3GgcRxkSPW_5TGpqXFhrHKp5OYQ@mail.gmail.com>
-	<CAOvK7nAOGwdDbwCPPFg+2w4DiUv75ppY0wSK6rjUqaZGHHmk4g@mail.gmail.com>
-Date: Tue, 1 May 2012 23:09:05 +0300
-Message-ID: <CANUX_P0mfez7RDfAnUQg_rn1Ow1drXiZ4b6G2y6Ph5+Yqot=kA@mail.gmail.com> (sfid-20120501_220911_521904_44DE1E64)
-Subject: Re: iwlwifi bug
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: dchyan@princeton.edu
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:4513 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760702Ab2EJRgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 13:36:23 -0400
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 1/2] NFC: Export nfc.h to userland
+Date: Thu, 10 May 2012 19:45:51 +0200
+Message-Id: <1336671952-22678-2-git-send-email-sameo@linux.intel.com> (sfid-20120510_194241_105689_8422590E)
+In-Reply-To: <1336671952-22678-1-git-send-email-sameo@linux.intel.com>
+References: <1336671952-22678-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 1, 2012 at 20:52, Daniel Chyan <dchyan@princeton.edu> wrote:
-> Well I believe I can reproduce it by downgrading to an older driver,
-> but I am unable to reproduce it now.
->
+The netlink commands and attributes, along with the socket structure
+definitions need to be exported.
 
-I had sent a fix for that, but the driver you were running when you
-reported the issue already included the fix.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ include/linux/Kbuild |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-> On Mon, Apr 30, 2012 at 3:22 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> On Mon, Apr 30, 2012 at 21:41, Daniel Chyan <dchyan@princeton.edu> wrote:
->>> I am running iwlwifi with the additional flags. Nothing particularly
->>> alarming has appeared in the logs, but I have attached it.
->>>
->>
->> Yeah... I was hoping you could reliably reproduce the issue but
->> apparently not :-)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/include/linux/Kbuild b/include/linux/Kbuild
+index 3c9b616..f08e3ae 100644
+--- a/include/linux/Kbuild
++++ b/include/linux/Kbuild
+@@ -271,6 +271,7 @@ header-y += netfilter_ipv4.h
+ header-y += netfilter_ipv6.h
+ header-y += netlink.h
+ header-y += netrom.h
++header-y += nfc.h
+ header-y += nfs.h
+ header-y += nfs2.h
+ header-y += nfs3.h
+-- 
+1.7.9.1
+
