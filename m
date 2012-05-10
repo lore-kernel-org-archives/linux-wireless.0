@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:62863 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754612Ab2EGMxa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44248 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756681Ab2EJINI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 08:53:30 -0400
-Received: by yenm10 with SMTP id m10so3581168yen.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 05:53:30 -0700 (PDT)
-Date: Mon, 7 May 2012 08:53:16 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 09/21] cw1200: txrx.*, implementation of datapath.
-Message-ID: <20120507125316.GA25400@localhost> (sfid-20120507_145335_155304_CF4C2FEF)
-References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
- <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
- <1330652495-25837-10-git-send-email-dmitry.tarnyagin@stericsson.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1330652495-25837-10-git-send-email-dmitry.tarnyagin@stericsson.com>
+	Thu, 10 May 2012 04:13:08 -0400
+Message-ID: <1336637580.4334.10.camel@jlt3.sipsolutions.net> (sfid-20120510_101318_466389_471EA70C)
+Subject: Re: rt28xx AP-mode problem with commit
+ 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
+ carrier state"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 10 May 2012 10:13:00 +0200
+In-Reply-To: <20120509212859.GF5472@yumi.tdiedrich.de>
+References: <20120509105719.GA24457@yumi.tdiedrich.de>
+	 <1336564773.4323.19.camel@jlt3.sipsolutions.net>
+	 <20120509121827.GD5472@yumi.tdiedrich.de>
+	 <20120509210448.GE5472@yumi.tdiedrich.de>
+	 <20120509212859.GF5472@yumi.tdiedrich.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
+On Wed, 2012-05-09 at 23:28 +0200, Tobias Diedrich wrote:
 
-A couple of other quick notes follow.  I'll make and send on those
-other patches sometime this week as I get time.
+> This seems to be the crucial hunk (and it conveniently ermoves a
+> check against NL80211_IFTYPE_AP), if I revert just this it works for
+> me:
+> 
+> Index: compat-wireless-2012-04-17/net/mac80211/iface.c
+> ===================================================================
+> --- compat-wireless-2012-04-17.orig/net/mac80211/iface.c	2012-05-09 01:00:39.197975402 +0200
+> +++ compat-wireless-2012-04-17/net/mac80211/iface.c	2012-05-09 01:02:32.514918371 +0200
+> @@ -411,8 +407,7 @@
+>  		ieee80211_bss_info_change_notify(sdata, changed);
+>  
+>  		if (sdata->vif.type == NL80211_IFTYPE_STATION ||
+> -		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
+> -		    sdata->vif.type == NL80211_IFTYPE_AP)
+> +		    sdata->vif.type == NL80211_IFTYPE_ADHOC)
+>  			netif_carrier_off(dev);
 
-On Fri, Mar 02, 2012 at 02:41:23AM +0100, Dmitry Tarnyagin wrote:
-> +	/* minstrel is buggy a little bit, so distille
-> +	 * incoming rates first. */
+Well ... yeah, if you remove this change all the other changes don't
+really do anything so that's not really surprising :)
 
-Can you elaborate a bit on the bugs?  It may be worth fixing them
-in minstrel so that everyone benefits.  From your code it looks
-like you want to reorder them from fastest->slowest, eliminate
-duplicate rates, and change retry counts to respect total retry
-limits.  I agree that the last two are problematic and should
-probably be fixed in minstrel.
+johannes
 
-Changing the rate order may have adverse affects (I'm not sure).
-Minstrel often puts 'probe' rates in early MRR slots to update
-its statistics, these may well be lower than the current rate.
-
-> +	/* Sort rates in descending order. */
-> +	for (i = 1; i < count; ++i) {
-> +		if (rates[i].idx < 0) {
-> +			count = i;
-> +			break;
-> +		}
-> +		if (rates[i].idx > rates[i - 1].idx) {
-> +			struct ieee80211_tx_rate tmp = rates[i - 1];
-> +			rates[i - 1] = rates[i];
-> +			rates[i] = tmp;
-> +		}
-> +	}
-
-This sort seems to be missing an inner loop.  E.g. if input was 2-3-5-4,
-I think you would end up with 2-5-4-3 instead of 5-4-3-2.
-
-> +		/* ">> 1" is an equivalent of "/ 2", but faster */
-> +		int mid_rate = (rates[0].idx + 4) >> 1;
-
-(This is true, but it's only by a couple of instructions for signed
-division since compilers still change divide-by-power-of-two to shifts.
-Unsigned /2 typically has the same code as >> 1.  I tend to prefer /2
-for readability unless it's a super hot path, but that's your call.)
-
--- 
-Bob Copeland %% www.bobcopeland.com
