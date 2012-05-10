@@ -1,58 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:54872 "EHLO
-	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751339Ab2EOGEr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 02:04:47 -0400
-From: Soumik DAS <soumik.das@stericsson.com>
-To: "John Linville (linville@tuxdriver.com)" <linville@tuxdriver.com>
-Cc: "linux-wireless (linux-wireless@vger.kernel.org)"
-	<linux-wireless@vger.kernel.org>,
-	"Johannes Berg (johannes@sipsolutions.net)"
-	<johannes@sipsolutions.net>,
-	"Kalle Valo (kvalo@adurom.com)" <kvalo@adurom.com>
-Date: Tue, 15 May 2012 08:04:32 +0200
-Subject: [PATCH] mac80211: Remove race condition in sending null frame to
- check AP status
-Message-ID: <2E48302EED53D048A7BA72B0A307FB511FB906BC9A@EXDCVYMBSTM005.EQ1STM.local> (sfid-20120515_080451_370994_6627F936)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758015Ab2EJJPV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 05:15:21 -0400
+Received: by wibhr2 with SMTP id hr2so244170wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:20 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 23/78] wlcore/wl18xx: add hw op for Rx HW checksum
+Date: Thu, 10 May 2012 12:13:28 +0300
+Message-Id: <1336641263-5761-24-git-send-email-arik@wizery.com> (sfid-20120510_112434_269065_04BA5B07)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 tries to verify the existence of the current AP by
-probing or sending a NULL frame in function
-ieee80211_mgd_probe_ap_send. It 1st sends a null frame to the AP,
-increments probe_send_count and waits for the ACK to the NULL
-frame for a finite duration of time. At times, it happens that
-by the time mac80211 gets to increment probe_send_count, the ACK
-for the NULL frame transmitted has already been processed. This
-leads to a race condition where mac80211 times out waiting for
-the ACK for the NULL frame causing unnecessary disconnection with
-the AP.
+Some chip families can checksum certain classes of Rx packets in FW.
+Implement the Rx-checksum feature as a HW-op. For the 18xx chip-family,
+set Rx-checsum according to indication from FW.
 
-Signed-off-by: Soumik Das <soumik.das@stericsson.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
-net/mac80211/mlme.c |    2 +-
-1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ti/wl12xx/main.c   |    1 +
+ drivers/net/wireless/ti/wl18xx/main.c   |   11 +++++++++++
+ drivers/net/wireless/ti/wlcore/hw_ops.h |    9 +++++++++
+ drivers/net/wireless/ti/wlcore/rx.c     |    1 +
+ drivers/net/wireless/ti/wlcore/wlcore.h |    4 ++++
+ 5 files changed, 26 insertions(+)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c index dbd4bd9..a1213e4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1522,6 +1522,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
-    * anymore. The timeout will be reset if the frame is ACKed by
-    * the AP.
-    */
-+    ifmgd->probe_send_count++;
-    if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) {
-        ifmgd->nullfunc_failed = false;
-        ieee80211_send_nullfunc(sdata->local, sdata, 0); @@ -1538,7 +1539,6 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
-                    0, (u32) -1, true, false);
-    }
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index 8141447..a333653 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -1314,6 +1314,7 @@ static struct wlcore_ops wl12xx_ops = {
+ 	.get_pg_ver		= wl12xx_get_pg_ver,
+ 	.get_mac		= wl12xx_get_mac,
+ 	.set_tx_desc_csum	= wl12xx_set_tx_desc_csum,
++	.set_rx_csum		= NULL,
+ };
+ 
+ static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index c47f52c..90fccb7 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -39,6 +39,8 @@
+ #include "wl18xx.h"
+ 
+ 
++#define WL18XX_RX_CHECKSUM_MASK      0x40
++
+ static const u8 wl18xx_rate_to_idx_2ghz[] = {
+ 	/* MCS rates are used only with 11n */
+ 	15,                            /* WL18XX_CONF_HW_RXTX_RATE_MCS15 */
+@@ -534,6 +536,14 @@ static void wl18xx_set_tx_desc_csum(struct wl1271 *wl,
+ 	desc->wl18xx_checksum_data |= (ip_hdr->protocol & 0x01);
+ }
+ 
++static void wl18xx_set_rx_csum(struct wl1271 *wl,
++			       struct wl1271_rx_descriptor *desc,
++			       struct sk_buff *skb)
++{
++	if (desc->status & WL18XX_RX_CHECKSUM_MASK)
++		skb->ip_summed = CHECKSUM_UNNECESSARY;
++}
++
+ static struct wlcore_ops wl18xx_ops = {
+ 	.identify_chip	= wl18xx_identify_chip,
+ 	.boot		= wl18xx_boot,
+@@ -548,6 +558,7 @@ static struct wlcore_ops wl18xx_ops = {
+ 	.tx_delayed_compl = NULL,
+ 	.hw_init	= wl18xx_hw_init,
+ 	.set_tx_desc_csum = wl18xx_set_tx_desc_csum,
++	.set_rx_csum = wl18xx_set_rx_csum,
+ };
+ 
+ int __devinit wl18xx_probe(struct platform_device *pdev)
+diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
+index 4573249..80f3d75 100644
+--- a/drivers/net/wireless/ti/wlcore/hw_ops.h
++++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
+@@ -130,4 +130,13 @@ wlcore_hw_set_tx_desc_csum(struct wl1271 *wl,
+ 	wl->ops->set_tx_desc_csum(wl, desc, skb);
+ }
+ 
++static inline void
++wlcore_hw_set_rx_csum(struct wl1271 *wl,
++		      struct wl1271_rx_descriptor *desc,
++		      struct sk_buff *skb)
++{
++	if (wl->ops->set_rx_csum)
++		wl->ops->set_rx_csum(wl, desc, skb);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 1f1d948..e2c5df6 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -186,6 +186,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
+ 		is_data = 1;
+ 
+ 	wl1271_rx_status(wl, desc, IEEE80211_SKB_RXCB(skb), beacon);
++	wlcore_hw_set_rx_csum(wl, desc, skb);
+ 
+ 	seq_num = (le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4;
+ 	wl1271_debug(DEBUG_RX, "rx skb 0x%p: %d B %s seq %d hlid %d", skb,
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index c062d30..2922d8a 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -33,6 +33,7 @@
+ /* forward declaration */
+ struct wl1271_tx_hw_descr;
+ enum wl_rx_buf_align;
++struct wl1271_rx_descriptor;
+ 
+ struct wlcore_ops {
+ 	int (*identify_chip)(struct wl1271 *wl);
+@@ -64,6 +65,9 @@ struct wlcore_ops {
+ 	void (*set_tx_desc_csum)(struct wl1271 *wl,
+ 				 struct wl1271_tx_hw_descr *desc,
+ 				 struct sk_buff *skb);
++	void (*set_rx_csum)(struct wl1271 *wl,
++			    struct wl1271_rx_descriptor *desc,
++			    struct sk_buff *skb);
+ };
+ 
+ enum wlcore_partitions {
+-- 
+1.7.9.5
 
--    ifmgd->probe_send_count++;
-    ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
-    run_again(ifmgd, ifmgd->probe_timeout);
-    if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
---
-1.7.5.4
