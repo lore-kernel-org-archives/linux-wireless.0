@@ -1,139 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:54313 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753101Ab2EEHUo convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43835 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756327Ab2EJSHK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2012 03:20:44 -0400
-Received: by qadb17 with SMTP id b17so1476459qad.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 May 2012 00:20:43 -0700 (PDT)
+	Thu, 10 May 2012 14:07:10 -0400
+Received: by yhmm54 with SMTP id m54so1741673yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 11:07:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CABF+-6U8100oTnpaU=anEYtzkktPLvNqp_bm5M+7Yp_Hajv3+w@mail.gmail.com>
-References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
-	<4FA15A70.2020108@stericsson.com>
-	<CABF+-6XbdG_QMa0iQJMpbOsr4bXCq4mDEB6unkM8jxNGWYwFyQ@mail.gmail.com>
-	<4FA23DA0.3030207@stericsson.com>
-	<CABF+-6WjnVxC55iGHwoaL2zJ+_6oLbkVjaqwwLLrQzZxKwwWxw@mail.gmail.com>
-	<4FA2BF0A.4040307@stericsson.com>
-	<CABF+-6UgQek50abaLnUsBh3LEccG2Pd1vFQDiLyxgcky-JN4Ag@mail.gmail.com>
-	<CAFED-jkzELRHGy7pwqDznLqPzhandwZLQEoCEFvw5F6ogMxiYA@mail.gmail.com>
-	<CABF+-6WvgwjkrD6WG8GxcXQ+JM7szugFWZbLN6ssJ8589Q7-BA@mail.gmail.com>
-	<CABF+-6U8100oTnpaU=anEYtzkktPLvNqp_bm5M+7Yp_Hajv3+w@mail.gmail.com>
-Date: Sat, 5 May 2012 09:20:43 +0200
-Message-ID: <CAFED-jn+L0oik5aNtz5xukiYn=W7McXp1sB=+SLPHj=Gdk5SBA@mail.gmail.com> (sfid-20120505_092047_925115_E39D919D)
-Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: Kevin Groeneveld <kgroeneveld@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+In-Reply-To: <1336554945.4323.12.camel@jlt3.sipsolutions.net>
+References: <1335479316-2933-1-git-send-email-thomas@cozybit.com> <1336554945.4323.12.camel@jlt3.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 10 May 2012 11:06:48 -0700
+Message-ID: <CAG6hwVPrbJ1ZQP=UqFd+oqFL8zm+qcRpbAUhrG+6gRe01rejSA@mail.gmail.com> (sfid-20120510_200715_687837_346CC10B)
+Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	linville@tuxdriver.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/5/4 Kevin Groeneveld <kgroeneveld@gmail.com>:
->>> So, you should configure this in cw1200_add_interface() for new
->>> compat-wireless:
->>>
->>>        vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
->>>                             IEEE80211_VIF_SUPPORTS_CQM_RSSI;
->
-> I tried adding the above code today and I can now connect in station mode.
->
-> While connected in station mode I get a lot of the following warnings
-> in the log:
->
-> ieee80211 phy1: Slowpath: tailroom is not big enough. Req: 8, got: 0.
->
-> Is that anything to worry about?
+Hi Johannes,
 
-Yes we have patch for this in mac80211. I can send you on monday.
-cw1200 firmware required pre-allocated IVs.
-Without that performance will be very poor.
+Thanks for reviewing.
 
-There is similar patch in community code - but seems not fullfill all
-our requirements.
-
+On Wed, May 9, 2012 at 2:15 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2012-04-26 at 15:28 -0700, Thomas Pedersen wrote:
+>> It seems as long as we have a netdev, a wdev is available as well.
+>> Remove the restriction that netdev must be up before a wdev can be
+>> obtained in nl80211, or changing channels in cfg80211.
+>>
+>> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+>>
+>> ---
+>> Hi list,
+>>
+>> This was encountered while implementing an interface for setting
+>> BSSBasicRateSet in mesh. The wdev->channel is needed in nl80211.c for
+>> rate verification, but prior to this patch not available.  This doesn't
+>> seem right since the following sequence of commands would fail:
+>>
+>> iw wlan0 set type mp
+>> iw wlan0 set channel n
+>> ip link set wlan0 up
+>> iw wlan0 mesh join meshid basic-rate 1,2
+>>
+>> Also, 'iw set channel' is met with an -EBUSY if doing this after the
+>> link is up for fixed channel modes (mesh) anyway.
+>>
+>> Comments? Any idea why this was required initially?
 >
-> The driver did seem to crash on me once today spewing out a lot of
-> WARNINGs and trace info to the log.  Unfortunately I didn't save the
-> log.  I will try to pay more attention to it if it happens again.
 >
-> I also did a bit more testing in AP mode.  After changing hostapd to
-> 802.11g mode I got much better throughput.  However, I did see quite a
-> few warnings in the log such as the following:
+> I don't think this patch is correct -- mac80211 will get updated even if
+> the device isn't even started which will likely cause trouble. Even if
+> not though, this all doesn't match any kind of multi-channel concept. We
+> treat the channel as part of the temporary setup, e.g. part of the
+> association. AP and mesh are the only ones that are different today I
+> think.
 >
-> [  296.854219] ieee80211 phy2: Missed interrupt?
-
-This is critical and this is firmware issue.
-After that driver can do recovery ...
-So, logs after that are not important much ...
-
-
-> [  297.104219] ieee80211 phy2: Multicast delivery timeout.
-> [  254.194450] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000002
-> [   34.731942] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-> asleep: 0x00000002
-> [  462.159614] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000002
-> [  482.560642] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000002
-> [  482.568372] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-> asleep: 0x00000002
-> [  482.601447] ieee80211 phy2: Multicast delivery timeout.
-> [  482.736948] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000006
-> [  482.879955] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-> asleep: 0x00000006
-> [  483.052676] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000006
-> [  483.570836] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-> asleep: 0x00000006
-> [  483.578685] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-> asleep: 0x00000006
-> [  483.765740] ieee80211 phy2: Requeue for link_id 1 (try 2). STAs
-> asleep: 0x00000006
-> [  483.773462] ieee80211 phy2: Requeue for link_id 1 (try 2). STAs
-> asleep: 0x00000006
-> [  484.340904] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000006
-> [  484.348626] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-> asleep: 0x00000006
-> [  484.356344] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-> asleep: 0x00000006
-> [  484.670846] ieee80211 phy2: Requeue for link_id 1 (try 1). STAs
-> asleep: 0x00000006
-> [  484.903498] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000006
-> [    2.101774] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000000
-> [    2.109569] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000000
-> [    2.119271] ieee80211 phy2: Requeue for link_id 0 (try 2). STAs
-> asleep: 0x00000000
-> [    2.128483] ieee80211 phy2: Requeue for link_id 0 (try 2). STAs
-> asleep: 0x00000004
-> [    2.137894] ieee80211 phy2: Requeue for link_id 0 (try 3). STAs
-> asleep: 0x00000004
-> [    5.629055] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000004
-> [   81.020541] ieee80211 phy2: Missed interrupt?
-> [   85.050556] ieee80211 phy2: Missed interrupt?
-> [   96.410571] ieee80211 phy2: Missed interrupt?
-> [  100.410560] ieee80211 phy2: Missed interrupt?
-> [  105.700565] ieee80211 phy2: Missed interrupt?
-> [  119.410573] ieee80211 phy2: Missed interrupt?
-> [  140.050548] ieee80211 phy2: Missed interrupt?
-> [  156.993680] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000004
-> [  157.001679] ieee80211 phy2: Requeue for link_id 0 (try 1). STAs
-> asleep: 0x00000004
-> [  157.240546] ieee80211 phy2: Multicast delivery timeout.
-> [  167.400528] ieee80211 phy2: Missed interrupt?
+> Overall, I don't think setting the channel & doing mesh setup separately
+> is really a good API.
 >
-> Should I be worried about these?
+> From mac80211's (and other drivers if they existed) POV the channel
+> should be given with the mesh_join command, like for IBSS.
 >
-Yes :)
+> Now, obviously, requiring userspace to do that would be an API change.
+> We probably don't want that, so I would suggest to change cfg80211 to
+> track the channel and then pass it to join_mesh as one of the mesh
+> parameters. This could be made work even when somebody attempts to set
+> the channel before the interface is up, but we'd have to be careful
+> about interface type changes.
 
+Unfortunately, when __nl80211_set_channel() is called we may or may
+not have a wdev, so there is nowhere to store the interface-specific
+channel and type.
+We could shove these into a cfg80211_registered_device, but now just
+"last channel for this wiphy" is tracked, and that doesn't seem to
+help your multi-channel operation.
 
--- 
-Janusz Dziedzic
+If the above is correct, how about we leave the existing API as-is and
+simply extend join_mesh to take a channel attribute?
+
+Also, with IBSS the desired channel is pushed to the driver along with
+the setup parameters. What do you think about calling
+__nl80211_set_channel() directly instead of relying on the cfg80211
+driver to handle this?
+
+> We should do the same for AP mode as well, since the channel really
+> becomes relevant only upon start_ap(), before that there's no real
+> concept of a channel since you don't use it yet anyway.
+
+Thanks,
+Thomas
