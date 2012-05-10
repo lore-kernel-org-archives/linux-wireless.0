@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43923 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755321Ab2E2WkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 18:40:10 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 6/8] compat-wireless: add bluetooth to pr_fmt patch
-Date: Wed, 30 May 2012 00:39:40 +0200
-Message-Id: <1338331182-29589-7-git-send-email-hauke@hauke-m.de> (sfid-20120530_004019_218752_1562A787)
-In-Reply-To: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
-References: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
+Received: from shards.monkeyblade.net ([198.137.202.13]:51881 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756145Ab2EJQcd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 12:32:33 -0400
+Date: Thu, 10 May 2012 12:30:24 -0400 (EDT)
+Message-Id: <20120510.123024.2157290550457495698.davem@davemloft.net> (sfid-20120510_183255_303365_38DA86A7)
+To: jussi.kivilinna@mbnet.fi
+Cc: joe@perches.com, fubar@us.ibm.com, andy@greyhouse.net,
+	benve@cisco.com, roprabhu@cisco.com, neepatel@cisco.com,
+	nistrive@cisco.com, grundler@parisc-linux.org,
+	anirban.chakraborty@qlogic.com, sony.chacko@qlogic.com,
+	linux-driver@qlogic.com, linux-net-drivers@solarflare.com,
+	bhutchings@solarflare.com, cmetcalf@tilera.com,
+	linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
+	mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+	chunkeey@googlemail.com, stas.yakovlev@gmail.com,
+	sgruszka@redhat.com, johannes.berg@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	buytenh@wantstofly.org, Larry.Finger@lwfinger.net,
+	chaoming_li@realsil.com.cn, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath5k-devel@venema.h4ckr.net, ath9k-devel@venema.h4ckr.net
+Subject: Re: [PATCH 1/3] drivers/net: Convert compare_ether_addr to
+ ether_addr_equal
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120510173201.16131du3cg90nybo@www.81.fi>
+References: <cover.1336618707.git.joe@perches.com>
+	<7c9881a67c52c2f218480b6742155b6d6928122d.1336618708.git.joe@perches.com>
+	<20120510173201.16131du3cg90nybo@www.81.fi>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/53-pr_fmt.patch |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Never, EVER, quote an entire large patch just to make a comment
+on one small hunk.
 
-diff --git a/patches/53-pr_fmt.patch b/patches/53-pr_fmt.patch
-index 1e5ee79..874e756 100644
---- a/patches/53-pr_fmt.patch
-+++ b/patches/53-pr_fmt.patch
-@@ -374,6 +374,20 @@ compiler warnings. This is going to be sent upstream.
-  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-  
-  #include <linux/types.h>
-+--- a/net/bluetooth/lib.c
-++++ b/net/bluetooth/lib.c
-+@@ -24,9 +24,11 @@
-+ 
-+ /* Bluetooth kernel library. */
-+ 
-++#undef pr_fmt
-+ #define pr_fmt(fmt) "Bluetooth: " fmt
-+ 
-+ #include <linux/export.h>
-++#include <linux/printk.h>
-+ 
-+ #include <net/bluetooth/bluetooth.h>
-+ 
- --- a/net/wireless/lib80211.c
- +++ b/net/wireless/lib80211.c
- @@ -13,8 +13,10 @@
--- 
-1.7.9.5
+I very nearly missed what you had to say because when scrolling
+through it it appeared as if you made no comments at all.
 
+Again, NEVER, EVER, do this.  It's extremely anti-social.  Edit out
+the irrelevant quoted content when replying to people, always.
