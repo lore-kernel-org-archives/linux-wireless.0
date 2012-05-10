@@ -1,68 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46015 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760345Ab2EKQQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 12:16:47 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: mcgrof@qca.qualcomm.com
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:48726 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755368Ab2EJPtp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 11:49:45 -0400
+Received: by qcro28 with SMTP id o28so1231497qcr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 08:49:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAG9cJm=tJcOnbEfcxV7zyizbUEerO52+NdEGMN13Z0oGmu_2dg@mail.gmail.com>
+References: <CAG9cJmkDf6koV93NyOo2W8D7Y3G6tapQOucjW5M7FLPDnNhvKQ@mail.gmail.com>
+	<CAGRGNgXDUuLFeKh7KgqMqyyT8Xi_GV2BReYJ66uK_SgBJ5Nb4g@mail.gmail.com>
+	<CAG9cJmmRZvf=EW9k6AVLEv_zeU86thGaEWHv5R0ADNX9B6jMmw@mail.gmail.com>
+	<CAGRGNgXQ3o-2bD9J+C2cAu9M-fo69tiXWfugZKjqU3o9ki7f7Q@mail.gmail.com>
+	<CAG9cJm=tJcOnbEfcxV7zyizbUEerO52+NdEGMN13Z0oGmu_2dg@mail.gmail.com>
+Date: Thu, 10 May 2012 23:49:44 +0800
+Message-ID: <CAG9cJmnPzdy10F1t+dJ_n4_2t1F5Yr588mDoUWj3B0n3h+d+Qw@mail.gmail.com> (sfid-20120510_174948_908266_8D6FC11A)
+Subject: Re: how to remove the b43
+From: lina <lina.lastname@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/6] atheros-initvals: remove the old script for generating ath9k headers
-Date: Fri, 11 May 2012 18:16:37 +0200
-Message-Id: <1336753001-29583-2-git-send-email-nbd@openwrt.org> (sfid-20120511_181655_084222_7990B1A4)
-In-Reply-To: <1336753001-29583-1-git-send-email-nbd@openwrt.org>
-References: <1336753001-29583-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- gen_ath9k_headers.sh |   37 -------------------------------------
- 1 files changed, 0 insertions(+), 37 deletions(-)
- delete mode 100755 gen_ath9k_headers.sh
+# aptitude install linux-image-amd64
+The following NEW packages will be installed:
+  firmware-linux-free{a} linux-base{a} linux-image-3.2.0-2-amd64{a}
+  linux-image-amd64
 
-diff --git a/gen_ath9k_headers.sh b/gen_ath9k_headers.sh
-deleted file mode 100755
-index b941b51..0000000
---- a/gen_ath9k_headers.sh
-+++ /dev/null
-@@ -1,37 +0,0 @@
--#!/bin/sh
--
--gen_ath9k_header()
--{
--	local family="$1"
--	local ath9k_hdr
--
--	case $family in
--	ar5008 |\
--	ar9001 |\
--	ar9002 |\
--	ar9003-2p2|\
--	ar9330-1p1|\
--	ar9330-1p2|\
--	ar9485|\
--	ar9580-1p0|\
--	ar9462-2p0)
--		ath9k_hdr="$(echo $family | tr '-' '_')_initvals.h"
--		;;
--	*)
--		echo "unknown family: '$family'" 1>&2
--		return 1
--		;;
--	esac
--
--	echo "$family => $ath9k_hdr"
--	./initvals -w -f $family > "./$ath9k_hdr"
--}
--
--FAMILIES="$@"
--[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9485 ar9580-1p0 ar9462-2p0"
--
--make clean all ATHEROS=1 >/dev/null
--
--for family in $FAMILIES; do
--	gen_ath9k_header $family
--done
--- 
-1.7.3.2
+# aptitude install firmware-b43-installer
+The following NEW packages will be installed:
+  b43-fwcutter{a} firmware-b43-installer
 
+
+Setting up b43-fwcutter (1:015-14) ...
+Setting up firmware-b43-installer (1:015-14) ...
+No chroot environment found. Starting normal installation
+Unsupported device(s) found: PCI id 14e4:4331
+Aborting.
+
+Have I missed something?
+
+Thanks again,
