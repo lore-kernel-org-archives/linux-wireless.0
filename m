@@ -1,78 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:51819 "HELO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754983Ab2ECHXX (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42083 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752884Ab2EJCHJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:23:23 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	harvey yang <harvey.huawei.yang@gmail.com>
-Subject: [PATCH 04/18] mwifiex: multi-interface support for mwifiex
-Date: Thu,  3 May 2012 00:22:26 -0700
-Message-Id: <1336029760-22565-5-git-send-email-bzhao@marvell.com> (sfid-20120503_092326_014188_65C71AA1)
-In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
-References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+	Wed, 9 May 2012 22:07:09 -0400
+Received: by dady13 with SMTP id y13so1056219dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 19:07:09 -0700 (PDT)
+From: Zero Lin <zero.lin.0203@gmail.com>
+To: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	"Zero.Lin" <Zero.Lin@mediatek.com>
+Subject: [PATCH] rt2x00:Add RT539b chipset support
+Date: Thu, 10 May 2012 10:06:31 +0800
+Message-Id: <1336615591-2017-1-git-send-email-zero.lin.0203@gmail.com> (sfid-20120510_040714_703246_281F1EF8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+From: "Zero.Lin" <Zero.Lin@mediatek.com>
 
-mwifiex supports STA and AP interfaces which use same phy.
-Indicate this to cfg80211.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Zero.Lin <Zero.Lin@mediatek.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 55513b6..26a706a 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -20,6 +20,23 @@
- #include "cfg80211.h"
- #include "main.h"
- 
-+static const struct ieee80211_iface_limit mwifiex_ap_sta_limits[] = {
-+	{
-+		.max = 1, .types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+	{
-+		.max = 1, .types = BIT(NL80211_IFTYPE_AP),
-+	},
-+};
-+
-+static const struct ieee80211_iface_combination mwifiex_iface_comb_ap_sta = {
-+	.limits = mwifiex_ap_sta_limits,
-+	.num_different_channels = 1,
-+	.n_limits = ARRAY_SIZE(mwifiex_ap_sta_limits),
-+	.max_interfaces = MWIFIEX_MAX_BSS_NUM,
-+	.beacon_int_infra_match = true,
-+};
-+
- /*
-  * This function maps the nl802.11 channel type into driver channel type.
-  *
-@@ -1505,6 +1522,9 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	else
- 		wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
- 
-+	wiphy->iface_combinations = &mwifiex_iface_comb_ap_sta;
-+	wiphy->n_iface_combinations = 1;
-+
- 	/* Initialize cipher suits */
- 	wiphy->cipher_suites = mwifiex_cipher_suites;
- 	wiphy->n_cipher_suites = ARRAY_SIZE(mwifiex_cipher_suites);
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 931331d..cad25bf 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1192,6 +1192,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
+ 	{ PCI_DEVICE(0x1814, 0x5390) },
+ 	{ PCI_DEVICE(0x1814, 0x5392) },
+ 	{ PCI_DEVICE(0x1814, 0x539a) },
++	{ PCI_DEVICE(0x1814, 0x539b) },
+ 	{ PCI_DEVICE(0x1814, 0x539f) },
+ #endif
+ 	{ 0, }
 -- 
-1.7.0.2
+1.7.5.4
 
