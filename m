@@ -1,142 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:64326 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760008Ab2EJPd7 convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758745Ab2EJJRK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 11:33:59 -0400
-Received: by qadb17 with SMTP id b17so446473qad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 08:33:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgXQ3o-2bD9J+C2cAu9M-fo69tiXWfugZKjqU3o9ki7f7Q@mail.gmail.com>
-References: <CAG9cJmkDf6koV93NyOo2W8D7Y3G6tapQOucjW5M7FLPDnNhvKQ@mail.gmail.com>
-	<CAGRGNgXDUuLFeKh7KgqMqyyT8Xi_GV2BReYJ66uK_SgBJ5Nb4g@mail.gmail.com>
-	<CAG9cJmmRZvf=EW9k6AVLEv_zeU86thGaEWHv5R0ADNX9B6jMmw@mail.gmail.com>
-	<CAGRGNgXQ3o-2bD9J+C2cAu9M-fo69tiXWfugZKjqU3o9ki7f7Q@mail.gmail.com>
-Date: Thu, 10 May 2012 23:33:58 +0800
-Message-ID: <CAG9cJm=tJcOnbEfcxV7zyizbUEerO52+NdEGMN13Z0oGmu_2dg@mail.gmail.com> (sfid-20120510_173406_318425_BCF4C36D)
-Subject: Re: how to remove the b43
-From: lina <lina.lastname@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 10 May 2012 05:17:10 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:17:09 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 72/78] wl18xx: export low/high band component values as module params
+Date: Thu, 10 May 2012 12:14:17 +0300
+Message-Id: <1336641263-5761-73-git-send-email-arik@wizery.com> (sfid-20120510_111740_939653_9EF1E92B)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 10, 2012 at 11:25 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Lina,
->
-> On Fri, May 11, 2012 at 1:00 AM, lina <lina.lastname@gmail.com> wrote:
->> On Thu, May 10, 2012 at 10:25 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->>> Hi Lina,
->>>
->>> Firstly, which distribution are you using, is it Ubuntu? Debian? Suse?
->>> Fedora? or something else?
->>
->> Debian,
->
-> I use Debian too, if you're fully up-to-date, all you need to do is
-> install these packages:
->
+From: Luciano Coelho <coelho@ti.com>
 
-Thanks, I will install the linux-image-amd64.
-suddenly all things become not so hard, seems.
-I have spent whole day on it.
-Before my fglrx-driver even lack the transplant.
+We use hardcoded values for the different board types.  In some cases
+we may need to override the defaults, so export the values as module
+params.  If not defined, the defaults for the specified board type
+will be used.
 
-> One of the linux-image-<arch> metapackages, e.g. linux-image-i686 or
-> linux-image-amd64
-> firmware-b43-installer
->
-> Support for your card was included in 3.2, so you should have no
-> problems using it with the stock Debian kernel.
->
-> There is no need to compile your own kernel unless the stock kernel
-> doesn't work on your system.
->
->>> 2. The firmware, this lives in /lib/firmware or wherever your distro
->>> puts it and are called ucode*.fw. The firmware is software which runs
->>> on the actual wireless card and runs the hardware at a low level.
->>
->> :/lib/firmware$  ls -1
->> 3.2.5mj-lina
->> 3.3.5
->> b43
->>
->> $ cd 3.3.5/
->> $ ls
->> 3com         bnx2   edgeport     korg         qlogic      ti_5052.fw
->>        yamaha
->> acenic       bnx2x  emi26        matrox       r128        tigon
->> adaptec      cis    emi62        mts_cdma.fw  radeon      ttusb-budget
->> advansys     cpia2  ess          mts_edge.fw  sun         whiteheat.fw
->> atmsar11.fw  cxgb3  kaweth       mts_gsm.fw   tehuti      whiteheat_loader.fw
->> av7110       e100   keyspan_pda  ositech      ti_3410.fw  yam
->>
->> another question, why I have so many things under /lib/firmware/3.3.5,
->
-> These files are firmware for other devices, e.g. 3com network cards,
-> qlogic SCSI cards, etc. I believe that they are all part of the
-> standard linux-firmware package.
->
->>>> The reason I want to clear is that today I installed the kernel  3.3.5,
->>>> but still keep the last version 3.2.5
->>>>
->>>> I want to clear the b43 related in 3.2.5, and re-install in 3.3.5
->>>
->>> Ok, so part 1, the driver, is part of the kernel and will be upgraded
->>> when you upgrade your kernel from version 3.2.5 to 3.3.5.
->>
->> Ha ... I didn't upgrade. I just obtained from kernel.org, not from
->> debian repository.
->>
->> now kept two, is it redundant? maybe just in case.
->
-> You should be fine just installing the kernel images that come with
-> Debian. Unless you're having a problem with those packages, there is
-> no need to build your own kernel.
->
->>> If you are trying option 1, using the stock driver in 3.3.5, then you
->>> should have to do _nothing_ other than upgrade the kernel. I strongly
->>> recommend doing this unless you require some feature or bug fix that
->>> is not present in kernel version 3.3.5. Your distribution should
->>> provide a package for obtaining the firmware, I strongly recommend you
->>> install it and _leave_it_alone_.
->>
->> Before strangly it not work in the 3.3.5, or maybe something not
->> activate in my network manager,
->
-> If you had deleted the firmware before this, then that will be the
-> reason why it is not working.
->
-> Otherwise, it's likely that there are errors in the system log, if you
-> post them here, we might be able to help you fix them.
->
->> so I came up the idea to remove the one in 3.2.5, I didn't realize
->> it's independent from kernel version until later.
->>
->> another reason to remove it from 3.2.5 is to reduce the chance of my /
->> get saturated. I only give  666M.
->
-> I'm surprised you are managing to fit an entire Linux system in 666 MB.
->
-> To re-iterate, I strongly recommend that you install the stock kernel
-> that comes with Debian. There is no need to build your own unless
-> there is a problem with that kernel.
->
-> To get the firmware for your broadcom wireless card, just install the
-> firmware-b43-installer package and this will automatically install and
-> maintain the latest versions of the firmware for you.
->
-> b43-fwcutter and the firmware itself are separate from the kernel and
-> there is no need to delete them when upgrading.
->
-> Thanks,
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |   46 +++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-Best regards,
->
-> --
-> Julian Calaby
->
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index ab3dd11..6baeb26b 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -49,6 +49,10 @@ static int n_antennas_2_param = 1;
+ static int n_antennas_5_param = 1;
+ static bool checksum_param = true;
+ static bool enable_11a_param = true;
++static int low_band_component = -1;
++static int low_band_component_type = -1;
++static int high_band_component = -1;
++static int high_band_component_type = -1;
+ 
+ static const u8 wl18xx_rate_to_idx_2ghz[] = {
+ 	/* MCS rates are used only with 11n */
+@@ -1160,6 +1164,32 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		goto out_free;
+ 	}
+ 
++	/*
++	 * If the module param is not set, update it with the one from
++	 * conf.  If it is set, overwrite conf with it.
++	 */
++	if (low_band_component == -1)
++		low_band_component = priv->conf.phy.low_band_component;
++	else
++		priv->conf.phy.low_band_component = low_band_component;
++	if (low_band_component_type == -1)
++		low_band_component_type =
++			priv->conf.phy.low_band_component_type;
++	else
++		priv->conf.phy.low_band_component_type =
++			low_band_component_type;
++
++	if (high_band_component == -1)
++		high_band_component = priv->conf.phy.high_band_component;
++	else
++		priv->conf.phy.high_band_component = high_band_component;
++	if (high_band_component_type == -1)
++		high_band_component_type =
++			priv->conf.phy.high_band_component_type;
++	else
++		priv->conf.phy.high_band_component_type =
++			high_band_component_type;
++
+ 	if (!checksum_param) {
+ 		wl18xx_ops.set_rx_csum = NULL;
+ 		wl18xx_ops.init_vif = NULL;
+@@ -1224,6 +1254,22 @@ MODULE_PARM_DESC(checksum, "Enable TCP checksum: boolean (defaults to true)");
+ module_param_named(enable_11a, enable_11a_param, bool, S_IRUSR);
+ MODULE_PARM_DESC(enable_11a, "Enable 11a (5GHz): boolean (defaults to true)");
+ 
++module_param(low_band_component, uint, S_IRUSR);
++MODULE_PARM_DESC(low_band_component, "Low band component: u8 "
++		 "(default is 0x01)");
++
++module_param(low_band_component_type, uint, S_IRUSR);
++MODULE_PARM_DESC(low_band_component_type, "Low band component type: u8 "
++		 "(default is 0x05 or 0x06 depending on the board_type)");
++
++module_param(high_band_component, uint, S_IRUSR);
++MODULE_PARM_DESC(high_band_component, "High band component: u8, "
++		 "(default is 0x01)");
++
++module_param(high_band_component_type, uint, S_IRUSR);
++MODULE_PARM_DESC(high_band_component_type, "High band component type: u8 "
++		 "(default is 0x09)");
++
+ MODULE_LICENSE("GPL v2");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_FIRMWARE(WL18XX_FW_NAME);
+-- 
+1.7.9.5
+
