@@ -1,48 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:45468 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313Ab2ECRSM (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:40505 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758632Ab2EJJQr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 13:18:12 -0400
-Date: Thu, 03 May 2012 13:17:07 -0400 (EDT)
-Message-Id: <20120503.131707.112550136096227430.davem@davemloft.net> (sfid-20120503_191817_480181_706C3A77)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-05-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120503.130516.1008806127286088740.davem@davemloft.net>
-References: <20120503152206.GL9285@tuxdriver.com>
-	<20120503.130516.1008806127286088740.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 10 May 2012 05:16:47 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1111470wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:47 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 62/78] wlcore: add debugfs macro to help print fw statistics arrays
+Date: Thu, 10 May 2012 12:14:07 +0300
+Message-Id: <1336641263-5761-63-git-send-email-arik@wizery.com> (sfid-20120510_111817_665337_31F54C0F)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Thu, 03 May 2012 13:05:16 -0400 (EDT)
+From: Luciano Coelho <coelho@ti.com>
 
-> Pulled, thanks John.
+Add a macro to make it easy to print arrays from the FW statistics
+array in debugfs.  At the same time, increase the buffer size so
+arrays fit more easily.
 
-Actually, I un-pulled.  The bluetooth guys are sending crap code
-formatting again.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/debugfs.c |    1 -
+ drivers/net/wireless/ti/wlcore/debugfs.h |   27 +++++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 1 deletion(-)
 
->From 74e05692c9599866d5c8743764544cf77cd1af87 Mon Sep 17 00:00:00 2001
-From: Andre Guedes <andre.guedes@openbossa.org>
-Date: Tue, 6 Mar 2012 19:37:06 -0300
-Subject: [PATCH 007/160] Bluetooth: Check FINDING state in interleaved
- discovery
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index 57c1eae..fc44262 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -39,7 +39,6 @@
+ #define WL1271_DEBUGFS_STATS_LIFETIME 1000
+ 
+ /* debugfs macros idea from mac80211 */
+-#define DEBUGFS_FORMAT_BUFFER_SIZE 100
+ int wl1271_format_buffer(char __user *userbuf, size_t count,
+ 			 loff_t *ppos, char *fmt, ...)
+ {
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.h b/drivers/net/wireless/ti/wlcore/debugfs.h
+index e1a5bf1..f7381dd 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.h
++++ b/drivers/net/wireless/ti/wlcore/debugfs.h
+@@ -34,6 +34,8 @@ void wl1271_debugfs_exit(struct wl1271 *wl);
+ void wl1271_debugfs_reset(struct wl1271 *wl);
+ void wl1271_debugfs_update_stats(struct wl1271 *wl);
+ 
++#define DEBUGFS_FORMAT_BUFFER_SIZE 256
++
+ #define DEBUGFS_READONLY_FILE(name, fmt, value...)			\
+ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ 			    size_t count, loff_t *ppos)			\
+@@ -86,6 +88,31 @@ static const struct file_operations sub## _ ##name## _ops = {		\
+ 	.llseek	= generic_file_llseek,					\
+ };
+ 
++#define DEBUGFS_FWSTATS_FILE_ARRAY(sub, name, len, struct_type)		\
++static ssize_t sub## _ ##name## _read(struct file *file,		\
++				      char __user *userbuf,		\
++				      size_t count, loff_t *ppos)	\
++{									\
++	struct wl1271 *wl = file->private_data;				\
++	struct struct_type *stats = wl->stats.fw_stats;			\
++	char buf[DEBUGFS_FORMAT_BUFFER_SIZE] = "";			\
++	int res, i;							\
++									\
++	wl1271_debugfs_update_stats(wl);				\
++									\
++	for (i = 0; i < len; i++)					\
++		res = snprintf(buf, sizeof(buf), "%s[%d] = %d\n",	\
++			       buf, i, stats->sub.name[i]);		\
++									\
++	return wl1271_format_buffer(userbuf, count, ppos, "%s", buf);	\
++}									\
++									\
++static const struct file_operations sub## _ ##name## _ops = {		\
++	.read = sub## _ ##name## _read,					\
++	.open = simple_open,						\
++	.llseek	= generic_file_llseek,					\
++};
++
+ #define DEBUGFS_FWSTATS_ADD(sub, name)					\
+ 	DEBUGFS_ADD(sub## _ ##name, stats)
+ 
+-- 
+1.7.9.5
 
-In order to do interleaved discovery we should be in DISCOVERY_
-FINDING state. Otherwise, discovery should be stopped.
-
-Signed-off-by: Andre Guedes <andre.guedes@openbossa.org>
-Signed-off-by: Gustavo F. Padovan <padovan@profusion.mobi>
- ...
--		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED) {
-+		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED &&
-+				hdev->discovery.state == DISCOVERY_FINDING) {
-
-Really, we went through this a million times very recently and I'm
-not pulling anything into my tree that has garbage like this in it.
-
-Sorry.
