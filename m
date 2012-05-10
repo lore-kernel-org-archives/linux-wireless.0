@@ -1,65 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57036 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754501Ab2EUNk2 convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:43685 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758702Ab2EJJQz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2012 09:40:28 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAFub=KSmCj9EryT8p6m6KvSPQxBcuaHAXRiVeFbvBYYndPORHg@mail.gmail.com>
-References: <CAFub=KS1_Bj=b2OVTf33VHtQ7BKY2k3Wd1oGwmVVJNgbexZ=6w@mail.gmail.com>
- <CAB=NE6VFghHT6zvGfW+9-Vsik39A_4Df=U3J1OtFFpM8LKDzvw@mail.gmail.com> <CAFub=KSmCj9EryT8p6m6KvSPQxBcuaHAXRiVeFbvBYYndPORHg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 21 May 2012 06:40:05 -0700
-Message-ID: <CAB=NE6X7ptSxB8aDW9boYqWDgTKpc8HuyJhN2UtHnW1CffVQbQ@mail.gmail.com> (sfid-20120521_154045_086941_1E552D78)
-Subject: Re: [Lf_driver_backport] scripts in compat tree
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Andy Whitcroft <apw@canonical.com>,
-	lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 10 May 2012 05:16:55 -0400
+Received: by wibhn19 with SMTP id hn19so250127wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:54 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 65/78] wlcore: create private static_data area and add operation to parse it
+Date: Thu, 10 May 2012 12:14:10 +0300
+Message-Id: <1336641263-5761-66-git-send-email-arik@wizery.com> (sfid-20120510_111747_073282_EC2FB27B)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 21, 2012 at 6:15 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
->> Well kernel.org does not have already built kernels. Ubuntu's PPA
->> kernels *are* vanilla kernels, in fact that is why they were put up,
->> they are guaranteed to be built on vanilla kernels. We couldn't get a
->> more generic approach then. The only thing though is -- the PPA
->> kernels obviously have the kernels integrated on .debs. There are a
->> few options here:
->>
->>  1) If Ubuntu can dpkg -x the kernels for us onto tarballs that'd be swell
->>  2) We could write our own script to do this with C code that does
->> the dpkg -x for us
->>
->> There are ways to do 2) suggested in the thread above.
->
-> ah you are right, we need to have built kernels in order to build the
-> modules. Well then the 2nd solution seems reasonable if we can mimic
-> dpkg -x. I googled a bit and people says that debs are generic .ar
-> archives so it would be easy to take the tarball inside of them.
->
-> If I succeed this can be used on any distro since that they are
-> vanilla without any patches. But if the PPA disappears one day, we'll
-> have to find another solution :)
+From: Luciano Coelho <coelho@ti.com>
 
-Indeed :) the PPA must not seize to exist! Or something.
+The wl18xx firmware has more information in the static_data than
+wl12xx.  To be able to parse that in an abstracted way, this patch
+adds a priv area to the static data struct and an operation that
+allows the lower driver to parse it if necessary.
 
-> BTW you also download the kernel images probably for booting into them
-> to test the compat builds. Booting using those images on other
-> distributions can be messy and unsuccessful as initramfs and booting
-> mechanisms differ widely. I'll test those too.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/boot.c   |   53 +++++++++++++++++--------------
+ drivers/net/wireless/ti/wlcore/boot.h   |    1 +
+ drivers/net/wireless/ti/wlcore/hw_ops.h |    9 ++++++
+ drivers/net/wireless/ti/wlcore/wlcore.h |    6 ++++
+ 4 files changed, 46 insertions(+), 23 deletions(-)
 
-Yeap... indeed. Mandrake for example loves to compress their modules.
-compat-wireless handles the initramfs I think well, so *if* you do
-want to address that, you could look at how we address initramfs
-there, but I frankly don't think having this option available for all
-distributions is a requirement. It'd be nice, but I think it'd be
-nicer if ckmake itself could run for all options without root
-privileges. So for example right now ckmake does require privileges to
-install the debs, it'd be nicer if instead we just unload the kernels
-to a $USER/ dir somewhere that ckmake has rights to under the user
-calling it. In this case I'd be willing to remove the option to even
-boot into these kernels.
+diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
+index 9b98230..ed718f7 100644
+--- a/drivers/net/wireless/ti/wlcore/boot.c
++++ b/drivers/net/wireless/ti/wlcore/boot.c
+@@ -45,10 +45,17 @@ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
+ 	wlcore_write_reg(wl, REG_ECPU_CONTROL, cpu_ctrl);
+ }
+ 
+-static int wlcore_parse_fw_ver(struct wl1271 *wl)
++static int wlcore_boot_parse_fw_ver(struct wl1271 *wl,
++				    struct wl1271_static_data *static_data)
+ {
+ 	int ret;
+ 
++	strncpy(wl->chip.fw_ver_str, static_data->fw_version,
++		sizeof(wl->chip.fw_ver_str));
++
++	/* make sure the string is NULL-terminated */
++	wl->chip.fw_ver_str[sizeof(wl->chip.fw_ver_str) - 1] = '\0';
++
+ 	ret = sscanf(wl->chip.fw_ver_str + 4, "%u.%u.%u.%u.%u",
+ 		     &wl->chip.fw_ver[0], &wl->chip.fw_ver[1],
+ 		     &wl->chip.fw_ver[2], &wl->chip.fw_ver[3],
+@@ -57,43 +64,43 @@ static int wlcore_parse_fw_ver(struct wl1271 *wl)
+ 	if (ret != 5) {
+ 		wl1271_warning("fw version incorrect value");
+ 		memset(wl->chip.fw_ver, 0, sizeof(wl->chip.fw_ver));
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto out;
+ 	}
+ 
+ 	ret = wlcore_identify_fw(wl);
+ 	if (ret < 0)
+-		return ret;
+-
+-	return 0;
++		goto out;
++out:
++	return ret;
+ }
+ 
+-static int wlcore_boot_fw_version(struct wl1271 *wl)
++static int wlcore_boot_static_data(struct wl1271 *wl)
+ {
+ 	struct wl1271_static_data *static_data;
++	size_t len = sizeof(*static_data) + wl->static_data_priv_len;
+ 	int ret;
+ 
+-	static_data = kmalloc(sizeof(*static_data), GFP_KERNEL | GFP_DMA);
++	static_data = kmalloc(len, GFP_KERNEL);
+ 	if (!static_data) {
+-		wl1271_error("Couldn't allocate memory for static data!");
+-		return -ENOMEM;
++		ret = -ENOMEM;
++		goto out;
+ 	}
+ 
+-	wl1271_read(wl, wl->cmd_box_addr, static_data, sizeof(*static_data),
+-		    false);
++	wl1271_read(wl, wl->cmd_box_addr, static_data, len, false);
+ 
+-	strncpy(wl->chip.fw_ver_str, static_data->fw_version,
+-		sizeof(wl->chip.fw_ver_str));
+-
+-	kfree(static_data);
+-
+-	/* make sure the string is NULL-terminated */
+-	wl->chip.fw_ver_str[sizeof(wl->chip.fw_ver_str) - 1] = '\0';
++	ret = wlcore_boot_parse_fw_ver(wl, static_data);
++	if (ret < 0)
++		goto out_free;
+ 
+-	ret = wlcore_parse_fw_ver(wl);
++	ret = wlcore_handle_static_data(wl, static_data);
+ 	if (ret < 0)
+-		return ret;
++		goto out_free;
+ 
+-	return 0;
++out_free:
++	kfree(static_data);
++out:
++	return ret;
+ }
+ 
+ static int wl1271_boot_upload_firmware_chunk(struct wl1271 *wl, void *buf,
+@@ -400,9 +407,9 @@ int wlcore_boot_run_firmware(struct wl1271 *wl)
+ 	wl1271_debug(DEBUG_MAILBOX, "MBOX ptrs: 0x%x 0x%x",
+ 		     wl->mbox_ptr[0], wl->mbox_ptr[1]);
+ 
+-	ret = wlcore_boot_fw_version(wl);
++	ret = wlcore_boot_static_data(wl);
+ 	if (ret < 0) {
+-		wl1271_error("couldn't boot firmware");
++		wl1271_error("error getting static data");
+ 		return ret;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/boot.h b/drivers/net/wireless/ti/wlcore/boot.h
+index 094981d..a525225 100644
+--- a/drivers/net/wireless/ti/wlcore/boot.h
++++ b/drivers/net/wireless/ti/wlcore/boot.h
+@@ -40,6 +40,7 @@ struct wl1271_static_data {
+ 	u8 fw_version[WL1271_FW_VERSION_MAX_LEN];
+ 	u32 hw_version;
+ 	u8 tx_power_table[WL1271_NO_SUBBANDS][WL1271_NO_POWER_LEVELS];
++	u8 priv[0];
+ };
+ 
+ /* number of times we try to read the INIT interrupt */
+diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
+index 1555c3e..c590b6f 100644
+--- a/drivers/net/wireless/ti/wlcore/hw_ops.h
++++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
+@@ -158,4 +158,13 @@ wlcore_debugfs_init(struct wl1271 *wl, struct dentry *rootdir)
+ 	return 0;
+ }
+ 
++static inline int
++wlcore_handle_static_data(struct wl1271 *wl, void *static_data)
++{
++	if (wl->ops->handle_static_data)
++		return wl->ops->handle_static_data(wl, static_data);
++
++	return 0;
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 85fd3d9..1967873 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -26,6 +26,7 @@
+ 
+ #include "wlcore_i.h"
+ #include "event.h"
++#include "boot.h"
+ 
+ /* The maximum number of Tx descriptors in all chip families */
+ #define WLCORE_MAX_TX_DESCRIPTORS 32
+@@ -72,6 +73,8 @@ struct wlcore_ops {
+ 	u32 (*ap_get_mimo_wide_rate_mask)(struct wl1271 *wl,
+ 					  struct wl12xx_vif *wlvif);
+ 	int (*debugfs_init)(struct wl1271 *wl, struct dentry *rootdir);
++	int (*handle_static_data)(struct wl1271 *wl,
++				  struct wl1271_static_data *static_data);
+ };
+ 
+ enum wlcore_partitions {
+@@ -373,6 +376,9 @@ struct wl1271 {
+ 	/* RX Data filter rule state - enabled/disabled */
+ 	bool rx_filter_enabled[WL1271_MAX_RX_FILTERS];
+ 
++	/* size of the private static data */
++	size_t static_data_priv_len;
++
+ 	/* the current channel type */
+ 	enum nl80211_channel_type channel_type;
+ };
+-- 
+1.7.9.5
 
- Luis
