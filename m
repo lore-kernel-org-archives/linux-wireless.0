@@ -1,88 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:35684 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965929Ab2EPIiu (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:53291 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755992Ab2EJQfa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 04:38:50 -0400
-Received: by obhx4 with SMTP id x4so835399obh.20
-        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 01:38:49 -0700 (PDT)
-From: Yoni Divinsky <yoni.divinsky@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <arik@wizery.com>, <coelho@ti.com>
-Subject: [PATCH v2] wlcore: do not send stop fwlog cmd if fw is hanged
-Date: Wed, 16 May 2012 11:34:18 +0300
-Message-Id: <1337157258-15163-2-git-send-email-yoni.divinsky@ti.com> (sfid-20120516_103855_985443_923CDDD5)
-In-Reply-To: <1337157258-15163-1-git-send-email-yoni.divinsky@ti.com>
-References: <1337157258-15163-1-git-send-email-yoni.divinsky@ti.com>
+	Thu, 10 May 2012 12:35:30 -0400
+Date: Thu, 10 May 2012 09:35:25 -0700
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>
+Subject: Re: brcmsmac still woes, possible regression?
+Message-ID: <20120510163525.GB32040@ubuntu-mba> (sfid-20120510_183541_667999_CBEFA5F6)
+References: <4F744DD8.8010004@broadcom.com>
+ <20120329133835.GA5196@stt008.linux.site>
+ <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
+ <20120402215005.GA13969@burratino>
+ <4F7B179F.7070502@broadcom.com>
+ <20120509094111.GA2333@burratino>
+ <4FAA45AF.8050201@broadcom.com>
+ <20120509174106.GA7189@ubuntu-mba>
+ <4FAAB0FE.601@broadcom.com>
+ <1336587054.1121.2.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1336587054.1121.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the driver received a watchdog interrupt then the
-assumption is that the fw is hanged. Avoid sending
-the stop fwlog command in case of a watchdog recovey
-to avoid waiting for the 2 seconds timeout of the command.
+On Wed, May 09, 2012 at 08:10:54PM +0200, Johannes Berg wrote:
+> On Wed, 2012-05-09 at 20:01 +0200, Arend van Spriel wrote:
+> 
+> > As part of the discussion over here I am proposing to get rid of the tx
+> > muting in brcmsmac as mac80211 already has that behaviour for passive
+> > channels if I am not mistaken (is this true, Johannes?).
+> 
+> Arend, I haven't really followed this discussion, can you elaborate?
+> 
+> On passive channels, when scanning, mac80211 will send a probe only
+> after receiving a frame on that channel. When associating, it has no
+> such behaviour, at least not directly, but I suppose it could be
+> implemented (waiting for the beacon)
 
-Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c   |    9 +++++++--
- drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
- 2 files changed, 8 insertions(+), 2 deletions(-)
+The background is that brcmsmac contains a bunch of code for regulatory
+support that is either duplicated (and in conflict) with the
+protocol-level support or else it would better be handled there. This is
+causing problems on pretty much any channel that isn't part of the
+default world regulatory domain.
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 45fe911..305a7c1 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -582,6 +582,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 		if (unlikely(intr & WL1271_ACX_INTR_WATCHDOG)) {
- 			wl1271_error("watchdog interrupt received! "
- 				     "starting recovery.");
-+			wl->watchdog_recovery = true;
- 			wl12xx_queue_recovery_work(wl);
- 
- 			/* restarting the chip. ignore any other interrupt. */
-@@ -820,10 +821,12 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
- 
- 	/*
- 	 * Make sure the chip is awake and the logger isn't active.
--	 * This might fail if the firmware hanged.
-+	 * Do not send a stop fwlog command if the fw is hanged.
- 	 */
--	if (!wl1271_ps_elp_wakeup(wl))
-+	if (!wl1271_ps_elp_wakeup(wl) && !wl->watchdog_recovery)
- 		wl12xx_cmd_stop_fwlog(wl);
-+	else
-+		goto out;
- 
- 	/* Read the first memory block address */
- 	wl12xx_fw_status(wl, wl->fw_status);
-@@ -914,6 +917,7 @@ static void wl1271_recovery_work(struct work_struct *work)
- 		vif = wl12xx_wlvif_to_vif(wlvif);
- 		__wl1271_op_remove_interface(wl, vif, false);
- 	}
-+        wl->watchdog_recovery = false;
- 	mutex_unlock(&wl->mutex);
- 	wl1271_op_stop(wl->hw);
- 
-@@ -928,6 +932,7 @@ static void wl1271_recovery_work(struct work_struct *work)
- 	ieee80211_wake_queues(wl->hw);
- 	return;
- out_unlock:
-+        wl->watchdog_recovery = false;
- 	mutex_unlock(&wl->mutex);
- }
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 0b3f0b5..d6a8ad4 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -228,6 +228,7 @@ struct wl1271 {
- 
- 	/* Hardware recovery work */
- 	struct work_struct recovery_work;
-+	bool watchdog_recovery;
- 
- 	/* Pointer that holds DMA-friendly block for the mailbox */
- 	struct event_mailbox *mbox;
--- 
-1.7.0.4
+I've sent RFC patches that strip out the vast majority of this code in
+favor of better integration with the protocol-level regulatory support.
+The piece that's under discussion here is a behavior I maintained in my
+changes, which mutes tx on passive scan channels until data is received
+on a given channel. But in my opinion, if this sort of behavior is
+desired it ought to be implemented at the protocol level instead of in
+the driver, so I'd really prefer to see it removed from brcmsmac.
+
+Seth
 
