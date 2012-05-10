@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:63579 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751208Ab2EBHIr (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758738Ab2EJJRS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 03:08:47 -0400
-Received: by wgbdr13 with SMTP id dr13so309899wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2012 00:08:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4595B4D22AB93C4FABBA84AAD5AA37FD14438A@ORSMSX103.amr.corp.intel.com>
-References: <20120422182928.GA2854@ritirata.org>
-	<20120430145803.GE2630@ritirata.org>
-	<20120430170337.GA2560@tuxdriver.com>
-	<4595B4D22AB93C4FABBA84AAD5AA37FD143115@ORSMSX103.amr.corp.intel.com>
-	<CANUX_P1Nx4jYbRwehi+qW-2RVy=ntb_cCzBzpYXkJysuPvrCPA@mail.gmail.com>
-	<20120501183415.GG4316@ritirata.org>
-	<20120501205616.GA2563@ritirata.org>
-	<4595B4D22AB93C4FABBA84AAD5AA37FD14438A@ORSMSX103.amr.corp.intel.com>
-Date: Wed, 2 May 2012 10:08:46 +0300
-Message-ID: <CANUX_P0UYx_-PS8BUGO10Cwrm6LuhMu4Vyhad4RL-Jn6YqE-Pg@mail.gmail.com> (sfid-20120502_090851_482504_6ED9300C)
-Subject: Re: iwlwifi warn_slowpath with 3.*
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
-Cc: Antonio Quartulli <ordex@autistici.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 10 May 2012 05:17:18 -0400
+Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:17:18 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 76/78] wl18xx: increase tx_ba_win_size to 64
+Date: Thu, 10 May 2012 12:14:21 +0300
+Message-Id: <1336641263-5761-77-git-send-email-arik@wizery.com> (sfid-20120510_111733_884927_AB8D7EFC)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 2, 2012 at 12:19 AM, Venkataraman, Meenakshi
-<meenakshi.venkataraman@intel.com> wrote:
-> Hi Antonio,
->
->>> it seems so. It happens at least once at boot time.
->>> I will try wireless-testing and see what happens. Then I will apply your patch.
->>
->>The problem is there either with wireless-testing and with
->>wireless-testing+your_patch.
->>
->>If it can somehow help, I also got several stack trace regarding intel_iova
->>functions. But then the I got kernel panic and I was not able to copy the
->>messages.
->
-> [MV] Depending on how you set it up, perhaps the stack trace was saved in one of the syslog files in /var/log/...
->
-> Thanks!
-> Meenakshi
->
+From: Luciano Coelho <coelho@ti.com>
 
-Can you please re-run with debug=1 and send the whole log ?
-This will give a better indication on when the issue occurs.
-Thanks
+Now the firmware can support TX block ack sessions with 64 frames.
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 27cd9b8..5053c05 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -408,7 +408,7 @@ static struct wlcore_conf wl18xx_conf = {
+ 	},
+ 	.ht = {
+ 		.rx_ba_win_size = 10,
+-		.tx_ba_win_size = 10,
++		.tx_ba_win_size = 64,
+ 		.inactivity_timeout = 10000,
+ 		.tx_ba_tid_bitmap = CONF_TX_BA_ENABLED_TID_BITMAP,
+ 	},
+-- 
+1.7.9.5
+
