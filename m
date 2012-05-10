@@ -1,90 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:54685 "EHLO
-	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756870Ab2EaMB2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572Ab2EJQuj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 08:01:28 -0400
-Message-ID: <20120531150124.119853l3a0cbvj40@www.81.fi> (sfid-20120531_140152_912629_88ABDF95)
-Date: Thu, 31 May 2012 15:01:24 +0300
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: David Miller <davem@davemloft.net>
-Cc: joe@perches.com, linville@tuxdriver.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] drivers/net: Convert compare_ether_addr to
- ether_addr_equal
-References: <7c9881a67c52c2f218480b6742155b6d6928122d.1336618708.git.joe@perches.com>
- <20120510173201.16131du3cg90nybo@www.81.fi>
- <1336666288.22495.14.camel@joe2Laptop>
- <20120510.123353.1458740731067514606.davem@davemloft.net>
-In-Reply-To: <20120510.123353.1458740731067514606.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+	Thu, 10 May 2012 12:50:39 -0400
+Message-ID: <1336668634.4334.23.camel@jlt3.sipsolutions.net> (sfid-20120510_185043_029152_81B6AB28)
+Subject: Re: [PATCH 1/4] iwlwifi: Add __printf argument checking to __iwl_dbg
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date: Thu, 10 May 2012 18:50:34 +0200
+In-Reply-To: <1336667905.22495.18.camel@joe2Laptop>
+References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
+	 <1336665952-24363-2-git-send-email-johannes@sipsolutions.net>
+	 <1336667905.22495.18.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting David Miller <davem@davemloft.net>:
+On Thu, 2012-05-10 at 09:38 -0700, Joe Perches wrote:
+> Add gcc format and argument printf checking
+> to reduce future defect introduction.
 
-> From: Joe Perches <joe@perches.com>
-> Date: Thu, 10 May 2012 09:11:28 -0700
->
->> (cc's trimmed)
->>
->> On Thu, 2012-05-10 at 17:32 +0300, Jussi Kivilinna wrote:
->>> Quoting Joe Perches <joe@perches.com>:
->>> > Use the new bool function ether_addr_equal to add
->>> > some clarity and reduce the likelihood for misuse
->>> > of compare_ether_addr for sorting.
->> []
->>> > diff --git a/drivers/net/wireless/rndis_wlan.c
->> []
->>> > @@ -2139,7 +2139,7 @@ resize_buf:
->>> >  	while (check_bssid_list_item(bssid, bssid_len, buf, len)) {
->>> >  		if (rndis_bss_info_update(usbdev, bssid) && match_bssid &&
->>> >  		    matched) {
->>> > -			if (compare_ether_addr(bssid->mac, match_bssid))
->>> > +			if (!ether_addr_equal(bssid->mac, match_bssid))
->>>
->>> While reviewing this, noticed that above original code is wrong. It
->>> should be !compare_ether_addr. So do I push patch fixing this through
->>> wireless-testing althought it will later cause conflict with this patch?
->>>
->>> -Jussi
->>>
->>> >  				*matched = true;
->>> >  		}
->>> >
->>
->> Up to John.
->>
->> Here's the patch I would send against net-next
->> updating the test and the style a little.
->
-> I think in this specific case it's better to push this one directly
-> through net-next.  But yes, it's up to John.
->
+Good point, I'll pick this up.
 
-It's been some time now, and I think it's ok to wait until  
-wireless-testing has
-this patch merged and then fix it there.
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-debug.h |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+> index 8376b84..d0c7c9e 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-debug.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+> @@ -50,10 +50,12 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
+>  #define IWL_CRIT(m, f, a...) __iwl_crit((m)->dev, f, ## a)
+>  
+>  #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
+> +__printf(5, 6)
+>  void __iwl_dbg(struct device *dev,
+>  	       u32 level, bool limit, const char *function,
+>  	       const char *fmt, ...);
 
-That line/compare was added as response to hardware bug, where bssid-list does
-not contain BSSID and other information of currently connected AP  
-(spec insists
-that device must provide this information in the list when connected). Lack
-bssid-data on current connection then causes WARN_ON somewhere in cfg80211.
-Workaround was to check if bssid-list returns current bssid and if it  
-does not,
-manually construct bssid information in other ways. And this  
-workaround worked,
-with inverse check. Which must mean that when hardware is experiencing the
-problem, it's actually returning empty bssid-list.
+But that looks a bit odd to me? It would seem more natural to me to put
+the attribute after the parameter list?
 
-Inverse check causes workaround be activated when bssid-list returns only
-entry, currently connected BSSID. That does not cause problems in itself, just
-slightly more inaccurate information in scan-list.
-
--Jussi
+johannes
 
