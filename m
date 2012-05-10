@@ -1,153 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:41131 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750715Ab2EESuB (ORCPT
+Received: from mail.windriver.com ([147.11.1.11]:63204 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755941Ab2EJDsL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2012 14:50:01 -0400
-Received: by wgbdr13 with SMTP id dr13so3678925wgb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 May 2012 11:50:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120504142006.GA2040@ritirata.org>
-References: <20120502162100.GA2528@ritirata.org>
-	<20120503065351.GB2307@ritirata.org>
-	<CANUX_P03yeuU7gpXbdPVeUBnco4Cz8v78e00x+SgYbhD5K8B5w@mail.gmail.com>
-	<CANUX_P0zRjSy9LOVzkWtboqAsvkD4O6EcEXLo11W1Sbb307OJQ@mail.gmail.com>
-	<20120503200948.GC11326@ritirata.org>
-	<CANUX_P0DL+_V8RO-CNXQx=oHF0T-opO=uw-ukYOjjVgo_OyfUw@mail.gmail.com>
-	<20120504002136.GA4201@ritirata.org>
-	<CANUX_P1Ji6H0zaA_kMHx2F1AD+czB=XtrDhjEvR8t1aCDpZhUQ@mail.gmail.com>
-	<20120504063644.GA2912@ritirata.org>
-	<CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
-	<20120504142006.GA2040@ritirata.org>
-Date: Sat, 5 May 2012 21:49:59 +0300
-Message-ID: <CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com> (sfid-20120505_205007_400740_33F133AC)
-Subject: Re: iwlwifi warn_slowpath with 3.*
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=f46d043c093e0ccbec04bf4e81c5
+	Wed, 9 May 2012 23:48:11 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: florian.c.schilhabel@googlemail.com, ali@internetdog.org,
+	netdev@vger.kernel.org,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 2/3] staging: wean rtl8712 off of its ancient duplicate of ip.h
+Date: Wed,  9 May 2012 23:47:20 -0400
+Message-Id: <1336621641-15467-3-git-send-email-paul.gortmaker@windriver.com> (sfid-20120510_054821_053885_1962DA22)
+In-Reply-To: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---f46d043c093e0ccbec04bf4e81c5
-Content-Type: text/plain; charset=ISO-8859-1
+This driver should not be carrying around ancient copies of
+headers like <linux/ip.h> for its own use.  Mapping it onto
+the mainline one uncovers no build issues.
 
-Well,
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/staging/rtl8712/ip.h           |  137 --------------------------------
+ drivers/staging/rtl8712/rtl8712_recv.c |    2 +-
+ drivers/staging/rtl8712/rtl871x_recv.c |    2 +-
+ drivers/staging/rtl8712/xmit_linux.c   |    3 +-
+ 4 files changed, 3 insertions(+), 141 deletions(-)
+ delete mode 100644 drivers/staging/rtl8712/ip.h
 
-this is not the same warning as before.
-Can you try the patch attached ?
-I have submitted it internally.
+diff --git a/drivers/staging/rtl8712/ip.h b/drivers/staging/rtl8712/ip.h
+deleted file mode 100644
+index f37b0f8..0000000
+diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
+index b2a7714..e975d0a 100644
+--- a/drivers/staging/rtl8712/rtl8712_recv.c
++++ b/drivers/staging/rtl8712/rtl8712_recv.c
+@@ -29,12 +29,12 @@
+ #define _RTL8712_RECV_C_
+ 
+ #include <linux/if_ether.h>
++#include <linux/ip.h>
+ 
+ #include "osdep_service.h"
+ #include "drv_types.h"
+ #include "recv_osdep.h"
+ #include "mlme_osdep.h"
+-#include "ip.h"
+ #include "ethernet.h"
+ #include "usb_ops.h"
+ #include "wifi.h"
+diff --git a/drivers/staging/rtl8712/rtl871x_recv.c b/drivers/staging/rtl8712/rtl871x_recv.c
+index 7376abb..c9d1743 100644
+--- a/drivers/staging/rtl8712/rtl871x_recv.c
++++ b/drivers/staging/rtl8712/rtl871x_recv.c
+@@ -28,6 +28,7 @@
+ 
+ #define _RTL871X_RECV_C_
+ 
++#include <linux/ip.h>
+ #include <linux/slab.h>
+ #include <linux/if_ether.h>
+ #include <linux/kmemleak.h>
+@@ -36,7 +37,6 @@
+ #include "drv_types.h"
+ #include "recv_osdep.h"
+ #include "mlme_osdep.h"
+-#include "ip.h"
+ #include "ethernet.h"
+ #include "usb_ops.h"
+ #include "wifi.h"
+diff --git a/drivers/staging/rtl8712/xmit_linux.c b/drivers/staging/rtl8712/xmit_linux.c
+index d27f652..c6943c5 100644
+--- a/drivers/staging/rtl8712/xmit_linux.c
++++ b/drivers/staging/rtl8712/xmit_linux.c
+@@ -29,13 +29,12 @@
+ #define _XMIT_OSDEP_C_
+ 
+ #include <linux/usb.h>
++#include <linux/ip.h>
+ #include <linux/if_ether.h>
+ 
+ #include "osdep_service.h"
+ #include "drv_types.h"
+ 
+-
+-#include "ip.h"
+ #include "rtl871x_byteorder.h"
+ #include "wifi.h"
+ #include "mlme_osdep.h"
+-- 
+1.7.9.1
 
-thanks
-
-Emmanuel Grumbach
-egrumbach@gmail.com
-
-
-On Fri, May 4, 2012 at 5:20 PM, Antonio Quartulli <ordex@autistici.org> wrote:
-> On Fri, May 04, 2012 at 09:58:30 +0300, Emmanuel Grumbach wrote:
->> This can't be with my patch, is it ?
->
-> here is the log. Some pieces are missing at the beginning, didn't check why.
-> However the WARNING comes up later, so it should be ok. Tell me if I can do
-> something else!
->
-> Cheers,
->
->
-> --
-> Antonio Quartulli
->
-> ..each of us alone is worth nothing..
-> Ernesto "Che" Guevara
-
---f46d043c093e0ccbec04bf4e81c5
-Content-Type: application/octet-stream;
-	name="0001-iwlwifi-zero-the-number-of-BDs-after-unmapping-a-TFD.patch"
-Content-Disposition: attachment;
-	filename="0001-iwlwifi-zero-the-number-of-BDs-after-unmapping-a-TFD.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h1v11n741
-
-RnJvbSA5OTY4Yjk0N2JkYTBhZTllOGJmZTU4MjE1MWFjZTFlOTdiZjdkNTYwIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hA
-aW50ZWwuY29tPgpEYXRlOiBGcmksIDQgTWF5IDIwMTIgMTY6MDY6MDAgKzAzMDAKU3ViamVjdDog
-W1BBVENIXSBpd2x3aWZpOiB6ZXJvIHRoZSBudW1iZXIgb2YgQkRzIGFmdGVyIHVubWFwcGluZyBh
-IFRGRAoKSWYgd2UgZG9uJ3QgZG8gc28sIHRoZSBURkQgd2lsbCBzdGlsbCAidGhpbmsiIGl0IGhv
-bGRzIFRCcwphbmQgaWYgaXQgaXMgcmVjbGFpbWVkIGFnYWluLCB0aGUgRE1BIHdpbGwgYmUgdW5t
-YXBwZWQgYWdhaW4uCgpBIFRGRCBjYW4gYmUgcmVjbGFpbWVkIHNldmVyYWwgdGltZXMgaWYgd2Ug
-aGF2ZSAic21hbGwgcXVldWVzIi4KVGhpcyBoYXBwZW5zIGZvciB0aGUgQ01EIHF1ZXVlOiBpdCBo
-YXMgMjU2IGVudHJpZXMgYnV0IG9ubHkgMzIKVEZEcyBhcmUgYWN0dWFsbHkgdXNlZC4KClRoaXMg
-cGF0Y2ggc29sdmVzIHRoaXMgd2FybmluZzoKClsgNjQyNy4wNzk4MzhdIC0tLS0tLS0tLS0tLVsg
-Y3V0IGhlcmUgXS0tLS0tLS0tLS0tLQpbIDY0MjcuMDc5ODU1XSBXQVJOSU5HOiBhdCBsaWIvZG1h
-LWRlYnVnLmM6ODY2IGNoZWNrX3VubWFwKzB4NzI3LzB4N2EwKCkKWyA2NDI3LjA3OTg1OV0gSGFy
-ZHdhcmUgbmFtZTogTGF0aXR1ZGUgRTY0MTAKWyA2NDI3LjA3OTg2NV0gaXdsd2lmaSAwMDAwOjAy
-OjAwLjA6IERNQS1BUEk6IGRldmljZSBkcml2ZXIgdHJpZXMgdG8gZnJlZSBETUEgbWVtb3J5IGl0
-IGhhcyBub3QgYWxsb2NhdGVkIFtkZXZpY2UgYWRkcmVzcz0weDAwMDAwMDAwMjk2ZDM5M2NdIFtz
-aXplPTggYnl0ZXNdClsgNjQyNy4wNzk4NzBdIE1vZHVsZXMgbGlua2VkIGluOiBpd2x3aWZpKE8p
-IG1hYzgwMjExKE8pIGNmZzgwMjExKE8pIGNvbXBhdChPKSBhcmM0IGJpbmZtdF9taXNjIHNwZWVk
-c3RlcF9saWIgYXV0b2ZzNCBtaWNyb2NvZGUgaTkxNSBkcm1fa21zX2hlbHBlciBkcm0gc25kX2hk
-YV9jb2RlY19oZG1pIHNuZF9oZGFfY29kZWNfaWR0IHNuZF9oZGFfaW50ZWwgZmlyZXdpcmVfb2hj
-aSBwc21vdXNlIHNuZF9oZGFfY29kZWMgc25kX3BjbSBkZWxsX3dtaSBzbmRfdGltZXIgZGVsbF9s
-YXB0b3AgZmlyZXdpcmVfY29yZSBzcGFyc2Vfa2V5bWFwIHNlcmlvX3JhdyBzbmQgZGNkYmFzIHNk
-aGNpX3BjaSBpbnRlbF9pcHMgYXNpeCBzZGhjaSBpMmNfYWxnb19iaXQgdXNibmV0IG1paSBpbnRl
-bF9hZ3AgY3JjX2l0dV90IHNvdW5kY29yZSBzbmRfcGFnZV9hbGxvYyBlMTAwMGUgaW50ZWxfZ3R0
-IHZpZGVvIFtsYXN0IHVubG9hZGVkOiBjb21wYXRdClsgNjQyNy4wNzk5NTBdIFBpZDogNjYxMywg
-Y29tbTogaWZjb25maWcgVGFpbnRlZDogRyAgICAgICAgICAgTyAzLjMuMyAjNQpbIDY0MjcuMDc5
-OTU0XSBDYWxsIFRyYWNlOgpbIDY0MjcuMDc5OTYzXSAgWzxjMTAzMzdhMj5dIHdhcm5fc2xvd3Bh
-dGhfY29tbW9uKzB4NzIvMHhhMApbIDY0MjcuMDc5OTcwXSAgWzxjMTJkY2I3Nz5dID8gY2hlY2tf
-dW5tYXArMHg3MjcvMHg3YTAKWyA2NDI3LjA3OTk3NV0gIFs8YzEyZGNiNzc+XSA/IGNoZWNrX3Vu
-bWFwKzB4NzI3LzB4N2EwClsgNjQyNy4wNzk5ODJdICBbPGMxMDMzODczPl0gd2Fybl9zbG93cGF0
-aF9mbXQrMHgzMy8weDQwClsgNjQyNy4wNzk5ODhdICBbPGMxMmRjYjc3Pl0gY2hlY2tfdW5tYXAr
-MHg3MjcvMHg3YTAKWyA2NDI3LjA3OTk5NV0gIFs8YzEyZGNkYWE+XSBkZWJ1Z19kbWFfdW5tYXBf
-cGFnZSsweDVhLzB4ODAKWyA2NDI3LjA4MDAyNF0gIFs8ZmUyMzEyYWM+XSBpd2xhZ25fdW5tYXBf
-dGZkKzB4MTJjLzB4MTgwIFtpd2x3aWZpXQpbIDY0MjcuMDgwMDQ4XSAgWzxmZTIzMTM0OT5dIGl3
-bGFnbl90eHFfZnJlZV90ZmQrMHg0OS8weGIwIFtpd2x3aWZpXQpbIDY0MjcuMDgwMDcxXSAgWzxm
-ZTIyOGUzNz5dIGl3bF90eF9xdWV1ZV91bm1hcCsweDY3LzB4OTAgW2l3bHdpZmldClsgNjQyNy4w
-ODAwOTVdICBbPGZlMjJkMjIxPl0gaXdsX3RyYW5zX3BjaWVfc3RvcF9kZXZpY2UrMHgzNDEvMHg3
-YjAgW2l3bHdpZmldClsgNjQyNy4wODAxMTNdICBbPGZlMjA0YjBlPl0gaXdsX2Rvd24rMHgxN2Uv
-MHgyNjAgW2l3bHdpZmldClsgNjQyNy4wODAxMzJdICBbPGZlMjBlZmVjPl0gaXdsYWduX21hY19z
-dG9wKzB4NmMvMHhmMCBbaXdsd2lmaV0KWyA2NDI3LjA4MDE2OF0gIFs8ZmQ4NDgwY2U+XSBpZWVl
-ODAyMTFfc3RvcF9kZXZpY2UrMHg1ZS8weDE5MCBbbWFjODAyMTFdClsgNjQyNy4wODAxOThdICBb
-PGZkODMzMjA4Pl0gaWVlZTgwMjExX2RvX3N0b3ArMHgyODgvMHg2MjAgW21hYzgwMjExXQpbIDY0
-MjcuMDgwMjA3XSAgWzxjMTU5MjUzNT5dID8gX3Jhd19zcGluX3VubG9ja19iaCsweDM1LzB4NDAK
-WyA2NDI3LjA4MDIxNF0gIFs8YzE0YWQ0Y2E+XSA/IGRldl9kZWFjdGl2YXRlX21hbnkrMHgyMWEv
-MHgyYTAKWyA2NDI3LjA4MDI0M10gIFs8ZmQ4MzM1Yjc+XSBpZWVlODAyMTFfc3RvcCsweDE3LzB4
-MjAgW21hYzgwMjExXQpbIDY0MjcuMDgwMjUwXSAgWzxjMTQ4ZGFjMT5dIF9fZGV2X2Nsb3NlX21h
-bnkrMHg4MS8weGQwClsgNjQyNy4wODAyNTddICBbPGMxMDkzOTBiPl0gPyB0cmFjZV9oYXJkaXJx
-c19vbisweGIvMHgxMApbIDY0MjcuMDgwMjY0XSAgWzxjMTAzYjBjMT5dID8gbG9jYWxfYmhfZW5h
-YmxlX2lwKzB4NzEvMHhlMApbIDY0MjcuMDgwMjcwXSAgWzxjMTQ4ZGIzZD5dIF9fZGV2X2Nsb3Nl
-KzB4MmQvMHg1MApbIDY0MjcuMDgwMjc2XSAgWzxjMTQ4ZDE1Mj5dIF9fZGV2X2NoYW5nZV9mbGFn
-cysweDgyLzB4MTUwClsgNjQyNy4wODAyODJdICBbPGMxNDhlM2UzPl0gZGV2X2NoYW5nZV9mbGFn
-cysweDIzLzB4NjAKWyA2NDI3LjA4MDI4OV0gIFs8YzE0ZjYzMjA+XSBkZXZpbmV0X2lvY3RsKzB4
-NmEwLzB4NzcwClsgNjQyNy4wODAyOTZdICBbPGMxNGY4NzA1Pl0gaW5ldF9pb2N0bCsweDk1LzB4
-YjAKWyA2NDI3LjA4MDMwNF0gIFs8YzE0N2EwZjA+XSBzb2NrX2lvY3RsKzB4NzAvMHgyNzAKWyA2
-NDI3LjA4MDMxMF0gIFs8YzE0N2EwODA+XSA/IHNvY2tfZmFzeW5jKzB4YzAvMHhjMApbIDY0Mjcu
-MDgwMzE3XSAgWzxjMTE1ZWM2Nj5dIGRvX3Zmc19pb2N0bCsweDg2LzB4NWIwClsgNjQyNy4wODAz
-MjVdICBbPGMxMDYwNTBiPl0gPyB1cF9yZWFkKzB4MWIvMHgzMApbIDY0MjcuMDgwMzMxXSAgWzxj
-MTU5NWNjND5dID8gZG9fcGFnZV9mYXVsdCsweDI0NC8weDQ3MApbIDY0MjcuMDgwMzM3XSAgWzxj
-MTU3OTEzYz5dID8ga21lbWxlYWtfYWxsb2MrMHgyYy8weDYwClsgNjQyNy4wODAzNDRdICBbPGMx
-MTRmMzU1Pl0gPyBmZ2V0X2xpZ2h0KzB4Mjk1LzB4NDAwClsgNjQyNy4wODAzNTJdICBbPGMxMDBi
-MTlmPl0gPyBpbml0X2ZwdSsweDZmLzB4YTAKWyA2NDI3LjA4MDM1N10gIFs8YzEwMDMyNzE+XSA/
-IG1hdGhfc3RhdGVfcmVzdG9yZSsweGQxLzB4ZjAKWyA2NDI3LjA4MDM2M10gIFs8YzE1OTM1YjA+
-XSA/IGRvX2dlbmVyYWxfcHJvdGVjdGlvbisweDE3MC8weDE3MApbIDY0MjcuMDgwMzY5XSAgWzxj
-MTU5MzVjYj5dID8gZG9fZGV2aWNlX25vdF9hdmFpbGFibGUrMHgxYi8weDMwClsgNjQyNy4wODAz
-NzZdICBbPGMxMTVmMjA3Pl0gc3lzX2lvY3RsKzB4NzcvMHg4MApbIDY0MjcuMDgwMzgzXSAgWzxj
-MTU5OWE1Zj5dIHN5c2VudGVyX2RvX2NhbGwrMHgxMi8weDM4ClsgNjQyNy4wODAzODhdIC0tLVsg
-ZW5kIHRyYWNlIGQ3OWI2OGI2ZmQzZDQ1MTkgXS0tLQoKU2lnbmVkLW9mZi1ieTogRW1tYW51ZWwg
-R3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93
-aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLXR4LmMgfCAgICAyICsrCiAxIGZpbGVzIGNo
-YW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2
-ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLXR4LmMgYi9kcml2ZXJzL25l
-dC93aXJlbGVzcy9pd2x3aWZpL2l3bC10cmFucy1wY2llLXR4LmMKaW5kZXggMjFhOGE2Ny4uMThm
-Y2NmNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMt
-cGNpZS10eC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLXRyYW5zLXBj
-aWUtdHguYwpAQCAtMjA0LDYgKzIwNCw4IEBAIHN0YXRpYyB2b2lkIGl3bGFnbl91bm1hcF90ZmQo
-c3RydWN0IGl3bF90cmFucyAqdHJhbnMsIHN0cnVjdCBpd2xfY21kX21ldGEgKm1ldGEsCiAJZm9y
-IChpID0gMTsgaSA8IG51bV90YnM7IGkrKykKIAkJZG1hX3VubWFwX3NpbmdsZSh0cmFucy0+ZGV2
-LCBpd2xfdGZkX3RiX2dldF9hZGRyKHRmZCwgaSksCiAJCQkJaXdsX3RmZF90Yl9nZXRfbGVuKHRm
-ZCwgaSksIGRtYV9kaXIpOworCisJdGZkLT5udW1fdGJzID0gMDsKIH0KIAogLyoqCi0tIAoxLjcu
-OC5tc3lzZ2l0LjAKCg==
---f46d043c093e0ccbec04bf4e81c5--
