@@ -1,93 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:1217 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754368Ab2E3HNk (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:54097 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751972Ab2EJOLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 03:13:40 -0400
-Message-ID: <1338361709.1780.3.camel@x61.thuisdomein> (sfid-20120530_091345_630175_CC635231)
-Subject: [PATCH] iwlwifi: fix typo 'IWL_WATCHHDOG_DISABLED'
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 30 May 2012 09:08:29 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 10 May 2012 10:11:08 -0400
+Received: by yenl13 with SMTP id l13so1206076yen.34
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 07:11:07 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <coelho@ti.com>, <arik@wizery.com>
+Subject: [PATCH v2] wl12xx: fix fm_coex parameters configuration
+Date: Thu, 10 May 2012 17:08:33 +0300
+Message-Id: <1336658913-11396-1-git-send-email-victorg@ti.com> (sfid-20120510_161113_135350_3FD52701)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 7c5ba4a830cbb730770129b0004e2a06e47dbac5 ("iwlwifi: move queue
-watchdog into transport") introduced the named constant
-'IWL_WATCHHDOG_DISABLED'. Rename it to 'IWL_WATCHDOG_DISABLED'.
+Wrong fm_coex parameters were set during wl12xx
+init phase, fix it.
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Ziv Riesel <zivriesel@ti.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
-Just something I noticed while researching another issue. Compile tested
-(by compiling iwl-1000.0, iwl-5000.o and iwl-agn.o).
 
- drivers/net/wireless/iwlwifi/iwl-1000.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-config.h |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+v2: changed the subject wlcore -> wl12xx
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 2629a66..2b7f615 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -64,7 +64,7 @@ static const struct iwl_base_params iwl1000_base_params = {
- 	.support_ct_kill_exit = true,
- 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF,
- 	.chain_noise_scale = 1000,
--	.wd_timeout = IWL_WATCHHDOG_DISABLED,
-+	.wd_timeout = IWL_WATCHDOG_DISABLED,
- 	.max_event_log_size = 128,
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 8e26bc8..a355ade 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -62,7 +62,7 @@ static const struct iwl_base_params iwl5000_base_params = {
- 	.led_compensation = 51,
- 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
- 	.chain_noise_scale = 1000,
--	.wd_timeout = IWL_WATCHHDOG_DISABLED,
-+	.wd_timeout = IWL_WATCHDOG_DISABLED,
- 	.max_event_log_size = 512,
- 	.no_idle_support = true,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ec36e2b..7eaa979 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1539,7 +1539,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 		trans_cfg.queue_watchdog_timeout =
- 			priv->cfg->base_params->wd_timeout;
- 	else
--		trans_cfg.queue_watchdog_timeout = IWL_WATCHHDOG_DISABLED;
-+		trans_cfg.queue_watchdog_timeout = IWL_WATCHDOG_DISABLED;
- 	trans_cfg.command_names = iwl_dvm_cmd_strings;
- 
- 	ucode_flags = fw->ucode_capa.flags;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 67b28aa..5f54742 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -113,7 +113,7 @@ enum iwl_led_mode {
- #define IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE	0
- 
- /* TX queue watchdog timeouts in mSecs */
--#define IWL_WATCHHDOG_DISABLED	0
-+#define IWL_WATCHDOG_DISABLED	0
- #define IWL_DEF_WD_TIMEOUT	2000
- #define IWL_LONG_WD_TIMEOUT	10000
- #define IWL_MAX_WD_TIMEOUT	120000
+ drivers/net/wireless/ti/wl12xx/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index d7dd3de..5131375 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -305,8 +305,8 @@ static struct wlcore_conf wl12xx_conf = {
+ 		.swallow_period               = 5,
+ 		.n_divider_fref_set_1         = 0xff,       /* default */
+ 		.n_divider_fref_set_2         = 12,
+-		.m_divider_fref_set_1         = 148,
+-		.m_divider_fref_set_2         = 0xffff,     /* default */
++		.m_divider_fref_set_1         = 0xffff,
++		.m_divider_fref_set_2         = 148,	    /* default */
+ 		.coex_pll_stabilization_time  = 0xffffffff, /* default */
+ 		.ldo_stabilization_time       = 0xffff,     /* default */
+ 		.fm_disturbed_band_margin     = 0xff,       /* default */
 -- 
-1.7.7.6
-
-
+1.7.5.4
 
