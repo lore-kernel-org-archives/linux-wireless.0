@@ -1,72 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:7898 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752384Ab2EQEwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 00:52:23 -0400
-Date: Wed, 16 May 2012 21:52:20 -0700
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	linux-bluetooth@vger.kernel.org,
-	gigaset307x-common@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
-Subject: Re: [RFC 13/13] USB: Disable hub-initiated LPM for comms devices.
-Message-ID: <20120517045220.GA4772@xanatos> (sfid-20120517_065303_697954_701547D6)
-References: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
- <20120516224528.GA25936@xanatos>
- <20120516232019.GA960@kroah.com>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:51226 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759340Ab2EJTrc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 15:47:32 -0400
+Received: by mail-gg0-f174.google.com with SMTP id u4so1204806ggl.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 12:47:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120516232019.GA960@kroah.com>
+In-Reply-To: <1336673569.4334.29.camel@jlt3.sipsolutions.net>
+References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>
+ <1336554945.4323.12.camel@jlt3.sipsolutions.net> <CAG6hwVPrbJ1ZQP=UqFd+oqFL8zm+qcRpbAUhrG+6gRe01rejSA@mail.gmail.com>
+ <1336673569.4334.29.camel@jlt3.sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 10 May 2012 12:47:10 -0700
+Message-ID: <CAG6hwVNTRYpr_H4za0Jf8gVU2=W5f6ZmzCiZsK4Ad2cGa26jDQ@mail.gmail.com> (sfid-20120510_214736_014964_52137EA7)
+Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 16, 2012 at 04:20:19PM -0700, Greg Kroah-Hartman wrote:
-> On Wed, May 16, 2012 at 03:45:28PM -0700, Sarah Sharp wrote:
-> > [Resending with a smaller Cc list]
-> > 
-> > Hub-initiated LPM is not good for USB communications devices.  Comms
-> > devices should be able to tell when their link can go into a lower power
-> > state, because they know when an incoming transmission is finished.
-> > Ideally, these devices would slam their links into a lower power state,
-> > using the device-initiated LPM, after finishing the last packet of their
-> > data transfer.
-> > 
-> > If we enable the idle timeouts for the parent hubs to enable
-> > hub-initiated LPM, we will get a lot of useless LPM packets on the bus
-> > as the devices reject LPM transitions when they're in the middle of
-> > receiving data.  Worse, some devices might blindly accept the
-> > hub-initiated LPM and power down their radios while they're in the
-> > middle of receiving a transmission.
-> > 
-> > The Intel Windows folks are disabling hub-initiated LPM for all USB
-> > communications devices under a xHCI USB 3.0 host.  In order to keep
-> > the Linux behavior as close as possible to Windows, we need to do the
-> > same in Linux.
-> 
-> How is the USB core on Windows determining that LPM should be turned off
-> for these devices?  Surely they aren't modifying each individual driver
-> like this is, right?  Any way we also can do this in the core?
+On Thu, May 10, 2012 at 11:12 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Hi Thomas,
+>
+>
+>> > I don't think this patch is correct -- mac80211 will get updated even if
+>> > the device isn't even started which will likely cause trouble. Even if
+>> > not though, this all doesn't match any kind of multi-channel concept. We
+>> > treat the channel as part of the temporary setup, e.g. part of the
+>> > association. AP and mesh are the only ones that are different today I
+>> > think.
+>> >
+>> > Overall, I don't think setting the channel & doing mesh setup separately
+>> > is really a good API.
+>> >
+>> > From mac80211's (and other drivers if they existed) POV the channel
+>> > should be given with the mesh_join command, like for IBSS.
+>> >
+>> > Now, obviously, requiring userspace to do that would be an API change.
+>> > We probably don't want that, so I would suggest to change cfg80211 to
+>> > track the channel and then pass it to join_mesh as one of the mesh
+>> > parameters. This could be made work even when somebody attempts to set
+>> > the channel before the interface is up, but we'd have to be careful
+>> > about interface type changes.
+>>
+>> Unfortunately, when __nl80211_set_channel() is called we may or may
+>> not have a wdev, so there is nowhere to store the interface-specific
+>> channel and type.
+>
+> Well, but if you don't have a wdev, is the setting relevant at all? Or
+> does it take effect later? This all isn't very well-defined I guess.
+>
+>> We could shove these into a cfg80211_registered_device, but now just
+>> "last channel for this wiphy" is tracked, and that doesn't seem to
+>> help your multi-channel operation.
+>
+> So you'd want to allow setting the channel on the phy, and have it take
+> effect for mesh? Is that really something we need to support? I'd think
+> almost everyone would set the channel on the netdev?
 
-No, I don't think they're modifying individual drivers.  Maybe they
-placed a shim/filter driver below other drivers?
+No :) Thanks for clearing that up.
 
-Basically, I don't know the exact details of what the Windows folks are
-doing.  The recommendation from the Intel Windows team was simply to
-turn hub-initiated LPM off for "all communications devices".  Perhaps
-the Windows USB core is looking for specific USB class codes?  Or maybe
-it has some older API that lets the core know it's a communications
-device?
+>> If the above is correct, how about we leave the existing API as-is and
+>> simply extend join_mesh to take a channel attribute?
+>
+> We could, but that'd mean that it can be NULL if the user doesn't set
+> it, which seems a bit odd to me too and then the driver again would have
+> to sort it out. I'd prefer if we could sort it out in cfg80211 so the
+> driver (mac80211) is simpler.
 
-I'm not really sure we can do it in the USB core with out basically
-duplicating all the class/PID/VID matching in the communications driver.
-I think just adding a flag might be the best way.  I'm open to
-suggestions though.
+For this, we can store a default channel and type in the default mesh config.
 
-> Or, turn it around the other way, and only enable it if we know it's
-> safe to do so, in each driver, but I guess that would be even messier.
+>> Also, with IBSS the desired channel is pushed to the driver along with
+>> the setup parameters. What do you think about calling
+>> __nl80211_set_channel() directly instead of relying on the cfg80211
+>> driver to handle this?
+>
+> No, that's certainly not possible. In IBSS the channel is just the
+> default channel if we don't find an IBSS. And in any case I'd rather
+> call set_channel less than more.
 
-Yeah, I think it would be messier.
-
-Sarah Sharp
+So cfg80211_set_freq() from cfg80211_join_mesh() is out, too?
