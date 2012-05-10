@@ -1,71 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6872 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757033Ab2ENSDp (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758320Ab2EJJQL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 14:03:45 -0400
-Date: Mon, 14 May 2012 11:03:39 -0700
-From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2] ath6kl: enable enhanced bmiss detection
-Message-ID: <20120514180339.GA4030@pista> (sfid-20120514_200348_826900_924BBD62)
-References: <1337017652-3962-1-git-send-email-c_tpeder@qca.qualcomm.com>
- <1337018219.29436.24.camel@joe2Laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1337018219.29436.24.camel@joe2Laptop>
+	Thu, 10 May 2012 05:16:11 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:11 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 46/78] wl18xx: change the low_band_component_type for HDK boards
+Date: Thu, 10 May 2012 12:13:51 +0300
+Message-Id: <1336641263-5761-47-git-send-email-arik@wizery.com> (sfid-20120510_112050_971477_D0C66436)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+From: Luciano Coelho <coelho@ti.com>
 
-On Mon, May 14, 2012 at 10:56:59AM -0700, Joe Perches wrote:
-> On Mon, 2012-05-14 at 10:47 -0700, Thomas Pedersen wrote:
-> > Enable enhanced bmiss detection if the firmware supports it. This
-> > feature is only enabled on some firmwares since it comes with a power
-> > cost.
-> []
-> > diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> []
-> > @@ -2614,6 +2619,30 @@ static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
-> >  	return 0;
-> >  }
-> >  
-> > +void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable)
-> > +{
-> > +	int err;
-> > +
-> > +	if (WARN_ON(!test_bit(WMI_READY, &vif->ar->flag)))
-> > +		return;
-> > +
-> > +	if (vif->nw_type != INFRA_NETWORK)
-> > +		return;
-> > +
-> > +	if (!test_bit(ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
-> > +		      vif->ar->fw_capabilities))
-> > +		return;
-> > +
-> > +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s fw bmiss enhance\n",
-> > +					enable ? "enable" : "disable");
-> > +	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
-> > +					       vif->fw_vif_idx, enable);
-> > +	if (err)
-> > +		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
-> > +			   "failed to %s enhanced bmiss detection: %d\n",
-> > +			   enable ? "enable" : "disable", err);
-> 
-> Why 2 messages when 1 message might do?
-> 
-> 	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
-> 					       vif->fw_vif_idx, enable);
-> 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
-> 		   "%s enhanced fw bmiss detection: %s\n",
-> 		   enable ? "enable" : "disable",
-> 		   err ? "OK" : "failed");
+Currently, all HDK boards use low_band_component_type 0x06.  In the
+future this may change, but for now, we hardcode this value when the
+board_type is set to HDK.
 
-OK that seems nicer. Should we still print the error code, or maybe it
-doesn't really matter?
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Thomas
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 5940829..f14141b 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1051,6 +1051,8 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 		priv->board_type = BOARD_TYPE_FPGA_18XX;
+ 	} else if (!strcmp(board_type_param, "hdk")) {
+ 		priv->board_type = BOARD_TYPE_HDK_18XX;
++		/* HACK! Just for now we hardcode HDK to 0x06 */
++		priv->conf.phy.low_band_component_type = 0x06;
+ 	} else if (!strcmp(board_type_param, "dvp")) {
+ 		priv->board_type = BOARD_TYPE_DVP_18XX;
+ 	} else if (!strcmp(board_type_param, "evb")) {
+-- 
+1.7.9.5
+
