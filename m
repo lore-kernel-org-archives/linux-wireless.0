@@ -1,89 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:48058 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756132Ab2EJGpK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 02:45:10 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/7] mac80211: introduce ieee80211_oper_channel_type
-Date: Thu, 10 May 2012 08:44:39 +0200
-Message-ID: <1336632282-2278-5-git-send-email-michal.kazior@tieto.com> (sfid-20120510_084518_555193_41F9F567)
-In-Reply-To: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
-References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:40365 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757747Ab2EJJOc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 05:14:32 -0400
+Received: by wibhr2 with SMTP id hr2so243407wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:14:31 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 01/78] wl18xx: add new module
+Date: Thu, 10 May 2012 12:13:06 +0300
+Message-Id: <1336641263-5761-2-git-send-email-arik@wizery.com> (sfid-20120510_111437_209157_7B842D86)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prepares for _oper_channel_type removal.
+From: Luciano Coelho <coelho@ti.com>
 
-Change-Id: I161842005dd195ad0935b6f4ba14740724ab9846
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Add the wl18xx module and the probe functions.  Use wlcore for the
+main parts (not functional at this point due to differences in the
+wl18xx initialization).
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- net/mac80211/chan.c        |   14 +++++++++++---
- net/mac80211/ieee80211_i.h |    3 +++
- 2 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ti/Kconfig         |    1 +
+ drivers/net/wireless/ti/Makefile        |    1 +
+ drivers/net/wireless/ti/wl18xx/Kconfig  |    6 +++
+ drivers/net/wireless/ti/wl18xx/Makefile |    3 ++
+ drivers/net/wireless/ti/wl18xx/main.c   |   73 +++++++++++++++++++++++++++++++
+ 5 files changed, 84 insertions(+)
+ create mode 100644 drivers/net/wireless/ti/wl18xx/Kconfig
+ create mode 100644 drivers/net/wireless/ti/wl18xx/Makefile
+ create mode 100644 drivers/net/wireless/ti/wl18xx/main.c
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 3234ad1..8513f70 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -66,14 +66,15 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
+diff --git a/drivers/net/wireless/ti/Kconfig b/drivers/net/wireless/ti/Kconfig
+index 1a72932..be80011 100644
+--- a/drivers/net/wireless/ti/Kconfig
++++ b/drivers/net/wireless/ti/Kconfig
+@@ -8,6 +8,7 @@ menuconfig WL_TI
+ if WL_TI
+ source "drivers/net/wireless/ti/wl1251/Kconfig"
+ source "drivers/net/wireless/ti/wl12xx/Kconfig"
++source "drivers/net/wireless/ti/wl18xx/Kconfig"
  
- static enum nl80211_channel_type
- ieee80211_get_superchan(struct ieee80211_local *local,
--			struct ieee80211_sub_if_data *sdata)
-+			struct ieee80211_sub_if_data *sdata,
-+			bool ignore_self)
- {
- 	struct ieee80211_sub_if_data *tmp;
- 	enum nl80211_channel_type superchan = NL80211_CHAN_NO_HT;
- 
- 	mutex_lock(&local->iflist_mtx);
- 	list_for_each_entry(tmp, &local->interfaces, list) {
--		if (tmp == sdata)
-+		if (ignore_self && tmp == sdata)
- 			continue;
- 
- 		if (!ieee80211_sdata_running(tmp))
-@@ -135,13 +136,20 @@ static bool ieee80211_channel_types_are_compatible(
- 	return result;
- }
- 
-+enum nl80211_channel_type
-+ieee80211_oper_channel_type(struct ieee80211_local *local,
-+			    struct ieee80211_sub_if_data *sdata)
+ # keep last for automatic dependencies
+ source "drivers/net/wireless/ti/wlcore/Kconfig"
+diff --git a/drivers/net/wireless/ti/Makefile b/drivers/net/wireless/ti/Makefile
+index 0a56562..4d68239 100644
+--- a/drivers/net/wireless/ti/Makefile
++++ b/drivers/net/wireless/ti/Makefile
+@@ -2,3 +2,4 @@ obj-$(CONFIG_WLCORE)			+= wlcore/
+ obj-$(CONFIG_WL12XX)			+= wl12xx/
+ obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wlcore/
+ obj-$(CONFIG_WL1251)			+= wl1251/
++obj-$(CONFIG_WL18XX)			+= wl18xx/
+diff --git a/drivers/net/wireless/ti/wl18xx/Kconfig b/drivers/net/wireless/ti/wl18xx/Kconfig
+new file mode 100644
+index 0000000..1451d1f
+--- /dev/null
++++ b/drivers/net/wireless/ti/wl18xx/Kconfig
+@@ -0,0 +1,6 @@
++config WL18XX
++       tristate "TI wl18xx support"
++       select WLCORE
++       ---help---
++	  This module adds support for wireless adapters based on TI
++	  WiLink 8 chipsets.
+diff --git a/drivers/net/wireless/ti/wl18xx/Makefile b/drivers/net/wireless/ti/wl18xx/Makefile
+new file mode 100644
+index 0000000..d187037
+--- /dev/null
++++ b/drivers/net/wireless/ti/wl18xx/Makefile
+@@ -0,0 +1,3 @@
++wl18xx-objs	= main.o
++
++obj-$(CONFIG_WL18XX)		+= wl18xx.o
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+new file mode 100644
+index 0000000..cb835d9
+--- /dev/null
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -0,0 +1,73 @@
++/*
++ * This file is part of wl18xx
++ *
++ * Copyright (C) 2011 Texas Instruments
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/platform_device.h>
++
++#include "../wlcore/wlcore.h"
++#include "../wlcore/debug.h"
++
++int __devinit wl18xx_probe(struct platform_device *pdev)
 +{
-+	return ieee80211_get_superchan(local, sdata, 0);
++	struct wl1271 *wl;
++	struct ieee80211_hw *hw;
++
++	hw = wlcore_alloc_hw(0);
++	if (IS_ERR(hw)) {
++		wl1271_error("can't allocate hw");
++		return PTR_ERR(hw);
++	}
++
++	wl = hw->priv;
++
++	return wlcore_probe(wl, pdev);
 +}
 +
- bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata,
- 				enum nl80211_channel_type chantype)
- {
- 	enum nl80211_channel_type superchan;
- 
--	superchan = ieee80211_get_superchan(local, sdata);
-+	superchan = ieee80211_get_superchan(local, sdata, 1);
- 	if (!ieee80211_channel_types_are_compatible(superchan, chantype))
- 		return false;
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 122717f..e40cd06 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1527,6 +1527,9 @@ enum ieee80211_chan_mode {
- enum ieee80211_chan_mode
- ieee80211_get_channel_mode(struct ieee80211_local *local,
- 			   struct ieee80211_sub_if_data *ignore);
-+enum nl80211_channel_type
-+ieee80211_oper_channel_type(struct ieee80211_local *local,
-+			    struct ieee80211_sub_if_data *sdata);
- bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata,
- 				enum nl80211_channel_type chantype);
++static const struct platform_device_id wl18xx_id_table[] __devinitconst = {
++	{ "wl18xx", 0 },
++	{  } /* Terminating Entry */
++};
++MODULE_DEVICE_TABLE(platform, wl18xx_id_table);
++
++static struct platform_driver wl18xx_driver = {
++	.probe		= wl18xx_probe,
++	.remove		= __devexit_p(wlcore_remove),
++	.id_table	= wl18xx_id_table,
++	.driver = {
++		.name	= "wl18xx_driver",
++		.owner	= THIS_MODULE,
++	}
++};
++
++static int __init wl18xx_init(void)
++{
++	return platform_driver_register(&wl18xx_driver);
++}
++module_init(wl18xx_init);
++
++static void __exit wl18xx_exit(void)
++{
++	platform_driver_unregister(&wl18xx_driver);
++}
++module_exit(wl18xx_exit);
++
++MODULE_LICENSE("GPL v2");
++MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
 -- 
-1.7.0.4
+1.7.9.5
 
