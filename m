@@ -1,78 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43002 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750949Ab2EBM6d (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:37427 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753319Ab2EJCdU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 08:58:33 -0400
-Received: by yhmm54 with SMTP id m54so636181yhm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2012 05:58:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FA0405C.8050101@lwfinger.net>
-References: <4FA0405C.8050101@lwfinger.net>
-Date: Wed, 2 May 2012 15:58:32 +0300
-Message-ID: <CAB3XZEerHsNUr4p5rTu0msucKUnxXwFxwZVtONrkZ_czmgS+ig@mail.gmail.com> (sfid-20120502_145837_109381_E4951E35)
-Subject: Re: Wireless problem in 3.4-rc5
-From: Eliad Peller <eliad@wizery.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 9 May 2012 22:33:20 -0400
+Received: by yenm10 with SMTP id m10so1012087yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 19:33:20 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: dmitry.tarnyagin@stericsson.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/3] cw1200: use != instead of ^ for comparison
+Date: Wed,  9 May 2012 22:32:34 -0400
+Message-Id: <1336617155-7455-2-git-send-email-me@bobcopeland.com> (sfid-20120510_043324_215183_30E33074)
+In-Reply-To: <1336617155-7455-1-git-send-email-me@bobcopeland.com>
+References: <1336617155-7455-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Larry,
+Compiler output is the same but "!=" is a bit more obvious.
 
-On Tue, May 1, 2012 at 10:58 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> After upgrading to 3.4-rc5 from wireless-testing, one of my boxes fails to
-> scan and gets a "Network down" message for all wireless devices. The code in
-> 3.4-rc4 was OK, thus I bisected to find the offending commit. The one that
-> broke my wireless is commit 3a25a8c entitled "mac80211: add improved HW
-> queue control".
->
-> On my main laptop, this patch causes no problems. On a 3rd box, a BCM4312
-> (b43) is OK, but an RTL8187L (rtl8187) also fails in the same manner.
->
-> The problem is not in the configuration as I copied the one from the box
-> that works to the one that fails, and it still fails. The only difference is
-> that the working system has 2 CPUs and the ones that fail are uni-processor;
-> however, if I boot with maxcpus=1, my main machine still works.
->
-> Any suggestions of things to try will be appreciated.
->
-i'm not sure this is related to the problem you're facing, but the
-commit above seems to have some bug in which a packet might get
-enqueued on invalid queue (0xff) - please try this patch (compile
-tested only):
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/staging/cw1200/sta.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 3557354..ee815a9 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2106,7 +2106,8 @@ static int ieee80211_mgmt_tx(struct wiphy
-*wiphy, struct net_device *dev,
+diff --git a/drivers/staging/cw1200/sta.c b/drivers/staging/cw1200/sta.c
+index cc9ed7b..42bca38 100644
+--- a/drivers/staging/cw1200/sta.c
++++ b/drivers/staging/cw1200/sta.c
+@@ -581,7 +581,7 @@ void cw1200_configure_filter(struct ieee80211_hw *dev,
+ 			(FIF_BCN_PRBRESP_PROMISC |
+ 			 FIF_PROMISC_IN_BSS |
+ 			 FIF_PROBE_REQ)) ? 1 : 0;
+-	if (priv->listening ^ listening) {
++	if (priv->listening != listening) {
+ 		priv->listening = listening;
+ 		wsm_lock_tx(priv);
+ 		cw1200_update_listening(priv, listening);
+-- 
+1.7.6
 
- 	IEEE80211_SKB_CB(skb)->flags = flags;
-
--	if (flags & IEEE80211_TX_CTL_TX_OFFCHAN)
-+	if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL &&
-+	    flags & IEEE80211_TX_CTL_TX_OFFCHAN)
- 		IEEE80211_SKB_CB(skb)->hw_queue =
- 			local->hw.offchannel_tx_hw_queue;
-
-@@ -2151,8 +2152,9 @@ static int ieee80211_mgmt_tx(struct wiphy
-*wiphy, struct net_device *dev,
- 		/* modify cookie to prevent API mismatches */
- 		*cookie ^= 2;
- 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
--		IEEE80211_SKB_CB(skb)->hw_queue =
--			local->hw.offchannel_tx_hw_queue;
-+		if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
-+			IEEE80211_SKB_CB(skb)->hw_queue =
-+				local->hw.offchannel_tx_hw_queue;
- 		local->hw_roc_skb = skb;
- 		local->hw_roc_skb_for_status = skb;
- 		mutex_unlock(&local->mtx);
-
-
-Eliad.
