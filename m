@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:33155 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755943Ab2ECWHJ (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:59452 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758294Ab2EJKVP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 18:07:09 -0400
-Received: by dady13 with SMTP id y13so2460602dad.5
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 15:07:08 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH] mac80211: send peer candidate event for new sta only
-Date: Thu,  3 May 2012 15:06:09 -0700
-Message-Id: <1336082769-23408-1-git-send-email-thomas@cozybit.com> (sfid-20120504_000748_632789_C83B828C)
+	Thu, 10 May 2012 06:21:15 -0400
+Received: by bkcji2 with SMTP id ji2so1110657bkc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 03:21:14 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2] mac80211: fix network header location when adding encryption headers
+Date: Thu, 10 May 2012 13:21:09 +0300
+Message-Id: <1336645269-9044-1-git-send-email-arik@wizery.com> (sfid-20120510_122119_433630_8A7A82C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only send a cfg80211 new peer candidate notification if userspace has
-yet to allocate this station entry.
+Update the location of the network header when adding encryption
+specific headers to a skb. This allows low-level drivers to use the
+(now correct) location of the network header.
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- net/mac80211/mesh_plink.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+John - I'm resending this patch on its own as a v2, to separate it from
+the previous series (with the netdev features patch). The netdev patch
+will probably have some more back and forth.
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 8cc8461..ae026ac 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -346,6 +346,15 @@ static struct sta_info *mesh_peer_init(struct ieee80211_sub_if_data *sdata,
+ net/mac80211/wep.c |    1 +
+ net/mac80211/wpa.c |    2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index 7aa31bb..7cb8d83 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -104,6 +104,7 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	newhdr = skb_push(skb, WEP_IV_LEN);
+ 	memmove(newhdr, newhdr + WEP_IV_LEN, hdrlen);
++	skb_set_network_header(skb, skb_network_offset(skb) + WEP_IV_LEN);
+ 	ieee80211_wep_get_iv(local, keylen, keyidx, newhdr + hdrlen);
+ 	return newhdr + hdrlen;
+ }
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 0ae23c6..9aef9f8 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -202,6 +202,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
  
- 	sta = sta_info_get(sdata, addr);
- 	if (!sta) {
-+		/* Userspace handles peer allocation when security is enabled */
-+		if (sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED) {
-+			cfg80211_notify_new_peer_candidate(sdata->dev, addr,
-+							   elems->ie_start,
-+							   elems->total_len,
-+							   GFP_ATOMIC);
-+			return NULL;
-+		}
-+
- 		sta = mesh_plink_alloc(sdata, addr);
- 		if (!sta)
- 			return NULL;
-@@ -387,15 +396,6 @@ void mesh_neighbour_update(struct ieee80211_sub_if_data *sdata,
- {
- 	struct sta_info *sta;
+ 	pos = skb_push(skb, TKIP_IV_LEN);
+ 	memmove(pos, pos + TKIP_IV_LEN, hdrlen);
++	skb_set_network_header(skb, skb_network_offset(skb) + TKIP_IV_LEN);
+ 	pos += hdrlen;
  
--	/* Userspace handles peer allocation when security is enabled */
--	if (sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED) {
--		cfg80211_notify_new_peer_candidate(sdata->dev, hw_addr,
--						   elems->ie_start,
--						   elems->total_len,
--						   GFP_KERNEL);
--		return;
--	}
--
- 	rcu_read_lock();
- 	sta = mesh_peer_init(sdata, hw_addr, elems);
- 	if (!sta)
+ 	/* Increase IV for the frame */
+@@ -422,6 +423,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 
+ 	pos = skb_push(skb, CCMP_HDR_LEN);
+ 	memmove(pos, pos + CCMP_HDR_LEN, hdrlen);
++	skb_set_network_header(skb, skb_network_offset(skb) + CCMP_HDR_LEN);
+ 
+ 	/* the HW only needs room for the IV, but not the actual IV */
+ 	if (info->control.hw_key &&
 -- 
-1.7.5.4
+1.7.9.5
 
