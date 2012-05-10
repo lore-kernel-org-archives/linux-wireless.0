@@ -1,67 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53434 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005Ab2EJXz7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 19:55:59 -0400
-Date: Thu, 10 May 2012 16:55:56 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Hewitt Lee <hewittl@synology.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	Synology/KueiHuan Chen <khchen@synology.com>,
-	andysuper Wang <minhongw@synology.com>
-Subject: Re: [PATCH] ath9k : stability issue in a noisy environment
-Message-ID: <20120510235556.GB26950@tux> (sfid-20120511_015603_830771_2A65186C)
-References: <CABCXq82J7UL2y6Zzt=Rm8XgAdnQeVMp4xOG-fnVU1uFEmooyZQ@mail.gmail.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:48058 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756116Ab2EJGpJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 02:45:09 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/7] mac80211: refactor ieee80211_set_channel_type
+Date: Thu, 10 May 2012 08:44:38 +0200
+Message-ID: <1336632282-2278-4-git-send-email-michal.kazior@tieto.com> (sfid-20120510_084528_002899_E7AB7E66)
+In-Reply-To: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
+References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CABCXq82J7UL2y6Zzt=Rm8XgAdnQeVMp4xOG-fnVU1uFEmooyZQ@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 09, 2012 at 08:12:38PM +0800, Hewitt Lee wrote:
->    Hi All,
->    This patch unlink a skb comes from ath_tx_form_aggr() which is freed at
->    ath_tx_get_buffer() when tx buffers are full.
->    Please kindly review it.
+Splits original functionality to:
+ * ieee80211_get_superchan
+ * ieee80211_channel_types_are_compatible
 
-Please see:
+Prepares for _oper_channel_type_removal.
 
-http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches
+Change-Id: Ic1bd50ad4fde619eb4fdbffdd33c440289071c9a
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/chan.c |   40 ++++++++++++++++++++++++++++------------
+ 1 files changed, 28 insertions(+), 12 deletions(-)
 
-Also please provide a clear description of what you are trying to fix,
-what happens without the patch, what happens with the patch. My review
-below.
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index c76cf72..3234ad1 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -64,16 +64,14 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
+ 	return mode;
+ }
+ 
+-bool ieee80211_set_channel_type(struct ieee80211_local *local,
+-				struct ieee80211_sub_if_data *sdata,
+-				enum nl80211_channel_type chantype)
++static enum nl80211_channel_type
++ieee80211_get_superchan(struct ieee80211_local *local,
++			struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_sub_if_data *tmp;
+ 	enum nl80211_channel_type superchan = NL80211_CHAN_NO_HT;
+-	bool result;
+ 
+ 	mutex_lock(&local->iflist_mtx);
+-
+ 	list_for_each_entry(tmp, &local->interfaces, list) {
+ 		if (tmp == sdata)
+ 			continue;
+@@ -99,6 +97,16 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 			break;
+ 		}
+ 	}
++	mutex_unlock(&local->iflist_mtx);
++
++	return superchan;
++}
++
++static bool ieee80211_channel_types_are_compatible(
++		enum nl80211_channel_type superchan,
++		enum nl80211_channel_type chantype)
++{
++	bool result = true;
+ 
+ 	switch (superchan) {
+ 	case NL80211_CHAN_NO_HT:
+@@ -121,17 +129,25 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+ 		if (superchan == chantype)
+ 			break;
+ 		result = false;
+-		goto out;
++		break;
+ 	}
+ 
+-	local->_oper_channel_type = superchan;
++	return result;
++}
++
++bool ieee80211_set_channel_type(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata,
++				enum nl80211_channel_type chantype)
++{
++	enum nl80211_channel_type superchan;
+ 
++	superchan = ieee80211_get_superchan(local, sdata);
++	if (!ieee80211_channel_types_are_compatible(superchan, chantype))
++		return false;
++
++	local->_oper_channel_type = superchan;
+ 	if (sdata)
+ 		sdata->vif.bss_conf.channel_type = chantype;
+ 
+-	result = true;
+- out:
+-	mutex_unlock(&local->iflist_mtx);
+-
+-	return result;
++	return true;
+ }
+-- 
+1.7.0.4
 
->    Thanks.
->    diff --git a/v3.3.x/drivers/net/wireless/ath/ath9k/xmit.c
->    b/v3.3.x/drivers/net/wireless/ath/ath9k/xmit.c
->    old mode 100644
->    new mode 100755
->    index 3182408..f4e1e62
->    --- a/v3.3.x/drivers/net/wireless/ath/ath9k/xmit.c
->    +++ b/v3.3.x/drivers/net/wireless/ath/ath9k/xmit.c
->    @@ -1858,6 +1858,12 @@ static struct ath_buf *ath_tx_setup_buffer(struct
->    ath_softc *sc,
->       return bf;
->     
->     error:
->    +  if (tid) {
->    +  if (skb == skb_peek(&tid->buf_q)) {
->    +  __skb_unlink(skb, &tid->buf_q);
->    +  }
->    +  }
->    +
->       dev_kfree_skb_any(skb);
->       return NULL;
->     }
-
-Yeah I have no idea why you are doing this here, based on your description
-the skb will be free'd at ath_tx_get_buffer() but ath_tx_get_buffer()
-does not free anything. Can you please be sure to check first against
-the latest development tree for 802.11 first?
-
-  Luis
