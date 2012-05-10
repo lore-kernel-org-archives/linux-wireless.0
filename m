@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:48207 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755069Ab2E3U0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 16:26:31 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 3/4] brcmfmac: Fix likely misuse of | for &
-Date: Wed, 30 May 2012 13:25:56 -0700
-Message-Id: <af79247f427979584f3e07753ec3ad4766844ec9.1338408931.git.joe@perches.com> (sfid-20120530_222707_594670_69A0648A)
-In-Reply-To: <cover.1338408931.git.joe@perches.com>
-References: <cover.1338408931.git.joe@perches.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757912Ab2EJJOx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 05:14:53 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:14:52 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 10/78] wl18xx: set the number of Tx descriptors
+Date: Thu, 10 May 2012 12:13:15 +0300
+Message-Id: <1336641263-5761-11-git-send-email-arik@wizery.com> (sfid-20120510_111457_308399_E55F02C6)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using | with a constant is always true.
-Likely this should have be &.
+Initialize the number of Tx-descriptors for the 18xx family.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ti/wl18xx/main.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index e2480d1..8e7e692 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -89,9 +89,9 @@ int brcmf_sdio_intr_register(struct brcmf_sdio_dev *sdiodev)
- 	data |= 1 << SDIO_FUNC_1 | 1 << SDIO_FUNC_2 | 1;
- 	brcmf_sdio_regwb(sdiodev, SDIO_CCCR_IENx, data, &ret);
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index b298e01..68f5e09 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -325,6 +325,7 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
+ 	wl->ops = &wl18xx_ops;
+ 	wl->ptable = wl18xx_ptable;
+ 	wl->rtable = wl18xx_rtable;
++	wl->num_tx_desc = 32;
  
--	/* redirect, configure ane enable io for interrupt signal */
-+	/* redirect, configure and enable io for interrupt signal */
- 	data = SDIO_SEPINT_MASK | SDIO_SEPINT_OE;
--	if (sdiodev->irq_flags | IRQF_TRIGGER_HIGH)
-+	if (sdiodev->irq_flags & IRQF_TRIGGER_HIGH)
- 		data |= SDIO_SEPINT_ACT_HI;
- 	brcmf_sdio_regwb(sdiodev, SDIO_CCCR_BRCM_SEPINT, data, &ret);
- 
+ 	return wlcore_probe(wl, pdev);
+ }
 -- 
-1.7.8.111.gad25c.dirty
+1.7.9.5
 
