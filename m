@@ -1,119 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33882 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754253Ab2EJUdn (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:45204 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750950Ab2EJB4p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 16:33:43 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SSa3S-0005kT-Nb
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 22:33:42 +0200
-Message-Id: <20120510203304.679354639@sipsolutions.net> (sfid-20120510_223347_817251_14F37FD0)
-Date: Thu, 10 May 2012 22:30:22 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/2] mac80211: move ieee80211_set_channel function
-References: <20120510203021.240931880@sipsolutions.net>
+	Wed, 9 May 2012 21:56:45 -0400
+Date: Wed, 09 May 2012 21:53:30 -0400 (EDT)
+Message-Id: <20120509.215330.1797609915710094377.davem@davemloft.net> (sfid-20120510_035757_812025_8C6B1408)
+To: joe@perches.com
+Cc: julia.lawall@lip6.fr, netdev@vger.kernel.org,
+	bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
+	netfilter@vger.kernel.org, coreteam@netfilter.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org
+Subject: Re: [PATCH 00/13] net: Add and use ether_addr_equal
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1336614484.1905.19.camel@joe2Laptop>
+References: <cover.1336538937.git.joe@perches.com>
+	<20120509.212110.437114897180819434.davem@davemloft.net>
+	<1336614484.1905.19.camel@joe2Laptop>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Joe Perches <joe@perches.com>
+Date: Wed, 09 May 2012 18:48:04 -0700
 
-Move the set_channel function up so it can be used
-by other code in this file in the future.
+> Maybe just a single patch?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |   70 ++++++++++++++++++++++++++---------------------------
- 1 file changed, 35 insertions(+), 35 deletions(-)
+Yes, I think high density on this one, it's extremely
+mechanical.
 
---- a/net/mac80211/cfg.c	2012-05-10 21:46:39.000000000 +0200
-+++ b/net/mac80211/cfg.c	2012-05-10 21:47:10.000000000 +0200
-@@ -674,6 +674,41 @@ static int ieee80211_get_station(struct
- 	return ret;
- }
- 
-+static int ieee80211_set_channel(struct wiphy *wiphy,
-+				 struct net_device *netdev,
-+				 struct ieee80211_channel *chan,
-+				 enum nl80211_channel_type channel_type)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata = NULL;
-+
-+	if (netdev)
-+		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
-+
-+	switch (ieee80211_get_channel_mode(local, NULL)) {
-+	case CHAN_MODE_HOPPING:
-+		return -EBUSY;
-+	case CHAN_MODE_FIXED:
-+		if (local->oper_channel != chan)
-+			return -EBUSY;
-+		if (!sdata && local->_oper_channel_type == channel_type)
-+			return 0;
-+		break;
-+	case CHAN_MODE_UNDEFINED:
-+		break;
-+	}
-+
-+	if (!ieee80211_set_channel_type(local, sdata, channel_type))
-+		return -EBUSY;
-+
-+	local->oper_channel = chan;
-+
-+	/* auto-detects changes */
-+	ieee80211_hw_config(local, 0);
-+
-+	return 0;
-+}
-+
- static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 				    const u8 *resp, size_t resp_len)
- {
-@@ -1676,41 +1711,6 @@ static int ieee80211_set_txq_params(stru
- 
- 	return 0;
- }
--
--static int ieee80211_set_channel(struct wiphy *wiphy,
--				 struct net_device *netdev,
--				 struct ieee80211_channel *chan,
--				 enum nl80211_channel_type channel_type)
--{
--	struct ieee80211_local *local = wiphy_priv(wiphy);
--	struct ieee80211_sub_if_data *sdata = NULL;
--
--	if (netdev)
--		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
--
--	switch (ieee80211_get_channel_mode(local, NULL)) {
--	case CHAN_MODE_HOPPING:
--		return -EBUSY;
--	case CHAN_MODE_FIXED:
--		if (local->oper_channel != chan)
--			return -EBUSY;
--		if (!sdata && local->_oper_channel_type == channel_type)
--			return 0;
--		break;
--	case CHAN_MODE_UNDEFINED:
--		break;
--	}
--
--	if (!ieee80211_set_channel_type(local, sdata, channel_type))
--		return -EBUSY;
--
--	local->oper_channel = chan;
--
--	/* auto-detects changes */
--	ieee80211_hw_config(local, 0);
--
--	return 0;
--}
- 
- #ifdef CONFIG_PM
- static int ieee80211_suspend(struct wiphy *wiphy,
+> Also the compare_ether_addr_64bits function is
+> still used a couple dozen times.  Maybe another
+> patch for those?  ether_addr_equal_64bits?
 
+Use your best judgment.
 
