@@ -1,64 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:41910 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756038Ab2EYPah (ORCPT
+Received: from mail.windriver.com ([147.11.1.11]:63166 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755807Ab2EJDsB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 11:30:37 -0400
-MIME-Version: 1.0
-In-Reply-To: <1337934071-29342-1-git-send-email-qasimj@gmail.com>
-References: <1337934071-29342-1-git-send-email-qasimj@gmail.com>
-Date: Fri, 25 May 2012 23:30:36 +0800
-Message-ID: <CAEFj985HxSrOwOoevDjG1jxPxobLda-X_LZUtj6LgwXZwozBog@mail.gmail.com> (sfid-20120525_173056_558327_6012FA11)
-Subject: Re: [RFC] mac80211: Use correct originator sequence number in a Path Reply
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: devel@lists.open80211s.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ravip@utdallas.edu
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 9 May 2012 23:48:01 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: florian.c.schilhabel@googlemail.com, ali@internetdog.org,
+	netdev@vger.kernel.org,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 1/3] staging: wean rtl8712 off of its ancient duplicate of if_ether.h
+Date: Wed,  9 May 2012 23:47:19 -0400
+Message-Id: <1336621641-15467-2-git-send-email-paul.gortmaker@windriver.com> (sfid-20120510_054812_047784_AA01B4C7)
+In-Reply-To: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Qasim Javed
+This driver should not be carrying around ancient copies of
+headers like <linux/if_ether.h> for its own use.  Mapping it
+onto the mainline one uncovers no build issues.
 
-I think that you are referring to the target HWMP sequence number in
-PREP element.
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/staging/rtl8712/if_ether.h     |  141 --------------------------------
+ drivers/staging/rtl8712/rtl8712_recv.c |    3 +-
+ drivers/staging/rtl8712/rtl871x_recv.c |    2 +-
+ drivers/staging/rtl8712/xmit_linux.c   |    2 +-
+ 4 files changed, 4 insertions(+), 144 deletions(-)
+ delete mode 100644 drivers/staging/rtl8712/if_ether.h
 
-Based on the 802.11s standard, it has specified that
-dot11MeshHWMPnetDiameterTraversalTime is only applied to original HWMP
-sequence number for PREQ as mentioned in the "Contents of a PREQ
-element" in section 11C.
+diff --git a/drivers/staging/rtl8712/if_ether.h b/drivers/staging/rtl8712/if_ether.h
+deleted file mode 100644
+index 2bbe527..0000000
+diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
+index fa6dc9c..b2a7714 100644
+--- a/drivers/staging/rtl8712/rtl8712_recv.c
++++ b/drivers/staging/rtl8712/rtl8712_recv.c
+@@ -28,12 +28,13 @@
+ 
+ #define _RTL8712_RECV_C_
+ 
++#include <linux/if_ether.h>
++
+ #include "osdep_service.h"
+ #include "drv_types.h"
+ #include "recv_osdep.h"
+ #include "mlme_osdep.h"
+ #include "ip.h"
+-#include "if_ether.h"
+ #include "ethernet.h"
+ #include "usb_ops.h"
+ #include "wifi.h"
+diff --git a/drivers/staging/rtl8712/rtl871x_recv.c b/drivers/staging/rtl8712/rtl871x_recv.c
+index 5b03b40..7376abb 100644
+--- a/drivers/staging/rtl8712/rtl871x_recv.c
++++ b/drivers/staging/rtl8712/rtl871x_recv.c
+@@ -29,6 +29,7 @@
+ #define _RTL871X_RECV_C_
+ 
+ #include <linux/slab.h>
++#include <linux/if_ether.h>
+ #include <linux/kmemleak.h>
+ 
+ #include "osdep_service.h"
+@@ -36,7 +37,6 @@
+ #include "recv_osdep.h"
+ #include "mlme_osdep.h"
+ #include "ip.h"
+-#include "if_ether.h"
+ #include "ethernet.h"
+ #include "usb_ops.h"
+ #include "wifi.h"
+diff --git a/drivers/staging/rtl8712/xmit_linux.c b/drivers/staging/rtl8712/xmit_linux.c
+index c970362..d27f652 100644
+--- a/drivers/staging/rtl8712/xmit_linux.c
++++ b/drivers/staging/rtl8712/xmit_linux.c
+@@ -29,12 +29,12 @@
+ #define _XMIT_OSDEP_C_
+ 
+ #include <linux/usb.h>
++#include <linux/if_ether.h>
+ 
+ #include "osdep_service.h"
+ #include "drv_types.h"
+ 
+ 
+-#include "if_ether.h"
+ #include "ip.h"
+ #include "rtl871x_byteorder.h"
+ #include "wifi.h"
+-- 
+1.7.9.1
 
-For PREP element, it should be based on the description in section 11C.9.8.3:
-"If it is a target mesh STA, it shall update its own HWMP sequence
-number to maximum (current HWMP sequence number, target HWMP sequence
-number in the PREQ) + 1 immediately before it generates a PREP in
-response to a PREQ. The target HWMP sequence number of the PREQ is
-relevant when a link was broken along the path and the stored sequence
-number was increased at an intermediate mesh STA."
-
-So the target HWMP sequence number should be modified as follow:
-
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 70ac7d1..5988e82 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -538,12 +538,10 @@ static void hwmp_preq_frame_process(struct
-ieee80211_sub_if_data *sdata,
-                forward = false;
-                reply = true;
-                metric = 0;
--               if (time_after(jiffies, ifmsh->last_sn_update +
--                                       net_traversal_jiffies(sdata)) ||
--                   time_before(jiffies, ifmsh->last_sn_update)) {
--                       target_sn = ++ifmsh->sn;
--                       ifmsh->last_sn_update = jiffies;
--               }
-+               if (SN_LT(ifmsh->sn, target_sn))
-+                       ifmsh->sn = target_sn;
-+               target_sn = ++ifmsh->sn;
-+               ifmsh->last_sn_update = jiffies;
-
-Comments.
-
-Regards,
-Chun-Yeow
