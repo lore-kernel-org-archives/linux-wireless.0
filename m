@@ -1,78 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52263 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753730Ab2ENByK (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:58739 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758071Ab2EJJPc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2012 21:54:10 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20400.26004.289549.13390@gargle.gargle.HOWL> (sfid-20120514_035413_605002_6E98E3AC)
-Date: Mon, 14 May 2012 07:23:24 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/7] ath9k_hw: Fix AR_RTC_KEEP_AWAKE usage
+	Thu, 10 May 2012 05:15:32 -0400
+Received: by wgbds11 with SMTP id ds11so231730wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:31 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 28/78] wlcore: support peer MIMO rates
+Date: Thu, 10 May 2012 12:13:33 +0300
+Message-Id: <1336641263-5761-29-git-send-email-arik@wizery.com> (sfid-20120510_112353_003389_20A704B8)
+In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The default value that is being programmed to AR_RTC_KEEP_AWAKE
-is 0x2, there is no need to program it manually in various
-functions.
+Parse the peer ht_cap element containing MCS8-MCS15 rates and pass it
+to the FW. Rates unsupported by the HW will be sanitized by mac80211
+before reaching us.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |    1 -
- drivers/net/wireless/ath/ath9k/hw.c         |   11 -----------
- 2 files changed, 12 deletions(-)
+ drivers/net/wireless/ti/wlcore/cmd.c    |    4 +++-
+ drivers/net/wireless/ti/wlcore/main.c   |    3 ++-
+ drivers/net/wireless/ti/wlcore/tx.c     |    4 ++--
+ drivers/net/wireless/ti/wlcore/wl12xx.h |    1 +
+ 4 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index ffbb180..9331d73 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -330,7 +330,6 @@ void ar9003_mci_set_full_sleep(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 8450f0e..0dec465 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -1371,7 +1371,9 @@ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 
+ 	sta_rates = sta->supp_rates[wlvif->band];
+ 	if (sta->ht_cap.ht_supported)
+-		sta_rates |= sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET;
++		sta_rates |=
++			(sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET) |
++			(sta->ht_cap.mcs.rx_mask[1] << HW_MIMO_RATES_OFFSET);
+ 
+ 	cmd->supported_rates =
+ 		cpu_to_le32(wl1271_tx_enabled_rates_get(wl, sta_rates,
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 3cd2ddd..f64aeb9 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -3695,7 +3695,8 @@ static void wl1271_bss_info_changed_sta(struct wl1271 *wl,
+ 		sta_rate_set = sta->supp_rates[wl->hw->conf.channel->band];
+ 		if (sta->ht_cap.ht_supported)
+ 			sta_rate_set |=
+-			    (sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET);
++			  (sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET) |
++			  (sta->ht_cap.mcs.rx_mask[1] << HW_MIMO_RATES_OFFSET);
+ 		sta_ht_cap = sta->ht_cap;
+ 		sta_exists = true;
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 44e4e7b..200d091 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -428,10 +428,10 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set,
+ 		rate_set >>= 1;
  	}
  
- 	mci->ready = false;
--	REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
- }
+-	/* MCS rates indication are on bits 16 - 23 */
++	/* MCS rates indication are on bits 16 - 31 */
+ 	rate_set >>= HW_HT_RATES_OFFSET - band->n_bitrates;
  
- static void ar9003_mci_disable_interrupt(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 02ce524..8698589 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1432,9 +1432,6 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
- 		break;
- 	}
+-	for (bit = 0; bit < 8; bit++) {
++	for (bit = 0; bit < 16; bit++) {
+ 		if (rate_set & 0x1)
+ 			enabled_rates |= (CONF_HW_BIT_RATE_MCS_0 << bit);
+ 		rate_set >>= 1;
+diff --git a/drivers/net/wireless/ti/wlcore/wl12xx.h b/drivers/net/wireless/ti/wlcore/wl12xx.h
+index 05e6f74..571a4ef 100644
+--- a/drivers/net/wireless/ti/wlcore/wl12xx.h
++++ b/drivers/net/wireless/ti/wlcore/wl12xx.h
+@@ -502,6 +502,7 @@ void wl1271_rx_filter_flatten_fields(struct wl12xx_rx_filter *filter,
+ /* Macros to handle wl1271.sta_rate_set */
+ #define HW_BG_RATES_MASK	0xffff
+ #define HW_HT_RATES_OFFSET	16
++#define HW_MIMO_RATES_OFFSET	24
  
--	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
--		REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
--
- 	return ret;
- }
+ #define WL12XX_HW_BLOCK_SIZE	256
  
-@@ -2164,10 +2161,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 	switch (mode) {
- 	case ATH9K_PM_AWAKE:
- 		status = ath9k_hw_set_power_awake(ah, setChip);
--
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
--			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
--
- 		break;
- 	case ATH9K_PM_FULL_SLEEP:
- 		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-@@ -2177,10 +2170,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 		ah->chip_fullsleep = true;
- 		break;
- 	case ATH9K_PM_NETWORK_SLEEP:
--
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
--			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
--
- 		ath9k_set_power_network_sleep(ah, setChip);
- 		break;
- 	default:
 -- 
-1.7.10.2
+1.7.9.5
 
