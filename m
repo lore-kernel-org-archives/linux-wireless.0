@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62133 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314Ab2E0CYH (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:51613 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751644Ab2EJN5F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2012 22:24:07 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20417.36878.491297.428459@gargle.gargle.HOWL> (sfid-20120527_042441_674763_9FDB45B7)
-Date: Sun, 27 May 2012 07:53:10 +0530
-To: Ben Greear <greearb@candelatech.com>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Adrian Chadd <adrian@freebsd.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
-In-Reply-To: <4FC18E6E.4020707@candelatech.com>
-References: <4FC04B5A.1070900@candelatech.com>
-	<CAJ-VmomRv-GdRooL=1G5avxAqJ4h3eoAfNkzYit3ok-fXmd25A@mail.gmail.com>
-	<20417.35821.91808.2702@gargle.gargle.HOWL>
-	<20417.36056.95300.690329@gargle.gargle.HOWL>
-	<4FC18E6E.4020707@candelatech.com>
+	Thu, 10 May 2012 09:57:05 -0400
+Received: by yenl6 with SMTP id l6so1875938yen.23
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 06:57:04 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <coelho@ti.com>, <arik@wizery.com>
+Subject: [PATCH] wlcore: fix fm_coex parameters configuration
+Date: Thu, 10 May 2012 16:54:31 +0300
+Message-Id: <1336658071-11317-1-git-send-email-victorg@ti.com> (sfid-20120510_155716_845286_C76FF75A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> On 05/26/2012 07:09 PM, Sujith Manoharan wrote:
-> > Sujith Manoharan wrote:
-> >> Odd. I get low numbers with a DB120 running OpenWRT (git HEAD).
-> >>
-> >> TCP TX - ~260 Mbps.
-> >> TCP RX - ~160 Mbps.
-> >>
-> >> UDP RX - ~240 Mbps.
-> >> UDP TX - iperf borks and doesn't display anything.
-> 
-> Maybe NAT won't let it through, if this is coming downstream?
+Wrong fm_coex parameters were set during wlcore
+init phase, fix it.
 
-Ah yes, OpenWRT has default iptables rules - I'll check.
+Signed-off-by: Ziv Riesel <zivriesel@ti.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ drivers/net/wireless/ti/wl12xx/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-> For that matter, from what perspective is the TX or RX?
+diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
+index d7dd3de..5131375 100644
+--- a/drivers/net/wireless/ti/wl12xx/main.c
++++ b/drivers/net/wireless/ti/wl12xx/main.c
+@@ -305,8 +305,8 @@ static struct wlcore_conf wl12xx_conf = {
+ 		.swallow_period               = 5,
+ 		.n_divider_fref_set_1         = 0xff,       /* default */
+ 		.n_divider_fref_set_2         = 12,
+-		.m_divider_fref_set_1         = 148,
+-		.m_divider_fref_set_2         = 0xffff,     /* default */
++		.m_divider_fref_set_1         = 0xffff,
++		.m_divider_fref_set_2         = 148,	    /* default */
+ 		.coex_pll_stabilization_time  = 0xffffffff, /* default */
+ 		.ldo_stabilization_time       = 0xffff,     /* default */
+ 		.fm_disturbed_band_margin     = 0xff,       /* default */
+-- 
+1.7.5.4
 
-I was using the ath9k station as the test unit, so:
-
-STA->AP is TX.
-AP->STA is RX.
-
-Sujith
