@@ -1,100 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:49394 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761465Ab2EJVgX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53965 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459Ab2EKMLe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 17:36:23 -0400
-Received: by lahi5 with SMTP id i5so2172290lah.14
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 14:36:20 -0700 (PDT)
-Message-ID: <1336685777.12189.142.camel@cumari.coelho.fi> (sfid-20120510_233640_598291_515CC435)
-Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
-From: Luciano Coelho <coelho@ti.com>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 11 May 2012 00:36:17 +0300
-In-Reply-To: <4FAC3249.3060107@xenotime.net>
-References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>
-		 <4F8C784B.2040402@xenotime.net>
-	 <1336049755.12189.30.camel@cumari.coelho.fi>
-	 <4FAC3249.3060107@xenotime.net>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-pxPS1HMkr0xQLFKJ1VOC"
+	Fri, 11 May 2012 08:11:34 -0400
+Message-ID: <1336738290.5819.23.camel@jlt3.sipsolutions.net> (sfid-20120511_141137_957037_16962830)
+Subject: Re: [RFC/PATCH] multi-channel preparation work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	Thomas Pedersen <thomas@cozybit.com>
+Date: Fri, 11 May 2012 14:11:30 +0200
+In-Reply-To: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
+References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Michal,
 
---=-pxPS1HMkr0xQLFKJ1VOC
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> Here's some work on multi-channel operation. It refactors channel
+> switching logic with regard to ieee80211_hw_config and moves
+> oper_channel stuff to sdata.
 
-Hey Randy,
+This could be useful, but it's hard to tell really. For example, if you
+have a channel context, why would you need to store the channel/channel
+type per sdata? Each sdata would just point to the channel context, I
+think?
 
-On Thu, 2012-05-10 at 14:25 -0700, Randy Dunlap wrote:
-> On 05/03/2012 05:55 AM, Luciano Coelho wrote:
->=20
-> > On Mon, 2012-04-16 at 12:51 -0700, Randy Dunlap wrote:
-> >> From: Randy Dunlap <rdunlap@xenotime.net>
-> >>
-> >> wl12xx build fails with many undefined symbol errors when MAC80211
-> >> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
-> >> on MAC80211 (which already depends on CFG80211).
-> >>
-> >> Here are a few of the many build errors:
+> I plan on doing channel contexts next. Monitor interface stuff probably
+> needs to be addressed as well since it's tied tightly with set_channel.
 
-[...]
+Maybe we need to take a more radical approach in introducing
+multi-channel and channel contexts :-)
 
-> >> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-> >> Cc:	Luciano Coelho <coelho@ti.com>
-> >> Cc:	linux-wireless@vger.kernel.org
-> >> Cc:	"John W. Linville" <linville@tuxdriver.com>
-> >> ---
-> >=20
-> > Applied! Thanks Randy, and sorry for the delay in pushing this through
-> > my tree.
->=20
->=20
->=20
-> Ping.
->=20
-> This patch is still needed in linux-next of 20120510.
+You've started with very small changes like this patchset, but I can't
+get a good feeling for how it'll be in the end with channel contexts.
+For example, see the question above.
 
-I already applied this patch and sent a pull-request to Linville, but he
-hasn't pulled from my tree into wireless-next yet.
+I think we should think about the end result / design more.
 
-Would it make sense for you to pull directly from my tree into
-linux-next?
+You saw my patches for managing the AP channel differently. I think we
+should do the same for mesh, Thomas might actually be working on it but
+if not it's pretty easy to do really. There are some questions about how
+it would work though that Thomas and I may have to discuss [1].
 
---=20
-Cheers,
-Luca.
+The reason for all this is to get rid of the set_channel call. It's not
+really how things should look like with multi-channel, since there we
+need a clear indication of when we start and stop using a certain
+channel. With the AP mode changes, we'll start using it in start_ap()
+(and obviously stop using it in stop_ap()), which simplifies things.
 
---=-pxPS1HMkr0xQLFKJ1VOC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
+Felix says WDS is completely broken today, so I don't think I care about
+it, we should probably just remove the ability to set the channel on WDS
+interfaces. Maybe even force them to be slaved to AP mode interfaces.
+Felix, any thoughts? I had a patch to introduce explicit start-wds and
+stop-wds operations but there were issues with error handling since I'd
+have to call start-wds in NETDEV_UP for compatibility... and that can't
+return errors any more [2].
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+That leaves monitor mode, and setting the channel when there's no
+interface at all. Monitor mode is special, but we have a nice way out:
+when a driver supports multi-channel it will probably need to use the
+new queue scheme. Then, if _injection_ is desired, the driver needs to
+implement support for explicit monitor mode interfaces anyway. So I
+think we can force multi-channel capable drivers to implement explicit
+monitor mode, if they want to support a real monitor mode at all.
+Depending on what mesh needs, we may be able to equate "phy channel" to
+"monitor mode channel", the cfg80211 callbacks pretty much make that
+assumption today but inside cfg80211 it may not be true.
 
-iQIcBAABAgAGBQJPrDTRAAoJEKFHnKIaPMX6EkEP/3ae2N54WKbf6C95HVqsJnCF
-2skvDCE3ip6OC743HLgh5MrtCxJjFtMF4PhDTiA0zzJ9BZgXDPB74HkPN/yS6RNq
-3OamagbL8krEyWsHbvl54HT93xcThAoUCqbpqMLjwu1iAF4KQtZ7V3Z0Ak1uJgJJ
-94JES6dYqBI0uVih9Fwl5ngu52h5IDucPOjbIoD/NAtsEkeA9P6OVbqpIj4U2YFl
-FZlICJHlRagRD3lrgxfs7/l+8mZRvel6UlNH9fMhwmEqtfL4rqXLTQu5QF+bkB/z
-9Hedv931uvb9Xnhvl01IBItY9rHhWCCkoY4XQ3IrAQjcPbwSR+ifYW+P0JDr86Qu
-Mg8QopI+pFQ5TW+IgBRZ1QSC+RqGsvsboPe3CDZGlH47z7wAx+RC0v3ytxrbMFz7
-MwUtB/oGj3BeciDK7c7CPUhdp4GN17BI3YwFpZXrpvQA3UcCcCdOkx9hUgfw4eWU
-10zYyPAUKPcYDRNzsWk88HeVJU6/OA5YU5uJTpOL7iDTqHf5C7MwBwxgLuCPhwuv
-gAT/rmBFGR0rsi3lHC78LR+L2mvNVzvYdc28TiE0JiQVITkOHenuNRb5zxpJk3y8
-jF1vKA3ZtE+ZfAts4yZLx9/2mV5p97ZH1fGrPE8sMu9/hOFhKUaAiPtWw5sZz3W6
-I/FhETJtfq0w7bYeEw92
-=f6mM
------END PGP SIGNATURE-----
+In any case, the result of all of this is that the cfg80211 set_channel
+operation is no longer used by anything but monitor mode, we could
+rename it to set_monitor_channel. This operation would only be available
+when only monitor interfaces, if any interfaces at all, are active.
+Internally in mac80211, the channel context for monitor interfaces would
+be attached to the explicit monitor interface.
 
---=-pxPS1HMkr0xQLFKJ1VOC--
+Now, if we have a driver that supports only a single channel and maybe
+doesn't even support the explicit monitor interface API, then obviously
+we have to translate all this to the explicit channel setting with
+hw_config. However, that's not terribly difficult I think? We need to
+have a limit on channel contexts anyway, so we don't create too many, so
+here the limit is 1 and when we change that context we program the
+hardware.
+
+The only other difficult thing is software scanning/remain-on-channel,
+i.e. the temporary channel. But this is only supported for drivers that
+don't have multi-channel, so we can essentially keep it the same with
+the tmp_channel variable, it just overrides the context.
+
+I'm probably glossing over a lot of details, but at least I now have a
+clearer picture of how we can do this. :-) I hope it helps explain my
+thinking.
+
+johannes
+
+[1] The question is whether or not setting the channel on the *phy* is
+needed for mesh, and if it has to support bringing up mesh without
+having any channel set at all. These are backward compatibility
+considerations.
+
+[2] Alternatively, we could change the userspace API and require that
+you set the WDS peer *after* bringing up the interface. Today, you have
+to set it *before*. Then setting the peer could actually be the signal
+to establish the "link". Given that it all doesn't work, maybe that's an
+alternative? I'd have patches for this almost ready.
 
