@@ -1,42 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:51683 "EHLO purkki.adurom.net"
+Received: from nbd.name ([46.4.11.11]:46023 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751615Ab2EGKlg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 06:41:36 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Subject: Re: [PATCH] fix the increment of unicast/multicast counters for forwarded PREQ
-References: <1336106215-7431-1-git-send-email-yeohchunyeow@gmail.com>
-	<1336376603.4325.3.camel@jlt3.sipsolutions.net>
-	<CAEFj9857DWGCcnF20nKYEDb0_p1K_iYLR1F=oLNAx6NjwPQE9w@mail.gmail.com>
-	<1336382462.4325.4.camel@jlt3.sipsolutions.net>
-	<CAEFj9855PG1Qv5RBWPJJc5tyKRz5LZZaY8qRU7oAwryH5G8L7A@mail.gmail.com>
-Date: Mon, 07 May 2012 13:41:30 +0300
-In-Reply-To: <CAEFj9855PG1Qv5RBWPJJc5tyKRz5LZZaY8qRU7oAwryH5G8L7A@mail.gmail.com>
-	(Yeoh Chun-Yeow's message of "Mon, 7 May 2012 18:19:50 +0800")
-Message-ID: <874nrs9sth.fsf@purkki.adurom.net> (sfid-20120507_124142_104180_EB6B0874)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	id S1760292Ab2EKQQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 12:16:47 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/6] atheros-initvals: drop the "turbo" column for older chipsets, it is unused and unsupported
+Date: Fri, 11 May 2012 18:16:39 +0200
+Message-Id: <1336753001-29583-4-git-send-email-nbd@openwrt.org> (sfid-20120511_181653_010385_0DCF5984)
+In-Reply-To: <1336753001-29583-3-git-send-email-nbd@openwrt.org>
+References: <1336753001-29583-1-git-send-email-nbd@openwrt.org>
+ <1336753001-29583-2-git-send-email-nbd@openwrt.org>
+ <1336753001-29583-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ initvals.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
-> Hi, Johannes
->
->>> >> +             if (da != broadcast_addr)
->>
->> will never be false.
->
-> Hmm, but I have a check on this and it works. The previous line will
-> set the da either as broadcast addr or unicast addr.
-
-You are comparing pointers, not addresses. If you do that on purpose
-then it's very confusing.
-
+diff --git a/initvals.c b/initvals.c
+index 17a7ab0..8c06690 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -283,7 +283,6 @@ typedef long long unsigned int u64;
+ 						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+-		printf("static const u32 "#_array"[][%d] = {\n", (int) ARRAY_SIZE((_array)[0])); \
+ 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
+ 	} \
+@@ -296,7 +295,6 @@ typedef long long unsigned int u64;
+ 						ARRAY_SIZE(_array), 1); \
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+-		printf("static const u32 "#_array"[] = {\n"); \
+ 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), 1, true); \
+ 	} \
+@@ -339,6 +337,7 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+ 
+ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
+ {
++	u32 p_columns = columns > 5 ? 5 : columns;
+ 	u32 col, row;
+ 
+ 	/*
+@@ -350,7 +349,12 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+ 	if (columns > 6)
+ 		return;
+ 
+-	switch (columns) {
++	if (onedim)
++		printf("static const u32 %s[] = {\n", name);
++	else
++		printf("static const u32 %s[][%d] = {\n", name, p_columns);
++
++	switch (p_columns) {
+ 	case 5:
+ 		printf("\t/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */\n");
+ 		break;
+@@ -368,7 +372,7 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+ 	}
+ 
+ 	for (row = 0; row < rows; row++) {
+-		for (col = 0; col < columns; col++) {
++		for (col = 0; col < p_columns; col++) {
+ 			u32 idx;
+ 			u32 val;
+ 			if (!col)
+@@ -379,7 +383,7 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+ 				val = ath9k_patch_initval(idx, val);
+ 			}
+ 			printf("0x%08x", val);
+-			if (col + 1 < columns)
++			if (col + 1 < p_columns)
+ 				printf(", ");
+ 		}
+ 		printf("%s,\n", onedim ? "" : "}");
+@@ -392,11 +396,12 @@ static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns)
+ 	SHA1_CTX ctx;
+ 	unsigned char digest[SHA1_DIGEST_SIZE];
+ 	static char buf[64];
++	u32 p_columns = columns > 5 ? 5 : columns;
+ 	u32 col, row;
+ 
+ 	SHA1_Init(&ctx);
+ 	for (row = 0; row < rows; row++) {
+-		for (col = 0; col < columns; col++) {
++		for (col = 0; col < p_columns; col++) {
+ 			unsigned char sha1_buf[4];
+ 			u32 val;
+ 
 -- 
-Kalle Valo
+1.7.3.2
+
