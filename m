@@ -1,75 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s34.blu0.hotmail.com ([65.55.111.109]:17260 "EHLO
-	blu0-omc2-s34.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751195Ab2ECFE3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42300 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757940Ab2EKIiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 01:04:29 -0400
-Message-ID: <BLU0-SMTP243D8B9F11F7BC3D5419A97AC2F0@phx.gbl> (sfid-20120503_070432_983355_777BC4BB)
-Subject: Re: [PATCH v2 0/6] BCMA Cumulative patches from OpenWRT
-From: Nathan Hintz <nlhintz@hotmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
-	hauke@hauke-m.de
-Date: Wed, 2 May 2012 22:04:18 -0700
-In-Reply-To: <4FA182A8.8080604@broadcom.com>
-References: <BLU0-SMTP45859B1CA3415BE44C9024CAC240@phx.gbl>
-	 <4F990DC1.4070305@broadcom.com> <87r4vaaezl.fsf@purkki.adurom.net>
-	 <20120502181157.GC9285@tuxdriver.com> <4FA182A8.8080604@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	Fri, 11 May 2012 04:38:18 -0400
+Message-Id: <20120511083720.739540203@sipsolutions.net> (sfid-20120511_103831_145287_106F870B)
+Date: Fri, 11 May 2012 10:34:15 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/3] cfg80211: simplify cfg80211_can_beacon_sec_chan API
+References: <20120511083413.778117363@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi:
-On Wed, 2012-05-02 at 20:53 +0200, Arend van Spriel wrote:
-> On 05/02/2012 08:11 PM, John W. Linville wrote:
-> > On Thu, Apr 26, 2012 at 02:50:54PM +0300, Kalle Valo wrote:
-> >> "Arend van Spriel" <arend@broadcom.com> writes:
-> >>
-> >>> On 04/26/2012 06:23 AM, Nathan Hintz wrote:
-> >>>> Nathan Hintz (6):
-> >>>>    bcma: Find names of non BCM cores
-> >>>>    bcma: Move initialization of SPROM to prevent overwrite
-> >>>>    bcma: Account for variable PCI memory base/size
-> >>>>    bcma: reads/writes are always 4 bytes, so always map 4 bytes
-> >>>>    bcma: Add __devexit to bcma_host_pci_remove
-> >>>>    bcma: Add flush for BCMA_RESET_CTL write
-> >>>>
-> >>>>   arch/mips/bcm47xx/setup.c      |    4 +++
-> >>>>   arch/mips/bcm47xx/sprom.c      |    2 -
-> >>>>   drivers/bcma/core.c            |    1 +
-> >>>>   drivers/bcma/driver_pci_host.c |   10 +++---
-> >>>>   drivers/bcma/host_pci.c        |    4 +-
-> >>>>   drivers/bcma/scan.c            |   54 +++++++++++++++++++++++++++++----------
-> >>>>   6 files changed, 52 insertions(+), 23 deletions(-)
-> >>>>
-> >>>
-> >>> None of these patches have any description. Some motivation for the
-> >>> changes would be appreciated like 'reported problem', 'new target
-> >>> support', etc.
-> >>
-> >> I would say that it's required. Anyone can see the diff and see what was
-> >> changed, but nobody will figure out why the change was made unless it's
-> >> described in the commit log. So it's important to answer the question
-> >> "Why?".
-> > 
-> > Will we be seeing this patchset reposted with better changelogs?
-> > 
-> > John
-> 
-> Although not strongly stated by me I was certainly expecting a re-post.
-> 
-> Gr. AvS
-> 
-> 
-I will repost; it will probably be a few days though.  I haven't used
-GIT before other than cloning some repo's, so I have a learning curve to
-overcome.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Any hints are welcome.
+Change cfg80211_can_beacon_sec_chan() to return true
+if there is no secondary channel to simplify all the
+current users of it. They all check the channel type
+before calling the function because it returns false
+if there's no secondary channel.
 
-Thanks,
-Nathan
+Also actually document the return value.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h |    5 ++++-
+ net/mac80211/ibss.c    |    3 +--
+ net/wireless/chan.c    |   22 ++++++----------------
+ 3 files changed, 11 insertions(+), 19 deletions(-)
+
+--- a/include/net/cfg80211.h	2012-05-11 10:22:59.000000000 +0200
++++ b/include/net/cfg80211.h	2012-05-11 10:23:50.000000000 +0200
+@@ -3359,11 +3359,14 @@ void cfg80211_report_obss_beacon(struct
+ 				 const u8 *frame, size_t len,
+ 				 int freq, int sig_dbm, gfp_t gfp);
+ 
+-/*
++/**
+  * cfg80211_can_beacon_sec_chan - test if ht40 on extension channel can be used
+  * @wiphy: the wiphy
+  * @chan: main channel
+  * @channel_type: HT mode
++ *
++ * This function returns true if there is no secondary channel or the secondary
++ * channel can be used for beaconing (i.e. is not a radar channel etc.)
+  */
+ bool cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
+ 				  struct ieee80211_channel *chan,
+--- a/net/mac80211/ibss.c	2012-05-10 08:54:21.000000000 +0200
++++ b/net/mac80211/ibss.c	2012-05-11 10:24:13.000000000 +0200
+@@ -82,8 +82,7 @@ static void __ieee80211_sta_join_ibss(st
+ 
+ 	local->oper_channel = chan;
+ 	channel_type = ifibss->channel_type;
+-	if (channel_type > NL80211_CHAN_HT20 &&
+-	    !cfg80211_can_beacon_sec_chan(local->hw.wiphy, chan, channel_type))
++	if (!cfg80211_can_beacon_sec_chan(local->hw.wiphy, chan, channel_type))
+ 		channel_type = NL80211_CHAN_HT20;
+ 	if (!ieee80211_set_channel_type(local, sdata, channel_type)) {
+ 		/* can only fail due to HT40+/- mismatch */
+--- a/net/wireless/chan.c	2012-05-11 10:22:59.000000000 +0200
++++ b/net/wireless/chan.c	2012-05-11 10:25:12.000000000 +0200
+@@ -60,7 +60,7 @@ bool cfg80211_can_beacon_sec_chan(struct
+ 		diff = -20;
+ 		break;
+ 	default:
+-		return false;
++		return true;
+ 	}
+ 
+ 	sec_chan = ieee80211_get_channel(wiphy, chan->center_freq + diff);
+@@ -107,21 +107,11 @@ int cfg80211_set_freq(struct cfg80211_re
+ 		     wdev->iftype == NL80211_IFTYPE_AP ||
+ 		     wdev->iftype == NL80211_IFTYPE_AP_VLAN ||
+ 		     wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
+-		     wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
+-		switch (channel_type) {
+-		case NL80211_CHAN_HT40PLUS:
+-		case NL80211_CHAN_HT40MINUS:
+-			if (!cfg80211_can_beacon_sec_chan(&rdev->wiphy, chan,
+-							  channel_type)) {
+-				printk(KERN_DEBUG
+-				       "cfg80211: Secondary channel not "
+-				       "allowed to initiate communication\n");
+-				return -EINVAL;
+-			}
+-			break;
+-		default:
+-			break;
+-		}
++		     wdev->iftype == NL80211_IFTYPE_P2P_GO) &&
++	    !cfg80211_can_beacon_sec_chan(&rdev->wiphy, chan, channel_type)) {
++		printk(KERN_DEBUG
++		       "cfg80211: Secondary channel not allowed to beacon\n");
++		return -EINVAL;
+ 	}
+ 
+ 	result = rdev->ops->set_channel(&rdev->wiphy,
 
 
