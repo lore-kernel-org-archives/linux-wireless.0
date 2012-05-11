@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7591 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044Ab2EXDyx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52118 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932388Ab2EKS0V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:54:53 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45261.861923.420204@gargle.gargle.HOWL> (sfid-20120524_055457_089763_7AB6A42D)
-Date: Thu, 24 May 2012 09:23:49 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 12/22] ath9k_hw: update ar9462 initval table to fix rx nfcal
+	Fri, 11 May 2012 14:26:21 -0400
+Message-ID: <1336760775.8739.1.camel@jlt3.sipsolutions.net> (sfid-20120511_202625_610548_B0B58C36)
+Subject: RE: [PATCH] mwifiex: remove set_channel cfg80211 hook
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 11 May 2012 20:26:15 +0200
+In-Reply-To: <477F20668A386D41ADCC57781B1F7043083A57BA86@SC-VEXCH1.marvell.com>
+References: <1336757074.12801.18.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F7043083A57BA86@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wrong ADC sample phase that happen between awake and
-network/full sleep will lead to improper rx noisefloor
-calibration.
+On Fri, 2012-05-11 at 11:21 -0700, Bing Zhao wrote:
+> Hi Johannes,
+> 
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Since mwifiex only supports managed and IBSS
+> > modes, it doesn't need a set_channel call. The
+> > callback might be called, but it won't matter
+> > as nothing can use the channel.
+> 
+> We still need this set_channel hander for station IBSS mode.
+> User may want to use "iw mlan0 set channel 11" command to configure the channel before starting an IBSS network.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+That doesn't make sense though, since you should give the channel to
+join the IBSS?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index 1d6658e..a10ece0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -958,7 +958,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
- 	{0x0001604c, 0x2699e04f},
- 	{0x00016050, 0x6db6db6c},
- 	{0x00016058, 0x6c200000},
--	{0x00016080, 0x00040000},
-+	{0x00016080, 0x000c0000},
- 	{0x00016084, 0x9a68048c},
- 	{0x00016088, 0x54214514},
- 	{0x0001608c, 0x1203040b},
-@@ -981,7 +981,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
- 	{0x00016144, 0x02084080},
- 	{0x00016148, 0x000080c0},
- 	{0x00016280, 0x050a0001},
--	{0x00016284, 0x3d841400},
-+	{0x00016284, 0x3d841418},
- 	{0x00016288, 0x00000000},
- 	{0x0001628c, 0xe3000000},
- 	{0x00016290, 0xa1005080},
--- 
-1.7.10.2
+iw mlan0 ibss join <SSID> 2462
+
+So maybe mwifiex_cfg80211_join_ibss() should use the channel it gets
+instead.
+
+johannes
 
