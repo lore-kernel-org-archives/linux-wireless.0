@@ -1,76 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:44492 "HELO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752948Ab2ECHXP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:23:15 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	harvey yang <harvey.huawei.yang@gmail.com>
-Subject: [PATCH 00/18] mwifiex: add AP support
-Date: Thu,  3 May 2012 00:22:22 -0700
-Message-Id: <1336029760-22565-1-git-send-email-bzhao@marvell.com> (sfid-20120503_092320_498826_95B00732)
+Received: from nbd.name ([46.4.11.11]:34754 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759981Ab2EKQkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 12:40:00 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 4/6] atheros-initvals: drop the "turbo" column for older chipsets, it is unused and unsupported
+Date: Fri, 11 May 2012 18:39:54 +0200
+Message-Id: <1336754396-30216-4-git-send-email-nbd@openwrt.org> (sfid-20120511_184010_218227_42BB7B91)
+In-Reply-To: <1336754396-30216-3-git-send-email-nbd@openwrt.org>
+References: <1336754396-30216-1-git-send-email-nbd@openwrt.org>
+ <1336754396-30216-2-git-send-email-nbd@openwrt.org>
+ <1336754396-30216-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds support for micro-AP (uAP) mode to mwifiex driver.
-
-Tested with hostapd devel v2. Simultaneous AP-STA functionality works fine.
-
-Thanks,
-Bing
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-Avinash Patil (18):
-  mwifiex: allocate space for one more mwifiex_private structure
-  mwifiex: handle station specific commands on STA interface only
-  mwifiex: support for creation of AP interface
-  mwifiex: multi-interface support for mwifiex
-  mwifiex: save adapter pointer in wiphy_priv
-  mwifiex: append peer mac address TLV in key material command to
-    firmware
-  mwifiex: add bss start and bss stop commands for AP
-  mwifiex: add AP command sys_config and set channel
-  mwifiex: stop BSS in deauthentication handling
-  mwifiex: handle interface type changes correctly
-  mwifiex: common set_wiphy_params cfg80211 handler for AP and STA
-    interface
-  mwifiex: add cfg80211 start_ap and stop_ap handlers
-  mwifiex: add AP event handling framework
-  mwifiex: add WPA2 support for AP
-  mwifiex: rearrange AP sys configure code
-  mwifiex: add custom IE framework
-  mwifiex: parse beacon, probe response and assoc response IEs from
-    start_ap
-  mwifiex: delete IEs when stop_ap
+ initvals.c |   17 +++++++++++------
+ 1 files changed, 11 insertions(+), 6 deletions(-)
 
- drivers/net/wireless/mwifiex/Makefile      |    2 +
- drivers/net/wireless/mwifiex/cfg80211.c    |  485 +++++++++++++++++++++-------
- drivers/net/wireless/mwifiex/cfg80211.h    |    2 +-
- drivers/net/wireless/mwifiex/cmdevt.c      |   21 ++-
- drivers/net/wireless/mwifiex/decl.h        |   13 +-
- drivers/net/wireless/mwifiex/fw.h          |  159 +++++++++-
- drivers/net/wireless/mwifiex/ie.c          |  447 +++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/init.c        |    1 +
- drivers/net/wireless/mwifiex/ioctl.h       |   32 ++
- drivers/net/wireless/mwifiex/join.c        |    4 +
- drivers/net/wireless/mwifiex/main.c        |   57 ++--
- drivers/net/wireless/mwifiex/main.h        |   27 ++-
- drivers/net/wireless/mwifiex/sta_cmd.c     |   64 +++--
- drivers/net/wireless/mwifiex/sta_cmdresp.c |    8 +
- drivers/net/wireless/mwifiex/sta_event.c   |   51 +++-
- drivers/net/wireless/mwifiex/sta_ioctl.c   |    9 +-
- drivers/net/wireless/mwifiex/uap_cmd.c     |  432 +++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/wmm.c         |    4 +
- 18 files changed, 1643 insertions(+), 175 deletions(-)
- create mode 100644 drivers/net/wireless/mwifiex/ie.c
- create mode 100644 drivers/net/wireless/mwifiex/uap_cmd.c
+diff --git a/initvals.c b/initvals.c
+index 17a7ab0..8c06690 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -283,7 +283,6 @@ typedef long long unsigned int u64;
+ 						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+-		printf("static const u32 "#_array"[][%d] = {\n", (int) ARRAY_SIZE((_array)[0])); \
+ 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
+ 	} \
+@@ -296,7 +295,6 @@ typedef long long unsigned int u64;
+ 						ARRAY_SIZE(_array), 1); \
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+-		printf("static const u32 "#_array"[] = {\n"); \
+ 		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), 1, true); \
+ 	} \
+@@ -339,6 +337,7 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+ 
+ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
+ {
++	u32 p_columns = columns > 5 ? 5 : columns;
+ 	u32 col, row;
+ 
+ 	/*
+@@ -350,7 +349,12 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+ 	if (columns > 6)
+ 		return;
+ 
+-	switch (columns) {
++	if (onedim)
++		printf("static const u32 %s[] = {\n", name);
++	else
++		printf("static const u32 %s[][%d] = {\n", name, p_columns);
++
++	switch (p_columns) {
+ 	case 5:
+ 		printf("\t/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */\n");
+ 		break;
+@@ -368,7 +372,7 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+ 	}
+ 
+ 	for (row = 0; row < rows; row++) {
+-		for (col = 0; col < columns; col++) {
++		for (col = 0; col < p_columns; col++) {
+ 			u32 idx;
+ 			u32 val;
+ 			if (!col)
+@@ -379,7 +383,7 @@ static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows,
+ 				val = ath9k_patch_initval(idx, val);
+ 			}
+ 			printf("0x%08x", val);
+-			if (col + 1 < columns)
++			if (col + 1 < p_columns)
+ 				printf(", ");
+ 		}
+ 		printf("%s,\n", onedim ? "" : "}");
+@@ -392,11 +396,12 @@ static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns)
+ 	SHA1_CTX ctx;
+ 	unsigned char digest[SHA1_DIGEST_SIZE];
+ 	static char buf[64];
++	u32 p_columns = columns > 5 ? 5 : columns;
+ 	u32 col, row;
+ 
+ 	SHA1_Init(&ctx);
+ 	for (row = 0; row < rows; row++) {
+-		for (col = 0; col < columns; col++) {
++		for (col = 0; col < p_columns; col++) {
+ 			unsigned char sha1_buf[4];
+ 			u32 val;
+ 
+-- 
+1.7.3.2
 
