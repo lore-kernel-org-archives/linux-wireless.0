@@ -1,78 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:36442 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752480Ab2EJQLa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:11:30 -0400
-Message-ID: <1336666288.22495.14.camel@joe2Laptop> (sfid-20120510_181149_555263_C903861C)
-Subject: Re: [PATCH 1/3] drivers/net: Convert compare_ether_addr to
- ether_addr_equal
-From: Joe Perches <joe@perches.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Date: Thu, 10 May 2012 09:11:28 -0700
-In-Reply-To: <20120510173201.16131du3cg90nybo@www.81.fi>
-References: <cover.1336618707.git.joe@perches.com>
-	 <7c9881a67c52c2f218480b6742155b6d6928122d.1336618708.git.joe@perches.com>
-	 <20120510173201.16131du3cg90nybo@www.81.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:60065 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897Ab2EKAUc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 May 2012 20:20:32 -0400
+Received: by yhmm54 with SMTP id m54so2092935yhm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 17:20:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FAC2B98.6040100@microhardcorp.com>
+References: <4FAC2B98.6040100@microhardcorp.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Thu, 10 May 2012 17:20:11 -0700
+Message-ID: <CAG6hwVPanDNoWCK-dA2V3gpz8cJhQ-5oJZLXng0rrUXQngPPww@mail.gmail.com> (sfid-20120511_022036_313005_3E5BAF69)
+Subject: Re: MESH only works at 54Mbps link rate or below?
+To: Bin Zeng <bzeng@microhardcorp.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(cc's trimmed)
+Hey Bin,
 
-On Thu, 2012-05-10 at 17:32 +0300, Jussi Kivilinna wrote:
-> Quoting Joe Perches <joe@perches.com>:
-> > Use the new bool function ether_addr_equal to add
-> > some clarity and reduce the likelihood for misuse
-> > of compare_ether_addr for sorting.
-[]
-> > diff --git a/drivers/net/wireless/rndis_wlan.c
-[]
-> > @@ -2139,7 +2139,7 @@ resize_buf:
-> >  	while (check_bssid_list_item(bssid, bssid_len, buf, len)) {
-> >  		if (rndis_bss_info_update(usbdev, bssid) && match_bssid &&
-> >  		    matched) {
-> > -			if (compare_ether_addr(bssid->mac, match_bssid))
-> > +			if (!ether_addr_equal(bssid->mac, match_bssid))
-> 
-> While reviewing this, noticed that above original code is wrong. It  
-> should be !compare_ether_addr. So do I push patch fixing this through  
-> wireless-testing althought it will later cause conflict with this patch?
-> 
-> -Jussi
-> 
-> >  				*matched = true;
-> >  		}
-> >
+On Thu, May 10, 2012 at 1:56 PM, Bin Zeng <bzeng@microhardcorp.com> wrote:
+> Hi
+>
+> I created a MESH network by using 802.11n supported cards, however, MESH
+> only works at 54Mbps link rate or below.
+>
+> Can anyone tell me how to active the 802.11n ht mode in mesh?
 
-Up to John.
+Just set the channel type to HT, something like:
 
-Here's the patch I would send against net-next
-updating the test and the style a little.
+iw wlan0 set channel 1 HT20
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index dcf0e7e..29cccc5 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -2137,11 +2137,10 @@ resize_buf:
- 	 * received 'num_items' and walking through full bssid buffer instead.
- 	 */
- 	while (check_bssid_list_item(bssid, bssid_len, buf, len)) {
--		if (rndis_bss_info_update(usbdev, bssid) && match_bssid &&
--		    matched) {
--			if (!ether_addr_equal(bssid->mac, match_bssid))
--				*matched = true;
--		}
-+		if (rndis_bss_info_update(usbdev, bssid) &&
-+		    match_bssid && matched &&
-+		    ether_addr_equal(bssid->mac, match_bssid))
-+			*matched = true;
- 
- 		real_count++;
- 		bssid = next_bssid_list_item(bssid, &bssid_len, buf, len);
+Before joining the mesh.
 
-
+Thomas
