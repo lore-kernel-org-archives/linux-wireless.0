@@ -1,125 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:45263 "HELO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753668Ab2ECHXP (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:48120 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756006Ab2EKQtp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:23:15 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	harvey yang <harvey.huawei.yang@gmail.com>
-Subject: [PATCH 01/18] mwifiex: allocate space for one more mwifiex_private structure
-Date: Thu,  3 May 2012 00:22:23 -0700
-Message-Id: <1336029760-22565-2-git-send-email-bzhao@marvell.com> (sfid-20120503_092320_845402_5F45688B)
-In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
-References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+	Fri, 11 May 2012 12:49:45 -0400
+Received: by qadb17 with SMTP id b17so1453928qad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2012 09:49:44 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1336733942.4310.21.camel@jlt3.sipsolutions.net>
+References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
+	<1336665952-24363-2-git-send-email-johannes@sipsolutions.net>
+	<1336733942.4310.21.camel@jlt3.sipsolutions.net>
+Date: Fri, 11 May 2012 18:49:44 +0200
+Message-ID: <CA+icZUW6CCxntmmO22k0PDJLfA2cT7zaJRv6+5M5c9=etd5Sig@mail.gmail.com> (sfid-20120511_184949_083355_55D53D30)
+Subject: Re: [PATCH 1/4 v2] iwlwifi: fix prints in iwl_rx_handle
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Fri, May 11, 2012 at 12:59 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>
+> The debug prints were wrong and buggy. The HW pointer wasn't printed
+> correctly, it was mixed up with the pointer to the rxbuf.
+>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> v2: make patch apply -- looks like some whitespace diff to upstream
+> crept into our tree, thanks dileks.
+>
 
-Reserve space for one more priv structure.
-This will be used by AP interface.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/decl.h |    2 +-
- drivers/net/wireless/mwifiex/main.c |   33 ++++++++++++++++++---------------
- drivers/net/wireless/mwifiex/wmm.c  |    4 ++++
- 3 files changed, 23 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index d04aba4..6b8f912 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -28,7 +28,7 @@
- #include <linux/ieee80211.h>
- 
- 
--#define MWIFIEX_MAX_BSS_NUM         (1)
-+#define MWIFIEX_MAX_BSS_NUM         (2)
- 
- #define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
- 					 *   + 4 byte alignment
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index be0f0e5..5ac0059 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -64,17 +64,17 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
- 
- 	adapter->priv_num = 0;
- 
--	/* Allocate memory for private structure */
--	adapter->priv[0] = kzalloc(sizeof(struct mwifiex_private), GFP_KERNEL);
--	if (!adapter->priv[0]) {
--		dev_err(adapter->dev,
--			"%s: failed to alloc priv[0]\n", __func__);
--		goto error;
--	}
--
--	adapter->priv_num++;
-+	for (i = 0; i < MWIFIEX_MAX_BSS_NUM; i++) {
-+		/* Allocate memory for private structure */
-+		adapter->priv[i] =
-+			kzalloc(sizeof(struct mwifiex_private), GFP_KERNEL);
-+		if (!adapter->priv[i])
-+			goto error;
- 
--	adapter->priv[0]->adapter = adapter;
-+		adapter->priv[i]->adapter = adapter;
-+		adapter->priv[i]->bss_priority = i;
-+		adapter->priv_num++;
-+	}
- 	mwifiex_init_lock_list(adapter);
- 
- 	init_timer(&adapter->cmd_timer);
-@@ -836,13 +836,16 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
- 	}
- 
- 	priv = adapter->priv[0];
--	if (!priv)
-+	if (!priv || !priv->wdev)
- 		goto exit_remove;
- 
--	if (priv->wdev) {
--		wiphy_unregister(priv->wdev->wiphy);
--		wiphy_free(priv->wdev->wiphy);
--		kfree(priv->wdev);
-+	wiphy_unregister(priv->wdev->wiphy);
-+	wiphy_free(priv->wdev->wiphy);
-+
-+	for (i = 0; i < adapter->priv_num; i++) {
-+		priv = adapter->priv[i];
-+		if (priv)
-+			kfree(priv->wdev);
- 	}
- 
- 	mwifiex_terminate_workqueue(adapter);
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 429a1de..f3fc655 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -885,6 +885,10 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 				tid_ptr = &(priv_tmp)->wmm.
- 					tid_tbl_ptr[tos_to_tid[i]];
- 
-+				/* For non-STA ra_list_curr may be NULL */
-+				if (!tid_ptr->ra_list_curr)
-+					continue;
-+
- 				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
- 						  flags);
- 				is_list_empty =
--- 
-1.7.0.2
-
+Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
