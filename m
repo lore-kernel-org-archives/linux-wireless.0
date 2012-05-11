@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:51741 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752576Ab2E2OVm convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60370 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756103Ab2EKGj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 10:21:42 -0400
-Received: by obbtb18 with SMTP id tb18so6926869obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 07:21:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1338203942-5667-14-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-	<1338203942-5667-14-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 29 May 2012 17:21:42 +0300
-Message-ID: <CAB3XZEdxDqyOOdi90zLz6h-98NvjZL1O04oD0uaJ5-jHmv34eA@mail.gmail.com> (sfid-20120529_162146_338715_5F39A105)
-Subject: Re: [RFC 13/14] cfg80211: extend combination checking to consider channels
-From: Eliad Peller <eliad@wizery.com>
+	Fri, 11 May 2012 02:39:58 -0400
+Message-ID: <1336718395.4310.3.camel@jlt3.sipsolutions.net> (sfid-20120511_084002_500462_209E8438)
+Subject: Re: [RFC 1/2] mac80211: move ieee80211_set_channel function
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Michal Kazior <michal.kazior@tieto.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 11 May 2012 08:39:55 +0200
+In-Reply-To: <4FACB379.2000001@tieto.com>
+References: <20120510203021.240931880@sipsolutions.net>
+	 <20120510203304.679354639@sipsolutions.net> <4FACB379.2000001@tieto.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Michal,
+On Fri, 2012-05-11 at 08:36 +0200, Michal Kazior wrote:
+> Johannes Berg wrote:
+> > +static int ieee80211_set_channel(struct wiphy *wiphy,
+> > +				 struct net_device *netdev,
+> > +				 struct ieee80211_channel *chan,
+> > +				 enum nl80211_channel_type channel_type)
+> > +{
+> > +	struct ieee80211_local *local = wiphy_priv(wiphy);
+> > +	struct ieee80211_sub_if_data *sdata = NULL;
+> > +
+> > +	if (netdev)
+> > +		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
+> > +
+> > +	switch (ieee80211_get_channel_mode(local, NULL)) {
+> > +	case CHAN_MODE_HOPPING:
+> > +		return -EBUSY;
+> > +	case CHAN_MODE_FIXED:
+> > +		if (local->oper_channel != chan)
+> > +			return -EBUSY;
+> 
+> 
+> > +		if (!sdata&&  local->_oper_channel_type == channel_type)
+> > +			return 0;
+> 
+> Do we need to keep this part? If not we could remove it in your:
+>    [RFC] mac80211: clean up ieee80211_set_channel
 
-On Mon, May 28, 2012 at 2:19 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> cfg80211_can_change_interface will soon be used
-> before .start_ap, .join_mesh, .join_ibss and .auth to
-> verify whether a given interface combination is
-> allowed.
->
-> .connect cannot be handled since the driver scans
-> and connects on its own. It is up to the driver
-> then to refuse a connection (with -EBUSY for
-> example).
->
-> Change-Id: I334c78aa9189f24fcf8829b98b7703ddde120eec
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-[...]
+I think we do need to keep it.
 
-> @@ -1007,7 +1007,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
->                if (rfkill_blocked(rdev->rfkill))
->                        return notifier_from_errno(-ERFKILL);
->                mutex_lock(&rdev->devlist_mtx);
-> -               ret = cfg80211_can_add_interface(rdev, wdev->iftype);
-> +               ret = cfg80211_can_add_interface(rdev, wdev->iftype, NULL);
+> I think we could even remove the whole `ieee80211_get_channel_mode` 
+> thing now since we enforce interface combinations, right? We just need 
+> to adjust the interface combinations verification to refuse mixing ibss 
+> with anything else for the moment. That shouldn't be bad, or is it?
 
-you pass NULL here...
+Somebody is going to complain if we never allow IBSS+anything any more
+because IBSS has a fixed-channel mode in mac80211 which can cooperate
+better.
 
-> @@ -965,9 +983,26 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
->                if (rdev->wiphy.software_iftypes & BIT(wdev_iter->iftype))
->                        continue;
->
-> +               for (i = 0; i < num_max_channels; i++) {
-> +                       if (!used_channels[i]) {
-> +                               used_channels[i] = chan;
-> +                               num_different_channels++;
-> +                               break;
-> +                       }
-> +                       else if (used_channels[i] == chan) {
-> +                               break;
-> +                       }
-> +               }
-> +
-> +               if (i == num_max_channels) {
-> +                       kfree(used_channels);
-> +                       return -ENOMEM;
-> +               }
-> +
+johannes
 
-but this code will count it as a new channel.
-
-Eliad.
