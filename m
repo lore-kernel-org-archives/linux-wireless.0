@@ -1,70 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46910 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930Ab2EZHTl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47164 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756737Ab2EKJc6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2012 03:19:41 -0400
-Received: by obbtb18 with SMTP id tb18so2290598obb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2012 00:19:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FC07A67.6010704@broadcom.com>
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
- <4FC00848.9060901@broadcom.com> <CAB=NE6XsTtJvmJDVa2toJCsjn1fxH+5cqJ8xkaquNhHcHDgh2A@mail.gmail.com>
- <4FC07A67.6010704@broadcom.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Sat, 26 May 2012 00:19:20 -0700
-Message-ID: <CAB=NE6V4nBnujukg_VCx3gpajiQ0o6iDCuzNy-ZEmfayy5Lmmg@mail.gmail.com> (sfid-20120526_091944_686993_A19FA68F)
-Subject: Re: [RFC PATCH 0/8] brcm80211: smac: rework regulatory support
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 11 May 2012 05:32:58 -0400
+Message-ID: <1336728772.4310.6.camel@jlt3.sipsolutions.net> (sfid-20120511_113301_784493_79BEAC28)
+Subject: Re: brcmsmac still woes, possible regression?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>
+Date: Fri, 11 May 2012 11:32:52 +0200
+In-Reply-To: <20120510163525.GB32040@ubuntu-mba>
+References: <4F744DD8.8010004@broadcom.com>
+	 <20120329133835.GA5196@stt008.linux.site>
+	 <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
+	 <20120402215005.GA13969@burratino> <4F7B179F.7070502@broadcom.com>
+	 <20120509094111.GA2333@burratino> <4FAA45AF.8050201@broadcom.com>
+	 <20120509174106.GA7189@ubuntu-mba> <4FAAB0FE.601@broadcom.com>
+	 <1336587054.1121.2.camel@jlt3.sipsolutions.net>
+	 <20120510163525.GB32040@ubuntu-mba>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 25, 2012 at 11:38 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 05/26/2012 12:51 AM, Luis R. Rodriguez wrote:
->>> It took a while. There were some discussions and we agreed that your
->>> > changes establish a better integration with the regulatory framework.
->>> > There are some concerns about the content of the crda database, but that
->>> > is another thing outside the scope of your patches.
->> BTW if you would like to address anything please let me know. If you'd like
->> to review things in private too that's fine, just let me know. I
->> should say that the staging area for the next generation regulatory
->> code is being done through the regulatory simulator:
->>
->> git://github.com/mcgrof/regsim.git
->
-> Thanks, Luis. I mainly focused on the crda database and it has a
-> relation freqs<->pwr_limit. In our regulatory code we make a distinction
-> between 11n and abg as we believe that is necessary.
+On Thu, 2012-05-10 at 09:35 -0700, Seth Forshee wrote:
 
-Atheros had similar poo. When I reviewed the architecture behind it,
-it was simply a design consideration, it had nothing to with
-regulatory. Nothing at all. In fact, all it did was add an overhead of
-data.
+> > On passive channels, when scanning, mac80211 will send a probe only
+> > after receiving a frame on that channel. When associating, it has no
+> > such behaviour, at least not directly, but I suppose it could be
+> > implemented (waiting for the beacon)
+> 
+> The background is that brcmsmac contains a bunch of code for regulatory
+> support that is either duplicated (and in conflict) with the
+> protocol-level support or else it would better be handled there. This is
+> causing problems on pretty much any channel that isn't part of the
+> default world regulatory domain.
+> 
+> I've sent RFC patches that strip out the vast majority of this code in
+> favor of better integration with the protocol-level regulatory support.
+> The piece that's under discussion here is a behavior I maintained in my
+> changes, which mutes tx on passive scan channels until data is received
+> on a given channel. But in my opinion, if this sort of behavior is
+> desired it ought to be implemented at the protocol level instead of in
+> the driver, so I'd really prefer to see it removed from brcmsmac.
 
-> Another example
-> would be 20MHz transmission in 40MHz channel.
+This isn't implemented in mac80211, and since some HW (e.g. ours)
+implements it in lower levels, I don't think you can just generally say
+it has to be in mac80211 now.
 
-Same thing here, turns out you can dynamically figure this out based
-on the regulatory rules.
+johannes
 
-> Maybe that is taken into
-> account in crda code, but I did not have a close look at it yet.
-
-It is taken into account. In fact 802.11ac and 802.11ad are thing I've
-already have considered as well.
-
-> I will have a look at the regsim repository and follow up on that.
-
-Great!
-
->> Arend, in the future please trim all hunks that are not relevant to
->> your replies, that makes review easier.
->
-> Will do.
-
-Thanks,
-
-  Luis
