@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46364 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757988Ab2EJQF5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:05:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/4] iwlwifi: fix prints in iwl_rx_handle
-Date: Thu, 10 May 2012 18:05:49 +0200
-Message-Id: <1336665952-24363-2-git-send-email-johannes@sipsolutions.net> (sfid-20120510_180602_348662_B04FB76A)
-In-Reply-To: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
-References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
+Received: from nbd.name ([46.4.11.11]:46015 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760345Ab2EKQQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 12:16:47 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/6] atheros-initvals: remove the old script for generating ath9k headers
+Date: Fri, 11 May 2012 18:16:37 +0200
+Message-Id: <1336753001-29583-2-git-send-email-nbd@openwrt.org> (sfid-20120511_181655_084222_7990B1A4)
+In-Reply-To: <1336753001-29583-1-git-send-email-nbd@openwrt.org>
+References: <1336753001-29583-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-The debug prints were wrong and buggy. The HW pointer wasn't printed
-correctly, it was mixed up with the pointer to the rxbuf.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ gen_ath9k_headers.sh |   37 -------------------------------------
+ 1 files changed, 0 insertions(+), 37 deletions(-)
+ delete mode 100755 gen_ath9k_headers.sh
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index d7b5e66..9191143 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -499,7 +499,7 @@ static void iwl_rx_handle(struct iwl_trans *trans)
- 
- 	/* Rx interrupt, but nothing sent from uCode */
- 	if (i == r)
--		IWL_DEBUG_RX(trans, "r = %d, i = %d\n", r, i);
-+		IWL_DEBUG_RX(trans, "HW = SW = %d\n", r);
- 
- 	/* calculate total frames need to be restock after handling RX */
- 	total_empty = r - rxq->write_actual;
-@@ -515,7 +515,8 @@ static void iwl_rx_handle(struct iwl_trans *trans)
- 		rxb = rxq->queue[i];
- 		rxq->queue[i] = NULL;
- 
--		IWL_DEBUG_RX(trans, "rxbuf: r = %d, i = %d (%p)\n", rxb);
-+		IWL_DEBUG_RX(trans, "rxbuf: HW = %d, SW = %d (%p)\n",
-+			     r, i, rxb);
- 		iwl_rx_handle_rxbuf(trans, rxb);
- 
- 		i = (i + 1) & RX_QUEUE_MASK;
+diff --git a/gen_ath9k_headers.sh b/gen_ath9k_headers.sh
+deleted file mode 100755
+index b941b51..0000000
+--- a/gen_ath9k_headers.sh
++++ /dev/null
+@@ -1,37 +0,0 @@
+-#!/bin/sh
+-
+-gen_ath9k_header()
+-{
+-	local family="$1"
+-	local ath9k_hdr
+-
+-	case $family in
+-	ar5008 |\
+-	ar9001 |\
+-	ar9002 |\
+-	ar9003-2p2|\
+-	ar9330-1p1|\
+-	ar9330-1p2|\
+-	ar9485|\
+-	ar9580-1p0|\
+-	ar9462-2p0)
+-		ath9k_hdr="$(echo $family | tr '-' '_')_initvals.h"
+-		;;
+-	*)
+-		echo "unknown family: '$family'" 1>&2
+-		return 1
+-		;;
+-	esac
+-
+-	echo "$family => $ath9k_hdr"
+-	./initvals -w -f $family > "./$ath9k_hdr"
+-}
+-
+-FAMILIES="$@"
+-[ -z "$FAMILIES" ] && FAMILIES="ar5008 ar9001 ar9002 ar9003-2p2 ar9330-1p1 ar9330-1p2 ar9485 ar9580-1p0 ar9462-2p0"
+-
+-make clean all ATHEROS=1 >/dev/null
+-
+-for family in $FAMILIES; do
+-	gen_ath9k_header $family
+-done
 -- 
-1.7.10
+1.7.3.2
 
