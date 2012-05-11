@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47548 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976Ab2EJUTD (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:60175 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754731Ab2EKF5a (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 16:19:03 -0400
-Message-ID: <1336681142.4334.36.camel@jlt3.sipsolutions.net> (sfid-20120510_221908_481440_FB4D8DC1)
-Subject: [RFC] mac80211: clean up ieee80211_set_channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 10 May 2012 22:19:02 +0200
+	Fri, 11 May 2012 01:57:30 -0400
+Received: by lahm15 with SMTP id m15so2118849lah.37
+        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 22:57:27 -0700 (PDT)
+Message-ID: <1336715845.12189.160.camel@cumari.coelho.fi> (sfid-20120511_075734_393229_3E0FE491)
+Subject: Re: [PATCH 00/78] 18xx chip support
+From: Luciano Coelho <coelho@ti.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	assaf@ti.com
+Date: Fri, 11 May 2012 08:57:25 +0300
+In-Reply-To: <87ipg48ivh.fsf@purkki.adurom.net>
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	 <87ipg48ivh.fsf@purkki.adurom.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Kalle,
 
-There's no need for ieee80211_set_channel to check
-whether a change in configuration happened since
-ieee80211_hw_config() auto-detects it.
+On Thu, 2012-05-10 at 12:50 +0300, Kalle Valo wrote:
+> Arik Nemtsov <arik@wizery.com> writes:
+> 
+> > This series adds initial support for the 18xx chip family. The new
+> > module uses wlcore for functionality common with the 12xx family.
+> 
+> You do know that sending 78 patches in one patchset is very much
+> frowned upon? No sane person (outside of wl12xx) is going to review
+> all of these.
 
-Additionally, it's wrong to pretend the HT config
-for the BSS changed, it didn't, the BSS can't be
-up & running (AP beaconing etc.) when the channel
-type is changed anyway.
+Yes, I totally agree with you.  I have been trying to send all this
+stuff in smaller batches that would be much easier to review and manage
+upstream.  We wanted to squash many of them, clean things up a bit more
+and so on, but we diverged so much from the mainline (we had close to
+100 patches dragging in our internal trees) that all the rebases and
+even small squashes or moving patches around became a horrible
+nightmare.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |   18 ++----------------
- 1 file changed, 2 insertions(+), 16 deletions(-)
+As you know, I've been on sick leave for a while, so all this work would
+have dragged even longer if Arik and the rest of the team didn't take an
+action to get it out.
 
---- a/net/mac80211/cfg.c	2012-05-10 21:46:37.000000000 +0200
-+++ b/net/mac80211/cfg.c	2012-05-10 21:47:12.000000000 +0200
-@@ -1684,9 +1684,6 @@ static int ieee80211_set_channel(struct
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_sub_if_data *sdata = NULL;
--	struct ieee80211_channel *old_oper;
--	enum nl80211_channel_type old_oper_type;
--	enum nl80211_channel_type old_vif_oper_type= NL80211_CHAN_NO_HT;
- 
- 	if (netdev)
- 		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
-@@ -1704,24 +1701,13 @@ static int ieee80211_set_channel(struct
- 		break;
- 	}
- 
--	if (sdata)
--		old_vif_oper_type = sdata->vif.bss_conf.channel_type;
--	old_oper_type = local->_oper_channel_type;
--
- 	if (!ieee80211_set_channel_type(local, sdata, channel_type))
- 		return -EBUSY;
- 
--	old_oper = local->oper_channel;
- 	local->oper_channel = chan;
- 
--	/* Update driver if changes were actually made. */
--	if ((old_oper != local->oper_channel) ||
--	    (old_oper_type != local->_oper_channel_type))
--		ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
--
--	if (sdata && sdata->vif.type != NL80211_IFTYPE_MONITOR &&
--	    old_vif_oper_type != sdata->vif.bss_conf.channel_type)
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_HT);
-+	/* auto-detects changes */
-+	ieee80211_hw_config(local, 0);
- 
- 	return 0;
- }
+To conclude, even though I don't like the way this was done, now it's
+done and sending this series again in smaller batches would just make
+things worse, because not only there would still be a huge bunch of
+patches in total, most of them would actually be duplicate or just
+slightly modified.  
 
+So, unless you or someone else really disagrees, I'll apply these to the
+wl12xx.git tree.
+
+And then I'll go find Arik to remove some of his fingernails, especially
+the one on his right hand pinky so he can't hit ENTER so quickly after
+typing git send-email. :P
+
+-- 
+Cheers,
+Luca.
 
