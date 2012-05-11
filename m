@@ -1,103 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42488 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757113Ab2EOHmf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43326 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758782Ab2EKGan (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 03:42:35 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 1/1] ath9k: Fix modal EERPOM dump
-Date: Tue, 15 May 2012 12:56:10 +0530
-Message-ID: <1337066770-22978-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120515_094239_492013_A324E109)
+	Fri, 11 May 2012 02:30:43 -0400
+Message-ID: <4FACB14D.4080507@qca.qualcomm.com> (sfid-20120511_083048_636509_0832118F)
+Date: Fri, 11 May 2012 09:27:25 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jonathan Bagg <jbagg@lenbrook.com>
+CC: Anthony Ginger <mapfly@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: ath6kl hostapd
+References: <CAK0tYSKLhALwUca2LPiRLfXTK-Qt3Oh3Lvk=V272AXdb=aAP7w@mail.gmail.com> <4F4B25F5.4090204@qca.qualcomm.com> <4F8546C7.40703@qca.qualcomm.com> <4FA036B6.7040002@lenbrook.com> <4FA03939.4080307@qca.qualcomm.com> <4FA0535D.2060907@lenbrook.com> <4FA21468.6060909@qca.qualcomm.com> <4FA43C79.6020202@lenbrook.com> <4FAB7D52.6060803@qca.qualcomm.com> <4FAC0992.6010603@lenbrook.com>
+In-Reply-To: <4FAC0992.6010603@lenbrook.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 05/10/2012 09:31 PM, Jonathan Bagg wrote:
+> On 12-05-10 04:33 AM, Kalle Valo wrote:
+>> On 05/04/2012 11:30 PM, Jonathan Bagg wrote:
+>>> On 12-05-03 01:15 AM, Kalle Valo wrote:
+>>>> That might be challenging. I think it's easier if you add debug messages
+>>>> and try to pinpoint where it is failing. For example
+>>>> ath6kl_cfg80211_change_iface() is a good place to start debugging.
+>>> I tried again and it appears that sometimes (<  10 %) I can make
+>>> connections to the ath6kl in AP mode.
+>> What exactly happens when a connection fails? What client device are you
+>> using?
+>
+> client = ipad and mac book
+> 
+> Udhcpd keeps sending offers and acks forever.
+> Sending OFFER of 192.168.5.80
+> Sending OFFER of 192.168.5.80
+> Sending ACK to 192.168.5.80
+> Sending ACK to 192.168.5.80
+> Sending ACK to 192.168.5.80
 
-we provide excess buffer size for 'simple_read_from_buffer'
-for modal EEPROM dump. This results in trailing NULL bytes
-at the end of EEPROM dump, fix this.
+Maybe it's a broadcast problem or something? Try with manual IPs and
+then first run unicast ping separetely both from the client and the AP,
+for example:
 
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Reported-by: Holger Schurig <holgerschurig@googlemail.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |    4 ++--
- 4 files changed, 6 insertions(+), 6 deletions(-)
+ping 192.168.5.1
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ac53d90..868f30f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3412,11 +3412,11 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 	if (!dump_base_hdr) {
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "2GHz modal Header");
--		len += ar9003_dump_modal_eeprom(buf, len, size,
-+		len = ar9003_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader2G);
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "5GHz modal Header");
--		len += ar9003_dump_modal_eeprom(buf, len, size,
-+		len = ar9003_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader5G);
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 4322ac8..a850f44 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -135,7 +135,7 @@ static u32 ath9k_hw_4k_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 	if (!dump_base_hdr) {
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "2GHz modal Header");
--		len += ath9k_dump_4k_modal_eeprom(buf, len, size,
-+		len = ath9k_dump_4k_modal_eeprom(buf, len, size,
- 						  &eep->modalHeader);
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index aa61476..cd742fb 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -132,7 +132,7 @@ static u32 ath9k_hw_ar9287_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 	if (!dump_base_hdr) {
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "2GHz modal Header");
--		len += ar9287_dump_modal_eeprom(buf, len, size,
-+		len = ar9287_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader);
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index b5fba8b..56290f3 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -211,11 +211,11 @@ static u32 ath9k_hw_def_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 	if (!dump_base_hdr) {
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "2GHz modal Header");
--		len += ath9k_def_dump_modal_eeprom(buf, len, size,
-+		len = ath9k_def_dump_modal_eeprom(buf, len, size,
- 						   &eep->modalHeader[0]);
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "5GHz modal Header");
--		len += ath9k_def_dump_modal_eeprom(buf, len, size,
-+		len = ath9k_def_dump_modal_eeprom(buf, len, size,
- 						   &eep->modalHeader[1]);
- 		goto out;
- 	}
--- 
-1.7.0.4
+If that works run broadcast ping separetely both from the client and the AP:
 
+ping -b 192.168.1.255
+
+Most likely you need to enable broadcast ping replies to get any answers:
+
+echo 0 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+And if MacOS doesn't support broadcast pings install a real operating
+system ;)
+
+Kalle
