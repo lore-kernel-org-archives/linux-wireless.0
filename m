@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:58868 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754266Ab2E3U0M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 16:26:12 -0400
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/4] mac80211: Fix likely misuse of | for &
-Date: Wed, 30 May 2012 13:25:54 -0700
-Message-Id: <aa9c55edda55d38111660c0b250d12d79f6e1755.1338408931.git.joe@perches.com> (sfid-20120530_222740_449137_003954ED)
-In-Reply-To: <cover.1338408931.git.joe@perches.com>
-References: <cover.1338408931.git.joe@perches.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54329 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759167Ab2EKLDt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 07:03:49 -0400
+Received: by dady13 with SMTP id y13so2958005dad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2012 04:03:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FACF02B.7070006@broadcom.com>
+References: <4FACF02B.7070006@broadcom.com>
+From: Kay Sievers <kay@vrfy.org>
+Date: Fri, 11 May 2012 13:03:28 +0200
+Message-ID: <CAPXgP12qaNm1Vh=8isf2gq=sUW8hOgi_STNfTuOqg5XT4KgwZA@mail.gmail.com> (sfid-20120511_130405_681592_56A4BAAD)
+Subject: Re: in-kernel drivers and firmware loader
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using | with a constant is always true.
-Likely this should have be &.
+On Fri, May 11, 2012 at 12:55 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> To my memory (which fails from time to time) you posted a message on
+> using the asynchronous API for firmware loading as some drivers were
+> blocking on it in the module initialization. So for our driver we
+> decoupled the initialization from probe and subsequently the firmware
+> request. Assuming this solves the udev issue, but I am currently looking
+> into a somewhat related issue with our driver built-in.
+>
+> I am testing on a PandaBoard which boots a linux kernel without a initrd
+> and our device is detected before the root filesystem is mounted. I was
+> expecting the async firmware request to get called back immediatly with
+> firmware pointer being NULL. The behaviour is slightly different as this
+> callback is coming after 60 seconds, which is the timeout. I guess the
+> uevent just gets lost without the kernel knowing it. Is that correct?
 
-cc: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Joe Perches <joe@perches.com>
----
- net/mac80211/cfg.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+It's probably sent, but nothing see it because there is no userspace
+that would have subscribed.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 495831e..e9cecca 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -533,16 +533,16 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
- 		sinfo.filled = 0;
- 		sta_set_sinfo(sta, &sinfo);
- 
--		if (sinfo.filled | STATION_INFO_TX_BITRATE)
-+		if (sinfo.filled & STATION_INFO_TX_BITRATE)
- 			data[i] = 100000 *
- 				cfg80211_calculate_bitrate(&sinfo.txrate);
- 		i++;
--		if (sinfo.filled | STATION_INFO_RX_BITRATE)
-+		if (sinfo.filled & STATION_INFO_RX_BITRATE)
- 			data[i] = 100000 *
- 				cfg80211_calculate_bitrate(&sinfo.rxrate);
- 		i++;
- 
--		if (sinfo.filled | STATION_INFO_SIGNAL_AVG)
-+		if (sinfo.filled & STATION_INFO_SIGNAL_AVG)
- 			data[i] = (u8)sinfo.signal_avg;
- 		i++;
- 	} else {
--- 
-1.7.8.111.gad25c.dirty
+If udev is started later during bootup, and the coldplug triggers all
+events again, the firmware request should be found and be fulfilled by
+userspace -- at least that's the theory.
 
+Can you reach the box with a login before the 60 seconds are reached?
+
+Do you see a firmware request (directory) still hanging around in
+/sys/class/firmware/ ?
+
+Kay
