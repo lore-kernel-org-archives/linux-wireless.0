@@ -1,103 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20496 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156Ab2EYKTN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 06:19:13 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2 1/2] ath6kl: Fix race in aggregation reorder logic
-Date: Fri, 25 May 2012 15:49:17 +0530
-Message-ID: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120525_121916_255410_ED6199EF)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:46022 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760625Ab2EKQQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 12:16:47 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/6] atheros-initvals: add a makefile target for refreshing all initval files
+Date: Fri, 11 May 2012 18:16:36 +0200
+Message-Id: <1336753001-29583-1-git-send-email-nbd@openwrt.org> (sfid-20120511_181656_694464_723D67F7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are many places where tid data are accessed without
-the lock (rxtid->lock), this can lead to a race condition
-when the timeout handler for aggregatin reorder and the
-receive function are getting executed at the same time.
-Fix this race, but still there are races which can not
-be fixed without rewriting the whole aggregation reorder
-logic, for now fix the obvious ones.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath6kl/txrx.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+ Makefile |   31 +++++++++++++++++++++----------
+ 1 files changed, 21 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 67206ae..60723be 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1036,6 +1036,7 @@ static void aggr_deque_frms(struct aggr_info_conn *agg_conn, u8 tid,
- 	rxtid = &agg_conn->rx_tid[tid];
- 	stats = &agg_conn->stat[tid];
+diff --git a/Makefile b/Makefile
+index ad02c6d..b8b0838 100644
+--- a/Makefile
++++ b/Makefile
+@@ -23,22 +23,33 @@ ATHEROS_DEPS += \
+ 	ar9300_jupiter20.ini
+ endif
  
-+	spin_lock_bh(&rxtid->lock);
- 	idx = AGGR_WIN_IDX(rxtid->seq_next, rxtid->hold_q_sz);
+-ATH9K_DEPS += \
+-	ar5008_initvals.h 	\
+-	ar9001_initvals.h	\
+-	ar9002_initvals.h 	\
+-	ar9003_2p2_initvals.h	\
+-	ar9330_1p1_initvals.h	\
+-	ar9330_1p2_initvals.h	\
+-	ar9485_initvals.h	\
+-	ar9580_1p0_initvals.h   \
+-	ar9462_2p0_initvals.h
++ATH9K_HEADERS = \
++	ar5008:ar5008_initvals.h		\
++	ar9001:ar9001_initvals.h		\
++	ar9002:ar9002_initvals.h		\
++	ar9003-2p2:ar9003_2p2_initvals.h	\
++	ar9330-1p1:ar9330_1p1_initvals.h	\
++	ar9330-1p2:ar9330_1p2_initvals.h	\
++	ar9485:ar9485_initvals.h		\
++	ar9580-1p0:ar9580_1p0_initvals.h \
++	ar9462-2p0:ar9462_2p0_initvals.h
++
++ATH9K_DEPS := $(foreach header,$(ATH9K_HEADERS),$(word 2,$(subst :, ,$(header))))
  
- 	/*
-@@ -1054,8 +1055,6 @@ static void aggr_deque_frms(struct aggr_info_conn *agg_conn, u8 tid,
- 	seq_end = seq_no ? seq_no : rxtid->seq_next;
- 	idx_end = AGGR_WIN_IDX(seq_end, rxtid->hold_q_sz);
+ SOURCES:=initvals.c sha1.c
  
--	spin_lock_bh(&rxtid->lock);
--
- 	do {
- 		node = &rxtid->hold_q[idx];
- 		if ((order == 1) && (!node->skb))
-@@ -1127,11 +1126,13 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
- 		    ((end > extended_end) && (cur > extended_end) &&
- 		     (cur < end))) {
- 			aggr_deque_frms(agg_conn, tid, 0, 0);
-+			spin_lock_bh(&rxtid->lock);
- 			if (cur >= rxtid->hold_q_sz - 1)
- 				rxtid->seq_next = cur - (rxtid->hold_q_sz - 1);
- 			else
- 				rxtid->seq_next = ATH6KL_MAX_SEQ_NO -
- 						  (rxtid->hold_q_sz - 2 - cur);
-+			spin_unlock_bh(&rxtid->lock);
- 		} else {
- 			/*
- 			 * Dequeue only those frames that are outside the
-@@ -1188,6 +1189,7 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
- 		rxtid->progress = true;
- 	else
- 		for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
-+			spin_lock_bh(&rxtid->lock);
- 			if (rxtid->hold_q[idx].skb) {
- 				/*
- 				 * There is a frame in the queue and no
-@@ -1201,8 +1203,10 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
- 					   HZ * (AGGR_RX_TIMEOUT) / 1000));
- 				rxtid->progress = false;
- 				rxtid->timer_mon = true;
-+				spin_unlock_bh(&rxtid->lock);
- 				break;
- 			}
-+			spin_unlock_bh(&rxtid->lock);
- 		}
+ initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) $(SOURCES)
+ 	gcc $(LOCAL_CFLAGS) -o $@ $(SOURCES)
  
- 	return is_queued;
-@@ -1627,12 +1631,15 @@ static void aggr_timeout(unsigned long arg)
++define refresh_command
++	./initvals -w -f $(word 1,$(subst :, ,$(1))) > $(word 2,$(subst :, ,$(1)))
++
++endef
++
++refresh: initvals
++	$(foreach header,$(ATH9K_HEADERS),$(call refresh_command,$(header)))
++	./initvals > checksums.txt
++
+ all: initvals
  
- 		if (rxtid->aggr && rxtid->hold_q) {
- 			for (j = 0; j < rxtid->hold_q_sz; j++) {
-+				spin_lock_bh(&rxtid->lock);
- 				if (rxtid->hold_q[j].skb) {
- 					aggr_conn->timer_scheduled = true;
- 					rxtid->timer_mon = true;
- 					rxtid->progress = false;
-+					spin_unlock_bh(&rxtid->lock);
- 					break;
- 				}
-+				spin_unlock_bh(&rxtid->lock);
- 			}
- 
- 			if (j >= rxtid->hold_q_sz)
+ clean:
 -- 
-1.7.0.4
+1.7.3.2
 
