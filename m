@@ -1,92 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:37568 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933994Ab2EXVVU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 17:21:20 -0400
-Date: Thu, 24 May 2012 16:21:15 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: BCM4331 tx failures after S3
-Message-ID: <20120524212115.GD26760@thinkpad-t410> (sfid-20120524_232124_532758_4502B846)
-References: <20120522165251.GA31347@thinkpad-t410>
- <4FBCAE3E.6050206@broadcom.com>
- <20120523135506.GB30165@thinkpad-t410>
- <4FBE0110.5020209@broadcom.com>
+Received: from purkki.adurom.net ([80.68.90.206]:58493 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758322Ab2EKJEB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 05:04:01 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	assaf@ti.com
+Subject: Re: [PATCH 00/78] 18xx chip support
+References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	<87ipg48ivh.fsf@purkki.adurom.net>
+	<1336715845.12189.160.camel@cumari.coelho.fi>
+Date: Fri, 11 May 2012 12:03:58 +0300
+In-Reply-To: <1336715845.12189.160.camel@cumari.coelho.fi> (Luciano Coelho's
+	message of "Fri, 11 May 2012 08:57:25 +0300")
+Message-ID: <87aa1f84xt.fsf@purkki.adurom.net> (sfid-20120511_110411_295537_E86688E1)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FBE0110.5020209@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 24, 2012 at 11:36:16AM +0200, Arend van Spriel wrote:
-> On 05/23/2012 03:55 PM, Seth Forshee wrote:
-> > On Wed, May 23, 2012 at 11:30:38AM +0200, Arend van Spriel wrote:
-> >> On 05/22/2012 06:52 PM, Seth Forshee wrote:
-> >>> Hi Arend,
-> >>>
-> >>> I've inquired about this issue on the list once before, but I thought
-> >>> I'd try once again to see if Broadcom can offer any suggestions.
-> >>>
-> >>> Recent MacBook Pros with BCM4331 wireless have a strange problem. Tx
-> >>> doesn't work after S3, but only if no external power is applied during
-> >>> the resume. mac80211 reports mostly timeouts for responses to probe
-> >>> requests, but analysis with wireshark shows no frames from the BCM4331
-> >>> on the air. The only way I've found to recover is to reload both b43 and
-> >>> bcma; reloading b43 alone is not enough.
-> >>
-> >> Yikes. I recently did suspend/resume and hibernate testing with BCM43224
-> >> (so brcmsmac and bcma), but my system was on AC. I will execute them
-> >> again on battery. I want to make sure it is not a BCM4331 specific issue.
-> > 
-> > I'm also testing a Macbook Air with BCM43224 using brcmsmac, and it does
-> > not suffer from the same issue.
-> 
-> Good to know. I will check whether there are any known issues with
-> BCM4331 that could explain this.
-> 
-> >>> I've checked the values of MACCTL and the DMA TXCTL registers, since
-> >>> these are the ones used by brcmsmac to mute tx, but those look okay. Any
-> >>> suggestions of other things to check? My next step would be to start
-> >>> looking at the state of the phy and radio, but since we don't have much
-> >>> information about what the registers there actually do some suggestions
-> >>> would be helpful.
-> >>
-> >> When going to S3 the driver is told by mac80211 .stop callback to abort
-> >> driver operation so I do not expect b43 has a problem. Instead we
-> >> probably have to look at the host PCI code in bcma, but before going
-> >> there let me execute my tests.
-> >>
-> >> Can you tell me on what kernel version you see this issue. I would also
-> >> like to have a look at your kernel log.
-> > 
-> > I'm still seeing it in both 3.4 and wireless-testing. Attached is dmesg
-> > from wireless-testing.
-> 
-> Nothing really looks wrong in there, but then again there are not much
-> b43/bcma related messages.
+Hi Luca,
 
-I don't know if this helps, but I can do a successful passive scan when
-tx isn't working. So it seems rx still works, only tx is broken. I also
-forgot to state explicitly that it only matters that AC power isn't
-present during the resume; i.e. I can suspend with AC connected, remove
-AC, then resume, and I will still get tx failures.
+Luciano Coelho <coelho@ti.com> writes:
 
-I've been going through the suspend/resume paths for bcma and pci, and I
-can't find anything that would account for differing behavior depending
-on whether or not AC power is present. Even the ACPI _PS* methods for
-the device appear to be (effectively) no-ops.
+> On Thu, 2012-05-10 at 12:50 +0300, Kalle Valo wrote:
+>> Arik Nemtsov <arik@wizery.com> writes:
+>> 
+>> > This series adds initial support for the 18xx chip family. The new
+>> > module uses wlcore for functionality common with the 12xx family.
+>> 
+>> You do know that sending 78 patches in one patchset is very much
+>> frowned upon? No sane person (outside of wl12xx) is going to review
+>> all of these.
+>
 
-The only other thing that comes to mind that might be disabling tx is
-firmware, either system firmware or the BCM4331's firmware. Perhaps
-there's something that bcma or b43 is not initializing that's usually in
-the needed state? That's mostly just a guess, but I'm at a loss for
-other explanations at this point.
+[...]
 
-Cheers,
-Seth
+> So, unless you or someone else really disagrees, I'll apply these to the
+> wl12xx.git tree.
 
+I don't like this method of sending patches with the "take it or leave it"
+attitude, because there's really no way to give any feedback to a series
+of 78 patches. But I'm not going to go berserk either if you take the
+patch bomb, it's really up to you.
+
+But I can promise you that I will complain everytime I see a patch bomb
+like this, and I will get louder after each iteration. And as you know,
+I have a really loud voice :)
+
+> And then I'll go find Arik to remove some of his fingernails, especially
+> the one on his right hand pinky so he can't hit ENTER so quickly after
+> typing git send-email. :P
+
+Please still try to be gentle ;)
+
+-- 
+Kalle Valo
