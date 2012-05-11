@@ -1,133 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:56088 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752091Ab2ECFKT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 01:10:19 -0400
-Message-ID: <4FA21339.8060407@gtri.gatech.edu> (sfid-20120503_071024_045381_B1BFEA7A)
-Date: Thu, 3 May 2012 01:10:17 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-CC: <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/9] rtlwifi: avoid race registering with mac80211
-References: <4FA212D9.5020602@gtri.gatech.edu>
-In-Reply-To: <4FA212D9.5020602@gtri.gatech.edu>
-Content-Type: multipart/mixed;
-	boundary="------------000405020607050809080207"
+Received: from nbd.name ([46.4.11.11]:34747 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759623Ab2EKQj7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 12:39:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/6] atheros-initvals: add a makefile target for refreshing all initval files
+Date: Fri, 11 May 2012 18:39:51 +0200
+Message-Id: <1336754396-30216-1-git-send-email-nbd@openwrt.org> (sfid-20120511_184015_495582_A1581FAD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------000405020607050809080207
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-
-
-
---------------000405020607050809080207
-Content-Type: text/x-patch;
-	name="0001-rtlwifi-avoid-race-registering-with-mac80211.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="0001-rtlwifi-avoid-race-registering-with-mac80211.patch"
-
->From 3511cdf6c7d4388a21a4d36da423258e73a963b6 Mon Sep 17 00:00:00 2001
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Date: Wed, 2 May 2012 23:48:21 -0400
-Subject: [PATCH 1/9] rtlwifi: avoid race registering with mac80211
-
-Move the ieee80211_register_hw call out of the firmware callback.  If the
-firmware is cached in memory, the callback could be called before
-rtl_init_core which configures the mac80211 bits.
-
-Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rtlwifi/base.c         |    9 +++++++++
- drivers/net/wireless/rtlwifi/core.c         |    9 ---------
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    9 ---------
- 3 files changed, 9 insertions(+), 18 deletions(-)
+ Makefile |   31 +++++++++++++++++++++----------
+ 1 files changed, 21 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-index e54488d..a08b408 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -421,11 +421,20 @@ int rtl_init_core(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *rtlmac = rtl_mac(rtl_priv(hw));
-+	int err;
+diff --git a/Makefile b/Makefile
+index ad02c6d..b8b0838 100644
+--- a/Makefile
++++ b/Makefile
+@@ -23,22 +23,33 @@ ATHEROS_DEPS += \
+ 	ar9300_jupiter20.ini
+ endif
  
- 	/* <1> init mac80211 */
- 	_rtl_init_mac80211(hw);
- 	rtlmac->hw = hw;
- 
-+	err = ieee80211_register_hw(hw);
-+	if (err) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+			"Can't register mac80211 hw\n");
-+		return 1;
-+	}
-+	rtlpriv->mac80211.mac80211_registered = 1;
+-ATH9K_DEPS += \
+-	ar5008_initvals.h 	\
+-	ar9001_initvals.h	\
+-	ar9002_initvals.h 	\
+-	ar9003_2p2_initvals.h	\
+-	ar9330_1p1_initvals.h	\
+-	ar9330_1p2_initvals.h	\
+-	ar9485_initvals.h	\
+-	ar9580_1p0_initvals.h   \
+-	ar9462_2p0_initvals.h
++ATH9K_HEADERS = \
++	ar5008:ar5008_initvals.h		\
++	ar9001:ar9001_initvals.h		\
++	ar9002:ar9002_initvals.h		\
++	ar9003-2p2:ar9003_2p2_initvals.h	\
++	ar9330-1p1:ar9330_1p1_initvals.h	\
++	ar9330-1p2:ar9330_1p2_initvals.h	\
++	ar9485:ar9485_initvals.h		\
++	ar9580-1p0:ar9580_1p0_initvals.h \
++	ar9462-2p0:ar9462_2p0_initvals.h
 +
- 	/* <2> rate control register */
- 	hw->rate_control_algorithm = "rtl_rc";
++ATH9K_DEPS := $(foreach header,$(ATH9K_HEADERS),$(word 2,$(subst :, ,$(header))))
  
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index 278e9f9..5f62b9d 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -40,7 +40,6 @@ void rtl_fw_cb(const struct firmware *firmware, void *context)
- {
- 	struct ieee80211_hw *hw = context;
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	int err;
+ SOURCES:=initvals.c sha1.c
  
- 	RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
- 			 "Firmware callback routine entered!\n");
-@@ -60,14 +59,6 @@ void rtl_fw_cb(const struct firmware *firmware, void *context)
- 	rtlpriv->rtlhal.fwsize = firmware->size;
- 	release_firmware(firmware);
+ initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) $(SOURCES)
+ 	gcc $(LOCAL_CFLAGS) -o $@ $(SOURCES)
  
--	err = ieee80211_register_hw(hw);
--	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't register mac80211 hw\n");
--		return;
--	} else {
--		rtlpriv->mac80211.mac80211_registered = 1;
--	}
- 	set_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status);
++define refresh_command
++	./initvals -w -f $(word 1,$(subst :, ,$(1))) > $(word 2,$(subst :, ,$(1)))
++
++endef
++
++refresh: initvals
++	$(foreach header,$(ATH9K_HEADERS),$(call refresh_command,$(header)))
++	./initvals > checksums.txt
++
+ all: initvals
  
- 	/*init rfkill */
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-index f1b3600..9739e24 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -95,7 +95,6 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(pcipriv);
- 	struct rt_firmware *pfirmware = NULL;
--	int err;
- 
- 	RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
- 			 "Firmware callback routine entered!\n");
-@@ -117,14 +116,6 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
- 	pfirmware->sz_fw_tmpbufferlen = firmware->size;
- 	release_firmware(firmware);
- 
--	err = ieee80211_register_hw(hw);
--	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't register mac80211 hw\n");
--		return;
--	} else {
--		rtlpriv->mac80211.mac80211_registered = 1;
--	}
- 	rtlpci->irq_alloc = 1;
- 	set_bit(RTL_STATUS_INTERFACE_START, &rtlpriv->status);
- 
+ clean:
 -- 
-1.7.7.6
+1.7.3.2
 
-
---------------000405020607050809080207--
