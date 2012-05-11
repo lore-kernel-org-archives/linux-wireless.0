@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33235 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758201Ab2EJJqP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:46:15 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Soumik DAS <soumik.das@stericsson.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: Increment probe_send_count earlier
-References: <2E48302EED53D048A7BA72B0A307FB511FB9009098@EXDCVYMBSTM005.EQ1STM.local>
-	<87vck48q92.fsf@purkki.adurom.net>
-	<2E48302EED53D048A7BA72B0A307FB511FB9009215@EXDCVYMBSTM005.EQ1STM.local>
-Date: Thu, 10 May 2012 12:46:10 +0300
-In-Reply-To: <2E48302EED53D048A7BA72B0A307FB511FB9009215@EXDCVYMBSTM005.EQ1STM.local>
-	(Soumik DAS's message of "Thu, 10 May 2012 10:43:57 +0200")
-Message-ID: <87mx5g8j31.fsf@purkki.adurom.net> (sfid-20120510_114618_699775_9FD8F2D6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:56053 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932215Ab2EKSUr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 14:20:47 -0400
+Message-Id: <20120511181044.938534049@sipsolutions.net> (sfid-20120511_202052_431487_8F92F00D)
+Date: Fri, 11 May 2012 20:08:19 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Williams <dcbw@redhat.com>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [RFC 2/3] cfg80211: disallow setting channel on WDS interfaces
+References: <20120511180817.974687689@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Soumik,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Soumik DAS <soumik.das@stericsson.com> writes:
+If it worked (Felix says it doesn't right now), the
+typical use-case for WDS interfaces would be to be
+slaved to AP mode interfaces. Therefore, it isn't
+necessary to set the channel on WDS interfaces. As
+they don't support powersave or anything like that,
+they also couldn't use a different channel anyway.
 
-> In some cases the sequence of events gets changed -
-> 	a. call ieee80211_send_nullfunc()
-> 		(current thread gets scheduled out/pre-empted at this point)
-> 	b. null frame gets transmitted and acked
-> 	c. probe_send_count is incremented
-> 	d. mac80211 waits for some specified timeout and checks that probe_send_count is still > 0. It concludes that AP did not acknowledge the null frame and disassociates from the current AP.
-> 	e. After a scan STA again re-associate with the same AP.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c     |    6 ++----
+ net/wireless/wext-compat.c |    1 -
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-Ok, so there's a race in mac80211? You should describe the race in the
-commit log so that a random developer understands what's happening. It
-doesn't need to be anything fancy, usually just few sentences is enough
-to give sufficient background for the patch. Where the race is, how
-often it happens and how to fix it properly, that sort of things.
+--- a/net/wireless/nl80211.c	2012-05-11 19:34:13.000000000 +0200
++++ b/net/wireless/nl80211.c	2012-05-11 20:01:08.000000000 +0200
+@@ -1128,9 +1128,8 @@ static int parse_txq_params(struct nlatt
+ static bool nl80211_can_set_dev_channel(struct wireless_dev *wdev)
+ {
+ 	/*
+-	 * You can only set the channel explicitly for WDS interfaces,
+-	 * all others have their channel managed via their respective
+-	 * "establish a connection" command (connect, join, ...)
++	 * You can't set the channel explicitly, it is managed with
++	 * the "establish a connection" commands (connect, join, ...)
+ 	 *
+ 	 * For AP/GO and mesh mode, the channel can be set with the
+ 	 * channel userspace API, but is only stored and passed to the
+@@ -1144,7 +1143,6 @@ static bool nl80211_can_set_dev_channel(
+ 	 */
+ 	return !wdev ||
+ 		wdev->iftype == NL80211_IFTYPE_AP ||
+-		wdev->iftype == NL80211_IFTYPE_WDS ||
+ 		wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
+ 		wdev->iftype == NL80211_IFTYPE_MONITOR ||
+ 		wdev->iftype == NL80211_IFTYPE_P2P_GO;
+--- a/net/wireless/wext-compat.c	2012-05-11 19:45:41.000000000 +0200
++++ b/net/wireless/wext-compat.c	2012-05-11 20:01:08.000000000 +0200
+@@ -796,7 +796,6 @@ static int cfg80211_wext_siwfreq(struct
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return cfg80211_ibss_wext_siwfreq(dev, info, wextfreq, extra);
+ 	case NL80211_IFTYPE_MONITOR:
+-	case NL80211_IFTYPE_WDS:
+ 		freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
+ 		if (freq < 0)
+ 			return freq;
 
-I repeat this a lot (sorry!) but the most important question the commit
-log should answer is "Why?". The question "What?" isn't actually that
-important as anyone can read the patch themselves.
 
--- 
-Kalle Valo
