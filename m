@@ -1,202 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10073 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754991Ab2ENRrf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 13:47:35 -0400
-From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-Subject: [PATCH v2] ath6kl: enable enhanced bmiss detection
-Date: Mon, 14 May 2012 10:47:32 -0700
-Message-ID: <1337017652-3962-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120514_194739_722636_A11EC3CA)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:34746 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759523Ab2EKQj7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 12:39:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 5/6] atheros-initvals: update copyright notices
+Date: Fri, 11 May 2012 18:39:55 +0200
+Message-Id: <1336754396-30216-5-git-send-email-nbd@openwrt.org> (sfid-20120511_184012_414667_9A7F951C)
+In-Reply-To: <1336754396-30216-4-git-send-email-nbd@openwrt.org>
+References: <1336754396-30216-1-git-send-email-nbd@openwrt.org>
+ <1336754396-30216-2-git-send-email-nbd@openwrt.org>
+ <1336754396-30216-3-git-send-email-nbd@openwrt.org>
+ <1336754396-30216-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable enhanced bmiss detection if the firmware supports it. This
-feature is only enabled on some firmwares since it comes with a power
-cost.
-
-Also add a few missing command ids to keep the enums straight.
-
-Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-v2:
-	comments (Kalle)
-	indentation (Kalle)
+ initvals.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   29 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +
- drivers/net/wireless/ath/ath6kl/core.h     |    3 ++
- drivers/net/wireless/ath/ath6kl/init.c     |    3 ++
- drivers/net/wireless/ath/ath6kl/wmi.c      |   19 ++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |   11 ++++++++++
- 6 files changed, 67 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index b869a35..af0c48a 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -575,6 +575,8 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	vif->nw_type = vif->next_mode;
-+	/* enable enhanced bmiss detection if applicable */
-+	ath6kl_cfg80211_sta_bmiss_enhance(vif, true);
- 
- 	if (vif->wdev.iftype == NL80211_IFTYPE_P2P_CLIENT)
- 		nw_subtype = SUBTYPE_P2PCLIENT;
-@@ -1512,6 +1514,9 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
- 		}
- 	}
- 
-+	/* need to clean up enhanced bmiss detection fw state */
-+	ath6kl_cfg80211_sta_bmiss_enhance(vif, false);
-+
- set_iface_type:
- 	switch (type) {
- 	case NL80211_IFTYPE_STATION:
-@@ -2614,6 +2619,30 @@ static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
-+void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable)
-+{
-+	int err;
-+
-+	if (WARN_ON(!test_bit(WMI_READY, &vif->ar->flag)))
-+		return;
-+
-+	if (vif->nw_type != INFRA_NETWORK)
-+		return;
-+
-+	if (!test_bit(ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
-+		      vif->ar->fw_capabilities))
-+		return;
-+
-+	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s fw bmiss enhance\n",
-+					enable ? "enable" : "disable");
-+	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
-+					       vif->fw_vif_idx, enable);
-+	if (err)
-+		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
-+			   "failed to %s enhanced bmiss detection: %d\n",
-+			   enable ? "enable" : "disable", err);
-+}
-+
- static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
- 				u8 *rsn_capab)
+diff --git a/initvals.c b/initvals.c
+index 8c06690..41744b4 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -303,7 +303,8 @@ typedef long long unsigned int u64;
+ static void print_license(void)
  {
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-index 5ea8cbb..b992046 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
-@@ -62,5 +62,7 @@ void ath6kl_cfg80211_cleanup(struct ath6kl *ar);
- 
- struct ath6kl *ath6kl_cfg80211_create(void);
- void ath6kl_cfg80211_destroy(struct ath6kl *ar);
-+/* TODO: remove this once ath6kl_vif_cleanup() is moved to cfg80211.c */
-+void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable);
- 
- #endif /* ATH6KL_CFG80211_H */
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 4d9c6f1..cb79378 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -100,6 +100,9 @@ enum ath6kl_fw_capability {
- 	/* Firmware has support to override rsn cap of rsn ie */
- 	ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
- 
-+	/* Firmware supports enhanced bmiss detection */
-+	ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
-+
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 7eb0515..10de132 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1659,6 +1659,9 @@ void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready)
- 		cfg80211_scan_done(vif->scan_req, true);
- 		vif->scan_req = NULL;
- 	}
-+
-+	/* need to clean up enhanced bmiss detection fw state */
-+	ath6kl_cfg80211_sta_bmiss_enhance(vif, false);
- }
- 
- void ath6kl_stop_txrx(struct ath6kl *ar)
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index ee8ec23..09a9e0c 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -2997,6 +2997,25 @@ int ath6kl_wmi_add_del_mcast_filter_cmd(struct wmi *wmi, u8 if_idx,
- 	return ret;
- }
- 
-+int ath6kl_wmi_sta_bmiss_enhance_cmd(struct wmi *wmi, u8 if_idx, bool enhance)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_sta_bmiss_enhance_cmd *cmd;
-+	int ret;
-+
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_sta_bmiss_enhance_cmd *) skb->data;
-+	cmd->enable = enhance ? 1 : 0;
-+
-+	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb,
-+				  WMI_STA_BMISS_ENHANCE_CMDID,
-+				  NO_SYNC_WMIFLAG);
-+	return ret;
-+}
-+
- s32 ath6kl_wmi_get_rate(s8 rate_index)
- {
- 	if (rate_index == RATE_AUTO)
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 9076bec..014f3dd 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -624,6 +624,10 @@ enum wmi_cmd_id {
- 	WMI_SEND_MGMT_CMDID,
- 	WMI_BEGIN_SCAN_CMDID,
- 
-+	WMI_SET_BLACK_LIST,
-+	WMI_SET_MCASTRATE,
-+
-+	WMI_STA_BMISS_ENHANCE_CMDID,
- };
- 
- enum wmi_mgmt_frame_type {
-@@ -1017,6 +1021,11 @@ struct wmi_bmiss_time_cmd {
- 	__le16 num_beacons;
- };
- 
-+/* WMI_STA_ENHANCE_BMISS_CMDID */
-+struct wmi_sta_bmiss_enhance_cmd {
-+	u8 enable;
-+} __packed;
-+
- /* WMI_SET_POWER_MODE_CMDID */
- enum wmi_power_mode {
- 	REC_POWER = 0x01,
-@@ -2547,6 +2556,8 @@ int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
- int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on);
- int ath6kl_wmi_add_del_mcast_filter_cmd(struct wmi *wmi, u8 if_idx,
- 					u8 *filter, bool add_filter);
-+int ath6kl_wmi_sta_bmiss_enhance_cmd(struct wmi *wmi, u8 if_idx, bool enable);
-+
- /* AP mode uAPSD */
- int ath6kl_wmi_ap_set_apsd(struct wmi *wmi, u8 if_idx, u8 enable);
- 
+ 	printf("/*\n");
+-	printf(" * Copyright (c) 2011 Atheros Communications Inc.\n");
++	printf(" * Copyright (c) 2010-2011 Atheros Communications Inc.\n");
++	printf(" * Copyright (c) 2011-2012 Qualcomm Atheros Inc.\n");
+ 	printf(" *\n");
+ 	printf(" * Permission to use, copy, modify, and/or distribute this software for any\n");
+ 	printf(" * purpose with or without fee is hereby granted, provided that the above\n");
 -- 
-1.7.4.1
+1.7.3.2
 
