@@ -1,88 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33359 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967722Ab2EROHK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60187 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757479Ab2EKPRh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 10:07:10 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 05/10] ath9k_hw: add AR9462 initval for Global WLAN, BT settings
-Date: Fri, 18 May 2012 19:37:28 +0530
-Message-ID: <1337350053-15491-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160717_117187_32162F43)
-In-Reply-To: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 11 May 2012 11:17:37 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1SSrb5-0007Ye-Ix
+	for linux-wireless@vger.kernel.org; Fri, 11 May 2012 17:17:35 +0200
+Message-ID: <1336749454.12801.15.camel@jlt3.sipsolutions.net> (sfid-20120511_171817_778993_4FA5390C)
+Subject: [RFC] cfg80211: disallow setting channel on WDS interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 11 May 2012 17:17:34 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c           |    3 +++
- drivers/net/wireless/ath/ath9k/ar9003_phy.c          |    3 +++
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    5 +++++
- drivers/net/wireless/ath/ath9k/hw.h                  |    2 +-
- 4 files changed, 12 insertions(+), 1 deletion(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index a0e3394..17e3703 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -305,6 +305,9 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 				ar9462_common_rx_gain_table_2p0,
- 				ARRAY_SIZE(ar9462_common_rx_gain_table_2p0), 2);
- 
-+		INIT_INI_ARRAY(&ah->ini_glb_wlan_bt, ar9462_2p0_glb_wlan_bt,
-+				ARRAY_SIZE(ar9462_2p0_glb_wlan_bt), 2);
-+
- 		/* Awake -> Sleep Setting */
- 		INIT_INI_ARRAY(&ah->iniPcieSerdes,
- 				PCIE_PLL_ON_CREQ_DIS_L1_2P0,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 11abb97..02dee90 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -676,6 +676,9 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
- 	if (chan->channel == 2484)
- 		ar9003_hw_prog_ini(ah, &ah->ini_japan2484, 1);
- 
-+	if (AR_SREV_9462(ah))
-+		ar9003_hw_prog_ini(ah, &ah->ini_glb_wlan_bt, 1);
-+
- 	ah->modes_index = modesIndex;
- 	ar9003_hw_override_ini(ah);
- 	ar9003_hw_set_channel_regs(ah, chan);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index a10ece0..89032bb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -358,6 +358,11 @@ static const u32 ar9462_common_rx_gain_table_2p0[][2] = {
- 	{0x0000b1fc, 0x00000196},
- };
- 
-+static const u32 ar9462_2p0_glb_wlan_bt[][2] = {
-+	/* Addr      allmodes  */
-+	{0x0002002c, 0x00000003},
-+};
-+
- static const u32 ar9462_pciephy_clkreq_disable_L1_2p0[][2] = {
- 	/* Addr      allmodes  */
- 	{0x00018c00, 0x18213ede},
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 3740aab..f807442 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -824,7 +824,7 @@ struct ath_hw {
- 	struct ar5416IniArray ini_japan2484;
- 	struct ar5416IniArray iniModes_9271_ANI_reg;
- 	struct ar5416IniArray ini_radio_post_sys2ant;
--	struct ar5416IniArray ini_BTCOEX_MAX_TXPWR;
-+	struct ar5416IniArray ini_glb_wlan_bt;
- 
- 	struct ar5416IniArray iniMac[ATH_INI_NUM_SPLIT];
- 	struct ar5416IniArray iniBB[ATH_INI_NUM_SPLIT];
--- 
-1.7.10.2
+If it worked (Felix says it doesn't right now), the
+typical use-case for WDS interfaces would be to be
+slaved to AP mode interfaces. Therefore, it isn't
+necessary to set the channel on WDS interfaces. As
+they don't support powersave or anything like that,
+they also couldn't use a different channel anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+This is based on top of a slightly modified version of the mesh change.
+
+ net/wireless/nl80211.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+--- a/net/wireless/nl80211.c	2012-05-11 17:14:08.000000000 +0200
++++ b/net/wireless/nl80211.c	2012-05-11 17:14:45.000000000 +0200
+@@ -1124,9 +1124,8 @@ static int parse_txq_params(struct nlatt
+ static bool nl80211_can_set_dev_channel(struct wireless_dev *wdev)
+ {
+ 	/*
+-	 * You can only set the channel explicitly for WDS interfaces,
+-	 * all others have their channel managed via their respective
+-	 * "establish a connection" command (connect, join, ...)
++	 * You can't set the channel explicitly, it is managed with
++	 * the "establish a connection" commands (connect, join, ...)
+ 	 *
+ 	 * For AP/GO and mesh mode, the channel can be set with the
+ 	 * channel userspace API, but is only stored and passed to the
+@@ -1140,7 +1139,6 @@ static bool nl80211_can_set_dev_channel(
+ 	 */
+ 	return !wdev ||
+ 		wdev->iftype == NL80211_IFTYPE_AP ||
+-		wdev->iftype == NL80211_IFTYPE_WDS ||
+ 		wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
+ 		wdev->iftype == NL80211_IFTYPE_MONITOR ||
+ 		wdev->iftype == NL80211_IFTYPE_P2P_GO;
+
 
