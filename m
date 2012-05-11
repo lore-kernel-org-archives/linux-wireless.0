@@ -1,86 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:51226 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759340Ab2EJTrc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52818 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152Ab2EKIx0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 15:47:32 -0400
-Received: by mail-gg0-f174.google.com with SMTP id u4so1204806ggl.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 12:47:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1336673569.4334.29.camel@jlt3.sipsolutions.net>
-References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>
- <1336554945.4323.12.camel@jlt3.sipsolutions.net> <CAG6hwVPrbJ1ZQP=UqFd+oqFL8zm+qcRpbAUhrG+6gRe01rejSA@mail.gmail.com>
- <1336673569.4334.29.camel@jlt3.sipsolutions.net>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Thu, 10 May 2012 12:47:10 -0700
-Message-ID: <CAG6hwVNTRYpr_H4za0Jf8gVU2=W5f6ZmzCiZsK4Ad2cGa26jDQ@mail.gmail.com> (sfid-20120510_214736_014964_52137EA7)
-Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 11 May 2012 04:53:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>
+Subject: [PATCH 2/4] iwlwifi: disable default wildcard ssid scan
+Date: Fri, 11 May 2012 10:53:16 +0200
+Message-Id: <1336726398-13200-3-git-send-email-johannes@sipsolutions.net> (sfid-20120511_105350_536285_845D78BF)
+In-Reply-To: <1336726398-13200-1-git-send-email-johannes@sipsolutions.net>
+References: <1336726398-13200-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 10, 2012 at 11:12 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi Thomas,
->
->
->> > I don't think this patch is correct -- mac80211 will get updated even if
->> > the device isn't even started which will likely cause trouble. Even if
->> > not though, this all doesn't match any kind of multi-channel concept. We
->> > treat the channel as part of the temporary setup, e.g. part of the
->> > association. AP and mesh are the only ones that are different today I
->> > think.
->> >
->> > Overall, I don't think setting the channel & doing mesh setup separately
->> > is really a good API.
->> >
->> > From mac80211's (and other drivers if they existed) POV the channel
->> > should be given with the mesh_join command, like for IBSS.
->> >
->> > Now, obviously, requiring userspace to do that would be an API change.
->> > We probably don't want that, so I would suggest to change cfg80211 to
->> > track the channel and then pass it to join_mesh as one of the mesh
->> > parameters. This could be made work even when somebody attempts to set
->> > the channel before the interface is up, but we'd have to be careful
->> > about interface type changes.
->>
->> Unfortunately, when __nl80211_set_channel() is called we may or may
->> not have a wdev, so there is nowhere to store the interface-specific
->> channel and type.
->
-> Well, but if you don't have a wdev, is the setting relevant at all? Or
-> does it take effect later? This all isn't very well-defined I guess.
->
->> We could shove these into a cfg80211_registered_device, but now just
->> "last channel for this wiphy" is tracked, and that doesn't seem to
->> help your multi-channel operation.
->
-> So you'd want to allow setting the channel on the phy, and have it take
-> effect for mesh? Is that really something we need to support? I'd think
-> almost everyone would set the channel on the netdev?
+From: David Spinadel <david.spinadel@intel.com>
 
-No :) Thanks for clearing that up.
+iwl_fill_probe_request has used to add a wildcard ssid IE to
+any probe request template, now it's disabled and it will
+send wildcard ssid only for full scan. Instead, the highest
+priority ssid is set to the template.
+Due to adding high priority SSID to the template, it reduce
+IE len, but since we had only 260 bytes for IEs before changing
+allocation size to be dynamic, now we should have a bit more room
+for IEs.
 
->> If the above is correct, how about we leave the existing API as-is and
->> simply extend join_mesh to take a channel attribute?
->
-> We could, but that'd mean that it can be NULL if the user doesn't set
-> it, which seems a bit odd to me too and then the driver again would have
-> to sort it out. I'd prefer if we could sort it out in cfg80211 so the
-> driver (mac80211) is simpler.
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   31 +++++++++++++++++++--------
+ 2 files changed, 24 insertions(+), 11 deletions(-)
 
-For this, we can store a default channel and type in the default mesh config.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index d33cc9c..9abe07a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -223,8 +223,8 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+ 	hw->wiphy->max_scan_ssids = PROBE_OPTION_MAX;
+-	/* we create the 802.11 header and a zero-length SSID element */
+-	hw->wiphy->max_scan_ie_len = capa->max_probe_length - 24 - 2;
++	/* we create the 802.11 header and a max-length SSID element */
++	hw->wiphy->max_scan_ie_len = capa->max_probe_length - 24 - 34;
+ 
+ 	/*
+ 	 * We don't use all queues: 4 and 9 are unused and any
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 6f221de..0505e4e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -617,7 +617,8 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
+  */
+ 
+ static u16 iwl_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
+-			      const u8 *ies, int ie_len, int left)
++			      const u8 *ies, int ie_len, const u8 *ssid,
++			      u8 ssid_len, int left)
+ {
+ 	int len = 0;
+ 	u8 *pos = NULL;
+@@ -639,14 +640,18 @@ static u16 iwl_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
+ 	/* ...next IE... */
+ 	pos = &frame->u.probe_req.variable[0];
+ 
+-	/* fill in our indirect SSID IE */
+-	left -= 2;
++	/* fill in our SSID IE */
++	left -= ssid_len + 2;
+ 	if (left < 0)
+ 		return 0;
+ 	*pos++ = WLAN_EID_SSID;
+-	*pos++ = 0;
++	*pos++ = ssid_len;
++	if (ssid && ssid_len) {
++		memcpy(pos, ssid, ssid_len);
++		pos += ssid_len;
++	}
+ 
+-	len += 2;
++	len += ssid_len + 2;
+ 
+ 	if (WARN_ON(left < ie_len))
+ 		return len;
+@@ -683,6 +688,8 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	int scan_cmd_size = sizeof(struct iwl_scan_cmd) +
+ 			    MAX_SCAN_CHANNEL * sizeof(struct iwl_scan_channel) +
+ 			    priv->fw->ucode_capa.max_probe_length;
++	const u8 *ssid = NULL;
++	u8 ssid_len = 0;
+ 
+ 	if (WARN_ON_ONCE(priv->scan_request &&
+ 			 priv->scan_request->n_channels > MAX_SCAN_CHANNEL))
+@@ -753,10 +760,14 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		if (priv->scan_request->n_ssids) {
+ 			int i, p = 0;
+ 			IWL_DEBUG_SCAN(priv, "Kicking off active scan\n");
+-			for (i = 0; i < priv->scan_request->n_ssids; i++) {
+-				/* always does wildcard anyway */
+-				if (!priv->scan_request->ssids[i].ssid_len)
+-					continue;
++			/*
++			 * The highest priority SSID is inserted to the
++			 * probe request template.
++			 */
++			ssid_len = priv->scan_request->ssids[0].ssid_len;
++			ssid = priv->scan_request->ssids[0].ssid;
++
++			for (i = 1; i < priv->scan_request->n_ssids; i++) {
+ 				scan->direct_scan[p].id = WLAN_EID_SSID;
+ 				scan->direct_scan[p].len =
+ 					priv->scan_request->ssids[i].ssid_len;
+@@ -890,6 +901,7 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 					vif->addr,
+ 					priv->scan_request->ie,
+ 					priv->scan_request->ie_len,
++					ssid, ssid_len,
+ 					scan_cmd_size - sizeof(*scan));
+ 		break;
+ 	case IWL_SCAN_RADIO_RESET:
+@@ -898,6 +910,7 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		cmd_len = iwl_fill_probe_req(
+ 					(struct ieee80211_mgmt *)scan->data,
+ 					iwl_bcast_addr, NULL, 0,
++					NULL, 0,
+ 					scan_cmd_size - sizeof(*scan));
+ 		break;
+ 	default:
+-- 
+1.7.10
 
->> Also, with IBSS the desired channel is pushed to the driver along with
->> the setup parameters. What do you think about calling
->> __nl80211_set_channel() directly instead of relying on the cfg80211
->> driver to handle this?
->
-> No, that's certainly not possible. In IBSS the channel is just the
-> default channel if we don't find an IBSS. And in any case I'd rather
-> call set_channel less than more.
-
-So cfg80211_set_freq() from cfg80211_join_mesh() is out, too?
