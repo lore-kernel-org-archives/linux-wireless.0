@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:36065 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757496Ab2EaNtb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 09:49:31 -0400
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH] b43: ensure ext PA lines are enabled for BCM4331
-Date: Thu, 31 May 2012 08:49:23 -0500
-Message-Id: <1338472163-3810-1-git-send-email-seth.forshee@canonical.com> (sfid-20120531_154935_056785_7EE0B925)
+Received: from nbd.name ([46.4.11.11]:34753 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759980Ab2EKQkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 May 2012 12:40:00 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 3/6] atheros-initvals: fix comments for non-fastclock 3-column tables
+Date: Fri, 11 May 2012 18:39:53 +0200
+Message-Id: <1336754396-30216-3-git-send-email-nbd@openwrt.org> (sfid-20120511_184007_609731_AD61B914)
+In-Reply-To: <1336754396-30216-2-git-send-email-nbd@openwrt.org>
+References: <1336754396-30216-1-git-send-email-nbd@openwrt.org>
+ <1336754396-30216-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some MacBook Pro models with BCM4331 wireless will stop transmitting
-after resuming from S3 without external power attached. This is fixed by
-ensuring that the ext PA lines are enabled in BCMA_CC_CHIPCTL. Export
-the function in bcma which does this for use by b43 and enable the ext
-PA lines during wireless core initialization.
-
-BugLink: http://bugs.launchpad.net/bugs/925577
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/bcma/driver_chipcommon_pmu.c |    1 +
- drivers/net/wireless/b43/main.c      |    7 +++++++
- 2 files changed, 8 insertions(+)
+ initvals.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/bcma/driver_chipcommon_pmu.c b/drivers/bcma/driver_chipcommon_pmu.c
-index a058842..332d7fb 100644
---- a/drivers/bcma/driver_chipcommon_pmu.c
-+++ b/drivers/bcma/driver_chipcommon_pmu.c
-@@ -129,6 +129,7 @@ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable)
- 	}
- 	bcma_cc_write32(cc, BCMA_CC_CHIPCTL, val);
+diff --git a/initvals.c b/initvals.c
+index 9352010..17a7ab0 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -284,7 +284,7 @@ typedef long long unsigned int u64;
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+ 		printf("static const u32 "#_array"[][%d] = {\n", (int) ARRAY_SIZE((_array)[0])); \
+-		ath9k_hw_print_initval((const u32 *) _array, \
++		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
+ 	} \
+     } while (0)
+@@ -297,7 +297,7 @@ typedef long long unsigned int u64;
+ 		printf("%s        "#_array"\n", sha1sum); \
+ 	} else { \
+ 		printf("static const u32 "#_array"[] = {\n"); \
+-		ath9k_hw_print_initval((const u32 *) _array, \
++		ath9k_hw_print_initval(#_array, (const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), 1, true); \
+ 	} \
+     } while (0)
+@@ -337,7 +337,7 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+ 	return val;
  }
-+EXPORT_SYMBOL_GPL(bcma_chipco_bcm4331_ext_pa_lines_ctl);
  
- void bcma_pmu_workarounds(struct bcma_drv_cc *cc)
+-static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns, bool onedim)
++static void ath9k_hw_print_initval(const char *name, const u32 *array, u32 rows, u32 columns, bool onedim)
  {
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 5a39b22..6bac5cf 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4713,6 +4713,13 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 	b43_upload_card_macaddress(dev);
- 	b43_security_init(dev);
+ 	u32 col, row;
  
-+#ifdef CONFIG_B43_BCMA
-+	/* Required for tx to work on BCM4331 */
-+	if (dev->dev->bus_type == B43_BUS_BCMA && dev->dev->chip_id == 0x4331)
-+		bcma_chipco_bcm4331_ext_pa_lines_ctl(&dev->dev->bdev->bus->drv_cc,
-+						     true);
-+#endif
-+
- 	ieee80211_wake_queues(dev->wl->hw);
- 
- 	b43_set_status(dev, B43_STAT_INITIALIZED);
+@@ -355,7 +355,10 @@ static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns, bool
+ 		printf("\t/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */\n");
+ 		break;
+ 	case 3:
+-		printf("\t/* Addr      5G_HT20     5G_HT40   */\n");
++		if (strstr(name, "fast_clock"))
++			printf("\t/* Addr      5G_HT20     5G_HT40   */\n");
++		else
++			printf("\t/* Addr      5G          2G        */\n");
+ 		break;
+ 	case 2:
+ 		printf("\t/* Addr      allmodes  */\n");
 -- 
-1.7.9.5
+1.7.3.2
 
