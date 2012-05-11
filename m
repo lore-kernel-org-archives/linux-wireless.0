@@ -1,40 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54711 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313Ab2EVQwy (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43873 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758403Ab2EKMiy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 12:52:54 -0400
-Date: Tue, 22 May 2012 11:52:51 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: BCM4331 tx failures after S3
-Message-ID: <20120522165251.GA31347@thinkpad-t410> (sfid-20120522_185258_717960_720CAAA1)
+	Fri, 11 May 2012 08:38:54 -0400
+Received: by pbbrp8 with SMTP id rp8so3264577pbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2012 05:38:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FAD0304.5060200@broadcom.com>
+References: <4FACF02B.7070006@broadcom.com> <CAPXgP12qaNm1Vh=8isf2gq=sUW8hOgi_STNfTuOqg5XT4KgwZA@mail.gmail.com>
+ <4FAD0304.5060200@broadcom.com>
+From: Kay Sievers <kay@vrfy.org>
+Date: Fri, 11 May 2012 14:38:33 +0200
+Message-ID: <CAPXgP11CQNeonO6hO7VXq7M9YDDsoPxcCnLm0OU1Xqr1TeVeGw@mail.gmail.com> (sfid-20120511_143858_866857_5CC8C698)
+Subject: Re: in-kernel drivers and firmware loader
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+On Fri, May 11, 2012 at 2:16 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 05/11/2012 01:03 PM, Kay Sievers wrote:
 
-I've inquired about this issue on the list once before, but I thought
-I'd try once again to see if Broadcom can offer any suggestions.
+>> It's probably sent, but nothing see it because there is no userspace
+>> that would have subscribed.
+>>
+>> If udev is started later during bootup, and the coldplug triggers all
+>> events again, the firmware request should be found and be fulfilled by
+>> userspace -- at least that's the theory.
+>>
+>> Can you reach the box with a login before the 60 seconds are reached?
+>>
+>> Do you see a firmware request (directory) still hanging around in
+>> /sys/class/firmware/ ?
 
-Recent MacBook Pros with BCM4331 wireless have a strange problem. Tx
-doesn't work after S3, but only if no external power is applied during
-the resume. mac80211 reports mostly timeouts for responses to probe
-requests, but analysis with wireshark shows no frames from the BCM4331
-on the air. The only way I've found to recover is to reload both b43 and
-bcma; reloading b43 alone is not enough.
+> # cd /sys/class/firmware/mmc1\:0001\:2/
+> # ls
+> data       device     loading    power      subsystem  uevent
+> # cat uevent
+> FIRMWARE=brcm/brcmfmac-sdio.bin
+> TIMEOUT=60
+> ASYNC=1
+> # cat loading
+> 0
+>
+> Not sure if loading content means anything or it presence is indicating
+> it is in progress. Below also the dmesg output.
 
-I've checked the values of MACCTL and the DMA TXCTL registers, since
-these are the ones used by brcmsmac to mute tx, but those look okay. Any
-suggestions of other things to check? My next step would be to start
-looking at the state of the phy and radio, but since we don't have much
-information about what the registers there actually do some suggestions
-would be helpful.
+Yeah, that looks good. The request is still around and waits for
+userspace to get handled.
 
-Thanks,
-Seth
+> [   11.448059] smsc95xx 1-1.1:1.0: eth0: link up, 100Mbps, full-duplex,
+> [   67.573059] brcmfmac: brcmf_sdbrcm_fw_callback: enter
+
+Seems userspace is not doing anything here, it's just the kernel
+timeout that we run into.
+
+If you can manage to do this before the timeout triggers, it should
+show if things *can* work:
+
+Start:
+  udevd --daemon
+if it's not already running.
+
+Trigger 'fake' events for all devices in the system, so that udev
+'thinks' the firmware request just came in:
+  udevadm trigger --action=add
+
+Normally, all that should be handled by the base system, and not need
+any custom setup.
+
+Kay
