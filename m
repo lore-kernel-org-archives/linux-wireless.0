@@ -1,122 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62129 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391Ab2EXDyl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33128 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760632Ab2EKTPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:54:41 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45249.499394.927712@gargle.gargle.HOWL> (sfid-20120524_055444_467345_2B446702)
-Date: Thu, 24 May 2012 09:23:37 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 10/22] ath9k: Remove SC_OP_OFFCHANNEL
+	Fri, 11 May 2012 15:15:39 -0400
+Message-ID: <1336763738.8739.5.camel@jlt3.sipsolutions.net> (sfid-20120511_211550_512342_42D00C99)
+Subject: Re: [RFC 1/3] cfg80211: provide channel to join_mesh function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, Dan Williams <dcbw@redhat.com>
+Date: Fri, 11 May 2012 21:15:38 +0200
+In-Reply-To: <CAG6hwVPgTOc_VtE2NaNcOTh6xTn_zBso7UOoN=_Tn4M7asG3dA@mail.gmail.com> (sfid-20120511_211142_933904_6314CEC0)
+References: <20120511180817.974687689@sipsolutions.net>
+	 <20120511181044.806226449@sipsolutions.net>
+	 <CAG6hwVPgTOc_VtE2NaNcOTh6xTn_zBso7UOoN=_Tn4M7asG3dA@mail.gmail.com>
+	 (sfid-20120511_211142_933904_6314CEC0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211's IEEE80211_CONF_OFFCHANNEL can be used directly
-to track offchannel state. Also pass the correct boolean
-value to ath9k_hw_startpcureceive().
+On Fri, 2012-05-11 at 12:10 -0700, Thomas Pedersen wrote:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |   15 +++++++--------
- drivers/net/wireless/ath/ath9k/main.c  |   11 +++--------
- drivers/net/wireless/ath/ath9k/recv.c  |    4 ++--
- 3 files changed, 12 insertions(+), 18 deletions(-)
+> > +       if (!setup->channel) {
+> > +               /* if we don't have that either, use the first usable channel */
+> > +               enum ieee80211_band band;
+> > +
+> > +               for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+> > +                       struct ieee80211_supported_band *sband;
+> > +                       struct ieee80211_channel *chan;
+> > +                       int i;
+> > +
+> > +                       sband = rdev->wiphy.bands[band];
+> > +                       if (!sband)
+> > +                               continue;
+> > +
+> > +                       for (i = 0; i < sband->n_channels; i++) {
+> > +                               chan = &sband->channels[i];
+> > +                               if (chan->flags & (IEEE80211_CHAN_NO_IBSS |
+> > +                                                  IEEE80211_CHAN_PASSIVE_SCAN |
+> > +                                                  IEEE80211_CHAN_DISABLED |
+> > +                                                  IEEE80211_CHAN_RADAR))
+> > +                                       continue;
+> > +                               setup->channel = chan;
+> > +                               break;
+> > +                       }
+> > +
+> > +                       if (setup->channel)
+> > +                               break;
+> > +               }
+> > +
+> > +               /* no usable channel ... */
+> > +               if (!setup->channel)
+> > +                       return -EINVAL;
+> > +
+> > +               setup->channel_type = NL80211_CHAN_NO_HT;
+> 
+> Can we make the default channel type HT20 if the band supports it? The
+> HT mixed-mode protection implementation in mesh currently only
+> considers mesh peers, so maybe this isn't acceptable, but it would be
+> nice.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 70504b7..9400579 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -586,14 +586,13 @@ struct ath_ant_comb {
- 
- #define SC_OP_INVALID                BIT(0)
- #define SC_OP_BEACONS                BIT(1)
--#define SC_OP_OFFCHANNEL             BIT(2)
--#define SC_OP_RXFLUSH                BIT(3)
--#define SC_OP_TSF_RESET              BIT(4)
--#define SC_OP_BT_PRIORITY_DETECTED   BIT(5)
--#define SC_OP_BT_SCAN                BIT(6)
--#define SC_OP_ANI_RUN                BIT(7)
--#define SC_OP_PRIM_STA_VIF           BIT(8)
--#define SC_OP_HW_RESET               BIT(9)
-+#define SC_OP_RXFLUSH                BIT(2)
-+#define SC_OP_TSF_RESET              BIT(3)
-+#define SC_OP_BT_PRIORITY_DETECTED   BIT(4)
-+#define SC_OP_BT_SCAN                BIT(5)
-+#define SC_OP_ANI_RUN                BIT(6)
-+#define SC_OP_PRIM_STA_VIF           BIT(7)
-+#define SC_OP_HW_RESET               BIT(8)
- 
- /* Powersave flags */
- #define PS_WAIT_FOR_BEACON        BIT(0)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 672aefe..02a8010 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -152,7 +152,7 @@ void ath_start_ani(struct ath_common *common)
- 	if (!(sc->sc_flags & SC_OP_ANI_RUN))
- 		return;
- 
--	if (sc->sc_flags & SC_OP_OFFCHANNEL)
-+	if (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
- 		return;
- 
- 	common->ani.longcal_timer = timestamp;
-@@ -282,7 +282,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 	ath9k_hw_set_interrupts(ah);
- 	ath9k_hw_enable_interrupts(ah);
- 
--	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
-+	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL) && start) {
- 		if (sc->sc_flags & SC_OP_BEACONS)
- 			ath_set_beacon(sc);
- 
-@@ -332,7 +332,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
- 
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 
--	if (!(sc->sc_flags & SC_OP_OFFCHANNEL)) {
-+	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)) {
- 		fastcc = false;
- 		caldata = &sc->caldata;
- 	}
-@@ -1639,11 +1639,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		if (ah->curchan)
- 			old_pos = ah->curchan - &ah->channels[0];
- 
--		if (hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
--			sc->sc_flags |= SC_OP_OFFCHANNEL;
--		else
--			sc->sc_flags &= ~SC_OP_OFFCHANNEL;
--
- 		ath_dbg(common, CONFIG, "Set channel: %d MHz type: %d\n",
- 			curchan->center_freq, conf->channel_type);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 544e549..7fa1e01 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -303,7 +303,7 @@ static void ath_edma_start_recv(struct ath_softc *sc)
- 
- 	ath_opmode_init(sc);
- 
--	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
-+	ath9k_hw_startpcureceive(sc->sc_ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
- 
- 	spin_unlock_bh(&sc->rx.rxbuflock);
- }
-@@ -500,7 +500,7 @@ int ath_startrecv(struct ath_softc *sc)
- 
- start_recv:
- 	ath_opmode_init(sc);
--	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
-+	ath9k_hw_startpcureceive(ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
- 
- 	spin_unlock_bh(&sc->rx.rxbuflock);
- 
--- 
-1.7.10.2
+I can't say I care. I even considered just removing this code, but I
+suspect that somebody might try to join a mesh without ever setting any
+channel, and mac80211 would assign one (essentially at random.)
+
+johannes
 
