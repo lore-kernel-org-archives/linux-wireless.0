@@ -1,78 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:51990 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902Ab2E2NMT (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57868 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997Ab2ELScr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 09:12:19 -0400
-Date: Tue, 29 May 2012 08:12:12 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC PATCH 4/8] brcm80211: smac: inform mac80211 of the X2
- regulatory domain
-Message-ID: <20120529131212.GB28007@thinkpad-t410> (sfid-20120529_151223_077986_939802F8)
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
- <1334607462-5387-5-git-send-email-seth.forshee@canonical.com>
- <4FC008AB.4080107@broadcom.com>
- <20120526171800.GC11759@ubuntu-mba>
- <4FC21B3F.6090903@broadcom.com>
+	Sat, 12 May 2012 14:32:47 -0400
+Date: Sat, 12 May 2012 14:22:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: bluetooth 2012-05-04
+Message-ID: <20120512182227.GA30574@tuxdriver.com> (sfid-20120512_203356_969805_1AC42436)
+References: <20120505001243.GC23728@joana>
+ <20120508070211.GB11843@joana>
+ <20120511201620.GD7620@joana>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FC21B3F.6090903@broadcom.com>
+In-Reply-To: <20120511201620.GD7620@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 27, 2012 at 02:17:03PM +0200, Arend van Spriel wrote:
-> On 05/26/2012 07:18 PM, Seth Forshee wrote:
-> > On Sat, May 26, 2012 at 12:33:15AM +0200, Arend van Spriel wrote:
-> >>> +#define BRCM_2GHZ_2412_2462	REG_RULE(2412-10, 2462+10, 40, 0, 19, 0)
-> >>> +#define BRCM_2GHZ_2467_2472	REG_RULE(2467-10, 2472+10, 20, 0, 19, \
-> >>> +					 NL80211_RRF_PASSIVE_SCAN | \
-> >>> +					 NL80211_RRF_NO_IBSS)
-> >>> +#define BRCM_2GHZ_2484		REG_RULE(2484-10, 2484+10, 40, 0, 19, \
-> >>> +					 NL80211_RRF_PASSIVE_SCAN | \
-> >>> +					 NL80211_RRF_NO_OFDM)
-> >>> +
-> >>
-> >> If channels 12 and 13 are 20MHz only, shouldn't channel 14 above
-> >> (2484MHz) be 20MHz as well?
+On Fri, May 11, 2012 at 05:16:20PM -0300, Gustavo Padovan wrote:
+> Hi Dave,
+> 
+> I couldn't get this pull by John this week, he's been unresponsive.
+> We would love to see this code in the 3.4 kernel (not sure if this would be
+> possible if Linus do not release the -rc7, there are important fixes 
+> in the pull request, such as a fix to a regression that was breaking bluetooth
+> keyboards.
+> 
+> Please let me know if you have any problems with this! I checked this code for
+> coding style issues too. Thanks.
+
+Well, I do apologize for my lack of responsiveness.  My employer saw
+fit to have me (figuratively) locked in a room with no email access all
+week, with me getting home rather late in the evenings and returning
+early each morning.  I would have liked to have stayed awake for
+hours each night catching-up, but I just didn't have the strength. :-(
+
+With that said, I'm not at all sure that this batch of fixes is
+appropriate for this late in the release cycle.  Normally at this
+point I would expect to see "regression cause by commit 1234" or
+"this common action results in this crash", all fixed by one-liners
+wherever possible.  This batch is more like "causes some problems",
+or "needs to be different" -- neither of which sound urgent enough
+to be worth requesting delays in Linus's release schedule.
+
+I am still quite exhausted from the past week, so it is possible that I
+am overlooking the importance of some of these commits.  But for right
+now, I am not convinced that there needs to be a rush on this request.
+Dave can do as he sees fit, of course.
+
+John
+
+> 	Gustavo
+> 
+> * Gustavo Padovan <gustavo@padovan.org> [2012-05-08 04:07:54 -0300]:
+> 
+> > Hi John,
 > > 
-> > Heh, good point. I'm trying to remember why I made 12 and 13 20MHz only
-> > though; maybe that's a mistake. Is there any reason why they couldn't
-> > all be 40MHz?
-> 
-> Not sure either. A number of countries have this rule so maybe it is
-> regulatory requirement.
-
-Maybe. I note that among the in-kernel rules, domain 00 only allows
-20MHz for those frequencies, but ath and rtlwifi allow 40MHz. I'll be
-conservative and leave them at 20MHz unless I hear otherwise from you.
-
-> >> You can avoid this code if you/we do not add the channels to
-> >> wiphy->bands[IEEE80211_BAND_5GHZ]. The driver does not support DFS so we
-> >> better stay away from these channels, which was your original issue to
-> >> start this work if I recall correct :-( Sorry.
+> > * Gustavo Padovan <gustavo@padovan.org> [2012-05-04 21:12:43 -0300]:
 > > 
-> > This is what originally got me looking at the brcmsmac regulatory
-> > support, so it would be disappointing if at the end these channels still
-> > aren't usable.
+> > > Hi John,
+> > > 
+> > > A few more patch to 3.4. There is 3 fixes from Mat Martineau, a fix for
+> > > a incoming MTU check that was breaking ERTM, still on ERTM there is a
+> > > patch that fixes concurrency with one of our locks. His third patch is
+> > > related to lock fixes too.
+> > > Besides that Johan fixed a wrong bit set in the Inquiry code, Vishal
+> > > Agarwal added a EIR fix and finally we have support for one more usb id.
+> > > 
+> > > Please pull or let me know of any problems!
+> > 
+> > I saw that you didn't pull this yet, so I decided to re-do this pull request.
+> > We have more 3 important fixes to go in. They fix a regression that was
+> > preventing Bluetooth keyboard to work. I'll re-do the whole pull request
+> > message, so you can copy and paste it easily:
+> > 
+> > A few more patch to 3.4. There is 3 fixes from Mat Martineau, a fix for a
+> > incoming MTU check that was breaking ERTM, still on ERTM there is a patch that
+> > fixes concurrency with one of our locks. His third patch is related to lock
+> > fixes too.
+> > Besides that Johan fixed a wrong bit set in the Inquiry code, Vishal Agarwal
+> > added a EIR fix and finally we have support for one more usb id.  Finally
+> > Johan and I fixed a regression that was preventing bluetooth keyboard to work.
+> > 
+> > Please pull or let me know of any problems!
+> > 
+> > 	Gustavo
+> > 
+> > ---
+> > 
+> > The following changes since commit 985140369be1e886754d8ac0375dd64e4f727311:
+> > 
+> >   Add Foxconn / Hon Hai IDs for btusb module (2012-04-24 11:38:41 -0300)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth.git for-upstream
+> > 
+> > for you to fetch changes up to fbcb6a061652b38257a1d8bcf6ebd70fc1771549:
+> > 
+> >   Bluetooth: mgmt: Fix device_connected sending order (2012-05-07 20:56:30 +0300)
+> > 
+> > ----------------------------------------------------------------
+> > Gustavo Padovan (2):
+> >       Bluetooth: notify userspace of security level change
+> >       Bluetooth: report the right security level in getsockopt
+> > 
+> > Johan Hedberg (2):
+> >       Bluetooth: Fix Inquiry with RSSI event mask
+> >       Bluetooth: mgmt: Fix device_connected sending order
+> > 
+> > Mat Martineau (3):
+> >       Bluetooth: Fix a redundant and problematic incoming MTU check
+> >       Bluetooth: Restore locking semantics when looking up L2CAP channels
+> >       Bluetooth: Lock the L2CAP channel when sending
+> > 
+> > Michael Gruetzner (1):
+> >       bluetooth: Add support for Foxconn/Hon Hai AR5BBU22 0489:E03C
+> > 
+> > Vishal Agarwal (1):
+> >       Bluetooth: Fix EIR data generation for mgmt_device_found
+> > 
+> >  drivers/bluetooth/ath3k.c         |    6 ++++++
+> >  drivers/bluetooth/btusb.c         |    3 +++
+> >  include/net/bluetooth/bluetooth.h |    3 +--
+> >  include/net/bluetooth/hci_core.h  |   17 +++++++++++++++++
+> >  net/bluetooth/af_bluetooth.c      |    2 +-
+> >  net/bluetooth/hci_core.c          |    8 ++++++++
+> >  net/bluetooth/hci_event.c         |   17 +++++++++++++----
+> >  net/bluetooth/l2cap_core.c        |   35 ++++++++---------------------------
+> >  net/bluetooth/l2cap_sock.c        |   39 +++++++++++++++++++++++++--------------
+> >  9 files changed, 82 insertions(+), 48 deletions(-)
 > 
-> Hence me saying sorry.
-> 
-> > My understanding of DFS is pretty rudamentary. Could you explain what
-> > support is needed? I do see that mac80211 doesn't really support power
-> > measurement requests, but if we can at least stop transmission when
-> > radar is present couldn't we still operate on the channels?
-> 
-> The hardware would need to signal the driver that a radar has been detected.
 
-Yes. I was trying to ask (not so clearly it turns out) whether or not
-Broadcom hardware can do this.
 
-I note that if I boot into OS X then I can use the DFS channels with
-BCM43224. So obviously we should be able to use those frequencies. The
-question I'm trying to get an answer to is what's needed in the Linux
-driver to be in compliance. I'm planning to spend some time today
-reading to better understand DFS in 802.11.
 
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
