@@ -1,119 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4307 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754365Ab2EFUsl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 16:48:41 -0400
-Message-ID: <4FA6E391.2080000@broadcom.com> (sfid-20120506_224845_147777_55A3A8D2)
-Date: Sun, 6 May 2012 22:48:17 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Nathan Hintz" <nlhintz@hotmail.com>
-cc: "Hauke Mehrtens" <hauke@hauke-m.de>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 6/6] bcma: Add flush for BCMA_RESET_CTL write
-References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
- <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl>
- <4FA4C2CA.8000401@broadcom.com>
- <BLU0-SMTP3963C1457D4A5496FC3C3A3AC2D0@phx.gbl>
- <4FA51FFE.4070100@hauke-m.de> <4FA5902E.8080308@broadcom.com>
- <BLU0-SMTP115782BC51E012F1967E169AC120@phx.gbl>
-In-Reply-To: <BLU0-SMTP115782BC51E012F1967E169AC120@phx.gbl>
-Content-Type: text/plain;
- charset=utf-8
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:44868 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286Ab2ELTL5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 May 2012 15:11:57 -0400
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 1/2] Bluetooth: notify userspace of security level change
+Date: Sat, 12 May 2012 16:11:49 -0300
+Message-Id: <1336849910-29064-1-git-send-email-gustavo@padovan.org> (sfid-20120512_211244_436575_151F1983)
+In-Reply-To: <20120512190900.GA15956@joana>
+References: <20120512190900.GA15956@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/06/2012 08:07 PM, Nathan Hintz wrote:
-> On Sat, 2012-05-05 at 22:40 +0200, Arend van Spriel wrote:
->> On 05/05/2012 02:41 PM, Hauke Mehrtens wrote:
->>> On 05/05/2012 09:50 AM, Nathan Hintz wrote:
->>>> On Sat, 2012-05-05 at 08:03 +0200, Arend van Spriel wrote:
->>>>> On 05/05/2012 06:56 AM, Nathan Hintz wrote:
->>>>>> Adds a missing read to flush the previous write (per the Broadcom SDK).
->>>>>>
->>>>>> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
->>>>>> ---
->>>>>>  drivers/bcma/core.c |    1 +
->>>>>>  1 files changed, 1 insertions(+), 0 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
->>>>>> index 893f6e0..c4e6deb 100644
->>>>>> --- a/drivers/bcma/core.c
->>>>>> +++ b/drivers/bcma/core.c
->>>>>> @@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
->>>>>>  	udelay(10);
->>>>>>  
->>>>>>  	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
->>>>>> +	bcma_aread32(core, BCMA_RESET_CTL);
->>>>>>  	udelay(1);
->>>>>>  }
->>>>>>  EXPORT_SYMBOL_GPL(bcma_core_disable);
->>>>>
->>>>> Hi Nathan,
->>>>>
->>>>> The read after write is only needed on (certain) SoCs. As bcma is not
->>>>> being used just for these SoCs I suggest to make the flush conditional.
->>>>> In brcmsmac we introduced "flushed write" function, which does the read
->>>>> only for those SoCs.
->>>>>
->>>>> Gr. AvS
->>>>>
->>>>>
->>>> There are several other occurrences in core.c that are the same
->>>> implementation as what was added in this patch.  Is there a reason
->>>> why the existing code isn't the way you have suggested already?
->>>> Would it be better to submit your suggestion as a separate patch, or
->>>> just roll it all into this one?
->>>>
->>>> Nathan
->>>
->>> In some older versions of the Broadcom SDK (e.g. version with wl
->>> 5.10.147.0 and the version brcmsmac seams to be based on) this read is
->>> not included in ai_core_disable(), but in more recent versions (e.g.
->>> version including wl 5.100.138.9) this read is included unconditionally.
->>>
->>> @Arend For what SoCs should we read after this write?
->>> When you are speaking of (certain) SoCs are you talking about this code
->>> and comment from brcmsmac?
->>>
->>> #ifdef CONFIG_BCM47XX
->>> /*
->>>  * bcm4716 (which includes 4717 & 4718), plus 4706 on PCIe can reorder
->>>  * transactions. As a fix, a read after write is performed on certain places
->>>  * in the code. Older chips and the newer 5357 family don't require this
->>> fix.
->>>  */
->>> #define bcma_wflush16(c, o, v) \
->>> 	({ bcma_write16(c, o, v); (void)bcma_read16(c, o); })
->>>
->>>
->>> Hauke
->>>
->>
->> Yes, Those are indeed the SoCs I meant. I was being to lazy to look it
->> up, so thanks for making the effort ;-)
->>
->> Gr. AvS
->>
->>
-> Is there a reason why a similar 'flush write' function was not applied
-> to all of the writes to 'objaddr' in 'brcmsmac/main.c', or are these
-> flushes not '4716/4717/4718/4706' specific?  For example:
-> 
-> static void brcms_b_set_cwmin(struct brcms_hardware *wlc_hw, u16 newmin)
-> {
-> 	wlc_hw->band->CWmin = newmin;
-> 
-> 	bcma_write32(wlc_hw->d11core, D11REGOFFS(objaddr),
-> 		     OBJADDR_SCR_SEL | S_DOT11_CWMIN);
-> 	(void)bcma_read32(wlc_hw->d11core, D11REGOFFS(objaddr));
-> 	bcma_write32(wlc_hw->d11core, D11REGOFFS(objdata), newmin);
-> }
-> 
-> Nathan
-> 
+When the userspace request a security level change it needs to be notified
+of when the change is complete.
+This patch make the socket non writable while the security request is
+ongoing. If it succeeds POLL_OUT is emitted, otherwise the channel is
+disconnected.
 
-These are indeed needed for all devices.
+Signed-off-by: Gustavo Padovan <gustavo@padovan.org>
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Johan Hedberg <johan.hedberg@intel.com>
+---
+ include/net/bluetooth/bluetooth.h |    1 +
+ net/bluetooth/af_bluetooth.c      |    2 +-
+ net/bluetooth/hci_event.c         |    7 +++++++
+ net/bluetooth/l2cap_core.c        |    5 +++++
+ net/bluetooth/l2cap_sock.c        |   15 ++++++++++-----
+ 5 files changed, 24 insertions(+), 6 deletions(-)
 
-Gr. AvS
+diff --git a/include/net/bluetooth/bluetooth.h b/include/net/bluetooth/bluetooth.h
+index 262ebd1..a65910b 100644
+--- a/include/net/bluetooth/bluetooth.h
++++ b/include/net/bluetooth/bluetooth.h
+@@ -191,6 +191,7 @@ struct bt_sock {
+ 	struct list_head accept_q;
+ 	struct sock *parent;
+ 	u32 defer_setup;
++	bool suspended;
+ };
+ 
+ struct bt_sock_list {
+diff --git a/net/bluetooth/af_bluetooth.c b/net/bluetooth/af_bluetooth.c
+index 72eb187..6fb68a9 100644
+--- a/net/bluetooth/af_bluetooth.c
++++ b/net/bluetooth/af_bluetooth.c
+@@ -450,7 +450,7 @@ unsigned int bt_sock_poll(struct file *file, struct socket *sock, poll_table *wa
+ 			sk->sk_state == BT_CONFIG)
+ 		return mask;
+ 
+-	if (sock_writeable(sk))
++	if (!bt_sk(sk)->suspended && sock_writeable(sk))
+ 		mask |= POLLOUT | POLLWRNORM | POLLWRBAND;
+ 	else
+ 		set_bit(SOCK_ASYNC_NOSPACE, &sk->sk_socket->flags);
+diff --git a/net/bluetooth/hci_event.c b/net/bluetooth/hci_event.c
+index 7f87a70..ff38cc6 100644
+--- a/net/bluetooth/hci_event.c
++++ b/net/bluetooth/hci_event.c
+@@ -2040,6 +2040,12 @@ static inline void hci_encrypt_change_evt(struct hci_dev *hdev, struct sk_buff *
+ 
+ 		clear_bit(HCI_CONN_ENCRYPT_PEND, &conn->flags);
+ 
++		if (ev->status && conn->state == BT_CONNECTED) {
++			hci_acl_disconn(conn, 0x13);
++			hci_conn_put(conn);
++			goto unlock;
++		}
++
+ 		if (conn->state == BT_CONFIG) {
+ 			if (!ev->status)
+ 				conn->state = BT_CONNECTED;
+@@ -2050,6 +2056,7 @@ static inline void hci_encrypt_change_evt(struct hci_dev *hdev, struct sk_buff *
+ 			hci_encrypt_cfm(conn, ev->status, ev->encrypt);
+ 	}
+ 
++unlock:
+ 	hci_dev_unlock(hdev);
+ }
+ 
+diff --git a/net/bluetooth/l2cap_core.c b/net/bluetooth/l2cap_core.c
+index 38d934a..c073533 100644
+--- a/net/bluetooth/l2cap_core.c
++++ b/net/bluetooth/l2cap_core.c
+@@ -4590,6 +4590,11 @@ int l2cap_security_cfm(struct hci_conn *hcon, u8 status, u8 encrypt)
+ 
+ 		if (!status && (chan->state == BT_CONNECTED ||
+ 						chan->state == BT_CONFIG)) {
++			struct sock *sk = chan->sk;
++
++			bt_sk(sk)->suspended = false;
++			sk->sk_state_change(sk);
++
+ 			l2cap_check_encryption(chan, encrypt);
+ 			l2cap_chan_unlock(chan);
+ 			continue;
+diff --git a/net/bluetooth/l2cap_sock.c b/net/bluetooth/l2cap_sock.c
+index 29122ed..4bdacf9 100644
+--- a/net/bluetooth/l2cap_sock.c
++++ b/net/bluetooth/l2cap_sock.c
+@@ -592,11 +592,16 @@ static int l2cap_sock_setsockopt(struct socket *sock, int level, int optname, ch
+ 			sk->sk_state = BT_CONFIG;
+ 			chan->state = BT_CONFIG;
+ 
+-		/* or for ACL link, under defer_setup time */
+-		} else if (sk->sk_state == BT_CONNECT2 &&
+-					bt_sk(sk)->defer_setup) {
+-			err = l2cap_chan_check_security(chan);
+-		} else {
++		/* or for ACL link */
++		} else if ((sk->sk_state == BT_CONNECT2 &&
++			   bt_sk(sk)->defer_setup) ||
++			   sk->sk_state == BT_CONNECTED) {
++			if (!l2cap_chan_check_security(chan))
++				bt_sk(sk)->suspended = true;
++			else
++				sk->sk_state_change(sk);
++		}
++		else {
+ 			err = -EINVAL;
+ 		}
+ 		break;
+-- 
+1.7.10.1
 
