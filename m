@@ -1,52 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:47638 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755290Ab2EUNPG convert rfc822-to-8bit (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:47668 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751224Ab2ELKPp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2012 09:15:06 -0400
+	Sat, 12 May 2012 06:15:45 -0400
+Received: by lahd3 with SMTP id d3so2421029lah.19
+        for <linux-wireless@vger.kernel.org>; Sat, 12 May 2012 03:15:43 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6VFghHT6zvGfW+9-Vsik39A_4Df=U3J1OtFFpM8LKDzvw@mail.gmail.com>
-References: <CAFub=KS1_Bj=b2OVTf33VHtQ7BKY2k3Wd1oGwmVVJNgbexZ=6w@mail.gmail.com>
-	<CAB=NE6VFghHT6zvGfW+9-Vsik39A_4Df=U3J1OtFFpM8LKDzvw@mail.gmail.com>
-Date: Mon, 21 May 2012 16:15:05 +0300
-Message-ID: <CAFub=KSmCj9EryT8p6m6KvSPQxBcuaHAXRiVeFbvBYYndPORHg@mail.gmail.com> (sfid-20120521_151529_805431_FC783870)
-Subject: Re: [Lf_driver_backport] scripts in compat tree
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-kernel@vger.kernel.org, Andy Whitcroft <apw@canonical.com>,
-	lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAGRGNgVw42wDHWMra64hursybHZUvWrTf8bjPUTCn2GkLrR04Q@mail.gmail.com>
+References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
+ <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com>
+ <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
+ <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
+ <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
+ <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
+ <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
+ <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com>
+ <4F9F55F9.3090800@lwfinger.net> <CAKVccoV+fNYVZUjkNSPzp=T8TC6L_zqUdocp=oYBP0=r-M9HRA@mail.gmail.com>
+ <4F9F6B67.5000400@lwfinger.net> <CAKVccoVA=Rk8AkD+h0n9aeV95h0iMcnQgM_WMJq3rjzoFvkU-w@mail.gmail.com>
+ <CAKVccoX=u=qX_OJ8RMSxpNEMGYdGVzimZURJ+ZeNZjhW1jPt6Q@mail.gmail.com>
+ <4F9FF3D3.1020006@lwfinger.net> <CAKVccoUNwk7zKzckY-bNNvgf0FNDqZhnruzgTPOtxSXRuq3myQ@mail.gmail.com>
+ <CAGRGNgVw42wDHWMra64hursybHZUvWrTf8bjPUTCn2GkLrR04Q@mail.gmail.com>
+From: "Simple ." <simplew8@gmail.com>
+Date: Sat, 12 May 2012 11:15:23 +0100
+Message-ID: <CAKVccoW2LFuKDzByxn-9p_Dz=3KDj+DYDQb4Xn7U3Pf0sUnDXw@mail.gmail.com> (sfid-20120512_121550_067458_1DA01B73)
+Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Forest Bond <forest@alittletooquiet.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Well kernel.org does not have already built kernels. Ubuntu's PPA
-> kernels *are* vanilla kernels, in fact that is why they were put up,
-> they are guaranteed to be built on vanilla kernels. We couldn't get a
-> more generic approach then. The only thing though is -- the PPA
-> kernels obviously have the kernels integrated on .debs. There are a
-> few options here:
+2012/5/2 Julian Calaby <julian.calaby@gmail.com>:
+> Hi,
 >
->  1) If Ubuntu can dpkg -x the kernels for us onto tarballs that'd be swell
->  2) We could write our own script to do this with C code that does
-> the dpkg -x for us
+> On Wed, May 2, 2012 at 1:49 AM, simple w8 <simplew8@gmail.com> wrote:
+>> But isnt strange that the wifi driver can interfere in the keyboard
+>> when typing? and also be capable to interfere with the pointer device?
 >
-> There are ways to do 2) suggested in the thread above.
+> It is very strange. I've had it happen to me before with a RAlink wireless card.
+>
+> From the behaviour, I'd expect it to be some form of misconfiguration
+> of the interrupts on your system, (i.e. keyboard / mouse interrupts
+> are being delayed / dropped) this could be caused by:
+> - the drivers not setting them up correctly for *your particular system*,
+> - your hardware being mis-configured or damaged
+> - ACPI not passing the correct data to Linux
+> - or some combination of all the above.
+>
+> In my case, it was definitely an issue with the wireless card's
+> driver, however that doesn't mean that it's the same for you.
+>
+> It's simply impossible to duplicate these sorts of issues without the
+> exact system that has the problem, so unless someone else has an
+> identical system and is experiencing this exact problem, only you will
+> be able to debug this.
+>
+> Given that there are many people out there with working Realtek
+> wireless cards who are not experiencing this problem, it's unlikely
+> that this is an issue with that particular driver.
+>
+> Also, there are many people (myself included) who use Microsoft
+> hardware products with their Linux computers without incident, so it
+> is unlikely to be related to the vendor of your keyboard / mouse.
+>
+> To debug this, the first thing I'd do is read through your entire
+> dmesg output from a clean boot that's exhibiting these symptoms and
+> see if Linux is complaining about anything or if there are any errors.
+> Following up on any errors would probably be a good place to start. If
+> there is some form of misconfiguration of your hardware, it is likely
+> to be listed there, and following up on that would be another good
+> thing to do.
+>
+> If there aren't any errors or warnings, the next thing I'd check
+> whether the Realtek card and the keyboard / mice controllers (USB host
+> or PS/2 port or whatever) are sharing any hardware resources. If they
+> are, you may be able to fix your system by convincing your BIOS to let
+> them have their own stuff. Another thing to look at is if there are
+> any changes to the resources your BIOS gives various devices when the
+> system has the card and when it doesn't, this may point you in the
+> direction of a different driver that has issues. (saving dmesgs,
+> stripping out the timestamps and diffing them is a good way to find
+> issues like this)
+>
+> That's about the limit of my knowledge on this, but following up on
+> any errors or warnings in the dmesg output and talking to the
+> maintainers of any relevant hardware (or the subsystems it's attached
+> to) would be a good start.
+>
+> Thanks,
 
-ah you are right, we need to have built kernels in order to build the
-modules. Well then the 2nd solution seems reasonable if we can mimic
-dpkg -x. I googled a bit and people says that debs are generic .ar
-archives so it would be easy to take the tarball inside of them.
+Thanks for all the hints but im not an expert and also appars what i
+have been trying to say to Larry doesnt appear to be of much
+importance to him.
 
-If I succeed this can be used on any distro since that they are
-vanilla without any patches. But if the PPA disappears one day, we'll
-have to find another solution :)
-
-BTW you also download the kernel images probably for booting into them
-to test the compat builds. Booting using those images on other
-distributions can be messy and unsuccessful as initramfs and booting
-mechanisms differ widely. I'll test those too.
-
-
--- 
-Ozan Çağlayan
+I have build and installed the Realtek driver
+(92ce_se_de_linux_mac80211_0005.1230.2011.tar.gz) and im getting *11*
+wifi networks against *3* wifi networks detected if using the driver
+from latest kernel (version 3.3.5).
+I know what Larry said but the differences are obvious and many, so
+the fix that was commited in rtl8192ce maybe needs to be reviewed,
+will someone listen please?
