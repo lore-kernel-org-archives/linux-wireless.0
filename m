@@ -1,23 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35749 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753786Ab2EYKRY (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:40292 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330Ab2ELTRd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 06:17:24 -0400
-Message-ID: <4FBF5C25.5020405@qca.qualcomm.com> (sfid-20120525_121727_660366_D6AC1E8D)
-Date: Fri, 25 May 2012 15:47:09 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+	Sat, 12 May 2012 15:17:33 -0400
+Received: by bkcji2 with SMTP id ji2so2955058bkc.19
+        for <linux-wireless@vger.kernel.org>; Sat, 12 May 2012 12:17:31 -0700 (PDT)
 MIME-Version: 1.0
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [V2 2/2] ath6kl: Fix unstable downlink throughput
-References: <1337940280-14690-1-git-send-email-vthiagar@qca.qualcomm.com> <1337940280-14690-2-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1337940280-14690-2-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1336658913-11396-1-git-send-email-victorg@ti.com>
+References: <1336658913-11396-1-git-send-email-victorg@ti.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sat, 12 May 2012 22:17:16 +0300
+Message-ID: <CA+XVXfcw+9vJ3pixC79DyQA25JmrpgC-m+PPohSdyUmLMe9Zig@mail.gmail.com> (sfid-20120512_211740_853260_11C208F8)
+Subject: Re: [PATCH v2] wl12xx: fix fm_coex parameters configuration
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, coelho@ti.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, May 10, 2012 at 5:08 PM, Victor Goldenshtein <victorg@ti.com> wrote:
+> Wrong fm_coex parameters were set during wl12xx
+> init phase, fix it.
+>
+> Signed-off-by: Ziv Riesel <zivriesel@ti.com>
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> ---
+>
+> v2: changed the subject wlcore -> wl12xx
 
-Oops, missing PATCH prefix, i'll resend them.
+Are you sure this is not relevant for 18xx? Are the parameters there correct?
 
-Vasanth
+Arik
