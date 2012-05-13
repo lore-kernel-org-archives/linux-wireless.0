@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33006 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754328Ab2EPPaZ (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:19269 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865Ab2EMRnl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 11:30:25 -0400
-Message-ID: <1337182220.18519.5.camel@jlt3.sipsolutions.net> (sfid-20120516_173044_870933_A1EB9FE8)
-Subject: Re: [PATCH 0/3] net: mac80211: Neaten debugging
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 16 May 2012 17:30:20 +0200
-In-Reply-To: <1337181771.4818.0.camel@joe2Laptop>
-References: <1337106548.15553.8.camel@jlt3.sipsolutions.net>
-	 <cover.1337116578.git.joe@perches.com>
-	 <20120516.012319.1903390658912592000.davem@davemloft.net>
-	 <1337155171.4367.2.camel@jlt3.sipsolutions.net>
-	 <1337181771.4818.0.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 13 May 2012 13:43:41 -0400
+Date: Sun, 13 May 2012 20:43:33 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: arend@broadcom.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: net: wireless: add brcm80211 drivers
+Message-ID: <20120513174333.GB4280@elgon.mountain> (sfid-20120513_194344_849388_ED62FB9E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-16 at 08:22 -0700, Joe Perches wrote:
-> On Wed, 2012-05-16 at 09:59 +0200, Johannes Berg wrote:
-> > I wonder if it makes sense to leave these under
-> > #ifdef though? Why #ifdef something if it's going to be invisible most
-> > of the time anyway?
-> 
-> I don't understand your point.
-> #ifdef removal is a good thing.
+Hi Arend,
 
-Yeah, but you left a lot of them under ifdef, and I'm wondering why you
-didn't remove them, or if you should, or ...
+This code is not really new, but I thought I would email you anyway
+because I know you are responsive.  :)
 
-johannes
+The patch 5b435de0d786: "net: wireless: add brcm80211 drivers" from 
+Oct 5, 2011, leads to the following Smatch complaint:
+
+drivers/net/wireless/brcm80211/brcmsmac/ampdu.c:741 brcms_c_sendampdu()
+	 warn: variable dereferenced before check 'p' (see line 739)
+
+drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+   733                  /*
+   734                   * check to see if the next pkt is
+   735                   * a candidate for aggregation
+   736                   */
+   737                  p = pktq_ppeek(&qi->q, prec);
+   738			/* tx_info must be checked with current p */
+   739			tx_info = IEEE80211_SKB_CB(p);
+                                  ^^^^^^^^^^^^^^^^
+"p" is dereferenced inside the call to IEEE80211_SKB_CB().
+
+   740	
+   741			if (p) {
+                           ^^^
+Checked too late.
+
+   742				if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
+   743				    ((u8) (p->priority) == tid)) {
+
+regards,
+dan carpenter
 
