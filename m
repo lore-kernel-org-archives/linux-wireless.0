@@ -1,79 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758512Ab2EJJQg (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:35453 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750757Ab2EMEbc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:36 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:35 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 57/78] wlcore: reorder identify_chip and get_hw_info
-Date: Thu, 10 May 2012 12:14:02 +0300
-Message-Id: <1336641263-5761-58-git-send-email-arik@wizery.com> (sfid-20120510_111848_474427_CCC097B6)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Sun, 13 May 2012 00:31:32 -0400
+Date: Sun, 13 May 2012 07:31:21 +0300
+From: Johan Hedberg <johan.hedberg@gmail.com>
+To: Gustavo Padovan <gustavo@padovan.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: bluetooth 2012-05-04
+Message-ID: <20120513043121.GA22845@x220.P-661HNU-F1> (sfid-20120513_063241_198416_D5186A29)
+References: <20120505001243.GC23728@joana>
+ <20120508070211.GB11843@joana>
+ <20120511201620.GD7620@joana>
+ <20120512182227.GA30574@tuxdriver.com>
+ <20120512190900.GA15956@joana>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120512190900.GA15956@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+Hi,
 
-We can do get the HW information and identify the chip already at
-probe time.  This makes it easier to mangle with the parameters during
-identify chip before registering the hardware with mac80211.
+On Sat, May 12, 2012, Gustavo Padovan wrote:
+> In my point of view there are two commits there that are really necessary:
+> 
+> Gustavo Padovan (2):
+>       Bluetooth: report the right security level in getsockopt
+> 
+> Johan Hedberg (2):
+>       Bluetooth: mgmt: Fix device_connected sending order
+> 
+> They fix a userspace breakage caused by:
+> 
+> Author: Marcel Holtmann <marcel@holtmann.org>
+> Date:   Mon Feb 20 21:24:37 2012 +0100
+> 
+>     Bluetooth: Always enable management interface
+>     
+>     The management interface API has reached stable version 1.0 and thus
+>     it can now be always enabled. All future changes will be made backwards
+>     compatible.
+>     
+>     Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+>     Signed-off-by: Johan Hedberg <johan.hedberg@intel.com>
+> 
+> 
+> This cause no crash, but it make bluetooth keyboards stop to work with Linux.
+> This a serious breakage IMO. I really would like to see at least these two
+> patches in. The other fixes can wait.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/main.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+I'd just like to add some further background since I don't think it's
+that obvious how these are regression fixes:
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 2c78057..9b8f6a2 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -962,10 +962,6 @@ static int wl12xx_chip_wakeup(struct wl1271 *wl, bool plt)
- 	if (wl1271_set_block_size(wl))
- 		wl->quirks |= WLCORE_QUIRK_TX_BLOCKSIZE_ALIGN;
- 
--	ret = wl->ops->identify_chip(wl);
--	if (ret < 0)
--		goto out;
--
- 	/* TODO: make sure the lower driver has set things up correctly */
- 
- 	ret = wl1271_setup(wl);
-@@ -4871,12 +4867,6 @@ static int wl1271_register_hw(struct wl1271 *wl)
- 	if (wl->mac80211_registered)
- 		return 0;
- 
--	ret = wl12xx_get_hw_info(wl);
--	if (ret < 0) {
--		wl1271_error("couldn't get hw info");
--		goto out;
--	}
--
- 	ret = wl1271_fetch_nvs(wl);
- 	if (ret == 0) {
- 		/* NOTE: The wl->nvs->nvs element must be first, in
-@@ -5281,6 +5271,16 @@ int __devinit wlcore_probe(struct wl1271 *wl, struct platform_device *pdev)
- 	}
- 	disable_irq(wl->irq);
- 
-+	ret = wl12xx_get_hw_info(wl);
-+	if (ret < 0) {
-+		wl1271_error("couldn't get hw info");
-+		goto out;
-+	}
-+
-+	ret = wl->ops->identify_chip(wl);
-+	if (ret < 0)
-+		goto out;
-+
- 	ret = wl1271_init_ieee80211(wl);
- 	if (ret)
- 		goto out_irq;
--- 
-1.7.9.5
+The device_connected fix should be quite self-explanatory, but it's
+actually a wider issue than just for keyboards. All profiles that do
+incoming connection authorization (e.g. headsets) will break without it
+with specific hardware. The reason it wasn't caught earlier is that it
+only occurs with specific Bluetooth adapters.
 
+As for the security level patch, this fixes L2CAP socket based security
+level elevation during a connection. The HID profile needs this (for
+keyboards) and it is the only way to achieve the security level
+elevation when using the management interface to talk to the kernel
+(hence the management enabling patch being the one that exposes this
+issue).
+
+Johan
