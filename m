@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:58127 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1760848Ab2EJVhP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 17:37:15 -0400
-Message-ID: <4FAC3518.6050107@xenotime.net> (sfid-20120510_233737_257019_7157E57D)
-Date: Thu, 10 May 2012 14:37:28 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
-References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>		 <4F8C784B.2040402@xenotime.net>	 <1336049755.12189.30.camel@cumari.coelho.fi>	 <4FAC3249.3060107@xenotime.net> <1336685777.12189.142.camel@cumari.coelho.fi>
-In-Reply-To: <1336685777.12189.142.camel@cumari.coelho.fi>
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:58748 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750698Ab2EMEAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 May 2012 00:00:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1STPyV-0005kL-I9
+	for linux-wireless@vger.kernel.org; Sun, 13 May 2012 06:00:03 +0200
+Received: from pool-74-108-21-82.nycmny.fios.verizon.net ([74.108.21.82])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2012 06:00:03 +0200
+Received: from Habstinat by pool-74-108-21-82.nycmny.fios.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2012 06:00:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Harry <Habstinat@gmail.com>
+Subject: carl9170 - Unable to see interface despite module being loaded
+Date: Sun, 13 May 2012 03:59:01 +0000 (UTC)
+Message-ID: <loom.20120513T054053-18@post.gmane.org> (sfid-20120513_060048_242543_79BD16B7)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/2012 02:36 PM, Luciano Coelho wrote:
+I own a "Bus 001 Device 002: ID 0cf3:7015 Atheros Communications, Inc. TP-Link
+TL-WN821N v3 802.11n [Atheros AR7010+AR9287]", according to lsusb. I'm
+attempting to get the carl9170 (
+http://linuxwireless.org/en/users/Drivers/carl9170 ) driver to work with it, as
+should be possible according to h-node ( http://www.h-node.org/wifi/view/en/253/
+) in Parabola GNU/Linux. 
 
-> Hey Randy,
-> 
-> On Thu, 2012-05-10 at 14:25 -0700, Randy Dunlap wrote:
->> On 05/03/2012 05:55 AM, Luciano Coelho wrote:
->>
->>> On Mon, 2012-04-16 at 12:51 -0700, Randy Dunlap wrote:
->>>> From: Randy Dunlap <rdunlap@xenotime.net>
->>>>
->>>> wl12xx build fails with many undefined symbol errors when MAC80211
->>>> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
->>>> on MAC80211 (which already depends on CFG80211).
->>>>
->>>> Here are a few of the many build errors:
-> 
-> [...]
-> 
->>>> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
->>>> Cc:	Luciano Coelho <coelho@ti.com>
->>>> Cc:	linux-wireless@vger.kernel.org
->>>> Cc:	"John W. Linville" <linville@tuxdriver.com>
->>>> ---
->>>
->>> Applied! Thanks Randy, and sorry for the delay in pushing this through
->>> my tree.
->>
->>
->>
->> Ping.
->>
->> This patch is still needed in linux-next of 20120510.
-> 
-> I already applied this patch and sent a pull-request to Linville, but he
-> hasn't pulled from my tree into wireless-next yet.
-> 
-> Would it make sense for you to pull directly from my tree into
-> linux-next?
+Despite my valiant efforts however, I cannot seem to get a WiFi interface to
+display via "ip link" (only my 'etho' and 'lo'). At this point, my dmesg tail
+after rmmod'ing and modprobing carl9170 looked somewhat like this: (
+http://www.pastie.org/pastes/3902525/text ). An anonymous peer managed to find a
+forum thread ( https://bbs.archlinux.org/viewtopic.php?id=123851 ) that brought
+up the issue of blacklisting. Prior to reading the thread, I had only
+blacklisted arusb_lnx and ar9170usb, as per
+https://wiki.archlinux.org/index.php/Wireless_Setup#carl9170 .
+Post-thread-reading, I have created a larger blacklist file:
+http://pastie.org/pastes/3903116/text . At this point, when subjected to similar
+conditions as described above my dmesg tail looked a bit like this:
+http://pastie.org/pastes/3903121/text . 
 
+This was where circumstances got confusing, as according to the latter dmesg
+tail, the device should be registered. But alas, after "ip link"ing again, only
+eth0 and lo are to be found.
 
-No, I'm just testing/reporting on linux-next.
+This problem originated on irc://irc.freenode.net/#parabola, so if reading
+anonymized IRC logs is your thing you can go back to the roots of my dilemma
+here: http://pastie.org/pastes/3903246/text
 
-Thanks.
+Much thanks is awarded to (s)he who can solve my misfortune.
 
--- 
-~Randy
