@@ -1,96 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:44357 "EHLO
 	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758423Ab2EJJQZ (ORCPT
+	with ESMTP id S1751456Ab2EMNqT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:25 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:24 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 52/78] wlcore: add module parameter to dump SDIO reads and writes
-Date: Thu, 10 May 2012 12:13:57 +0300
-Message-Id: <1336641263-5761-53-git-send-email-arik@wizery.com> (sfid-20120510_111638_935292_26B43652)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Sun, 13 May 2012 09:46:19 -0400
+Received: by wgbdr13 with SMTP id dr13so3832382wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2012 06:46:18 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Harry <Habstinat@gmail.com>
+Subject: Re: carl9170 - Unable to see interface despite module being loaded
+Date: Sun, 13 May 2012 15:46:13 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <loom.20120513T054053-18@post.gmane.org>
+In-Reply-To: <loom.20120513T054053-18@post.gmane.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201205131546.13765.chunkeey@googlemail.com> (sfid-20120513_154623_767633_4E43950D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+On Sunday 13 May 2012 05:59:01 Harry wrote:
+> I own a "Bus 001 Device 002: ID 0cf3:7015 Atheros Communications, Inc. TP-Link
+> TL-WN821N v3 802.11n [Atheros AR7010+AR9287]", according to lsusb. I'm
+> attempting to get the carl9170 (
+> http://linuxwireless.org/en/users/Drivers/carl9170 ) driver to work with it, as
+> should be possible according to h-node ( http://www.h-node.org/wifi/view/en/253/
+> ) in Parabola GNU/Linux.
 
-In some cases we may want to dump all the SDIO data in order to get
-detailed information for debugging the communication with the
-firmware.
+Well looks like you figured it out already?!
+Anyway, TP-Link changed the chipset with the v3 series.
+ - the 3-4 years old V1 and V2 revisions have the AR9170
+	chip and are supported by carl9170.
+ - V3 and newer need a different driver: ath9k_htc
+	<http://wireless.kernel.org/en/users/Drivers/ath9k_htc>
 
-Add printks to dump the data and a module parameter to enable/disable
-it.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/sdio.c |   20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
-diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
-index 1082e39..c67ec48 100644
---- a/drivers/net/wireless/ti/wlcore/sdio.c
-+++ b/drivers/net/wireless/ti/wlcore/sdio.c
-@@ -33,6 +33,7 @@
- #include <linux/gpio.h>
- #include <linux/wl12xx.h>
- #include <linux/pm_runtime.h>
-+#include <linux/printk.h>
- 
- #include "wlcore.h"
- #include "wl12xx_80211.h"
-@@ -46,6 +47,8 @@
- #define SDIO_DEVICE_ID_TI_WL1271	0x4076
- #endif
- 
-+static bool dump = false;
-+
- struct wl12xx_sdio_glue {
- 	struct device *dev;
- 	struct platform_device *core;
-@@ -77,6 +80,13 @@ static void wl12xx_sdio_raw_read(struct device *child, int addr, void *buf,
- 
- 	sdio_claim_host(func);
- 
-+	if (unlikely(dump)) {
-+		printk(KERN_DEBUG "wlcore_sdio: READ from 0x%04x\n", addr);
-+		print_hex_dump(KERN_DEBUG, "wlcore_sdio: READ ",
-+				DUMP_PREFIX_OFFSET, 16, 1,
-+				buf, len, false);
-+	}
-+
- 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG)) {
- 		((u8 *)buf)[0] = sdio_f0_readb(func, addr, &ret);
- 		dev_dbg(child->parent, "sdio read 52 addr 0x%x, byte 0x%02x\n",
-@@ -106,6 +116,13 @@ static void wl12xx_sdio_raw_write(struct device *child, int addr, void *buf,
- 
- 	sdio_claim_host(func);
- 
-+	if (unlikely(dump)) {
-+		printk(KERN_DEBUG "wlcore_sdio: WRITE to 0x%04x\n", addr);
-+		print_hex_dump(KERN_DEBUG, "wlcore_sdio: WRITE ",
-+				DUMP_PREFIX_OFFSET, 16, 1,
-+				buf, len, false);
-+	}
-+
- 	if (unlikely(addr == HW_ACCESS_ELP_CTRL_REG)) {
- 		sdio_f0_writeb(func, ((u8 *)buf)[0], addr, &ret);
- 		dev_dbg(child->parent, "sdio write 52 addr 0x%x, byte 0x%02x\n",
-@@ -380,6 +397,9 @@ static void __exit wl1271_exit(void)
- module_init(wl1271_init);
- module_exit(wl1271_exit);
- 
-+module_param(dump, bool, S_IRUSR | S_IWUSR);
-+MODULE_PARM_DESC(dump, "Enable sdio read/write dumps.");
-+
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
--- 
-1.7.9.5
-
+Regards,
+	Chr
