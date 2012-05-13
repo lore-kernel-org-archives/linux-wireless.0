@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44682 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753287Ab2EDIsv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 04:48:51 -0400
-Received: by lahj13 with SMTP id j13so1847260lah.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 May 2012 01:48:48 -0700 (PDT)
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:57822 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392Ab2EMGWb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 May 2012 02:22:31 -0400
+Date: Sun, 13 May 2012 03:22:24 -0300
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 1/2] Bluetooth: notify userspace of security level change
+Message-ID: <20120513062224.GC15956@joana> (sfid-20120513_082249_563918_10176501)
+References: <20120512190900.GA15956@joana>
+ <1336849910-29064-1-git-send-email-gustavo@padovan.org>
 MIME-Version: 1.0
-In-Reply-To: <1336071691.5167.10.camel@jlt3.sipsolutions.net>
-References: <1335266308-3286-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
-	<1336071691.5167.10.camel@jlt3.sipsolutions.net>
-Date: Fri, 4 May 2012 11:48:48 +0300
-Message-ID: <CAMXE1-p6KcFA8_8ZXOOUANjmpnUiJ7ZBqRHM2rqJK-TLvDr7Yw@mail.gmail.com> (sfid-20120504_104855_333416_4825AF32)
-Subject: Re: [PATCH] mac80211: Adds clean sdata helper
-From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1336849910-29064-1-git-send-email-gustavo@padovan.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Hi,
 
-On Thu, May 3, 2012 at 10:01 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Looks fine to me, but I'd prefer not having the mesh.h change, maybe we
-> can add an extra  if (ieee80211_vif_is_mesh(&sdata->vif)) or use if
-> instead of switch?
+* Gustavo Padovan <gustavo@padovan.org> [2012-05-12 16:11:49 -0300]:
 
-Is this approach a recommended way? Otherwise using "elseif" or "if"
-inside "switch" looks somehow not OK.
+> When the userspace request a security level change it needs to be notified
+> of when the change is complete.
+> This patch make the socket non writable while the security request is
+> ongoing. If it succeeds POLL_OUT is emitted, otherwise the channel is
+> disconnected.
 
-Regards,
-Andrei
+I just sent a second version of this patches that includes comments Johan made
+in the last e-mail for better understanding of what the problem really is.
+
+	Gustavo
