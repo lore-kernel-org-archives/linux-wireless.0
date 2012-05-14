@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:52099 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206Ab2ECFNi (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54303 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754608Ab2ENHSs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 01:13:38 -0400
-Received: from aeonflux.amr.corp.intel.com (unknown [81.253.16.139])
-	by mail.holtmann.org (Postfix) with ESMTPSA id 64D788B3B6
-	for <linux-wireless@vger.kernel.org>; Thu,  3 May 2012 07:13:37 +0200 (CEST)
-From: Marcel Holtmann <marcel@holtmann.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] NFC: Select CRC_CCITT for SHDLC link layer of HCI based drivers
-Date: Thu,  3 May 2012 07:12:48 +0200
-Message-Id: <1336021968-19478-1-git-send-email-marcel@holtmann.org> (sfid-20120503_071341_272312_03723F1B)
+	Mon, 14 May 2012 03:18:48 -0400
+Message-ID: <1336979924.4303.5.camel@jlt3.sipsolutions.net> (sfid-20120514_091853_611519_12E1FA7E)
+Subject: Re: CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
+ (Barcelona!)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
+Date: Mon, 14 May 2012 09:18:44 +0200
+In-Reply-To: <20120427174439.GC16207@tuxdriver.com> (sfid-20120427_194754_950690_60A07BB5)
+References: <20120322192406.GB2432@tuxdriver.com>
+	 <1332698585.1870.88.camel@aeonflux> <20120326145433.GE13806@tuxdriver.com>
+	 <1332774906.1870.98.camel@aeonflux> <20120326152541.GH13806@tuxdriver.com>
+	 <20120427174439.GC16207@tuxdriver.com>
+	 (sfid-20120427_194754_950690_60A07BB5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The SHDLC link layer of HCI based drivers uses CRC-CCITT and thus
-needs to select that kernel option.
+On Fri, 2012-04-27 at 13:44 -0400, John W. Linville wrote:
 
-Otherwise it ends up with this linking error:
+> Angela has reserved space for us at the Hotel Fira
+> Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
 
-net/built-in.o: In function `nfc_shdlc_add_len_crc':
-net/nfc/hci/shdlc.c:113: undefined reference to `crc_ccitt'
+FWIW, I will not be able to attend.
 
-Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
----
- net/nfc/hci/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/net/nfc/hci/Kconfig b/net/nfc/hci/Kconfig
-index 17213a6..fd67f51 100644
---- a/net/nfc/hci/Kconfig
-+++ b/net/nfc/hci/Kconfig
-@@ -9,6 +9,7 @@ config NFC_HCI
- 
- config NFC_SHDLC
- 	depends on NFC_HCI
-+	select CRC_CCITT
- 	bool "SHDLC link layer for HCI based NFC drivers"
- 	default n
- 	---help---
--- 
-1.7.7.6
+johannes
 
