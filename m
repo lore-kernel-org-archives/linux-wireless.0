@@ -1,31 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:50324 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751478Ab2EHHzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 03:55:23 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k: Support ethtool getstats api.
-References: <1336411437-16653-1-git-send-email-greearb@candelatech.com>
-	<1336412033.20924.6.camel@joe2Laptop> <4FA80D02.404@candelatech.com>
-Date: Tue, 08 May 2012 10:55:21 +0300
-In-Reply-To: <4FA80D02.404@candelatech.com> (Ben Greear's message of "Mon, 07
-	May 2012 10:57:22 -0700")
-Message-ID: <87zk9j85ue.fsf@purkki.adurom.net> (sfid-20120508_095527_427799_24E40EE7)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:44745 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753628Ab2ENIKF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 04:10:05 -0400
+Received: by obbtb18 with SMTP id tb18so7098817obb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 01:10:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Mon, 14 May 2012 10:10:04 +0200
+Message-ID: <CAOpc7mHADqRcvXgg-8JoVfsoDh0_cZnkqBFS3AadwS6x0gtg7g@mail.gmail.com> (sfid-20120514_101010_891845_2010FFCE)
+Subject: [BUG, ath9k]: NUL bytes at end of /sys/kernel/debug/ieee80211/phy0/ath9k/modal_eeprom
+From: Holger Schurig <holgerschurig@googlemail.com>
+To: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
-
-> No, there is a check later that does a BUG_ON if our
-> we have screwed up the indexing of the stats.
-
-Please, no BUG_ON() calls in wifi drivers. They just make users life
-miserable. WARN_ON() with a safe bailout is enough.
+At first I wondered why "grep -i ant ." in this phy0/ath9k directory
+just said "Binary file modal_eeprom matches". But when I used "less
+modal_eeprom", I saw a bunch of NUL bytes at the end of the virtual
+file.
 
 -- 
-Kalle Valo
+http://www.holgerschurig.de
