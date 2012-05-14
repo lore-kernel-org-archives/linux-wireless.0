@@ -1,100 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56002 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756530Ab2EXMcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 08:32:41 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	stable@vger.kernel.org
-Subject: [PATCH 3.5 2/4] ath9k: fix a use-after-free-bug when ath_tx_setup_buffer() fails
-Date: Thu, 24 May 2012 14:32:20 +0200
-Message-Id: <1337862742-10574-2-git-send-email-nbd@openwrt.org> (sfid-20120524_143245_337380_6AAF028E)
-In-Reply-To: <1337862742-10574-1-git-send-email-nbd@openwrt.org>
-References: <1337862742-10574-1-git-send-email-nbd@openwrt.org>
+Received: from mailrelay02.solcon.nl ([212.45.32.108]:33185 "EHLO
+	mailrelay02.solcon.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754949Ab2ENQut (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 12:50:49 -0400
+Message-ID: <4FB12E00.4050104@solcon.nl> (sfid-20120514_185053_064864_CA1F2BD0)
+Date: Mon, 14 May 2012 18:08:32 +0200
+From: Albert Pool <albertpool@solcon.nl>
+MIME-Version: 1.0
+To: IvDoorn@gmail.com, gwingerde@gmail.com, helmut.schaa@googlemail.com
+CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rt2800usb: 2001:3c17 is an RT3370 device
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath_tx_setup_buffer() can fail if there is no ath_buf left, or if mapping DMA
-failed. In this case it frees the skb passed to it.
-If ath_tx_setup_buffer is called from ath_tx_form_aggr, the skb is still
-linked into the tid buffer list and must be dequeued before being released.
+D-Link DWA-123 rev A1
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@vger.kernel.org
+Signed-off-by: Albert Pool<albertpool@solcon.nl>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+  drivers/net/wireless/rt2x00/rt2800usb.c |    3 ++-
+  1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 23eaa1b..d59dd01 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -64,7 +64,8 @@ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
- static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 					   struct ath_txq *txq,
- 					   struct ath_atx_tid *tid,
--					   struct sk_buff *skb);
-+					   struct sk_buff *skb,
-+					   bool dequeue);
- 
- enum {
- 	MCS_HT20,
-@@ -811,7 +812,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 		fi = get_frame_info(skb);
- 		bf = fi->bf;
- 		if (!fi->bf)
--			bf = ath_tx_setup_buffer(sc, txq, tid, skb);
-+			bf = ath_tx_setup_buffer(sc, txq, tid, skb, true);
- 
- 		if (!bf)
- 			continue;
-@@ -1726,7 +1727,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
- 		return;
- 	}
- 
--	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
-+	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb, false);
- 	if (!bf)
- 		return;
- 
-@@ -1753,7 +1754,7 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
- 
- 	bf = fi->bf;
- 	if (!bf)
--		bf = ath_tx_setup_buffer(sc, txq, tid, skb);
-+		bf = ath_tx_setup_buffer(sc, txq, tid, skb, false);
- 
- 	if (!bf)
- 		return;
-@@ -1814,7 +1815,8 @@ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
- static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 					   struct ath_txq *txq,
- 					   struct ath_atx_tid *tid,
--					   struct sk_buff *skb)
-+					   struct sk_buff *skb,
-+					   bool dequeue)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_frame_info *fi = get_frame_info(skb);
-@@ -1863,6 +1865,8 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 	return bf;
- 
- error:
-+	if (dequeue)
-+		__skb_unlink(skb, &tid->buf_q);
- 	dev_kfree_skb_any(skb);
- 	return NULL;
- }
-@@ -1893,7 +1897,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
- 		 */
- 		ath_tx_send_ampdu(sc, tid, skb, txctl);
- 	} else {
--		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
-+		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb, false);
- 		if (!bf)
- 			return;
- 
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 262ee9e..6ee4051 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1070,6 +1070,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
+  #ifdef CONFIG_RT2800USB_RT33XX
+  	/* Belkin */
+  	{ USB_DEVICE(0x050d, 0x945b) },
++	/* D-Link */
++	{ USB_DEVICE(0x2001, 0x3c17) },
+  	/* Ralink */
+  	{ USB_DEVICE(0x148f, 0x3370) },
+  	{ USB_DEVICE(0x148f, 0x8070) },
+@@ -1145,7 +1147,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
+  	/* D-Link */
+  	{ USB_DEVICE(0x07d1, 0x3c0b) },
+  	{ USB_DEVICE(0x07d1, 0x3c17) },
+-	{ USB_DEVICE(0x2001, 0x3c17) },
+  	/* Edimax */
+  	{ USB_DEVICE(0x7392, 0x4085) },
+  	/* Encore */
 -- 
-1.7.3.2
+1.7.9
+
 
