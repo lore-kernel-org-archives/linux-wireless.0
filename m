@@ -1,82 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout4.freenet.de ([195.4.92.94]:38026 "EHLO mout4.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753105Ab2EGHFL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 03:05:11 -0400
-Message-Id: <201205070702.q4772uem002960@mail.maya.org> (sfid-20120507_090516_132109_B2DD8555)
-Date: Mon, 7 May 2012 09:02:58 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-To: hostap@lists.shmoo.com,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [rt2x00-users] [rt2800pci (AP) - ath9k] 802.11w: broken
- aggregation handling?
-In-Reply-To: <4FA75983.9040003@01019freenet.de>
-References: <4FA75983.9040003@01019freenet.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:48045 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755210Ab2ENNsE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 09:48:04 -0400
+Received: by qcro28 with SMTP id o28so3294393qcr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 06:48:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn1CddAK_-gAg69DTvRckWNk574KCoOvwvTTCQBDu_CyHg@mail.gmail.com>
+References: <CAOpc7mHADqRcvXgg-8JoVfsoDh0_cZnkqBFS3AadwS6x0gtg7g@mail.gmail.com>
+	<CAD2nsn2G67v0rMtQxvqvFpVPwrU2GXR9+zYRutaT8GuRpLoiZQ@mail.gmail.com>
+	<CAOpc7mEHhZuFdUzzTzXVdn3-DzWuoi-N02Ts1t2xHdNfAGFZhA@mail.gmail.com>
+	<CAD2nsn1CddAK_-gAg69DTvRckWNk574KCoOvwvTTCQBDu_CyHg@mail.gmail.com>
+Date: Mon, 14 May 2012 19:18:03 +0530
+Message-ID: <CAD2nsn2f+V27xtKHvPRjbEgvHesKnFze=gB6AZrT17e_E4U_hw@mail.gmail.com> (sfid-20120514_154809_361849_43DA08BF)
+Subject: Re: [BUG, ath9k]: NUL bytes at end of /sys/kernel/debug/ieee80211/phy0/ath9k/modal_eeprom
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=bcaec54eea0ac342a604bfff555a
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 07 2012 at 07:11:31 +0200 
-Andreas Hartmann <andihartmann@01019freenet.de> wrote:
+--bcaec54eea0ac342a604bfff555a
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> Hello!
-> 
-> I switched on 802.11w on my AP (rt2860) in hostapd with ieee80211w=1 and
-> in wpa_supplicant with ieee80211w=2 (ath9k). key_mgmt is WPA-EAP (TLS) /
-> CCMP for both pairwise and group.
-> 
-> On both machines, compat-wireless-2012-04-26 (or
-> compat-wireless-3.4-rc3) is running.
-> 
-> Directly after authorization, dhcp is started and therefore the opening
-> of the BA session is started by the AP but times out because of no
-> answer of the supplicant:
+Hi Holger,
 
-[...]
+On Mon, May 14, 2012 at 6:55 PM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+>>
+>> root@/sys/kernel/debug/ieee80211/phy0/ath9k# xxd <modal_eeprom | tail -4
+>> 0000630: 2036 0a20 2020 2020 2020 2054 5820 4469 =A0 6. =A0 =A0 =A0 =A0T=
+X Di
+>> 0000640: 7665 7273 6974 7920 3a20 2020 2020 2020 =A0versity :
+>> 0000650: 2020 2030 0a00 0000 0000 0000 0000 0000 =A0 =A0 0............
+>> 0000660: 0000 0000 0000 0000 0000 0000 =A0 =A0 =A0 =A0 =A0 =A0..........=
+..
+>>
 
-> 
-> The deauth request from wpa_supplicant -> AP isn't recognized on the AP,
-> too.
+please try with the attached patch. seems to be working. i check if
+its fine and review it internally. thank you!
 
-Meanwhile, I found the reason (I forgot to take care of hostapd's
-logfile - I would have expected an error message from the driver in
-messages, too :-)):
+--=20
+thanks,
+shafi
 
-AP (hostapd.log):
-...
-1336372202.462946: WPA: 48:5d:60:3e:a3:18 WPA_PTK entering state INITIALIZE
-1336372202.462965: wpa_driver_nl80211_set_key: ifindex=17 alg=0 addr=0x673d40 key_idx=0 set_tx=1 seq_len=0 key_len=0
-1336372202.462977:    addr=48:5d:60:3e:a3:18
-1336372202.462999: WPA: 48:5d:60:3e:a3:18 WPA_PTK_GROUP entering state IDLE
-1336372202.463007: WPA: 48:5d:60:3e:a3:18 WPA_PTK entering state AUTHENTICATION
-1336372202.463018: WPA: 48:5d:60:3e:a3:18 WPA_PTK entering state AUTHENTICATION2
-1336372202.463025: WPA: Re-initialize GMK/Counter on first station
-1336372202.463896: GMK - hexdump(len=32): [REMOVED]
-1336372202.464771: Key Counter - hexdump(len=32): [REMOVED]
-1336372202.465639: GTK - hexdump(len=16): [REMOVED]
-1336372202.466502: IGTK - hexdump(len=16): [REMOVED]
-1336372202.466524: wpa_driver_nl80211_set_key: ifindex=17 alg=3 addr=0x44fbbe key_idx=1 set_tx=1 seq_len=0 key_len=16
-1336372202.466539:    broadcast key
-1336372202.478318: wpa_driver_nl80211_set_key: ifindex=17 alg=4 addr=0x44fbbe key_idx=4 set_tx=1 seq_len=0 key_len=16
-1336372202.478349:    broadcast key
-1336372202.478389: nl80211: set_key failed; err=-22 Invalid argument)
-....
-1336372202.529973: wlan0: STA 48:5d:60:3e:a3:18 IEEE 802.1X: authenticated - EAP type: 13 (TLS)
+--bcaec54eea0ac342a604bfff555a
+Content-Type: text/x-diff; charset=US-ASCII; name="fix-eeprom-debug.patch"
+Content-Disposition: attachment; filename="fix-eeprom-debug.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h27l7lhe0
 
-
-But there are some questions open anyway:
-
-- Why is the authentication started here at all, regardless of an error?
-- Why does TLS succeed? (802.11g is "working"). 
-- Why does set_key fail?
-
-
-I'm getting the same error, regardless if nohwcrypt is enabled for
-rt2800pci or not.
-
-
-Thanks for your advice,
-kind regards,
-Andreas Hartmann
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9hcjkwMDNfZWVwcm9t
+LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvYXI5MDAzX2VlcHJvbS5jCmluZGV4
+IGFjNTNkOTAuLjMzMDc4MTQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9h
+dGg5ay9hcjkwMDNfZWVwcm9tLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlr
+L2FyOTAwM19lZXByb20uYwpAQCAtMzM2NSw5ICszMzY1LDExIEBAIHN0YXRpYyBib29sIGF0aDlr
+X2h3X2FyOTMwMF9maWxsX2VlcHJvbShzdHJ1Y3QgYXRoX2h3ICphaCkKIH0KIAogI2lmIGRlZmlu
+ZWQoQ09ORklHX0FUSDlLX0RFQlVHRlMpIHx8IGRlZmluZWQoQ09ORklHX0FUSDlLX0hUQ19ERUJV
+R0ZTKQotc3RhdGljIHUzMiBhcjkwMDNfZHVtcF9tb2RhbF9lZXByb20oY2hhciAqYnVmLCB1MzIg
+bGVuLCB1MzIgc2l6ZSwKK3N0YXRpYyB1MzIgYXI5MDAzX2R1bXBfbW9kYWxfZWVwcm9tKGNoYXIg
+KmJ1ZiwgdTMyIHNpemUsCiAJCQkJICAgIHN0cnVjdCBhcjkzMDBfbW9kYWxfZWVwX2hlYWRlciAq
+bW9kYWxfaGRyKQogeworCXUzMiBsZW4gPSAwOworCiAJUFJfRUVQKCJDaGFpbjAgQW50LiBDb250
+cm9sIiwgbGUxNl90b19jcHUobW9kYWxfaGRyLT5hbnRDdHJsQ2hhaW5bMF0pKTsKIAlQUl9FRVAo
+IkNoYWluMSBBbnQuIENvbnRyb2wiLCBsZTE2X3RvX2NwdShtb2RhbF9oZHItPmFudEN0cmxDaGFp
+blsxXSkpOwogCVBSX0VFUCgiQ2hhaW4yIEFudC4gQ29udHJvbCIsIGxlMTZfdG9fY3B1KG1vZGFs
+X2hkci0+YW50Q3RybENoYWluWzJdKSk7CkBAIC0zNDEyLDExICszNDE0LDExIEBAIHN0YXRpYyB1
+MzIgYXRoOWtfaHdfYXI5MDAzX2R1bXBfZWVwcm9tKHN0cnVjdCBhdGhfaHcgKmFoLCBib29sIGR1
+bXBfYmFzZV9oZHIsCiAJaWYgKCFkdW1wX2Jhc2VfaGRyKSB7CiAJCWxlbiArPSBzbnByaW50Zihi
+dWYgKyBsZW4sIHNpemUgLSBsZW4sCiAJCQkJIiUyMHMgOlxuIiwgIjJHSHogbW9kYWwgSGVhZGVy
+Iik7Ci0JCWxlbiArPSBhcjkwMDNfZHVtcF9tb2RhbF9lZXByb20oYnVmLCBsZW4sIHNpemUsCisJ
+CWxlbiArPSBhcjkwMDNfZHVtcF9tb2RhbF9lZXByb20oYnVmICsgbGVuLCBzaXplIC0gbGVuLAog
+CQkJCQkJJmVlcC0+bW9kYWxIZWFkZXIyRyk7CiAJCWxlbiArPSBzbnByaW50ZihidWYgKyBsZW4s
+IHNpemUgLSBsZW4sCiAJCQkJIiUyMHMgOlxuIiwgIjVHSHogbW9kYWwgSGVhZGVyIik7Ci0JCWxl
+biArPSBhcjkwMDNfZHVtcF9tb2RhbF9lZXByb20oYnVmLCBsZW4sIHNpemUsCisJCWxlbiArPSBh
+cjkwMDNfZHVtcF9tb2RhbF9lZXByb20oYnVmICsgbGVuLCBzaXplIC0gbGVuLAogCQkJCQkJJmVl
+cC0+bW9kYWxIZWFkZXI1Ryk7CiAJCWdvdG8gb3V0OwogCX0KZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9lZXByb21fNGsuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L2F0aC9hdGg5ay9lZXByb21fNGsuYwppbmRleCA0MzIyYWM4Li45ZTdjYTU3IDEwMDY0NAotLS0g
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvZWVwcm9tXzRrLmMKKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2VlcHJvbV80ay5jCkBAIC03Miw5ICs3MiwxMSBAQCBz
+dGF0aWMgYm9vbCBhdGg5a19od180a19maWxsX2VlcHJvbShzdHJ1Y3QgYXRoX2h3ICphaCkKIH0K
+IAogI2lmIGRlZmluZWQoQ09ORklHX0FUSDlLX0RFQlVHRlMpIHx8IGRlZmluZWQoQ09ORklHX0FU
+SDlLX0hUQ19ERUJVR0ZTKQotc3RhdGljIHUzMiBhdGg5a19kdW1wXzRrX21vZGFsX2VlcHJvbShj
+aGFyICpidWYsIHUzMiBsZW4sIHUzMiBzaXplLAorc3RhdGljIHUzMiBhdGg5a19kdW1wXzRrX21v
+ZGFsX2VlcHJvbShjaGFyICpidWYsIHUzMiBzaXplLAogCQkJCSAgICAgIHN0cnVjdCBtb2RhbF9l
+ZXBfNGtfaGVhZGVyICptb2RhbF9oZHIpCiB7CisJdTMyIGxlbiA9IDA7CisKIAlQUl9FRVAoIkNo
+YWluMCBBbnQuIENvbnRyb2wiLCBtb2RhbF9oZHItPmFudEN0cmxDaGFpblswXSk7CiAJUFJfRUVQ
+KCJBbnQuIENvbW1vbiBDb250cm9sIiwgbW9kYWxfaGRyLT5hbnRDdHJsQ29tbW9uKTsKIAlQUl9F
+RVAoIkNoYWluMCBBbnQuIEdhaW4iLCBtb2RhbF9oZHItPmFudGVubmFHYWluQ2hbMF0pOwpAQCAt
+MTM1LDcgKzEzNyw3IEBAIHN0YXRpYyB1MzIgYXRoOWtfaHdfNGtfZHVtcF9lZXByb20oc3RydWN0
+IGF0aF9odyAqYWgsIGJvb2wgZHVtcF9iYXNlX2hkciwKIAlpZiAoIWR1bXBfYmFzZV9oZHIpIHsK
+IAkJbGVuICs9IHNucHJpbnRmKGJ1ZiArIGxlbiwgc2l6ZSAtIGxlbiwKIAkJCQkiJTIwcyA6XG4i
+LCAiMkdIeiBtb2RhbCBIZWFkZXIiKTsKLQkJbGVuICs9IGF0aDlrX2R1bXBfNGtfbW9kYWxfZWVw
+cm9tKGJ1ZiwgbGVuLCBzaXplLAorCQlsZW4gKz0gYXRoOWtfZHVtcF80a19tb2RhbF9lZXByb20o
+YnVmICsgbGVuLCBzaXplIC0gbGVuLAogCQkJCQkJICAmZWVwLT5tb2RhbEhlYWRlcik7CiAJCWdv
+dG8gb3V0OwogCX0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9l
+ZXByb21fOTI4Ny5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2VlcHJvbV85Mjg3
+LmMKaW5kZXggYWE2MTQ3Ni4uYzJjMDc3ZCAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvYXRoL2F0aDlrL2VlcHJvbV85Mjg3LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRo
+L2F0aDlrL2VlcHJvbV85Mjg3LmMKQEAgLTc2LDkgKzc2LDExIEBAIHN0YXRpYyBib29sIGF0aDlr
+X2h3X2FyOTI4N19maWxsX2VlcHJvbShzdHJ1Y3QgYXRoX2h3ICphaCkKIH0KIAogI2lmIGRlZmlu
+ZWQoQ09ORklHX0FUSDlLX0RFQlVHRlMpIHx8IGRlZmluZWQoQ09ORklHX0FUSDlLX0hUQ19ERUJV
+R0ZTKQotc3RhdGljIHUzMiBhcjkyODdfZHVtcF9tb2RhbF9lZXByb20oY2hhciAqYnVmLCB1MzIg
+bGVuLCB1MzIgc2l6ZSwKK3N0YXRpYyB1MzIgYXI5Mjg3X2R1bXBfbW9kYWxfZWVwcm9tKGNoYXIg
+KmJ1ZiwgdTMyIHNpemUsCiAJCQkJICAgIHN0cnVjdCBtb2RhbF9lZXBfYXI5Mjg3X2hlYWRlciAq
+bW9kYWxfaGRyKQogeworCXUzMiBsZW4gPSAwOworCiAJUFJfRUVQKCJDaGFpbjAgQW50LiBDb250
+cm9sIiwgbW9kYWxfaGRyLT5hbnRDdHJsQ2hhaW5bMF0pOwogCVBSX0VFUCgiQ2hhaW4xIEFudC4g
+Q29udHJvbCIsIG1vZGFsX2hkci0+YW50Q3RybENoYWluWzFdKTsKIAlQUl9FRVAoIkFudC4gQ29t
+bW9uIENvbnRyb2wiLCBtb2RhbF9oZHItPmFudEN0cmxDb21tb24pOwpAQCAtMTMyLDcgKzEzNCw3
+IEBAIHN0YXRpYyB1MzIgYXRoOWtfaHdfYXI5Mjg3X2R1bXBfZWVwcm9tKHN0cnVjdCBhdGhfaHcg
+KmFoLCBib29sIGR1bXBfYmFzZV9oZHIsCiAJaWYgKCFkdW1wX2Jhc2VfaGRyKSB7CiAJCWxlbiAr
+PSBzbnByaW50ZihidWYgKyBsZW4sIHNpemUgLSBsZW4sCiAJCQkJIiUyMHMgOlxuIiwgIjJHSHog
+bW9kYWwgSGVhZGVyIik7Ci0JCWxlbiArPSBhcjkyODdfZHVtcF9tb2RhbF9lZXByb20oYnVmLCBs
+ZW4sIHNpemUsCisJCWxlbiArPSBhcjkyODdfZHVtcF9tb2RhbF9lZXByb20oYnVmICsgbGVuLCBz
+aXplIC0gbGVuLAogCQkJCQkJJmVlcC0+bW9kYWxIZWFkZXIpOwogCQlnb3RvIG91dDsKIAl9CmRp
+ZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvZWVwcm9tX2RlZi5jIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL2VlcHJvbV9kZWYuYwppbmRleCBiNWZiYThi
+Li5mYjJlZWFhIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvZWVw
+cm9tX2RlZi5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9lZXByb21fZGVm
+LmMKQEAgLTEzMyw5ICsxMzMsMTEgQEAgc3RhdGljIGJvb2wgYXRoOWtfaHdfZGVmX2ZpbGxfZWVw
+cm9tKHN0cnVjdCBhdGhfaHcgKmFoKQogI3VuZGVmIFNJWkVfRUVQUk9NX0RFRgogCiAjaWYgZGVm
+aW5lZChDT05GSUdfQVRIOUtfREVCVUdGUykgfHwgZGVmaW5lZChDT05GSUdfQVRIOUtfSFRDX0RF
+QlVHRlMpCi1zdGF0aWMgdTMyIGF0aDlrX2RlZl9kdW1wX21vZGFsX2VlcHJvbShjaGFyICpidWYs
+IHUzMiBsZW4sIHUzMiBzaXplLAorc3RhdGljIHUzMiBhdGg5a19kZWZfZHVtcF9tb2RhbF9lZXBy
+b20oY2hhciAqYnVmLCB1MzIgc2l6ZSwKIAkJCQkgICAgICAgc3RydWN0IG1vZGFsX2VlcF9oZWFk
+ZXIgKm1vZGFsX2hkcikKIHsKKwl1MzIgbGVuID0gMDsKKwogCVBSX0VFUCgiQ2hhaW4wIEFudC4g
+Q29udHJvbCIsIG1vZGFsX2hkci0+YW50Q3RybENoYWluWzBdKTsKIAlQUl9FRVAoIkNoYWluMSBB
+bnQuIENvbnRyb2wiLCBtb2RhbF9oZHItPmFudEN0cmxDaGFpblsxXSk7CiAJUFJfRUVQKCJDaGFp
+bjIgQW50LiBDb250cm9sIiwgbW9kYWxfaGRyLT5hbnRDdHJsQ2hhaW5bMl0pOwpAQCAtMjExLDEx
+ICsyMTMsMTEgQEAgc3RhdGljIHUzMiBhdGg5a19od19kZWZfZHVtcF9lZXByb20oc3RydWN0IGF0
+aF9odyAqYWgsIGJvb2wgZHVtcF9iYXNlX2hkciwKIAlpZiAoIWR1bXBfYmFzZV9oZHIpIHsKIAkJ
+bGVuICs9IHNucHJpbnRmKGJ1ZiArIGxlbiwgc2l6ZSAtIGxlbiwKIAkJCQkiJTIwcyA6XG4iLCAi
+MkdIeiBtb2RhbCBIZWFkZXIiKTsKLQkJbGVuICs9IGF0aDlrX2RlZl9kdW1wX21vZGFsX2VlcHJv
+bShidWYsIGxlbiwgc2l6ZSwKKwkJbGVuICs9IGF0aDlrX2RlZl9kdW1wX21vZGFsX2VlcHJvbShi
+dWYgKyBsZW4sIHNpemUgLSBsZW4sCiAJCQkJCQkgICAmZWVwLT5tb2RhbEhlYWRlclswXSk7CiAJ
+CWxlbiArPSBzbnByaW50ZihidWYgKyBsZW4sIHNpemUgLSBsZW4sCiAJCQkJIiUyMHMgOlxuIiwg
+IjVHSHogbW9kYWwgSGVhZGVyIik7Ci0JCWxlbiArPSBhdGg5a19kZWZfZHVtcF9tb2RhbF9lZXBy
+b20oYnVmLCBsZW4sIHNpemUsCisJCWxlbiArPSBhdGg5a19kZWZfZHVtcF9tb2RhbF9lZXByb20o
+YnVmICsgbGVuLCBzaXplIC0gbGVuLAogCQkJCQkJICAgJmVlcC0+bW9kYWxIZWFkZXJbMV0pOwog
+CQlnb3RvIG91dDsKIAl9Cg==
+--bcaec54eea0ac342a604bfff555a--
