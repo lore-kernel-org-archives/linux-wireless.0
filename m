@@ -1,191 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1333 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755907Ab2EEB1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 21:27:50 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 04/11] brcmfmac: introduce unified register access
- interface for SDIO
-Date: Fri, 4 May 2012 18:27:31 -0700
-Message-ID: <1336181258-7305-5-git-send-email-frankyl@broadcom.com> (sfid-20120505_032825_636261_5A2ACE7D)
-In-Reply-To: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
-References: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44100 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755836Ab2ENNRu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 09:17:50 -0400
+Date: Mon, 14 May 2012 09:14:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
+Subject: Re: CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
+ (Barcelona!)
+Message-ID: <20120514131444.GA2428@tuxdriver.com> (sfid-20120514_151755_172896_7CBE1C0F)
+References: <20120322192406.GB2432@tuxdriver.com>
+ <1332698585.1870.88.camel@aeonflux>
+ <20120326145433.GE13806@tuxdriver.com>
+ <1332774906.1870.98.camel@aeonflux>
+ <20120326152541.GH13806@tuxdriver.com>
+ <20120427174439.GC16207@tuxdriver.com>
+ <1336979924.4303.5.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1336979924.4303.5.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both brcmf_sdcard_cfg_read/write and brcmf_sdcard_reg_read/write
-are used as interface functions for register access of SDIO WiFi
-dongle. A unified interface brcmf_sdio_regr/w is introduced in
-this patch in order to simplify the interface and keep the
-complexity within the lower layer.
+On Mon, May 14, 2012 at 09:18:44AM +0200, Johannes Berg wrote:
+> On Fri, 2012-04-27 at 13:44 -0400, John W. Linville wrote:
+> 
+> > Angela has reserved space for us at the Hotel Fira
+> > Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
+> 
+> FWIW, I will not be able to attend.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  113 ++++++++++++++++++++
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |   12 +++
- 2 files changed, 125 insertions(+)
+Yeah, I was afraid that would be the case -- I'm sorry.  But, I hope
+that this will motivate others in the group to step-up with discussion
+topics and/or presentations.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index f971fa8..5e719d8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -233,6 +233,119 @@ brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- 	return err;
- }
- 
-+static int
-+brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+			void *data, bool write)
-+{
-+	u8 func_num, reg_size;
-+	u32 bar;
-+	s32 retry = 0;
-+	int ret;
-+
-+	/*
-+	 * figure out how to read the register based on address range
-+	 * 0x00 ~ 0xFF: function 0 CCCR
-+	 * 0x10000 ~ 0x1FFFF: function 1 miscellaneous registers
-+	 * The rest: function 1 silicon backplane core registers
-+	 */
-+	if ((addr & ~REG_F0_CCCR_MASK) == 0) {
-+		func_num = SDIO_FUNC_0;
-+		reg_size = 1;
-+	} else if ((addr & ~REG_F1_MISC_MASK) == 0) {
-+		func_num = SDIO_FUNC_1;
-+		reg_size = 1;
-+	} else {
-+		func_num = SDIO_FUNC_1;
-+		reg_size = 4;
-+
-+		/* Set the window for SB core register */
-+		bar = addr & ~SBSDIO_SB_OFT_ADDR_MASK;
-+		if (bar != sdiodev->sbwad) {
-+			ret = brcmf_sdcard_set_sbaddr_window(sdiodev, bar);
-+			if (ret != 0) {
-+				memset(data, 0xFF, reg_size);
-+				return ret;
-+			}
-+			sdiodev->sbwad = bar;
-+		}
-+		addr &= SBSDIO_SB_OFT_ADDR_MASK;
-+		addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
-+	}
-+
-+	do {
-+		if (!write)
-+			memset(data, 0, reg_size);
-+		if (retry)	/* wait for 1 ms till bus get settled down */
-+			usleep_range(1000, 2000);
-+		if (reg_size == 1)
-+			ret = brcmf_sdioh_request_byte(sdiodev, write,
-+						       func_num, addr, data);
-+		else
-+			ret = brcmf_sdioh_request_word(sdiodev, write,
-+						       func_num, addr, data, 4);
-+	} while (ret != 0 && retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
-+
-+	sdiodev->regfail = (ret != 0);
-+	if (sdiodev->regfail)
-+		brcmf_dbg(ERROR, "failed with %d\n", ret);
-+
-+	return ret;
-+}
-+
-+u8 brcmf_sdio_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
-+{
-+	u8 data;
-+	int retval;
-+
-+	brcmf_dbg(INFO, "addr:0x%08x\n", addr);
-+	retval = brcmf_sdio_regrw_helper(sdiodev, addr, &data, false);
-+	brcmf_dbg(INFO, "data:0x%02x\n", data);
-+
-+	if (ret)
-+		*ret = retval;
-+
-+	return data;
-+}
-+
-+u32 brcmf_sdio_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret)
-+{
-+	u32 data;
-+	int retval;
-+
-+	brcmf_dbg(INFO, "addr:0x%08x\n", addr);
-+	retval = brcmf_sdio_regrw_helper(sdiodev, addr, &data, false);
-+	brcmf_dbg(INFO, "data:0x%08x\n", data);
-+
-+	if (ret)
-+		*ret = retval;
-+
-+	return data;
-+}
-+
-+void brcmf_sdio_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+		      u8 data, int *ret)
-+{
-+	int retval;
-+
-+	brcmf_dbg(INFO, "addr:0x%08x, data:0x%02x\n", addr, data);
-+	retval = brcmf_sdio_regrw_helper(sdiodev, addr, &data, true);
-+
-+	if (ret)
-+		*ret = retval;
-+}
-+
-+void brcmf_sdio_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+		      u32 data, int *ret)
-+{
-+	int retval;
-+
-+	brcmf_dbg(INFO, "addr:0x%08x, data:0x%08x\n", addr, data);
-+	retval = brcmf_sdio_regrw_helper(sdiodev, addr, &data, true);
-+
-+	if (ret)
-+		*ret = retval;
-+}
-+
- u32 brcmf_sdcard_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr)
- {
- 	int status;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index 6df06cf..d6ed2d8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -40,6 +40,10 @@
- /* Maximum number of I/O funcs */
- #define SDIOD_MAX_IOFUNCS	7
- 
-+/* mask of register map */
-+#define REG_F0_CCCR_MASK	0xFF
-+#define REG_F1_MISC_MASK	0x1FFFF
-+
- /* as of sdiod rev 0, supports 3 functions */
- #define SBSDIO_NUM_FUNCTION		3
- 
-@@ -186,6 +190,14 @@ brcmf_sdcard_reg_read(struct brcmf_sdio_dev *sdiodev, u32 addr);
- extern u32
- brcmf_sdcard_reg_write(struct brcmf_sdio_dev *sdiodev, u32 addr, u32 data);
- 
-+/* sdio device register access interface */
-+extern u8 brcmf_sdio_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret);
-+extern u32 brcmf_sdio_regrl(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret);
-+extern void brcmf_sdio_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+			     u8 data, int *ret);
-+extern void brcmf_sdio_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
-+			     u32 data, int *ret);
-+
- /* Indicate if last reg read/write failed */
- extern bool brcmf_sdcard_regfail(struct brcmf_sdio_dev *sdiodev);
- 
+John
 -- 
-1.7.9.5
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
