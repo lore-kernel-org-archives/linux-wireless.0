@@ -1,64 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58243 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756911Ab2EOSD7 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23681 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756604Ab2ENRgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 14:03:59 -0400
-Message-ID: <1337105028.15553.3.camel@jlt3.sipsolutions.net> (sfid-20120515_200427_061396_6FEBCADE)
-Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-decnet-user@lists.sourceforge.net,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
-	dev@openvswitch.org, linux-sctp@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 15 May 2012 20:03:48 +0200
-In-Reply-To: <1337104765.7050.24.camel@joe2Laptop> (sfid-20120515_195955_463081_DA730895)
-References: <cover.1336981915.git.joe@perches.com>
-	 <20120515.134531.530903973750646107.davem@davemloft.net>
-	 <1337104765.7050.24.camel@joe2Laptop>
-	 (sfid-20120515_195955_463081_DA730895)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 14 May 2012 13:36:24 -0400
+Date: Mon, 14 May 2012 10:36:21 -0700
+From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: enable enhanced bmiss detection
+Message-ID: <20120514173621.GA3705@pista> (sfid-20120514_193628_281919_D4407F97)
+References: <1336778089-11473-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <4FB0A931.80309@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4FB0A931.80309@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-15 at 10:59 -0700, Joe Perches wrote:
-> On Tue, 2012-05-15 at 13:45 -0400, David Miller wrote:
-> > From: Joe Perches <joe@perches.com>
-> > Date: Mon, 14 May 2012 00:56:24 -0700
+Hi Kalle,
+
+Thanks for your comments, v2 coming shortly.
+
+Thomas
+
+On Mon, May 14, 2012 at 09:41:53AM +0300, Kalle Valo wrote:
+> On 05/12/2012 02:14 AM, Thomas Pedersen wrote:
+> > Enable enhanced bmiss detection if the firmware supports it. This
+> > feature is only enabled on some firmwares since it comes with a power
+> > cost.
 > > 
-> > > net_ratelimit() like __ratelimit() is too easy to misuse.
-> > > 
-> > > Add simplifying macros similar to pr_<level>_ratelimited
-> > > that combines the test of net_ratelimit and logging.
-> > > 
-> > > Joe Perches (2):
-> > >   net: Add net_ratelimited_function and net_<level>_ratelimited macros
-> > >   net: Convert net_ratelimit uses to net_<level>_ratelimited
+> > Also add a few missing command ids to keep the enums straight.
 > > 
-> > These look fine to me so I've applied them to net-next and am
-> > sanity checking the build right now.
+> > Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 > 
-> OK, but fyi, there's a possible issue with !CONFIG_DEBUG
-> builds because these patches converted some uses of
-> 	if (net_ratelimit())
-> 		printk(KERN_DEBUG ...
-> to
-> 	net_dbg_ratelimited()
+> [...]
 > 
-> These messages are no longer emitted when DEBUG isn't defined
-> and not using dynamic_debug.  I'm not sure that's a real
-> problem, but it's a difference.
+> > @@ -1512,6 +1513,8 @@ static int ath6kl_cfg80211_change_iface(struct >
+> wiphy *wiphy,
+> > 		}
+> > 	}
+> >
+> > +	ath6kl_sta_bmiss_enhance(vif, false);
 > 
-> I could produce a net_printk_ratelimited that would keep
-> the original behavior if necessary.
+> A comment why you disable the feature is good to have. I'm sure there's
+> a good reason :)
 > 
-> 	net_printk_ratelimited(KERN_DEBUG etc...)
-
-Oops. Yes, please do that, mac80211 doesn't have DEBUG yet
-
-johannes
-
+> > +void ath6kl_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable)
+> > +{
+> 
+> Please cfg80211 prefix, eg. ath6kl_cfg80211_bmiss_enhance() or something
+> like that.
+> 
+> > +	int err;
+> > +
+> > +	if (WARN_ON(!test_bit(WMI_READY, &vif->ar->flag)))
+> > +		return;
+> > +
+> > +	if (vif->nw_type == INFRA_NETWORK &&
+> > +	    test_bit(ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
+> > +		     vif->ar->fw_capabilities)) {
+> 
+> Less indentation:
+> 
+> if (vif->nw_type != INFRA_NETWORK)
+> 	return;
+> 
+> if (!test_bit(ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
+> 		     vif->ar->fw_capabilities))
+> 	return;
+> 
+> 
+> > +		ath6kl_dbg(ATH6KL_DBG_TRC, enable ? "enable fw bmiss enhance\n"
+> > +						  : "");
+> 
+> ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s fw bmiss enhance\n",
+> 		enable ? "enable" : "disable");
+> 
+> 
+> > +		err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
+> > +						       vif->fw_vif_idx, enable);
+> > +		if (err)
+> > +			ath6kl_dbg(ATH6KL_DBG_TRC,
+> > +				   "failed to %s enhanced bmiss detection: %d\n",
+> > +				   enable ? "set" : "disable",
+> > +				   err);
+> 
+> Use WLAN_CFG here as well.
+> 
+> Kalle
