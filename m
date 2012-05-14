@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:34597 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951Ab2EIK3f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 06:29:35 -0400
-Received: by yhmm54 with SMTP id m54so82760yhm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 03:29:35 -0700 (PDT)
-Date: Wed, 9 May 2012 05:29:26 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: =?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>,
-	Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: brcmsmac still woes, possible regression?
-Message-ID: <20120509102926.GD3499@burratino> (sfid-20120509_122939_583563_2BACA0B2)
-References: <20120328112657.GA6114@stt008.linux.site>
- <4F7302D9.8070009@broadcom.com>
- <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
- <4F744DD8.8010004@broadcom.com>
- <20120329133835.GA5196@stt008.linux.site>
- <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
- <20120402215005.GA13969@burratino>
- <4F7B179F.7070502@broadcom.com>
- <20120509094111.GA2333@burratino>
- <4FAA45AF.8050201@broadcom.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:3435 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754524Ab2ENHIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 03:08:09 -0400
+Message-ID: <4FB0AF4B.9070606@broadcom.com> (sfid-20120514_090813_622392_38919A13)
+Date: Mon, 14 May 2012 09:07:55 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FAA45AF.8050201@broadcom.com>
+To: "Dan Carpenter" <dan.carpenter@oracle.com>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: net: wireless: add brcm80211 drivers
+References: <20120513174333.GB4280@elgon.mountain>
+In-Reply-To: <20120513174333.GB4280@elgon.mountain>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel wrote:
-> On 05/09/2012 11:41 AM, Jonathan Nieder wrote:
+On 05/13/2012 07:43 PM, Dan Carpenter wrote:
+> Hi Arend,
+> 
+> This code is not really new, but I thought I would email you anyway
+> because I know you are responsive.  :)
 
->> Any news?  If there's a patch that goes in the right direction with
->> known problems I'd still be interested in it, among other reasons
->> because it would make the bug more concrete and make it easier to
->> think about possible fixes.
->
-> Well, there is the short term fix, which is already upstream and moved
-> to stable. The long term fix for which Seth Forshee (Canonical) did a
-> great job is reviewed over here, but it involves regulatory related code
-> so it needs discussions with our compliance team and supervisor. So that
-> causes some lag time.
->
-> If you are using a kernel with the short term fix included please sent
-> any logging information if the problem still persists.
+Dito ;-)
 
-Thanks for explaining.  That makes sense.
+> The patch 5b435de0d786: "net: wireless: add brcm80211 drivers" from 
+> Oct 5, 2011, leads to the following Smatch complaint:
+> 
+> drivers/net/wireless/brcm80211/brcmsmac/ampdu.c:741 brcms_c_sendampdu()
+> 	 warn: variable dereferenced before check 'p' (see line 739)
+> 
+> drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+>    733                  /*
+>    734                   * check to see if the next pkt is
+>    735                   * a candidate for aggregation
+>    736                   */
+>    737                  p = pktq_ppeek(&qi->q, prec);
+>    738			/* tx_info must be checked with current p */
+>    739			tx_info = IEEE80211_SKB_CB(p);
+>                                   ^^^^^^^^^^^^^^^^
+> "p" is dereferenced inside the call to IEEE80211_SKB_CB().
+> 
+>    740	
+>    741			if (p) {
+>                            ^^^
+> Checked too late.
+> 
+>    742				if ((tx_info->flags & IEEE80211_TX_CTL_AMPDU) &&
+>    743				    ((u8) (p->priority) == tid)) {
+> 
+> regards,
+> dan carpenter
+> 
+> 
 
-Is the short term fix badc4f07622f ("brcm80211: smac: resume transmit
-fifo upon receiving frames", 2012-04-11)?
+Thanks for running smatch. I will look in the current code base and fix
+this. Just out of curiosity: Another static checker used regularly is
+Coccinelle. What are the pros and cons of smatch compared to Coccinelle?
 
-Thanks,
-Jonathan
+Gr. AvS
+
