@@ -1,91 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62558 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645Ab2EXDzx (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:32810 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756038Ab2ENUxH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:55:53 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 14 May 2012 16:53:07 -0400
+Received: by bkcji2 with SMTP id ji2so4216318bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 13:53:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45320.875845.342311@gargle.gargle.HOWL> (sfid-20120524_055555_694152_F0E7AC54)
-Date: Thu, 24 May 2012 09:24:48 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 21/22] ath9k_hw: fix power state for MCI
+In-Reply-To: <4FB15D76.9000302@lwfinger.net>
+References: <4FB15D76.9000302@lwfinger.net>
+Date: Mon, 14 May 2012 13:53:06 -0700
+Message-ID: <CA++WF2M18LBx2OfKs47pr3=Z=yfOf43YEVv7-CshzMVrFcgmKg@mail.gmail.com> (sfid-20120514_225312_128036_B5E213D3)
+Subject: Re: Warning from wireless-testing for ipw2100
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Program MCI related power registers only if MCI interrupts
-are enabled. This could help to reduce power consumptions when
-WLAN alone is enabled in BT coex chips.
+Hello Larry,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   25 +++++++++----------------
- 1 file changed, 9 insertions(+), 16 deletions(-)
+On 14 May 2012 12:31, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> A freshly pulled copy of wireless-testing 3.4-rc7 has the following warning
+> that the 802.11 band has not been set when the ipw2100 driver is probed:
+> [   17.766431] ------------[ cut here ]------------
+> [   17.766467] WARNING: at net/wireless/core.c:562
+> wiphy_register+0x34c/0x3c0 [cfg80211]()
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 9e8fef2..d13211d 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2006,12 +2006,9 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
- 
- 	if (AR_SREV_9462(ah)) {
--		REG_WRITE(ah, AR_TIMER_MODE,
--			  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
--		REG_WRITE(ah, AR_NDP2_TIMER_MODE,
--			  REG_READ(ah, AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
--		REG_WRITE(ah, AR_SLP32_INC,
--			  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
-+		REG_CLR_BIT(ah, AR_TIMER_MODE, 0xff);
-+		REG_CLR_BIT(ah, AR_NDP2_TIMER_MODE, 0xff);
-+		REG_CLR_BIT(ah, AR_SLP32_INC, 0xfffff);
- 		/* xxx Required for WLAN only case ? */
- 		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
- 		udelay(100);
-@@ -2023,7 +2020,7 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- 	 */
- 	REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
- 
--	if (AR_SREV_9462(ah))
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		udelay(100);
- 
- 	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
-@@ -2048,7 +2045,6 @@ static void ath9k_set_power_sleep(struct ath_hw *ah)
- static void ath9k_set_power_network_sleep(struct ath_hw *ah)
- {
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
--	u32 val;
- 
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
- 
-@@ -2067,19 +2063,16 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah)
- 		 * SYS_WAKING and SYS_SLEEPING messages which will make
- 		 * BT CPU to busy to process.
- 		 */
--		if (AR_SREV_9462(ah)) {
--			val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
--				~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
--			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
--		}
-+		if (ath9k_hw_mci_is_enabled(ah))
-+			REG_CLR_BIT(ah, AR_MCI_INTERRUPT_RX_MSG_EN,
-+				    AR_MCI_INTERRUPT_RX_HW_MSG_MASK);
- 		/*
- 		 * Clear the RTC force wake bit to allow the
- 		 * mac to go to sleep.
- 		 */
--		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
--			    AR_RTC_FORCE_WAKE_EN);
-+		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
- 
--		if (AR_SREV_9462(ah))
-+		if (ath9k_hw_mci_is_enabled(ah))
- 			udelay(30);
- 	}
- 
--- 
-1.7.10.2
+I think it is the same problem as for ipw2200 as found by Stefan
+http://marc.info/?l=linux-wireless&m=132720334512946&w=2
 
+which is already fixed.
+http://marc.info/?l=linux-wireless&m=133457257407196&w=2
+
+> ....
+> I do not use the device and it doesn't make any difference to me, but there
+> may be someone that needs it.
+
+I will send a patch.
+
+Stanislav.
