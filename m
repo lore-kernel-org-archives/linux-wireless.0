@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2144 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754418Ab2EGHzb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 03:55:31 -0400
-Message-ID: <4FA77FE7.5030303@broadcom.com> (sfid-20120507_095535_836257_C6D452C8)
-Date: Mon, 7 May 2012 09:55:19 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6872 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757033Ab2ENSDp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 14:03:45 -0400
+Date: Mon, 14 May 2012 11:03:39 -0700
+From: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2] ath6kl: enable enhanced bmiss detection
+Message-ID: <20120514180339.GA4030@pista> (sfid-20120514_200348_826900_924BBD62)
+References: <1337017652-3962-1-git-send-email-c_tpeder@qca.qualcomm.com>
+ <1337018219.29436.24.camel@joe2Laptop>
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	"John Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: WARNING: at net/mac80211/iface.c:162
-References: <4FA709B3.4030404@lwfinger.net> (
- sfid-20120507_013135_141792_546F01AB)
- <1336372450.4325.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1336372450.4325.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1337018219.29436.24.camel@joe2Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/07/2012 08:34 AM, Johannes Berg wrote:
-> On Sun, 2012-05-06 at 18:30 -0500, Larry Finger wrote:
->> Hi,
->>
->> I am getting the following warning from the latest wireless-testing system:
->>
->>   ------------[ cut here ]------------
->>   WARNING: at net/mac80211/iface.c:162 ieee80211_check_queues+0x119/0x130 
->> [mac80211]()
-> 
-> 
->>       if (WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
->>
->> The warning is triggered for i, n_queues, and sdata->vif.hw_queue[i] all equal to 1.
-> 
-> Is this a driver with just a single queue by any chance? I never tested
-> that and probably forgot to set those up correctly.
-> 
+Hi Joe,
 
-The bug report Larry mentions is with iwlwifi driver:
+On Mon, May 14, 2012 at 10:56:59AM -0700, Joe Perches wrote:
+> On Mon, 2012-05-14 at 10:47 -0700, Thomas Pedersen wrote:
+> > Enable enhanced bmiss detection if the firmware supports it. This
+> > feature is only enabled on some firmwares since it comes with a power
+> > cost.
+> []
+> > diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> []
+> > @@ -2614,6 +2619,30 @@ static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
+> >  	return 0;
+> >  }
+> >  
+> > +void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable)
+> > +{
+> > +	int err;
+> > +
+> > +	if (WARN_ON(!test_bit(WMI_READY, &vif->ar->flag)))
+> > +		return;
+> > +
+> > +	if (vif->nw_type != INFRA_NETWORK)
+> > +		return;
+> > +
+> > +	if (!test_bit(ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
+> > +		      vif->ar->fw_capabilities))
+> > +		return;
+> > +
+> > +	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s fw bmiss enhance\n",
+> > +					enable ? "enable" : "disable");
+> > +	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
+> > +					       vif->fw_vif_idx, enable);
+> > +	if (err)
+> > +		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+> > +			   "failed to %s enhanced bmiss detection: %d\n",
+> > +			   enable ? "enable" : "disable", err);
+> 
+> Why 2 messages when 1 message might do?
+> 
+> 	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
+> 					       vif->fw_vif_idx, enable);
+> 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+> 		   "%s enhanced fw bmiss detection: %s\n",
+> 		   enable ? "enable" : "disable",
+> 		   err ? "OK" : "failed");
 
-pci, iwlwifi, NETWORK, Centrino Wireless-N 130 BGN
+OK that seems nicer. Should we still print the error code, or maybe it
+doesn't really matter?
 
-Gr. AvS
-
+Thomas
