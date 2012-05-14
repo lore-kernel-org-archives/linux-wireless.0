@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54042 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755898Ab2EGJa1 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:33080 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755826Ab2ENQKP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 05:30:27 -0400
-Message-ID: <1336383024.4325.6.camel@jlt3.sipsolutions.net> (sfid-20120507_113030_238264_C85BF802)
-Subject: Re: [PATCH] cfg80211: Remove compile warnings
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Date: Mon, 07 May 2012 11:30:24 +0200
-In-Reply-To: <CAMXE1-qniMzGi97U2oDPxyvSsms7nZpy6QfZVZPpnrC0WcNMqQ@mail.gmail.com> (sfid-20120504_104453_127145_540640EF)
-References: <1335357955-28089-1-git-send-email-Andrei.Emeltchenko.news@gmail.com>
-	 <1336071617.5167.9.camel@jlt3.sipsolutions.net>
-	 <CAMXE1-qniMzGi97U2oDPxyvSsms7nZpy6QfZVZPpnrC0WcNMqQ@mail.gmail.com>
-	 (sfid-20120504_104453_127145_540640EF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 14 May 2012 12:10:15 -0400
+Received: by bkcji2 with SMTP id ji2so3984638bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 09:10:13 -0700 (PDT)
+Message-ID: <4FB12E62.4030905@gmail.com> (sfid-20120514_181019_641249_0BC13AAB)
+Date: Mon, 14 May 2012 18:10:10 +0200
+From: =?ISO-8859-1?Q?Mustafa_Y=FCcel?= <yuecelm@gmail.com>
+MIME-Version: 1.0
+To: yoni.divinsky@ti.com
+CC: coelho@ti.com, linux-wireless@vger.kernel.org
+Subject: wl12xx: extend survey with channel_time_tx, channel_busy_time and
+ channel_time
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-05-04 at 11:44 +0300, Andrei Emeltchenko wrote:
+Hi Yoni,
 
-> >> -             case NL80211_IFTYPE_UNSPECIFIED:
-> >> -             case NUM_NL80211_IFTYPES:
-> >> +             default:
-> >
-> > When did this warning start occurring? I was pretty sure it didn't use
-> > to? I think we should explicitly list the cases here though because we
-> > want the compiler to warn here when we add something to the interface
-> > type list so we catch this place that may have to be modified.
-> 
-> I think warning occurs when I added new interface type since it is
-> also not handled.
+I try to get this feature working with hostapd and wl12xx:
+http://linuxwireless.org/en/users/Documentation/acs
 
-Well, but in that case the warning is supposed to happen to tell you
-that you need to think about that code for your new interface type.
+currently only the noise of the main channel is filled within the
+wl1271_op_get_survey function. but to get acs working, in need to fill
+channel_time, channel_time_tx and channel_busy_time in the survey. is it
+somehow possible to get these values (or similar values like a duty
+cycle value) from the firmware? the only requirement I see as far, is
+that it should measure these values inside a ROC phase...
 
-John, please revert this patch.
-
-johannes
-
+Thanks,
+Musti
