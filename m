@@ -1,53 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:47321 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754586Ab2ECUWO convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:45363 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756444Ab2ENO0K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 16:22:14 -0400
-Received: by yhmm54 with SMTP id m54so2184009yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 13:22:13 -0700 (PDT)
+	Mon, 14 May 2012 10:26:10 -0400
+Received: by dady13 with SMTP id y13so5980169dad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 07:26:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1336073962.5167.18.camel@jlt3.sipsolutions.net>
-References: <1335820832-18887-1-git-send-email-ashok@cozybit.com>
- <1335820832-18887-2-git-send-email-ashok@cozybit.com> <1336073962.5167.18.camel@jlt3.sipsolutions.net>
-From: Ashok Nagarajan <ashok@cozybit.com>
-Date: Thu, 3 May 2012 13:21:52 -0700
-Message-ID: <CACcxo+rYCuMW3c+W1ONyh7deihLcE21J_WyU2bsUB4Mk+Zo-bg@mail.gmail.com> (sfid-20120503_222217_840159_95C386D7)
-Subject: Re: [PATCH v2 2/4] mac80211: Implement HT mixed protection mode
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org
+In-Reply-To: <CA+icZUXUNS4bW610vnyXzhHdEeON=03w_61c4tcX9Tm1ad=uxw@mail.gmail.com>
+References: <CALGY4fvUmHmFbYAH2044qCBOozOqmOCBcmB8acV-Qivd3PpFgQ@mail.gmail.com>
+	<CA+icZUXUNS4bW610vnyXzhHdEeON=03w_61c4tcX9Tm1ad=uxw@mail.gmail.com>
+Date: Mon, 14 May 2012 10:26:10 -0400
+Message-ID: <CALGY4ft-as1LT+-G2tukzgFCfVYOnE3vHugsHa0eyo_Y+cco0A@mail.gmail.com> (sfid-20120514_162614_610462_96585802)
+Subject: Re: iwlwifi regression: disconnections
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 3, 2012 at 12:39 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2012-04-30 at 14:20 -0700, Ashok Nagarajan wrote:
->
->> +/** mesh_set_ht_prot_mode - set correct HT protection mode
->
-> I think you need a newline before the function name, but this isn't
-> really valid kernel-doc anyway so please just don't use **
->
-Noted.
->> + *
->> + * Section 9.23.3.5 of IEEE 80211s standard
->
-> There's no 80211s standard. 802.11s is an amendment, please correct the
-> reference to the -2012 version.
->
-Noted.
->> +     rcu_read_lock();
->> +     list_for_each_entry_rcu(sta, &local->sta_list, list) {
->> +             if (sdata == sta->sdata &&
->> +                 sta->plink_state == NL80211_PLINK_ESTAB) {
->
-> there would be less indentation if you'd add a continue for the mismatch
-> cases :-)
->
-> johannes
->
+Hi.
 
-Thank you,
-Ashok
+  Thanks for pointing this out! I'll try to disable ipv6 on the
+interface and see if I still experience the problem. I'll post my
+results on the list.
+
+2012/5/14 Sedat Dilek <sedat.dilek@googlemail.com>:
+> This is a problem of Network-Manager, see Ubuntu LP-988183 [1].
+>
+> [1] https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/988183
+>
+> - Sedat -
+>
+> On Mon, May 14, 2012 at 4:00 PM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
+>> Hi.
+>>
+>>  I have Intel 5300 card. It works fine with 3.2.16. When I try 3.3.6
+>> or 3.4.0rc6 I get connection drops often - once 5-10 mins. With 3.2.16
+>> such disconnects happen once-twice a day. AP - ath9k based router and
+>> it doesn't change. I'm using kernels from ubuntu kernel ppa.
+>>
+>>  Here is what I see in logs during disconnect:
+>>
+>> [ 1024.296004] ICMPv6 RA: ndisc_router_discovery() failed to add default route.
+>> [ 1259.209166] wlan1: deauthenticating from XX:XX:XX:XX:XX:XX by local
+>> choice (reason=3)
+>> [ 1259.277831] cfg80211: All devices are disconnected, going to
+>> restore regulatory settings
+>> [ 1259.277842] cfg80211: Restoring regulatory settings
+>> [ 1259.277851] cfg80211: Calling CRDA to update world regulatory domain
+>> [ 1259.293624] cfg80211: Ignoring regulatory request Set by core since
+>> the driver uses its own custom regulatory domain
+>> [ 1259.293629] cfg80211: World regulatory domain updated:
+>> [ 1259.293632] cfg80211:   (start_freq - end_freq @ bandwidth),
+>> (max_antenna_gain, max_eirp)
+>> [ 1259.293636] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+>> (300 mBi, 2000 mBm)
+>> [ 1259.293640] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
+>> (300 mBi, 2000 mBm)
+>> [ 1259.293644] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+>> (300 mBi, 2000 mBm)
+>> [ 1259.293647] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
+>> (300 mBi, 2000 mBm)
+>> [ 1259.293651] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
+>> (300 mBi, 2000 mBm)
+>> [ 1265.296158] wlan1: authenticate with XX:XX:XX:XX:XX:XX
+>> [ 1265.297450] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 1/3)
+>> [ 1265.500053] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 2/3)
+>> [ 1265.502380] wlan1: authenticated
+>> [ 1265.504080] wlan1: associate with XX:XX:XX:XX:XX:XX (try 1/3)
+>> [ 1265.507624] wlan1: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x411
+>> status=0 aid=1)
+>> [ 1265.507632] wlan1: associated
+>>
+>>
+>> I'll be happy to help with any additional information of debugging.
+>> Thanks!
+>>
+>> --
+>> Truthfully yours,
+>> Martynov Nikolay.
+>> Email: mar.kolya@gmail.com
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
