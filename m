@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:58748 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750698Ab2EMEAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2012 00:00:06 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1STPyV-0005kL-I9
-	for linux-wireless@vger.kernel.org; Sun, 13 May 2012 06:00:03 +0200
-Received: from pool-74-108-21-82.nycmny.fios.verizon.net ([74.108.21.82])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2012 06:00:03 +0200
-Received: from Habstinat by pool-74-108-21-82.nycmny.fios.verizon.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2012 06:00:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Harry <Habstinat@gmail.com>
-Subject: carl9170 - Unable to see interface despite module being loaded
-Date: Sun, 13 May 2012 03:59:01 +0000 (UTC)
-Message-ID: <loom.20120513T054053-18@post.gmane.org> (sfid-20120513_060048_242543_79BD16B7)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4074 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757033Ab2ENSJg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 14:09:36 -0400
+Message-ID: <4FB14A4D.1030002@qca.qualcomm.com> (sfid-20120514_200942_684389_F030AA80)
+Date: Mon, 14 May 2012 21:09:17 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+CC: Joe Perches <joe@perches.com>, <linux-wireless@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2] ath6kl: enable enhanced bmiss detection
+References: <1337017652-3962-1-git-send-email-c_tpeder@qca.qualcomm.com> <1337018219.29436.24.camel@joe2Laptop> <20120514180339.GA4030@pista>
+In-Reply-To: <20120514180339.GA4030@pista>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I own a "Bus 001 Device 002: ID 0cf3:7015 Atheros Communications, Inc. TP-Link
-TL-WN821N v3 802.11n [Atheros AR7010+AR9287]", according to lsusb. I'm
-attempting to get the carl9170 (
-http://linuxwireless.org/en/users/Drivers/carl9170 ) driver to work with it, as
-should be possible according to h-node ( http://www.h-node.org/wifi/view/en/253/
-) in Parabola GNU/Linux. 
+On 05/14/2012 09:03 PM, Pedersen, Thomas wrote:
+> On Mon, May 14, 2012 at 10:56:59AM -0700, Joe Perches wrote:
+>
+>> Why 2 messages when 1 message might do?
+>>
+>> 	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
+>> 					       vif->fw_vif_idx, enable);
+>> 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+>> 		   "%s enhanced fw bmiss detection: %s\n",
+>> 		   enable ? "enable" : "disable",
+>> 		   err ? "OK" : "failed");
+> 
+> OK that seems nicer. Should we still print the error code, or maybe it
+> doesn't really matter?
 
-Despite my valiant efforts however, I cannot seem to get a WiFi interface to
-display via "ip link" (only my 'etho' and 'lo'). At this point, my dmesg tail
-after rmmod'ing and modprobing carl9170 looked somewhat like this: (
-http://www.pastie.org/pastes/3902525/text ). An anonymous peer managed to find a
-forum thread ( https://bbs.archlinux.org/viewtopic.php?id=123851 ) that brought
-up the issue of blacklisting. Prior to reading the thread, I had only
-blacklisted arusb_lnx and ar9170usb, as per
-https://wiki.archlinux.org/index.php/Wireless_Setup#carl9170 .
-Post-thread-reading, I have created a larger blacklist file:
-http://pastie.org/pastes/3903116/text . At this point, when subjected to similar
-conditions as described above my dmesg tail looked a bit like this:
-http://pastie.org/pastes/3903121/text . 
+I missed this in the original review, but it's actually better to not
+use ath6kl_dbg() for error messages. They are more difficult to notice
+that way.
 
-This was where circumstances got confusing, as according to the latter dmesg
-tail, the device should be registered. But alas, after "ip link"ing again, only
-eth0 and lo are to be found.
+Or did you have a specific reason for using ath6kl_dbg()?
 
-This problem originated on irc://irc.freenode.net/#parabola, so if reading
-anonymized IRC logs is your thing you can go back to the roots of my dilemma
-here: http://pastie.org/pastes/3903246/text
-
-Much thanks is awarded to (s)he who can solve my misfortune.
-
+Kalle
