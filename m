@@ -1,95 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:64003 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755247Ab2ECV2n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 17:28:43 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/6] iwlwifi: add documentation for bt reduced tx power
-Date: Thu,  3 May 2012 14:22:02 -0700
-Message-Id: <1336080126-22606-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120503_232854_628176_947DDBE8)
-In-Reply-To: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from lennier.cc.vt.edu ([198.82.162.213]:54715 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757103Ab2ENQWW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 12:22:22 -0400
+Received: from dagger.cc.vt.edu (dagger.cc.vt.edu [198.82.163.114])
+	by lennier.cc.vt.edu (8.13.8/8.13.8) with ESMTP id q4EGJC8P011675
+	for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 12:22:21 -0400
+Received: by mail-gg0-f180.google.com with SMTP id f1so2891019ggn.25
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 09:22:19 -0700 (PDT)
+To: Gustavo Padovan <gustavo@padovan.org>
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 1/2] Bluetooth: notify userspace of security level change
+In-Reply-To: Your message of "Sun, 13 May 2012 03:20:07 -0300."
+             <1336890007-10646-1-git-send-email-gustavo@padovan.org>
+From: valdis.kletnieks@vt.edu
+References: <1336849910-29064-2-git-send-email-gustavo@padovan.org>
+            <1336890007-10646-1-git-send-email-gustavo@padovan.org>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1337012536_2289P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Mon, 14 May 2012 12:22:16 -0400
+Message-ID: <15456.1337012536@turing-police.cc.vt.edu> (sfid-20120514_182241_365767_7DC89417)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change-Id: Ia6294d651dcffdcaf8b62e67bcef52bd8c158dea
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Reviewed-on: http://git-mwg.jer.intel.com/gerrit/1947
-Tested-by: Jenkins
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   22 +++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-commands.h |    6 ++++++
- 2 files changed, 27 insertions(+), 1 deletions(-)
+--==_Exmh_1337012536_2289P
+Content-Type: text/plain; charset=us-ascii
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 9d88565..cb4b31f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -274,9 +274,20 @@ void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
- 		return;
- 	}
- 
-+	/*
-+	 * Possible situations when BT needs to take over for receive,
-+	 * at the same time where STA needs to response to AP's frame(s),
-+	 * reduce the tx power of the required response frames, by that,
-+	 * allow the concurrent BT receive & WiFi transmit
-+	 * (BT - ANT A, WiFi -ANT B), without interference to one another
-+	 *
-+	 * Reduced tx power apply to control frames only (ACK/Back/CTS)
-+	 * when indicated by the BT config command
-+	 */
- 	basic.kill_ack_mask = priv->kill_ack_mask;
- 	basic.kill_cts_mask = priv->kill_cts_mask;
--	basic.reduce_txpower = priv->reduced_txpower;
-+	if (priv->reduced_txpower)
-+		basic.reduce_txpower = IWLAGN_BT_REDUCED_TX_PWR;
- 	basic.valid = priv->bt_valid;
- 
- 	/*
-@@ -590,6 +601,15 @@ static bool iwlagn_set_kill_msk(struct iwl_priv *priv,
- 	return need_update;
- }
- 
-+/*
-+ * Upon RSSI changes, sends a bt config command with following changes
-+ *  1. enable/disable "reduced control frames tx power
-+ *  2. update the "kill)ack_mask" and "kill_cts_mask"
-+ *
-+ * If "reduced tx power" is enabled, uCode shall
-+ *  1. ACK/Back/CTS rate shall reduced to 6Mbps
-+ *  2. not use duplciate 20/40MHz mode
-+ */
- static bool iwlagn_fill_txpower_mode(struct iwl_priv *priv,
- 				struct iwl_bt_uart_msg *uart_msg)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 83a6930..2813a0a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -1910,6 +1910,8 @@ enum iwl_bt_kill_idx {
- 					IWLAGN_BT_VALID_REDUCED_TX_PWR | \
- 					IWLAGN_BT_VALID_3W_LUT)
- 
-+#define IWLAGN_BT_REDUCED_TX_PWR	BIT(0)
-+
- #define IWLAGN_BT_DECISION_LUT_SIZE	12
- 
- struct iwl_basic_bt_cmd {
-@@ -1923,6 +1925,10 @@ struct iwl_basic_bt_cmd {
- 	u8 bt3_timer_t2_value;
- 	__le16 bt4_reaction_time; /* unused */
- 	__le32 bt3_lookup_table[IWLAGN_BT_DECISION_LUT_SIZE];
-+	/*
-+	 * bit 0: use reduced tx power for control frame
-+	 * bit 1 - 7: reserved
-+	 */
- 	u8 reduce_txpower;
- 	u8 reserved;
- 	__le16 valid;
--- 
-1.7.0.4
+On Sun, 13 May 2012 03:20:07 -0300, Gustavo Padovan said:
+
+> It enables the userspace a security level change when the socket is
+> already connected and create a way to notify the socket the result of the
+> request. At the moment of the request the socket is made non writable, if
+> the request fails the connections closes, otherwise the socket is made
+> writable again, POLL_OUT is emmited.
+
+What happens to in-flight data already written but not yet consumed?  I'm
+smelling a possible race condition with data sent under the old level but
+read under the new level....
+
+--==_Exmh_1337012536_2289P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iQIVAwUBT7ExOAdmEQWDXROgAQIEXxAAvEkGmcWB3xSQnwxaG6YPP3bMreXbmyKv
+sc3L0TJ49yyyfVXND63wLV+jpnhdmRfTg/YkPzUSdv5QM26bf7eN8xPHl7cNYsTW
+/UzJmC3x+rb03ixjPWMAQFUwJ5LmB/Vm6VwkonMmgQRRgc0ICSrl+hQuBxO9vrbg
+oldwJPTR/ILslBJzvfK6Mwv+hmXcDVa8X2UAFpN/dSGzwfV1vIcseuQSI/JXDKvN
+b+UOX5zumHJFPIOhRqsS3FAYHsUbf8BWMFXuqfzQUbv4c+dd3V+OFKDQx11cHS5O
+d3vNWvCoxKgZt3shD5j2wx8RCcz4qVlmwdvlnz+Vksmsn6HFyNdrxv0vSAwxlsPV
+yPnzptcnotIWFjKD40IeKQb+SRmILLqlhosXTyYIkFWnYl7N3iZHfeh1ohMsYNtd
+SMov/cOt91e0BB9iUw3FFRUEAkTnrkXdv+TehT5G7tEwtcTOWr3BPzaJIKlqs12Z
+Our3yILTGFg1OvItS2zJ4j5XiXGxpTYCvRWSt+77nLAGg282PbKaZGniCYbQiZpv
+MO5Makfc0EE0pUMaPTL8A753w+8P/mYGc0vJb/qCQ49HfaxteTjrle6SWapp0ZCU
+8uBARtq2nPdWj/nu6KKf2BAmq1J/Ay1i8mjDWsauDwXE7yYahLvYQkDXm3JWBB9M
+H685+ryqnJg=
+=ofMS
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1337012536_2289P--
 
