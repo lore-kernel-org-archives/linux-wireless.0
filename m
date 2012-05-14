@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:52507 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395Ab2EHIcv (ORCPT
+Received: from na3sys009aog138.obsmtp.com ([74.125.149.19]:52629 "EHLO
+	na3sys009aog138.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755438Ab2ENK6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 04:32:51 -0400
-Received: by obbtb18 with SMTP id tb18so9485334obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 01:32:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1336390235.4325.16.camel@jlt3.sipsolutions.net>
-References: <4FA0405C.8050101@lwfinger.net>
-	<CAB3XZEerHsNUr4p5rTu0msucKUnxXwFxwZVtONrkZ_czmgS+ig@mail.gmail.com>
-	<4FA19674.90804@lwfinger.net>
-	<1336390235.4325.16.camel@jlt3.sipsolutions.net>
-Date: Tue, 8 May 2012 11:32:50 +0300
-Message-ID: <CAB3XZEfJ7vPzHnc5ACHMTnJBFGgDVFpkZ6hJ8QfXtL8L+94gOw@mail.gmail.com> (sfid-20120508_103300_404679_7C9399AC)
-Subject: Re: Wireless problem in 3.4-rc5
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 14 May 2012 06:58:13 -0400
+Received: by obbeh20 with SMTP id eh20so10849507obb.17
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 03:58:11 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <coelho@ti.com>, <arik@wizery.com>
+Subject: [PATCH] wlcore: don't enable BET for high basic rates
+Date: Mon, 14 May 2012 13:55:47 +0300
+Message-Id: <1336992947-12927-1-git-send-email-victorg@ti.com> (sfid-20120514_125816_399672_A58B193C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 7, 2012 at 2:30 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2012-05-02 at 15:17 -0500, Larry Finger wrote:
->> >>
->> >> On my main laptop, this patch causes no problems. On a 3rd box, a BCM4312
->> >> (b43) is OK, but an RTL8187L (rtl8187) also fails in the same manner.
->
-> Do you get the warning in iface.c:162 as well? It seems this would cause
-> such problems.
->
->> > i'm not sure this is related to the problem you're facing, but the
->> > commit above seems to have some bug in which a packet might get
->> > enqueued on invalid queue (0xff) - please try this patch (compile
->> > tested only):
->
-> Eliad, can you submit that patch with more details?
->
-sure, i'll send it soon.
+The beacon early termination is not relevant for
+high basic rates, which doesn't contribute
+anything to the PS and only adds unnecessary FW
+work.
 
-Eliad.
+Enable BET only if the basic rate is less than 9
+Mbps.
+
+Signed-off-by: Ziv Riesel <zivriesel@ti.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Igal Chernobelsky <igalc@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/ps.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/ps.c b/drivers/net/wireless/ti/wlcore/ps.c
+index 756eee2..87c84d1 100644
+--- a/drivers/net/wireless/ti/wlcore/ps.c
++++ b/drivers/net/wireless/ti/wlcore/ps.c
+@@ -185,8 +185,12 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 
+ 		set_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
+ 
+-		/* enable beacon early termination. Not relevant for 5GHz */
+-		if (wlvif->band == IEEE80211_BAND_2GHZ) {
++		/*
++		 * enable beacon early termination.
++		 * Not relevant for 5GHz and for high rates.
++		 */
++		if ((wlvif->band == IEEE80211_BAND_2GHZ) &&
++		    (wlvif->basic_rate < CONF_HW_BIT_RATE_9MBPS)) {
+ 			ret = wl1271_acx_bet_enable(wl, wlvif, true);
+ 			if (ret < 0)
+ 				return ret;
+@@ -196,7 +200,8 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		wl1271_debug(DEBUG_PSM, "leaving psm");
+ 
+ 		/* disable beacon early termination */
+-		if (wlvif->band == IEEE80211_BAND_2GHZ) {
++		if ((wlvif->band == IEEE80211_BAND_2GHZ) &&
++		    (wlvif->basic_rate < CONF_HW_BIT_RATE_9MBPS)) {
+ 			ret = wl1271_acx_bet_enable(wl, wlvif, false);
+ 			if (ret < 0)
+ 				return ret;
+-- 
+1.7.5.4
+
