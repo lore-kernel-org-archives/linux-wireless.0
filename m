@@ -1,84 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50889 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48216 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759506Ab2EPRsI (ORCPT
+	with ESMTP id S1757449Ab2ENSCt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 13:48:08 -0400
-Date: Wed, 16 May 2012 13:41:22 -0400
+	Mon, 14 May 2012 14:02:49 -0400
+Date: Mon, 14 May 2012 13:56:04 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: add __printf argument checking
-Message-ID: <20120516174121.GF3508@tuxdriver.com> (sfid-20120516_194835_983748_71C6E9A7)
-References: <1337086877.4546.4.camel@jlt3.sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix single queue drivers
+Message-ID: <20120514175603.GB2428@tuxdriver.com> (sfid-20120514_200253_829659_A1F0FAF8)
+References: <1336405529.4325.31.camel@jlt3.sipsolutions.net>
+ <4FAF3AB8.90900@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1337086877.4546.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FAF3AB8.90900@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This one causes a few warnings here -- can we fix those at the same time as we add this?
+On Sat, May 12, 2012 at 11:38:16PM -0500, Larry Finger wrote:
+> On 05/07/2012 10:45 AM, Johannes Berg wrote:
+> >From: Johannes Berg<johannes.berg@intel.com>
+> >
+> >My queue management rework broke drivers that don't
+> >have multiple AC queues and register a single queue
+> >only, causing a warning:
+> >
+> >WARNING: at net/mac80211/iface.c:162 ieee80211_check_queues
+> >
+> >This was due to filling the queues wrongly and then
+> >noticing the error when checking later.
+> >
+> >Reported-and-Tested-by: Larry Finger<Larry.Finger@lwfinger.net>
+> >Signed-off-by: Johannes Berg<johannes.berg@intel.com>
+> 
+> John,
+> 
+> I know you have been busy and that Linus is restricting the patches
+> to be added after 3.4-rc7; however, this one really needs to get
+> into 3.4. If it does not make it, every wireless device with only
+> one hardware queue will break.
+> 
+> Larry
 
-  CC      drivers/net/wireless/iwlwifi/iwl-agn-sta.o
-drivers/net/wireless/iwlwifi/iwl-agn-sta.c: In function ‘iwl_sta_calc_ht_flags’:
-drivers/net/wireless/iwlwifi/iwl-agn-sta.c:238:2: warning: too few arguments for format
+Actually, it doesn't seem to apply in 3.4.  The original commit that
+causes the problem (3a25a8c8) seems to only exist in wireless-next.
 
-  CC      drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.o
-drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c: In function ‘iwl_rx_handle’:
-drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c:516:3: warning: format ‘%d’ expects type ‘int’, but argument 6 has type ‘struct iwl_rx_mem_buffer *’
-drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c:516:3: warning: too few arguments for format
+Is there some other version of this patch to apply for 3.4?
 
-On Tue, May 15, 2012 at 03:01:17PM +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Joe Perches suggested adding the __printf attribute
-> to the __iwl_dbg function to check arguments; add it
-> to all of the logging functions (err, warn, info, dbg
-> and crit.)
-> 
-> Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-debug.h |   12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-> index 8376b84..f6bf91c 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-> @@ -38,10 +38,10 @@ static inline bool iwl_have_debug_level(u32 level)
->  }
->  
->  void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
-> -		const char *fmt, ...);
-> -void __iwl_warn(struct device *dev, const char *fmt, ...);
-> -void __iwl_info(struct device *dev, const char *fmt, ...);
-> -void __iwl_crit(struct device *dev, const char *fmt, ...);
-> +		const char *fmt, ...) __printf(4, 5);
-> +void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
-> +void __iwl_info(struct device *dev, const char *fmt, ...) __printf(2, 3);
-> +void __iwl_crit(struct device *dev, const char *fmt, ...) __printf(2, 3);
->  
->  /* No matter what is m (priv, bus, trans), this will work */
->  #define IWL_ERR(m, f, a...) __iwl_err((m)->dev, false, false, f, ## a)
-> @@ -52,9 +52,9 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
->  #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
->  void __iwl_dbg(struct device *dev,
->  	       u32 level, bool limit, const char *function,
-> -	       const char *fmt, ...);
-> +	       const char *fmt, ...) __printf(5, 6);
->  #else
-> -static inline void
-> +__printf(5, 6) static inline void
->  __iwl_dbg(struct device *dev,
->  	  u32 level, bool limit, const char *function,
->  	  const char *fmt, ...)
-> -- 
-> 1.7.10
-> 
-> 
-> 
-
+John
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
