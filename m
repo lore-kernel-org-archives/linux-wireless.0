@@ -1,128 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:41020 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751518Ab2EJOZw convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10073 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754991Ab2ENRrf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 10:25:52 -0400
-Received: by lbbgm6 with SMTP id gm6so1108238lbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 07:25:50 -0700 (PDT)
+	Mon, 14 May 2012 13:47:35 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH v2] ath6kl: enable enhanced bmiss detection
+Date: Mon, 14 May 2012 10:47:32 -0700
+Message-ID: <1337017652-3962-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120514_194739_722636_A11EC3CA)
 MIME-Version: 1.0
-In-Reply-To: <CAG9cJmkDf6koV93NyOo2W8D7Y3G6tapQOucjW5M7FLPDnNhvKQ@mail.gmail.com>
-References: <CAG9cJmkDf6koV93NyOo2W8D7Y3G6tapQOucjW5M7FLPDnNhvKQ@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 11 May 2012 00:25:30 +1000
-Message-ID: <CAGRGNgXDUuLFeKh7KgqMqyyT8Xi_GV2BReYJ66uK_SgBJ5Nb4g@mail.gmail.com> (sfid-20120510_162557_577162_9B79AF51)
-Subject: Re: how to remove the b43
-To: lina <lina.lastname@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lina,
+Enable enhanced bmiss detection if the firmware supports it. This
+feature is only enabled on some firmwares since it comes with a power
+cost.
 
-Firstly, which distribution are you using, is it Ubuntu? Debian? Suse?
-Fedora? or something else?
+Also add a few missing command ids to keep the enums straight.
 
-On Thu, May 10, 2012 at 11:38 PM, lina <lina.lastname@gmail.com> wrote:
-> Hi,
->
-> I want to clear the
-> b43-fwcutter-015
-> broadcom-wl-*
-> and all it related.
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 
-Ok, the first thing you need to understand is which files do what and
-how they're related.
+---
+v2:
+	comments (Kalle)
+	indentation (Kalle)
 
-Broadcom wireless devices which are driven by the b43 driver have three "parts":
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   29 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 +
+ drivers/net/wireless/ath/ath6kl/core.h     |    3 ++
+ drivers/net/wireless/ath/ath6kl/init.c     |    3 ++
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   19 ++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   11 ++++++++++
+ 6 files changed, 67 insertions(+), 0 deletions(-)
 
-1. The driver in the kernel itself. This is called "b43". This
-controls the hardware and provides an interface between the kernel
-wireless code and the actual hardware.
-
-2. The firmware, this lives in /lib/firmware or wherever your distro
-puts it and are called ucode*.fw. The firmware is software which runs
-on the actual wireless card and runs the hardware at a low level.
-
-3. As broadcom has not distributed firmware for these devices in the
-linux-firmware repository, a separate tool called b43-fwcutter is used
-to extract the firmware from other Broadcom drivers.
-
-> The reason I want to clear is that today I installed the kernel  3.3.5,
-> but still keep the last version 3.2.5
->
-> I want to clear the b43 related in 3.2.5, and re-install in 3.3.5
-
-Ok, so part 1, the driver, is part of the kernel and will be upgraded
-when you upgrade your kernel from version 3.2.5 to 3.3.5.
-
-The firmware (part 2) and b43-fwcutter (part 3) do *not* depend on the
-version of the kernel driver, and may safely be left alone when you
-upgrade your kernel.
-
-> Thanks ahead for your suggestions.
->
-> P.S I have done some robust blind clear, but
-> # lsmod
-> Module                  Size  Used by
-> b43                   353456  0
-> mac80211              381396  1 b43
-> cfg80211              178201  2 mac80211,b43
-> pcmcia                 40801  2 ssb,b43
-> pcmcia_core            18294  1 pcmcia
->
-> seems I have removed the compact-wireless
-
-Firstly it's 'compat-wireless' not 'compact-wireless'.
-
-Secondly, deleting system files without knowing exactly what you're
-doing is a _really_bad_ idea.
-
-Thirdly, what precisely are you trying to do?
-
-Are you:
-1. Trying to use the stock driver in 3.3.5?
-2. Trying to use the stock driver from 3.2.5?
-3. Trying to use the driver in compat-wireless from a later kernel version?
-
-If you are trying option 1, using the stock driver in 3.3.5, then you
-should have to do _nothing_ other than upgrade the kernel. I strongly
-recommend doing this unless you require some feature or bug fix that
-is not present in kernel version 3.3.5. Your distribution should
-provide a package for obtaining the firmware, I strongly recommend you
-install it and _leave_it_alone_.
-
-If you are trying option 2, using the stock driver from 3.2.5, then
-you cannot upgrade your kernel as the driver from kernel version 3.2.5
-_will_not_work_ with kernel version 3.3.5. Also, the driver in kernel
-version 3.3.5 will have received many improvements over the version in
-3.2.5 and as such, will perform better than the older version. I
-_strongly_ recommend that you use the driver in kernel version 3.3.5.
-
-If you are trying option 3, then you will need to re-compile whichever
-version of compat-wireless you wish to use *every* time you upgrade
-your kernel. Remember that the version of compat-wireless *must* be
-greater than the version of your kernel. I recommend you do not use
-compat-wireless unless you need some feature or bug fix that is not
-present in your current kernel.
-
-> Sorry I do really lack understanding about what's going on.
-
-Yes, you really do.
-
-May I strongly recommend you use the stock drivers that come with your
-kernel and the firmware that comes with your distribution. You seem to
-be very insistent on doing this yourself, and it is simply not
-necessary.
-
-Also, remember to use reply-all when replying.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b869a35..af0c48a 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -575,6 +575,8 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 
+ 	vif->nw_type = vif->next_mode;
++	/* enable enhanced bmiss detection if applicable */
++	ath6kl_cfg80211_sta_bmiss_enhance(vif, true);
+ 
+ 	if (vif->wdev.iftype == NL80211_IFTYPE_P2P_CLIENT)
+ 		nw_subtype = SUBTYPE_P2PCLIENT;
+@@ -1512,6 +1514,9 @@ static int ath6kl_cfg80211_change_iface(struct wiphy *wiphy,
+ 		}
+ 	}
+ 
++	/* need to clean up enhanced bmiss detection fw state */
++	ath6kl_cfg80211_sta_bmiss_enhance(vif, false);
++
+ set_iface_type:
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -2614,6 +2619,30 @@ static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
++void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable)
++{
++	int err;
++
++	if (WARN_ON(!test_bit(WMI_READY, &vif->ar->flag)))
++		return;
++
++	if (vif->nw_type != INFRA_NETWORK)
++		return;
++
++	if (!test_bit(ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
++		      vif->ar->fw_capabilities))
++		return;
++
++	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s fw bmiss enhance\n",
++					enable ? "enable" : "disable");
++	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
++					       vif->fw_vif_idx, enable);
++	if (err)
++		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
++			   "failed to %s enhanced bmiss detection: %d\n",
++			   enable ? "enable" : "disable", err);
++}
++
+ static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
+ 				u8 *rsn_capab)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index 5ea8cbb..b992046 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -62,5 +62,7 @@ void ath6kl_cfg80211_cleanup(struct ath6kl *ar);
+ 
+ struct ath6kl *ath6kl_cfg80211_create(void);
+ void ath6kl_cfg80211_destroy(struct ath6kl *ar);
++/* TODO: remove this once ath6kl_vif_cleanup() is moved to cfg80211.c */
++void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable);
+ 
+ #endif /* ATH6KL_CFG80211_H */
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 4d9c6f1..cb79378 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -100,6 +100,9 @@ enum ath6kl_fw_capability {
+ 	/* Firmware has support to override rsn cap of rsn ie */
+ 	ATH6KL_FW_CAPABILITY_RSN_CAP_OVERRIDE,
+ 
++	/* Firmware supports enhanced bmiss detection */
++	ATH6KL_FW_CAPABILITY_BMISS_ENHANCE,
++
+ 	/* this needs to be last */
+ 	ATH6KL_FW_CAPABILITY_MAX,
+ };
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 7eb0515..10de132 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1659,6 +1659,9 @@ void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready)
+ 		cfg80211_scan_done(vif->scan_req, true);
+ 		vif->scan_req = NULL;
+ 	}
++
++	/* need to clean up enhanced bmiss detection fw state */
++	ath6kl_cfg80211_sta_bmiss_enhance(vif, false);
+ }
+ 
+ void ath6kl_stop_txrx(struct ath6kl *ar)
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index ee8ec23..09a9e0c 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2997,6 +2997,25 @@ int ath6kl_wmi_add_del_mcast_filter_cmd(struct wmi *wmi, u8 if_idx,
+ 	return ret;
+ }
+ 
++int ath6kl_wmi_sta_bmiss_enhance_cmd(struct wmi *wmi, u8 if_idx, bool enhance)
++{
++	struct sk_buff *skb;
++	struct wmi_sta_bmiss_enhance_cmd *cmd;
++	int ret;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_sta_bmiss_enhance_cmd *) skb->data;
++	cmd->enable = enhance ? 1 : 0;
++
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb,
++				  WMI_STA_BMISS_ENHANCE_CMDID,
++				  NO_SYNC_WMIFLAG);
++	return ret;
++}
++
+ s32 ath6kl_wmi_get_rate(s8 rate_index)
+ {
+ 	if (rate_index == RATE_AUTO)
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 9076bec..014f3dd 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -624,6 +624,10 @@ enum wmi_cmd_id {
+ 	WMI_SEND_MGMT_CMDID,
+ 	WMI_BEGIN_SCAN_CMDID,
+ 
++	WMI_SET_BLACK_LIST,
++	WMI_SET_MCASTRATE,
++
++	WMI_STA_BMISS_ENHANCE_CMDID,
+ };
+ 
+ enum wmi_mgmt_frame_type {
+@@ -1017,6 +1021,11 @@ struct wmi_bmiss_time_cmd {
+ 	__le16 num_beacons;
+ };
+ 
++/* WMI_STA_ENHANCE_BMISS_CMDID */
++struct wmi_sta_bmiss_enhance_cmd {
++	u8 enable;
++} __packed;
++
+ /* WMI_SET_POWER_MODE_CMDID */
+ enum wmi_power_mode {
+ 	REC_POWER = 0x01,
+@@ -2547,6 +2556,8 @@ int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
+ int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on);
+ int ath6kl_wmi_add_del_mcast_filter_cmd(struct wmi *wmi, u8 if_idx,
+ 					u8 *filter, bool add_filter);
++int ath6kl_wmi_sta_bmiss_enhance_cmd(struct wmi *wmi, u8 if_idx, bool enable);
++
+ /* AP mode uAPSD */
+ int ath6kl_wmi_ap_set_apsd(struct wmi *wmi, u8 if_idx, u8 enable);
+ 
 -- 
-Julian Calaby
+1.7.4.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
