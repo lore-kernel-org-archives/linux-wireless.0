@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34932 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951Ab2EISK6 (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:38384 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755359Ab2ENJXQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 14:10:58 -0400
-Message-ID: <1336587054.1121.2.camel@jlt3.sipsolutions.net> (sfid-20120509_201102_285698_F4B583A0)
-Subject: Re: brcmsmac still woes, possible regression?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>
-Date: Wed, 09 May 2012 20:10:54 +0200
-In-Reply-To: <4FAAB0FE.601@broadcom.com>
-References: <20120328112657.GA6114@stt008.linux.site>
-	 <4F7302D9.8070009@broadcom.com>
-	 <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
-	 <4F744DD8.8010004@broadcom.com> <20120329133835.GA5196@stt008.linux.site>
-	 <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
-	 <20120402215005.GA13969@burratino> <4F7B179F.7070502@broadcom.com>
-	 <20120509094111.GA2333@burratino> <4FAA45AF.8050201@broadcom.com>
-	 <20120509174106.GA7189@ubuntu-mba> <4FAAB0FE.601@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 14 May 2012 05:23:16 -0400
+Received: by bkcji2 with SMTP id ji2so3586381bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 02:23:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAK80WHYcaYPODP5iBL5y4yODAtm-cKMnJgtJyTPQxwUTg1Ztdg@mail.gmail.com>
+References: <1336658913-11396-1-git-send-email-victorg@ti.com>
+ <CA+XVXfcw+9vJ3pixC79DyQA25JmrpgC-m+PPohSdyUmLMe9Zig@mail.gmail.com> <CAK80WHYcaYPODP5iBL5y4yODAtm-cKMnJgtJyTPQxwUTg1Ztdg@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 14 May 2012 12:15:22 +0300
+Message-ID: <CA+XVXffRt3ujcuZvsWJfzzHepSGw7x8T9eCfhTa20Sj=4YucXQ@mail.gmail.com> (sfid-20120514_112319_770637_DA75DF9E)
+Subject: Re: [PATCH v2] wl12xx: fix fm_coex parameters configuration
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, coelho@ti.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-09 at 20:01 +0200, Arend van Spriel wrote:
+On Mon, May 14, 2012 at 12:02 PM, Goldenshtein, Victor <victorg@ti.com> wrote:
+> On Sat, May 12, 2012 at 10:17 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>>
+>> On Thu, May 10, 2012 at 5:08 PM, Victor Goldenshtein <victorg@ti.com>
+>> wrote:
+>> > Wrong fm_coex parameters were set during wl12xx
+>> > init phase, fix it.
+>> >
+>> > Signed-off-by: Ziv Riesel <zivriesel@ti.com>
+>> > Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+>> > ---
+>> >
+>> > v2: changed the subject wlcore -> wl12xx
+>>
+>> Are you sure this is not relevant for 18xx? Are the parameters there
+>> correct?
+>>
+>
+> You're right, I will send a patch also for the 18xx. But I"m not sure
+> which branch should I use ? To send also to Linux-Wireless ?
+> Is the remotes/origin/18xx_upstream branch is good for upstream ?
 
-> As part of the discussion over here I am proposing to get rid of the tx
-> muting in brcmsmac as mac80211 already has that behaviour for passive
-> channels if I am not mistaken (is this true, Johannes?).
+Better send it rebased on the internal branch. I'll send it to linux
+wireless later (together with other pending patches).
 
-Arend, I haven't really followed this discussion, can you elaborate?
-
-On passive channels, when scanning, mac80211 will send a probe only
-after receiving a frame on that channel. When associating, it has no
-such behaviour, at least not directly, but I suppose it could be
-implemented (waiting for the beacon)
-
-johannes
-
+Arik
