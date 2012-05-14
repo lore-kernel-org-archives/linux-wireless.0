@@ -1,53 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:54310 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753292Ab2ECRqJ (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:48626 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755812Ab2ENKTU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 13:46:09 -0400
-Received: by yhmm54 with SMTP id m54so2012990yhm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 10:46:08 -0700 (PDT)
-Message-ID: <4FA2C45A.3010001@lwfinger.net> (sfid-20120503_194613_989182_A19D097B)
-Date: Thu, 03 May 2012 12:46:02 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: paulmck@linux.vnet.ibm.com
-CC: Catalin Marinas <catalin.marinas@arm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Suspicious RCU usage in mac80211
-References: <1334202842.3788.10.camel@jlt3.sipsolutions.net> <4F86FA05.5080404@lwfinger.net> <1334246145.4062.0.camel@jlt3.sipsolutions.net> <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com> <4FA0371E.9040704@lwfinger.net> <20120502100012.GA8492@arm.com> <1335978471.4295.3.camel@jlt3.sipsolutions.net> <4FA1F534.8040601@lwfinger.net> <20120503084701.GA27872@arm.com> <4FA2B845.2000502@lwfinger.net> <20120503171209.GH2592@linux.vnet.ibm.com>
-In-Reply-To: <20120503171209.GH2592@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 14 May 2012 06:19:20 -0400
+Received: by weyu7 with SMTP id u7so1643694wey.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 03:19:19 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [RFC] regulatory: fix potential deadlock
+Date: Mon, 14 May 2012 13:19:17 +0300
+Message-Id: <1336990757-29817-1-git-send-email-eliad@wizery.com> (sfid-20120514_121926_488482_14D615ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2012 12:12 PM, Paul E. McKenney wrote:
-> On Thu, May 03, 2012 at 11:54:29AM -0500, Larry Finger wrote:
->> On 05/03/2012 03:47 AM, Catalin Marinas wrote:
->>>
->>> IIUC, Paul suggested that you should use rcu_dereference_check() here
->>> instead as the protected one is not safe in this context.
->>
->> This patch also fails to fix the problem. Did I do what Paul suggested?
->
-> That is indeed what I suggested!
->
-> What locks does lockdep say are held?
+reg_timeout_work() calls restore_regulatory_settings() which
+takes cfg80211_mutex.
 
-It varies from instance to instance. I have seen 1, 2, or 3. Those are the 
-following:
+reg_set_request_processed() already holds cfg80211_mutex
+before calling cancel_delayed_work_sync(reg_timeout),
+so it might deadlock.
 
-#0:  (scan_mutex){+.+...}, at: [<ffffffff8113b0d6>] kmemleak_scan_thread+0x56/0xd0
-#1:  (&tid_tx->session_timer){+.-...}, at: [<ffffffff8104853a>] 
-run_timer_softirq+0xfa/0x6e0
-#2:  (rcu_read_lock){.+.+..}, at: [<ffffffffa03c1ff0>] 
-sta_tx_agg_session_timer_expired+0x0/0x2a0 [mac80211]
+Call the async cancel_delayed_work instead, in order
+to avoid the potential deadlock.
 
+This is the relevant lockdep warning:
 
-When only 1 lock is held, it is "&tid_tx->session_timer", and that one is held 
-in every case. I think that means we need to OR it with the other 
-lockdep_is_held() arguments in the rcu_dereference_xxxxx() call, but I did not 
-seem to get the syntax right.
+cfg80211: Calling CRDA for country: XX
 
-Larry
+======================================================
+[ INFO: possible circular locking dependency detected ]
+3.4.0-rc5-wl+ #26 Not tainted
+-------------------------------------------------------
+kworker/0:2/1391 is trying to acquire lock:
+ (cfg80211_mutex){+.+.+.}, at: [<bf28ae00>] restore_regulatory_settings+0x34/0x418 [cfg80211]
+
+but task is already holding lock:
+ ((reg_timeout).work){+.+...}, at: [<c0059e94>] process_one_work+0x1f0/0x480
+
+which lock already depends on the new lock.
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 ((reg_timeout).work){+.+...}:
+       [<c008fd44>] validate_chain+0xb94/0x10f0
+       [<c0090b68>] __lock_acquire+0x8c8/0x9b0
+       [<c0090d40>] lock_acquire+0xf0/0x114
+       [<c005b600>] wait_on_work+0x4c/0x154
+       [<c005c000>] __cancel_work_timer+0xd4/0x11c
+       [<c005c064>] cancel_delayed_work_sync+0x1c/0x20
+       [<bf28b274>] reg_set_request_processed+0x50/0x78 [cfg80211]
+       [<bf28bd84>] set_regdom+0x550/0x600 [cfg80211]
+       [<bf294cd8>] nl80211_set_reg+0x218/0x258 [cfg80211]
+       [<c03c7738>] genl_rcv_msg+0x1a8/0x1e8
+       [<c03c6a00>] netlink_rcv_skb+0x5c/0xc0
+       [<c03c7584>] genl_rcv+0x28/0x34
+       [<c03c6720>] netlink_unicast+0x15c/0x228
+       [<c03c6c7c>] netlink_sendmsg+0x218/0x298
+       [<c03933c8>] sock_sendmsg+0xa4/0xc0
+       [<c039406c>] __sys_sendmsg+0x1e4/0x268
+       [<c0394228>] sys_sendmsg+0x4c/0x70
+       [<c0013840>] ret_fast_syscall+0x0/0x3c
+
+-> #1 (reg_mutex){+.+.+.}:
+       [<c008fd44>] validate_chain+0xb94/0x10f0
+       [<c0090b68>] __lock_acquire+0x8c8/0x9b0
+       [<c0090d40>] lock_acquire+0xf0/0x114
+       [<c04734dc>] mutex_lock_nested+0x48/0x320
+       [<bf28b2cc>] reg_todo+0x30/0x538 [cfg80211]
+       [<c0059f44>] process_one_work+0x2a0/0x480
+       [<c005a4b4>] worker_thread+0x1bc/0x2bc
+       [<c0061148>] kthread+0x98/0xa4
+       [<c0014af4>] kernel_thread_exit+0x0/0x8
+
+-> #0 (cfg80211_mutex){+.+.+.}:
+       [<c008ed58>] print_circular_bug+0x68/0x2cc
+       [<c008fb28>] validate_chain+0x978/0x10f0
+       [<c0090b68>] __lock_acquire+0x8c8/0x9b0
+       [<c0090d40>] lock_acquire+0xf0/0x114
+       [<c04734dc>] mutex_lock_nested+0x48/0x320
+       [<bf28ae00>] restore_regulatory_settings+0x34/0x418 [cfg80211]
+       [<bf28b200>] reg_timeout_work+0x1c/0x20 [cfg80211]
+       [<c0059f44>] process_one_work+0x2a0/0x480
+       [<c005a4b4>] worker_thread+0x1bc/0x2bc
+       [<c0061148>] kthread+0x98/0xa4
+       [<c0014af4>] kernel_thread_exit+0x0/0x8
+
+other info that might help us debug this:
+
+Chain exists of:
+  cfg80211_mutex --> reg_mutex --> (reg_timeout).work
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock((reg_timeout).work);
+                               lock(reg_mutex);
+                               lock((reg_timeout).work);
+  lock(cfg80211_mutex);
+
+ *** DEADLOCK ***
+
+2 locks held by kworker/0:2/1391:
+ #0:  (events){.+.+.+}, at: [<c0059e94>] process_one_work+0x1f0/0x480
+ #1:  ((reg_timeout).work){+.+...}, at: [<c0059e94>] process_one_work+0x1f0/0x480
+
+stack backtrace:
+[<c001b928>] (unwind_backtrace+0x0/0x12c) from [<c0471d3c>] (dump_stack+0x20/0x24)
+[<c0471d3c>] (dump_stack+0x20/0x24) from [<c008ef70>] (print_circular_bug+0x280/0x2cc)
+[<c008ef70>] (print_circular_bug+0x280/0x2cc) from [<c008fb28>] (validate_chain+0x978/0x10f0)
+[<c008fb28>] (validate_chain+0x978/0x10f0) from [<c0090b68>] (__lock_acquire+0x8c8/0x9b0)
+[<c0090b68>] (__lock_acquire+0x8c8/0x9b0) from [<c0090d40>] (lock_acquire+0xf0/0x114)
+[<c0090d40>] (lock_acquire+0xf0/0x114) from [<c04734dc>] (mutex_lock_nested+0x48/0x320)
+[<c04734dc>] (mutex_lock_nested+0x48/0x320) from [<bf28ae00>] (restore_regulatory_settings+0x34/0x418 [cfg80211])
+[<bf28ae00>] (restore_regulatory_settings+0x34/0x418 [cfg80211]) from [<bf28b200>] (reg_timeout_work+0x1c/0x20 [cfg80211])
+[<bf28b200>] (reg_timeout_work+0x1c/0x20 [cfg80211]) from [<c0059f44>] (process_one_work+0x2a0/0x480)
+[<c0059f44>] (process_one_work+0x2a0/0x480) from [<c005a4b4>] (worker_thread+0x1bc/0x2bc)
+[<c005a4b4>] (worker_thread+0x1bc/0x2bc) from [<c0061148>] (kthread+0x98/0xa4)
+[<c0061148>] (kthread+0x98/0xa4) from [<c0014af4>] (kernel_thread_exit+0x0/0x8)
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: World regulatory domain updated:
+cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+i suspect not calling the _sync version might introduce some race
+condition wrt. correct reg domain. however, so far it works well
+and i don't seem to get the lockdep warning anymore.
+
+ net/wireless/reg.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 15f3474..baf5704 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1389,7 +1389,7 @@ static void reg_set_request_processed(void)
+ 	spin_unlock(&reg_requests_lock);
+ 
+ 	if (last_request->initiator == NL80211_REGDOM_SET_BY_USER)
+-		cancel_delayed_work_sync(&reg_timeout);
++		cancel_delayed_work(&reg_timeout);
+ 
+ 	if (need_more_processing)
+ 		schedule_work(&reg_work);
+-- 
+1.7.6.401.g6a319
+
