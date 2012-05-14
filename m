@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54303 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754608Ab2ENHSs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 03:18:48 -0400
-Message-ID: <1336979924.4303.5.camel@jlt3.sipsolutions.net> (sfid-20120514_091853_611519_12E1FA7E)
-Subject: Re: CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit 2012
- (Barcelona!)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	alexander.smirnov@siemens.com, Sergey.Sobolev@siemens.com
-Date: Mon, 14 May 2012 09:18:44 +0200
-In-Reply-To: <20120427174439.GC16207@tuxdriver.com> (sfid-20120427_194754_950690_60A07BB5)
-References: <20120322192406.GB2432@tuxdriver.com>
-	 <1332698585.1870.88.camel@aeonflux> <20120326145433.GE13806@tuxdriver.com>
-	 <1332774906.1870.98.camel@aeonflux> <20120326152541.GH13806@tuxdriver.com>
-	 <20120427174439.GC16207@tuxdriver.com>
-	 (sfid-20120427_194754_950690_60A07BB5)
+Received: from perches-mx.perches.com ([206.117.179.246]:52517 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757033Ab2ENSI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 14:08:29 -0400
+Message-ID: <1337018906.29436.27.camel@joe2Laptop> (sfid-20120514_200831_954511_19BAA71C)
+Subject: Re: [PATCH v2] ath6kl: enable enhanced bmiss detection
+From: Joe Perches <joe@perches.com>
+To: "Pedersen, Thomas" <c_tpeder@qca.qualcomm.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath6kl-devel@qualcomm.com
+Date: Mon, 14 May 2012 11:08:26 -0700
+In-Reply-To: <20120514180339.GA4030@pista>
+References: <1337017652-3962-1-git-send-email-c_tpeder@qca.qualcomm.com>
+	 <1337018219.29436.24.camel@joe2Laptop> <20120514180339.GA4030@pista>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-04-27 at 13:44 -0400, John W. Linville wrote:
+On Mon, 2012-05-14 at 11:03 -0700, Pedersen, Thomas wrote:
+> On Mon, May 14, 2012 at 10:56:59AM -0700, Joe Perches wrote:
+> > On Mon, 2012-05-14 at 10:47 -0700, Thomas Pedersen wrote:
+> > > Enable enhanced bmiss detection if the firmware supports it. This
+> > > feature is only enabled on some firmwares since it comes with a power
+> > > cost.
+> > []
+> > > diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> > []
+> > > @@ -2614,6 +2619,30 @@ static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
+> > >  	return 0;
+> > >  }
+> > >  
+> > > +void ath6kl_cfg80211_sta_bmiss_enhance(struct ath6kl_vif *vif, bool enable)
+[]
+> > Why 2 messages when 1 message might do?
+> > 
+> > 	err = ath6kl_wmi_sta_bmiss_enhance_cmd(vif->ar->wmi,
+> > 					       vif->fw_vif_idx, enable);
+> > 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+> > 		   "%s enhanced fw bmiss detection: %s\n",
+> > 		   enable ? "enable" : "disable",
+> > 		   err ? "OK" : "failed");
+> 
+> OK that seems nicer. Should we still print the error code, or maybe it
+> doesn't really matter?
 
-> Angela has reserved space for us at the Hotel Fira
-> Palace for the Wireless Summit on Thurs, Nov 8th and Fri, Nov 9th.
+Hi Thomas.
 
-FWIW, I will not be able to attend.
+That's up to you.  I don't know the code at all.
 
-johannes
+btw: the err ?: output is badly reversed in my example.
+
 
