@@ -1,46 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3561 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751462Ab2EIKcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 06:32:35 -0400
-Message-ID: <4FAA47B4.5090002@broadcom.com> (sfid-20120509_123238_864710_4544DB39)
-Date: Wed, 9 May 2012 12:32:20 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:47359 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755924Ab2ENNUc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 09:20:32 -0400
+Received: by qadb17 with SMTP id b17so2658650qad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 06:20:31 -0700 (PDT)
 MIME-Version: 1.0
-To: "Jonathan Nieder" <jrnieder@gmail.com>
-cc: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: Re: brcmsmac still woes, possible regression?
-References: <20120328112657.GA6114@stt008.linux.site>
- <4F7302D9.8070009@broadcom.com>
- <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
- <4F744DD8.8010004@broadcom.com>
- <20120329133835.GA5196@stt008.linux.site>
- <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
- <20120402215005.GA13969@burratino> <4F7B179F.7070502@broadcom.com>
- <20120509094111.GA2333@burratino> <4FAA45AF.8050201@broadcom.com>
- <20120509102926.GD3499@burratino>
-In-Reply-To: <20120509102926.GD3499@burratino>
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <1335189878.27767.175.camel@wwguy-huron>
+References: <CAFE89JyMHthxBuTcoMN_kOerrW+5yt8Sv1JyQRZATd-mzSwjvA@mail.gmail.com>
+	<1335189878.27767.175.camel@wwguy-huron>
+Date: Mon, 14 May 2012 16:20:30 +0300
+Message-ID: <CAFE89JyAdTwTyWHmk0u7aQECWPREJUcDy_H5Bs5ySMTJAG4pgA@mail.gmail.com> (sfid-20120514_152059_843962_34BE83E7)
+Subject: Re: laptop hangs while connecting to open wifi network
+From: Oleksandr Yeremko <yeremko@gmail.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2012 12:29 PM, Jonathan Nieder wrote:
-> 
-> Thanks for explaining.  That makes sense.
-> 
-> Is the short term fix badc4f07622f ("brcm80211: smac: resume transmit
-> fifo upon receiving frames", 2012-04-11)?
-> 
-> Thanks,
-> Jonathan
-> 
+Guy,
 
-Yep. I remember because the SHA1 start with 'bad', which felt like a
-certain kind of omen to me ;-)
+thank you very much for your letter. Sorry for my long silence.
 
-Gr. AvS
+I solved the problem by moving to Ubuntu 12 with 3.2.0 kernel version.
 
+Actually the problem was not only with wireless but with cardreader,
+touchpad and screen brightness also. I think kernel 2.6.x does not
+support chipset of Dell XPS notebook fully. And kernel 3.2.0 does
+support.
+
+Thank you very much again for your time.
+
+Best regards,
+Oleksandr
+
+
+On Mon, Apr 23, 2012 at 5:04 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> Hi Oleksandr,
+>
+> On Mon, 2012-04-23 at 13:06 +0300, Oleksandr Yeremko wrote:
+>> Dear All,
+>>
+>> I have Dell XPS laptop with Intel Corporation Centrino Wireless-N 1030 (rev 34).
+>>
+>> I use CentOS 6 with 2.6.32-220.7.1.el6.x86_64 kernel and iwlagn module.
+>>
+>> The problem is:
+>> when I try to connect to any open wifi network my laptop hangs
+>> (switching off is needed) and screen looses colors (like it is
+>> switched to 256-colors mode).
+>>
+>> Does somebody have an idea how to solve this?
+>>
+> Could you provide more information, such as dmesg, lspci, ...
+> also the configuration on your device, (open/secure, band,
+> channel, ....)
+>
+> without more detail information, I am not sure how to help.
+>
+> Thanks
+> Wey
+>
+>
