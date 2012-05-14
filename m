@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:42083 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752884Ab2EJCHJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28994 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947Ab2ENGQg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 22:07:09 -0400
-Received: by dady13 with SMTP id y13so1056219dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 19:07:09 -0700 (PDT)
-From: Zero Lin <zero.lin.0203@gmail.com>
-To: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	"Zero.Lin" <Zero.Lin@mediatek.com>
-Subject: [PATCH] rt2x00:Add RT539b chipset support
-Date: Thu, 10 May 2012 10:06:31 +0800
-Message-Id: <1336615591-2017-1-git-send-email-zero.lin.0203@gmail.com> (sfid-20120510_040714_703246_281F1EF8)
+	Mon, 14 May 2012 02:16:36 -0400
+Message-ID: <4FB0A33B.4050409@qca.qualcomm.com> (sfid-20120514_081639_479253_791607D8)
+Date: Mon, 14 May 2012 09:16:27 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: John Linville <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] cfg80211: provide channel to start_ap function
+References: <20120511083413.778117363@sipsolutions.net> <20120511083720.868662963@sipsolutions.net>
+In-Reply-To: <20120511083720.868662963@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Zero.Lin" <Zero.Lin@mediatek.com>
+On 05/11/2012 11:34 AM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Instead of setting the channel first and then
+> starting the AP, let cfg80211 store the channel
+> and provide it as one of the AP settings.
+> 
+> This means that now you have to set the channel
+> before you can start an AP interface, but since
+> hostapd/wpa_supplicant always do that we're OK
+> with this change.
+> 
+> Alternatively, it's now possible to give the
+> channel as an attribute to the start-ap nl80211
+> command, overriding any preset channel.
+> 
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Zero.Lin <Zero.Lin@mediatek.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+For the ath6kl part:
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 931331d..cad25bf 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1192,6 +1192,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
- 	{ PCI_DEVICE(0x1814, 0x5390) },
- 	{ PCI_DEVICE(0x1814, 0x5392) },
- 	{ PCI_DEVICE(0x1814, 0x539a) },
-+	{ PCI_DEVICE(0x1814, 0x539b) },
- 	{ PCI_DEVICE(0x1814, 0x539f) },
- #endif
- 	{ 0, }
--- 
-1.7.5.4
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
+Kalle
