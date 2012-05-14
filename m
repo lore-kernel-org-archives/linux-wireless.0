@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:54097 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751972Ab2EJOLI (ORCPT
+Received: from mail4-relais-sop.national.inria.fr ([192.134.164.105]:35397
+	"EHLO mail4-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755681Ab2ENLpg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 10:11:08 -0400
-Received: by yenl13 with SMTP id l13so1206076yen.34
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 07:11:07 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <coelho@ti.com>, <arik@wizery.com>
-Subject: [PATCH v2] wl12xx: fix fm_coex parameters configuration
-Date: Thu, 10 May 2012 17:08:33 +0300
-Message-Id: <1336658913-11396-1-git-send-email-victorg@ti.com> (sfid-20120510_161113_135350_3FD52701)
+	Mon, 14 May 2012 07:45:36 -0400
+Date: Mon, 14 May 2012 13:45:33 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: net: wireless: add brcm80211 drivers
+In-Reply-To: <20120514083415.GA16999@mwanda>
+Message-ID: <alpine.DEB.2.02.1205141345101.2160@localhost6.localdomain6> (sfid-20120514_134539_988391_E610BC9D)
+References: <20120513174333.GB4280@elgon.mountain> <4FB0AF4B.9070606@broadcom.com> <20120514083415.GA16999@mwanda>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wrong fm_coex parameters were set during wl12xx
-init phase, fix it.
+On Mon, 14 May 2012, Dan Carpenter wrote:
 
-Signed-off-by: Ziv Riesel <zivriesel@ti.com>
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
+> On Mon, May 14, 2012 at 09:07:55AM +0200, Arend van Spriel wrote:
+>> Thanks for running smatch. I will look in the current code base and fix
+>> this. Just out of curiosity: Another static checker used regularly is
+>> Coccinelle. What are the pros and cons of smatch compared to Coccinelle?
+>>
+>> Gr. AvS
+>
+> That's a tricky question because of my obvious bias as the author
+> of Smatch, and I'm not an expert on Coccinelle.  ;)
+>
+> Smatch works on the preprocessed code and Coccinelle works on .c
+> code.  So some things are easier to check for in Coccinelle.  I've
+> generally found hacks to get the information I need in Smatch but
+> sometimes it's gnarly.  So a one liner in Coccinelle is twenty lines
+> of code in Smatch which require in depth knowledge of Smatch and
+> Sparse.
+>
+> Smatch doesn't fix the bugs it finds.
+>
+> The other advantage for Coccinelle is that you can run it on other
+> architecture's code without setting up a cross compile environment.
+>
+> What Smatch does that Coccinelle doesn't is that it tries to track
+> the values of all the variables.  This means you can detect array
+> overflows, for example.  Smatch tries to track values across
+> function calls as well, with the recent database work.
+>
+> That's really the long term goal of Smatch, to track the value of
+> every variable in the kernel.  But there is still a lot of work to
+> do.  :P
 
-v2: changed the subject wlcore -> wl12xx
+That all seems accurate to me :)
 
- drivers/net/wireless/ti/wl12xx/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index d7dd3de..5131375 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -305,8 +305,8 @@ static struct wlcore_conf wl12xx_conf = {
- 		.swallow_period               = 5,
- 		.n_divider_fref_set_1         = 0xff,       /* default */
- 		.n_divider_fref_set_2         = 12,
--		.m_divider_fref_set_1         = 148,
--		.m_divider_fref_set_2         = 0xffff,     /* default */
-+		.m_divider_fref_set_1         = 0xffff,
-+		.m_divider_fref_set_2         = 148,	    /* default */
- 		.coex_pll_stabilization_time  = 0xffffffff, /* default */
- 		.ldo_stabilization_time       = 0xffff,     /* default */
- 		.fm_disturbed_band_margin     = 0xff,       /* default */
--- 
-1.7.5.4
-
+julia
