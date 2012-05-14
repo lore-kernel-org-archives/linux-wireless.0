@@ -1,272 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33883 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754602Ab2EJUdo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 16:33:44 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1SSa3S-0005kT-Vo
-	for linux-wireless@vger.kernel.org; Thu, 10 May 2012 22:33:43 +0200
-Message-Id: <20120510203304.806786399@sipsolutions.net> (sfid-20120510_223350_423850_B854E6D7)
-Date: Thu, 10 May 2012 22:30:23 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 2/2] cfg80211: provide channel to start_ap function
-References: <20120510203021.240931880@sipsolutions.net>
-Mime-Version: 1.0
+Received: from perches-mx.perches.com ([206.117.179.246]:55589 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754170Ab2ENH5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 03:57:08 -0400
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org, linux-decnet-user@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	dev@openvswitch.org, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [RFC net-next 0/2] net: Use net_<level>_ratelimit
+Date: Mon, 14 May 2012 00:56:24 -0700
+Message-Id: <cover.1336981915.git.joe@perches.com> (sfid-20120514_095743_615612_3FDBB8CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+net_ratelimit() like __ratelimit() is too easy to misuse.
 
-Instead of setting the channel first and then
-starting the AP, let cfg80211 store the channel
-and provide it as one of the AP settings.
+Add simplifying macros similar to pr_<level>_ratelimited
+that combines the test of net_ratelimit and logging.
 
-This means that now you have to set the channel
-before you can start an AP interface, but since
-hostapd/wpa_supplicant always do that we're OK
-with this small userspace API change.
+Joe Perches (2):
+  net: Add net_ratelimited_function and net_<level>_ratelimited macros
+  net: Convert net_ratelimit uses to net_<level>_ratelimited
 
-Alternatively, it's now possible to give the
-channel as an attribute to the start-ap nl80211
-command as well.
+ include/linux/net.h                            |   23 +++++++++++
+ net/atm/ioctl.c                                |    8 +--
+ net/caif/caif_socket.c                         |   10 ++---
+ net/core/dev.c                                 |   30 ++++++--------
+ net/core/pktgen.c                              |    7 +--
+ net/core/rtnetlink.c                           |    8 +--
+ net/core/skbuff.c                              |   11 ++---
+ net/decnet/dn_fib.c                            |    5 +-
+ net/decnet/dn_neigh.c                          |   22 ++++-------
+ net/decnet/dn_nsp_in.c                         |   11 +++--
+ net/decnet/dn_nsp_out.c                        |    5 +-
+ net/decnet/dn_route.c                          |   15 ++-----
+ net/decnet/dn_table.c                          |    4 +-
+ net/decnet/netfilter/dn_rtmsg.c                |    3 +-
+ net/ipv4/icmp.c                                |   20 ++++-----
+ net/ipv4/ip_fragment.c                         |    3 +-
+ net/ipv4/ip_input.c                            |   13 +++---
+ net/ipv4/ip_options.c                          |    6 ++-
+ net/ipv4/ip_output.c                           |    4 +-
+ net/ipv4/ipconfig.c                            |   11 ++---
+ net/ipv4/ipmr.c                                |    3 +-
+ net/ipv4/netfilter/arp_tables.c                |    5 +-
+ net/ipv4/netfilter/ip_tables.c                 |    3 +-
+ net/ipv4/netfilter/ipt_CLUSTERIP.c             |    3 +-
+ net/ipv4/netfilter/nf_nat_h323.c               |   26 ++++--------
+ net/ipv4/netfilter/nf_nat_snmp_basic.c         |    8 +--
+ net/ipv4/route.c                               |   40 ++++++++-----------
+ net/ipv4/tcp.c                                 |   14 +++---
+ net/ipv4/tcp_input.c                           |    7 +--
+ net/ipv4/tcp_ipv4.c                            |   11 ++---
+ net/ipv4/tcp_output.c                          |    3 +-
+ net/ipv6/addrconf.c                            |   17 +++-----
+ net/ipv6/ah6.c                                 |    4 +-
+ net/ipv6/ip6_output.c                          |    3 +-
+ net/ipv6/ip6_tunnel.c                          |   33 +++++----------
+ net/ipv6/ip6mr.c                               |    3 +-
+ net/ipv6/netfilter/ip6_tables.c                |    3 +-
+ net/ipv6/netfilter/ip6t_REJECT.c               |    6 +--
+ net/ipv6/netfilter/ip6table_mangle.c           |    3 +-
+ net/ipv6/netfilter/nf_conntrack_l3proto_ipv6.c |    3 +-
+ net/ipv6/netfilter/nf_conntrack_reasm.c        |    7 +--
+ net/ipv6/reassembly.c                          |    6 +--
+ net/ipv6/route.c                               |   12 +----
+ net/ipv6/sit.c                                 |    6 +--
+ net/ipv6/tcp_ipv6.c                            |   10 ++---
+ net/llc/af_llc.c                               |    7 +--
+ net/mac80211/agg-rx.c                          |   13 ++----
+ net/mac80211/ht.c                              |    8 ++--
+ net/mac80211/ibss.c                            |   10 ++---
+ net/mac80211/mlme.c                            |   12 ++---
+ net/mac80211/rx.c                              |   11 ++---
+ net/mac80211/tx.c                              |   17 +++-----
+ net/netfilter/nf_conntrack_amanda.c            |    3 +-
+ net/netfilter/nf_conntrack_core.c              |    5 +--
+ net/netfilter/nf_conntrack_expect.c            |    4 +-
+ net/netfilter/nf_conntrack_h323_main.c         |    9 +---
+ net/netfilter/nf_conntrack_irc.c               |    8 +--
+ net/netfilter/nfnetlink_queue.c                |    9 +---
+ net/netfilter/xt_TCPMSS.c                      |   10 ++---
+ net/netfilter/xt_hashlimit.c                   |    3 +-
+ net/openvswitch/vport-netdev.c                 |    6 +-
+ net/sched/act_ipt.c                            |    7 +--
+ net/sched/act_mirred.c                         |    5 +-
+ net/sched/cls_u32.c                            |    3 +-
+ net/sched/ematch.c                             |    4 +-
+ net/sched/sch_api.c                            |   10 ++---
+ net/sched/sch_generic.c                        |   11 ++---
+ net/sched/sch_gred.c                           |   12 ++----
+ net/sctp/sm_sideeffect.c                       |    5 +-
+ net/sctp/sm_statefuns.c                        |   18 ++++-----
+ net/sctp/socket.c                              |    6 +--
+ net/socket.c                                   |    3 +-
+ net/sunrpc/svc.c                               |   18 ++++-----
+ net/sunrpc/svc_xprt.c                          |   13 ++----
+ net/sunrpc/svcsock.c                           |   28 +++++--------
+ net/wireless/lib80211_crypt_ccmp.c             |   33 +++++----------
+ net/wireless/lib80211_crypt_tkip.c             |   50 ++++++++----------------
+ 77 files changed, 329 insertions(+), 490 deletions(-)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   36 +--------------------
- drivers/net/wireless/ath/ath6kl/core.h     |    3 -
- include/linux/nl80211.h                    |    2 +
- include/net/cfg80211.h                     |   12 ++++++-
- net/mac80211/cfg.c                         |    5 +++
- net/wireless/nl80211.c                     |   48 ++++++++++++++++++++++++++++-
- 6 files changed, 68 insertions(+), 38 deletions(-)
-
---- a/include/net/cfg80211.h	2012-05-10 21:42:19.000000000 +0200
-+++ b/include/net/cfg80211.h	2012-05-10 21:51:37.000000000 +0200
-@@ -404,6 +404,8 @@ struct cfg80211_beacon_data {
-  *
-  * Used to configure an AP interface.
-  *
-+ * @channel: the channel to start the AP on
-+ * @channel_type: the channel type to use
-  * @beacon: beacon data
-  * @beacon_interval: beacon interval
-  * @dtim_period: DTIM period
-@@ -417,6 +419,9 @@ struct cfg80211_beacon_data {
-  * @inactivity_timeout: time in seconds to determine station's inactivity.
-  */
- struct cfg80211_ap_settings {
-+	struct ieee80211_channel *channel;
-+	enum nl80211_channel_type channel_type;
-+
- 	struct cfg80211_beacon_data beacon;
- 
- 	int beacon_interval, dtim_period;
-@@ -2263,7 +2268,10 @@ struct cfg80211_cached_keys;
-  * @netdev: (private) Used to reference back to the netdev
-  * @current_bss: (private) Used by the internal configuration code
-  * @channel: (private) Used by the internal configuration code to track
-- *	user-set AP, monitor and WDS channels for wireless extensions
-+ *	the user-set AP, monitor and WDS channel
-+ * @preset_chan: (private) Used by the internal configuration code to
-+ *	track the channel to be used for AP later
-+ * @preset_chantype: (private) the corresponding channel type
-  * @bssid: (private) Used by the internal configuration code
-  * @ssid: (private) Used by the internal configuration code
-  * @ssid_len: (private) Used by the internal configuration code
-@@ -2314,6 +2322,8 @@ struct wireless_dev {
- 
- 	struct cfg80211_internal_bss *current_bss; /* associated / joined */
- 	struct ieee80211_channel *channel;
-+	struct ieee80211_channel *preset_chan;
-+	enum nl80211_channel_type preset_chantype;
- 
- 	bool ps;
- 	int ps_timeout;
---- a/net/wireless/nl80211.c	2012-05-10 21:42:19.000000000 +0200
-+++ b/net/wireless/nl80211.c	2012-05-10 22:29:18.000000000 +0200
-@@ -1132,6 +1132,9 @@ static bool nl80211_can_set_dev_channel(
- 	 * Monitors are special as they are normally slaved to
- 	 * whatever else is going on, so they behave as though
- 	 * you tried setting the wiphy channel itself.
-+	 *
-+	 * For AP/GO modes, it's only for compatibility, you can
-+	 * also give the channel to the start-AP command.
- 	 */
- 	return !wdev ||
- 		wdev->iftype == NL80211_IFTYPE_AP ||
-@@ -1166,6 +1169,7 @@ static int __nl80211_set_channel(struct
- 				 struct wireless_dev *wdev,
- 				 struct genl_info *info)
- {
-+	struct ieee80211_channel *channel;
- 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
- 	u32 freq;
- 	int result;
-@@ -1187,8 +1191,27 @@ static int __nl80211_set_channel(struct
- 		wdev_lock(wdev);
- 		result = cfg80211_set_freq(rdev, wdev, freq, channel_type);
- 		wdev_unlock(wdev);
--	} else {
-+	} else switch (wdev->iftype) {
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+		if (wdev->beacon_interval) {
-+			result = -EBUSY;
-+			break;
-+		}
-+		channel = rdev_freq_to_chan(rdev, freq, channel_type);
-+		if (!channel || !cfg80211_can_beacon_sec_chan(&rdev->wiphy,
-+							      channel,
-+							      channel_type)) {
-+			result = -EINVAL;
-+			break;
-+		}
-+		wdev->preset_chan = channel;
-+		wdev->preset_chantype = channel_type;
-+		result = 0;
-+		break;
-+	default:
- 		result = cfg80211_set_freq(rdev, NULL, freq, channel_type);
-+		break;
- 	}
- 	mutex_unlock(&rdev->devlist_mtx);
- 
-@@ -2259,6 +2282,29 @@ static int nl80211_start_ap(struct sk_bu
- 			info->attrs[NL80211_ATTR_INACTIVITY_TIMEOUT]);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
-+		enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-+
-+		if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE] &&
-+		    !nl80211_valid_channel_type(info, &channel_type))
-+			return -EINVAL;
-+
-+		params.channel = rdev_freq_to_chan(rdev,
-+			nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
-+			channel_type);
-+		if (!params.channel)
-+			return -EINVAL;
-+		params.channel_type = channel_type;
-+	} else if (wdev->preset_chan) {
-+		params.channel = wdev->preset_chan;
-+		params.channel_type = wdev->preset_chantype;
-+	} else
-+		return -EINVAL;
-+
-+	if (!cfg80211_can_beacon_sec_chan(&rdev->wiphy, params.channel,
-+					  params.channel_type))
-+		return -EINVAL;
-+
- 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
- 	if (!err)
- 		wdev->beacon_interval = params.beacon_interval;
---- a/include/linux/nl80211.h	2012-05-10 21:42:19.000000000 +0200
-+++ b/include/linux/nl80211.h	2012-05-10 21:51:37.000000000 +0200
-@@ -170,6 +170,8 @@
-  *	%NL80211_ATTR_CIPHER_GROUP, %NL80211_ATTR_WPA_VERSIONS,
-  *	%NL80211_ATTR_AKM_SUITES, %NL80211_ATTR_PRIVACY,
-  *	%NL80211_ATTR_AUTH_TYPE and %NL80211_ATTR_INACTIVITY_TIMEOUT.
-+ *	The channel to use can be set on the interface or be given using the
-+ *	%NL80211_ATTR_WIPHY_FREQ and %NL80211_ATTR_WIPHY_CHANNEL_TYPE attrs.
-  * @NL80211_CMD_NEW_BEACON: old alias for %NL80211_CMD_START_AP
-  * @NL80211_CMD_STOP_AP: Stop AP operation on the given interface
-  * @NL80211_CMD_DEL_BEACON: old alias for %NL80211_CMD_STOP_AP
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c	2012-05-10 21:42:19.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c	2012-05-10 21:51:37.000000000 +0200
-@@ -2521,35 +2521,6 @@ static int ath6kl_set_ies(struct ath6kl_
- 	return 0;
- }
- 
--static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
--			      struct ieee80211_channel *chan,
--			      enum nl80211_channel_type channel_type)
--{
--	struct ath6kl_vif *vif;
--
--	/*
--	 * 'dev' could be NULL if a channel change is required for the hardware
--	 * device itself, instead of a particular VIF.
--	 *
--	 * FIXME: To be handled properly when monitor mode is supported.
--	 */
--	if (!dev)
--		return -EBUSY;
--
--	vif = netdev_priv(dev);
--
--	if (!ath6kl_cfg80211_ready(vif))
--		return -EIO;
--
--	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: center_freq=%u hw_value=%u\n",
--		   __func__, chan->center_freq, chan->hw_value);
--	vif->next_chan = chan->center_freq;
--	vif->next_ch_type = channel_type;
--	vif->next_ch_band = chan->band;
--
--	return 0;
--}
--
- static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
- 				u8 *rsn_capab)
- {
-@@ -2721,7 +2692,7 @@ static int ath6kl_start_ap(struct wiphy
- 	p.ssid_len = vif->ssid_len;
- 	memcpy(p.ssid, vif->ssid, vif->ssid_len);
- 	p.dot11_auth_mode = vif->dot11_auth_mode;
--	p.ch = cpu_to_le16(vif->next_chan);
-+	p.ch = cpu_to_le16(info->channel->center_freq);
- 
- 	/* Enable uAPSD support by default */
- 	res = ath6kl_wmi_ap_set_apsd(ar->wmi, vif->fw_vif_idx, true);
-@@ -2745,8 +2716,8 @@ static int ath6kl_start_ap(struct wiphy
- 			return res;
- 	}
- 
--	if (ath6kl_set_htcap(vif, vif->next_ch_band,
--			     vif->next_ch_type != NL80211_CHAN_NO_HT))
-+	if (ath6kl_set_htcap(vif, info->channel->band,
-+			     info->channel_type != NL80211_CHAN_NO_HT))
- 		return -EIO;
- 
- 	/*
-@@ -3213,7 +3184,6 @@ static struct cfg80211_ops ath6kl_cfg802
- 	.suspend = __ath6kl_cfg80211_suspend,
- 	.resume = __ath6kl_cfg80211_resume,
- #endif
--	.set_channel = ath6kl_set_channel,
- 	.start_ap = ath6kl_start_ap,
- 	.change_beacon = ath6kl_change_beacon,
- 	.stop_ap = ath6kl_stop_ap,
---- a/drivers/net/wireless/ath/ath6kl/core.h	2012-05-10 21:42:19.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath6kl/core.h	2012-05-10 21:51:37.000000000 +0200
-@@ -543,9 +543,6 @@ struct ath6kl_vif {
- 	u32 last_cancel_roc_id;
- 	u32 send_action_id;
- 	bool probe_req_report;
--	u16 next_chan;
--	enum nl80211_channel_type next_ch_type;
--	enum ieee80211_band next_ch_band;
- 	u16 assoc_bss_beacon_int;
- 	u16 listen_intvl_t;
- 	u16 bmiss_time_t;
---- a/net/mac80211/cfg.c	2012-05-10 21:51:35.000000000 +0200
-+++ b/net/mac80211/cfg.c	2012-05-10 21:51:37.000000000 +0200
-@@ -823,6 +823,11 @@ static int ieee80211_start_ap(struct wip
- 	if (old)
- 		return -EALREADY;
- 
-+	err = ieee80211_set_channel(wiphy, dev, params->channel,
-+				    params->channel_type);
-+	if (err)
-+		return err;
-+
- 	/*
- 	 * Apply control port protocol, this allows us to
- 	 * not encrypt dynamic WEP control frames.
-
+-- 
+1.7.8.111.gad25c.dirty
 
