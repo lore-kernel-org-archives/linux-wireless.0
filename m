@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fw.wantstofly.org ([80.101.37.227]:61262 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757376Ab2EAMrM (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:26023 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757400Ab2ENU5x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 08:47:12 -0400
-Date: Tue, 1 May 2012 14:47:08 +0200
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: sedat.dilek@gmail.com
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
-	Jim Cromie <jim.cromie@gmail.com>
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-Message-ID: <20120501124708.GM3157@wantstofly.org> (sfid-20120501_144748_364302_4138DBB2)
-References: <CA+icZUUiYwpHpqe5_kz1rLzTT13qQMwpNpDH7EOaRrVi_c8Z2Q@mail.gmail.com>
- <20120427094637.GV3157@wantstofly.org>
- <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
- <20120427095842.GW3157@wantstofly.org>
- <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
- <20120427101732.GX3157@wantstofly.org>
- <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
- <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
- <20120427185809.GZ3157@wantstofly.org>
- <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
+	Mon, 14 May 2012 16:57:53 -0400
+Date: Mon, 14 May 2012 23:57:29 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] brcm80211: remove an unneeded NULL check
+Message-ID: <20120514205729.GD20836@elgon.mountain> (sfid-20120514_225757_851251_915DAE6F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 27, 2012 at 11:53:28PM +0200, Sedat Dilek wrote:
+This code causes a static checker warning because "pi" gets dereferenced
+before it is checked.  The dereference is inside the write_phy_reg()
+function which is called from wlc_phy_write_txmacreg_nphy().
 
-> >> So, Lennert if you want more testing - What? How? etc.
-> >
-> > For one, the output of 'iw phy', please.
-> >
-> > Also, does monitor mode work?  Do you get plausible channel/rxpower
-> > values in tcpdump in monitor mode?
-> >
-> > Are there any messages in the syslog about failing commands?
-> 
-> On 1st sight, logs look fine:
-> 
-> [21:52:52] <lautriv> [    6.050967] ieee80211 phy0: 88w8361p v4,
-> 00173f3bdde3, STA firmware 2.1.4.25
-> 
-> But WLAN connection is not that fast and stable as lautriv reports
-> (several abnormalities were observed).
+This code is only called from wlc_phy_init_nphy() and "pi" is a
+valid pointer so we can remove the check for NULL.
 
-iwconfig saying "Bit Rate=1 Mb/s" can be safely ignored.  If there is
-a bitrate indication on transmitted packets in tcpdump, then that's
-bogus too, as rate control is done in hardware.  (I.e. if you want to
-verify the rate at which a packet is transmitted, you'll have to sniff
-from another machine.)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+index 812b6e3..d6380f3 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+@@ -14358,7 +14358,7 @@ void wlc_phy_nphy_tkip_rifs_war(struct brcms_phy *pi, u8 rifs)
+ 
+ 	wlc_phy_write_txmacreg_nphy(pi, holdoff, delay);
+ 
+-	if (pi && pi->sh && (pi->sh->_rifs_phy != rifs))
++	if (pi->sh && (pi->sh->_rifs_phy != rifs))
+ 		pi->sh->_rifs_phy = rifs;
+ }
+ 
