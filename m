@@ -1,67 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:40793 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932293Ab2EGUtB (ORCPT
+Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:21561 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932521Ab2ENWXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 16:49:01 -0400
-Message-ID: <4FA835F0.2050003@fold.natur.cuni.cz> (sfid-20120507_224922_920769_82AEA5A5)
-Date: Mon, 07 May 2012 22:52:00 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+	Mon, 14 May 2012 18:23:42 -0400
+From: "Bouterse, Robert" <robert.bouterse@dmh-global.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 14 May 2012 15:23:33 -0700
+Subject: RE: ath9k_htc fails with 
+Message-ID: <110B6C33195F5F4790292BDD9E7DED401ABDA8B446@VA3DIAXVS371.RED001.local> (sfid-20120515_002346_732516_F3A7951B)
+References: <20120321175800.GA28516@aldebaran.gro-tsen.net>
+	<CAJ-Vmom2fPUuuT8mUa2fWrbBQGuDtd7nh7Tkn3Sa2_TmhjtJaA@mail.gmail.com>
+	<20120321220242.GA26363@aldebaran.gro-tsen.net>
+	<20120322002955.GA9391@aldebaran.gro-tsen.net>
+	<20331.61854.29639.644902@gargle.gargle.HOWL>
+	<20120323174708.GA2797@aldebaran.gro-tsen.net>
+	<20337.31328.528725.786517@gargle.gargle.HOWL>
+	<loom.20120511T213645-406@post.gmane.org>,<20400.52778.34625.954002@gargle.gargle.HOWL>
+In-Reply-To: <20400.52778.34625.954002@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: sedat.dilek@gmail.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: 3.4-rc5: Oops in run_timer_softirq()
-References: <4FA7E041.1070108@fold.natur.cuni.cz> <4FA821F5.8090203@fold.natur.cuni.cz> <CA+icZUWwy6A5y8EM0b=xEwzP2gqo4mY_bUdUAG8NOVajAHzYvg@mail.gmail.com>
-In-Reply-To: <CA+icZUWwy6A5y8EM0b=xEwzP2gqo4mY_bUdUAG8NOVajAHzYvg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sedat Dilek wrote:
-> On Mon, May 7, 2012 at 9:26 PM, Martin Mokrejs
-> <mmokrejs@fold.natur.cuni.cz> wrote:
->> Hmm, linux-3.4-rc6 tells me some news about my v5 firmware. Will try to upgrade. The ACPI message
->> is not new.
->>
->> [   11.008565] ACPI Warning: 0x000000000000f040-0x000000000000f05f SystemIO conflicts with Region \_SB_.PCI0.SBUS.SMBI 1 (20120320/utaddress-251)
->> [   11.008571] ACPI: If an ACPI driver is available for this device, you should use it instead of the native driver
->> [   11.936175] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
->> [   11.936177] Copyright(c) 2003-2012 Intel Corporation
->> [   11.936364] iwlwifi 0000:09:00.0: pci_resource_len = 0x00002000
->> [   11.936366] iwlwifi 0000:09:00.0: pci_resource_base = ffffc90006684000
->> [   11.936368] iwlwifi 0000:09:00.0: HW Revision ID = 0x34
->> [   11.936462] iwlwifi 0000:09:00.0: irq 53 for MSI/MSI-X
->> [   12.058300] iwlwifi 0000:09:00.0: request for firmware file 'iwlwifi-6000g2b-6.ucode' failed.
->> [   12.137737] usb 1-1.5: usb auto-suspend, wakeup 0
->> [   12.158653] iwlwifi 0000:09:00.0: Firmware has old API version, expected v6, got v5.
->> [   12.158655] iwlwifi 0000:09:00.0: New firmware can be obtained from http://www.intellinuxwireless.org/.
->> [   12.158657] iwlwifi 0000:09:00.0: loaded firmware version 17.168.5.2 build 35905
->> [   12.158759] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEBUG enabled
->> [   12.158761] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
->> [   12.158763] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
->> [   12.158764] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
->> [   12.158766] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_P2P disabled
->> [   12.158768] iwlwifi 0000:09:00.0: Detected Intel(R) Centrino(R) Wireless-N 1030 BGN, REV=0xB0
->> [   12.158816] iwlwifi 0000:09:00.0: L1 Disabled; Enabling L0S
->> [   12.175752] iwlwifi 0000:09:00.0: device EEPROM VER=0x71a, CALIB=0x6
->> [   12.175754] iwlwifi 0000:09:00.0: Device SKU: 0x150
->> [   12.175756] iwlwifi 0000:09:00.0: Valid Tx ant: 0x1, Valid Rx ant: 0x3
->> [   12.175768] iwlwifi 0000:09:00.0: Tunable channels: 13 802.11bg, 0 802.11a channels
->>
->> Martin
->>
-> 
-> What about a new subject :-)?
+RllJLCBJZiB5b3UgYXJlIGludGVyZXN0ZWQgaW4gd2hlcmUgSSBoYXZlIGdvdHRlbiB3aXRoIHRo
+aXMsIGxldCBtZSBleHBsYWluOg0KSSBoYXZlIHRoZSBUTC1XTjcyMU4gcGx1Z2dlZCBpbnRvIGEg
+c2VsZiBwb3dlcmVkIGh1Yi4NCkkgYW0gcnVubmluZyBvbiBhIEZyZWVzY2FsZSBpTVg1MF9yZDMg
+RVZNLg0KDQpJIGhhdmUgZm91bmQgdGhhdCB0aGUgdXNiIGRpc2Nvbm5lY3QgY2FsbGJhY2sgZG9l
+cyBub3QgYWx3YXlzIGdldCBjYWxsZWQsIGZvciBpbnN0YW5jZSBvbiBzaHV0ZG93bi4NCg0KV2hl
+biB0aGUgZGV2aWNlIGlzIGluIHRoZSBVbnJlc3BvbnNpdmUgc3RhdGUsIEkgZ2V0IHRoZSBmb2xs
+aW5nIHN0YXRlIG91dHB1dCBvbiBtb2R1bGUgbG9hZDoNCg0KCXVzYiAyLTEuMzogYXRoOWtfaHRj
+OiBUcmFuc2ZlcnJlZCBGVzogaHRjXzkyNzEuZncsIHNpemU6IDUxMjcyICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCglhdGg5a19odGMgMi0xLjM6MS4wOiBhdGg5
+a19odGM6IFRhcmdldCBpcyB1bnJlc3BvbnNpdmUgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgDQoJRmFpbGVkIHRvIGluaXRpYWxpemUgdGhlIGRldmlj
+ZSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgIA0KCXVzYiAyLTEuMzogYXRoOWtfaGlmX3VzYl9kZXZfZGVpbml0
+OjEwNjUgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICANCglhdGg5a19oaWZfdXNiX2Rldl9kZWluaXQ6MTA2NiAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgDQoJdXNiIDItMS4zOiBhdGg5a19odGM6IFVTQiBTdGF0ZSA3LCB1bnBsdWdnZWQg
+PSAwLCBoaWZfZGV2LT5mbGFncyA9IDAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgIA0KCXVzYiAyLTEuMzogYXRoOWtfaHRjOiBVU0IgbGF5ZXIgZGVpbml0aWFsaXplZA0KDQpJ
+IGFkZGVkIHRoZSBsb2cgc3RhdGVtZW50IHRvIGdldCB0aGUgc3RhdGUganVzdCBiZWZvcmUgdGhl
+IGlmIHN0YXRlbWVudCBnYXRpbmcgdGhlIGNhbGwgdG8gcmVib290Og0KQXMgeW91IGNhbiBzZWUg
+dGhlIHVucGx1Z2dlZCBpZiBmYWxzZSBidXQgSElGX1VTQl9TVEFSVCBpcyBub3QgdHJ1ZSwgdGhl
+cmVmb3JlIHRoZSByZWJvb3QgaXMgbm90IGNhbGxlZC4gSSBhbSBzdHVjayBpbiB0aGlzIHN0YXRl
+IHVudGlsIEkgdW5wbHVnIHRoZSBkZXZpY2UuDQpUaGUgcHJvYmxlbSBpcyB0aGF0IEkgY2Fubm90
+IGNhbGwgcmVib290IHVudGlsIGhpZl91c2Jfc3RhcnQgaXMgY2FsbGVkLg0KSSB0cmllZCBzaW1w
+bGlmeWluZyB0aGUgY29uZGl0aW9uYWwgdG86DQoNCglkZXZfaW5mbygmdWRldi0+ZGV2LCAiYXRo
+OWtfaHRjOiBVU0IgU3RhdGUgJWQsIHVucGx1Z2dlZCA9ICVkLCBoaWZfZGV2LT5mbGFncyA9ICVk
+XG4iLCB1ZGV2LT5zdGF0ZSwgdW5wbHVnZ2VkLCBoaWZfZGV2LT5mbGFncyk7DQoJaWYgKCF1bnBs
+dWdnZWQpew0KCQlhdGg5a19oaWZfdXNiX3JlYm9vdCh1ZGV2KTsNCgl9DQoNCmJ1dCB0aGF0IGp1
+c3QgZ290IG1lOg0KDQoJdXNiIDItMS4zOiBhdGg5a19odGM6IFVTQiBTdGF0ZSA3LCB1bnBsdWdn
+ZWQgPSAwLCBoaWZfZGV2LT5mbGFncyA9IDAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIA0KCWF0aDlrX2h0YzogYXRoOWtfaGlmX3VzYl9yZWJvb3Q6MTIwMCAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICANCgl1c2IgMi0xLjM6IGF0aDlrX2h0YzogVVNCIHJlYm9vdCBmYWlsZWQgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDQoJ
+dXNiIDItMS4zOiBhdGg5a19odGM6IFVTQiBsYXllciBkZWluaXRpYWxpemVkICANCg0KU28sIGl0
+IG1heSBiZSB0aGF0IHRoZSBkZXZpY2UgaXMgbm90IGNhcGFibGUgb2YgcHJvY2Vzc2luZyB0aGUg
+cmVib290IGNvbW1hbmQgaW4gdGhpcyBzdGF0ZS4NCg0KSSBhcHBvbG9naXplIGZvciBteSBpbmV4
+cGVyaWVuY2Ugd2l0aCB0aGUgdXNiIGFwaXMuDQoNCi8qLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLSovDQpCb2IgQm91dGVyc2UNClNlbmlvciBTb2Z0d2FyZSBFbmdpbmVl
+cg0KTXVsdGltZWRpYSBEZXZlbG9wbWVudCBDZW50ZXINCkQmTSBIb2xkaW5ncyBJbmMuDQpodHRw
+Oi8vd3d3LmRtLWhvbGRpbmdzLmNvbQ0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXw0KRnJvbTogU3VqaXRoIE1hbm9oYXJhbiBbY19tYW5vaGFAcWNhLnF1YWxjb21tLmNv
+bV0NClNlbnQ6IE1vbmRheSwgTWF5IDE0LCAyMDEyIDU6MTkgQU0NClRvOiBCb3V0ZXJzZSwgUm9i
+ZXJ0DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogYXRo
+OWtfaHRjIGZhaWxzIHdpdGgNCg0KUm9iZXJ0IEJvdXRlcnNlIHdyb3RlOg0KPiBJIHNlZW0gdG8g
+cnVubmluZyBpbnRvIHRoaXMgc2FtZSBpc3N1ZSwgbWluZSBpcyB0aGF0IHRoZSBkcml2ZXIgZW1p
+dHMgdGhlDQo+ICJUYXJnZXQgdW5yZXNwb25zaXZlIiBlcnJvciBpZiB0aGUgdW5pdCBpcyBwb3dl
+cmVkLXVwIHdpdGggdGhlIFRMLVdONzIxTiBwbHVnZ2VkDQo+IGluIGFscmVhZHkuIEkgdGhpbmsg
+bXkgaXNzdWUgaXMgdGhhdCB0aGUgVVNCIHN1YnN5dGVtIGV2ZW50IGlzIG5vdCByZWNpZXZlZCBi
+eQ0KPiB0aGUgYXRrOWtfaHRjIGRyaXZlciwgYW5kIHRoZXJlZm9yZSB0aGUgaGFyZHdhcmUgaXMg
+bm90IHJlc2V0Lg0KPg0KPiBIYXMgdGhpcyBiZW4gZml4ZWQgYWxyZWFkeT8gQ2FuIHlvdSBnaXZl
+IG1lIHRoZSBjb21taXQgc2hhMSBpbiB3aXJlbGVzcy10ZXN0aW5nPw0KPiBJIGFtIHVzaW5nIGNv
+bXBhdC13aXJlbGVzcywgc28gSSBhbSBsYWdnaW5nIG1hc3RlciBhIGJpdC4NCj4NCj4gSWYgbm90
+LCBjYW4geW91IHBvaW50IG1lIGF0IHdoZXJlIGluIHRoZSBkcml2ZXIgY29kZSB0aGUgcmVzZXQg
+aGFwcGVucz8gTWF5YmUgSQ0KPiBjYW4gY29tZSB1cCB3aXRoIGEgcGF0Y2guDQoNCllvdSBjYW4g
+cGxheSBhcm91bmQgd2l0aCB0aGUgZnVuY3Rpb24gYXRoOWtfaGlmX3VzYl9kaXNjb25uZWN0KCkg
+aW4NCmRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9oaWZfdXNiLmMgd2hpY2ggaGFzIHRo
+ZSBkZWluaXQvcmVib290IGNvZGUuIDopDQoNClN1aml0aA0KDQo=
 
-Well, I just thought that maybe it is related to the v5 firmware, but no, it is not.
-I did not want to report the v5 vs. v6 line. This is really about the Oops. ;)
-
-> Known issue - Check for these patches (pending in
-> (net.git|wireless.git)#master):
-> 
->       iwlwifi: use correct released ucode version
->       iwlwifi: use 6000G2B for 6030 device series
-
-So when I already updated the firmware manually I do not these two patches, right?
-
-Martin
