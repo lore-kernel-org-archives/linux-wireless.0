@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3625 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750864Ab2EYQrl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 12:47:41 -0400
-Message-ID: <4FBFB79F.4060609@broadcom.com> (sfid-20120525_184745_589488_0E5BDC12)
-Date: Fri, 25 May 2012 18:47:27 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:52540 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754447Ab2ENIXF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 04:23:05 -0400
+Received: by vbbff1 with SMTP id ff1so4579764vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 01:23:04 -0700 (PDT)
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Hauke Mehrtens" <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org,
-	"Stefano Brivio" <stefano.brivio@polimi.it>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: BCM4331 tx failures after S3
-References: <20120522165251.GA31347@thinkpad-t410>
- <4FBCAE3E.6050206@broadcom.com> <20120523135506.GB30165@thinkpad-t410>
- <4FBE0110.5020209@broadcom.com> <20120524212115.GD26760@thinkpad-t410>
- <4FBEA96D.8030207@hauke-m.de> <20120525141339.GB2895@thinkpad-t410>
-In-Reply-To: <20120525141339.GB2895@thinkpad-t410>
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <CAOpc7mHADqRcvXgg-8JoVfsoDh0_cZnkqBFS3AadwS6x0gtg7g@mail.gmail.com>
+References: <CAOpc7mHADqRcvXgg-8JoVfsoDh0_cZnkqBFS3AadwS6x0gtg7g@mail.gmail.com>
+Date: Mon, 14 May 2012 13:53:04 +0530
+Message-ID: <CAD2nsn2G67v0rMtQxvqvFpVPwrU2GXR9+zYRutaT8GuRpLoiZQ@mail.gmail.com> (sfid-20120514_102311_066300_D31E0F26)
+Subject: Re: [BUG, ath9k]: NUL bytes at end of /sys/kernel/debug/ieee80211/phy0/ath9k/modal_eeprom
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2012 04:13 PM, Seth Forshee wrote:
-> On Thu, May 24, 2012 at 11:34:37PM +0200, Hauke Mehrtens wrote:
->> Hi Seth,
->>
->> rmmod and insmod of b43 does not help but doing this with b43 and bcma
->> works is that correct?
->> Have you tried to add this code from bcma_host_pci_probe() to resume:
->>
->> 	/* Disable the RETRY_TIMEOUT register (0x41) to keep
->> 	 * PCI Tx retries from interfering with C3 CPU state */
->> 	pci_read_config_dword(dev, 0x40, &val);
->> 	if ((val & 0x0000ff00) != 0)
->> 		pci_write_config_dword(dev, 0x40, val & 0xffff00ff);
->>
->> Could you also try to run bcma_sprom_get() after resume.
-> 
-> Okay, this one fixes it. The part that's needed seems to be:
-> 
->         if (bus->chipinfo.id == 0x4331)
->                 bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, true);
-> 
-> I could have sworn I tried adding this to resume before, but apparently
-> I didn't.
-> 
-> Hmm. It turns out that BCMA_CC_CHIPCTL is completely reset to 0 when on
-> S3 without AC power, meaning all other fields in the register get
-> cleared as well. On this MBP that's affecting
-> BCMA_CHIPCTL_4331_BT_COEXIST. So we could save the value at suspend and
-> restore it during resume, but maybe the initialization of this register
-> also needs to be improved. Thoughts?
-> 
-> Thanks,
-> Seth
-> 
-> 
+Hi,
 
-Well let me explain some behaviour. Upon suspend mac80211 takes down the
-driver with the last callback being .stop(). Upon resume mac80211 calls
-the driver with .start() callback.
+On Mon, May 14, 2012 at 1:40 PM, Holger Schurig
+<holgerschurig@googlemail.com> wrote:
+> At first I wondered why "grep -i ant ." in this phy0/ath9k directory
+> just said "Binary file modal_eeprom matches". But when I used "less
+> modal_eeprom", I saw a bunch of NUL bytes at the end of the virtual
+> file.
 
-The brcmsmac driver has two bool states that are in play here: driver_up
-and hw_up. Upon .stop() callback the driver_up is set to false, but
-hw_up remains true. A subsequent .start() will perform some
-reconfiguration and driver_up will be made true.
+please dump the whole contents you had got
 
-The suspend/resume scenario is different for brcmsmac. bcma will call
-brcmsmac .suspend() callback in which we set hw_up to false. This
-changes the behaviour of the .start() callback after resume. Basically,
-it reinitializes the hardware.
+>
+> --
+> http://www.holgerschurig.de
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Not sure why having AC connected would make a difference. Maybe the
-device is not completely turned off (for WoWL maybe?).
 
-Gr. AvS
 
+-- 
+thanks,
+shafi
