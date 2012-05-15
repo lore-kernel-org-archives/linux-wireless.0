@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:52124 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759027Ab2EIJlk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 05:41:40 -0400
-Message-ID: <4FAA3BD2.9070203@tieto.com> (sfid-20120509_114143_130940_EC60ADB2)
-Date: Wed, 9 May 2012 11:41:38 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Thomas Pedersen <thomas@cozybit.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
-References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>  (sfid-20120427_002914_313709_1CC9F96D) <1336554945.4323.12.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1336554945.4323.12.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from shards.monkeyblade.net ([198.137.202.13]:41074 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966047Ab2EOSc1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2012 14:32:27 -0400
+Date: Tue, 15 May 2012 14:30:09 -0400 (EDT)
+Message-Id: <20120515.143009.2103212327515966852.davem@davemloft.net> (sfid-20120515_203250_791255_6AA4DE0E)
+To: johannes@sipsolutions.net
+Cc: joe@perches.com, netdev@vger.kernel.org,
+	linux-decnet-user@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	dev@openvswitch.org, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1337106548.15553.8.camel@jlt3.sipsolutions.net>
+References: <1337106094.15553.5.camel@jlt3.sipsolutions.net>
+	<20120515.142405.633851408201128056.davem@davemloft.net>
+	<1337106548.15553.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2012-04-26 at 15:28 -0700, Thomas Pedersen wrote:
->> iw wlan0 set type mp
->> iw wlan0 set channel n
->> ip link set wlan0 up
->> iw wlan0 mesh join meshid basic-rate 1,2
->>
->> Also, 'iw set channel' is met with an -EBUSY if doing this after the
->> link is up for fixed channel modes (mesh) anyway.
->>
->> Comments? Any idea why this was required initially?
->
->
-> I don't think this patch is correct -- mac80211 will get updated even if
-> the device isn't even started which will likely cause trouble. Even if
-> not though, this all doesn't match any kind of multi-channel concept. We
-> treat the channel as part of the temporary setup, e.g. part of the
-> association. AP and mesh are the only ones that are different today I
-> think.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 15 May 2012 20:29:08 +0200
 
-What about monitor mode?
+> On Tue, 2012-05-15 at 14:24 -0400, David Miller wrote:
+> 
+>> > But don't you have to do something in the sources to actually get
+>> > dynamic_debug enabled? I'm concerned this will make mac80211 debugging
+>> > inconsistent - the normal bits are just printk() still, and the
+>> > rate-limited bits need some special enabling? That seems odd.
+>> 
+>> You can turn them all off or on with a simple flip of a boolean switch
+>> at run-time.  Or, alternatively, you can turn them on or off in a
+>> finer grained manner with other run-time facilities.
+>> 
+>> There should be a transition away from explicit KERN_DEBUG.
+> 
+> I support that, but I think it's confusing to have things mixed. Also,
+> we seem to have printk_ratelimit(), so I'd prefer to have that used in
+> mac80211 instead until everything there moves over to newer facilities.
 
-
-> Overall, I don't think setting the channel&  doing mesh setup separately
-> is really a good API.
->
->  From mac80211's (and other drivers if they existed) POV the channel
-> should be given with the mesh_join command, like for IBSS.
->
-> Now, obviously, requiring userspace to do that would be an API change.
-> We probably don't want that, so I would suggest to change cfg80211 to
-> track the channel and then pass it to join_mesh as one of the mesh
-> parameters. This could be made work even when somebody attempts to set
-> the channel before the interface is up, but we'd have to be careful
-> about interface type changes.
->
-> We should do the same for AP mode as well, since the channel really
-> becomes relevant only upon start_ap(), before that there's no real
-> concept of a channel since you don't use it yet anyway.
-
-Maybe we should do the same with monitor interface type, i.e. introduce 
-start_monitor() and have it pass the channel.
-
-But then I'm thinking we shouldn't really be changing interface types 
-explicitly, since they would be set implicitly by start_ap() and such. 
-We could then use the NL80211_IFTYPE_UNSPECIFIED when we're not associated.
-
-
--- 
-Pozdrawiam / Best regards, Michal Kazior.
+No, you don't want that, it's different from the networking ratelimit
+mechanism.  Joe explained this, and I just explaing it to you once
+again in another reply.
