@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:54130 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757705Ab2EaCbp (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:40956 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932936Ab2EOS0X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 22:31:45 -0400
-Received: by gglu4 with SMTP id u4so464895ggl.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 19:31:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgWXF5AMQfSkoCBGWgB1sod6fOEqViDiFCif2hqLx55N0g@mail.gmail.com>
-References: <1338430181-12490-1-git-send-email-yeohchunyeow@gmail.com>
-	<CAGRGNgWXF5AMQfSkoCBGWgB1sod6fOEqViDiFCif2hqLx55N0g@mail.gmail.com>
-Date: Thu, 31 May 2012 10:31:44 +0800
-Message-ID: <CAEFj987H6wrN5ayRqh1QiE_OKbi_9bj1OCeFCrht0yKtkz0mqA@mail.gmail.com> (sfid-20120531_043148_621388_A607BE76)
-Subject: Re: [PATCH] {nl,cfg,mac}80211: implement dot11MeshHWMPconfirmationInterval
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	javier@cozybit.com, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 15 May 2012 14:26:23 -0400
+Date: Tue, 15 May 2012 14:24:05 -0400 (EDT)
+Message-Id: <20120515.142405.633851408201128056.davem@davemloft.net> (sfid-20120515_202646_421332_1DAD8579)
+To: johannes@sipsolutions.net
+Cc: joe@perches.com, netdev@vger.kernel.org,
+	linux-decnet-user@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	dev@openvswitch.org, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1337106094.15553.5.camel@jlt3.sipsolutions.net>
+References: <1337105028.15553.3.camel@jlt3.sipsolutions.net>
+	<20120515.141348.892964316296815698.davem@davemloft.net>
+	<1337106094.15553.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Julian
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 15 May 2012 20:21:34 +0200
 
-> This doesn't make sense.
->
-> Is this what you're trying to say?
->
-> "Minimum interval of time (in TUs) between sending Action frames
-> containing PREQ elements for root path confirmation."
+> On Tue, 2012-05-15 at 14:13 -0400, David Miller wrote:
+>> From: Johannes Berg <johannes@sipsolutions.net>
+>> Date: Tue, 15 May 2012 20:03:48 +0200
+>> 
+>> > Oops. Yes, please do that, mac80211 doesn't have DEBUG yet
+>> 
+>> If you want debugging messages you would turn on dynamic_debug
+>> via sysctl or whatever, not define DEBUG in your sources.
+>> 
+>> I don't think we should add yet another interface just to get
+>> KERN_DEBUG in there.
+> 
+> But don't you have to do something in the sources to actually get
+> dynamic_debug enabled? I'm concerned this will make mac80211 debugging
+> inconsistent - the normal bits are just printk() still, and the
+> rate-limited bits need some special enabling? That seems odd.
 
-Hi, Julian
+You can turn them all off or on with a simple flip of a boolean switch
+at run-time.  Or, alternatively, you can turn them on or off in a
+finer grained manner with other run-time facilities.
 
-I have captured this directly from the standard. It actually means
-that once the mesh STA receives the RANN, it can send the PREQ to the
-root mesh STA if the the last PREQ to the root mesh STA was sent
-dot11MeshHWMPconfirmationInterval TUs (or more) ago.
-
-"This attribute specifies the minimum interval of time (in TUs) during
-which a mesh STA can send only one Action frame containing a PREQ
-element for root path confirmation."
-
-Regards,
-Chun-Yeow
+There should be a transition away from explicit KERN_DEBUG.
