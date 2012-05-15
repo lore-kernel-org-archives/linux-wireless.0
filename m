@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29701 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602Ab2E1GvS (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:49086 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757095Ab2EOLSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 02:51:18 -0400
-Message-ID: <4FC3205E.6020608@qca.qualcomm.com> (sfid-20120528_085120_750690_5A086F39)
-Date: Mon, 28 May 2012 12:21:10 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Tue, 15 May 2012 07:18:37 -0400
+Received: by weyu7 with SMTP id u7so2400484wey.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 04:18:36 -0700 (PDT)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: net_ratelimit few aggregation related messages
-References: <1337960224-7428-1-git-send-email-mohammed@qca.qualcomm.com>	 <1337976166.30100.6.camel@joe2Laptop> <4FC3180F.1060902@qca.qualcomm.com>	 <1338186413.2202.16.camel@joe2Laptop> <4FC31BDC.1050401@qca.qualcomm.com> <1338187439.2202.20.camel@joe2Laptop>
-In-Reply-To: <1338187439.2202.20.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <CADYPuQ5U-TeJvaWdLA=kTgLRacMRyEPoi2aoB=PV-cx_YDXotg@mail.gmail.com>
+References: <CADYPuQ5U-TeJvaWdLA=kTgLRacMRyEPoi2aoB=PV-cx_YDXotg@mail.gmail.com>
+Date: Tue, 15 May 2012 14:18:35 +0300
+Message-ID: <CANUX_P3=G_ooQ_ODCKPXQxt9vkJZpbRV083CUBitof5mEVo6kw@mail.gmail.com> (sfid-20120515_131840_782984_C64D9B4E)
+Subject: Re: frequent disconnects with iwlwifi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Philipp Dreimann <philipp@dreimann.net>, sedat.dilek@googlemail.com
+Cc: johannes.berg@intel.com, wey-yi.w.guy@intel.com,
+	ilw@linux.intel.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 28 May 2012 12:13 PM, Joe Perches wrote:
-> On Mon, 2012-05-28 at 12:01 +0530, Mohammed Shafi Shajakhan wrote:
->> On Monday 28 May 2012 11:56 AM, Joe Perches wrote:
->>> On Mon, 2012-05-28 at 11:45 +0530, Mohammed Shafi Shajakhan wrote:
->>>> just today saw this link where you had introduced net_dbg_ratelimited
->>>> http://www.digipedia.pl/usenet/thread/18978/31017/
->>>> so should i send the v2 patch using net_dbg_ratelimited to net-next
->>>> rather than wireless-testing tree ?
->>>
->>> Yes, but you should wait until net-next opens
->>> for patches (after Linus' -rc1 is released)
->> Joe, once Linus release rc1, will your changes will be updated in
->> wireless-testing ,
+On Mon, May 14, 2012 at 10:39 PM, Philipp Dreimann <philipp@dreimann.net> wrote:
+> Hello,
 >
-> I presume so, the patch is in Linus' tree for 3.4.
+> my wifi connection is unstable with the 3.4-rc-kernels. Kernel 3.2 works fine.
 >
->> so that i can send a patch directly to John/linux
->> wireless ? thank you.
->
-> I guess you'll have to wait for John to merge Linus' tree.
+> The first symptom was: "deauthenticating from 00:1f:3f:d0:65:73 by
+> local choice (reason=3)"
 >
 
-sure, thanks!
-
--- 
-thanks,
-shafi
+Sedat, your business is doing well. You have another customer. This is
+a bug in NM. Sedat will provide details :-)
