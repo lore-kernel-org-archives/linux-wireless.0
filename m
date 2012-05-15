@@ -1,57 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:52440 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760747Ab2EPXZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 19:25:05 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1SUnaZ-0008IR-F3
-	for linux-wireless@vger.kernel.org; Thu, 17 May 2012 01:25:03 +0200
-Received: from lns-bzn-48f-81-56-242-144.adsl.proxad.net ([81.56.242.144])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 01:25:03 +0200
-Received: from alexandre.alouit by lns-bzn-48f-81-56-242-144.adsl.proxad.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 01:25:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Alex Alouit <alexandre.alouit@gmail.com>
-Subject: Module Carl9170, firmware won't load properly
-Date: Wed, 16 May 2012 23:19:56 +0000 (UTC)
-Message-ID: <loom.20120517T011514-623@post.gmane.org> (sfid-20120517_012510_153224_85315299)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:51568 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756346Ab2EOA7g convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 May 2012 20:59:36 -0400
+Received: by dady13 with SMTP id y13so6600680dad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 17:59:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CALGY4ft-as1LT+-G2tukzgFCfVYOnE3vHugsHa0eyo_Y+cco0A@mail.gmail.com>
+References: <CALGY4fvUmHmFbYAH2044qCBOozOqmOCBcmB8acV-Qivd3PpFgQ@mail.gmail.com>
+	<CA+icZUXUNS4bW610vnyXzhHdEeON=03w_61c4tcX9Tm1ad=uxw@mail.gmail.com>
+	<CALGY4ft-as1LT+-G2tukzgFCfVYOnE3vHugsHa0eyo_Y+cco0A@mail.gmail.com>
+Date: Mon, 14 May 2012 20:59:35 -0400
+Message-ID: <CALGY4fs6d9SNuxVDrcYsooakw0BB4JHs9_0KFrEO=8smNj=seQ@mail.gmail.com> (sfid-20120515_030011_462835_44710BF7)
+Subject: Re: iwlwifi regression: disconnections
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: sedat.dilek@gmail.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, 
+Hi
 
-I want to use an Netgear WN111v2 (AR9170 usb wireless) with Vyatta 6.4, 
-I copied the firmware (http://linuxwireless.org/en/users/Drivers/carl9170), 
-(carl9170-1.fw in /usr/local/lib/firmware version 1.9.2 (kernel 3.0.23)) 
-but it seems that the module doesn't load correctly the firmware. 
+  Looks like the problem I was seeing is indeed related to
+Network-Manager and newer kernel.
+  After I set ipv6 to 'ignore' in Network-Manager there are not more
+disconnections and I still have ipv6.
+  Thanks!
+
+2012/5/14 Nikolay Martynov <mar.kolya@gmail.com>:
+> Hi.
+>
+>  Thanks for pointing this out! I'll try to disable ipv6 on the
+> interface and see if I still experience the problem. I'll post my
+> results on the list.
+>
+> 2012/5/14 Sedat Dilek <sedat.dilek@googlemail.com>:
+>> This is a problem of Network-Manager, see Ubuntu LP-988183 [1].
+>>
+>> [1] https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/988183
+>>
+>> - Sedat -
+>>
+>> On Mon, May 14, 2012 at 4:00 PM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
+>>> Hi.
+>>>
+>>>  I have Intel 5300 card. It works fine with 3.2.16. When I try 3.3.6
+>>> or 3.4.0rc6 I get connection drops often - once 5-10 mins. With 3.2.16
+>>> such disconnects happen once-twice a day. AP - ath9k based router and
+>>> it doesn't change. I'm using kernels from ubuntu kernel ppa.
+>>>
+>>>  Here is what I see in logs during disconnect:
+>>>
+>>> [ 1024.296004] ICMPv6 RA: ndisc_router_discovery() failed to add default route.
+>>> [ 1259.209166] wlan1: deauthenticating from XX:XX:XX:XX:XX:XX by local
+>>> choice (reason=3)
+>>> [ 1259.277831] cfg80211: All devices are disconnected, going to
+>>> restore regulatory settings
+>>> [ 1259.277842] cfg80211: Restoring regulatory settings
+>>> [ 1259.277851] cfg80211: Calling CRDA to update world regulatory domain
+>>> [ 1259.293624] cfg80211: Ignoring regulatory request Set by core since
+>>> the driver uses its own custom regulatory domain
+>>> [ 1259.293629] cfg80211: World regulatory domain updated:
+>>> [ 1259.293632] cfg80211:   (start_freq - end_freq @ bandwidth),
+>>> (max_antenna_gain, max_eirp)
+>>> [ 1259.293636] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+>>> (300 mBi, 2000 mBm)
+>>> [ 1259.293640] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
+>>> (300 mBi, 2000 mBm)
+>>> [ 1259.293644] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+>>> (300 mBi, 2000 mBm)
+>>> [ 1259.293647] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
+>>> (300 mBi, 2000 mBm)
+>>> [ 1259.293651] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
+>>> (300 mBi, 2000 mBm)
+>>> [ 1265.296158] wlan1: authenticate with XX:XX:XX:XX:XX:XX
+>>> [ 1265.297450] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 1/3)
+>>> [ 1265.500053] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 2/3)
+>>> [ 1265.502380] wlan1: authenticated
+>>> [ 1265.504080] wlan1: associate with XX:XX:XX:XX:XX:XX (try 1/3)
+>>> [ 1265.507624] wlan1: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x411
+>>> status=0 aid=1)
+>>> [ 1265.507632] wlan1: associated
+>>>
+>>>
+>>> I'll be happy to help with any additional information of debugging.
+>>> Thanks!
+>>>
+>>> --
+>>> Truthfully yours,
+>>> Martynov Nikolay.
+>>> Email: mar.kolya@gmail.com
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
+> --
+> Truthfully yours,
+> Martynov Nikolay.
+> Email: mar.kolya@gmail.com
 
 
-dmesg output: 
-Code:
 
-usb 1-1: new high speed USB device number 2 using ehci_hcd 
-usb 1-1: New USB device found, idVendor=0846, idProduct=9001 
-usb 1-1: New USB device strings: Mfr=16, Product=32, SerialNumber=48 
-usb 1-1: Product: USB2.0 WLAN 
-usb 1-1: Manufacturer: ATHER 
-usb 1-1: SerialNumber: 12345 
-usb 1-1: reset high speed USB device number 2 using ehci_hcd 
-usbcore: registered new interface driver carl9170 
-usb 1-1: driver   API: 1.9.2 2011-01-22 [1-1] 
-usb 1-1: firmware API: 1.9.2 2010-12-25 
-usb 1-1: firmware upload failed (-110). 
-
-
-It's the module or firmware that is buggy? How can I fix this?
-
-Excuse my English, is not my native language. 
-
-
-Best regards
-
+-- 
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
