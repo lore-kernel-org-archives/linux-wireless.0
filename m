@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:47105 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753045Ab2E2HVh (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:48273 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758501Ab2EOJAv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 03:21:37 -0400
-Received: by lagv3 with SMTP id v3so2572090lag.3
-        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 00:21:34 -0700 (PDT)
-Message-ID: <1338276092.15008.68.camel@cumari.coelho.fi> (sfid-20120529_092154_579737_F00E8E08)
-Subject: Re: [PATCH] wlcore: fix undefined symbols when CONFIG_PM is not
- defined
-From: Luciano Coelho <coelho@ti.com>
-To: Eyal Shapira <eyal@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-next@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 29 May 2012 10:21:32 +0300
-In-Reply-To: <1338275703-28103-1-git-send-email-eyal@wizery.com>
-References: <CAMuHMdVv+g=+A1HHNmWWcsFBQjRXNNA437V6-g80cYq7zRJ78g@mail.gmail.com>
-	 <1338275703-28103-1-git-send-email-eyal@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 May 2012 05:00:51 -0400
+Date: Tue, 15 May 2012 12:00:27 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] brcm80211: brcmu_pkt_buf_free_skb() should handle NULL
+Message-ID: <20120515090027.GG30265@elgon.mountain> (sfid-20120515_110056_180179_168FF4BC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-29 at 00:15 -0700, Eyal Shapira wrote:
-> commit 5063c201d7b799d6cb36d3edfc2c2c3db3b400e5
-> "wl12xx: add RX filters ACX commands" breaks the build
-> when CONFIG_PM isn't defined:
-> 
-> ERROR: "wl1271_rx_filter_get_fields_size"
-> [drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
-> ERROR: "wl1271_rx_filter_flatten_fields"
-> [drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
-> 
-> code in drivers/net/wireless/ti/wlcore/acx.c is using these
-> functions unconditionally while they are #ifdefed CONFIG_PM.
-> Fix it by ifdefing all relevant RX filters code with CONFIG_PM.
-> 
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Signed-off-by: Eyal Shapira <eyal@wizery.com>
-> ---
+This is potentially called with NULL pointers, for example, look at
+brcmf_c_prec_enq().  Since it's a free() function, probably people
+expect it to handle NULL pointers.
 
-Acked-by: Luciano Coelho <coelho@ti.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Thanks, Eyal!
-
-John, can you push this up so it gets applied for 3.5?
-
--- 
-Cheers,
-Luca.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+index b45ab34..3e6405e 100644
+--- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
++++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
+@@ -43,6 +43,8 @@ EXPORT_SYMBOL(brcmu_pkt_buf_get_skb);
+ /* Free the driver packet. Free the tag if present */
+ void brcmu_pkt_buf_free_skb(struct sk_buff *skb)
+ {
++	if (!skb)
++		return;
+ 	WARN_ON(skb->next);
+ 	if (skb->destructor)
+ 		/* cannot kfree_skb() on hard IRQ (net/core/skbuff.c) if
