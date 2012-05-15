@@ -1,65 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51028 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932635Ab2EONBU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42488 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757113Ab2EOHmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 09:01:20 -0400
-Message-ID: <1337086877.4546.4.camel@jlt3.sipsolutions.net> (sfid-20120515_150123_514896_C25341BD)
-Subject: [PATCH] iwlwifi: add __printf argument checking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 15 May 2012 15:01:17 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 May 2012 03:42:35 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 1/1] ath9k: Fix modal EERPOM dump
+Date: Tue, 15 May 2012 12:56:10 +0530
+Message-ID: <1337066770-22978-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120515_094239_492013_A324E109)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Joe Perches suggested adding the __printf attribute
-to the __iwl_dbg function to check arguments; add it
-to all of the logging functions (err, warn, info, dbg
-and crit.)
+we provide excess buffer size for 'simple_read_from_buffer'
+for modal EEPROM dump. This results in trailing NULL bytes
+at the end of EEPROM dump, fix this.
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Reported-by: Holger Schurig <holgerschurig@googlemail.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-debug.h |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    |    4 ++--
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index 8376b84..f6bf91c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -38,10 +38,10 @@ static inline bool iwl_have_debug_level(u32 level)
- }
- 
- void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
--		const char *fmt, ...);
--void __iwl_warn(struct device *dev, const char *fmt, ...);
--void __iwl_info(struct device *dev, const char *fmt, ...);
--void __iwl_crit(struct device *dev, const char *fmt, ...);
-+		const char *fmt, ...) __printf(4, 5);
-+void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
-+void __iwl_info(struct device *dev, const char *fmt, ...) __printf(2, 3);
-+void __iwl_crit(struct device *dev, const char *fmt, ...) __printf(2, 3);
- 
- /* No matter what is m (priv, bus, trans), this will work */
- #define IWL_ERR(m, f, a...) __iwl_err((m)->dev, false, false, f, ## a)
-@@ -52,9 +52,9 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
- #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
- void __iwl_dbg(struct device *dev,
- 	       u32 level, bool limit, const char *function,
--	       const char *fmt, ...);
-+	       const char *fmt, ...) __printf(5, 6);
- #else
--static inline void
-+__printf(5, 6) static inline void
- __iwl_dbg(struct device *dev,
- 	  u32 level, bool limit, const char *function,
- 	  const char *fmt, ...)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index ac53d90..868f30f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3412,11 +3412,11 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	if (!dump_base_hdr) {
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "2GHz modal Header");
+-		len += ar9003_dump_modal_eeprom(buf, len, size,
++		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader2G);
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "5GHz modal Header");
+-		len += ar9003_dump_modal_eeprom(buf, len, size,
++		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader5G);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 4322ac8..a850f44 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -135,7 +135,7 @@ static u32 ath9k_hw_4k_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	if (!dump_base_hdr) {
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "2GHz modal Header");
+-		len += ath9k_dump_4k_modal_eeprom(buf, len, size,
++		len = ath9k_dump_4k_modal_eeprom(buf, len, size,
+ 						  &eep->modalHeader);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index aa61476..cd742fb 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -132,7 +132,7 @@ static u32 ath9k_hw_ar9287_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	if (!dump_base_hdr) {
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "2GHz modal Header");
+-		len += ar9287_dump_modal_eeprom(buf, len, size,
++		len = ar9287_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index b5fba8b..56290f3 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -211,11 +211,11 @@ static u32 ath9k_hw_def_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	if (!dump_base_hdr) {
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "2GHz modal Header");
+-		len += ath9k_def_dump_modal_eeprom(buf, len, size,
++		len = ath9k_def_dump_modal_eeprom(buf, len, size,
+ 						   &eep->modalHeader[0]);
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "5GHz modal Header");
+-		len += ath9k_def_dump_modal_eeprom(buf, len, size,
++		len = ath9k_def_dump_modal_eeprom(buf, len, size,
+ 						   &eep->modalHeader[1]);
+ 		goto out;
+ 	}
 -- 
-1.7.10
-
+1.7.0.4
 
