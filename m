@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:54629 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757851Ab2EOLu7 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:42523 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758872Ab2EONiy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 07:50:59 -0400
-Received: by bkcji2 with SMTP id ji2so4699970bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 04:50:58 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] nl80211: add new rssi event to indicate beacon loss
-Date: Tue, 15 May 2012 14:50:58 +0300
-Message-Id: <1337082658-25363-1-git-send-email-eliad@wizery.com> (sfid-20120515_135103_021575_42106914)
+	Tue, 15 May 2012 09:38:54 -0400
+Received: by weyu7 with SMTP id u7so2485267wey.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 06:38:53 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 2/3] wlcore: increase WL1271_EVENT_TIMEOUT
+Date: Tue, 15 May 2012 16:38:45 +0300
+Message-Id: <1337089126-11570-2-git-send-email-arik@wizery.com> (sfid-20120515_153857_177223_5B791D8F)
+In-Reply-To: <1337089126-11570-1-git-send-email-arik@wizery.com>
+References: <1337089126-11570-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tell userspace about beacon loss event.
-This event doesn't replace the deauth/disassoc that
-might come if the AP is not available.
+From: Eliad Peller <eliad@wizery.com>
 
-The driver can send this event in order to hint
-userspace what might follow (which in turn can
-use it as roaming trigger).
+In some cases, the ROC_COMPLETE event might exceed the
+current timeout (750 msec). Increase it to 1 sec.
 
 Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- include/linux/nl80211.h |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ti/wlcore/cmd.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 2540e86..01d2108 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -2532,10 +2532,14 @@ enum nl80211_attr_cqm {
-  *      configured threshold
-  * @NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH: The RSSI is higher than the
-  *      configured threshold
-+ * @NL80211_CQM_RSSI_BEACON_LOSS_EVENT: The device experienced beacon loss.
-+ *	(Note that deauth/disassoc will still follow if the AP is not
-+ *	available. This event might get used as roaming event, etc.)
-  */
- enum nl80211_cqm_rssi_threshold_event {
- 	NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
- 	NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+	NL80211_CQM_RSSI_BEACON_LOSS_EVENT,
- };
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index 2aafe3d..85171f2 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -192,7 +192,7 @@ enum cmd_templ {
+ #define WL1271_COMMAND_TIMEOUT     2000
+ #define WL1271_CMD_TEMPL_DFLT_SIZE 252
+ #define WL1271_CMD_TEMPL_MAX_SIZE  512
+-#define WL1271_EVENT_TIMEOUT       750
++#define WL1271_EVENT_TIMEOUT       1000
  
- 
+ struct wl1271_cmd_header {
+ 	__le16 id;
 -- 
-1.7.6.401.g6a319
+1.7.9.5
 
