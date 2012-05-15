@@ -1,141 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33402 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946073Ab2EROHa (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:46196 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755214Ab2EOOJM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 10:07:30 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 07/10] ath9k: BT coex performance tuning for AR9462
-Date: Fri, 18 May 2012 19:37:30 +0530
-Message-ID: <1337350053-15491-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160733_531304_FDB3C425)
-In-Reply-To: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 15 May 2012 10:09:12 -0400
+Received: by wibhj8 with SMTP id hj8so2859247wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 07:09:11 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>,
+	"bartosz.markowski" <bartosz.markowski@tieto.com>
+Subject: [PATCH 04/10] wlcore: fixes for connection_loss_work
+Date: Tue, 15 May 2012 17:08:54 +0300
+Message-Id: <1337090940-13750-4-git-send-email-arik@wizery.com> (sfid-20120515_160918_933395_0F8C5A15)
+In-Reply-To: <1337090940-13750-1-git-send-email-arik@wizery.com>
+References: <1337090940-13750-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use smaller aggregation limit and increasing aggregation threshold
-for osla that could improve wlan performance when there is HID profile.
+We can't use cancel_delayed_work_sync() from functions that take the
+wl->mutex, since connection_loss_work also takes the mutex. This might
+result in a deadlock. Restructure the code so the work is synchronously
+canceled before taking the mutex.
+Avoid a bug where we would indefinitely delay the connection loss
+indication by re-queuing the connection loss work on consecutive beacon
+loss events.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: bartosz.markowski <bartosz.markowski@tieto.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |    3 --
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 -
- drivers/net/wireless/ath/ath9k/mci.c        |   54 +++++++++++++++++----------
- 3 files changed, 35 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ti/wlcore/event.c |   15 ++++++++++++---
+ drivers/net/wireless/ti/wlcore/main.c  |   10 +++++++---
+ 2 files changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index e31461b..00cd531 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1381,9 +1381,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 	case MCI_STATE_NEED_FTP_STOMP:
- 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
- 		break;
--	case MCI_STATE_NEED_TUNING:
--		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_TUNING);
--		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index f4a6a44..10282e2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -212,7 +212,6 @@ enum mci_state_type {
- 	MCI_STATE_SET_CONCUR_TX_PRI,
- 	MCI_STATE_RECOVER_RX,
- 	MCI_STATE_NEED_FTP_STOMP,
--	MCI_STATE_NEED_TUNING,
- 	MCI_STATE_DEBUG,
- 	MCI_STATE_MAX
- };
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 7b553f6..49137f4 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -116,42 +116,58 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath_mci_profile *mci = &btcoex->mci;
-+	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
- 	struct ath_mci_profile_info *info;
- 	u32 num_profile = NUM_PROF(mci);
- 
-+	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
-+		goto skip_tuning;
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 28e2a63..4ed83579 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -148,15 +148,24 @@ static int wl1271_event_process(struct wl1271 *wl)
+ 		int delay = wl->conf.conn.synch_fail_thold *
+ 					wl->conf.conn.bss_lose_timeout;
+ 		wl1271_info("Beacon loss detected.");
+-		cancel_delayed_work_sync(&wl->connection_loss_work);
 +
- 	if (num_profile == 1) {
- 		info = list_first_entry(&mci->info,
- 					struct ath_mci_profile_info,
- 					list);
--		if (mci->num_sco && info->T == 12) {
--			mci->aggr_limit = 8;
-+		if (mci->num_sco) {
-+			if (info->T == 12)
-+				mci->aggr_limit = 8;
-+			else if (info->T == 6) {
-+				mci->aggr_limit = 6;
-+				btcoex->duty_cycle = 30;
-+			}
- 			ath_dbg(common, MCI,
--				"Single SCO, aggregation limit 2 ms\n");
--		} else if ((info->type == MCI_GPM_COEX_PROFILE_BNEP) &&
--			   !info->master) {
--			btcoex->btcoex_period = 60;
-+				"Single SCO, aggregation limit %d 1/4 ms\n",
-+				mci->aggr_limit);
-+		} else if (mci->num_pan || mci->num_other_acl) {
-+			/*
-+			 * For single PAN/FTP profile, allocate 35% for BT
-+			 * to improve WLAN throughput.
-+			 */
-+			btcoex->duty_cycle = 35;
-+			btcoex->btcoex_period = 53;
- 			ath_dbg(common, MCI,
--				"Single slave PAN/FTP, bt period 60 ms\n");
--		} else if ((info->type == MCI_GPM_COEX_PROFILE_HID) &&
--			 (info->T > 0 && info->T < 50) &&
--			 (info->A > 1 || info->W > 1)) {
-+				"Single PAN/FTP bt period %d ms dutycycle %d\n",
-+				btcoex->duty_cycle, btcoex->btcoex_period);
-+		} else if (mci->num_hid) {
- 			btcoex->duty_cycle = 30;
--			mci->aggr_limit = 8;
-+			mci->aggr_limit = 6;
- 			ath_dbg(common, MCI,
- 				"Multiple attempt/timeout single HID "
--				"aggregation limit 2 ms dutycycle 30%%\n");
-+				"aggregation limit 1.5 ms dutycycle 30%%\n");
- 		}
--	} else if ((num_profile == 2) && (mci->num_hid == 2)) {
--		btcoex->duty_cycle = 30;
--		mci->aggr_limit = 8;
--		ath_dbg(common, MCI,
--			"Two HIDs aggregation limit 2 ms dutycycle 30%%\n");
--	} else if (num_profile > 3) {
-+	} else if (num_profile == 2) {
-+		if (mci->num_hid == 2)
-+			btcoex->duty_cycle = 30;
- 		mci->aggr_limit = 6;
- 		ath_dbg(common, MCI,
--			"Three or more profiles aggregation limit 1.5 ms\n");
-+			"Two BT profiles aggr limit 1.5 ms dutycycle %d%%\n",
-+			btcoex->duty_cycle);
-+	} else if (num_profile >= 3) {
-+		mci->aggr_limit = 4;
-+		ath_dbg(common, MCI,
-+			"Three or more profiles aggregation limit 1 ms\n");
++		/*
++		 * if the work is already queued, it should take place. We
++		 * don't want to delay the connection loss indication
++		 * any more.
++		 */
+ 		ieee80211_queue_delayed_work(wl->hw, &wl->connection_loss_work,
+-		      msecs_to_jiffies(delay));
++					     msecs_to_jiffies(delay));
  	}
  
-+skip_tuning:
- 	if (IS_CHAN_2GHZ(sc->sc_ah->curchan)) {
- 		if (IS_CHAN_HT(sc->sc_ah->curchan))
- 			ath_mci_adjust_aggr_limit(btcoex);
+ 	if (vector & REGAINED_BSS_EVENT_ID) {
+ 		/* TODO: check for multi-role */
+ 		wl1271_info("Beacon regained.");
+-		cancel_delayed_work_sync(&wl->connection_loss_work);
++		cancel_delayed_work(&wl->connection_loss_work);
++
++		/* sanity check - we can't lose and gain the beacon together */
++		WARN(vector & BSS_LOSE_EVENT_ID,
++		     "Concurrent beacon loss and gain from FW");
+ 	}
+ 
+ 	if (vector & RSSI_SNR_TRIGGER_0_EVENT_ID) {
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 659634b..35f6bc1 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -3708,9 +3708,6 @@ sta_not_found:
+ 			do_join = true;
+ 			set_assoc = true;
+ 
+-			/* Cancel connection_loss_work */
+-			cancel_delayed_work_sync(&wl->connection_loss_work);
+-
+ 			/*
+ 			 * use basic rates from AP, and determine lowest rate
+ 			 * to use with control frames.
+@@ -3960,6 +3957,13 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed 0x%x",
+ 		     (int)changed);
+ 
++	/*
++	 * make sure to cancel pending disconnections if our association
++	 * state changed
++	 */
++	if (!is_ap && (changed & BSS_CHANGED_ASSOC))
++		cancel_delayed_work_sync(&wl->connection_loss_work);
++
+ 	mutex_lock(&wl->mutex);
+ 
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
 -- 
-1.7.10.2
+1.7.9.5
 
