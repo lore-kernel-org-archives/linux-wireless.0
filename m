@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52220 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752734Ab2EIWXI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 18:23:08 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, m@bues.ch,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2] ssb: add PCI IDs 0x4322 and 43222
-Date: Thu, 10 May 2012 00:22:46 +0200
-Message-Id: <1336602166-7518-1-git-send-email-hauke@hauke-m.de> (sfid-20120510_002312_590802_0B977133)
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:58264 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753113Ab2EONaK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2012 09:30:10 -0400
+Received: by eeit10 with SMTP id t10so1959691eei.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 06:30:09 -0700 (PDT)
+Date: Tue, 15 May 2012 15:29:51 +0200
+From: Anisse Astier <anisse@astier.eu>
+To: <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: rtl8192ce : freeze after connecting to network with FW Power Save
+ on
+Message-ID: <20120515152951.7cc4f84b@destiny.ordissimo> (sfid-20120515_153016_329584_A407CE20)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 0x4322 ID is found on the BCM4322 used on some SoCs like the
-Linksys WRT610N V1 connected to a BCM4705. The 43222 (0xa8d6) ID
-is found on the BCM43222 used on some other SoCs like the D-Link
-DSL-2760U connected to a BCM63xx.
+Hi,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/b43_pci_bridge.c |    2 ++
- 1 file changed, 2 insertions(+)
+With the rtl8192ce driver, I get freezes a few seconds after connecting
+to a network. (see PCI id below) Machine is unusable after hang. I'm
+using the linville/wireless-next git tree.
 
-diff --git a/drivers/ssb/b43_pci_bridge.c b/drivers/ssb/b43_pci_bridge.c
-index bad7ba5..f551e53 100644
---- a/drivers/ssb/b43_pci_bridge.c
-+++ b/drivers/ssb/b43_pci_bridge.c
-@@ -29,6 +29,8 @@ static const struct pci_device_id b43_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4319) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4320) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4321) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4322) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43222) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4324) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4325) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4328) },
--- 
-1.7.9.5
+I've been playing with the different options, and noticed that setting
+fwlps=0 fixes the issue.
 
+I've tried to get more messages with netconsole, but once the lockup
+happens I'm unable to get any debug message (regardless of the log level
+of the driver).
+
+Regards,
+
+Anisse
+
+
+06:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+	Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8212]
+	Flags: bus master, fast devsel, latency 0, IRQ 17
+	I/O ports at 3000 [size=256]
+	Memory at f0200000 (64-bit, non-prefetchable) [size=16K]
+	Capabilities: [40] Power Management version 3
+	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+	Capabilities: [70] Express Endpoint, MSI 00
+	Capabilities: [100] Advanced Error Reporting
+	Capabilities: [140] Virtual Channel
+	Capabilities: [160] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+	Kernel driver in use: rtl8192ce
