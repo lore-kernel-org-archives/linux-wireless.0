@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1809 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751519Ab2EEGEO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2012 02:04:14 -0400
-Message-ID: <4FA4C2CA.8000401@broadcom.com> (sfid-20120505_080417_798344_A3AF9EC1)
-Date: Sat, 5 May 2012 08:03:54 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Nathan Hintz" <nlhintz@hotmail.com>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	hauke@hauke-m.de
-Subject: Re: [PATCH v3 6/6] bcma: Add flush for BCMA_RESET_CTL write
-References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
- <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl>
-In-Reply-To: <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from mail-we0-f174.google.com ([74.125.82.174]:37619 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755214Ab2EOOJQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2012 10:09:16 -0400
+Received: by mail-we0-f174.google.com with SMTP id u7so2512825wey.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 07:09:15 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 06/10] wlcore: flush before stopping AP
+Date: Tue, 15 May 2012 17:08:56 +0300
+Message-Id: <1337090940-13750-6-git-send-email-arik@wizery.com> (sfid-20120515_160925_293095_F43B233D)
+In-Reply-To: <1337090940-13750-1-git-send-email-arik@wizery.com>
+References: <1337090940-13750-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/05/2012 06:56 AM, Nathan Hintz wrote:
-> Adds a missing read to flush the previous write (per the Broadcom SDK).
-> 
-> Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
-> ---
->  drivers/bcma/core.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-> index 893f6e0..c4e6deb 100644
-> --- a/drivers/bcma/core.c
-> +++ b/drivers/bcma/core.c
-> @@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
->  	udelay(10);
->  
->  	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
-> +	bcma_aread32(core, BCMA_RESET_CTL);
->  	udelay(1);
->  }
->  EXPORT_SYMBOL_GPL(bcma_core_disable);
+From: Eliad Peller <eliad@wizery.com>
 
-Hi Nathan,
+Make sure the deauth bcast gets sent
 
-The read after write is only needed on (certain) SoCs. As bcma is not
-being used just for these SoCs I suggest to make the flush conditional.
-In brcmsmac we introduced "flushed write" function, which does the read
-only for those SoCs.
+[Make sure we are AP as well before the flush - Arik]
 
-Gr. AvS
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 35f6bc1..92478cb 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -3964,6 +3964,10 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (!is_ap && (changed & BSS_CHANGED_ASSOC))
+ 		cancel_delayed_work_sync(&wl->connection_loss_work);
+ 
++	if (is_ap && (changed & BSS_CHANGED_BEACON_ENABLED) &&
++	    !bss_conf->enable_beacon)
++		wl1271_tx_flush(wl);
++
+ 	mutex_lock(&wl->mutex);
+ 
+ 	if (unlikely(wl->state == WL1271_STATE_OFF))
+-- 
+1.7.9.5
 
