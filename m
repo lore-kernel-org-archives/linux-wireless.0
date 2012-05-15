@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:56498 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751476Ab2EGDfO (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:33368 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754404Ab2EOOkS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 23:35:14 -0400
-Received: by dady13 with SMTP id y13so712965dad.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 May 2012 20:35:13 -0700 (PDT)
-From: Zero Lin <zero.lin.0203@gmail.com>
-To: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	"Zero.Lin" <Zero.Lin@mediatek.com>
-Subject: [PATCH] rt2x00:Add RT539B chipset support V2
-Date: Mon,  7 May 2012 11:34:42 +0800
-Message-Id: <1336361682-2771-1-git-send-email-zero.lin.0203@gmail.com> (sfid-20120507_053545_046339_CA8026B0)
+	Tue, 15 May 2012 10:40:18 -0400
+Received: by qcro28 with SMTP id o28so4183028qcr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 07:40:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1337092228.15553.0.camel@jlt3.sipsolutions.net>
+References: <1337091676-29441-1-git-send-email-eliad@wizery.com>
+	<1337092228.15553.0.camel@jlt3.sipsolutions.net>
+Date: Tue, 15 May 2012 17:40:17 +0300
+Message-ID: <CAB3XZEd49R_KSAMRwM-B9PW_yzmK7aS9zzFVueA=nrFM7odC=w@mail.gmail.com> (sfid-20120515_164030_305950_AFFE2CC3)
+Subject: Re: [PATCH] mac80211: retry auth and assoc on error 17
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Zero.Lin" <Zero.Lin@mediatek.com>
+On Tue, May 15, 2012 at 5:30 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2012-05-15 at 17:21 +0300, Eliad Peller wrote:
+>> In some congested environments APs return
+>> WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA on auth/assoc
+>> attempt. Instead of failing immediately, retry again
+>> in 200 msec.
+>
+> I think this should be in wpa_supplicant?
+>
+it behaves similarly to WLAN_STATUS_ASSOC_REJECTED_TEMPORARILY, which
+handled by mac80211, so i thought it would be fine to handle it as
+well (and this way it can also be used by iw).
 
-Signed-off-by: Zero.Lin <Zero.Lin@mediatek.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 0c9b51d..cad25bf 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1192,8 +1192,8 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
- 	{ PCI_DEVICE(0x1814, 0x5390) },
- 	{ PCI_DEVICE(0x1814, 0x5392) },
- 	{ PCI_DEVICE(0x1814, 0x539a) },
--	{ PCI_DEVICE(0x1814, 0x539f) },
- 	{ PCI_DEVICE(0x1814, 0x539b) },
-+	{ PCI_DEVICE(0x1814, 0x539f) },
- #endif
- 	{ 0, }
- };
--- 
-1.7.5.4
-
+Eliad.
