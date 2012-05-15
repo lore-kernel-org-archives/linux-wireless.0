@@ -1,47 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48304 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752887Ab2EKKMg (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:33781 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755969Ab2EOOHX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 06:12:36 -0400
-Message-ID: <1336731153.4310.20.camel@jlt3.sipsolutions.net> (sfid-20120511_121240_049398_F5B8C0CE)
-Subject: Re: [RFC 2/2] cfg80211: provide channel to start_ap function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <avinashapatil@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>
-Date: Fri, 11 May 2012 12:12:33 +0200
-In-Reply-To: <CAJwzM1=hFmaj-tA7ru2Li9c2EGL5wbPbcGoA6aws=f+dRNmvTA@mail.gmail.com> (sfid-20120511_120401_713989_11A9A313)
-References: <20120510203021.240931880@sipsolutions.net>
-	 <20120510203304.806786399@sipsolutions.net>
-	 <CAJwzM1=KxQqGRu34C9N-SFcwY3ayVsLnP4BS4iOr7dFgO+qu3A@mail.gmail.com>
-	 <1336730159.4310.16.camel@jlt3.sipsolutions.net>
-	 <CAJwzM1=hFmaj-tA7ru2Li9c2EGL5wbPbcGoA6aws=f+dRNmvTA@mail.gmail.com>
-	 (sfid-20120511_120401_713989_11A9A313)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 May 2012 10:07:23 -0400
+Received: by ggnc4 with SMTP id c4so2319355ggn.3
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 07:07:11 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <coelho@ti.com>, <arik@wizery.com>
+Subject: [PATCH] wlcore: set channels 12-14 as pactive for sched scan
+Date: Tue, 15 May 2012 17:04:40 +0300
+Message-Id: <1337090680-24733-1-git-send-email-victorg@ti.com> (sfid-20120515_160728_376309_4CF29D56)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-05-11 at 15:33 +0530, Avinash Patil wrote:
-> How does mwifiex work with this? Is it easier/harder to do?
-> 
-> set_channel handler from cfg80211 is issued first where we set channel
-> to FW. After that in start_ap, we set beacon, dtim interval, SSID,
-> security etc and start AP.
-> Its easier to move to new implementation, but unit testing and
-> internal review of this patch may take some time and by then merge
-> window may expire.
+Introduce “pactive” scan mode – which instructs the fw to
+perform a passive scan until an activity/energy is detected
+on these channels, once energy detected the channel becomes
+active.
 
-I'll have to let you sort this out with John. I don't know if he is
-planning to merge either of our patches for 3.5.
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/scan.c |   39 +++++++++++++++++++++++++++-----
+ drivers/net/wireless/ti/wlcore/scan.h |    8 +++++-
+ 2 files changed, 39 insertions(+), 8 deletions(-)
 
-If he picks up your code before mine though, be prepared that I'll just
-resend my code fixing up mwifiex in the most simple way and will not
-really be worried about your unit testing/internal review. If you want
-to help me out though you could make a small patch that adjusts your
-code to the new API and send it to me/the list separately from your
-submission.
-
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index ade21a0..97022f4 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -411,7 +411,8 @@ wl1271_scan_get_sched_scan_channels(struct wl1271 *wl,
+ 				    struct cfg80211_sched_scan_request *req,
+ 				    struct conn_scan_ch_params *channels,
+ 				    u32 band, bool radar, bool passive,
+-				    int start, int max_channels)
++				    int start, int max_channels,
++				    u8 *n_pactive_ch)
+ {
+ 	struct conf_sched_scan_settings *c = &wl->conf.sched_scan;
+ 	int i, j;
+@@ -479,6 +480,23 @@ wl1271_scan_get_sched_scan_channels(struct wl1271 *wl,
+ 			channels[j].tx_power_att = req->channels[i]->max_power;
+ 			channels[j].channel = req->channels[i]->hw_value;
+ 
++			if ((band == IEEE80211_BAND_2GHZ) &&
++			    (channels[j].channel >= 12) &&
++			    (channels[j].channel <= 14) &&
++			    (flags & IEEE80211_CHAN_PASSIVE_SCAN) &&
++			    !force_passive) {
++				/* pactive channels treated as DFS */
++				channels[j].flags = SCAN_CHANNEL_FLAGS_DFS;
++
++				/*
++				 * n_pactive_ch is counted down from the end of
++				 * the passive channel list
++				 */
++				(*n_pactive_ch)++;
++				wl1271_debug(DEBUG_SCAN, "n_pactive_ch = %d",
++					     *n_pactive_ch);
++			}
++
+ 			j++;
+ 		}
+ 	}
+@@ -491,38 +509,47 @@ wl1271_scan_sched_scan_channels(struct wl1271 *wl,
+ 				struct cfg80211_sched_scan_request *req,
+ 				struct wl1271_cmd_sched_scan_config *cfg)
+ {
++	u8 n_pactive_ch = 0;
++
+ 	cfg->passive[0] =
+ 		wl1271_scan_get_sched_scan_channels(wl, req, cfg->channels_2,
+ 						    IEEE80211_BAND_2GHZ,
+ 						    false, true, 0,
+-						    MAX_CHANNELS_2GHZ);
++						    MAX_CHANNELS_2GHZ,
++						    &n_pactive_ch);
+ 	cfg->active[0] =
+ 		wl1271_scan_get_sched_scan_channels(wl, req, cfg->channels_2,
+ 						    IEEE80211_BAND_2GHZ,
+ 						    false, false,
+ 						    cfg->passive[0],
+-						    MAX_CHANNELS_2GHZ);
++						    MAX_CHANNELS_2GHZ,
++						    &n_pactive_ch);
+ 	cfg->passive[1] =
+ 		wl1271_scan_get_sched_scan_channels(wl, req, cfg->channels_5,
+ 						    IEEE80211_BAND_5GHZ,
+ 						    false, true, 0,
+-						    MAX_CHANNELS_5GHZ);
++						    MAX_CHANNELS_5GHZ,
++						    &n_pactive_ch);
+ 	cfg->dfs =
+ 		wl1271_scan_get_sched_scan_channels(wl, req, cfg->channels_5,
+ 						    IEEE80211_BAND_5GHZ,
+ 						    true, true,
+ 						    cfg->passive[1],
+-						    MAX_CHANNELS_5GHZ);
++						    MAX_CHANNELS_5GHZ,
++						    &n_pactive_ch);
+ 	cfg->active[1] =
+ 		wl1271_scan_get_sched_scan_channels(wl, req, cfg->channels_5,
+ 						    IEEE80211_BAND_5GHZ,
+ 						    false, false,
+ 						    cfg->passive[1] + cfg->dfs,
+-						    MAX_CHANNELS_5GHZ);
++						    MAX_CHANNELS_5GHZ,
++						    &n_pactive_ch);
+ 	/* 802.11j channels are not supported yet */
+ 	cfg->passive[2] = 0;
+ 	cfg->active[2] = 0;
+ 
++	cfg->n_pactive_ch = n_pactive_ch;
++
+ 	wl1271_debug(DEBUG_SCAN, "    2.4GHz: active %d passive %d",
+ 		     cfg->active[0], cfg->passive[0]);
+ 	wl1271_debug(DEBUG_SCAN, "    5GHz: active %d passive %d",
+diff --git a/drivers/net/wireless/ti/wlcore/scan.h b/drivers/net/wireless/ti/wlcore/scan.h
+index 81ee36a..ea53223 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.h
++++ b/drivers/net/wireless/ti/wlcore/scan.h
+@@ -142,7 +142,8 @@ enum {
+ 	SCAN_BSS_TYPE_ANY,
+ };
+ 
+-#define SCAN_CHANNEL_FLAGS_DFS		BIT(0)
++#define SCAN_CHANNEL_FLAGS_DFS		BIT(0) /* channel is passive until an
++						  activity is detected on it */
+ #define SCAN_CHANNEL_FLAGS_DFS_ENABLED	BIT(1)
+ 
+ struct conn_scan_ch_params {
+@@ -185,7 +186,10 @@ struct wl1271_cmd_sched_scan_config {
+ 
+ 	u8 dfs;
+ 
+-	u8 padding[3];
++	u8 n_pactive_ch; /* number of pactive (passive until fw detects energy)
++			    channels in BG band */
++
++	u8 padding[2];
+ 
+ 	struct conn_scan_ch_params channels_2[MAX_CHANNELS_2GHZ];
+ 	struct conn_scan_ch_params channels_5[MAX_CHANNELS_5GHZ];
+-- 
+1.7.5.4
 
