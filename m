@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38378 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754726Ab2E3U3z (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:36064 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965251Ab2EOPb4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 16:29:55 -0400
-Message-ID: <4FC68336.3000806@candelatech.com> (sfid-20120530_223016_650773_355C6F06)
-Date: Wed, 30 May 2012 13:29:42 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] mac80211: Fix likely misuse of | for &
-References: <cover.1338408931.git.joe@perches.com> <aa9c55edda55d38111660c0b250d12d79f6e1755.1338408931.git.joe@perches.com>
-In-Reply-To: <aa9c55edda55d38111660c0b250d12d79f6e1755.1338408931.git.joe@perches.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 15 May 2012 11:31:56 -0400
+Received: by wgbdr13 with SMTP id dr13so5936852wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 08:31:55 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wlcore: compare ssid_len before comparing ssids
+Date: Tue, 15 May 2012 18:31:58 +0300
+Message-Id: <1337095918-8903-1-git-send-email-eliad@wizery.com> (sfid-20120515_173200_412067_6BADB37A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2012 01:25 PM, Joe Perches wrote:
-> Using | with a constant is always true.
-> Likely this should have be&.
+When comparing 2 ssids the ssid_len must be taken
+into account. Otherwise, a substring will be treated
+as equal.
 
-Yes, I think your change is correct.  Looks like something
-a compiler or static analysis tool could catch and warn about...
+This bug might cause ssids to get scanned as
+public ssids (rather than hidden), resulting in
+broadcast probe request (instead of ssid-specific
+ones)
 
-Sorry for the bug!
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/scan.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-Ben
-
->
-> cc: Ben Greear<greearb@candelatech.com>
-> Signed-off-by: Joe Perches<joe@perches.com>
-> ---
->   net/mac80211/cfg.c |    6 +++---
->   1 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 495831e..e9cecca 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -533,16 +533,16 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
->   		sinfo.filled = 0;
->   		sta_set_sinfo(sta,&sinfo);
->
-> -		if (sinfo.filled | STATION_INFO_TX_BITRATE)
-> +		if (sinfo.filled&  STATION_INFO_TX_BITRATE)
->   			data[i] = 100000 *
->   				cfg80211_calculate_bitrate(&sinfo.txrate);
->   		i++;
-> -		if (sinfo.filled | STATION_INFO_RX_BITRATE)
-> +		if (sinfo.filled&  STATION_INFO_RX_BITRATE)
->   			data[i] = 100000 *
->   				cfg80211_calculate_bitrate(&sinfo.rxrate);
->   		i++;
->
-> -		if (sinfo.filled | STATION_INFO_SIGNAL_AVG)
-> +		if (sinfo.filled&  STATION_INFO_SIGNAL_AVG)
->   			data[i] = (u8)sinfo.signal_avg;
->   		i++;
->   	} else {
-
-
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index ade21a0..267a3a3 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -603,7 +603,9 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
+ 					continue;
+ 
+ 				for (j = 0; j < cmd->n_ssids; j++)
+-					if (!memcmp(req->ssids[i].ssid,
++					if ((req->ssids[i].ssid_len ==
++					     req->ssids[j].ssid_len) &&
++					    !memcmp(req->ssids[i].ssid,
+ 						   cmd->ssids[j].ssid,
+ 						   req->ssids[i].ssid_len)) {
+ 						cmd->ssids[j].type =
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.6.401.g6a319
 
