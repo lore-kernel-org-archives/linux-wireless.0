@@ -1,80 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:63880 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757577Ab2EDOgA convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19776 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912Ab2EOJy4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 10:36:00 -0400
-Received: by vbbff1 with SMTP id ff1so2065969vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 May 2012 07:35:59 -0700 (PDT)
+	Tue, 15 May 2012 05:54:56 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 1/1] ath9k: Fix modal EEPROM dump
+Date: Tue, 15 May 2012 15:24:47 +0530
+Message-ID: <1337075687-24377-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120515_115500_427303_DB73FEA4)
 MIME-Version: 1.0
-In-Reply-To: <4FA3DD87.7030004@lwfinger.net>
-References: <4F83A6DE.7070109@lwfinger.net>
-	<1334201497.3788.1.camel@jlt3.sipsolutions.net>
-	<4F865155.2000202@lwfinger.net>
-	<1334202842.3788.10.camel@jlt3.sipsolutions.net>
-	<4F86FA05.5080404@lwfinger.net>
-	<1334246145.4062.0.camel@jlt3.sipsolutions.net>
-	<CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
-	<4FA0371E.9040704@lwfinger.net>
-	<20120502100012.GA8492@arm.com>
-	<1335978471.4295.3.camel@jlt3.sipsolutions.net>
-	<20120502200955.GI2450@linux.vnet.ibm.com>
-	<1336070304.5167.4.camel@jlt3.sipsolutions.net>
-	<4FA37461.6050304@lwfinger.net>
-	<CAD2nsn2kgk9P3zTNP0zVRb-tx3A2p3Nb+FLsTC=TGy9MoXMwtw@mail.gmail.com>
-	<CAD2nsn1s32uTOf7PQrzuskvQaLOnwpSLghHyJN8m7QJL2DyxNQ@mail.gmail.com>
-	<4FA3DD87.7030004@lwfinger.net>
-Date: Fri, 4 May 2012 20:05:59 +0530
-Message-ID: <CAD2nsn2xMg0oUwtzYbLTv1vjJSnyHnrvhvNSCQL-4qRJ4cLPUg@mail.gmail.com> (sfid-20120504_163604_862166_C5A1DCA9)
-Subject: Re: Suspicious RCU usage in mac80211
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 4, 2012 at 7:15 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/04/2012 01:48 AM, Mohammed Shafi wrote:
->>
->> On Fri, May 4, 2012 at 12:10 PM, Mohammed Shafi
->> <shafi.wireless@gmail.com>  wrote:
->>>
->>> Hi Larry,
->>>
->>> On Fri, May 4, 2012 at 11:47 AM, Larry Finger<Larry.Finger@lwfinger.net>
->>>  wrote:
->>>>
->>>> On 05/03/2012 01:38 PM, Johannes Berg wrote:
->>>>>
->>>>>
->>>>> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
->>>>> index 5b7053c..40d3ff4 100644
->>>>> --- a/net/mac80211/agg-tx.c
->>>>> +++ b/net/mac80211/agg-tx.c
->>>>> @@ -421,16 +421,22 @@ static void
->>>>> sta_tx_agg_session_timer_expired(unsigned long data)
->>>>>        struct tid_ampdu_tx *tid_tx;
->>>>>        unsigned long timeout;
->>>>>
->>>>> -       tid_tx = rcu_dereference_protected_tid_tx(sta, *ptid);
->>>>> -       if (!tid_tx)
->>>>> +       rcu_read_lock();
->>>>> +       tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[*ptid]);
->>
->>
->> Larry, Johannes seems to use rcu_dereference straight way just like in
->> 'sta_addba_resp_timer_expired'
->> and have it protected by rcu_read_locks
->
->
-> Sorry. I missed that subtle difference. Submitted "from Johannes".
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-no problem thanks! yeah but it seems my gmail seems to be identify those
-changes!!
+we provide excess buffer size for 'simple_read_from_buffer'
+for modal EEPROM dump. This results in trailing NULL bytes
+at the end of EEPROM dump, fix this.
 
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Reported-by: Holger Schurig <holgerschurig@googlemail.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+
+v2: fix the spelling mistake in subject line
+
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    |    4 ++--
+ 4 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index ac53d90..868f30f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3412,11 +3412,11 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	if (!dump_base_hdr) {
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "2GHz modal Header");
+-		len += ar9003_dump_modal_eeprom(buf, len, size,
++		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader2G);
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "5GHz modal Header");
+-		len += ar9003_dump_modal_eeprom(buf, len, size,
++		len = ar9003_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader5G);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 4322ac8..a850f44 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -135,7 +135,7 @@ static u32 ath9k_hw_4k_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	if (!dump_base_hdr) {
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "2GHz modal Header");
+-		len += ath9k_dump_4k_modal_eeprom(buf, len, size,
++		len = ath9k_dump_4k_modal_eeprom(buf, len, size,
+ 						  &eep->modalHeader);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index aa61476..cd742fb 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -132,7 +132,7 @@ static u32 ath9k_hw_ar9287_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	if (!dump_base_hdr) {
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "2GHz modal Header");
+-		len += ar9287_dump_modal_eeprom(buf, len, size,
++		len = ar9287_dump_modal_eeprom(buf, len, size,
+ 						&eep->modalHeader);
+ 		goto out;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index b5fba8b..56290f3 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -211,11 +211,11 @@ static u32 ath9k_hw_def_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 	if (!dump_base_hdr) {
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "2GHz modal Header");
+-		len += ath9k_def_dump_modal_eeprom(buf, len, size,
++		len = ath9k_def_dump_modal_eeprom(buf, len, size,
+ 						   &eep->modalHeader[0]);
+ 		len += snprintf(buf + len, size - len,
+ 				"%20s :\n", "5GHz modal Header");
+-		len += ath9k_def_dump_modal_eeprom(buf, len, size,
++		len = ath9k_def_dump_modal_eeprom(buf, len, size,
+ 						   &eep->modalHeader[1]);
+ 		goto out;
+ 	}
 -- 
-thanks,
-shafi
+1.7.0.4
+
