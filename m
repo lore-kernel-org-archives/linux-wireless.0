@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:55943 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835Ab2ECFW4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39363 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965929Ab2EOWRu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 01:22:56 -0400
-Date: Thu, 3 May 2012 02:22:48 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: [PATCH 2/2 v2] Bluetooth: btmrvl: add support for SDIO
- suspend/resume callbacks
-Message-ID: <20120503052248.GF16030@joana> (sfid-20120503_072301_477175_C05AEA16)
-References: <1335379434-12564-1-git-send-email-bzhao@marvell.com>
+	Tue, 15 May 2012 18:17:50 -0400
+Date: Tue, 15 May 2012 18:01:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull request: wl12xx 2012-05-03
+Message-ID: <20120515220105.GI24572@tuxdriver.com> (sfid-20120516_001815_173118_E0F9EED9)
+References: <1336050471.12189.37.camel@cumari.coelho.fi>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1335379434-12564-1-git-send-email-bzhao@marvell.com>
+In-Reply-To: <1336050471.12189.37.camel@cumari.coelho.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bing,
-
-* Bing Zhao <bzhao@marvell.com> [2012-04-25 11:43:54 -0700]:
-
-> From: Amitkumar Karwar <akarwar@marvell.com>
+On Thu, May 03, 2012 at 04:07:51PM +0300, Luciano Coelho wrote:
+> Hi John,
 > 
-> Host sleep is activated using already configured host sleep
-> parameters in suspend handler and it is cancelled in resume
-> handler.
+> This is another pull request intended for 3.5.  A few fixes here and
+> there, stuff that has been pending for a while and I hadn't had the time
+> to apply.  Nothing really major.
 > 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> ---
-> v2: remove '\n' at end of BT_DBG, BT_ERR. (Marcel Holtmann)
+> Please pull or let me know if there's any problem. This tree is based on
+> wireless-next/master and the head I want you to pull from is
+> 422823e85d3957b64c573a2f15c6172d78de1e00. 
 > 
->  drivers/bluetooth/btmrvl_drv.h  |    2 +
->  drivers/bluetooth/btmrvl_main.c |    3 +-
->  drivers/bluetooth/btmrvl_sdio.c |  100 +++++++++++++++++++++++++++++++++++++++
->  3 files changed, 104 insertions(+), 1 deletions(-)
+> Thanks! 
+> 
+> The following changes since commit 0a9b3782ef402d27c3e6d1b116f10076a9dd088c:
+> 
+>   {nl,cfg,mac}80211: Allow user to see/configure HT protection mode (2012-05-02 14:30:55 -0400)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linville
+> 
+> for you to fetch changes up to 422823e85d3957b64c573a2f15c6172d78de1e00:
+> 
+>   wlcore/wl12xx: implement better beacon loss handling (2012-05-03 15:45:03 +0300)
 
-Patch has been applied to bluetooth-next. Thanks.
+I used the magic of git to fix this up after last week's rebasing.
+Please do take the opportunity to verify the result.
 
-	Gustavo
+Thanks,
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
