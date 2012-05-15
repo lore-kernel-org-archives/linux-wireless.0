@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:45498 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752063Ab2ECRWc (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:47224 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756527Ab2EOOJU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 13:22:32 -0400
-Date: Thu, 03 May 2012 13:21:26 -0400 (EDT)
-Message-Id: <20120503.132126.1970020317749906187.davem@davemloft.net> (sfid-20120503_192240_900013_758CBF04)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-05-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120503.131707.112550136096227430.davem@davemloft.net>
-References: <20120503152206.GL9285@tuxdriver.com>
-	<20120503.130516.1008806127286088740.davem@davemloft.net>
-	<20120503.131707.112550136096227430.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 15 May 2012 10:09:20 -0400
+Received: by mail-wg0-f44.google.com with SMTP id dr13so5822694wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 07:09:19 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Assaf Azulay <assaf@ti.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 08/10] wlcore: increase number of BA sessions to 3
+Date: Tue, 15 May 2012 17:08:58 +0300
+Message-Id: <1337090940-13750-8-git-send-email-arik@wizery.com> (sfid-20120515_160932_133196_802A5F1D)
+In-Reply-To: <1337090940-13750-1-git-send-email-arik@wizery.com>
+References: <1337090940-13750-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Miller <davem@davemloft.net>
-Date: Thu, 03 May 2012 13:17:07 -0400 (EDT)
+From: Assaf Azulay <assaf@ti.com>
 
-> Really, we went through this a million times very recently and I'm
-> not pulling anything into my tree that has garbage like this in it.
+With the new FW (sigle role X.3.8.0.108, multi role X.5.4.0.21)
+we are supporting 3 RX BA sessions, this change is to support this
+new ability.
 
-BTW, the bluetooth guys owe John Linville a serious apology.
+Signed-off-by: Assaf Azulay <assaf@ti.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/ti/wlcore/acx.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Because of the crap situation they've created, I can no longer
-trust John's pulls.
+diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
+index 28fb35c..26a5dc3 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.h
++++ b/drivers/net/wireless/ti/wlcore/acx.h
+@@ -726,7 +726,7 @@ struct wl1271_acx_ht_information {
+ 	u8 padding[2];
+ } __packed;
+ 
+-#define RX_BA_MAX_SESSIONS 2
++#define RX_BA_MAX_SESSIONS 3
+ 
+ struct wl1271_acx_ba_initiator_policy {
+ 	struct acx_header header;
+-- 
+1.7.9.5
 
-That means I have to baby-sit every pull request he sends me and
-go through every single patch in it looking for these kinds of
-problems.
-
-This is _NOT_ how this is supposed to work.
-
-John should be sending me things that are fully vetted and I can
-basically trust to be in good shape.  But because of the bluetooth
-guys that is not the case.
