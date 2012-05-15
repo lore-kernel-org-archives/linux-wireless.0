@@ -1,76 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:39091 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753183Ab2ETK7b convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54394 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966228Ab2EOS3M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 May 2012 06:59:31 -0400
-Received: by obbtb18 with SMTP id tb18so6543013obb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 May 2012 03:59:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1337342589-10617-6-git-send-email-michal.kazior@tieto.com>
-References: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
-	<1337342589-10617-6-git-send-email-michal.kazior@tieto.com>
-Date: Sun, 20 May 2012 13:59:30 +0300
-Message-ID: <CAB3XZEd=k7JjpvxYBQv1peDny7+Bax+7eBVuWfC4QpBFENpRDA@mail.gmail.com> (sfid-20120520_125935_731267_162348EC)
-Subject: Re: [RFC 5/6] mac80211: refactor set_channel_type
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 15 May 2012 14:29:12 -0400
+Message-ID: <1337106548.15553.8.camel@jlt3.sipsolutions.net> (sfid-20120515_202941_027677_9A1CC0B0)
+Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: joe@perches.com, netdev@vger.kernel.org,
+	linux-decnet-user@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	dev@openvswitch.org, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 15 May 2012 20:29:08 +0200
+In-Reply-To: <20120515.142405.633851408201128056.davem@davemloft.net>
+References: <1337105028.15553.3.camel@jlt3.sipsolutions.net>
+	 <20120515.141348.892964316296815698.davem@davemloft.net>
+	 <1337106094.15553.5.camel@jlt3.sipsolutions.net>
+	 <20120515.142405.633851408201128056.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Michal,
+On Tue, 2012-05-15 at 14:24 -0400, David Miller wrote:
 
-On Fri, May 18, 2012 at 3:03 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Split functionality for further reuse.
->
-> Will prevent code duplication when channel context
-> channel_type merging is introduced.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-[...]
+> > But don't you have to do something in the sources to actually get
+> > dynamic_debug enabled? I'm concerned this will make mac80211 debugging
+> > inconsistent - the normal bits are just printk() still, and the
+> > rate-limited bits need some special enabling? That seems odd.
+> 
+> You can turn them all off or on with a simple flip of a boolean switch
+> at run-time.  Or, alternatively, you can turn them on or off in a
+> finer grained manner with other run-time facilities.
+> 
+> There should be a transition away from explicit KERN_DEBUG.
 
-> -       switch (superchan) {
-> +static bool
-> +ieee80211_channel_types_are_compatible(enum nl80211_channel_type chantype1,
-> +                                      enum nl80211_channel_type chantype2,
-> +                                      enum nl80211_channel_type *compat)
-> +{
+I support that, but I think it's confusing to have things mixed. Also,
+we seem to have printk_ratelimit(), so I'd prefer to have that used in
+mac80211 instead until everything there moves over to newer facilities.
 
-you split superchan (in + out) into chantype1 (in) + compat (out)
-here, but it looks a bit broken -
+johannes
 
-> +       switch (chantype1) {
->        case NL80211_CHAN_NO_HT:
->        case NL80211_CHAN_HT20:
->                /*
->                 * allow any change that doesn't go to no-HT
->                 * (if it already is no-HT no change is needed)
->                 */
-> -               if (chantype == NL80211_CHAN_NO_HT)
-> +               if (chantype2 == NL80211_CHAN_NO_HT)
->                        break;
-
-you don't set compat here...
-
-> +
-> +bool ieee80211_set_channel_type(struct ieee80211_local *local,
-> +                               struct ieee80211_sub_if_data *sdata,
-> +                               enum nl80211_channel_type chantype)
-> +{
-> +       enum nl80211_channel_type superchan;
-> +       enum nl80211_channel_type compatchan = NL80211_CHAN_NO_HT;
-> +
-> +       superchan = ieee80211_get_superchan(local, sdata);
-> +       if (!ieee80211_channel_types_are_compatible(superchan, chantype,
-> +                                                   &compatchan))
-> +               return false;
-> +
-> +       local->_oper_channel_type = compatchan;
->
-so when superchan=NL80211_CHAN_HT20, and chantype=NL80211_CHAN_NO_HT,
-you'll end up with compatchan=NL80211_CHAN_NO_HT which is wrong.
-
-Eliad.
