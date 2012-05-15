@@ -1,55 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54105 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966166Ab2EPUgH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60432 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753105Ab2EOOR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 16:36:07 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Subject: [PATCH 1/3] iwlwifi: update BT traffic load states correctly
-Date: Wed, 16 May 2012 22:35:57 +0200
-Message-Id: <1337200559-11133-2-git-send-email-johannes@sipsolutions.net> (sfid-20120516_223613_981929_2EF74C9A)
-In-Reply-To: <1337200559-11133-1-git-send-email-johannes@sipsolutions.net>
-References: <1337200559-11133-1-git-send-email-johannes@sipsolutions.net>
+	Tue, 15 May 2012 10:17:58 -0400
+Date: Tue, 15 May 2012 10:00:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Soumik DAS <soumik.das@stericsson.com>
+Cc: "linux-wireless (linux-wireless@vger.kernel.org)"
+	<linux-wireless@vger.kernel.org>,
+	"Johannes Berg (johannes@sipsolutions.net)"
+	<johannes@sipsolutions.net>,
+	"Kalle Valo (kvalo@adurom.com)" <kvalo@adurom.com>
+Subject: Re: [PATCH] mac80211: Remove race condition in sending null frame to
+ check AP status
+Message-ID: <20120515140053.GD24572@tuxdriver.com> (sfid-20120515_161802_285127_15F64AF5)
+References: <2E48302EED53D048A7BA72B0A307FB511FB906BC9A@EXDCVYMBSTM005.EQ1STM.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2E48302EED53D048A7BA72B0A307FB511FB906BC9A@EXDCVYMBSTM005.EQ1STM.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+On Tue, May 15, 2012 at 08:04:32AM +0200, Soumik DAS wrote:
+> mac80211 tries to verify the existence of the current AP by
+> probing or sending a NULL frame in function
+> ieee80211_mgd_probe_ap_send. It 1st sends a null frame to the AP,
+> increments probe_send_count and waits for the ACK to the NULL
+> frame for a finite duration of time. At times, it happens that
+> by the time mac80211 gets to increment probe_send_count, the ACK
+> for the NULL frame transmitted has already been processed. This
+> leads to a race condition where mac80211 times out waiting for
+> the ACK for the NULL frame causing unnecessary disconnection with
+> the AP.
+> 
+> Signed-off-by: Soumik Das <soumik.das@stericsson.com>
+> ---
+> net/mac80211/mlme.c |    2 +-
+> 1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c index dbd4bd9..a1213e4 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -1522,6 +1522,7 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+>     * anymore. The timeout will be reset if the frame is ACKed by
+>     * the AP.
+>     */
+> +    ifmgd->probe_send_count++;
+>     if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) {
+>         ifmgd->nullfunc_failed = false;
+>         ieee80211_send_nullfunc(sdata->local, sdata, 0); @@ -1538,7 +1539,6 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+>                     0, (u32) -1, true, false);
+>     }
+> 
+> -    ifmgd->probe_send_count++;
+>     ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
+>     run_again(ifmgd, ifmgd->probe_timeout);
+>     if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
+> --
+> 1.7.5.4
+> 
 
-When BT traffic load changes from its
-previous state, a new LQ command needs to be
-sent down to the firmware. This needs to
-be done only once per change. The state
-variable that keeps track of this change is
-last_bt_traffic_load. However, it was not
-being updated when the change had been
-handled. Not updating this variable was
-causing a flood of advanced BT config
-commands to be sent to the firmware. Fix
-this.
+Looks like whitespace damage...?
 
-Cc: stable@vger.kernel.org #2.6.38+
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 51e1a69..8cebd7c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -884,6 +884,7 @@ static void rs_bt_update_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 	if ((priv->bt_traffic_load != priv->last_bt_traffic_load) ||
- 	    (priv->bt_full_concurrent != full_concurrent)) {
- 		priv->bt_full_concurrent = full_concurrent;
-+		priv->last_bt_traffic_load = priv->bt_traffic_load;
- 
- 		/* Update uCode's rate table. */
- 		tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
 -- 
-1.7.10
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
