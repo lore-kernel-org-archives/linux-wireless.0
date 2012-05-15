@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:43374 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754719Ab2EJDEY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 23:04:24 -0400
-From: Joe Perches <joe@perches.com>
-To: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	ath9k-devel@lists.ath9k.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH 0/3] net,drivers/net: Use ether_addr_equal and ether_addr_equal_64bits
-Date: Wed,  9 May 2012 20:04:01 -0700
-Message-Id: <cover.1336618707.git.joe@perches.com> (sfid-20120510_050443_651160_9F08C73A)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:52559 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758824Ab2EONny (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2012 09:43:54 -0400
+Received: by bkcji2 with SMTP id ji2so4811282bkc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 06:43:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1337089231.4189.47.camel@cumari.coelho.fi>
+References: <1337089126-11570-1-git-send-email-arik@wizery.com> <1337089231.4189.47.camel@cumari.coelho.fi>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 15 May 2012 16:43:38 +0300
+Message-ID: <CA+XVXfcD=5s-kjzJtYuNuP3zxqYyeV3=CgpfF16LkiY0v2cuCA@mail.gmail.com> (sfid-20120515_154358_568344_686F45CF)
+Subject: Re: [PATCH 1/3] wlcore: flush tx on CHANGE_CHANNEL
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches (3):
-  drivers/net: Convert compare_ether_addr to ether_addr_equal
-  etherdevice.h: Add ether_addr_equal_64bits
-  net,drivers/net: Convert compare_ether_addr_64bits to ether_addr_equal_64bits
+On Tue, May 15, 2012 at 4:40 PM, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2012-05-15 at 16:38 +0300, Arik Nemtsov wrote:
+>> From: Eliad Peller <eliad@wizery.com>
+>>
+>> On CHANGE_CHANNEL indication, we should flush all the
+>> queued tx frames, so they will be sent on the correct
+>> (current) channel.
+>>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>> ---
+>
+> If this patch is From: Eliad, you need his s-o-b tag here too (assuming
+> he wants to sign it, of course ;).
 
- drivers/net/bonding/bond_alb.c                    |   58 ++++++++++----------
- drivers/net/bonding/bond_main.c                   |    2 +-
- drivers/net/ethernet/amd/depca.c                  |    3 +-
- drivers/net/ethernet/cisco/enic/enic_main.c       |   12 ++---
- drivers/net/ethernet/dec/ewrk3.c                  |    3 +-
- drivers/net/ethernet/dec/tulip/de4x5.c            |    2 +-
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c  |    5 +-
- drivers/net/ethernet/sfc/ethtool.c                |    2 +-
- drivers/net/ethernet/sun/sunvnet.c                |    2 +-
- drivers/net/ethernet/tile/tilepro.c               |    2 +-
- drivers/net/ethernet/toshiba/ps3_gelic_wireless.c |    8 ++--
- drivers/net/macvlan.c                             |    7 +--
- drivers/net/tun.c                                 |    2 +-
- drivers/net/wireless/at76c50x-usb.c               |    2 +-
- drivers/net/wireless/ath/ath5k/base.c             |    6 +-
- drivers/net/wireless/ath/ath9k/recv.c             |    2 +-
- drivers/net/wireless/ath/carl9170/rx.c            |    2 +-
- drivers/net/wireless/ipw2x00/libipw_rx.c          |   16 +++---
- drivers/net/wireless/iwlegacy/3945.c              |    4 +-
- drivers/net/wireless/iwlegacy/4965-mac.c          |    2 +-
- drivers/net/wireless/iwlegacy/common.c            |   14 +++---
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |    8 ++--
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |    6 +-
- drivers/net/wireless/mwl8k.c                      |    2 +-
- drivers/net/wireless/p54/txrx.c                   |    2 +-
- drivers/net/wireless/rndis_wlan.c                 |   12 ++--
- drivers/net/wireless/rtlwifi/base.c               |    2 +-
- drivers/net/wireless/rtlwifi/ps.c                 |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |   10 ++--
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c      |   10 ++--
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c      |   11 ++--
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |   11 ++--
- include/linux/etherdevice.h                       |   20 +++++++
- net/ethernet/eth.c                                |    5 +-
- 35 files changed, 140 insertions(+), 121 deletions(-)
-
--- 
-1.7.8.111.gad25c.dirty
-
+Sure we'll add it.
