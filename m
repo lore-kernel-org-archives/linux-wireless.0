@@ -1,94 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33357 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758013Ab2EaNJb (ORCPT
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:9368
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758312Ab2EOI7d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 09:09:31 -0400
-Message-ID: <1338469767.9102.8.camel@jlt3.sipsolutions.net> (sfid-20120531_150939_471965_9C8C4BD8)
-Subject: [PATCH v2 3.5] mac80211: clean up remain-on-channel on interface
- stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Nirav Shah <nirav.j2.shah@intel.com>,
-	Eliad Peller <eliad@wizery.com>
-Date: Thu, 31 May 2012 15:09:27 +0200
-In-Reply-To: <1338383762.4511.16.camel@jlt3.sipsolutions.net> (sfid-20120530_151615_403243_25B38365)
-References: <1338383762.4511.16.camel@jlt3.sipsolutions.net>
-	 (sfid-20120530_151615_403243_25B38365)
+	Tue, 15 May 2012 04:59:33 -0400
+Message-ID: <4FB21AE3.80301@netgem.com> (sfid-20120515_105938_141322_9988967F)
+Date: Tue, 15 May 2012 10:59:15 +0200
+From: "F. LECAILLE" <flc@netgem.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: broadcom 43236B USB module
+References: <4FB2033B.4070701@netgem.com> <4FB21985.9090306@broadcom.com>
+In-Reply-To: <4FB21985.9090306@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 05/15/12 10:53, Arend van Spriel wrote:
+> On 05/15/2012 09:18 AM, F. LECAILLE wrote:
+>> Hello,
+>>
+>> I have some Wifi USB modules with 43236B Broadcom chipset. I have read on the
+>> linuxwireless dot org website that this chipset is supported by the brcmfmac
+>> *(USB)* driver.
+>>
+>> As I am also trying to backport this driver for an embedded device which runs a
+>> 2.6.27 kernel, I had a look to the 3.2 kernel sources and especially to the
+>> drivers/net/wireless/brcm80211/brcmfmac directory. But I do not find any
+>> reference to USB stack kernel functions.
+>>
+>> How may this work?
+> 
+> It works by being patient. USB support was merged upstream in the
+> previous merge window so it is present in the current 3.4-rcX releases.
+> If you want to backport I suggest to use compat-wireless (see [1]) as it
+> does a lot of work for you.
+> 
+> Gr. AvS
+> 
+> [1] http://linuxwireless.org/en/users/Download
+> 
+> 
+> 
 
-When any interface goes down, it could be the one that we
-were doing a remain-on-channel with. We therefore need to
-cancel the remain-on-channel and flush the related work
-structs so they don't run after the interface has been
-removed or even destroyed.
+Ok. I understand.
 
-It's also possible in this case that an off-channel SKB
-was never transmitted, so free it if this is the case.
-Note that this can also happen if the driver finishes
-the off-channel period without ever starting it.
-
-Cc: stable@kernel.org
-Reported-by: Nirav Shah <nirav.j2.shah@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-v2: actually cancel the roc and clean up after it
-
- net/mac80211/iface.c      |   12 ++++++++++++
- net/mac80211/offchannel.c |   16 ++++++++++++++++
- 2 files changed, 28 insertions(+)
-
---- a/net/mac80211/iface.c	2012-05-31 14:29:52.000000000 +0200
-+++ b/net/mac80211/iface.c	2012-05-31 15:03:22.000000000 +0200
-@@ -637,6 +637,18 @@ static void ieee80211_do_stop(struct iee
- 		ieee80211_configure_filter(local);
- 		break;
- 	default:
-+		mutex_lock(&local->mtx);
-+		if (local->hw_roc_dev == sdata->dev &&
-+		    local->hw_roc_channel) {
-+			/* ignore return value since this is racy */
-+			drv_cancel_remain_on_channel(local);
-+			ieee80211_queue_work(&local->hw, &local->hw_roc_done);
-+		}
-+		mutex_unlock(&local->mtx);
-+
-+		flush_work(&local->hw_roc_start);
-+		flush_work(&local->hw_roc_done);
-+
- 		flush_work(&sdata->work);
- 		/*
- 		 * When we get here, the interface is marked down.
---- a/net/mac80211/offchannel.c	2012-05-31 14:48:54.000000000 +0200
-+++ b/net/mac80211/offchannel.c	2012-05-31 14:48:57.000000000 +0200
-@@ -234,6 +234,22 @@ static void ieee80211_hw_roc_done(struct
- 		return;
- 	}
- 
-+	/* was never transmitted */
-+	if (local->hw_roc_skb) {
-+		u64 cookie;
-+
-+		cookie = local->hw_roc_cookie ^ 2;
-+
-+		cfg80211_mgmt_tx_status(local->hw_roc_dev, cookie,
-+					local->hw_roc_skb->data,
-+					local->hw_roc_skb->len, false,
-+					GFP_KERNEL);
-+
-+		kfree_skb(local->hw_roc_skb);
-+		local->hw_roc_skb = NULL;
-+		local->hw_roc_skb_for_status = NULL;
-+	}
-+
- 	if (!local->hw_roc_for_tx)
- 		cfg80211_remain_on_channel_expired(local->hw_roc_dev,
- 						   local->hw_roc_cookie,
-
+Thank you Arend.
 
