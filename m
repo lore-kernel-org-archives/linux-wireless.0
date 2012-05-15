@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([78.24.191.182]:42131 "EHLO
-	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964944Ab2EOV4H (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51028 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932635Ab2EONBU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 17:56:07 -0400
-Received: from localhost.localdomain ([127.0.0.1]:48398 "EHLO h5.dl5rb.org.uk"
-        rhost-flags-OK-OK-OK-FAIL) by eddie.linux-mips.org with ESMTP
-        id S1903706Ab2EOV4E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 May 2012 23:56:04 +0200
-Date: Tue, 15 May 2012 23:55:51 +0200
-From: Ralf Baechle <ralf@linux-mips.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-mips@linux-mips.org,
-	linux-wireless@vger.kernel.org, arend@broadcom.com, m@bues.ch
-Subject: Re: [PATCH 0/8] ssb/bcma/bcm47xx: extend boardinfo and sprom
-Message-ID: <20120515215551.GA16397@linux-mips.org> (sfid-20120515_235613_486536_D7760338)
-References: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
- <20120515211605.GH24572@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120515211605.GH24572@tuxdriver.com>
+	Tue, 15 May 2012 09:01:20 -0400
+Message-ID: <1337086877.4546.4.camel@jlt3.sipsolutions.net> (sfid-20120515_150123_514896_C25341BD)
+Subject: [PATCH] iwlwifi: add __printf argument checking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 15 May 2012 15:01:17 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 15, 2012 at 05:16:05PM -0400, John W. Linville wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Sun, Apr 29, 2012 at 02:04:05AM +0200, Hauke Mehrtens wrote:
-> > This patch series fixes the boardinfo for ssb based devices by removing 
-> > board_rev from the struct, this should be fetched from sprom. In 
-> > addition a boardinfo struct was added to bcma.
-> > The pci sprom parsing code was extended for bcma to provide all 
-> > attributes needed by brcmsmac and that code was also copied to ssb.
-> > 
-> > This is based on wireless-testing/master.
-> > 
-> > Hauke Mehrtens (8):
-> >   ssb: remove rev from boardinfo
-> >   MIPS: bcm47xx: refactor fetching board data
-> >   bcma: add boardinfo struct
-> >   MIPS: bcm47xx: read baordrev without prefix from sprom
-> >   ssb/bcma: fill attribute alpha2 from sprom
-> >   ssb: fill board_rev attribute from sprom
-> >   bcma: read out some additional sprom attributes
-> >   bcma/ssb: parse new attributes from sprom
-> 
-> I'd still like to see an ACK from Ralf on the mips stuff?
+Joe Perches suggested adding the __printf attribute
+to the __iwl_dbg function to check arguments; add it
+to all of the logging functions (err, warn, info, dbg
+and crit.)
 
-Sorry, I'm awfully backloged.
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debug.h |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Acked-by: Ralf Baechle <ralf@linux-mips.org>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 8376b84..f6bf91c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -38,10 +38,10 @@ static inline bool iwl_have_debug_level(u32 level)
+ }
+ 
+ void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+-		const char *fmt, ...);
+-void __iwl_warn(struct device *dev, const char *fmt, ...);
+-void __iwl_info(struct device *dev, const char *fmt, ...);
+-void __iwl_crit(struct device *dev, const char *fmt, ...);
++		const char *fmt, ...) __printf(4, 5);
++void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
++void __iwl_info(struct device *dev, const char *fmt, ...) __printf(2, 3);
++void __iwl_crit(struct device *dev, const char *fmt, ...) __printf(2, 3);
+ 
+ /* No matter what is m (priv, bus, trans), this will work */
+ #define IWL_ERR(m, f, a...) __iwl_err((m)->dev, false, false, f, ## a)
+@@ -52,9 +52,9 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
+ #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
+ void __iwl_dbg(struct device *dev,
+ 	       u32 level, bool limit, const char *function,
+-	       const char *fmt, ...);
++	       const char *fmt, ...) __printf(5, 6);
+ #else
+-static inline void
++__printf(5, 6) static inline void
+ __iwl_dbg(struct device *dev,
+ 	  u32 level, bool limit, const char *function,
+ 	  const char *fmt, ...)
+-- 
+1.7.10
 
-  Ralf
+
