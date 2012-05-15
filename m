@@ -1,64 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34326 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209Ab2ECH6b (ORCPT
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:33484 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754419Ab2EOIJK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:58:31 -0400
-Message-ID: <1336031908.3459.4.camel@jlt3.sipsolutions.net> (sfid-20120503_095834_702323_C18DF261)
-Subject: Re: carl9170 - monitor mode TP drop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 03 May 2012 09:58:28 +0200
-In-Reply-To: <201204251928.21559.chunkeey@googlemail.com> (sfid-20120425_192840_070867_199F0B3E)
-References: <CAFED-j=fZjXVhLKe=eOHM-rhR7g1ZvHeSMm1jUA0bdJbk4_qWQ@mail.gmail.com>
-	 <201204231945.05113.chunkeey@googlemail.com>
-	 <CAFED-j=4NWR2mjnooQs4V_T23cV9iPAUi65J-FZ7JjC28aZ=Gw@mail.gmail.com>
-	 <201204251928.21559.chunkeey@googlemail.com>
-	 (sfid-20120425_192840_070867_199F0B3E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 May 2012 04:09:10 -0400
+Received: by qadb17 with SMTP id b17so3395472qad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 01:09:09 -0700 (PDT)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CALGY4fs6d9SNuxVDrcYsooakw0BB4JHs9_0KFrEO=8smNj=seQ@mail.gmail.com>
+References: <CALGY4fvUmHmFbYAH2044qCBOozOqmOCBcmB8acV-Qivd3PpFgQ@mail.gmail.com>
+	<CA+icZUXUNS4bW610vnyXzhHdEeON=03w_61c4tcX9Tm1ad=uxw@mail.gmail.com>
+	<CALGY4ft-as1LT+-G2tukzgFCfVYOnE3vHugsHa0eyo_Y+cco0A@mail.gmail.com>
+	<CALGY4fs6d9SNuxVDrcYsooakw0BB4JHs9_0KFrEO=8smNj=seQ@mail.gmail.com>
+Date: Tue, 15 May 2012 10:09:09 +0200
+Message-ID: <CA+icZUVAVdy_0EBMJ=KuT0Yjh3hiiAyd3oMQCD_xroTctcSLAQ@mail.gmail.com> (sfid-20120515_100921_321959_AEDA8040)
+Subject: Re: iwlwifi regression: disconnections
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-04-25 at 19:28 +0200, Christian Lamparter wrote:
-> On Wednesday, April 25, 2012 07:28:18 AM Janusz Dziedzic wrote:
-> > W dniu 23 kwietnia 2012 19:45 użytkownik Christian Lamparter
-> > <chunkeey@googlemail.com> napisał:
-> > >> This is what I can see on STA1:
-> > >> # iperf -c 192.168.254.1 -t 100 -i 5
-> > >> [ 3] 10.0-15.0 sec  20.4 MBytes  34.2 Mbits/sec
-> > >>
-> > >> =====> here I setup carl monitor on second PC, like this:
-> > >> =====> iw dev wlan0 set type monitor
-> > >> =====> iw dev wlan0 set freq 2437
-> > >> =====> ifconfig wlan0 up
-> > >>
-> > >> [  3] 40.0-45.0 sec  2.38 MBytes  3.98 Mbits/sec
-> > > Well, there's the "AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER = bit (30)"
-> > > in "AR9170_MAC_REG_RX_CONTROL = (0x1c3c40)".
-> > I disabled this in code.
-> > 
-> > -               rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
-> > +//             rx_ctrl |= AR9170_MAC_RX_CTRL_ACK_IN_SNIFFER;
-> > 
-> > After that I don't see any TP drop and can see all packets in
-> > wireshark (as expected).
-> > 
-> > Why carl try to ACK rx packets in monitor mode?
-> > Is that a correct behaviour?
-> Well, it depends.
-> 
-> You see without the BIT set, the hardware won't sent any ACKs
-> (Not even those which are directed at this interface - which of
-> course is also bad, or even worse?) and with the BIT set (and if
-> the HW is in Sniffer Mode) then the hardware acks every frames,
-> even if they are for a different stations.
-> So your fix might break someone else's setup.
+On Tue, May 15, 2012 at 2:59 AM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
+> Hi
+>
+>  Looks like the problem I was seeing is indeed related to
+> Network-Manager and newer kernel.
+>  After I set ipv6 to 'ignore' in Network-Manager there are not more
+> disconnections and I still have ipv6.
+>  Thanks!
+>
 
-You may want to implement the new monitor-mode-vif-to-driver thing in
-mac80211 which tells you when you're in *pure* monitor mode.
+Can you please add your experiences to LP #988183 as the issue seems
+to affect also older Ubuntu releases/kernels with NM + IPv6 - not only
+affected to Ubuntu/precise (with its kernel and shipped NM).
+So, NM needs to be fixed in older Ubuntu releases, too.
+Thanks.
 
-johannes
+- Sedat -
 
+[1] https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/988183
+
+> 2012/5/14 Nikolay Martynov <mar.kolya@gmail.com>:
+>> Hi.
+>>
+>>  Thanks for pointing this out! I'll try to disable ipv6 on the
+>> interface and see if I still experience the problem. I'll post my
+>> results on the list.
+>>
+>> 2012/5/14 Sedat Dilek <sedat.dilek@googlemail.com>:
+>>> This is a problem of Network-Manager, see Ubuntu LP-988183 [1].
+>>>
+>>> [1] https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/988183
+>>>
+>>> - Sedat -
+>>>
+>>> On Mon, May 14, 2012 at 4:00 PM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
+>>>> Hi.
+>>>>
+>>>>  I have Intel 5300 card. It works fine with 3.2.16. When I try 3.3.6
+>>>> or 3.4.0rc6 I get connection drops often - once 5-10 mins. With 3.2.16
+>>>> such disconnects happen once-twice a day. AP - ath9k based router and
+>>>> it doesn't change. I'm using kernels from ubuntu kernel ppa.
+>>>>
+>>>>  Here is what I see in logs during disconnect:
+>>>>
+>>>> [ 1024.296004] ICMPv6 RA: ndisc_router_discovery() failed to add default route.
+>>>> [ 1259.209166] wlan1: deauthenticating from XX:XX:XX:XX:XX:XX by local
+>>>> choice (reason=3)
+>>>> [ 1259.277831] cfg80211: All devices are disconnected, going to
+>>>> restore regulatory settings
+>>>> [ 1259.277842] cfg80211: Restoring regulatory settings
+>>>> [ 1259.277851] cfg80211: Calling CRDA to update world regulatory domain
+>>>> [ 1259.293624] cfg80211: Ignoring regulatory request Set by core since
+>>>> the driver uses its own custom regulatory domain
+>>>> [ 1259.293629] cfg80211: World regulatory domain updated:
+>>>> [ 1259.293632] cfg80211:   (start_freq - end_freq @ bandwidth),
+>>>> (max_antenna_gain, max_eirp)
+>>>> [ 1259.293636] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
+>>>> (300 mBi, 2000 mBm)
+>>>> [ 1259.293640] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
+>>>> (300 mBi, 2000 mBm)
+>>>> [ 1259.293644] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
+>>>> (300 mBi, 2000 mBm)
+>>>> [ 1259.293647] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
+>>>> (300 mBi, 2000 mBm)
+>>>> [ 1259.293651] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
+>>>> (300 mBi, 2000 mBm)
+>>>> [ 1265.296158] wlan1: authenticate with XX:XX:XX:XX:XX:XX
+>>>> [ 1265.297450] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 1/3)
+>>>> [ 1265.500053] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 2/3)
+>>>> [ 1265.502380] wlan1: authenticated
+>>>> [ 1265.504080] wlan1: associate with XX:XX:XX:XX:XX:XX (try 1/3)
+>>>> [ 1265.507624] wlan1: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x411
+>>>> status=0 aid=1)
+>>>> [ 1265.507632] wlan1: associated
+>>>>
+>>>>
+>>>> I'll be happy to help with any additional information of debugging.
+>>>> Thanks!
+>>>>
+>>>> --
+>>>> Truthfully yours,
+>>>> Martynov Nikolay.
+>>>> Email: mar.kolya@gmail.com
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>>
+>> --
+>> Truthfully yours,
+>> Martynov Nikolay.
+>> Email: mar.kolya@gmail.com
+>
+>
+>
+> --
+> Truthfully yours,
+> Martynov Nikolay.
+> Email: mar.kolya@gmail.com
