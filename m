@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57532 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753452Ab2E3F3a (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:32846 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933265Ab2EOSaf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 01:29:30 -0400
-Message-ID: <4FC5B033.7020900@qca.qualcomm.com> (sfid-20120530_072935_001791_13C4F639)
-Date: Wed, 30 May 2012 08:29:23 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Kiran Reddy <c_lreddy@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath6kl: separate ht cap for each band
-References: <1338315170-9940-1-git-send-email-c_lreddy@qca.qualcomm.com>
-In-Reply-To: <1338315170-9940-1-git-send-email-c_lreddy@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 15 May 2012 14:30:35 -0400
+Received: by wibhj8 with SMTP id hj8so3155798wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 11:30:34 -0700 (PDT)
+References: <1336652854-16163-1-git-send-email-gwingerde@gmail.com> <20120515122257.1e58ee43@north>
+In-Reply-To: <20120515122257.1e58ee43@north>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=utf-8
+Message-Id: <0D1E4D3E-3811-4026-8F33-495D31112E84@gmail.com> (sfid-20120515_203045_845033_58819F13)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+	"<users@rt2x00.serialmonkey.com>" <users@rt2x00.serialmonkey.com>,
+	=?utf-8?Q?AlexVillac=C3=AD=C2=ADs_Lasso?=
+	<a_villacis@palosanto.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: Add support for RT5360 based PCI devices.
+Date: Tue, 15 May 2012 20:30:33 +0200
+To: Jakub Kicinski <kubakici@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/29/2012 09:12 PM, Kiran Reddy wrote:
-> In virtual interface structure, for each band separate ht cap
-> is needed. so that one can disable or enable ht capability band
-> wise.
-> This will fix the following issue:
-> 
-> 1) Disable 11n from supplicant and start a P2P GO.
-> 2) In beacon frames no HT-CAP IE is seen which is expected.
-> 3) Now remove the P2P GO and kill the supplicant.
-> 4) Beacon stops
-> 5) Now using iw  associate to an external AP in 5 GHZ
-> 6) In 5 GHZ no HT IE going in assoc request but
-> when  associated in 2.4 GHZ can see HT IES over the air
-> in assoc request.
-> 
-> In the code for del_beacon in cfg80211.c,set_ht_cap is being
-> called first for 2.4 GHZ and then for 5 GHZ. When  called
-> for the first time for 2.4 GHZ the enable flag will be set to true
-> and so when called for the second time for 5 GHZ it just returns
-> after checking the flag.
-> 
-> Also using this one can have different HT capabilities
-> per band (for example one may decide not to use 20/40 in 2.4 GHZ
-> but use it in 5 GHZ). So maintaining a single context is not ok.
-> it is true for even the enable/disable flag and other HT
-> capabilities as well
-> 
-> Signed-off-by: Kiran Reddy <c_lreddy@qca.qualcomm.com>
+Hi Jakub,
 
-Thanks, applied.
+On 15 mei 2012, at 12:22, Jakub Kicinski <kubakici@wp.pl> wrote:
 
-Kalle
+> Hi,
+> 
+> On Thu, 10 May 2012 14:27:33 +0200 Gertjan van Wingerde <gwingerde@gmail.com> wrote:
+>> From: Alex Villací­s Lasso <a villacis@palosanto.com>
+>> 
+>> This chip is used at least by the D-Link DWA-525 adapter.
+> 
+> I have some concerns regarding this patch. 
+> 
+> First of all Gertjan, I think you removed define of RF5360 and it
+> doesn't compile now ;-)
+
+Ouch. Don't know what happened here, as I have compile tested it and tested it with an actual card. Probably something went wrong when merging in the tree that I use to generate and send patches.
+Will send a v2 tomorrow, when I return home.
+
+> 
+> Secondly looking at legacy driver, 5360 is just another PCI ID of 5390
+> family, do we really need to add all these cases? I think maybe adding
+> PCI ID, as Zero Lin did recently with 539b will be sufficient? 
+
+This is really needed. For some reason Ralink are separating the RF definitions here, even though they are all programmed the same.
+I do own the D-Link card I mentioned in the commit message, and testing has shown these cases are needed.
+Apparently it is not needed for the 539b.
+
+---
+Gertjan
