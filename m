@@ -1,41 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:37956 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755747Ab2ENNZi convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:40562 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754656Ab2EORqw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 09:25:38 -0400
-Received: by vbbff1 with SMTP id ff1so4830864vbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 06:25:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOpc7mEHhZuFdUzzTzXVdn3-DzWuoi-N02Ts1t2xHdNfAGFZhA@mail.gmail.com>
-References: <CAOpc7mHADqRcvXgg-8JoVfsoDh0_cZnkqBFS3AadwS6x0gtg7g@mail.gmail.com>
-	<CAD2nsn2G67v0rMtQxvqvFpVPwrU2GXR9+zYRutaT8GuRpLoiZQ@mail.gmail.com>
-	<CAOpc7mEHhZuFdUzzTzXVdn3-DzWuoi-N02Ts1t2xHdNfAGFZhA@mail.gmail.com>
-Date: Mon, 14 May 2012 18:55:37 +0530
-Message-ID: <CAD2nsn1CddAK_-gAg69DTvRckWNk574KCoOvwvTTCQBDu_CyHg@mail.gmail.com> (sfid-20120514_152541_624178_F2F2DFB3)
-Subject: Re: [BUG, ath9k]: NUL bytes at end of /sys/kernel/debug/ieee80211/phy0/ath9k/modal_eeprom
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 15 May 2012 13:46:52 -0400
+Date: Tue, 15 May 2012 13:45:31 -0400 (EDT)
+Message-Id: <20120515.134531.530903973750646107.davem@davemloft.net> (sfid-20120515_194720_254948_1D84987C)
+To: joe@perches.com
+Cc: netdev@vger.kernel.org, linux-decnet-user@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	dev@openvswitch.org, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <cover.1336981915.git.joe@perches.com>
+References: <cover.1336981915.git.joe@perches.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> root@/sys/kernel/debug/ieee80211/phy0/ath9k# xxd <modal_eeprom | tail -4
-> 0000630: 2036 0a20 2020 2020 2020 2054 5820 4469   6.        TX Di
-> 0000640: 7665 7273 6974 7920 3a20 2020 2020 2020  versity :
-> 0000650: 2020 2030 0a00 0000 0000 0000 0000 0000     0............
-> 0000660: 0000 0000 0000 0000 0000 0000            ............
->
-> --
+From: Joe Perches <joe@perches.com>
+Date: Mon, 14 May 2012 00:56:24 -0700
 
+> net_ratelimit() like __ratelimit() is too easy to misuse.
+> 
+> Add simplifying macros similar to pr_<level>_ratelimited
+> that combines the test of net_ratelimit and logging.
+> 
+> Joe Perches (2):
+>   net: Add net_ratelimited_function and net_<level>_ratelimited macros
+>   net: Convert net_ratelimit uses to net_<level>_ratelimited
 
-will soon send a RFC patch for your testing, i tested this it seems to
-be working!
+These look fine to me so I've applied them to net-next and am
+sanity checking the build right now.
 
-
--- 
-thanks,
-shafi
+Thanks Joe.
