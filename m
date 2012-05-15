@@ -1,59 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:59663 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755512Ab2EDAKu convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38910 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966231Ab2EOVct (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 20:10:50 -0400
-Received: by vbbff1 with SMTP id ff1so1706902vbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 17:10:49 -0700 (PDT)
+	Tue, 15 May 2012 17:32:49 -0400
+Date: Tue, 15 May 2012 17:15:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, arend@broadcom.com
+Subject: Re: [PATCH 0/4] bcma: add PCI functions from brcmsmac
+Message-ID: <20120515211526.GG24572@tuxdriver.com> (sfid-20120515_233256_580312_4E5B1F6F)
+References: <1335658732-24351-1-git-send-email-hauke@hauke-m.de>
+ <4FAAED03.4090008@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <CAFED-jkzELRHGy7pwqDznLqPzhandwZLQEoCEFvw5F6ogMxiYA@mail.gmail.com>
-References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
-	<4FA15A70.2020108@stericsson.com>
-	<CABF+-6XbdG_QMa0iQJMpbOsr4bXCq4mDEB6unkM8jxNGWYwFyQ@mail.gmail.com>
-	<4FA23DA0.3030207@stericsson.com>
-	<CABF+-6WjnVxC55iGHwoaL2zJ+_6oLbkVjaqwwLLrQzZxKwwWxw@mail.gmail.com>
-	<4FA2BF0A.4040307@stericsson.com>
-	<CABF+-6UgQek50abaLnUsBh3LEccG2Pd1vFQDiLyxgcky-JN4Ag@mail.gmail.com>
-	<CAFED-jkzELRHGy7pwqDznLqPzhandwZLQEoCEFvw5F6ogMxiYA@mail.gmail.com>
-Date: Thu, 3 May 2012 20:10:49 -0400
-Message-ID: <CABF+-6WvgwjkrD6WG8GxcXQ+JM7szugFWZbLN6ssJ8589Q7-BA@mail.gmail.com> (sfid-20120504_021053_936181_0CB9D211)
-Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
-From: Kevin Groeneveld <kgroeneveld@gmail.com>
-To: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Cc: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4FAAED03.4090008@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Janusz,
+On Thu, May 10, 2012 at 12:17:39AM +0200, Hauke Mehrtens wrote:
+> On 04/29/2012 02:18 AM, Hauke Mehrtens wrote:
+> > This patch series contains the functions regarding the PCIe core from 
+> > brcmsmac for the supported PCIe core revisions.
+> > 
+> > Some of these functions have to be called on resume after suspend, but 
+> > I do not know which or if all have to be called. I do not have a PCIe 
+> > based device supported by brcmsmac, so I can not test this. Could 
+> > someone which such a device do some tests and create a patch with the 
+> > functions, which have to be called on resume.
+> > 
+> > The goal of theses patches is to remove the PCIe code from brcmsmac to 
+> > get one step ahead in making brcmsmac support non pcie based devices.
+> > 
+> > This is based on wireless-testing/master.
+> > 
+> > Hauke Mehrtens (4):
+> >   bcma: implement setting core clock mode to dynamic
+> >   bcma: add bcma_core_pci_extend_L1timer
+> >   bcma: add bcma_core_pci_fixcfg()
+> >   bcma: add bcma_core_pci_config_fixup()
+> > 
+> >  drivers/bcma/core.c                  |    2 +-
+> >  drivers/bcma/driver_pci.c            |   53 ++++++++++++++++++++++++++++++++--
+> >  include/linux/bcma/bcma_driver_pci.h |   11 +++++++
+> >  3 files changed, 63 insertions(+), 3 deletions(-)
+> > 
+> 
+> Hi Rafa≈Ç,
+> 
+> could you give me an ack or a nack about this patch series and the other
+> (ssb/bcma/bcm47xx: extend boardinfo and sprom).
+> 
+> I have tested them with b43 and brcmsmac on bcma and ssb based SoCs
+> (bcm4718 + bcm43224, bcm4705 + 2x bcm4322, bcm4704 + bcm4318)  and have
+> not found any problems.
+> 
+> Hauke
 
-> Seems this flag is per vif in new compat now.
-> IEEE80211_VIF_BEACON_FILTER
-> IEEE80211_VIF_SUPPORTS_CQM_RSSI
->
-> So, you should configure this in cw1200_add_interface() for new
-> compat-wireless:
->
-> † † † †vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
-> † † † † † † † † † † † † † † IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+Rafa≈Ç, ping?
 
-Thanks for the suggestion.  I will take a look at this tomorrow.
-
-On a positive note, just before leaving for the day I fired up hostapd
-and was able to connect a couple clients to the cw1200 in AP mode!  I
-didn't test it very much but it seemed to be working okay.  I
-transferred a couple hundred MB of data without any issue.  I was only
-getting about 500kB per second but I suspect all the logging I have
-turned on may be slowing it down.  I am not even sure what rate I was
-connected at as I was using an old MacBook for the test and not being
-a Mac guy I couldn't figure out how to see what rate the WiFi was
-connected at.
-
-So if AP mode is working station mode can't be that far off...
-
-
-Thanks,
-
-Kevin
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
