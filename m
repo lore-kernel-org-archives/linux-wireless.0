@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:38650 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753857Ab2EFQbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 12:31:07 -0400
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1SR4MS-0001Zs-KS
-	for linux-wireless@vger.kernel.org; Sun, 06 May 2012 18:31:04 +0200
-Received: from localhost ([::1]:56430 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SR4MS-0008GH-Gd
-	for linux-wireless@vger.kernel.org; Sun, 06 May 2012 18:31:04 +0200
-Received: from [195.4.92.19] (port=48283 helo=9.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SR4KO-0007Ep-BW
-	for linux-wireless@vger.kernel.org; Sun, 06 May 2012 18:28:56 +0200
-Received: from [2002:4fde:aad:2:5054:ff:feb8:40bd] (port=57643 helo=mail.maya.org)
-	by 9.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1SR4KO-0007BD-2q
-	for linux-wireless@vger.kernel.org; Sun, 06 May 2012 18:28:56 +0200
-Message-ID: <4FA6A6C2.50102@01019freenet.de> (sfid-20120506_183111_602798_8CEF8663)
-Date: Sun, 06 May 2012 18:28:50 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-CC: linux-wireless@vger.kernel.org,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [PATCH] rt28xx: Revert eccc068e8e84c8fe997115629925e0422a98e4de
- which causes txpower to be stuck at 0
-References: <20120506153806.GF2774@yumi.tdiedrich.de>
-In-Reply-To: <20120506153806.GF2774@yumi.tdiedrich.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:43152 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757065Ab2EOR70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2012 13:59:26 -0400
+Message-ID: <1337104765.7050.24.camel@joe2Laptop> (sfid-20120515_195955_463081_DA730895)
+Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
+From: Joe Perches <joe@perches.com>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-decnet-user@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	dev@openvswitch.org, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 15 May 2012 10:59:25 -0700
+In-Reply-To: <20120515.134531.530903973750646107.davem@davemloft.net>
+References: <cover.1336981915.git.joe@perches.com>
+	 <20120515.134531.530903973750646107.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Tobias,
-
-Tobias Diedrich wrote:
-> Revert eccc068e8e84c8fe997115629925e0422a98e4de which causes txpower
-> to be stuck at 0.
+On Tue, 2012-05-15 at 13:45 -0400, David Miller wrote:
+> From: Joe Perches <joe@perches.com>
+> Date: Mon, 14 May 2012 00:56:24 -0700
 > 
-> Recent OpenWRT has txpower stuck at 0 for at least rt28xx, and I
-> found this commit as the root cause:
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
+> > net_ratelimit() like __ratelimit() is too easy to misuse.
+> > 
+> > Add simplifying macros similar to pr_<level>_ratelimited
+> > that combines the test of net_ratelimit and logging.
+> > 
+> > Joe Perches (2):
+> >   net: Add net_ratelimited_function and net_<level>_ratelimited macros
+> >   net: Convert net_ratelimit uses to net_<level>_ratelimited
 > 
-> Before reverting this "iw phy phy0 info" would show "0.0 dBm" as
-> maximum transmit power for all frequencies.
-> 
-> After reverting this (and with regdomain set to CH) it is back to
-> the expected 20 dBm.
+> These look fine to me so I've applied them to net-next and am
+> sanity checking the build right now.
 
-I can confirm this, too (rt2800pci|usb).
+OK, but fyi, there's a possible issue with !CONFIG_DEBUG
+builds because these patches converted some uses of
+	if (net_ratelimit())
+		printk(KERN_DEBUG ...
+to
+	net_dbg_ratelimited()
 
+These messages are no longer emitted when DEBUG isn't defined
+and not using dynamic_debug.  I'm not sure that's a real
+problem, but it's a difference.
 
-Thanks,
-kind regards,
-Andreas
+I could produce a net_printk_ratelimited that would keep
+the original behavior if necessary.
+
+	net_printk_ratelimited(KERN_DEBUG etc...)
+
+cheers, Joe
+
