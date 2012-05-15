@@ -1,79 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:48833 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754494Ab2ECMz7 (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:60818 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933285Ab2EOU2G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 08:55:59 -0400
-Received: by lbbgg6 with SMTP id gg6so1800922lbb.22
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 05:55:57 -0700 (PDT)
-Message-ID: <1336049755.12189.30.camel@cumari.coelho.fi> (sfid-20120503_145604_644918_7F861676)
-Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
-From: Luciano Coelho <coelho@ti.com>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 03 May 2012 15:55:55 +0300
-In-Reply-To: <4F8C784B.2040402@xenotime.net>
-References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>
-	 <4F8C784B.2040402@xenotime.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 May 2012 16:28:06 -0400
+Received: by gglu4 with SMTP id u4so10281ggl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 13:28:05 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 15 May 2012 13:28:04 -0700
+Message-ID: <CAOcc+SB7Tr_AAAB4aQK_-8MWhKo7NQuap65FLd8omuou6XFctQ@mail.gmail.com> (sfid-20120515_222811_880072_F35515FE)
+Subject: Significant amount of packet loss observed after creating second
+ virtual interface on ath9k
+From: Chih-Chieh Chou <ccchou@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-04-16 at 12:51 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@xenotime.net>
-> 
-> wl12xx build fails with many undefined symbol errors when MAC80211
-> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
-> on MAC80211 (which already depends on CFG80211).
-> 
-> Here are a few of the many build errors:
-> 
-> drivers/built-in.o: In function `wl1271_register_hw':
-> main.c:(.text+0x4197cd): undefined reference to `ieee80211_register_hw'
-> drivers/built-in.o: In function `wl1271_rx_streaming_timer':
-> main.c:(.text+0x419818): undefined reference to `ieee80211_queue_work'
-> drivers/built-in.o: In function `wl1271_flush_deferred_work':
-> main.c:(.text+0x419910): undefined reference to `ieee80211_rx'
-> main.c:(.text+0x419938): undefined reference to `ieee80211_tx_status'
-> drivers/built-in.o: In function `wl12xx_op_channel_switch':
-> main.c:(.text+0x419afc): undefined reference to `ieee80211_chswitch_done'
-> drivers/built-in.o: In function `wl1271_ssid_set':
-> drivers/built-in.o: In function `wl1271_event_process':
-> event.c:(.text+0x41fec4): undefined reference to `ieee80211_sched_scan_stopped'
-> event.c:(.text+0x41ff88): undefined reference to `ieee80211_cqm_rssi_notify'
-> event.c:(.text+0x42000d): undefined reference to `ieee80211_stop_rx_ba_session'
-> event.c:(.text+0x420048): undefined reference to `ieee80211_stop_rx_ba_session'
-> event.c:(.text+0x4200b8): undefined reference to `ieee80211_chswitch_done'
-> event.c:(.text+0x4201ae): undefined reference to `ieee80211_find_sta'
-> event.c:(.text+0x4201ba): undefined reference to `ieee80211_report_low_ack'
-> event.c:(.text+0x42021b): undefined reference to `ieee80211_connection_loss'
-> drivers/built-in.o: In function `wl1271_tx_complete_packet':
-> tx.c:(.text+0x4206a6): undefined reference to `ieee80211_get_hdrlen_from_skb'
-> drivers/built-in.o: In function `wl1271_tx_fill_hdr':
-> tx.c:(.text+0x4208ca): undefined reference to `ieee80211_hdrlen'
-> drivers/built-in.o: In function `wl1271_handle_tx_low_watermark':
-> (.text+0x420e25): undefined reference to `ieee80211_wake_queue'
-> drivers/built-in.o: In function `wl12xx_rearm_rx_streaming':
-> (.text+0x420ed9): undefined reference to `ieee80211_queue_work'
-> drivers/built-in.o: In function `wl1271_tx_work_locked':
-> (.text+0x421008): undefined reference to `ieee80211_free_txskb'
-> drivers/built-in.o: In function `wl1271_rx_status.clone.2':
-> rx.c:(.text+0x421593): undefined reference to `ieee80211_channel_to_frequency'
-> drivers/built-in.o: In function `wl1271_ps_filter_frames':
-> ps.c:(.text+0x421a41): undefined reference to `ieee80211_tx_status'
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-> Cc:	Luciano Coelho <coelho@ti.com>
-> Cc:	linux-wireless@vger.kernel.org
-> Cc:	"John W. Linville" <linville@tuxdriver.com>
-> ---
+Hi All,
 
-Applied! Thanks Randy, and sorry for the delay in pushing this through
-my tree.
+  I ran into a weird issue that I couldn't find any answers on the
+Internet. My aim is to setup a wireless hotspot, sharing my existing
+internet connection on the same single wireless interface card. The
+following shows the step of doing it.
 
+    iw phy phy0 interface add wlan1 type __ap
+    iw phy phy0 interface add wlan2 type station
 
+    ifconfig wlan1 hw ether 52:54:00:11:22:33
+    ifconfig wlan1 192.168.77.1 netmask 255.255.255.0 up
+
+    dnsmasq -C dnsmasq.conf    # start dnsmasq
+    hostapd -d hostapd.conf -B   # start hostapd
+    wpa_supplicant -i wlan2 -c wpa_supplicant.conf -B
+
+    echo 1 > /proc/sys/net/ipv4/ip_forward
+    # NAT rules
+    iptables --table nat --append POSTROUTING --out-interface new0 -j MASQUERADE
+
+  When I use a laptop connecting to the network broadcast by the
+hotspot, there's no problem with it. I got an IP address assigned and
+can ping the access point, here 192.168.77.1. However, I observed
+significant amount of packet loss during pinging (I used ping -t
+192.168.77.1). I also found that if I create only one virtual
+interface on ath9k, it works pretty well (no packet loss from ping).
+If I create one more virtual interface, there's about 10% packet loss
+and 40% packet loss right after starting wpa_supplicant. Could anyone
+have good insight to this issue?
+
+Thanks and Best Regards,
+C.C
