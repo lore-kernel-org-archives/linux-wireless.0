@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:46680 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758536Ab2EJJQi (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:41060 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965999Ab2EOSbn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:38 -0400
-Received: by mail-wi0-f170.google.com with SMTP id hm4so231590wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:38 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 58/78] wl18xx: disable MCS_13 for wl18xx PG 1.0
-Date: Thu, 10 May 2012 12:14:03 +0300
-Message-Id: <1336641263-5761-59-git-send-email-arik@wizery.com> (sfid-20120510_111854_464242_C68A7E5A)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Tue, 15 May 2012 14:31:43 -0400
+Date: Tue, 15 May 2012 14:29:22 -0400 (EDT)
+Message-Id: <20120515.142922.1434224550630736456.davem@davemloft.net> (sfid-20120515_203206_287469_F4F93A38)
+To: johannes@sipsolutions.net
+Cc: joe@perches.com, netdev@vger.kernel.org,
+	linux-decnet-user@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	dev@openvswitch.org, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1337106430.15553.6.camel@jlt3.sipsolutions.net>
+References: <20120515.134531.530903973750646107.davem@davemloft.net>
+	<1337104765.7050.24.camel@joe2Laptop>
+	<1337106430.15553.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 15 May 2012 20:27:10 +0200
 
-There are some problems with MCS_13 in PG 1.0 hardware.  So we disable
-it when PG 1.0 is detected.
+> On Tue, 2012-05-15 at 10:59 -0700, Joe Perches wrote:
+> 
+>> OK, but fyi, there's a possible issue with !CONFIG_DEBUG
+>> builds because these patches converted some uses of
+>> 	if (net_ratelimit())
+>> 		printk(KERN_DEBUG ...
+>> to
+>> 	net_dbg_ratelimited()
+>> 
+>> These messages are no longer emitted when DEBUG isn't defined
+>> and not using dynamic_debug.  I'm not sure that's a real
+>> problem, but it's a difference.
+>> 
+>> I could produce a net_printk_ratelimited that would keep
+>> the original behavior if necessary.
+>> 
+>> 	net_printk_ratelimited(KERN_DEBUG etc...)
+> 
+> Btw, what would the difference be to just plain printk_ratelimited()?
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |   18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+printk_ratelimited() drops a local ratelimit cookie into each call-site,
+whereas we have a global one for the networking which these new interfaces
+use.
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 6047a6d..afa2334 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -588,6 +588,9 @@ static int wl18xx_identify_chip(struct wl1271 *wl)
- 			      WLCORE_QUIRK_FWLOG_NOT_IMPLEMENTED |
- 			      WLCORE_QUIRK_RX_BLOCKSIZE_ALIGN;
- 
-+		/* PG 1.0 has some problems with MCS_13, so disable it */
-+		wl->ht_cap.mcs.rx_mask[1] &= ~BIT(5);
-+
- 		/* TODO: need to blocksize alignment for RX/TX separately? */
- 		break;
- 	default:
-@@ -914,6 +917,10 @@ static void wl18xx_set_rx_csum(struct wl1271 *wl,
- 		skb->ip_summed = CHECKSUM_UNNECESSARY;
- }
- 
-+/*
-+ * TODO: instead of having these two functions to get the rate mask,
-+ * we should modify the wlvif->rate_set instead
-+ */
- static u32 wl18xx_sta_get_ap_rate_mask(struct wl1271 *wl,
- 				       struct wl12xx_vif *wlvif)
- {
-@@ -940,6 +947,17 @@ static u32 wl18xx_ap_get_mimo_wide_rate_mask(struct wl1271 *wl,
- 		return CONF_TX_RATE_USE_WIDE_CHAN;
- 	} else {
- 		wl1271_debug(DEBUG_ACX, "using MIMO rate mask");
-+
-+		/*
-+		 * PG 1.0 has some problems with MCS_13, so disable it
-+		 *
-+		 * TODO: instead of hacking this in here, we should
-+		 * make it more general and change a bit in the
-+		 * wlvif->rate_set instead.
-+		 */
-+		if (wl->chip.id == CHIP_ID_185x_PG10)
-+			return CONF_TX_MIMO_RATES & ~CONF_HW_BIT_RATE_MCS_13;
-+
- 		return CONF_TX_MIMO_RATES;
- 	}
- }
--- 
-1.7.9.5
-
+Joe explained this completely in his 0/2 patch posting.
