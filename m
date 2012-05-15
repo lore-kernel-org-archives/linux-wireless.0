@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:9368
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758312Ab2EOI7d (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:62806 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966266Ab2EOTIN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 04:59:33 -0400
-Message-ID: <4FB21AE3.80301@netgem.com> (sfid-20120515_105938_141322_9988967F)
-Date: Tue, 15 May 2012 10:59:15 +0200
-From: "F. LECAILLE" <flc@netgem.com>
+	Tue, 15 May 2012 15:08:13 -0400
+Received: by bkcji2 with SMTP id ji2so5129389bkc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 12:08:12 -0700 (PDT)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: broadcom 43236B USB module
-References: <4FB2033B.4070701@netgem.com> <4FB21985.9090306@broadcom.com>
-In-Reply-To: <4FB21985.9090306@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <4FB1C6F8.7060902@lwfinger.net>
+References: <1337036779-16348-1-git-send-email-stas.yakovlev@gmail.com>
+	<4FB1C6F8.7060902@lwfinger.net>
+Date: Tue, 15 May 2012 12:08:11 -0700
+Message-ID: <CA++WF2MFg4fA11hxKE=9FSf-V6QH2bBEshKoM8Z9G_8AO80KsA@mail.gmail.com> (sfid-20120515_210817_800488_36A3AA2A)
+Subject: Re: [PATCH] net/wireless: ipw2100: Fix WARN_ON occurring in
+ wiphy_register called by ipw2100_pci_init_one
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/15/12 10:53, Arend van Spriel wrote:
-> On 05/15/2012 09:18 AM, F. LECAILLE wrote:
->> Hello,
+On 14 May 2012 20:01, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 05/14/2012 06:06 PM, Stanislav Yakovlev wrote:
 >>
->> I have some Wifi USB modules with 43236B Broadcom chipset. I have read on the
->> linuxwireless dot org website that this chipset is supported by the brcmfmac
->> *(USB)* driver.
+>> The problem was found by Larry Finger:
+>> http://marc.info/?l=linux-wireless&m=133702401700614&w=2
 >>
->> As I am also trying to backport this driver for an embedded device which runs a
->> 2.6.27 kernel, I had a look to the 3.2 kernel sources and especially to the
->> drivers/net/wireless/brcm80211/brcmfmac directory. But I do not find any
->> reference to USB stack kernel functions.
+>> The problem is identical to the one for ipw2200 which is already fixed:
+>> http://marc.info/?l=linux-wireless&m=133457257407196&w=2
 >>
->> How may this work?
-> 
-> It works by being patient. USB support was merged upstream in the
-> previous merge window so it is present in the current 3.4-rcX releases.
-> If you want to backport I suggest to use compat-wireless (see [1]) as it
-> does a lot of work for you.
-> 
-> Gr. AvS
-> 
-> [1] http://linuxwireless.org/en/users/Download
-> 
-> 
-> 
+>> [   17.766431] ------------[ cut here ]------------
+>> [   17.766467] WARNING: at net/wireless/core.c:562
+>> ...
+>> [   17.766769] ---[ end trace 559898c6bb0d1c75 ]---
+>> [   17.767093] ipw2100: probe of 0000:02:03.0 failed with error -5
+>>
+>> This warning appears only if we apply Ben Hutchings' fix
+>> http://marc.info/?l=linux-wireless&m=132720204412667&w=2
+>> for the bug reported by Cesare Leonardi
+>> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=656813
+>> with cfg80211 warning during device registration
+>> ("cfg80211: failed to add phy80211 symlink to netdev!").
+>>
+>> We separate device bring up and registration with network stack
+>> to avoid the problem.
+>>
+>> Signed-off-by: Stanislav Yakovlev<stas.yakovlev@gmail.com>
+>> ---
+>>
+>> Larry, can you test it once again?
+>
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+>
+> Yes, this patch fixes the problem.
 
-Ok. I understand.
+Thanks!
 
-Thank you Arend.
-
+Stanislav.
