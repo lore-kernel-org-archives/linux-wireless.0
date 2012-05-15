@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56923 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755183Ab2EWGMt (ORCPT
+Received: from mx4.wp.pl ([212.77.101.8]:63766 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752548Ab2EOKXC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 02:12:49 -0400
-Message-ID: <4FBC7FD9.9080307@canonical.com> (sfid-20120523_081312_723404_A13B2364)
-Date: Wed, 23 May 2012 14:12:41 +0800
-From: Alex Hung <alex.hung@canonical.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rfkill: Add handling when rfkill's type is RFKILL_TYPE_ALL.
-References: <1337589439-14605-1-git-send-email-alex.hung@canonical.com> <1337712399.4470.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1337712399.4470.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 15 May 2012 06:23:02 -0400
+Date: Tue, 15 May 2012 12:22:57 +0200
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Alex =?UTF-8?B?VmlsbGFjw63CrXM=?= Lasso
+	<a_villacis@palosanto.com>
+Subject: Re: [PATCH] rt2x00: Add support for RT5360 based PCI devices.
+Message-ID: <20120515122257.1e58ee43@north> (sfid-20120515_122307_506160_052A5772)
+In-Reply-To: <1336652854-16163-1-git-send-email-gwingerde@gmail.com>
+References: <1336652854-16163-1-git-send-email-gwingerde@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2012 02:46 AM, Johannes Berg wrote:
-> On Mon, 2012-05-21 at 16:37 +0800, Alex Hung wrote:
->> This rfkill type is supposed to be able to toggles the status of all wireless
->> devices; however, no wireless devices will register itself with type
->> RFKILL_TYPE_ALL and thus it was previously ignored in __rfkill_switch_all.
->>
->> Signed-off-by: Alex Hung<alex.hung@canonical.com>
->> ---
->>   net/rfkill/core.c |    2 +-
->>   1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
->> index 5be1957..84dd71a 100644
->> --- a/net/rfkill/core.c
->> +++ b/net/rfkill/core.c
->> @@ -324,7 +324,7 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
->>
->>   	rfkill_global_states[type].cur = blocked;
->>   	list_for_each_entry(rfkill,&rfkill_list, node) {
->> -		if (rfkill->type != type)
->> +		if (rfkill->type != type&&  type != RFKILL_TYPE_ALL)
->>   			continue;
->
-> Sorry, I accidentally replied to this in private and then Alex replied
-> but it all got lost.
->
-> He said he was going to change the eeepc use KEY_RFKILL instead of
-> KEY_WLAN to switch all types...
->
-> So I guess what this change really does is make __rfkill_switch_all() be
-> able to not only switch all devices of a given type, but also be able to
-> switch all devices of all types.
->
-> Alex, can you please rewrite the commit log to make that clearer?
->
-> johannes
->
+Hi,
 
-Thanks for your feedback, I re-wrote the comments to clarify the changes 
-and re-submitted.
+On Thu, 10 May 2012 14:27:33 +0200 Gertjan van Wingerde <gwingerde@gmail.com> wrote:
+> From: Alex Villací­s Lasso <a villacis@palosanto.com>
+> 
+> This chip is used at least by the D-Link DWA-525 adapter.
 
-Cheers,
-Alex Hung
+I have some concerns regarding this patch. 
+
+First of all Gertjan, I think you removed define of RF5360 and it
+doesn't compile now ;-)
+
+Secondly looking at legacy driver, 5360 is just another PCI ID of 5390
+family, do we really need to add all these cases? I think maybe adding
+PCI ID, as Zero Lin did recently with 539b will be sufficient? 
+
+  -- Kuba
