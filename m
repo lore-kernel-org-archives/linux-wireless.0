@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41210 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756232Ab2EGLaj (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:63435 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758954Ab2EONrD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 07:30:39 -0400
-Message-ID: <1336390235.4325.16.camel@jlt3.sipsolutions.net> (sfid-20120507_133056_481564_90E31153)
-Subject: Re: Wireless problem in 3.4-rc5
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Eliad Peller <eliad@wizery.com>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 07 May 2012 13:30:35 +0200
-In-Reply-To: <4FA19674.90804@lwfinger.net> (sfid-20120502_221835_271123_89998A55)
-References: <4FA0405C.8050101@lwfinger.net>
-	 <CAB3XZEerHsNUr4p5rTu0msucKUnxXwFxwZVtONrkZ_czmgS+ig@mail.gmail.com>
-	 <4FA19674.90804@lwfinger.net> (sfid-20120502_221835_271123_89998A55)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 15 May 2012 09:47:03 -0400
+Received: by wgbdr13 with SMTP id dr13so5793940wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 06:47:02 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 1/3] wlcore: flush tx on CHANGE_CHANNEL
+Date: Tue, 15 May 2012 16:46:56 +0300
+Message-Id: <1337089618-12450-1-git-send-email-arik@wizery.com> (sfid-20120515_154715_344926_B0E7DDEF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-02 at 15:17 -0500, Larry Finger wrote:
-> >>
-> >> On my main laptop, this patch causes no problems. On a 3rd box, a BCM4312
-> >> (b43) is OK, but an RTL8187L (rtl8187) also fails in the same manner.
+From: Eliad Peller <eliad@wizery.com>
 
-Do you get the warning in iface.c:162 as well? It seems this would cause
-such problems.
+On CHANGE_CHANNEL indication, we should flush all the
+queued tx frames, so they will be sent on the correct
+(current) channel.
 
-> > i'm not sure this is related to the problem you're facing, but the
-> > commit above seems to have some bug in which a packet might get
-> > enqueued on invalid queue (0xff) - please try this patch (compile
-> > tested only):
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+v1->2: added SOB tag by eliad
 
-Eliad, can you submit that patch with more details?
+ drivers/net/wireless/ti/wlcore/main.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index ebbedbf..4e71078 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2553,8 +2553,9 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
+ 	 * frames, such as the deauth. To make sure those frames reach the air,
+ 	 * wait here until the TX queue is fully flushed.
+ 	 */
+-	if ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
+-	    (conf->flags & IEEE80211_CONF_IDLE))
++	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) ||
++	    ((changed & IEEE80211_CONF_CHANGE_IDLE) &&
++	     (conf->flags & IEEE80211_CONF_IDLE)))
+ 		wl1271_tx_flush(wl);
+ 
+ 	mutex_lock(&wl->mutex);
+-- 
+1.7.9.5
 
