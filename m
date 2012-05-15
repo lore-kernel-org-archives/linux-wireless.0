@@ -1,50 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:26259 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756141Ab2EGKcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 06:32:21 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 07/20] NFC: Remove unneeded pn533 dev NULL check
-Date: Mon,  7 May 2012 12:31:18 +0200
-Message-Id: <1336386691-24840-8-git-send-email-sameo@linux.intel.com> (sfid-20120507_123225_297880_3B3D2F1A)
-In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
-References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:45164 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755974Ab2EOOa3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2012 10:30:29 -0400
+Message-ID: <1337092228.15553.0.camel@jlt3.sipsolutions.net> (sfid-20120515_163032_972974_0CDF5A0B)
+Subject: Re: [PATCH] mac80211: retry auth and assoc on error 17
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 15 May 2012 16:30:28 +0200
+In-Reply-To: <1337091676-29441-1-git-send-email-eliad@wizery.com> (sfid-20120515_162144_000592_97797139)
+References: <1337091676-29441-1-git-send-email-eliad@wizery.com>
+	 (sfid-20120515_162144_000592_97797139)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+On Tue, 2012-05-15 at 17:21 +0300, Eliad Peller wrote:
+> In some congested environments APs return
+> WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA on auth/assoc
+> attempt. Instead of failing immediately, retry again
+> in 200 msec.
 
-container_of() works by subtracting the offset of the member.  The math
-can't really return a zero here.  Sometimes people check it when they
-actually meant to check something else but in this case we can just
-remove the check.
+I think this should be in wpa_supplicant?
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index 766e0bb..19110f0 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -394,9 +394,6 @@ static void pn533_wq_cmd_complete(struct work_struct *work)
- 	struct pn533_frame *in_frame;
- 	int rc;
- 
--	if (dev == NULL)
--		return;
--
- 	in_frame = dev->wq_in_frame;
- 
- 	if (dev->wq_in_error)
--- 
-1.7.9.1
+johannes
 
