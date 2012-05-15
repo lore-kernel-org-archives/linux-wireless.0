@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:32970 "EHLO
-	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756726Ab2EJIoV convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 04:44:21 -0400
-From: Soumik DAS <soumik.das@stericsson.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 10 May 2012 10:43:57 +0200
-Subject: RE: [PATCH] mac80211: Increment probe_send_count earlier
-Message-ID: <2E48302EED53D048A7BA72B0A307FB511FB9009215@EXDCVYMBSTM005.EQ1STM.local> (sfid-20120510_104431_809522_91D28FB6)
-References: <2E48302EED53D048A7BA72B0A307FB511FB9009098@EXDCVYMBSTM005.EQ1STM.local>
- <87vck48q92.fsf@purkki.adurom.net>
-In-Reply-To: <87vck48q92.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from eddie.linux-mips.org ([78.24.191.182]:42131 "EHLO
+	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964944Ab2EOV4H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2012 17:56:07 -0400
+Received: from localhost.localdomain ([127.0.0.1]:48398 "EHLO h5.dl5rb.org.uk"
+        rhost-flags-OK-OK-OK-FAIL) by eddie.linux-mips.org with ESMTP
+        id S1903706Ab2EOV4E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 May 2012 23:56:04 +0200
+Date: Tue, 15 May 2012 23:55:51 +0200
+From: Ralf Baechle <ralf@linux-mips.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, arend@broadcom.com, m@bues.ch
+Subject: Re: [PATCH 0/8] ssb/bcma/bcm47xx: extend boardinfo and sprom
+Message-ID: <20120515215551.GA16397@linux-mips.org> (sfid-20120515_235613_486536_D7760338)
+References: <1335657853-23925-1-git-send-email-hauke@hauke-m.de>
+ <20120515211605.GH24572@tuxdriver.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120515211605.GH24572@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Tue, May 15, 2012 at 05:16:05PM -0400, John W. Linville wrote:
 
-Mac80211 tries to verify the existence of the current AP by probing or sending a NULL frame (function: ieee80211_mgd_probe_ap_send). It 1st sends a null frame to the AP increments probe_send_count and waits for the ACK to the NULL frame for a finite duration of time.
+> On Sun, Apr 29, 2012 at 02:04:05AM +0200, Hauke Mehrtens wrote:
+> > This patch series fixes the boardinfo for ssb based devices by removing 
+> > board_rev from the struct, this should be fetched from sprom. In 
+> > addition a boardinfo struct was added to bcma.
+> > The pci sprom parsing code was extended for bcma to provide all 
+> > attributes needed by brcmsmac and that code was also copied to ssb.
+> > 
+> > This is based on wireless-testing/master.
+> > 
+> > Hauke Mehrtens (8):
+> >   ssb: remove rev from boardinfo
+> >   MIPS: bcm47xx: refactor fetching board data
+> >   bcma: add boardinfo struct
+> >   MIPS: bcm47xx: read baordrev without prefix from sprom
+> >   ssb/bcma: fill attribute alpha2 from sprom
+> >   ssb: fill board_rev attribute from sprom
+> >   bcma: read out some additional sprom attributes
+> >   bcma/ssb: parse new attributes from sprom
+> 
+> I'd still like to see an ACK from Ralf on the mips stuff?
 
-Normally, the sequence of events will be -
-	a. call ieee80211_send_nullfunc()
-	b. increment probe_send_count ( this indicates probing is underway)
-	c. null frame gets transmitted and acked, so mac80211 resets probe_send_count and concludes that the current is still alive.
+Sorry, I'm awfully backloged.
 
-In some cases the sequence of events gets changed -
-	a. call ieee80211_send_nullfunc()
-		(current thread gets scheduled out/pre-empted at this point)
-	b. null frame gets transmitted and acked
-	c. probe_send_count is incremented
-	d. mac80211 waits for some specified timeout and checks that probe_send_count is still > 0. It concludes that AP did not acknowledge the null frame and disassociates from the current AP.
-	e. After a scan STA again re-associate with the same AP.
+Acked-by: Ralf Baechle <ralf@linux-mips.org>
 
-Btw, this verification of current AP by sending null frame occurs after every scan.
-
-Regards,
-Soumik
-
------Original Message-----
-From: Kalle Valo [mailto:kvalo@adurom.com] 
-Sent: Thursday, May 10, 2012 12:41 PM
-To: Soumik DAS
-Cc: John Linville; linux-wireless; Johannes Berg
-Subject: Re: [PATCH] mac80211: Increment probe_send_count earlier
-
-Hi Soumik,
-
-Soumik DAS <soumik.das@stericsson.com> writes:
-
-> At times, null frame gets transmitted and acked before mac80211 gets 
-> to increment probe_send_count. This leads to a situation where 
-> mac80211 waits for ack to null frame, but no ack comes causing 
-> unnecessary disconnection.
-
-Can explain a bit more about the scenario when this happens, please?
-It's not clear for me from the patch.
-
---
-Kalle Valo
+  Ralf
