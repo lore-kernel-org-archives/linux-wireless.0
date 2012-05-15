@@ -1,169 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57151 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239Ab2ECRrt (ORCPT
+Received: from mail.serverraum.org ([78.47.150.89]:49948 "EHLO
+	mail.serverraum.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932378Ab2EOMOz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 13:47:49 -0400
-Date: Thu, 3 May 2012 13:37:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kerenl.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless 2012-05-03
-Message-ID: <20120503173749.GQ9285@tuxdriver.com> (sfid-20120503_194806_067008_7886079F)
+	Tue, 15 May 2012 08:14:55 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by mail.serverraum.org (Postfix) with ESMTP id BDE913EFF0
+	for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 14:14:54 +0200 (CEST)
+Received: from mail.serverraum.org ([127.0.0.1])
+	by localhost (web.serverraum.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id luvbLKeCQKYr for <linux-wireless@vger.kernel.org>;
+	Tue, 15 May 2012 14:14:54 +0200 (CEST)
+Received: from mail-ob0-f174.google.com (mail-ob0-f174.google.com [209.85.214.174])
+	(using TLSv1 with cipher RC4-SHA (128/128 bits))
+	(No client certificate requested)
+	by mail.serverraum.org (Postfix) with ESMTPSA id 6C8FC3EFEF
+	for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 14:14:51 +0200 (CEST)
+Received: by obbtb18 with SMTP id tb18so8843103obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 05:14:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P3=G_ooQ_ODCKPXQxt9vkJZpbRV083CUBitof5mEVo6kw@mail.gmail.com>
+References: <CADYPuQ5U-TeJvaWdLA=kTgLRacMRyEPoi2aoB=PV-cx_YDXotg@mail.gmail.com>
+	<CANUX_P3=G_ooQ_ODCKPXQxt9vkJZpbRV083CUBitof5mEVo6kw@mail.gmail.com>
+Date: Tue, 15 May 2012 14:14:49 +0200
+Message-ID: <CADYPuQ54joKvzJEyTU+sjHFCPDqzizZL7_HfJwLi9VE-=+ETVQ@mail.gmail.com> (sfid-20120515_141459_383606_10C51886)
+Subject: Re: frequent disconnects with iwlwifi
+From: Philipp Dreimann <philipp@dreimann.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: sedat.dilek@googlemail.com, johannes.berg@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 3c3052eac295678fd2765552c6a86d5441306cb4
+On 15 May 2012 13:18, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Mon, May 14, 2012 at 10:39 PM, Philipp Dreimann <philipp@dreimann.net> wrote:
+> Sedat, your business is doing well. You have another customer. This is
+> a bug in NM. Sedat will provide details :-)
 
-Dave,
+I saw Sedat's posts and wanted to try disabling ipv6 handling in NM
+first to see if it helps. And, yes, it does.
 
-Here is another trio of fixes intended for 3.4.  The fix from Eric
-Dumazet corrects skb truesize reporting in iwlwifi, avoiding a
-potential exhaustion of kernel memory due to differet socket memory
-accounting for these skb allocations.  The fix from Franky Lin avoids
-a double unlock on a spinlock in brcmfmac.  Finally, Rajkumar Manoharan
-reverts an earlier patch that created a minor regression in ath9k.
-
-Please let me know if there are problems!
-
-John
-
----
-
-The following changes since commit 5a8887d39e1ba5ee2d4ccb94b14d6f2dce5ddfca:
-
-  sungem: Fix WakeOnLan (2012-05-03 01:42:55 -0400)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
-
-Eric Dumazet (1):
-      iwlwifi: fix skb truesize underestimation
-
-Franky Lin (1):
-      brcmfmac: fix a double spin_unlock_irqrestore issue in dpc
-
-John W. Linville (1):
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless into for-davem
-
-Rajkumar Manoharan (1):
-      Revert "ath9k_hw: Fix incorrect spur_freq_sd for AR9003"
-
- drivers/net/wireless/ath/ath9k/ar9003_phy.c        |    4 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c          |   21 +++++++++++++------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c   |    3 +-
- drivers/net/wireless/iwlwifi/iwl-trans.h           |    1 +
- 5 files changed, 20 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index deb6cfb..600aca9 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -373,7 +373,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
- 			else
- 				spur_subchannel_sd = 0;
- 
--			spur_freq_sd = (freq_offset << 9) / 11;
-+			spur_freq_sd = ((freq_offset + 10) << 9) / 11;
- 
- 		} else {
- 			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
-@@ -382,7 +382,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
- 			else
- 				spur_subchannel_sd = 1;
- 
--			spur_freq_sd = (freq_offset << 9) / 11;
-+			spur_freq_sd = ((freq_offset - 10) << 9) / 11;
- 
- 		}
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index eb3829b..e2b34e1 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2637,6 +2637,7 @@ static int brcmf_sdbrcm_dpc_thread(void *data)
- 				/* after stopping the bus, exit thread */
- 				brcmf_sdbrcm_bus_stop(bus->sdiodev->dev);
- 				bus->dpc_tsk = NULL;
-+				spin_lock_irqsave(&bus->dpc_tl_lock, flags);
- 				break;
- 			}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-index f4b84d1..2247460 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-@@ -773,8 +773,7 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
- 	struct sk_buff *skb;
- 	__le16 fc = hdr->frame_control;
- 	struct iwl_rxon_context *ctx;
--	struct page *p;
--	int offset;
-+	unsigned int hdrlen, fraglen;
- 
- 	/* We only process data packets if the interface is open */
- 	if (unlikely(!priv->is_open)) {
-@@ -788,16 +787,24 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
- 	    iwlagn_set_decrypted_flag(priv, hdr, ampdu_status, stats))
- 		return;
- 
--	skb = dev_alloc_skb(128);
-+	/* Dont use dev_alloc_skb(), we'll have enough headroom once
-+	 * ieee80211_hdr pulled.
-+	 */
-+	skb = alloc_skb(128, GFP_ATOMIC);
- 	if (!skb) {
--		IWL_ERR(priv, "dev_alloc_skb failed\n");
-+		IWL_ERR(priv, "alloc_skb failed\n");
- 		return;
- 	}
-+	hdrlen = min_t(unsigned int, len, skb_tailroom(skb));
-+	memcpy(skb_put(skb, hdrlen), hdr, hdrlen);
-+	fraglen = len - hdrlen;
- 
--	offset = (void *)hdr - rxb_addr(rxb);
--	p = rxb_steal_page(rxb);
--	skb_add_rx_frag(skb, 0, p, offset, len, len);
-+	if (fraglen) {
-+		int offset = (void *)hdr + hdrlen - rxb_addr(rxb);
- 
-+		skb_add_rx_frag(skb, 0, rxb_steal_page(rxb), offset,
-+				fraglen, rxb->truesize);
-+	}
- 	iwl_update_stats(priv, false, fc, len);
- 
- 	/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 8b1a798..aa7aea1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -374,8 +374,9 @@ static void iwl_rx_handle_rxbuf(struct iwl_trans *trans,
- 	if (WARN_ON(!rxb))
- 		return;
- 
-+	rxcb.truesize = PAGE_SIZE << hw_params(trans).rx_page_order;
- 	dma_unmap_page(trans->dev, rxb->page_dma,
--		       PAGE_SIZE << hw_params(trans).rx_page_order,
-+		       rxcb.truesize,
- 		       DMA_FROM_DEVICE);
- 
- 	rxcb._page = rxb->page;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 0c81cba..fdf9788 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -260,6 +260,7 @@ static inline void iwl_free_resp(struct iwl_host_cmd *cmd)
- 
- struct iwl_rx_cmd_buffer {
- 	struct page *_page;
-+	unsigned int truesize;
- };
- 
- static inline void *rxb_addr(struct iwl_rx_cmd_buffer *r)
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Cheers
