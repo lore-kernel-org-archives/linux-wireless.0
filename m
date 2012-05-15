@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46799 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753505Ab2EaO0z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 10:26:55 -0400
-Message-ID: <1338474236.2242.1.camel@dcbw.foobar.com> (sfid-20120531_163830_698531_EAB936B8)
-Subject: Re: Master mode support in iwlagn?
-From: Dan Williams <dcbw@redhat.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Erwin Van de Velde <erwin.vandevelde@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Florian Fainelli <florian@openwrt.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 31 May 2012 09:23:56 -0500
-In-Reply-To: <4FC76389.70600@broadcom.com>
-References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be>
-	 <5625918.SuzapvkoUg@sylvesterjr.cmi.ua.ac.be>
-	 <4FC75DA4.2090909@broadcom.com>
-	 <1999855.FUDAX7EfOH@sylvesterjr.cmi.ua.ac.be> <4FC76389.70600@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([198.137.202.13]:40845 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932887Ab2EOSQP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 May 2012 14:16:15 -0400
+Date: Tue, 15 May 2012 14:13:48 -0400 (EDT)
+Message-Id: <20120515.141348.892964316296815698.davem@davemloft.net> (sfid-20120515_201643_664801_F97B208D)
+To: johannes@sipsolutions.net
+Cc: joe@perches.com, netdev@vger.kernel.org,
+	linux-decnet-user@lists.sourceforge.net,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
+	dev@openvswitch.org, linux-sctp@vger.kernel.org,
+	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1337105028.15553.3.camel@jlt3.sipsolutions.net>
+References: <20120515.134531.530903973750646107.davem@davemloft.net>
+	<1337104765.7050.24.camel@joe2Laptop>
+	<1337105028.15553.3.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-31 at 14:26 +0200, Arend van Spriel wrote:
-> On 05/31/2012 02:16 PM, Erwin Van de Velde wrote:
-> > I have one ethernet connection and want to share that connection over 
-> > wireless, preferably in AP mode although I guess ad hoc mode is possible too. 
-> > Just not sure if NetworkManager supports that.
-> 
-> NetworkManager does support ad-hoc, but your hardware need to support
-> beacon transmission for that as well. You could consider buying an AP.
-> They are not that expensive ;-)
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 15 May 2012 20:03:48 +0200
 
-The problem with Ad-Hoc as "hotspot" is that many devices like Android
-phones simply ignore adhoc networks due to security issues (as stupid as
-that may be, since anyone can set up an AP-mode network too).  Which is
-why real AP mode is nice, but clearly not all wifi hardware is going to
-support it.
+> Oops. Yes, please do that, mac80211 doesn't have DEBUG yet
 
-Dan
+If you want debugging messages you would turn on dynamic_debug
+via sysctl or whatever, not define DEBUG in your sources.
 
+I don't think we should add yet another interface just to get
+KERN_DEBUG in there.
