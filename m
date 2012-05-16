@@ -1,44 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:57544 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755808Ab2EOOSD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32497 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754052Ab2EPUlR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 10:18:03 -0400
-Received: by ggcs5 with SMTP id s5so4991634ggc.36
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 07:18:02 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <coelho@ti.com>, <arik@wizery.com>
-Subject: [PATCH] wl18xx: fix fm_coex parameters configuration
-Date: Tue, 15 May 2012 17:15:40 +0300
-Message-Id: <1337091340-24800-1-git-send-email-victorg@ti.com> (sfid-20120515_161810_854695_97375F62)
+	Wed, 16 May 2012 16:41:17 -0400
+From: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: issue wmi disconnect after notifying cfg80211
+Date: Wed, 16 May 2012 13:41:13 -0700
+Message-ID: <1337200873-3698-1-git-send-email-c_tpeder@qca.qualcomm.com> (sfid-20120516_224129_759938_837F12D8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wrong fm_coex parameters were set during wl18xx
-init phase, fix it.
+ath6kl would issue a wmi disconnect command in response to a remote
+disconnect and return early without notifying cfg80211, only sending a
+cfg80211_disconnected (with reason code always 3) in response to the
+second disconnect firmware event.
 
-Signed-off-by: Ziv Riesel <zivriesel@ti.com>
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Pass the right reason code to cfg80211 on the first disconnect instead.
+
+Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   27 ++++++++++++---------------
+ 1 files changed, 12 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 1bbf195..50dfd7f 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -428,8 +428,8 @@ static struct wlcore_conf wl18xx_conf = {
- 		.swallow_period               = 5,
- 		.n_divider_fref_set_1         = 0xff,       /* default */
- 		.n_divider_fref_set_2         = 12,
--		.m_divider_fref_set_1         = 148,
--		.m_divider_fref_set_2         = 0xffff,     /* default */
-+		.m_divider_fref_set_1         = 0xffff,
-+		.m_divider_fref_set_2         = 148,        /* default */
- 		.coex_pll_stabilization_time  = 0xffffffff, /* default */
- 		.ldo_stabilization_time       = 0xffff,     /* default */
- 		.fm_disturbed_band_margin     = 0xff,       /* default */
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index f3a6cfc..7845d33 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -860,20 +860,6 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl_vif *vif, u8 reason,
+ 		}
+ 	}
+ 
+-	/*
+-	 * Send a disconnect command to target when a disconnect event is
+-	 * received with reason code other than 3 (DISCONNECT_CMD - disconnect
+-	 * request from host) to make the firmware stop trying to connect even
+-	 * after giving disconnect event. There will be one more disconnect
+-	 * event for this disconnect command with reason code DISCONNECT_CMD
+-	 * which will be notified to cfg80211.
+-	 */
+-
+-	if (reason != DISCONNECT_CMD) {
+-		ath6kl_wmi_disconnect_cmd(ar->wmi, vif->fw_vif_idx);
+-		return;
+-	}
+-
+ 	clear_bit(CONNECT_PEND, &vif->flags);
+ 
+ 	if (vif->sme_state == SME_CONNECTING) {
+@@ -883,11 +869,22 @@ void ath6kl_cfg80211_disconnect_event(struct ath6kl_vif *vif, u8 reason,
+ 					WLAN_STATUS_UNSPECIFIED_FAILURE,
+ 					GFP_KERNEL);
+ 	} else if (vif->sme_state == SME_CONNECTED) {
+-		cfg80211_disconnected(vif->ndev, reason,
++		cfg80211_disconnected(vif->ndev, proto_reason,
+ 				      NULL, 0, GFP_KERNEL);
+ 	}
+ 
+ 	vif->sme_state = SME_DISCONNECTED;
++
++	/*
++	 * Send a disconnect command to target when a disconnect event is
++	 * received with reason code other than 3 (DISCONNECT_CMD - disconnect
++	 * request from host) to make the firmware stop trying to connect even
++	 * after giving disconnect event. There will be one more disconnect
++	 * event for this disconnect command with reason code DISCONNECT_CMD
++	 * which won't be notified to cfg80211.
++	 */
++	if (reason != DISCONNECT_CMD)
++		ath6kl_wmi_disconnect_cmd(ar->wmi, vif->fw_vif_idx);
+ }
+ 
+ static int ath6kl_set_probed_ssids(struct ath6kl *ar,
 -- 
-1.7.5.4
+1.7.4.1
 
