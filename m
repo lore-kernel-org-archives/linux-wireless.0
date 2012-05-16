@@ -1,105 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19776 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751912Ab2EOJy4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33006 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754328Ab2EPPaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 05:54:56 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 1/1] ath9k: Fix modal EEPROM dump
-Date: Tue, 15 May 2012 15:24:47 +0530
-Message-ID: <1337075687-24377-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120515_115500_427303_DB73FEA4)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 16 May 2012 11:30:25 -0400
+Message-ID: <1337182220.18519.5.camel@jlt3.sipsolutions.net> (sfid-20120516_173044_870933_A1EB9FE8)
+Subject: Re: [PATCH 0/3] net: mac80211: Neaten debugging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 16 May 2012 17:30:20 +0200
+In-Reply-To: <1337181771.4818.0.camel@joe2Laptop>
+References: <1337106548.15553.8.camel@jlt3.sipsolutions.net>
+	 <cover.1337116578.git.joe@perches.com>
+	 <20120516.012319.1903390658912592000.davem@davemloft.net>
+	 <1337155171.4367.2.camel@jlt3.sipsolutions.net>
+	 <1337181771.4818.0.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, 2012-05-16 at 08:22 -0700, Joe Perches wrote:
+> On Wed, 2012-05-16 at 09:59 +0200, Johannes Berg wrote:
+> > I wonder if it makes sense to leave these under
+> > #ifdef though? Why #ifdef something if it's going to be invisible most
+> > of the time anyway?
+> 
+> I don't understand your point.
+> #ifdef removal is a good thing.
 
-we provide excess buffer size for 'simple_read_from_buffer'
-for modal EEPROM dump. This results in trailing NULL bytes
-at the end of EEPROM dump, fix this.
+Yeah, but you left a lot of them under ifdef, and I'm wondering why you
+didn't remove them, or if you should, or ...
 
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Reported-by: Holger Schurig <holgerschurig@googlemail.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
-
-v2: fix the spelling mistake in subject line
-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |    4 ++--
- 4 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ac53d90..868f30f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3412,11 +3412,11 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 	if (!dump_base_hdr) {
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "2GHz modal Header");
--		len += ar9003_dump_modal_eeprom(buf, len, size,
-+		len = ar9003_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader2G);
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "5GHz modal Header");
--		len += ar9003_dump_modal_eeprom(buf, len, size,
-+		len = ar9003_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader5G);
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 4322ac8..a850f44 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -135,7 +135,7 @@ static u32 ath9k_hw_4k_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 	if (!dump_base_hdr) {
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "2GHz modal Header");
--		len += ath9k_dump_4k_modal_eeprom(buf, len, size,
-+		len = ath9k_dump_4k_modal_eeprom(buf, len, size,
- 						  &eep->modalHeader);
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index aa61476..cd742fb 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -132,7 +132,7 @@ static u32 ath9k_hw_ar9287_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 	if (!dump_base_hdr) {
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "2GHz modal Header");
--		len += ar9287_dump_modal_eeprom(buf, len, size,
-+		len = ar9287_dump_modal_eeprom(buf, len, size,
- 						&eep->modalHeader);
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index b5fba8b..56290f3 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -211,11 +211,11 @@ static u32 ath9k_hw_def_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 	if (!dump_base_hdr) {
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "2GHz modal Header");
--		len += ath9k_def_dump_modal_eeprom(buf, len, size,
-+		len = ath9k_def_dump_modal_eeprom(buf, len, size,
- 						   &eep->modalHeader[0]);
- 		len += snprintf(buf + len, size - len,
- 				"%20s :\n", "5GHz modal Header");
--		len += ath9k_def_dump_modal_eeprom(buf, len, size,
-+		len = ath9k_def_dump_modal_eeprom(buf, len, size,
- 						   &eep->modalHeader[1]);
- 		goto out;
- 	}
--- 
-1.7.0.4
+johannes
 
