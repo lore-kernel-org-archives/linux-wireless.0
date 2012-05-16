@@ -1,24 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46358 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757354Ab2EJQF5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45032 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760765Ab2EPXqp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:05:57 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] iwlwifi fixes
-Date: Thu, 10 May 2012 18:05:48 +0200
-Message-Id: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net> (sfid-20120510_180601_800847_E430A8B9)
+	Wed, 16 May 2012 19:46:45 -0400
+From: "Mehta, Vipin" <vipimeht@qca.qualcomm.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"Gangadharan, Naveen" <ngangadh@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: RE: [PATCH] ath6kl: Add wow multicast firmware capability support
+Date: Wed, 16 May 2012 23:46:39 +0000
+Message-ID: <1BD89E1E9E29A842B7BB2C01597E84E201B934DE@nasanexd02d.na.qualcomm.com> (sfid-20120517_014650_163547_34961B9C)
+References: <1336771149-17063-1-git-send-email-ngangadh@qca.qualcomm.com>
+ <4FB0AB4B.4000105@qca.qualcomm.com>
+In-Reply-To: <4FB0AB4B.4000105@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John,
+Naveen,
+    Do we need to have this patch applied for 8x25-CS?
 
-Here are a few fixes for iwlwifi. It's probably too late to get 
-them into 3.4 but I split them out into their own series anyway.
+Vipin
 
-This is my first ever submission as iwlwifi maintainer, so I
-hope it works ok and doesn't get too many CCs :-)
+-----Original Message-----
+From: Valo, Kalle 
+Sent: Sunday, May 13, 2012 11:51 PM
+To: Gangadharan, Naveen
+Cc: linux-wireless@vger.kernel.org; ath6kl-devel
+Subject: Re: [PATCH] ath6kl: Add wow multicast firmware capability support
 
-johannes
+On 05/12/2012 12:19 AM, Naveen Gangadharan wrote:
+> Infrastructure to enable Multicast WOW support based on firmware 
+> capability added to the driver.This enables different customers or 
+> chips to control this feature based on firmware capability.
+> 
+> kvalo: Firmware capability infrastructure for multicast wow feature.
+> 
+> Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+Thanks, applied with some indentation fixes.
+
+Kalle
