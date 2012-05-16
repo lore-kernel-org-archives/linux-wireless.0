@@ -1,114 +1,291 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42345 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932116Ab2EXDDa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41674 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759429Ab2EPVzF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:03:30 -0400
-Received: by yhmm54 with SMTP id m54so7337141yhm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 20:03:29 -0700 (PDT)
-Message-ID: <4FBDA4FE.6040603@lwfinger.net> (sfid-20120524_050333_872200_23E57C12)
-Date: Wed, 23 May 2012 22:03:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Mourad De Clerck <bugs-wireless@aquazul.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: firmware loading fails for b43 using linux 3.4?
-References: <4FBD7772.6070305@aquazul.com>
-In-Reply-To: <4FBD7772.6070305@aquazul.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 16 May 2012 17:55:05 -0400
+Message-Id: <20120516215038.639976237@sipsolutions.net> (sfid-20120516_235550_751089_03F722BF)
+Date: Wed, 16 May 2012 23:50:18 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 4/7] cfg80211: provide channel to start_ap function
+References: <20120516215014.379333357@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/23/2012 06:49 PM, Mourad De Clerck wrote:
-> Hi,
->
-> I'm probably missing something obvious, but when going from 3.3 to 3.4 the b43
-> driver throws up an error, saying it can't find the firmware - but it really
-> _is_ there.
->
->
-> Here's the error:
->
-> b43-phy0 ERROR: Firmware file "b43/ucode16_mimo.fw" not found
-> b43-phy0 ERROR: Firmware file "b43-open/ucode16_mimo.fw" not found
-> b43-phy0 ERROR: You must go to
-> http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware and download the
-> correct firmware for this driver version. Please carefully read all instructions
-> on this website.
->
->
-> Here's the firmware it claims doesn't exist:
->
-> $ sha1sum /lib/firmware/b43/ucode16_mimo.fw
-> 825a4bc63e3a96bb20fd8551add947435d47ad46 /lib/firmware/b43/ucode16_mimo.fw
->
-> This is from Debian's firmware-b43-installer package, version 1:015-14.
->
->
-> The network card in question:
->
-> 02:00.0 Network controller [0280]: Broadcom Corporation BCM4322 802.11a/b/g/n
-> Wireless LAN Controller [14e4:432b] (rev 01)
->
->
-> The only obvious change is 6b6fa5868eec26bdc6a83543cebb8cf832a2645a by Larry
-> Finger. I don't know if it matters, but b43 is statically compiled in the kernel.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I was able to reproduce your result when b43 is built into the kernel, and it 
-was not intentional. Recent modifications in udev make synchronous firmware 
-loads fail when the firmware loading is initiated from the probe routine. The 
-usual solution to switch to asynchronous firmware loading is a poor option for 
-b43 as it loads multiple firmware files, and the number depends on the model. 
-Accordingly, I selected a solution that initiates the firmware load from a work 
-queue. The problem is that user space is not yet started when b43 asks for the 
-firmware. Such a condition is not needed when b43 is a module as the user-space 
-routines are started as they are needed to get the module from the disk. I see 2 
-ways to resolve the problem.
+Instead of setting the channel first and then
+starting the AP, let cfg80211 store the channel
+and provide it as one of the AP settings.
 
-It would be possible to switch to a delayed work queue. I have rejected this 
-solution for the moment, as the delay would still be there even if the driver 
-were a module.
+This means that now you have to set the channel
+before you can start an AP interface, but since
+hostapd/wpa_supplicant always do that we're OK
+with this change.
 
-The second solution is to make multiple tries of the read of the first firmware 
-file. If the driver is a module, the first read will succeed, thus there is no 
-penalty for that case. If the read fails, the code sleeps for 2000 ms, then 
-retries the read. On my system, the 3rd try works, thus the loop count is set to 10.
+Alternatively, it's now possible to give the
+channel as an attribute to the start-ap nl80211
+command, overriding any preset channel.
 
-Please try the patch below on your system. If it works, please report the number 
-in the line from the dmesg output that states "********** loop count at exit 2".
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   36 +------------------
+ drivers/net/wireless/ath/ath6kl/core.h     |    3 -
+ drivers/net/wireless/ath/ath6kl/main.c     |    1 
+ include/linux/nl80211.h                    |    2 +
+ include/net/cfg80211.h                     |   12 ++++++
+ net/mac80211/cfg.c                         |    5 ++
+ net/wireless/nl80211.c                     |   53 +++++++++++++++++++++++++++--
+ 7 files changed, 72 insertions(+), 40 deletions(-)
 
-Larry
-===================================================================
-Index: wireless-testing/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing.orig/drivers/net/wireless/b43/main.c
-+++ wireless-testing/drivers/net/wireless/b43/main.c
-@@ -2185,6 +2185,7 @@ static int b43_try_request_fw(struct b43
-   	const char *filename;
-   	u32 tmshigh;
-   	int err;
-+	int i;
-
-   	/* Files for HT and LCN were found by trying one by one */
-
-@@ -2223,9 +2224,18 @@ static int b43_try_request_fw(struct b43
-   			goto err_no_ucode;
-   		}
-   	}
--	err = b43_do_request_fw(ctx, filename, &fw->ucode);
-+	/* If b43 is builtin rather than as a module, user space will not
-+	 * be able to supply firmware yet. Retry with a delay
-+	 */
-+	for (i = 0; i < 10; i++) {
-+		err = b43_do_request_fw(ctx, filename, &fw->ucode);
-+		if (!err)
-+			break;
-+		msleep(2000);
+--- a/include/net/cfg80211.h	2012-05-16 23:35:46.000000000 +0200
++++ b/include/net/cfg80211.h	2012-05-16 23:49:23.000000000 +0200
+@@ -404,6 +404,8 @@ struct cfg80211_beacon_data {
+  *
+  * Used to configure an AP interface.
+  *
++ * @channel: the channel to start the AP on
++ * @channel_type: the channel type to use
+  * @beacon: beacon data
+  * @beacon_interval: beacon interval
+  * @dtim_period: DTIM period
+@@ -417,6 +419,9 @@ struct cfg80211_beacon_data {
+  * @inactivity_timeout: time in seconds to determine station's inactivity.
+  */
+ struct cfg80211_ap_settings {
++	struct ieee80211_channel *channel;
++	enum nl80211_channel_type channel_type;
++
+ 	struct cfg80211_beacon_data beacon;
+ 
+ 	int beacon_interval, dtim_period;
+@@ -2263,7 +2268,10 @@ struct cfg80211_cached_keys;
+  * @netdev: (private) Used to reference back to the netdev
+  * @current_bss: (private) Used by the internal configuration code
+  * @channel: (private) Used by the internal configuration code to track
+- *	user-set AP, monitor and WDS channels for wireless extensions
++ *	the user-set AP, monitor and WDS channel
++ * @preset_chan: (private) Used by the internal configuration code to
++ *	track the channel to be used for AP later
++ * @preset_chantype: (private) the corresponding channel type
+  * @bssid: (private) Used by the internal configuration code
+  * @ssid: (private) Used by the internal configuration code
+  * @ssid_len: (private) Used by the internal configuration code
+@@ -2314,6 +2322,8 @@ struct wireless_dev {
+ 
+ 	struct cfg80211_internal_bss *current_bss; /* associated / joined */
+ 	struct ieee80211_channel *channel;
++	struct ieee80211_channel *preset_chan;
++	enum nl80211_channel_type preset_chantype;
+ 
+ 	bool ps;
+ 	int ps_timeout;
+--- a/net/wireless/nl80211.c	2012-05-16 21:15:51.000000000 +0200
++++ b/net/wireless/nl80211.c	2012-05-16 23:49:23.000000000 +0200
+@@ -921,7 +921,11 @@ static int nl80211_send_wiphy(struct sk_
+ 		if (nla_put_u32(msg, i, NL80211_CMD_SET_WIPHY_NETNS))
+ 			goto nla_put_failure;
+ 	}
+-	CMD(set_channel, SET_CHANNEL);
++	if (dev->ops->set_channel || dev->ops->start_ap) {
++		i++;
++		if (nla_put_u32(msg, i, NL80211_CMD_SET_CHANNEL))
++			goto nla_put_failure;
 +	}
-   	if (err)
-   		goto err_load;
-+	pr_info("********** loop count at exit %d\n", i);
+ 	CMD(set_wds_peer, SET_WDS_PEER);
+ 	if (dev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) {
+ 		CMD(tdls_mgmt, TDLS_MGMT);
+@@ -1170,6 +1174,9 @@ static bool nl80211_can_set_dev_channel(
+ 	 * Monitors are special as they are normally slaved to
+ 	 * whatever else is going on, so they behave as though
+ 	 * you tried setting the wiphy channel itself.
++	 *
++	 * For AP/GO modes, it's only for compatibility, you can
++	 * also give the channel to the start-AP command.
+ 	 */
+ 	return !wdev ||
+ 		wdev->iftype == NL80211_IFTYPE_AP ||
+@@ -1204,6 +1211,7 @@ static int __nl80211_set_channel(struct
+ 				 struct wireless_dev *wdev,
+ 				 struct genl_info *info)
+ {
++	struct ieee80211_channel *channel;
+ 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
+ 	u32 freq;
+ 	int result;
+@@ -1221,7 +1229,25 @@ static int __nl80211_set_channel(struct
+ 	freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]);
+ 
+ 	mutex_lock(&rdev->devlist_mtx);
+-	if (wdev) {
++	if (wdev) switch (wdev->iftype) {
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		if (wdev->beacon_interval) {
++			result = -EBUSY;
++			break;
++		}
++		channel = rdev_freq_to_chan(rdev, freq, channel_type);
++		if (!channel || !cfg80211_can_beacon_sec_chan(&rdev->wiphy,
++							      channel,
++							      channel_type)) {
++			result = -EINVAL;
++			break;
++		}
++		wdev->preset_chan = channel;
++		wdev->preset_chantype = channel_type;
++		result = 0;
++		break;
++	default:
+ 		wdev_lock(wdev);
+ 		result = cfg80211_set_freq(rdev, wdev, freq, channel_type);
+ 		wdev_unlock(wdev);
+@@ -2299,6 +2325,29 @@ static int nl80211_start_ap(struct sk_bu
+ 			info->attrs[NL80211_ATTR_INACTIVITY_TIMEOUT]);
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
++		enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
++
++		if (info->attrs[NL80211_ATTR_WIPHY_CHANNEL_TYPE] &&
++		    !nl80211_valid_channel_type(info, &channel_type))
++			return -EINVAL;
++
++		params.channel = rdev_freq_to_chan(rdev,
++			nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]),
++			channel_type);
++		if (!params.channel)
++			return -EINVAL;
++		params.channel_type = channel_type;
++	} else if (wdev->preset_chan) {
++		params.channel = wdev->preset_chan;
++		params.channel_type = wdev->preset_chantype;
++	} else
++		return -EINVAL;
++
++	if (!cfg80211_can_beacon_sec_chan(&rdev->wiphy, params.channel,
++					  params.channel_type))
++		return -EINVAL;
++
+ 	err = rdev->ops->start_ap(&rdev->wiphy, dev, &params);
+ 	if (!err)
+ 		wdev->beacon_interval = params.beacon_interval;
+--- a/include/linux/nl80211.h	2012-05-16 21:15:51.000000000 +0200
++++ b/include/linux/nl80211.h	2012-05-16 23:35:47.000000000 +0200
+@@ -170,6 +170,8 @@
+  *	%NL80211_ATTR_CIPHER_GROUP, %NL80211_ATTR_WPA_VERSIONS,
+  *	%NL80211_ATTR_AKM_SUITES, %NL80211_ATTR_PRIVACY,
+  *	%NL80211_ATTR_AUTH_TYPE and %NL80211_ATTR_INACTIVITY_TIMEOUT.
++ *	The channel to use can be set on the interface or be given using the
++ *	%NL80211_ATTR_WIPHY_FREQ and %NL80211_ATTR_WIPHY_CHANNEL_TYPE attrs.
+  * @NL80211_CMD_NEW_BEACON: old alias for %NL80211_CMD_START_AP
+  * @NL80211_CMD_STOP_AP: Stop AP operation on the given interface
+  * @NL80211_CMD_DEL_BEACON: old alias for %NL80211_CMD_STOP_AP
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c	2012-05-16 21:15:51.000000000 +0200
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c	2012-05-16 23:35:47.000000000 +0200
+@@ -2585,35 +2585,6 @@ static int ath6kl_set_ies(struct ath6kl_
+ 	return 0;
+ }
+ 
+-static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
+-			      struct ieee80211_channel *chan,
+-			      enum nl80211_channel_type channel_type)
+-{
+-	struct ath6kl_vif *vif;
+-
+-	/*
+-	 * 'dev' could be NULL if a channel change is required for the hardware
+-	 * device itself, instead of a particular VIF.
+-	 *
+-	 * FIXME: To be handled properly when monitor mode is supported.
+-	 */
+-	if (!dev)
+-		return -EBUSY;
+-
+-	vif = netdev_priv(dev);
+-
+-	if (!ath6kl_cfg80211_ready(vif))
+-		return -EIO;
+-
+-	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: center_freq=%u hw_value=%u\n",
+-		   __func__, chan->center_freq, chan->hw_value);
+-	vif->next_chan = chan->center_freq;
+-	vif->next_ch_type = channel_type;
+-	vif->next_ch_band = chan->band;
+-
+-	return 0;
+-}
+-
+ static int ath6kl_get_rsn_capab(struct cfg80211_beacon_data *beacon,
+ 				u8 *rsn_capab)
+ {
+@@ -2791,7 +2762,7 @@ static int ath6kl_start_ap(struct wiphy
+ 	p.ssid_len = vif->ssid_len;
+ 	memcpy(p.ssid, vif->ssid, vif->ssid_len);
+ 	p.dot11_auth_mode = vif->dot11_auth_mode;
+-	p.ch = cpu_to_le16(vif->next_chan);
++	p.ch = cpu_to_le16(info->channel->center_freq);
+ 
+ 	/* Enable uAPSD support by default */
+ 	res = ath6kl_wmi_ap_set_apsd(ar->wmi, vif->fw_vif_idx, true);
+@@ -2815,8 +2786,8 @@ static int ath6kl_start_ap(struct wiphy
+ 			return res;
+ 	}
+ 
+-	if (ath6kl_set_htcap(vif, vif->next_ch_band,
+-			     vif->next_ch_type != NL80211_CHAN_NO_HT))
++	if (ath6kl_set_htcap(vif, info->channel->band,
++			     info->channel_type != NL80211_CHAN_NO_HT))
+ 		return -EIO;
+ 
+ 	/*
+@@ -3271,7 +3242,6 @@ static struct cfg80211_ops ath6kl_cfg802
+ 	.suspend = __ath6kl_cfg80211_suspend,
+ 	.resume = __ath6kl_cfg80211_resume,
+ #endif
+-	.set_channel = ath6kl_set_channel,
+ 	.start_ap = ath6kl_start_ap,
+ 	.change_beacon = ath6kl_change_beacon,
+ 	.stop_ap = ath6kl_stop_ap,
+--- a/drivers/net/wireless/ath/ath6kl/core.h	2012-05-16 21:15:51.000000000 +0200
++++ b/drivers/net/wireless/ath/ath6kl/core.h	2012-05-16 23:35:47.000000000 +0200
+@@ -553,9 +553,6 @@ struct ath6kl_vif {
+ 	u32 last_cancel_roc_id;
+ 	u32 send_action_id;
+ 	bool probe_req_report;
+-	u16 next_chan;
+-	enum nl80211_channel_type next_ch_type;
+-	enum ieee80211_band next_ch_band;
+ 	u16 assoc_bss_beacon_int;
+ 	u16 listen_intvl_t;
+ 	u16 bmiss_time_t;
+--- a/net/mac80211/cfg.c	2012-05-16 23:35:45.000000000 +0200
++++ b/net/mac80211/cfg.c	2012-05-16 23:49:23.000000000 +0200
+@@ -823,6 +823,11 @@ static int ieee80211_start_ap(struct wip
+ 	if (old)
+ 		return -EALREADY;
+ 
++	err = ieee80211_set_channel(wiphy, dev, params->channel,
++				    params->channel_type);
++	if (err)
++		return err;
++
+ 	/*
+ 	 * Apply control port protocol, this allows us to
+ 	 * not encrypt dynamic WEP control frames.
+--- a/drivers/net/wireless/ath/ath6kl/main.c	2012-05-16 21:15:51.000000000 +0200
++++ b/drivers/net/wireless/ath/ath6kl/main.c	2012-05-16 23:50:01.000000000 +0200
+@@ -598,7 +598,6 @@ static int ath6kl_commit_ch_switch(struc
+ 
+ 	struct ath6kl *ar = vif->ar;
+ 
+-	vif->next_chan = channel;
+ 	vif->profile.ch = cpu_to_le16(channel);
+ 
+ 	switch (vif->nw_type) {
 
-   	/* Get PCM code */
-   	if ((rev >= 5) && (rev <= 10))
 
