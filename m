@@ -1,115 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fold.natur.cuni.cz ([195.113.57.32]:48139 "HELO
-	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757521Ab2ENTOd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41667 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759249Ab2EPVzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 15:14:33 -0400
-Message-ID: <4FB15995.80205@fold.natur.cuni.cz> (sfid-20120514_211437_496257_9273A2E0)
-Date: Mon, 14 May 2012 21:14:29 +0200
-From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-MIME-Version: 1.0
-To: sedat.dilek@gmail.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: 3.4-rc5: Oops in run_timer_softirq()
-References: <4FA7E041.1070108@fold.natur.cuni.cz> <4FA821F5.8090203@fold.natur.cuni.cz> <CA+icZUWwy6A5y8EM0b=xEwzP2gqo4mY_bUdUAG8NOVajAHzYvg@mail.gmail.com> <4FA835F0.2050003@fold.natur.cuni.cz>
-In-Reply-To: <4FA835F0.2050003@fold.natur.cuni.cz>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 16 May 2012 17:55:03 -0400
+Message-Id: <20120516215038.773976797@sipsolutions.net> (sfid-20120516_235513_080603_21F72C30)
+Date: Wed, 16 May 2012 23:50:19 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/7] cfg80211: disallow setting channel on WDS interfaces
+References: <20120516215014.379333357@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sedat,
-  I still get the Oops with 3.4-rc7 when repeatedly turning on and off wifi device
-(Fn+F2). I did download the v6 firmware and placed it manually.
+From: Johannes Berg <johannes.berg@intel.com>
 
-# ls -lat /lib/firmware/iwlwifi-*
--rw-r--r-- 1 root root 444128 Jan 29 17:27 /lib/firmware/iwlwifi-6000g2a-5.ucode
--rw-r--r-- 1 root root 337400 Jan 29 17:27 /lib/firmware/iwlwifi-5150-2.ucode
--rw-r--r-- 1 root root 340696 Jan 29 17:27 /lib/firmware/iwlwifi-5000-5.ucode
--rw-r--r-- 1 root root 187972 Jan 29 17:27 /lib/firmware/iwlwifi-4965-2.ucode
--rw-r--r-- 1 root root 150100 Jan 29 17:26 /lib/firmware/iwlwifi-3945-2.ucode
--rw-r--r-- 1 root root 469780 Jan 29 17:25 /lib/firmware/iwlwifi-6050-5.ucode
--rw-r--r-- 1 root root 460912 Jan 29 17:25 /lib/firmware/iwlwifi-6000g2b-5.ucode
--rw-r--r-- 1 root root 454608 Jan 29 17:25 /lib/firmware/iwlwifi-6000-4.ucode
--rw-r--r-- 1 root root 337520 Jan 29 16:13 /lib/firmware/iwlwifi-1000-5.ucode
--rw-r--r-- 1 1000 1000 679436 Jan 13 20:39 /lib/firmware/iwlwifi-6000g2b-6.ucode
-# dmesg | grep iwl
-[   12.542816] iwlwifi 0000:09:00.0: pci_resource_len = 0x00002000
-[   12.542818] iwlwifi 0000:09:00.0: pci_resource_base = ffffc900057e4000
-[   12.542820] iwlwifi 0000:09:00.0: HW Revision ID = 0x34
-[   12.542904] iwlwifi 0000:09:00.0: irq 53 for MSI/MSI-X
-[   13.119591] iwlwifi 0000:09:00.0: loaded firmware version 18.168.6.1
-[   13.119724] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEBUG enabled
-[   13.119726] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
-[   13.119727] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
-[   13.119728] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
-[   13.119729] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_P2P disabled
-[   13.119731] iwlwifi 0000:09:00.0: Detected Intel(R) Centrino(R) Wireless-N 1030 BGN, REV=0xB0
-[   13.119784] iwlwifi 0000:09:00.0: L1 Disabled; Enabling L0S
-[   13.136873] iwlwifi 0000:09:00.0: device EEPROM VER=0x71a, CALIB=0x6
-[   13.136874] iwlwifi 0000:09:00.0: Device SKU: 0x150
-[   13.136875] iwlwifi 0000:09:00.0: Valid Tx ant: 0x1, Valid Rx ant: 0x3
-[   13.136886] iwlwifi 0000:09:00.0: Tunable channels: 13 802.11bg, 0 802.11a channels
-[   13.137055] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-[  262.607784] iwlwifi 0000:09:00.0: RF_KILL bit toggled to enable radio.
-# 
+If it worked (Felix says it doesn't right now), the
+typical use-case for WDS interfaces would be to be
+slaved to AP mode interfaces. Therefore, it isn't
+necessary to set the channel on WDS interfaces. As
+they don't support powersave or anything like that,
+they also couldn't use a different channel anyway.
 
-  I did not download the patches. Are they not in 3.4-rc7 yet? And do I need them
-if I have the v6 firmware files in /lib/firmware/?
-Thanks,
-Martin
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c     |    5 ++---
+ net/wireless/wext-compat.c |    1 -
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-Martin Mokrejs wrote:
-> Sedat Dilek wrote:
->> On Mon, May 7, 2012 at 9:26 PM, Martin Mokrejs
->> <mmokrejs@fold.natur.cuni.cz> wrote:
->>> Hmm, linux-3.4-rc6 tells me some news about my v5 firmware. Will try to upgrade. The ACPI message
->>> is not new.
->>>
->>> [   11.008565] ACPI Warning: 0x000000000000f040-0x000000000000f05f SystemIO conflicts with Region \_SB_.PCI0.SBUS.SMBI 1 (20120320/utaddress-251)
->>> [   11.008571] ACPI: If an ACPI driver is available for this device, you should use it instead of the native driver
->>> [   11.936175] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
->>> [   11.936177] Copyright(c) 2003-2012 Intel Corporation
->>> [   11.936364] iwlwifi 0000:09:00.0: pci_resource_len = 0x00002000
->>> [   11.936366] iwlwifi 0000:09:00.0: pci_resource_base = ffffc90006684000
->>> [   11.936368] iwlwifi 0000:09:00.0: HW Revision ID = 0x34
->>> [   11.936462] iwlwifi 0000:09:00.0: irq 53 for MSI/MSI-X
->>> [   12.058300] iwlwifi 0000:09:00.0: request for firmware file 'iwlwifi-6000g2b-6.ucode' failed.
->>> [   12.137737] usb 1-1.5: usb auto-suspend, wakeup 0
->>> [   12.158653] iwlwifi 0000:09:00.0: Firmware has old API version, expected v6, got v5.
->>> [   12.158655] iwlwifi 0000:09:00.0: New firmware can be obtained from http://www.intellinuxwireless.org/.
->>> [   12.158657] iwlwifi 0000:09:00.0: loaded firmware version 17.168.5.2 build 35905
->>> [   12.158759] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEBUG enabled
->>> [   12.158761] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
->>> [   12.158763] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
->>> [   12.158764] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
->>> [   12.158766] iwlwifi 0000:09:00.0: CONFIG_IWLWIFI_P2P disabled
->>> [   12.158768] iwlwifi 0000:09:00.0: Detected Intel(R) Centrino(R) Wireless-N 1030 BGN, REV=0xB0
->>> [   12.158816] iwlwifi 0000:09:00.0: L1 Disabled; Enabling L0S
->>> [   12.175752] iwlwifi 0000:09:00.0: device EEPROM VER=0x71a, CALIB=0x6
->>> [   12.175754] iwlwifi 0000:09:00.0: Device SKU: 0x150
->>> [   12.175756] iwlwifi 0000:09:00.0: Valid Tx ant: 0x1, Valid Rx ant: 0x3
->>> [   12.175768] iwlwifi 0000:09:00.0: Tunable channels: 13 802.11bg, 0 802.11a channels
->>>
->>> Martin
->>>
->>
->> What about a new subject :-)?
-> 
-> Well, I just thought that maybe it is related to the v5 firmware, but no, it is not.
-> I did not want to report the v5 vs. v6 line. This is really about the Oops. ;)
-> 
->> Known issue - Check for these patches (pending in
->> (net.git|wireless.git)#master):
->>
->>       iwlwifi: use correct released ucode version
->>       iwlwifi: use 6000G2B for 6030 device series
-> 
-> So when I already updated the firmware manually I do not these two patches, right?
-> 
-> Martin
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+--- a/net/wireless/nl80211.c	2012-05-16 10:24:41.000000000 +0200
++++ b/net/wireless/nl80211.c	2012-05-16 10:24:45.000000000 +0200
+@@ -1166,8 +1166,8 @@ static int parse_txq_params(struct nlatt
+ static bool nl80211_can_set_dev_channel(struct wireless_dev *wdev)
+ {
+ 	/*
+-	 * You can only set the channel explicitly for AP, mesh
+-	 * and WDS type interfaces; all others have their channel
++	 * You can only set the channel explicitly for AP and
++	 * mesh type interfaces; all others have their channel
+ 	 * managed via their respective "establish a connection"
+ 	 * command (connect, join, ...)
+ 	 *
+@@ -1180,7 +1180,6 @@ static bool nl80211_can_set_dev_channel(
+ 	 */
+ 	return !wdev ||
+ 		wdev->iftype == NL80211_IFTYPE_AP ||
+-		wdev->iftype == NL80211_IFTYPE_WDS ||
+ 		wdev->iftype == NL80211_IFTYPE_MESH_POINT ||
+ 		wdev->iftype == NL80211_IFTYPE_MONITOR ||
+ 		wdev->iftype == NL80211_IFTYPE_P2P_GO;
+--- a/net/wireless/wext-compat.c	2012-05-16 10:22:21.000000000 +0200
++++ b/net/wireless/wext-compat.c	2012-05-16 10:24:45.000000000 +0200
+@@ -796,7 +796,6 @@ static int cfg80211_wext_siwfreq(struct
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return cfg80211_ibss_wext_siwfreq(dev, info, wextfreq, extra);
+ 	case NL80211_IFTYPE_MONITOR:
+-	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		freq = cfg80211_wext_freq(wdev->wiphy, wextfreq);
+ 		if (freq < 0)
+
+
