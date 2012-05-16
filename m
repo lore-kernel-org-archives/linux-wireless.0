@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:34245 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756181Ab2EBUSA (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:60638 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754382Ab2EPSfa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 16:18:00 -0400
-Received: by obbtb18 with SMTP id tb18so1419205obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2012 13:17:59 -0700 (PDT)
-Message-ID: <4FA19674.90804@lwfinger.net> (sfid-20120502_221804_614976_E61E40CE)
-Date: Wed, 02 May 2012 15:17:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 16 May 2012 14:35:30 -0400
+Received: by dady13 with SMTP id y13so1337286dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 11:35:30 -0700 (PDT)
 MIME-Version: 1.0
-To: Eliad Peller <eliad@wizery.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Wireless problem in 3.4-rc5
-References: <4FA0405C.8050101@lwfinger.net> <CAB3XZEerHsNUr4p5rTu0msucKUnxXwFxwZVtONrkZ_czmgS+ig@mail.gmail.com>
-In-Reply-To: <CAB3XZEerHsNUr4p5rTu0msucKUnxXwFxwZVtONrkZ_czmgS+ig@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CA+7oygddbQpoPmc=A05AGyPfq9YyhdeejwYfpS0sGXD=9CeZqA@mail.gmail.com>
+References: <CA+7oygccmq9DY+dR-=__4z_rZ4Sa9d8zmz+6=zX-xsTKdWkFWQ@mail.gmail.com>
+	<CAOpc7mEKLM1wjKmdde3YqTuB0edoOFBcH=dK5s5V1y5t7v=wMQ@mail.gmail.com>
+	<CA+7oygftxidR_r-t16K1g9CNPhL+EkMdPyKftkWoSk+Fzf+Rog@mail.gmail.com>
+	<CA+7oygddbQpoPmc=A05AGyPfq9YyhdeejwYfpS0sGXD=9CeZqA@mail.gmail.com>
+Date: Wed, 16 May 2012 14:35:30 -0400
+Message-ID: <CA+7oygcX6_d4anpCKGRG1f7ugcr4Pm19O_+Vogbj13W55PuczA@mail.gmail.com> (sfid-20120516_203541_124593_8DB365EA)
+Subject: Re: AR9280 reported signal strengths are flat (comparison with
+ bcm4322 included)
+From: George Nychis <gnychis@gmail.com>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2012 07:58 AM, Eliad Peller wrote:
-> hi Larry,
->
-> On Tue, May 1, 2012 at 10:58 PM, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->> After upgrading to 3.4-rc5 from wireless-testing, one of my boxes fails to
->> scan and gets a "Network down" message for all wireless devices. The code in
->> 3.4-rc4 was OK, thus I bisected to find the offending commit. The one that
->> broke my wireless is commit 3a25a8c entitled "mac80211: add improved HW
->> queue control".
->>
->> On my main laptop, this patch causes no problems. On a 3rd box, a BCM4312
->> (b43) is OK, but an RTL8187L (rtl8187) also fails in the same manner.
->>
->> The problem is not in the configuration as I copied the one from the box
->> that works to the one that fails, and it still fails. The only difference is
->> that the working system has 2 CPUs and the ones that fail are uni-processor;
->> however, if I boot with maxcpus=1, my main machine still works.
->>
->> Any suggestions of things to try will be appreciated.
->>
-> i'm not sure this is related to the problem you're facing, but the
-> commit above seems to have some bug in which a packet might get
-> enqueued on invalid queue (0xff) - please try this patch (compile
-> tested only):
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 3557354..ee815a9 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -2106,7 +2106,8 @@ static int ieee80211_mgmt_tx(struct wiphy
-> *wiphy, struct net_device *dev,
->
->   	IEEE80211_SKB_CB(skb)->flags = flags;
->
-> -	if (flags&  IEEE80211_TX_CTL_TX_OFFCHAN)
-> +	if (local->hw.flags&  IEEE80211_HW_QUEUE_CONTROL&&
-> +	    flags&  IEEE80211_TX_CTL_TX_OFFCHAN)
->   		IEEE80211_SKB_CB(skb)->hw_queue =
->   			local->hw.offchannel_tx_hw_queue;
->
-> @@ -2151,8 +2152,9 @@ static int ieee80211_mgmt_tx(struct wiphy
-> *wiphy, struct net_device *dev,
->   		/* modify cookie to prevent API mismatches */
->   		*cookie ^= 2;
->   		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
-> -		IEEE80211_SKB_CB(skb)->hw_queue =
-> -			local->hw.offchannel_tx_hw_queue;
-> +		if (local->hw.flags&  IEEE80211_HW_QUEUE_CONTROL)
-> +			IEEE80211_SKB_CB(skb)->hw_queue =
-> +				local->hw.offchannel_tx_hw_queue;
->   		local->hw_roc_skb = skb;
->   		local->hw_roc_skb_for_status = skb;
->   		mutex_unlock(&local->mtx);
+BTW- is ANI _not_ applied on broadcast traffic?  I notice that
+monitoring the signal strength of beacons does not show this behavior.
+ Maybe not applied for localization reasons?
 
-Sorry, but this patch does not fix my problem.
+- George
 
-Larry
 
+On Wed, May 16, 2012 at 2:32 PM, George Nychis <gnychis@gmail.com> wrote:
+> Hi Holger,
+>
+> Thanks a bunch for your response!  I had read about ANI before on the
+> list, it would be interesting to know if this is the cause for this.
+> It definitely seems plausible. I will dig around the ath9k code and
+> see if I can narrow down this to the cause.
+>
+>
+> On Wed, May 16, 2012 at 2:31 PM, George Nychis <gnychis@gmail.com> wrote:
+>>
+>> Hi Holger,
+>>
+>> Thanks a bunch for your response!  I had read about ANI before on the
+>> list, it would be interesting to know if this is the cause for this.  It
+>> definitely seems plausible. I will dig around the ath9k code and see if I
+>> can narrow down this to the cause.
+>>
+>> - George
+>>
+>>
+>> On Wed, May 16, 2012 at 2:08 AM, Holger Schurig
+>> <holgerschurig@googlemail.com> wrote:
+>>>
+>>> This is probably due to ANI (adapative noise immunity). I think ath9k
+>>> does too much here, in other words: it doesn't just kick in if there
+>>> are too strong signals there. Instead it seems to always adjust the
+>>> input attenuator, needed or not.
+>>
+>>
