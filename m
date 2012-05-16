@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4498 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752689Ab2EKL71 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 07:59:27 -0400
-Message-ID: <4FACFF12.60504@broadcom.com> (sfid-20120511_135944_076353_5ED4C4D7)
-Date: Fri, 11 May 2012 13:59:14 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Randy Dunlap" <rdunlap@xenotime.net>
-cc: "Stephen Rothwell" <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"Andrew Morton" <akpm@linux-foundation.org>,
-	"Luciano Coelho" <coelho@ti.com>, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Arik Nemtsov" <arik@wizery.com>
-Subject: Re: [PATCH -next] wireless: TI wlxxx depends on MAC80211
-References: <20120416161121.261ba4e7e38989173accfb16@canb.auug.org.au>
- <4F8C784B.2040402@xenotime.net>
-In-Reply-To: <4F8C784B.2040402@xenotime.net>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:52883 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759593Ab2EPUyg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 16:54:36 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>
+Subject: [PATCH 3/9] iwlwifi: Move IWL_MASK macro to transport.
+Date: Wed, 16 May 2012 22:54:24 +0200
+Message-Id: <1337201670-21604-4-git-send-email-johannes@sipsolutions.net> (sfid-20120516_225457_186044_D8FE58C6)
+In-Reply-To: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
+References: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 09:51 PM, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@xenotime.net>
-> 
-> wl12xx build fails with many undefined symbol errors when MAC80211
-> and CFG80211 are not enabled, so make WLCORE and WL12XX depend
-> on MAC80211 (which already depends on CFG80211).
-> 
-> ---
->  drivers/net/wireless/ti/wl12xx/Kconfig |    1 +
->  drivers/net/wireless/ti/wlcore/Kconfig |    2 +-
->  2 files changed, 2 insertions(+), 1 deletion(-)
-> 
-> --- linux-next-20120416.orig/drivers/net/wireless/ti/wl12xx/Kconfig
-> +++ linux-next-20120416/drivers/net/wireless/ti/wl12xx/Kconfig
-> @@ -1,5 +1,6 @@
->  config WL12XX
->         tristate "TI wl12xx support"
-> +	depends on MAC80211
->         select WLCORE
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-Similar patch is probably needed for new wl18xx driver.
+This macro is needed by other transports besides PCIe, thus
+moving to a common location.
 
->         ---help---
->  	  This module adds support for wireless adapters based on TI wl1271,
-> --- linux-next-20120416.orig/drivers/net/wireless/ti/wlcore/Kconfig
-> +++ linux-next-20120416/drivers/net/wireless/ti/wlcore/Kconfig
-> @@ -1,6 +1,6 @@
->  config WLCORE
->  	tristate "TI wlcore support"
-> -	depends on WL_TI && GENERIC_HARDIRQS
-> +	depends on WL_TI && GENERIC_HARDIRQS && MAC80211
->  	depends on INET
->  	select FW_LOADER
->  	---help---
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-trans.h      |    2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Gr. AvS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index c119118..12d84e9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -78,8 +78,6 @@
+ /* FIXME: need to abstract out TX command (once we know what it looks like) */
+ #include "iwl-commands.h"
+ 
+-#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
+-
+ #define SCD_QUEUECHAIN_SEL_ALL(trans, trans_pcie)	\
+ 	(((1<<trans->cfg->base_params->num_of_queues) - 1) &\
+ 	(~(1<<(trans_pcie)->cmd_queue)))
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 79a1e7a..78b89f1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -280,6 +280,8 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
+ 
+ #define MAX_NO_RECLAIM_CMDS	6
+ 
++#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
++
+ /*
+  * Maximum number of HW queues the transport layer
+  * currently supports
+-- 
+1.7.10
 
