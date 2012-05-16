@@ -1,106 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:37152 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753158Ab2ECQKP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 12:10:15 -0400
-Received: by eekc41 with SMTP id c41so581727eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 09:10:14 -0700 (PDT)
-Date: Thu, 3 May 2012 18:10:03 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Gertjan van Wingerde <gwingerde@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	RA-ShiangTu <Shiang_Tu@ralinktech.com>,
-	RA-Jay Hung <Jay_Hung@ralinktech.com>,
-	John Li <chen-yang.li@mediatek.com>,
-	Kevin Chou <kevin.chou@mediatek.com>
-Subject: Re: [PATCH v2] rt2800: add chipset revision RT5390R support
-Message-ID: <20120503181003.2c7c6f27@destiny.ordissimo> (sfid-20120503_181020_768188_4051D876)
-In-Reply-To: <1335177191-11101-1-git-send-email-anisse@astier.eu>
-References: <CAL1gcdOT1E3jP=j8-sEEN87WRZ7qG=m0jv3aK6QaP-mBuYtXmw@mail.gmail.com>
-	<1335177191-11101-1-git-send-email-anisse@astier.eu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mx1.redhat.com ([209.132.183.28]:56492 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965873Ab2EPJGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 05:06:51 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Herton Ronaldo Krzesinski" <herton@canonical.com>,
+	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] rtl8187: ->brightness_set can not sleep
+Date: Wed, 16 May 2012 11:06:21 +0200
+Message-Id: <1337159181-4466-1-git-send-email-sgruszka@redhat.com> (sfid-20120516_110658_270721_EB2F0812)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Fix:
 
-Any opinon on the patch below ?
+BUG: sleeping function called from invalid context at kernel/workqueue.c:2547
+in_atomic(): 1, irqs_disabled(): 0, pid: 629, name: wpa_supplicant
+2 locks held by wpa_supplicant/629:
+ #0:  (rtnl_mutex){+.+.+.}, at: [<c08b2b84>] rtnl_lock+0x14/0x20
+ #1:  (&trigger->leddev_list_lock){.+.?..}, at: [<c0867f41>] led_trigger_event+0x21/0x80
+Pid: 629, comm: wpa_supplicant Not tainted 3.3.0-0.rc3.git5.1.fc17.i686
+Call Trace:
+ [<c046a9f6>] __might_sleep+0x126/0x1d0
+ [<c0457d6c>] wait_on_work+0x2c/0x1d0
+ [<c045a09a>] __cancel_work_timer+0x6a/0x120
+ [<c045a160>] cancel_delayed_work_sync+0x10/0x20
+ [<f7dd3c22>] rtl8187_led_brightness_set+0x82/0xf0 [rtl8187]
+ [<c0867f7c>] led_trigger_event+0x5c/0x80
+ [<f7ff5e6d>] ieee80211_led_radio+0x1d/0x40 [mac80211]
+ [<f7ff3583>] ieee80211_stop_device+0x13/0x230 [mac80211]
 
-On Mon, 23 Apr 2012 12:33:11 +0200, Anisse Astier <anisse@astier.eu> wrote :
+Removing _sync is ok, because if led_on work is currently running
+it will be finished before led_off work start to perform, since
+they are always queued on the same mac80211 local->workqueue.
 
-> About 70% of the chips with revision RT5390R initialize incorrectly, using
-> the auxiliary antenna instead of the main one. The net result is that
-> signal reception is very poor (no AP further than 1M).
-> 
-> This chipset differs from RT5390 and RT5390F by its support of hardware
-> antenna diversity. Therefore antenna selection should be done
-> differently, by disabling software features and previously selected
-> antenna.
-> 
-> This changeset does just that, and makes all RT5390R work properly.
-> 
-> This is based on Ralink's 2012_03_22_RT5572_Linux_STA_v2.6.0.0_DPO
-> driver.
-> 
-> Signed-off-by: Anisse Astier <anisse@astier.eu>
-> ---
-> Changes since v1:
->  - moved default_ant inits to proper function, thanks to Gertjan van Wingerde !
-> 
-> ---
->  drivers/net/wireless/rt2x00/rt2800.h    |    1 +
->  drivers/net/wireless/rt2x00/rt2800lib.c |   12 ++++++++++++
->  2 files changed, 13 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index 063bfa8..1ce2634 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -83,6 +83,7 @@
->  #define REV_RT3090E			0x0211
->  #define REV_RT3390E			0x0211
->  #define REV_RT5390F			0x0502
-> +#define REV_RT5390R			0x1502
->  
->  /*
->   * Signal information.
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index bd19802..1cd16b4 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -3356,6 +3356,13 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
->  			rt2800_register_write(rt2x00dev, GPIO_CTRL_CFG, reg);
->  		}
->  
-> +		/* This chip has hardware antenna diversity*/
-> +		if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
-> +			rt2800_bbp_write(rt2x00dev, 150, 0); /* Disable Antenna Software OFDM */
-> +			rt2800_bbp_write(rt2x00dev, 151, 0); /* Disable Antenna Software CCK */
-> +			rt2800_bbp_write(rt2x00dev, 154, 0); /* Clear previously selected antenna */
-> +		}
-> +
->  		rt2800_bbp_read(rt2x00dev, 152, &value);
->  		if (ant == 0)
->  			rt2x00_set_field8(&value, BBP152_RX_DEFAULT_ANT, 1);
-> @@ -4291,6 +4298,11 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  		rt2x00dev->default_ant.rx = ANTENNA_A;
->  	}
->  
-> +	if (rt2x00_rt_rev_gte(rt2x00dev, RT5390, REV_RT5390R)) {
-> +		rt2x00dev->default_ant.tx = ANTENNA_HW_DIVERSITY; /* Unused */
-> +		rt2x00dev->default_ant.rx = ANTENNA_HW_DIVERSITY; /* Unused */
-> +	}
-> +
->  	/*
->  	 * Determine external LNA informations.
->  	 */
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=795176
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rtl818x/rtl8187/leds.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Regards,
+diff --git a/drivers/net/wireless/rtl818x/rtl8187/leds.c b/drivers/net/wireless/rtl818x/rtl8187/leds.c
+index 2e0de2f..c2d5b49 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187/leds.c
++++ b/drivers/net/wireless/rtl818x/rtl8187/leds.c
+@@ -117,7 +117,7 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
+ 			radio_on = true;
+ 		} else if (radio_on) {
+ 			radio_on = false;
+-			cancel_delayed_work_sync(&priv->led_on);
++			cancel_delayed_work(&priv->led_on);
+ 			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
+ 		}
+ 	} else if (radio_on) {
+-- 
+1.7.1
 
-Anisse
