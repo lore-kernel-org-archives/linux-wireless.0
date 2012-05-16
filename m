@@ -1,45 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:39464 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756865Ab2EJKZd (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41678 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759444Ab2EPV4J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 06:25:33 -0400
-Received: by bkcji2 with SMTP id ji2so1114609bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 03:25:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87ehqs8hqy.fsf@purkki.adurom.net>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
- <87ipg48ivh.fsf@purkki.adurom.net> <CA+XVXfcFx3ZDiPrwmDHbVbHs=_V0wsJasNvXAE9XrPodr_xVTg@mail.gmail.com>
- <87ehqs8hqy.fsf@purkki.adurom.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 10 May 2012 13:25:16 +0300
-Message-ID: <CA+XVXffbZ03ANuagfnYQow6y4L07gVb=wP3SDTWKsnF5RDKnZw@mail.gmail.com> (sfid-20120510_122535_476025_225D4916)
-Subject: Re: [PATCH 00/78] 18xx chip support
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 16 May 2012 17:56:09 -0400
+Message-Id: <20120516214048.608319597@sipsolutions.net> (sfid-20120516_235626_424970_A686323C)
+Date: Wed, 16 May 2012 23:40:18 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 1/2] wireless: remove wext sysfs
+References: <20120516214017.936343357@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 10, 2012 at 1:15 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> Arik Nemtsov <arik@wizery.com> writes:
->
->> On Thu, May 10, 2012 at 12:50 PM, Kalle Valo <kvalo@adurom.com> wrote:
->>> Arik Nemtsov <arik@wizery.com> writes:
->>>
->>>> This series adds initial support for the 18xx chip family. The new
->>>> module uses wlcore for functionality common with the 12xx family.
->>>
->>> You do know that sending 78 patches in one patchset is very much
->>> frowned upon? No sane person (outside of wl12xx) is going to review
->>> all of these.
->>
->> Yea I don't like it as well, but it took this amount of patches to get
->> the card up and running. Posting some skeleton code seems kind of
->> useless.
->
-> You can always submit patches in smaller (10-15 patches) chunks.
+From: Johannes Berg <johannes.berg@intel.com>
 
-We'll try to better split stuff in the future.
+The only user of this was hal prior to its 0.5.12
+release which happened over two years ago, so I'm
+sure this can be removed without issues.
 
-Arik
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/feature-removal-schedule.txt |    9 ---
+ net/core/net-sysfs.c                       |   74 -----------------------------
+ net/wireless/Kconfig                       |   13 -----
+ 3 files changed, 96 deletions(-)
+
+--- a/Documentation/feature-removal-schedule.txt	2012-05-15 20:14:44.000000000 +0200
++++ b/Documentation/feature-removal-schedule.txt	2012-05-15 20:14:51.000000000 +0200
+@@ -242,15 +242,6 @@ Who:	Ravikiran Thirumalai <kiran@scalex8
+ 
+ ---------------------------
+ 
+-What:	Code that is now under CONFIG_WIRELESS_EXT_SYSFS
+-	(in net/core/net-sysfs.c)
+-When:	3.5
+-Why:	Over 1K .text/.data size reduction, data is available in other
+-	ways (ioctls)
+-Who:	Johannes Berg <johannes@sipsolutions.net>
+-
+----------------------------
+-
+ What:	sysfs ui for changing p4-clockmod parameters
+ When:	September 2009
+ Why:	See commits 129f8ae9b1b5be94517da76009ea956e89104ce8 and
+--- a/net/core/net-sysfs.c	2012-05-15 20:14:44.000000000 +0200
++++ b/net/core/net-sysfs.c	2012-05-15 20:14:51.000000000 +0200
+@@ -417,72 +417,6 @@ static struct attribute_group netstat_gr
+ 	.name  = "statistics",
+ 	.attrs  = netstat_attrs,
+ };
+-
+-#ifdef CONFIG_WIRELESS_EXT_SYSFS
+-/* helper function that does all the locking etc for wireless stats */
+-static ssize_t wireless_show(struct device *d, char *buf,
+-			     ssize_t (*format)(const struct iw_statistics *,
+-					       char *))
+-{
+-	struct net_device *dev = to_net_dev(d);
+-	const struct iw_statistics *iw;
+-	ssize_t ret = -EINVAL;
+-
+-	if (!rtnl_trylock())
+-		return restart_syscall();
+-	if (dev_isalive(dev)) {
+-		iw = get_wireless_stats(dev);
+-		if (iw)
+-			ret = (*format)(iw, buf);
+-	}
+-	rtnl_unlock();
+-
+-	return ret;
+-}
+-
+-/* show function template for wireless fields */
+-#define WIRELESS_SHOW(name, field, format_string)			\
+-static ssize_t format_iw_##name(const struct iw_statistics *iw, char *buf) \
+-{									\
+-	return sprintf(buf, format_string, iw->field);			\
+-}									\
+-static ssize_t show_iw_##name(struct device *d,				\
+-			      struct device_attribute *attr, char *buf)	\
+-{									\
+-	return wireless_show(d, buf, format_iw_##name);			\
+-}									\
+-static DEVICE_ATTR(name, S_IRUGO, show_iw_##name, NULL)
+-
+-WIRELESS_SHOW(status, status, fmt_hex);
+-WIRELESS_SHOW(link, qual.qual, fmt_dec);
+-WIRELESS_SHOW(level, qual.level, fmt_dec);
+-WIRELESS_SHOW(noise, qual.noise, fmt_dec);
+-WIRELESS_SHOW(nwid, discard.nwid, fmt_dec);
+-WIRELESS_SHOW(crypt, discard.code, fmt_dec);
+-WIRELESS_SHOW(fragment, discard.fragment, fmt_dec);
+-WIRELESS_SHOW(misc, discard.misc, fmt_dec);
+-WIRELESS_SHOW(retries, discard.retries, fmt_dec);
+-WIRELESS_SHOW(beacon, miss.beacon, fmt_dec);
+-
+-static struct attribute *wireless_attrs[] = {
+-	&dev_attr_status.attr,
+-	&dev_attr_link.attr,
+-	&dev_attr_level.attr,
+-	&dev_attr_noise.attr,
+-	&dev_attr_nwid.attr,
+-	&dev_attr_crypt.attr,
+-	&dev_attr_fragment.attr,
+-	&dev_attr_retries.attr,
+-	&dev_attr_misc.attr,
+-	&dev_attr_beacon.attr,
+-	NULL
+-};
+-
+-static struct attribute_group wireless_group = {
+-	.name = "wireless",
+-	.attrs = wireless_attrs,
+-};
+-#endif
+ #endif /* CONFIG_SYSFS */
+ 
+ #ifdef CONFIG_RPS
+@@ -1463,14 +1397,6 @@ int netdev_register_kobject(struct net_d
+ 		groups++;
+ 
+ 	*groups++ = &netstat_group;
+-#ifdef CONFIG_WIRELESS_EXT_SYSFS
+-	if (net->ieee80211_ptr)
+-		*groups++ = &wireless_group;
+-#ifdef CONFIG_WIRELESS_EXT
+-	else if (net->wireless_handlers)
+-		*groups++ = &wireless_group;
+-#endif
+-#endif
+ #endif /* CONFIG_SYSFS */
+ 
+ 	error = device_add(dev);
+--- a/net/wireless/Kconfig	2012-05-15 20:14:44.000000000 +0200
++++ b/net/wireless/Kconfig	2012-05-15 20:14:51.000000000 +0200
+@@ -119,19 +119,6 @@ config CFG80211_WEXT
+ 	  Enable this option if you need old userspace for wireless
+ 	  extensions with cfg80211-based drivers.
+ 
+-config WIRELESS_EXT_SYSFS
+-	bool "Wireless extensions sysfs files"
+-	depends on WEXT_CORE && SYSFS
+-	help
+-	  This option enables the deprecated wireless statistics
+-	  files in /sys/class/net/*/wireless/. The same information
+-	  is available via the ioctls as well.
+-
+-	  Say N. If you know you have ancient tools requiring it,
+-	  like very old versions of hal (prior to 0.5.12 release),
+-	  say Y and update the tools as soon as possible as this
+-	  option will be removed soon.
+-
+ config LIB80211
+ 	tristate "Common routines for IEEE802.11 drivers"
+ 	default n
+
+
