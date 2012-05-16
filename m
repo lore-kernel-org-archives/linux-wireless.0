@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:61285 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754357Ab2ECUXV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 16:23:21 -0400
-Received: by obbtb18 with SMTP id tb18so2923537obb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 13:23:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1336074010.5167.19.camel@jlt3.sipsolutions.net>
-References: <1335820832-18887-1-git-send-email-ashok@cozybit.com>
- <1335820832-18887-3-git-send-email-ashok@cozybit.com> <1336074010.5167.19.camel@jlt3.sipsolutions.net>
-From: Ashok Nagarajan <ashok@cozybit.com>
-Date: Thu, 3 May 2012 13:23:00 -0700
-Message-ID: <CACcxo+rNUbiitNUvZewaNpXnT8BJTtSvJLsgDnZ44+MYAzbVuA@mail.gmail.com> (sfid-20120503_222325_079456_4E810050)
-Subject: Re: [PATCH v2 3/4] mac80211: Allow nonHT/HT peering in mesh
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from plane.gmane.org ([80.91.229.3]:52440 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760747Ab2EPXZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 19:25:05 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SUnaZ-0008IR-F3
+	for linux-wireless@vger.kernel.org; Thu, 17 May 2012 01:25:03 +0200
+Received: from lns-bzn-48f-81-56-242-144.adsl.proxad.net ([81.56.242.144])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 01:25:03 +0200
+Received: from alexandre.alouit by lns-bzn-48f-81-56-242-144.adsl.proxad.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 01:25:03 +0200
+To: linux-wireless@vger.kernel.org
+From: Alex Alouit <alexandre.alouit@gmail.com>
+Subject: Module Carl9170, firmware won't load properly
+Date: Wed, 16 May 2012 23:19:56 +0000 (UTC)
+Message-ID: <loom.20120517T011514-623@post.gmane.org> (sfid-20120517_012510_153224_85315299)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 3, 2012 at 12:40 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2012-04-30 at 14:20 -0700, Ashok Nagarajan wrote:
->
->> -         (local->_oper_channel_type !=
->> -          ieee80211_ht_oper_to_channel_type(ie->ht_operation)))
->> +         local->_oper_channel_type > NL80211_CHAN_HT20 &&
->> +         sta_channel_type > NL80211_CHAN_HT20 &&
->> +         local->_oper_channel_type != sta_channel_type)
->
-> I don't think you should use > operators since we may later have to add
-> other channel types like 5 and 10 MHz.
->
-Sure. I will send a fix patch reflecting this change.
+Hello, 
 
-> johannes
->
+I want to use an Netgear WN111v2 (AR9170 usb wireless) with Vyatta 6.4, 
+I copied the firmware (http://linuxwireless.org/en/users/Drivers/carl9170), 
+(carl9170-1.fw in /usr/local/lib/firmware version 1.9.2 (kernel 3.0.23)) 
+but it seems that the module doesn't load correctly the firmware. 
 
-Thanks,
-Ashok
+
+dmesg output: 
+Code:
+
+usb 1-1: new high speed USB device number 2 using ehci_hcd 
+usb 1-1: New USB device found, idVendor=0846, idProduct=9001 
+usb 1-1: New USB device strings: Mfr=16, Product=32, SerialNumber=48 
+usb 1-1: Product: USB2.0 WLAN 
+usb 1-1: Manufacturer: ATHER 
+usb 1-1: SerialNumber: 12345 
+usb 1-1: reset high speed USB device number 2 using ehci_hcd 
+usbcore: registered new interface driver carl9170 
+usb 1-1: driver   API: 1.9.2 2011-01-22 [1-1] 
+usb 1-1: firmware API: 1.9.2 2010-12-25 
+usb 1-1: firmware upload failed (-110). 
+
+
+It's the module or firmware that is buggy? How can I fix this?
+
+Excuse my English, is not my native language. 
+
+
+Best regards
+
