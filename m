@@ -1,63 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56492 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965873Ab2EPJGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 05:06:51 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Herton Ronaldo Krzesinski" <herton@canonical.com>,
-	"Hin-Tak Leung" <htl10@users.sourceforge.net>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] rtl8187: ->brightness_set can not sleep
-Date: Wed, 16 May 2012 11:06:21 +0200
-Message-Id: <1337159181-4466-1-git-send-email-sgruszka@redhat.com> (sfid-20120516_110658_270721_EB2F0812)
+Received: from he.sipsolutions.net ([78.46.109.217]:41681 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759603Ab2EPV4O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 17:56:14 -0400
+Message-Id: <20120516214048.739945597@sipsolutions.net> (sfid-20120516_235624_043250_4605F4F8)
+Date: Wed, 16 May 2012 23:40:19 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 2/2] cfg80211: deprecate CFG80211_WEXT
+References: <20120516214017.936343357@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix:
+From: Johannes Berg <johannes.berg@intel.com>
 
-BUG: sleeping function called from invalid context at kernel/workqueue.c:2547
-in_atomic(): 1, irqs_disabled(): 0, pid: 629, name: wpa_supplicant
-2 locks held by wpa_supplicant/629:
- #0:  (rtnl_mutex){+.+.+.}, at: [<c08b2b84>] rtnl_lock+0x14/0x20
- #1:  (&trigger->leddev_list_lock){.+.?..}, at: [<c0867f41>] led_trigger_event+0x21/0x80
-Pid: 629, comm: wpa_supplicant Not tainted 3.3.0-0.rc3.git5.1.fc17.i686
-Call Trace:
- [<c046a9f6>] __might_sleep+0x126/0x1d0
- [<c0457d6c>] wait_on_work+0x2c/0x1d0
- [<c045a09a>] __cancel_work_timer+0x6a/0x120
- [<c045a160>] cancel_delayed_work_sync+0x10/0x20
- [<f7dd3c22>] rtl8187_led_brightness_set+0x82/0xf0 [rtl8187]
- [<c0867f7c>] led_trigger_event+0x5c/0x80
- [<f7ff5e6d>] ieee80211_led_radio+0x1d/0x40 [mac80211]
- [<f7ff3583>] ieee80211_stop_device+0x13/0x230 [mac80211]
+Almost all wireless tools have transitioned to
+or at least added compatibility with nl80211 so
+there's no real need for CONFIG_CFG80211_WEXT
+any more. Mark it for removal, and also change
+the default to not be enabled.
 
-Removing _sync is ok, because if led_on work is currently running
-it will be finished before led_off work start to perform, since
-they are always queued on the same mac80211 local->workqueue.
-
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=795176
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rtl818x/rtl8187/leds.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ Documentation/feature-removal-schedule.txt |   13 +++++++++++++
+ net/wireless/Kconfig                       |    1 -
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187/leds.c b/drivers/net/wireless/rtl818x/rtl8187/leds.c
-index 2e0de2f..c2d5b49 100644
---- a/drivers/net/wireless/rtl818x/rtl8187/leds.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187/leds.c
-@@ -117,7 +117,7 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
- 			radio_on = true;
- 		} else if (radio_on) {
- 			radio_on = false;
--			cancel_delayed_work_sync(&priv->led_on);
-+			cancel_delayed_work(&priv->led_on);
- 			ieee80211_queue_delayed_work(hw, &priv->led_off, 0);
- 		}
- 	} else if (radio_on) {
--- 
-1.7.1
+--- a/Documentation/feature-removal-schedule.txt	2012-05-15 20:14:51.000000000 +0200
++++ b/Documentation/feature-removal-schedule.txt	2012-05-15 20:14:51.000000000 +0200
+@@ -433,6 +433,19 @@ Who:	Hans Verkuil <hans.verkuil@cisco.co
+ 
+ ----------------------------
+ 
++What:	CONFIG_CFG80211_WEXT
++When:	as soon as distributions ship new wireless tools, ie. wpa_supplicant 1.0
++	and NetworkManager/connman/etc. that are able to use nl80211
++Why:	Wireless extensions are deprecated, and userland tools are moving to
++	using nl80211. New drivers are no longer using wireless extensions,
++	and while there might still be old drivers, both new drivers and new
++	userland no longer needs them and they can't be used for an feature
++	developed in the past couple of years. As such, compatibility with
++	wireless extensions in new drivers will be removed.
++Who:	Johannes Berg <johannes@sipsolutions.net>
++
++----------------------------
++
+ What:	g_file_storage driver
+ When:	3.8
+ Why:	This driver has been superseded by g_mass_storage.
+--- a/net/wireless/Kconfig	2012-05-15 20:14:51.000000000 +0200
++++ b/net/wireless/Kconfig	2012-05-15 20:14:51.000000000 +0200
+@@ -114,7 +114,6 @@ config CFG80211_WEXT
+ 	bool "cfg80211 wireless extensions compatibility"
+ 	depends on CFG80211
+ 	select WEXT_CORE
+-	default y
+ 	help
+ 	  Enable this option if you need old userspace for wireless
+ 	  extensions with cfg80211-based drivers.
+
 
