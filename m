@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:46680 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757747Ab2EJJQD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38786 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756131Ab2EPUqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:03 -0400
-Received: by mail-wi0-f170.google.com with SMTP id hm4so231590wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:02 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 42/78] wl18xx: don't upload NVS to FW
-Date: Thu, 10 May 2012 12:13:47 +0300
-Message-Id: <1336641263-5761-43-git-send-email-arik@wizery.com> (sfid-20120510_112122_639042_E1EF315C)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Wed, 16 May 2012 16:46:35 -0400
+Message-ID: <1337201182.18519.15.camel@jlt3.sipsolutions.net> (sfid-20120516_224641_413968_03092B49)
+Subject: Re: [Lf_driver_backport] [PATCH] compat: backport ether_addr_equal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	Ozan =?UTF-8?Q?=C3=87a=C4=9Flayan?= <ozancag@gmail.com>,
+	mcgrof@kernel.org, linux-wireless@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org,
+	linux-bluetooth@vger.kernel.org
+Date: Wed, 16 May 2012 22:46:22 +0200
+In-Reply-To: <4FB40FF0.4050809@hauke-m.de> (sfid-20120516_223716_008251_1D472FFC)
+References: <1337162148-16499-1-git-send-email-ozancag@gmail.com>
+	 <CAB=NE6W2dz=Ld=w5+7jexKk9xfADhk644mc4C=TtbvBZ9_cKGg@mail.gmail.com>
+	 <4FB40FF0.4050809@hauke-m.de> (sfid-20120516_223716_008251_1D472FFC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In this chip family the NVS file should not be uploaded to FW. In fact,
-we encounter strange bugs (sdio errors) when trying to upload it with
-certain parameters.
+On Wed, 2012-05-16 at 22:37 +0200, Hauke Mehrtens wrote:
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |    4 ----
- 1 file changed, 4 deletions(-)
+> > Content-Type: text/plain; charset="utf-8"
+> > Content-Transfer-Encoding: base64
+> > 
+> > And then all I see is this when I save the e-mail to a txt file, given
+> > that the encoding is base64. This is odd given that I see you sent
+> > this with X-Mailer: git-send-email 1.7.10.1 -- so not sure how this
+> > ended up going out like this.
+> 
+> That's strange, when I save this mail I got over the mailing list with
+> Thunderbird it is not based64 encoded and when looking into the source
+> code with my mail program it is normal text mail.
+> 
+> From:	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
+> Subject: [PATCH] compat: backport ether_addr_equal
+> Content-Type: text/plain; charset=UTF-8
+> Content-Transfer-Encoding: 8bit
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index a8b9cea..ddd11d0 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -755,10 +755,6 @@ static int wl18xx_boot(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out;
- 
--	ret = wlcore_boot_upload_nvs(wl);
--	if (ret < 0)
--		goto out;
--
- 	wl18xx_pre_upload(wl);
- 
- 	ret = wlcore_boot_upload_firmware(wl);
--- 
-1.7.9.5
+Well, which list? :-)
+
+I suspect you looked at linux-wireless, and Luis looked at
+lf_driver_backport (given his reply tag), so maybe the
+lf_driver_backport list re-encoded the email.
+
+johannes
 
