@@ -1,147 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35755 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125Ab2EYKEo (ORCPT
+Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:50209 "EHLO
+	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759863Ab2EPIoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 06:04:44 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [V2 2/2] ath6kl: Fix unstable downlink throughput
-Date: Fri, 25 May 2012 15:34:40 +0530
-Message-ID: <1337940280-14690-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120525_120447_906922_6DF9388E)
-In-Reply-To: <1337940280-14690-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1337940280-14690-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 16 May 2012 04:44:16 -0400
+Received: by obbwd18 with SMTP id wd18so946589obb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 01:44:15 -0700 (PDT)
+From: Yoni Divinsky <yoni.divinsky@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <arik@wizery.com>, <coelho@ti.com>
+Subject: [PATCH] wlcore: add role_id to all the sched_scan commands
+Date: Wed, 16 May 2012 11:34:17 +0300
+Message-Id: <1337157258-15163-1-git-send-email-yoni.divinsky@ti.com> (sfid-20120516_104425_853648_CE84A019)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is frequent downlink throughput drop to 0 when operating
-at the signal level between -42dBm to -53dBm. This has been root
-caused to the delay in releasing pending a-mpdu subframes in
-reorder buffer. Right now the timeout value is 400ms, there
-is also a race condition where timeout handler can be delayed
-to run at an extra timeout interval. This patch reduces the
-timout interval to reasonable 100ms and makes sure releasing
-pending frames are not skipped in the timeout handler by removing
-the flag (rxtid->progress) which can delay the timeout logic.
+Due to a need by the firmware when working in multirole
+the role id needs to be added to the structs of the
+following commands:
+CMD_CONNECTION_SCAN_CFG, CMD_CONNECTION_SCAN_SSID_CFG,
+CMD_START_PERIODIC_SCAN, CMD_STOP_PERIODIC_SCAN
 
-Reported-by: Yu Yanzhi <yanzhiy@qca.qualcomm.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
+Signed-off-by: Igal Chernobelsky <igalc@ti.com>
 ---
+ drivers/net/wireless/ti/wlcore/main.c |    5 +++--
+ drivers/net/wireless/ti/wlcore/scan.c |    9 +++++++--
+ drivers/net/wireless/ti/wlcore/scan.h |   15 +++++++++------
+ 3 files changed, 19 insertions(+), 10 deletions(-)
 
-V2 - Fix code alignment
-
- drivers/net/wireless/ath/ath6kl/core.h |    3 +-
- drivers/net/wireless/ath/ath6kl/txrx.c |   43 ++++++++++++++-----------------
- 2 files changed, 20 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index b1bc6bc..a827bd7 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -215,7 +215,7 @@ enum ath6kl_hw_flags {
- 
- #define AGGR_NUM_OF_FREE_NETBUFS    16
- 
--#define AGGR_RX_TIMEOUT     400	/* in ms */
-+#define AGGR_RX_TIMEOUT     100	/* in ms */
- 
- #define WMI_TIMEOUT (2 * HZ)
- 
-@@ -264,7 +264,6 @@ struct skb_hold_q {
- 
- struct rxtid {
- 	bool aggr;
--	bool progress;
- 	bool timer_mon;
- 	u16 win_sz;
- 	u16 seq_next;
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 60723be..a6ff890 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1186,28 +1186,26 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
- 	aggr_deque_frms(agg_conn, tid, 0, 1);
- 
- 	if (agg_conn->timer_scheduled)
--		rxtid->progress = true;
--	else
--		for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
--			spin_lock_bh(&rxtid->lock);
--			if (rxtid->hold_q[idx].skb) {
--				/*
--				 * There is a frame in the queue and no
--				 * timer so start a timer to ensure that
--				 * the frame doesn't remain stuck
--				 * forever.
--				 */
--				agg_conn->timer_scheduled = true;
--				mod_timer(&agg_conn->timer,
--					  (jiffies +
--					   HZ * (AGGR_RX_TIMEOUT) / 1000));
--				rxtid->progress = false;
--				rxtid->timer_mon = true;
--				spin_unlock_bh(&rxtid->lock);
--				break;
--			}
-+		return is_queued;
-+
-+	for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
-+		spin_lock_bh(&rxtid->lock);
-+		if (rxtid->hold_q[idx].skb) {
-+			/*
-+			 * There is a frame in the queue and no
-+			 * timer so start a timer to ensure that
-+			 * the frame doesn't remain stuck
-+			 * forever.
-+			 */
-+			agg_conn->timer_scheduled = true;
-+			mod_timer(&agg_conn->timer,
-+				  (jiffies + HZ * (AGGR_RX_TIMEOUT) / 1000));
-+			rxtid->timer_mon = true;
- 			spin_unlock_bh(&rxtid->lock);
-+			break;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index b6718e0..2d3f8f7 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -2448,7 +2448,7 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	} else {
+ 		/* The current firmware only supports sched_scan in idle */
+ 		if (wl->sched_scanning) {
+-			wl1271_scan_sched_scan_stop(wl);
++			wl1271_scan_sched_scan_stop(wl, wlvif);
+ 			ieee80211_sched_scan_stopped(wl->hw);
  		}
-+		spin_unlock_bh(&rxtid->lock);
-+	}
  
- 	return is_queued;
+@@ -3198,6 +3198,7 @@ static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
+ 				      struct ieee80211_vif *vif)
+ {
+ 	struct wl1271 *wl = hw->priv;
++	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	int ret;
+ 
+ 	wl1271_debug(DEBUG_MAC80211, "wl1271_op_sched_scan_stop");
+@@ -3211,7 +3212,7 @@ static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	wl1271_scan_sched_scan_stop(wl);
++	wl1271_scan_sched_scan_stop(wl, wlvif);
+ 
+ 	wl1271_ps_elp_sleep(wl);
+ out:
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index 97022f4..30bedd8 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -564,6 +564,7 @@ wl1271_scan_sched_scan_channels(struct wl1271 *wl,
+ /* Returns the scan type to be used or a negative value on error */
+ static int
+ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
++				 struct wl12xx_vif *wlvif,
+ 				 struct cfg80211_sched_scan_request *req)
+ {
+ 	struct wl1271_cmd_sched_scan_ssid_list *cmd = NULL;
+@@ -592,6 +593,7 @@ wl12xx_scan_sched_scan_ssid_list(struct wl1271 *wl,
+ 		goto out;
+ 	}
+ 
++	cmd->role_id = wlvif->dev_role_id;
+ 	if (!n_match_ssids) {
+ 		/* No filter, with ssids */
+ 		type = SCAN_SSID_FILTER_DISABLED;
+@@ -679,6 +681,7 @@ int wl1271_scan_sched_scan_config(struct wl1271 *wl,
+ 	if (!cfg)
+ 		return -ENOMEM;
+ 
++	cfg->role_id = wlvif->dev_role_id;
+ 	cfg->rssi_threshold = c->rssi_threshold;
+ 	cfg->snr_threshold  = c->snr_threshold;
+ 	cfg->n_probe_reqs = c->num_probe_reqs;
+@@ -696,7 +699,7 @@ int wl1271_scan_sched_scan_config(struct wl1271 *wl,
+ 		cfg->intervals[i] = cpu_to_le32(req->interval);
+ 
+ 	cfg->ssid_len = 0;
+-	ret = wl12xx_scan_sched_scan_ssid_list(wl, req);
++	ret = wl12xx_scan_sched_scan_ssid_list(wl, wlvif, req);
+ 	if (ret < 0)
+ 		goto out;
+ 
+@@ -768,6 +771,7 @@ int wl1271_scan_sched_scan_start(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	if (!start)
+ 		return -ENOMEM;
+ 
++	start->role_id = wlvif->dev_role_id;
+ 	start->tag = WL1271_SCAN_DEFAULT_TAG;
+ 
+ 	ret = wl1271_cmd_send(wl, CMD_START_PERIODIC_SCAN, start,
+@@ -789,7 +793,7 @@ void wl1271_scan_sched_scan_results(struct wl1271 *wl)
+ 	ieee80211_sched_scan_results(wl->hw);
  }
-@@ -1612,7 +1610,7 @@ static void aggr_timeout(unsigned long arg)
- 		rxtid = &aggr_conn->rx_tid[i];
- 		stats = &aggr_conn->stat[i];
  
--		if (!rxtid->aggr || !rxtid->timer_mon || rxtid->progress)
-+		if (!rxtid->aggr || !rxtid->timer_mon)
- 			continue;
+-void wl1271_scan_sched_scan_stop(struct wl1271 *wl)
++void wl1271_scan_sched_scan_stop(struct wl1271 *wl,  struct wl12xx_vif *wlvif)
+ {
+ 	struct wl1271_cmd_sched_scan_stop *stop;
+ 	int ret = 0;
+@@ -803,6 +807,7 @@ void wl1271_scan_sched_scan_stop(struct wl1271 *wl)
+ 		return;
+ 	}
  
- 		stats->num_timeouts++;
-@@ -1635,7 +1633,6 @@ static void aggr_timeout(unsigned long arg)
- 				if (rxtid->hold_q[j].skb) {
- 					aggr_conn->timer_scheduled = true;
- 					rxtid->timer_mon = true;
--					rxtid->progress = false;
- 					spin_unlock_bh(&rxtid->lock);
- 					break;
- 				}
-@@ -1667,7 +1664,6 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
- 		aggr_deque_frms(aggr_conn, tid, 0, 0);
++	stop->role_id = wlvif->dev_role_id;
+ 	stop->tag = WL1271_SCAN_DEFAULT_TAG;
  
- 	rxtid->aggr = false;
--	rxtid->progress = false;
- 	rxtid->timer_mon = false;
- 	rxtid->win_sz = 0;
- 	rxtid->seq_next = 0;
-@@ -1746,7 +1742,6 @@ void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
- 	for (i = 0; i < NUM_OF_TIDS; i++) {
- 		rxtid = &aggr_conn->rx_tid[i];
- 		rxtid->aggr = false;
--		rxtid->progress = false;
- 		rxtid->timer_mon = false;
- 		skb_queue_head_init(&rxtid->q);
- 		spin_lock_init(&rxtid->lock);
+ 	ret = wl1271_cmd_send(wl, CMD_STOP_PERIODIC_SCAN, stop,
+diff --git a/drivers/net/wireless/ti/wlcore/scan.h b/drivers/net/wireless/ti/wlcore/scan.h
+index ea53223..29f3c8d 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.h
++++ b/drivers/net/wireless/ti/wlcore/scan.h
+@@ -40,7 +40,7 @@ int wl1271_scan_sched_scan_config(struct wl1271 *wl,
+ 				     struct cfg80211_sched_scan_request *req,
+ 				     struct ieee80211_sched_scan_ies *ies);
+ int wl1271_scan_sched_scan_start(struct wl1271 *wl, struct wl12xx_vif *wlvif);
+-void wl1271_scan_sched_scan_stop(struct wl1271 *wl);
++void wl1271_scan_sched_scan_stop(struct wl1271 *wl,  struct wl12xx_vif *wlvif);
+ void wl1271_scan_sched_scan_results(struct wl1271 *wl);
+ 
+ #define WL1271_SCAN_MAX_CHANNELS       24
+@@ -188,8 +188,8 @@ struct wl1271_cmd_sched_scan_config {
+ 
+ 	u8 n_pactive_ch; /* number of pactive (passive until fw detects energy)
+ 			    channels in BG band */
+-
+-	u8 padding[2];
++	u8 role_id;
++	u8 padding[1];
+ 
+ 	struct conn_scan_ch_params channels_2[MAX_CHANNELS_2GHZ];
+ 	struct conn_scan_ch_params channels_5[MAX_CHANNELS_5GHZ];
+@@ -216,21 +216,24 @@ struct wl1271_cmd_sched_scan_ssid_list {
+ 
+ 	u8 n_ssids;
+ 	struct wl1271_ssid ssids[SCHED_SCAN_MAX_SSIDS];
+-	u8 padding[3];
++	u8 role_id;
++	u8 padding[2];
+ } __packed;
+ 
+ struct wl1271_cmd_sched_scan_start {
+ 	struct wl1271_cmd_header header;
+ 
+ 	u8 tag;
+-	u8 padding[3];
++	u8 role_id;
++	u8 padding[2];
+ } __packed;
+ 
+ struct wl1271_cmd_sched_scan_stop {
+ 	struct wl1271_cmd_header header;
+ 
+ 	u8 tag;
+-	u8 padding[3];
++	u8 role_id;
++	u8 padding[2];
+ } __packed;
+ 
+ 
 -- 
 1.7.0.4
 
