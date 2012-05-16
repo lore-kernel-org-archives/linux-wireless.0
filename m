@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:62982 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757495Ab2EJXSX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 19:18:23 -0400
-Received: by lahd3 with SMTP id d3so1495241lah.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 16:18:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAG9cJmmywREd9JYxkoySEXPaLX2Ebqq5yc7s9Kv5-sGczpq1iQ@mail.gmail.com>
-References: <CAG9cJmkDf6koV93NyOo2W8D7Y3G6tapQOucjW5M7FLPDnNhvKQ@mail.gmail.com>
- <CAGRGNgXDUuLFeKh7KgqMqyyT8Xi_GV2BReYJ66uK_SgBJ5Nb4g@mail.gmail.com>
- <CAG9cJmmRZvf=EW9k6AVLEv_zeU86thGaEWHv5R0ADNX9B6jMmw@mail.gmail.com>
- <CAGRGNgXQ3o-2bD9J+C2cAu9M-fo69tiXWfugZKjqU3o9ki7f7Q@mail.gmail.com>
- <CAG9cJmkBsS6oSmVnkrjarhNnkruiy0ntByrGAoH7MhwC_xoPag@mail.gmail.com> <CAG9cJmmywREd9JYxkoySEXPaLX2Ebqq5yc7s9Kv5-sGczpq1iQ@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 11 May 2012 09:18:01 +1000
-Message-ID: <CAGRGNgUQVdBaezJAhDytV=eOHLoi46j7GAzKXq-VbHoxB4uadg@mail.gmail.com> (sfid-20120511_011827_401235_DC9C6F52)
-Subject: Re: how to remove the b43
-To: lina <lina.lastname@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:33935 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757341Ab2EPU60 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 16:58:26 -0400
+Message-ID: <1337201904.10019.21.camel@joe2Laptop> (sfid-20120516_225829_821547_833CA746)
+Subject: Re: [PATCH 3/3] iwlwifi: add __printf argument checking
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Wed, 16 May 2012 13:58:24 -0700
+In-Reply-To: <1337200851-20469-4-git-send-email-johannes@sipsolutions.net>
+References: <1337200851-20469-1-git-send-email-johannes@sipsolutions.net>
+	 <1337200851-20469-4-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lina,
+On Wed, 2012-05-16 at 22:40 +0200, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Joe Perches suggested adding the __printf attribute
+> to the __iwl_dbg function to check arguments; add it
+> to all of the logging functions (err, warn, info, dbg
+> and crit.)
+> 
+> Change-Id: I7a2ffcd3f625ff29c65519b0c3d474bace884f9d
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Reviewed-on: http://git-mwg.jer.intel.com/gerrit/2022
+> Tested-by: Jenkins
+> Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Fri, May 11, 2012 at 3:08 AM, lina <lina.lastname@gmail.com> wrote:
-> It worked well in the 3.3.5 following the
-> http://linuxwireless.org/en/users/Drivers/b43.
+Trivial comments:
 
-Glad to hear that.
+Odd Reviewed-on: and Tested-by: lines.
+The intel.com link does not resolve here too.
 
-Thanks,
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+[]
+> @@ -38,10 +38,10 @@ static inline bool iwl_have_debug_level(u32 level)
+>  }
+>  
+>  void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+> -		const char *fmt, ...);
+> -void __iwl_warn(struct device *dev, const char *fmt, ...);
+> -void __iwl_info(struct device *dev, const char *fmt, ...);
+> -void __iwl_crit(struct device *dev, const char *fmt, ...);
+> +		const char *fmt, ...) __printf(4, 5);
+> +void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
+> +void __iwl_info(struct device *dev, const char *fmt, ...) __printf(2, 3);
+> +void __iwl_crit(struct device *dev, const char *fmt, ...) __printf(2, 3);
 
--- 
-Julian Calaby
+As far as I know, there are very few in-kernel uses of
+__printf after the function prototype (6 out of 183).
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+$ git grep -E "\b__printf\s*\(\s*\w+\s*,\s*\w+\s*\)\s*;" | wc -l
+6
+$ git grep -E "\b__printf\s*\(\s*\w+\s*,\s*\w+\s*\)" | wc -l
+183
+
+I'd prefer to keep the __printf before the return type.
+
+
