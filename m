@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:39971 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751810Ab2E2ONY convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38316 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755067Ab2EPUk5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 10:13:24 -0400
-Received: by obbtb18 with SMTP id tb18so6918308obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 07:13:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1338203942-5667-8-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-	<1338203942-5667-8-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 29 May 2012 17:13:23 +0300
-Message-ID: <CAB3XZEe97MkqeugFrqdjVUOhE0cifGvikwNFnB20EHokPEc5Cg@mail.gmail.com> (sfid-20120529_161339_475858_FC6AC685)
-Subject: Re: [RFC 07/14] cfg80211: track monitor interfaces count
-From: Eliad Peller <eliad@wizery.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 16 May 2012 16:40:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Subject: [PATCH 2/3] iwlwifi: fix debug print in iwl_sta_calc_ht_flags
+Date: Wed, 16 May 2012 22:40:50 +0200
+Message-Id: <1337200851-20469-3-git-send-email-johannes@sipsolutions.net> (sfid-20120516_224110_126559_46371AB5)
+In-Reply-To: <1337200851-20469-1-git-send-email-johannes@sipsolutions.net>
+References: <1337200851-20469-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Michal,
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-On Mon, May 28, 2012 at 2:18 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
-> Implements .set_monitor_enabled(wiphy, enabled).
->
-> Notifies driver upon change of interface layout.
->
-> If only monitor interfaces become present it is
-> called with 2nd argument being true. If
-> non-monitor interface appears then 2nd argument
-> is false. Driver is notified only upon change.
->
-> This makes it more obvious about the fact that
-> cfg80211 supports single monitor channel. Once we
-> implement multi-channel we don't want to allow
-> setting monitor channel while other interface
-> types are running. Otherwise it would be ambiguous
-> once we start considering num_different_channels.
->
-> Change-Id: Ibd82a70c256c2de584eb541ea2c36663a59f09d4
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-[...]
+We missed passing an argument to the
+debug print. Fix it.
 
-> @@ -879,6 +895,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
->                break;
->        case NETDEV_DOWN:
->                dev_hold(dev);
-> +               cfg80211_update_iface_num(rdev, wdev, -1);
->                queue_work(cfg80211_wq, &wdev->cleanup_work);
->                break;
->        case NETDEV_UP:
-> @@ -986,6 +1003,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
->                ret = cfg80211_can_add_interface(rdev, wdev->iftype);
->                if (ret)
->                        return notifier_from_errno(ret);
-> +               cfg80211_update_iface_num(rdev, wdev, 1);
->                break;
->        }
->
+Cc: stable@kernel.org
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-what about interface type change?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 67e6f1d..76c1f72 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -236,6 +236,7 @@ static void iwl_sta_calc_ht_flags(struct iwl_priv *priv,
+ 	mimo_ps_mode = (sta_ht_inf->cap & IEEE80211_HT_CAP_SM_PS) >> 2;
+ 
+ 	IWL_DEBUG_INFO(priv, "STA %pM SM PS mode: %s\n",
++			sta->addr,
+ 			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_STATIC) ?
+ 			"static" :
+ 			(mimo_ps_mode == WLAN_HT_CAP_SM_PS_DYNAMIC) ?
+-- 
+1.7.10
 
-Eliad.
