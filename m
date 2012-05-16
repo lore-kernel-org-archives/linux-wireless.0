@@ -1,99 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:51455 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751121Ab2EHEAr (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52897 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759677Ab2EPUyj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 00:00:47 -0400
-Received: by mail-ob0-f174.google.com with SMTP id tb18so9215680obb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 21:00:47 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	javier@cozybit.com, devel@lists.open80211s.org,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 3/4] mac80211: Modify mesh_set_ht_prot_mode() to have less identation
-Date: Mon,  7 May 2012 21:00:31 -0700
-Message-Id: <1336449632-9057-3-git-send-email-ashok@cozybit.com> (sfid-20120508_060116_203551_C981DC7E)
-In-Reply-To: <1336449632-9057-1-git-send-email-ashok@cozybit.com>
-References: <1336449632-9057-1-git-send-email-ashok@cozybit.com>
+	Wed, 16 May 2012 16:54:39 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Subject: [PATCH 9/9] iwlwifi: add debugging to shadow registers and fix typo
+Date: Wed, 16 May 2012 22:54:30 +0200
+Message-Id: <1337201670-21604-10-git-send-email-johannes@sipsolutions.net> (sfid-20120516_225446_488270_BF7C233F)
+In-Reply-To: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
+References: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Determining types of peers is modified to have less indentation. This change is
-suggested by Johannes. This patch also corrects the reference in comment to
-IEEE 802.11-2012 version.
+From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Add a debugging log when using shadow
+registers. Also fix a minor typo in this
+connection.
+
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh_plink.c |   47 +++++++++++++++++++++++----------------------
- 1 files changed, 24 insertions(+), 23 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-config.h     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 8cc8461..9744c51 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -105,15 +105,15 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
- 	return sta;
- }
- 
--/** mesh_set_ht_prot_mode - set correct HT protection mode
-+/*
-+ * mesh_set_ht_prot_mode - set correct HT protection mode
-  *
-- * Section 9.23.3.5 of IEEE 80211s standard describes the protection rules for
-- * HT mesh STA in a MBSS. Three HT protection modes are supported for now,
-- * non-HT mixed mode, 20MHz-protection and no-protection mode. non-HT mixed
-- * mode is selected if any non-HT peers are present in our MBSS.
-- * 20MHz-protection mode is selected if all peers in our 20/40MHz MBSS support
-- * HT and atleast one HT20 peer is present. Otherwise no-protection mode is
-- * selected.
-+ * Section 9.23.3.5 of IEEE 80211-2012 describes the protection rules for HT
-+ * mesh STA in a MBSS. Three HT protection modes are supported for now, non-HT
-+ * mixed mode, 20MHz-protection and no-protection mode. non-HT mixed mode is
-+ * selected if any non-HT peers are present in our MBSS.  20MHz-protection mode
-+ * is selected if all peers in our 20/40MHz MBSS support HT and atleast one
-+ * HT20 peer is present. Otherwise no-protection mode is selected.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 67b28aa..a52818b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -143,7 +143,7 @@ enum iwl_led_mode {
+  * @chain_noise_scale: default chain noise scale used for gain computation
+  * @wd_timeout: TX queues watchdog timeout
+  * @max_event_log_size: size of event log buffer size for ucode event logging
+- * @shadow_reg_enable: HW shadhow register bit
++ * @shadow_reg_enable: HW shadow register support
+  * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
+  * @no_idle_support: do not support idle mode
   */
- static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
- {
-@@ -128,21 +128,22 @@ static u32 mesh_set_ht_prot_mode(struct ieee80211_sub_if_data *sdata)
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sta, &local->sta_list, list) {
--		if (sdata == sta->sdata &&
--		    sta->plink_state == NL80211_PLINK_ESTAB) {
--			switch (sta->ch_type) {
--			case NL80211_CHAN_NO_HT:
--				mpl_dbg("mesh_plink %pM: nonHT sta (%pM) is present",
--					sdata->vif.addr, sta->sta.addr);
--				non_ht_sta = true;
--				goto out;
--			case NL80211_CHAN_HT20:
--				mpl_dbg("mesh_plink %pM: HT20 sta (%pM) is present",
--					sdata->vif.addr, sta->sta.addr);
--				ht20_sta = true;
--			default:
--				break;
--			}
-+		if (sdata != sta->sdata ||
-+		    sta->plink_state != NL80211_PLINK_ESTAB)
-+			continue;
-+
-+		switch (sta->ch_type) {
-+		case NL80211_CHAN_NO_HT:
-+			mpl_dbg("mesh_plink %pM: nonHT sta (%pM) is present",
-+				sdata->vif.addr, sta->sta.addr);
-+			non_ht_sta = true;
-+			goto out;
-+		case NL80211_CHAN_HT20:
-+			mpl_dbg("mesh_plink %pM: HT20 sta (%pM) is present",
-+				sdata->vif.addr, sta->sta.addr);
-+			ht20_sta = true;
-+		default:
-+			break;
- 		}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 02ef48c..1e50401 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -829,6 +829,7 @@ static int iwl_nic_init(struct iwl_trans *trans)
+ 	if (trans->cfg->base_params->shadow_reg_enable) {
+ 		/* enable shadow regs in HW */
+ 		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL, 0x800FFFFF);
++		IWL_DEBUG_INFO(trans, "Enabling shadow registers in device\n");
  	}
- out:
+ 
+ 	return 0;
 -- 
-1.7.5.4
+1.7.10
 
