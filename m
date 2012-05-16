@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:35932 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751161Ab2ECH0B (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58475 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965135Ab2EPH7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:26:01 -0400
-Received: by lbgc1 with SMTP id c1so85825lbg.29
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 00:25:59 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: dcb314@hotmail.com, Luciano Coelho <coelho@ti.com>
-Subject: [PATCH] wlcore: fix memset sizes in wl1271_cmd_build_arp_rsp()
-Date: Thu,  3 May 2012 10:25:51 +0300
-Message-Id: <1336029951-28745-1-git-send-email-coelho@ti.com> (sfid-20120503_092606_659611_49E1A79E)
+	Wed, 16 May 2012 03:59:38 -0400
+Message-ID: <1337155171.4367.2.camel@jlt3.sipsolutions.net> (sfid-20120516_095958_912857_319585F0)
+Subject: Re: [PATCH 0/3] net: mac80211: Neaten debugging
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: joe@perches.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 16 May 2012 09:59:31 +0200
+In-Reply-To: <20120516.012319.1903390658912592000.davem@davemloft.net>
+References: <1337106548.15553.8.camel@jlt3.sipsolutions.net>
+	 <cover.1337116578.git.joe@perches.com>
+	 <20120516.012319.1903390658912592000.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We were using the size of the pointer and not of the allocate
-structure itself in this function.  Use the size of the structure
-instead.
+On Wed, 2012-05-16 at 01:23 -0400, David Miller wrote:
+> From: Joe Perches <joe@perches.com>
+> Date: Tue, 15 May 2012 14:20:29 -0700
+> 
+> > Always use pr_debug variants instead of printk(KERN_DEBUG...)
+> > 
+> > Joe Perches (3):
+> >   net: mac80211: Convert printk(KERN_DEBUG to pr_debug
+> >   net: mac80211: Add and use ht_vdbg debugging macro
+> >   net: mac80211: Add and use ibss_vdbg debugging macro
+> 
+> I really think this is the right thing to do and I hope the wireless
+> folks integrate this.
+> 
+> I am well aware that you guys intend for some of these messages to be
+> indications and notifications the user is intended to SEE, but in the
+> cases where that is true KERN_DEBUG is absolutely not appropriate.
+> 
+> You should be using KERN_INFO or KERN_WARN in those situations
+> instead.
 
-Reported-by: David Binderman <dcb314@hotmail.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/ti/wlcore/cmd.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Yeah, makes sense. I wonder if it makes sense to leave these under
+#ifdef though? Why #ifdef something if it's going to be invisible most
+of the time anyway?
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 5c4716c..9f1c431 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -1034,7 +1034,7 @@ int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	skb_reserve(skb, sizeof(*hdr) + WL1271_EXTRA_SPACE_MAX);
- 
- 	tmpl = (struct wl12xx_arp_rsp_template *)skb_put(skb, sizeof(*tmpl));
--	memset(tmpl, 0, sizeof(tmpl));
-+	memset(tmpl, 0, sizeof(*tmpl));
- 
- 	/* llc layer */
- 	memcpy(tmpl->llc_hdr, rfc1042_header, sizeof(rfc1042_header));
-@@ -1083,7 +1083,7 @@ int wl1271_cmd_build_arp_rsp(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 
- 	/* mac80211 header */
- 	hdr = (struct ieee80211_hdr_3addr *)skb_push(skb, sizeof(*hdr));
--	memset(hdr, 0, sizeof(hdr));
-+	memset(hdr, 0, sizeof(*hdr));
- 	fc = IEEE80211_FTYPE_DATA | IEEE80211_FCTL_TODS;
- 	if (wlvif->sta.qos)
- 		fc |= IEEE80211_STYPE_QOS_DATA;
--- 
-1.7.10
+johannes
 
