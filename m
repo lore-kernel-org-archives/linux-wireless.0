@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ibawizard.net ([82.208.49.253]:37602 "EHLO
-	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755175Ab2ESPo1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755031Ab2EPUk4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2012 11:44:27 -0400
-Date: Sat, 19 May 2012 17:34:13 +0200
-From: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
-To: linux-wireless@vger.kernel.org
-Cc: users@rt2x00.serialmonkey.com
-Subject: rt2x00: is p2p possible?
-Message-ID: <20120519153413.GD15710@ibawizard.net> (sfid-20120519_174431_425344_0A2F8A40)
-Reply-To: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 16 May 2012 16:40:56 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/3] iwlwifi: fix prints in iwl_rx_handle
+Date: Wed, 16 May 2012 22:40:49 +0200
+Message-Id: <1337200851-20469-2-git-send-email-johannes@sipsolutions.net> (sfid-20120516_224110_652952_8246DCA7)
+In-Reply-To: <1337200851-20469-1-git-send-email-johannes@sipsolutions.net>
+References: <1337200851-20469-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I'm wondering if it would be possible to add P2P support to rt2x00 driver.
-I've made some observations and it seems to me, that it should be possible,
-but I'm not 100% sure, so before digging even more deeper(buying p2p specs) I
-would like to ask about it first some skilled devs.
+The debug prints were wrong and buggy. The HW pointer wasn't printed
+correctly, it was mixed up with the pointer to the rxbuf.
 
-What I'm mainly unsure about is that binary blob (firmware). Do we need some
-support for p2p there, or it should work with current blobs also? My rt2x00
-device is following:
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-rt2x00_set_chip: Info - Chipset detected - rt: 2872, rf: 0005, rev: 0200
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 08517d3..1a7eb2a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -497,7 +497,7 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 
+ 	/* Rx interrupt, but nothing sent from uCode */
+ 	if (i == r)
+-		IWL_DEBUG_RX(trans, "r = %d, i = %d\n", r, i);
++		IWL_DEBUG_RX(trans, "HW = SW = %d\n", r);
+ 
+ 	/* calculate total frames need to be restock after handling RX */
+ 	total_empty = r - rxq->write_actual;
+@@ -513,8 +513,8 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 		rxb = rxq->queue[i];
+ 		rxq->queue[i] = NULL;
+ 
+-		IWL_DEBUG_RX(trans, "rxbuf: r = %d, i = %d (%p)\n", rxb);
+-
++		IWL_DEBUG_RX(trans, "rxbuf: HW = %d, SW = %d (%p)\n",
++			     r, i, rxb);
+ 		iwl_rx_handle_rxbuf(trans, rxb);
+ 
+ 		i = (i + 1) & RX_QUEUE_MASK;
+-- 
+1.7.10
 
-Thank you for any information/advice/pointers.
-
--- ynezz
