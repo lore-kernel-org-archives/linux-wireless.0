@@ -1,36 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50278 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757648Ab2EJI7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 04:59:13 -0400
-Message-ID: <4FAB835F.4090808@tieto.com> (sfid-20120510_105919_062634_54617BDB)
-Date: Thu, 10 May 2012 10:59:11 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 7/7] mac80211: move oper_channel to sdata
-References: <1336632282-2278-1-git-send-email-michal.kazior@tieto.com>  <1336632282-2278-8-git-send-email-michal.kazior@tieto.com> <1336635100.4334.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1336635100.4334.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:52879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757352Ab2EPUyg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 16:54:36 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/9] iwlwifi: s/iwlagn_unmap_tfd/iwl_unmap_tfd
+Date: Wed, 16 May 2012 22:54:23 +0200
+Message-Id: <1337201670-21604-3-git-send-email-johannes@sipsolutions.net> (sfid-20120516_225445_420274_EEADF567)
+In-Reply-To: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
+References: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2012-05-10 at 08:44 +0200, Michal Kazior wrote:
->
->> +	/* cfg80211 arbitrates multi-channel */
->> +	if (local->hw.wiphy->flags&  WIPHY_FLAG_ENFORCE_COMBINATIONS)
->> +		return true;
->
-> This no longer exists, but that's just arbitrating
-> multi-virtual-interface, not necessarily multi-channel, I think?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Oh, my bad. You're right.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
-On a second thought I think this condition shouldn't be here yet 
-(putting aside that the flag does no longer exist).
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index cf8f3cf..e727c4f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -178,8 +178,8 @@ static inline u8 iwl_tfd_get_num_tbs(struct iwl_tfd *tfd)
+ 	return tfd->num_tbs & 0x1f;
+ }
+ 
+-static void iwlagn_unmap_tfd(struct iwl_trans *trans, struct iwl_cmd_meta *meta,
+-		     struct iwl_tfd *tfd, enum dma_data_direction dma_dir)
++static void iwl_unmap_tfd(struct iwl_trans *trans, struct iwl_cmd_meta *meta,
++			  struct iwl_tfd *tfd, enum dma_data_direction dma_dir)
+ {
+ 	int i;
+ 	int num_tbs;
+@@ -229,8 +229,8 @@ void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+ 	lockdep_assert_held(&txq->lock);
+ 
+ 	/* We have only q->n_window txq->entries, but we use q->n_bd tfds */
+-	iwlagn_unmap_tfd(trans, &txq->entries[idx].meta,
+-			 &tfd_tmp[rd_ptr], dma_dir);
++	iwl_unmap_tfd(trans, &txq->entries[idx].meta, &tfd_tmp[rd_ptr],
++		      dma_dir);
+ 
+ 	/* free SKB */
+ 	if (txq->entries) {
+@@ -647,9 +647,9 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 					   (void *)cmd->data[i],
+ 					   cmd->len[i], DMA_BIDIRECTIONAL);
+ 		if (dma_mapping_error(trans->dev, phys_addr)) {
+-			iwlagn_unmap_tfd(trans, out_meta,
+-					 &txq->tfds[q->write_ptr],
+-					 DMA_BIDIRECTIONAL);
++			iwl_unmap_tfd(trans, out_meta,
++				      &txq->tfds[q->write_ptr],
++				      DMA_BIDIRECTIONAL);
+ 			idx = -ENOMEM;
+ 			goto out;
+ 		}
+@@ -784,8 +784,7 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_cmd_buffer *rxb,
+ 	cmd = txq->entries[cmd_index].cmd;
+ 	meta = &txq->entries[cmd_index].meta;
+ 
+-	iwlagn_unmap_tfd(trans, meta, &txq->tfds[index],
+-			 DMA_BIDIRECTIONAL);
++	iwl_unmap_tfd(trans, meta, &txq->tfds[index], DMA_BIDIRECTIONAL);
+ 
+ 	/* Input error checking is done when commands are added to queue. */
+ 	if (meta->flags & CMD_WANT_SKB) {
 -- 
-Pozdrawiam / Best regards, Michal Kazior.
+1.7.10
+
