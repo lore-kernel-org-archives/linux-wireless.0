@@ -1,55 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:57356 "EHLO ebb05.tieto.com"
+Received: from mga09.intel.com ([134.134.136.24]:49449 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752663Ab2EIKQT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 06:16:19 -0400
-Message-ID: <4FAA43F0.6050401@tieto.com> (sfid-20120509_121623_489268_1658A785)
-Date: Wed, 9 May 2012 12:16:16 +0200
-From: Michal Kazior <michal.kazior@tieto.com>
+	id S1760718Ab2EPWpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 18:45:42 -0400
+Date: Wed, 16 May 2012 15:45:26 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	linux-bluetooth@vger.kernel.org,
+	gigaset307x-common@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
+Subject: [RFC 05/13] USB: Allow drivers to disable hub-initiated LPM.
+Message-ID: <20120516224526.GA25856@xanatos> (sfid-20120517_004559_964280_66F17314)
+References: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Thomas Pedersen <thomas@cozybit.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
-References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>   (sfid-20120427_002914_313709_1CC9F96D) <1336554945.4323.12.camel@jlt3.sipsolutions.net>  <4FAA3BD2.9070203@tieto.com> <1336557043.4323.15.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1336557043.4323.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
->>> We should do the same for AP mode as well, since the channel really
->>> becomes relevant only upon start_ap(), before that there's no real
->>> concept of a channel since you don't use it yet anyway.
->>
->> Maybe we should do the same with monitor interface type, i.e. introduce
->> start_monitor() and have it pass the channel.
->
-> No, that's the special case that doesn't work that way -- monitor mode
-> interfaces are also great for debugging when they're just concurrently
-> running with other interfaces and don't have their own channel setting.
+[[Resending with a smaller Cc list]
 
-We can make monitor interface to be a slave to other non-monitor 
-interface by passing an extra parameter in start_monitor(). We could 
-then have such a monitor interface follow channel changes of a given 
-non-monitor interface (or rather it wouldn't be using a channel on it's 
-own).
+USB 3.0 Link Power Management (LPM) is designed to allow individual
+links in the bus to go into lower power states.  There are two ways a
+link can enter a lower power state:
 
+1. Device-initiated LPM.  When a USB device decides it can go into a
+lower power link state, it sends a message to the parent hub, telling it
+to go into either U1 or U2.  Device-initiated LPM is good for devices
+that send data to the host, like communications devices.
 
->> But then I'm thinking we shouldn't really be changing interface types
->> explicitly, since they would be set implicitly by start_ap() and such.
->> We could then use the NL80211_IFTYPE_UNSPECIFIED when we're not associated.
->
->  From some point of view, it should work that way, yes.
->
-> Given how entrenched interface types are we definitely can't get rid of
-> them though, and they're still needed to do concurrency management etc.
+2. Hub-initiated LPM.  After the link has been idle for a specific
+amount of time, the parent hub will request that the child go into a
+lower power state.  The child can refuse that request.  For example, a
+USB modem may want to refuse the LPM request if it is in the middle of
+receiving a text message.  Hub-initiated LPM is good for devices where
+only the host initiates the data transfer, like USB printers or USB mass
+storage devices.
 
-Well, I don't think we can get completely rid of them, too. Or do you 
-mean something else?
+Links will be automatically placed into higher power states by the USB
+hubs and roothubs whenever the host starts a USB transmission.
 
+Introduce a new usb_driver flag, disable_hub_initiated_lpm, that allows
+drivers to disable hub-initiated LPM.
 
+Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>
+Cc: Gustavo Padovan <gustavo@padovan.org>
+Cc: Johan Hedberg <johan.hedberg@gmail.com>
+Cc: Hansjoerg Lipp <hjlipp@web.de>
+Cc: Tilman Schmidt <tilman@imap.cc>
+Cc: Karsten Keil <isdn@linux-pingi.de>
+Cc: Oliver Neukum <oliver@neukum.name>
+Cc: Peter Korsgaard <jacmet@sunsite.dk>
+Cc: Jan Dumon <j.dumon@option.com>
+Cc: Petko Manolov <petkan@users.sourceforge.net>
+Cc: Steve Glendinning <steve.glendinning@smsc.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Roland Vossen <rvossen@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Cc: Kan Yan <kanyan@broadcom.com>
+Cc: Dan Williams <dcbw@redhat.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Herton Ronaldo Krzesinski <herton@canonical.com>
+Cc: Hin-Tak Leung <htl10@users.sourceforge.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Daniel Drake <dsd@gentoo.org>
+Cc: Ulrich Kunitz <kune@deine-taler.de>
+Cc: linux-bluetooth@vger.kernel.org
+Cc: gigaset307x-common@lists.sourceforge.net
+Cc: netdev@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Cc: libertas-dev@lists.infradead.org
+Cc: users@rt2x00.serialmonkey.com
+---
+ include/linux/usb.h |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/usb.h b/include/linux/usb.h
+index eb46077..998c276 100644
+--- a/include/linux/usb.h
++++ b/include/linux/usb.h
+@@ -875,6 +875,9 @@ struct usbdrv_wrap {
+  *	for interfaces bound to this driver.
+  * @soft_unbind: if set to 1, the USB core will not kill URBs and disable
+  *	endpoints before calling the driver's disconnect method.
++ * @disable_hub_initiated_lpm: if set to 0, the USB core will not allow hubs
++ *	to initiate lower power link state transitions when an idle timeout
++ *	occurs.  Device-initiated USB 3.0 link PM will still be allowed.
+  *
+  * USB interface drivers must provide a name, probe() and disconnect()
+  * methods, and an id_table.  Other driver fields are optional.
+@@ -915,6 +918,7 @@ struct usb_driver {
+ 	struct usbdrv_wrap drvwrap;
+ 	unsigned int no_dynamic_id:1;
+ 	unsigned int supports_autosuspend:1;
++	unsigned int disable_hub_initiated_lpm:1;
+ 	unsigned int soft_unbind:1;
+ };
+ #define	to_usb_driver(d) container_of(d, struct usb_driver, drvwrap.driver)
 -- 
-Pozdrawiam / Best regards, Michal Kazior.
+1.7.9
+
