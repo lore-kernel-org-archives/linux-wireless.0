@@ -1,41 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757912Ab2EJJOx (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:52776 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751434Ab2EPOoe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:14:53 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:14:52 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 10/78] wl18xx: set the number of Tx descriptors
-Date: Thu, 10 May 2012 12:13:15 +0300
-Message-Id: <1336641263-5761-11-git-send-email-arik@wizery.com> (sfid-20120510_111457_308399_E55F02C6)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Wed, 16 May 2012 10:44:34 -0400
+Received: by gglu4 with SMTP id u4so748665ggl.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 07:44:33 -0700 (PDT)
+Message-ID: <4FB3BD4A.5020509@lwfinger.net> (sfid-20120516_164438_745597_FDB4CFBB)
+Date: Wed, 16 May 2012 09:44:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@canonical.com>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>
+Subject: Re: [PATCH] rtl8187: ->brightness_set can not sleep
+References: <1337159181-4466-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1337159181-4466-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize the number of Tx-descriptors for the 18xx family.
+On 05/16/2012 04:06 AM, Stanislaw Gruszka wrote:
+> Fix:
+>
+> BUG: sleeping function called from invalid context at kernel/workqueue.c:2547
+> in_atomic(): 1, irqs_disabled(): 0, pid: 629, name: wpa_supplicant
+> 2 locks held by wpa_supplicant/629:
+>   #0:  (rtnl_mutex){+.+.+.}, at: [<c08b2b84>] rtnl_lock+0x14/0x20
+>   #1:  (&trigger->leddev_list_lock){.+.?..}, at: [<c0867f41>] led_trigger_event+0x21/0x80
+> Pid: 629, comm: wpa_supplicant Not tainted 3.3.0-0.rc3.git5.1.fc17.i686
+> Call Trace:
+>   [<c046a9f6>] __might_sleep+0x126/0x1d0
+>   [<c0457d6c>] wait_on_work+0x2c/0x1d0
+>   [<c045a09a>] __cancel_work_timer+0x6a/0x120
+>   [<c045a160>] cancel_delayed_work_sync+0x10/0x20
+>   [<f7dd3c22>] rtl8187_led_brightness_set+0x82/0xf0 [rtl8187]
+>   [<c0867f7c>] led_trigger_event+0x5c/0x80
+>   [<f7ff5e6d>] ieee80211_led_radio+0x1d/0x40 [mac80211]
+>   [<f7ff3583>] ieee80211_stop_device+0x13/0x230 [mac80211]
+>
+> Removing _sync is ok, because if led_on work is currently running
+> it will be finished before led_off work start to perform, since
+> they are always queued on the same mac80211 local->workqueue.
+>
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=795176
+>
+> Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
+> ---
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/main.c |    1 +
- 1 file changed, 1 insertion(+)
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index b298e01..68f5e09 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -325,6 +325,7 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
- 	wl->ops = &wl18xx_ops;
- 	wl->ptable = wl18xx_ptable;
- 	wl->rtable = wl18xx_rtable;
-+	wl->num_tx_desc = 32;
- 
- 	return wlcore_probe(wl, pdev);
- }
--- 
-1.7.9.5
+Thanks,
+
+Larry
+
+>   drivers/net/wireless/rtl818x/rtl8187/leds.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187/leds.c b/drivers/net/wireless/rtl818x/rtl8187/leds.c
+> index 2e0de2f..c2d5b49 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187/leds.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187/leds.c
+> @@ -117,7 +117,7 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
+>   			radio_on = true;
+>   		} else if (radio_on) {
+>   			radio_on = false;
+> -			cancel_delayed_work_sync(&priv->led_on);
+> +			cancel_delayed_work(&priv->led_on);
+>   			ieee80211_queue_delayed_work(hw,&priv->led_off, 0);
+>   		}
+>   	} else if (radio_on) {
 
