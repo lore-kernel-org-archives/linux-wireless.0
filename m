@@ -1,161 +1,546 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:40841 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755430Ab2ECTFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 15:05:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1SQ1Kp-00024r-LB
-	for linux-wireless@vger.kernel.org; Thu, 03 May 2012 21:05:03 +0200
-Received: from host-84-13-216-172.opaltelecom.net ([84.13.216.172])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 21:05:03 +0200
-Received: from mprowe by host-84-13-216-172.opaltelecom.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 21:05:03 +0200
-To: linux-wireless@vger.kernel.org
-From: Martin Rowe <mprowe@gzunder.homeip.net>
-Subject: Poor Signal Strength on Broadcom BCM94313....? 
-Date: Thu, 3 May 2012 18:44:38 +0000 (UTC)
-Message-ID: <loom.20120503T203736-143@post.gmane.org> (sfid-20120503_210511_787697_AD0B5244)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:52889 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759681Ab2EPUyi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 16:54:38 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>
+Subject: [PATCH 6/9] iwlwifi: implement dynamic opmode loading
+Date: Wed, 16 May 2012 22:54:27 +0200
+Message-Id: <1337201670-21604-7-git-send-email-johannes@sipsolutions.net> (sfid-20120516_225451_214372_1643411D)
+In-Reply-To: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
+References: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Don Fry <donald.h.fry@intel.com>
 
-I have a new notebook (HP DM1-4125) onto which I have installed openSUSE 12.1.
-Generally, all is well. But (isn't there always!) I am having problems with the
-wireless (wlan and bt).
-The radio module is a Broadcom BCM94313HMGB. Which, I think is a BCM4313 plus a
-BCM20702AW bluetooth component?
+This is the next step in splitting up the driver,
+making the uCode API dependent pieces of it live
+in separate modules. Right now there's only one
+so it's not user-selectable, but we're actively
+working on more.
 
-My problem is that the rx signal is VERY poor.
-For example with BCM94313 (wlan0) installed in a testbed alongside a (very old
-but) known working unit (wlan1). At only 30cm from the AP, I see these figures:
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig        |    5 ++
+ drivers/net/wireless/iwlwifi/Makefile       |   32 ++++----
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   16 ++--
+ drivers/net/wireless/iwlwifi/iwl-debug.c    |    6 ++
+ drivers/net/wireless/iwlwifi/iwl-devtrace.c |    5 ++
+ drivers/net/wireless/iwlwifi/iwl-drv.c      |  112 ++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-io.c       |   19 +++++
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h  |    3 +
+ 8 files changed, 172 insertions(+), 26 deletions(-)
 
-#iwlist scan
-
-wlan0     Scan completed :
-          Cell 01 - Address: 00:21:63:30:0B:E8
-                    Channel:11
-                    Frequency:2.462 GHz (Channel 11)
-          **********Quality=37/70  Signal level=-73 dBm*************
-                    Encryption key:on
-                    ESSID:"myAP0"
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
-                              9 Mb/s; 12 Mb/s; 18 Mb/s
-                    Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
-                    Mode:Master
-                    Extra:tsf=00000000127b4180
-                    Extra: Last beacon: 166ms ago
-*****Truncated*******
-
-wlan1      Scan completed :
-          Cell 01 - Address: 00:21:63:30:0B:E8
-                    Channel:11
-                    Frequency:2.462 GHz (Channel 11)
-          **********Quality=70/70  Signal level=-33 dBm***********
-                    Encryption key:on
-                    ESSID:"myAP0"
-                    Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
-                              9 Mb/s; 12 Mb/s; 18 Mb/s
-                    Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
-                    Mode:Master
-                    Extra:tsf=00000000127f062e
-                    Extra: Last beacon: 169ms ago
-******TRUNCATED*****
-
-When, I move more that 5 meters away from the AP, all connection is lost via the
-Broadcom. I have to increase the distance to over 20m before the other wlan
-connection starts complaining. Any suggestions on how to increase the range for
-the broadcom will be appreciated.
-
-One possible cause that comes to mind is the Antenna Diversity?
-Is the antenna switch introducing this massive loss? Can this antenna switch be
-bypassed via software or is it purely a hardware function?
-
-Incidentally, the bluetooth function is nowhere to be seen!! But I guess that
-this is a whole different (driver) issue?
-
-I hope that any details that may be useful are listed here:
-
-#hwinfo --wlan
-25: PCI 300.0: 0282 WLAN controller
-  [Created at pci.319]
-  Unique ID: y9sn.N0h4zxfwtV0
-  Parent ID: H0_h.4N97gW8nvQ8
-  SysFS ID: /devices/pci0000:00/0000:00:06.0/0000:03:00.0
-  SysFS BusID: 0000:03:00.0
-  Hardware Class: network
-  Model: "Broadcom WLAN controller"
-  Vendor: pci 0x14e4 "Broadcom"
-  Device: pci 0x4727 
-  SubVendor: pci 0x103c "Hewlett-Packard Company"
-  SubDevice: pci 0x1795 
-  Revision: 0x01
-  Driver: "brcmsmac"
-  Driver Modules: "brcmsmac"
-  Device File: wlan0
-  Features: WLAN
-  Memory Range: 0xfe3fc000-0xfe3fffff (rw,non-prefetchable)
-  IRQ: 18 (no events)
-  HW Address: 60:d8:19:99:39:12
-  Link detected: no
-  WLAN channels: 1 2 3 4 5 6 7 8 9 10 11 12 13 14
-  WLAN frequencies: 2.412 2.417 2.422 2.427 2.432 2.437 2.442 2.447 2.452 2.457
-2.462 2.467 2.472 2.484
-  WLAN encryption modes: WEP40 WEP104 TKIP CCMP
-  WLAN authentication modes: open sharedkey wpa-psk wpa-eap
-  Module Alias: "pci:v000014E4d00004727sv0000103Csd00001795bc02sc80i00"
-  Driver Info #0:
-    Driver Status: brcmsmac is active
-    Driver Activation Cmd: "modprobe brcmsmac"
-  Driver Info #1:
-    Driver Status: bcma is active
-    Driver Activation Cmd: "modprobe bcma"
-  Driver Info #2:
-    Driver Status: wl is active
-    Driver Activation Cmd: "modprobe wl"
-  Config Status: cfg=no, avail=yes, need=no, active=unknown
-  Attached to: #4 (PCI bridge)
-
-27: PCMCIA 00.0: 0282 WLAN controller
-  [Created at pcmcia.84]
-  Unique ID: pz0h.lG4e6KMEdl8
-  Parent ID: +QnG.J5lSzbB0WR8
-  SysFS ID: /devices/pci0000:00/0000:00:14.4/0000:04:06.0/0.0
-  SysFS BusID: 0.0
-  Hardware Class: network
-  Model: "TOSHIBA Wireless LAN Card"
-  Hotplug: CardBus
-  Socket: 0
-  Vendor: pcmcia 0x0156 "TOSHIBA"
-  Device: pcmcia 0x0002 "Wireless LAN Card"
-  Driver: "orinoco_cs"
-  Driver Modules: "orinoco_cs"
-  Device File: eth1
-  Features: WLAN
-  HW Address: 00:02:2d:13:2d:ea
-  Link detected: no
-  WLAN channels: 1 2 3 4 5 6 7 8 9 10 11
-  WLAN frequencies: 2.412 2.417 2.422 2.427 2.432 2.437 2.442 2.447 2.452 2.457
-2.462
-  WLAN encryption modes: WEP40 WEP104 TKIP
-  WLAN authentication modes: open sharedkey wpa-psk wpa-eap
-  Module Alias:
-"pcmcia:m0156c0002f06fn00pfn00paB4585A1Apb0B537C13pcD27DEB1Apd00000000"
-  Driver Info #0:
-    Driver Status: hostap_cs is not active
-    Driver Activation Cmd: "modprobe hostap_cs"
-  Driver Info #1:
-    Driver Status: orinoco_cs is active
-    Driver Activation Cmd: "modprobe orinoco_cs"
-  Extra Info: TOSHIBA, Wireless LAN Card, Version 01.01
-  Config Status: cfg=no, avail=yes, need=no, active=unknown
-  Attached to: #26 (CardBus bridge)
-
-Regards, Martin
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 2463c06..727fbb5 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -6,6 +6,7 @@ config IWLWIFI
+ 	select LEDS_CLASS
+ 	select LEDS_TRIGGERS
+ 	select MAC80211_LEDS
++	select IWLDVM
+ 	---help---
+ 	  Select to build the driver supporting the:
+ 
+@@ -41,6 +42,10 @@ config IWLWIFI
+ 	  say M here and read <file:Documentation/kbuild/modules.txt>.  The
+ 	  module will be called iwlwifi.
+ 
++config IWLDVM
++	tristate "Intel Wireless WiFi"
++	depends on IWLWIFI
++
+ menu "Debugging Options"
+ 	depends on IWLWIFI
+ 
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index d615eac..f284ea8 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -1,27 +1,31 @@
++# DVM
++obj-$(CONFIG_IWLDVM)   += iwldvm.o
++iwldvm-objs		:= iwl-agn.o iwl-agn-rs.o iwl-mac80211.o
++iwldvm-objs		+= iwl-ucode.o iwl-agn-tx.o
++iwldvm-objs		+= iwl-agn-lib.o iwl-agn-calib.o
++iwldvm-objs		+= iwl-agn-tt.o iwl-agn-sta.o iwl-agn-rx.o
++iwldvm-objs		+= iwl-eeprom.o iwl-power.o
++iwldvm-objs		+= iwl-scan.o iwl-led.o
++iwldvm-objs		+= iwl-agn-rxon.o iwl-agn-devices.o
++iwldvm-objs		+= iwl-notif-wait.o
++
++iwldvm-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
++iwldvm-$(CONFIG_IWLWIFI_DEVICE_TESTMODE) += iwl-testmode.o
++
++CFLAGS_iwl-devtrace.o := -I$(src)
++
+ # WIFI
+ obj-$(CONFIG_IWLWIFI)	+= iwlwifi.o
+-iwlwifi-objs		:= iwl-agn.o iwl-agn-rs.o iwl-mac80211.o
+-iwlwifi-objs		+= iwl-ucode.o iwl-agn-tx.o iwl-debug.o
+-iwlwifi-objs		+= iwl-agn-lib.o iwl-agn-calib.o iwl-io.o
+-iwlwifi-objs		+= iwl-agn-tt.o iwl-agn-sta.o iwl-agn-rx.o
+-
+-iwlwifi-objs		+= iwl-eeprom.o iwl-power.o
+-iwlwifi-objs		+= iwl-scan.o iwl-led.o
+-iwlwifi-objs		+= iwl-agn-rxon.o iwl-agn-devices.o
+ iwlwifi-objs		+= iwl-5000.o
+ iwlwifi-objs		+= iwl-6000.o
+ iwlwifi-objs		+= iwl-1000.o
+ iwlwifi-objs		+= iwl-2000.o
++iwlwifi-objs		+= iwl-io.o
+ iwlwifi-objs		+= iwl-pci.o
+ iwlwifi-objs		+= iwl-drv.o
+-iwlwifi-objs		+= iwl-notif-wait.o
++iwlwifi-objs		+= iwl-debug.o
+ iwlwifi-objs		+= iwl-trans-pcie.o iwl-trans-pcie-rx.o iwl-trans-pcie-tx.o
+ 
+-
+-iwlwifi-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
+ iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
+-iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TESTMODE) += iwl-testmode.o
+-
+-CFLAGS_iwl-devtrace.o := -I$(src)
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ec36e2b..5149e6f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -78,7 +78,6 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_VERSION(DRV_VERSION);
+ MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
+ MODULE_LICENSE("GPL");
+-MODULE_ALIAS("iwlagn");
+ 
+ void iwl_update_chain_flags(struct iwl_priv *priv)
+ {
+@@ -2344,24 +2343,25 @@ static int __init iwl_init(void)
+ 		goto error_rc_register;
+ 	}
+ 
+-	ret = iwl_pci_register_driver();
+-	if (ret)
+-		goto error_pci_register;
++	ret = iwl_opmode_register("iwldvm", &iwl_dvm_ops);
++	if (ret) {
++		pr_err("Unable to register op_mode: %d\n", ret);
++		goto error_opmode_register;
++	}
+ 	return ret;
+ 
+-error_pci_register:
++error_opmode_register:
+ 	iwlagn_rate_control_unregister();
+ error_rc_register:
+ 	kmem_cache_destroy(iwl_tx_cmd_pool);
+ 	return ret;
+ }
++module_init(iwl_init);
+ 
+ static void __exit iwl_exit(void)
+ {
+-	iwl_pci_unregister_driver();
++	iwl_opmode_deregister("iwldvm");
+ 	iwlagn_rate_control_unregister();
+ 	kmem_cache_destroy(iwl_tx_cmd_pool);
+ }
+-
+ module_exit(iwl_exit);
+-module_init(iwl_init);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.c b/drivers/net/wireless/iwlwifi/iwl-debug.c
+index 2d1b428..0f8fcd1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.c
+@@ -62,6 +62,7 @@
+  *****************************************************************************/
+ 
+ #include <linux/interrupt.h>
++#include <linux/export.h>
+ #include "iwl-debug.h"
+ #include "iwl-devtrace.h"
+ 
+@@ -81,8 +82,11 @@ void __iwl_ ##fn(struct device *dev, const char *fmt, ...)	\
+ }
+ 
+ __iwl_fn(warn)
++EXPORT_SYMBOL_GPL(__iwl_warn);
+ __iwl_fn(info)
++EXPORT_SYMBOL_GPL(__iwl_info);
+ __iwl_fn(crit)
++EXPORT_SYMBOL_GPL(__iwl_crit);
+ 
+ void __iwl_err(struct device *dev, bool rfkill_prefix, bool trace_only,
+ 		const char *fmt, ...)
+@@ -103,6 +107,7 @@ void __iwl_err(struct device *dev, bool rfkill_prefix, bool trace_only,
+ 	trace_iwlwifi_err(&vaf);
+ 	va_end(args);
+ }
++EXPORT_SYMBOL_GPL(__iwl_err);
+ 
+ #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
+ void __iwl_dbg(struct device *dev,
+@@ -125,4 +130,5 @@ void __iwl_dbg(struct device *dev,
+ 	trace_iwlwifi_dbg(level, in_interrupt(), function, &vaf);
+ 	va_end(args);
+ }
++EXPORT_SYMBOL_GPL(__iwl_dbg);
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.c b/drivers/net/wireless/iwlwifi/iwl-devtrace.c
+index 91f45e7..70191dd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace.c
++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.c
+@@ -42,4 +42,9 @@ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_event);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_error);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_cont_event);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_wrap_event);
++EXPORT_TRACEPOINT_SYMBOL(iwlwifi_info);
++EXPORT_TRACEPOINT_SYMBOL(iwlwifi_warn);
++EXPORT_TRACEPOINT_SYMBOL(iwlwifi_crit);
++EXPORT_TRACEPOINT_SYMBOL(iwlwifi_err);
++EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dbg);
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index d742900..cdfdfae 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -77,8 +77,33 @@
+ /* private includes */
+ #include "iwl-fw-file.h"
+ 
++/******************************************************************************
++ *
++ * module boiler plate
++ *
++ ******************************************************************************/
++
++/*
++ * module name, copyright, version, etc.
++ */
++#define DRV_DESCRIPTION	"Intel(R) Wireless WiFi driver for Linux"
++
++#ifdef CONFIG_IWLWIFI_DEBUG
++#define VD "d"
++#else
++#define VD
++#endif
++
++#define DRV_VERSION     IWLWIFI_VERSION VD
++
++MODULE_DESCRIPTION(DRV_DESCRIPTION);
++MODULE_VERSION(DRV_VERSION);
++MODULE_AUTHOR(DRV_COPYRIGHT " " DRV_AUTHOR);
++MODULE_LICENSE("GPL");
++
+ /**
+  * struct iwl_drv - drv common data
++ * @list: list of drv structures using this opmode
+  * @fw: the iwl_fw structure
+  * @op_mode: the running op_mode
+  * @trans: transport layer
+@@ -89,6 +114,7 @@
+  * @request_firmware_complete: the firmware has been obtained from user space
+  */
+ struct iwl_drv {
++	struct list_head list;
+ 	struct iwl_fw fw;
+ 
+ 	struct iwl_op_mode *op_mode;
+@@ -102,7 +128,17 @@ struct iwl_drv {
+ 	struct completion request_firmware_complete;
+ };
+ 
++#define DVM_OP_MODE	0
++#define MVM_OP_MODE	1
+ 
++static struct iwlwifi_opmode_table {
++	const char *name;			/* name: iwldvm, iwlmvm, etc */
++	const struct iwl_op_mode_ops *ops;	/* pointer to op_mode ops */
++	struct list_head drv;		/* list of devices using this op_mode */
++} iwlwifi_opmode_table[] = {		/* ops set when driver is initialized */
++	{ .name = "iwldvm", .ops = NULL },
++	{ .name = "iwlmvm", .ops = NULL },
++};
+ 
+ /*
+  * struct fw_sec: Just for the image parsing proccess.
+@@ -721,7 +757,6 @@ static int validate_sec_sizes(struct iwl_drv *drv,
+ 	return 0;
+ }
+ 
+-
+ /**
+  * iwl_ucode_callback - callback when firmware was loaded
+  *
+@@ -733,6 +768,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	struct iwl_drv *drv = context;
+ 	struct iwl_fw *fw = &drv->fw;
+ 	struct iwl_ucode_header *ucode;
++	struct iwlwifi_opmode_table *op;
+ 	int err;
+ 	struct iwl_firmware_pieces pieces;
+ 	const unsigned int api_max = drv->cfg->ucode_api_max;
+@@ -863,10 +899,17 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	release_firmware(ucode_raw);
+ 	complete(&drv->request_firmware_complete);
+ 
+-	drv->op_mode = iwl_dvm_ops.start(drv->trans, drv->cfg, &drv->fw);
++	op = &iwlwifi_opmode_table[DVM_OP_MODE];
+ 
+-	if (!drv->op_mode)
+-		goto out_free_fw;
++	/* add this device to the list of devices using this op_mode */
++	list_add_tail(&drv->list, &op->drv);
++
++	if (op->ops) {
++		const struct iwl_op_mode_ops *ops = op->ops;
++		drv->op_mode = ops->start(drv->trans, drv->cfg, &drv->fw);
++	} else {
++		request_module_nowait("%s", op->name);
++	}
+ 
+ 	return;
+ 
+@@ -938,6 +981,67 @@ struct iwl_mod_params iwlwifi_mod_params = {
+ 	.auto_agg = true,
+ 	/* the rest are 0 by default */
+ };
++EXPORT_SYMBOL_GPL(iwlwifi_mod_params);
++
++int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
++{
++	int i;
++	struct iwl_drv *drv;
++
++	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
++		if (strcmp(iwlwifi_opmode_table[i].name, name))
++			continue;
++		iwlwifi_opmode_table[i].ops = ops;
++		list_for_each_entry(drv, &iwlwifi_opmode_table[i].drv, list)
++			drv->op_mode = ops->start(drv->trans, drv->cfg,
++						  &drv->fw);
++		return 0;
++	}
++	return -EIO;
++}
++EXPORT_SYMBOL_GPL(iwl_opmode_register);
++
++void iwl_opmode_deregister(const char *name)
++{
++	int i;
++	struct iwl_drv *drv;
++
++	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
++		if (strcmp(iwlwifi_opmode_table[i].name, name))
++			continue;
++		iwlwifi_opmode_table[i].ops = NULL;
++
++		/* call the stop routine for all devices */
++		list_for_each_entry(drv, &iwlwifi_opmode_table[i].drv, list) {
++			if (drv->op_mode) {
++				iwl_op_mode_stop(drv->op_mode);
++				drv->op_mode = NULL;
++			}
++		}
++		return;
++	}
++}
++EXPORT_SYMBOL_GPL(iwl_opmode_deregister);
++
++static int __init iwl_drv_init(void)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++)
++		INIT_LIST_HEAD(&iwlwifi_opmode_table[i].drv);
++
++	pr_info(DRV_DESCRIPTION ", " DRV_VERSION "\n");
++	pr_info(DRV_COPYRIGHT "\n");
++
++	return iwl_pci_register_driver();
++}
++module_init(iwl_drv_init);
++
++static void __exit iwl_drv_exit(void)
++{
++	iwl_pci_unregister_driver();
++}
++module_exit(iwl_drv_exit);
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ module_param_named(debug, iwlwifi_mod_params.debug_level, uint,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index 081dd34..ee93274 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -27,6 +27,7 @@
+  *****************************************************************************/
+ #include <linux/delay.h>
+ #include <linux/device.h>
++#include <linux/export.h>
+ 
+ #include "iwl-io.h"
+ #include"iwl-csr.h"
+@@ -52,6 +53,7 @@ void iwl_set_bit(struct iwl_trans *trans, u32 reg, u32 mask)
+ 	__iwl_set_bit(trans, reg, mask);
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(iwl_set_bit);
+ 
+ void iwl_clear_bit(struct iwl_trans *trans, u32 reg, u32 mask)
+ {
+@@ -61,6 +63,7 @@ void iwl_clear_bit(struct iwl_trans *trans, u32 reg, u32 mask)
+ 	__iwl_clear_bit(trans, reg, mask);
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(iwl_clear_bit);
+ 
+ int iwl_poll_bit(struct iwl_trans *trans, u32 addr,
+ 		 u32 bits, u32 mask, int timeout)
+@@ -76,6 +79,7 @@ int iwl_poll_bit(struct iwl_trans *trans, u32 addr,
+ 
+ 	return -ETIMEDOUT;
+ }
++EXPORT_SYMBOL_GPL(iwl_poll_bit);
+ 
+ int iwl_grab_nic_access_silent(struct iwl_trans *trans)
+ {
+@@ -117,6 +121,7 @@ int iwl_grab_nic_access_silent(struct iwl_trans *trans)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(iwl_grab_nic_access_silent);
+ 
+ bool iwl_grab_nic_access(struct iwl_trans *trans)
+ {
+@@ -130,6 +135,7 @@ bool iwl_grab_nic_access(struct iwl_trans *trans)
+ 
+ 	return true;
+ }
++EXPORT_SYMBOL_GPL(iwl_grab_nic_access);
+ 
+ void iwl_release_nic_access(struct iwl_trans *trans)
+ {
+@@ -144,6 +150,7 @@ void iwl_release_nic_access(struct iwl_trans *trans)
+ 	 */
+ 	mmiowb();
+ }
++EXPORT_SYMBOL_GPL(iwl_release_nic_access);
+ 
+ u32 iwl_read_direct32(struct iwl_trans *trans, u32 reg)
+ {
+@@ -158,6 +165,7 @@ u32 iwl_read_direct32(struct iwl_trans *trans, u32 reg)
+ 
+ 	return value;
+ }
++EXPORT_SYMBOL_GPL(iwl_read_direct32);
+ 
+ void iwl_write_direct32(struct iwl_trans *trans, u32 reg, u32 value)
+ {
+@@ -170,6 +178,7 @@ void iwl_write_direct32(struct iwl_trans *trans, u32 reg, u32 value)
+ 	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(iwl_write_direct32);
+ 
+ int iwl_poll_direct_bit(struct iwl_trans *trans, u32 addr, u32 mask,
+ 			int timeout)
+@@ -185,6 +194,7 @@ int iwl_poll_direct_bit(struct iwl_trans *trans, u32 addr, u32 mask,
+ 
+ 	return -ETIMEDOUT;
+ }
++EXPORT_SYMBOL_GPL(iwl_poll_direct_bit);
+ 
+ static inline u32 __iwl_read_prph(struct iwl_trans *trans, u32 reg)
+ {
+@@ -211,6 +221,7 @@ u32 iwl_read_prph(struct iwl_trans *trans, u32 reg)
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ 	return val;
+ }
++EXPORT_SYMBOL_GPL(iwl_read_prph);
+ 
+ void iwl_write_prph(struct iwl_trans *trans, u32 addr, u32 val)
+ {
+@@ -223,6 +234,7 @@ void iwl_write_prph(struct iwl_trans *trans, u32 addr, u32 val)
+ 	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(iwl_write_prph);
+ 
+ void iwl_set_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask)
+ {
+@@ -236,6 +248,7 @@ void iwl_set_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask)
+ 	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(iwl_set_bits_prph);
+ 
+ void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 reg,
+ 			    u32 bits, u32 mask)
+@@ -250,6 +263,7 @@ void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 reg,
+ 	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(iwl_set_bits_mask_prph);
+ 
+ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask)
+ {
+@@ -264,6 +278,7 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask)
+ 	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(iwl_clear_bits_prph);
+ 
+ void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 			      void *buf, int words)
+@@ -281,6 +296,7 @@ void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(_iwl_read_targ_mem_words);
+ 
+ u32 iwl_read_targ_mem(struct iwl_trans *trans, u32 addr)
+ {
+@@ -290,6 +306,7 @@ u32 iwl_read_targ_mem(struct iwl_trans *trans, u32 addr)
+ 
+ 	return value;
+ }
++EXPORT_SYMBOL_GPL(iwl_read_targ_mem);
+ 
+ int _iwl_write_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 				void *buf, int words)
+@@ -310,8 +327,10 @@ int _iwl_write_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 
+ 	return result;
+ }
++EXPORT_SYMBOL_GPL(_iwl_write_targ_mem_words);
+ 
+ int iwl_write_targ_mem(struct iwl_trans *trans, u32 addr, u32 val)
+ {
+ 	return _iwl_write_targ_mem_words(trans, addr, &val, 1);
+ }
++EXPORT_SYMBOL_GPL(iwl_write_targ_mem);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index 4ef742b..cec133c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -145,6 +145,9 @@ struct iwl_op_mode_ops {
+ 	void (*wimax_active)(struct iwl_op_mode *op_mode);
+ };
+ 
++int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops);
++void iwl_opmode_deregister(const char *name);
++
+ /**
+  * struct iwl_op_mode - operational mode
+  *
+-- 
+1.7.10
 
