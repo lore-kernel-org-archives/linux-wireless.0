@@ -1,49 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:47743 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754694Ab2EWHEM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 03:04:12 -0400
-Received: by lahi5 with SMTP id i5so5078614lah.28
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 00:04:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1337712022.4470.0.camel@jlt3.sipsolutions.net>
-References: <1337669130-4229-1-git-send-email-victorg@ti.com>
-	<1337712022.4470.0.camel@jlt3.sipsolutions.net>
-Date: Wed, 23 May 2012 09:58:35 +0300
-Message-ID: <CAK80WHZW8OLs8N9vPhLx8+yVUhOnFU8EGyHQX=Es12gzZ32rNg@mail.gmail.com> (sfid-20120523_090415_707058_99C7F06C)
-Subject: Re: [PATCH] mac80211: add command to get current rssi
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:52881 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759576Ab2EPUyg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 16:54:36 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/9] iwlwifi: s/iwlagn_txq_free_tfd/iwl_txq_free_tfd
+Date: Wed, 16 May 2012 22:54:22 +0200
+Message-Id: <1337201670-21604-2-git-send-email-johannes@sipsolutions.net> (sfid-20120516_225445_942486_9708659B)
+In-Reply-To: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
+References: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 22, 2012 at 9:40 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2012-05-22 at 09:45 +0300, Victor Goldenshtein wrote:
->
->> @@ -388,7 +389,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
->>       if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
->>           (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
->>               sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
->> -             sinfo->signal = (s8)sta->last_signal;
->> +             if (local->ops->get_rssi)
->> +                     drv_get_rssi(local, sdata, &sinfo->signal);
->> +             else
->> +                     sinfo->signal = (s8)sta->last_signal;
->>               sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
->>       }
->
-> So .. you're filling a per-station value with a generic per-interface
-> callback? What were you thinking? ;-)
->
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This is this is for managed only.
-I can rename the drv_get_rssi() to drv_get_sta_rssi() and to call it
-only for NL80211_IFTYPE_STATION, I think it would clarify things?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index e959207..ccb97b9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -346,8 +346,8 @@ void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
+ 				   int tx_fifo_id, bool active);
+ void iwl_trans_pcie_tx_agg_setup(struct iwl_trans *trans, int queue, int fifo,
+ 				 int sta_id, int tid, int frame_limit, u16 ssn);
+-void iwlagn_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+-			 enum dma_data_direction dma_dir);
++void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
++		      enum dma_data_direction dma_dir);
+ int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
+ 			 struct sk_buff_head *skbs);
+ int iwl_queue_space(const struct iwl_queue *q);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index a875023..cf8f3cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -209,7 +209,7 @@ static void iwlagn_unmap_tfd(struct iwl_trans *trans, struct iwl_cmd_meta *meta,
+ }
+ 
+ /**
+- * iwlagn_txq_free_tfd - Free all chunks referenced by TFD [txq->q.read_ptr]
++ * iwl_txq_free_tfd - Free all chunks referenced by TFD [txq->q.read_ptr]
+  * @trans - transport private data
+  * @txq - tx queue
+  * @dma_dir - the direction of the DMA mapping
+@@ -217,8 +217,8 @@ static void iwlagn_unmap_tfd(struct iwl_trans *trans, struct iwl_cmd_meta *meta,
+  * Does NOT advance any TFD circular buffer read/write indexes
+  * Does NOT free the TFD itself (which is within circular buffer)
+  */
+-void iwlagn_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+-			 enum dma_data_direction dma_dir)
++void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
++		      enum dma_data_direction dma_dir)
+ {
+ 	struct iwl_tfd *tfd_tmp = txq->tfds;
+ 
+@@ -979,7 +979,7 @@ int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
+ 
+ 		iwlagn_txq_inval_byte_cnt_tbl(trans, txq);
+ 
+-		iwlagn_txq_free_tfd(trans, txq, DMA_TO_DEVICE);
++		iwl_txq_free_tfd(trans, txq, DMA_TO_DEVICE);
+ 		freed++;
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index ec6fb39..c119118 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -435,7 +435,7 @@ static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
+ 
+ 	spin_lock_bh(&txq->lock);
+ 	while (q->write_ptr != q->read_ptr) {
+-		iwlagn_txq_free_tfd(trans, txq, dma_dir);
++		iwl_txq_free_tfd(trans, txq, dma_dir);
+ 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd);
+ 	}
+ 	spin_unlock_bh(&txq->lock);
 -- 
-Victor.
+1.7.10
+
