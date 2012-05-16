@@ -1,102 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:15444 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753896Ab2EDN1r (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:57038 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756772Ab2EPQJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 09:27:47 -0400
-Date: Fri, 04 May 2012 08:27:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: frostyplanet@gmail.com, Joshua.Roys@gtri.gatech.edu,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: fix for race condition when firmware is cached
-Message-ID: <4fa3d94f.HMgKjSzWMwTy5sU7%Larry.Finger@lwfinger.net> (sfid-20120504_152751_919490_05A555BF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 16 May 2012 12:09:43 -0400
+Received: by bkcji2 with SMTP id ji2so777861bkc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 09:09:42 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: remove ieee80211_get_operstate()
+Date: Wed, 16 May 2012 19:09:48 +0300
+Message-Id: <1337184588-28488-1-git-send-email-eliad@wizery.com> (sfid-20120516_180947_548689_53DC31E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit b0302ab, the rtlwifi family of drivers was converted to use
-asynchronous firmware loading. Unfortumately, the implementation was
-racy, and the ieee80211 routines could be started before rtl_init_core()
-was called to setup the data.
+ieee80211_get_operstate() was used by drivers in order to
+know whether the sta link is up, but it's no longer needed
+(nor used) as mac80211 notifies the drivers about
+authorization changes (via the sta_state callback)
 
-This patch fixes the bug noted in https://bugzilla.kernel.org/show_bug.cgi?id=43187.
-
-Reported-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Tested-by: Neptune Ning <frostyplanet@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>    [3.3]
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
+ include/net/mac80211.h |   10 ----------
+ net/mac80211/mlme.c    |    7 -------
+ 2 files changed, 0 insertions(+), 17 deletions(-)
 
-John,
-
-This bug is kind of nasty. I never see its effects, but apparently Gentoo
-users are hit particularly hard. Please send it up to 3.4. I hope DaveM
-doesn't get too upset.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
-@@ -1853,14 +1853,6 @@ int __devinit rtl_pci_probe(struct pci_d
- 	/*like read eeprom and so on */
- 	rtlpriv->cfg->ops->read_eeprom_info(hw);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 45d1ca5..5398415 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3555,16 +3555,6 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       gfp_t gfp);
  
--	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
--		err = -ENODEV;
--		goto fail3;
--	}
+ /**
+- * ieee80211_get_operstate - get the operstate of the vif
+- *
+- * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+- *
+- * The driver might need to know the operstate of the net_device
+- * (specifically, whether the link is IF_OPER_UP after resume)
+- */
+-unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif);
 -
--	rtlpriv->cfg->ops->init_sw_leds(hw);
+-/**
+  * ieee80211_chswitch_done - Complete channel switch process
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  * @success: make the channel switch successful or not
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index dbd4bd9..5ebac0d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3547,10 +3547,3 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
+ }
+ EXPORT_SYMBOL(ieee80211_cqm_rssi_notify);
 -
- 	/*aspm */
- 	rtl_pci_init_aspm(hw);
- 
-@@ -1879,6 +1871,14 @@ int __devinit rtl_pci_probe(struct pci_d
- 		goto fail3;
- 	}
- 
-+	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
-+		err = -ENODEV;
-+		goto fail3;
-+	}
-+
-+	rtlpriv->cfg->ops->init_sw_leds(hw);
-+
- 	err = sysfs_create_group(&pdev->dev.kobj, &rtl_attribute_group);
- 	if (err) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/usb.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-@@ -971,11 +971,6 @@ int __devinit rtl_usb_probe(struct usb_i
- 	rtlpriv->cfg->ops->read_chip_version(hw);
- 	/*like read eeprom and so on */
- 	rtlpriv->cfg->ops->read_eeprom_info(hw);
--	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
--		goto error_out;
--	}
--	rtlpriv->cfg->ops->init_sw_leds(hw);
- 	err = _rtl_usb_init(hw);
- 	if (err)
- 		goto error_out;
-@@ -987,6 +982,11 @@ int __devinit rtl_usb_probe(struct usb_i
- 			 "Can't allocate sw for mac80211\n");
- 		goto error_out;
- 	}
-+	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
-+		goto error_out;
-+	}
-+	rtlpriv->cfg->ops->init_sw_leds(hw);
- 
- 	return 0;
- error_out:
+-unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
+-{
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+-	return sdata->dev->operstate;
+-}
+-EXPORT_SYMBOL(ieee80211_get_operstate);
+-- 
+1.7.6.401.g6a319
+
