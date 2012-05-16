@@ -1,29 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7776 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852Ab2EVM2j (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50526 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758514Ab2EPRRt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 08:28:39 -0400
-Message-ID: <4FBB8670.1030305@qca.qualcomm.com> (sfid-20120522_142842_486075_8FFB6116)
-Date: Tue, 22 May 2012 15:28:32 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 16 May 2012 13:17:49 -0400
+Date: Wed, 16 May 2012 13:06:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwlwifi updates 2012-05-11
+Message-ID: <20120516170657.GD3508@tuxdriver.com> (sfid-20120516_191755_097164_43086E1B)
+References: <1336726398-13200-1-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
-References: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com> <1337671370-32519-3-git-send-email-vthiagar@qca.qualcomm.com> <4FBB3F58.2080104@qca.qualcomm.com>
-In-Reply-To: <4FBB3F58.2080104@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1336726398-13200-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/22/2012 10:25 AM, Vasanthakumar Thiagarajan wrote:
+On Fri, May 11, 2012 at 10:53:14AM +0200, Johannes Berg wrote:
+> Here are some more iwlwifi updates :-)
 > 
-> Oops, please forget this crap, mistakenly sent the older patches.
-> I'm really sorry.
+> David Spinadel worked on scanning and got rid of the extra
+> wildcard probe. This is at the expense of some probe request
+> IE space, but due to the sizing bug that he also fixed the
+> IE space was previously actually advertised wrongly, we'd
+> already fail at 40 bytes less than advertised.
+> 
+> I also include a patch to make use of the explicit monitor
+> interface to use sniffer mode and hopefully keep injection
+> working with the HW queue changes.
+> 
+> johannes
 
-No worries :)
+Oddly enough, these all applied...
 
-I will ignore the patches.
-
-Kalle
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
