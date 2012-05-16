@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:48441 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967348Ab2ERWq4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50527 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758667Ab2EPRRt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 18:46:56 -0400
-Message-ID: <4FB6D15F.6020006@candelatech.com> (sfid-20120519_004704_154711_043D4D4B)
-Date: Fri, 18 May 2012 15:46:55 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 16 May 2012 13:17:49 -0400
+Date: Wed, 16 May 2012 13:06:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/3] iwlwifi updates
+Message-ID: <20120516170634.GC3508@tuxdriver.com> (sfid-20120516_191755_746610_3B5ADB07)
+References: <1336666148-24471-1-git-send-email-johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: Kernel splat with debugging on 3.3.6+ kernel.
-References: <4FB697AB.10809@candelatech.com>
-In-Reply-To: <4FB697AB.10809@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1336666148-24471-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/2012 11:40 AM, Ben Greear wrote:
-> This is a patched kernel, but nothing proprietary loaded.
->
-> We're chasing a hard-to-reproduce bug that appears to be stale
-> memory access related to wifi stations.
->
-> So, I enabled a bunch of debugging (memory debugging, lockdep, etc)
-> and this lockup occurs every time we try to load our
-> '400 station' test case.
->
-> I'm going to poke at this some more, try some smaller test
-> cases and such, but if anyone has any other suggestions I'm interested!
+On Thu, May 10, 2012 at 06:09:05PM +0200, Johannes Berg wrote:
+> John,
+> 
+> Here are a few more iwlwifi updates. We rename some functions to
+> get rid of the "agn" in them which we're using to indicate that
+> the function belongs to the current firmware API, and move a
+> macro that we'll need in a few more places.
+> 
+> johannes
 
-I think with the amount of mem debugging I have enabled,
-I just cannot use this many virtual stations.
-
-The problem goes away when we have "only" 100 or so virtual
-stations enabled...
-
-Thanks,
-Ben
+I had trouble with this batch as well...
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
