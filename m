@@ -1,50 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog133.obsmtp.com ([74.125.149.82]:35372 "EHLO
-	na3sys009aog133.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754583Ab2EHToS (ORCPT
+Received: from mx1.watchguard.com ([206.191.171.101]:11556 "EHLO
+	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760723Ab2EPXGZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 15:44:18 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	harvey yang <harvey.huawei.yang@gmail.com>
-Date: Tue, 8 May 2012 12:43:51 -0700
-Subject: RE: [PATCH 17/18] mwifiex: parse beacon, probe response and assoc
- response IEs from start_ap
-Message-ID: <477F20668A386D41ADCC57781B1F7043083A4ADE8F@SC-VEXCH1.marvell.com> (sfid-20120508_214421_390916_D0B72677)
-References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
-	 <1336029760-22565-18-git-send-email-bzhao@marvell.com>
-	 (sfid-20120503_092407_448446_1D53B766)
- <1336054745.5167.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 16 May 2012 19:06:25 -0400
+From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: AP mode my ath9k broke between 3.3 and 3.4-rc2
+Date: Wed, 16 May 2012 22:55:22 +0000
+Message-ID: <AA421655-0DA6-47F5-BA24-847AAD0D02BA@watchguard.com> (sfid-20120517_010630_038014_0701CEAA)
+References: <CANugF37WSOdHODRXOb6nnBCh5HMTTUqf0VpyPuTDdNK80-LkAQ@mail.gmail.com>
+ <CANugF37wdS3=u7grT3H6WAJM=XxTukZoWdj70SXLL8k_6t1b6A@mail.gmail.com>
+ <4F9679AB.6010103@01019freenet.de> <20120424125429.GB3770@tuxdriver.com>
+ <4F983795.3070906@openwrt.org>
+ <80FFDD6E-923A-4348-AEC0-2C85C60A0D22@watchguard.com>
+In-Reply-To: <80FFDD6E-923A-4348-AEC0-2C85C60A0D22@watchguard.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gVGhhbmtzIGZvciB5b3VyIGNvbW1lbnQuDQo+IA0KPiA+ID4gQWRk
-IGxvZ2ljIGZvciBwYXJzaW5nIHRhaWwgSUVzLCBiZWFjb24gSUVzLCBwcm9iZSByZXNwb25zZSBJ
-RXMNCj4gPiA+IGFuZCBhc3NvYyByZXNwb25zZSBJRXMgZnJvbSBjZmc4MDIxMV9hcF9zZXR0aW5n
-cyBwYXJhbWV0ZXIgb2YNCj4gPiA+IHN0YXJ0X2FwIGhhbmRsZXIuDQo+ID4gPg0KPiA+ID4gVGhp
-cyBwYXRjaCBhbHNvIGltcGxlbWVudHMgZnVuY3Rpb25hbGl0eSB0byByZXRyaWV2ZSBSU04gSUUg
-ZnJvbQ0KPiA+ID4gdGFpbCBJRSBhbmQgc2VuZCBpdCB0byBGVy4NCj4gPg0KPiA+IFRoaXMgZG9l
-c24ndCBzZWVtIHJpZ2h0IC0tIHlvdSBzaG91bGQgdXNlIEFQIFNNRSBtb2RlIGFuZCBnZXQgbXVj
-aCBtb3JlDQo+ID4gZGV0YWlsIGluIG90aGVyIGF0dHJpYnV0ZXM/IExvb2sgYXQgYXRoNmtsPw0K
-PiANCj4gV2lsbCBsb29rIGludG8gdGhpcy4NCg0KYXRoNmtsIG1ha2VzIHVzZSBvZiBjZmc4MDIx
-MV9maW5kX2llKCkgdG8gcGFyc2UgUlNOIElFIGZyb20gYmVhY29uLnRhaWwuDQoNCllvdSBhcmUg
-cmlnaHQuIG13aWZpZXggc2hvdWxkIHVzZSB0aGlzIEFQSSB0b28sIGluc3RlYWQgb2YgaW1wbGVt
-ZW50aW5nIGl0cyBvd24uDQoNCkZvciBBUCBTTUUgbW9kZSwgd2UgaGF2ZSBzZXQgV0lQSFlfRkxB
-R19IQVZFX0FQX1NNRSBiaXQgaW4gd2lwaHktPmZsYWdzIChQQVRDSCAzLzE4KS4NCkFuZCBpbiBz
-dGFydF91cCgpIGhhbmRsZXIsIHdlIHJldHJpZXZlIGJlYWNvbiBJRSwgcHJvYmUgcmVzcG9uc2Ug
-SUUsIGFuZCBhc3NvY2lhdGlvbiByZXNwb25zZSBJRSBmcm9tIGNmZzgwMjExX2FwX3NldHRpbmdz
-IGJlYWNvbiB0YWlsLiBEcml2ZXIgd2lsbCBzZW5kIHRoZXNlIElFcyB0byBmaXJtd2FyZS4NCg0K
-T3RoZXIgY2ZnODAyMTFfYXBfc2V0dGluZ3MgcGFyYW1ldGVycyAoc3NpZCwgYmVhY29uIGludGVy
-dmFsLCBkdGltIHBlcmlvZCwgc2VjdXJpdHkpIGhhdmUgYmVlbiB0YWtlbiBjYXJlIG9mIGluIHBh
-dGNoZXMgMTIvMTggYW5kIDE0LzE4Lg0KDQpJIHdpbGwgcmVzcGluIHYyIHBhdGNoc2V0IHRvIGlu
-Y2x1ZGUgdGhlIGNmZzgwMjExX2ZpbmRfaWUoKSBjaGFuZ2UuDQoNClRoYW5rcywNCkJpbmcNCg0K
+
+It seems like 3.4-rc3-1 is still the latest package available for download on the website, even though
+it's not usable as an AP.  Is there an ETA for an update that works as an AP?
+
+Thanks,
+--
+-bp
+
+
+On Apr 25, 2012, at 4:46 PM, Bryan Phillippe wrote:
+
+> 
+> On Apr 25, 2012, at 10:42 AM, Felix Fietkau wrote:
+> 
+>> On 2012-04-24 2:54 PM, John W. Linville wrote:
+>>> On Tue, Apr 24, 2012 at 12:00:11PM +0200, Andreas Hartmann wrote:
+>>>> Andrew Chant wrote:
+>>>>> 3.4-rc4 doesn't work either.
+>>>>> If I revert the patch on 3.4-rc4, the Intel card is able to associate again.
+>>>>> -Andrew
+>>>>> 
+>>>>> On Tue, Apr 24, 2012 at 12:11 AM, Andrew Chant <andrew.chant@gmail.com> wrote:
+>>>>>> Hello,
+>>>>>> my Atheros AR9300 PCIe card (168c:0030) stopped working as an AP on
+>>>>>> the 5GHz band between 3.3 and 3.4-rc2.
+>>>>>> After 14 git bisects, I believe I have narrowed it down to the following patch:
+>>>>>> 
+>>>>>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=293702a3fb75832613e2af097bdc3ac8ef775b33
+>>>>>> 
+>>>>>> mac80211: use common radiotap code for cooked monitors
+>>>> 
+>>>> Same problem here with ar9285 / 2.4GHz / eap-tls / 802.11n / hostapd
+>>>> 0.7.3 / compat-wireless-3.4-rc3-1.tar.bz2
+>>>> 
+>>>> Removing "mac80211: use common radiotap code for cooked monitors" solves
+>>>> the problem here, too.
+>>>> 
+>>>> Using rt2860 as AP seems not to be a problem.
+>>> 
+>>> Sounds like we may need to revert it upstream.  Johannes, any comments?
+>> That's a known bug, which I submitted a fix for. When looking at the
+>> 3.4-rc4 log, I don't see my fix in there. It was submitted as
+>> "[PATCH] mac80211: fix truncated packets in cooked monitor rx"
+> 
+> 
+> Just as another data-point, I'm using ath9k for an AR9300 Rev:3 chipset
+> with compat-wireless-v3.4-rc3-1, and it doesn't work as an AP in any case:
+> 
+> Stock code:
+>  fails
+> Reverting [PATCH] mac80211: use common radiotap code for cooked monitors:
+>  fails
+> Leaving the above in place and applying Felix's radiotap patch:
+>  fails
+> 
+> I get a lot of these logs from hostapd:
+> 
+> 1335397090.413064: Could not parse ProbeReq from 00:24:44:f5:e3:c2
+> 
+> I'm using hostapd 0.7.3.  If I rewind to an earlier "stable", it works -
+> at least the AP works; there is a bug in client mode when connecting to
+> a WEP AP, which is fixed in v3.4-rc3-1.
+> 
+> Should I try switching from "stable" to "next"?
+> 
+> --
+> -bp
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
