@@ -1,40 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50359 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753448Ab2EXDzN (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:37789 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756001Ab2EPU0S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:55:13 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 16 May 2012 16:26:18 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45280.722167.7669@gargle.gargle.HOWL> (sfid-20120524_055517_795594_9C7CA2A1)
-Date: Thu, 24 May 2012 09:24:08 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 15/22] ath9k_hw: program BT to control SPDT
+In-Reply-To: <CAB=NE6W2dz=Ld=w5+7jexKk9xfADhk644mc4C=TtbvBZ9_cKGg@mail.gmail.com>
+References: <1337162148-16499-1-git-send-email-ozancag@gmail.com> <CAB=NE6W2dz=Ld=w5+7jexKk9xfADhk644mc4C=TtbvBZ9_cKGg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Wed, 16 May 2012 13:25:57 -0700
+Message-ID: <CAB=NE6U6Ou-rRE9_wpN_5u93BOKk2j06T2Z68C3DO6KG+SENag@mail.gmail.com> (sfid-20120516_222624_253768_00A3E61B)
+Subject: Re: [Lf_driver_backport] [PATCH] compat: backport ether_addr_equal
+To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org,
+	lf_driver_backport@lists.linux-foundation.org,
+	linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-program BT to control SPDT everytime while loading switch table
-from eeprom.
+On Wed, May 16, 2012 at 1:17 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> This is what I see when I save the e-mail:
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    1 +
- 1 file changed, 1 insertion(+)
+<-- snip -->
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ac53d90..4791976 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3613,6 +3613,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
- 		value = ar9003_switch_com_spdt_get(ah, is2ghz);
- 		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
- 				AR_SWITCH_TABLE_COM_SPDT_ALL, value);
-+		REG_SET_BIT(ah, AR_PHY_GLB_CONTROL, AR_BTCOEX_CTRL_SPDT_ENABLE);
- 	}
- 
- 	value = ar9003_hw_ant_ctrl_common_2_get(ah, is2ghz);
--- 
-1.7.10.2
+I've used http://www.opinionatedgeek.com/dotnet/tools/base64decode/ to
+decode this to a file, I'm testing it now with ckmake on compat and
+compat-wireless, thanks!
 
+  Luis
