@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52607 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757077Ab2EJI1g (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:32772 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965584Ab2EPUP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 04:27:36 -0400
-Message-ID: <1336638453.4334.15.camel@jlt3.sipsolutions.net> (sfid-20120510_102742_254576_EC118C30)
-Subject: Re: rt28xx AP-mode problem with commit
- 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
- carrier state"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 10 May 2012 10:27:33 +0200
-In-Reply-To: <1336637726.4334.13.camel@jlt3.sipsolutions.net> (sfid-20120510_101538_229332_FE8BA9F3)
-References: <20120509105719.GA24457@yumi.tdiedrich.de>
-	 <1336564773.4323.19.camel@jlt3.sipsolutions.net>
-	 <20120509121827.GD5472@yumi.tdiedrich.de>
-	 <20120509210448.GE5472@yumi.tdiedrich.de>
-	 <1336637726.4334.13.camel@jlt3.sipsolutions.net>
-	 (sfid-20120510_101538_229332_FE8BA9F3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 16 May 2012 16:15:26 -0400
+Date: Wed, 16 May 2012 15:15:21 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>
+Subject: Re: brcmsmac still woes, possible regression?
+Message-ID: <20120516201521.GA22946@thinkpad-t410> (sfid-20120516_221530_107513_0A152D63)
+References: <20120402215005.GA13969@burratino>
+ <4F7B179F.7070502@broadcom.com>
+ <20120509094111.GA2333@burratino>
+ <4FAA45AF.8050201@broadcom.com>
+ <20120509174106.GA7189@ubuntu-mba>
+ <4FAAB0FE.601@broadcom.com>
+ <1336587054.1121.2.camel@jlt3.sipsolutions.net>
+ <20120510163525.GB32040@ubuntu-mba>
+ <1336728772.4310.6.camel@jlt3.sipsolutions.net>
+ <20120511173149.GA20232@ubuntu-mba>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120511173149.GA20232@ubuntu-mba>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 10:15 +0200, Johannes Berg wrote:
-> On Wed, 2012-05-09 at 23:04 +0200, Tobias Diedrich wrote:
+On Fri, May 11, 2012 at 10:31:49AM -0700, Seth Forshee wrote:
+> > > I've sent RFC patches that strip out the vast majority of this code in
+> > > favor of better integration with the protocol-level regulatory support.
+> > > The piece that's under discussion here is a behavior I maintained in my
+> > > changes, which mutes tx on passive scan channels until data is received
+> > > on a given channel. But in my opinion, if this sort of behavior is
+> > > desired it ought to be implemented at the protocol level instead of in
+> > > the driver, so I'd really prefer to see it removed from brcmsmac.
+> > 
+> > This isn't implemented in mac80211, and since some HW (e.g. ours)
+> > implements it in lower levels, I don't think you can just generally say
+> > it has to be in mac80211 now.
 > 
-> > > PKG_REV:=1f0cc27eb98f7d1af9c64d0752238184cbdb9a24
-> 
-> Ok.
-> 
-> > When associating to the AP works (3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 reverted):
-> > root@OpenWrt:/# ip monitor
-> > dev eth0.1 lladdr 00:50:5b:04:05:7e REACHABLE
-> > dev wlan0 lladdr a0:0b:ba:c6:9f:88 REACHABLE
-> 
-> Ah, well, I wanted "ip monitor" (and maybe restrict to "ip monitor
-> link") while you start/stop hostapd. Sorry for not being clear on that.
-> Also could be useful to look at it with the tcpdump thing, which is very
-> very strange.
-> 
-> I wonder if things like broadcast addresses are only added upon
-> netif_carrier_on() and that would reprogram filters and cause issues for
-> rt2x00... For that we'd need to do some more debugging inside mac80211
-> though.
+> I guess I need to familiarize myself with the situation for other
+> hardware then, which I will do next week when I'm not at a conference.
+> It just seems to me that if we want to enforce consistent regulatory
+> behavior for all HW then mac80211 is the logical place to implement it.
 
-I don't see anything like that happening upon netif_carrier_on(), the
-only thing that really seems to happen is attaching and starting qdiscs,
-which shouldn't make a difference across drivers...
+I had a look at iwlwifi, and I see how passive channels are being
+handled. I don't understand though how having this functionality in
+mac80211 would hurt iwlwifi, but perhaps we can find an acceptible
+solution.
 
-Is this using compat-wireless? But then, so do I right now, against 3.1
-base kernel.
+Actually the support already present for regulatory beacon hints would
+probably suit this purpose fairly well, and in fact it already does seem
+to work for some channels. But for reasons I don't understand the beacon
+hints are only processed for channels with IEEE80211_CHAN_RADAR cleared,
+making it ineffective for most of the 5 GHz band. If this was changed to
+at least give the driver some indication that a beacon has been seen on
+the channel (even just setting chan->beacon_found) then drivers should
+be able to use it to know when tx can be enabled on passive channels.
 
-johannes
+Cheers,
+Seth
 
