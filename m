@@ -1,143 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3213 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755340Ab2EYWdp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 18:33:45 -0400
-Message-ID: <4FC008BB.1020606@broadcom.com> (sfid-20120526_003347_743624_8DB7D1F4)
-Date: Sat, 26 May 2012 00:33:31 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Subject: Re: [RFC PATCH 5/8] brcm80211: smac: enable/disable radio on
- regulatory updates
-References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
- <1334607462-5387-6-git-send-email-seth.forshee@canonical.com>
-In-Reply-To: <1334607462-5387-6-git-send-email-seth.forshee@canonical.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:35684 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965929Ab2EPIiu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 May 2012 04:38:50 -0400
+Received: by obhx4 with SMTP id x4so835399obh.20
+        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 01:38:49 -0700 (PDT)
+From: Yoni Divinsky <yoni.divinsky@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <arik@wizery.com>, <coelho@ti.com>
+Subject: [PATCH v2] wlcore: do not send stop fwlog cmd if fw is hanged
+Date: Wed, 16 May 2012 11:34:18 +0300
+Message-Id: <1337157258-15163-2-git-send-email-yoni.divinsky@ti.com> (sfid-20120516_103855_985443_923CDDD5)
+In-Reply-To: <1337157258-15163-1-git-send-email-yoni.divinsky@ti.com>
+References: <1337157258-15163-1-git-send-email-yoni.divinsky@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/16/2012 10:17 PM, Seth Forshee wrote:
-> Currently the radio disable state is only updated during initialization,
-> and it's only checked against the internal world domain. This is
-> unnecessary, as there are always valid channels against this domain.
-> Instead, check whether any channels are enabled in the regulatory
-> notifier and update the radio state accordingly.
+If the driver received a watchdog interrupt then the
+assumption is that the fw is hanged. Avoid sending
+the stop fwlog command in case of a watchdog recovey
+to avoid waiting for the 2 seconds timeout of the command.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/channel.c |   66 ++++++++-------------
->  1 file changed, 25 insertions(+), 41 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/channel.c b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> index fd5b807..590e8c1 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/channel.c
-> @@ -681,46 +681,6 @@ brcms_c_channel_min_txpower_limits_with_local_constraint(
->  
->  }
->  
-> -/* Update the radio state (enable/disable) and tx power targets
-> - * based on a new set of channel/regulatory information
-> - */
-> -static void brcms_c_channels_commit(struct brcms_cm_info *wlc_cm)
-> -{
-> -	struct brcms_c_info *wlc = wlc_cm->wlc;
-> -	uint chan;
-> -
-> -	/* search for the existence of any valid channel */
-> -	for (chan = 0; chan < MAXCHANNEL; chan++) {
-> -		if (brcms_c_valid_channel20_db(wlc->cmi, chan))
-> -			break;
-> -	}
-> -	if (chan == MAXCHANNEL)
-> -		chan = INVCHANNEL;
-> -
-> -	/*
-> -	 * based on the channel search above, set or
-> -	 * clear WL_RADIO_COUNTRY_DISABLE.
-> -	 */
-> -	if (chan == INVCHANNEL) {
-> -		/*
-> -		 * country/locale with no valid channels, set
-> -		 * the radio disable bit
-> -		 */
-> -		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-> -		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\" "
-> -			  "nbands %d bandlocked %d\n", wlc->pub->unit,
-> -			  __func__, wlc_cm->world_regd->regdomain->alpha2,
-> -			  wlc->pub->_nbands, wlc->bandlocked);
-> -	} else if (mboolisset(wlc->pub->radio_disabled,
-> -			      WL_RADIO_COUNTRY_DISABLE)) {
-> -		/*
-> -		 * country/locale with valid channel, clear
-> -		 * the radio disable bit
-> -		 */
-> -		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-> -	}
-> -}
-> -
->  static int
->  brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
->  		      const struct country_info *country)
-> @@ -766,7 +726,6 @@ brcms_c_channels_init(struct brcms_cm_info *wlc_cm,
->  	}
->  
->  	brcms_c_quiet_channels_reset(wlc_cm);
-> -	brcms_c_channels_commit(wlc_cm);
->  
->  	return 0;
->  }
-> @@ -1240,12 +1199,37 @@ static int brcms_reg_notifier(struct wiphy *wiphy,
->  	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
->  	struct brcms_info *wl = hw->priv;
->  	struct brcms_c_info *wlc = wl->wlc;
-> +	struct ieee80211_supported_band *sband;
-> +	struct ieee80211_channel *ch;
-> +	int band, i, n_channels = 0;
->  
->  	brcms_reg_apply_radar_flags(wiphy);
->  
->  	if (request && request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)
->  		brcms_reg_apply_beaconing_flags(wiphy, request->initiator);
->  
-> +	/* Disable radio if all channels disallowed by regulatory */
+Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c   |    9 +++++++--
+ drivers/net/wireless/ti/wlcore/wlcore.h |    1 +
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-I think we need to validate the channels against our phy as well. See
-brcms_c_channels_init().
-
-> +	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-> +		sband = wiphy->bands[band];
-> +		if (!sband)
-> +			continue;
-> +
-> +		for (i = 0; i < sband->n_channels; i++) {
-> +			ch = &sband->channels[i];
-> +
-> +			if (!(ch->flags & IEEE80211_CHAN_DISABLED))
-> +				n_channels++;
-
-could break here when a valid channel is found.
-
-> +		}
-> +	}
-> +
-> +	if (n_channels == 0) {
-> +		mboolset(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-> +		wiphy_err(wlc->wiphy, "wl%d: %s: no valid channel for \"%s\"\n",
-> +			  wlc->pub->unit, __func__, request->alpha2);
-> +	} else {
-> +		mboolclr(wlc->pub->radio_disabled, WL_RADIO_COUNTRY_DISABLE);
-> +	}
-> +
->  	if (wlc->pub->_nbands > 1 || wlc->band->bandtype == BRCM_BAND_2G)
->  		wlc_phy_chanspec_ch14_widefilter_set(wlc->band->pi,
->  					brcms_c_japan_ccode(request->alpha2));
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 45fe911..305a7c1 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -582,6 +582,7 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 		if (unlikely(intr & WL1271_ACX_INTR_WATCHDOG)) {
+ 			wl1271_error("watchdog interrupt received! "
+ 				     "starting recovery.");
++			wl->watchdog_recovery = true;
+ 			wl12xx_queue_recovery_work(wl);
+ 
+ 			/* restarting the chip. ignore any other interrupt. */
+@@ -820,10 +821,12 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
+ 
+ 	/*
+ 	 * Make sure the chip is awake and the logger isn't active.
+-	 * This might fail if the firmware hanged.
++	 * Do not send a stop fwlog command if the fw is hanged.
+ 	 */
+-	if (!wl1271_ps_elp_wakeup(wl))
++	if (!wl1271_ps_elp_wakeup(wl) && !wl->watchdog_recovery)
+ 		wl12xx_cmd_stop_fwlog(wl);
++	else
++		goto out;
+ 
+ 	/* Read the first memory block address */
+ 	wl12xx_fw_status(wl, wl->fw_status);
+@@ -914,6 +917,7 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 		vif = wl12xx_wlvif_to_vif(wlvif);
+ 		__wl1271_op_remove_interface(wl, vif, false);
+ 	}
++        wl->watchdog_recovery = false;
+ 	mutex_unlock(&wl->mutex);
+ 	wl1271_op_stop(wl->hw);
+ 
+@@ -928,6 +932,7 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 	ieee80211_wake_queues(wl->hw);
+ 	return;
+ out_unlock:
++        wl->watchdog_recovery = false;
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 0b3f0b5..d6a8ad4 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -228,6 +228,7 @@ struct wl1271 {
+ 
+ 	/* Hardware recovery work */
+ 	struct work_struct recovery_work;
++	bool watchdog_recovery;
+ 
+ 	/* Pointer that holds DMA-friendly block for the mailbox */
+ 	struct event_mailbox *mbox;
+-- 
+1.7.0.4
 
