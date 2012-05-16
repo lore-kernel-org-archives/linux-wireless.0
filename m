@@ -1,35 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39016 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:57451 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758357Ab2ECTkL (ORCPT
+	with ESMTP id S1753938Ab2EPVFL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 15:40:11 -0400
-Message-ID: <1336074010.5167.19.camel@jlt3.sipsolutions.net> (sfid-20120503_214015_074097_4CD79259)
-Subject: Re: [PATCH v2 3/4] mac80211: Allow nonHT/HT peering in mesh
+	Wed, 16 May 2012 17:05:11 -0400
+Message-ID: <1337202309.18519.21.camel@jlt3.sipsolutions.net> (sfid-20120516_230515_251505_3B7797BF)
+Subject: [PATCH 3/3 v2] iwlwifi: add __printf argument checking
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	javier@cozybit.com, devel@lists.open80211s.org
-Date: Thu, 03 May 2012 21:40:10 +0200
-In-Reply-To: <1335820832-18887-3-git-send-email-ashok@cozybit.com> (sfid-20120430_232129_619325_DD1BD59B)
-References: <1335820832-18887-1-git-send-email-ashok@cozybit.com>
-	 <1335820832-18887-3-git-send-email-ashok@cozybit.com>
-	 (sfid-20120430_232129_619325_DD1BD59B)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 16 May 2012 23:05:09 +0200
+In-Reply-To: <1337200851-20469-4-git-send-email-johannes@sipsolutions.net> (sfid-20120516_224111_220363_A215918A)
+References: <1337200851-20469-1-git-send-email-johannes@sipsolutions.net>
+	 <1337200851-20469-4-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20120516_224111_220363_A215918A)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-04-30 at 14:20 -0700, Ashok Nagarajan wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> -	    (local->_oper_channel_type !=
-> -	     ieee80211_ht_oper_to_channel_type(ie->ht_operation)))
-> +	    local->_oper_channel_type > NL80211_CHAN_HT20 &&
-> +	    sta_channel_type > NL80211_CHAN_HT20 &&
-> +	    local->_oper_channel_type != sta_channel_type)
+Joe Perches suggested adding the __printf attribute
+to the __iwl_dbg function to check arguments; add it
+to all of the logging functions (err, warn, info, dbg
+and crit.)
 
-I don't think you should use > operators since we may later have to add
-other channel types like 5 and 10 MHz.
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: remove gerrit junk from commit log
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 8376b84..f6bf91c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -38,10 +38,10 @@ static inline bool iwl_have_debug_level(u32 level)
+ }
+ 
+ void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+-		const char *fmt, ...);
+-void __iwl_warn(struct device *dev, const char *fmt, ...);
+-void __iwl_info(struct device *dev, const char *fmt, ...);
+-void __iwl_crit(struct device *dev, const char *fmt, ...);
++		const char *fmt, ...) __printf(4, 5);
++void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
++void __iwl_info(struct device *dev, const char *fmt, ...) __printf(2, 3);
++void __iwl_crit(struct device *dev, const char *fmt, ...) __printf(2, 3);
+ 
+ /* No matter what is m (priv, bus, trans), this will work */
+ #define IWL_ERR(m, f, a...) __iwl_err((m)->dev, false, false, f, ## a)
+@@ -52,9 +52,9 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
+ #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
+ void __iwl_dbg(struct device *dev,
+ 	       u32 level, bool limit, const char *function,
+-	       const char *fmt, ...);
++	       const char *fmt, ...) __printf(5, 6);
+ #else
+-static inline void
++__printf(5, 6) static inline void
+ __iwl_dbg(struct device *dev,
+ 	  u32 level, bool limit, const char *function,
+ 	  const char *fmt, ...)
+
 
