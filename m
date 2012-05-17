@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yumi.tdiedrich.de ([85.10.210.183]:56066 "EHLO mx.tdiedrich.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752417Ab2EHAnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 20:43:37 -0400
-Date: Tue, 8 May 2012 02:43:33 +0200
-From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt28xx: Revert
- eccc068e8e84c8fe997115629925e0422a98e4de which causes txpower to be stuck
- at 0
-Message-ID: <20120508004333.GB5472@yumi.tdiedrich.de> (sfid-20120508_024344_004774_CA09293D)
-References: <20120506153806.GF2774@yumi.tdiedrich.de>
- <CAGXE3d8X3FLoUEjmg+13ggCzVdDHncpr7uwwLweSb+4r87jRpQ@mail.gmail.com>
+Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:52369 "EHLO
+	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762167Ab2EQS2h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 14:28:37 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 17 May 2012 11:28:24 -0700
+Subject: RE: [PATCH 3/3] mwifiex: fix kernel warning in ibss start/join path
+Message-ID: <477F20668A386D41ADCC57781B1F7043083A64B448@SC-VEXCH1.marvell.com> (sfid-20120517_202850_012873_D71E7951)
+References: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
+	 <1337228696-22312-3-git-send-email-bzhao@marvell.com>
+	 (sfid-20120517_063333_463261_998602DE)
+ <1337238333.4524.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1337238333.4524.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGXE3d8X3FLoUEjmg+13ggCzVdDHncpr7uwwLweSb+4r87jRpQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa wrote:
-> On Sun, May 6, 2012 at 5:38 PM, Tobias Diedrich
-> > Before reverting this "iw phy phy0 info" would show "0.0 dBm" as
-> > maximum transmit power for all frequencies.
-> >
-> > After reverting this (and with regdomain set to CH) it is back to
-> > the expected 20 dBm.
-> 
-> Ok, the problem seems to come from the fact that rt2800 doesn't
-> register a per channel
-> max power to mac80211.
-
-BTW I have a secondary issue that I've today bisected down to some
-change between compat-wireless-2012-04-11 and
-compat-wireless-2012-04-12, but I still need to narrow it down
-further and verify it.
-Even with the max_power issue fixed associating with an rt28xx AP
-running compat-wireless-2012-04-12 or higher doesn't work (IIRC AP
-claims wpa auth succeeded, but STA claims it timed out).
-STA mode worked fine though (But only tested it once on Sunday).
-
--- 
-Tobias						PGP: http://8ef7ddba.uguu.de
+SGkgSm9oYW5uZXMsDQoNClRoYW5rcyBmb3IgeW91ciBjb21tZW50Lg0KDQo+ID4gRnJvbTogQW1p
+dGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IFNpbmNlIGNmZzgw
+MjExX2lic3Nfam9pbmVkKCkgaXMgY2FsbGVkIGluc2lkZSBpYnNzIGpvaW4gY2FsbGJhY2sNCj4g
+PiByb3V0aW5lLCBmb2xsb3dpbmcga2VybmVsIHdhcm5pbmcgaXMgaGl0IHdoaWxlIHN0YXJ0aW5n
+L2pvaW5pbmcNCj4gPiBhbiBpYnNzIG5ldHdvcmsuDQo+ID4NCj4gPiAiV0FSTklORzogYXQgbmV0
+L3dpcmVsZXNzL2lic3MuYzo2MyBjZmc4MDIxMV9pYnNzX2pvaW5lZCsweDM1LzB4YjYNCj4gPiBb
+Y2ZnODAyMTFdKCkiDQo+ID4NCj4gPiBVcGRhdGUgIndkZXYtPnNzaWQiIGFuZCAid2Rldi0+c3Np
+ZF9sZW4iIGluIGlic3Mgam9pbiBjYWxsYmFjayB0bw0KPiA+IGZpeCB0aGlzIHdhcm5pbmcuDQo+
+IA0KPiBHdXlzLCBuby4gVGhlIGRvY3VtZW50YXRpb24gZm9yIHRoaXMgZXhwbGljaXRseSBzYXlz
+Og0KPiANCj4gICogQHNzaWQ6IChwcml2YXRlKSBVc2VkIGJ5IHRoZSBpbnRlcm5hbCBjb25maWd1
+cmF0aW9uIGNvZGUNCj4gICogQHNzaWRfbGVuOiAocHJpdmF0ZSkgVXNlZCBieSB0aGUgaW50ZXJu
+YWwgY29uZmlndXJhdGlvbiBjb2RlDQoNClNvcnJ5LCBJIHNob3VsZCBoYXZlIGJlZW4gYXdhcmUg
+b2YgdGhhdC4NCg0KPiANCj4gRG9uJ3QgdG91Y2ggaXQuIEkga25ldyBJIHNob3VsZCBoYXZlIGhp
+ZGRlbiB0aGVzZSBmaWVsZHMgZnJvbSBkcml2ZXINCj4gdmlldywgYnV0IGl0IHdhc24ndCBlYXNp
+bHkgcG9zc2libGUuDQo+IA0KPiBJZiB5b3UncmUgdXNpbmcgdGhlIEFQSSB3cm9uZyB0aGVuIHlv
+dSBzaG91bGQgZml4IHRoYXQgaW5zdGVhZC4gSW4NCj4gcGFydGljdWxhciwgeW91IHNob3VsZCBv
+bmx5IGNhbGwgY2ZnODAyMTFfaWJzc19qb2luZWQoKSB3aGVuIHlvdQ0KPiBhY3R1YWxseSBrbm93
+IHRoZSBCU1NJRCBvZiB0aGUgSUJTUyB5b3UndmUgam9pbmVkLiBZb3UgY2FuJ3QgcG9zc2libHkN
+Cj4ga25vdyB0aGlzIGF0IHRoaXMgcG9pbnQgc2luY2UgeW91IGNhbid0IGV2ZW4gaGF2ZSBzY2Fu
+bmVkIGZvciBwZWVycyB5ZXQuDQoNCkluIC5qb2luX2lic3MgaGFuZGxlciwgbXdpZmlleCBkcml2
+ZXIgc2VuZHMgYSBjb21tYW5kIHRvIGZpcm13YXJlIHRvIHN0YXJ0L2pvaW4gYW4gSUJTUyBuZXR3
+b3JrLg0KVGhpcyBjb21tYW5kIGlzIGEgc3luY2hyb25vdXMgY2FsbC4gV2hlbiB0aGUgY29tbWFu
+ZCByZXNwb25zZSBjb21lcyBiYWNrIHdlIGhhdmUgc3RhcnRlZC9qb2luZWQgaXQgc3VjY2Vzc2Z1
+bGx5LCBvdGhlcndpc2UgYW4gZXJyb3IgY29kZSB3aWxsIGJlIHJldHVybmVkLiBIb3dldmVyLCB3
+ZSBhcmUgc3RpbGwgaW5zaWRlIC5qb2luX2lic3MgaGFuZGxlciBhdCB0aGlzIG1vbWVudC4gQ2Fs
+bGluZyBjZmc4MDIxMV9pYnNzX2pvaW5lZCgpIGdpdmVzIHVzIHRoZSB3YXJuaW5nIGJlY2F1c2Ug
+c3NpZF9sZW4gaGFzbid0IGJlZW4gc2V0IGJ5IGNmZzgwMjExIHlldC4NCg0KQW55d2F5LCB3ZSB3
+aWxsIGxvb2sgZm9yIG90aGVyIHNvbHV0aW9uIHRvIHJlc29sdmUgdGhlIGtlcm5lbCB3YXJuaW5n
+Lg0KDQoNCkhpIEpvaG4sDQoNClBsZWFzZSBkcm9wIHRoaXMgcGF0Y2guDQoNClRoYW5rcywNCkJp
+bmcNCg0K
