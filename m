@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:45428 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933652Ab2EXRK5 (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:31686 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932275Ab2EQTNy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 13:10:57 -0400
-Received: by eeit10 with SMTP id t10so3994eei.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2012 10:10:56 -0700 (PDT)
-Date: Thu, 24 May 2012 19:10:37 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 17 May 2012 15:13:54 -0400
+Date: Thu, 17 May 2012 22:13:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: hauke@hauke-m.de, Arend van Spriel <arend@broadcom.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce : freeze after connecting to network with FW Power
- Save on
-Message-ID: <20120524191037.19e10917@destiny.ordissimo> (sfid-20120524_191111_945628_AFA23B05)
-In-Reply-To: <4FB3D348.2010700@lwfinger.net>
-References: <20120515152951.7cc4f84b@destiny.ordissimo>
-	<4FB26D6B.2030005@lwfinger.net>
-	<20120515170405.7f6510f2@destiny.ordissimo>
-	<4FB28834.4000803@lwfinger.net>
-	<20120516124133.69f57311@destiny.ordissimo>
-	<4FB3D348.2010700@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: re: brcmsmac: use sprom from bcma
+Message-ID: <20120517191339.GA17018@elgon.mountain> (sfid-20120517_211357_834596_A682B01C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(sorry for the delay, I got caught up in other things, and forgot to send
-answer email)
+Hello Hauke, Arend,
 
-On Wed, 16 May 2012 11:18:16 -0500, Larry Finger <Larry.Finger@lwfinger.net> wrote :
+The patch 898d3c3b2462: "brcmsmac: use sprom from bcma" from Apr 29, 
+2012, leads to the following warning:
+drivers/net/wireless/brcm80211/brcmsmac/channel.c:645 
+brcms_c_country_valid()
+	 error: buffer overflow 'ccode' 2 <= 2
 
-> On 05/16/2012 05:41 AM, Anisse Astier wrote:
-> > I enabled the following options:
-> > CONFIG_LOCKDEP_SUPPORT=y
-> > CONFIG_LOCKDEP=y
-> > CONFIG_DEBUG_LOCKDEP=y
-> > CONFIG_DEBUG_SPINLOCK=y
-> > CONFIG_DEBUG_MUTEXES=y
-> > But it didn't detect any lockup yet, and machine still hangs. I'll try
-> > CONFIG_PROVE_LOCKING.
-> >
-> > Enabling CONFIG_DEBUG_INFO seems to make the problem go away...
-> 
-> That may explain why I never see the problem. I do not think I have ever 
-> generated a kernel with that parameter disabled, and my distro's kernels have it 
-> enabled. Does anything new get logged (dmesg output) when that parameter is enabled?
-> 
+-       if (ccode && brcms_c_country_valid(ccode))
+-               strncpy(wlc->pub->srom_ccode, ccode, BRCM_CNTRY_BUF_SZ - 1);
++       if (sprom->alpha2 && brcms_c_country_valid(sprom->alpha2))
+                                                   ^^^^^^^^^^^^^
+This is a two character array.  It's not NULL terminated.
 
-There's no zero difference in dmesg output. Have you tried with
-debug_info disabled?
++               strncpy(wlc->pub->srom_ccode, sprom->alpha2, sizeof(sprom->alpha2));
 
-Unfortunately, I've lost access to this hardware, so I won't be able to
-do more test for quite some time.
+But in brcms_c_country_valid() we check for the NULL terminator.
+
+   637  static bool brcms_c_country_valid(const char *ccode)
+   638  {
+   639          /*
+   640           * only allow ascii alpha uppercase for the first 2
+   641           * chars.
+   642           */
+   643          if (!((0x80 & ccode[0]) == 0 && ccode[0] >= 0x41 && ccode[0] <= 0x5A &&
+   644                (0x80 & ccode[1]) == 0 && ccode[1] >= 0x41 && ccode[1] <= 0x5A &&
+   645                ccode[2] == '\0'))
+                      ^^^^^^^^^^^^^^^^
+Here.
+
+   646                  return false;
+
+My guess is that this works because -> leddc_on_time is mostly zero.
+
+regards,
+dan carpenter
+
