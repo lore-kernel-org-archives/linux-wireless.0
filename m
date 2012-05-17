@@ -1,96 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50128 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754378Ab2EGKbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 06:31:51 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 00/20] NFC updates for 3.5
-Date: Mon,  7 May 2012 12:31:11 +0200
-Message-Id: <1336386691-24840-1-git-send-email-sameo@linux.intel.com> (sfid-20120507_123157_019537_9362236C)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44149 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030224Ab2EQWcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 18:32:10 -0400
+Message-ID: <4FB57C61.3090302@hauke-m.de> (sfid-20120518_003216_241431_236F528A)
+Date: Fri, 18 May 2012 00:32:01 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: brcmsmac and BCM47186 (BCM5357) + brcmfmac and BCM43236 V2
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi Arend,
 
-Here comes my 2nd NFC batch for the next 3.5 merge window.
+I got a new device, a Linksys E3200 with a BCM47186 (id: 0x5357) and a
+BCM43236 v2 for 5GHz wifi.
 
-Besides the sparse, warning and LLCP fixes, we have a new pn544 driver based
-on the existing NFC HCI APIs. We will be living with 2 pn544 drivers for a
-while as I wanted to keep a transition period for whoever is using the
-existing driver. I'm planning to remove it for 3.6, but this could be extended
-if someone screams about it.
+The BCM47186 has a wifi core rev 28, a N-PHY rev 9 and a 2057 radio rev
+5 and it does not work with brcmsmac or b43. :-(
 
-You can also pull those patches from:
+Are there plans to add support for such new N-PHY revs to brcmsmac and
+the firmware?
 
-git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-3.0.git nfc-next
+Here are some parts of my log with brcmsamc with firmware from
+linux-firmware.
 
-They should apply cleanly on top of your wireless-next tree.
+bcma: Found chip with id 0x5357, rev 0x02 and package 0x0A
+....
+bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x1C, class 0x0)
+....
+[   14.776000] b43-phy0: Broadcom 5357 WLAN found (core revision 28)
+[   14.780000] b43-phy0 debug: Found PHY: Analog 9, Type 4, Revision 9
+[   14.780000] b43-phy0 ERROR: FOUND UNSUPPORTED RADIO (Manuf 0x17F,
+Version 0x2057, Revision 5)
+[   14.792000] b43: probe of bcma0:5 failed with error -122
+[   14.796000] Broadcom 43xx driver loaded [ Features: PNL ]
+[   14.824000] Broadcom 43xx-legacy driver loaded [ Features: PLID ]
+...
+[   15.048000] brcmsmac bcma0:5: mfg 4bf core 812 rev 28 class 0 irq 3
+[   15.144000] ieee80211 phy1: Selected rate control algorithm 'minstrel_ht'
+...
+[   16.212000] brcmf_usb_fw_download: unsupported chip 43236 rev 2
+[   16.212000] brcmf_usb_attach: failed!
+[   16.212000] brcmf_usb_probe: failed with errno -19
+...
+[   32.508000] ieee80211 phy1: wl0: wlc_coreinit: ucode did not
+self-suspend!
+[   32.516000] ieee80211 phy1: wlc_coreinit: txfifo mismatch: ucode size
+127 driver size 29535 index 5
+[   32.636000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   32.644000] ieee80211 phy1: wl0: psmdebug 0x00ff8cd4, phydebug
+0x00000000, psm_brc 0x0000
+... (~6 times the same two messages)
+[   33.372000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   33.380000] ieee80211 phy1: wl0: psmdebug 0x00ff8cd4, phydebug
+0x00000000, psm_brc 0x0000
+[   33.388000] ieee80211 phy1: brcms_ops_bss_info_changed: qos enabled:
+false (implement)
+[   33.396000] ieee80211 phy1: brcms_ops_config: change monitor mode: false
+[   33.396000] ieee80211 phy1: brcms_ops_config: change power-save mode:
+false (implement)
+[   33.492000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   33.500000] ieee80211 phy1: wl0: psmdebug 0x00ff8cd4, phydebug
+0x00000000, psm_brc 0x0000
+... (~10 times the same two messages)
+[   43.144000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   43.152000] ieee80211 phy1: wl0: psmdebug 0x00ff8cd4, phydebug
+0x00000001, psm_brc 0x0000
+[   51.096000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   51.236000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   51.244000] ieee80211 phy1: wl0: psmdebug 0x00ff8cd4, phydebug
+0x00000001, psm_brc 0x0000
+... (~10 times the same two messages)
+[   53.652000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   53.660000] ieee80211 phy1: wl0: psmdebug 0x00ff8cd4, phydebug
+0x00000000, psm_brc 0x0000
+[   53.796000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   53.956000] ------------[ cut here ]------------
+[   53.960000] WARNING: at
+/home/hauke/kamikaze/git/build_dir/linux-brcm47xx/compat-wireless-2012-04-17/drivers/net/wireless/brcm80211/brcmsmac/main.c:7975
+brcms_c_wait_for_
+tx_completion+0xc4/0xe0 [brcmsmac]()
+[   53.976000] Modules linked in: usb_storage brcmfmac(O) uhci_hcd
+ohci_hcd nf_nat_irc nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp
+ipt_MASQUERADE iptable_nat nf_nat xt_conn
+track xt_CT xt_NOTRACK iptable_raw xt_state nf_conntrack_ipv4
+nf_defrag_ipv4 nf_conntrack ehci_hcd sd_mod pppoe pppox ipt_REJECT
+xt_TCPMSS ipt_LOG xt_comment xt_multiport xt
+_mac xt_limit iptable_mangle iptable_filter ip_tables xt_tcpudp x_tables
+msdos brcmsmac(O) ppp_async ppp_generic slhc vfat fat ext4 jbd2 mbcache
+brcmutil(O) b43legacy(O) b43
+(O) nls_utf8 nls_koi8_r nls_iso8859_2 nls_iso8859_15 nls_iso8859_13
+nls_iso8859_1 nls_cp866 nls_cp852 nls_cp850 nls_cp775 nls_cp437
+nls_cp1251 nls_cp1250 mac80211(O) usbcore
+ usb_common switch_core(O) scsi_mod nls_base crc8 crc16 crc_ccitt cordic
+cfg80211(O) compat(O) ssb_hcd bcma_hcd arc4 aes_generic crypto_algapi
+tg3 diag(O) [last unloaded: switch_core]
+[   54.056000] Call Trace:
+[   54.060000] [<8024ea44>] dump_stack+0x8/0x34
+[   54.064000] [<80017f80>] warn_slowpath_common+0x78/0xa4
+[   54.068000] [<80017fc4>] warn_slowpath_null+0x18/0x24
+[   54.072000] [<82e8dd1c>] brcms_c_wait_for_tx_completion+0xc4/0xe0
+[brcmsmac]
+[   54.080000] [<82e80194>] 0x82e80194
+[   54.084000]
+[   54.084000] ---[ end trace 374ee2ec89e7f317 ]---
+[   63.292000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[   63.300000] ieee80211 phy1: wl0: psmdebug 0x00ff8cd4, phydebug
+0x00000001, psm_brc 0x0000
+... (~10 times the same two messages)
+[  193.292000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
+[  193.300000] ieee80211 phy1: wl0: psmdebug 0x00ff8cd4, phydebug
+0x00000001, psm_brc 0x0000
+[  203.292000] ieee80211 phy1: wl0: wlc_suspend_mac_and_wait: waited
+83000 uS and MI_MACSSPNDD is still not on.
 
-Dan Carpenter (1):
-  NFC: Remove unneeded pn533 dev NULL check
 
-Eric Lapuyade (7):
-  NFC: Cache the core NFC active target pointer instead of its index
-  NFC: Remove useless HCI private nfc target table
-  NFC: Specify usage for targets found and target lost events
-  NFC: Add HCI/SHDLC support to let driver check for tag presence
-  NFC: Update Documentation/nfc-hci.txt
-  NFC: HCI based pn544 driver
-  NFC: HCI drivers don't have to keep track of polling state
+When using the firmware from b43 (666.2, extracted from wl 5.100.138) I
+get the following messages, but iw wlan0 scan does not find any networks
+either.
 
-H Hartley Sweeten (5):
-  NFC: Quiet nci/data.c sparse noise about plain integer as NULL
-    pointer
-  NFC: Include nci_core.h to nci/lib.c
-  NFC: Quiet nci/ntf.c sparse noise about plain integer as NULL pointer
-  NFC: HCI ops should not be exposed globally
-  NFC: The NFC genl family structure should not be exposed globally
+[   30.088000] ieee80211 phy1: wlc_coreinit: txfifo mismatch: ucode size
+127 driver size 29535 index 5
+[   30.164000] ieee80211 phy1: brcms_ops_bss_info_changed: qos enabled:
+false (implement)
+[   30.172000] ieee80211 phy1: brcms_ops_config: change monitor mode: false
+[   30.172000] ieee80211 phy1: brcms_ops_config: change power-save mode:
+false (implement)
+[   43.976000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   44.844000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   48.088000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   48.956000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   53.448000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   54.316000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   76.816000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
+[   77.684000] ieee80211 phy1: FIF_BCN_PRBRESP_PROMISC
 
-Samuel Ortiz (5):
-  NFC: LLCP connect must wait for a CC frame
-  NFC: Update the LLCP poll mask
-  NFC: Return the amount of LLCP bytes queued to sock_sendmsg
-  NFC: Send device index instead of its name when target is lost
-  feature-removal: Remove pn544 raw driver
+Did you talk to the firmware guys, is there a limitation to core rev 23
+devices in the N-PHY firmware other than in the firmware used by wl?
 
-Stephen Rothwell (1):
-  NFC: Fix up for NLA_PUT_ api changes
+There is also a BCM43236 V2 (usb chip) on the board. I tried brcmfmac
+and the firmware from linux-firmware, but it did not work. This is a rev
+2 device and brcmfmac just seams to support rev 3. Are there any plans
+to add support for rev 2 or is this an other problem and a rev 2 device
+should also work with brcmfmac?
 
-joseph daniel (1):
-  NFC: Fix LLCP compilation warning
-
- Documentation/feature-removal-schedule.txt |   12 +
- Documentation/nfc/nfc-hci.txt              |   45 +-
- drivers/nfc/Kconfig                        |   13 +
- drivers/nfc/Makefile                       |    1 +
- drivers/nfc/pn533.c                        |   19 +-
- drivers/nfc/pn544_hci.c                    |  947 ++++++++++++++++++++++++++++
- include/linux/nfc/pn544.h                  |    7 +
- include/net/nfc/hci.h                      |    6 +-
- include/net/nfc/nfc.h                      |   19 +-
- include/net/nfc/shdlc.h                    |    2 +
- net/nfc/core.c                             |  112 +++-
- net/nfc/hci/core.c                         |   78 +--
- net/nfc/hci/shdlc.c                        |   12 +
- net/nfc/llcp/commands.c                    |    2 +-
- net/nfc/llcp/llcp.c                        |    7 +
- net/nfc/llcp/sock.c                        |   57 ++-
- net/nfc/nci/core.c                         |   27 +-
- net/nfc/nci/data.c                         |    8 +-
- net/nfc/nci/lib.c                          |    1 +
- net/nfc/nci/ntf.c                          |    2 +-
- net/nfc/netlink.c                          |   12 +-
- net/nfc/nfc.h                              |    2 +-
- 22 files changed, 1248 insertions(+), 143 deletions(-)
- create mode 100644 drivers/nfc/pn544_hci.c
-
--- 
-1.7.9.1
-
+Hauke
