@@ -1,101 +1,96 @@
-Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41928 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751208Ab2E0X3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 May 2012 19:29:42 -0400
-Message-ID: <4FC2B8E0.8060805@openwrt.org> (sfid-20120528_013005_935387_C2F90528)
-Date: Mon, 28 May 2012 01:29:36 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Return-Path: <linux-wireless-owner@vger.kernel.org>
+Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:33583 "EHLO
+	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754389Ab2EQFvC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 01:51:02 -0400
+From: Amit SHAKYA <amit.shakya@stericsson.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless (linux-wireless@vger.kernel.org)"
+	<linux-wireless@vger.kernel.org>,
+        "Johannes Berg (johannes@sipsolutions.net)"
+	<johannes@sipsolutions.net>
+Date: Thu, 17 May 2012 07:50:39 +0200
+Subject: Recall: [PATCH] mac80211: Handle race condition in replay handling
+Message-ID: <ECD438FDEF6BD742895E554C24725A4022946BBC7E@EXDCVYMBSTM005.EQ1STM.local>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Ben Greear <greearb@candelatech.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: Anyone doing WiFi throughput tests?
-References: <4FC04B5A.1070900@candelatech.com> <20416.19680.571601.549629@gargle.gargle.HOWL> <4FC0F8CE.1030303@candelatech.com> <20417.972.888113.821079@gargle.gargle.HOWL> <20417.1857.115550.807746@gargle.gargle.HOWL> <4FC2437C.9090106@candelatech.com> <CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com> <4FC26EED.5090906@openwrt.org> <CAJ-VmokeucgfCOhFQms9hMkvGdN1VikU0cdybURXWfnO+RzOcA@mail.gmail.com>
-In-Reply-To: <CAJ-VmokeucgfCOhFQms9hMkvGdN1VikU0cdybURXWfnO+RzOcA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-05-28 1:15 AM, Adrian Chadd wrote:
-> Sweet. Thanks a lot for chasing that up.
-> 
-> What's the oprofile output look like for the AR7242 when doing that?
-Haven't run oprofile on the AR7242 yet, but here's what 350Mbits/s UDP
-ethernet-rx <-> wifi-tx traffic (bridged) looks like on AR9344:
+Amit SHAKYA would like to recall the message, "[PATCH] mac80211: Handle race condition in replay handling".--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>From linux-wireless-owner@vger.kernel.org Thu May 17 09:12:02 2012
+Return-Path: <linux-wireless-owner@vger.kernel.org>
+X-Spam-Checker-Version: SpamAssassin 3.3.1 (2010-03-16) on
+	jmaline2.user.openhosting.com
+X-Spam-Level: 
+X-Spam-Status: No, score=-6.9 required=5.0 tests=BAYES_00,RCVD_IN_DNSWL_HI,
+	T_DKIM_INVALID,T_RP_MATCHES_RCVD autolearn=ham version=3.3.1
+Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
+	by jmaline2.user.openhosting.com (8.13.8/8.13.8) with ESMTP id q4H6C1fx015354
+	for <j@w1.fi>; Thu, 17 May 2012 02:12:02 -0400
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1757417Ab2EQGPI (ORCPT <rfc822;j@w1.fi>);
+	Thu, 17 May 2012 02:15:08 -0400
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60687 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754564Ab2EQGPH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 02:15:07 -0400
+DKIM-Signature: 	v=1; a=rsa-sha256; c=simple/simple;
+  d=qca.qualcomm.com; i=kvalo@qca.qualcomm.com; q=dns/txt;
+  s=qcdkim; t=1337235307; x=1368771307;
+  h=message-id:date:from:mime-version:to:cc:subject:
+   references:in-reply-to:content-transfer-encoding;
+  bh=S65kz6nR7mFBoCLkvJ40C2Z71r6DfKgQ+wPw061Q4xc=;
+  b=qC34JftD0hu6dYeE3KW/cALLQOF9VDfcGf0OxvgnLeugRQ4U6zKeagjU
+   Cyx2BTw2mLFsDMQ4HdSWRdha8co82sOWkcr2VEq3ny/zwfpiiO2ZSDBPR
+   BaOwBAuFFjDIT2LX/8bZb6SZ2xsDBf7pZihZubsyrlnJ92lrwkZfm6DNl
+   M=;
+X-IronPort-AV: E=McAfee;i="5400,1158,6713"; a="191786987"
+Received: from ironmsg03-r.qualcomm.com ([172.30.46.17])
+  by wolverine01.qualcomm.com with ESMTP; 16 May 2012 23:15:07 -0700
+X-IronPort-AV: E=Sophos;i="4.75,605,1330934400"; 
+   d="scan'208";a="252825768"
+Received: from nasanexhc05.na.qualcomm.com ([172.30.48.2])
+  by Ironmsg03-R.qualcomm.com with ESMTP/TLS/RC4-SHA; 16 May 2012 23:15:07 -0700
+Received: from [10.64.3.213] (172.30.48.1) by qcmail1.qualcomm.com
+ (172.30.48.2) with Microsoft SMTP Server (TLS) id 14.2.283.3; Wed, 16 May
+ 2012 23:15:06 -0700
+Message-ID: <4FB49765.2080105@qca.qualcomm.com>
+Date: 	Thu, 17 May 2012 09:15:01 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20120430 Thunderbird/12.0.1
+MIME-Version: 1.0
+To: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: issue wmi disconnect after notifying cfg80211
+References: <1337200873-3698-1-git-send-email-c_tpeder@qca.qualcomm.com>
+In-Reply-To: <1337200873-3698-1-git-send-email-c_tpeder@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [172.30.48.1]
+Sender: linux-wireless-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-wireless.vger.kernel.org>
+X-Mailing-List: 	linux-wireless@vger.kernel.org
+Content-Length: 724
+Lines: 18
 
-CPU: MIPS 74K, speed 417 MHz (estimated)
-Counted CYCLES events (0-0 Cycles) with a unit mask of 0x00 (No unit mask) count 10000
-samples  %        app name                 symbol name
-203986    6.8165  vmlinux                  ag71xx_poll
-139395    4.6581  vmlinux                  __do_softirq
-119259    3.9852  mac80211.ko              invoke_tx_handlers
-112990    3.7757  vmlinux                  ring_buffer_consume
-89195     2.9806  mac80211.ko              ieee80211_tx_status
-69185     2.3119  vmlinux                  __copy_user
-67684     2.2618  vmlinux                  __bzero
-67014     2.2394  ath9k.ko                 ath_txq_schedule
-65597     2.1920  vmlinux                  __slab_alloc.isra.60.constprop.63
-65375     2.1846  vmlinux                  eth_type_trans
-63594     2.1251  vmlinux                  r4k_dma_cache_inv
-61121     2.0425  mac80211.ko              ieee80211_subif_start_xmit
-50797     1.6975  ath9k_hw.ko              ar9003_set_txdesc
-49942     1.6689  vmlinux                  __rmemcpy
-48397     1.6173  ath9k.ko                 ath_tx_complete
-46697     1.5605  vmlinux                  skb_release_data
-45083     1.5065  vmlinux                  __netif_receive_skb
-43928     1.4679  ath9k.ko                 ath_tx_complete_aggr.isra.21
-43289     1.4466  vmlinux                  vlan_untag
-41766     1.3957  mac80211.ko              minstrel_ht_set_rate
-41154     1.3752  ath9k.ko                 ath_tx_setup_buffer.isra.18
-41136     1.3746  vmlinux                  pfifo_fast_dequeue
-40500     1.3534  vmlinux                  __slab_free.isra.58
-39498     1.3199  vmlinux                  __qdisc_run
-39278     1.3125  ath9k.ko                 ath_tx_start
-38789     1.2962  vmlinux                  r4k_dma_cache_wback_inv
-38497     1.2864  ath9k.ko                 ath_tx_fill_desc
-37308     1.2467  vmlinux                  kfree
-36235     1.2109  vmlinux                  br_handle_frame
-35178     1.1755  vmlinux                  skb_put
-34532     1.1539  vmlinux                  __kmalloc_track_caller
-31535     1.0538  vmlinux                  kmem_cache_alloc
-31045     1.0374  vmlinux                  dev_queue_xmit
-30953     1.0343  vmlinux                  vlan_do_receive
-30151     1.0075  mac80211.ko              __ieee80211_tx
-30132     1.0069  vmlinux                  put_cpu_partial
-29625     0.9900  vmlinux                  mips_dma_map_page
-28214     0.9428  mac80211.ko              ieee80211_tx_prepare
-27059     0.9042  vmlinux                  br_fdb_update
-25845     0.8637  oprofile.ko              add_event_entry
-25230     0.8431  vmlinux                  br_handle_frame_finish
-24652     0.8238  vmlinux                  net_rx_action
-22232     0.7429  mac80211.ko              rate_control_get_rate
-21840     0.7298  mac80211.ko              minstrel_ht_get_rate
-21591     0.7215  mac80211.ko              ccmp_encrypt_skb
-20313     0.6788  ath9k.ko                 ath9k_ps_restore
-20055     0.6702  vmlinux                  r4k_wait_irqoff
-19867     0.6639  vmlinux                  dev_hard_start_xmit
-19220     0.6423  vmlinux                  __br_fdb_get
-18673     0.6240  vmlinux                  ksize
-17769     0.5938  vmlinux                  __alloc_skb
-17687     0.5910  vmlinux                  kmem_cache_free
-17605     0.5883  mac80211.ko              minstrel_ht_tx_status
-17112     0.5718  mac80211.ko              ieee80211_select_queue
-16926     0.5656  ath9k.ko                 ath_tx_complete_buf
-16310     0.5450  vmlinux                  pfifo_fast_enqueue
-16065     0.5368  vmlinux                  local_bh_enable
-15586     0.5208  ath9k.ko                 ath_tx_update_baw.isra.14
-14449     0.4828  vmlinux                  skb_push
-14097     0.4711  oprofile.ko              sync_buffer
-13755     0.4596  vmlinux                  napi_complete
-12793     0.4275  vmlinux                  mips_dma_unmap_page
-12228     0.4086  vmlinux                  br_dev_queue_push_xmit
-12212     0.4081  vmlinux                  br_forward
-12149     0.4060  vmlinux                  __netdev_alloc_skb
-11250     0.3759  vmlinux                  rcu_bh_qs
-11153     0.3727  vmlinux                  atomic64_add_return
-11123     0.3717  ath9k.ko                 ath9k_tx
-11026     0.3685  ath9k.ko                 ath_debug_stat_tx
-10763     0.3597  oprofile.ko              op_cpu_buffer_read_entry
+On 05/16/2012 11:41 PM, Thomas Pedersen wrote:
+> ath6kl would issue a wmi disconnect command in response to a remote
+> disconnect and return early without notifying cfg80211, only sending a
+> cfg80211_disconnected (with reason code always 3) in response to the
+> second disconnect firmware event.
+> 
+> Pass the right reason code to cfg80211 on the first disconnect instead.
+> 
+> Signed-off-by: Thomas Pedersen <c_tpeder@qca.qualcomm.com>
+
+Thanks, applied with the extra description about the actual bug this is
+fixing.
+
+Kalle
