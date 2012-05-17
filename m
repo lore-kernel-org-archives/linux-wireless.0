@@ -1,96 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:58739 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758060Ab2EJJQA (ORCPT
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:40997 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965954Ab2EQV7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:00 -0400
-Received: by mail-wg0-f42.google.com with SMTP id ds11so231730wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:15:59 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 40/78] wlcore/wl12xx: move rx_mem_pool_addr element to wl12xx
-Date: Thu, 10 May 2012 12:13:45 +0300
-Message-Id: <1336641263-5761-41-git-send-email-arik@wizery.com> (sfid-20120510_112147_526973_7919FDC2)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Thu, 17 May 2012 17:59:38 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 17 May 2012 14:58:59 -0700
+Subject: RE: [PATCH 3/3] mwifiex: fix kernel warning in ibss start/join path
+Message-ID: <477F20668A386D41ADCC57781B1F7043083A64B4C2@SC-VEXCH1.marvell.com> (sfid-20120517_235942_833012_312A4206)
+References: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
+	 <1337228696-22312-3-git-send-email-bzhao@marvell.com>
+	 (sfid-20120517_063333_463261_998602DE)
+ <1337238333.4524.1.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F7043083A64B448@SC-VEXCH1.marvell.com>
+ <1337284374.4687.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1337284374.4687.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
-
-Only wl127x chips use the rx_mem_pool_addr values, which need to be
-given to the firmware as part of the RX path.  Move this from core to
-the wl12xx driver.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl12xx/main.c     |    2 +-
- drivers/net/wireless/ti/wl12xx/wl12xx.h   |    5 +++++
- drivers/net/wireless/ti/wlcore/wlcore.h   |    3 ---
- drivers/net/wireless/ti/wlcore/wlcore_i.h |    5 -----
- 4 files changed, 6 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 962d85d..0266855 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -596,7 +596,7 @@ static void wl127x_prepare_read(struct wl1271 *wl, u32 rx_desc, u32 len)
- {
- 	if (wl->chip.id != CHIP_ID_1283_PG20) {
- 		struct wl1271_acx_mem_map *wl_mem_map = wl->target_mem_map;
--		struct wl1271_rx_mem_pool_addr rx_mem_addr;
-+		struct wl127x_rx_mem_pool_addr rx_mem_addr;
- 
- 		/*
- 		 * Choose the block we want to read
-diff --git a/drivers/net/wireless/ti/wl12xx/wl12xx.h b/drivers/net/wireless/ti/wl12xx/wl12xx.h
-index 0d81c1e..de11324 100644
---- a/drivers/net/wireless/ti/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/ti/wl12xx/wl12xx.h
-@@ -24,6 +24,11 @@
- 
- #include "conf.h"
- 
-+struct wl127x_rx_mem_pool_addr {
-+	u32 addr;
-+	u32 addr_extra;
-+};
-+
- struct wl12xx_priv {
- 	struct wl12xx_priv_conf conf;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 89abbce..f62152e 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -213,9 +213,6 @@ struct wl1271 {
- 	/* FW Rx counter */
- 	u32 rx_counter;
- 
--	/* Rx memory pool address */
--	struct wl1271_rx_mem_pool_addr rx_mem_pool_addr;
--
- 	/* Intermediate buffer, used for packet aggregation */
- 	u8 *aggr_buf;
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 819c97c..53263a9 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -194,11 +194,6 @@ struct wl_fw_status {
- 	u8 priv[0];
- } __packed;
- 
--struct wl1271_rx_mem_pool_addr {
--	u32 addr;
--	u32 addr_extra;
--};
--
- #define WL1271_MAX_CHANNELS 64
- struct wl1271_scan {
- 	struct cfg80211_scan_request *req;
--- 
-1.7.9.5
-
+SGkgSm9oYW5uZXMsDQoNCj4gT24gVGh1LCAyMDEyLTA1LTE3IGF0IDExOjI4IC0wNzAwLCBCaW5n
+IFpoYW8gd3JvdGU6DQo+IA0KPiA+ID4gRG9uJ3QgdG91Y2ggaXQuIEkga25ldyBJIHNob3VsZCBo
+YXZlIGhpZGRlbiB0aGVzZSBmaWVsZHMgZnJvbSBkcml2ZXINCj4gPiA+IHZpZXcsIGJ1dCBpdCB3
+YXNuJ3QgZWFzaWx5IHBvc3NpYmxlLg0KPiA+ID4NCj4gPiA+IElmIHlvdSdyZSB1c2luZyB0aGUg
+QVBJIHdyb25nIHRoZW4geW91IHNob3VsZCBmaXggdGhhdCBpbnN0ZWFkLiBJbg0KPiA+ID4gcGFy
+dGljdWxhciwgeW91IHNob3VsZCBvbmx5IGNhbGwgY2ZnODAyMTFfaWJzc19qb2luZWQoKSB3aGVu
+IHlvdQ0KPiA+ID4gYWN0dWFsbHkga25vdyB0aGUgQlNTSUQgb2YgdGhlIElCU1MgeW91J3ZlIGpv
+aW5lZC4gWW91IGNhbid0IHBvc3NpYmx5DQo+ID4gPiBrbm93IHRoaXMgYXQgdGhpcyBwb2ludCBz
+aW5jZSB5b3UgY2FuJ3QgZXZlbiBoYXZlIHNjYW5uZWQgZm9yIHBlZXJzIHlldC4NCj4gPg0KPiA+
+IEluIC5qb2luX2lic3MgaGFuZGxlciwgbXdpZmlleCBkcml2ZXIgc2VuZHMgYSBjb21tYW5kIHRv
+IGZpcm13YXJlIHRvIHN0YXJ0L2pvaW4gYW4gSUJTUyBuZXR3b3JrLg0KPiA+IFRoaXMgY29tbWFu
+ZCBpcyBhIHN5bmNocm9ub3VzIGNhbGwuIFdoZW4gdGhlIGNvbW1hbmQgcmVzcG9uc2UgY29tZXMN
+Cj4gPiBiYWNrIHdlIGhhdmUgc3RhcnRlZC9qb2luZWQgaXQgc3VjY2Vzc2Z1bGx5LCBvdGhlcndp
+c2UgYW4gZXJyb3IgY29kZQ0KPiA+IHdpbGwgYmUgcmV0dXJuZWQuIEhvd2V2ZXIsIHdlIGFyZSBz
+dGlsbCBpbnNpZGUgLmpvaW5faWJzcyBoYW5kbGVyIGF0DQo+ID4gdGhpcyBtb21lbnQuIENhbGxp
+bmcgY2ZnODAyMTFfaWJzc19qb2luZWQoKSBnaXZlcyB1cyB0aGUgd2FybmluZw0KPiA+IGJlY2F1
+c2Ugc3NpZF9sZW4gaGFzbid0IGJlZW4gc2V0IGJ5IGNmZzgwMjExIHlldC4NCj4gDQo+IEhtbS4g
+SW50ZXJlc3RpbmcsIGJlY2F1c2UgSSB3b3VsZCB0aGluayB0aGF0IGNvdWxkIHBvdGVudGlhbGx5
+IHRha2UNCj4gcXVpdGUgYSB3aGlsZT8NCg0KSXQgZG9lcyB0YWtlIGEgd2hpbGUsIGF0IGxlYXN0
+IGZvciBhIHNjYW4uIFRoZSBpc3N1ZSBpcyB0aGF0LCBubyBtYXR0ZXIgaG93IGxvbmcgaXQgdGFr
+ZXMgdGhlIGRyaXZlciBzdGF5cyBpbiB0aGUgam9pbl9pYnNzIGhhbmRsZXIuIFRoZSBmdW5jdGlv
+biBjYWxsIGlzbid0IHJldHVybmVkIHVudGlsIHRoZSBBRF9IT0NfSk9JTiBjb21tYW5kIHJlc3Bv
+bnNlIGlzIHJlY2VpdmVkLg0KDQo+IA0KPiBJdCdzIGludGVyZXN0aW5nIHRob3VnaCBiZWNhdXNl
+IGl0IHBvaW50cyBvdXQgdGhhdCBldmVuIGlmIHlvdSBkbyBjYWxsDQo+IGl0IGFzeW5jaHJvbm91
+c2x5LCB0aGVyZSdzIG5vIGd1YXJhbnRlZSB0aGF0IGl0IGFjdHVhbGx5IGhhcHBlbnMgYmVmb3Jl
+DQo+IHRoZSBmdW5jdGlvbiBjYWxsIHJldHVybnMuDQoNCkJ5IGRvaW5nIGl0IGFzeW5jaHJvbm91
+c2x5IHdlIGNhbiBwcm9iYWJseSB1c2Ugam9pbl9pYnNzIGhhbmRsZXIgYXMgYSB0cmlnZ2VyIGZv
+ciBzc2lkIHNjYW4gYW5kIGlic3Mgc3RhcnQvam9pbi4gSGVyZSB0aGUgam9pbl9pYnNzIGZ1bmN0
+aW9uIGNhbGwgd2lsbCBiZSByZXR1bmVkIHJpZ2h0IGF3YXkuIExhdGVyIGFmdGVyIGRyaXZlciBm
+aW5pc2hlcyBzY2FuIGFuZCBnZXRzICJpYnNzIHN0YXJ0ZWQvam9pbmVkIiByZXNwb25zZSBmcm9t
+IGZpcm13YXJlLCBjZmc4MDIxMV9pYnNzX2pvaW5lZCgpIGlzIGNhbGxlZC4NCg0KSW4gdGhpcyBj
+YXNlLCByZXR1cm5pbmcgY2ZnODAyMTFfam9pbl9pYnNzKCkgY2FsbCBkb2Vzbid0IG1lYW4gdGhh
+dCB3ZSBoYXZlIGpvaW5lZCBzdWNjZXNzZnVsbHkuIEluc3RlYWQsIGNmZzgwMjExX2lic3Nfam9p
+bmVkKCkgY2FsbCBndWFyYW50ZWVzIHRoYXQuDQoNCj4gTWF5YmUgd2Ugc2hvdWxkIGp1c3QgbW92
+ZSB0aGUgYXNzaWdubWVudCBpbiBjZmc4MDIxMSBpbnN0ZWFkPw0KDQpNb3Zpbmcgd2Rldi0+c3Np
+ZCBhbmQgd2Rldi0+c3NpZF9sZW4gYXNzaWdubWVudHMgZnJvbSBfX2NmZzgwMjExX2pvaW5faWJz
+cygpIHRvIGNmZzgwMjExX2lic3Nfam9pbmVkKCkgbWFrZXMgbW9yZSBzZW5zZSB0byBtZS4gT2Yg
+Y291cnNlLCAiQ0ZHODAyMTFfREVWX1dBUk5fT04oIXdkZXYtPnNzaWRfbGVuKSIgY2hlY2sgd29u
+4oCZdCBiZSBuZWVkZWQgYW55IG1vcmUuDQoNClRoYW5rcywNCkJpbmcNCg0K
