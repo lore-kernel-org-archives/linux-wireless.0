@@ -1,78 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50250 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951Ab2E2HBl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 03:01:41 -0400
-Message-ID: <1338274903.4342.12.camel@jlt3.sipsolutions.net> (sfid-20120529_090146_408879_3BAAA968)
-Subject: Re: Network kernel panics with wireless-testing 3.4-rc7
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Tue, 29 May 2012 09:01:43 +0200
-In-Reply-To: <4FBB0A5E.4010007@lwfinger.net> (sfid-20120522_053920_311858_AA3718FE)
-References: <4FBB0A5E.4010007@lwfinger.net>
-	 (sfid-20120522_053920_311858_AA3718FE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:47907 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760211Ab2EQJkc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 05:40:32 -0400
+From: Amit SHAKYA <amit.shakya@stericsson.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless (linux-wireless@vger.kernel.org)"
+	<linux-wireless@vger.kernel.org>,
+	"Johannes Berg (johannes@sipsolutions.net)"
+	<johannes@sipsolutions.net>
+Date: Thu, 17 May 2012 11:40:16 +0200
+Subject: [PATCH] mac80211: Handle race condition in replay handling
+Message-ID: <ECD438FDEF6BD742895E554C24725A4022946BBD16@EXDCVYMBSTM005.EQ1STM.local> (sfid-20120517_114036_953664_E394AD39)
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-05-21 at 22:39 -0500, Larry Finger wrote:
-> I am getting kernel panics on one of my boxes from the b43legacy driver due to a 
-> "Fatal exception in interrupt".
-> 
-> This particular one happened 50K seconds after bootup, but it has happened 
-> nearly as soon as the network connection was completed. The hand-transcribed 
-> traceback is as follows:
+Added fix for the issue where the Rx throughput use to get stuck,
+with unicast key rotation feature enabled in the Cisco AP.
+The issue is that due to race condition during EAPOL key
+handshake and packet reception, the PN gets reset at MAC, while
+it still receives previous PN range packets for a while from AP.
+At MAC, there is a memcpy of the PN from the received PN
+and as a result the maintained PN is overwritten with the
+previous PN sequence value after being reset at the time, new
+key is plumbed by supplicant.
 
-FWIW, if you have a digital camera I'm happy with a picture too, no need
-to hand-transcribe everything.
+As a result, when this change in sequence number happens, the
+replay detection handling in MAC gets triggered, causing the
+traffic to stops for some while till PN re-match, with the
+one last updated at MAC.
 
-> __nefif_schedule+0x13/0xa0
-> ieee80211_propagate_queue_wake+0x166/0x1c0
-> __ieee80211_wake_queue+0x13b/0x2d0
-> ? __ieee80211_wake_queue++0xc0/0x2d0
-> ieee80211_wake_queue_by_reason+0x45/0x70
-> ieee80211_wake_queue+0xb/0x10
-> b43legacy_dma_handle_txstatus+0x3f9/0x4b0
-> ? _raw_spin_unlock+0x26/0x40
-> b43legacy_handle_txstatus+0x64/0x90
-> b43legacy_handle_hwtxstatus+0x66/0x70
-> b43legacy_dma_rx+0x354/0x610
-> 
-> The offsets are for an x86_64 architecture.
-> 
-> These crashes never happen when I use a USB device running the rtl8187 driver, 
-> thus it appears to arise in b43legacy. Any suggestions on what might cause the 
-> problem would be helpful. Sorry I don't have the register dumps, etc.
+The fix takes care of selectively updating the Rx PN during
+this transition phase.
 
-Maybe that device simply never stops/wakes the queues in the same way.
-Or the difference is that b43legacy has only a single queue available to
-it (right now) and no QoS.
+Signed-off-by: Amit Shakya <amit.shakya@stericsson.com>
+---
+net/mac80211/key.c |    9 +++++++++
+net/mac80211/key.h |    1 +
+net/mac80211/wpa.c |   35 ++++++++++++++++++++++++++++++++++-
+3 files changed, 44 insertions(+), 1 deletions(-)
 
-> The code dump at the point of the crash is as follows:
-> ec 10 4c 89 65 f8 48 89 5d f0 49 89 fc <3c> 0f ba af 80 00 00 00 00
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 5bb600d..461bb7c 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -278,6 +278,15 @@ static void __ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
+          list_add_tail(&new->list, &sdata->key_list);
 
-Hmm. That decodes (script/decodecode) to
+     if (sta && pairwise) {
++          if (old && new &&
++               (new->conf.cipher == WLAN_CIPHER_SUITE_CCMP)) {
++               int i;
++               for (i = 0; i < NUM_RX_DATA_QUEUES + 1; i++) {
++                    memcpy(new->u.ccmp.prev_rx_pn[i],
++                    old->u.ccmp.prev_rx_pn[i], CCMP_PN_LEN);
++               }
++          }
++
+          rcu_assign_pointer(sta->ptk, new);
+    } else if (sta) {
+          if (old)
+diff --git a/net/mac80211/key.h b/net/mac80211/key.h
+index 7d4e31f..e0d9728 100644
+--- a/net/mac80211/key.h
++++ b/net/mac80211/key.h
+@@ -93,6 +93,7 @@ struct ieee80211_key {
+                * Management frames.
+                */
+               u8 rx_pn[NUM_RX_DATA_QUEUES + 1][CCMP_PN_LEN];
++               u8 prev_rx_pn[NUM_RX_DATA_QUEUES + 1][CCMP_PN_LEN];
+               struct crypto_cipher *tfm;
+               u32 replays; /* dot11RSNAStatsCCMPReplays */
+          } ccmp;
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 0ae23c6..e1c3612 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -482,6 +482,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+    u8 pn[CCMP_PN_LEN];
+    int data_len;
+    int queue;
++    static const u8 zero_pn[6] = {0};
 
-All code
-========
-   0:	ec                   	in     (%dx),%al
-   1:	10 4c 89 65          	adc    %cl,0x65(%rcx,%rcx,4)
-   5:	f8                   	clc    
-   6:	48 89 5d f0          	mov    %rbx,-0x10(%rbp)
-   a:	49 89 fc             	mov    %rdi,%r12
-   d:*	3c 0f                	cmp    $0xf,%al     <-- trapping instruction
-   f:	ba af 80 00 00       	mov    $0x80af,%edx
-	...
+     hdrlen = ieee80211_hdrlen(hdr->frame_control);
 
-which is odd because that function doesn't seem to have a comparison to
-0xf (15) in it as far as I can tell.
+@@ -523,7 +524,39 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+               return RX_DROP_UNUSABLE;
+    }
 
-I'm pretty stumped. Does this reproduce well? Maybe you can print out
-the queue number in the propagate wake function?
+-    memcpy(key->u.ccmp.rx_pn[queue], pn, CCMP_PN_LEN);
++    /* As long as u.ccmp.rx_pn and u.ccmp.prev_rx_pn are equal, no
++    race condition induced.
++    It is seen that with Cisco AP and with PTK re-negotiation feature
++    enabled on Cisco to do key-negotiaton periodically, even after the
++    RX PN is reset by the supplicant, at MAC, we still keep getting
++    previous RX PN packets.
++    This is due to race condition when this feature is enabled with
++    throughput test and is introduced because of the combination of
++    different TIDs used for data and EAPOL packets and aggregation.
++    The RX PN gets reset to lower value after a while and at that time
++    the RX PN value becomes lower than the maintained current PN at MAC.
++    As a result, the replay detection code chips in and starts dropping all
++    packets till the PN re-match. This causes throughput to stall
++    intermittently for the duration till RX PN match with current PN.
++    So to take care of this we maintain u.ccmp.prev_rx_pn, which doesn't get
++    reset when new PTK is plumbed by supplicant and use it for detecting
++    this transition i.e. from higher PN to lower PN and once this situation
++    happens start updating u.ccmp.rx_pn and thereafter u.ccmp.rx_pn and
++    u.ccmp.prev_rx_pn should be same. In normal scenario, i.e. no new key
++    plumbed both counters should be same. */
++    if ((memcmp(key->u.ccmp.prev_rx_pn[queue],
++          key->u.ccmp.rx_pn[queue], CCMP_PN_LEN) == 0) ||
++          (memcmp(key->u.ccmp.prev_rx_pn[queue], pn, CCMP_PN_LEN) > 0)) {
++          memcpy(key->u.ccmp.rx_pn[queue], pn, CCMP_PN_LEN);
++          memcpy(key->u.ccmp.prev_rx_pn[queue], pn, CCMP_PN_LEN);
++    }
++
++    /* If u.ccmp.rx_pn gets reset to zero due to PTK re-negotiaton then
++    don't update it and just keep updating the u.ccmp.prev_rx_pn.
++    This is to detect the transition that will happen later i.e. from higher
++    RX PN to lower RX PN in case of race condition scenario. */
++    if (memcmp(key->u.ccmp.rx_pn[queue], zero_pn, CCMP_PN_LEN) == 0)
++          memcpy(key->u.ccmp.prev_rx_pn[queue], pn, CCMP_PN_LEN);
 
-johannes
+     /* Remove CCMP header and MIC */
+    if (pskb_trim(skb, skb->len - CCMP_MIC_LEN))
+-- 
+1.7.0.4
 
