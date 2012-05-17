@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:56198 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116Ab2ECFNS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 01:13:18 -0400
-Message-ID: <4FA213EC.3030202@gtri.gatech.edu> (sfid-20120503_071321_930896_DA3A0F4A)
-Date: Thu, 3 May 2012 01:13:16 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-MIME-Version: 1.0
+Received: from ebb05.tieto.com ([131.207.168.36]:52898 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761446Ab2EQJ70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 05:59:26 -0400
+From: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
 To: <linux-wireless@vger.kernel.org>
-CC: <Larry.Finger@lwfinger.net>
-Subject: [PATCH 7/9] rtlwifi: fail rtl_usb_start if any bulk in urbs fail
-References: <4FA212D9.5020602@gtri.gatech.edu>
-In-Reply-To: <4FA212D9.5020602@gtri.gatech.edu>
-Content-Type: multipart/mixed;
-	boundary="------------030402060204000104070405"
+CC: <johannes@sipsolutions.net>, <lukasz.kucharczyk@tieto.com>
+Subject: [RFC 2/2] iw: handle rts threshold per netdev
+Date: Thu, 17 May 2012 11:58:43 +0200
+Message-ID: <1337248723-10946-3-git-send-email-lukasz.kucharczyk@tieto.com> (sfid-20120517_115930_016684_22D68CC5)
+In-Reply-To: <1337248723-10946-1-git-send-email-lukasz.kucharczyk@tieto.com>
+References: <1337248723-10946-1-git-send-email-lukasz.kucharczyk@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------030402060204000104070405
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-
-
-
---------------030402060204000104070405
-Content-Type: text/x-patch;
-	name="0007-rtlwifi-fail-rtl_usb_start-if-any-bulk-in-urbs-fail.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename*0="0007-rtlwifi-fail-rtl_usb_start-if-any-bulk-in-urbs-fail.pat";
-	filename*1="ch"
-
->From 2cb9c6eca9f0b05d8055d1c7ba78f89c89c34869 Mon Sep 17 00:00:00 2001
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Date: Thu, 3 May 2012 00:20:18 -0400
-Subject: [PATCH 7/9] rtlwifi: fail rtl_usb_start if any bulk in urbs fail
-
-This would have made debugging the erroneous bulk in endpoint number
-easier.
-
-Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Signed-off-by: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
 ---
- drivers/net/wireless/rtlwifi/usb.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ info.c      |    8 --------
+ interface.c |    2 ++
+ phy.c       |    3 +++
+ 3 files changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 00e90bc..c62fc7d 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -648,13 +648,17 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 
- 		usb_anchor_urb(urb, &rtlusb->rx_submitted);
- 		err = usb_submit_urb(urb, GFP_KERNEL);
--		if (err)
-+		if (err) {
-+			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
-+				 "Failed to submit URB!!\n");
- 			goto err_out;
-+		}
- 		usb_free_urb(urb);
- 	}
- 	return 0;
- 
- err_out:
-+	RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG, "err=%i\n", err);
- 	usb_kill_anchored_urbs(&rtlusb->rx_submitted);
- 	return err;
- }
-@@ -676,7 +680,7 @@ static int rtl_usb_start(struct ieee80211_hw *hw)
- 		set_hal_start(rtlhal);
- 
- 		/* Start bulk IN */
--		_rtl_usb_receive(hw);
-+		err = _rtl_usb_receive(hw);
+diff --git a/info.c b/info.c
+index e896eb5..72bd97c 100644
+--- a/info.c
++++ b/info.c
+@@ -178,14 +178,6 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 			printf("\tFragmentation threshold: %d\n", frag);
  	}
  
- 	return err;
+-	if (tb_msg[NL80211_ATTR_WIPHY_RTS_THRESHOLD]) {
+-		unsigned int rts;
+-
+-		rts = nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_RTS_THRESHOLD]);
+-		if (rts != (unsigned int)-1)
+-			printf("\tRTS threshold: %d\n", rts);
+-	}
+-
+ 	if (tb_msg[NL80211_ATTR_WIPHY_COVERAGE_CLASS]) {
+ 		unsigned char coverage;
+ 
+diff --git a/interface.c b/interface.c
+index 6c90f9d..3fb4df4 100644
+--- a/interface.c
++++ b/interface.c
+@@ -281,6 +281,8 @@ static int print_iface_handler(struct nl_msg *msg, void *arg)
+ 		printf("%s\tifindex %d\n", indent, nla_get_u32(tb_msg[NL80211_ATTR_IFINDEX]));
+ 	if (tb_msg[NL80211_ATTR_IFTYPE])
+ 		printf("%s\ttype %s\n", indent, iftype_name(nla_get_u32(tb_msg[NL80211_ATTR_IFTYPE])));
++	if (tb_msg[NL80211_ATTR_WIPHY_RTS_THRESHOLD])
++		printf("%s\tRTS threshold: %d\n", indent, nla_get_u32(tb_msg[NL80211_ATTR_WIPHY_RTS_THRESHOLD]));
+ 	if (!wiphy && tb_msg[NL80211_ATTR_WIPHY])
+ 		printf("%s\twiphy %d\n", indent, nla_get_u32(tb_msg[NL80211_ATTR_WIPHY]));
+ 	if (tb_msg[NL80211_ATTR_WIPHY_FREQ]) {
+diff --git a/phy.c b/phy.c
+index 839aead..2073261 100644
+--- a/phy.c
++++ b/phy.c
+@@ -161,6 +161,9 @@ static int handle_rts(struct nl80211_state *state,
+ COMMAND(set, rts, "<rts threshold|off>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_rts,
+ 	"Set rts threshold.");
++COMMAND(set, rts, "<rts threshold|off>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_rts,
++	"Set rts threshold.");
+ 
+ static int handle_netns(struct nl80211_state *state,
+ 			struct nl_cb *cb,
 -- 
-1.7.7.6
+1.7.0.4
 
-
---------------030402060204000104070405--
