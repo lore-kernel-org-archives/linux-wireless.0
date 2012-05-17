@@ -1,133 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:43986 "EHLO ebb05.tieto.com"
+Received: from mga14.intel.com ([143.182.124.37]:7898 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030220Ab2ERMDW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 08:03:22 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 5/6] mac80211: refactor set_channel_type
-Date: Fri, 18 May 2012 14:03:08 +0200
-Message-ID: <1337342589-10617-6-git-send-email-michal.kazior@tieto.com> (sfid-20120518_140330_940453_2438FA90)
-In-Reply-To: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
-References: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
+	id S1752384Ab2EQEwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 00:52:23 -0400
+Date: Wed, 16 May 2012 21:52:20 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	linux-bluetooth@vger.kernel.org,
+	gigaset307x-common@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
+Subject: Re: [RFC 13/13] USB: Disable hub-initiated LPM for comms devices.
+Message-ID: <20120517045220.GA4772@xanatos> (sfid-20120517_065303_697954_701547D6)
+References: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
+ <20120516224528.GA25936@xanatos>
+ <20120516232019.GA960@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120516232019.GA960@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Split functionality for further reuse.
+On Wed, May 16, 2012 at 04:20:19PM -0700, Greg Kroah-Hartman wrote:
+> On Wed, May 16, 2012 at 03:45:28PM -0700, Sarah Sharp wrote:
+> > [Resending with a smaller Cc list]
+> > 
+> > Hub-initiated LPM is not good for USB communications devices.  Comms
+> > devices should be able to tell when their link can go into a lower power
+> > state, because they know when an incoming transmission is finished.
+> > Ideally, these devices would slam their links into a lower power state,
+> > using the device-initiated LPM, after finishing the last packet of their
+> > data transfer.
+> > 
+> > If we enable the idle timeouts for the parent hubs to enable
+> > hub-initiated LPM, we will get a lot of useless LPM packets on the bus
+> > as the devices reject LPM transitions when they're in the middle of
+> > receiving data.  Worse, some devices might blindly accept the
+> > hub-initiated LPM and power down their radios while they're in the
+> > middle of receiving a transmission.
+> > 
+> > The Intel Windows folks are disabling hub-initiated LPM for all USB
+> > communications devices under a xHCI USB 3.0 host.  In order to keep
+> > the Linux behavior as close as possible to Windows, we need to do the
+> > same in Linux.
+> 
+> How is the USB core on Windows determining that LPM should be turned off
+> for these devices?  Surely they aren't modifying each individual driver
+> like this is, right?  Any way we also can do this in the core?
 
-Will prevent code duplication when channel context
-channel_type merging is introduced.
+No, I don't think they're modifying individual drivers.  Maybe they
+placed a shim/filter driver below other drivers?
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/chan.c |   57 ++++++++++++++++++++++++++++++++++-----------------
- 1 files changed, 38 insertions(+), 19 deletions(-)
+Basically, I don't know the exact details of what the Windows folks are
+doing.  The recommendation from the Intel Windows team was simply to
+turn hub-initiated LPM off for "all communications devices".  Perhaps
+the Windows USB core is looking for specific USB class codes?  Or maybe
+it has some older API that lets the core know it's a communications
+device?
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 32b7088..030d44e 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -65,16 +65,14 @@ ieee80211_get_channel_mode(struct ieee80211_local *local,
- 	return mode;
- }
- 
--bool ieee80211_set_channel_type(struct ieee80211_local *local,
--				struct ieee80211_sub_if_data *sdata,
--				enum nl80211_channel_type chantype)
-+static enum nl80211_channel_type
-+ieee80211_get_superchan(struct ieee80211_local *local,
-+			struct ieee80211_sub_if_data *sdata)
- {
--	struct ieee80211_sub_if_data *tmp;
- 	enum nl80211_channel_type superchan = NL80211_CHAN_NO_HT;
--	bool result;
-+	struct ieee80211_sub_if_data *tmp;
- 
- 	mutex_lock(&local->iflist_mtx);
--
- 	list_for_each_entry(tmp, &local->interfaces, list) {
- 		if (tmp == sdata)
- 			continue;
-@@ -100,41 +98,62 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 			break;
- 		}
- 	}
-+	mutex_unlock(&local->iflist_mtx);
-+
-+	return superchan;
-+}
- 
--	switch (superchan) {
-+static bool
-+ieee80211_channel_types_are_compatible(enum nl80211_channel_type chantype1,
-+				       enum nl80211_channel_type chantype2,
-+				       enum nl80211_channel_type *compat)
-+{
-+	switch (chantype1) {
- 	case NL80211_CHAN_NO_HT:
- 	case NL80211_CHAN_HT20:
- 		/*
- 		 * allow any change that doesn't go to no-HT
- 		 * (if it already is no-HT no change is needed)
- 		 */
--		if (chantype == NL80211_CHAN_NO_HT)
-+		if (chantype2 == NL80211_CHAN_NO_HT)
- 			break;
--		superchan = chantype;
-+		*compat = chantype2;
- 		break;
- 	case NL80211_CHAN_HT40PLUS:
- 	case NL80211_CHAN_HT40MINUS:
-+		*compat = chantype1;
- 		/* allow smaller bandwidth and same */
--		if (chantype == NL80211_CHAN_NO_HT)
-+		if (chantype2 == NL80211_CHAN_NO_HT)
- 			break;
--		if (chantype == NL80211_CHAN_HT20)
-+		if (chantype2 == NL80211_CHAN_HT20)
- 			break;
--		if (superchan == chantype)
-+		if (chantype2 == chantype1)
- 			break;
--		result = false;
--		goto out;
-+		return false;
- 	}
- 
--	local->_oper_channel_type = superchan;
-+	return true;
-+}
-+
-+bool ieee80211_set_channel_type(struct ieee80211_local *local,
-+				struct ieee80211_sub_if_data *sdata,
-+				enum nl80211_channel_type chantype)
-+{
-+	enum nl80211_channel_type superchan;
-+	enum nl80211_channel_type compatchan = NL80211_CHAN_NO_HT;
-+
-+	superchan = ieee80211_get_superchan(local, sdata);
-+	if (!ieee80211_channel_types_are_compatible(superchan, chantype,
-+						    &compatchan))
-+		return false;
-+
-+	local->_oper_channel_type = compatchan;
- 
- 	if (sdata)
- 		sdata->vif.bss_conf.channel_type = chantype;
- 
--	result = true;
-- out:
--	mutex_unlock(&local->iflist_mtx);
-+	return true;
- 
--	return result;
- }
- 
- static struct ieee80211_channel_context *
--- 
-1.7.0.4
+I'm not really sure we can do it in the USB core with out basically
+duplicating all the class/PID/VID matching in the communications driver.
+I think just adding a flag might be the best way.  I'm open to
+suggestions though.
 
+> Or, turn it around the other way, and only enable it if we know it's
+> safe to do so, in each driver, but I guess that would be even messier.
+
+Yeah, I think it would be messier.
+
+Sarah Sharp
