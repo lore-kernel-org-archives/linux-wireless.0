@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:42256 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752729Ab2EYRRg (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:38732 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761033Ab2EQVoB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 13:17:36 -0400
+	Thu, 17 May 2012 17:44:01 -0400
+Message-ID: <4FB5711C.1050207@candelatech.com> (sfid-20120517_234405_562698_BB654388)
+Date: Thu, 17 May 2012 14:43:56 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEFj987dNMyMcS9rySzVpfY0Fo5t0LtL9FZg770ohKi+bDO9ZA@mail.gmail.com>
-References: <1337934071-29342-1-git-send-email-qasimj@gmail.com>
-	<CAEFj985HxSrOwOoevDjG1jxPxobLda-X_LZUtj6LgwXZwozBog@mail.gmail.com>
-	<CAJivULpmLp9JK+PQZ9RkrvvYHNk=uA33=A-ffftroigivy1_NQ@mail.gmail.com>
-	<CAEFj984efuO12nSPsZ2A0Q0nwPLesYJ8gDHwgh=0e1VO3_UtGw@mail.gmail.com>
-	<CAEFj987dNMyMcS9rySzVpfY0Fo5t0LtL9FZg770ohKi+bDO9ZA@mail.gmail.com>
-Date: Fri, 25 May 2012 12:17:34 -0500
-Message-ID: <CAJivULpT=XTG2tKm=hQk9mHwJ2K5eo_siHRAWfL0y3vPfrRLiA@mail.gmail.com> (sfid-20120525_191757_221588_156E0273)
-Subject: Re: [RFC] mac80211: Use correct originator sequence number in a Path Reply
-From: Qasim Javed <qasimj@gmail.com>
-To: Javier Cardona <javier@cozybit.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ravip@utdallas.edu,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Eliad Peller <eliad@wizery.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: fix memory leak/corruption of bss_list
+References: <1337270768-22719-1-git-send-email-eliad@wizery.com> <1337284032.4687.1.camel@jlt3.sipsolutions.net> <CAB3XZEcWGYAsPpuxs7Fs3a5c8ufkJOeEpJ3FgWyWttos6dYdKQ@mail.gmail.com>
+In-Reply-To: <CAB3XZEcWGYAsPpuxs7Fs3a5c8ufkJOeEpJ3FgWyWttos6dYdKQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Forgot to add Javier. Could you please comment on this?
+On 05/17/2012 02:34 PM, Eliad Peller wrote:
+> On Thu, May 17, 2012 at 10:47 PM, Johannes Berg
+> <johannes@sipsolutions.net>  wrote:
+>> On Thu, 2012-05-17 at 19:06 +0300, Eliad Peller wrote:
+>>> cfg80211_dev_free() calls cfg80211_put_bss() directly on all
+>>> the remaining bss entries, skipping the proper bss entry
+>>> cleanup that usually made by __cfg80211_unlink_bss(), and
+>>> leaving the bss_list and the rb_tree with dangling pointers.
+>>
+>>>        list_for_each_entry_safe(scan, tmp,&rdev->bss_list, list)
+>>> -             cfg80211_put_bss(&scan->pub);
+>>> +             cfg80211_unlink_bss(&rdev->wiphy,&scan->pub);
+>>>        kfree(rdev);
+>>
+>> I don't see why we care, we free rdev anyway.
+>>
+> yeah, you have a point here...
+>
+> we got a crash report for an older kernel with some custom patches,
+> that indicated a possible write-after-free on the bss release. i was
+> probably too rushed to blame this code.
+
+Ahhh, as luck would have it..we saw a crash today (in a hacked 3.3.4) that could
+be explained by a stale bss reference, so I was all excited by your patch,
+thinking I didn't have to go looking for the bug :)
+
+My crash was in an older version of the ethtool-stats logic,
+so it could just be my bug, as well....
 
 Thanks,
--Qasim
+Ben
 
-On Fri, May 25, 2012 at 11:31 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
->> I think that the PREQ element has originator sequence number at the
->> end but the PREQ element has the target sequence number at the end.
->> This is what mesh_path_sel_frame_tx is doing.
->
-> PREP element has originator sequence number at the end but the PREQ
-> element has the target sequence number at the end.
->
-> Regards,
-> Chun-Yeow
-> _______________________________________________
-> Devel mailing list
-> Devel@lists.open80211s.org
-> http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
