@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:36572 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756768Ab2EYUCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 16:02:47 -0400
-Message-ID: <1337976166.30100.6.camel@joe2Laptop> (sfid-20120525_220251_765822_1E019503)
-Subject: Re: [RFC] mac80211: net_ratelimit few aggregation related messages
-From: Joe Perches <joe@perches.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Fri, 25 May 2012 13:02:46 -0700
-In-Reply-To: <1337960224-7428-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1337960224-7428-1-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nm22-vm1.bullet.mail.ukl.yahoo.com ([217.12.10.75]:36962 "HELO
+	nm22-vm1.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755418Ab2EQLri (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 07:47:38 -0400
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
+Subject: Re: [RFC 0/2] bind RTS threshold to vif.
+Date: Thu, 17 May 2012 19:40:42 +0800
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+References: <1337248723-10946-1-git-send-email-lukasz.kucharczyk@tieto.com>
+In-Reply-To: <1337248723-10946-1-git-send-email-lukasz.kucharczyk@tieto.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201205171940.42671.lindner_marek@yahoo.de> (sfid-20120517_134742_514733_D2414FD0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-05-25 at 21:07 +0530, Mohammed Shafi Shajakhan wrote:
-> net_ratelimit few aggregation related messages,
-[]
-> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-[]
-> @@ -464,8 +464,9 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
->  		return -EINVAL;
->  
->  #ifdef CONFIG_MAC80211_HT_DEBUG
-> -	printk(KERN_DEBUG "Open BA session requested for %pM tid %u\n",
-> -	       pubsta->addr, tid);
-> +	if (net_ratelimit())
-> +		printk(KERN_DEBUG "Open BA session requested for %pM tid %u\n",
-> +		       pubsta->addr, tid);
+On Thursday, May 17, 2012 17:58:41 Lukasz Kucharczyk wrote:
+> following patches bind rts threshold to vif.
+> I think it might be useful in multi channel operation
+> (one chip handling multiple virtual interfaces on different
+> channels).
+> 
+> RTS threshold is still set with NL80211_CMD_SET_WIPHY, and can
+> be now executed for both hw and vif, so it's backward compatible
+> (from userspace).
 
-perhaps
-	net_dbg_ratelimited(...)
+As much as I like the idea of having per vif rts/cts settings, the rts/cts 
+user space API is useless as long as these settings are bluntly ignored by 
+certain rate control algorithms. I already had to explain to a dozen people 
+who turned rts/cts off via this API does not really turn it off.
+Therefore, I suggest to remove the rts/cts API altogether, so that nobody 
+falls into the trap of believing this does anything useful.
 
-etc...
-
+Regards,
+Marek
