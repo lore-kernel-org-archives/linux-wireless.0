@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:65331 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137Ab2EXEFB (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:45086 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932832Ab2EQTvN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 00:05:01 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45867.862989.977871@gargle.gargle.HOWL> (sfid-20120524_060506_506155_2F530EA6)
-Date: Thu, 24 May 2012 09:33:55 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 20/22] ath9k: always perform ani calibration at poll
+	Thu, 17 May 2012 15:51:13 -0400
+Received: by pbbrp8 with SMTP id rp8so2953306pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 12:51:13 -0700 (PDT)
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Subject: [PATCH] net/wireless: ipw2200: introduce ipw_read_eeprom function
+Date: Thu, 17 May 2012 15:56:35 -0400
+Message-Id: <1337284595-3084-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20120517_215117_626189_2E0425F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We separate reading of device's eeprom content from writing it back
+to the device's sram.
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-
-Skiping the ani based on power state is delaying the ani cycles
-further on an idle state. And also as the power state is updated
-in different contexts, let us not skip the ani calibration.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/wireless/ipw2x00/ipw2200.c |   23 +++++++++++++++++------
+ 1 files changed, 17 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3e8bef8..b9c9f4c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -554,10 +554,6 @@ void ath_ani_calibrate(unsigned long data)
- 	short_cal_interval = (ah->opmode == NL80211_IFTYPE_AP) ?
- 		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 0036737..254b892 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -2701,6 +2701,20 @@ static void eeprom_parse_mac(struct ipw_priv *priv, u8 * mac)
+ 	memcpy(mac, &priv->eeprom[EEPROM_MAC_ADDRESS], 6);
+ }
  
--	/* Only calibrate if awake */
--	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
--		goto set_timer;
++static void ipw_read_eeprom(struct ipw_priv *priv)
++{
++	int i;
++	__le16 *eeprom = (__le16 *) priv->eeprom;
++
++	IPW_DEBUG_TRACE(">>\n");
++
++	/* read entire contents of eeprom into private buffer */
++	for (i = 0; i < 128; i++)
++		eeprom[i] = cpu_to_le16(eeprom_read_u16(priv, (u8) i));
++
++	IPW_DEBUG_TRACE("<<\n");
++}
++
+ /*
+  * Either the device driver (i.e. the host) or the firmware can
+  * load eeprom data into the designated region in SRAM.  If neither
+@@ -2712,14 +2726,9 @@ static void eeprom_parse_mac(struct ipw_priv *priv, u8 * mac)
+ static void ipw_eeprom_init_sram(struct ipw_priv *priv)
+ {
+ 	int i;
+-	__le16 *eeprom = (__le16 *) priv->eeprom;
+ 
+ 	IPW_DEBUG_TRACE(">>\n");
+ 
+-	/* read entire contents of eeprom into private buffer */
+-	for (i = 0; i < 128; i++)
+-		eeprom[i] = cpu_to_le16(eeprom_read_u16(priv, (u8) i));
 -
- 	ath9k_ps_wakeup(sc);
- 
- 	/* Long calibration runs independently of short calibration. */
-@@ -613,7 +609,6 @@ void ath_ani_calibrate(unsigned long data)
- 
- 	ath9k_ps_restore(sc);
- 
--set_timer:
  	/*
- 	* Set timer interval based on previous results.
- 	* The interval must be the shortest necessary to satisfy ANI,
+ 	   If the data looks correct, then copy it to our private
+ 	   copy.  Otherwise let the firmware know to perform the operation
+@@ -3643,8 +3652,10 @@ static int ipw_load(struct ipw_priv *priv)
+ 	/* ack fw init done interrupt */
+ 	ipw_write32(priv, IPW_INTA_RW, IPW_INTA_BIT_FW_INITIALIZATION_DONE);
+ 
+-	/* read eeprom data and initialize the eeprom region of sram */
++	/* read eeprom data */
+ 	priv->eeprom_delay = 1;
++	ipw_read_eeprom(priv);
++	/* initialize the eeprom region of sram */
+ 	ipw_eeprom_init_sram(priv);
+ 
+ 	/* enable interrupts */
 -- 
-1.7.10.2
+1.7.2.5
 
