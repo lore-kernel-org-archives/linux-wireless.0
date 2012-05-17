@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49140 "EHLO mga02.intel.com"
+Received: from ebb06.tieto.com ([131.207.168.38]:46867 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755583Ab2EGI2l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 04:28:41 -0400
-Date: Mon, 7 May 2012 11:29:47 +0300
-From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: David Miller <davem@davemloft.net>, dh.herrmann@googlemail.com,
-	gustavo@padovan.org, linville@tuxdriver.com,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Bluetooth: Fix coding style
-Message-ID: <20120507082945.GB19002@aemeltch-MOBL1> (sfid-20120507_102846_674699_38DCD179)
-References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
- <20120506.123656.1335354317428258137.davem@davemloft.net>
- <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
- <20120506.145304.1998242927519675381.davem@davemloft.net>
- <20120507081411.GA19002@aemeltch-MOBL1>
- <4FA78618.4050203@broadcom.com>
+	id S1756049Ab2EQJ7T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 05:59:19 -0400
+From: Lukasz Kucharczyk <lukasz.kucharczyk@tieto.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes@sipsolutions.net>, <lukasz.kucharczyk@tieto.com>
+Subject: [RFC 0/2] bind RTS threshold to vif.
+Date: Thu, 17 May 2012 11:58:41 +0200
+Message-ID: <1337248723-10946-1-git-send-email-lukasz.kucharczyk@tieto.com> (sfid-20120517_115923_062368_D327E9AE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FA78618.4050203@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Hi,
 
-On Mon, May 07, 2012 at 10:21:44AM +0200, Arend van Spriel wrote:
-> On 05/07/2012 10:14 AM, Andrei Emeltchenko wrote:
-> >> They don't.  All the examples you'll find are of the form:
-> >> > 
-> >> > 	if (a &&
-> >> > 	    b)
-> >> > 
-> >> > not:
-> >> > 
-> >> > 	if (a &&
-> >> > 			b)
-> > Actually it does not look like this, otherwise "b" would be placed in the
-> > same line, don't it?
-> 
-> Let me rephrase Dave's remark so you may understand:
-> 
-> 	if (a_has_to_be_long_enough_to_make_you_understand &&
-> 	    you_do_not_care_about_code_readability)
-> 
-> and not:
-> 	if (a_has_to_be_long_enough_to_make_you_understand &&
-> 			you_do_not_care_about_code_readability)
+following patches bind rts threshold to vif.
+I think it might be useful in multi channel operation
+(one chip handling multiple virtual interfaces on different
+channels).
 
-You seems to forgot to reply to the main question about Codying Style.
+RTS threshold is still set with NL80211_CMD_SET_WIPHY, and can
+be now executed for both hw and vif, so it's backward compatible
+(from userspace).
 
-Best regards 
-Andrei Emeltchenko 
+.set_rts_threshold driver's callback has additional
+<struct ieee80211_vif *vif> parameter, so it will require
+changes in all related drivers.
 
+It's assumed, that when setting is done for hw, null vif pointer
+is passed to driver (is that acceptable?).
+
+I'm also not sure about solution in ieee80211_reconfig: I'm
+trying to set rts threshold for each vif, and when it fails
+(assuming that driver doesn't support setting for vif), I'm
+setting rts for hw (so vif == NULL in .set_rts_threshold call).
+Maybe it would be better to add new define for ieee80211_hw.flags
+indicating whether driver supports setting rts threshold for vif?
+
+BR,
+Lukasz
