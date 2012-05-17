@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:35541 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754448Ab2EaJW6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37919 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965400Ab2EQLF0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 05:22:58 -0400
-Received: by eeit10 with SMTP id t10so230892eei.19
-        for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 02:22:57 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Erwin Van de Velde <erwin.vandevelde@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Subject: Re: Master mode support in iwlagn?
-Date: Thu, 31 May 2012 11:20:49 +0200
-Message-ID: <4932187.SWLxM4x7cN@flexo> (sfid-20120531_112309_153126_321CFF8F)
-In-Reply-To: <1338455399.7328.0.camel@jlt3.sipsolutions.net>
-References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be> <3093264.LxkCudZSCQ@sylvesterjr.cmi.ua.ac.be> <1338455399.7328.0.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 17 May 2012 07:05:26 -0400
+Message-ID: <1337252722.4332.1.camel@jlt3.sipsolutions.net> (sfid-20120517_130529_871496_5F3D4CCE)
+Subject: Re: [PATCH] mac80211: add op to configure default key id to driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ravi Sharma <sharmaravi.lx@gmail.com>
+Cc: "Divinsky, Yonatan" <yoni.divinsky@ti.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 17 May 2012 13:05:22 +0200
+In-Reply-To: <CAEZZmbF6wa3JF48KsCiyg4T7OsBS73OnzAMVYPkPdPro9EYUtg@mail.gmail.com> (sfid-20120517_103653_559210_BF230AEA)
+References: <1336479518-23006-1-git-send-email-yoni.divinsky@ti.com>
+	 <1336485961.4320.1.camel@jlt3.sipsolutions.net>
+	 <CANJm+iAoVkPOO61ufrM3mxzsURFZzuNcMm9N6Y=3xUbSCaC1+w@mail.gmail.com>
+	 <1337072920.4546.0.camel@jlt3.sipsolutions.net>
+	 <CANJm+iDif1+KREB=CJ_wYbo+Hzxo=nJL6fUxbBTQ5_C8Tz0E9Q@mail.gmail.com>
+	 <CANJm+iDU1ahy3B9u6nn=0E4d0Pge+OubaNE9bPaE1EXYGahOUA@mail.gmail.com>
+	 <CAEZZmbEExFr6=7G6kQb_bbpt=wfiNDuoR+U4_Eu_wLdair=SrA@mail.gmail.com>
+	 <CAEZZmbF6wa3JF48KsCiyg4T7OsBS73OnzAMVYPkPdPro9EYUtg@mail.gmail.com>
+	 (sfid-20120517_103653_559210_BF230AEA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, 2012-05-17 at 14:06 +0530, Ravi Sharma wrote:
+> Hi All
+> I know this use case is quite trivial looking regarding WEP (Since it
+> is going to be deprecated), we faced a issue with minap (softap) in
+> WEP security with auth mode as shared. Since the default key is not
+> passed to driver, we can not program firmware default key idx (default
+> key is programmed when data packet exchange started, looking into type
+> of encryption) and the handshake failed in shared auth mode. In open
+> mode, there is no need for this.
 
-On Thursday 31 May 2012 11:09:59 Johannes Berg wrote:
-> Please don't top-post.
-> 
-> On Thu, 2012-05-31 at 11:03 +0200, Erwin Van de Velde wrote:
-> > What is the reasoning behind it? Why provide it for some wireless NICs and 
-not 
-> > for others? Seems quite odd for me and features like Internet sharing over 
-> > wireless are not that exotic, are they?
-> 
-> This features requires extensive testing, space in the firmware that not
-> all devices have, integration, etc. It's not trivial to port to
-> different devices.
+Now you're talking about something else entirely? What does this have to
+do with auto-ARP responses??
 
-It certainly is not, but you can get some help from the software mac with that 
-regard. Since your device is capable of beaconing for P2P and GO modes, 
-Erwin's question is perfectly legitimate with respect to AP support. I suppose 
-that you could get it working without too much firmware work.
+Can we get that story straight? :-) And then a patch that actually
+explains & documents it ... Remember that the changelog should indicate
+why you're changing something.
 
-At the same time, since Intel's iwlwifi series are targetted at the laptop 
-market, and not AP/router solutions, it certainly was not in a roadmap to get 
-AP mode supported. Apart from pleasing people, that won't make you sell more 
-adapters.
+johannes
 
-My 2 cents.
---
-Florian
