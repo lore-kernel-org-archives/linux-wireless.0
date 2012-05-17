@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38678 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756328Ab2EHQto convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48986 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759153Ab2EQHFg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 12:49:44 -0400
-Received: by yhmm54 with SMTP id m54so5522266yhm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 09:49:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120508163018.GE25400@localhost>
-References: <loom.20101104T140201-178@post.gmane.org> <AANLkTinMSH2Vr=iUTD0Pc_OdaM_LFETDEjsOJn+2ZzVD@mail.gmail.com>
- <CAB=NE6X=iD7Hh7-wFx8-ZudNWUKKJw1Mg5MC_G3z4knu7bNTqg@mail.gmail.com> <20120508163018.GE25400@localhost>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 8 May 2012 09:49:22 -0700
-Message-ID: <CAB=NE6Xx_KKjk5s_CMRopwBuHDxajgn=Jdc_Nbb1DN2s=2QL0A@mail.gmail.com> (sfid-20120508_184947_661526_2481DFE1)
-Subject: Re: Adding custom channels to ath5k for researching purposes
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Vadim <Vadims.Kurmis@gmail.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 17 May 2012 03:05:36 -0400
+Message-ID: <1337238333.4524.1.camel@jlt3.sipsolutions.net> (sfid-20120517_090548_997634_AEEFC3DA)
+Subject: Re: [PATCH 3/3] mwifiex: fix kernel warning in ibss start/join path
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Thu, 17 May 2012 09:05:33 +0200
+In-Reply-To: <1337228696-22312-3-git-send-email-bzhao@marvell.com> (sfid-20120517_063333_463261_998602DE)
+References: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
+	 <1337228696-22312-3-git-send-email-bzhao@marvell.com>
+	 (sfid-20120517_063333_463261_998602DE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 8, 2012 at 9:30 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Tue, May 08, 2012 at 07:50:06AM -0700, Luis R. Rodriguez wrote:
->> I'm thinking it may make sense to add CONFIG_WIRELESS_EXPERT where we
->> can stuff some of this stuff under. It may be useful for other
->> regulatory testing / certification stuff.
->
-> No objection here, so long as this kind of config opt wouldn't become
-> a dumping ground (cf. CONFIG_EMBEDDED).  "EXPERT" could mean different
-> things to different people.
+On Wed, 2012-05-16 at 21:24 -0700, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Since cfg80211_ibss_joined() is called inside ibss join callback
+> routine, following kernel warning is hit while starting/joining
+> an ibss network.
+> 
+> "WARNING: at net/wireless/ibss.c:63 cfg80211_ibss_joined+0x35/0xb6
+> [cfg80211]()"
+> 
+> Update "wdev->ssid" and "wdev->ssid_len" in ibss join callback to
+> fix this warning.
 
-Well it should depend on CONFIG_EXPERT but yeah -- I was surprised to
-learn recently even Ubuntu is shipping with CONFIG_EXPERT, so WTF.
-Localizing the expert config to wireless might make more sense.
+Guys, no. The documentation for this explicitly says:
 
-> I still like the idea of exporting more stuff to userspace and letting
-> CRDA handle the card-based restrictions, but ISTR you had reasons that
-> didn't work for everything.
+ * @ssid: (private) Used by the internal configuration code
+ * @ssid_len: (private) Used by the internal configuration code
 
-What do you mean?
+Don't touch it. I knew I should have hidden these fields from driver
+view, but it wasn't easily possible.
 
-  Luis
+If you're using the API wrong then you should fix that instead. In
+particular, you should only call cfg80211_ibss_joined() when you
+actually know the BSSID of the IBSS you've joined. You can't possibly
+know this at this point since you can't even have scanned for peers yet.
+
+johannes
+
