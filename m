@@ -1,93 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50086 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756270Ab2EJQJL (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4304 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756420Ab2ERHPX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:09:11 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/3] iwlwifi: s/iwlagn_txq_free_tfd/iwl_txq_free_tfd
-Date: Thu, 10 May 2012 18:09:06 +0200
-Message-Id: <1336666148-24471-2-git-send-email-johannes@sipsolutions.net> (sfid-20120510_180916_797050_92610BC7)
-In-Reply-To: <1336666148-24471-1-git-send-email-johannes@sipsolutions.net>
-References: <1336666148-24471-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 18 May 2012 03:15:23 -0400
+Message-ID: <4FB5F2F5.7090702@gmail.com> (sfid-20120518_091528_039834_1C20D3A1)
+Date: Fri, 18 May 2012 08:57:57 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Hong Wu <Hong.Wu@dspg.com>, helmut.schaa@googlemail.com,
+	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
+ respectively
+References: <20120517230400.GB22418@yumi.tdiedrich.de>
+In-Reply-To: <20120517230400.GB22418@yumi.tdiedrich.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 05/18/12 01:04, Tobias Diedrich wrote:
+> rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
+> respectively, similar to how it is already done in rt2[45]00pci.c
+> 
+> rt2800lib.c doesn't initialize max_power and thus after
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
+> was applied txpower is limited to 0 for these devices.
+> 
+> This should be the proper fix compared to the net/wireless/reg.c
+> hack in http://patchwork.openwrt.org/patch/2165/
+> 
+> (Patch against the OpenWRT compat-wireless version, but applies
+> equally well against wireless-next with a 19-line offset)
+> 
+> Signed-off-by: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    8 ++++----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index e959207..ccb97b9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -346,8 +346,8 @@ void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
- 				   int tx_fifo_id, bool active);
- void iwl_trans_pcie_tx_agg_setup(struct iwl_trans *trans, int queue, int fifo,
- 				 int sta_id, int tid, int frame_limit, u16 ssn);
--void iwlagn_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
--			 enum dma_data_direction dma_dir);
-+void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
-+		      enum dma_data_direction dma_dir);
- int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
- 			 struct sk_buff_head *skbs);
- int iwl_queue_space(const struct iwl_queue *q);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index a875023..cf8f3cf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -209,7 +209,7 @@ static void iwlagn_unmap_tfd(struct iwl_trans *trans, struct iwl_cmd_meta *meta,
- }
- 
- /**
-- * iwlagn_txq_free_tfd - Free all chunks referenced by TFD [txq->q.read_ptr]
-+ * iwl_txq_free_tfd - Free all chunks referenced by TFD [txq->q.read_ptr]
-  * @trans - transport private data
-  * @txq - tx queue
-  * @dma_dir - the direction of the DMA mapping
-@@ -217,8 +217,8 @@ static void iwlagn_unmap_tfd(struct iwl_trans *trans, struct iwl_cmd_meta *meta,
-  * Does NOT advance any TFD circular buffer read/write indexes
-  * Does NOT free the TFD itself (which is within circular buffer)
-  */
--void iwlagn_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
--			 enum dma_data_direction dma_dir)
-+void iwl_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
-+		      enum dma_data_direction dma_dir)
- {
- 	struct iwl_tfd *tfd_tmp = txq->tfds;
- 
-@@ -979,7 +979,7 @@ int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
- 
- 		iwlagn_txq_inval_byte_cnt_tbl(trans, txq);
- 
--		iwlagn_txq_free_tfd(trans, txq, DMA_TO_DEVICE);
-+		iwl_txq_free_tfd(trans, txq, DMA_TO_DEVICE);
- 		freed++;
- 	}
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 3cdc014..2f8c84e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -435,7 +435,7 @@ static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
- 
- 	spin_lock_bh(&txq->lock);
- 	while (q->write_ptr != q->read_ptr) {
--		iwlagn_txq_free_tfd(trans, txq, dma_dir);
-+		iwl_txq_free_tfd(trans, txq, dma_dir);
- 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd);
- 	}
- 	spin_unlock_bh(&txq->lock);
+> 
+> 
+> Index: compat-wireless-2012-04-17/drivers/net/wireless/rt2x00/rt2800lib.c
+> ===================================================================
+> --- compat-wireless-2012-04-17.orig/drivers/net/wireless/rt2x00/rt2800lib.c	2012-05-18 00:25:22.515271380 +0200
+> +++ compat-wireless-2012-04-17/drivers/net/wireless/rt2x00/rt2800lib.c	2012-05-18 00:28:48.809658951 +0200
+> @@ -4622,6 +4622,7 @@
+>  	default_power2 = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG2);
+>  
+>  	for (i = 0; i < 14; i++) {
+> +		info[i].max_power = MAX_G_TXPOWER;
+>  		info[i].default_power1 = default_power1[i];
+>  		info[i].default_power2 = default_power2[i];
+>  	}
+> @@ -4631,6 +4632,7 @@
+>  		default_power2 = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_A2);
+>  
+>  		for (i = 14; i < spec->num_channels; i++) {
+> +			info[i].max_power = MAX_A_TXPOWER;
+>  			info[i].default_power1 = default_power1[i];
+>  			info[i].default_power2 = default_power2[i];
+>  		}
+> 
+
+
 -- 
-1.7.10
-
+---
+Gertjan
