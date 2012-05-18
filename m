@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:55582 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752795Ab2EGLKb (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33087 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933560Ab2EROGc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 07:10:31 -0400
-Received: by yhmm54 with SMTP id m54so4011123yhm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 04:10:30 -0700 (PDT)
+	Fri, 18 May 2012 10:06:32 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 01/10] ath9k_hw: update ar9462 initval table to fix rx nfcal
+Date: Fri, 18 May 2012 19:37:24 +0530
+Message-ID: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160636_831636_F87486B6)
 MIME-Version: 1.0
-In-Reply-To: <4FA7A13D.6020405@01019freenet.de>
-References: <4FA75983.9040003@01019freenet.de>
-	<201205070702.q4772uem002960@mail.maya.org>
-	<4FA7A13D.6020405@01019freenet.de>
-Date: Mon, 7 May 2012 13:04:29 +0200
-Message-ID: <CAGXE3d-pwTraDvC6yOKt7hHPTXL5LtaHFovD_SFmaPgajJbS9g@mail.gmail.com> (sfid-20120507_131034_591594_8EF80298)
-Subject: Re: [rt2x00-users] [rt2800pci (AP) - ath9k] 802.11w: broken
- aggregation handling?
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: "users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	hostap@lists.shmoo.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The wrong ADC sample phase that happen between awake and
+network/full sleep will lead to improper rx noisefloor
+calibration.
 
-On Mon, May 7, 2012 at 12:17 PM, Andreas Hartmann
-<andihartmann@01019freenet.de> wrote:
-> The attached patch seems to enable 802.11w for rt2800pci (AP). It does
-> not work for rt2800usb (rt3572 SUPP), even if the set_key error
-> disappears (originally the flag IEEE80211_HW_MFP_CAPABLE was set
-> unconditionally).
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I'm fine with enabling MFP in rt2800pci but I don't know enough about the
-necessary requirements.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+index 1d6658e..a10ece0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+@@ -958,7 +958,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
+ 	{0x0001604c, 0x2699e04f},
+ 	{0x00016050, 0x6db6db6c},
+ 	{0x00016058, 0x6c200000},
+-	{0x00016080, 0x00040000},
++	{0x00016080, 0x000c0000},
+ 	{0x00016084, 0x9a68048c},
+ 	{0x00016088, 0x54214514},
+ 	{0x0001608c, 0x1203040b},
+@@ -981,7 +981,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
+ 	{0x00016144, 0x02084080},
+ 	{0x00016148, 0x000080c0},
+ 	{0x00016280, 0x050a0001},
+-	{0x00016284, 0x3d841400},
++	{0x00016284, 0x3d841418},
+ 	{0x00016288, 0x00000000},
+ 	{0x0001628c, 0xe3000000},
+ 	{0x00016290, 0xa1005080},
+-- 
+1.7.10.2
 
-Jouni, are there any special requirements for MFP?
-
-Thanks,
-Helmut
