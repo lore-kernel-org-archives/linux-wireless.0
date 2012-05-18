@@ -1,328 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55995 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756327Ab2EXMcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 08:32:39 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.5 3/4] ath9k_hw: update AR933x initvals to fix issues with high power devices
-Date: Thu, 24 May 2012 14:32:21 +0200
-Message-Id: <1337862742-10574-3-git-send-email-nbd@openwrt.org> (sfid-20120524_143249_261321_71055899)
-In-Reply-To: <1337862742-10574-2-git-send-email-nbd@openwrt.org>
-References: <1337862742-10574-1-git-send-email-nbd@openwrt.org>
- <1337862742-10574-2-git-send-email-nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60228 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946073Ab2EROHU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2012 10:07:20 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 06/10] ath9k_hw: fix BT RF performance
+Date: Fri, 18 May 2012 19:37:29 +0530
+Message-ID: <1337350053-15491-6-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160725_367693_A2DA610B)
+In-Reply-To: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   |  178 ++++++++++----------
- 1 files changed, 90 insertions(+), 88 deletions(-)
+When software rfkill is triggered, before put the chip in reset
+state, give LNA and SPDT control to BT to make sure BT can have
+good RF performance.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-index f11d9b2..1bd3a3d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
-@@ -1,5 +1,6 @@
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   16 ++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 +
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +++
+ 3 files changed, 20 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 4ebe4a2..e31461b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1391,3 +1391,19 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 	return value;
+ }
+ EXPORT_SYMBOL(ar9003_mci_state);
++
++void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++
++	ath_dbg(common, MCI, "Give LNA and SPDT control to BT\n");
++
++	REG_SET_BIT(ah, AR_PHY_GLB_CONTROL, AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
++	mci->is_2g = false;
++	mci->update_2g5g = true;
++	ar9003_mci_send_2g5g_status(ah, true);
++
++	/* Force another 2g5g update at next scanning */
++	mci->update_2g5g = true;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 652ab8c..f4a6a44 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -266,6 +266,7 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ void ar9003_mci_cleanup(struct ath_hw *ah);
+ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ 			      u32 *rx_msg_intr);
++void ar9003_mci_bt_gain_ctrl(struct ath_hw *ah);
+ 
  /*
-- * Copyright (c) 2011 Atheros Communications Inc.
-+ * Copyright (c) 2010-2011 Atheros Communications Inc.
-+ * Copyright (c) 2011-2012 Qualcomm Atheros Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -18,7 +19,7 @@
- #define INITVALS_9330_1P1_H
+  * These functions are used by ath9k_hw.
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 53c5dea..245dec5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2734,6 +2734,9 @@ EXPORT_SYMBOL(ath9k_hw_setrxfilter);
  
- static const u32 ar9331_1p1_baseband_postamble[][5] = {
--	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a8005},
- 	{0x00009820, 0x206a002e, 0x206a002e, 0x206a002e, 0x206a002e},
- 	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
-@@ -27,10 +28,10 @@ static const u32 ar9331_1p1_baseband_postamble[][5] = {
- 	{0x00009830, 0x0000059c, 0x0000059c, 0x0000059c, 0x0000059c},
- 	{0x00009c00, 0x00000044, 0x00000044, 0x00000044, 0x00000044},
- 	{0x00009e00, 0x0372161e, 0x0372161e, 0x037216a4, 0x037216a4},
--	{0x00009e04, 0x00182020, 0x00182020, 0x00182020, 0x00182020},
-+	{0x00009e04, 0x00202020, 0x00202020, 0x00202020, 0x00202020},
- 	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000e2},
- 	{0x00009e10, 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e},
--	{0x00009e14, 0x31395d5e, 0x3139605e, 0x3139605e, 0x31395d5e},
-+	{0x00009e14, 0x31365d5e, 0x3136605e, 0x3136605e, 0x31365d5e},
- 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
- 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
-@@ -55,7 +56,7 @@ static const u32 ar9331_1p1_baseband_postamble[][5] = {
- 	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
--	{0x0000a2d0, 0x00071981, 0x00071981, 0x00071981, 0x00071981},
-+	{0x0000a2d0, 0x00071982, 0x00071982, 0x00071982, 0x00071982},
- 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
- 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
- 	{0x0000ae04, 0x00802020, 0x00802020, 0x00802020, 0x00802020},
-@@ -63,7 +64,7 @@ static const u32 ar9331_1p1_baseband_postamble[][5] = {
- };
+ bool ath9k_hw_phy_disable(struct ath_hw *ah)
+ {
++	if (AR_SREV_9462(ah))
++		ar9003_mci_bt_gain_ctrl(ah);
++
+ 	if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_WARM))
+ 		return false;
  
- static const u32 ar9331_modes_lowest_ob_db_tx_gain_1p1[][5] = {
--	/*   Addr     5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
- 	{0x0000a2dc, 0xffff2a52, 0xffff2a52, 0xffff2a52, 0xffff2a52},
- 	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
-@@ -155,7 +156,7 @@ static const u32 ar9331_modes_lowest_ob_db_tx_gain_1p1[][5] = {
- };
- 
- static const u32 ar9331_modes_high_ob_db_tx_gain_1p1[][5] = {
--	/*   Addr     5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
- 	{0x0000a2dc, 0xffaa9a52, 0xffaa9a52, 0xffaa9a52, 0xffaa9a52},
- 	{0x0000a2e0, 0xffb31c84, 0xffb31c84, 0xffb31c84, 0xffb31c84},
-@@ -245,7 +246,7 @@ static const u32 ar9331_modes_high_ob_db_tx_gain_1p1[][5] = {
- };
- 
- static const u32 ar9331_modes_low_ob_db_tx_gain_1p1[][5] = {
--	/*   Addr     5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
- 	{0x0000a2dc, 0xffff2a52, 0xffff2a52, 0xffff2a52, 0xffff2a52},
- 	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
-@@ -377,14 +378,14 @@ static const u32 ar9331_1p1_radio_core[][2] = {
- 	{0x000160b4, 0x92480040},
- 	{0x000160c0, 0x006db6db},
- 	{0x000160c4, 0x0186db60},
--	{0x000160c8, 0x6db6db6c},
-+	{0x000160c8, 0x6db4db6c},
- 	{0x000160cc, 0x6de6c300},
- 	{0x000160d0, 0x14500820},
- 	{0x00016100, 0x04cb0001},
- 	{0x00016104, 0xfff80015},
- 	{0x00016108, 0x00080010},
- 	{0x0001610c, 0x00170000},
--	{0x00016140, 0x10804000},
-+	{0x00016140, 0x10800000},
- 	{0x00016144, 0x01884080},
- 	{0x00016148, 0x000080c0},
- 	{0x00016280, 0x01000015},
-@@ -417,7 +418,7 @@ static const u32 ar9331_1p1_radio_core[][2] = {
- };
- 
- static const u32 ar9331_1p1_soc_postamble[][5] = {
--	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00007010, 0x00000022, 0x00000022, 0x00000022, 0x00000022},
- };
- 
-@@ -691,7 +692,7 @@ static const u32 ar9331_1p1_baseband_core[][2] = {
- };
- 
- static const u32 ar9331_modes_high_power_tx_gain_1p1[][5] = {
--	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
- 	{0x0000a2dc, 0xffff2a52, 0xffff2a52, 0xffff2a52, 0xffff2a52},
- 	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
-@@ -783,7 +784,7 @@ static const u32 ar9331_modes_high_power_tx_gain_1p1[][5] = {
- };
- 
- static const u32 ar9331_1p1_mac_postamble[][5] = {
--	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
-+	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
- 	{0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c},
- 	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
-@@ -973,26 +974,27 @@ static const u32 ar9331_1p1_mac_core[][2] = {
- 
- static const u32 ar9331_common_rx_gain_1p1[][2] = {
- 	/* Addr      allmodes  */
--	{0x0000a000, 0x00010000},
--	{0x0000a004, 0x00030002},
--	{0x0000a008, 0x00050004},
--	{0x0000a00c, 0x00810080},
--	{0x0000a010, 0x00830082},
--	{0x0000a014, 0x01810180},
--	{0x0000a018, 0x01830182},
--	{0x0000a01c, 0x01850184},
--	{0x0000a020, 0x01890188},
--	{0x0000a024, 0x018b018a},
--	{0x0000a028, 0x018d018c},
--	{0x0000a02c, 0x01910190},
--	{0x0000a030, 0x01930192},
--	{0x0000a034, 0x01950194},
--	{0x0000a038, 0x038a0196},
--	{0x0000a03c, 0x038c038b},
--	{0x0000a040, 0x0390038d},
--	{0x0000a044, 0x03920391},
--	{0x0000a048, 0x03940393},
--	{0x0000a04c, 0x03960395},
-+	{0x00009e18, 0x05000000},
-+	{0x0000a000, 0x00060005},
-+	{0x0000a004, 0x00810080},
-+	{0x0000a008, 0x00830082},
-+	{0x0000a00c, 0x00850084},
-+	{0x0000a010, 0x01820181},
-+	{0x0000a014, 0x01840183},
-+	{0x0000a018, 0x01880185},
-+	{0x0000a01c, 0x018a0189},
-+	{0x0000a020, 0x02850284},
-+	{0x0000a024, 0x02890288},
-+	{0x0000a028, 0x028b028a},
-+	{0x0000a02c, 0x03850384},
-+	{0x0000a030, 0x03890388},
-+	{0x0000a034, 0x038b038a},
-+	{0x0000a038, 0x038d038c},
-+	{0x0000a03c, 0x03910390},
-+	{0x0000a040, 0x03930392},
-+	{0x0000a044, 0x03950394},
-+	{0x0000a048, 0x00000396},
-+	{0x0000a04c, 0x00000000},
- 	{0x0000a050, 0x00000000},
- 	{0x0000a054, 0x00000000},
- 	{0x0000a058, 0x00000000},
-@@ -1005,15 +1007,15 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
- 	{0x0000a074, 0x00000000},
- 	{0x0000a078, 0x00000000},
- 	{0x0000a07c, 0x00000000},
--	{0x0000a080, 0x22222229},
--	{0x0000a084, 0x1d1d1d1d},
--	{0x0000a088, 0x1d1d1d1d},
--	{0x0000a08c, 0x1d1d1d1d},
--	{0x0000a090, 0x171d1d1d},
--	{0x0000a094, 0x11111717},
--	{0x0000a098, 0x00030311},
--	{0x0000a09c, 0x00000000},
--	{0x0000a0a0, 0x00000000},
-+	{0x0000a080, 0x28282828},
-+	{0x0000a084, 0x28282828},
-+	{0x0000a088, 0x28282828},
-+	{0x0000a08c, 0x28282828},
-+	{0x0000a090, 0x28282828},
-+	{0x0000a094, 0x24242428},
-+	{0x0000a098, 0x171e1e1e},
-+	{0x0000a09c, 0x02020b0b},
-+	{0x0000a0a0, 0x02020202},
- 	{0x0000a0a4, 0x00000000},
- 	{0x0000a0a8, 0x00000000},
- 	{0x0000a0ac, 0x00000000},
-@@ -1021,27 +1023,27 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
- 	{0x0000a0b4, 0x00000000},
- 	{0x0000a0b8, 0x00000000},
- 	{0x0000a0bc, 0x00000000},
--	{0x0000a0c0, 0x001f0000},
--	{0x0000a0c4, 0x01000101},
--	{0x0000a0c8, 0x011e011f},
--	{0x0000a0cc, 0x011c011d},
--	{0x0000a0d0, 0x02030204},
--	{0x0000a0d4, 0x02010202},
--	{0x0000a0d8, 0x021f0200},
--	{0x0000a0dc, 0x0302021e},
--	{0x0000a0e0, 0x03000301},
--	{0x0000a0e4, 0x031e031f},
--	{0x0000a0e8, 0x0402031d},
--	{0x0000a0ec, 0x04000401},
--	{0x0000a0f0, 0x041e041f},
--	{0x0000a0f4, 0x0502041d},
--	{0x0000a0f8, 0x05000501},
--	{0x0000a0fc, 0x051e051f},
--	{0x0000a100, 0x06010602},
--	{0x0000a104, 0x061f0600},
--	{0x0000a108, 0x061d061e},
--	{0x0000a10c, 0x07020703},
--	{0x0000a110, 0x07000701},
-+	{0x0000a0c0, 0x22072208},
-+	{0x0000a0c4, 0x22052206},
-+	{0x0000a0c8, 0x22032204},
-+	{0x0000a0cc, 0x22012202},
-+	{0x0000a0d0, 0x221f2200},
-+	{0x0000a0d4, 0x221d221e},
-+	{0x0000a0d8, 0x33023303},
-+	{0x0000a0dc, 0x33003301},
-+	{0x0000a0e0, 0x331e331f},
-+	{0x0000a0e4, 0x4402331d},
-+	{0x0000a0e8, 0x44004401},
-+	{0x0000a0ec, 0x441e441f},
-+	{0x0000a0f0, 0x55025503},
-+	{0x0000a0f4, 0x55005501},
-+	{0x0000a0f8, 0x551e551f},
-+	{0x0000a0fc, 0x6602551d},
-+	{0x0000a100, 0x66006601},
-+	{0x0000a104, 0x661e661f},
-+	{0x0000a108, 0x7703661d},
-+	{0x0000a10c, 0x77017702},
-+	{0x0000a110, 0x00007700},
- 	{0x0000a114, 0x00000000},
- 	{0x0000a118, 0x00000000},
- 	{0x0000a11c, 0x00000000},
-@@ -1054,26 +1056,26 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
- 	{0x0000a138, 0x00000000},
- 	{0x0000a13c, 0x00000000},
- 	{0x0000a140, 0x001f0000},
--	{0x0000a144, 0x01000101},
--	{0x0000a148, 0x011e011f},
--	{0x0000a14c, 0x011c011d},
--	{0x0000a150, 0x02030204},
--	{0x0000a154, 0x02010202},
--	{0x0000a158, 0x021f0200},
--	{0x0000a15c, 0x0302021e},
--	{0x0000a160, 0x03000301},
--	{0x0000a164, 0x031e031f},
--	{0x0000a168, 0x0402031d},
--	{0x0000a16c, 0x04000401},
--	{0x0000a170, 0x041e041f},
--	{0x0000a174, 0x0502041d},
--	{0x0000a178, 0x05000501},
--	{0x0000a17c, 0x051e051f},
--	{0x0000a180, 0x06010602},
--	{0x0000a184, 0x061f0600},
--	{0x0000a188, 0x061d061e},
--	{0x0000a18c, 0x07020703},
--	{0x0000a190, 0x07000701},
-+	{0x0000a144, 0x111f1100},
-+	{0x0000a148, 0x111d111e},
-+	{0x0000a14c, 0x111b111c},
-+	{0x0000a150, 0x22032204},
-+	{0x0000a154, 0x22012202},
-+	{0x0000a158, 0x221f2200},
-+	{0x0000a15c, 0x221d221e},
-+	{0x0000a160, 0x33013302},
-+	{0x0000a164, 0x331f3300},
-+	{0x0000a168, 0x4402331e},
-+	{0x0000a16c, 0x44004401},
-+	{0x0000a170, 0x441e441f},
-+	{0x0000a174, 0x55015502},
-+	{0x0000a178, 0x551f5500},
-+	{0x0000a17c, 0x6602551e},
-+	{0x0000a180, 0x66006601},
-+	{0x0000a184, 0x661e661f},
-+	{0x0000a188, 0x7703661d},
-+	{0x0000a18c, 0x77017702},
-+	{0x0000a190, 0x00007700},
- 	{0x0000a194, 0x00000000},
- 	{0x0000a198, 0x00000000},
- 	{0x0000a19c, 0x00000000},
-@@ -1100,14 +1102,14 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
- 	{0x0000a1f0, 0x00000396},
- 	{0x0000a1f4, 0x00000396},
- 	{0x0000a1f8, 0x00000396},
--	{0x0000a1fc, 0x00000196},
-+	{0x0000a1fc, 0x00000296},
- };
- 
- static const u32 ar9331_common_tx_gain_offset1_1[][1] = {
--	{0},
--	{3},
--	{0},
--	{0},
-+	{0x00000000},
-+	{0x00000003},
-+	{0x00000000},
-+	{0x00000000},
- };
- 
- static const u32 ar9331_1p1_chansel_xtal_25M[] = {
 -- 
-1.7.3.2
+1.7.10.2
 
