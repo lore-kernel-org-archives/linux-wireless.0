@@ -1,48 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:38655 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751754Ab2EPIGq (ORCPT
+Received: from oproxy9.bluehost.com ([69.89.24.6]:60959 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S966571Ab2ERCAW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 04:06:46 -0400
-Received: by qcro28 with SMTP id o28so259351qcr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 01:06:45 -0700 (PDT)
+	Thu, 17 May 2012 22:00:22 -0400
+Message-ID: <4FB5ADAB.5010206@Magitekindustries.com> (sfid-20120518_040026_642397_D19560E5)
+Date: Thu, 17 May 2012 22:02:19 -0400
+From: DC <DC@Magitekindustries.com>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CADYPuQ54joKvzJEyTU+sjHFCPDqzizZL7_HfJwLi9VE-=+ETVQ@mail.gmail.com>
-References: <CADYPuQ5U-TeJvaWdLA=kTgLRacMRyEPoi2aoB=PV-cx_YDXotg@mail.gmail.com>
-	<CANUX_P3=G_ooQ_ODCKPXQxt9vkJZpbRV083CUBitof5mEVo6kw@mail.gmail.com>
-	<CADYPuQ54joKvzJEyTU+sjHFCPDqzizZL7_HfJwLi9VE-=+ETVQ@mail.gmail.com>
-Date: Wed, 16 May 2012 10:06:45 +0200
-Message-ID: <CA+icZUVEAvwdQiKPaEVtVRNZoHTCnrHdKet0kbAN2wQccW-+_Q@mail.gmail.com> (sfid-20120516_100652_928047_9BE08794)
-Subject: Re: frequent disconnects with iwlwifi
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Philipp Dreimann <philipp@dreimann.net>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Intel 2200BG/Linux
+References: <6x75xpmamff1htgn6m1n6t9l.1337272291919@email.android.com> <CAGRGNgVnHwFH99xDn_OG93OerJRK8QzYacm-JwhxXjdmwCC2UA@mail.gmail.com>
+In-Reply-To: <CAGRGNgVnHwFH99xDn_OG93OerJRK8QzYacm-JwhxXjdmwCC2UA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 15, 2012 at 2:14 PM, Philipp Dreimann <philipp@dreimann.net> wrote:
-> On 15 May 2012 13:18, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> On Mon, May 14, 2012 at 10:39 PM, Philipp Dreimann <philipp@dreimann.net> wrote:
->> Sedat, your business is doing well. You have another customer. This is
->> a bug in NM. Sedat will provide details :-)
+Didn't know it was a party line. On it.
+
+I haven't been able to get the driver to load. The download on the site
+doesn't work.
+
+The firmware should be installed on the card, because the card runs
+perfectly on the windows side of the drive, but if it needs to be
+installed on Linux, then no, it's likely not.
+
+But again, the page has no download link.
+
+
+
+On 5/17/12 7:46 PM, Julian Calaby wrote:
+> Hi,
 >
-> I saw Sedat's posts and wanted to try disabling ipv6 handling in NM
-> first to see if it helps. And, yes, it does.
+> Firstly, always Reply-All, that way other people on the list will see
+> your emails, and may be able to help if I can't.
 >
-> Cheers
+> On Fri, May 18, 2012 at 2:31 AM, D <dc@magitekindustries.com> wrote:
+>> I'm not having any luck with this. The os is bt5 which it's a build of Ubuntu
+> Ok, so can you confirm that the ipw2200 driver is actually loaded. You
+> can do this using the lsmod command.
+>
+> Are there any errors or warnings in the kernel log (see the output from dmesg)
+>
+> Have you installed the firmware?
+>
+> Thanks,
+>
+> Julian Calaby
+>
+>> Julian Calaby <julian.calaby@gmail.com> wrote:
+>>
+>>> Hi,
+>>>
+>>> On Sun, May 6, 2012 at 3:33 PM, DC <DC@magitekindustries.com> wrote:
+>>>>    I'm having the hardest time in the world getting this card to work
+>>>> with Linux. Can you help me?
+>>> You need to use the ipw2200 driver, and you need the firmware.
+>>>
+>>> The driver should already be in your distro's kernel, and the firmware
+>>> should be available through it's package repository.
+>>>
+>>> E.g. in Debian, the firmware is available in the firmware-ipw2x00 package.
+>>>
+>>> Thanks,
+>>>
+>>> --
+>>> Julian Calaby
+>>>
+>>> Email: julian.calaby@gmail.com
+>>> Profile: http://www.google.com/profiles/julian.calaby/
+>>> .Plan: http://sites.google.com/site/juliancalaby/
+>
+>
 
-Normally, I am used a classic /etc/network/interfaces file to
-configure my network environment, but Ubuntu/precise shipped NM and I
-gave it a try.
-
-To (disable) ignore IPv6 in NM seems to be the easiest way.
-Alternatively, I have added debdiffs for re-packaging a NM version w/o
-this misbehaviour.
-
-Just follow news on Ubuntu LP #988183.
-
-- Sedat -
