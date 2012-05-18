@@ -1,123 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:38481 "HELO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755426Ab2EIBch (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 21:32:37 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH v2 01/18] mwifiex: allocate space for one more mwifiex_private structure
-Date: Tue,  8 May 2012 18:30:13 -0700
-Message-Id: <1336527030-2045-2-git-send-email-bzhao@marvell.com> (sfid-20120509_033241_485096_9756A23E)
-In-Reply-To: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
-References: <1336527030-2045-1-git-send-email-bzhao@marvell.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:43986 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030199Ab2ERMDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2012 08:03:21 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 3/6] mac80211: add drv_* wrappers for channel contexts
+Date: Fri, 18 May 2012 14:03:06 +0200
+Message-ID: <1337342589-10617-4-git-send-email-michal.kazior@tieto.com> (sfid-20120518_140328_765931_BC032309)
+In-Reply-To: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
+References: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
-
-Reserve space for one more priv structure.
-This will be used by AP interface.
-
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/mwifiex/decl.h |    2 +-
- drivers/net/wireless/mwifiex/main.c |   33 ++++++++++++++++++---------------
- drivers/net/wireless/mwifiex/wmm.c  |    4 ++++
- 3 files changed, 23 insertions(+), 16 deletions(-)
+ net/mac80211/driver-ops.h |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 45 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index d04aba4..6b8f912 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -28,7 +28,7 @@
- #include <linux/ieee80211.h>
- 
- 
--#define MWIFIEX_MAX_BSS_NUM         (1)
-+#define MWIFIEX_MAX_BSS_NUM         (2)
- 
- #define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
- 					 *   + 4 byte alignment
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index be0f0e5..5ac0059 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -64,17 +64,17 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
- 
- 	adapter->priv_num = 0;
- 
--	/* Allocate memory for private structure */
--	adapter->priv[0] = kzalloc(sizeof(struct mwifiex_private), GFP_KERNEL);
--	if (!adapter->priv[0]) {
--		dev_err(adapter->dev,
--			"%s: failed to alloc priv[0]\n", __func__);
--		goto error;
--	}
--
--	adapter->priv_num++;
-+	for (i = 0; i < MWIFIEX_MAX_BSS_NUM; i++) {
-+		/* Allocate memory for private structure */
-+		adapter->priv[i] =
-+			kzalloc(sizeof(struct mwifiex_private), GFP_KERNEL);
-+		if (!adapter->priv[i])
-+			goto error;
- 
--	adapter->priv[0]->adapter = adapter;
-+		adapter->priv[i]->adapter = adapter;
-+		adapter->priv[i]->bss_priority = i;
-+		adapter->priv_num++;
-+	}
- 	mwifiex_init_lock_list(adapter);
- 
- 	init_timer(&adapter->cmd_timer);
-@@ -836,13 +836,16 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
- 	}
- 
- 	priv = adapter->priv[0];
--	if (!priv)
-+	if (!priv || !priv->wdev)
- 		goto exit_remove;
- 
--	if (priv->wdev) {
--		wiphy_unregister(priv->wdev->wiphy);
--		wiphy_free(priv->wdev->wiphy);
--		kfree(priv->wdev);
-+	wiphy_unregister(priv->wdev->wiphy);
-+	wiphy_free(priv->wdev->wiphy);
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 6d33a0c..5bc1efc 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -845,4 +845,49 @@ drv_allow_buffered_frames(struct ieee80211_local *local,
+ 						  more_data);
+ 	trace_drv_return_void(local);
+ }
 +
-+	for (i = 0; i < adapter->priv_num; i++) {
-+		priv = adapter->priv[i];
-+		if (priv)
-+			kfree(priv->wdev);
- 	}
- 
- 	mwifiex_terminate_workqueue(adapter);
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 429a1de..f3fc655 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -885,6 +885,10 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 				tid_ptr = &(priv_tmp)->wmm.
- 					tid_tbl_ptr[tos_to_tid[i]];
- 
-+				/* For non-STA ra_list_curr may be NULL */
-+				if (!tid_ptr->ra_list_curr)
-+					continue;
++static inline void
++drv_add_channel_context(struct ieee80211_local *local,
++		        struct ieee80211_channel_context *ctx)
++{
++	if (local->ops->add_channel_context)
++		local->ops->add_channel_context(&local->hw, ctx);
++}
 +
- 				spin_lock_irqsave(&tid_ptr->tid_tbl_lock,
- 						  flags);
- 				is_list_empty =
++static inline void
++drv_remove_channel_context(struct ieee80211_local *local,
++			   struct ieee80211_channel_context *ctx)
++{
++	if (local->ops->remove_channel_context)
++		local->ops->remove_channel_context(&local->hw, ctx);
++}
++
++static inline void
++drv_change_channel_type(struct ieee80211_local *local,
++			struct ieee80211_channel_context *ctx)
++{
++	if (local->ops->change_channel_type)
++		local->ops->change_channel_type(&local->hw, ctx);
++}
++
++static inline void
++drv_assign_vif_channel_context(struct ieee80211_local *local,
++			       struct ieee80211_sub_if_data *sdata,
++			       struct ieee80211_channel_context *ctx)
++{
++	if (local->ops->assign_vif_channel_context)
++		local->ops->assign_vif_channel_context(&local->hw,
++						       &sdata->vif, ctx);
++}
++
++static inline void
++drv_unassign_vif_channel_context(struct ieee80211_local *local,
++				 struct ieee80211_sub_if_data *sdata,
++				 struct ieee80211_channel_context *ctx)
++{
++	if (local->ops->unassign_vif_channel_context)
++		local->ops->unassign_vif_channel_context(&local->hw,
++							 &sdata->vif, ctx);
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
 -- 
-1.7.0.2
+1.7.0.4
 
