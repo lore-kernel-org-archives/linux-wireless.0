@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53291 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755992Ab2EJQfa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39791 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932533Ab2ERRQd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:35:30 -0400
-Date: Thu, 10 May 2012 09:35:25 -0700
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	=?utf-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>
-Subject: Re: brcmsmac still woes, possible regression?
-Message-ID: <20120510163525.GB32040@ubuntu-mba> (sfid-20120510_183541_667999_CBEFA5F6)
-References: <4F744DD8.8010004@broadcom.com>
- <20120329133835.GA5196@stt008.linux.site>
- <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
- <20120402215005.GA13969@burratino>
- <4F7B179F.7070502@broadcom.com>
- <20120509094111.GA2333@burratino>
- <4FAA45AF.8050201@broadcom.com>
- <20120509174106.GA7189@ubuntu-mba>
- <4FAAB0FE.601@broadcom.com>
- <1336587054.1121.2.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1336587054.1121.2.camel@jlt3.sipsolutions.net>
+	Fri, 18 May 2012 13:16:33 -0400
+Message-ID: <1337361387.4802.6.camel@jlt3.sipsolutions.net> (sfid-20120518_191641_106614_D561BA33)
+Subject: Re: rt28xx AP-mode problem with commit
+ 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
+ carrier state"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Date: Fri, 18 May 2012 19:16:27 +0200
+In-Reply-To: <20120518011829.GD22418@yumi.tdiedrich.de>
+References: <20120509105719.GA24457@yumi.tdiedrich.de>
+	 <1336564773.4323.19.camel@jlt3.sipsolutions.net>
+	 <20120509121827.GD5472@yumi.tdiedrich.de>
+	 <20120509210448.GE5472@yumi.tdiedrich.de>
+	 <1336637726.4334.13.camel@jlt3.sipsolutions.net>
+	 <1336638453.4334.15.camel@jlt3.sipsolutions.net>
+	 <20120518011829.GD22418@yumi.tdiedrich.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 09, 2012 at 08:10:54PM +0200, Johannes Berg wrote:
-> On Wed, 2012-05-09 at 20:01 +0200, Arend van Spriel wrote:
-> 
-> > As part of the discussion over here I am proposing to get rid of the tx
-> > muting in brcmsmac as mac80211 already has that behaviour for passive
-> > channels if I am not mistaken (is this true, Johannes?).
-> 
-> Arend, I haven't really followed this discussion, can you elaborate?
-> 
-> On passive channels, when scanning, mac80211 will send a probe only
-> after receiving a frame on that channel. When associating, it has no
-> such behaviour, at least not directly, but I suppose it could be
-> implemented (waiting for the beacon)
+[dropping openwrt list, it keeps bothering me that I should subscribe]
 
-The background is that brcmsmac contains a bunch of code for regulatory
-support that is either duplicated (and in conflict) with the
-protocol-level support or else it would better be handled there. This is
-causing problems on pretty much any channel that isn't part of the
-default world regulatory domain.
+On Fri, 2012-05-18 at 03:18 +0200, Tobias Diedrich wrote:
 
-I've sent RFC patches that strip out the vast majority of this code in
-favor of better integration with the protocol-level regulatory support.
-The piece that's under discussion here is a behavior I maintained in my
-changes, which mutes tx on passive scan channels until data is received
-on a given channel. But in my opinion, if this sort of behavior is
-desired it ought to be implemented at the protocol level instead of in
-the driver, so I'd really prefer to see it removed from brcmsmac.
+> One more clue:
+> I think this has to do with the order in which the OpenWRT wifi
+> script does things:
+> 
+> hostapd -P /var/run/wifi-phy0.pid -B /var/run/hostapd-phy0.conf
+> hostapd_ctrl=/var/run/hostapd-phy0/wlan0
+> ifconfig wlan0
+> ifconfig wlan0 down
+> ifconfig wlan0 hw ether 1c:af:f7:49:50:56 up
+> ifconfig wlan0 0.0.0.0
+> ifconfig wlan0
+> ifconfig br-lan
+> ifconfig wlan0 0.0.0.0
+> ifconfig wlan0 hw ether 1c:af:f7:49:50:56 up
+> iw dev wlan0 set txpower fixed 2000
 
-Seth
+Wow, ok, setting the interface down while the AP is up really isn't a
+valid use of it. I'm actually amazed that it ever works at all when you
+do this. Either this should be done the other way around, or hostapd
+needs to get some smarts about it. For example, with the start-AP
+function transition, I'm not sure even *beacon* after you do this...
+
+johannes
 
