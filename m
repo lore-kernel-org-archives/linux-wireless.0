@@ -1,78 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout6.freenet.de ([195.4.92.96]:50617 "EHLO mout6.freenet.de"
+Received: from ebb06.tieto.com ([131.207.168.38]:43813 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755901Ab2ERMQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 08:16:47 -0400
-Message-ID: <4FB63CEF.5020700@01019freenet.de> (sfid-20120518_141651_566967_EB535F4B)
-Date: Fri, 18 May 2012 14:13:35 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S1030207Ab2ERMDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2012 08:03:21 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 4/6] mac80211: use channel context notifications
+Date: Fri, 18 May 2012 14:03:07 +0200
+Message-ID: <1337342589-10617-5-git-send-email-michal.kazior@tieto.com> (sfid-20120518_140334_335661_1C4E0BDD)
+In-Reply-To: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
+References: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Tobias Diedrich <ranma+openwrt@tdiedrich.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Hong Wu <Hong.Wu@dspg.com>, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
- respectively
-References: <20120517230400.GB22418@yumi.tdiedrich.de> <CAGXE3d_Yz=-UWO+PiJkRQ7ZSBgh_fdcwsPz6FCig2VjOOoMQOg@mail.gmail.com>
-In-Reply-To: <CAGXE3d_Yz=-UWO+PiJkRQ7ZSBgh_fdcwsPz6FCig2VjOOoMQOg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Helmut,
+Channel context pointer will be accessiable on
+both assign and unassign events.
 
-Helmut Schaa wrote:
-> Hi,
-> 
-> On Fri, May 18, 2012 at 1:04 AM, Tobias Diedrich
-> <ranma+openwrt@tdiedrich.de> wrote:
->> rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
->> respectively, similar to how it is already done in rt2[45]00pci.c
->>
->> rt2800lib.c doesn't initialize max_power and thus after
->> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
->> was applied txpower is limited to 0 for these devices.
->>
->> This should be the proper fix compared to the net/wireless/reg.c
->> hack in http://patchwork.openwrt.org/patch/2165/
->>
->> (Patch against the OpenWRT compat-wireless version, but applies
->> equally well against wireless-next with a 19-line offset)
->>
->> Signed-off-by: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
->>
->>
->> Index: compat-wireless-2012-04-17/drivers/net/wireless/rt2x00/rt2800lib.c
->> ===================================================================
->> --- compat-wireless-2012-04-17.orig/drivers/net/wireless/rt2x00/rt2800lib.c     2012-05-18 00:25:22.515271380 +0200
->> +++ compat-wireless-2012-04-17/drivers/net/wireless/rt2x00/rt2800lib.c  2012-05-18 00:28:48.809658951 +0200
->> @@ -4622,6 +4622,7 @@
->>        default_power2 = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG2);
->>
->>        for (i = 0; i < 14; i++) {
->> +               info[i].max_power = MAX_G_TXPOWER;
-> 
-> 31dBm? That's ~1.3W.
-> 
-> I'd say we have to find a different way to deal with this issue.
-> 
-> Theoretically the device eeprom contains the allowed max tx power in
-> EEPROM_EIRP_MAX_TX_POWER however most devices don't use this
-> value at all :( so we cannot rely on it for most devices.
-> 
-> Typically the ralink devices are calibrated for 100% tx power. However,
-> without EEPROM_EIRP_MAX_TX_POWER we don't know the real tx
-> power of the device at all (have to consider antenna gain which should be
-> part of EEPROM_EIRP_MAX_TX_POWER).
-> 
-> So, maybe we should do it the safe way and just register a safe default
-> of 20dBm for all channels?
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/chan.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-What are your considerations to set it to 20dBm and not to 25dBm, e.g.?
-What would be the functional consequence, if it would be set to 25dBm or
-to 31dBm?
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index e9b0f3e..32b7088 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -5,6 +5,7 @@
+ #include <linux/nl80211.h>
+ #include <net/cfg80211.h>
+ #include "ieee80211_i.h"
++#include "driver-ops.h"
+ 
+ static enum ieee80211_chan_mode
+ __ieee80211_get_channel_mode(struct ieee80211_local *local,
+@@ -181,6 +182,8 @@ ieee80211_new_channel_context(struct ieee80211_local *local,
+ 	ctx->channel_type = channel_type;
+ 	INIT_LIST_HEAD(&ctx->vif_list);
+ 
++	drv_add_channel_context(local, ctx);
++
+ 	return ctx;
+ }
+ 
+@@ -191,6 +194,8 @@ ieee80211_free_channel_context(struct ieee80211_local *local,
+ 	if (WARN_ON(!list_empty(&ctx->vif_list)))
+ 		return;
+ 
++	drv_remove_channel_context(local, ctx);
++
+ 	ctx->channel = NULL;
+ }
+ 
+@@ -198,14 +203,22 @@ static void
+ ieee80211_assign_vif_channel_context(struct ieee80211_sub_if_data *sdata,
+ 				     struct ieee80211_channel_context *ctx)
+ {
++	struct ieee80211_local *local = sdata->local;
++
+ 	list_add(&sdata->vif.list, &ctx->vif_list);
+ 	sdata->vif.channel_context = ctx;
++
++	drv_assign_vif_channel_context(local, sdata, ctx);
+ }
+ 
+ static void
+ ieee80211_unassign_vif_channel_context(struct ieee80211_sub_if_data *sdata,
+ 				       struct ieee80211_channel_context *ctx)
+ {
++	struct ieee80211_local *local = sdata->local;
++
++	drv_unassign_vif_channel_context(local, sdata, ctx);
++
+ 	sdata->vif.channel_context = NULL;
+ 	list_del(&sdata->vif.list);
+ }
+-- 
+1.7.0.4
 
-
-Thanks,
-Andreas
