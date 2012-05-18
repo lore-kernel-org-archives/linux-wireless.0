@@ -1,104 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:4599 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758792Ab2EJOrO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33402 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946073Ab2EROHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 10:47:14 -0400
-Message-ID: <4FABD4EB.4070003@gmail.com> (sfid-20120510_164719_962500_86299305)
-Date: Thu, 10 May 2012 16:47:07 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Fri, 18 May 2012 10:07:30 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 07/10] ath9k: BT coex performance tuning for AR9462
+Date: Fri, 18 May 2012 19:37:30 +0530
+Message-ID: <1337350053-15491-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160733_531304_FDB3C425)
+In-Reply-To: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-CC: Ivo Van Doorn <ivdoorn@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: [rt2x00-users] [PATCH][RFC/RFT] rt2800: Implement selectable
- support for 802.11w (MFP)
-References: <201205100719.q4A7JwVl003140@mail.maya.org> <CAOZOX0VfLrqBwfcqf5qsSnA4EH00-6tmG8te3M-WVAR8NqcFSw@mail.gmail.com> <4FAB9EAE.9090403@01019freenet.de> <CAOZOX0Vax7HTsND=vi+c6vamtvWaWW9omWu1CM-=vWsrAf4fgQ@mail.gmail.com> <4FABCECC.30709@01019freenet.de>
-In-Reply-To: <4FABCECC.30709@01019freenet.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/12 16:21, Andreas Hartmann wrote:
-> Hi Ivo,
-> 
-> Ivo Van Doorn wrote:
->> Hi,
->>
->> On Thu, May 10, 2012 at 12:55 PM, Andreas Hartmann
->> <andihartmann@01019freenet.de> wrote:
->>> Hello!
->>>
->>> Ivo Van Doorn schrieb:
->>>> Hi,
->>>>
->>>> On Thu, May 10, 2012 at 9:19 AM, Andreas Hartmann
->>>> <andihartmann@01019freenet.de> wrote:
->>>>> This patch adds support for 802.11w for rt2800. This is achieved by
->>>>> using the 802.11w implementation in mac80211.
->>>>>
->>>>> To get this working, it is necessary to disable hw encryption of
->>>>> rt2800pci / rt2800usb, because I don't know of any support in hardware
->>>>> for 802.11w and therefore let mac80211 do the whole job.
->>>>>
->>>>> The user can enable 802.11w with the new mod parameter enablemfp.
->>>>> Enabling MFP disables hw encryption.
->>>>>
->>>>> 802.11w is deactivated per default.
->>>>>
->>>>> Tested with rt2860 and rt3572.
->>>>>
->>>>> This is a workaround as long as there isn't hardware support implemented
->>>>> in the driver.
->>>>>
->>>>> Signed-off-by: Andreas Hartmann <andihartmann@01019freenet.de>
->>>>> ---
->>>>> diff -ur compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800lib.c compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800lib.c
->>>>> --- compat-wireless-2012-04-26.orig/drivers/net/wireless/rt2x00/rt2800lib.c     2012-04-26 22:10:30.000000000 +0200
->>>>> +++ compat-wireless-2012-04-26/drivers/net/wireless/rt2x00/rt2800lib.c  2012-05-09 11:37:48.463278177 +0200
->>>>> @@ -4519,6 +4519,15 @@
->>>>>            IEEE80211_HW_AMPDU_AGGREGATION |
->>>>>            IEEE80211_HW_REPORTS_TX_ACK_STATUS;
->>>>>
->>>>> +       /*
->>>>> +        * Enable support for 802.11w in mac80211. hwencryption must be disabled
->>>>> +        */
->>>>> +       if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags) && rt2x00dev->mfprequested) {
->>>>> +               INFO(rt2x00dev, "802.11w support (MFP) enabled.\n");
->>>>> +               rt2x00dev->hw->flags |=
->>>>> +                       IEEE80211_HW_MFP_CAPABLE;
->>>>> +       }
->>>>
->>>> Can't the whole patch be simplified into
->>>>
->>>> if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags)) {
->>>>                INFO(rt2x00dev, "802.11w support (MFP) enabled.\n");
->>>>                rt2x00dev->hw->flags |=
->>>>                        IEEE80211_HW_MFP_CAPABLE;
->>>> }
->>>
->>> This would surely be possible, but it wouldn't be possible any more to
->>> run the driver w/o MFP support as long as hw encryption is disabled.
->>>
->>> Additionally, I would like to have an additional comment added to
->>> nohwcrypt, which mentions, that activating nohwcrypt enables MFP, like:
->>> "Disable hardware encryption, enable MFP." to let the user know, how to
->>> enable MFP.
->>
->> I am wondering what the usecase would be for having an option to disable MFP?
->> Isn't that a feature which technically should be enabled by default and in the
->> userspace you have the configuration to use it or not?
-> 
-> It's the same idea as behind the nohwcrypt switch. If there are problems
-> with the feature in a special case, you have the possibility to disable it.
-> My understanding of nohwcrypt is to have a fallback mode, which I didn't
-> want to touch. That's all.
-> 
+Use smaller aggregation limit and increasing aggregation threshold
+for osla that could improve wlan performance when there is HID profile.
 
-The difference here is that nohwcrypt has no userspace choice to use it,
-MFP does have that. Therefore I do not believe there is a need to also
-be able to enable/disable it at the module level.
-
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
-Gertjan
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    3 --
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 -
+ drivers/net/wireless/ath/ath9k/mci.c        |   54 +++++++++++++++++----------
+ 3 files changed, 35 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index e31461b..00cd531 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1381,9 +1381,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 	case MCI_STATE_NEED_FTP_STOMP:
+ 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
+ 		break;
+-	case MCI_STATE_NEED_TUNING:
+-		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_TUNING);
+-		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index f4a6a44..10282e2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -212,7 +212,6 @@ enum mci_state_type {
+ 	MCI_STATE_SET_CONCUR_TX_PRI,
+ 	MCI_STATE_RECOVER_RX,
+ 	MCI_STATE_NEED_FTP_STOMP,
+-	MCI_STATE_NEED_TUNING,
+ 	MCI_STATE_DEBUG,
+ 	MCI_STATE_MAX
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 7b553f6..49137f4 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -116,42 +116,58 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 	struct ath_mci_profile *mci = &btcoex->mci;
++	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
+ 	struct ath_mci_profile_info *info;
+ 	u32 num_profile = NUM_PROF(mci);
+ 
++	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
++		goto skip_tuning;
++
+ 	if (num_profile == 1) {
+ 		info = list_first_entry(&mci->info,
+ 					struct ath_mci_profile_info,
+ 					list);
+-		if (mci->num_sco && info->T == 12) {
+-			mci->aggr_limit = 8;
++		if (mci->num_sco) {
++			if (info->T == 12)
++				mci->aggr_limit = 8;
++			else if (info->T == 6) {
++				mci->aggr_limit = 6;
++				btcoex->duty_cycle = 30;
++			}
+ 			ath_dbg(common, MCI,
+-				"Single SCO, aggregation limit 2 ms\n");
+-		} else if ((info->type == MCI_GPM_COEX_PROFILE_BNEP) &&
+-			   !info->master) {
+-			btcoex->btcoex_period = 60;
++				"Single SCO, aggregation limit %d 1/4 ms\n",
++				mci->aggr_limit);
++		} else if (mci->num_pan || mci->num_other_acl) {
++			/*
++			 * For single PAN/FTP profile, allocate 35% for BT
++			 * to improve WLAN throughput.
++			 */
++			btcoex->duty_cycle = 35;
++			btcoex->btcoex_period = 53;
+ 			ath_dbg(common, MCI,
+-				"Single slave PAN/FTP, bt period 60 ms\n");
+-		} else if ((info->type == MCI_GPM_COEX_PROFILE_HID) &&
+-			 (info->T > 0 && info->T < 50) &&
+-			 (info->A > 1 || info->W > 1)) {
++				"Single PAN/FTP bt period %d ms dutycycle %d\n",
++				btcoex->duty_cycle, btcoex->btcoex_period);
++		} else if (mci->num_hid) {
+ 			btcoex->duty_cycle = 30;
+-			mci->aggr_limit = 8;
++			mci->aggr_limit = 6;
+ 			ath_dbg(common, MCI,
+ 				"Multiple attempt/timeout single HID "
+-				"aggregation limit 2 ms dutycycle 30%%\n");
++				"aggregation limit 1.5 ms dutycycle 30%%\n");
+ 		}
+-	} else if ((num_profile == 2) && (mci->num_hid == 2)) {
+-		btcoex->duty_cycle = 30;
+-		mci->aggr_limit = 8;
+-		ath_dbg(common, MCI,
+-			"Two HIDs aggregation limit 2 ms dutycycle 30%%\n");
+-	} else if (num_profile > 3) {
++	} else if (num_profile == 2) {
++		if (mci->num_hid == 2)
++			btcoex->duty_cycle = 30;
+ 		mci->aggr_limit = 6;
+ 		ath_dbg(common, MCI,
+-			"Three or more profiles aggregation limit 1.5 ms\n");
++			"Two BT profiles aggr limit 1.5 ms dutycycle %d%%\n",
++			btcoex->duty_cycle);
++	} else if (num_profile >= 3) {
++		mci->aggr_limit = 4;
++		ath_dbg(common, MCI,
++			"Three or more profiles aggregation limit 1 ms\n");
+ 	}
+ 
++skip_tuning:
+ 	if (IS_CHAN_2GHZ(sc->sc_ah->curchan)) {
+ 		if (IS_CHAN_HT(sc->sc_ah->curchan))
+ 			ath_mci_adjust_aggr_limit(btcoex);
+-- 
+1.7.10.2
+
