@@ -1,81 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:56180 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751377Ab2ECFMv (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33422 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933560Ab2EROHk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 01:12:51 -0400
-Message-ID: <4FA213D1.9030506@gtri.gatech.edu> (sfid-20120503_071254_219549_D93C580C)
-Date: Thu, 3 May 2012 01:12:49 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+	Fri, 18 May 2012 10:07:40 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 08/10] ath: do not update cycle counters with sleep mode results
+Date: Fri, 18 May 2012 19:37:31 +0530
+Message-ID: <1337350053-15491-8-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160743_875228_A5B1BD75)
+In-Reply-To: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-CC: <Larry.Finger@lwfinger.net>
-Subject: [PATCH 6/9] rtlwifi: add short circuit in the receive path
-References: <4FA212D9.5020602@gtri.gatech.edu>
-In-Reply-To: <4FA212D9.5020602@gtri.gatech.edu>
-Content-Type: multipart/mixed;
-	boundary="------------060401080204030606050906"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------060401080204030606050906
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+When the chip is waking up from sleep state, the cycle counters
+might have incorrect readings. So it is better not to update those
+readings with software counters.
 
-
-
---------------060401080204030606050906
-Content-Type: text/x-patch;
-	name="0006-rtlwifi-add-short-circuit-in-the-receive-path.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="0006-rtlwifi-add-short-circuit-in-the-receive-path.patch"
-
->From 78b5e60d9797583172d3e1f755a9f354b5a20759 Mon Sep 17 00:00:00 2001
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Date: Thu, 3 May 2012 00:16:39 -0400
-Subject: [PATCH 6/9] rtlwifi: add short circuit in the receive path
-
-Allow things like C2H events without any actual 802.11 data to avoid
-the rest of the receive path.
-
-Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/usb.c |   12 ++++++++++--
- 1 files changed, 10 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 88dbef0..00e90bc 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -440,7 +440,11 @@ static void _rtl_usb_rx_process_agg(struct ieee80211_hw *hw,
- 	};
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3f79923..66ea3df 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -101,6 +101,7 @@ void ath9k_ps_wakeup(struct ath_softc *sc)
+ 		spin_lock(&common->cc_lock);
+ 		ath_hw_cycle_counters_update(common);
+ 		memset(&common->cc_survey, 0, sizeof(common->cc_survey));
++		memset(&common->cc_ani, 0, sizeof(common->cc_ani));
+ 		spin_unlock(&common->cc_lock);
+ 	}
  
- 	skb_pull(skb, RTL_RX_DESC_SIZE);
--	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
-+	if (!rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc,
-+	    skb)) {
-+		dev_kfree_skb_any(skb);
-+		return;
-+	}
- 	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
- 	hdr = (struct ieee80211_hdr *)(skb->data);
- 	fc = hdr->frame_control;
-@@ -483,7 +487,11 @@ static void _rtl_usb_rx_process_noagg(struct ieee80211_hw *hw,
- 	};
- 
- 	skb_pull(skb, RTL_RX_DESC_SIZE);
--	rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc, skb);
-+	if (!rtlpriv->cfg->ops->query_rx_desc(hw, &stats, &rx_status, rxdesc,
-+	    skb)) {
-+		dev_kfree_skb_any(skb);
-+		return;
-+	}
- 	skb_pull(skb, (stats.rx_drvinfo_size + stats.rx_bufshift));
- 	hdr = (struct ieee80211_hdr *)(skb->data);
- 	fc = hdr->frame_control;
 -- 
-1.7.7.6
+1.7.10.2
 
-
---------------060401080204030606050906--
