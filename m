@@ -1,54 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59314 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306Ab2EVHW7 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33324 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933560Ab2EROG4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 03:22:59 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 1/2] ath6kl: Update netstats for some of the tx failrues in ath6kl_data_tx()
-Date: Tue, 22 May 2012 12:52:49 +0530
-Message-ID: <1337671370-32519-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120522_092305_138370_2387F64D)
-In-Reply-To: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Fri, 18 May 2012 10:06:56 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 03/10] ath9k_hw: fix IQ calibration chain index
+Date: Fri, 18 May 2012 19:37:26 +0530
+Message-ID: <1337350053-15491-3-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120518_160659_523793_A2E0290A)
+In-Reply-To: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1337350053-15491-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are few cases where the tx skb is dropped but netstats is
-not updated, fix this.
+The chain index to perform IQ calibration is counted to number of valid
+tx chains and then used for indexing chain specific registers. If the
+chainmask is set to 0x2 (i.e chain 1 only), still it accesses chain 0
+registers for chain 1. So use real chain index instead sequential one.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/txrx.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 82f2f5c..67206ae 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -362,15 +362,11 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 		   skb, skb->data, skb->len);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index f83a4a2..d7deb8c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -653,7 +653,6 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
+ }
  
- 	/* If target is not associated */
--	if (!test_bit(CONNECTED, &vif->flags)) {
--		dev_kfree_skb(skb);
--		return 0;
+ static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
+-						 u8 num_chains,
+ 						 struct coeff *coeff,
+ 						 bool is_reusable)
+ {
+@@ -677,7 +676,9 @@ static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
+ 	}
+ 
+ 	/* Load the average of 2 passes */
+-	for (i = 0; i < num_chains; i++) {
++	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++		if (!(ah->txchainmask & (1 << i)))
++			continue;
+ 		nmeasurement = REG_READ_FIELD(ah,
+ 				AR_PHY_TX_IQCAL_STATUS_B0,
+ 				AR_PHY_CALIBRATED_GAINS_0);
+@@ -767,16 +768,13 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
+ 	};
+ 	struct coeff coeff;
+ 	s32 iq_res[6];
+-	u8 num_chains = 0;
+ 	int i, im, j;
+ 	int nmeasurement;
+ 
+ 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+-		if (ah->txchainmask & (1 << i))
+-			num_chains++;
 -	}
-+	if (!test_bit(CONNECTED, &vif->flags))
-+		goto fail_tx;
++		if (!(ah->txchainmask & (1 << i)))
++			continue;
  
--	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON)) {
--		dev_kfree_skb(skb);
--		return 0;
--	}
-+	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON))
-+		goto fail_tx;
+-	for (i = 0; i < num_chains; i++) {
+ 		nmeasurement = REG_READ_FIELD(ah,
+ 				AR_PHY_TX_IQCAL_STATUS_B0,
+ 				AR_PHY_CALIBRATED_GAINS_0);
+@@ -839,8 +837,7 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
+ 				coeff.phs_coeff[i][im] -= 128;
+ 		}
+ 	}
+-	ar9003_hw_tx_iqcal_load_avg_2_passes(ah, num_chains,
+-					     &coeff, is_reusable);
++	ar9003_hw_tx_iqcal_load_avg_2_passes(ah, &coeff, is_reusable);
  
- 	if (!test_bit(WMI_READY, &ar->flag))
- 		goto fail_tx;
+ 	return;
+ 
 -- 
-1.7.0.4
+1.7.10.2
 
