@@ -1,41 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-02.mandic.com.br ([200.225.81.133]:47524 "EHLO
-	smtp-02.mandic.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751350Ab2EaKnO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49371 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966420Ab2ERSFx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 06:43:14 -0400
-Message-ID: <4FC74B3C.1090501@cesarb.net> (sfid-20120531_124317_511101_2DAF7AC9)
-Date: Thu, 31 May 2012 07:43:08 -0300
-From: Cesar Eduardo Barros <cesarb@cesarb.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Subject: Re: iwlwifi: GF was set with SGI:SISO
-References: <4FC17BA8.2050606@cesarb.net>  (sfid-20120527_030308_122290_604E4002) <1338450650.4531.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1338450650.4531.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 18 May 2012 14:05:53 -0400
+Message-ID: <1337364344.4802.15.camel@jlt3.sipsolutions.net> (sfid-20120518_200615_455431_883247F8)
+Subject: RE: Possible regression regarding multiple WLAN_EID_AP_CHAN_REPORT
+ in beacon frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Drews, Paul" <paul.drews@intel.com>
+Cc: Paul Stewart <pstew@chromium.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 18 May 2012 20:05:44 +0200
+In-Reply-To: <6008DE3C35C7C04D85C2A4C813D36515481E5C76@ORSMSX101.amr.corp.intel.com>
+References: <6008DE3C35C7C04D85C2A4C813D36515481E4C99@ORSMSX101.amr.corp.intel.com>
+	 <1337033085.4303.32.camel@jlt3.sipsolutions.net>
+	 <CAMcMvsiZzjxPucyDLW-farQR4mfGECu6_yYfgNao-zi-faK2Gw@mail.gmail.com>
+	 <1337033976.4303.33.camel@jlt3.sipsolutions.net>
+	 <6008DE3C35C7C04D85C2A4C813D36515481E4EDF@ORSMSX101.amr.corp.intel.com>
+	 <1337093429.15553.2.camel@jlt3.sipsolutions.net>
+	 <6008DE3C35C7C04D85C2A4C813D36515481E564D@ORSMSX101.amr.corp.intel.com>
+	 <1337239289.4524.11.camel@jlt3.sipsolutions.net>
+	 <CAMcMvsgWPuL9cOihOF_wynhYGNTQ8i0bbkg1MC5MAGiYYrKgLQ@mail.gmail.com>
+	 <6008DE3C35C7C04D85C2A4C813D36515481E583A@ORSMSX101.amr.corp.intel.com>
+	 <1337284215.4687.4.camel@jlt3.sipsolutions.net>
+	 <6008DE3C35C7C04D85C2A4C813D36515481E5C76@ORSMSX101.amr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em 31-05-2012 04:50, Johannes Berg escreveu:
-> On Sat, 2012-05-26 at 21:56 -0300, Cesar Eduardo Barros wrote:
->> I have twice now seen a problem with iwlwifi where rate control gets
->> "stuck" (the tx bitrate as shown by "iw dev wlan0 link" does not change
->> anymore), while spamming the kernel log with "iwlwifi 0000:03:00.0: GF
->> was set with SGI:SISO".
->>
->> What I believe is happening is the following scenario:
-> [...]
->
-> Unfortunately, I don't have any idea right away right now what's going
-> on. Would you file a bug on bugzilla.intellinuxwireless.org so we can
-> track it and help you better? We may want to reproduce it and/or ask you
-> to collect some tracing information and it's easier to collect all that
-> in a bug report.
+On Fri, 2012-05-18 at 17:31 +0000, Drews, Paul wrote:
 
-Filed as http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2361.
+> Ok, I have a version of the patch that I'm happy with at this point.
+> () Builds with no errors or warning and works on 3.4-rc7
+> () Passes checkpatch.pl
+> () Does static-initialization of the bitmap in a way that lets the
+>     author specify the values in any old order.  One incremental
+>     line of source-code per value.  Pretty easy to maintain the
+>     list of values.
+> () Relies on constant-folding to keep the bitmap initialization compact
+>     without extra footprint in code-section or data-section.  This
+>     all works with shift operators instead of (shudder) bitfield operators
+>     I originally thought I would have to use.
+> () Uses the standard bitops, no need to roll-your-own
+> () Is 32-bit and 64-bit compatible with one #ifdef in the
+>     "boiler-plate" section of the code.  I don't see a way around
+>    this #ifdef
 
--- 
-Cesar Eduardo Barros
-cesarb@cesarb.net
-cesar.barros@gmail.com
+Wow, that's pretty impressive :-) I gave up way earlier I guess.
+
+> +#define ALL_MASKS(idx) ( \
+> +	CONDITIONAL_MASK(WLAN_EID_SSID, idx) | \
+
+> +#define CONDITIONAL_MASK(ordinal, idx) \
+> +	((BIT_WORD(ordinal) == idx) ?  BIT_MASK(ordinal) : 0)
+
+...
+
+> +#if BITS_PER_LONG == 32
+> +static DECLARE_BITMAP(singleton_map, 256) = {
+> +	[0] = ALL_MASKS(0),
+> +	[1] = ALL_MASKS(1),
+> +	[2] = ALL_MASKS(2),
+> +	[3] = ALL_MASKS(3),
+> +	[4] = ALL_MASKS(4),
+> +	[5] = ALL_MASKS(5),
+> +	[6] = ALL_MASKS(6),
+> +	[7] = ALL_MASKS(7),
+> +};
+> +#elif BITS_PER_LONG == 64
+> +static DECLARE_BITMAP(singleton_map, 256) = {
+> +	[0] = ALL_MASKS(0),
+> +	[1] = ALL_MASKS(1),
+> +	[2] = ALL_MASKS(2),
+> +	[3] = ALL_MASKS(3),
+> +};
+> +#else
+> +#error "adjust your <asm/bitsperlong.h> defines"
+> +#endif
+
+And we don't even need to touch this directly, nice!
+
+johannes
+
