@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61669 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905Ab2EZL3h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2012 07:29:37 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:43813 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965342Ab2ERMDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2012 08:03:18 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [RFC] initial channel context implementation
+Date: Fri, 18 May 2012 14:03:03 +0200
+Message-ID: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com> (sfid-20120518_140328_262607_E2FB6604)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20416.48743.815578.238107@gargle.gargle.HOWL> (sfid-20120526_133015_202714_1AAAE8FF)
-Date: Sat, 26 May 2012 16:58:39 +0530
-To: Josef Semler <josef.semler@gmail.com>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	Ben Greear <greearb@candelatech.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
-In-Reply-To: <CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com>
-References: <4FC04B5A.1070900@candelatech.com>
-	<20416.19680.571601.549629@gargle.gargle.HOWL>
-	<7759D07D-C2C8-48D8-8F44-687C7E85D188@gmail.com>
-	<20416.35246.76971.129331@gargle.gargle.HOWL>
-	<CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Josef Semler wrote:
-> OK, tnx Sujith, but that brings me to my next question acc. 2x2 or 3x3 on
-> OpenWRT-based devices like NanoStation M or AirBridge M.  Up to now only 1x2
-> or 1x3 was possible on this devices. Do we have changings there too?
+Hi Johannes,
 
-Hm, am not sure about these devices. But, the number of streams is determined
-based on the chip, and there is nothing that can be done to increase it. If
-you have access, load the driver with the parameter 'debug=0x200' and check
-dmesg - this should show the number of TX/RX streams.
+I've done some work on channel contexts. It's based on your recently
+posted patches (set_channel, join_mesh, etc). This is course for
+multi-channel operation.
 
-Sujith
+This isn't ready/complete yet. Channel selection is unsafe because the
+for() shouldn't be limited to the IEEE80211_MAX_CHANNEL_CONTEXTS. It
+should be limited by the maximum number of different channels for a
+matching interface combination during runtime.
+
+This however seems to be a bit tricky right now. I've looked at your
+cfg80211-enforce-beacon_int_infra_match.patch but the
+cfg80211_find_current_combination ignores the fact that an interface
+may be up and running without a channel contexts being bound (i.e.
+without an association whatsoever). For this to work we need to know
+whether a given interface is really running/operational for tx.
+
+I've thought about using netif_carrier_on/off for this purpose but
+I'm not sure whether we can use it for our purpose. Other idea is to
+create a new function that would be able to tell us whether an
+interface is using a channel. But what would that be based on? Can we
+check that easily for all interface types (monitor)?
+
+My current idea is to make channel contexts work alongside what we
+have today. Old drivers would remain to use current structures
+(oper_channel, hw.conf.channel, etc), new ones or the ones wanting to
+support multi-channel would switch to channel contexts.
+
+
+--
+Pozdrawiam / Best regards,
+Michal Kazior.
+
