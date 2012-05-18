@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16892 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753260Ab2E1Jx4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 05:53:56 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] rt2x00: claim RSN IBSS support
-Date: Mon, 28 May 2012 11:53:11 +0200
-Message-Id: <1338198791-21643-1-git-send-email-sgruszka@redhat.com> (sfid-20120528_115402_849814_F539ED5D)
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:33143 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030626Ab2ERCcj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 May 2012 22:32:39 -0400
+Received: by lahd3 with SMTP id d3so1766284lah.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 19:32:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FB5ADAB.5010206@Magitekindustries.com>
+References: <6x75xpmamff1htgn6m1n6t9l.1337272291919@email.android.com>
+ <CAGRGNgVnHwFH99xDn_OG93OerJRK8QzYacm-JwhxXjdmwCC2UA@mail.gmail.com> <4FB5ADAB.5010206@Magitekindustries.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 18 May 2012 12:32:17 +1000
+Message-ID: <CAGRGNgUc=bi9vOfukw_uBRH7TD=wYcFJ1yEPVLiFfAw8cK_-9g@mail.gmail.com> (sfid-20120518_043243_005451_403119D9)
+Subject: Re: Intel 2200BG/Linux
+To: DC <DC@magitekindustries.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similar like other drivers, do not configure group keys to the hardware
-(on Ad-Hoc mode) to make IBSS RSN work.
+Hi,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |    2 ++
- drivers/net/wireless/rt2x00/rt2x00mac.c |   14 ++++++++++++--
- 2 files changed, 14 insertions(+), 2 deletions(-)
+On Fri, May 18, 2012 at 12:02 PM, DC <DC@magitekindustries.com> wrote:
+> I haven't been able to get the driver to load. The download on the site
+> doesn't work.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index e5404e5..a6b88bd 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -1161,6 +1161,8 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 		    BIT(NL80211_IFTYPE_MESH_POINT) |
- 		    BIT(NL80211_IFTYPE_WDS);
- 
-+	rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
-+
- 	/*
- 	 * Initialize work.
- 	 */
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index b49773e..ef8b984 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -507,9 +507,19 @@ int rt2x00mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
- 		return 0;
--	else if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags))
-+
-+	if (!test_bit(CAPABILITY_HW_CRYPTO, &rt2x00dev->cap_flags))
-+		return -EOPNOTSUPP;
-+
-+	/*
-+	 * To support IBSS RSN, don't program group keys in IBSS, the
-+	 * hardware will then not attempt to decrypt the frames.
-+	 */
-+	if (vif->type == NL80211_IFTYPE_ADHOC &&
-+	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
- 		return -EOPNOTSUPP;
--	else if (key->keylen > 32)
-+
-+	if (key->keylen > 32)
- 		return -ENOSPC;
- 
- 	memset(&crypto, 0, sizeof(crypto));
+Where are you downloading it from.
+
+The driver should already be installed in BackTrack 5.
+
+Could you please check the output of the lsmod command to see if the
+driver has been loaded?
+
+Then check the kernel logs using the dmesg command to see if there are
+any messages or errors about this driver. If the firmware is not
+available, it will complain about this in the kernel log.
+
+Without that information, we can't really help you.
+
+> The firmware should be installed on the card, because the card runs
+> perfectly on the windows side of the drive, but if it needs to be
+> installed on Linux, then no, it's likely not.
+
+The firmware for a device is generally built into windows drivers, and
+is always separate from the kernel part of Linux drivers. It is very
+rare that firmware is actually built into computer components, even if
+they need it.
+
+I would be surprised if BackTrack doesn't have a package called
+"firmware-ipw2x00" or something similar that contains the firmware.
+Install that package with a package manager or the software center and
+the firmware will be installed in the correct place to be loaded by
+the driver.
+
+> But again, the page has no download link.
+
+Which page?
+
+Thanks,
+
 -- 
-1.7.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
