@@ -1,54 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40877 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129Ab2EXEEI (ORCPT
+Received: from oproxy5-pub.bluehost.com ([67.222.38.55]:41795 "HELO
+	oproxy5-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758222Ab2ERWnQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 00:04:08 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Fri, 18 May 2012 18:43:16 -0400
+Date: Fri, 18 May 2012 18:29:18 -0400
+Subject: Re: Intel 2200BG/Linux
+Message-ID: <dbxgdp08gmmvuwimst0weboh.1337380158309@email.android.com> (sfid-20120519_004320_553005_21B59194)
+From: D <dc@magitekindustries.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45815.951093.199200@gargle.gargle.HOWL> (sfid-20120524_060412_244956_501CD8FE)
-Date: Thu, 24 May 2012 09:33:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 12/22] ath9k_hw: update ar9462 initval table to fix rx
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-
-The wrong ADC sample phase that happen between awake and
-network/full sleep will lead to improper rx noisefloor
-calibration.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index 1d6658e..a10ece0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -958,7 +958,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
- 	{0x0001604c, 0x2699e04f},
- 	{0x00016050, 0x6db6db6c},
- 	{0x00016058, 0x6c200000},
--	{0x00016080, 0x00040000},
-+	{0x00016080, 0x000c0000},
- 	{0x00016084, 0x9a68048c},
- 	{0x00016088, 0x54214514},
- 	{0x0001608c, 0x1203040b},
-@@ -981,7 +981,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
- 	{0x00016144, 0x02084080},
- 	{0x00016148, 0x000080c0},
- 	{0x00016280, 0x050a0001},
--	{0x00016284, 0x3d841400},
-+	{0x00016284, 0x3d841418},
- 	{0x00016288, 0x00000000},
- 	{0x0001628c, 0xe3000000},
- 	{0x00016290, 0xa1005080},
--- 
-1.7.10.2
+QXB0LWdldCBkaWRuJ3QgZmluZCBpdAoKSnVsaWFuIENhbGFieSA8anVsaWFuLmNhbGFieUBnbWFp
+bC5jb20+IHdyb3RlOgoKPkhpLAo+Cj5Zb3UgZHJvcHBlZCB0aGUgQ0NzIGFnYWluLgo+Cj5PbiBT
+YXQsIE1heSAxOSwgMjAxMiBhdCAxMjo1NyBBTSwgRCA8ZGNAbWFnaXRla2luZHVzdHJpZXMuY29t
+PiB3cm90ZToKPj4gQ29weWluZyB0aGUgZm9sZGVyIHRvIGxpYiBhbmQgbGliXGZpcm13YXJlIGRp
+ZG4ndCB3b3JrLiDCoGhvdyBkbyBJIEluc3RhbGwgdGhhdCBwYWNrYWdlPwo+Cj5Zb3Ugc2hvdWxk
+IGJlIGNvcHlpbmcgdGhlIGZpbGVzIG5vdCB0aGUgZm9sZGVyLgo+Cj5Vc2UgYSBwYWNrYWdlIG1h
+bmFnZXIgLSBzYXksIHN5bmFwdGljLCBzb2Z0d2FyZSBjZW50ZXIsIGFwdGl0dWRlLAo+YXB0LWdl
+dCBvciBzb21ldGhpbmcgZXF1aXZhbGVudC4KPgo+VGhhbmtzLAo+Cj4tLSAKPkp1bGlhbiBDYWxh
+YnkKPgo+RW1haWw6IGp1bGlhbi5jYWxhYnlAZ21haWwuY29tCj5Qcm9maWxlOiBodHRwOi8vd3d3
+Lmdvb2dsZS5jb20vcHJvZmlsZXMvanVsaWFuLmNhbGFieS8KPi5QbGFuOiBodHRwOi8vc2l0ZXMu
+Z29vZ2xlLmNvbS9zaXRlL2p1bGlhbmNhbGFieS8K
 
