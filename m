@@ -1,52 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog137.obsmtp.com ([74.125.149.18]:53756 "EHLO
-	na3sys009aog137.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752530Ab2EHLH2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 07:07:28 -0400
-Received: by obbwd18 with SMTP id wd18so4880158obb.28
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 04:07:25 -0700 (PDT)
-From: Yoni Divinsky <yoni.divinsky@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <arik@wizery.com>, <coelho@ti.com>
-Subject: [PATCH 1/4] wlcore: use psd_type indexing according to spec
-Date: Tue,  8 May 2012 14:02:11 +0300
-Message-Id: <1336474934-22069-1-git-send-email-yoni.divinsky@ti.com> (sfid-20120508_130731_999622_D9C1F923)
+Received: from mga01.intel.com ([192.55.52.88]:54307 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946775Ab2ERXKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2012 19:10:06 -0400
+Date: Fri, 18 May 2012 16:09:55 -0700
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+To: Tilman Schmidt <tilman@imap.cc>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	Hansjoerg Lipp <hjlipp@web.de>,
+	linux-bluetooth@vger.kernel.org,
+	gigaset307x-common@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
+Subject: Re: [RFC 13/13] USB: Disable hub-initiated LPM for comms devices.
+Message-ID: <20120518230955.GA4686@xanatos> (sfid-20120519_011044_352630_C07F37E2)
+References: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
+ <3c634afbbe15598cdcbf77bb9393d22ad4bfa373.1337203535.git.sarah.a.sharp@linux.intel.com>
+ <4FB53054.9070309@imap.cc>
+ <20120517173150.GE4967@xanatos>
+ <4FB6CF71.7080307@imap.cc>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FB6CF71.7080307@imap.cc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In ieee80211.h the uapsd bit mask is defined such that
-VO=BIT(0), VI=BIT(1), BK=BIT(2), BE=BIT(3).
-The firmware uses the indexing as defined in the ieee80211
-spec, meaning that VO=3, VI=2, BK=1, BE=0.
+On Sat, May 19, 2012 at 12:38:41AM +0200, Tilman Schmidt wrote:
+> Am 17.05.2012 19:31, schrieb Sarah Sharp:
+> > On Thu, May 17, 2012 at 07:07:32PM +0200, Tilman Schmidt wrote:
+> >>
+> >> I follow the argument for class drivers. But this patch also
+> >> modifies drivers for specific existing USB 2.0 only devices
+> >> which are unlikely to ever grow USB 3.0 support, such as the
+> >> Gigaset ISDN driver:
+> >>
+> >>>  drivers/isdn/gigaset/bas-gigaset.c            |    1 +
+> >>>  drivers/isdn/gigaset/usb-gigaset.c            |    1 +
+> > 
+> > Is there a particular reason why you think that driver is unlikely to
+> > ever get USB 3.0 support?
+> 
+> Actually, there is. :-)
+> - The USB devices driven by this driver aren't built anymore.
+> - Their USB interface design is quite, um, idiosyncratic, and it's
+>   pretty unlikely that anyone will reuse it. (At least I truly hope
+>   no one will.)
+> - Their successor models have completely different and incompatible
+>   USB interfaces which this driver is unable to handle.
 
-In AP mode when adding peer wlcore needs to convert
-the indexing accordingly.
+I see!
 
-Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
----
- drivers/net/wireless/ti/wlcore/cmd.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+> >> What is the interest of setting the disable_hub_initiated_lpm
+> >> flag for these?
+> > 
+> > It's partially to lay the foundation for anyone who wants to make a USB
+> > 3.0 communications driver in the future.  They're likely to start from
+> > some USB 2.0 class driver, and copy a lot of code.  If they notice that
+> > flag is set in all the USB communications class drivers, they're likely
+> > to set it as well.
+> 
+> You've got a point there.
+> 
+> > I'm not quite sure where the best place to provide documentation on the
+> > flag is.  I've added the kernel doc comments to the structure, but maybe
+> > it needs to be documented somewhere in Documentation/usb/?
+> 
+> Documentation/usb/power-management.txt would seem like a natural
+> place. Although it appears to limit itself to "suspending" in its
+> first paragraph, it does have a section "xHCI hardware link PM"
+> at the end already, added by Andiry Xu on 2011-09-23.
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 5b128a9..576c5bc 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -1346,9 +1346,12 @@ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 
- 	for (i = 0; i < NUM_ACCESS_CATEGORIES_COPY; i++)
- 		if (sta->wme && (sta->uapsd_queues & BIT(i)))
--			cmd->psd_type[i] = WL1271_PSD_UPSD_TRIGGER;
-+			cmd->psd_type[NUM_ACCESS_CATEGORIES_COPY-1-i] =
-+					WL1271_PSD_UPSD_TRIGGER;
- 		else
--			cmd->psd_type[i] = WL1271_PSD_LEGACY;
-+			cmd->psd_type[NUM_ACCESS_CATEGORIES_COPY-1-i] =
-+					WL1271_PSD_LEGACY;
-+
- 
- 	sta_rates = sta->supp_rates[wlvif->band];
- 	if (sta->ht_cap.ht_supported)
--- 
-1.7.0.4
+Ok, I'll send a separate patch to add documentation here, after the 3.5
+merge window.  (I just sent the pull request for the USB 3.0 LPM patches
+off to Greg.)
 
+> Hmmm, that section seems to suggest that LPM exists for USB2, too.
+> Perhaps I should reconsider my attitude towards your patch.
+
+The patchset doesn't change the USB 2.0 LPM behavior at all.  USB 2.0
+doesn't have hub initiated LPM, because that would mean changing
+existing USB 2.0 hub IP.  Only devices attached directly to the roothub
+will be able to do USB 2.0 LPM.  Also, devices have to specifically say
+they implement the USB 2.1 LPM extensions, so it's unlikely devices
+supported by your driver implement USB 2.0 LPM.
+
+Sarah Sharp
