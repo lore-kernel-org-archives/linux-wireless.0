@@ -1,274 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7548 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391Ab2EXDyQ (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:45297 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756283Ab2EREqp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 23:54:16 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45224.402377.689589@gargle.gargle.HOWL> (sfid-20120524_055420_886425_F8B0D423)
-Date: Thu, 24 May 2012 09:23:12 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 06/22] ath9k_hw: Cleanup power mode API
+	Fri, 18 May 2012 00:46:45 -0400
+Received: by wibhn6 with SMTP id hn6so2490194wib.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 21:46:44 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 0/5] TKIP/GEM support for 18xx
+Date: Fri, 18 May 2012 07:46:35 +0300
+Message-Id: <1337316400-23875-1-git-send-email-arik@wizery.com> (sfid-20120518_064649_476430_6AF4AF8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 'setChip' variable is unused, remove it and
-simplify the functions.
+TKIP extra padding is not required for 18xx cards. Turn this into a
+quirk for 12xx cards only.
+18xx cards must have their Tx spare-blocks updated before any vif can
+transmit GEM or TKIP encrypted packets. When spare blocks are updated,
+we must make sure no Tx frame reaches the FW. Otherwise our Tx block
+accounting will be out of sync.
+Introduce new internal Tx queue wake/stop APIs to allow us to safely
+stop the queues for multiple reasons (similar to mac80211). Use the
+new APIs to prevent all Tx during the change of spare blocks.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |  175 +++++++++++++++++------------------
- 1 file changed, 85 insertions(+), 90 deletions(-)
+Arik Nemtsov (5):
+  wlcore/wl12xx/wl18xx: introduce quirk to remove TKIP header space
+  wlcore/wl12xx/wl18xx: handle spare blocks spacial cases per arch
+  wlcore: add stop reason bitmap for waking/starting queues
+  wlcore: stop queues on Tx flush
+  wlcore/wl12xx/wl18xx: implement op_set_key per HW arch
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 175b340..53c5dea 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2001,39 +2001,38 @@ EXPORT_SYMBOL(ath9k_hw_reset);
-  * Notify Power Mgt is disabled in self-generated frames.
-  * If requested, force chip to sleep.
-  */
--static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
-+static void ath9k_set_power_sleep(struct ath_hw *ah)
- {
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
--	if (setChip) {
--		if (AR_SREV_9462(ah)) {
--			REG_WRITE(ah, AR_TIMER_MODE,
--				  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
--			REG_WRITE(ah, AR_NDP2_TIMER_MODE, REG_READ(ah,
--				  AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
--			REG_WRITE(ah, AR_SLP32_INC,
--				  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
--			/* xxx Required for WLAN only case ? */
--			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
--			udelay(100);
--		}
- 
--		/*
--		 * Clear the RTC force wake bit to allow the
--		 * mac to go to sleep.
--		 */
--		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
-+	if (AR_SREV_9462(ah)) {
-+		REG_WRITE(ah, AR_TIMER_MODE,
-+			  REG_READ(ah, AR_TIMER_MODE) & 0xFFFFFF00);
-+		REG_WRITE(ah, AR_NDP2_TIMER_MODE,
-+			  REG_READ(ah, AR_NDP2_TIMER_MODE) & 0xFFFFFF00);
-+		REG_WRITE(ah, AR_SLP32_INC,
-+			  REG_READ(ah, AR_SLP32_INC) & 0xFFF00000);
-+		/* xxx Required for WLAN only case ? */
-+		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
-+		udelay(100);
-+	}
- 
--		if (AR_SREV_9462(ah))
--			udelay(100);
-+	/*
-+	 * Clear the RTC force wake bit to allow the
-+	 * mac to go to sleep.
-+	 */
-+	REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN);
- 
--		if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
--			REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
-+	if (AR_SREV_9462(ah))
-+		udelay(100);
- 
--		/* Shutdown chip. Active low */
--		if (!AR_SREV_5416(ah) && !AR_SREV_9271(ah)) {
--			REG_CLR_BIT(ah, AR_RTC_RESET, AR_RTC_RESET_EN);
--			udelay(2);
--		}
-+	if (!AR_SREV_9100(ah) && !AR_SREV_9300_20_OR_LATER(ah))
-+		REG_WRITE(ah, AR_RC, AR_RC_AHB | AR_RC_HOSTIF);
-+
-+	/* Shutdown chip. Active low */
-+	if (!AR_SREV_5416(ah) && !AR_SREV_9271(ah)) {
-+		REG_CLR_BIT(ah, AR_RTC_RESET, AR_RTC_RESET_EN);
-+		udelay(2);
- 	}
- 
- 	/* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
-@@ -2046,44 +2045,42 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
-  * frames. If request, set power mode of chip to
-  * auto/normal.  Duration in units of 128us (1/8 TU).
-  */
--static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
-+static void ath9k_set_power_network_sleep(struct ath_hw *ah)
- {
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	u32 val;
- 
- 	REG_SET_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
--	if (setChip) {
--		struct ath9k_hw_capabilities *pCap = &ah->caps;
- 
--		if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
--			/* Set WakeOnInterrupt bit; clear ForceWake bit */
--			REG_WRITE(ah, AR_RTC_FORCE_WAKE,
--				  AR_RTC_FORCE_WAKE_ON_INT);
--		} else {
-+	if (!(pCap->hw_caps & ATH9K_HW_CAP_AUTOSLEEP)) {
-+		/* Set WakeOnInterrupt bit; clear ForceWake bit */
-+		REG_WRITE(ah, AR_RTC_FORCE_WAKE,
-+			  AR_RTC_FORCE_WAKE_ON_INT);
-+	} else {
- 
--			/* When chip goes into network sleep, it could be waken
--			 * up by MCI_INT interrupt caused by BT's HW messages
--			 * (LNA_xxx, CONT_xxx) which chould be in a very fast
--			 * rate (~100us). This will cause chip to leave and
--			 * re-enter network sleep mode frequently, which in
--			 * consequence will have WLAN MCI HW to generate lots of
--			 * SYS_WAKING and SYS_SLEEPING messages which will make
--			 * BT CPU to busy to process.
--			 */
--			if (AR_SREV_9462(ah)) {
--				val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
--					~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
--				REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
--			}
--			/*
--			 * Clear the RTC force wake bit to allow the
--			 * mac to go to sleep.
--			 */
--			REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
--				    AR_RTC_FORCE_WAKE_EN);
--
--			if (AR_SREV_9462(ah))
--				udelay(30);
-+		/* When chip goes into network sleep, it could be waken
-+		 * up by MCI_INT interrupt caused by BT's HW messages
-+		 * (LNA_xxx, CONT_xxx) which chould be in a very fast
-+		 * rate (~100us). This will cause chip to leave and
-+		 * re-enter network sleep mode frequently, which in
-+		 * consequence will have WLAN MCI HW to generate lots of
-+		 * SYS_WAKING and SYS_SLEEPING messages which will make
-+		 * BT CPU to busy to process.
-+		 */
-+		if (AR_SREV_9462(ah)) {
-+			val = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_EN) &
-+				~AR_MCI_INTERRUPT_RX_HW_MSG_MASK;
-+			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, val);
- 		}
-+		/*
-+		 * Clear the RTC force wake bit to allow the
-+		 * mac to go to sleep.
-+		 */
-+		REG_CLR_BIT(ah, AR_RTC_FORCE_WAKE,
-+			    AR_RTC_FORCE_WAKE_EN);
-+
-+		if (AR_SREV_9462(ah))
-+			udelay(30);
- 	}
- 
- 	/* Clear Bit 14 of AR_WA after putting chip into Net Sleep mode. */
-@@ -2091,7 +2088,7 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
- 		REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
- }
- 
--static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
-+static bool ath9k_hw_set_power_awake(struct ath_hw *ah)
- {
- 	u32 val;
- 	int i;
-@@ -2102,37 +2099,35 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
- 		udelay(10);
- 	}
- 
--	if (setChip) {
--		if ((REG_READ(ah, AR_RTC_STATUS) &
--		     AR_RTC_STATUS_M) == AR_RTC_STATUS_SHUTDOWN) {
--			if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
--				return false;
--			}
--			if (!AR_SREV_9300_20_OR_LATER(ah))
--				ath9k_hw_init_pll(ah, NULL);
-+	if ((REG_READ(ah, AR_RTC_STATUS) &
-+	     AR_RTC_STATUS_M) == AR_RTC_STATUS_SHUTDOWN) {
-+		if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON)) {
-+			return false;
- 		}
--		if (AR_SREV_9100(ah))
--			REG_SET_BIT(ah, AR_RTC_RESET,
--				    AR_RTC_RESET_EN);
-+		if (!AR_SREV_9300_20_OR_LATER(ah))
-+			ath9k_hw_init_pll(ah, NULL);
-+	}
-+	if (AR_SREV_9100(ah))
-+		REG_SET_BIT(ah, AR_RTC_RESET,
-+			    AR_RTC_RESET_EN);
- 
-+	REG_SET_BIT(ah, AR_RTC_FORCE_WAKE,
-+		    AR_RTC_FORCE_WAKE_EN);
-+	udelay(50);
-+
-+	for (i = POWER_UP_TIME / 50; i > 0; i--) {
-+		val = REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M;
-+		if (val == AR_RTC_STATUS_ON)
-+			break;
-+		udelay(50);
- 		REG_SET_BIT(ah, AR_RTC_FORCE_WAKE,
- 			    AR_RTC_FORCE_WAKE_EN);
--		udelay(50);
--
--		for (i = POWER_UP_TIME / 50; i > 0; i--) {
--			val = REG_READ(ah, AR_RTC_STATUS) & AR_RTC_STATUS_M;
--			if (val == AR_RTC_STATUS_ON)
--				break;
--			udelay(50);
--			REG_SET_BIT(ah, AR_RTC_FORCE_WAKE,
--				    AR_RTC_FORCE_WAKE_EN);
--		}
--		if (i == 0) {
--			ath_err(ath9k_hw_common(ah),
--				"Failed to wakeup in %uus\n",
--				POWER_UP_TIME / 20);
--			return false;
--		}
-+	}
-+	if (i == 0) {
-+		ath_err(ath9k_hw_common(ah),
-+			"Failed to wakeup in %uus\n",
-+			POWER_UP_TIME / 20);
-+		return false;
- 	}
- 
- 	REG_CLR_BIT(ah, AR_STA_ID1, AR_STA_ID1_PWR_SAV);
-@@ -2143,7 +2138,7 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
- bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
--	int status = true, setChip = true;
-+	int status = true;
- 	static const char *modes[] = {
- 		"AWAKE",
- 		"FULL-SLEEP",
-@@ -2159,17 +2154,17 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 
- 	switch (mode) {
- 	case ATH9K_PM_AWAKE:
--		status = ath9k_hw_set_power_awake(ah, setChip);
-+		status = ath9k_hw_set_power_awake(ah);
- 		break;
- 	case ATH9K_PM_FULL_SLEEP:
- 		if (ath9k_hw_mci_is_enabled(ah))
- 			ar9003_mci_set_full_sleep(ah);
- 
--		ath9k_set_power_sleep(ah, setChip);
-+		ath9k_set_power_sleep(ah);
- 		ah->chip_fullsleep = true;
- 		break;
- 	case ATH9K_PM_NETWORK_SLEEP:
--		ath9k_set_power_network_sleep(ah, setChip);
-+		ath9k_set_power_network_sleep(ah);
- 		break;
- 	default:
- 		ath_err(common, "Unknown power mode %u\n", mode);
+ drivers/net/wireless/ti/wl12xx/main.c     |   27 ++++-
+ drivers/net/wireless/ti/wl18xx/acx.c      |    4 +
+ drivers/net/wireless/ti/wl18xx/main.c     |  101 ++++++++++++++++---
+ drivers/net/wireless/ti/wl18xx/tx.c       |    3 +-
+ drivers/net/wireless/ti/wl18xx/tx.h       |    3 +-
+ drivers/net/wireless/ti/wl18xx/wl18xx.h   |    3 +
+ drivers/net/wireless/ti/wlcore/cmd.c      |    5 +-
+ drivers/net/wireless/ti/wlcore/debugfs.c  |    1 -
+ drivers/net/wireless/ti/wlcore/hw_ops.h   |   21 ++++
+ drivers/net/wireless/ti/wlcore/main.c     |   55 ++++++-----
+ drivers/net/wireless/ti/wlcore/tx.c       |  152 ++++++++++++++++++++++++-----
+ drivers/net/wireless/ti/wlcore/tx.h       |   23 ++++-
+ drivers/net/wireless/ti/wlcore/wlcore.h   |   21 +++-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |    3 -
+ 14 files changed, 343 insertions(+), 79 deletions(-)
+
 -- 
-1.7.10.2
+1.7.9.5
 
