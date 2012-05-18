@@ -1,63 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:36555 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755580Ab2EGI6M convert rfc822-to-8bit (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:51204 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755125Ab2ERWiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 04:58:12 -0400
-Received: by yenm10 with SMTP id m10so3456260yen.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 01:58:11 -0700 (PDT)
+	Fri, 18 May 2012 18:38:46 -0400
+Message-ID: <4FB6CF71.7080307@imap.cc> (sfid-20120519_003856_814749_A1ABEE20)
+Date: Sat, 19 May 2012 00:38:41 +0200
+From: Tilman Schmidt <tilman@imap.cc>
 MIME-Version: 1.0
-In-Reply-To: <1336376603.4325.3.camel@jlt3.sipsolutions.net>
-References: <1336106215-7431-1-git-send-email-yeohchunyeow@gmail.com>
-	<1336376603.4325.3.camel@jlt3.sipsolutions.net>
-Date: Mon, 7 May 2012 16:58:11 +0800
-Message-ID: <CAEFj9857DWGCcnF20nKYEDb0_p1K_iYLR1F=oLNAx6NjwPQE9w@mail.gmail.com> (sfid-20120507_105816_074718_5AE6DC15)
-Subject: Re: [PATCH] fix the increment of unicast/multicast counters for
- forwarded PREQ
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+	Hansjoerg Lipp <hjlipp@web.de>,
+	linux-bluetooth@vger.kernel.org,
+	gigaset307x-common@lists.sourceforge.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
+Subject: Re: [RFC 13/13] USB: Disable hub-initiated LPM for comms devices.
+References: <cover.1337203535.git.sarah.a.sharp@linux.intel.com> <3c634afbbe15598cdcbf77bb9393d22ad4bfa373.1337203535.git.sarah.a.sharp@linux.intel.com> <4FB53054.9070309@imap.cc> <20120517173150.GE4967@xanatos>
+In-Reply-To: <20120517173150.GE4967@xanatos>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig64FD94716F5B226BF768211C"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig64FD94716F5B226BF768211C
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-If the destination address is not broadcast frame, the number of
-forwarded unicast frame is increased. And the other way round. Not
-correct?
-
-+		if (!is_multicast_ether_addr(da))
-+			ifmsh->mshstats.fwded_unicast++;
-+		else
-+			ifmsh->mshstats.fwded_mcast++;
-
-Regards,
-Chun-Yeow
-
-On Mon, May 7, 2012 at 3:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2012-05-04 at 12:36 +0800, Chun-Yeow Yeoh wrote:
->> Forwarded PREQ is either unicast or multicast. The appropriate counters
->> should be incremented accordingly.
+Am 17.05.2012 19:31, schrieb Sarah Sharp:
+> On Thu, May 17, 2012 at 07:07:32PM +0200, Tilman Schmidt wrote:
 >>
->> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
->> ---
->>  net/mac80211/mesh_hwmp.c |    5 ++++-
->>  1 files changed, 4 insertions(+), 1 deletions(-)
+>> I follow the argument for class drivers. But this patch also
+>> modifies drivers for specific existing USB 2.0 only devices
+>> which are unlikely to ever grow USB 3.0 support, such as the
+>> Gigaset ISDN driver:
 >>
->> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
->> index 503016f..f0695e5 100644
->> --- a/net/mac80211/mesh_hwmp.c
->> +++ b/net/mac80211/mesh_hwmp.c
->> @@ -603,7 +603,10 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
->>                               hopcount, ttl, cpu_to_le32(lifetime),
->>                               cpu_to_le32(metric), cpu_to_le32(preq_id),
->>                               sdata);
->> -             ifmsh->mshstats.fwded_mcast++;
->> +             if (da != broadcast_addr)
->
-> In addition to what Javier said. Err. Think about this comparison again.
->
-> johannes
->
+>>>  drivers/isdn/gigaset/bas-gigaset.c            |    1 +
+>>>  drivers/isdn/gigaset/usb-gigaset.c            |    1 +
+>=20
+> Is there a particular reason why you think that driver is unlikely to
+> ever get USB 3.0 support?
+
+Actually, there is. :-)
+- The USB devices driven by this driver aren't built anymore.
+- Their USB interface design is quite, um, idiosyncratic, and it's
+  pretty unlikely that anyone will reuse it. (At least I truly hope
+  no one will.)
+- Their successor models have completely different and incompatible
+  USB interfaces which this driver is unable to handle.
+
+>> What is the interest of setting the disable_hub_initiated_lpm
+>> flag for these?
+>=20
+> It's partially to lay the foundation for anyone who wants to make a USB=
+
+> 3.0 communications driver in the future.  They're likely to start from
+> some USB 2.0 class driver, and copy a lot of code.  If they notice that=
+
+> flag is set in all the USB communications class drivers, they're likely=
+
+> to set it as well.
+
+You've got a point there.
+
+> I'm not quite sure where the best place to provide documentation on the=
+
+> flag is.  I've added the kernel doc comments to the structure, but mayb=
+e
+> it needs to be documented somewhere in Documentation/usb/?
+
+Documentation/usb/power-management.txt would seem like a natural
+place. Although it appears to limit itself to "suspending" in its
+first paragraph, it does have a section "xHCI hardware link PM"
+at the end already, added by Andiry Xu on 2011-09-23.
+
+Hmmm, that section seems to suggest that LPM exists for USB2, too.
+Perhaps I should reconsider my attitude towards your patch.
+
+Thanks,
+Tilman
+
+--=20
+Tilman Schmidt                    E-Mail: tilman@imap.cc
+Bonn, Germany
+Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
+Unge=F6ffnet mindestens haltbar bis: (siehe R=FCckseite)
+
+
+--------------enig64FD94716F5B226BF768211C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk+2z3IACgkQQ3+did9BuFs/RgCfdQ3ASobaleTQ6niqoTvKtb/g
+1x8AnRvNqVATSpi6N3gcSrgLEfrQUtrn
+=QHD+
+-----END PGP SIGNATURE-----
+
+--------------enig64FD94716F5B226BF768211C--
