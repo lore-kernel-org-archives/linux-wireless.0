@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:55012 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753289Ab2EKFGz (ORCPT
+Received: from kvm.w1.fi ([128.177.28.162]:51481 "EHLO
+	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933560Ab2ERNjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 01:06:55 -0400
-Received: by lahg1 with SMTP id g1so1226864lah.2
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 22:06:52 -0700 (PDT)
-Message-ID: <1336712810.12189.146.camel@cumari.coelho.fi> (sfid-20120511_070658_856800_A12F71E4)
-Subject: Re: [PATCH] wlcore: wlcore should depend on MAC80211
-From: Luciano Coelho <coelho@ti.com>
-To: Sasha Levin <levinsasha928@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 11 May 2012 08:06:50 +0300
-In-Reply-To: <1336711194-26883-1-git-send-email-levinsasha928@gmail.com>
-References: <1336711194-26883-1-git-send-email-levinsasha928@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 18 May 2012 09:39:49 -0400
+Date: Fri, 18 May 2012 09:39:35 -0400
+From: Jouni Malinen <j@w1.fi>
+To: Amit SHAKYA <amit.shakya@stericsson.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless (linux-wireless@vger.kernel.org)"
+	<linux-wireless@vger.kernel.org>,
+	"Johannes Berg (johannes@sipsolutions.net)"
+	<johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Handle race condition in replay handling
+Message-ID: <20120518133935.GA13088@w1.fi> (sfid-20120518_153953_380001_17039993)
+References: <ECD438FDEF6BD742895E554C24725A4022946BBD16@EXDCVYMBSTM005.EQ1STM.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ECD438FDEF6BD742895E554C24725A4022946BBD16@EXDCVYMBSTM005.EQ1STM.local>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-05-11 at 06:39 +0200, Sasha Levin wrote:
-> wlcore can't be built if MAC80211 isn't set.
+On Thu, May 17, 2012 at 11:40:16AM +0200, Amit SHAKYA wrote:
+> Added fix for the issue where the Rx throughput use to get stuck,
+> with unicast key rotation feature enabled in the Cisco AP.
+> The issue is that due to race condition during EAPOL key
+> handshake and packet reception, the PN gets reset at MAC, while
+> it still receives previous PN range packets for a while from AP.
+
+How would that happen? I would assume the previous PN range is still
+used with the old key and as such, the PN updates should not be accepted
+for the new key.
+
+> At MAC, there is a memcpy of the PN from the received PN
+> and as a result the maintained PN is overwritten with the
+> previous PN sequence value after being reset at the time, new
+> key is plumbed by supplicant.
 > 
-> Signed-off-by: Sasha Levin <levinsasha928@gmail.com>
-> ---
+> As a result, when this change in sequence number happens, the
+> replay detection handling in MAC gets triggered, causing the
+> traffic to stops for some while till PN re-match, with the
+> one last updated at MAC.
+> 
+> The fix takes care of selectively updating the Rx PN during
+> this transition phase.
 
-Thanks for your patch, Sasha! But this change was already submitted and
-has been applied in the wl12xx.git tree.  I've sent a pull request with
-it already, but it hasn't been pulled into wireless-next and up.
+This sounds incorrect.. I don't really like the idea of adding the extra
+hack here and the additional memcmp() calls either.
 
-http://www.spinics.net/lists/linux-next/msg19910.html
-http://www.spinics.net/lists/linux-wireless/msg89583.html
+Would you be able to provide more detailed description on how the PN
+values are used based on the key (old/new) and how the PN value for the
+new key gets updated based on the old range?
 
 -- 
-Cheers,
-Luca.
-
+Jouni Malinen                                            PGP id EFC895FA
