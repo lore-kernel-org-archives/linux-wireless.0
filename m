@@ -1,62 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:34656 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364Ab2EXPS7 (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:43163 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760310Ab2ERHg7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 11:18:59 -0400
-Received: by pbbrp8 with SMTP id rp8so388713pbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2012 08:18:58 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] Fix the Problem of Unreachable Mesh Station when joining from one MBSS to another MBSS
-Date: Thu, 24 May 2012 23:14:24 +0800
-Message-Id: <1337872464-10924-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120524_171902_630259_FDBAB451)
+	Fri, 18 May 2012 03:36:59 -0400
+Date: Fri, 18 May 2012 10:36:47 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] NFC: potential integer overflow problem in check_crc()
+Message-ID: <20120518073647.GB4136@elgon.mountain> (sfid-20120518_093709_375396_327596A4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh station that joins an MBSS is reachable using mesh portal with 6 address frame
-by mesh stations from another MBSS if these two different MBSSes are bridged. However,
-if the mesh station later moves into the same MBSS of those mesh stations, it is unreachable
-by mesh stations in the MBSS due to the mpp_paths table is not deleted. A quick fix is
-to perform mesh_path_lookup, if it is available for the target destination, mpp_path_lookup
-is not performed. When the mesh station moves back to its original MBSS, the mesh_paths will
-be deleted once expired. So, it will be reachable using mpp_path_lookup again.
+If "buf[0]" is 255 then "len" gets set to 0.  The call to
+"crc_ccitt(0xffff, buf, len - 2);" casts the "len - 2" to a high
+positive number which is ugly.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- net/mac80211/tx.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d67d36f..f44cd9d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1740,7 +1740,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	__le16 fc;
- 	struct ieee80211_hdr hdr;
- 	struct ieee80211s_hdr mesh_hdr __maybe_unused;
--	struct mesh_path __maybe_unused *mppath = NULL;
-+	struct mesh_path __maybe_unused *mppath = NULL, *mpath = NULL;
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
- 	int nh_pos, h_pos;
-@@ -1806,8 +1806,11 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 			goto fail;
- 		}
- 		rcu_read_lock();
--		if (!is_multicast_ether_addr(skb->data))
--			mppath = mpp_path_lookup(skb->data, sdata);
-+		if (!is_multicast_ether_addr(skb->data)) {
-+			mpath = mesh_path_lookup(skb->data, sdata);
-+			if (!mpath)
-+				mppath = mpp_path_lookup(skb->data, sdata);
-+		}
+diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
+index 46f4a9f..281f18c 100644
+--- a/drivers/nfc/pn544_hci.c
++++ b/drivers/nfc/pn544_hci.c
+@@ -232,7 +232,7 @@ static int pn544_hci_i2c_write(struct i2c_client *client, u8 *buf, int len)
  
- 		/*
- 		 * Use address extension if it is a packet from
--- 
-1.7.0.4
-
+ static int check_crc(u8 *buf, int buflen)
+ {
+-	u8 len;
++	int len;
+ 	u16 crc;
+ 
+ 	len = buf[0] + 1;
