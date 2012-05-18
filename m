@@ -1,37 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:37924 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758363Ab2EYUJH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 16:09:07 -0400
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46069 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759247Ab2ERTNF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2012 15:13:05 -0400
+Message-ID: <4FB69F25.3040707@hauke-m.de> (sfid-20120518_211311_161428_664A3CC6)
+Date: Fri, 18 May 2012 21:12:37 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Fri, 25 May 2012 13:08:46 -0700
-Message-ID: <CAB=NE6Urc0LPLP87rH6sDRsaKxb8Mh9u+suWQff6X3T2mYWx1A@mail.gmail.com> (sfid-20120525_220929_806559_93302552)
-Subject: [ANN] QCA swiss army knife
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	qca-linux-team <qca-linux-team@qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: brcmsmac: use sprom from bcma
+References: <20120517191339.GA17018@elgon.mountain>
+In-Reply-To: <20120517191339.GA17018@elgon.mountain>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To help with simplifying placement of userspace tool development for
-QCA for our different drivers we have merged together a few public
-development repositories into one, a qca-swiss-army-knife:
+On 05/17/2012 09:13 PM, Dan Carpenter wrote:
+> Hello Hauke, Arend,
+> 
+> The patch 898d3c3b2462: "brcmsmac: use sprom from bcma" from Apr 29, 
+> 2012, leads to the following warning:
+> drivers/net/wireless/brcm80211/brcmsmac/channel.c:645 
+> brcms_c_country_valid()
+> 	 error: buffer overflow 'ccode' 2 <= 2
+> 
+> -       if (ccode && brcms_c_country_valid(ccode))
+> -               strncpy(wlc->pub->srom_ccode, ccode, BRCM_CNTRY_BUF_SZ - 1);
+> +       if (sprom->alpha2 && brcms_c_country_valid(sprom->alpha2))
+>                                                    ^^^^^^^^^^^^^
+> This is a two character array.  It's not NULL terminated.
+> 
+> +               strncpy(wlc->pub->srom_ccode, sprom->alpha2, sizeof(sprom->alpha2));
+> 
+> But in brcms_c_country_valid() we check for the NULL terminator.
+> 
+>    637  static bool brcms_c_country_valid(const char *ccode)
+>    638  {
+>    639          /*
+>    640           * only allow ascii alpha uppercase for the first 2
+>    641           * chars.
+>    642           */
+>    643          if (!((0x80 & ccode[0]) == 0 && ccode[0] >= 0x41 && ccode[0] <= 0x5A &&
+>    644                (0x80 & ccode[1]) == 0 && ccode[1] >= 0x41 && ccode[1] <= 0x5A &&
+>    645                ccode[2] == '\0'))
+>                       ^^^^^^^^^^^^^^^^
+> Here.
+> 
+>    646                  return false;
+> 
+> My guess is that this works because -> leddc_on_time is mostly zero.
+> 
+> regards,
+> dan carpenter
+> 
+Hi Dan,
 
-Code: git://github.com/mcgrof/qca-swiss-army-knife.git
-Wiki: https://github.com/mcgrof/qca-swiss-army-knife/wiki
+your guess is probably right, but I do not know want is the best
+solution to fix this. I set this to 2 byte as there are just two bytes
+memory for this in the sprom. In the nvram of some SoC I also found a 3
+letter code ccode=US2 and an other wrong two letter code ccode=Q2. What
+is the way we should handle this?
 
-Of most importance so far is the initval-tools [0], if you used to
-send patches for this utility please update your git tree to point to
-this new URL, a simple change in the name should let you git pull all
-the new changes, you will not have to reset your tree. The other tools
-that merged into this tree were  ath-utils and hal-reg-dump, so I've
-nuked the old trees from github.
+1. just read the first 2 bytes and ignore the rest -> change
+brcms_c_country_valid() and some SoC parsing code.
 
-If you have any question please let us know.
+2. read the first 2 bytes and reject longer codes as completely invalid
+(probably just found in nvram on SoCs) -> change brcms_c_country_valid()
 
-[0] http://wireless.kernel.org/en/users/Drivers/ath9k_hw/initvals-tool
+3. read 4 (or more) bytes and let brcmsmac decide what is a valid code
+-> change sprom struct and some more code
 
-  Luis
+I would vote for number 2.
+
+@Arend by the way how should the code EU or 0 be handled? It is used on
+all my recent SoCs.
+
+Hauke
