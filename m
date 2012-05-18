@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43935 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753416Ab2E2WkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 18:40:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 5/8] compat-wireless: add asm/unaligned.h include to ath6kl
-Date: Wed, 30 May 2012 00:39:39 +0200
-Message-Id: <1338331182-29589-6-git-send-email-hauke@hauke-m.de> (sfid-20120530_004027_640562_407DC450)
-In-Reply-To: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
-References: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:48441 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967348Ab2ERWq4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 May 2012 18:46:56 -0400
+Message-ID: <4FB6D15F.6020006@candelatech.com> (sfid-20120519_004704_154711_043D4D4B)
+Date: Fri, 18 May 2012 15:46:55 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: Kernel splat with debugging on 3.3.6+ kernel.
+References: <4FB697AB.10809@candelatech.com>
+In-Reply-To: <4FB697AB.10809@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some old kernel versions are missing this include and we get a compile
-error because of missing get_unaligned_le16() prototype.
+On 05/18/2012 11:40 AM, Ben Greear wrote:
+> This is a patched kernel, but nothing proprietary loaded.
+>
+> We're chasing a hard-to-reproduce bug that appears to be stale
+> memory access related to wifi stations.
+>
+> So, I enabled a bunch of debugging (memory debugging, lockdep, etc)
+> and this lockup occurs every time we try to load our
+> '400 station' test case.
+>
+> I'm going to poke at this some more, try some smaller test
+> cases and such, but if anyone has any other suggestions I'm interested!
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/06-header-changes.patch |   10 ++++++++++
- 1 file changed, 10 insertions(+)
+I think with the amount of mem debugging I have enabled,
+I just cannot use this many virtual stations.
 
-diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
-index db84468..d77e5fb 100644
---- a/patches/06-header-changes.patch
-+++ b/patches/06-header-changes.patch
-@@ -105,3 +105,13 @@ cases.
-  
-  #include "hidp.h"
-  
-+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+@@ -20,6 +20,7 @@
-+ #include <linux/moduleparam.h>
-+ #include <linux/inetdevice.h>
-+ #include <linux/export.h>
-++#include <asm/unaligned.h>
-+ 
-+ #include "core.h"
-+ #include "cfg80211.h"
+The problem goes away when we have "only" 100 or so virtual
+stations enabled...
+
+Thanks,
+Ben
+
 -- 
-1.7.9.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
