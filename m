@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:42523 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758872Ab2EONiy (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:44821 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755041Ab2EREvO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 09:38:54 -0400
-Received: by weyu7 with SMTP id u7so2485267wey.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 06:38:53 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 2/3] wlcore: increase WL1271_EVENT_TIMEOUT
-Date: Tue, 15 May 2012 16:38:45 +0300
-Message-Id: <1337089126-11570-2-git-send-email-arik@wizery.com> (sfid-20120515_153857_177223_5B791D8F)
-In-Reply-To: <1337089126-11570-1-git-send-email-arik@wizery.com>
-References: <1337089126-11570-1-git-send-email-arik@wizery.com>
+	Fri, 18 May 2012 00:51:14 -0400
+Received: by lbbgm6 with SMTP id gm6so1794891lbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 21:51:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <69fa4f807ccd8b754ec80307e60e8ab8.squirrel@magitekindustries.com>
+References: <6x75xpmamff1htgn6m1n6t9l.1337272291919@email.android.com>
+ <CAGRGNgVnHwFH99xDn_OG93OerJRK8QzYacm-JwhxXjdmwCC2UA@mail.gmail.com>
+ <4FB5ADAB.5010206@Magitekindustries.com> <CAGRGNgUc=bi9vOfukw_uBRH7TD=wYcFJ1yEPVLiFfAw8cK_-9g@mail.gmail.com>
+ <69fa4f807ccd8b754ec80307e60e8ab8.squirrel@magitekindustries.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 18 May 2012 14:50:52 +1000
+Message-ID: <CAGRGNgV2W3ui=UR759ZBAFisapzDuc13GkG5k2L055etG+NoHg@mail.gmail.com> (sfid-20120518_065117_592336_B3C2833D)
+Subject: Re: Intel 2200BG/Linux
+To: dc@magitekindustries.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Hi,
 
-In some cases, the ROC_COMPLETE event might exceed the
-current timeout (750 msec). Increase it to 1 sec.
+On Fri, May 18, 2012 at 2:35 PM,  <dc@magitekindustries.com> wrote:
+> [ 18.522100] ipw2200: Unable to load firmware: -2
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wlcore/cmd.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+You do not have the firmware installed.
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
-index 2aafe3d..85171f2 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.h
-+++ b/drivers/net/wireless/ti/wlcore/cmd.h
-@@ -192,7 +192,7 @@ enum cmd_templ {
- #define WL1271_COMMAND_TIMEOUT     2000
- #define WL1271_CMD_TEMPL_DFLT_SIZE 252
- #define WL1271_CMD_TEMPL_MAX_SIZE  512
--#define WL1271_EVENT_TIMEOUT       750
-+#define WL1271_EVENT_TIMEOUT       1000
- 
- struct wl1271_cmd_header {
- 	__le16 id;
+Your distro should have a package called "firmware-ipw2x00" that you
+can install. This package will set it all up automatically.
+
+Otherwise, unpacking the firmware to /lib/firmware should fix your problem.
+
+Thanks,
+
 -- 
-1.7.9.5
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
