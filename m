@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56913 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753061Ab2ECRct (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16838 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932596Ab2ESIn2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 13:32:49 -0400
-Date: Thu, 3 May 2012 13:28:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2012-05-03
-Message-ID: <20120503172829.GN9285@tuxdriver.com> (sfid-20120503_193256_240677_0E20CF86)
-References: <20120503152206.GL9285@tuxdriver.com>
- <20120503.130516.1008806127286088740.davem@davemloft.net>
- <20120503.131707.112550136096227430.davem@davemloft.net>
+	Sat, 19 May 2012 04:43:28 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 04/10] ath9k_hw: program BT to control SPDT
+Date: Sat, 19 May 2012 14:13:50 +0530
+Message-ID: <1337417036-1431-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120519_104355_695745_37FE8272)
+In-Reply-To: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120503.131707.112550136096227430.davem@davemloft.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 03, 2012 at 01:17:07PM -0400, David Miller wrote:
-> From: David Miller <davem@davemloft.net>
-> Date: Thu, 03 May 2012 13:05:16 -0400 (EDT)
-> 
-> > Pulled, thanks John.
-> 
-> Actually, I un-pulled.  The bluetooth guys are sending crap code
-> formatting again.
-> 
-> From 74e05692c9599866d5c8743764544cf77cd1af87 Mon Sep 17 00:00:00 2001
-> From: Andre Guedes <andre.guedes@openbossa.org>
-> Date: Tue, 6 Mar 2012 19:37:06 -0300
-> Subject: [PATCH 007/160] Bluetooth: Check FINDING state in interleaved
->  discovery
-> 
-> In order to do interleaved discovery we should be in DISCOVERY_
-> FINDING state. Otherwise, discovery should be stopped.
-> 
-> Signed-off-by: Andre Guedes <andre.guedes@openbossa.org>
-> Signed-off-by: Gustavo F. Padovan <padovan@profusion.mobi>
->  ...
-> -		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED) {
-> +		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED &&
-> +				hdev->discovery.state == DISCOVERY_FINDING) {
-> 
-> Really, we went through this a million times very recently and I'm
-> not pulling anything into my tree that has garbage like this in it.
-> 
-> Sorry.
+program BT to control SPDT everytime while loading switch table
+from eeprom.
 
-No, I'm sorry.  I thought we had this worked-out.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-John
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index ac53d90..4791976 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3613,6 +3613,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		value = ar9003_switch_com_spdt_get(ah, is2ghz);
+ 		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
+ 				AR_SWITCH_TABLE_COM_SPDT_ALL, value);
++		REG_SET_BIT(ah, AR_PHY_GLB_CONTROL, AR_BTCOEX_CTRL_SPDT_ENABLE);
+ 	}
+ 
+ 	value = ar9003_hw_ant_ctrl_common_2_get(ah, is2ghz);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.10.2
+
