@@ -1,68 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1466 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751494Ab2EISB6 convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40848 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964817Ab2ESIoX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 14:01:58 -0400
-Message-ID: <4FAAB0FE.601@broadcom.com> (sfid-20120509_200201_882591_9FB5A317)
-Date: Wed, 9 May 2012 20:01:34 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+	Sat, 19 May 2012 04:44:23 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 07/10] ath9k: BT coex performance tuning for AR9462
+Date: Sat, 19 May 2012 14:13:53 +0530
+Message-ID: <1337417036-1431-7-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120519_104428_035249_D6B2273D)
+In-Reply-To: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Seth Forshee" <seth.forshee@canonical.com>
-cc: "Jonathan Nieder" <jrnieder@gmail.com>,
-	=?UTF-8?B?Q2FtYWxlw7Nu?= <noelamac@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: brcmsmac still woes, possible regression?
-References: <20120328112657.GA6114@stt008.linux.site>
- <4F7302D9.8070009@broadcom.com>
- <CAKprTDHz0d=W1472KcHuD-Zda9dCUX+5nKfEX55UfiNBeQ7T2w@mail.gmail.com>
- <4F744DD8.8010004@broadcom.com>
- <20120329133835.GA5196@stt008.linux.site>
- <CAKprTDFxqYq7jMm3z19xEt4NBeN9FbcR0pez9BSjY6R8kZC5KA@mail.gmail.com>
- <20120402215005.GA13969@burratino> <4F7B179F.7070502@broadcom.com>
- <20120509094111.GA2333@burratino> <4FAA45AF.8050201@broadcom.com>
- <20120509174106.GA7189@ubuntu-mba>
-In-Reply-To: <20120509174106.GA7189@ubuntu-mba>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2012 07:41 PM, Seth Forshee wrote:
-> On Wed, May 09, 2012 at 12:23:43PM +0200, Arend van Spriel wrote:
->> On 05/09/2012 11:41 AM, Jonathan Nieder wrote:
->>> Hi Arend,
->>>
->>> Arend van Spriel wrote, about a month ago[1]:
->>>
->>>> I sent the patch to Camaleón to test it before sending out the
->>>> patch. So the answer it definitely no. I wanted to get it into rc1,
->>>> but we missed that.
->>>
->>> Any news?  If there's a patch that goes in the right direction with
->>> known problems I'd still be interested in it, among other reasons
->>> because it would make the bug more concrete and make it easier to
->>> think about possible fixes.
->>
->> Well, there is the short term fix, which is already upstream and moved
->> to stable. The long term fix for which Seth Forshee (Canonical) did a
->> great job is reviewed over here, but it involves regulatory related code
->> so it needs discussions with our compliance team and supervisor. So that
->> causes some lag time.
-> 
-> The patches I sent still relies on the transmit-after-beacon fix, as I
-> preserved the behavior of muting tx if the channel is passive scan. I
-> *think* this isn't actually necessary, but I'd have to investigate a
-> little further to be certain.
-> 
-> Seth
-> 
+Use smaller aggregation limit and increasing aggregation threshold
+for osla that could improve wlan performance when there is HID profile.
 
-As part of the discussion over here I am proposing to get rid of the tx
-muting in brcmsmac as mac80211 already has that behaviour for passive
-channels if I am not mistaken (is this true, Johannes?).
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    3 --
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 -
+ drivers/net/wireless/ath/ath9k/mci.c        |   54 +++++++++++++++++----------
+ 3 files changed, 35 insertions(+), 23 deletions(-)
 
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index e31461b..00cd531 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1381,9 +1381,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 	case MCI_STATE_NEED_FTP_STOMP:
+ 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
+ 		break;
+-	case MCI_STATE_NEED_TUNING:
+-		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_TUNING);
+-		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index f4a6a44..10282e2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -212,7 +212,6 @@ enum mci_state_type {
+ 	MCI_STATE_SET_CONCUR_TX_PRI,
+ 	MCI_STATE_RECOVER_RX,
+ 	MCI_STATE_NEED_FTP_STOMP,
+-	MCI_STATE_NEED_TUNING,
+ 	MCI_STATE_DEBUG,
+ 	MCI_STATE_MAX
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 7b553f6..49137f4 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -116,42 +116,58 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 	struct ath_mci_profile *mci = &btcoex->mci;
++	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
+ 	struct ath_mci_profile_info *info;
+ 	u32 num_profile = NUM_PROF(mci);
+ 
++	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
++		goto skip_tuning;
++
+ 	if (num_profile == 1) {
+ 		info = list_first_entry(&mci->info,
+ 					struct ath_mci_profile_info,
+ 					list);
+-		if (mci->num_sco && info->T == 12) {
+-			mci->aggr_limit = 8;
++		if (mci->num_sco) {
++			if (info->T == 12)
++				mci->aggr_limit = 8;
++			else if (info->T == 6) {
++				mci->aggr_limit = 6;
++				btcoex->duty_cycle = 30;
++			}
+ 			ath_dbg(common, MCI,
+-				"Single SCO, aggregation limit 2 ms\n");
+-		} else if ((info->type == MCI_GPM_COEX_PROFILE_BNEP) &&
+-			   !info->master) {
+-			btcoex->btcoex_period = 60;
++				"Single SCO, aggregation limit %d 1/4 ms\n",
++				mci->aggr_limit);
++		} else if (mci->num_pan || mci->num_other_acl) {
++			/*
++			 * For single PAN/FTP profile, allocate 35% for BT
++			 * to improve WLAN throughput.
++			 */
++			btcoex->duty_cycle = 35;
++			btcoex->btcoex_period = 53;
+ 			ath_dbg(common, MCI,
+-				"Single slave PAN/FTP, bt period 60 ms\n");
+-		} else if ((info->type == MCI_GPM_COEX_PROFILE_HID) &&
+-			 (info->T > 0 && info->T < 50) &&
+-			 (info->A > 1 || info->W > 1)) {
++				"Single PAN/FTP bt period %d ms dutycycle %d\n",
++				btcoex->duty_cycle, btcoex->btcoex_period);
++		} else if (mci->num_hid) {
+ 			btcoex->duty_cycle = 30;
+-			mci->aggr_limit = 8;
++			mci->aggr_limit = 6;
+ 			ath_dbg(common, MCI,
+ 				"Multiple attempt/timeout single HID "
+-				"aggregation limit 2 ms dutycycle 30%%\n");
++				"aggregation limit 1.5 ms dutycycle 30%%\n");
+ 		}
+-	} else if ((num_profile == 2) && (mci->num_hid == 2)) {
+-		btcoex->duty_cycle = 30;
+-		mci->aggr_limit = 8;
+-		ath_dbg(common, MCI,
+-			"Two HIDs aggregation limit 2 ms dutycycle 30%%\n");
+-	} else if (num_profile > 3) {
++	} else if (num_profile == 2) {
++		if (mci->num_hid == 2)
++			btcoex->duty_cycle = 30;
+ 		mci->aggr_limit = 6;
+ 		ath_dbg(common, MCI,
+-			"Three or more profiles aggregation limit 1.5 ms\n");
++			"Two BT profiles aggr limit 1.5 ms dutycycle %d%%\n",
++			btcoex->duty_cycle);
++	} else if (num_profile >= 3) {
++		mci->aggr_limit = 4;
++		ath_dbg(common, MCI,
++			"Three or more profiles aggregation limit 1 ms\n");
+ 	}
+ 
++skip_tuning:
+ 	if (IS_CHAN_2GHZ(sc->sc_ah->curchan)) {
+ 		if (IS_CHAN_HT(sc->sc_ah->curchan))
+ 			ath_mci_adjust_aggr_limit(btcoex);
+-- 
+1.7.10.2
 
