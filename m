@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45016 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932430Ab2E3Jji (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26657 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932706Ab2ESIni (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 05:39:38 -0400
-Message-ID: <1338370773.4511.11.camel@jlt3.sipsolutions.net> (sfid-20120530_113941_713215_94670BB5)
-Subject: [PATCH 3.5] mac80211: fix error in station state transitions during
- reconfig
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 30 May 2012 11:39:33 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 19 May 2012 04:43:38 -0400
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH v2 05/10] ath9k_hw: configure ar9462 switching regulator discontinuous mode
+Date: Sat, 19 May 2012 14:13:51 +0530
+Message-ID: <1337417036-1431-5-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120519_104358_502222_DA969008)
+In-Reply-To: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1337417036-1431-1-git-send-email-rmanohar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Enable WLAN and BT mode for switching regulator discontinuous
+orverride for AR9462 chips.
 
-As part of hardware reconfig mac80211 tries
-to restore the station state to its values
-before the hardware reconfig, but it only
-goes to the last-state - 1. Fix this
-off-by-one error.
-
-Cc: stable@kernel.org [3.4]
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- net/mac80211/util.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 -
+ drivers/net/wireless/ath/ath9k/reg.h        |    2 ++
+ 3 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 22f2216..c7dc129 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1271,7 +1271,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 			enum ieee80211_sta_state state;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 11abb97..d6baf69 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -676,6 +676,10 @@ static int ar9003_hw_process_ini(struct ath_hw *ah,
+ 	if (chan->channel == 2484)
+ 		ar9003_hw_prog_ini(ah, &ah->ini_japan2484, 1);
  
- 			for (state = IEEE80211_STA_NOTEXIST;
--			     state < sta->sta_state - 1; state++)
-+			     state < sta->sta_state; state++)
- 				WARN_ON(drv_sta_state(local, sta->sdata, sta,
- 						      state, state + 1));
- 		}
++	if (AR_SREV_9462(ah))
++		REG_WRITE(ah, AR_GLB_SWREG_DISCONT_MODE,
++			  AR_GLB_SWREG_DISCONT_EN_BT_WLAN);
++
+ 	ah->modes_index = modesIndex;
+ 	ar9003_hw_override_ini(ah);
+ 	ar9003_hw_set_channel_regs(ah, chan);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 3740aab..03d5909 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -824,7 +824,6 @@ struct ath_hw {
+ 	struct ar5416IniArray ini_japan2484;
+ 	struct ar5416IniArray iniModes_9271_ANI_reg;
+ 	struct ar5416IniArray ini_radio_post_sys2ant;
+-	struct ar5416IniArray ini_BTCOEX_MAX_TXPWR;
+ 
+ 	struct ar5416IniArray iniMac[ATH_INI_NUM_SPLIT];
+ 	struct ar5416IniArray iniBB[ATH_INI_NUM_SPLIT];
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 458f81b..560d6ef 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -2211,5 +2211,7 @@ enum {
+ #define AR_BTCOEX_CTRL3_CONT_INFO_TIMEOUT	0x00000fff
+ #define AR_BTCOEX_CTRL3_CONT_INFO_TIMEOUT_S	0
+ 
++#define AR_GLB_SWREG_DISCONT_MODE         0x2002c
++#define AR_GLB_SWREG_DISCONT_EN_BT_WLAN   0x3
+ 
+ #endif
 -- 
-1.7.10
-
-
+1.7.10.2
 
