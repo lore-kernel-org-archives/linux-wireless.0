@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:45677 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976Ab2EJUPa (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:52209 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754872Ab2ESWmn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 16:15:30 -0400
-Message-ID: <20120510231525.13005nqjlevr1n48@www.81.fi> (sfid-20120510_221607_464022_0A49FD0D)
-Date: Thu, 10 May 2012 23:15:25 +0300
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: David Miller <davem@davemloft.net>
-Cc: joe@perches.com, fubar@us.ibm.com, andy@greyhouse.net,
-	benve@cisco.com, roprabhu@cisco.com, neepatel@cisco.com,
-	nistrive@cisco.com, grundler@parisc-linux.org,
-	anirban.chakraborty@qlogic.com, sony.chacko@qlogic.com,
-	linux-driver@qlogic.com, linux-net-drivers@solarflare.com,
-	bhutchings@solarflare.com, cmetcalf@tilera.com,
-	linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	chunkeey@googlemail.com, stas.yakovlev@gmail.com,
-	sgruszka@redhat.com, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	buytenh@wantstofly.org, Larry.Finger@lwfinger.net,
-	chaoming_li@realsil.com.cn, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH 1/3] drivers/net: Convert compare_ether_addr to
- ether_addr_equal
-References: <cover.1336618707.git.joe@perches.com>
- <7c9881a67c52c2f218480b6742155b6d6928122d.1336618708.git.joe@perches.com>
- <20120510173201.16131du3cg90nybo@www.81.fi>
- <20120510.123024.2157290550457495698.davem@davemloft.net>
-In-Reply-To: <20120510.123024.2157290550457495698.davem@davemloft.net>
+	Sat, 19 May 2012 18:42:43 -0400
+Received: by obbtb18 with SMTP id tb18so5911684obb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 May 2012 15:42:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+In-Reply-To: <4FB6D114.4050802@candelatech.com>
+References: <4FB6D114.4050802@candelatech.com>
+Date: Sun, 20 May 2012 01:42:42 +0300
+Message-ID: <CAB3XZEem=2P36WgWXynoscemAhMrcgh0mKFocBbGhy8C-cJigQ@mail.gmail.com> (sfid-20120520_004247_251937_588CE5A1)
+Subject: Re: lockdep splat related to wifi regulatory in 3.3.6+
+From: Eliad Peller <eliad@wizery.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting David Miller <davem@davemloft.net>:
+hi Ben,
 
+On Sat, May 19, 2012 at 1:45 AM, Ben Greear <greearb@candelatech.com> wrote:
+> This appears to be this bug:
 >
-> Never, EVER, quote an entire large patch just to make a comment
-> on one small hunk.
+> https://bugzilla.redhat.com/show_bug.cgi?id=734519
 >
-> I very nearly missed what you had to say because when scrolling
-> through it it appeared as if you made no comments at all.
+> Test case was to create 40 (virtual) stations against an AP that can only
+> handle
+> 30, so the remaining 10 constantly try to re-associate, get DHCP if
+> they manage, etc....
 >
-> Again, NEVER, EVER, do this.  It's extremely anti-social.  Edit out
-> the irrelevant quoted content when replying to people, always.
 >
+> cfg80211: Calling CRDA for country: US
+>
+> ======================================================
+> [ INFO: possible circular locking dependency detected ]
+> 3.3.6+ #1 Tainted: G        WC O
+> -------------------------------------------------------
+> kworker/1:2/62 is trying to acquire lock:
+>  (cfg80211_mutex){+.+.+.}, at: [<ffffffffa00f7ced>]
+> restore_regulatory_settings+0x2c/0x4af [cfg80211]
+>
+> but task is already holding lock:
+>  ((reg_timeout).work){+.+...}, at: [<ffffffff8104c5c1>]
+> process_one_work+0x1c2/0x35a
+>
+> which lock already depends on the new lock.
+>
+Try this:
+http://www.spinics.net/lists/linux-wireless/msg90322.html
 
-I'm sorry. I will not do this again.
-
--Jussi
-
-
+Eliad.
