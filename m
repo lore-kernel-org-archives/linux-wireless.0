@@ -1,59 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52897 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759677Ab2EPUyj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 16:54:39 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Subject: [PATCH 9/9] iwlwifi: add debugging to shadow registers and fix typo
-Date: Wed, 16 May 2012 22:54:30 +0200
-Message-Id: <1337201670-21604-10-git-send-email-johannes@sipsolutions.net> (sfid-20120516_225446_488270_BF7C233F)
-In-Reply-To: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
-References: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
+Received: from yumi.tdiedrich.de ([85.10.210.183]:52975 "EHLO mx.tdiedrich.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758046Ab2ESHyR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 May 2012 03:54:17 -0400
+Date: Sat, 19 May 2012 09:54:11 +0200
+From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt28xx AP-mode problem with commit
+ 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
+ carrier state"
+Message-ID: <20120519075411.GG22418@yumi.tdiedrich.de> (sfid-20120519_095421_901962_6775A9A7)
+References: <20120509105719.GA24457@yumi.tdiedrich.de>
+ <1336564773.4323.19.camel@jlt3.sipsolutions.net>
+ <20120509121827.GD5472@yumi.tdiedrich.de>
+ <20120509210448.GE5472@yumi.tdiedrich.de>
+ <1336637726.4334.13.camel@jlt3.sipsolutions.net>
+ <1336638453.4334.15.camel@jlt3.sipsolutions.net>
+ <20120518011829.GD22418@yumi.tdiedrich.de>
+ <1337361387.4802.6.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1337361387.4802.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Johannes Berg wrote:
+> [dropping openwrt list, it keeps bothering me that I should subscribe]
+> 
+> On Fri, 2012-05-18 at 03:18 +0200, Tobias Diedrich wrote:
+> 
+> > One more clue:
+> > I think this has to do with the order in which the OpenWRT wifi
+> > script does things:
+> > 
+> > hostapd -P /var/run/wifi-phy0.pid -B /var/run/hostapd-phy0.conf
+> > hostapd_ctrl=/var/run/hostapd-phy0/wlan0
+> > ifconfig wlan0
+> > ifconfig wlan0 down
+> > ifconfig wlan0 hw ether 1c:af:f7:49:50:56 up
+> > ifconfig wlan0 0.0.0.0
+> > ifconfig wlan0
+> > ifconfig br-lan
+> > ifconfig wlan0 0.0.0.0
+> > ifconfig wlan0 hw ether 1c:af:f7:49:50:56 up
+> > iw dev wlan0 set txpower fixed 2000
+> 
+> Wow, ok, setting the interface down while the AP is up really isn't a
+> valid use of it. I'm actually amazed that it ever works at all when you
+> do this. Either this should be done the other way around, or hostapd
+> needs to get some smarts about it. For example, with the start-AP
+> function transition, I'm not sure even *beacon* after you do this...
 
-Add a debugging log when using shadow
-registers. Also fix a minor typo in this
-connection.
+I think the problem here is you can have multiple logical interfaces per phy
+devices, so the init script has to start hostapd first and do setup
+setup for the interfaces after that.  And you can't change the mac
+address as long as the interface is up.  This naturally leads to
+- start hostapd
+- for each interface
+ - down the interface
+ - set mac address
+ - up the interface
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-config.h     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+Which seems to be exactly what the scripts are doing from what I can
+see:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 67b28aa..a52818b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -143,7 +143,7 @@ enum iwl_led_mode {
-  * @chain_noise_scale: default chain noise scale used for gain computation
-  * @wd_timeout: TX queues watchdog timeout
-  * @max_event_log_size: size of event log buffer size for ucode event logging
-- * @shadow_reg_enable: HW shadhow register bit
-+ * @shadow_reg_enable: HW shadow register support
-  * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
-  * @no_idle_support: do not support idle mode
-  */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 02ef48c..1e50401 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -829,6 +829,7 @@ static int iwl_nic_init(struct iwl_trans *trans)
- 	if (trans->cfg->base_params->shadow_reg_enable) {
- 		/* enable shadow regs in HW */
- 		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL, 0x800FFFFF);
-+		IWL_DEBUG_INFO(trans, "Enabling shadow registers in device\n");
- 	}
- 
- 	return 0;
+|hostapd -P /var/run/wifi-$phy.pid -B /var/run/hostapd-$phy.conf || {
+|        echo "Failed to start hostapd for $phy"
+|        return
+|}
+|sleep 2
+|
+|for vif in $vifs; do
+|        config_get mode "$vif" mode
+|        config_get ifname "$vif" ifname
+|        [ "$mode" = "ap" ] || continue
+|        hostapd_ctrl="${hostapd_ctrl:-/var/run/hostapd-$phy/$ifname}"
+|        mac80211_start_vif "$vif" "$ifname"
+|done
+
+mac80211_start_vif in turn calls start_net, which calls setup_interface, which
+calls prepare_interface, which does the mac-address setup among other things.
+
+|prepare_interface() {
+[...]
+|    [ -n "$macaddr" ] && $DEBUG ifconfig "$iface" down
+|    $DEBUG ifconfig "$iface" ${macaddr:+hw ether "$macaddr"} ${mtu:+mtu $mtu} ${txqueuelen:+txqueuelen $txqueuelen} up
+[...]
+
 -- 
-1.7.10
-
+Tobias						PGP: http://8ef7ddba.uguu.de
