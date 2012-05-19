@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog132.obsmtp.com ([74.125.149.250]:48239 "EHLO
-	na3sys009aog132.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752525Ab2ECHep (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:41982 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915Ab2ESQxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:34:45 -0400
-Received: by lbjn8 with SMTP id n8so1495264lbj.14
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 00:34:42 -0700 (PDT)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: dan.carpenter@oracle.com, Luciano Coelho <coelho@ti.com>
-Subject: [PATCH] wlcore: use GFP_KERNEL together with GFP_DMA
-Date: Thu,  3 May 2012 10:34:35 +0300
-Message-Id: <1336030475-28943-1-git-send-email-coelho@ti.com> (sfid-20120503_093449_016515_288D3087)
+	Sat, 19 May 2012 12:53:24 -0400
+Date: Sat, 19 May 2012 11:53:16 -0500
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Greg KH <greg@kroah.com>, stable@vger.kernel.org,
+	Touko Korpela <touko.korpela@iki.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: [PATCH 3.2.y, 3.3.y] brcm80211: smac: fix endless retry of
+ A-MPDU transmissions
+Message-ID: <20120519165316.GC26095@burratino> (sfid-20120519_185329_827217_0A0629EE)
+References: <1330018703-2472-1-git-send-email-arend@broadcom.com>
+ <1330018703-2472-2-git-send-email-arend@broadcom.com>
+ <20120516222824.GA11009@burratino>
+ <20120518195812.GE4874@kroah.com>
+ <20120518205118.GE2986@burratino>
+ <4FB75E88.3010908@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FB75E88.3010908@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-GFP_DMA should not be used by itself, it still needs GFP_KERNEL or
-such.  Fix two occurrences of allocations with GFP_DMA only.
+Arend van Spriel wrote:
+> On 05/18/2012 10:51 PM, Jonathan Nieder wrote:
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
+>> My bad --- looks like it was already applied during the 3.3 cycle as
+>> v3.3~19^2^2~7 (commit 85091fc0a756).  Sorry I missed that before.
+[...]
+> Yes. The patch was posted upstream with Cc to stable. As it did not
+> apply to earlier kernels it was marked for 3.3 stable only.
 
-This is a follow-up on Dan's patch.  He fixed one occurence of
-allocation with only the GFP_DMA flag set.  This fixes the other two
-allocations where this was done.
+Technically it wasn't cc-ed to stable; it went to wireless-next
+for 3.4 and then was fast-tracked through the plain wireless tree
+for 3.3[1].  But the effect is basically the same.
 
+Thanks for writing it.
 
- drivers/net/wireless/ti/wlcore/boot.c |    2 +-
- drivers/net/wireless/ti/wlcore/main.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Jonathan
 
-diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
-index 3a2207d..eb204ba 100644
---- a/drivers/net/wireless/ti/wlcore/boot.c
-+++ b/drivers/net/wireless/ti/wlcore/boot.c
-@@ -72,7 +72,7 @@ static int wlcore_boot_fw_version(struct wl1271 *wl)
- 	struct wl1271_static_data *static_data;
- 	int ret;
- 
--	static_data = kmalloc(sizeof(*static_data), GFP_DMA);
-+	static_data = kmalloc(sizeof(*static_data), GFP_KERNEL | GFP_DMA);
- 	if (!static_data) {
- 		wl1271_error("Couldn't allocate memory for static data!");
- 		return -ENOMEM;
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 2b0f987..b156bc6 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -4861,7 +4861,7 @@ struct ieee80211_hw *wlcore_alloc_hw(size_t priv_size)
- 		goto err_dummy_packet;
- 	}
- 
--	wl->mbox = kmalloc(sizeof(*wl->mbox), GFP_DMA);
-+	wl->mbox = kmalloc(sizeof(*wl->mbox), GFP_KERNEL | GFP_DMA);
- 	if (!wl->mbox) {
- 		ret = -ENOMEM;
- 		goto err_fwlog;
--- 
-1.7.10
-
+[1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/85902
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/85249
