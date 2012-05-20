@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:43689 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755699Ab2EIS4f convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49404 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756741Ab2ETTHw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 14:56:35 -0400
-Received: by vbbff1 with SMTP id ff1so609166vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 11:56:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAMG6FYgcep04reRKFe6vjpW+THbCT=+FnJ_-eLrcgE7+3UJEfA@mail.gmail.com>
-References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
-	<4FA15A70.2020108@stericsson.com>
-	<CABF+-6VjWxN6mP4E+7WoR=RZxmSU70GPbua77Vmw+z=JnnKcUg@mail.gmail.com>
-	<CAMG6FYgcep04reRKFe6vjpW+THbCT=+FnJ_-eLrcgE7+3UJEfA@mail.gmail.com>
-Date: Wed, 9 May 2012 14:56:34 -0400
-Message-ID: <CABF+-6XSA8OOjwuQqM-iDKHVTriJ04BzfA-VN0MqVAiN_ZrsEA@mail.gmail.com> (sfid-20120509_205644_764485_BB9DF7F8)
-Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
-From: Kevin Groeneveld <kgroeneveld@gmail.com>
-To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-Cc: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 20 May 2012 15:07:52 -0400
+Message-ID: <1337540836.4585.1.camel@jlt3.sipsolutions.net> (sfid-20120520_210755_672970_92507325)
+Subject: Re: IWLWIFI should depend on SUSPEND
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sebastian Kemper <sebastian_ml@gmx.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Sun, 20 May 2012 21:07:16 +0200
+In-Reply-To: <20120519201958.GA2313@wolfgang> (sfid-20120519_221944_090598_23FED733)
+References: <20120519201958.GA2313@wolfgang>
+	 (sfid-20120519_221944_090598_23FED733)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
+On Sat, 2012-05-19 at 22:19 +0200, Sebastian Kemper wrote:
+> Hello everybody,
+> 
+> iwlwifi doesn't start without suspend support in the kernel. The last
+> thing it says when suspend is missing is this:
+> 
+> iwlwifi 0000:03:00.0: Failed to register hw (error -22)
+> iwlwifi 0000:03:00.0: PCI INT A disabled
 
-Thanks for the information.
+I was going to say it's a mac80211 bug due to this code:
 
->> If a PTA element is found the code always sets priv->is_BT_Present =
->> true.  If I do not have Blue Tooth in my system should this still be
->> set?
->>
-> Yes if you share antenna and use PTA (Bluetooth arbitrage) in your design.
-> But in this case you should have SDD with PTA entry in.
+        if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns)
+#ifdef CONFIG_PM
+            && (!local->ops->suspend || !local->ops->resume)
+#endif
+            )
+                return -EINVAL;
 
-My system does not have Bluetooth at all.  Will the existence of a PTA
-record in my SDD file have any negative impact?
+But then I thought about it and think it makes sense, if you don't have
+suspend then you can't have WoWLAN, so the driver shouldn't advertise it
+in that case, which makes it an iwlwifi bug again, we should ifdef the
+wowlan support correctly.
 
-Can I just delete the PTA record?  (Easier said than done since it is
-a binary file... but it can be done.)
+OTOH, we could also just make the wowlan stuff not compile if CONFIG_PM
+isn't set by adding an ifdef in cfg80211... That might be better so
+others don't run into this trap.
 
-Are there any other records in the SDD file that could cause problems?
+Thoughts?
 
+johannes
 
-Thanks,
-
-Kevin
