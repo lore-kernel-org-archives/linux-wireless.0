@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1466 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755129Ab2EHMkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 08:40:14 -0400
-Message-ID: <4FA9141B.3020008@broadcom.com> (sfid-20120508_144020_104588_C64F0962)
-Date: Tue, 8 May 2012 14:39:55 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from eu1sys200aog118.obsmtp.com ([207.126.144.145]:56373 "EHLO
+	eu1sys200aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752782Ab2ETKBa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 20 May 2012 06:01:30 -0400
+From: Soumik DAS <soumik.das@stericsson.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Soumik Das <soumik.das@stericsson.com>
+Subject: [PATCH] mac80211: Fix race in checking AP status by sending null frame
+Date: Sun, 20 May 2012 15:31:13 +0530
+Message-ID: <1337508073-8346-1-git-send-email-soumik.das@stericsson.com> (sfid-20120520_120135_043686_B373C58A)
 MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/19] brcmsmac: use sprom and PCIe code from bcma
-References: <1335660643-26368-1-git-send-email-hauke@hauke-m.de>
- <4F9CF839.1040401@broadcom.com> <4FA0CF03.9060307@broadcom.com>
- <4FA1B66A.4060901@hauke-m.de>
-In-Reply-To: <4FA1B66A.4060901@hauke-m.de>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2012 12:34 AM, Hauke Mehrtens wrote:
-> Hi Arend,
-> 
-> thanks for testing.
-> 
-> Have you tried suspend/resume and hibernate/resume? I think some of the
-> workaround in drivers/bcma/driver_pci.c should be called in the resume
-> path and not only in the initialization path.
-> 
-> Hauke
-> 
+From: Soumik Das <soumik.das@stericsson.com>
 
-Hi Hauke,
+mac80211 tries to verify the existence of the current AP by
+probing or sending a NULL frame in function
+ieee80211_mgd_probe_ap_send. It 1st sends a null frame to the AP,
+increments probe_send_count and waits for the ACK to the NULL
+frame for a finite duration of time. At times, it happens that by
+the time mac80211 gets to increment probe_send_count, the ACK for
+the NULL frame transmitted has already been processed. This leads
+to a race condition where mac80211 times out waiting for the ACK
+for the NULL frame causing unnecessary disconnection with the AP.
 
-The patches have been in regression testing here for a couple of nights
-without issue. Tested chips: bcm43224 and bcm4313. platforms: x86,
-x86_64 and ppc64.
+Signed-off-by: Soumik Das <soumik.das@stericsson.com>
+---
+ net/mac80211/mlme.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-I also did a suspend/resume test performing 10 cycles. Have to look in
-the logs to get more info. Not tried hibernate/resume testing yet.
-
-Gr. AvS
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index dbd4bd9..40c933c 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1522,6 +1522,8 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 	 * anymore. The timeout will be reset if the frame is ACKed by
+ 	 * the AP.
+ 	 */
++	ifmgd->probe_send_count++;
++
+ 	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS) {
+ 		ifmgd->nullfunc_failed = false;
+ 		ieee80211_send_nullfunc(sdata->local, sdata, 0);
+@@ -1538,7 +1540,6 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 					 0, (u32) -1, true, false);
+ 	}
+ 
+-	ifmgd->probe_send_count++;
+ 	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
+ 	run_again(ifmgd, ifmgd->probe_timeout);
+ 	if (sdata->local->hw.flags & IEEE80211_HW_REPORTS_TX_ACK_STATUS)
+-- 
+1.7.0.4
 
