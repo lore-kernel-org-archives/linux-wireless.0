@@ -1,62 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62995 "EHLO ebb06.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753623Ab2E1LTh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 07:19:37 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 04/14] cfg80211: .stop_ap when interface is going down
-Date: Mon, 28 May 2012 13:18:52 +0200
-Message-ID: <1338203942-5667-5-git-send-email-michal.kazior@tieto.com> (sfid-20120528_132027_316187_E107C916)
-In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from shards.monkeyblade.net ([198.137.202.13]:41212 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758661Ab2EUVJy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 May 2012 17:09:54 -0400
+Date: Mon, 21 May 2012 17:09:39 -0400 (EDT)
+Message-Id: <20120521.170939.1673415470771353481.davem@davemloft.net> (sfid-20120521_231005_509865_94695ACF)
+To: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: [README] net-next has been merged
+From: David Miller <davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We'll need this for proper channel tracking (which
-is going to be needed for channel context
-accounting and finding matching/active interface
-combination).
 
-Change-Id: I7fc8eac0989ced8a81048f299a9c311e0692f850
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/wireless/core.c |    3 +++
- net/wireless/util.c |    3 +++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+Linus has pulled in all of the net-next changes, and I have
+subsequently fast-forwarded both 'net' and 'net-next' to
+Linus's tree.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index a87d435..46a33ea 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -869,6 +869,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		case NL80211_IFTYPE_MESH_POINT:
- 			cfg80211_leave_mesh(rdev, dev);
- 			break;
-+		case NL80211_IFTYPE_AP:
-+			cfg80211_stop_ap(rdev, dev);
-+			break;
- 		default:
- 			break;
- 		}
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index eb7ca3c..252ba8d 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -815,6 +815,9 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 		dev->ieee80211_ptr->mesh_id_up_len = 0;
- 
- 		switch (otype) {
-+		case NL80211_IFTYPE_AP:
-+			cfg80211_stop_ap(rdev, dev);
-+			break;
- 		case NL80211_IFTYPE_ADHOC:
- 			cfg80211_leave_ibss(rdev, dev, false);
- 			break;
--- 
-1.7.0.4
+All work at this time should be bug fixes and should be arranged
+against 'net'.  'net-next' will be frozen and untouched until
+some time after the merge window closes, and no development should
+occur against it.
 
+I am rejecting all patches in patchwork which implement new features,
+perform cleanups, or otherwise are inappropriate at this time.  You
+must resubmit them when the net-next tree opens back up.
+
+There is one exception waiting in the wings, there is one netfilter
+pull remaining from Pedro for the merge window and I told him that
+this is OK.
