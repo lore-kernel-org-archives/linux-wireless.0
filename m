@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:32810 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756038Ab2ENUxH convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:41373 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753688Ab2EUVcI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 16:53:07 -0400
-Received: by bkcji2 with SMTP id ji2so4216318bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 13:53:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FB15D76.9000302@lwfinger.net>
-References: <4FB15D76.9000302@lwfinger.net>
-Date: Mon, 14 May 2012 13:53:06 -0700
-Message-ID: <CA++WF2M18LBx2OfKs47pr3=Z=yfOf43YEVv7-CshzMVrFcgmKg@mail.gmail.com> (sfid-20120514_225312_128036_B5E213D3)
-Subject: Re: Warning from wireless-testing for ipw2100
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 21 May 2012 17:32:08 -0400
+Date: Mon, 21 May 2012 17:32:02 -0400 (EDT)
+Message-Id: <20120521.173202.501452996374396326.davem@davemloft.net> (sfid-20120521_233218_564643_D1001609)
+To: joe@perches.com
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org
+Subject: Re: [README] net-next has been merged
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1337635442.13812.44.camel@joe2Laptop>
+References: <20120521.170939.1673415470771353481.davem@davemloft.net>
+	<1337635442.13812.44.camel@joe2Laptop>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Larry,
+From: Joe Perches <joe@perches.com>
+Date: Mon, 21 May 2012 14:24:02 -0700
 
-On 14 May 2012 12:31, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> A freshly pulled copy of wireless-testing 3.4-rc7 has the following warning
-> that the 802.11 band has not been set when the ipw2100 driver is probed:
-> [   17.766431] ------------[ cut here ]------------
-> [   17.766467] WARNING: at net/wireless/core.c:562
-> wiphy_register+0x34c/0x3c0 [cfg80211]()
+> On Mon, 2012-05-21 at 17:09 -0400, David Miller wrote:
+>> Linus has pulled in all of the net-next changes, and I have
+>> subsequently fast-forwarded both 'net' and 'net-next' to
+>> Linus's tree.
+> 
+> I think you should consider pulling the tags too.
+> The last tag in -next seems to be v3.1-rc9.
 
-I think it is the same problem as for ipw2200 as found by Stefan
-http://marc.info/?l=linux-wireless&m=132720334512946&w=2
-
-which is already fixed.
-http://marc.info/?l=linux-wireless&m=133457257407196&w=2
-
-> ....
-> I do not use the device and it doesn't make any difference to me, but there
-> may be someone that needs it.
-
-I will send a patch.
-
-Stanislav.
+I've now done this, thanks Joe.
