@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:36289 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754533Ab2E3Noy (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:25633 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864Ab2EUN2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 09:44:54 -0400
-Received: by obbtb18 with SMTP id tb18so8420786obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 06:44:07 -0700 (PDT)
+	Mon, 21 May 2012 09:28:18 -0400
+Date: Mon, 21 May 2012 16:32:12 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: sameo@linux.intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: NFC: Initial LLCP support
+Message-ID: <20120521133212.GD4629@mwanda> (sfid-20120521_152821_957235_BC252202)
+References: <20111216202659.GD18570@elgon.mountain>
 MIME-Version: 1.0
-In-Reply-To: <1338383762.4511.16.camel@jlt3.sipsolutions.net>
-References: <1338383762.4511.16.camel@jlt3.sipsolutions.net>
-Date: Wed, 30 May 2012 16:44:07 +0300
-Message-ID: <CAB3XZEdmWRn-2O65AnfnF-jya_FNXK8gc21EBBoDisNoZGDeRQ@mail.gmail.com> (sfid-20120530_163647_360671_52405997)
-Subject: Re: [PATCH 3.5] mac80211: flush off-channel work when interface goes down
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nirav Shah <nirav.j2.shah@intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111216202659.GD18570@elgon.mountain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 30, 2012 at 4:16 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> When any interface goes down, it could be the one that
-> we were doing off-channel with. Thus, we need to flush
-> the offchannel start/stop work so they can't run when
-> the interface has already been removed from the driver
-> or even been destroyed. It's OK to flush them even if
-> they were for another interface, that just means that
-> we potentially delay the interface down a little bit.
->
-can't we check hw_roc_dev?
+On Fri, Dec 16, 2011 at 11:26:59PM +0300, Dan Carpenter wrote:
+> Hello Samuel Ortiz,
+> 
+> This is a semi-automatic email about new static checker warnings.
+> 
+> The patch d646960f7986: "NFC: Initial LLCP support" from Dec 14, 
+> 2011, leads to the following Smatch complaint:
+> 
+> net/nfc/llcp/sock.c +47 llcp_sock_bind()
+> 	 warn: variable dereferenced before check 'addr' (see line 45)
+> 
+> net/nfc/llcp/sock.c
+>     44	
+>     45		pr_debug("sk %p addr %p family %d\n", sk, addr, addr->sa_family);
+>                                                                 ^^^^^^^^^^^^^^^
+> New dereference.
+> 
+>     46	
+>     47		if (!addr || addr->sa_family != AF_NFC)
+>                      ^^^^
+> New check.
+> 
 
-Eliad.
+This got lost in the holiday season.  Probably the check can just be
+remove, yes?
+
+regards,
+dan carpenter
+
+>     48			return -EINVAL;
+>     49	
+> 
+> regards,
+> dan carpenter
+> 
