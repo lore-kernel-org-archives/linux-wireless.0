@@ -1,67 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:32822 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753676Ab2EDJmf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 05:42:35 -0400
-Message-ID: <1336124554.1766.11.camel@joe2Laptop> (sfid-20120504_114245_506365_0222E3DB)
-Subject: Re: pull request: wireless-next 2012-05-03
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Fri, 04 May 2012 02:42:34 -0700
-In-Reply-To: <4FA399E1.5080708@broadcom.com>
-References: <20120503152206.GL9285@tuxdriver.com>
-	 <20120503.130516.1008806127286088740.davem@davemloft.net>
-	 <20120503.131707.112550136096227430.davem@davemloft.net>
-	 <1336066186.13866.25.camel@joe2Laptop> <4FA399E1.5080708@broadcom.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:45444 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751302Ab2EVSkv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 May 2012 14:40:51 -0400
+Message-ID: <1337712022.4470.0.camel@jlt3.sipsolutions.net> (sfid-20120522_204055_007815_C3722E65)
+Subject: Re: [PATCH] mac80211: add command to get current rssi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 22 May 2012 20:40:22 +0200
+In-Reply-To: <1337669130-4229-1-git-send-email-victorg@ti.com>
+References: <1337669130-4229-1-git-send-email-victorg@ti.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-05-04 at 10:57 +0200, Arend van Spriel wrote:
-> On 05/03/2012 07:29 PM, Joe Perches wrote:
-> > On Thu, 2012-05-03 at 13:17 -0400, David Miller wrote:
-> >>  ...
-> >> -		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED) {
-> >> +		if (hdev->discovery.type == DISCOV_TYPE_INTERLEAVED &&
-> >> +				hdev->discovery.state == DISCOVERY_FINDING) {
-> >>
-> >> Really, we went through this a million times very recently and I'm
-> >> not pulling anything into my tree that has garbage like this in it.
-> > 
-> > Perhaps the bluetooth folk can adopt using
-> > 
-> > scripts/checkpatch.pl --strict
-> > 
-> > or maybe checkpatch could be changed to use
-> > --strict on patches in net and drivers/net
-> > automatically.
-> 
-> When the --strict option was added it
+On Tue, 2012-05-22 at 09:45 +0300, Victor Goldenshtein wrote:
 
---strict was added to checkpatch in 2007
-to quiet some of the more controversial
-output messages.
+> @@ -388,7 +389,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+>  	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+>  	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
+>  		sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
+> -		sinfo->signal = (s8)sta->last_signal;
+> +		if (local->ops->get_rssi)
+> +			drv_get_rssi(local, sdata, &sinfo->signal);
+> +		else
+> +			sinfo->signal = (s8)sta->last_signal;
+>  		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+>  	}
 
-> So why not do --strict by default and get rid of the option flag.
+So .. you're filling a per-station value with a generic per-interface
+callback? What were you thinking? ;-)
 
-Some subsystem maintainers would again
-complain about checkpatch output verbosity.
-
-Maybe some of the less controversial CHK 
-tests can be changed to WARN.
-
-Still, who really cares whether or not
-multiline indentation is aligned after an
-open parenthesis or on a tabstop?
-
-Ted Ts'o had an idea awhile back about
-adding .checkpatch config files to every
-directory that had specific formatting
-wants.  That might work too.
-
-https://lkml.org/lkml/2012/3/13/662
-
+johannes
 
