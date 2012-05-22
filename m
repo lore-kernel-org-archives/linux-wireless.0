@@ -1,115 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41660 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756020Ab2EPVzC (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:53744 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932065Ab2EVLd1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 17:55:02 -0400
-Message-Id: <20120516215038.373373677@sipsolutions.net> (sfid-20120516_235507_406021_82333FF9)
-Date: Wed, 16 May 2012 23:50:16 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/7] mac80211: move ieee80211_set_channel function
-References: <20120516215014.379333357@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 22 May 2012 07:33:27 -0400
+Received: by gglu4 with SMTP id u4so5235060ggl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2012 04:33:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20120517230400.GB22418@yumi.tdiedrich.de>
+References: <20120517230400.GB22418@yumi.tdiedrich.de>
+Date: Tue, 22 May 2012 13:33:27 +0200
+Message-ID: <CAGXE3d-MTZu16cU1wybd6zehGOudKPadknuHm9MG6JDVRKmDag@mail.gmail.com> (sfid-20120522_133331_244839_B2A0531E)
+Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and
+ MAX_A_TXPOWER respectively
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Hong Wu <Hong.Wu@dspg.com>, openwrt-devel@lists.openwrt.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, May 18, 2012 at 1:04 AM, Tobias Diedrich
+<ranma+openwrt@tdiedrich.de> wrote:
+> rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
+> respectively, similar to how it is already done in rt2[45]00pci.c
+>
+> rt2800lib.c doesn't initialize max_power and thus after
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
+> was applied txpower is limited to 0 for these devices.
+>
+> This should be the proper fix compared to the net/wireless/reg.c
+> hack in http://patchwork.openwrt.org/patch/2165/
 
-Move the set_channel function up so it can be used
-by other code in this file in the future.
+Btw. Tobias, did this affect the real tx power of the device at all or
+is this just
+a cosmetic issue?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |   70 ++++++++++++++++++++++++++---------------------------
- 1 file changed, 35 insertions(+), 35 deletions(-)
-
---- a/net/mac80211/cfg.c	2012-05-15 20:14:53.000000000 +0200
-+++ b/net/mac80211/cfg.c	2012-05-15 20:14:53.000000000 +0200
-@@ -674,6 +674,41 @@ static int ieee80211_get_station(struct
- 	return ret;
- }
- 
-+static int ieee80211_set_channel(struct wiphy *wiphy,
-+				 struct net_device *netdev,
-+				 struct ieee80211_channel *chan,
-+				 enum nl80211_channel_type channel_type)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_sub_if_data *sdata = NULL;
-+
-+	if (netdev)
-+		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
-+
-+	switch (ieee80211_get_channel_mode(local, NULL)) {
-+	case CHAN_MODE_HOPPING:
-+		return -EBUSY;
-+	case CHAN_MODE_FIXED:
-+		if (local->oper_channel != chan)
-+			return -EBUSY;
-+		if (!sdata && local->_oper_channel_type == channel_type)
-+			return 0;
-+		break;
-+	case CHAN_MODE_UNDEFINED:
-+		break;
-+	}
-+
-+	if (!ieee80211_set_channel_type(local, sdata, channel_type))
-+		return -EBUSY;
-+
-+	local->oper_channel = chan;
-+
-+	/* auto-detects changes */
-+	ieee80211_hw_config(local, 0);
-+
-+	return 0;
-+}
-+
- static int ieee80211_set_probe_resp(struct ieee80211_sub_if_data *sdata,
- 				    const u8 *resp, size_t resp_len)
- {
-@@ -1676,41 +1711,6 @@ static int ieee80211_set_txq_params(stru
- 
- 	return 0;
- }
--
--static int ieee80211_set_channel(struct wiphy *wiphy,
--				 struct net_device *netdev,
--				 struct ieee80211_channel *chan,
--				 enum nl80211_channel_type channel_type)
--{
--	struct ieee80211_local *local = wiphy_priv(wiphy);
--	struct ieee80211_sub_if_data *sdata = NULL;
--
--	if (netdev)
--		sdata = IEEE80211_DEV_TO_SUB_IF(netdev);
--
--	switch (ieee80211_get_channel_mode(local, NULL)) {
--	case CHAN_MODE_HOPPING:
--		return -EBUSY;
--	case CHAN_MODE_FIXED:
--		if (local->oper_channel != chan)
--			return -EBUSY;
--		if (!sdata && local->_oper_channel_type == channel_type)
--			return 0;
--		break;
--	case CHAN_MODE_UNDEFINED:
--		break;
--	}
--
--	if (!ieee80211_set_channel_type(local, sdata, channel_type))
--		return -EBUSY;
--
--	local->oper_channel = chan;
--
--	/* auto-detects changes */
--	ieee80211_hw_config(local, 0);
--
--	return 0;
--}
- 
- #ifdef CONFIG_PM
- static int ieee80211_suspend(struct wiphy *wiphy,
-
-
+Thanks,
+Helmut
