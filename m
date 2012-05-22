@@ -1,32 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:63632 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139Ab2EYQb6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40446 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751302Ab2EVSrL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 12:31:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAEFj984efuO12nSPsZ2A0Q0nwPLesYJ8gDHwgh=0e1VO3_UtGw@mail.gmail.com>
-References: <1337934071-29342-1-git-send-email-qasimj@gmail.com>
-	<CAEFj985HxSrOwOoevDjG1jxPxobLda-X_LZUtj6LgwXZwozBog@mail.gmail.com>
-	<CAJivULpmLp9JK+PQZ9RkrvvYHNk=uA33=A-ffftroigivy1_NQ@mail.gmail.com>
-	<CAEFj984efuO12nSPsZ2A0Q0nwPLesYJ8gDHwgh=0e1VO3_UtGw@mail.gmail.com>
-Date: Sat, 26 May 2012 00:31:57 +0800
-Message-ID: <CAEFj987dNMyMcS9rySzVpfY0Fo5t0LtL9FZg770ohKi+bDO9ZA@mail.gmail.com> (sfid-20120525_183224_850613_D25861F5)
-Subject: Re: [RFC] mac80211: Use correct originator sequence number in a Path Reply
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: devel@lists.open80211s.org
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ravip@utdallas.edu
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 22 May 2012 14:47:11 -0400
+Message-ID: <1337712399.4470.5.camel@jlt3.sipsolutions.net> (sfid-20120522_204715_537995_8E04FA9F)
+Subject: Re: [PATCH] rfkill: Add handling when rfkill's type is
+ RFKILL_TYPE_ALL.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alex Hung <alex.hung@canonical.com>
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 22 May 2012 20:46:39 +0200
+In-Reply-To: <1337589439-14605-1-git-send-email-alex.hung@canonical.com>
+References: <1337589439-14605-1-git-send-email-alex.hung@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I think that the PREQ element has originator sequence number at the
-> end but the PREQ element has the target sequence number at the end.
-> This is what mesh_path_sel_frame_tx is doing.
+On Mon, 2012-05-21 at 16:37 +0800, Alex Hung wrote:
+> This rfkill type is supposed to be able to toggles the status of all wireless
+> devices; however, no wireless devices will register itself with type 
+> RFKILL_TYPE_ALL and thus it was previously ignored in __rfkill_switch_all.
+> 
+> Signed-off-by: Alex Hung <alex.hung@canonical.com>
+> ---
+>  net/rfkill/core.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> index 5be1957..84dd71a 100644
+> --- a/net/rfkill/core.c
+> +++ b/net/rfkill/core.c
+> @@ -324,7 +324,7 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
+>  
+>  	rfkill_global_states[type].cur = blocked;
+>  	list_for_each_entry(rfkill, &rfkill_list, node) {
+> -		if (rfkill->type != type)
+> +		if (rfkill->type != type && type != RFKILL_TYPE_ALL)
+>  			continue;
 
-PREP element has originator sequence number at the end but the PREQ
-element has the target sequence number at the end.
+Sorry, I accidentally replied to this in private and then Alex replied
+but it all got lost.
 
-Regards,
-Chun-Yeow
+He said he was going to change the eeepc use KEY_RFKILL instead of
+KEY_WLAN to switch all types...
+
+So I guess what this change really does is make __rfkill_switch_all() be
+able to not only switch all devices of a given type, but also be able to
+switch all devices of all types.
+
+Alex, can you please rewrite the commit log to make that clearer?
+
+johannes
+
