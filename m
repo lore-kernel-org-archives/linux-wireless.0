@@ -1,64 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:40657 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752983Ab2EZQZl (ORCPT
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:63934 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757760Ab2EVLcR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 May 2012 12:25:41 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Tue, 22 May 2012 07:32:17 -0400
+Received: by gglu4 with SMTP id u4so5234134ggl.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2012 04:32:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20417.972.888113.821079@gargle.gargle.HOWL> (sfid-20120526_182606_860632_157A35E2)
-Date: Sat, 26 May 2012 21:54:44 +0530
-To: Ben Greear <greearb@candelatech.com>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: Anyone doing WiFi throughput tests?
-In-Reply-To: <4FC0F8CE.1030303@candelatech.com>
-References: <4FC04B5A.1070900@candelatech.com>
-	<20416.19680.571601.549629@gargle.gargle.HOWL>
-	<4FC0F8CE.1030303@candelatech.com>
+In-Reply-To: <4FBB77D4.9050801@01019freenet.de>
+References: <20120517230400.GB22418@yumi.tdiedrich.de>
+	<CAGXE3d_Yz=-UWO+PiJkRQ7ZSBgh_fdcwsPz6FCig2VjOOoMQOg@mail.gmail.com>
+	<20120518162158.GE22418@yumi.tdiedrich.de>
+	<CAGXE3d8e+hYo_MT30XUW+r4-Dq6AgqLTJxD_oGnRuR94zjZ7_Q@mail.gmail.com>
+	<4FB769DF.5060400@01019freenet.de>
+	<4FBB5083.4000606@01019freenet.de>
+	<CAGXE3d-2ndXX1D-JQLo6m=Osg6RRe4Z2gb_=BPrz0wASzFciNA@mail.gmail.com>
+	<4FBB77D4.9050801@01019freenet.de>
+Date: Tue, 22 May 2012 13:32:16 +0200
+Message-ID: <CAGXE3d8m_0E2HGjCY9uMtj-Kahg9QCJjpsCCGjm+go6n_+V1Pg@mail.gmail.com> (sfid-20120522_133220_683486_C553CA21)
+Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and
+ MAX_A_TXPOWER respectively
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> We're using WPEA-127N.  We have a dual-core Atom for one system, and
-> a quad-core i7 CPU (and two wifi NICs) in another system..  So far, the Atom with
-> single NIC is benchmarking better in some tests.  We were only using one of
-> the NICs in the i7 for testing, but maybe there is still some interference
-> or maybe we just had bad antenna placement or something.
+On Tue, May 22, 2012 at 1:26 PM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> Hello Helmut,
+>
+> Helmut Schaa wrote:
+>> Hi Andreas,
+>>
+>> Sorry, missed your previous mail.
+>
+> Thanks for your response!! This made things more clear to me!
+>
+>> On Tue, May 22, 2012 at 10:38 AM, Andreas Hartmann
+>> <andihartmann@01019freenet.de> wrote:
+>>> Andreas Hartmann wrote:
+>>>> Helmut Schaa wrote:
+>>>>> On Fri, May 18, 2012 at 6:21 PM, Tobias Diedrich <ranma@tdiedrich.de> wrote:
+>>>>>>> So, maybe we should do it the safe way and just register a safe default
+>>>>>>> of 20dBm for all channels?
+>>>>>>
+>>>>>> AFAIU that would cap you to 20dBm even if you are in a country that
+>>>>>> has higher limits (e.g. 27dBm in the US?).
+>>>>>
+>>>>> Not necessarily because the driver won't allow tx power adjustments at all
+>>>>> if EEPROM_EIRP_MAX_TX_POWER is unused.
+>>>>
+>>>> This means:
+>>>> Tx settings in cfg80211 as given by "iw reg get" e.g. are ignored
+>>>> completely as long as EEPROM_EIRP_MAX_TX_POWER is unused.
+>>>> Thus it is more or less chance that the device actually uses the allowed
+>>>> / correct Tx power at all. Maybe it's too high or too low. Both would be
+>>>> bad.
+>
+> [Most ralink devices have fixed max Tx power depended on the region, the
+> device was sold]
+>
+>> Either we have to tune cfg80211 to allow setting the tx power by percentage
+>> or disallow tx power control on these device or we trick cfg80211 by registering
+>> a reasonable default value (like 20dBm) to cfg80211 but do adjustments
+>> by percentage.
+>>
+>> So, if a device is actually calibrated to 17dBm but we register 20dBm
+>> to cfg80211
+>> and a user sets the new tx power to 17dBm we can apply the actual delta to
+>> the device tx power configuration. Hence, the device will then
+>> transmit with 14dBm
+>> while cfg80211 shows 17dBm. This would be a compromise to still allow tx power
+>> settings without having to add all the overhead to cfg80211.
+>
+> What about this idea: The driver gets an option to set the calibrated
+> region (devcalreg), say US. This is a static value in respect of the device.
+> If the user operates the device in DE, he just would have to change the
+> value of cfg80211 from US to DE.
+>
+> Device sold in US
+> =================
+>
+> Device operated in US
+> devcalreg=US                                    23dBm
+> cfg80211=US             100% max Tx power       23dBm
+>
+> Device operated in DE
+> devcalreg=US                                    23dBm
+> cfg80211=DE             87%  max Tx power       20dBm
+>
+> If cfg80211 is set to a region which allows higher values, the
+> percentage would be >100%, but this could be probably easily prohibited.
+>
+> If the user doesn't provide devcalreg your default value gets applied.
+>
+> The difference to your idea is, that the "default" could be dynamically
+> derived from cfg80211 on the basis of the devcalreg. This would prohibit
+> the problem you showed above.
 
-Fiddling with antenna position/placement does help.
+Understood, but that would require the user to know the domain the
+device is calibrated for.
 
-> What chipset or brand/model is this?  I see that XB112 mentioned in the WPEA-127N
-> description, but maybe that is just a form-factor description?
+I think we should just always run the device at 100% but add an option in
+the future to allow rx power reduction by percentage.
 
-XB112 is the board and I am using an engineering sample. The WLAN chipset
-is AR9380.
-
-> Can you offer any additional details on how you tested this?  You are using the same
-> NIC for both AP and station?
-> 
-> Open-air connection?
-> 
-> How far away is AP?
-> 
-> I would like to try to reproduce this result, as it is significantly better
-> than what I'm seeing.
-> 
-> Are you doing any special AP tuning, like using short-guard-intervals
-> or similar?  Care to post the wpa_supplicant and hostapd config files?
-
-I am using a DB120 as AP which has dual radio - AR9340/AR9300. The setup is
-standard:
-
-STA -------------->  AP -------------------> CONSOLE
-       wlan/OTA             gig-ethernet
-
-
-The AP runs an internal BSP/SDK build and is positioned about 4-5 feet from
-the Station. As for the HT parameters, HT40 and short-GI is enabled in both
-bands.
-
-Sujith
-
+Helmut
