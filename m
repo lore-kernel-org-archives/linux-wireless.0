@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52515 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752378Ab2E3M7k (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:33546 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751522Ab2EVHZU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 08:59:40 -0400
-Message-ID: <1338382776.4511.15.camel@jlt3.sipsolutions.net> (sfid-20120530_145944_226954_0E2A121B)
-Subject: [PATCH] mac80211_hwsim: advertise interface combinations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Nirav Shah <nirav.j2.shah@intel.com>
-Date: Wed, 30 May 2012 14:59:36 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 22 May 2012 03:25:20 -0400
+Message-ID: <4FBB3F58.2080104@qca.qualcomm.com> (sfid-20120522_092524_517887_507CFF83)
+Date: Tue, 22 May 2012 12:55:12 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/2] ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
+References: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com> <1337671370-32519-3-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1337671370-32519-3-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Enforcing interface combinations broke uses of hwsim
-with multiple virtual interfaces. Advertise that all
-combinations are possible to fix this.
+Oops, please forget this crap, mistakenly sent the older patches.
+I'm really sorry.
 
-Reported-by: Nirav Shah <nirav.j2.shah@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+Vasanth
 
---- a/drivers/net/wireless/mac80211_hwsim.c	2012-05-29 21:12:48.000000000 +0200
-+++ b/drivers/net/wireless/mac80211_hwsim.c	2012-05-30 14:58:07.000000000 +0200
-@@ -1721,6 +1721,24 @@ static void hwsim_exit_netlink(void)
- 		       "unregister family %i\n", ret);
- }
- 
-+static const struct ieee80211_iface_limit hwsim_if_limits[] = {
-+	{ .max = 1, .types = BIT(NL80211_IFTYPE_ADHOC) },
-+	{ .max = 2048,  .types = BIT(NL80211_IFTYPE_STATION) |
-+				 BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+#ifdef CONFIG_MAC80211_MESH
-+				 BIT(NL80211_IFTYPE_MESH_POINT) |
-+#endif
-+				 BIT(NL80211_IFTYPE_AP) |
-+				 BIT(NL80211_IFTYPE_P2P_GO) },
-+};
-+
-+static const struct ieee80211_iface_combination hwsim_if_comb = {
-+	.limits = hwsim_if_limits,
-+	.n_limits = ARRAY_SIZE(hwsim_if_limits),
-+	.max_interfaces = 2048,
-+	.num_different_channels = 1,
-+};
-+
- static int __init init_mac80211_hwsim(void)
- {
- 	int i, err = 0;
-@@ -1782,6 +1800,9 @@ static int __init init_mac80211_hwsim(vo
- 		hw->wiphy->n_addresses = 2;
- 		hw->wiphy->addresses = data->addresses;
- 
-+		hw->wiphy->iface_combinations = &hwsim_if_comb;
-+		hw->wiphy->n_iface_combinations = 1;
-+
- 		if (fake_hw_scan) {
- 			hw->wiphy->max_scan_ssids = 255;
- 			hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
-
-
+On Tuesday 22 May 2012 12:52 PM, Vasanthakumar Thiagarajan wrote:
+> Return status of ath6kl_htc_tx_issue() is ignored in
+> ath6kl_htc_tx_from_queue(), but failed tx packet is
+> is not cleaned up. To fix memory leak in this case, call
+> completion with error. Also, throw an error debug message
+> when tx fails in ath6kl_sdio_write_async() due to shortage
+> in bus request buffer.
+>
+> Signed-off-by: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath6kl/htc_mbox.c |    8 +++++++-
+>   drivers/net/wireless/ath/ath6kl/sdio.c     |    4 +++-
+>   2 files changed, 10 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> index 65310d5..8729803 100644
+> --- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> +++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+> @@ -850,6 +850,7 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+>   	int bundle_sent;
+>   	int n_pkts_bundle;
+>   	u8 ac = WMM_NUM_AC;
+> +	int status;
+>
+>   	spin_lock_bh(&target->tx_lock);
+>
+> @@ -911,7 +912,12 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+>
+>   			ath6kl_htc_tx_prep_pkt(packet, packet->info.tx.flags,
+>   					       0, packet->info.tx.seqno);
+> -			ath6kl_htc_tx_issue(target, packet);
+> +			status = ath6kl_htc_tx_issue(target, packet);
+> +
+> +			if (status) {
+> +				packet->status = status;
+> +				packet->completion(packet->context, packet);
+> +			}
+>   		}
+>
+>   		spin_lock_bh(&target->tx_lock);
+> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+> index 0384a0f..efe083f 100644
+> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+> @@ -552,8 +552,10 @@ static int ath6kl_sdio_write_async(struct ath6kl *ar, u32 address, u8 *buffer,
+>
+>   	bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
+>
+> -	if (!bus_req)
+> +	if (!bus_req) {
+> +		ath6kl_err("Ran out of bus request buffer for tx\n");
+>   		return -ENOMEM;
+> +	}
+>
+>   	bus_req->address = address;
+>   	bus_req->buffer = buffer;
