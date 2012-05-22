@@ -1,71 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55042 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753788Ab2E3NbW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59314 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752306Ab2EVHW7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 09:31:22 -0400
-Message-ID: <1338384543.4511.18.camel@jlt3.sipsolutions.net> (sfid-20120530_163646_640212_C8EA8DFB)
-Subject: Re: IWLWIFI should depend on SUSPEND
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sebastian Kemper <sebastian_ml@gmx.net>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 30 May 2012 15:29:03 +0200
-In-Reply-To: <1337540836.4585.1.camel@jlt3.sipsolutions.net> (sfid-20120520_210755_672970_92507325)
-References: <20120519201958.GA2313@wolfgang>
-	 (sfid-20120519_221944_090598_23FED733) <1337540836.4585.1.camel@jlt3.sipsolutions.net>
-	 (sfid-20120520_210755_672970_92507325)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 22 May 2012 03:22:59 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 1/2] ath6kl: Update netstats for some of the tx failrues in ath6kl_data_tx()
+Date: Tue, 22 May 2012 12:52:49 +0530
+Message-ID: <1337671370-32519-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120522_092305_138370_2387F64D)
+In-Reply-To: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-05-20 at 21:07 +0200, Johannes Berg wrote:
-> On Sat, 2012-05-19 at 22:19 +0200, Sebastian Kemper wrote:
-> > Hello everybody,
-> > 
-> > iwlwifi doesn't start without suspend support in the kernel. The last
-> > thing it says when suspend is missing is this:
-> > 
-> > iwlwifi 0000:03:00.0: Failed to register hw (error -22)
-> > iwlwifi 0000:03:00.0: PCI INT A disabled
-> 
-> I was going to say it's a mac80211 bug due to this code:
-> 
->         if ((hw->wiphy->wowlan.flags || hw->wiphy->wowlan.n_patterns)
-> #ifdef CONFIG_PM
->             && (!local->ops->suspend || !local->ops->resume)
-> #endif
->             )
->                 return -EINVAL;
-> 
-> But then I thought about it and think it makes sense, if you don't have
-> suspend then you can't have WoWLAN, so the driver shouldn't advertise it
-> in that case, which makes it an iwlwifi bug again, we should ifdef the
-> wowlan support correctly.
+There are few cases where the tx skb is dropped but netstats is
+not updated, fix this.
 
-Could you try this patch please?
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/txrx.c |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
 
-johannes
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index ab2f4d7..06546f7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -199,6 +199,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 			    WIPHY_FLAG_DISABLE_BEACON_HINTS |
- 			    WIPHY_FLAG_IBSS_RSN;
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 82f2f5c..67206ae 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -362,15 +362,11 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 		   skb, skb->data, skb->len);
  
-+#ifdef CONFIG_PM
- 	if (priv->fw->img[IWL_UCODE_WOWLAN].sec[0].len &&
- 	    priv->trans->ops->wowlan_suspend &&
- 	    device_can_wakeup(priv->trans->dev)) {
-@@ -217,6 +218,7 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 		hw->wiphy->wowlan.pattern_max_len =
- 					IWLAGN_WOWLAN_MAX_PATTERN_LEN;
- 	}
-+#endif
+ 	/* If target is not associated */
+-	if (!test_bit(CONNECTED, &vif->flags)) {
+-		dev_kfree_skb(skb);
+-		return 0;
+-	}
++	if (!test_bit(CONNECTED, &vif->flags))
++		goto fail_tx;
  
- 	if (iwlwifi_mod_params.power_save)
- 		hw->wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
-
+-	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON)) {
+-		dev_kfree_skb(skb);
+-		return 0;
+-	}
++	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON))
++		goto fail_tx;
+ 
+ 	if (!test_bit(WMI_READY, &ar->flag))
+ 		goto fail_tx;
+-- 
+1.7.0.4
 
