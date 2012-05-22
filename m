@@ -1,31 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:37789 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756001Ab2EPU0S (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23818 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932647Ab2EVA50 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 16:26:18 -0400
+	Mon, 21 May 2012 20:57:26 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6W2dz=Ld=w5+7jexKk9xfADhk644mc4C=TtbvBZ9_cKGg@mail.gmail.com>
-References: <1337162148-16499-1-git-send-email-ozancag@gmail.com> <CAB=NE6W2dz=Ld=w5+7jexKk9xfADhk644mc4C=TtbvBZ9_cKGg@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 16 May 2012 13:25:57 -0700
-Message-ID: <CAB=NE6U6Ou-rRE9_wpN_5u93BOKk2j06T2Z68C3DO6KG+SENag@mail.gmail.com> (sfid-20120516_222624_253768_00A3E61B)
-Subject: Re: [Lf_driver_backport] [PATCH] compat: backport ether_addr_equal
-To: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org,
-	linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="iso-8859-1"
+Message-ID: <20410.58433.115014.351622@gargle.gargle.HOWL> (sfid-20120522_025730_814116_B8A6FD24)
+Date: Tue, 22 May 2012 06:26:33 +0530
+To: Gary Morain <gmorain@chromium.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>, <pstew@chromium.org>
+Subject: [PATCH] CHROMIUMOS: mac80211: Increase retry attempts for nullfunc probes
+In-Reply-To: <CADfcX6pjFEWyxd5o-t7yPdr+6MkB+7ZvQ-TgAe1A894h7C5vTw@mail.gmail.com>
+References: <20120521190547.3E23A8061C@gary-pc2.mtv.corp.google.com>
+	<1337628372.11626.0.camel@jlt3.sipsolutions.net>
+	<CADfcX6r=GuQh2kdC_OEX9fvfGjWXeGwFKGTfFWs-88nqgGNF_Q@mail.gmail.com>
+	<CADfcX6pjFEWyxd5o-t7yPdr+6MkB+7ZvQ-TgAe1A894h7C5vTw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 16, 2012 at 1:17 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> This is what I see when I save the e-mail:
+Gary Morain wrote:
+> Scenario:
+> 1.  Client connects to a managed AP.
+> 2.  Client goes off-channel to scan for APs.
+> 3.  AP goes off-channel to scan for rogue APs.  The client misses any
+> signaling the AP may have sent.
+> 4.  The client returns to its home channel before the AP does.
+> 5.  The client immediately probes the AP with a nullfunc.
+> (ieee80211_mlme_notify_scan_completed()).
+> 6.  The AP does not respond to the nullfunc because it is off-channel.
+> 7.  The client retries the nullfunc, which also does not get an ACK, and the
+> client disconnects from the AP (ieee80211_sta_work).
+> 
+> It's worth noticing that the client never detects beacon loss because the AP
+> is not off-channel long enough to miss sending multiple beacons.
 
-<-- snip -->
+If this is with ath9k, there is a much more fundamental issue - the HW beacon
+timers are never re-programmed with the correct values, which can be done only
+after a TSF sync.
 
-I've used http://www.opinionatedgeek.com/dotnet/tools/base64decode/ to
-decode this to a file, I'm testing it now with ckmake on compat and
-compat-wireless, thanks!
+The sequence is like this:
 
-  Luis
+* ath9k associates to an AP
+* A scan is started on the station side.
+* The HW is reset as part of the scan.
+* The scan completes.
+* ath9k sets the BSSID and configures beacon timers - but,
+  without waiting for the HW TSF sync, so the timers
+  end up being programmed incorrectly.
+
+This is with wireless-testing.
+
+Sujith
