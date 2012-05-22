@@ -1,99 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:63204 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755941Ab2EJDsL (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:41751 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757388Ab2EVKmZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 23:48:11 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: florian.c.schilhabel@googlemail.com, ali@internetdog.org,
-	netdev@vger.kernel.org,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 2/3] staging: wean rtl8712 off of its ancient duplicate of ip.h
-Date: Wed,  9 May 2012 23:47:20 -0400
-Message-Id: <1336621641-15467-3-git-send-email-paul.gortmaker@windriver.com> (sfid-20120510_054821_053885_1962DA22)
-In-Reply-To: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1336621641-15467-1-git-send-email-paul.gortmaker@windriver.com>
+	Tue, 22 May 2012 06:42:25 -0400
+Received: by eeit10 with SMTP id t10so1661214eei.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2012 03:42:24 -0700 (PDT)
+Message-ID: <4FBB6D8D.4010106@googlemail.com> (sfid-20120522_124229_189071_AFB2C2F4)
+Date: Tue, 22 May 2012 11:42:21 +0100
+From: Mr Dash Four <mr.dash.four@googlemail.com>
+MIME-Version: 1.0
+To: Michael Zintakis <michael.zintakis@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: IEEE 802.11w support/compliance in TI-1251 (wl1251)
+References: <4FBAD772.2090807@googlemail.com>
+In-Reply-To: <4FBAD772.2090807@googlemail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver should not be carrying around ancient copies of
-headers like <linux/ip.h> for its own use.  Mapping it onto
-the mainline one uncovers no build issues.
 
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/staging/rtl8712/ip.h           |  137 --------------------------------
- drivers/staging/rtl8712/rtl8712_recv.c |    2 +-
- drivers/staging/rtl8712/rtl871x_recv.c |    2 +-
- drivers/staging/rtl8712/xmit_linux.c   |    3 +-
- 4 files changed, 3 insertions(+), 141 deletions(-)
- delete mode 100644 drivers/staging/rtl8712/ip.h
+> Thanks in advance for any help!
+Hehe, another one...
 
-diff --git a/drivers/staging/rtl8712/ip.h b/drivers/staging/rtl8712/ip.h
-deleted file mode 100644
-index f37b0f8..0000000
-diff --git a/drivers/staging/rtl8712/rtl8712_recv.c b/drivers/staging/rtl8712/rtl8712_recv.c
-index b2a7714..e975d0a 100644
---- a/drivers/staging/rtl8712/rtl8712_recv.c
-+++ b/drivers/staging/rtl8712/rtl8712_recv.c
-@@ -29,12 +29,12 @@
- #define _RTL8712_RECV_C_
- 
- #include <linux/if_ether.h>
-+#include <linux/ip.h>
- 
- #include "osdep_service.h"
- #include "drv_types.h"
- #include "recv_osdep.h"
- #include "mlme_osdep.h"
--#include "ip.h"
- #include "ethernet.h"
- #include "usb_ops.h"
- #include "wifi.h"
-diff --git a/drivers/staging/rtl8712/rtl871x_recv.c b/drivers/staging/rtl8712/rtl871x_recv.c
-index 7376abb..c9d1743 100644
---- a/drivers/staging/rtl8712/rtl871x_recv.c
-+++ b/drivers/staging/rtl8712/rtl871x_recv.c
-@@ -28,6 +28,7 @@
- 
- #define _RTL871X_RECV_C_
- 
-+#include <linux/ip.h>
- #include <linux/slab.h>
- #include <linux/if_ether.h>
- #include <linux/kmemleak.h>
-@@ -36,7 +37,6 @@
- #include "drv_types.h"
- #include "recv_osdep.h"
- #include "mlme_osdep.h"
--#include "ip.h"
- #include "ethernet.h"
- #include "usb_ops.h"
- #include "wifi.h"
-diff --git a/drivers/staging/rtl8712/xmit_linux.c b/drivers/staging/rtl8712/xmit_linux.c
-index d27f652..c6943c5 100644
---- a/drivers/staging/rtl8712/xmit_linux.c
-+++ b/drivers/staging/rtl8712/xmit_linux.c
-@@ -29,13 +29,12 @@
- #define _XMIT_OSDEP_C_
- 
- #include <linux/usb.h>
-+#include <linux/ip.h>
- #include <linux/if_ether.h>
- 
- #include "osdep_service.h"
- #include "drv_types.h"
- 
--
--#include "ip.h"
- #include "rtl871x_byteorder.h"
- #include "wifi.h"
- #include "mlme_osdep.h"
--- 
-1.7.9.1
+Someone from TI will be along shortly to let you know that <insert name 
+of random TI engineer/developer> is having mental breakdown/couldn't be 
+arsed replying (delete as appropriate) and to also thank you for your 
+patience! You are more likely to get a response from Bill Gates on a 
+Linux support question than have somebody from TI deal with your 
+particular query.
 
+FWIW, I don't think MFP is supported in Wilink, maybe it is on wl1251 
+(the linux-wireless driver), but I couldn't manage to get that driver to 
+work on Android. I also had the driver supplied by TI and wanted to 
+replace it for different reasons - if you look at the archives of this 
+ML you may find why that is. I ended up completely replacing my device 
+which doesn't have anything related to Texas Instruments (at least not 
+in terms of wireless anyway) and I am much happier that way - staying as 
+far as possible from having to deal with a bunch of lazy, uninterested 
+and self-indulgent "developers" from that company is not anything I'd 
+recommend to anyone.
+
+In any case, I am hoping your experience is a bit different and wish you 
+good luck!
