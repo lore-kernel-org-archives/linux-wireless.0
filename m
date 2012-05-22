@@ -1,105 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:58074 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756199Ab2E3IfN (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62903 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752211Ab2EVHXQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 04:35:13 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com,
-	Etay Luz <eluz@qca.qualcomm.com>
-Subject: [PATCH v2] ath6kl: support changing dtim period on AP mode
-Date: Wed, 30 May 2012 11:35:08 +0300
-Message-Id: <1338366908-4654-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120530_103529_834194_53F227B1)
+	Tue, 22 May 2012 03:23:16 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 2/2] ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
+Date: Tue, 22 May 2012 12:52:50 +0530
+Message-ID: <1337671370-32519-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120522_092325_142894_A1452A6E)
+In-Reply-To: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Etay Luz <eluz@qca.qualcomm.com>
+Return status of ath6kl_htc_tx_issue() is ignored in
+ath6kl_htc_tx_from_queue(), but failed tx packet is
+is not cleaned up. To fix memory leak in this case, call
+completion with error. Also, throw an error debug message
+when tx fails in ath6kl_sdio_write_async() due to shortage
+in bus request buffer.
 
-This patch adds support for dtim_period configuration in beacon.
-
-kvalo: add a comment about ignoring the error, use vif_idx,
-add \n to the warning message
-
-Signed-off-by: Etay Luz <eluz@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 +++++++-
- drivers/net/wireless/ath/ath6kl/wmi.c      |   16 ++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |    5 +++++
- 3 files changed, 28 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |    8 +++++++-
+ drivers/net/wireless/ath/ath6kl/sdio.c     |    4 +++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 6f20998..62688a4 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2783,9 +2783,15 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+index 65310d5..8729803 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+@@ -850,6 +850,7 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+ 	int bundle_sent;
+ 	int n_pkts_bundle;
+ 	u8 ac = WMM_NUM_AC;
++	int status;
  
- 	/* TODO:
- 	 * info->interval
--	 * info->dtim_period
- 	 */
+ 	spin_lock_bh(&target->tx_lock);
  
-+	ret = ath6kl_wmi_ap_set_dtim_cmd(ar->wmi, vif->fw_vif_idx,
-+					 info->dtim_period);
-+
-+	/* ignore error, just print a warning and continue normally */
-+	if (ret)
-+		ath6kl_warn("Failed to set dtim_period in beacon: %d\n", ret);
-+
- 	if (info->beacon.head == NULL)
- 		return -EINVAL;
- 	mgmt = (struct ieee80211_mgmt *) info->beacon.head;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 43bce9c..a6caa67 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -752,6 +752,22 @@ int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid)
- 				   NO_SYNC_WMIFLAG);
- }
+@@ -911,7 +912,12 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
  
-+int ath6kl_wmi_ap_set_dtim_cmd(struct wmi *wmi, u8 if_idx, u32 dtim_period)
-+{
-+	struct sk_buff *skb;
-+	struct set_dtim_cmd *cmd;
+ 			ath6kl_htc_tx_prep_pkt(packet, packet->info.tx.flags,
+ 					       0, packet->info.tx.seqno);
+-			ath6kl_htc_tx_issue(target, packet);
++			status = ath6kl_htc_tx_issue(target, packet);
 +
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct set_dtim_cmd *) skb->data;
-+
-+	cmd->dtim_period = cpu_to_le32(dtim_period);
-+	return ath6kl_wmi_cmd_send(wmi, if_idx, skb,
-+				   WMI_AP_SET_DTIM_CMDID, NO_SYNC_WMIFLAG);
-+}
-+
- int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode)
- {
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 7c94fe3..43339ac 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1617,6 +1617,10 @@ struct roam_ctrl_cmd {
- 	u8 roam_ctrl;
- } __packed;
++			if (status) {
++				packet->status = status;
++				packet->completion(packet->context, packet);
++			}
+ 		}
  
-+struct set_dtim_cmd {
-+	__le32 dtim_period;
-+} __packed;
-+
- /* BSS INFO HDR version 2.0 */
- struct wmi_bss_info_hdr2 {
- 	__le16 ch; /* frequency in MHz */
-@@ -2589,6 +2593,7 @@ int ath6kl_wmi_add_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
- int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
- 				   u16 list_id, u16 filter_id);
- int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi);
-+int ath6kl_wmi_ap_set_dtim_cmd(struct wmi *wmi, u8 if_idx, u32 dtim_period);
- int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid);
- int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
- int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on);
+ 		spin_lock_bh(&target->tx_lock);
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 0384a0f..efe083f 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -552,8 +552,10 @@ static int ath6kl_sdio_write_async(struct ath6kl *ar, u32 address, u8 *buffer,
+ 
+ 	bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
+ 
+-	if (!bus_req)
++	if (!bus_req) {
++		ath6kl_err("Ran out of bus request buffer for tx\n");
+ 		return -ENOMEM;
++	}
+ 
+ 	bus_req->address = address;
+ 	bus_req->buffer = buffer;
 -- 
-1.7.1
+1.7.0.4
 
