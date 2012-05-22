@@ -1,77 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:50971 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750971Ab2EIE5W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 00:57:22 -0400
-From: Joe Perches <joe@perches.com>
-To: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
-	netfilter@vger.kernel.org, coreteam@netfilter.org,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: [PATCH 00/13] net: Add and use ether_addr_equal
-Date: Tue,  8 May 2012 21:56:44 -0700
-Message-Id: <cover.1336538937.git.joe@perches.com> (sfid-20120509_065831_935690_2F01E673)
+Received: from mail.candelatech.com ([208.74.158.172]:46535 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754068Ab2EVRBh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 May 2012 13:01:37 -0400
+Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q4MH1aIR029404
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 22 May 2012 10:01:36 -0700
+Message-ID: <4FBBC670.1090200@candelatech.com> (sfid-20120522_190141_288397_12D2E291)
+Date: Tue, 22 May 2012 10:01:36 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Any known reasons for ath9k being slow to send to AP?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a boolean function to test 2 ethernet addresses for equality
-Convert compare_ether_addr uses to ether_addr_equal
+We had a report where some smart-phone running iperf was significantly
+faster than an i7 system running ath9k when sending TCP traffic to
+an AP.
 
-Joe Perches (13):
-  etherdevice.h: Add ether_addr_equal
-  802: Convert compare_ether_addr to ether_addr_equal
-  8021q: Convert compare_ether_addr to ether_addr_equal
-  bridge: netfilter: Convert compare_ether_addr to ether_addr_equal
-  bridge: Convert compare_ether_addr to ether_addr_equal
-  atm: Convert compare_ether_addr to ether_addr_equal
-  bluetooth: Convert compare_ether_addr to ether_addr_equal
-  mac80211: Convert compare_ether_addr to ether_addr_equal
-  mac80211: Convert compare_ether_addr to ether_addr_equal by hand
-  netfilter: Convert compare_ether_addr to ether_addr_equal
-  wireless: Convert compare_ether_addr to ether_addr_equal
-  wireless: Convert compare_ether_addr to ether_addr_equal by hand
-  dsa: Convert compare_ether_addr to ether_addr_equal
+For receiving traffic FROM the AP, the i7/ath9k box was equally fast
+or a bit faster.
 
- include/linux/etherdevice.h               |   12 +++++++++
- net/802/stp.c                             |    2 +-
- net/8021q/vlan.c                          |   10 +++---
- net/8021q/vlan_core.c                     |    3 +-
- net/8021q/vlan_dev.c                      |   10 +++---
- net/atm/lec.c                             |    6 ++--
- net/atm/mpc.c                             |    3 +-
- net/bluetooth/bnep/core.c                 |    6 ++--
- net/bridge/br_device.c                    |    2 +-
- net/bridge/br_fdb.c                       |   14 +++++-----
- net/bridge/br_input.c                     |    2 +-
- net/bridge/br_stp_bpdu.c                  |    2 +-
- net/bridge/br_stp_if.c                    |   11 +++----
- net/bridge/netfilter/ebt_stp.c            |    4 +-
- net/dsa/slave.c                           |   10 +++---
- net/mac80211/cfg.c                        |    2 +-
- net/mac80211/ibss.c                       |   12 ++++----
- net/mac80211/ieee80211_i.h                |    2 +-
- net/mac80211/iface.c                      |    2 +-
- net/mac80211/mesh.c                       |    4 +-
- net/mac80211/mesh_hwmp.c                  |   14 +++++-----
- net/mac80211/mesh_pathtbl.c               |   12 ++++----
- net/mac80211/mlme.c                       |   29 +++++++++------------
- net/mac80211/rx.c                         |   39 +++++++++++++---------------
- net/mac80211/scan.c                       |    2 +-
- net/mac80211/sta_info.c                   |    8 +++---
- net/mac80211/sta_info.h                   |    2 +-
- net/mac80211/status.c                     |    2 +-
- net/mac80211/tx.c                         |   11 +++----
- net/netfilter/ipset/ip_set_bitmap_ipmac.c |    4 +-
- net/netfilter/xt_mac.c                    |    2 +-
- net/wireless/ibss.c                       |    2 +-
- net/wireless/mlme.c                       |   31 +++++++++++------------
- net/wireless/scan.c                       |    2 +-
- net/wireless/util.c                       |   11 +++----
- net/wireless/wext-sme.c                   |    2 +-
- net/wireless/wext-spy.c                   |    2 +-
- 37 files changed, 147 insertions(+), 147 deletions(-)
+Are there any known issues with ath9k sending (maybe incomplete
+MPDU logic or similar)?
+
+Kernel was 3.3.4+.
+
+Thanks,
+Ben
 
 -- 
-1.7.8.111.gad25c.dirty
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
