@@ -1,144 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.mlbassoc.com ([64.234.241.98]:38415 "EHLO
-	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755661Ab2EANmy (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:32894 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754197Ab2EVCoT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 09:42:54 -0400
-Message-ID: <4F9FE85C.5050902@mlbassoc.com> (sfid-20120501_154258_776524_AEC7C22E)
-Date: Tue, 01 May 2012 07:42:52 -0600
-From: Gary Thomas <gary@mlbassoc.com>
+	Mon, 21 May 2012 22:44:19 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 21 May 2012 19:43:27 -0700
+Subject: RE: [PATCH 3/3] mwifiex: fix kernel warning in ibss start/join path
+Message-ID: <477F20668A386D41ADCC57781B1F7043083A64BA49@SC-VEXCH1.marvell.com> (sfid-20120522_044423_215218_E68B89C1)
+References: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
+	 <1337228696-22312-3-git-send-email-bzhao@marvell.com>
+	 (sfid-20120517_063333_463261_998602DE)
+ <1337238333.4524.1.camel@jlt3.sipsolutions.net>
+	 <477F20668A386D41ADCC57781B1F7043083A64B448@SC-VEXCH1.marvell.com>
+ <1337284374.4687.6.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1337284374.4687.6.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: wireless <linux-wireless@vger.kernel.org>
-CC: Luciano Coelho <coelho@ti.com>
-Subject: Re: wl1271 woes continue
-References: <4F9E8F49.3080700@mlbassoc.com>
-In-Reply-To: <4F9E8F49.3080700@mlbassoc.com>
-Content-Type: multipart/mixed;
- boundary="------------040102080401080407090101"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040102080401080407090101
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-
-On 2012-04-30 07:10, Gary Thomas wrote:
-> Luciano,
->
-> I'm still having troubles with the WL1271. I now have a
-> brand new platform - same basic design as before but with
-> a DM3730 instead of the DM8148. I've tried a couple of
-> off-the-shelf kernels (3.0.0 and 3.3.0) with it, with mixed
-> results.
->
-> With 3.3.0 I could not get the device to associate with the AP.
-> It would get started and then the wl1271 stopped talking and
-> the process failed.
->
-> With 3.0.0, I can get it to work reasonably well. However, I
-> still have to go through the manual steps to get it to associate.
-> Anything other than the process below causes the wl1271 to reset
-> and die... I also cannot shut the device down and restart it.
-> Attempts at a restart cause the wl1271 to lock up and I have to
-> reboot to recover.
->
-> Only these steps work for the initial association:
-> # ifconfig wlan0 hw ether 0:1:2:3:4:5
-> # ifconfig wlan0 up
-> # iw wlan0 scan
-> # ifup wlan0
-> Note: my AP is using WPA2 so I'm also running wpa_supplicant
->
-> I'm going to try using the latest compat-wireless, using the
-> 3.0.0 kernel as overall it is more stable on this platform.
-> I also plan to experiment a bit with the Panda (OMAP4) as it
-> has the same peripherals (and I assume that it works?)
->
-> What can I do to make this work better?
-> What data need I provide to help diagnose the failures?
->
-> Thanks for your time
->
-
-My problems seem to stem from how the WiFi interface is taken
-up/down.  Looking at the driver, it's expecting the MMC/SDIO
-hardware to be able to power the device on/off.  Sadly, on my
-board, this is not possible.  However, we do have a way to
-control the WLAN_EN signal to the module.
-
-I extended the driver to make use of the set_power function
-within the platform data.  With this in place, the WiFi can
-now be taken up/down with much success (that means it's not
-perfect, but at least it doesn't stop talking irrecoverably)
-Note that is is how it also works when SPI is used instead
-of SDIO.
-
-The attached patch is what I used.
-
--- 
-------------------------------------------------------------
-Gary Thomas                 |  Consulting for the
-MLB Associates              |    Embedded world
-------------------------------------------------------------
-
---------------040102080401080407090101
-Content-Type: text/x-patch;
- name="0001-Use-platform-specific-power-function-if-provided-whe.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-Use-platform-specific-power-function-if-provided-whe.pa";
- filename*1="tch"
-
->From 58eb478ced706dda18af23452c26568ea25aac77 Mon Sep 17 00:00:00 2001
-From: Gary Thomas <gary@mlbassoc.com>
-Date: Tue, 1 May 2012 06:02:11 -0600
-Subject: [PATCH 1/3] Use platform specific power function if provided when
- taking interface up/down
-
-Signed-off-by: Gary Thomas <gary@mlbassoc.com>
----
- drivers/net/wireless/wl12xx/sdio.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index 536e506..a242b67 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -170,6 +170,11 @@ static int wl1271_sdio_power_on(struct wl1271 *wl)
- 	struct sdio_func *func = wl_to_func(wl);
- 	int ret;
- 
-+        /* Use platform function to enable power if provided */
-+        if (wl->set_power) {
-+                (wl->set_power)(true);
-+        }
-+
- 	/* Make sure the card will not be powered off by runtime PM */
- 	ret = pm_runtime_get_sync(&func->dev);
- 	if (ret < 0)
-@@ -200,6 +205,11 @@ static int wl1271_sdio_power_off(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
- 
-+        /* Use platform function to disable power if provided */
-+        if (wl->set_power) {
-+                (wl->set_power)(false);
-+        }
-+
- 	/* Let runtime PM know the card is powered off */
- 	return pm_runtime_put_sync(&func->dev);
- }
-@@ -264,6 +274,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	wl->ref_clock = wlan_data->board_ref_clock;
- 	wl->tcxo_clock = wlan_data->board_tcxo_clock;
- 	wl->platform_quirks = wlan_data->platform_quirks;
-+	wl->set_power = wlan_data->set_power;
- 
- 	if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ)
- 		irqflags = IRQF_TRIGGER_RISING;
--- 
-1.7.7.6
-
-
---------------040102080401080407090101--
+SGkgSm9oYW5uZXMsDQoNCj4gPiBJbiAuam9pbl9pYnNzIGhhbmRsZXIsIG13aWZpZXggZHJpdmVy
+IHNlbmRzIGEgY29tbWFuZCB0byBmaXJtd2FyZSB0byBzdGFydC9qb2luIGFuIElCU1MgbmV0d29y
+ay4NCj4gPiBUaGlzIGNvbW1hbmQgaXMgYSBzeW5jaHJvbm91cyBjYWxsLiBXaGVuIHRoZSBjb21t
+YW5kIHJlc3BvbnNlIGNvbWVzDQo+ID4gYmFjayB3ZSBoYXZlIHN0YXJ0ZWQvam9pbmVkIGl0IHN1
+Y2Nlc3NmdWxseSwgb3RoZXJ3aXNlIGFuIGVycm9yIGNvZGUNCj4gPiB3aWxsIGJlIHJldHVybmVk
+LiBIb3dldmVyLCB3ZSBhcmUgc3RpbGwgaW5zaWRlIC5qb2luX2lic3MgaGFuZGxlciBhdA0KPiA+
+IHRoaXMgbW9tZW50LiBDYWxsaW5nIGNmZzgwMjExX2lic3Nfam9pbmVkKCkgZ2l2ZXMgdXMgdGhl
+IHdhcm5pbmcNCj4gPiBiZWNhdXNlIHNzaWRfbGVuIGhhc24ndCBiZWVuIHNldCBieSBjZmc4MDIx
+MSB5ZXQuDQo+IA0KPiBIbW0uIEludGVyZXN0aW5nLCBiZWNhdXNlIEkgd291bGQgdGhpbmsgdGhh
+dCBjb3VsZCBwb3RlbnRpYWxseSB0YWtlDQo+IHF1aXRlIGEgd2hpbGU/DQo+IA0KPiBJdCdzIGlu
+dGVyZXN0aW5nIHRob3VnaCBiZWNhdXNlIGl0IHBvaW50cyBvdXQgdGhhdCBldmVuIGlmIHlvdSBk
+byBjYWxsDQo+IGl0IGFzeW5jaHJvbm91c2x5LCB0aGVyZSdzIG5vIGd1YXJhbnRlZSB0aGF0IGl0
+IGFjdHVhbGx5IGhhcHBlbnMgYmVmb3JlDQo+IHRoZSBmdW5jdGlvbiBjYWxsIHJldHVybnMuIE1h
+eWJlIHdlIHNob3VsZCBqdXN0IG1vdmUgdGhlIGFzc2lnbm1lbnQgaW4NCj4gY2ZnODAyMTEgaW5z
+dGVhZD8NCg0KQ2FuIHdlIHVzZSAic21lX3N0YXRlICE9IENGRzgwMjExX1NNRV9DT05ORUNUSU5H
+IiBjaGVjayBmb3IgaWJzcyBwYXRoIHRvbz8NCg0KLS0tDQpkaWZmIC0tZ2l0IGEvbmV0L3dpcmVs
+ZXNzL2lic3MuYyBiL25ldC93aXJlbGVzcy9pYnNzLmMNCmluZGV4IDMwZjIwZmUuLjNkMDkzMGQg
+MTAwNjQ0DQotLS0gYS9uZXQvd2lyZWxlc3MvaWJzcy5jDQorKysgYi9uZXQvd2lyZWxlc3MvaWJz
+cy5jDQpAQCAtNDIsNiArNDIsNyBAQCB2b2lkIF9fY2ZnODAyMTFfaWJzc19qb2luZWQoc3RydWN0
+IG5ldF9kZXZpY2UgKmRldiwgY29uc3QgdTggKmJzc2lkKQ0KIAljZmc4MDIxMV9ob2xkX2Jzcyhi
+c3NfZnJvbV9wdWIoYnNzKSk7DQogCXdkZXYtPmN1cnJlbnRfYnNzID0gYnNzX2Zyb21fcHViKGJz
+cyk7DQogDQorCXdkZXYtPnNtZV9zdGF0ZSA9IENGRzgwMjExX1NNRV9DT05ORUNURUQ7DQogCWNm
+ZzgwMjExX3VwbG9hZF9jb25uZWN0X2tleXMod2Rldik7DQogDQogCW5sODAyMTFfc2VuZF9pYnNz
+X2Jzc2lkKHdpcGh5X3RvX2Rldih3ZGV2LT53aXBoeSksIGRldiwgYnNzaWQsDQpAQCAtNjAsNyAr
+NjEsNyBAQCB2b2lkIGNmZzgwMjExX2lic3Nfam9pbmVkKHN0cnVjdCBuZXRfZGV2aWNlICpkZXYs
+IGNvbnN0IHU4ICpic3NpZCwgZ2ZwX3QgZ2ZwKQ0KIAlzdHJ1Y3QgY2ZnODAyMTFfZXZlbnQgKmV2
+Ow0KIAl1bnNpZ25lZCBsb25nIGZsYWdzOw0KIA0KLQlDRkc4MDIxMV9ERVZfV0FSTl9PTighd2Rl
+di0+c3NpZF9sZW4pOw0KKwlDRkc4MDIxMV9ERVZfV0FSTl9PTih3ZGV2LT5zbWVfc3RhdGUgIT0g
+Q0ZHODAyMTFfU01FX0NPTk5FQ1RJTkcpOw0KIA0KIAlldiA9IGt6YWxsb2Moc2l6ZW9mKCpldiks
+IGdmcCk7DQogCWlmICghZXYpDQpAQCAtMTE1LDkgKzExNiwxMSBAQCBpbnQgX19jZmc4MDIxMV9q
+b2luX2lic3Moc3RydWN0IGNmZzgwMjExX3JlZ2lzdGVyZWRfZGV2aWNlICpyZGV2LA0KICNpZmRl
+ZiBDT05GSUdfQ0ZHODAyMTFfV0VYVA0KIAl3ZGV2LT53ZXh0Lmlic3MuY2hhbm5lbCA9IHBhcmFt
+cy0+Y2hhbm5lbDsNCiAjZW5kaWYNCisJd2Rldi0+c21lX3N0YXRlID0gQ0ZHODAyMTFfU01FX0NP
+Tk5FQ1RJTkc7DQogCWVyciA9IHJkZXYtPm9wcy0+am9pbl9pYnNzKCZyZGV2LT53aXBoeSwgZGV2
+LCBwYXJhbXMpOw0KIAlpZiAoZXJyKSB7DQogCQl3ZGV2LT5jb25uZWN0X2tleXMgPSBOVUxMOw0K
+KwkJd2Rldi0+c21lX3N0YXRlID0gQ0ZHODAyMTFfU01FX0lETEU7DQogCQlyZXR1cm4gZXJyOw0K
+IAl9DQogDQpAQCAtMTY5LDYgKzE3Miw3IEBAIHN0YXRpYyB2b2lkIF9fY2ZnODAyMTFfY2xlYXJf
+aWJzcyhzdHJ1Y3QgbmV0X2RldmljZSAqZGV2LCBib29sIG5vd2V4dCkNCiAJfQ0KIA0KIAl3ZGV2
+LT5jdXJyZW50X2JzcyA9IE5VTEw7DQorCXdkZXYtPnNtZV9zdGF0ZSA9IENGRzgwMjExX1NNRV9J
+RExFOw0KIAl3ZGV2LT5zc2lkX2xlbiA9IDA7DQogI2lmZGVmIENPTkZJR19DRkc4MDIxMV9XRVhU
+DQogCWlmICghbm93ZXh0KQ0KLS0NCg0KVGhhbmtzLA0KQmluZw0KDQo=
