@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:33633 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752542Ab2E2IdK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13549 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753020Ab2EVHWt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 04:33:10 -0400
-Received: by lahi5 with SMTP id i5so2889008lah.0
-        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 01:33:07 -0700 (PDT)
-Message-ID: <1338280385.15008.74.camel@cumari.coelho.fi> (sfid-20120529_103326_247559_FB16E8C4)
-Subject: Re: [PATCH v2] wlcore: fix undefined symbols when CONFIG_PM is not
- defined
-From: Luciano Coelho <coelho@ti.com>
-To: eyal@wizery.com, "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-next@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 29 May 2012 11:33:05 +0300
-In-Reply-To: <1338280122-28648-1-git-send-email-eyal@wizery.com>
-References: <1338280122-28648-1-git-send-email-eyal@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 22 May 2012 03:22:49 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Fix missing gpio pin 9 configuration
+Date: Tue, 22 May 2012 12:52:48 +0530
+Message-ID: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120522_092259_608717_5F53215E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-29 at 01:28 -0700, Eyal Shapira wrote:
-> commit c21eebb50379a96e1335e933583dcd5b455c6b64
-> "wl12xx: add RX filters ACX commands" breaks the build
-> when CONFIG_PM isn't defined:
-> 
-> ERROR: "wl1271_rx_filter_get_fields_size"
-> [drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
-> ERROR: "wl1271_rx_filter_flatten_fields"
-> [drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
-> 
-> code in drivers/net/wireless/ti/wlcore/acx.c is using these
-> functions unconditionally while they are #ifdefed CONFIG_PM.
-> Fix it by ifdefing all relevant RX filters code with CONFIG_PM.
-> 
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Signed-off-by: Eyal Shapira <eyal@wizery.com>
-> ---
-> v2: reference the correct commit in linux-next (Thanks Stephen!)
+GPIO pin 9 also needs to be configured along with other gpio
+pins to avoid sdio crc errors. I've not experienced any issue
+with missing this particular gpio pin configuration, found dunring
+code review. This can potentially improve rx performance.
 
-Thanks for the correction.  For v2:
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c   |    6 ++++++
+ drivers/net/wireless/ath/ath6kl/target.h |    1 +
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-Acked-by: Luciano Coelho <coelho@ti.com>
-
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 10de132..241febc 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1392,6 +1392,12 @@ static int ath6kl_init_upload(struct ath6kl *ar)
+ 	    ar->version.target_ver == AR6003_HW_2_1_1_VERSION) {
+ 		ath6kl_err("temporary war to avoid sdio crc error\n");
+ 
++		param = 0x28;
++		address = GPIO_BASE_ADDRESS + GPIO_PIN9_ADDRESS;
++		status = ath6kl_bmi_reg_write(ar, address, param);
++		if (status)
++			return status;
++
+ 		param = 0x20;
+ 
+ 		address = GPIO_BASE_ADDRESS + GPIO_PIN10_ADDRESS;
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index 78e0ef4..a98c12b 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -45,6 +45,7 @@
+ #define LPO_CAL_ENABLE_S		20
+ #define LPO_CAL_ENABLE			0x00100000
+ 
++#define GPIO_PIN9_ADDRESS		0x0000004c
+ #define GPIO_PIN10_ADDRESS		0x00000050
+ #define GPIO_PIN11_ADDRESS		0x00000054
+ #define GPIO_PIN12_ADDRESS		0x00000058
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
