@@ -1,3059 +1,1211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:39675 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322Ab2EDOT2 (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:58787 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933367Ab2EWNzJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 10:19:28 -0400
-Date: Fri, 4 May 2012 16:20:08 +0200
-From: Antonio Quartulli <ordex@autistici.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi warn_slowpath with 3.*
-Message-ID: <20120504142006.GA2040@ritirata.org> (sfid-20120504_162003_297713_FD723B4D)
-References: <20120502162100.GA2528@ritirata.org>
- <20120503065351.GB2307@ritirata.org>
- <CANUX_P03yeuU7gpXbdPVeUBnco4Cz8v78e00x+SgYbhD5K8B5w@mail.gmail.com>
- <CANUX_P0zRjSy9LOVzkWtboqAsvkD4O6EcEXLo11W1Sbb307OJQ@mail.gmail.com>
- <20120503200948.GC11326@ritirata.org>
- <CANUX_P0DL+_V8RO-CNXQx=oHF0T-opO=uw-ukYOjjVgo_OyfUw@mail.gmail.com>
- <20120504002136.GA4201@ritirata.org>
- <CANUX_P1Ji6H0zaA_kMHx2F1AD+czB=XtrDhjEvR8t1aCDpZhUQ@mail.gmail.com>
- <20120504063644.GA2912@ritirata.org>
- <CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
+	Wed, 23 May 2012 09:55:09 -0400
+Date: Wed, 23 May 2012 08:55:06 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: BCM4331 tx failures after S3
+Message-ID: <20120523135506.GB30165@thinkpad-t410> (sfid-20120523_155524_671860_C966C0E1)
+References: <20120522165251.GA31347@thinkpad-t410>
+ <4FBCAE3E.6050206@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="JWEK1jqKZ6MHAcjA"
-In-Reply-To: <CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
+Content-Type: multipart/mixed; boundary="ReaqsoxgOBHFXBhH"
+In-Reply-To: <4FBCAE3E.6050206@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---JWEK1jqKZ6MHAcjA
-Content-Type: multipart/mixed; boundary="R3G7APHDIzY6R/pk"
+--ReaqsoxgOBHFXBhH
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
+On Wed, May 23, 2012 at 11:30:38AM +0200, Arend van Spriel wrote:
+> On 05/22/2012 06:52 PM, Seth Forshee wrote:
+> > Hi Arend,
+> > 
+> > I've inquired about this issue on the list once before, but I thought
+> > I'd try once again to see if Broadcom can offer any suggestions.
+> > 
+> > Recent MacBook Pros with BCM4331 wireless have a strange problem. Tx
+> > doesn't work after S3, but only if no external power is applied during
+> > the resume. mac80211 reports mostly timeouts for responses to probe
+> > requests, but analysis with wireshark shows no frames from the BCM4331
+> > on the air. The only way I've found to recover is to reload both b43 and
+> > bcma; reloading b43 alone is not enough.
+> 
+> Yikes. I recently did suspend/resume and hibernate testing with BCM43224
+> (so brcmsmac and bcma), but my system was on AC. I will execute them
+> again on battery. I want to make sure it is not a BCM4331 specific issue.
 
---R3G7APHDIzY6R/pk
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I'm also testing a Macbook Air with BCM43224 using brcmsmac, and it does
+not suffer from the same issue.
 
-On Fri, May 04, 2012 at 09:58:30 +0300, Emmanuel Grumbach wrote:
-> This can't be with my patch, is it ?
+> > I've checked the values of MACCTL and the DMA TXCTL registers, since
+> > these are the ones used by brcmsmac to mute tx, but those look okay. Any
+> > suggestions of other things to check? My next step would be to start
+> > looking at the state of the phy and radio, but since we don't have much
+> > information about what the registers there actually do some suggestions
+> > would be helpful.
+> 
+> When going to S3 the driver is told by mac80211 .stop callback to abort
+> driver operation so I do not expect b43 has a problem. Instead we
+> probably have to look at the host PCI code in bcma, but before going
+> there let me execute my tests.
+> 
+> Can you tell me on what kernel version you see this issue. I would also
+> like to have a look at your kernel log.
 
-here is the log. Some pieces are missing at the beginning, didn't check why.
-However the WARNING comes up later, so it should be ok. Tell me if I can do
-something else!
+I'm still seeing it in both 3.4 and wireless-testing. Attached is dmesg
+from wireless-testing.
 
-Cheers,
+Thanks,
+Seth
 
 
---=20
-Antonio Quartulli
+--ReaqsoxgOBHFXBhH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="dmesg.txt"
 
-=2E.each of us alone is worth nothing..
-Ernesto "Che" Guevara
+[    0.000000] Initializing cgroup subsys cpuset
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Linux version 3.4.0-030400v201205231424-generic (sforshee@tangerine) (gcc version 4.7.0 (Ubuntu/Linaro 4.7.0-7ubuntu3) ) #030400v201205231424 SMP Wed May 23 13:28:41 UTC 2012
+[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz-3.4.0-030400v201205231424-generic root=UUID=3b5f80a7-de95-4588-af4f-eedc09cfb366 ro quiet splash vt.handoff=7
+[    0.000000] KERNEL supported cpus:
+[    0.000000]   Intel GenuineIntel
+[    0.000000]   AMD AuthenticAMD
+[    0.000000]   Centaur CentaurHauls
+[    0.000000] BIOS-provided physical RAM map:
+[    0.000000]  BIOS-e820: 0000000000000000 - 000000000008e000 (usable)
+[    0.000000]  BIOS-e820: 000000000008e000 - 0000000000090000 (reserved)
+[    0.000000]  BIOS-e820: 0000000000090000 - 000000000009fc00 (usable)
+[    0.000000]  BIOS-e820: 000000000009fc00 - 00000000000c0000 (reserved)
+[    0.000000]  BIOS-e820: 00000000000e0000 - 0000000000100000 (reserved)
+[    0.000000]  BIOS-e820: 0000000000100000 - 0000000020000000 (usable)
+[    0.000000]  BIOS-e820: 0000000020000000 - 0000000020200000 (reserved)
+[    0.000000]  BIOS-e820: 0000000020200000 - 0000000040000000 (usable)
+[    0.000000]  BIOS-e820: 0000000040000000 - 0000000040200000 (reserved)
+[    0.000000]  BIOS-e820: 0000000040200000 - 000000008ad34000 (usable)
+[    0.000000]  BIOS-e820: 000000008ad34000 - 000000008ad5f000 (ACPI NVS)
+[    0.000000]  BIOS-e820: 000000008ad5f000 - 000000008afa3000 (ACPI data)
+[    0.000000]  BIOS-e820: 000000008afa3000 - 000000008afff000 (reserved)
+[    0.000000]  BIOS-e820: 000000008afff000 - 000000008b000000 (ACPI data)
+[    0.000000]  BIOS-e820: 000000008b000000 - 000000008ba00000 (reserved)
+[    0.000000]  BIOS-e820: 000000008ba00000 - 000000008fa00000 (ACPI data)
+[    0.000000]  BIOS-e820: 00000000e0000000 - 00000000f0000000 (reserved)
+[    0.000000]  BIOS-e820: 00000000fec00000 - 00000000fec01000 (reserved)
+[    0.000000]  BIOS-e820: 00000000fed00000 - 00000000fed04000 (reserved)
+[    0.000000]  BIOS-e820: 00000000fed10000 - 00000000fed14000 (reserved)
+[    0.000000]  BIOS-e820: 00000000fed18000 - 00000000fed1a000 (reserved)
+[    0.000000]  BIOS-e820: 00000000fed1c000 - 00000000fed20000 (reserved)
+[    0.000000]  BIOS-e820: 00000000fee00000 - 00000000fee01000 (reserved)
+[    0.000000]  BIOS-e820: 00000000ff800000 - 0000000100000000 (reserved)
+[    0.000000]  BIOS-e820: 0000000100000000 - 000000016fe00000 (usable)
+[    0.000000] NX (Execute Disable) protection: active
+[    0.000000] DMI 2.4 present.
+[    0.000000] DMI: Apple Inc. MacBookPro8,2/Mac-94245A3940C91C80, BIOS    MBP81.88Z.0047.B27.1201241646 01/24/12
+[    0.000000] e820 update range: 0000000000000000 - 0000000000010000 (usable) ==> (reserved)
+[    0.000000] e820 remove range: 00000000000a0000 - 0000000000100000 (usable)
+[    0.000000] No AGP bridge found
+[    0.000000] last_pfn = 0x16fe00 max_arch_pfn = 0x400000000
+[    0.000000] MTRR default type: write-back
+[    0.000000] MTRR fixed ranges enabled:
+[    0.000000]   00000-9FFFF write-back
+[    0.000000]   A0000-BFFFF uncachable
+[    0.000000]   C0000-DFFFF write-protect
+[    0.000000]   E0000-FFFFF uncachable
+[    0.000000] MTRR variable ranges enabled:
+[    0.000000]   0 base 0C0000000 mask FC0000000 uncachable
+[    0.000000]   1 base 0A0000000 mask FE0000000 uncachable
+[    0.000000]   2 base 090000000 mask FF0000000 uncachable
+[    0.000000]   3 base 08C000000 mask FFC000000 uncachable
+[    0.000000]   4 base 08B800000 mask FFF800000 uncachable
+[    0.000000]   5 disabled
+[    0.000000]   6 disabled
+[    0.000000]   7 disabled
+[    0.000000]   8 disabled
+[    0.000000]   9 disabled
+[    0.000000] x86 PAT enabled: cpu 0, old 0x7040600070406, new 0x7010600070106
+[    0.000000] last_pfn = 0x8ad34 max_arch_pfn = 0x400000000
+[    0.000000] initial memory mapped : 0 - 20000000
+[    0.000000] Base memory trampoline at [ffff88000009a000] 9a000 size 20480
+[    0.000000] init_memory_mapping: 0000000000000000-000000008ad34000
+[    0.000000]  0000000000 - 008ac00000 page 2M
+[    0.000000]  008ac00000 - 008ad34000 page 4k
+[    0.000000] kernel direct mapping tables up to 8ad34000 @ 1fffb000-20000000
+[    0.000000] init_memory_mapping: 0000000100000000-000000016fe00000
+[    0.000000]  0100000000 - 016fe00000 page 2M
+[    0.000000] kernel direct mapping tables up to 16fe00000 @ 8ad2d000-8ad34000
+[    0.000000] RAMDISK: 365be000 - 372d7000
+[    0.000000] ACPI: RSDP 00000000000fe020 00024 (v02 APPLE )
+[    0.000000] ACPI: XSDT 000000008ad8e1c0 000A4 (v01 APPLE   Apple00 00000047      01000013)
+[    0.000000] ACPI: FACP 000000008ad8c000 000F4 (v04 APPLE   Apple00 00000047 Loki 0000005F)
+[    0.000000] ACPI: DSDT 000000008ad80000 06F12 (v01 APPLE  MacBookP 00080001 INTL 20061109)
+[    0.000000] ACPI: FACS 000000008ad3e000 00040
+[    0.000000] ACPI: HPET 000000008ad8b000 00038 (v01 APPLE   Apple00 00000001 Loki 0000005F)
+[    0.000000] ACPI: APIC 000000008ad8a000 000BC (v02 APPLE   Apple00 00000001 Loki 0000005F)
+[    0.000000] ACPI: SBST 000000008ad88000 00030 (v01 APPLE   Apple00 00000001 Loki 0000005F)
+[    0.000000] ACPI: ECDT 000000008ad87000 00053 (v01 APPLE   Apple00 00000001 Loki 0000005F)
+[    0.000000] ACPI: SSDT 000000008ad7b000 00024 (v01 APPLE   SmcDppt 00001000 INTL 20061109)
+[    0.000000] ACPI: SSDT 000000008ad79000 0061A (v01 APPLE  UsbNoRmh 00001000 INTL 20061109)
+[    0.000000] ACPI: SSDT 000000008ad75000 000A0 (v02 APPLE   IGNoHda 00001000 INTL 20061109)
+[    0.000000] ACPI: SSDT 000000008ad73000 0062F (v01  PmRef  Cpu0Ist 00003000 INTL 20061109)
+[    0.000000] ACPI: SSDT 000000008ad72000 009B1 (v01  PmRef    CpuPm 00003000 INTL 20061109)
+[    0.000000] ACPI: SSDT 000000008ad71000 00315 (v01  PmRef  Cpu0Tst 00003000 INTL 20061109)
+[    0.000000] ACPI: SSDT 000000008ad70000 0037A (v01  PmRef    ApTst 00003000 INTL 20061109)
+[    0.000000] ACPI: MCFG 000000008ad89000 0003C (v01 APPLE   Apple00 00000001 Loki 0000005F)
+[    0.000000] ACPI: SSDT 000000008ad7f000 00124 (v01 SataRe  SataPri 00001000 INTL 20061109)
+[    0.000000] ACPI: SSDT 000000008ad7e000 000FA (v01 SataRe  SataSec 00001000 INTL 20061109)
+[    0.000000] ACPI: SSDT 000000008ad7d000 00032 (v01  Apple   SsdtS3 00001000 INTL 20061109)
+[    0.000000] ACPI: Local APIC address 0xfee00000
+[    0.000000] No NUMA configuration found
+[    0.000000] Faking a node at 0000000000000000-000000016fe00000
+[    0.000000] Initmem setup node 0 0000000000000000-000000016fe00000
+[    0.000000]   NODE_DATA [000000016fdfc000 - 000000016fdfffff]
+[    0.000000]  [ffffea0000000000-ffffea0005bfffff] PMD -> [ffff88016b400000-ffff88016f3fffff] on node 0
+[    0.000000] Zone PFN ranges:
+[    0.000000]   DMA      0x00000010 -> 0x00001000
+[    0.000000]   DMA32    0x00001000 -> 0x00100000
+[    0.000000]   Normal   0x00100000 -> 0x0016fe00
+[    0.000000] Movable zone start PFN for each node
+[    0.000000] Early memory PFN ranges
+[    0.000000]     0: 0x00000010 -> 0x0000008e
+[    0.000000]     0: 0x00000090 -> 0x0000009f
+[    0.000000]     0: 0x00000100 -> 0x00020000
+[    0.000000]     0: 0x00020200 -> 0x00040000
+[    0.000000]     0: 0x00040200 -> 0x0008ad34
+[    0.000000]     0: 0x00100000 -> 0x0016fe00
+[    0.000000] On node 0 totalpages: 1025729
+[    0.000000]   DMA zone: 64 pages used for memmap
+[    0.000000]   DMA zone: 5 pages reserved
+[    0.000000]   DMA zone: 3912 pages, LIFO batch:0
+[    0.000000]   DMA32 zone: 16320 pages used for memmap
+[    0.000000]   DMA32 zone: 547188 pages, LIFO batch:31
+[    0.000000]   Normal zone: 7160 pages used for memmap
+[    0.000000]   Normal zone: 451080 pages, LIFO batch:31
+[    0.000000] ACPI: PM-Timer IO Port: 0x408
+[    0.000000] ACPI: Local APIC address 0xfee00000
+[    0.000000] ACPI: LAPIC (acpi_id[0x01] lapic_id[0x00] enabled)
+[    0.000000] ACPI: LAPIC (acpi_id[0x02] lapic_id[0x02] enabled)
+[    0.000000] ACPI: LAPIC (acpi_id[0x03] lapic_id[0x04] enabled)
+[    0.000000] ACPI: LAPIC (acpi_id[0x04] lapic_id[0x06] enabled)
+[    0.000000] ACPI: LAPIC (acpi_id[0x05] lapic_id[0x01] enabled)
+[    0.000000] ACPI: LAPIC (acpi_id[0x06] lapic_id[0x03] enabled)
+[    0.000000] ACPI: LAPIC (acpi_id[0x07] lapic_id[0x05] enabled)
+[    0.000000] ACPI: LAPIC (acpi_id[0x08] lapic_id[0x07] enabled)
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x01] high edge lint[0x1])
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x02] high edge lint[0x1])
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x03] high edge lint[0x1])
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x04] high edge lint[0x1])
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x05] high edge lint[0x1])
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x06] high edge lint[0x1])
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x07] high edge lint[0x1])
+[    0.000000] ACPI: LAPIC_NMI (acpi_id[0x08] high edge lint[0x1])
+[    0.000000] ACPI: IOAPIC (id[0x02] address[0xfec00000] gsi_base[0])
+[    0.000000] IOAPIC[0]: apic_id 2, version 32, address 0xfec00000, GSI 0-23
+[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
+[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
+[    0.000000] ACPI: IRQ0 used by override.
+[    0.000000] ACPI: IRQ2 used by override.
+[    0.000000] ACPI: IRQ9 used by override.
+[    0.000000] Using ACPI (MADT) for SMP configuration information
+[    0.000000] ACPI: HPET id: 0x8086a201 base: 0xfed00000
+[    0.000000] SMP: Allowing 8 CPUs, 0 hotplug CPUs
+[    0.000000] nr_irqs_gsi: 40
+[    0.000000] PM: Registered nosave memory: 000000000008e000 - 0000000000090000
+[    0.000000] PM: Registered nosave memory: 000000000009f000 - 00000000000a0000
+[    0.000000] PM: Registered nosave memory: 00000000000a0000 - 00000000000c0000
+[    0.000000] PM: Registered nosave memory: 00000000000c0000 - 00000000000e0000
+[    0.000000] PM: Registered nosave memory: 00000000000e0000 - 0000000000100000
+[    0.000000] PM: Registered nosave memory: 0000000020000000 - 0000000020200000
+[    0.000000] PM: Registered nosave memory: 0000000040000000 - 0000000040200000
+[    0.000000] PM: Registered nosave memory: 000000008ad34000 - 000000008ad5f000
+[    0.000000] PM: Registered nosave memory: 000000008ad5f000 - 000000008afa3000
+[    0.000000] PM: Registered nosave memory: 000000008afa3000 - 000000008afff000
+[    0.000000] PM: Registered nosave memory: 000000008afff000 - 000000008b000000
+[    0.000000] PM: Registered nosave memory: 000000008b000000 - 000000008ba00000
+[    0.000000] PM: Registered nosave memory: 000000008ba00000 - 000000008fa00000
+[    0.000000] PM: Registered nosave memory: 000000008fa00000 - 00000000e0000000
+[    0.000000] PM: Registered nosave memory: 00000000e0000000 - 00000000f0000000
+[    0.000000] PM: Registered nosave memory: 00000000f0000000 - 00000000fec00000
+[    0.000000] PM: Registered nosave memory: 00000000fec00000 - 00000000fec01000
+[    0.000000] PM: Registered nosave memory: 00000000fec01000 - 00000000fed00000
+[    0.000000] PM: Registered nosave memory: 00000000fed00000 - 00000000fed04000
+[    0.000000] PM: Registered nosave memory: 00000000fed04000 - 00000000fed10000
+[    0.000000] PM: Registered nosave memory: 00000000fed10000 - 00000000fed14000
+[    0.000000] PM: Registered nosave memory: 00000000fed14000 - 00000000fed18000
+[    0.000000] PM: Registered nosave memory: 00000000fed18000 - 00000000fed1a000
+[    0.000000] PM: Registered nosave memory: 00000000fed1a000 - 00000000fed1c000
+[    0.000000] PM: Registered nosave memory: 00000000fed1c000 - 00000000fed20000
+[    0.000000] PM: Registered nosave memory: 00000000fed20000 - 00000000fee00000
+[    0.000000] PM: Registered nosave memory: 00000000fee00000 - 00000000fee01000
+[    0.000000] PM: Registered nosave memory: 00000000fee01000 - 00000000ff800000
+[    0.000000] PM: Registered nosave memory: 00000000ff800000 - 0000000100000000
+[    0.000000] Allocating PCI resources starting at 8fa00000 (gap: 8fa00000:50600000)
+[    0.000000] Booting paravirtualized kernel on bare hardware
+[    0.000000] setup_percpu: NR_CPUS:256 nr_cpumask_bits:256 nr_cpu_ids:8 nr_node_ids:1
+[    0.000000] PERCPU: Embedded 28 pages/cpu @ffff88016fa00000 s83392 r8192 d23104 u262144
+[    0.000000] pcpu-alloc: s83392 r8192 d23104 u262144 alloc=1*2097152
+[    0.000000] pcpu-alloc: [0] 0 1 2 3 4 5 6 7 
+[    0.000000] Built 1 zonelists in Node order, mobility grouping on.  Total pages: 1002180
+[    0.000000] Policy zone: Normal
+[    0.000000] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-3.4.0-030400v201205231424-generic root=UUID=3b5f80a7-de95-4588-af4f-eedc09cfb366 ro quiet splash vt.handoff=7
+[    0.000000] PID hash table entries: 4096 (order: 3, 32768 bytes)
+[    0.000000] xsave/xrstor: enabled xstate_bv 0x7, cntxt size 0x340
+[    0.000000] Checking aperture...
+[    0.000000] No AGP bridge found
+[    0.000000] Calgary: detecting Calgary via BIOS EBDA area
+[    0.000000] Calgary: Unable to locate Rio Grande table in EBDA - bailing!
+[    0.000000] Memory: 3941156k/6027264k available (6683k kernel code, 1924348k absent, 161760k reserved, 6497k data, 912k init)
+[    0.000000] SLUB: Genslabs=15, HWalign=64, Order=0-3, MinObjects=0, CPUs=8, Nodes=1
+[    0.000000] Hierarchical RCU implementation.
+[    0.000000] 	RCU dyntick-idle grace-period acceleration is enabled.
+[    0.000000] NR_IRQS:16640 nr_irqs:744 16
+[    0.000000] Extended CMOS year: 2000
+[    0.000000] Console: colour dummy device 80x25
+[    0.000000] console [tty0] enabled
+[    0.000000] allocated 16777216 bytes of page_cgroup
+[    0.000000] please try 'cgroup_disable=memory' option if you don't want memory cgroups
+[    0.000000] hpet clockevent registered
+[    0.000000] Fast TSC calibration using PIT
+[    0.004000] Detected 2199.915 MHz processor.
+[    0.000002] Calibrating delay loop (skipped), value calculated using timer frequency.. 4399.83 BogoMIPS (lpj=8799660)
+[    0.000006] pid_max: default: 32768 minimum: 301
+[    0.000029] Security Framework initialized
+[    0.000041] AppArmor: AppArmor initialized
+[    0.000341] Dentry cache hash table entries: 524288 (order: 10, 4194304 bytes)
+[    0.001226] Inode-cache hash table entries: 262144 (order: 9, 2097152 bytes)
+[    0.001608] Mount-cache hash table entries: 256
+[    0.001773] Initializing cgroup subsys cpuacct
+[    0.001775] Initializing cgroup subsys memory
+[    0.001782] Initializing cgroup subsys devices
+[    0.001784] Initializing cgroup subsys freezer
+[    0.001786] Initializing cgroup subsys blkio
+[    0.001791] Initializing cgroup subsys perf_event
+[    0.001816] CPU: Physical Processor ID: 0
+[    0.001817] CPU: Processor Core ID: 0
+[    0.001823] mce: CPU supports 9 MCE banks
+[    0.001837] CPU0: Thermal monitoring enabled (TM1)
+[    0.001844] using mwait in idle threads.
+[    0.004505] ACPI: Core revision 20120320
+[    0.011643] ftrace: allocating 25032 entries in 98 pages
+[    0.027252] ..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
+[    0.066897] CPU0: Intel(R) Core(TM) i7-2675QM CPU @ 2.20GHz stepping 07
+[    0.172412] Performance Events: PEBS fmt1+, 16-deep LBR, SandyBridge events, Intel PMU driver.
+[    0.172418] PEBS disabled due to CPU errata.
+[    0.172420] ... version:                3
+[    0.172422] ... bit width:              48
+[    0.172423] ... generic registers:      4
+[    0.172424] ... value mask:             0000ffffffffffff
+[    0.172426] ... max period:             000000007fffffff
+[    0.172427] ... fixed-purpose events:   3
+[    0.172428] ... event mask:             000000070000000f
+[    0.172577] NMI watchdog: enabled, takes one hw-pmu counter.
+[    0.172646] Booting Node   0, Processors  #1
+[    0.185791] NMI watchdog: enabled, takes one hw-pmu counter.
+[    0.185870]  #2
+[    0.199000] NMI watchdog: enabled, takes one hw-pmu counter.
+[    0.199076]  #3
+[    0.212206] NMI watchdog: enabled, takes one hw-pmu counter.
+[    0.212281]  #4
+[    0.225418] NMI watchdog: enabled, takes one hw-pmu counter.
+[    0.225504]  #5
+[    0.238634] NMI watchdog: enabled, takes one hw-pmu counter.
+[    0.238711]  #6
+[    0.251842] NMI watchdog: enabled, takes one hw-pmu counter.
+[    0.251915]  #7 Ok.
+[    0.265051] NMI watchdog: enabled, takes one hw-pmu counter.
+[    0.265079] Brought up 8 CPUs
+[    0.265082] Total of 8 processors activated (35198.64 BogoMIPS).
+[    0.272665] devtmpfs: initialized
+[    0.273524] EVM: security.selinux
+[    0.273526] EVM: security.SMACK64
+[    0.273527] EVM: security.capability
+[    0.273567] PM: Registering ACPI NVS region [mem 0x8ad34000-0x8ad5efff] (176128 bytes)
+[    0.274226] dummy: 
+[    0.274255] RTC time: 13:45:21, date: 05/23/12
+[    0.274288] NET: Registered protocol family 16
+[    0.274412] ACPI: bus type pci registered
+[    0.274472] PCI: MMCONFIG for domain 0000 [bus 00-9b] at [mem 0xe0000000-0xe9bfffff] (base 0xe0000000)
+[    0.274475] PCI: MMCONFIG at [mem 0xe0000000-0xe9bfffff] reserved in E820
+[    0.311429] PCI: Using configuration type 1 for base access
+[    0.312330] bio: create slab <bio-0> at 0
+[    0.312391] ACPI: Added _OSI(Module Device)
+[    0.312393] ACPI: Added _OSI(Processor Device)
+[    0.312394] ACPI: Added _OSI(3.0 _SCP Extensions)
+[    0.312396] ACPI: Added _OSI(Processor Aggregator Device)
+[    0.313808] ACPI: EC: EC description table is found, configuring boot EC
+[    0.320134] [Firmware Bug]: ACPI: BIOS _OSI(Linux) query ignored
+[    2.314658] ACPI: SSDT 000000008ad39818 00781 (v01  PmRef  Cpu0Cst 00003001 INTL 20061109)
+[    2.315022] ACPI: Dynamic OEM Table Load:
+[    2.315025] ACPI: SSDT           (null) 00781 (v01  PmRef  Cpu0Cst 00003001 INTL 20061109)
+[    2.315302] ACPI: SSDT 000000008ad3ac18 003A4 (v01  PmRef    ApIst 00003000 INTL 20061109)
+[    2.315713] ACPI: Dynamic OEM Table Load:
+[    2.315715] ACPI: SSDT           (null) 003A4 (v01  PmRef    ApIst 00003000 INTL 20061109)
+[    2.315860] ACPI: SSDT 000000008ad38d98 00119 (v01  PmRef    ApCst 00003000 INTL 20061109)
+[    2.316224] ACPI: Dynamic OEM Table Load:
+[    2.316227] ACPI: SSDT           (null) 00119 (v01  PmRef    ApCst 00003000 INTL 20061109)
+[    2.317298] ACPI: Interpreter enabled
+[    2.317302] ACPI: (supports S0 S3 S4 S5)
+[    2.317322] ACPI: Using IOAPIC for interrupt routing
+[    2.328890] ACPI: EC: GPE = 0x17, I/O: command/status = 0x66, data = 0x62
+[    2.329063] ACPI: No dock devices found.
+[    2.329066] PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
+[    2.329344] ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+[    2.329766] pci_root PNP0A08:00: host bridge window [io  0x0000-0x0cf7]
+[    2.329769] pci_root PNP0A08:00: host bridge window [io  0x0d00-0xffff]
+[    2.329771] pci_root PNP0A08:00: host bridge window [mem 0x000a0000-0x000bffff]
+[    2.329774] pci_root PNP0A08:00: host bridge window [mem 0x8fa00000-0xfeafffff]
+[    2.329776] pci_root PNP0A08:00: host bridge window [mem 0xfed40000-0xfed44fff]
+[    2.329802] PCI host bridge to bus 0000:00
+[    2.329804] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7]
+[    2.329806] pci_bus 0000:00: root bus resource [io  0x0d00-0xffff]
+[    2.329808] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff]
+[    2.329810] pci_bus 0000:00: root bus resource [mem 0x8fa00000-0xfeafffff]
+[    2.329812] pci_bus 0000:00: root bus resource [mem 0xfed40000-0xfed44fff]
+[    2.329821] pci 0000:00:00.0: [8086:0104] type 00 class 0x060000
+[    2.329859] pci 0000:00:01.0: [8086:0101] type 01 class 0x060400
+[    2.329893] pci 0000:00:01.0: PME# supported from D0 D3hot D3cold
+[    2.329907] pci 0000:00:01.1: [8086:0105] type 01 class 0x060400
+[    2.329939] pci 0000:00:01.1: PME# supported from D0 D3hot D3cold
+[    2.329984] pci 0000:00:16.0: [8086:1c3a] type 00 class 0x078000
+[    2.330010] pci 0000:00:16.0: reg 10: [mem 0xb0907100-0xb090710f 64bit]
+[    2.330090] pci 0000:00:16.0: PME# supported from D0 D3hot D3cold
+[    2.330121] pci 0000:00:1a.0: [8086:1c2c] type 00 class 0x0c0300
+[    2.330167] pci 0000:00:1a.0: reg 20: [io  0x3120-0x313f]
+[    2.330237] pci 0000:00:1a.7: [8086:1c2d] type 00 class 0x0c0320
+[    2.330260] pci 0000:00:1a.7: reg 10: [mem 0xb0906c00-0xb0906fff]
+[    2.330354] pci 0000:00:1a.7: PME# supported from D0 D3hot D3cold
+[    2.330383] pci 0000:00:1b.0: [8086:1c20] type 00 class 0x040300
+[    2.330399] pci 0000:00:1b.0: reg 10: [mem 0xb0900000-0xb0903fff 64bit]
+[    2.330470] pci 0000:00:1b.0: PME# supported from D0 D3hot D3cold
+[    2.330496] pci 0000:00:1c.0: [8086:1c10] type 01 class 0x060400
+[    2.330579] pci 0000:00:1c.0: PME# supported from D0 D3hot D3cold
+[    2.330605] pci 0000:00:1c.1: [8086:1c12] type 01 class 0x060400
+[    2.330688] pci 0000:00:1c.1: PME# supported from D0 D3hot D3cold
+[    2.330716] pci 0000:00:1c.2: [8086:1c14] type 01 class 0x060400
+[    2.330798] pci 0000:00:1c.2: PME# supported from D0 D3hot D3cold
+[    2.330834] pci 0000:00:1d.0: [8086:1c27] type 00 class 0x0c0300
+[    2.330879] pci 0000:00:1d.0: reg 20: [io  0x30c0-0x30df]
+[    2.330951] pci 0000:00:1d.7: [8086:1c26] type 00 class 0x0c0320
+[    2.330973] pci 0000:00:1d.7: reg 10: [mem 0xb0906800-0xb0906bff]
+[    2.331068] pci 0000:00:1d.7: PME# supported from D0 D3hot D3cold
+[    2.331096] pci 0000:00:1f.0: [8086:1c49] type 00 class 0x060100
+[    2.331224] pci 0000:00:1f.2: [8086:1c01] type 00 class 0x01018f
+[    2.331241] pci 0000:00:1f.2: reg 10: [io  0x3148-0x314f]
+[    2.331250] pci 0000:00:1f.2: reg 14: [io  0x315c-0x315f]
+[    2.331259] pci 0000:00:1f.2: reg 18: [io  0x3140-0x3147]
+[    2.331270] pci 0000:00:1f.2: reg 1c: [io  0x3158-0x315b]
+[    2.331278] pci 0000:00:1f.2: reg 20: [io  0x3060-0x306f]
+[    2.331287] pci 0000:00:1f.2: reg 24: [io  0xffe0-0xffef]
+[    2.331338] pci 0000:00:1f.3: [8086:1c22] type 00 class 0x0c0500
+[    2.331354] pci 0000:00:1f.3: reg 10: [mem 0xb0907000-0xb09070ff 64bit]
+[    2.331377] pci 0000:00:1f.3: reg 20: [io  0xefa0-0xefbf]
+[    2.331442] pci 0000:01:00.0: [1002:6741] type 00 class 0x030000
+[    2.331458] pci 0000:01:00.0: reg 10: [mem 0x90000000-0x9fffffff 64bit pref]
+[    2.331472] pci 0000:01:00.0: reg 18: [mem 0xb0800000-0xb081ffff 64bit]
+[    2.331481] pci 0000:01:00.0: reg 20: [io  0x2000-0x20ff]
+[    2.331497] pci 0000:01:00.0: reg 30: [mem 0xb0820000-0xb083ffff pref]
+[    2.331538] pci 0000:01:00.0: supports D1 D2
+[    2.331562] pci 0000:01:00.1: [1002:aa90] type 00 class 0x040300
+[    2.331578] pci 0000:01:00.1: reg 10: [mem 0xb0840000-0xb0843fff 64bit]
+[    2.331655] pci 0000:01:00.1: supports D1 D2
+[    2.338235] pci 0000:00:01.0: PCI bridge to [bus 01-01]
+[    2.338242] pci 0000:00:01.0:   bridge window [io  0x2000-0x2fff]
+[    2.338250] pci 0000:00:01.0:   bridge window [mem 0xb0800000-0xb08fffff]
+[    2.338259] pci 0000:00:01.0:   bridge window [mem 0x90000000-0x9fffffff 64bit pref]
+[    2.338304] pci 0000:00:01.1: PCI bridge to [bus 05-9b]
+[    2.338306] pci 0000:00:01.1:   bridge window [io  0x4000-0x4fff]
+[    2.338309] pci 0000:00:01.1:   bridge window [mem 0xb0a00000-0xb4efffff]
+[    2.338313] pci 0000:00:01.1:   bridge window [mem 0xb4f00000-0xb8efffff 64bit pref]
+[    2.338420] pci 0000:02:00.0: [14e4:16b4] type 00 class 0x020000
+[    2.338456] pci 0000:02:00.0: reg 10: [mem 0xb0400000-0xb040ffff 64bit pref]
+[    2.338486] pci 0000:02:00.0: reg 18: [mem 0xb0410000-0xb041ffff 64bit pref]
+[    2.338645] pci 0000:02:00.0: PME# supported from D0 D3hot D3cold
+[    2.338725] pci 0000:02:00.1: [14e4:16bc] type 00 class 0x080501
+[    2.338762] pci 0000:02:00.1: reg 10: [mem 0xb0420000-0xb042ffff 64bit pref]
+[    2.338940] pci 0000:02:00.1: PME# supported from D0 D3hot D3cold
+[    2.346281] pci 0000:00:1c.0: PCI bridge to [bus 02-02]
+[    2.346288] pci 0000:00:1c.0:   bridge window [mem 0xb0700000-0xb07fffff]
+[    2.346295] pci 0000:00:1c.0:   bridge window [mem 0xb0400000-0xb04fffff 64bit pref]
+[    2.346406] pci 0000:03:00.0: [14e4:4331] type 00 class 0x028000
+[    2.346453] pci 0000:03:00.0: reg 10: [mem 0xb0600000-0xb0603fff 64bit]
+[    2.346714] pci 0000:03:00.0: supports D1 D2
+[    2.346716] pci 0000:03:00.0: PME# supported from D0 D3hot D3cold
+[    2.354250] pci 0000:00:1c.1: PCI bridge to [bus 03-03]
+[    2.354273] pci 0000:00:1c.1:   bridge window [mem 0xb0600000-0xb06fffff]
+[    2.354356] pci 0000:04:00.0: [11c1:5901] type 00 class 0x0c0010
+[    2.354393] pci 0000:04:00.0: reg 10: [mem 0xb0500000-0xb0500fff 64bit]
+[    2.354574] pci 0000:04:00.0: supports D1 D2
+[    2.354576] pci 0000:04:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+[    2.362215] pci 0000:00:1c.2: PCI bridge to [bus 04-04]
+[    2.362230] pci 0000:00:1c.2:   bridge window [mem 0xb0500000-0xb05fffff]
+[    2.362279] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
+[    2.362365] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.P0P2._PRT]
+[    2.362398] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PEG1._PRT]
+[    2.362438] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.RP01._PRT]
+[    2.362470] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.RP02._PRT]
+[    2.362499] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.RP03._PRT]
+[    2.362585]  pci0000:00: Requesting ACPI _OSC control (0x1d)
+[    2.362656]  pci0000:00: ACPI _OSC control (0x1d) granted
+[    2.365817] ACPI: PCI Interrupt Link [LNKA] (IRQs 1 3 4 5 6 7 10 12 14 15) *11
+[    2.365858] ACPI: PCI Interrupt Link [LNKB] (IRQs 1 3 4 5 6 7 *11 12 14 15)
+[    2.365899] ACPI: PCI Interrupt Link [LNKC] (IRQs 1 3 4 5 6 7 10 12 14 15) *11
+[    2.365938] ACPI: PCI Interrupt Link [LNKD] (IRQs 1 3 4 5 6 7 *11 12 14 15)
+[    2.365976] ACPI: PCI Interrupt Link [LNKE] (IRQs 1 3 4 5 6 7 10 12 14 15) *0, disabled.
+[    2.366016] ACPI: PCI Interrupt Link [LNKF] (IRQs 1 3 4 5 6 7 11 12 14 15) *10
+[    2.366054] ACPI: PCI Interrupt Link [LNKG] (IRQs 1 3 4 5 6 7 10 12 14 15) *11
+[    2.366092] ACPI: PCI Interrupt Link [LNKH] (IRQs 1 3 4 5 6 7 *11 12 14 15)
+[    2.366176] vgaarb: device added: PCI:0000:01:00.0,decodes=io+mem,owns=io+mem,locks=none
+[    2.366182] vgaarb: loaded
+[    2.366184] vgaarb: bridge control possible 0000:01:00.0
+[    2.366254] i2c-core: driver [tps65090] using legacy suspend method
+[    2.366256] i2c-core: driver [tps65090] using legacy resume method
+[    2.366313] SCSI subsystem initialized
+[    2.366340] libata version 3.00 loaded.
+[    2.366370] usbcore: registered new interface driver usbfs
+[    2.366379] usbcore: registered new interface driver hub
+[    2.366395] usbcore: registered new device driver usb
+[    2.366447] PCI: Using ACPI for IRQ routing
+[    2.368003] PCI: pci_cache_line_size set to 64 bytes
+[    2.368191] reserve RAM buffer: 000000000008e000 - 000000000008ffff 
+[    2.368193] reserve RAM buffer: 000000000009fc00 - 000000000009ffff 
+[    2.368195] reserve RAM buffer: 000000008ad34000 - 000000008bffffff 
+[    2.368198] reserve RAM buffer: 000000016fe00000 - 000000016fffffff 
+[    2.368270] NetLabel: Initializing
+[    2.368271] NetLabel:  domain hash size = 128
+[    2.368272] NetLabel:  protocols = UNLABELED CIPSOv4
+[    2.368282] NetLabel:  unlabeled traffic allowed by default
+[    2.368343] hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0, 0, 0, 0, 0, 0
+[    2.368349] hpet0: 8 comparators, 64-bit 14.318180 MHz counter
+[    2.370365] Switching to clocksource hpet
+[    2.375653] AppArmor: AppArmor Filesystem Enabled
+[    2.375671] pnp: PnP ACPI init
+[    2.375684] ACPI: bus type pnp registered
+[    2.375937] pnp 00:00: [bus 00-ff]
+[    2.375939] pnp 00:00: [io  0x0000-0x0cf7 window]
+[    2.375941] pnp 00:00: [io  0x0cf8-0x0cff]
+[    2.375943] pnp 00:00: [io  0x0d00-0xffff window]
+[    2.375945] pnp 00:00: [mem 0x000a0000-0x000bffff window]
+[    2.375947] pnp 00:00: [mem 0x000c0000-0x000c3fff window]
+[    2.375950] pnp 00:00: [mem 0x000c4000-0x000c7fff window]
+[    2.375952] pnp 00:00: [mem 0x000c8000-0x000cbfff window]
+[    2.375954] pnp 00:00: [mem 0x000cc000-0x000cffff window]
+[    2.375956] pnp 00:00: [mem 0x000d0000-0x000d3fff window]
+[    2.375958] pnp 00:00: [mem 0x000d4000-0x000d7fff window]
+[    2.375960] pnp 00:00: [mem 0x000d8000-0x000dbfff window]
+[    2.375961] pnp 00:00: [mem 0x000dc000-0x000dffff window]
+[    2.375963] pnp 00:00: [mem 0x000e0000-0x000e3fff window]
+[    2.375965] pnp 00:00: [mem 0x000e4000-0x000e7fff window]
+[    2.375967] pnp 00:00: [mem 0x000e8000-0x000ebfff window]
+[    2.375969] pnp 00:00: [mem 0x000ec000-0x000effff window]
+[    2.375971] pnp 00:00: [mem 0x000f0000-0x000fffff window]
+[    2.375972] pnp 00:00: [mem 0x8fa00000-0xfeafffff window]
+[    2.375974] pnp 00:00: [mem 0xfed40000-0xfed44fff window]
+[    2.376028] pnp 00:00: Plug and Play ACPI device, IDs PNP0a08 PNP0a03 (active)
+[    2.376108] pnp 00:01: [io  0x0000-0x001f]
+[    2.376110] pnp 00:01: [io  0x0081-0x0091]
+[    2.376112] pnp 00:01: [io  0x0093-0x009f]
+[    2.376113] pnp 00:01: [io  0x00c0-0x00df]
+[    2.376115] pnp 00:01: [dma 4]
+[    2.376140] pnp 00:01: Plug and Play ACPI device, IDs PNP0200 (active)
+[    2.376147] pnp 00:02: [mem 0xff000000-0xffffffff]
+[    2.376169] pnp 00:02: Plug and Play ACPI device, IDs INT0800 (active)
+[    2.376233] pnp 00:03: [mem 0xfed00000-0xfed003ff]
+[    2.376274] system 00:03: [mem 0xfed00000-0xfed003ff] has been reserved
+[    2.376277] system 00:03: Plug and Play ACPI device, IDs PNP0103 PNP0c01 (active)
+[    2.376286] pnp 00:04: [io  0x00f0]
+[    2.376295] pnp 00:04: [irq 13]
+[    2.376318] pnp 00:04: Plug and Play ACPI device, IDs PNP0c04 (active)
+[    2.376327] pnp 00:05: [io  0x002e-0x002f]
+[    2.376329] pnp 00:05: [io  0x004e-0x004f]
+[    2.376330] pnp 00:05: [io  0x0061]
+[    2.376332] pnp 00:05: [io  0x0063]
+[    2.376333] pnp 00:05: [io  0x0065]
+[    2.376335] pnp 00:05: [io  0x0067]
+[    2.376336] pnp 00:05: [io  0x0070]
+[    2.376337] pnp 00:05: [io  0x0080]
+[    2.376339] pnp 00:05: [io  0x0092]
+[    2.376340] pnp 00:05: [io  0x00b2-0x00b3]
+[    2.376342] pnp 00:05: [io  0x0680-0x069f]
+[    2.376344] pnp 00:05: [io  0x1000-0x100f]
+[    2.376345] pnp 00:05: [io  0xffff]
+[    2.376347] pnp 00:05: [io  0xffff]
+[    2.376348] pnp 00:05: [io  0x0400-0x047f]
+[    2.376350] pnp 00:05: [io  0x0500-0x057f]
+[    2.376351] pnp 00:05: [io  0x164e-0x164f]
+[    2.376392] system 00:05: [io  0x0680-0x069f] has been reserved
+[    2.376394] system 00:05: [io  0x1000-0x100f] has been reserved
+[    2.376396] system 00:05: [io  0xffff] has been reserved
+[    2.376398] system 00:05: [io  0xffff] has been reserved
+[    2.376400] system 00:05: [io  0x0400-0x047f] has been reserved
+[    2.376402] system 00:05: [io  0x0500-0x057f] has been reserved
+[    2.376404] system 00:05: [io  0x164e-0x164f] has been reserved
+[    2.376407] system 00:05: Plug and Play ACPI device, IDs PNP0c02 (active)
+[    2.376414] pnp 00:06: [io  0x0070-0x0077]
+[    2.376420] pnp 00:06: [irq 8]
+[    2.376446] pnp 00:06: Plug and Play ACPI device, IDs PNP0b00 (active)
+[    2.376457] pnp 00:07: [io  0x0300-0x031f]
+[    2.376462] pnp 00:07: [irq 6]
+[    2.376485] pnp 00:07: Plug and Play ACPI device, IDs APP0001 (active)
+[    2.376527] pnp 00:08: [io  0x0700-0x07fe]
+[    2.376556] pnp 00:08: Plug and Play ACPI device, IDs APP000b (active)
+[    2.376683] pnp 00:09: [mem 0xfed1c000-0xfed1ffff]
+[    2.376684] pnp 00:09: [mem 0xfed10000-0xfed17fff]
+[    2.376686] pnp 00:09: [mem 0xfed18000-0xfed18fff]
+[    2.376688] pnp 00:09: [mem 0xfed19000-0xfed19fff]
+[    2.376689] pnp 00:09: [mem 0xe0000000-0xefffffff]
+[    2.376691] pnp 00:09: [mem 0xfed20000-0xfed3ffff]
+[    2.376693] pnp 00:09: [mem 0xfed90000-0xfed93fff]
+[    2.376695] pnp 00:09: [mem 0xfed45000-0xfed8ffff]
+[    2.376696] pnp 00:09: [mem 0xff000000-0xffffffff]
+[    2.376698] pnp 00:09: [mem 0xfee00000-0xfeefffff]
+[    2.376700] pnp 00:09: [mem 0x00000000-0xffffffffffffffff disabled]
+[    2.376742] system 00:09: [mem 0xfed1c000-0xfed1ffff] has been reserved
+[    2.376745] system 00:09: [mem 0xfed10000-0xfed17fff] could not be reserved
+[    2.376747] system 00:09: [mem 0xfed18000-0xfed18fff] has been reserved
+[    2.376749] system 00:09: [mem 0xfed19000-0xfed19fff] has been reserved
+[    2.376752] system 00:09: [mem 0xe0000000-0xefffffff] has been reserved
+[    2.376754] system 00:09: [mem 0xfed20000-0xfed3ffff] has been reserved
+[    2.376756] system 00:09: [mem 0xfed90000-0xfed93fff] has been reserved
+[    2.376758] system 00:09: [mem 0xfed45000-0xfed8ffff] has been reserved
+[    2.376761] system 00:09: [mem 0xff000000-0xffffffff] could not be reserved
+[    2.376763] system 00:09: [mem 0xfee00000-0xfeefffff] could not be reserved
+[    2.376766] system 00:09: Plug and Play ACPI device, IDs PNP0c02 (active)
+[    2.376817] pnp 00:0a: [mem 0x20000000-0x201fffff]
+[    2.376818] pnp 00:0a: [mem 0x40000000-0x401fffff]
+[    2.376862] system 00:0a: [mem 0x20000000-0x201fffff] has been reserved
+[    2.376864] system 00:0a: [mem 0x40000000-0x401fffff] has been reserved
+[    2.376867] system 00:0a: Plug and Play ACPI device, IDs PNP0c01 (active)
+[    2.382858] pnp: PnP ACPI: found 11 devices
+[    2.382860] ACPI: ACPI bus type pnp unregistered
+[    2.388981] pci 0000:00:01.0: PCI bridge to [bus 01-01]
+[    2.388985] pci 0000:00:01.0:   bridge window [io  0x2000-0x2fff]
+[    2.388988] pci 0000:00:01.0:   bridge window [mem 0xb0800000-0xb08fffff]
+[    2.388991] pci 0000:00:01.0:   bridge window [mem 0x90000000-0x9fffffff 64bit pref]
+[    2.388995] pci 0000:00:01.1: PCI bridge to [bus 05-9b]
+[    2.388997] pci 0000:00:01.1:   bridge window [io  0x4000-0x4fff]
+[    2.389000] pci 0000:00:01.1:   bridge window [mem 0xb0a00000-0xb4efffff]
+[    2.389003] pci 0000:00:01.1:   bridge window [mem 0xb4f00000-0xb8efffff 64bit pref]
+[    2.389007] pci 0000:00:1c.0: PCI bridge to [bus 02-02]
+[    2.389013] pci 0000:00:1c.0:   bridge window [mem 0xb0700000-0xb07fffff]
+[    2.389018] pci 0000:00:1c.0:   bridge window [mem 0xb0400000-0xb04fffff 64bit pref]
+[    2.389024] pci 0000:00:1c.1: PCI bridge to [bus 03-03]
+[    2.389030] pci 0000:00:1c.1:   bridge window [mem 0xb0600000-0xb06fffff]
+[    2.389039] pci 0000:00:1c.2: PCI bridge to [bus 04-04]
+[    2.389044] pci 0000:00:1c.2:   bridge window [mem 0xb0500000-0xb05fffff]
+[    2.389091] pci 0000:00:1c.1: power state changed by ACPI to D0
+[    2.389096] pci 0000:00:1c.1: power state changed by ACPI to D0
+[    2.389114] pci_bus 0000:00: resource 4 [io  0x0000-0x0cf7]
+[    2.389116] pci_bus 0000:00: resource 5 [io  0x0d00-0xffff]
+[    2.389118] pci_bus 0000:00: resource 6 [mem 0x000a0000-0x000bffff]
+[    2.389120] pci_bus 0000:00: resource 7 [mem 0x8fa00000-0xfeafffff]
+[    2.389121] pci_bus 0000:00: resource 8 [mem 0xfed40000-0xfed44fff]
+[    2.389124] pci_bus 0000:01: resource 0 [io  0x2000-0x2fff]
+[    2.389125] pci_bus 0000:01: resource 1 [mem 0xb0800000-0xb08fffff]
+[    2.389128] pci_bus 0000:01: resource 2 [mem 0x90000000-0x9fffffff 64bit pref]
+[    2.389130] pci_bus 0000:05: resource 0 [io  0x4000-0x4fff]
+[    2.389132] pci_bus 0000:05: resource 1 [mem 0xb0a00000-0xb4efffff]
+[    2.389134] pci_bus 0000:05: resource 2 [mem 0xb4f00000-0xb8efffff 64bit pref]
+[    2.389136] pci_bus 0000:02: resource 1 [mem 0xb0700000-0xb07fffff]
+[    2.389138] pci_bus 0000:02: resource 2 [mem 0xb0400000-0xb04fffff 64bit pref]
+[    2.389140] pci_bus 0000:03: resource 1 [mem 0xb0600000-0xb06fffff]
+[    2.389142] pci_bus 0000:04: resource 1 [mem 0xb0500000-0xb05fffff]
+[    2.389169] NET: Registered protocol family 2
+[    2.389278] IP route cache hash table entries: 131072 (order: 8, 1048576 bytes)
+[    2.389899] TCP established hash table entries: 524288 (order: 11, 8388608 bytes)
+[    2.391172] TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
+[    2.391306] TCP: Hash tables configured (established 524288 bind 65536)
+[    2.391309] TCP: reno registered
+[    2.391318] UDP hash table entries: 2048 (order: 4, 65536 bytes)
+[    2.391338] UDP-Lite hash table entries: 2048 (order: 4, 65536 bytes)
+[    2.391406] NET: Registered protocol family 1
+[    2.391788] pci 0000:01:00.0: Boot video device
+[    2.391857] PCI: CLS 256 bytes, default 64
+[    2.391897] Trying to unpack rootfs image as initramfs...
+[    2.635795] Freeing initrd memory: 13412k freed
+[    2.637407] PCI-DMA: Using software bounce buffering for IO (SWIOTLB)
+[    2.637412] Placing 64MB software IO TLB between ffff880086d2d000 - ffff88008ad2d000
+[    2.637414] software IO TLB at phys 0x86d2d000 - 0x8ad2d000
+[    2.638069] audit: initializing netlink socket (disabled)
+[    2.638085] type=2000 audit(1337780723.528:1): initialized
+[    2.658999] HugeTLB registered 2 MB page size, pre-allocated 0 pages
+[    2.660341] VFS: Disk quotas dquot_6.5.2
+[    2.660380] Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    2.660742] fuse init (API version 7.18)
+[    2.660806] msgmni has been set to 7723
+[    2.661085] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 253)
+[    2.661109] io scheduler noop registered
+[    2.661110] io scheduler deadline registered
+[    2.661147] io scheduler cfq registered (default)
+[    2.661248] pcieport 0000:00:01.0: irq 40 for MSI/MSI-X
+[    2.661312] pcieport 0000:00:01.1: irq 41 for MSI/MSI-X
+[    2.661399] pcieport 0000:00:1c.0: irq 42 for MSI/MSI-X
+[    2.661502] pcieport 0000:00:1c.1: irq 43 for MSI/MSI-X
+[    2.661606] pcieport 0000:00:1c.2: irq 44 for MSI/MSI-X
+[    2.661681] pcieport 0000:00:01.0: Signaling PME through PCIe PME interrupt
+[    2.661683] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+[    2.661685] pci 0000:01:00.1: Signaling PME through PCIe PME interrupt
+[    2.661688] pcie_pme 0000:00:01.0:pcie01: service driver pcie_pme loaded
+[    2.661699] pcieport 0000:00:01.1: Signaling PME through PCIe PME interrupt
+[    2.661702] pcie_pme 0000:00:01.1:pcie01: service driver pcie_pme loaded
+[    2.661719] pcieport 0000:00:1c.0: Signaling PME through PCIe PME interrupt
+[    2.661721] pci 0000:02:00.0: Signaling PME through PCIe PME interrupt
+[    2.661722] pci 0000:02:00.1: Signaling PME through PCIe PME interrupt
+[    2.661727] pcie_pme 0000:00:1c.0:pcie01: service driver pcie_pme loaded
+[    2.661745] pcieport 0000:00:1c.1: Signaling PME through PCIe PME interrupt
+[    2.661746] pci 0000:03:00.0: Signaling PME through PCIe PME interrupt
+[    2.661751] pcie_pme 0000:00:1c.1:pcie01: service driver pcie_pme loaded
+[    2.661768] pcieport 0000:00:1c.2: Signaling PME through PCIe PME interrupt
+[    2.661770] pci 0000:04:00.0: Signaling PME through PCIe PME interrupt
+[    2.661775] pcie_pme 0000:00:1c.2:pcie01: service driver pcie_pme loaded
+[    2.661786] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
+[    2.661801] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
+[    2.661840] efifb: dmi detected MacBookPro8,2 - framebuffer at 0x90000000 (1152x864, stride 4608)
+[    2.661842] intel_idle: MWAIT substates: 0x21120
+[    2.661844] intel_idle: v0.4 model 0x2A
+[    2.661845] intel_idle: lapic_timer_reliable_states 0xffffffff
+[    2.661905] ACPI: Deprecated procfs I/F for AC is loaded, please retry with CONFIG_ACPI_PROCFS_POWER cleared
+[    2.661937] ACPI: AC Adapter [ADP1] (off-line)
+[    2.662033] input: Lid Switch as /devices/LNXSYSTM:00/device:00/PNP0C0D:00/input/input0
+[    2.662047] ACPI: Lid Switch [LID0]
+[    2.662079] input: Power Button as /devices/LNXSYSTM:00/device:00/PNP0C0C:00/input/input1
+[    2.662083] ACPI: Power Button [PWRB]
+[    2.662110] input: Sleep Button as /devices/LNXSYSTM:00/device:00/PNP0C0E:00/input/input2
+[    2.662113] ACPI: Sleep Button [SLPB]
+[    2.662140] input: Power Button as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input3
+[    2.662142] ACPI: Power Button [PWRF]
+[    2.662179] ACPI: Requesting acpi_cpufreq
+[    2.675443] GHES: HEST is not enabled!
+[    2.675517] Serial: 8250/16550 driver, 32 ports, IRQ sharing enabled
+[    2.678707] Linux agpgart interface v0.103
+[    2.679823] brd: module loaded
+[    2.680374] loop: module loaded
+[    2.680479] ata_piix 0000:00:1f.2: version 2.13
+[    2.680493] ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+[    2.788005] ACPI: Deprecated procfs I/F for battery is loaded, please retry with CONFIG_ACPI_PROCFS_POWER cleared
+[    2.788011] ACPI: Battery Slot [BAT0] (battery present)
+[    2.833836] ata_piix 0000:00:1f.2: setting latency timer to 64
+[    2.834054] scsi0 : ata_piix
+[    2.834108] scsi1 : ata_piix
+[    2.834267] ata1: SATA max UDMA/133 cmd 0x3148 ctl 0x315c bmdma 0x3060 irq 19
+[    2.834272] ata2: SATA max UDMA/133 cmd 0x3140 ctl 0x3158 bmdma 0x3068 irq 19
+[    2.834474] Fixed MDIO Bus: probed
+[    2.834485] tun: Universal TUN/TAP device driver, 1.6
+[    2.834487] tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
+[    2.834522] PPP generic driver version 2.4.2
+[    2.834585] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+[    2.834628] ehci_hcd 0000:00:1a.7: setting latency timer to 64
+[    2.834633] ehci_hcd 0000:00:1a.7: EHCI Host Controller
+[    2.834681] ehci_hcd 0000:00:1a.7: new USB bus registered, assigned bus number 1
+[    2.834709] ehci_hcd 0000:00:1a.7: debug port 2
+[    2.838583] ehci_hcd 0000:00:1a.7: cache line size of 256 is not supported
+[    2.838598] ehci_hcd 0000:00:1a.7: irq 23, io mem 0xb0906c00
+[    2.849800] ehci_hcd 0000:00:1a.7: USB 2.0 started, EHCI 1.00
+[    2.849925] hub 1-0:1.0: USB hub found
+[    2.849929] hub 1-0:1.0: 6 ports detected
+[    2.850006] ehci_hcd 0000:00:1d.7: setting latency timer to 64
+[    2.850009] ehci_hcd 0000:00:1d.7: EHCI Host Controller
+[    2.850048] ehci_hcd 0000:00:1d.7: new USB bus registered, assigned bus number 2
+[    2.850069] ehci_hcd 0000:00:1d.7: debug port 2
+[    2.853945] ehci_hcd 0000:00:1d.7: cache line size of 256 is not supported
+[    2.853959] ehci_hcd 0000:00:1d.7: irq 22, io mem 0xb0906800
+[    2.865782] ehci_hcd 0000:00:1d.7: USB 2.0 started, EHCI 1.00
+[    2.865890] hub 2-0:1.0: USB hub found
+[    2.865893] hub 2-0:1.0: 8 ports detected
+[    2.865953] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+[    2.865966] uhci_hcd: USB Universal Host Controller Interface driver
+[    2.865982] uhci_hcd 0000:00:1a.0: setting latency timer to 64
+[    2.865986] uhci_hcd 0000:00:1a.0: UHCI Host Controller
+[    2.866018] uhci_hcd 0000:00:1a.0: new USB bus registered, assigned bus number 3
+[    2.866052] uhci_hcd 0000:00:1a.0: irq 21, io base 0x00003120
+[    2.866133] hub 3-0:1.0: USB hub found
+[    2.866136] hub 3-0:1.0: 2 ports detected
+[    2.866183] uhci_hcd 0000:00:1d.0: setting latency timer to 64
+[    2.866187] uhci_hcd 0000:00:1d.0: UHCI Host Controller
+[    2.866219] uhci_hcd 0000:00:1d.0: new USB bus registered, assigned bus number 4
+[    2.866242] uhci_hcd 0000:00:1d.0: irq 19, io base 0x000030c0
+[    2.866321] hub 4-0:1.0: USB hub found
+[    2.866323] hub 4-0:1.0: 2 ports detected
+[    2.866397] usbcore: registered new interface driver libusual
+[    2.866423] i8042: PNP: No PS/2 controller found. Probing ports directly.
+[    2.867297] i8042: No controller found
+[    2.867349] mousedev: PS/2 mouse device common for all mice
+[    2.867492] rtc_cmos 00:06: RTC can wake from S4
+[    2.867603] rtc_cmos 00:06: rtc core: registered rtc_cmos as rtc0
+[    2.867632] rtc0: alarms up to one month, y3k, 242 bytes nvram, hpet irqs
+[    2.867694] device-mapper: uevent: version 1.0.3
+[    2.867743] device-mapper: ioctl: 4.22.0-ioctl (2011-10-19) initialised: dm-devel@redhat.com
+[    2.867871] cpuidle: using governor ladder
+[    2.868049] cpuidle: using governor menu
+[    2.868051] EFI Variables Facility v0.08 2004-May-17
+[    2.868173] ashmem: initialized
+[    2.868196] using rtc device, rtc_cmos, for alarms
+[    2.868295] TCP: cubic registered
+[    2.868375] NET: Registered protocol family 10
+[    2.868533] NET: Registered protocol family 17
+[    2.868542] Registering the dns_resolver key type
+[    2.868648] PM: Hibernation image not present or could not be loaded.
+[    2.868657] registered taskstats version 1
+[    2.875505]   Magic number: 12:336:787
+[    2.875613] rtc_cmos 00:06: setting system clock to 2012-05-23 13:45:24 UTC (1337780724)
+[    2.876729] BIOS EDD facility v0.16 2004-Jun-25, 0 devices found
+[    2.876730] EDD information not available.
+[    3.161579] usb 1-1: new high-speed USB device number 2 using ehci_hcd
+[    3.294343] hub 1-1:1.0: USB hub found
+[    3.294510] hub 1-1:1.0: 3 ports detected
+[    3.405362] usb 1-2: new high-speed USB device number 3 using ehci_hcd
+[    3.633105] Refined TSC clocksource calibration: 2200.015 MHz.
+[    3.633117] Switching to clocksource tsc
+[    3.665080] usb 2-1: new high-speed USB device number 2 using ehci_hcd
+[    3.797847] hub 2-1:1.0: USB hub found
+[    3.798013] hub 2-1:1.0: 2 ports detected
+[    3.885068] usb 1-1.1: new full-speed USB device number 4 using ehci_hcd
+[    3.979701] hub 1-1.1:1.0: USB hub found
+[    3.979974] hub 1-1.1:1.0: 3 ports detected
+[    4.052908] usb 1-1.2: new full-speed USB device number 5 using ehci_hcd
+[    4.180575] ata1.01: failed to resume link (SControl 0)
+[    4.180673] ata2.01: failed to resume link (SControl 0)
+[    4.240724] usb 2-1.1: new low-speed USB device number 3 using ehci_hcd
+[    4.336482] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    4.336495] ata1.01: SATA link down (SStatus 0 SControl 0)
+[    4.336624] ata2.00: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    4.336639] ata2.01: SATA link down (SStatus 0 SControl 0)
+[    4.336658] ata2.01: link offline, clearing class 3 to NONE
+[    4.344827] ata2.00: ATAPI: MATSHITADVD-R   UJ-8A8, HB14, max UDMA/100
+[    4.344985] ata1.00: ATA-8: Hitachi HTS545050B9A302, PB4AC60Y, max UDMA/133
+[    4.344987] ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 0/32)
+[    4.360756] ata2.00: configured for UDMA/100
+[    4.361075] ata1.00: configured for UDMA/133
+[    4.361292] scsi 0:0:0:0: Direct-Access     ATA      Hitachi HTS54505 PB4A PQ: 0 ANSI: 5
+[    4.361404] sd 0:0:0:0: [sda] 976773168 512-byte logical blocks: (500 GB/465 GiB)
+[    4.361433] sd 0:0:0:0: [sda] Write Protect is off
+[    4.361437] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    4.361439] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    4.361454] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[    4.364683] scsi 1:0:0:0: CD-ROM            MATSHITA DVD-R   UJ-8A8   HB14 PQ: 0 ANSI: 5
+[    4.368357] sr0: scsi3-mmc drive: 24x/24x writer cd/rw xa/form2 cdda tray
+[    4.368366] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    4.368519] sr 1:0:0:0: Attached scsi CD-ROM sr0
+[    4.368632] sr 1:0:0:0: Attached scsi generic sg1 type 5
+[    4.410476]  sda: sda1 sda2 sda3 sda4 sda5 sda99
+[    4.411154] sd 0:0:0:0: [sda] Attached SCSI disk
+[    4.412250] Freeing unused kernel memory: 912k freed
+[    4.412339] Write protecting the kernel read-only data: 12288k
+[    4.415586] Freeing unused kernel memory: 1488k freed
+[    4.418104] Freeing unused kernel memory: 1132k freed
+[    4.428346] usb 1-1.1.1: new full-speed USB device number 6 using ehci_hcd
+[    4.431277] udevd[124]: starting version 175
+[    4.465096] sdhci: Secure Digital Host Controller Interface driver
+[    4.465100] sdhci: Copyright(c) Pierre Ossman
+[    4.465693] tg3.c:v3.123 (March 21, 2012)
+[    4.465720] usbcore: registered new interface driver usbhid
+[    4.465722] usbhid: USB HID core driver
+[    4.481907] tg3 0000:02:00.0: eth0: Tigon3 [partno(BCM957765) rev 57785100] (PCI Express) MAC address 3c:07:54:42:d4:d9
+[    4.481912] tg3 0000:02:00.0: eth0: attached PHY is 57765 (10/100/1000Base-T Ethernet) (WireSpeed[1], EEE[1])
+[    4.481916] tg3 0000:02:00.0: eth0: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[0] TSOcap[1]
+[    4.481918] tg3 0000:02:00.0: eth0: dma_rwctrl[00000001] dma_mask[64-bit]
+[    4.482049] sdhci-pci 0000:02:00.1: SDHCI controller found [14e4:16bc] (rev 10)
+[    4.482101] sdhci-pci 0000:02:00.1: Invalid iomem size. You may experience problems.
+[    4.482202] mmc0: no vmmc regulator found
+[    4.482264] Registered led device: mmc0::
+[    4.483347] mmc0: SDHCI controller on PCI [0000:02:00.1] using ADMA
+[    4.487777] input: Apple Inc. Apple Internal Keyboard / Trackpad as /devices/pci0000:00/0000:00:1a.7/usb1/1-1/1-1.2/1-1.2:1.0/input/input4
+[    4.487877] apple 0003:05AC:0252.0001: input,hidraw0: USB HID v1.11 Keyboard [Apple Inc. Apple Internal Keyboard / Trackpad] on usb-0000:00:1a.7-1.2/input0
+[    4.492090] apple 0003:05AC:0252.0002: hidraw1: USB HID v1.11 Device [Apple Inc. Apple Internal Keyboard / Trackpad] on usb-0000:00:1a.7-1.2/input1
+[    4.495892] apple 0003:05AC:8242.0003: hiddev0,hidraw2: USB HID v1.11 Device [Apple Computer, Inc. IR Receiver] on usb-0000:00:1d.7-1.1/input0
+[    4.520295] firewire_ohci 0000:04:00.0: irq 45 for MSI/MSI-X
+[    4.520344] firewire_ohci 0000:04:00.0: added OHCI v1.10 device as card 0, 8 IR + 8 IT contexts, quirks 0x0
+[    4.524876] input: HID 05ac:820a as /devices/pci0000:00/0000:00:1a.7/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/input/input5
+[    4.525024] generic-usb 0003:05AC:820A.0004: input,hidraw3: USB HID v1.11 Keyboard [HID 05ac:820a] on usb-0000:00:1a.7-1.1.1/input0
+[    4.596302] usb 1-1.1.2: new full-speed USB device number 7 using ehci_hcd
+[    4.694172] input: HID 05ac:820b as /devices/pci0000:00/0000:00:1a.7/usb1/1-1/1-1.1/1-1.1.2/1-1.1.2:1.0/input/input6
+[    4.694331] generic-usb 0003:05AC:820B.0005: input,hidraw4: USB HID v1.11 Mouse [HID 05ac:820b] on usb-0000:00:1a.7-1.1.2/input0
+[    4.764005] usb 1-1.1.3: new full-speed USB device number 8 using ehci_hcd
+[    5.019847] firewire_core 0000:04:00.0: created device fw0: GUID a4b197fffea72698, S800
+[    5.019854] firewire_core 0000:04:00.0: phy config: new root=ffc0, gap_count=63
+[    5.212470] EXT4-fs (sda4): mounted filesystem with ordered data mode. Opts: (null)
+[   16.901280] Adding 3999996k swap on /dev/sda5.  Priority:-1 extents:1 across:3999996k 
+[   16.937715] udevd[472]: starting version 175
+[   17.292450] type=1400 audit(1337780738.929:2): apparmor="STATUS" operation="profile_load" name="/sbin/dhclient" pid=534 comm="apparmor_parser"
+[   17.292471] type=1400 audit(1337780738.929:3): apparmor="STATUS" operation="profile_replace" name="/sbin/dhclient" pid=646 comm="apparmor_parser"
+[   17.292706] type=1400 audit(1337780738.929:4): apparmor="STATUS" operation="profile_load" name="/usr/lib/NetworkManager/nm-dhcp-client.action" pid=534 comm="apparmor_parser"
+[   17.292728] type=1400 audit(1337780738.929:5): apparmor="STATUS" operation="profile_replace" name="/usr/lib/NetworkManager/nm-dhcp-client.action" pid=646 comm="apparmor_parser"
+[   17.292852] type=1400 audit(1337780738.929:6): apparmor="STATUS" operation="profile_load" name="/usr/lib/connman/scripts/dhclient-script" pid=534 comm="apparmor_parser"
+[   17.292876] type=1400 audit(1337780738.929:7): apparmor="STATUS" operation="profile_replace" name="/usr/lib/connman/scripts/dhclient-script" pid=646 comm="apparmor_parser"
+[   17.344603] lp: driver loaded but no devices found
+[   17.352641] input: bcm5974 as /devices/pci0000:00/0000:00:1a.7/usb1/1-1/1-1.2/1-1.2:1.2/input/input7
+[   17.352714] usbcore: registered new interface driver bcm5974
+[   17.353406] [Firmware Bug]: ACPI(GFX0) defines _DOD but not _DOS
+[   17.354111] acpi device:03: registered as cooling_device8
+[   17.354129] ACPI Error: Evaluating _BCM failed (20120320/video-364)
+[   17.354166] video: probe of LNXVIDEO:00 failed with error -5
+[   18.094662] mei: module is from the staging directory, the quality is unknown, you have been warned.
+[   18.095003] mei 0000:00:16.0: setting latency timer to 64
+[   18.095063] mei 0000:00:16.0: irq 46 for MSI/MSI-X
+[   18.205068] applesmc: key=441 fan=2 temp=29 acc=1 lux=2 kbd=1
+[   18.218164] input: applesmc as /devices/platform/applesmc.768/input/input8
+[   18.218314] Registered led device: smc::kbd_backlight
+[   18.493180] bcma: Found chip with id 0x4331, rev 0x02 and package 0x09
+[   18.493211] bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x25, class 0x0)
+[   18.493237] bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x1D, class 0x0)
+[   18.493294] bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x13, class 0x0)
+[   18.551979] apple_gmux: Found gmux version 1.9.35
+[   18.595168] bcma: Bus registered
+[   18.690478] microcode: CPU0 sig=0x206a7, pf=0x10, revision=0x1a
+[   18.751218] microcode: CPU1 sig=0x206a7, pf=0x10, revision=0x1a
+[   18.752034] microcode: CPU2 sig=0x206a7, pf=0x10, revision=0x1a
+[   18.752849] microcode: CPU3 sig=0x206a7, pf=0x10, revision=0x1a
+[   18.753654] microcode: CPU4 sig=0x206a7, pf=0x10, revision=0x1a
+[   18.754469] microcode: CPU5 sig=0x206a7, pf=0x10, revision=0x1a
+[   18.755325] microcode: CPU6 sig=0x206a7, pf=0x10, revision=0x1a
+[   18.756092] microcode: CPU7 sig=0x206a7, pf=0x10, revision=0x1a
+[   18.756885] microcode: Microcode Update Driver: v2.00 <tigran@aivazian.fsnet.co.uk>, Peter Oruba
+[   18.818655] [drm] Initialized drm 1.1.0 20060810
+[   18.932611] Bluetooth: Core ver 2.16
+[   18.932625] NET: Registered protocol family 31
+[   18.932627] Bluetooth: HCI device and connection manager initialized
+[   18.932629] Bluetooth: HCI socket layer initialized
+[   18.932631] Bluetooth: L2CAP socket layer initialized
+[   18.932635] Bluetooth: SCO socket layer initialized
+[   19.008530] usbcore: registered new interface driver btusb
+[   19.081274] usb 1-1.1.1: USB disconnect, device number 6
+[   19.229956] cfg80211: Calling CRDA to update world regulatory domain
+[   19.238243] usb 1-1.1.2: USB disconnect, device number 7
+[   19.385346] Linux video capture interface: v2.00
+[   19.500826] uvcvideo: Found UVC 1.00 device FaceTime HD Camera (Built-in) (05ac:8509)
+[   19.507782] input: FaceTime HD Camera (Built-in) as /devices/pci0000:00/0000:00:1a.7/usb1/1-2/1-2:1.0/input/input9
+[   19.507887] usbcore: registered new interface driver uvcvideo
+[   19.507888] USB Video Class driver (1.1.1)
+[   19.699275] [drm] radeon defaulting to kernel modesetting.
+[   19.699277] [drm] radeon kernel modesetting enabled.
+[   19.699508] [drm] initializing kernel modesetting (TURKS 0x1002:0x6741 0x106B:0x00E2).
+[   19.699609] [drm] register mmio base: 0xB0800000
+[   19.699611] [drm] register mmio size: 131072
+[   19.699739] ATOM BIOS: Apple
+[   19.699766] radeon 0000:01:00.0: VRAM: 512M 0x0000000000000000 - 0x000000001FFFFFFF (512M used)
+[   19.699768] radeon 0000:01:00.0: GTT: 512M 0x0000000020000000 - 0x000000003FFFFFFF
+[   19.704335] [drm] Detected VRAM RAM=512M, BAR=256M
+[   19.704337] [drm] RAM width 128bits DDR
+[   19.704437] [TTM] Zone  kernel: Available graphics memory: 1979050 kiB
+[   19.704438] [TTM] Initializing pool allocator
+[   19.704441] [TTM] Initializing DMA pool allocator
+[   19.704461] [drm] radeon: 512M of VRAM memory ready
+[   19.704462] [drm] radeon: 512M of GTT memory ready.
+[   19.704475] [drm] Supports vblank timestamp caching Rev 1 (10.10.2010).
+[   19.704476] [drm] Driver supports precise vblank timestamp query.
+[   19.704528] radeon 0000:01:00.0: irq 47 for MSI/MSI-X
+[   19.704537] radeon 0000:01:00.0: radeon: using MSI.
+[   19.704579] [drm] radeon: irq initialized.
+[   19.704582] [drm] GART: num cpu pages 131072, num gpu pages 131072
+[   19.704859] [drm] radeon: ib pool ready.
+[   19.704923] [drm] Loading TURKS Microcode
+[   19.885799] cfg80211: World regulatory domain updated:
+[   19.885801] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[   19.885803] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   19.885805] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   19.885807] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   19.885808] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   19.885810] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.025620] [drm] PCIE GART of 512M enabled (table at 0x0000000000040000).
+[   20.025739] radeon 0000:01:00.0: WB enabled
+[   20.025742] [drm] fence driver on ring 0 use gpu addr 0x20000c00 and cpu addr 0xffff88015a800c00
+[   20.042084] [drm] ring test on 0 succeeded in 2 usecs
+[   20.042309] [drm] ib test on ring 0 succeeded in 0 usecs
+[   20.043376] [drm] Radeon Display Connectors
+[   20.043378] [drm] Connector 0:
+[   20.043379] [drm]   LVDS
+[   20.043380] [drm]   DDC: 0x6470 0x6470 0x6474 0x6474 0x6478 0x6478 0x647c 0x647c
+[   20.043381] [drm]   Encoders:
+[   20.043382] [drm]     LCD1: INTERNAL_UNIPHY
+[   20.043383] [drm] Connector 1:
+[   20.043384] [drm]   DisplayPort
+[   20.043385] [drm]   HPD1
+[   20.043386] [drm]   DDC: 0x6430 0x6430 0x6434 0x6434 0x6438 0x6438 0x643c 0x643c
+[   20.043388] [drm]   Encoders:
+[   20.043389] [drm]     DFP1: INTERNAL_UNIPHY1
+[   20.043389] [drm] Connector 2:
+[   20.043390] [drm]   DisplayPort
+[   20.043391] [drm]   HPD2
+[   20.043392] [drm]   DDC: 0x6440 0x6440 0x6444 0x6444 0x6448 0x6448 0x644c 0x644c
+[   20.043393] [drm]   Encoders:
+[   20.043394] [drm]     DFP2: INTERNAL_UNIPHY1
+[   20.043395] [drm] Connector 3:
+[   20.043396] [drm]   DisplayPort
+[   20.043397] [drm]   HPD3
+[   20.043398] [drm]   DDC: 0x6450 0x6450 0x6454 0x6454 0x6458 0x6458 0x645c 0x645c
+[   20.043399] [drm]   Encoders:
+[   20.043400] [drm]     DFP3: INTERNAL_UNIPHY2
+[   20.043496] [drm] Special thermal controller config
+[   20.044599] [drm] radeon: power management initialized
+[   20.089358] EXT4-fs (sda4): re-mounted. Opts: errors=remount-ro
+[   20.372571] b43-phy0: Broadcom 4331 WLAN found (core revision 29)
+[   20.373240] Broadcom 43xx driver loaded [ Features: PNL ]
+[   20.495696] [drm] fb mappable at 0x90142000
+[   20.495698] [drm] vram apper at 0x90000000
+[   20.495699] [drm] size 5324800
+[   20.495700] [drm] fb depth is 24
+[   20.495701] [drm]    pitch is 5888
+[   20.495831] fbcon: radeondrmfb (fb0) is primary device
+[   20.585660] snd_hda_intel 0000:00:1b.0: irq 48 for MSI/MSI-X
+[   20.609915] cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609917] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609918] cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609920] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609921] cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609923] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609924] cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609926] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609927] cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609929] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609930] cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609931] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609933] cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609934] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609935] cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609937] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609938] cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609940] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609941] cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609943] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609944] cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609945] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   20.609947] cfg80211: Updating information on frequency 2467 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609948] cfg80211: 2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   20.609950] cfg80211: Updating information on frequency 2472 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609951] cfg80211: 2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   20.609952] cfg80211: Updating information on frequency 2484 MHz for a 20 MHz width channel with regulatory rule:
+[   20.609954] cfg80211: 2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   20.666875] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+[   20.667064] Registered led device: b43-phy0::tx
+[   20.667076] Registered led device: b43-phy0::rx
+[   20.667094] Registered led device: b43-phy0::radio
+[   20.689977] input: HDA Intel PCH SPDIF In as /devices/pci0000:00/0000:00:1b.0/sound/card0/input10
+[   20.690050] input: HDA Intel PCH Line as /devices/pci0000:00/0000:00:1b.0/sound/card0/input11
+[   20.690110] input: HDA Intel PCH Headphone as /devices/pci0000:00/0000:00:1b.0/sound/card0/input12
+[   21.228237] Console: switching to colour frame buffer device 180x56
+[   21.230876] fb0: radeondrmfb frame buffer device
+[   21.230877] drm: registered panic notifier
+[   21.230890] [drm] Initialized radeon 2.15.0 20080528 for 0000:01:00.0 on minor 0
+[   21.231061] snd_hda_intel 0000:01:00.1: irq 49 for MSI/MSI-X
+[   21.297431] input: HD-Audio Generic HDMI/DP,pcm=3 as /devices/pci0000:00/0000:00:01.0/0000:01:00.1/sound/card1/input13
+[   21.309570] init: failsafe main process (899) killed by TERM signal
+[   21.427188] type=1400 audit(1337780743.065:8): apparmor="STATUS" operation="profile_replace" name="/sbin/dhclient" pid=986 comm="apparmor_parser"
+[   21.428055] type=1400 audit(1337780743.069:9): apparmor="STATUS" operation="profile_replace" name="/usr/lib/NetworkManager/nm-dhcp-client.action" pid=986 comm="apparmor_parser"
+[   21.428215] type=1400 audit(1337780743.069:10): apparmor="STATUS" operation="profile_replace" name="/usr/lib/connman/scripts/dhclient-script" pid=986 comm="apparmor_parser"
+[   21.477635] tg3 0000:02:00.0: irq 50 for MSI/MSI-X
+[   21.477640] tg3 0000:02:00.0: irq 51 for MSI/MSI-X
+[   21.477643] tg3 0000:02:00.0: irq 52 for MSI/MSI-X
+[   21.477646] tg3 0000:02:00.0: irq 53 for MSI/MSI-X
+[   21.477650] tg3 0000:02:00.0: irq 54 for MSI/MSI-X
+[   21.507556] type=1400 audit(1337780743.145:11): apparmor="STATUS" operation="profile_load" name="/usr/lib/lightdm/lightdm/lightdm-guest-session-wrapper" pid=985 comm="apparmor_parser"
+[   21.556132] ppdev: user-space parallel port driver
+[   21.623303] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+[   21.623306] Bluetooth: BNEP filters: protocol multicast
+[   21.664705] Bluetooth: RFCOMM TTY layer initialized
+[   21.664709] Bluetooth: RFCOMM socket layer initialized
+[   21.664710] Bluetooth: RFCOMM ver 1.11
+[   21.772703] ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   21.931358] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+[   21.991977] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   22.418923] init: plymouth-stop pre-start process (1306) terminated with status 1
+[   25.156682] tg3 0000:02:00.0: eth0: Link is up at 1000 Mbps, full duplex
+[   25.156684] tg3 0000:02:00.0: eth0: Flow control is on for TX and on for RX
+[   25.156686] tg3 0000:02:00.0: eth0: EEE is disabled
+[   25.156897] ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+[   25.212860] wlan0: authenticate with c0:c1:c0:45:40:dd
+[   25.244286] wlan0: send auth to c0:c1:c0:45:40:dd (try 1/3)
+[   25.246117] wlan0: authenticated
+[   25.248157] wlan0: associate with c0:c1:c0:45:40:dd (try 1/3)
+[   25.252328] wlan0: RX AssocResp from c0:c1:c0:45:40:dd (capab=0x411 status=0 aid=1)
+[   25.252330] wlan0: associated
+[   25.252895] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[   35.546004] eth0: no IPv6 routers present
+[   35.785725] wlan0: no IPv6 routers present
+[  112.009220] wlan0: deauthenticating from c0:c1:c0:45:40:dd by local choice (reason=3)
+[  112.017476] cfg80211: All devices are disconnected, going to restore regulatory settings
+[  112.017481] cfg80211: Restoring regulatory settings
+[  112.017487] cfg80211: Calling CRDA to update world regulatory domain
+[  112.025379] cfg80211: Updating information on frequency 2412 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025391] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025397] cfg80211: Updating information on frequency 2417 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025404] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025409] cfg80211: Updating information on frequency 2422 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025453] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025463] cfg80211: Updating information on frequency 2427 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025474] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025481] cfg80211: Updating information on frequency 2432 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025490] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025498] cfg80211: Updating information on frequency 2437 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025507] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025514] cfg80211: Updating information on frequency 2442 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025529] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025543] cfg80211: Updating information on frequency 2447 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025568] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025572] cfg80211: Updating information on frequency 2452 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025577] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025580] cfg80211: Updating information on frequency 2457 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025584] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025587] cfg80211: Updating information on frequency 2462 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025590] cfg80211: 2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025593] cfg80211: Updating information on frequency 2467 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025597] cfg80211: 2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[  112.025599] cfg80211: Updating information on frequency 2472 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025603] cfg80211: 2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[  112.025606] cfg80211: Updating information on frequency 2484 MHz for a 20 MHz width channel with regulatory rule:
+[  112.025610] cfg80211: 2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[  112.025613] cfg80211: World regulatory domain updated:
+[  112.025616] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[  112.025619] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025622] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[  112.025625] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[  112.025628] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  112.025631] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[  113.893281] PM: Syncing filesystems ... done.
+[  113.893761] PM: Preparing system for mem sleep
+[  113.994897] Freezing user space processes ... (elapsed 0.01 seconds) done.
+[  114.010618] Freezing remaining freezable tasks ... (elapsed 0.01 seconds) done.
+[  114.026676] PM: Entering mem sleep
+[  114.026695] Suspending console(s) (use no_console_suspend to debug)
+[  114.027122] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+[  114.027269] apple-gmux 00:08: wake-up capability disabled by ACPI
+[  114.046151] sd 0:0:0:0: [sda] Stopping disk
+[  114.821399] PM: suspend of devices complete after 795.772 msecs
+[  114.821406] PM: suspend devices took 0.796 seconds
+[  114.821498] PM: late suspend of devices complete after 0.078 msecs
+[  114.837471] ehci_hcd 0000:00:1d.7: wake-up capability enabled by ACPI
+[  114.853388] ehci_hcd 0000:00:1a.7: wake-up capability enabled by ACPI
+[  114.885284] PM: noirq suspend of devices complete after 63.874 msecs
+[  114.886252] ACPI: Preparing to enter system sleep state S3
+[  114.925283] PM: Saving platform NVS memory
+[  114.925562] Disabling non-boot CPUs ...
+[  115.029119] CPU 1 is now offline
+[  115.133001] CPU 2 is now offline
+[  115.236725] CPU 3 is now offline
+[  115.340690] CPU 4 is now offline
+[  115.341396] Broke affinity for irq 23
+[  115.444457] CPU 5 is now offline
+[  115.548332] CPU 6 is now offline
+[  115.548849] Broke affinity for irq 47
+[  115.549853] CPU 7 is now offline
+[  115.550131] Extended CMOS year: 2000
+[  115.551309] ACPI: Low-level resume complete
+[  115.551350] PM: Restoring platform NVS memory
+[  115.551663] Extended CMOS year: 2000
+[  115.551699] Enabling non-boot CPUs ...
+[  115.551773] Booting Node 0 Processor 1 APIC 0x2
+[  115.566831] NMI watchdog: enabled, takes one hw-pmu counter.
+[  115.567225] CPU1 is up
+[  115.567910] Booting Node 0 Processor 2 APIC 0x4
+[  115.583503] NMI watchdog: enabled, takes one hw-pmu counter.
+[  115.596011] CPU2 is up
+[  115.598061] Booting Node 0 Processor 3 APIC 0x6
+[  115.617290] NMI watchdog: enabled, takes one hw-pmu counter.
+[  115.630641] CPU3 is up
+[  115.632131] Booting Node 0 Processor 4 APIC 0x1
+[  115.651174] NMI watchdog: enabled, takes one hw-pmu counter.
+[  115.664115] CPU4 is up
+[  115.665925] Booting Node 0 Processor 5 APIC 0x3
+[  115.687598] NMI watchdog: enabled, takes one hw-pmu counter.
+[  115.688485] CPU5 is up
+[  115.690953] Booting Node 0 Processor 6 APIC 0x5
+[  115.706944] NMI watchdog: enabled, takes one hw-pmu counter.
+[  115.722254] CPU6 is up
+[  115.725494] Booting Node 0 Processor 7 APIC 0x7
+[  115.750523] NMI watchdog: enabled, takes one hw-pmu counter.
+[  115.751760] CPU7 is up
+[  115.759373] ACPI: Waking up from system sleep state S3
+[  116.676491] ehci_hcd 0000:00:1a.7: wake-up capability disabled by ACPI
+[  116.676757] ehci_hcd 0000:00:1d.7: wake-up capability disabled by ACPI
+[  116.677485] PM: noirq resume of devices complete after 1.173 msecs
+[  116.677557] PM: early resume of devices complete after 0.043 msecs
+[  116.677632] uhci_hcd 0000:00:1a.0: setting latency timer to 64
+[  116.677664] mei 0000:00:16.0: irq 45 for MSI/MSI-X
+[  116.677667] ehci_hcd 0000:00:1a.7: setting latency timer to 64
+[  116.677671] usb usb3: root hub lost power or was reset
+[  116.677702] uhci_hcd 0000:00:1d.0: setting latency timer to 64
+[  116.677753] usb usb4: root hub lost power or was reset
+[  116.677762] snd_hda_intel 0000:00:1b.0: irq 46 for MSI/MSI-X
+[  116.677789] ehci_hcd 0000:00:1d.7: setting latency timer to 64
+[  116.677815] ata_piix 0000:00:1f.2: setting latency timer to 64
+[  116.678100] snd_hda_intel 0000:01:00.1: irq 48 for MSI/MSI-X
+[  116.693562] [drm] PCIE GART of 512M enabled (table at 0x0000000000040000).
+[  116.693768] radeon 0000:01:00.0: WB enabled
+[  116.693771] [drm] fence driver on ring 0 use gpu addr 0x20000c00 and cpu addr 0xffff88015a800c00
+[  116.709958] [drm] ring test on 0 succeeded in 2 usecs
+[  116.710002] [drm] ib test on ring 0 succeeded in 0 usecs
+[  116.732263] firewire_ohci 0000:04:00.0: irq 49 for MSI/MSI-X
+[  117.231438] firewire_core 0000:04:00.0: rediscovered device fw0
+[  118.022220] ata1.01: failed to resume link (SControl 0)
+[  118.022313] ata2.01: failed to resume link (SControl 0)
+[  118.178110] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[  118.178121] ata1.01: SATA link down (SStatus 0 SControl 0)
+[  118.178245] ata2.00: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  118.178258] ata2.01: SATA link down (SStatus 0 SControl 0)
+[  118.178277] ata2.01: link offline, clearing class 3 to NONE
+[  118.186335] ata2.00: ACPI cmd ef/03:46:00:00:00:a0 (SET FEATURES) filtered out
+[  118.186411] ata1.00: ACPI cmd ef/03:46:00:00:00:a0 (SET FEATURES) filtered out
+[  118.202362] ata2.00: configured for UDMA/100
+[  118.202599] ata1.00: configured for UDMA/133
+[  118.203153] sd 0:0:0:0: [sda] Starting disk
+[  118.205958] Extended CMOS year: 2000
+[  118.230421] PM: resume of devices complete after 1555.145 msecs
+[  118.230484] PM: resume devices took 1.556 seconds
+[  118.230500] PM: Finishing wakeup.
+[  118.230501] Restarting tasks ... done.
+[  118.873702] tg3 0000:02:00.0: irq 50 for MSI/MSI-X
+[  118.873718] tg3 0000:02:00.0: irq 51 for MSI/MSI-X
+[  118.873729] tg3 0000:02:00.0: irq 52 for MSI/MSI-X
+[  118.873741] tg3 0000:02:00.0: irq 53 for MSI/MSI-X
+[  118.873751] tg3 0000:02:00.0: irq 54 for MSI/MSI-X
+[  119.167111] ADDRCONF(NETDEV_UP): eth0: link is not ready
+[  119.324422] b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
+[  119.374503] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  122.496708] wlan0: authenticate with c0:c1:c0:45:40:dd
+[  122.507911] wlan0: send auth to c0:c1:c0:45:40:dd (try 1/3)
+[  122.563193] tg3 0000:02:00.0: eth0: Link is up at 1000 Mbps, full duplex
+[  122.563202] tg3 0000:02:00.0: eth0: Flow control is on for TX and on for RX
+[  122.563208] tg3 0000:02:00.0: eth0: EEE is disabled
+[  122.563986] ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+[  122.711291] wlan0: send auth to c0:c1:c0:45:40:dd (try 2/3)
+[  122.914989] wlan0: send auth to c0:c1:c0:45:40:dd (try 3/3)
+[  123.118674] wlan0: authentication with c0:c1:c0:45:40:dd timed out
+[  129.363968] wlan0: authenticate with c0:c1:c0:45:40:dd
+[  129.373734] wlan0: direct probe to c0:c1:c0:45:40:dd (try 1/3)
+[  129.577211] wlan0: direct probe to c0:c1:c0:45:40:dd (try 2/3)
+[  129.780908] wlan0: direct probe to c0:c1:c0:45:40:dd (try 3/3)
+[  129.984577] wlan0: authentication with c0:c1:c0:45:40:dd timed out
+[  132.740880] eth0: no IPv6 routers present
+[  136.138612] wlan0: authenticate with c0:c1:c0:45:40:dd
+[  136.150024] wlan0: direct probe to c0:c1:c0:45:40:dd (try 1/3)
+[  136.353442] wlan0: direct probe to c0:c1:c0:45:40:dd (try 2/3)
+[  136.557242] wlan0: direct probe to c0:c1:c0:45:40:dd (try 3/3)
+[  136.761037] wlan0: authentication with c0:c1:c0:45:40:dd timed out
+[  142.903974] wlan0: authenticate with c0:c1:c0:45:40:dd
+[  142.915214] wlan0: direct probe to c0:c1:c0:45:40:dd (try 1/3)
+[  143.118831] wlan0: direct probe to c0:c1:c0:45:40:dd (try 2/3)
+[  143.322632] wlan0: direct probe to c0:c1:c0:45:40:dd (try 3/3)
+[  143.526413] wlan0: authentication with c0:c1:c0:45:40:dd timed out
+[  149.697180] wlan0: authenticate with c0:c1:c0:45:40:dd
+[  149.708847] wlan0: direct probe to c0:c1:c0:45:40:dd (try 1/3)
+[  149.912275] wlan0: direct probe to c0:c1:c0:45:40:dd (try 2/3)
+[  150.116078] wlan0: direct probe to c0:c1:c0:45:40:dd (try 3/3)
+[  150.319891] wlan0: authentication with c0:c1:c0:45:40:dd timed out
+[  156.462878] wlan0: authenticate with c0:c1:c0:45:40:dd
+[  156.474364] wlan0: direct probe to c0:c1:c0:45:40:dd (try 1/3)
+[  156.677656] wlan0: direct probe to c0:c1:c0:45:40:dd (try 2/3)
+[  156.881508] wlan0: direct probe to c0:c1:c0:45:40:dd (try 3/3)
+[  157.085313] wlan0: authentication with c0:c1:c0:45:40:dd timed out
+[  163.236250] wlan0: authenticate with c0:c1:c0:45:40:dd
+[  163.247714] wlan0: direct probe to c0:c1:c0:45:40:dd (try 1/3)
+[  163.451113] wlan0: direct probe to c0:c1:c0:45:40:dd (try 2/3)
+[  163.654934] wlan0: direct probe to c0:c1:c0:45:40:dd (try 3/3)
+[  163.858682] wlan0: authentication with c0:c1:c0:45:40:dd timed out
 
---R3G7APHDIzY6R/pk
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: attachment; filename="log.dmesg"
-
-31e00 00000000ffe68000
-[   17.090073] iwlwifi 0000:02:00.0: Free 122 ffffea0004952100 00000000ffe66000
-[   17.090732] iwlwifi 0000:02:00.0: Free 123 ffffea0004955d80 00000000ffe64000
-[   17.091396] iwlwifi 0000:02:00.0: Free 124 ffffea0004932300 00000000ffe62000
-[   17.092060] iwlwifi 0000:02:00.0: Free 125 ffffea0004932480 00000000ffe60000
-[   17.092723] iwlwifi 0000:02:00.0: Free 126 ffffea0004932000 00000000ffe5e000
-[   17.093390] iwlwifi 0000:02:00.0: Free 127 ffffea0004931580 00000000ffe5c000
-[   17.094058] iwlwifi 0000:02:00.0: Free 128 ffffea000495f500 00000000ffe5a000
-[   17.094728] iwlwifi 0000:02:00.0: Free 129 ffffea0004931c00 00000000ffe58000
-[   17.095398] iwlwifi 0000:02:00.0: Free 130 ffffea00049e5c00 00000000ffe56000
-[   17.096067] iwlwifi 0000:02:00.0: Free 131 ffffea00049e7c00 00000000ffe54000
-[   17.096734] iwlwifi 0000:02:00.0: Free 132 ffffea0004a10800 00000000ffe52000
-[   17.097405] iwlwifi 0000:02:00.0: Free 133 ffffea0004991000 00000000ffe50000
-[   17.098073] iwlwifi 0000:02:00.0: Free 134 ffffea0004991700 00000000ffe4e000
-[   17.098739] iwlwifi 0000:02:00.0: Free 135 ffffea0004994f00 00000000ffe4c000
-[   17.099406] iwlwifi 0000:02:00.0: Free 136 ffffea00049eac00 00000000ffe4a000
-[   17.100071] iwlwifi 0000:02:00.0: Free 137 ffffea00049ec800 00000000ffe48000
-[   17.100735] iwlwifi 0000:02:00.0: Free 138 ffffea00049ec880 00000000ffe46000
-[   17.101393] iwlwifi 0000:02:00.0: Free 139 ffffea0004995300 00000000ffe44000
-[   17.102054] iwlwifi 0000:02:00.0: Free 140 ffffea0004995380 00000000ffe42000
-[   17.102717] iwlwifi 0000:02:00.0: Free 141 ffffea0004994e00 00000000ffe40000
-[   17.103380] iwlwifi 0000:02:00.0: Free 142 ffffea0004994e80 00000000ffe3e000
-[   17.104043] iwlwifi 0000:02:00.0: Free 143 ffffea00049ec500 00000000ffe3c000
-[   17.104707] iwlwifi 0000:02:00.0: Free 144 ffffea00049ec580 00000000ffe3a000
-[   17.105371] iwlwifi 0000:02:00.0: Free 145 ffffea00049eb200 00000000ffe38000
-[   17.106037] iwlwifi 0000:02:00.0: Free 146 ffffea00049eb280 00000000ffe36000
-[   17.106698] iwlwifi 0000:02:00.0: Free 147 ffffea00049ead00 00000000ffe34000
-[   17.107358] iwlwifi 0000:02:00.0: Free 148 ffffea00049ead80 00000000ffe32000
-[   17.108023] iwlwifi 0000:02:00.0: Free 149 ffffea00049e8700 00000000ffe30000
-[   17.108685] iwlwifi 0000:02:00.0: Free 150 ffffea00049e8780 00000000ffe2e000
-[   17.109348] iwlwifi 0000:02:00.0: Free 151 ffffea0004990f00 00000000ffe2c000
-[   17.110013] iwlwifi 0000:02:00.0: Free 152 ffffea0004990f80 00000000ffe2a000
-[   17.110677] iwlwifi 0000:02:00.0: Free 153 ffffea0004a1fd00 00000000ffe28000
-[   17.111338] iwlwifi 0000:02:00.0: Free 154 ffffea0004a1fd80 00000000ffe26000
-[   17.112001] iwlwifi 0000:02:00.0: Free 155 ffffea0004a1fb00 00000000ffe24000
-[   17.112661] iwlwifi 0000:02:00.0: Free 156 ffffea0004a1fb80 00000000ffe22000
-[   17.113317] iwlwifi 0000:02:00.0: Free 157 ffffea0004992b00 00000000ffe20000
-[   17.113977] iwlwifi 0000:02:00.0: Free 158 ffffea0004992b80 00000000ffe1e000
-[   17.114632] iwlwifi 0000:02:00.0: Free 159 ffffea0004991c00 00000000ffe1c000
-[   17.115286] iwlwifi 0000:02:00.0: Free 160 ffffea0004991c80 00000000ffe1a000
-[   17.115938] iwlwifi 0000:02:00.0: Free 161 ffffea0004992100 00000000ffe18000
-[   17.116590] iwlwifi 0000:02:00.0: Free 162 ffffea0004992180 00000000ffe16000
-[   17.117245] iwlwifi 0000:02:00.0: Free 163 ffffea0004991800 00000000ffe14000
-[   17.117900] iwlwifi 0000:02:00.0: Free 164 ffffea0004991880 00000000ffe12000
-[   17.118549] iwlwifi 0000:02:00.0: Free 165 ffffea0004991400 00000000ffe10000
-[   17.119199] iwlwifi 0000:02:00.0: Free 166 ffffea0004991480 00000000ffe0e000
-[   17.119850] iwlwifi 0000:02:00.0: Free 167 ffffea0004991e00 00000000ffe0c000
-[   17.120501] iwlwifi 0000:02:00.0: Free 168 ffffea0004991e80 00000000ffe0a000
-[   17.121147] iwlwifi 0000:02:00.0: Free 169 ffffea0004991a00 00000000ffe08000
-[   17.121797] iwlwifi 0000:02:00.0: Free 170 ffffea0004991a80 00000000ffe06000
-[   17.122446] iwlwifi 0000:02:00.0: Free 171 ffffea0004990c00 00000000ffe04000
-[   17.123098] iwlwifi 0000:02:00.0: Free 172 ffffea0004990c80 00000000ffe02000
-[   17.123748] iwlwifi 0000:02:00.0: Free 173 ffffea0004991100 00000000ffe00000
-[   17.124399] iwlwifi 0000:02:00.0: Free 174 ffffea0004991180 00000000ffdfe000
-[   17.125046] iwlwifi 0000:02:00.0: Free 175 ffffea0004991200 00000000ffdfc000
-[   17.125701] iwlwifi 0000:02:00.0: Free 176 ffffea0004991280 00000000ffdfa000
-[   17.126349] iwlwifi 0000:02:00.0: Free 177 ffffea00049e3500 00000000ffdf8000
-[   17.126999] iwlwifi 0000:02:00.0: Free 178 ffffea00049e3580 00000000ffdf6000
-[   17.127648] iwlwifi 0000:02:00.0: Free 179 ffffea00049eaa00 00000000ffdf4000
-[   17.128297] iwlwifi 0000:02:00.0: Free 180 ffffea00049eaa80 00000000ffdf2000
-[   17.128948] iwlwifi 0000:02:00.0: Free 181 ffffea00049ea200 00000000ffdf0000
-[   17.129600] iwlwifi 0000:02:00.0: Free 182 ffffea00049ea280 00000000ffdee000
-[   17.130253] iwlwifi 0000:02:00.0: Free 183 ffffea00049e9100 00000000ffdec000
-[   17.130901] iwlwifi 0000:02:00.0: Free 184 ffffea00049e9180 00000000ffdea000
-[   17.131546] iwlwifi 0000:02:00.0: Free 185 ffffea0004a1d400 00000000ffde8000
-[   17.132190] iwlwifi 0000:02:00.0: Free 186 ffffea0004a1d480 00000000ffde6000
-[   17.132834] iwlwifi 0000:02:00.0: Free 187 ffffea00049eaf00 00000000ffde4000
-[   17.133480] iwlwifi 0000:02:00.0: Free 188 ffffea00049eaf80 00000000ffde2000
-[   17.134126] iwlwifi 0000:02:00.0: Free 189 ffffea0004a1eb00 00000000ffde0000
-[   17.134776] iwlwifi 0000:02:00.0: Free 190 ffffea0004a1eb80 00000000ffdde000
-[   17.135425] iwlwifi 0000:02:00.0: Free 191 ffffea0004991600 00000000ffddc000
-[   17.136075] iwlwifi 0000:02:00.0: Free 192 ffffea0004991680 00000000ffdda000
-[   17.136723] iwlwifi 0000:02:00.0: Free 193 ffffea0004993000 00000000ffdd8000
-[   17.137375] iwlwifi 0000:02:00.0: Free 194 ffffea0004993080 00000000ffdd6000
-[   17.138027] iwlwifi 0000:02:00.0: Free 195 ffffea0004990700 00000000ffdd4000
-[   17.138676] iwlwifi 0000:02:00.0: Free 196 ffffea0004990780 00000000ffdd2000
-[   17.139323] iwlwifi 0000:02:00.0: Free 197 ffffea0004993700 00000000ffdd0000
-[   17.139972] iwlwifi 0000:02:00.0: Free 198 ffffea0004993780 00000000ffdce000
-[   17.140617] iwlwifi 0000:02:00.0: Free 199 ffffea0004993c00 00000000ffdcc000
-[   17.141267] iwlwifi 0000:02:00.0: Free 200 ffffea0004993c80 00000000ffdca000
-[   17.141915] iwlwifi 0000:02:00.0: Free 201 ffffea0004a56500 00000000ffdc8000
-[   17.142561] iwlwifi 0000:02:00.0: Free 202 ffffea0004a56580 00000000ffdc6000
-[   17.143210] iwlwifi 0000:02:00.0: Free 203 ffffea00049ed300 00000000ffdc4000
-[   17.143860] iwlwifi 0000:02:00.0: Free 204 ffffea00049ed380 00000000ffdc2000
-[   17.144507] iwlwifi 0000:02:00.0: Free 205 ffffea0004a10900 00000000ffdc0000
-[   17.145158] iwlwifi 0000:02:00.0: Free 206 ffffea0004a10980 00000000ffdbe000
-[   17.145806] iwlwifi 0000:02:00.0: Free 207 ffffea00049e8f00 00000000ffdbc000
-[   17.146450] iwlwifi 0000:02:00.0: Free 208 ffffea00049e8f80 00000000ffdba000
-[   17.147091] iwlwifi 0000:02:00.0: Free 209 ffffea00049e7d00 00000000ffdb8000
-[   17.147738] iwlwifi 0000:02:00.0: Free 210 ffffea00049e7d80 00000000ffdb6000
-[   17.148383] iwlwifi 0000:02:00.0: Free 211 ffffea0004a10a00 00000000ffdb4000
-[   17.149027] iwlwifi 0000:02:00.0: Free 212 ffffea0004a10a80 00000000ffdb2000
-[   17.149675] iwlwifi 0000:02:00.0: Free 213 ffffea00049e5800 00000000ffdb0000
-[   17.150320] iwlwifi 0000:02:00.0: Free 214 ffffea00049e5880 00000000ffdae000
-[   17.150968] iwlwifi 0000:02:00.0: Free 215 ffffea00049ed100 00000000ffdac000
-[   17.151611] iwlwifi 0000:02:00.0: Free 216 ffffea00049ed180 00000000ffdaa000
-[   17.152257] iwlwifi 0000:02:00.0: Free 217 ffffea00049e9a00 00000000ffda8000
-[   17.152903] iwlwifi 0000:02:00.0: Free 218 ffffea00049e9a80 00000000ffda6000
-[   17.153545] iwlwifi 0000:02:00.0: Free 219 ffffea0004a57800 00000000ffda4000
-[   17.154189] iwlwifi 0000:02:00.0: Free 220 ffffea0004a57880 00000000ffda2000
-[   17.154839] iwlwifi 0000:02:00.0: Free 221 ffffea00049e3b00 00000000ffda0000
-[   17.155486] iwlwifi 0000:02:00.0: Free 222 ffffea00049e3b80 00000000ffd9e000
-[   17.156129] iwlwifi 0000:02:00.0: Free 223 ffffea00049e4e00 00000000ffd9c000
-[   17.156775] iwlwifi 0000:02:00.0: Free 224 ffffea00049e4e80 00000000ffd9a000
-[   17.157415] iwlwifi 0000:02:00.0: Free 225 ffffea0004a56b00 00000000ffd98000
-[   17.158058] iwlwifi 0000:02:00.0: Free 226 ffffea0004a56b80 00000000ffd96000
-[   17.158702] iwlwifi 0000:02:00.0: Free 227 ffffea0004990500 00000000ffd94000
-[   17.159342] iwlwifi 0000:02:00.0: Free 228 ffffea0004990580 00000000ffd92000
-[   17.159985] iwlwifi 0000:02:00.0: Free 229 ffffea00049eb800 00000000ffd90000
-[   17.160625] iwlwifi 0000:02:00.0: Free 230 ffffea00049eb880 00000000ffd8e000
-[   17.161260] iwlwifi 0000:02:00.0: Free 231 ffffea00049e5d00 00000000ffd8c000
-[   17.161899] iwlwifi 0000:02:00.0: Free 232 ffffea00049e5d80 00000000ffd8a000
-[   17.162538] iwlwifi 0000:02:00.0: Free 233 ffffea00049e7000 00000000ffd88000
-[   17.163178] iwlwifi 0000:02:00.0: Free 234 ffffea00049e7080 00000000ffd86000
-[   17.163819] iwlwifi 0000:02:00.0: Free 235 ffffea0004933400 00000000ffd84000
-[   17.164457] iwlwifi 0000:02:00.0: Free 236 ffffea0004933480 00000000ffd82000
-[   17.165096] iwlwifi 0000:02:00.0: Free 237 ffffea0004a1ca00 00000000ffd80000
-[   17.165737] iwlwifi 0000:02:00.0: Free 238 ffffea0004a1ca80 00000000ffd7e000
-[   17.166376] iwlwifi 0000:02:00.0: Free 239 ffffea00049e9e00 00000000ffd7c000
-[   17.167015] iwlwifi 0000:02:00.0: Free 240 ffffea00049e9e80 00000000ffd7a000
-[   17.167656] iwlwifi 0000:02:00.0: Free 241 ffffea0004933700 00000000ffd78000
-[   17.168296] iwlwifi 0000:02:00.0: Free 242 ffffea0004933780 00000000ffd76000
-[   17.168935] iwlwifi 0000:02:00.0: Free 243 ffffea00049e9600 00000000ffd74000
-[   17.169576] iwlwifi 0000:02:00.0: Free 244 ffffea00049e9680 00000000ffd72000
-[   17.170214] iwlwifi 0000:02:00.0: Free 245 ffffea00049e5a00 00000000ffd70000
-[   17.170854] iwlwifi 0000:02:00.0: Free 246 ffffea00049e5a80 00000000ffd6e000
-[   17.171490] iwlwifi 0000:02:00.0: Free 247 ffffea0004a55e00 00000000ffd6c000
-[   17.172131] iwlwifi 0000:02:00.0: Free 248 ffffea0004a55e80 00000000ffd6a000
-[   17.172772] iwlwifi 0000:02:00.0: Free 249 ffffea000495eb00 00000000ffd68000
-[   17.173410] iwlwifi 0000:02:00.0: Free 250 ffffea000495eb80 00000000ffd66000
-[   17.174084] iwlwifi 0000:02:00.0: Free 251 ffffea00049e5e00 00000000ffd64000
-[   17.174728] iwlwifi 0000:02:00.0: Free 252 ffffea00049e5e80 00000000ffd62000
-[   17.175374] iwlwifi 0000:02:00.0: Free 253 ffffea0004933000 00000000ffd60000
-[   17.176019] iwlwifi 0000:02:00.0: Free 254 ffffea0004933080 00000000ffd5e000
-[   17.176665] iwlwifi 0000:02:00.0: Free 255 ffffea000495fc00 00000000ffd5c000
-[   17.177311] iwlwifi 0000:02:00.0: Free 256 ffffea000495fc80 00000000ffd5a000
-[   17.177955] iwlwifi 0000:02:00.0: Free 257 ffffea0004930600 00000000ffd58000
-[   17.178604] iwlwifi 0000:02:00.0: Free 258 ffffea0004930680 00000000ffd56000
-[   17.179252] iwlwifi 0000:02:00.0: Free 259 ffffea0004931200 00000000ffd54000
-[   17.179897] iwlwifi 0000:02:00.0: Free 260 ffffea0004931280 00000000ffd52000
-[   17.180542] iwlwifi 0000:02:00.0: Free 261 ffffea0004931d00 00000000ffd50000
-[   17.181191] iwlwifi 0000:02:00.0: Free 262 ffffea0004931d80 00000000ffd4e000
-[   17.181839] iwlwifi 0000:02:00.0: Free 263 ffffea0004933900 00000000ffd4c000
-[   17.182490] iwlwifi 0000:02:00.0: Free 264 ffffea0004933980 00000000ffd4a000
-[   17.183137] iwlwifi 0000:02:00.0: Free 265 ffffea00049e9400 00000000ffd48000
-[   17.183783] iwlwifi 0000:02:00.0: Free 266 ffffea00049e9480 00000000ffd46000
-[   17.184432] iwlwifi 0000:02:00.0: Free 267 ffffea00049e9500 00000000ffd44000
-[   17.185081] iwlwifi 0000:02:00.0: Free 268 ffffea00049e9580 00000000ffd42000
-[   17.185733] iwlwifi 0000:02:00.0: Free 269 ffffea0004993e00 00000000ffd40000
-[   17.186386] iwlwifi 0000:02:00.0: Free 270 ffffea0004993e80 00000000ffd3e000
-[   17.187038] iwlwifi 0000:02:00.0: Free 271 ffffea0004993f00 00000000ffd3c000
-[   17.187695] iwlwifi 0000:02:00.0: Free 272 ffffea0004993f80 00000000ffd3a000
-[   17.188348] iwlwifi 0000:02:00.0: Free 273 ffffea00049ebe00 00000000ffd38000
-[   17.189000] iwlwifi 0000:02:00.0: Free 274 ffffea00049ebe80 00000000ffd36000
-[   17.189658] iwlwifi 0000:02:00.0: Free 275 ffffea00049ebf00 00000000ffd34000
-[   17.190311] iwlwifi 0000:02:00.0: Free 276 ffffea00049ebf80 00000000ffd32000
-[   17.190968] iwlwifi 0000:02:00.0: Free 277 ffffea00049e9c00 00000000ffd30000
-[   17.191621] iwlwifi 0000:02:00.0: Free 278 ffffea00049e9c80 00000000ffd2e000
-[   17.192276] iwlwifi 0000:02:00.0: Free 279 ffffea00049e9d00 00000000ffd2c000
-[   17.192933] iwlwifi 0000:02:00.0: Free 280 ffffea00049e9d80 00000000ffd2a000
-[   17.193589] iwlwifi 0000:02:00.0: Free 281 ffffea0004933e00 00000000ffd28000
-[   17.194244] iwlwifi 0000:02:00.0: Free 282 ffffea0004933e80 00000000ffd26000
-[   17.194904] iwlwifi 0000:02:00.0: Free 283 ffffea0004933f00 00000000ffd24000
-[   17.195562] iwlwifi 0000:02:00.0: Free 284 ffffea0004933f80 00000000ffd22000
-[   17.196224] iwlwifi 0000:02:00.0: Free 285 ffffea00049e8000 00000000ffd20000
-[   17.196887] iwlwifi 0000:02:00.0: Free 286 ffffea00049e8080 00000000ffd1e000
-[   17.197546] iwlwifi 0000:02:00.0: Free 287 ffffea00049e8100 00000000ffd1c000
-[   17.198209] iwlwifi 0000:02:00.0: Free 288 ffffea00049e8180 00000000ffd1a000
-[   17.198873] iwlwifi 0000:02:00.0: Free 289 ffffea00049e8200 00000000ffd18000
-[   17.199538] iwlwifi 0000:02:00.0: Free 290 ffffea00049e8280 00000000ffd16000
-[   17.200203] iwlwifi 0000:02:00.0: Free 291 ffffea00049e8300 00000000ffd14000
-[   17.200865] iwlwifi 0000:02:00.0: Free 292 ffffea00049e8380 00000000ffd12000
-[   17.201529] iwlwifi 0000:02:00.0: Free 293 ffffea00049e6000 00000000ffd10000
-[   17.202195] iwlwifi 0000:02:00.0: Free 294 ffffea00049e6080 00000000ffd0e000
-[   17.202860] iwlwifi 0000:02:00.0: Free 295 ffffea00049e6100 00000000ffd0c000
-[   17.203526] iwlwifi 0000:02:00.0: Free 296 ffffea00049e6180 00000000ffd0a000
-[   17.204189] iwlwifi 0000:02:00.0: Free 297 ffffea00049e6200 00000000ffd08000
-[   17.204853] iwlwifi 0000:02:00.0: Free 298 ffffea00049e6280 00000000ffd06000
-[   17.205519] iwlwifi 0000:02:00.0: Free 299 ffffea00049e6300 00000000ffd04000
-[   17.206187] iwlwifi 0000:02:00.0: Free 300 ffffea00049e6380 00000000ffd02000
-[   17.206855] iwlwifi 0000:02:00.0: Free 301 ffffea00049eb400 00000000ffd00000
-[   17.207522] iwlwifi 0000:02:00.0: Free 302 ffffea00049eb480 00000000ffcfe000
-[   17.208192] iwlwifi 0000:02:00.0: Free 303 ffffea00049eb500 00000000ffcfc000
-[   17.208859] iwlwifi 0000:02:00.0: Free 304 ffffea00049eb580 00000000ffcfa000
-[   17.209529] iwlwifi 0000:02:00.0: Free 305 ffffea00049eb600 00000000ffcf8000
-[   17.210196] iwlwifi 0000:02:00.0: Free 306 ffffea00049eb680 00000000ffcf6000
-[   17.210856] iwlwifi 0000:02:00.0: Free 307 ffffea00049eb700 00000000ffcf4000
-[   17.211522] iwlwifi 0000:02:00.0: Free 308 ffffea00049eb780 00000000ffcf2000
-[   17.212185] iwlwifi 0000:02:00.0: Free 309 ffffea0004934000 00000000ffcf0000
-[   17.212850] iwlwifi 0000:02:00.0: Free 310 ffffea0004934080 00000000ffcee000
-[   17.213517] iwlwifi 0000:02:00.0: Free 311 ffffea0004934100 00000000ffcec000
-[   17.214184] iwlwifi 0000:02:00.0: Free 312 ffffea0004934180 00000000ffcea000
-[   17.214848] iwlwifi 0000:02:00.0: Free 313 ffffea0004934200 00000000ffce8000
-[   17.215512] iwlwifi 0000:02:00.0: Free 314 ffffea0004934280 00000000ffce6000
-[   17.216179] iwlwifi 0000:02:00.0: Free 315 ffffea0004934300 00000000ffce4000
-[   17.216843] iwlwifi 0000:02:00.0: Free 316 ffffea0004934380 00000000ffce2000
-[   17.217510] iwlwifi 0000:02:00.0: Free 317 ffffea0004934400 00000000ffce0000
-[   17.218181] iwlwifi 0000:02:00.0: Free 318 ffffea0004934480 00000000ffcde000
-[   17.218849] iwlwifi 0000:02:00.0: Free 319 ffffea0004934500 00000000ffcdc000
-[   17.219544] iwlwifi 0000:02:00.0: Mapped ffffea00049eac00 to 00000000fff5a000
-[   17.220222] iwlwifi 0000:02:00.0: Mapped ffffea0004994f00 to 00000000fff58000
-[   17.220225] iwlwifi 0000:02:00.0: Mapped ffffea0004991700 to 00000000fff56000
-[   17.220227] iwlwifi 0000:02:00.0: Mapped ffffea0004991000 to 00000000fff54000
-[   17.220230] iwlwifi 0000:02:00.0: Mapped ffffea0004a10800 to 00000000fff52000
-[   17.220232] iwlwifi 0000:02:00.0: Mapped ffffea00049e7c00 to 00000000fff50000
-[   17.220234] iwlwifi 0000:02:00.0: Mapped ffffea00049e5c00 to 00000000fff4e000
-[   17.220236] iwlwifi 0000:02:00.0: Mapped ffffea0004931c00 to 00000000fff4c000
-[   17.220239] iwlwifi 0000:02:00.0: Mapped ffffea000495f500 to 00000000fff4a000
-[   17.220242] iwlwifi 0000:02:00.0: Mapped ffffea0004931580 to 00000000fff48000
-[   17.220244] iwlwifi 0000:02:00.0: Mapped ffffea0004932000 to 00000000fff46000
-[   17.220246] iwlwifi 0000:02:00.0: Mapped ffffea0004932480 to 00000000fff44000
-[   17.220248] iwlwifi 0000:02:00.0: Mapped ffffea0004932300 to 00000000fff42000
-[   17.220251] iwlwifi 0000:02:00.0: Mapped ffffea0004955d80 to 00000000fff40000
-[   17.220256] iwlwifi 0000:02:00.0: Mapped ffffea0004952100 to 00000000fff3e000
-[   17.220259] iwlwifi 0000:02:00.0: Mapped ffffea0004931e00 to 00000000fff3c000
-[   17.220261] iwlwifi 0000:02:00.0: Mapped ffffea0004956580 to 00000000fff3a000
-[   17.220263] iwlwifi 0000:02:00.0: Mapped ffffea0004952b80 to 00000000fff38000
-[   17.220265] iwlwifi 0000:02:00.0: Mapped ffffea0004953c00 to 00000000fff36000
-[   17.220268] iwlwifi 0000:02:00.0: Mapped ffffea0004931180 to 00000000fff34000
-[   17.220270] iwlwifi 0000:02:00.0: Mapped ffffea0004933200 to 00000000fff32000
-[   17.220272] iwlwifi 0000:02:00.0: Mapped ffffea000495f800 to 00000000fff30000
-[   17.220275] iwlwifi 0000:02:00.0: Mapped ffffea0004930100 to 00000000fff2e000
-[   17.220277] iwlwifi 0000:02:00.0: Mapped ffffea0004997300 to 00000000fff2c000
-[   17.220279] iwlwifi 0000:02:00.0: Mapped ffffea000495fa80 to 00000000fff2a000
-[   17.220281] iwlwifi 0000:02:00.0: Mapped ffffea0004953200 to 00000000fff28000
-[   17.220284] iwlwifi 0000:02:00.0: Mapped ffffea0004931900 to 00000000fff26000
-[   17.220286] iwlwifi 0000:02:00.0: Mapped ffffea0004954180 to 00000000fff24000
-[   17.220288] iwlwifi 0000:02:00.0: Mapped ffffea0004954680 to 00000000fff22000
-[   17.220290] iwlwifi 0000:02:00.0: Mapped ffffea0004932680 to 00000000fff20000
-[   17.220292] iwlwifi 0000:02:00.0: Mapped ffffea000495f000 to 00000000fff1e000
-[   17.220295] iwlwifi 0000:02:00.0: Mapped ffffea0004931380 to 00000000fff1c000
-[   17.220297] iwlwifi 0000:02:00.0: Mapped ffffea00049e5b00 to 00000000fff1a000
-[   17.220299] iwlwifi 0000:02:00.0: Mapped ffffea0004933100 to 00000000fff18000
-[   17.220301] iwlwifi 0000:02:00.0: Mapped ffffea000495f100 to 00000000fff16000
-[   17.220303] iwlwifi 0000:02:00.0: Mapped ffffea00049e2680 to 00000000fff14000
-[   17.220306] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ea00 to 00000000fff12000
-[   17.220308] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d280 to 00000000fff10000
-[   17.220310] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ed80 to 00000000fff0e000
-[   17.220312] iwlwifi 0000:02:00.0: Mapped ffffea00049e2700 to 00000000fff0c000
-[   17.220315] iwlwifi 0000:02:00.0: Mapped ffffea0004a1da00 to 00000000fff0a000
-[   17.220317] iwlwifi 0000:02:00.0: Mapped ffffea0004930000 to 00000000fff08000
-[   17.220319] iwlwifi 0000:02:00.0: Mapped ffffea00049e5f00 to 00000000fff06000
-[   17.220322] iwlwifi 0000:02:00.0: Mapped ffffea00049e9780 to 00000000fff04000
-[   17.220324] iwlwifi 0000:02:00.0: Mapped ffffea00049e8500 to 00000000fff02000
-[   17.220326] iwlwifi 0000:02:00.0: Mapped ffffea00049e9b00 to 00000000fff00000
-[   17.220328] iwlwifi 0000:02:00.0: Mapped ffffea00049e2a00 to 00000000ffefe000
-[   17.220331] iwlwifi 0000:02:00.0: Mapped ffffea00049e2c80 to 00000000ffefc000
-[   17.220333] iwlwifi 0000:02:00.0: Mapped ffffea00049e0f80 to 00000000ffefa000
-[   17.220335] iwlwifi 0000:02:00.0: Mapped ffffea00049e6d00 to 00000000ffef8000
-[   17.220337] iwlwifi 0000:02:00.0: Mapped ffffea000495f700 to 00000000ffef6000
-[   17.220339] iwlwifi 0000:02:00.0: Mapped ffffea0004931b80 to 00000000ffef4000
-[   17.220342] iwlwifi 0000:02:00.0: Mapped ffffea0004a1a700 to 00000000ffef2000
-[   17.220344] iwlwifi 0000:02:00.0: Mapped ffffea00049eb900 to 00000000ffef0000
-[   17.220346] iwlwifi 0000:02:00.0: Mapped ffffea00049ea100 to 00000000ffeee000
-[   17.220348] iwlwifi 0000:02:00.0: Mapped ffffea00049ef400 to 00000000ffeec000
-[   17.220351] iwlwifi 0000:02:00.0: Mapped ffffea0004a1f300 to 00000000ffeea000
-[   17.220353] iwlwifi 0000:02:00.0: Mapped ffffea00049e4980 to 00000000ffee8000
-[   17.220355] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c600 to 00000000ffee6000
-[   17.220357] iwlwifi 0000:02:00.0: Mapped ffffea0004990600 to 00000000ffee4000
-[   17.220359] iwlwifi 0000:02:00.0: Mapped ffffea00049e9f80 to 00000000ffee2000
-[   17.220362] iwlwifi 0000:02:00.0: Mapped ffffea00049ea000 to 00000000ffee0000
-[   17.220364] iwlwifi 0000:02:00.0: Mapped ffffea0004990480 to 00000000ffede000
-[   17.220366] iwlwifi 0000:02:00.0: Mapped ffffea00049ec100 to 00000000ffedc000
-[   17.220369] iwlwifi 0000:02:00.0: Mapped ffffea00049ec080 to 00000000ffeda000
-[   17.220372] iwlwifi 0000:02:00.0: Mapped ffffea0004990980 to 00000000ffed8000
-[   17.220375] iwlwifi 0000:02:00.0: Mapped ffffea00049ef900 to 00000000ffed6000
-[   17.220378] iwlwifi 0000:02:00.0: Mapped ffffea00049e8680 to 00000000ffed4000
-[   17.220380] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c080 to 00000000ffed2000
-[   17.220383] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c900 to 00000000ffed0000
-[   17.220385] iwlwifi 0000:02:00.0: Mapped ffffea00049e4f80 to 00000000ffece000
-[   17.220388] iwlwifi 0000:02:00.0: Mapped ffffea00049ec300 to 00000000ffecc000
-[   17.220390] iwlwifi 0000:02:00.0: Mapped ffffea00049ea300 to 00000000ffeca000
-[   17.220392] iwlwifi 0000:02:00.0: Mapped ffffea00049ecd00 to 00000000ffec8000
-[   17.220395] iwlwifi 0000:02:00.0: Mapped ffffea0004a1db00 to 00000000ffec6000
-[   17.220398] iwlwifi 0000:02:00.0: Mapped ffffea00049e4b00 to 00000000ffec4000
-[   17.220401] iwlwifi 0000:02:00.0: Mapped ffffea00049e2e00 to 00000000ffec2000
-[   17.220403] iwlwifi 0000:02:00.0: Mapped ffffea00049e3f80 to 00000000ffec0000
-[   17.220406] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d380 to 00000000ffebe000
-[   17.220408] iwlwifi 0000:02:00.0: Mapped ffffea0004993880 to 00000000ffebc000
-[   17.220411] iwlwifi 0000:02:00.0: Mapped ffffea0004a10b00 to 00000000ffeba000
-[   17.220413] iwlwifi 0000:02:00.0: Mapped ffffea00049e7f00 to 00000000ffeb8000
-[   17.220417] iwlwifi 0000:02:00.0: Mapped ffffea00049e7e80 to 00000000ffeb6000
-[   17.220419] iwlwifi 0000:02:00.0: Mapped ffffea00049e2200 to 00000000ffeb4000
-[   17.220422] iwlwifi 0000:02:00.0: Mapped ffffea00049ecc80 to 00000000ffeb2000
-[   17.220424] iwlwifi 0000:02:00.0: Mapped ffffea00049ec280 to 00000000ffeb0000
-[   17.220427] iwlwifi 0000:02:00.0: Mapped ffffea00049ed580 to 00000000ffeae000
-[   17.220430] iwlwifi 0000:02:00.0: Mapped ffffea0004a19c80 to 00000000ffeac000
-[   17.220432] iwlwifi 0000:02:00.0: Mapped ffffea00049eab80 to 00000000ffeaa000
-[   17.220435] iwlwifi 0000:02:00.0: Mapped ffffea0004993b00 to 00000000ffea8000
-[   17.220437] iwlwifi 0000:02:00.0: Mapped ffffea0004994400 to 00000000ffea6000
-[   17.220440] iwlwifi 0000:02:00.0: Mapped ffffea0004994180 to 00000000ffea4000
-[   17.220442] iwlwifi 0000:02:00.0: Mapped ffffea0004993980 to 00000000ffea2000
-[   17.220445] iwlwifi 0000:02:00.0: Mapped ffffea0004994000 to 00000000ffea0000
-[   17.220447] iwlwifi 0000:02:00.0: Mapped ffffea0004993100 to 00000000ffe9e000
-[   17.220449] iwlwifi 0000:02:00.0: Mapped ffffea00049e9080 to 00000000ffe9c000
-[   17.220452] iwlwifi 0000:02:00.0: Mapped ffffea00049e7280 to 00000000ffe9a000
-[   17.220455] iwlwifi 0000:02:00.0: Mapped ffffea0004991380 to 00000000ffe98000
-[   17.220457] iwlwifi 0000:02:00.0: Mapped ffffea0004991500 to 00000000ffe96000
-[   17.220459] iwlwifi 0000:02:00.0: Mapped ffffea00049e1f00 to 00000000ffe94000
-[   17.220462] iwlwifi 0000:02:00.0: Mapped ffffea0004990d00 to 00000000ffe92000
-[   17.220465] iwlwifi 0000:02:00.0: Mapped ffffea00049ed280 to 00000000ffe90000
-[   17.220468] iwlwifi 0000:02:00.0: Mapped ffffea0004990a80 to 00000000ffe8e000
-[   17.220470] iwlwifi 0000:02:00.0: Mapped ffffea0004990b00 to 00000000ffe8c000
-[   17.220473] iwlwifi 0000:02:00.0: Mapped ffffea00049ea980 to 00000000ffe8a000
-[   17.220476] iwlwifi 0000:02:00.0: Mapped ffffea0004a1dd80 to 00000000ffe88000
-[   17.220479] iwlwifi 0000:02:00.0: Mapped ffffea00049e1b00 to 00000000ffe86000
-[   17.220481] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fe00 to 00000000ffe84000
-[   17.220484] iwlwifi 0000:02:00.0: Mapped ffffea00049e5100 to 00000000ffe82000
-[   17.220486] iwlwifi 0000:02:00.0: Mapped ffffea00049e5500 to 00000000ffe80000
-[   17.220489] iwlwifi 0000:02:00.0: Mapped ffffea00049e5480 to 00000000ffe7e000
-[   17.220491] iwlwifi 0000:02:00.0: Mapped ffffea00049e8900 to 00000000ffe7c000
-[   17.220493] iwlwifi 0000:02:00.0: Mapped ffffea0004993200 to 00000000ffe7a000
-[   17.220497] iwlwifi 0000:02:00.0: Mapped ffffea0004994a80 to 00000000ffe78000
-[   17.220499] iwlwifi 0000:02:00.0: Mapped ffffea0004990080 to 00000000ffe76000
-[   17.220502] iwlwifi 0000:02:00.0: Mapped ffffea0004990880 to 00000000ffe74000
-[   17.220504] iwlwifi 0000:02:00.0: Mapped ffffea0004a1e580 to 00000000ffe72000
-[   17.220507] iwlwifi 0000:02:00.0: Mapped ffffea00049e0880 to 00000000ffe70000
-[   17.220509] iwlwifi 0000:02:00.0: Mapped ffffea0004991d00 to 00000000ffe6e000
-[   17.220512] iwlwifi 0000:02:00.0: Mapped ffffea0004991f80 to 00000000ffe6c000
-[   17.220514] iwlwifi 0000:02:00.0: Mapped ffffea0004992e00 to 00000000ffe6a000
-[   17.220517] iwlwifi 0000:02:00.0: Mapped ffffea0004992d80 to 00000000ffe68000
-[   17.220519] iwlwifi 0000:02:00.0: Mapped ffffea0004996a00 to 00000000ffe66000
-[   17.220522] iwlwifi 0000:02:00.0: Mapped ffffea0004992080 to 00000000ffe64000
-[   17.220524] iwlwifi 0000:02:00.0: Mapped ffffea0004992a80 to 00000000ffe62000
-[   17.220527] iwlwifi 0000:02:00.0: Mapped ffffea0004992f00 to 00000000ffe60000
-[   17.220530] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b180 to 00000000ffe5e000
-[   17.220532] iwlwifi 0000:02:00.0: Mapped ffffea0004a19d80 to 00000000ffe5c000
-[   17.220534] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b700 to 00000000ffe5a000
-[   17.220538] iwlwifi 0000:02:00.0: Mapped ffffea00049eae80 to 00000000ffe58000
-[   17.220540] iwlwifi 0000:02:00.0: Mapped ffffea00049eb180 to 00000000ffe56000
-[   17.220543] iwlwifi 0000:02:00.0: Mapped ffffea00049e1880 to 00000000ffe54000
-[   17.220545] iwlwifi 0000:02:00.0: Mapped ffffea0004995080 to 00000000ffe52000
-[   17.220548] iwlwifi 0000:02:00.0: Mapped ffffea0004994d00 to 00000000ffe50000
-[   17.220551] iwlwifi 0000:02:00.0: Mapped ffffea00049ec980 to 00000000ffe4e000
-[   17.220553] iwlwifi 0000:02:00.0: Mapped ffffea0004998600 to 00000000ffe4c000
-[   17.220556] iwlwifi 0000:02:00.0: Mapped ffffea00049e7700 to 00000000ffe4a000
-[   17.220558] iwlwifi 0000:02:00.0: Mapped ffffea0004938280 to 00000000ffe48000
-[   17.220560] iwlwifi 0000:02:00.0: Mapped ffffea0004933900 to 00000000ffe46000
-[   17.220563] iwlwifi 0000:02:00.0: Mapped ffffea0004933980 to 00000000ffe44000
-[   17.220566] iwlwifi 0000:02:00.0: Mapped ffffea0004931d00 to 00000000ffe42000
-[   17.220568] iwlwifi 0000:02:00.0: Mapped ffffea0004931d80 to 00000000ffe40000
-[   17.220571] iwlwifi 0000:02:00.0: Mapped ffffea0004931200 to 00000000ffe3e000
-[   17.220573] iwlwifi 0000:02:00.0: Mapped ffffea0004931280 to 00000000ffe3c000
-[   17.220576] iwlwifi 0000:02:00.0: Mapped ffffea0004930600 to 00000000ffe3a000
-[   17.220578] iwlwifi 0000:02:00.0: Mapped ffffea0004930680 to 00000000ffe38000
-[   17.220581] iwlwifi 0000:02:00.0: Mapped ffffea000495fc00 to 00000000ffe36000
-[   17.220584] iwlwifi 0000:02:00.0: Mapped ffffea000495fc80 to 00000000ffe34000
-[   17.220587] iwlwifi 0000:02:00.0: Mapped ffffea0004933000 to 00000000ffe32000
-[   17.220589] iwlwifi 0000:02:00.0: Mapped ffffea0004933080 to 00000000ffe30000
-[   17.220591] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e00 to 00000000ffe2e000
-[   17.220594] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e80 to 00000000ffe2c000
-[   17.220597] iwlwifi 0000:02:00.0: Mapped ffffea000495eb00 to 00000000ffe2a000
-[   17.220599] iwlwifi 0000:02:00.0: Mapped ffffea000495eb80 to 00000000ffe28000
-[   17.220602] iwlwifi 0000:02:00.0: Mapped ffffea0004a55e00 to 00000000ffe26000
-[   17.220605] iwlwifi 0000:02:00.0: Mapped ffffea0004a55e80 to 00000000ffe24000
-[   17.220608] iwlwifi 0000:02:00.0: Mapped ffffea00049e5a00 to 00000000ffe22000
-[   17.220610] iwlwifi 0000:02:00.0: Mapped ffffea00049e5a80 to 00000000ffe20000
-[   17.220612] iwlwifi 0000:02:00.0: Mapped ffffea00049e9600 to 00000000ffe1e000
-[   17.220615] iwlwifi 0000:02:00.0: Mapped ffffea00049e9680 to 00000000ffe1c000
-[   17.220618] iwlwifi 0000:02:00.0: Mapped ffffea0004933700 to 00000000ffe1a000
-[   17.220621] iwlwifi 0000:02:00.0: Mapped ffffea0004933780 to 00000000ffe18000
-[   17.220623] iwlwifi 0000:02:00.0: Mapped ffffea00049e9e00 to 00000000ffe16000
-[   17.220626] iwlwifi 0000:02:00.0: Mapped ffffea00049e9e80 to 00000000ffe14000
-[   17.220629] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ca00 to 00000000ffe12000
-[   17.220631] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ca80 to 00000000ffe10000
-[   17.220634] iwlwifi 0000:02:00.0: Mapped ffffea0004933400 to 00000000ffe0e000
-[   17.220637] iwlwifi 0000:02:00.0: Mapped ffffea0004933480 to 00000000ffe0c000
-[   17.220639] iwlwifi 0000:02:00.0: Mapped ffffea00049e7000 to 00000000ffe0a000
-[   17.220642] iwlwifi 0000:02:00.0: Mapped ffffea00049e7080 to 00000000ffe08000
-[   17.220645] iwlwifi 0000:02:00.0: Mapped ffffea00049e5d00 to 00000000ffe06000
-[   17.220647] iwlwifi 0000:02:00.0: Mapped ffffea00049e5d80 to 00000000ffe04000
-[   17.220650] iwlwifi 0000:02:00.0: Mapped ffffea00049eb800 to 00000000ffe02000
-[   17.220653] iwlwifi 0000:02:00.0: Mapped ffffea00049eb880 to 00000000ffe00000
-[   17.220655] iwlwifi 0000:02:00.0: Mapped ffffea0004990500 to 00000000ffdfe000
-[   17.220657] iwlwifi 0000:02:00.0: Mapped ffffea0004990580 to 00000000ffdfc000
-[   17.220660] iwlwifi 0000:02:00.0: Mapped ffffea0004a56b00 to 00000000ffdfa000
-[   17.220663] iwlwifi 0000:02:00.0: Mapped ffffea0004a56b80 to 00000000ffdf8000
-[   17.220666] iwlwifi 0000:02:00.0: Mapped ffffea00049e4e00 to 00000000ffdf6000
-[   17.220668] iwlwifi 0000:02:00.0: Mapped ffffea00049e4e80 to 00000000ffdf4000
-[   17.220671] iwlwifi 0000:02:00.0: Mapped ffffea00049e3b00 to 00000000ffdf2000
-[   17.220674] iwlwifi 0000:02:00.0: Mapped ffffea00049e3b80 to 00000000ffdf0000
-[   17.220676] iwlwifi 0000:02:00.0: Mapped ffffea0004a57800 to 00000000ffdee000
-[   17.220679] iwlwifi 0000:02:00.0: Mapped ffffea0004a57880 to 00000000ffdec000
-[   17.220681] iwlwifi 0000:02:00.0: Mapped ffffea00049e9a00 to 00000000ffdea000
-[   17.220684] iwlwifi 0000:02:00.0: Mapped ffffea00049e9a80 to 00000000ffde8000
-[   17.220687] iwlwifi 0000:02:00.0: Mapped ffffea00049ed100 to 00000000ffde6000
-[   17.220689] iwlwifi 0000:02:00.0: Mapped ffffea00049ed180 to 00000000ffde4000
-[   17.220692] iwlwifi 0000:02:00.0: Mapped ffffea00049e5800 to 00000000ffde2000
-[   17.220695] iwlwifi 0000:02:00.0: Mapped ffffea00049e5880 to 00000000ffde0000
-[   17.220698] iwlwifi 0000:02:00.0: Mapped ffffea0004a10a00 to 00000000ffdde000
-[   17.220700] iwlwifi 0000:02:00.0: Mapped ffffea0004a10a80 to 00000000ffddc000
-[   17.220703] iwlwifi 0000:02:00.0: Mapped ffffea00049e7d00 to 00000000ffdda000
-[   17.220705] iwlwifi 0000:02:00.0: Mapped ffffea00049e7d80 to 00000000ffdd8000
-[   17.220708] iwlwifi 0000:02:00.0: Mapped ffffea00049e8f00 to 00000000ffdd6000
-[   17.220710] iwlwifi 0000:02:00.0: Mapped ffffea00049e8f80 to 00000000ffdd4000
-[   17.220712] iwlwifi 0000:02:00.0: Mapped ffffea0004a10900 to 00000000ffdd2000
-[   17.220715] iwlwifi 0000:02:00.0: Mapped ffffea0004a10980 to 00000000ffdd0000
-[   17.220717] iwlwifi 0000:02:00.0: Mapped ffffea00049ed300 to 00000000ffdce000
-[   17.220720] iwlwifi 0000:02:00.0: Mapped ffffea00049ed380 to 00000000ffdcc000
-[   17.220723] iwlwifi 0000:02:00.0: Mapped ffffea0004a56500 to 00000000ffdca000
-[   17.220726] iwlwifi 0000:02:00.0: Mapped ffffea0004a56580 to 00000000ffdc8000
-[   17.220728] iwlwifi 0000:02:00.0: Mapped ffffea0004993c00 to 00000000ffdc6000
-[   17.220731] iwlwifi 0000:02:00.0: Mapped ffffea0004993c80 to 00000000ffdc4000
-[   17.220733] iwlwifi 0000:02:00.0: Mapped ffffea0004993700 to 00000000ffdc2000
-[   17.220736] iwlwifi 0000:02:00.0: Mapped ffffea0004993780 to 00000000ffdc0000
-[   17.220739] iwlwifi 0000:02:00.0: Mapped ffffea0004990700 to 00000000ffdbe000
-[   17.220741] iwlwifi 0000:02:00.0: Mapped ffffea0004990780 to 00000000ffdbc000
-[   17.220744] iwlwifi 0000:02:00.0: Mapped ffffea0004993000 to 00000000ffdba000
-[   17.220746] iwlwifi 0000:02:00.0: Mapped ffffea0004993080 to 00000000ffdb8000
-[   17.220749] iwlwifi 0000:02:00.0: Mapped ffffea0004991600 to 00000000ffdb6000
-[   17.220752] iwlwifi 0000:02:00.0: Mapped ffffea0004991680 to 00000000ffdb4000
-[   17.220754] iwlwifi 0000:02:00.0: Mapped ffffea0004a1eb00 to 00000000ffdb2000
-[   17.220756] iwlwifi 0000:02:00.0: Mapped ffffea0004a1eb80 to 00000000ffdb0000
-[   17.220759] iwlwifi 0000:02:00.0: Mapped ffffea00049eaf00 to 00000000ffdae000
-[   17.220761] iwlwifi 0000:02:00.0: Mapped ffffea00049eaf80 to 00000000ffdac000
-[   17.220764] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d400 to 00000000ffdaa000
-[   17.220766] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d480 to 00000000ffda8000
-[   17.220769] iwlwifi 0000:02:00.0: Mapped ffffea00049e9100 to 00000000ffda6000
-[   17.220772] iwlwifi 0000:02:00.0: Mapped ffffea00049e9180 to 00000000ffda4000
-[   17.220774] iwlwifi 0000:02:00.0: Mapped ffffea00049ea200 to 00000000ffda2000
-[   17.220776] iwlwifi 0000:02:00.0: Mapped ffffea00049ea280 to 00000000ffda0000
-[   17.220779] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa00 to 00000000ffd9e000
-[   17.220782] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa80 to 00000000ffd9c000
-[   17.220784] iwlwifi 0000:02:00.0: Mapped ffffea00049e3500 to 00000000ffd9a000
-[   17.220786] iwlwifi 0000:02:00.0: Mapped ffffea00049e3580 to 00000000ffd98000
-[   17.220789] iwlwifi 0000:02:00.0: Mapped ffffea0004991200 to 00000000ffd96000
-[   17.220791] iwlwifi 0000:02:00.0: Mapped ffffea0004991280 to 00000000ffd94000
-[   17.220794] iwlwifi 0000:02:00.0: Mapped ffffea0004991100 to 00000000ffd92000
-[   17.220797] iwlwifi 0000:02:00.0: Mapped ffffea0004991180 to 00000000ffd90000
-[   17.220799] iwlwifi 0000:02:00.0: Mapped ffffea0004990c00 to 00000000ffd8e000
-[   17.220802] iwlwifi 0000:02:00.0: Mapped ffffea0004990c80 to 00000000ffd8c000
-[   17.220804] iwlwifi 0000:02:00.0: Mapped ffffea0004991a00 to 00000000ffd8a000
-[   17.220807] iwlwifi 0000:02:00.0: Mapped ffffea0004991a80 to 00000000ffd88000
-[   17.220809] iwlwifi 0000:02:00.0: Mapped ffffea0004991e00 to 00000000ffd86000
-[   17.220812] iwlwifi 0000:02:00.0: Mapped ffffea0004991e80 to 00000000ffd84000
-[   17.220815] iwlwifi 0000:02:00.0: Mapped ffffea0004991400 to 00000000ffd82000
-[   17.220817] iwlwifi 0000:02:00.0: Mapped ffffea0004991480 to 00000000ffd80000
-[   17.220820] iwlwifi 0000:02:00.0: Mapped ffffea0004991800 to 00000000ffd7e000
-[   17.220822] iwlwifi 0000:02:00.0: Mapped ffffea0004991880 to 00000000ffd7c000
-[   17.220825] iwlwifi 0000:02:00.0: Mapped ffffea0004992100 to 00000000ffd7a000
-[   17.220828] iwlwifi 0000:02:00.0: Mapped ffffea0004992180 to 00000000ffd78000
-[   17.220830] iwlwifi 0000:02:00.0: Mapped ffffea0004991c00 to 00000000ffd76000
-[   17.220833] iwlwifi 0000:02:00.0: Mapped ffffea0004991c80 to 00000000ffd74000
-[   17.220836] iwlwifi 0000:02:00.0: Mapped ffffea0004992b00 to 00000000ffd72000
-[   17.220838] iwlwifi 0000:02:00.0: Mapped ffffea0004992b80 to 00000000ffd70000
-[   17.220841] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fb00 to 00000000ffd6e000
-[   17.220843] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fb80 to 00000000ffd6c000
-[   17.220846] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fd00 to 00000000ffd6a000
-[   17.220848] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fd80 to 00000000ffd68000
-[   17.220851] iwlwifi 0000:02:00.0: Mapped ffffea0004990f00 to 00000000ffd66000
-[   17.220853] iwlwifi 0000:02:00.0: Mapped ffffea0004990f80 to 00000000ffd64000
-[   17.220856] iwlwifi 0000:02:00.0: Mapped ffffea00049e8700 to 00000000ffd62000
-[   17.220860] iwlwifi 0000:02:00.0: Mapped ffffea00049e8780 to 00000000ffd60000
-[   17.220862] iwlwifi 0000:02:00.0: Mapped ffffea00049ead00 to 00000000ffd5e000
-[   17.220865] iwlwifi 0000:02:00.0: Mapped ffffea00049ead80 to 00000000ffd5c000
-[   17.220867] iwlwifi 0000:02:00.0: Mapped ffffea00049eb200 to 00000000ffd5a000
-[   17.220871] iwlwifi 0000:02:00.0: Mapped ffffea00049eb280 to 00000000ffd58000
-[   17.220873] iwlwifi 0000:02:00.0: Mapped ffffea00049ec500 to 00000000ffd56000
-[   17.220876] iwlwifi 0000:02:00.0: Mapped ffffea00049ec580 to 00000000ffd54000
-[   17.220879] iwlwifi 0000:02:00.0: Mapped ffffea0004994e00 to 00000000ffd52000
-[   17.220882] iwlwifi 0000:02:00.0: Mapped ffffea0004994e80 to 00000000ffd50000
-[   17.220885] iwlwifi 0000:02:00.0: Mapped ffffea0004995300 to 00000000ffd4e000
-[   17.220887] iwlwifi 0000:02:00.0: Mapped ffffea0004995380 to 00000000ffd4c000
-[   17.220890] iwlwifi 0000:02:00.0: Mapped ffffea00049ec800 to 00000000ffd4a000
-[   17.220892] iwlwifi 0000:02:00.0: Mapped ffffea00049ec880 to 00000000ffd48000
-[   17.220895] iwlwifi 0000:02:00.0: Mapped ffffea0004938300 to 00000000ffd46000
-[   17.220897] iwlwifi 0000:02:00.0: Mapped ffffea0004938380 to 00000000ffd44000
-[   17.220899] iwlwifi 0000:02:00.0: Mapped ffffea0004933e00 to 00000000ffd42000
-[   17.220902] iwlwifi 0000:02:00.0: Mapped ffffea0004933e80 to 00000000ffd40000
-[   17.220905] iwlwifi 0000:02:00.0: Mapped ffffea0004933f00 to 00000000ffd3e000
-[   17.220907] iwlwifi 0000:02:00.0: Mapped ffffea0004933f80 to 00000000ffd3c000
-[   17.220910] iwlwifi 0000:02:00.0: Mapped ffffea00049e9c00 to 00000000ffd3a000
-[   17.220913] iwlwifi 0000:02:00.0: Mapped ffffea00049e9c80 to 00000000ffd38000
-[   17.220916] iwlwifi 0000:02:00.0: Mapped ffffea00049e9d00 to 00000000ffd36000
-[   17.220918] iwlwifi 0000:02:00.0: Mapped ffffea00049e9d80 to 00000000ffd34000
-[   17.220921] iwlwifi 0000:02:00.0: Mapped ffffea00049ebe00 to 00000000ffd32000
-[   17.220924] iwlwifi 0000:02:00.0: Mapped ffffea00049ebe80 to 00000000ffd30000
-[   17.220927] iwlwifi 0000:02:00.0: Mapped ffffea00049ebf00 to 00000000ffd2e000
-[   17.220930] iwlwifi 0000:02:00.0: Mapped ffffea00049ebf80 to 00000000ffd2c000
-[   17.220933] iwlwifi 0000:02:00.0: Mapped ffffea0004993e00 to 00000000ffd2a000
-[   17.220936] iwlwifi 0000:02:00.0: Mapped ffffea0004993e80 to 00000000ffd28000
-[   17.220939] iwlwifi 0000:02:00.0: Mapped ffffea0004993f00 to 00000000ffd26000
-[   17.220942] iwlwifi 0000:02:00.0: Mapped ffffea0004993f80 to 00000000ffd24000
-[   17.220945] iwlwifi 0000:02:00.0: Mapped ffffea00049e9400 to 00000000ffd22000
-[   17.220948] iwlwifi 0000:02:00.0: Mapped ffffea00049e9480 to 00000000ffd20000
-[   17.220952] iwlwifi 0000:02:00.0: Mapped ffffea00049e9500 to 00000000ffd1e000
-[   17.220955] iwlwifi 0000:02:00.0: Mapped ffffea00049e9580 to 00000000ffd1c000
-[   17.220957] iwlwifi 0000:02:00.0: Mapped ffffea0004934400 to 00000000ffd1a000
-[   17.220960] iwlwifi 0000:02:00.0: Mapped ffffea0004934480 to 00000000ffd18000
-[   17.220962] iwlwifi 0000:02:00.0: Mapped ffffea0004934500 to 00000000ffd16000
-[   17.220965] iwlwifi 0000:02:00.0: Mapped ffffea0004934580 to 00000000ffd14000
-[   17.220968] iwlwifi 0000:02:00.0: Mapped ffffea0004934000 to 00000000ffd12000
-[   17.220970] iwlwifi 0000:02:00.0: Mapped ffffea0004934080 to 00000000ffd10000
-[   17.220973] iwlwifi 0000:02:00.0: Mapped ffffea0004934100 to 00000000ffd0e000
-[   17.220975] iwlwifi 0000:02:00.0: Mapped ffffea0004934180 to 00000000ffd0c000
-[   17.220978] iwlwifi 0000:02:00.0: Mapped ffffea0004934200 to 00000000ffd0a000
-[   17.220981] iwlwifi 0000:02:00.0: Mapped ffffea0004934280 to 00000000ffd08000
-[   17.220983] iwlwifi 0000:02:00.0: Mapped ffffea0004934300 to 00000000ffd06000
-[   17.220985] iwlwifi 0000:02:00.0: Mapped ffffea0004934380 to 00000000ffd04000
-[   17.220988] iwlwifi 0000:02:00.0: Mapped ffffea00049eb400 to 00000000ffd02000
-[   17.220991] iwlwifi 0000:02:00.0: Mapped ffffea00049eb480 to 00000000ffd00000
-[   17.220994] iwlwifi 0000:02:00.0: Mapped ffffea00049eb500 to 00000000ffcfe000
-[   17.220996] iwlwifi 0000:02:00.0: Mapped ffffea00049eb580 to 00000000ffcfc000
-[   17.220998] iwlwifi 0000:02:00.0: Mapped ffffea00049eb600 to 00000000ffcfa000
-[   17.221001] iwlwifi 0000:02:00.0: Mapped ffffea00049eb680 to 00000000ffcf8000
-[   17.221004] iwlwifi 0000:02:00.0: Mapped ffffea00049eb700 to 00000000ffcf6000
-[   17.221006] iwlwifi 0000:02:00.0: Mapped ffffea00049eb780 to 00000000ffcf4000
-[   17.221009] iwlwifi 0000:02:00.0: Mapped ffffea00049e6000 to 00000000ffcf2000
-[   17.221011] iwlwifi 0000:02:00.0: Mapped ffffea00049e6080 to 00000000ffcf0000
-[   17.221014] iwlwifi 0000:02:00.0: Mapped ffffea00049e6100 to 00000000ffcee000
-[   17.221017] iwlwifi 0000:02:00.0: Mapped ffffea00049e6180 to 00000000ffcec000
-[   17.221020] iwlwifi 0000:02:00.0: Mapped ffffea00049e6200 to 00000000ffcea000
-[   17.221022] iwlwifi 0000:02:00.0: Mapped ffffea00049e6280 to 00000000ffce8000
-[   17.221025] iwlwifi 0000:02:00.0: Mapped ffffea00049e6300 to 00000000ffce6000
-[   17.221027] iwlwifi 0000:02:00.0: Mapped ffffea00049e6380 to 00000000ffce4000
-[   17.221030] iwlwifi 0000:02:00.0: Mapped ffffea00049e8000 to 00000000ffce2000
-[   17.221032] iwlwifi 0000:02:00.0: Mapped ffffea00049e8080 to 00000000ffce0000
-[   17.221035] iwlwifi 0000:02:00.0: Mapped ffffea00049e8100 to 00000000ffcde000
-[   17.221038] iwlwifi 0000:02:00.0: Mapped ffffea00049e8180 to 00000000ffcdc000
-[   17.287252] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command COEX_PRIORITY_TABLE_CMD
-[   17.287256] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[   17.287372] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[   17.287381] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   17.287383] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.287982] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.287988] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   17.287990] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288055] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288059] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   17.288061] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288131] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288136] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   17.288137] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288234] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288239] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   17.288240] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288345] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288350] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   17.288352] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288427] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   17.288432] iwlwifi 0000:02:00.0: U iwl_alive_start Runtime Alive received.
-[   17.288434] iwlwifi 0000:02:00.0: U iwl_send_bt_config BT coex active
-[   17.288436] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_BT_CONFIG
-[   17.288437] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_BT_CONFIG
-[   17.288510] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_BT_CONFIG
-[   17.288515] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command CALIBRATION_CFG_CMD
-[   17.288517] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command CALIBRATION_CFG_CMD
-[   17.288593] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command CALIBRATION_CFG_CMD
-[   17.288598] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command TX_ANT_CONFIGURATION_CMD
-[   17.288600] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-[   17.315702] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-[   17.315717] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.315723] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   17.315726] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   17.315727]   * without RXON_FILTER_ASSOC_MSK
-[   17.315727]   * channel = 1
-[   17.315728]   * bssid = 00:00:00:00:00:00
-[   17.315729] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   17.315731] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   17.316834] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   17.316851] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   17.316854] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations No active stations found to be cleared
-[   17.316858] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   17.316861] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   17.316864] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   17.316867] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   17.316870] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   17.333563] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   17.333566] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   17.333568] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   17.333570] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   17.333572] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   17.333575] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   17.333587] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 0 is not an HT channel
-[   17.333589] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   17.333591] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   17.333785] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   17.333803] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   17.333806] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   17.333809] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_CT_KILL_CONFIG_CMD
-[   17.333810] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_CT_KILL_CONFIG_CMD
-[   17.334091] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_CT_KILL_CONFIG_CMD
-[   17.334103] iwlwifi 0000:02:00.0: U iwl_rf_kill_ct_config REPLY_CT_KILL_CONFIG_CMD succeeded, critical temperature enter is 114,exit is 95
-[   17.334106] iwlwifi 0000:02:00.0: U iwl_alive_start ALIVE processing complete.
-[   17.334116] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command POWER_TABLE_CMD
-[   17.334119] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command POWER_TABLE_CMD
-[   17.334218] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command POWER_TABLE_CMD
-[   17.334231] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.334233] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.334236] iwlwifi 0000:02:00.0: U iwlagn_mac_start Start UP work done.
-[   17.334260] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.334263] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   17.334265] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   17.334266]   * without RXON_FILTER_ASSOC_MSK
-[   17.334266]   * channel = 1
-[   17.334267]   * bssid = 00:00:00:00:00:00
-[   17.334268] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   17.334270] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   17.334679] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   17.334690] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   17.334693] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   17.334695] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   17.334697] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   17.334700] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   17.334702] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   17.334703] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   17.334788] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   17.334790] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   17.334792] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   17.334794] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   17.334796] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   17.334799] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   17.334805] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   17.334806] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   17.334808] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   17.334951] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   17.334956] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   17.334958] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   17.334963] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.334966] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   17.334969] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   17.334970]   * without RXON_FILTER_ASSOC_MSK
-[   17.334970]   * channel = 1
-[   17.334971]   * bssid = 00:00:00:00:00:00
-[   17.334972] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   17.334974] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   17.335331] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   17.335346] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   17.335350] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   17.335352] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   17.335354] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   17.335357] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   17.335359] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   17.335360] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   17.335539] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   17.335541] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   17.335543] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   17.335545] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   17.335547] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   17.335550] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   17.335557] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   17.335558] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   17.335560] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   17.335863] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   17.335870] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   17.335872] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   17.335882] iwlwifi 0000:02:00.0: U iwlagn_update_qos send QoS cmd with Qos active=0 FLAGS=0x0
-[   17.335884] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_QOS_PARAM
-[   17.335886] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_QOS_PARAM
-[   17.335994] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_QOS_PARAM
-[   17.336001] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.336004] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.336007] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.336009] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.336012] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command POWER_TABLE_CMD
-[   17.336014] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command POWER_TABLE_CMD
-[   17.336137] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command POWER_TABLE_CMD
-[   17.336145] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.336149] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   17.336457] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[   17.412410] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   17.412413] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   17.414222] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   17.964605] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   17.965856] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   17.965857]   * without RXON_FILTER_ASSOC_MSK
-[   17.965858]   * channel = 1
-[   17.965859]   * bssid = 00:00:00:00:00:00
-[   17.970722] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   17.970726] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   17.972295] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   17.972313] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   17.972316] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   17.972319] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   17.972321] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   17.972324] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   17.972326] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   17.972327] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   17.973830] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   17.973833] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   17.973835] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   17.973837] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   17.973839] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   17.973842] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   17.973852] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   17.973854] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   17.973856] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   17.975068] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   17.975078] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   17.975081] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   17.975097] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   17.975100] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   17.979411] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   18.166724] iwlwifi 0000:02:00.0: Mapped ffffea0004933900 to 00000000ffeee000
-[   18.167975] iwlwifi 0000:02:00.0: Mapped ffffea00049e7700 to 00000000ffeec000
-[   18.169258] iwlwifi 0000:02:00.0: Mapped ffffea0004998600 to 00000000ffeea000
-[   18.170467] iwlwifi 0000:02:00.0: Mapped ffffea00049e1880 to 00000000ffee8000
-[   18.170471] iwlwifi 0000:02:00.0: Mapped ffffea00049eb180 to 00000000ffee6000
-[   18.170475] iwlwifi 0000:02:00.0: Mapped ffffea00049eae80 to 00000000ffee4000
-[   18.170478] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b700 to 00000000ffee2000
-[   18.170480] iwlwifi 0000:02:00.0: Mapped ffffea0004a19d80 to 00000000ffee0000
-[   18.170482] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b180 to 00000000ffede000
-[   18.170485] iwlwifi 0000:02:00.0: Mapped ffffea0004992f00 to 00000000ffedc000
-[   18.170487] iwlwifi 0000:02:00.0: Mapped ffffea00049e0880 to 00000000ffeda000
-[   18.170489] iwlwifi 0000:02:00.0: Mapped ffffea00049e8900 to 00000000ffed8000
-[   18.170492] iwlwifi 0000:02:00.0: Mapped ffffea00049e5480 to 00000000ffed6000
-[   18.170494] iwlwifi 0000:02:00.0: Mapped ffffea00049e5500 to 00000000ffed4000
-[   18.170496] iwlwifi 0000:02:00.0: Mapped ffffea0004995c00 to 00000000ffed2000
-[   18.170499] iwlwifi 0000:02:00.0: Mapped ffffea0004a1dd80 to 00000000ffed0000
-[   18.170501] iwlwifi 0000:02:00.0: Mapped ffffea00049ea980 to 00000000ffece000
-[   18.170504] iwlwifi 0000:02:00.0: Mapped ffffea0004990b00 to 00000000ffecc000
-[   18.170506] iwlwifi 0000:02:00.0: Mapped ffffea00049e1f00 to 00000000ffeca000
-[   18.170508] iwlwifi 0000:02:00.0: Mapped ffffea0004991380 to 00000000ffec8000
-[   18.170510] iwlwifi 0000:02:00.0: Mapped ffffea00049e7280 to 00000000ffec6000
-[   18.170513] iwlwifi 0000:02:00.0: Mapped ffffea00049e9080 to 00000000ffec4000
-[   18.170515] iwlwifi 0000:02:00.0: Mapped ffffea0004993100 to 00000000ffec2000
-[   18.170518] iwlwifi 0000:02:00.0: Mapped ffffea0004994000 to 00000000ffec0000
-[   18.170520] iwlwifi 0000:02:00.0: Mapped ffffea0004993b00 to 00000000ffebe000
-[   18.170522] iwlwifi 0000:02:00.0: Mapped ffffea00049eab80 to 00000000ffebc000
-[   18.170524] iwlwifi 0000:02:00.0: Mapped ffffea00049e7f00 to 00000000ffeba000
-[   18.170527] iwlwifi 0000:02:00.0: Mapped ffffea0004a10b00 to 00000000ffeb8000
-[   18.170529] iwlwifi 0000:02:00.0: Mapped ffffea0004995280 to 00000000ffeb6000
-[   18.170531] iwlwifi 0000:02:00.0: Mapped ffffea00049e2e00 to 00000000ffeb4000
-[   18.170533] iwlwifi 0000:02:00.0: Mapped ffffea00049e4b00 to 00000000ffeb2000
-[   18.170536] iwlwifi 0000:02:00.0: Mapped ffffea00049ec300 to 00000000ffeb0000
-[   18.170538] iwlwifi 0000:02:00.0: Mapped ffffea00049e4f80 to 00000000ffeae000
-[   18.170540] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c900 to 00000000ffeac000
-[   18.170542] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c080 to 00000000ffeaa000
-[   18.170545] iwlwifi 0000:02:00.0: Mapped ffffea00049e8680 to 00000000ffea8000
-[   18.170547] iwlwifi 0000:02:00.0: Mapped ffffea00049ef900 to 00000000ffea6000
-[   18.170549] iwlwifi 0000:02:00.0: Mapped ffffea0004990480 to 00000000ffea4000
-[   18.170552] iwlwifi 0000:02:00.0: Mapped ffffea00049ea000 to 00000000ffea2000
-[   18.170554] iwlwifi 0000:02:00.0: Mapped ffffea00049e9f80 to 00000000ffea0000
-[   18.170556] iwlwifi 0000:02:00.0: Mapped ffffea0004990600 to 00000000ffe9e000
-[   18.170558] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c600 to 00000000ffe9c000
-[   18.170561] iwlwifi 0000:02:00.0: Mapped ffffea00049e4980 to 00000000ffe9a000
-[   18.170563] iwlwifi 0000:02:00.0: Mapped ffffea0004a1f300 to 00000000ffe98000
-[   18.170565] iwlwifi 0000:02:00.0: Mapped ffffea00049ef400 to 00000000ffe96000
-[   18.170568] iwlwifi 0000:02:00.0: Mapped ffffea00049e0f80 to 00000000ffe94000
-[   18.170570] iwlwifi 0000:02:00.0: Mapped ffffea00049e8500 to 00000000ffe92000
-[   18.170572] iwlwifi 0000:02:00.0: Mapped ffffea0004a1da00 to 00000000ffe90000
-[   18.170575] iwlwifi 0000:02:00.0: Mapped ffffea00049e2700 to 00000000ffe8e000
-[   18.170577] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ed80 to 00000000ffe8c000
-[   18.170579] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d280 to 00000000ffe8a000
-[   18.170581] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ea00 to 00000000ffe88000
-[   18.170584] iwlwifi 0000:02:00.0: Mapped ffffea00049e2680 to 00000000ffe86000
-[   18.170586] iwlwifi 0000:02:00.0: Mapped ffffea000495f100 to 00000000ffe84000
-[   18.170588] iwlwifi 0000:02:00.0: Mapped ffffea0004933100 to 00000000ffe82000
-[   18.170591] iwlwifi 0000:02:00.0: Mapped ffffea00049e5b00 to 00000000ffe80000
-[   18.170593] iwlwifi 0000:02:00.0: Mapped ffffea00049e6d80 to 00000000ffe7e000
-[   18.170595] iwlwifi 0000:02:00.0: Mapped ffffea00049e8c00 to 00000000ffe7c000
-[   22.111063] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   22.111683] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   22.113928] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   22.492268] iwlwifi 0000:02:00.0: Mapped ffffea00049e9580 to 00000000ffdae000
-[   22.492968] iwlwifi 0000:02:00.0: Mapped ffffea0004933f00 to 00000000ffdac000
-[   22.493663] iwlwifi 0000:02:00.0: Mapped ffffea00049ec500 to 00000000ffdaa000
-[   22.494358] iwlwifi 0000:02:00.0: Mapped ffffea0004990f80 to 00000000ffda8000
-[   22.495054] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fb80 to 00000000ffda6000
-[   22.495754] iwlwifi 0000:02:00.0: Mapped ffffea0004992100 to 00000000ffda4000
-[   22.496477] iwlwifi 0000:02:00.0: Mapped ffffea0004991e80 to 00000000ffda0000
-[   22.497190] iwlwifi 0000:02:00.0: Mapped ffffea0004990c80 to 00000000ffd9a000
-[   22.497193] iwlwifi 0000:02:00.0: Mapped ffffea00049ea280 to 00000000ffd98000
-[   22.497195] iwlwifi 0000:02:00.0: Mapped ffffea0004a5b100 to 00000000ffd96000
-[   22.497198] iwlwifi 0000:02:00.0: Mapped ffffea0004993280 to 00000000ffd94000
-[   22.497200] iwlwifi 0000:02:00.0: Mapped ffffea0004995b80 to 00000000ffd92000
-[   22.497202] iwlwifi 0000:02:00.0: Mapped ffffea0004995880 to 00000000ffd90000
-[   22.497205] iwlwifi 0000:02:00.0: Mapped ffffea0004995980 to 00000000ffd8e000
-[   22.497207] iwlwifi 0000:02:00.0: Mapped ffffea0004995a80 to 00000000ffd8c000
-[   22.497209] iwlwifi 0000:02:00.0: Mapped ffffea00049e2a80 to 00000000ffd8a000
-[   22.497212] iwlwifi 0000:02:00.0: Mapped ffffea00049e9600 to 00000000ffd88000
-[   22.497214] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e80 to 00000000ffd86000
-[   22.497217] iwlwifi 0000:02:00.0: Mapped ffffea0004930100 to 00000000ffd84000
-[   22.497219] iwlwifi 0000:02:00.0: Mapped ffffea0004931e00 to 00000000ffd82000
-[   22.497221] iwlwifi 0000:02:00.0: Mapped ffffea0004938300 to 00000000ffd80000
-[   22.497224] iwlwifi 0000:02:00.0: Mapped ffffea0004934500 to 00000000ffd7e000
-[   22.497226] iwlwifi 0000:02:00.0: Mapped ffffea0004934300 to 00000000ffd7c000
-[   22.497228] iwlwifi 0000:02:00.0: Mapped ffffea0004934200 to 00000000ffd7a000
-[   22.497231] iwlwifi 0000:02:00.0: Mapped ffffea0004934280 to 00000000ffd78000
-[   22.497233] iwlwifi 0000:02:00.0: Mapped ffffea0004934100 to 00000000ffd76000
-[   22.497235] iwlwifi 0000:02:00.0: Mapped ffffea0004934180 to 00000000ffd74000
-[   22.497238] iwlwifi 0000:02:00.0: Mapped ffffea0004934400 to 00000000ffd72000
-[   22.497240] iwlwifi 0000:02:00.0: Mapped ffffea0004934480 to 00000000ffd70000
-[   22.497242] iwlwifi 0000:02:00.0: Mapped ffffea00049e9400 to 00000000ffd6e000
-[   22.497244] iwlwifi 0000:02:00.0: Mapped ffffea00049e9480 to 00000000ffd6c000
-[   22.497247] iwlwifi 0000:02:00.0: Mapped ffffea00049ec800 to 00000000ffd6a000
-[   22.497249] iwlwifi 0000:02:00.0: Mapped ffffea00049ec880 to 00000000ffd68000
-[   22.497251] iwlwifi 0000:02:00.0: Mapped ffffea0004995300 to 00000000ffd66000
-[   22.497253] iwlwifi 0000:02:00.0: Mapped ffffea0004995380 to 00000000ffd64000
-[   22.497256] iwlwifi 0000:02:00.0: Mapped ffffea00049eb200 to 00000000ffd62000
-[   22.497258] iwlwifi 0000:02:00.0: Mapped ffffea00049eb280 to 00000000ffd60000
-[   22.497260] iwlwifi 0000:02:00.0: Mapped ffffea00049ead00 to 00000000ffd5e000
-[   22.497262] iwlwifi 0000:02:00.0: Mapped ffffea00049ead80 to 00000000ffd5c000
-[   22.497265] iwlwifi 0000:02:00.0: Mapped ffffea00049e8700 to 00000000ffd5a000
-[   22.497267] iwlwifi 0000:02:00.0: Mapped ffffea00049e8780 to 00000000ffd58000
-[   22.497269] iwlwifi 0000:02:00.0: Mapped ffffea0004991800 to 00000000ffd56000
-[   22.497272] iwlwifi 0000:02:00.0: Mapped ffffea0004991880 to 00000000ffd54000
-[   22.497274] iwlwifi 0000:02:00.0: Mapped ffffea0004991400 to 00000000ffd52000
-[   22.497276] iwlwifi 0000:02:00.0: Mapped ffffea0004991480 to 00000000ffd50000
-[   22.497278] iwlwifi 0000:02:00.0: Mapped ffffea0004991200 to 00000000ffd4e000
-[   22.497281] iwlwifi 0000:02:00.0: Mapped ffffea0004991280 to 00000000ffd4c000
-[   22.497283] iwlwifi 0000:02:00.0: Mapped ffffea00049e3500 to 00000000ffd4a000
-[   22.497285] iwlwifi 0000:02:00.0: Mapped ffffea00049e3580 to 00000000ffd48000
-[   22.497288] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa00 to 00000000ffd46000
-[   22.497290] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa80 to 00000000ffd44000
-[   22.497292] iwlwifi 0000:02:00.0: Mapped ffffea0004a55e00 to 00000000ffd42000
-[   22.497295] iwlwifi 0000:02:00.0: Mapped ffffea0004a55e80 to 00000000ffd40000
-[   22.497297] iwlwifi 0000:02:00.0: Mapped ffffea000495eb00 to 00000000ffd3e000
-[   22.497299] iwlwifi 0000:02:00.0: Mapped ffffea000495eb80 to 00000000ffd3c000
-[   22.497301] iwlwifi 0000:02:00.0: Mapped ffffea000495fc00 to 00000000ffd3a000
-[   22.497304] iwlwifi 0000:02:00.0: Mapped ffffea000495fc80 to 00000000ffd38000
-[   22.497306] iwlwifi 0000:02:00.0: Mapped ffffea0004930600 to 00000000ffd36000
-[   22.622248] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   22.622920] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   22.628228] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   25.959109] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   25.959780] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   25.960474] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   25.960475]   * without RXON_FILTER_ASSOC_MSK
-[   25.960475]   * channel = 1
-[   25.960476]   * bssid = 00:00:00:00:00:00
-[   25.963236] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   25.963972] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   25.966371] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   25.967173] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   25.967952] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   25.968729] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   25.968731] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   25.968734] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   25.968736] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   25.968738] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   25.970175] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   25.970177] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   25.970180] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   25.970182] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   25.970184] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   25.970187] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   25.970200] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   25.970202] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   25.970204] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   25.971410] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   25.971425] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   25.971427] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   25.971447] iwlwifi 0000:02:00.0: U iwl_down iwlwifi is going down
-[   25.971451] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   25.971453] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   25.971920] ------------[ cut here ]------------
-[   25.971926] WARNING: at drivers/iommu/intel-iommu.c:2922 intel_unmap_page+0x11e/0x130()
-[   25.971927] Hardware name: Latitude E5420
-[   25.971928] Driver unmaps unmatched page at PFN ffc24ed8
-[   25.971929] Modules linked in: uvcvideo videobuf2_vmalloc videobuf2_memops hid_logitech_dj videobuf2_core usbhid videodev snd_hda_codec_hdmi snd_hda_codec_idt crc32c_intel aesni_intel snd_hda_intel iwlwifi aes_x86_64 snd_hda_codec cryptd snd_hwdep snd_pcm snd_page_alloc snd_timer mac80211 snd ehci_hcd soundcore usbcore cfg80211 usb_common psmouse
-[   25.971950] Pid: 1795, comm: ifconfig Tainted: G        W    3.4.0-rc5-wl+ #26
-[   25.971951] Call Trace:
-[   25.971956]  [<ffffffff8103279a>] warn_slowpath_common+0x7a/0xb0
-[   25.971959]  [<ffffffff81032871>] warn_slowpath_fmt+0x41/0x50
-[   25.971961]  [<ffffffff813735c0>] ? find_iova+0x50/0x90
-[   25.971964]  [<ffffffff813775ae>] intel_unmap_page+0x11e/0x130
-[   25.971970]  [<ffffffffa01749d0>] iwlagn_unmap_tfd.isra.17+0xc0/0x140 [iwlwifi]
-[   25.971974]  [<ffffffffa0174d1b>] iwlagn_txq_free_tfd+0x4b/0x90 [iwlwifi]
-[   25.971977]  [<ffffffffa016f919>] iwl_tx_queue_unmap+0x69/0x90 [iwlwifi]
-[   25.971981]  [<ffffffffa0170f0f>] iwl_trans_pcie_stop_device+0x2cf/0x340 [iwlwifi]
-[   25.971984]  [<ffffffffa0151da5>] iwl_down+0x205/0x310 [iwlwifi]
-[   25.971988]  [<ffffffffa0158da0>] iwlagn_mac_stop+0x60/0xd0 [iwlwifi]
-[   25.971995]  [<ffffffffa00fda94>] ieee80211_stop_device+0x44/0x80 [mac80211]
-[   25.972001]  [<ffffffffa00eb94f>] ieee80211_do_stop+0x27f/0x630 [mac80211]
-[   25.972005]  [<ffffffffa00ebd15>] ieee80211_stop+0x15/0x20 [mac80211]
-[   25.972009]  [<ffffffff813915ee>] __dev_close_many+0x8e/0xe0
-[   25.972011]  [<ffffffff81391671>] __dev_close+0x31/0x50
-[   25.972013]  [<ffffffff8139617c>] __dev_change_flags+0x9c/0x180
-[   25.972015]  [<ffffffff81396313>] dev_change_flags+0x23/0x70
-[   25.972018]  [<ffffffff813f1a4d>] devinet_ioctl+0x5bd/0x740
-[   25.972020]  [<ffffffff813f1f15>] inet_ioctl+0x75/0x90
-[   25.972023]  [<ffffffff8137cefb>] sock_do_ioctl+0x2b/0x70
-[   25.972025]  [<ffffffff8137cfa8>] sock_ioctl+0x68/0x2b0
-[   25.972028]  [<ffffffff810fd62e>] do_vfs_ioctl+0x8e/0x500
-[   25.972031]  [<ffffffff810914f2>] ? call_rcu+0x12/0x20
-[   25.972034]  [<ffffffff8105408a>] ? __put_cred+0x3a/0x50
-[   25.972037]  [<ffffffff810fdb31>] sys_ioctl+0x91/0xa0
-[   25.972039]  [<ffffffff81483462>] system_call_fastpath+0x16/0x1b
-[   25.972041] ---[ end trace e93713a9d40cd06e ]---
-[   25.972134] iwlwifi 0000:02:00.0: U iwl_apm_stop Stop card, put in low power state
-[   25.972150] iwlwifi 0000:02:00.0: U iwl_apm_stop_master stop master
-[   25.972217] iwlwifi 0000:02:00.0: U iwl_apm_stop Stop card, put in low power state
-[   25.972232] iwlwifi 0000:02:00.0: U iwl_apm_stop_master stop master
-[   26.036697] iwlwifi 0000:02:00.0: I iwl_prep_station Add STA to driver ID 15: ff:ff:ff:ff:ff:ff
-[   26.037944] iwlwifi 0000:02:00.0: I iwl_prep_station Add STA to driver ID 14: ff:ff:ff:ff:ff:ff
-[   26.039186] iwlwifi 0000:02:00.0: U iwl_prepare_card_hw iwl_trans_prepare_card_hw enter
-[   26.040457] iwlwifi 0000:02:00.0: U iwl_set_hw_ready hardware ready
-[   26.041710] iwlwifi 0000:02:00.0: U iwl_apm_init Init card's basic functions
-[   26.042980] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
-[   26.050981] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
-[   26.052188] iwlwifi 0000:02:00.0: 0 is NULL 00000000ffcd4000
-[   26.052210] iwlwifi 0000:02:00.0: 1 is NULL 00000000ffcd0000
-[   26.053405] iwlwifi 0000:02:00.0: Free 2 ffffea0004991700 00000000ffd1e000
-[   26.055752] iwlwifi 0000:02:00.0: Free 3 ffffea0004991000 00000000ffd1c000
-[   26.056922] iwlwifi 0000:02:00.0: Free 4 ffffea0004a10800 00000000ffd1a000
-[   26.058074] iwlwifi 0000:02:00.0: 5 is NULL 00000000ffc22000
-[   26.058097] iwlwifi 0000:02:00.0: Free 6 ffffea00049e5c00 00000000ffd18000
-[   26.060350] iwlwifi 0000:02:00.0: Free 7 ffffea0004931c00 00000000ffd16000
-[   26.061473] iwlwifi 0000:02:00.0: Free 8 ffffea000495f500 00000000ffd14000
-[   26.062600] iwlwifi 0000:02:00.0: Free 9 ffffea0004931580 00000000ffd12000
-[   26.063706] iwlwifi 0000:02:00.0: 10 is NULL 00000000ffc0e000
-[   26.063728] iwlwifi 0000:02:00.0: 11 is NULL 00000000ffc0a000
-[   26.064864] iwlwifi 0000:02:00.0: 12 is NULL 00000000ffc06000
-[   26.064866] iwlwifi 0000:02:00.0: 13 is NULL 00000000ffc04000
-[   26.064868] iwlwifi 0000:02:00.0: 14 is NULL 00000000ffc02000
-[   26.064870] iwlwifi 0000:02:00.0: Free 15 ffffea0004933900 00000000fff06000
-[   26.064878] iwlwifi 0000:02:00.0: 16 is NULL 00000000ffbfe000
-[   26.064880] iwlwifi 0000:02:00.0: 17 is NULL 00000000ffbfa000
-[   26.064882] iwlwifi 0000:02:00.0: Free 18 ffffea0004953c00 00000000ffd10000
-[   26.064886] iwlwifi 0000:02:00.0: Free 19 ffffea0004931180 00000000ffd0e000
-[   26.064889] iwlwifi 0000:02:00.0: Free 20 ffffea0004933200 00000000ffd0c000
-[   26.064893] iwlwifi 0000:02:00.0: Free 21 ffffea000495f800 00000000ffd0a000
-[   26.064896] iwlwifi 0000:02:00.0: Free 22 ffffea00049e7700 00000000fff04000
-[   26.064900] iwlwifi 0000:02:00.0: Free 23 ffffea0004997300 00000000ffd08000
-[   26.064903] iwlwifi 0000:02:00.0: Free 24 ffffea000495fa80 00000000ffd06000
-[   26.064907] iwlwifi 0000:02:00.0: Free 25 ffffea0004953200 00000000ffd04000
-[   26.064910] iwlwifi 0000:02:00.0: Free 26 ffffea0004998600 00000000fff02000
-[   26.064913] iwlwifi 0000:02:00.0: Free 27 ffffea0004954180 00000000ffd02000
-[   26.064917] iwlwifi 0000:02:00.0: Free 28 ffffea0004954680 00000000ffd00000
-[   26.064920] iwlwifi 0000:02:00.0: Free 29 ffffea0004932680 00000000ffcfe000
-[   26.064924] iwlwifi 0000:02:00.0: Free 30 ffffea000495f000 00000000ffcfc000
-[   26.064927] iwlwifi 0000:02:00.0: 31 is NULL 00000000fff56000
-[   26.064930] iwlwifi 0000:02:00.0: Free 32 ffffea00049e1880 00000000fff00000
-[   26.064933] iwlwifi 0000:02:00.0: Free 33 ffffea00049eb180 00000000ffefe000
-[   26.064936] iwlwifi 0000:02:00.0: Free 34 ffffea00049eae80 00000000ffefc000
-[   26.064940] iwlwifi 0000:02:00.0: Free 35 ffffea0004a1b700 00000000ffefa000
-[   26.064943] iwlwifi 0000:02:00.0: Free 36 ffffea0004a19d80 00000000ffef8000
-[   26.064946] iwlwifi 0000:02:00.0: Free 37 ffffea0004a1b180 00000000ffef6000
-[   26.064950] iwlwifi 0000:02:00.0: Free 38 ffffea0004992f00 00000000ffef4000
-[   26.064953] iwlwifi 0000:02:00.0: Free 39 ffffea00049e0880 00000000ffef2000
-[   26.064956] iwlwifi 0000:02:00.0: Free 40 ffffea00049e8900 00000000ffef0000
-[   26.064960] iwlwifi 0000:02:00.0: 41 is NULL 00000000fff54000
-[   26.064962] iwlwifi 0000:02:00.0: 42 is NULL 00000000fff52000
-[   26.064964] iwlwifi 0000:02:00.0: 43 is NULL 00000000fff50000
-[   26.064966] iwlwifi 0000:02:00.0: Free 44 ffffea00049e5480 00000000ffeee000
-[   26.064969] iwlwifi 0000:02:00.0: 45 is NULL 00000000fff4e000
-[   26.064971] iwlwifi 0000:02:00.0: 46 is NULL 00000000fff4c000
-[   26.064974] iwlwifi 0000:02:00.0: Free 47 ffffea00049e2c80 00000000fff58000
-[   26.064977] iwlwifi 0000:02:00.0: Free 48 ffffea00049e5500 00000000ffeec000
-[   26.064980] iwlwifi 0000:02:00.0: Free 49 ffffea00049e6d00 00000000fff56000
-[   26.064984] iwlwifi 0000:02:00.0: Free 50 ffffea000495f700 00000000fff54000
-[   26.064987] iwlwifi 0000:02:00.0: Free 51 ffffea0004931b80 00000000fff52000
-[   26.064990] iwlwifi 0000:02:00.0: Free 52 ffffea0004a1a700 00000000fff50000
-[   26.064994] iwlwifi 0000:02:00.0: 53 is NULL 00000000fff40000
-[   26.064996] iwlwifi 0000:02:00.0: 54 is NULL 00000000fff3e000
-[   26.064998] iwlwifi 0000:02:00.0: Free 55 ffffea0004995c00 00000000ffeea000
-[   26.065002] iwlwifi 0000:02:00.0: Free 56 ffffea0004a1dd80 00000000ffee8000
-[   26.065005] iwlwifi 0000:02:00.0: Free 57 ffffea00049ea980 00000000ffee6000
-[   26.065009] iwlwifi 0000:02:00.0: Free 58 ffffea0004990b00 00000000ffee4000
-[   26.065012] iwlwifi 0000:02:00.0: Free 59 ffffea00049e1f00 00000000ffee2000
-[   26.065015] iwlwifi 0000:02:00.0: Free 60 ffffea0004991380 00000000ffee0000
-[   26.065019] iwlwifi 0000:02:00.0: Free 61 ffffea00049e7280 00000000ffede000
-[   26.065022] iwlwifi 0000:02:00.0: Free 62 ffffea00049e9080 00000000ffedc000
-[   26.065025] iwlwifi 0000:02:00.0: 63 is NULL 00000000fff3c000
-[   26.065028] iwlwifi 0000:02:00.0: 64 is NULL 00000000fff3a000
-[   26.065030] iwlwifi 0000:02:00.0: 65 is NULL 00000000fff38000
-[   26.065032] iwlwifi 0000:02:00.0: Free 66 ffffea0004993100 00000000ffeda000
-[   26.065035] iwlwifi 0000:02:00.0: Free 67 ffffea0004994000 00000000ffed6000
-[   26.065039] iwlwifi 0000:02:00.0: Free 68 ffffea0004993b00 00000000ffed4000
-[   26.065042] iwlwifi 0000:02:00.0: 69 is NULL 00000000ffebc000
-[   26.065044] iwlwifi 0000:02:00.0: Free 70 ffffea00049e7f00 00000000ffed0000
-[   26.065047] iwlwifi 0000:02:00.0: Free 71 ffffea0004a10b00 00000000ffeb8000
-[   26.065051] iwlwifi 0000:02:00.0: Free 72 ffffea00049ea300 00000000fff4e000
-[   26.065054] iwlwifi 0000:02:00.0: Free 73 ffffea00049ecd00 00000000fff4c000
-[   26.065058] iwlwifi 0000:02:00.0: Free 74 ffffea0004a1db00 00000000fff4a000
-[   26.065061] iwlwifi 0000:02:00.0: Free 75 ffffea0004995280 00000000ffeb6000
-[   26.065064] iwlwifi 0000:02:00.0: Free 76 ffffea00049e2e00 00000000ffeb4000
-[   26.065067] iwlwifi 0000:02:00.0: Free 77 ffffea00049e3f80 00000000fff48000
-[   26.065071] iwlwifi 0000:02:00.0: Free 78 ffffea0004a1d380 00000000fff46000
-[   26.065074] iwlwifi 0000:02:00.0: Free 79 ffffea0004993880 00000000fff44000
-[   26.065078] iwlwifi 0000:02:00.0: Free 80 ffffea00049e4b00 00000000ffeb2000
-[   26.065081] iwlwifi 0000:02:00.0: Free 81 ffffea00049ec300 00000000ffeb0000
-[   26.065085] iwlwifi 0000:02:00.0: Free 82 ffffea00049e7e80 00000000fff5a000
-[   26.065088] iwlwifi 0000:02:00.0: Free 83 ffffea00049e2200 00000000fff42000
-[   26.065091] iwlwifi 0000:02:00.0: Free 84 ffffea00049ecc80 00000000fff40000
-[   26.065095] iwlwifi 0000:02:00.0: Free 85 ffffea00049ec280 00000000fff3e000
-[   26.065099] iwlwifi 0000:02:00.0: Free 86 ffffea00049ed580 00000000fff3c000
-[   26.065102] iwlwifi 0000:02:00.0: Free 87 ffffea0004a19c80 00000000fff3a000
-[   26.065105] iwlwifi 0000:02:00.0: Free 88 ffffea00049e4f80 00000000ffeae000
-[   26.065109] iwlwifi 0000:02:00.0: Free 89 ffffea0004a1c900 00000000ffeac000
-[   26.065112] iwlwifi 0000:02:00.0: Free 90 ffffea0004994400 00000000fff38000
-[   26.065115] iwlwifi 0000:02:00.0: Free 91 ffffea0004994180 00000000fff36000
-[   26.065119] iwlwifi 0000:02:00.0: Free 92 ffffea0004993980 00000000fff34000
-[   26.065122] iwlwifi 0000:02:00.0: Free 93 ffffea0004a1c080 00000000ffeaa000
-[   26.065125] iwlwifi 0000:02:00.0: Free 94 ffffea00049e8680 00000000ffea8000
-[   26.065129] iwlwifi 0000:02:00.0: Free 95 ffffea00049ef900 00000000ffea6000
-[   26.065133] iwlwifi 0000:02:00.0: Free 96 ffffea0004990480 00000000ffea4000
-[   26.065137] iwlwifi 0000:02:00.0: Free 97 ffffea00049ea000 00000000ffea2000
-[   26.065141] iwlwifi 0000:02:00.0: Free 98 ffffea0004991500 00000000fff32000
-[   26.065144] iwlwifi 0000:02:00.0: Free 99 ffffea00049e9f80 00000000ffea0000
-[   26.065147] iwlwifi 0000:02:00.0: Free 100 ffffea0004990d00 00000000fff30000
-[   26.065151] iwlwifi 0000:02:00.0: Free 101 ffffea00049ed280 00000000fff2e000
-[   26.065154] iwlwifi 0000:02:00.0: Free 102 ffffea0004990a80 00000000fff2c000
-[   26.065158] iwlwifi 0000:02:00.0: Free 103 ffffea0004990600 00000000ffe9e000
-[   26.065161] iwlwifi 0000:02:00.0: Free 104 ffffea0004a1c600 00000000ffe9c000
-[   26.065166] iwlwifi 0000:02:00.0: Free 105 ffffea00049e4980 00000000ffe9a000
-[   26.065169] iwlwifi 0000:02:00.0: Free 106 ffffea00049e1b00 00000000fff2a000
-[   26.065173] iwlwifi 0000:02:00.0: Free 107 ffffea0004a1fe00 00000000fff28000
-[   26.065176] iwlwifi 0000:02:00.0: Free 108 ffffea00049e5100 00000000fff26000
-[   26.065179] iwlwifi 0000:02:00.0: Free 109 ffffea0004a1f300 00000000ffe98000
-[   26.065182] iwlwifi 0000:02:00.0: Free 110 ffffea00049ef400 00000000ffe96000
-[   26.065186] iwlwifi 0000:02:00.0: Free 111 ffffea00049e0f80 00000000ffe94000
-[   26.065189] iwlwifi 0000:02:00.0: Free 112 ffffea0004993200 00000000fff24000
-[   26.065195] iwlwifi 0000:02:00.0: Free 113 ffffea0004994a80 00000000fff22000
-[   26.065198] iwlwifi 0000:02:00.0: Free 114 ffffea0004990080 00000000fff20000
-[   26.065202] iwlwifi 0000:02:00.0: Free 115 ffffea0004990880 00000000fff1e000
-[   26.065205] iwlwifi 0000:02:00.0: Free 116 ffffea0004a1e580 00000000fff1c000
-[   26.065210] iwlwifi 0000:02:00.0: Free 117 ffffea00049e8500 00000000ffe92000
-[   26.065213] iwlwifi 0000:02:00.0: Free 118 ffffea0004991d00 00000000fff1a000
-[   26.065217] iwlwifi 0000:02:00.0: Free 119 ffffea0004991f80 00000000fff18000
-[   26.065220] iwlwifi 0000:02:00.0: Free 120 ffffea0004992e00 00000000fff16000
-[   26.065223] iwlwifi 0000:02:00.0: Free 121 ffffea0004992d80 00000000fff14000
-[   26.065227] iwlwifi 0000:02:00.0: Free 122 ffffea0004996a00 00000000fff12000
-[   26.065233] iwlwifi 0000:02:00.0: Free 123 ffffea0004992080 00000000fff10000
-[   26.065236] iwlwifi 0000:02:00.0: Free 124 ffffea0004992a80 00000000fff0e000
-[   26.065239] iwlwifi 0000:02:00.0: Free 125 ffffea0004a1da00 00000000ffe90000
-[   26.065243] iwlwifi 0000:02:00.0: Free 126 ffffea00049e2700 00000000ffe8e000
-[   26.065246] iwlwifi 0000:02:00.0: Free 127 ffffea0004a1ed80 00000000ffe8c000
-[   26.065252] iwlwifi 0000:02:00.0: Free 128 ffffea0004a1d280 00000000ffe8a000
-[   26.065256] iwlwifi 0000:02:00.0: Free 129 ffffea0004a1ea00 00000000ffe88000
-[   26.065259] iwlwifi 0000:02:00.0: Free 130 ffffea00049e2680 00000000ffe86000
-[   26.065262] iwlwifi 0000:02:00.0: Free 131 ffffea000495f100 00000000ffe84000
-[   26.065265] iwlwifi 0000:02:00.0: Free 132 ffffea0004995080 00000000fff0c000
-[   26.065269] iwlwifi 0000:02:00.0: Free 133 ffffea0004994d00 00000000fff0a000
-[   26.065272] iwlwifi 0000:02:00.0: Free 134 ffffea00049ec980 00000000fff08000
-[   26.065276] iwlwifi 0000:02:00.0: Free 135 ffffea0004933100 00000000ffe82000
-[   26.065280] iwlwifi 0000:02:00.0: Free 136 ffffea00049e5b00 00000000ffe80000
-[   26.065285] iwlwifi 0000:02:00.0: Free 137 ffffea00049e6d80 00000000ffe7e000
-[   26.065288] iwlwifi 0000:02:00.0: Free 138 ffffea00049e8c00 00000000ffe7c000
-[   26.065291] iwlwifi 0000:02:00.0: Free 139 ffffea0004933980 00000000ffe7a000
-[   26.065295] iwlwifi 0000:02:00.0: Free 140 ffffea0004931d00 00000000ffe78000
-[   26.065298] iwlwifi 0000:02:00.0: Free 141 ffffea0004931d80 00000000ffe76000
-[   26.065301] iwlwifi 0000:02:00.0: Free 142 ffffea00049e9580 00000000ffdae000
-[   26.065308] iwlwifi 0000:02:00.0: Free 143 ffffea0004933f00 00000000ffdac000
-[   26.065311] iwlwifi 0000:02:00.0: Free 144 ffffea00049ec500 00000000ffdaa000
-[   26.065315] iwlwifi 0000:02:00.0: Free 145 ffffea0004990f80 00000000ffda8000
-[   26.065318] iwlwifi 0000:02:00.0: Free 146 ffffea0004a1fb80 00000000ffda6000
-[   26.065322] iwlwifi 0000:02:00.0: Free 147 ffffea0004992100 00000000ffda4000
-[   26.065325] iwlwifi 0000:02:00.0: Free 148 ffffea0004933000 00000000ffe74000
-[   26.065329] iwlwifi 0000:02:00.0: Free 149 ffffea0004933080 00000000ffe72000
-[   26.065332] iwlwifi 0000:02:00.0: Free 150 ffffea00049e5e00 00000000ffe70000
-[   26.065336] iwlwifi 0000:02:00.0: Free 151 ffffea0004991e80 00000000ffda0000
-[   26.065339] iwlwifi 0000:02:00.0: Free 152 ffffea0004990c80 00000000ffd9a000
-[   26.065342] iwlwifi 0000:02:00.0: Free 153 ffffea00049ea280 00000000ffd98000
-[   26.065346] iwlwifi 0000:02:00.0: Free 154 ffffea0004a5b100 00000000ffd96000
-[   26.065349] iwlwifi 0000:02:00.0: Free 155 ffffea0004993280 00000000ffd94000
-[   26.065352] iwlwifi 0000:02:00.0: Free 156 ffffea0004995b80 00000000ffd92000
-[   26.065358] iwlwifi 0000:02:00.0: Free 157 ffffea0004995880 00000000ffd90000
-[   26.065361] iwlwifi 0000:02:00.0: Free 158 ffffea0004995980 00000000ffd8e000
-[   26.065364] iwlwifi 0000:02:00.0: Free 159 ffffea00049e9680 00000000ffe6e000
-[   26.065368] iwlwifi 0000:02:00.0: Free 160 ffffea0004933700 00000000ffe6c000
-[   26.065371] iwlwifi 0000:02:00.0: Free 161 ffffea0004933780 00000000ffe6a000
-[   26.065374] iwlwifi 0000:02:00.0: Free 162 ffffea00049e9e00 00000000ffe68000
-[   26.065378] iwlwifi 0000:02:00.0: Free 163 ffffea00049e9e80 00000000ffe66000
-[   26.065381] iwlwifi 0000:02:00.0: Free 164 ffffea0004a1ca00 00000000ffe64000
-[   26.065387] iwlwifi 0000:02:00.0: Free 165 ffffea0004a1ca80 00000000ffe62000
-[   26.065390] iwlwifi 0000:02:00.0: Free 166 ffffea0004933400 00000000ffe60000
-[   26.065393] iwlwifi 0000:02:00.0: Free 167 ffffea0004933480 00000000ffe5e000
-[   26.065396] iwlwifi 0000:02:00.0: Free 168 ffffea00049e7000 00000000ffe5c000
-[   26.065400] iwlwifi 0000:02:00.0: Free 169 ffffea00049e7080 00000000ffe5a000
-[   26.065403] iwlwifi 0000:02:00.0: Free 170 ffffea00049e5d00 00000000ffe58000
-[   26.065408] iwlwifi 0000:02:00.0: Free 171 ffffea00049e5d80 00000000ffe56000
-[   26.065411] iwlwifi 0000:02:00.0: Free 172 ffffea00049eb800 00000000ffe54000
-[   26.065414] iwlwifi 0000:02:00.0: Free 173 ffffea00049eb880 00000000ffe52000
-[   26.065417] iwlwifi 0000:02:00.0: Free 174 ffffea0004990500 00000000ffe50000
-[   26.065420] iwlwifi 0000:02:00.0: Free 175 ffffea0004990580 00000000ffe4e000
-[   26.065424] iwlwifi 0000:02:00.0: Free 176 ffffea0004a56b00 00000000ffe4c000
-[   26.065427] iwlwifi 0000:02:00.0: Free 177 ffffea0004a56b80 00000000ffe4a000
-[   26.065430] iwlwifi 0000:02:00.0: Free 178 ffffea00049e4e00 00000000ffe48000
-[   26.065434] iwlwifi 0000:02:00.0: Free 179 ffffea00049e4e80 00000000ffe46000
-[   26.065438] iwlwifi 0000:02:00.0: Free 180 ffffea00049e3b00 00000000ffe44000
-[   26.065441] iwlwifi 0000:02:00.0: Free 181 ffffea00049e3b80 00000000ffe42000
-[   26.065445] iwlwifi 0000:02:00.0: Free 182 ffffea0004a57800 00000000ffe40000
-[   26.065448] iwlwifi 0000:02:00.0: Free 183 ffffea0004a57880 00000000ffe3e000
-[   26.065451] iwlwifi 0000:02:00.0: Free 184 ffffea00049e9a00 00000000ffe3c000
-[   26.065454] iwlwifi 0000:02:00.0: Free 185 ffffea00049e9a80 00000000ffe3a000
-[   26.065459] iwlwifi 0000:02:00.0: Free 186 ffffea00049ed100 00000000ffe38000
-[   26.065463] iwlwifi 0000:02:00.0: Free 187 ffffea00049ed180 00000000ffe36000
-[   26.065466] iwlwifi 0000:02:00.0: Free 188 ffffea00049e5800 00000000ffe34000
-[   26.065469] iwlwifi 0000:02:00.0: Free 189 ffffea00049e5880 00000000ffe32000
-[   26.065472] iwlwifi 0000:02:00.0: Free 190 ffffea0004a10a00 00000000ffe30000
-[   26.065476] iwlwifi 0000:02:00.0: Free 191 ffffea0004a10a80 00000000ffe2e000
-[   26.065481] iwlwifi 0000:02:00.0: Free 192 ffffea00049e7d00 00000000ffe2c000
-[   26.065484] iwlwifi 0000:02:00.0: Free 193 ffffea00049e7d80 00000000ffe2a000
-[   26.065487] iwlwifi 0000:02:00.0: Free 194 ffffea00049e8f00 00000000ffe28000
-[   26.065490] iwlwifi 0000:02:00.0: Free 195 ffffea00049e8f80 00000000ffe26000
-[   26.065493] iwlwifi 0000:02:00.0: Free 196 ffffea0004a10900 00000000ffe24000
-[   26.065497] iwlwifi 0000:02:00.0: Free 197 ffffea0004a10980 00000000ffe22000
-[   26.065500] iwlwifi 0000:02:00.0: Free 198 ffffea00049ed300 00000000ffe20000
-[   26.065505] iwlwifi 0000:02:00.0: Free 199 ffffea00049ed380 00000000ffe1e000
-[   26.065508] iwlwifi 0000:02:00.0: Free 200 ffffea0004a56500 00000000ffe1c000
-[   26.065512] iwlwifi 0000:02:00.0: Free 201 ffffea0004a56580 00000000ffe1a000
-[   26.065515] iwlwifi 0000:02:00.0: Free 202 ffffea0004993c00 00000000ffe18000
-[   26.065520] iwlwifi 0000:02:00.0: Free 203 ffffea0004993c80 00000000ffe16000
-[   26.065523] iwlwifi 0000:02:00.0: Free 204 ffffea0004993700 00000000ffe14000
-[   26.065527] iwlwifi 0000:02:00.0: Free 205 ffffea0004993780 00000000ffe12000
-[   26.065530] iwlwifi 0000:02:00.0: Free 206 ffffea0004990700 00000000ffe10000
-[   26.065533] iwlwifi 0000:02:00.0: Free 207 ffffea0004990780 00000000ffe0e000
-[   26.065536] iwlwifi 0000:02:00.0: Free 208 ffffea0004993000 00000000ffe0c000
-[   26.065539] iwlwifi 0000:02:00.0: Free 209 ffffea0004993080 00000000ffe0a000
-[   26.065543] iwlwifi 0000:02:00.0: Free 210 ffffea0004991600 00000000ffe08000
-[   26.065546] iwlwifi 0000:02:00.0: Free 211 ffffea0004991680 00000000ffe06000
-[   26.065549] iwlwifi 0000:02:00.0: Free 212 ffffea0004a1eb00 00000000ffe04000
-[   26.065552] iwlwifi 0000:02:00.0: Free 213 ffffea0004a1eb80 00000000ffe02000
-[   26.065557] iwlwifi 0000:02:00.0: Free 214 ffffea00049eaf00 00000000ffe00000
-[   26.065561] iwlwifi 0000:02:00.0: Free 215 ffffea00049eaf80 00000000ffdfe000
-[   26.065564] iwlwifi 0000:02:00.0: Free 216 ffffea0004a1d400 00000000ffdfc000
-[   26.065567] iwlwifi 0000:02:00.0: Free 217 ffffea0004a1d480 00000000ffdfa000
-[   26.065570] iwlwifi 0000:02:00.0: Free 218 ffffea00049e9100 00000000ffdf8000
-[   26.065575] iwlwifi 0000:02:00.0: Free 219 ffffea00049e9180 00000000ffdf4000
-[   26.065580] iwlwifi 0000:02:00.0: Free 220 ffffea00049ea200 00000000ffdf2000
-[   26.065583] iwlwifi 0000:02:00.0: Free 221 ffffea0004995a80 00000000ffd8c000
-[   26.065586] iwlwifi 0000:02:00.0: Free 222 ffffea00049e2a80 00000000ffd8a000
-[   26.065589] iwlwifi 0000:02:00.0: Free 223 ffffea00049e9600 00000000ffd88000
-[   26.065592] iwlwifi 0000:02:00.0: Free 224 ffffea00049e5e80 00000000ffd86000
-[   26.065597] iwlwifi 0000:02:00.0: Free 225 ffffea0004930100 00000000ffd84000
-[   26.065600] iwlwifi 0000:02:00.0: Free 226 ffffea0004931e00 00000000ffd82000
-[   26.065603] iwlwifi 0000:02:00.0: Free 227 ffffea0004938300 00000000ffd80000
-[   26.065606] iwlwifi 0000:02:00.0: Free 228 ffffea0004991100 00000000ffdf6000
-[   26.065610] iwlwifi 0000:02:00.0: Free 229 ffffea0004991180 00000000ffdf0000
-[   26.065615] iwlwifi 0000:02:00.0: Free 230 ffffea0004990c00 00000000ffdee000
-[   26.065619] iwlwifi 0000:02:00.0: Free 231 ffffea0004934500 00000000ffd7e000
-[   26.065623] iwlwifi 0000:02:00.0: Free 232 ffffea0004991a00 00000000ffdec000
-[   26.065626] iwlwifi 0000:02:00.0: Free 233 ffffea0004991a80 00000000ffdea000
-[   26.065631] iwlwifi 0000:02:00.0: Free 234 ffffea0004991e00 00000000ffde8000
-[   26.065634] iwlwifi 0000:02:00.0: Free 235 ffffea0004934300 00000000ffd7c000
-[   26.065638] iwlwifi 0000:02:00.0: Free 236 ffffea0004934200 00000000ffd7a000
-[   26.065641] iwlwifi 0000:02:00.0: Free 237 ffffea0004934280 00000000ffd78000
-[   26.065644] iwlwifi 0000:02:00.0: Free 238 ffffea0004934100 00000000ffd76000
-[   26.065650] iwlwifi 0000:02:00.0: Free 239 ffffea0004934180 00000000ffd74000
-[   26.065653] iwlwifi 0000:02:00.0: Free 240 ffffea0004934400 00000000ffd72000
-[   26.065656] iwlwifi 0000:02:00.0: Free 241 ffffea0004992180 00000000ffde6000
-[   26.065660] iwlwifi 0000:02:00.0: Free 242 ffffea0004991c00 00000000ffde4000
-[   26.065663] iwlwifi 0000:02:00.0: Free 243 ffffea0004991c80 00000000ffde2000
-[   26.065667] iwlwifi 0000:02:00.0: Free 244 ffffea0004992b00 00000000ffde0000
-[   26.065671] iwlwifi 0000:02:00.0: Free 245 ffffea0004992b80 00000000ffdde000
-[   26.065674] iwlwifi 0000:02:00.0: Free 246 ffffea0004a1fb00 00000000ffddc000
-[   26.065677] iwlwifi 0000:02:00.0: Free 247 ffffea0004934480 00000000ffd70000
-[   26.065680] iwlwifi 0000:02:00.0: Free 248 ffffea0004a1fd00 00000000ffdda000
-[   26.065685] iwlwifi 0000:02:00.0: Free 249 ffffea0004a1fd80 00000000ffdd8000
-[   26.065688] iwlwifi 0000:02:00.0: Free 250 ffffea0004990f00 00000000ffdd6000
-[   26.065691] iwlwifi 0000:02:00.0: Free 251 ffffea00049e9400 00000000ffd6e000
-[   26.065695] iwlwifi 0000:02:00.0: Free 252 ffffea00049e9480 00000000ffd6c000
-[   26.065698] iwlwifi 0000:02:00.0: Free 253 ffffea00049ec800 00000000ffd6a000
-[   26.065704] iwlwifi 0000:02:00.0: Free 254 ffffea00049ec880 00000000ffd68000
-[   26.065707] iwlwifi 0000:02:00.0: Free 255 ffffea0004995300 00000000ffd66000
-[   26.065710] iwlwifi 0000:02:00.0: Free 256 ffffea0004995380 00000000ffd64000
-[   26.065713] iwlwifi 0000:02:00.0: Free 257 ffffea00049eb200 00000000ffd62000
-[   26.065716] iwlwifi 0000:02:00.0: Free 258 ffffea00049eb280 00000000ffd60000
-[   26.065719] iwlwifi 0000:02:00.0: Free 259 ffffea00049ec580 00000000ffdd4000
-[   26.065724] iwlwifi 0000:02:00.0: Free 260 ffffea0004994e00 00000000ffdd2000
-[   26.065728] iwlwifi 0000:02:00.0: Free 261 ffffea0004994e80 00000000ffdd0000
-[   26.065731] iwlwifi 0000:02:00.0: Free 262 ffffea00049ead00 00000000ffd5e000
-[   26.065734] iwlwifi 0000:02:00.0: Free 263 ffffea00049ead80 00000000ffd5c000
-[   26.065738] iwlwifi 0000:02:00.0: Free 264 ffffea00049e8700 00000000ffd5a000
-[   26.065741] iwlwifi 0000:02:00.0: Free 265 ffffea00049e8780 00000000ffd58000
-[   26.065744] iwlwifi 0000:02:00.0: Free 266 ffffea0004991800 00000000ffd56000
-[   26.065747] iwlwifi 0000:02:00.0: Free 267 ffffea0004938380 00000000ffdce000
-[   26.065753] iwlwifi 0000:02:00.0: Free 268 ffffea0004933e00 00000000ffdcc000
-[   26.065756] iwlwifi 0000:02:00.0: Free 269 ffffea0004933e80 00000000ffdca000
-[   26.065759] iwlwifi 0000:02:00.0: Free 270 ffffea0004991880 00000000ffd54000
-[   26.065763] iwlwifi 0000:02:00.0: Free 271 ffffea0004933f80 00000000ffdc8000
-[   26.065766] iwlwifi 0000:02:00.0: Free 272 ffffea00049e9c00 00000000ffdc6000
-[   26.065840] iwlwifi 0000:02:00.0: Free 273 ffffea00049e9c80 00000000ffdc4000
-[   26.065843] iwlwifi 0000:02:00.0: Free 274 ffffea00049e9d00 00000000ffdc2000
-[   26.065847] iwlwifi 0000:02:00.0: Free 275 ffffea00049e9d80 00000000ffdc0000
-[   26.065850] iwlwifi 0000:02:00.0: Free 276 ffffea00049ebe00 00000000ffdbe000
-[   26.065853] iwlwifi 0000:02:00.0: Free 277 ffffea00049ebe80 00000000ffdbc000
-[   26.065857] iwlwifi 0000:02:00.0: Free 278 ffffea00049ebf00 00000000ffdba000
-[   26.065860] iwlwifi 0000:02:00.0: Free 279 ffffea00049ebf80 00000000ffdb8000
-[   26.065863] iwlwifi 0000:02:00.0: Free 280 ffffea0004991400 00000000ffd52000
-[   26.065867] iwlwifi 0000:02:00.0: Free 281 ffffea0004991480 00000000ffd50000
-[   26.065870] iwlwifi 0000:02:00.0: Free 282 ffffea0004991200 00000000ffd4e000
-[   26.065873] iwlwifi 0000:02:00.0: Free 283 ffffea0004991280 00000000ffd4c000
-[   26.065876] iwlwifi 0000:02:00.0: Free 284 ffffea00049e3500 00000000ffd4a000
-[   26.065879] iwlwifi 0000:02:00.0: Free 285 ffffea00049e3580 00000000ffd48000
-[   26.065882] iwlwifi 0000:02:00.0: Free 286 ffffea00049e9500 00000000ffdb6000
-[   26.065885] iwlwifi 0000:02:00.0: Free 287 ffffea00049eaa00 00000000ffd46000
-[   26.065889] iwlwifi 0000:02:00.0: Free 288 ffffea00049eaa80 00000000ffd44000
-[   26.065892] iwlwifi 0000:02:00.0: Free 289 ffffea0004a55e00 00000000ffd42000
-[   26.065895] iwlwifi 0000:02:00.0: Free 290 ffffea0004a55e80 00000000ffd40000
-[   26.065898] iwlwifi 0000:02:00.0: Free 291 ffffea0004934580 00000000ffdb4000
-[   26.065901] iwlwifi 0000:02:00.0: Free 292 ffffea0004934000 00000000ffdb2000
-[   26.065905] iwlwifi 0000:02:00.0: Free 293 ffffea0004934080 00000000ffdb0000
-[   26.065908] iwlwifi 0000:02:00.0: Free 294 ffffea000495eb00 00000000ffd3e000
-[   26.065911] iwlwifi 0000:02:00.0: Free 295 ffffea000495eb80 00000000ffd3c000
-[   26.065914] iwlwifi 0000:02:00.0: Free 296 ffffea000495fc00 00000000ffd3a000
-[   26.065917] iwlwifi 0000:02:00.0: Free 297 ffffea000495fc80 00000000ffd38000
-[   26.065920] iwlwifi 0000:02:00.0: Free 298 ffffea0004930600 00000000ffd36000
-[   26.065924] iwlwifi 0000:02:00.0: Free 299 ffffea0004934380 00000000ffda2000
-[   26.065927] iwlwifi 0000:02:00.0: Free 300 ffffea00049eb400 00000000ffd9e000
-[   26.065930] iwlwifi 0000:02:00.0: Free 301 ffffea00049eb480 00000000ffd9c000
-[   26.065933] iwlwifi 0000:02:00.0: 302 is NULL 00000000ffcfe000
-[   26.065935] iwlwifi 0000:02:00.0: 303 is NULL 00000000ffcfc000
-[   26.065937] iwlwifi 0000:02:00.0: Free 304 ffffea00049eb600 00000000ffd34000
-[   26.065941] iwlwifi 0000:02:00.0: Free 305 ffffea00049eb680 00000000ffd32000
-[   26.065945] iwlwifi 0000:02:00.0: Free 306 ffffea00049eb700 00000000ffd30000
-[   26.065948] iwlwifi 0000:02:00.0: Free 307 ffffea00049eb780 00000000ffd2c000
-[   26.065951] iwlwifi 0000:02:00.0: Free 308 ffffea00049e6000 00000000ffd2a000
-[   26.065954] iwlwifi 0000:02:00.0: Free 309 ffffea00049e6080 00000000ffd28000
-[   26.065957] iwlwifi 0000:02:00.0: Free 310 ffffea00049e6100 00000000ffd2e000
-[   26.065961] iwlwifi 0000:02:00.0: Free 311 ffffea00049e6180 00000000ffd26000
-[   26.065964] iwlwifi 0000:02:00.0: Free 312 ffffea00049e6200 00000000ffd24000
-[   26.065967] iwlwifi 0000:02:00.0: Free 313 ffffea00049e6280 00000000ffd22000
-[   26.065970] iwlwifi 0000:02:00.0: Free 314 ffffea00049e6300 00000000ffd20000
-[   26.065974] iwlwifi 0000:02:00.0: 315 is NULL 00000000ffce4000
-[   26.065976] iwlwifi 0000:02:00.0: 316 is NULL 00000000ffce2000
-[   26.065978] iwlwifi 0000:02:00.0: 317 is NULL 00000000ffce0000
-[   26.065980] iwlwifi 0000:02:00.0: 318 is NULL 00000000ffcde000
-[   26.065982] iwlwifi 0000:02:00.0: 319 is NULL 00000000ffcdc000
-[   26.065996] iwlwifi 0000:02:00.0: Mapped ffffea0004931e00 to 00000000fff5a000
-[   26.066001] iwlwifi 0000:02:00.0: Mapped ffffea0004930100 to 00000000fff58000
-[   26.066005] iwlwifi 0000:02:00.0: Mapped ffffea00049e2a80 to 00000000fff56000
-[   26.066009] iwlwifi 0000:02:00.0: Mapped ffffea0004995a80 to 00000000fff54000
-[   26.066012] iwlwifi 0000:02:00.0: Mapped ffffea0004995980 to 00000000fff52000
-[   26.066016] iwlwifi 0000:02:00.0: Mapped ffffea0004995880 to 00000000fff50000
-[   26.066019] iwlwifi 0000:02:00.0: Mapped ffffea0004995b80 to 00000000fff4e000
-[   26.066023] iwlwifi 0000:02:00.0: Mapped ffffea0004a5b100 to 00000000fff4c000
-[   26.066030] iwlwifi 0000:02:00.0: Mapped ffffea00049e8c00 to 00000000fff4a000
-[   26.066035] iwlwifi 0000:02:00.0: Mapped ffffea00049e5b00 to 00000000fff48000
-[   26.066040] iwlwifi 0000:02:00.0: Mapped ffffea0004933100 to 00000000fff46000
-[   26.066044] iwlwifi 0000:02:00.0: Mapped ffffea00049ec980 to 00000000fff44000
-[   26.066053] iwlwifi 0000:02:00.0: Mapped ffffea0004994d00 to 00000000fff42000
-[   26.066058] iwlwifi 0000:02:00.0: Mapped ffffea0004995080 to 00000000fff40000
-[   26.066062] iwlwifi 0000:02:00.0: Mapped ffffea000495f100 to 00000000fff3e000
-[   26.066072] iwlwifi 0000:02:00.0: Mapped ffffea00049e2680 to 00000000fff3c000
-[   26.066078] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ea00 to 00000000fff3a000
-[   26.066084] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d280 to 00000000fff38000
-[   26.066094] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ed80 to 00000000fff36000
-[   26.066101] iwlwifi 0000:02:00.0: Mapped ffffea00049e2700 to 00000000fff34000
-[   26.066107] iwlwifi 0000:02:00.0: Mapped ffffea0004a1da00 to 00000000fff32000
-[   26.066112] iwlwifi 0000:02:00.0: Mapped ffffea0004992a80 to 00000000fff30000
-[   26.066123] iwlwifi 0000:02:00.0: Mapped ffffea0004992080 to 00000000fff2e000
-[   26.066131] iwlwifi 0000:02:00.0: Mapped ffffea0004996a00 to 00000000fff2c000
-[   26.066139] iwlwifi 0000:02:00.0: Mapped ffffea0004992d80 to 00000000fff2a000
-[   26.066145] iwlwifi 0000:02:00.0: Mapped ffffea0004992e00 to 00000000fff28000
-[   26.066150] iwlwifi 0000:02:00.0: Mapped ffffea0004991f80 to 00000000fff26000
-[   26.066155] iwlwifi 0000:02:00.0: Mapped ffffea0004991d00 to 00000000fff24000
-[   26.066165] iwlwifi 0000:02:00.0: Mapped ffffea00049e8500 to 00000000fff22000
-[   26.066170] iwlwifi 0000:02:00.0: Mapped ffffea0004a1e580 to 00000000fff20000
-[   26.066176] iwlwifi 0000:02:00.0: Mapped ffffea0004990880 to 00000000fff1e000
-[   26.066182] iwlwifi 0000:02:00.0: Mapped ffffea0004990080 to 00000000fff1c000
-[   26.066191] iwlwifi 0000:02:00.0: Mapped ffffea0004994a80 to 00000000fff1a000
-[   26.066202] iwlwifi 0000:02:00.0: Mapped ffffea00049e0f80 to 00000000fff18000
-[   26.066210] iwlwifi 0000:02:00.0: Mapped ffffea00049ef400 to 00000000fff16000
-[   26.066218] iwlwifi 0000:02:00.0: Mapped ffffea0004a1f300 to 00000000fff14000
-[   26.066227] iwlwifi 0000:02:00.0: Mapped ffffea00049e5100 to 00000000fff12000
-[   26.066234] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fe00 to 00000000fff10000
-[   26.066239] iwlwifi 0000:02:00.0: Mapped ffffea00049e1b00 to 00000000fff0e000
-[   26.066250] iwlwifi 0000:02:00.0: Mapped ffffea00049e4980 to 00000000fff0c000
-[   26.066255] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c600 to 00000000fff0a000
-[   26.066261] iwlwifi 0000:02:00.0: Mapped ffffea0004990600 to 00000000fff08000
-[   26.066267] iwlwifi 0000:02:00.0: Mapped ffffea0004990a80 to 00000000fff06000
-[   26.066272] iwlwifi 0000:02:00.0: Mapped ffffea00049ed280 to 00000000fff04000
-[   26.066277] iwlwifi 0000:02:00.0: Mapped ffffea0004990d00 to 00000000fff02000
-[   26.066281] iwlwifi 0000:02:00.0: Mapped ffffea00049e9f80 to 00000000fff00000
-[   26.066286] iwlwifi 0000:02:00.0: Mapped ffffea0004991500 to 00000000ffefe000
-[   26.066291] iwlwifi 0000:02:00.0: Mapped ffffea00049ea000 to 00000000ffefc000
-[   26.066295] iwlwifi 0000:02:00.0: Mapped ffffea0004990480 to 00000000ffefa000
-[   26.066300] iwlwifi 0000:02:00.0: Mapped ffffea00049ef900 to 00000000ffef8000
-[   26.066306] iwlwifi 0000:02:00.0: Mapped ffffea00049e8680 to 00000000ffef6000
-[   26.066312] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c080 to 00000000ffef4000
-[   26.066317] iwlwifi 0000:02:00.0: Mapped ffffea0004993980 to 00000000ffef2000
-[   26.066321] iwlwifi 0000:02:00.0: Mapped ffffea0004994180 to 00000000ffef0000
-[   26.066326] iwlwifi 0000:02:00.0: Mapped ffffea0004994400 to 00000000ffeee000
-[   26.066331] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c900 to 00000000ffeec000
-[   26.066336] iwlwifi 0000:02:00.0: Mapped ffffea00049e4f80 to 00000000ffeea000
-[   26.066341] iwlwifi 0000:02:00.0: Mapped ffffea0004a19c80 to 00000000ffee8000
-[   26.066346] iwlwifi 0000:02:00.0: Mapped ffffea00049ed580 to 00000000ffee6000
-[   26.066351] iwlwifi 0000:02:00.0: Mapped ffffea00049ec280 to 00000000ffee4000
-[   26.066355] iwlwifi 0000:02:00.0: Mapped ffffea00049ecc80 to 00000000ffee2000
-[   26.066360] iwlwifi 0000:02:00.0: Mapped ffffea00049e2200 to 00000000ffee0000
-[   26.066365] iwlwifi 0000:02:00.0: Mapped ffffea00049e7e80 to 00000000ffede000
-[   26.066370] iwlwifi 0000:02:00.0: Mapped ffffea00049ec300 to 00000000ffedc000
-[   26.066374] iwlwifi 0000:02:00.0: Mapped ffffea00049e4b00 to 00000000ffeda000
-[   26.066379] iwlwifi 0000:02:00.0: Mapped ffffea0004993880 to 00000000ffed8000
-[   26.066384] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d380 to 00000000ffed6000
-[   26.066389] iwlwifi 0000:02:00.0: Mapped ffffea00049e3f80 to 00000000ffed4000
-[   26.066394] iwlwifi 0000:02:00.0: Mapped ffffea00049e2e00 to 00000000ffed2000
-[   26.066400] iwlwifi 0000:02:00.0: Mapped ffffea0004995280 to 00000000ffed0000
-[   26.066404] iwlwifi 0000:02:00.0: Mapped ffffea0004a1db00 to 00000000ffece000
-[   26.066409] iwlwifi 0000:02:00.0: Mapped ffffea00049ecd00 to 00000000ffecc000
-[   26.066414] iwlwifi 0000:02:00.0: Mapped ffffea00049ea300 to 00000000ffeca000
-[   26.066418] iwlwifi 0000:02:00.0: Mapped ffffea0004a10b00 to 00000000ffec8000
-[   26.066423] iwlwifi 0000:02:00.0: Mapped ffffea00049e7f00 to 00000000ffec6000
-[   26.066428] iwlwifi 0000:02:00.0: Mapped ffffea0004993b00 to 00000000ffec4000
-[   26.066433] iwlwifi 0000:02:00.0: Mapped ffffea0004994000 to 00000000ffec2000
-[   26.066438] iwlwifi 0000:02:00.0: Mapped ffffea0004993100 to 00000000ffec0000
-[   26.066443] iwlwifi 0000:02:00.0: Mapped ffffea00049e9080 to 00000000ffebe000
-[   26.066448] iwlwifi 0000:02:00.0: Mapped ffffea00049e7280 to 00000000ffebc000
-[   26.066453] iwlwifi 0000:02:00.0: Mapped ffffea0004991380 to 00000000ffeba000
-[   26.066457] iwlwifi 0000:02:00.0: Mapped ffffea00049e1f00 to 00000000ffeb8000
-[   26.066462] iwlwifi 0000:02:00.0: Mapped ffffea0004990b00 to 00000000ffeb6000
-[   26.066467] iwlwifi 0000:02:00.0: Mapped ffffea00049ea980 to 00000000ffeb4000
-[   26.066472] iwlwifi 0000:02:00.0: Mapped ffffea0004a1dd80 to 00000000ffeb2000
-[   26.066477] iwlwifi 0000:02:00.0: Mapped ffffea0004995c00 to 00000000ffeb0000
-[   26.066482] iwlwifi 0000:02:00.0: Mapped ffffea0004a1a700 to 00000000ffeae000
-[   26.066487] iwlwifi 0000:02:00.0: Mapped ffffea0004931b80 to 00000000ffeac000
-[   26.066492] iwlwifi 0000:02:00.0: Mapped ffffea000495f700 to 00000000ffeaa000
-[   26.066497] iwlwifi 0000:02:00.0: Mapped ffffea00049e5500 to 00000000ffea8000
-[   26.066502] iwlwifi 0000:02:00.0: Mapped ffffea00049e2c80 to 00000000ffea6000
-[   26.066506] iwlwifi 0000:02:00.0: Mapped ffffea00049e5480 to 00000000ffea4000
-[   26.066512] iwlwifi 0000:02:00.0: Mapped ffffea00049e8900 to 00000000ffea2000
-[   26.066517] iwlwifi 0000:02:00.0: Mapped ffffea00049e0880 to 00000000ffea0000
-[   26.066521] iwlwifi 0000:02:00.0: Mapped ffffea0004992f00 to 00000000ffe9e000
-[   26.066526] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b180 to 00000000ffe9c000
-[   26.066531] iwlwifi 0000:02:00.0: Mapped ffffea0004a19d80 to 00000000ffe9a000
-[   26.066540] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b700 to 00000000ffe98000
-[   26.066545] iwlwifi 0000:02:00.0: Mapped ffffea00049eae80 to 00000000ffe96000
-[   26.066550] iwlwifi 0000:02:00.0: Mapped ffffea00049eb180 to 00000000ffe94000
-[   26.066556] iwlwifi 0000:02:00.0: Mapped ffffea00049e1880 to 00000000ffe92000
-[   26.066561] iwlwifi 0000:02:00.0: Mapped ffffea000495f000 to 00000000ffe90000
-[   26.066569] iwlwifi 0000:02:00.0: Mapped ffffea0004932680 to 00000000ffe8e000
-[   26.066573] iwlwifi 0000:02:00.0: Mapped ffffea0004954680 to 00000000ffe8c000
-[   26.066578] iwlwifi 0000:02:00.0: Mapped ffffea0004954180 to 00000000ffe8a000
-[   26.066583] iwlwifi 0000:02:00.0: Mapped ffffea0004998600 to 00000000ffe88000
-[   26.066587] iwlwifi 0000:02:00.0: Mapped ffffea0004953200 to 00000000ffe86000
-[   26.066597] iwlwifi 0000:02:00.0: Mapped ffffea000495fa80 to 00000000ffe84000
-[   26.066602] iwlwifi 0000:02:00.0: Mapped ffffea0004997300 to 00000000ffe82000
-[   26.066611] iwlwifi 0000:02:00.0: Mapped ffffea00049e7700 to 00000000ffe80000
-[   26.066616] iwlwifi 0000:02:00.0: Mapped ffffea000495f800 to 00000000ffe7e000
-[   26.066621] iwlwifi 0000:02:00.0: Mapped ffffea0004933200 to 00000000ffe7c000
-[   26.066630] iwlwifi 0000:02:00.0: Mapped ffffea0004931180 to 00000000ffe7a000
-[   26.066635] iwlwifi 0000:02:00.0: Mapped ffffea0004953c00 to 00000000ffe78000
-[   26.066639] iwlwifi 0000:02:00.0: Mapped ffffea0004990980 to 00000000ffe76000
-[   26.066645] iwlwifi 0000:02:00.0: Mapped ffffea0004931580 to 00000000ffe74000
-[   26.066653] iwlwifi 0000:02:00.0: Mapped ffffea000495f500 to 00000000ffe72000
-[   26.066658] iwlwifi 0000:02:00.0: Mapped ffffea0004931c00 to 00000000ffe70000
-[   26.066662] iwlwifi 0000:02:00.0: Mapped ffffea00049e5c00 to 00000000ffe6e000
-[   26.066667] iwlwifi 0000:02:00.0: Mapped ffffea0004a10800 to 00000000ffe6c000
-[   26.066672] iwlwifi 0000:02:00.0: Mapped ffffea0004991000 to 00000000ffe6a000
-[   26.066682] iwlwifi 0000:02:00.0: Mapped ffffea0004991700 to 00000000ffe68000
-[   26.066686] iwlwifi 0000:02:00.0: Mapped ffffea0004995580 to 00000000ffe66000
-[   26.066691] iwlwifi 0000:02:00.0: Mapped ffffea0004994f00 to 00000000ffe64000
-[   26.066698] iwlwifi 0000:02:00.0: Mapped ffffea00049eac00 to 00000000ffe62000
-[   26.066706] iwlwifi 0000:02:00.0: Mapped ffffea00049eb400 to 00000000ffe60000
-[   26.066710] iwlwifi 0000:02:00.0: Mapped ffffea00049eb480 to 00000000ffe5e000
-[   26.066715] iwlwifi 0000:02:00.0: Mapped ffffea0004930600 to 00000000ffe5c000
-[   26.066721] iwlwifi 0000:02:00.0: Mapped ffffea0004930680 to 00000000ffe5a000
-[   26.066728] iwlwifi 0000:02:00.0: Mapped ffffea000495fc00 to 00000000ffe58000
-[   26.066733] iwlwifi 0000:02:00.0: Mapped ffffea000495fc80 to 00000000ffe56000
-[   26.066737] iwlwifi 0000:02:00.0: Mapped ffffea000495eb00 to 00000000ffe54000
-[   26.066742] iwlwifi 0000:02:00.0: Mapped ffffea000495eb80 to 00000000ffe52000
-[   26.066748] iwlwifi 0000:02:00.0: Mapped ffffea0004a55e00 to 00000000ffe50000
-[   26.066756] iwlwifi 0000:02:00.0: Mapped ffffea0004a55e80 to 00000000ffe4e000
-[   26.066760] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa00 to 00000000ffe4c000
-[   26.066766] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa80 to 00000000ffe4a000
-[   26.066770] iwlwifi 0000:02:00.0: Mapped ffffea00049e3500 to 00000000ffe48000
-[   26.066779] iwlwifi 0000:02:00.0: Mapped ffffea00049e3580 to 00000000ffe46000
-[   26.066784] iwlwifi 0000:02:00.0: Mapped ffffea0004991200 to 00000000ffe44000
-[   26.066789] iwlwifi 0000:02:00.0: Mapped ffffea0004991280 to 00000000ffe42000
-[   26.066794] iwlwifi 0000:02:00.0: Mapped ffffea0004991400 to 00000000ffe40000
-[   26.066802] iwlwifi 0000:02:00.0: Mapped ffffea0004991480 to 00000000ffe3e000
-[   26.066807] iwlwifi 0000:02:00.0: Mapped ffffea0004991800 to 00000000ffe3c000
-[   26.066816] iwlwifi 0000:02:00.0: Mapped ffffea0004991880 to 00000000ffe3a000
-[   26.066820] iwlwifi 0000:02:00.0: Mapped ffffea00049e8700 to 00000000ffe38000
-[   26.066829] iwlwifi 0000:02:00.0: Mapped ffffea00049e8780 to 00000000ffe36000
-[   26.066835] iwlwifi 0000:02:00.0: Mapped ffffea00049ead00 to 00000000ffe34000
-[   26.066840] iwlwifi 0000:02:00.0: Mapped ffffea00049ead80 to 00000000ffe32000
-[   26.066846] iwlwifi 0000:02:00.0: Mapped ffffea0004994e00 to 00000000ffe30000
-[   26.066853] iwlwifi 0000:02:00.0: Mapped ffffea0004994e80 to 00000000ffe2e000
-[   26.066858] iwlwifi 0000:02:00.0: Mapped ffffea00049ec500 to 00000000ffe2c000
-[   26.066863] iwlwifi 0000:02:00.0: Mapped ffffea00049ec580 to 00000000ffe2a000
-[   26.066870] iwlwifi 0000:02:00.0: Mapped ffffea00049eb200 to 00000000ffe28000
-[   26.066875] iwlwifi 0000:02:00.0: Mapped ffffea00049eb280 to 00000000ffe26000
-[   26.066880] iwlwifi 0000:02:00.0: Mapped ffffea0004995300 to 00000000ffe24000
-[   26.066884] iwlwifi 0000:02:00.0: Mapped ffffea0004995380 to 00000000ffe22000
-[   26.066892] iwlwifi 0000:02:00.0: Mapped ffffea00049ec800 to 00000000ffe20000
-[   26.066898] iwlwifi 0000:02:00.0: Mapped ffffea00049ec880 to 00000000ffe1e000
-[   26.066905] iwlwifi 0000:02:00.0: Mapped ffffea0004990f00 to 00000000ffe1c000
-[   26.066911] iwlwifi 0000:02:00.0: Mapped ffffea0004990f80 to 00000000ffe1a000
-[   26.066915] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fd00 to 00000000ffe18000
-[   26.066925] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fd80 to 00000000ffe16000
-[   26.066930] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fb00 to 00000000ffe14000
-[   26.066935] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fb80 to 00000000ffe12000
-[   26.066944] iwlwifi 0000:02:00.0: Mapped ffffea0004992b00 to 00000000ffe10000
-[   26.066948] iwlwifi 0000:02:00.0: Mapped ffffea0004992b80 to 00000000ffe0e000
-[   26.066953] iwlwifi 0000:02:00.0: Mapped ffffea0004991c00 to 00000000ffe0c000
-[   26.066963] iwlwifi 0000:02:00.0: Mapped ffffea0004991c80 to 00000000ffe0a000
-[   26.066968] iwlwifi 0000:02:00.0: Mapped ffffea0004992100 to 00000000ffe08000
-[   26.066972] iwlwifi 0000:02:00.0: Mapped ffffea0004992180 to 00000000ffe06000
-[   26.066980] iwlwifi 0000:02:00.0: Mapped ffffea0004991e00 to 00000000ffe04000
-[   26.066987] iwlwifi 0000:02:00.0: Mapped ffffea0004991e80 to 00000000ffe02000
-[   26.066992] iwlwifi 0000:02:00.0: Mapped ffffea0004991a00 to 00000000ffe00000
-[   26.067002] iwlwifi 0000:02:00.0: Mapped ffffea0004991a80 to 00000000ffdfe000
-[   26.067007] iwlwifi 0000:02:00.0: Mapped ffffea0004990c00 to 00000000ffdfc000
-[   26.067014] iwlwifi 0000:02:00.0: Mapped ffffea0004990c80 to 00000000ffdfa000
-[   26.067019] iwlwifi 0000:02:00.0: Mapped ffffea0004991100 to 00000000ffdf8000
-[   26.067024] iwlwifi 0000:02:00.0: Mapped ffffea0004991180 to 00000000ffdf6000
-[   26.067033] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e00 to 00000000ffdf4000
-[   26.067039] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e80 to 00000000ffdf2000
-[   26.067043] iwlwifi 0000:02:00.0: Mapped ffffea00049e9600 to 00000000ffdf0000
-[   26.067051] iwlwifi 0000:02:00.0: Mapped ffffea00049e9680 to 00000000ffdee000
-[   26.067057] iwlwifi 0000:02:00.0: Mapped ffffea00049ea200 to 00000000ffdec000
-[   26.067062] iwlwifi 0000:02:00.0: Mapped ffffea00049ea280 to 00000000ffdea000
-[   26.067071] iwlwifi 0000:02:00.0: Mapped ffffea00049e9100 to 00000000ffde8000
-[   26.067077] iwlwifi 0000:02:00.0: Mapped ffffea00049e9180 to 00000000ffde6000
-[   26.067085] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d400 to 00000000ffde4000
-[   26.067090] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d480 to 00000000ffde2000
-[   26.067094] iwlwifi 0000:02:00.0: Mapped ffffea00049eaf00 to 00000000ffde0000
-[   26.067099] iwlwifi 0000:02:00.0: Mapped ffffea00049eaf80 to 00000000ffdde000
-[   26.067107] iwlwifi 0000:02:00.0: Mapped ffffea0004a1eb00 to 00000000ffddc000
-[   26.067112] iwlwifi 0000:02:00.0: Mapped ffffea0004a1eb80 to 00000000ffdda000
-[   26.067117] iwlwifi 0000:02:00.0: Mapped ffffea0004991600 to 00000000ffdd8000
-[   26.067121] iwlwifi 0000:02:00.0: Mapped ffffea0004991680 to 00000000ffdd6000
-[   26.067126] iwlwifi 0000:02:00.0: Mapped ffffea0004993000 to 00000000ffdd4000
-[   26.067134] iwlwifi 0000:02:00.0: Mapped ffffea0004993080 to 00000000ffdd2000
-[   26.067138] iwlwifi 0000:02:00.0: Mapped ffffea0004990700 to 00000000ffdd0000
-[   26.067143] iwlwifi 0000:02:00.0: Mapped ffffea0004990780 to 00000000ffdce000
-[   26.067148] iwlwifi 0000:02:00.0: Mapped ffffea0004993700 to 00000000ffdcc000
-[   26.067154] iwlwifi 0000:02:00.0: Mapped ffffea0004993780 to 00000000ffdca000
-[   26.067159] iwlwifi 0000:02:00.0: Mapped ffffea0004a56500 to 00000000ffdc8000
-[   26.067168] iwlwifi 0000:02:00.0: Mapped ffffea0004a56580 to 00000000ffdae000
-[   26.067173] iwlwifi 0000:02:00.0: Mapped ffffea00049ed300 to 00000000ffdac000
-[   26.067179] iwlwifi 0000:02:00.0: Mapped ffffea00049ed380 to 00000000ffdaa000
-[   26.067184] iwlwifi 0000:02:00.0: Mapped ffffea0004a10900 to 00000000ffda8000
-[   26.067190] iwlwifi 0000:02:00.0: Mapped ffffea0004a10980 to 00000000ffda6000
-[   26.067195] iwlwifi 0000:02:00.0: Mapped ffffea00049e8f00 to 00000000ffda4000
-[   26.067201] iwlwifi 0000:02:00.0: Mapped ffffea00049e8f80 to 00000000ffda0000
-[   26.067209] iwlwifi 0000:02:00.0: Mapped ffffea00049e7d00 to 00000000ffd9a000
-[   26.067214] iwlwifi 0000:02:00.0: Mapped ffffea00049e7d80 to 00000000ffd98000
-[   26.067220] iwlwifi 0000:02:00.0: Mapped ffffea0004a10a00 to 00000000ffd96000
-[   26.067225] iwlwifi 0000:02:00.0: Mapped ffffea0004a10a80 to 00000000ffd94000
-[   26.067231] iwlwifi 0000:02:00.0: Mapped ffffea00049e5800 to 00000000ffd92000
-[   26.067236] iwlwifi 0000:02:00.0: Mapped ffffea00049e5880 to 00000000ffd90000
-[   26.067241] iwlwifi 0000:02:00.0: Mapped ffffea00049ed100 to 00000000ffd8e000
-[   26.067246] iwlwifi 0000:02:00.0: Mapped ffffea00049ed180 to 00000000ffd8c000
-[   26.067251] iwlwifi 0000:02:00.0: Mapped ffffea00049e9a00 to 00000000ffd8a000
-[   26.067256] iwlwifi 0000:02:00.0: Mapped ffffea00049e9a80 to 00000000ffd88000
-[   26.067262] iwlwifi 0000:02:00.0: Mapped ffffea0004a57800 to 00000000ffd86000
-[   26.067266] iwlwifi 0000:02:00.0: Mapped ffffea0004a57880 to 00000000ffd84000
-[   26.067273] iwlwifi 0000:02:00.0: Mapped ffffea00049e3b00 to 00000000ffd82000
-[   26.067278] iwlwifi 0000:02:00.0: Mapped ffffea00049e3b80 to 00000000ffd80000
-[   26.067283] iwlwifi 0000:02:00.0: Mapped ffffea00049e4e00 to 00000000ffd7e000
-[   26.067288] iwlwifi 0000:02:00.0: Mapped ffffea00049e4e80 to 00000000ffd7c000
-[   26.067293] iwlwifi 0000:02:00.0: Mapped ffffea0004a56b00 to 00000000ffd7a000
-[   26.067298] iwlwifi 0000:02:00.0: Mapped ffffea0004a56b80 to 00000000ffd78000
-[   26.067303] iwlwifi 0000:02:00.0: Mapped ffffea0004990500 to 00000000ffd76000
-[   26.067309] iwlwifi 0000:02:00.0: Mapped ffffea0004990580 to 00000000ffd74000
-[   26.067318] iwlwifi 0000:02:00.0: Mapped ffffea00049eb800 to 00000000ffd72000
-[   26.067323] iwlwifi 0000:02:00.0: Mapped ffffea00049eb880 to 00000000ffd70000
-[   26.067329] iwlwifi 0000:02:00.0: Mapped ffffea00049e5d00 to 00000000ffd6e000
-[   26.067333] iwlwifi 0000:02:00.0: Mapped ffffea00049e5d80 to 00000000ffd6c000
-[   26.067338] iwlwifi 0000:02:00.0: Mapped ffffea00049e7000 to 00000000ffd6a000
-[   26.067343] iwlwifi 0000:02:00.0: Mapped ffffea00049e7080 to 00000000ffd68000
-[   26.067349] iwlwifi 0000:02:00.0: Mapped ffffea0004933400 to 00000000ffd66000
-[   26.067355] iwlwifi 0000:02:00.0: Mapped ffffea0004933480 to 00000000ffd64000
-[   26.067360] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ca00 to 00000000ffd62000
-[   26.067365] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ca80 to 00000000ffd60000
-[   26.067376] iwlwifi 0000:02:00.0: Mapped ffffea00049e9e00 to 00000000ffd5e000
-[   26.067381] iwlwifi 0000:02:00.0: Mapped ffffea00049e9e80 to 00000000ffd5c000
-[   26.067386] iwlwifi 0000:02:00.0: Mapped ffffea0004933700 to 00000000ffd5a000
-[   26.067392] iwlwifi 0000:02:00.0: Mapped ffffea0004933780 to 00000000ffd58000
-[   26.067397] iwlwifi 0000:02:00.0: Mapped ffffea0004993200 to 00000000ffd56000
-[   26.067402] iwlwifi 0000:02:00.0: Mapped ffffea0004993280 to 00000000ffd54000
-[   26.067408] iwlwifi 0000:02:00.0: Mapped ffffea0004933000 to 00000000ffd1e000
-[   26.067414] iwlwifi 0000:02:00.0: Mapped ffffea0004933080 to 00000000ffd1c000
-[   26.067421] iwlwifi 0000:02:00.0: Mapped ffffea0004931d00 to 00000000ffd1a000
-[   26.067426] iwlwifi 0000:02:00.0: Mapped ffffea0004931d80 to 00000000ffd18000
-[   26.067433] iwlwifi 0000:02:00.0: Mapped ffffea0004933900 to 00000000ffd16000
-[   26.067440] iwlwifi 0000:02:00.0: Mapped ffffea0004933980 to 00000000ffd14000
-[   26.067446] iwlwifi 0000:02:00.0: Mapped ffffea00049e6d00 to 00000000ffd12000
-[   26.067451] iwlwifi 0000:02:00.0: Mapped ffffea00049e6d80 to 00000000ffd10000
-[   26.067460] iwlwifi 0000:02:00.0: Mapped ffffea0004931200 to 00000000ffd0e000
-[   26.067468] iwlwifi 0000:02:00.0: Mapped ffffea0004931280 to 00000000ffd0c000
-[   26.067474] iwlwifi 0000:02:00.0: Mapped ffffea0004993c00 to 00000000ffd0a000
-[   26.067479] iwlwifi 0000:02:00.0: Mapped ffffea0004993c80 to 00000000ffd08000
-[   26.067487] iwlwifi 0000:02:00.0: Mapped ffffea00049eb600 to 00000000ffd06000
-[   26.067497] iwlwifi 0000:02:00.0: Mapped ffffea00049eb680 to 00000000ffd04000
-[   26.067504] iwlwifi 0000:02:00.0: Mapped ffffea00049eb700 to 00000000ffd02000
-[   26.067513] iwlwifi 0000:02:00.0: Mapped ffffea00049eb780 to 00000000ffd00000
-[   26.067518] iwlwifi 0000:02:00.0: Mapped ffffea0004934400 to 00000000ffcfe000
-[   26.067523] iwlwifi 0000:02:00.0: Mapped ffffea0004934480 to 00000000ffcfc000
-[   26.067532] iwlwifi 0000:02:00.0: Mapped ffffea0004934500 to 00000000ffcfa000
-[   26.067537] iwlwifi 0000:02:00.0: Mapped ffffea0004934580 to 00000000ffcf8000
-[   26.067543] iwlwifi 0000:02:00.0: Mapped ffffea00049e9400 to 00000000ffcf6000
-[   26.067548] iwlwifi 0000:02:00.0: Mapped ffffea00049e9480 to 00000000ffcf4000
-[   26.067559] iwlwifi 0000:02:00.0: Mapped ffffea00049e9500 to 00000000ffcf2000
-[   26.067570] iwlwifi 0000:02:00.0: Mapped ffffea00049e9580 to 00000000ffcf0000
-[   26.067582] iwlwifi 0000:02:00.0: Mapped ffffea00049ebe00 to 00000000ffcee000
-[   26.067592] iwlwifi 0000:02:00.0: Mapped ffffea00049ebe80 to 00000000ffcec000
-[   26.067598] iwlwifi 0000:02:00.0: Mapped ffffea00049ebf00 to 00000000ffcea000
-[   26.067604] iwlwifi 0000:02:00.0: Mapped ffffea00049ebf80 to 00000000ffce8000
-[   26.067610] iwlwifi 0000:02:00.0: Mapped ffffea00049e9c00 to 00000000ffce6000
-[   26.067621] iwlwifi 0000:02:00.0: Mapped ffffea00049e9c80 to 00000000ffce4000
-[   26.067629] iwlwifi 0000:02:00.0: Mapped ffffea00049e9d00 to 00000000ffce2000
-[   26.067635] iwlwifi 0000:02:00.0: Mapped ffffea00049e9d80 to 00000000ffce0000
-[   26.067641] iwlwifi 0000:02:00.0: Mapped ffffea0004933e00 to 00000000ffcde000
-[   26.067647] iwlwifi 0000:02:00.0: Mapped ffffea0004933e80 to 00000000ffcdc000
-[   26.067652] iwlwifi 0000:02:00.0: Mapped ffffea0004933f00 to 00000000ffcd4000
-[   26.067657] iwlwifi 0000:02:00.0: Mapped ffffea0004933f80 to 00000000ffcd2000
-[   26.067662] iwlwifi 0000:02:00.0: Mapped ffffea0004938200 to 00000000ffcd0000
-[   26.067668] iwlwifi 0000:02:00.0: Mapped ffffea0004938280 to 00000000ffc2e000
-[   26.067672] iwlwifi 0000:02:00.0: Mapped ffffea0004938300 to 00000000ffc2c000
-[   26.067677] iwlwifi 0000:02:00.0: Mapped ffffea0004938380 to 00000000ffc2a000
-[   26.067682] iwlwifi 0000:02:00.0: Mapped ffffea0004993e00 to 00000000ffc28000
-[   26.067687] iwlwifi 0000:02:00.0: Mapped ffffea0004993e80 to 00000000ffc26000
-[   26.067692] iwlwifi 0000:02:00.0: Mapped ffffea0004993f00 to 00000000ffc24000
-[   26.067698] iwlwifi 0000:02:00.0: Mapped ffffea0004993f80 to 00000000ffc22000
-[   26.067703] iwlwifi 0000:02:00.0: Mapped ffffea0004995600 to 00000000ffc20000
-[   26.067708] iwlwifi 0000:02:00.0: Mapped ffffea0004995680 to 00000000ffc1e000
-[   26.067713] iwlwifi 0000:02:00.0: Mapped ffffea0004995700 to 00000000ffc1c000
-[   26.067718] iwlwifi 0000:02:00.0: Mapped ffffea0004995780 to 00000000ffc1a000
-[   26.067723] iwlwifi 0000:02:00.0: Mapped ffffea00049e6000 to 00000000ffc18000
-[   26.067727] iwlwifi 0000:02:00.0: Mapped ffffea00049e6080 to 00000000ffc16000
-[   26.067732] iwlwifi 0000:02:00.0: Mapped ffffea00049e6100 to 00000000ffc14000
-[   26.067737] iwlwifi 0000:02:00.0: Mapped ffffea00049e6180 to 00000000ffc12000
-[   26.067742] iwlwifi 0000:02:00.0: Mapped ffffea00049e6200 to 00000000ffc10000
-[   26.067747] iwlwifi 0000:02:00.0: Mapped ffffea00049e6280 to 00000000ffc0e000
-[   26.067751] iwlwifi 0000:02:00.0: Mapped ffffea00049e6300 to 00000000ffc0c000
-[   26.067756] iwlwifi 0000:02:00.0: Mapped ffffea00049e6380 to 00000000ffc0a000
-[   26.067761] iwlwifi 0000:02:00.0: Mapped ffffea0004934000 to 00000000ffc08000
-[   26.067765] iwlwifi 0000:02:00.0: Mapped ffffea0004934080 to 00000000ffc06000
-[   26.067770] iwlwifi 0000:02:00.0: Mapped ffffea0004934100 to 00000000ffc04000
-[   26.067776] iwlwifi 0000:02:00.0: Mapped ffffea0004934180 to 00000000ffc02000
-[   26.067781] iwlwifi 0000:02:00.0: Mapped ffffea0004934200 to 00000000ffc00000
-[   26.067786] iwlwifi 0000:02:00.0: Mapped ffffea0004934280 to 00000000ffbfe000
-[   26.067792] iwlwifi 0000:02:00.0: Mapped ffffea0004934300 to 00000000ffbfc000
-[   26.067796] iwlwifi 0000:02:00.0: Mapped ffffea0004934380 to 00000000ffbfa000
-[   26.067801] iwlwifi 0000:02:00.0: Mapped ffffea0004938400 to 00000000ffbf8000
-[   26.067806] iwlwifi 0000:02:00.0: Mapped ffffea0004938480 to 00000000ffbf6000
-[   26.067815] iwlwifi 0000:02:00.0: Mapped ffffea0004938500 to 00000000ffbf4000
-[   26.067820] iwlwifi 0000:02:00.0: Mapped ffffea0004938580 to 00000000ffbf2000
-[   26.067825] iwlwifi 0000:02:00.0: Mapped ffffea0004938600 to 00000000ffbf0000
-[   26.067830] iwlwifi 0000:02:00.0: Mapped ffffea0004938680 to 00000000ffbee000
-[   26.067838] iwlwifi 0000:02:00.0: Mapped ffffea0004938700 to 00000000ffbec000
-[   26.067843] iwlwifi 0000:02:00.0: Mapped ffffea0004938780 to 00000000ffbea000
-[   26.067848] iwlwifi 0000:02:00.0: Mapped ffffea0004938800 to 00000000ffbe8000
-[   26.067854] iwlwifi 0000:02:00.0: Mapped ffffea0004938880 to 00000000ffbe6000
-[   26.067859] iwlwifi 0000:02:00.0: Mapped ffffea0004938900 to 00000000ffbe4000
-[   26.535400] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command COEX_PRIORITY_TABLE_CMD
-[   26.536081] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[   26.536882] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[   26.537625] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.538403] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.539284] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.540054] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.540831] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.541705] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.542536] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.543359] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.544286] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.545130] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.545985] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.546972] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.547863] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.548755] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.549839] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.550794] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.551725] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.552798] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.553765] iwlwifi 0000:02:00.0: U iwl_alive_start Runtime Alive received.
-[   26.554737] iwlwifi 0000:02:00.0: U iwl_send_bt_config BT coex active
-[   26.555723] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_BT_CONFIG
-[   26.556720] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_BT_CONFIG
-[   26.556830] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_BT_CONFIG
-[   26.556842] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command CALIBRATION_CFG_CMD
-[   26.556844] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command CALIBRATION_CFG_CMD
-[   26.556965] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command CALIBRATION_CFG_CMD
-[   26.556982] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command TX_ANT_CONFIGURATION_CMD
-[   26.556984] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-[   26.584137] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-[   26.585260] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.586364] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   26.587580] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   26.587581]   * without RXON_FILTER_ASSOC_MSK
-[   26.587582]   * channel = 1
-[   26.587583]   * bssid = 00:00:00:00:00:00
-[   26.592035] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   26.593247] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   26.595621] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   26.596840] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   26.598037] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations No active stations found to be cleared
-[   26.599274] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   26.599279] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   26.599283] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   26.599287] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   26.599290] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.612368] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   26.613648] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   26.614905] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   26.616187] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   26.617477] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:00:ff
-[   26.618783] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.620113] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   26.621467] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   26.622878] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.623514] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.623525] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   26.623528] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   26.623531] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_CT_KILL_CONFIG_CMD
-[   26.623533] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_CT_KILL_CONFIG_CMD
-[   26.623633] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_CT_KILL_CONFIG_CMD
-[   26.623645] iwlwifi 0000:02:00.0: U iwl_rf_kill_ct_config REPLY_CT_KILL_CONFIG_CMD succeeded, critical temperature enter is 114,exit is 95
-[   26.623647] iwlwifi 0000:02:00.0: U iwl_alive_start ALIVE processing complete.
-[   26.623651] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command POWER_TABLE_CMD
-[   26.623653] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command POWER_TABLE_CMD
-[   26.623744] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command POWER_TABLE_CMD
-[   26.623757] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.623759] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.623763] iwlwifi 0000:02:00.0: U iwlagn_mac_start Start UP work done.
-[   26.623770] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.623772] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   26.623775] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   26.623776]   * without RXON_FILTER_ASSOC_MSK
-[   26.623777]   * channel = 1
-[   26.623777]   * bssid = 00:00:00:00:00:00
-[   26.623779] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   26.623781] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   26.624094] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   26.624112] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   26.624116] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   26.624120] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   26.624123] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   26.624127] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   26.624129] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   26.624131] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.625399] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   26.625402] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   26.625404] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   26.625406] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   26.625408] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   26.625411] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.625422] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   26.625424] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   26.625426] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.626634] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.626647] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   26.626649] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   26.626655] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.626658] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   26.626660] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   26.626661]   * without RXON_FILTER_ASSOC_MSK
-[   26.626662]   * channel = 1
-[   26.626662]   * bssid = 00:00:00:00:00:00
-[   26.626664] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   26.626665] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   26.628225] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   26.628239] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   26.628242] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   26.628245] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   26.628247] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   26.628249] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   26.628251] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   26.628253] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.628356] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   26.628359] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   26.628361] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   26.628363] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   26.628365] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   26.628368] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.628379] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   26.628381] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   26.628383] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.629586] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.629601] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   26.629604] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   26.629610] iwlwifi 0000:02:00.0: U iwlagn_update_qos send QoS cmd with Qos active=0 FLAGS=0x0
-[   26.629612] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_QOS_PARAM
-[   26.629613] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_QOS_PARAM
-[   26.630755] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_QOS_PARAM
-[   26.630768] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.630773] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.630775] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.631085] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[   26.722706] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.722710] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   26.722713] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   26.722714]   * without RXON_FILTER_ASSOC_MSK
-[   26.722715]   * channel = 1
-[   26.722715]   * bssid = 00:00:00:00:00:00
-[   26.722718] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   26.722720] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   26.724239] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   26.724247] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   26.724254] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   26.724259] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   26.724262] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   26.724266] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   26.724269] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   26.724272] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.724377] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   26.724379] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   26.724381] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   26.724383] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   26.724386] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   26.724388] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.724396] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   26.724399] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   26.724402] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.727846] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.727861] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   26.727864] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   26.727886] iwlwifi 0000:02:00.0: U iwl_down iwlwifi is going down
-[   26.727891] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   26.727894] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   26.728264] iwlwifi 0000:02:00.0: U iwl_apm_stop Stop card, put in low power state
-[   26.728280] iwlwifi 0000:02:00.0: U iwl_apm_stop_master stop master
-[   26.728345] iwlwifi 0000:02:00.0: U iwl_apm_stop Stop card, put in low power state
-[   26.728360] iwlwifi 0000:02:00.0: U iwl_apm_stop_master stop master
-[   26.757928] iwlwifi 0000:02:00.0: I iwl_prep_station Add STA to driver ID 15: ff:ff:ff:ff:ff:ff
-[   26.757932] iwlwifi 0000:02:00.0: I iwl_prep_station Add STA to driver ID 14: ff:ff:ff:ff:ff:ff
-[   26.757935] iwlwifi 0000:02:00.0: U iwl_prepare_card_hw iwl_trans_prepare_card_hw enter
-[   26.757968] iwlwifi 0000:02:00.0: U iwl_set_hw_ready hardware ready
-[   26.757996] iwlwifi 0000:02:00.0: U iwl_apm_init Init card's basic functions
-[   26.758046] iwlwifi 0000:02:00.0: L1 Enabled; Disabling L0S
-[   26.764810] iwlwifi 0000:02:00.0: Radio type=0x1-0x2-0x0
-[   26.764816] iwlwifi 0000:02:00.0: Free 0 ffffea0004931e00 00000000ffdc6000
-[   26.764822] iwlwifi 0000:02:00.0: Free 1 ffffea0004930100 00000000fff5a000
-[   26.764825] iwlwifi 0000:02:00.0: Free 2 ffffea00049e2a80 00000000ffdc4000
-[   26.764827] iwlwifi 0000:02:00.0: Free 3 ffffea0004995a80 00000000ffdc0000
-[   26.764830] iwlwifi 0000:02:00.0: Free 4 ffffea0004995980 00000000ffdbc000
-[   26.764832] iwlwifi 0000:02:00.0: Free 5 ffffea0004995880 00000000fff56000
-[   26.764834] iwlwifi 0000:02:00.0: Free 6 ffffea0004995b80 00000000fff52000
-[   26.764836] iwlwifi 0000:02:00.0: Free 7 ffffea0004a5b100 00000000ffdbe000
-[   26.764839] iwlwifi 0000:02:00.0: Free 8 ffffea00049e8c00 00000000ffdb8000
-[   26.764841] iwlwifi 0000:02:00.0: Free 9 ffffea00049e5b00 00000000fff58000
-[   26.764843] iwlwifi 0000:02:00.0: Free 10 ffffea0004933100 00000000fff50000
-[   26.764845] iwlwifi 0000:02:00.0: Free 11 ffffea00049ec980 00000000fff54000
-[   26.764848] iwlwifi 0000:02:00.0: Free 12 ffffea0004994d00 00000000fff4c000
-[   26.764850] iwlwifi 0000:02:00.0: Free 13 ffffea0004995080 00000000fff4a000
-[   26.764852] iwlwifi 0000:02:00.0: Free 14 ffffea000495f100 00000000fff48000
-[   26.764854] iwlwifi 0000:02:00.0: 15 is NULL 00000000fff3c000
-[   26.764856] iwlwifi 0000:02:00.0: Free 16 ffffea0004a1ea00 00000000fff4e000
-[   26.764858] iwlwifi 0000:02:00.0: Free 17 ffffea0004a1d280 00000000fff44000
-[   26.764860] iwlwifi 0000:02:00.0: Free 18 ffffea0004a1ed80 00000000fff42000
-[   26.764863] iwlwifi 0000:02:00.0: Free 19 ffffea00049e2700 00000000fff3e000
-[   26.764865] iwlwifi 0000:02:00.0: Free 20 ffffea0004a1da00 00000000fff3a000
-[   26.764867] iwlwifi 0000:02:00.0: Free 21 ffffea0004992a80 00000000ffdba000
-[   26.764869] iwlwifi 0000:02:00.0: Free 22 ffffea0004992080 00000000ffdb6000
-[   26.764871] iwlwifi 0000:02:00.0: 23 is NULL 00000000fff2c000
-[   26.764873] iwlwifi 0000:02:00.0: Free 24 ffffea0004992d80 00000000ffdb2000
-[   26.764875] iwlwifi 0000:02:00.0: Free 25 ffffea0004992e00 00000000ffda2000
-[   26.764878] iwlwifi 0000:02:00.0: Free 26 ffffea0004991f80 00000000ffd9e000
-[   26.764880] iwlwifi 0000:02:00.0: 27 is NULL 00000000fff24000
-[   26.764881] iwlwifi 0000:02:00.0: Free 28 ffffea00049e8500 00000000ffd52000
-[   26.764884] iwlwifi 0000:02:00.0: Free 29 ffffea0004a1e580 00000000ffd4e000
-[   26.764886] iwlwifi 0000:02:00.0: Free 30 ffffea0004990880 00000000fff40000
-[   26.764888] iwlwifi 0000:02:00.0: Free 31 ffffea0004990080 00000000fff3c000
-[   26.764891] iwlwifi 0000:02:00.0: 32 is NULL 00000000fff1a000
-[   26.764892] iwlwifi 0000:02:00.0: Free 33 ffffea00049e0f80 00000000fff36000
-[   26.764895] iwlwifi 0000:02:00.0: Free 34 ffffea00049ef400 00000000fff16000
-[   26.764897] iwlwifi 0000:02:00.0: Free 35 ffffea0004a1f300 00000000fff14000
-[   26.764899] iwlwifi 0000:02:00.0: Free 36 ffffea00049e5100 00000000fff12000
-[   26.764901] iwlwifi 0000:02:00.0: Free 37 ffffea0004a1fe00 00000000fff10000
-[   26.764904] iwlwifi 0000:02:00.0: Free 38 ffffea00049e1b00 00000000fff0e000
-[   26.764907] iwlwifi 0000:02:00.0: Free 39 ffffea00049e4980 00000000fff0c000
-[   26.764910] iwlwifi 0000:02:00.0: Free 40 ffffea0004a1c600 00000000fff0a000
-[   26.764912] iwlwifi 0000:02:00.0: Free 41 ffffea0004990600 00000000fff08000
-[   26.764915] iwlwifi 0000:02:00.0: Free 42 ffffea0004990a80 00000000fff06000
-[   26.764917] iwlwifi 0000:02:00.0: Free 43 ffffea00049ed280 00000000fff04000
-[   26.764919] iwlwifi 0000:02:00.0: Free 44 ffffea0004990d00 00000000fff02000
-[   26.764921] iwlwifi 0000:02:00.0: Free 45 ffffea00049e9f80 00000000fff00000
-[   26.764923] iwlwifi 0000:02:00.0: Free 46 ffffea0004991500 00000000ffefe000
-[   26.764926] iwlwifi 0000:02:00.0: Free 47 ffffea00049ea000 00000000ffefc000
-[   26.764928] iwlwifi 0000:02:00.0: Free 48 ffffea0004990480 00000000ffefa000
-[   26.764930] iwlwifi 0000:02:00.0: Free 49 ffffea00049ef900 00000000ffef8000
-[   26.764932] iwlwifi 0000:02:00.0: Free 50 ffffea00049e8680 00000000ffef6000
-[   26.764935] iwlwifi 0000:02:00.0: Free 51 ffffea0004a1c080 00000000ffef4000
-[   26.764937] iwlwifi 0000:02:00.0: Free 52 ffffea0004993980 00000000ffef2000
-[   26.764939] iwlwifi 0000:02:00.0: Free 53 ffffea0004994180 00000000ffef0000
-[   26.764941] iwlwifi 0000:02:00.0: Free 54 ffffea0004994400 00000000ffeee000
-[   26.764943] iwlwifi 0000:02:00.0: Free 55 ffffea0004a1c900 00000000ffeec000
-[   26.764945] iwlwifi 0000:02:00.0: Free 56 ffffea00049e4f80 00000000ffeea000
-[   26.764948] iwlwifi 0000:02:00.0: Free 57 ffffea0004a19c80 00000000ffee8000
-[   26.764950] iwlwifi 0000:02:00.0: Free 58 ffffea00049ed580 00000000ffee6000
-[   26.764952] iwlwifi 0000:02:00.0: Free 59 ffffea00049ec280 00000000ffee4000
-[   26.764954] iwlwifi 0000:02:00.0: Free 60 ffffea00049ecc80 00000000ffee2000
-[   26.764956] iwlwifi 0000:02:00.0: Free 61 ffffea00049e2200 00000000ffee0000
-[   26.764959] iwlwifi 0000:02:00.0: Free 62 ffffea00049e7e80 00000000ffede000
-[   26.764961] iwlwifi 0000:02:00.0: Free 63 ffffea00049ec300 00000000ffedc000
-[   26.764963] iwlwifi 0000:02:00.0: Free 64 ffffea00049e4b00 00000000ffeda000
-[   26.764965] iwlwifi 0000:02:00.0: Free 65 ffffea0004993880 00000000ffed8000
-[   26.764967] iwlwifi 0000:02:00.0: Free 66 ffffea0004a1d380 00000000ffed6000
-[   26.764969] iwlwifi 0000:02:00.0: Free 67 ffffea00049e3f80 00000000ffed4000
-[   26.764972] iwlwifi 0000:02:00.0: Free 68 ffffea00049e2e00 00000000ffed2000
-[   26.764974] iwlwifi 0000:02:00.0: Free 69 ffffea0004995280 00000000ffed0000
-[   26.764976] iwlwifi 0000:02:00.0: Free 70 ffffea0004a1db00 00000000ffece000
-[   26.764978] iwlwifi 0000:02:00.0: Free 71 ffffea00049ecd00 00000000ffecc000
-[   26.764981] iwlwifi 0000:02:00.0: Free 72 ffffea00049ea300 00000000ffeca000
-[   26.764983] iwlwifi 0000:02:00.0: Free 73 ffffea0004a10b00 00000000ffec8000
-[   26.764985] iwlwifi 0000:02:00.0: Free 74 ffffea00049e7f00 00000000ffec6000
-[   26.764987] iwlwifi 0000:02:00.0: Free 75 ffffea0004993b00 00000000ffec4000
-[   26.764989] iwlwifi 0000:02:00.0: Free 76 ffffea0004994000 00000000ffec2000
-[   26.764992] iwlwifi 0000:02:00.0: Free 77 ffffea0004993100 00000000ffec0000
-[   26.764994] iwlwifi 0000:02:00.0: Free 78 ffffea00049e9080 00000000ffebe000
-[   26.764996] iwlwifi 0000:02:00.0: Free 79 ffffea00049e7280 00000000ffebc000
-[   26.764998] iwlwifi 0000:02:00.0: Free 80 ffffea0004991380 00000000ffeba000
-[   26.765001] iwlwifi 0000:02:00.0: Free 81 ffffea00049e1f00 00000000ffeb8000
-[   26.765003] iwlwifi 0000:02:00.0: Free 82 ffffea0004990b00 00000000ffeb6000
-[   26.765005] iwlwifi 0000:02:00.0: Free 83 ffffea00049ea980 00000000ffeb4000
-[   26.765007] iwlwifi 0000:02:00.0: Free 84 ffffea0004a1dd80 00000000ffeb2000
-[   26.765009] iwlwifi 0000:02:00.0: Free 85 ffffea0004995c00 00000000ffeb0000
-[   26.765011] iwlwifi 0000:02:00.0: Free 86 ffffea0004a1a700 00000000ffeae000
-[   26.765014] iwlwifi 0000:02:00.0: Free 87 ffffea0004931b80 00000000ffeac000
-[   26.765016] iwlwifi 0000:02:00.0: Free 88 ffffea000495f700 00000000ffeaa000
-[   26.765018] iwlwifi 0000:02:00.0: Free 89 ffffea00049e5500 00000000ffea8000
-[   26.765020] iwlwifi 0000:02:00.0: Free 90 ffffea00049e2c80 00000000ffea6000
-[   26.765022] iwlwifi 0000:02:00.0: Free 91 ffffea00049e5480 00000000ffea4000
-[   26.765025] iwlwifi 0000:02:00.0: Free 92 ffffea00049e8900 00000000ffea2000
-[   26.765027] iwlwifi 0000:02:00.0: Free 93 ffffea00049e0880 00000000ffea0000
-[   26.765029] iwlwifi 0000:02:00.0: Free 94 ffffea0004992f00 00000000ffe9e000
-[   26.765031] iwlwifi 0000:02:00.0: Free 95 ffffea0004a1b180 00000000ffe9c000
-[   26.765033] iwlwifi 0000:02:00.0: Free 96 ffffea0004a19d80 00000000ffe9a000
-[   26.765035] iwlwifi 0000:02:00.0: Free 97 ffffea0004a1b700 00000000ffe98000
-[   26.765037] iwlwifi 0000:02:00.0: Free 98 ffffea00049eae80 00000000ffe96000
-[   26.765040] iwlwifi 0000:02:00.0: Free 99 ffffea00049eb180 00000000ffe94000
-[   26.765042] iwlwifi 0000:02:00.0: Free 100 ffffea00049e1880 00000000ffe92000
-[   26.765044] iwlwifi 0000:02:00.0: Free 101 ffffea000495f000 00000000ffe90000
-[   26.765046] iwlwifi 0000:02:00.0: Free 102 ffffea0004932680 00000000ffe8e000
-[   26.765048] iwlwifi 0000:02:00.0: Free 103 ffffea0004954680 00000000ffe8c000
-[   26.765051] iwlwifi 0000:02:00.0: Free 104 ffffea0004954180 00000000ffe8a000
-[   26.765053] iwlwifi 0000:02:00.0: Free 105 ffffea0004998600 00000000ffe88000
-[   26.765055] iwlwifi 0000:02:00.0: Free 106 ffffea0004953200 00000000ffe86000
-[   26.765057] iwlwifi 0000:02:00.0: Free 107 ffffea000495fa80 00000000ffe84000
-[   26.765059] iwlwifi 0000:02:00.0: Free 108 ffffea0004997300 00000000ffe82000
-[   26.765062] iwlwifi 0000:02:00.0: Free 109 ffffea00049e7700 00000000ffe80000
-[   26.765064] iwlwifi 0000:02:00.0: Free 110 ffffea000495f800 00000000ffe7e000
-[   26.765066] iwlwifi 0000:02:00.0: Free 111 ffffea0004933200 00000000ffe7c000
-[   26.765068] iwlwifi 0000:02:00.0: Free 112 ffffea0004931180 00000000ffe7a000
-[   26.765070] iwlwifi 0000:02:00.0: Free 113 ffffea0004953c00 00000000ffe78000
-[   26.765072] iwlwifi 0000:02:00.0: Free 114 ffffea0004990980 00000000ffe76000
-[   26.765074] iwlwifi 0000:02:00.0: Free 115 ffffea0004931580 00000000ffe74000
-[   26.765076] iwlwifi 0000:02:00.0: Free 116 ffffea000495f500 00000000ffe72000
-[   26.765079] iwlwifi 0000:02:00.0: Free 117 ffffea0004931c00 00000000ffe70000
-[   26.765081] iwlwifi 0000:02:00.0: Free 118 ffffea00049e5c00 00000000ffe6e000
-[   26.765083] iwlwifi 0000:02:00.0: Free 119 ffffea0004a10800 00000000ffe6c000
-[   26.765085] iwlwifi 0000:02:00.0: Free 120 ffffea0004991000 00000000ffe6a000
-[   26.765087] iwlwifi 0000:02:00.0: Free 121 ffffea0004991700 00000000ffe68000
-[   26.765089] iwlwifi 0000:02:00.0: Free 122 ffffea0004995580 00000000ffe66000
-[   26.765092] iwlwifi 0000:02:00.0: Free 123 ffffea0004994f00 00000000ffe64000
-[   26.765094] iwlwifi 0000:02:00.0: Free 124 ffffea00049eac00 00000000ffe62000
-[   26.765096] iwlwifi 0000:02:00.0: Free 125 ffffea00049eb400 00000000ffe60000
-[   26.765098] iwlwifi 0000:02:00.0: Free 126 ffffea00049eb480 00000000ffe5e000
-[   26.765101] iwlwifi 0000:02:00.0: Free 127 ffffea0004930600 00000000ffe5c000
-[   26.765103] iwlwifi 0000:02:00.0: Free 128 ffffea0004930680 00000000ffe5a000
-[   26.765105] iwlwifi 0000:02:00.0: Free 129 ffffea000495fc00 00000000ffe58000
-[   26.765107] iwlwifi 0000:02:00.0: Free 130 ffffea000495fc80 00000000ffe56000
-[   26.765109] iwlwifi 0000:02:00.0: Free 131 ffffea000495eb00 00000000ffe54000
-[   26.765111] iwlwifi 0000:02:00.0: Free 132 ffffea000495eb80 00000000ffe52000
-[   26.765114] iwlwifi 0000:02:00.0: Free 133 ffffea0004a55e00 00000000ffe50000
-[   26.765116] iwlwifi 0000:02:00.0: Free 134 ffffea0004a55e80 00000000ffe4e000
-[   26.765118] iwlwifi 0000:02:00.0: Free 135 ffffea00049eaa00 00000000ffe4c000
-[   26.765120] iwlwifi 0000:02:00.0: Free 136 ffffea00049eaa80 00000000ffe4a000
-[   26.765122] iwlwifi 0000:02:00.0: Free 137 ffffea00049e3500 00000000ffe48000
-[   26.765124] iwlwifi 0000:02:00.0: Free 138 ffffea00049e3580 00000000ffe46000
-[   26.765127] iwlwifi 0000:02:00.0: Free 139 ffffea0004991200 00000000ffe44000
-[   26.765129] iwlwifi 0000:02:00.0: Free 140 ffffea0004991280 00000000ffe42000
-[   26.765131] iwlwifi 0000:02:00.0: Free 141 ffffea0004991400 00000000ffe40000
-[   26.765133] iwlwifi 0000:02:00.0: Free 142 ffffea0004991480 00000000ffe3e000
-[   26.765135] iwlwifi 0000:02:00.0: Free 143 ffffea0004991800 00000000ffe3c000
-[   26.765137] iwlwifi 0000:02:00.0: Free 144 ffffea0004991880 00000000ffe3a000
-[   26.765139] iwlwifi 0000:02:00.0: Free 145 ffffea00049e8700 00000000ffe38000
-[   26.765141] iwlwifi 0000:02:00.0: Free 146 ffffea00049e8780 00000000ffe36000
-[   26.765143] iwlwifi 0000:02:00.0: Free 147 ffffea00049ead00 00000000ffe34000
-[   26.765145] iwlwifi 0000:02:00.0: Free 148 ffffea00049ead80 00000000ffe32000
-[   26.765147] iwlwifi 0000:02:00.0: Free 149 ffffea0004994e00 00000000ffe30000
-[   26.765150] iwlwifi 0000:02:00.0: Free 150 ffffea0004994e80 00000000ffe2e000
-[   26.765152] iwlwifi 0000:02:00.0: Free 151 ffffea00049ec500 00000000ffe2c000
-[   26.765154] iwlwifi 0000:02:00.0: Free 152 ffffea00049ec580 00000000ffe2a000
-[   26.765156] iwlwifi 0000:02:00.0: Free 153 ffffea00049eb200 00000000ffe28000
-[   26.765158] iwlwifi 0000:02:00.0: Free 154 ffffea00049eb280 00000000ffe26000
-[   26.765160] iwlwifi 0000:02:00.0: Free 155 ffffea0004995300 00000000ffe24000
-[   26.765162] iwlwifi 0000:02:00.0: Free 156 ffffea0004995380 00000000ffe22000
-[   26.765164] iwlwifi 0000:02:00.0: Free 157 ffffea00049ec800 00000000ffe20000
-[   26.765166] iwlwifi 0000:02:00.0: Free 158 ffffea00049ec880 00000000ffe1e000
-[   26.765168] iwlwifi 0000:02:00.0: Free 159 ffffea0004990f00 00000000ffe1c000
-[   26.765171] iwlwifi 0000:02:00.0: Free 160 ffffea0004990f80 00000000ffe1a000
-[   26.765173] iwlwifi 0000:02:00.0: Free 161 ffffea0004a1fd00 00000000ffe18000
-[   26.765175] iwlwifi 0000:02:00.0: Free 162 ffffea0004a1fd80 00000000ffe16000
-[   26.765177] iwlwifi 0000:02:00.0: Free 163 ffffea0004a1fb00 00000000ffe14000
-[   26.765179] iwlwifi 0000:02:00.0: Free 164 ffffea0004a1fb80 00000000ffe12000
-[   26.765181] iwlwifi 0000:02:00.0: Free 165 ffffea0004992b00 00000000ffe10000
-[   26.765183] iwlwifi 0000:02:00.0: Free 166 ffffea0004992b80 00000000ffe0e000
-[   26.765185] iwlwifi 0000:02:00.0: Free 167 ffffea0004991c00 00000000ffe0c000
-[   26.765188] iwlwifi 0000:02:00.0: Free 168 ffffea0004991c80 00000000ffe0a000
-[   26.765190] iwlwifi 0000:02:00.0: Free 169 ffffea0004992100 00000000ffe08000
-[   26.765192] iwlwifi 0000:02:00.0: Free 170 ffffea0004992180 00000000ffe06000
-[   26.765194] iwlwifi 0000:02:00.0: Free 171 ffffea0004991e00 00000000ffe04000
-[   26.765196] iwlwifi 0000:02:00.0: Free 172 ffffea0004991e80 00000000ffe02000
-[   26.765198] iwlwifi 0000:02:00.0: Free 173 ffffea0004991a00 00000000ffe00000
-[   26.765200] iwlwifi 0000:02:00.0: Free 174 ffffea0004991a80 00000000ffdfe000
-[   26.765202] iwlwifi 0000:02:00.0: Free 175 ffffea0004990c00 00000000ffdfc000
-[   26.765204] iwlwifi 0000:02:00.0: Free 176 ffffea0004990c80 00000000ffdfa000
-[   26.765206] iwlwifi 0000:02:00.0: Free 177 ffffea0004991100 00000000ffdf8000
-[   26.765208] iwlwifi 0000:02:00.0: Free 178 ffffea0004991180 00000000ffdf6000
-[   26.765210] iwlwifi 0000:02:00.0: Free 179 ffffea00049e5e00 00000000ffdf4000
-[   26.765213] iwlwifi 0000:02:00.0: Free 180 ffffea00049e5e80 00000000ffdf2000
-[   26.765215] iwlwifi 0000:02:00.0: Free 181 ffffea00049e9600 00000000ffdf0000
-[   26.765217] iwlwifi 0000:02:00.0: Free 182 ffffea00049e9680 00000000ffdee000
-[   26.765219] iwlwifi 0000:02:00.0: Free 183 ffffea00049ea200 00000000ffdec000
-[   26.765221] iwlwifi 0000:02:00.0: Free 184 ffffea00049ea280 00000000ffdea000
-[   26.765223] iwlwifi 0000:02:00.0: Free 185 ffffea00049e9100 00000000ffde8000
-[   26.765225] iwlwifi 0000:02:00.0: Free 186 ffffea00049e9180 00000000ffde6000
-[   26.765228] iwlwifi 0000:02:00.0: Free 187 ffffea0004a1d400 00000000ffde4000
-[   26.765230] iwlwifi 0000:02:00.0: Free 188 ffffea0004a1d480 00000000ffde2000
-[   26.765232] iwlwifi 0000:02:00.0: Free 189 ffffea00049eaf00 00000000ffde0000
-[   26.765234] iwlwifi 0000:02:00.0: Free 190 ffffea00049eaf80 00000000ffdde000
-[   26.765236] iwlwifi 0000:02:00.0: Free 191 ffffea0004a1eb00 00000000ffddc000
-[   26.765238] iwlwifi 0000:02:00.0: Free 192 ffffea0004a1eb80 00000000ffdda000
-[   26.765240] iwlwifi 0000:02:00.0: Free 193 ffffea0004991600 00000000ffdd8000
-[   26.765242] iwlwifi 0000:02:00.0: Free 194 ffffea0004991680 00000000ffdd6000
-[   26.765244] iwlwifi 0000:02:00.0: Free 195 ffffea0004993000 00000000ffdd4000
-[   26.765247] iwlwifi 0000:02:00.0: Free 196 ffffea0004993080 00000000ffdd2000
-[   26.765249] iwlwifi 0000:02:00.0: Free 197 ffffea0004990700 00000000ffdd0000
-[   26.765251] iwlwifi 0000:02:00.0: Free 198 ffffea0004990780 00000000ffdce000
-[   26.765253] iwlwifi 0000:02:00.0: Free 199 ffffea0004993700 00000000ffdcc000
-[   26.765255] iwlwifi 0000:02:00.0: Free 200 ffffea0004993780 00000000ffdca000
-[   26.765257] iwlwifi 0000:02:00.0: Free 201 ffffea0004a56500 00000000ffdc8000
-[   26.765260] iwlwifi 0000:02:00.0: Free 202 ffffea0004a56580 00000000ffdae000
-[   26.765262] iwlwifi 0000:02:00.0: Free 203 ffffea00049ed300 00000000ffdac000
-[   26.765264] iwlwifi 0000:02:00.0: Free 204 ffffea00049ed380 00000000ffdaa000
-[   26.765266] iwlwifi 0000:02:00.0: Free 205 ffffea0004a10900 00000000ffda8000
-[   26.765268] iwlwifi 0000:02:00.0: Free 206 ffffea0004a10980 00000000ffda6000
-[   26.765270] iwlwifi 0000:02:00.0: Free 207 ffffea00049e8f00 00000000ffda4000
-[   26.765272] iwlwifi 0000:02:00.0: Free 208 ffffea00049e8f80 00000000ffda0000
-[   26.765274] iwlwifi 0000:02:00.0: Free 209 ffffea00049e7d00 00000000ffd9a000
-[   26.765276] iwlwifi 0000:02:00.0: Free 210 ffffea00049e7d80 00000000ffd98000
-[   26.765278] iwlwifi 0000:02:00.0: Free 211 ffffea0004a10a00 00000000ffd96000
-[   26.765281] iwlwifi 0000:02:00.0: Free 212 ffffea0004a10a80 00000000ffd94000
-[   26.765283] iwlwifi 0000:02:00.0: Free 213 ffffea00049e5800 00000000ffd92000
-[   26.765285] iwlwifi 0000:02:00.0: Free 214 ffffea00049e5880 00000000ffd90000
-[   26.765287] iwlwifi 0000:02:00.0: Free 215 ffffea00049ed100 00000000ffd8e000
-[   26.765289] iwlwifi 0000:02:00.0: Free 216 ffffea00049ed180 00000000ffd8c000
-[   26.765291] iwlwifi 0000:02:00.0: Free 217 ffffea00049e9a00 00000000ffd8a000
-[   26.765294] iwlwifi 0000:02:00.0: Free 218 ffffea00049e9a80 00000000ffd88000
-[   26.765296] iwlwifi 0000:02:00.0: Free 219 ffffea0004a57800 00000000ffd86000
-[   26.765298] iwlwifi 0000:02:00.0: Free 220 ffffea0004a57880 00000000ffd84000
-[   26.765300] iwlwifi 0000:02:00.0: Free 221 ffffea00049e3b00 00000000ffd82000
-[   26.765302] iwlwifi 0000:02:00.0: Free 222 ffffea00049e3b80 00000000ffd80000
-[   26.765304] iwlwifi 0000:02:00.0: Free 223 ffffea00049e4e00 00000000ffd7e000
-[   26.765306] iwlwifi 0000:02:00.0: Free 224 ffffea00049e4e80 00000000ffd7c000
-[   26.765309] iwlwifi 0000:02:00.0: Free 225 ffffea0004a56b00 00000000ffd7a000
-[   26.765311] iwlwifi 0000:02:00.0: Free 226 ffffea0004a56b80 00000000ffd78000
-[   26.765313] iwlwifi 0000:02:00.0: Free 227 ffffea0004990500 00000000ffd76000
-[   26.765315] iwlwifi 0000:02:00.0: Free 228 ffffea0004990580 00000000ffd74000
-[   26.765317] iwlwifi 0000:02:00.0: Free 229 ffffea00049eb800 00000000ffd72000
-[   26.765320] iwlwifi 0000:02:00.0: Free 230 ffffea00049eb880 00000000ffd70000
-[   26.765322] iwlwifi 0000:02:00.0: Free 231 ffffea00049e5d00 00000000ffd6e000
-[   26.765324] iwlwifi 0000:02:00.0: Free 232 ffffea00049e5d80 00000000ffd6c000
-[   26.765326] iwlwifi 0000:02:00.0: Free 233 ffffea00049e7000 00000000ffd6a000
-[   26.765328] iwlwifi 0000:02:00.0: Free 234 ffffea00049e7080 00000000ffd68000
-[   26.765331] iwlwifi 0000:02:00.0: Free 235 ffffea0004933400 00000000ffd66000
-[   26.765333] iwlwifi 0000:02:00.0: Free 236 ffffea0004933480 00000000ffd64000
-[   26.765335] iwlwifi 0000:02:00.0: Free 237 ffffea0004a1ca00 00000000ffd62000
-[   26.765337] iwlwifi 0000:02:00.0: Free 238 ffffea0004a1ca80 00000000ffd60000
-[   26.765339] iwlwifi 0000:02:00.0: Free 239 ffffea00049e9e00 00000000ffd5e000
-[   26.765341] iwlwifi 0000:02:00.0: Free 240 ffffea00049e9e80 00000000ffd5c000
-[   26.765343] iwlwifi 0000:02:00.0: Free 241 ffffea0004933700 00000000ffd5a000
-[   26.765346] iwlwifi 0000:02:00.0: Free 242 ffffea0004933780 00000000ffd58000
-[   26.765348] iwlwifi 0000:02:00.0: Free 243 ffffea0004993200 00000000ffd56000
-[   26.765350] iwlwifi 0000:02:00.0: Free 244 ffffea0004993280 00000000ffd54000
-[   26.765352] iwlwifi 0000:02:00.0: Free 245 ffffea0004933000 00000000ffd1e000
-[   26.765354] iwlwifi 0000:02:00.0: Free 246 ffffea0004933080 00000000ffd1c000
-[   26.765356] iwlwifi 0000:02:00.0: Free 247 ffffea0004931d00 00000000ffd1a000
-[   26.765358] iwlwifi 0000:02:00.0: Free 248 ffffea0004931d80 00000000ffd18000
-[   26.765360] iwlwifi 0000:02:00.0: Free 249 ffffea0004933900 00000000ffd16000
-[   26.765362] iwlwifi 0000:02:00.0: Free 250 ffffea0004933980 00000000ffd14000
-[   26.765365] iwlwifi 0000:02:00.0: Free 251 ffffea00049e6d00 00000000ffd12000
-[   26.765367] iwlwifi 0000:02:00.0: Free 252 ffffea00049e6d80 00000000ffd10000
-[   26.765369] iwlwifi 0000:02:00.0: Free 253 ffffea0004931200 00000000ffd0e000
-[   26.765371] iwlwifi 0000:02:00.0: Free 254 ffffea0004931280 00000000ffd0c000
-[   26.765410] iwlwifi 0000:02:00.0: Free 255 ffffea0004993c00 00000000ffd0a000
-[   26.765412] iwlwifi 0000:02:00.0: Free 256 ffffea0004993c80 00000000ffd08000
-[   26.765414] iwlwifi 0000:02:00.0: Free 257 ffffea00049eb600 00000000ffd06000
-[   26.765416] iwlwifi 0000:02:00.0: Free 258 ffffea00049eb680 00000000ffd04000
-[   26.765419] iwlwifi 0000:02:00.0: Free 259 ffffea00049eb700 00000000ffd02000
-[   26.765421] iwlwifi 0000:02:00.0: Free 260 ffffea00049eb780 00000000ffd00000
-[   26.765423] iwlwifi 0000:02:00.0: Free 261 ffffea0004934400 00000000ffcfe000
-[   26.765425] iwlwifi 0000:02:00.0: Free 262 ffffea0004934480 00000000ffcfc000
-[   26.765427] iwlwifi 0000:02:00.0: Free 263 ffffea0004934500 00000000ffcfa000
-[   26.765429] iwlwifi 0000:02:00.0: Free 264 ffffea0004934580 00000000ffcf8000
-[   26.765432] iwlwifi 0000:02:00.0: Free 265 ffffea00049e9400 00000000ffcf6000
-[   26.765434] iwlwifi 0000:02:00.0: Free 266 ffffea00049e9480 00000000ffcf4000
-[   26.765436] iwlwifi 0000:02:00.0: Free 267 ffffea00049e9500 00000000ffcf2000
-[   26.765438] iwlwifi 0000:02:00.0: Free 268 ffffea00049e9580 00000000ffcf0000
-[   26.765440] iwlwifi 0000:02:00.0: Free 269 ffffea00049ebe00 00000000ffcee000
-[   26.765443] iwlwifi 0000:02:00.0: Free 270 ffffea00049ebe80 00000000ffcec000
-[   26.765445] iwlwifi 0000:02:00.0: Free 271 ffffea00049ebf00 00000000ffcea000
-[   26.765447] iwlwifi 0000:02:00.0: Free 272 ffffea00049ebf80 00000000ffce8000
-[   26.765449] iwlwifi 0000:02:00.0: Free 273 ffffea00049e9c00 00000000ffce6000
-[   26.765452] iwlwifi 0000:02:00.0: Free 274 ffffea00049e9c80 00000000ffce4000
-[   26.765454] iwlwifi 0000:02:00.0: Free 275 ffffea00049e9d00 00000000ffce2000
-[   26.765456] iwlwifi 0000:02:00.0: Free 276 ffffea00049e9d80 00000000ffce0000
-[   26.765458] iwlwifi 0000:02:00.0: Free 277 ffffea0004933e00 00000000ffcde000
-[   26.765460] iwlwifi 0000:02:00.0: Free 278 ffffea0004933e80 00000000ffcdc000
-[   26.765463] iwlwifi 0000:02:00.0: Free 279 ffffea0004933f00 00000000ffcd4000
-[   26.765465] iwlwifi 0000:02:00.0: Free 280 ffffea0004933f80 00000000ffcd2000
-[   26.765467] iwlwifi 0000:02:00.0: Free 281 ffffea0004938200 00000000ffcd0000
-[   26.765470] iwlwifi 0000:02:00.0: Free 282 ffffea0004938280 00000000ffc2e000
-[   26.765472] iwlwifi 0000:02:00.0: Free 283 ffffea0004938300 00000000ffc2c000
-[   26.765474] iwlwifi 0000:02:00.0: Free 284 ffffea0004938380 00000000ffc2a000
-[   26.765477] iwlwifi 0000:02:00.0: Free 285 ffffea0004993e00 00000000ffc28000
-[   26.765479] iwlwifi 0000:02:00.0: Free 286 ffffea0004993e80 00000000ffc26000
-[   26.765481] iwlwifi 0000:02:00.0: Free 287 ffffea0004993f00 00000000ffc24000
-[   26.765483] iwlwifi 0000:02:00.0: Free 288 ffffea0004993f80 00000000ffc22000
-[   26.765485] iwlwifi 0000:02:00.0: Free 289 ffffea0004995600 00000000ffc20000
-[   26.765487] iwlwifi 0000:02:00.0: Free 290 ffffea0004995680 00000000ffc1e000
-[   26.765490] iwlwifi 0000:02:00.0: Free 291 ffffea0004995700 00000000ffc1c000
-[   26.765492] iwlwifi 0000:02:00.0: Free 292 ffffea0004995780 00000000ffc1a000
-[   26.765494] iwlwifi 0000:02:00.0: Free 293 ffffea00049e6000 00000000ffc18000
-[   26.765496] iwlwifi 0000:02:00.0: Free 294 ffffea00049e6080 00000000ffc16000
-[   26.765498] iwlwifi 0000:02:00.0: Free 295 ffffea00049e6100 00000000ffc14000
-[   26.765500] iwlwifi 0000:02:00.0: Free 296 ffffea00049e6180 00000000ffc12000
-[   26.765502] iwlwifi 0000:02:00.0: Free 297 ffffea00049e6200 00000000ffc10000
-[   26.765505] iwlwifi 0000:02:00.0: Free 298 ffffea00049e6280 00000000ffc0e000
-[   26.765507] iwlwifi 0000:02:00.0: Free 299 ffffea00049e6300 00000000ffc0c000
-[   26.765509] iwlwifi 0000:02:00.0: Free 300 ffffea00049e6380 00000000ffc0a000
-[   26.765511] iwlwifi 0000:02:00.0: Free 301 ffffea0004934000 00000000ffc08000
-[   26.765513] iwlwifi 0000:02:00.0: Free 302 ffffea0004934080 00000000ffc06000
-[   26.765516] iwlwifi 0000:02:00.0: Free 303 ffffea0004934100 00000000ffc04000
-[   26.765518] iwlwifi 0000:02:00.0: Free 304 ffffea0004934180 00000000ffc02000
-[   26.765520] iwlwifi 0000:02:00.0: Free 305 ffffea0004934200 00000000ffc00000
-[   26.765522] iwlwifi 0000:02:00.0: Free 306 ffffea0004934280 00000000ffbfe000
-[   26.765524] iwlwifi 0000:02:00.0: Free 307 ffffea0004934300 00000000ffbfc000
-[   26.765526] iwlwifi 0000:02:00.0: Free 308 ffffea0004934380 00000000ffbfa000
-[   26.765528] iwlwifi 0000:02:00.0: Free 309 ffffea0004938400 00000000ffbf8000
-[   26.765530] iwlwifi 0000:02:00.0: Free 310 ffffea0004938480 00000000ffbf6000
-[   26.765532] iwlwifi 0000:02:00.0: Free 311 ffffea0004938500 00000000ffbf4000
-[   26.765534] iwlwifi 0000:02:00.0: Free 312 ffffea0004938580 00000000ffbf2000
-[   26.765537] iwlwifi 0000:02:00.0: Free 313 ffffea0004938600 00000000ffbf0000
-[   26.765539] iwlwifi 0000:02:00.0: Free 314 ffffea0004938680 00000000ffbee000
-[   26.765541] iwlwifi 0000:02:00.0: Free 315 ffffea0004938700 00000000ffbec000
-[   26.765544] iwlwifi 0000:02:00.0: Free 316 ffffea0004938780 00000000ffbea000
-[   26.765546] iwlwifi 0000:02:00.0: Free 317 ffffea0004938800 00000000ffbe8000
-[   26.765548] iwlwifi 0000:02:00.0: Free 318 ffffea0004938880 00000000ffbe6000
-[   26.765550] iwlwifi 0000:02:00.0: Free 319 ffffea0004938900 00000000ffbe4000
-[   26.765558] iwlwifi 0000:02:00.0: Mapped ffffea00049eac00 to 00000000fff5a000
-[   26.765560] iwlwifi 0000:02:00.0: Mapped ffffea0004994f00 to 00000000fff58000
-[   26.765563] iwlwifi 0000:02:00.0: Mapped ffffea0004995580 to 00000000fff56000
-[   26.765565] iwlwifi 0000:02:00.0: Mapped ffffea0004991700 to 00000000fff54000
-[   26.765567] iwlwifi 0000:02:00.0: Mapped ffffea0004991000 to 00000000fff52000
-[   26.765569] iwlwifi 0000:02:00.0: Mapped ffffea0004a10800 to 00000000fff50000
-[   26.765572] iwlwifi 0000:02:00.0: Mapped ffffea00049e5c00 to 00000000fff4e000
-[   26.765574] iwlwifi 0000:02:00.0: Mapped ffffea0004931c00 to 00000000fff4c000
-[   26.765576] iwlwifi 0000:02:00.0: Mapped ffffea000495f500 to 00000000fff4a000
-[   26.765579] iwlwifi 0000:02:00.0: Mapped ffffea0004931580 to 00000000fff48000
-[   26.765581] iwlwifi 0000:02:00.0: Mapped ffffea0004990980 to 00000000fff46000
-[   26.765583] iwlwifi 0000:02:00.0: Mapped ffffea0004953c00 to 00000000fff44000
-[   26.765585] iwlwifi 0000:02:00.0: Mapped ffffea0004931180 to 00000000fff42000
-[   26.765588] iwlwifi 0000:02:00.0: Mapped ffffea0004933200 to 00000000fff40000
-[   26.765590] iwlwifi 0000:02:00.0: Mapped ffffea000495f800 to 00000000fff3e000
-[   26.765592] iwlwifi 0000:02:00.0: Mapped ffffea00049e7700 to 00000000fff3c000
-[   26.765594] iwlwifi 0000:02:00.0: Mapped ffffea0004997300 to 00000000fff3a000
-[   26.765597] iwlwifi 0000:02:00.0: Mapped ffffea000495fa80 to 00000000fff38000
-[   26.765599] iwlwifi 0000:02:00.0: Mapped ffffea0004953200 to 00000000fff36000
-[   26.765601] iwlwifi 0000:02:00.0: Mapped ffffea0004998600 to 00000000fff34000
-[   26.765603] iwlwifi 0000:02:00.0: Mapped ffffea0004954180 to 00000000fff32000
-[   26.765606] iwlwifi 0000:02:00.0: Mapped ffffea0004954680 to 00000000fff30000
-[   26.765608] iwlwifi 0000:02:00.0: Mapped ffffea0004932680 to 00000000fff2e000
-[   26.765610] iwlwifi 0000:02:00.0: Mapped ffffea000495f000 to 00000000fff2c000
-[   26.765613] iwlwifi 0000:02:00.0: Mapped ffffea00049e1880 to 00000000fff2a000
-[   26.765615] iwlwifi 0000:02:00.0: Mapped ffffea00049eb180 to 00000000fff28000
-[   26.765617] iwlwifi 0000:02:00.0: Mapped ffffea00049eae80 to 00000000fff26000
-[   26.765619] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b700 to 00000000fff24000
-[   26.765621] iwlwifi 0000:02:00.0: Mapped ffffea0004a19d80 to 00000000fff22000
-[   26.765624] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b180 to 00000000fff20000
-[   26.765626] iwlwifi 0000:02:00.0: Mapped ffffea0004992f00 to 00000000fff1e000
-[   26.765628] iwlwifi 0000:02:00.0: Mapped ffffea00049e0880 to 00000000fff1c000
-[   26.765631] iwlwifi 0000:02:00.0: Mapped ffffea00049e8900 to 00000000fff1a000
-[   26.765633] iwlwifi 0000:02:00.0: Mapped ffffea00049e5480 to 00000000fff18000
-[   26.765635] iwlwifi 0000:02:00.0: Mapped ffffea00049e2c80 to 00000000fff16000
-[   26.765637] iwlwifi 0000:02:00.0: Mapped ffffea00049e5500 to 00000000fff14000
-[   26.765640] iwlwifi 0000:02:00.0: Mapped ffffea000495f700 to 00000000fff12000
-[   26.765642] iwlwifi 0000:02:00.0: Mapped ffffea0004931b80 to 00000000fff10000
-[   26.765644] iwlwifi 0000:02:00.0: Mapped ffffea0004a1a700 to 00000000fff0e000
-[   26.765646] iwlwifi 0000:02:00.0: Mapped ffffea0004995c00 to 00000000fff0c000
-[   26.765649] iwlwifi 0000:02:00.0: Mapped ffffea0004a1dd80 to 00000000fff0a000
-[   26.765651] iwlwifi 0000:02:00.0: Mapped ffffea00049ea980 to 00000000fff08000
-[   26.765653] iwlwifi 0000:02:00.0: Mapped ffffea0004990b00 to 00000000fff06000
-[   26.765655] iwlwifi 0000:02:00.0: Mapped ffffea00049e1f00 to 00000000fff04000
-[   26.765658] iwlwifi 0000:02:00.0: Mapped ffffea0004991380 to 00000000fff02000
-[   26.765660] iwlwifi 0000:02:00.0: Mapped ffffea00049e7280 to 00000000fff00000
-[   26.765662] iwlwifi 0000:02:00.0: Mapped ffffea00049e9080 to 00000000ffefe000
-[   26.765664] iwlwifi 0000:02:00.0: Mapped ffffea0004993100 to 00000000ffefc000
-[   26.765667] iwlwifi 0000:02:00.0: Mapped ffffea0004994000 to 00000000ffefa000
-[   26.765669] iwlwifi 0000:02:00.0: Mapped ffffea0004993b00 to 00000000ffef8000
-[   26.765671] iwlwifi 0000:02:00.0: Mapped ffffea00049e7f00 to 00000000ffef6000
-[   26.765674] iwlwifi 0000:02:00.0: Mapped ffffea0004a10b00 to 00000000ffef4000
-[   26.765676] iwlwifi 0000:02:00.0: Mapped ffffea00049ea300 to 00000000ffef2000
-[   26.765678] iwlwifi 0000:02:00.0: Mapped ffffea00049ecd00 to 00000000ffef0000
-[   26.765681] iwlwifi 0000:02:00.0: Mapped ffffea0004a1db00 to 00000000ffeee000
-[   26.765683] iwlwifi 0000:02:00.0: Mapped ffffea0004995280 to 00000000ffeec000
-[   26.765685] iwlwifi 0000:02:00.0: Mapped ffffea00049e2e00 to 00000000ffeea000
-[   26.765687] iwlwifi 0000:02:00.0: Mapped ffffea00049e3f80 to 00000000ffee8000
-[   26.765690] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d380 to 00000000ffee6000
-[   26.765692] iwlwifi 0000:02:00.0: Mapped ffffea0004993880 to 00000000ffee4000
-[   26.765694] iwlwifi 0000:02:00.0: Mapped ffffea00049e4b00 to 00000000ffee2000
-[   26.765697] iwlwifi 0000:02:00.0: Mapped ffffea00049ec300 to 00000000ffee0000
-[   26.765699] iwlwifi 0000:02:00.0: Mapped ffffea00049e7e80 to 00000000ffede000
-[   26.765701] iwlwifi 0000:02:00.0: Mapped ffffea00049e2200 to 00000000ffedc000
-[   26.765703] iwlwifi 0000:02:00.0: Mapped ffffea00049ecc80 to 00000000ffeda000
-[   26.765706] iwlwifi 0000:02:00.0: Mapped ffffea00049ec280 to 00000000ffed8000
-[   26.765708] iwlwifi 0000:02:00.0: Mapped ffffea00049ed580 to 00000000ffed6000
-[   26.765710] iwlwifi 0000:02:00.0: Mapped ffffea0004a19c80 to 00000000ffed4000
-[   26.765713] iwlwifi 0000:02:00.0: Mapped ffffea00049e4f80 to 00000000ffed2000
-[   26.765715] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c900 to 00000000ffed0000
-[   26.765717] iwlwifi 0000:02:00.0: Mapped ffffea0004994400 to 00000000ffece000
-[   26.765719] iwlwifi 0000:02:00.0: Mapped ffffea0004994180 to 00000000ffecc000
-[   26.765721] iwlwifi 0000:02:00.0: Mapped ffffea0004993980 to 00000000ffeca000
-[   26.765724] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c080 to 00000000ffec8000
-[   26.765726] iwlwifi 0000:02:00.0: Mapped ffffea00049e8680 to 00000000ffec6000
-[   26.765728] iwlwifi 0000:02:00.0: Mapped ffffea00049ef900 to 00000000ffec4000
-[   26.765730] iwlwifi 0000:02:00.0: Mapped ffffea0004990480 to 00000000ffec2000
-[   26.765733] iwlwifi 0000:02:00.0: Mapped ffffea00049ea000 to 00000000ffec0000
-[   26.765735] iwlwifi 0000:02:00.0: Mapped ffffea0004991500 to 00000000ffebe000
-[   26.765737] iwlwifi 0000:02:00.0: Mapped ffffea00049e9f80 to 00000000ffebc000
-[   26.765739] iwlwifi 0000:02:00.0: Mapped ffffea0004990d00 to 00000000ffeba000
-[   26.765742] iwlwifi 0000:02:00.0: Mapped ffffea00049ed280 to 00000000ffeb8000
-[   26.765744] iwlwifi 0000:02:00.0: Mapped ffffea0004990a80 to 00000000ffeb6000
-[   26.765746] iwlwifi 0000:02:00.0: Mapped ffffea0004990600 to 00000000ffeb4000
-[   26.765748] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c600 to 00000000ffeb2000
-[   26.765751] iwlwifi 0000:02:00.0: Mapped ffffea00049e4980 to 00000000ffeb0000
-[   26.765753] iwlwifi 0000:02:00.0: Mapped ffffea00049e1b00 to 00000000ffeae000
-[   26.765755] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fe00 to 00000000ffeac000
-[   26.765758] iwlwifi 0000:02:00.0: Mapped ffffea00049e5100 to 00000000ffeaa000
-[   26.765760] iwlwifi 0000:02:00.0: Mapped ffffea0004a1f300 to 00000000ffea8000
-[   26.765762] iwlwifi 0000:02:00.0: Mapped ffffea00049ef400 to 00000000ffea6000
-[   26.765764] iwlwifi 0000:02:00.0: Mapped ffffea00049e0f80 to 00000000ffea4000
-[   26.765767] iwlwifi 0000:02:00.0: Mapped ffffea0004990080 to 00000000ffea2000
-[   26.765769] iwlwifi 0000:02:00.0: Mapped ffffea0004990880 to 00000000ffea0000
-[   26.765771] iwlwifi 0000:02:00.0: Mapped ffffea0004a1e580 to 00000000ffe9e000
-[   26.765773] iwlwifi 0000:02:00.0: Mapped ffffea00049e8500 to 00000000ffe9c000
-[   26.765775] iwlwifi 0000:02:00.0: Mapped ffffea0004991f80 to 00000000ffe9a000
-[   26.765778] iwlwifi 0000:02:00.0: Mapped ffffea0004992e00 to 00000000ffe98000
-[   26.765780] iwlwifi 0000:02:00.0: Mapped ffffea0004992d80 to 00000000ffe96000
-[   26.765783] iwlwifi 0000:02:00.0: Mapped ffffea0004992080 to 00000000ffe94000
-[   26.765785] iwlwifi 0000:02:00.0: Mapped ffffea0004992a80 to 00000000ffe92000
-[   26.765787] iwlwifi 0000:02:00.0: Mapped ffffea0004a1da00 to 00000000ffe90000
-[   26.765789] iwlwifi 0000:02:00.0: Mapped ffffea00049e2700 to 00000000ffe8e000
-[   26.765792] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ed80 to 00000000ffe8c000
-[   26.765794] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d280 to 00000000ffe8a000
-[   26.765797] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ea00 to 00000000ffe88000
-[   26.765799] iwlwifi 0000:02:00.0: Mapped ffffea000495f100 to 00000000ffe86000
-[   26.765801] iwlwifi 0000:02:00.0: Mapped ffffea0004995080 to 00000000ffe84000
-[   26.765803] iwlwifi 0000:02:00.0: Mapped ffffea0004994d00 to 00000000ffe82000
-[   26.765806] iwlwifi 0000:02:00.0: Mapped ffffea00049ec980 to 00000000ffe80000
-[   26.765808] iwlwifi 0000:02:00.0: Mapped ffffea0004933100 to 00000000ffe7e000
-[   26.765810] iwlwifi 0000:02:00.0: Mapped ffffea00049e5b00 to 00000000ffe7c000
-[   26.765812] iwlwifi 0000:02:00.0: Mapped ffffea00049e8c00 to 00000000ffe7a000
-[   26.765815] iwlwifi 0000:02:00.0: Mapped ffffea0004a5b100 to 00000000ffe78000
-[   26.765817] iwlwifi 0000:02:00.0: Mapped ffffea0004995b80 to 00000000ffe76000
-[   26.765819] iwlwifi 0000:02:00.0: Mapped ffffea0004995880 to 00000000ffe74000
-[   26.765821] iwlwifi 0000:02:00.0: Mapped ffffea0004995980 to 00000000ffe72000
-[   26.765824] iwlwifi 0000:02:00.0: Mapped ffffea0004995a80 to 00000000ffe70000
-[   26.765826] iwlwifi 0000:02:00.0: Mapped ffffea00049e2a80 to 00000000ffe6e000
-[   26.765828] iwlwifi 0000:02:00.0: Mapped ffffea0004930100 to 00000000ffe6c000
-[   26.765830] iwlwifi 0000:02:00.0: Mapped ffffea0004931e00 to 00000000ffe6a000
-[   26.765833] iwlwifi 0000:02:00.0: Mapped ffffea0004993c00 to 00000000ffe68000
-[   26.765835] iwlwifi 0000:02:00.0: Mapped ffffea0004993c80 to 00000000ffe66000
-[   26.765837] iwlwifi 0000:02:00.0: Mapped ffffea0004931200 to 00000000ffe64000
-[   26.765839] iwlwifi 0000:02:00.0: Mapped ffffea0004931280 to 00000000ffe62000
-[   26.765842] iwlwifi 0000:02:00.0: Mapped ffffea00049e6d00 to 00000000ffe60000
-[   26.765844] iwlwifi 0000:02:00.0: Mapped ffffea00049e6d80 to 00000000ffe5e000
-[   26.765846] iwlwifi 0000:02:00.0: Mapped ffffea0004933900 to 00000000ffe5c000
-[   26.765848] iwlwifi 0000:02:00.0: Mapped ffffea0004933980 to 00000000ffe5a000
-[   26.765851] iwlwifi 0000:02:00.0: Mapped ffffea0004931d00 to 00000000ffe58000
-[   26.765853] iwlwifi 0000:02:00.0: Mapped ffffea0004931d80 to 00000000ffe56000
-[   26.765855] iwlwifi 0000:02:00.0: Mapped ffffea0004933000 to 00000000ffe54000
-[   26.765857] iwlwifi 0000:02:00.0: Mapped ffffea0004933080 to 00000000ffe52000
-[   26.765860] iwlwifi 0000:02:00.0: Mapped ffffea0004993200 to 00000000ffe50000
-[   26.765862] iwlwifi 0000:02:00.0: Mapped ffffea0004993280 to 00000000ffe4e000
-[   26.765864] iwlwifi 0000:02:00.0: Mapped ffffea0004933700 to 00000000ffe4c000
-[   26.765867] iwlwifi 0000:02:00.0: Mapped ffffea0004933780 to 00000000ffe4a000
-[   26.765869] iwlwifi 0000:02:00.0: Mapped ffffea00049e9e00 to 00000000ffe48000
-[   26.765871] iwlwifi 0000:02:00.0: Mapped ffffea00049e9e80 to 00000000ffe46000
-[   26.765873] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ca00 to 00000000ffe44000
-[   26.765876] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ca80 to 00000000ffe42000
-[   26.765878] iwlwifi 0000:02:00.0: Mapped ffffea0004933400 to 00000000ffe40000
-[   26.765880] iwlwifi 0000:02:00.0: Mapped ffffea0004933480 to 00000000ffe3e000
-[   26.765882] iwlwifi 0000:02:00.0: Mapped ffffea00049e7000 to 00000000ffe3c000
-[   26.765885] iwlwifi 0000:02:00.0: Mapped ffffea00049e7080 to 00000000ffe3a000
-[   26.765887] iwlwifi 0000:02:00.0: Mapped ffffea00049e5d00 to 00000000ffe38000
-[   26.765889] iwlwifi 0000:02:00.0: Mapped ffffea00049e5d80 to 00000000ffe36000
-[   26.765891] iwlwifi 0000:02:00.0: Mapped ffffea00049eb800 to 00000000ffe34000
-[   26.765894] iwlwifi 0000:02:00.0: Mapped ffffea00049eb880 to 00000000ffe32000
-[   26.765896] iwlwifi 0000:02:00.0: Mapped ffffea0004990500 to 00000000ffe30000
-[   26.765898] iwlwifi 0000:02:00.0: Mapped ffffea0004990580 to 00000000ffe2e000
-[   26.765901] iwlwifi 0000:02:00.0: Mapped ffffea0004a56b00 to 00000000ffe2c000
-[   26.765924] iwlwifi 0000:02:00.0: Mapped ffffea0004a56b80 to 00000000ffe2a000
-[   26.765929] iwlwifi 0000:02:00.0: Mapped ffffea00049e4e00 to 00000000ffe28000
-[   26.765933] iwlwifi 0000:02:00.0: Mapped ffffea00049e4e80 to 00000000ffe26000
-[   26.765937] iwlwifi 0000:02:00.0: Mapped ffffea00049e3b00 to 00000000ffe24000
-[   26.765940] iwlwifi 0000:02:00.0: Mapped ffffea00049e3b80 to 00000000ffe22000
-[   26.765944] iwlwifi 0000:02:00.0: Mapped ffffea0004a57800 to 00000000ffe20000
-[   26.765948] iwlwifi 0000:02:00.0: Mapped ffffea0004a57880 to 00000000ffe1e000
-[   26.765950] iwlwifi 0000:02:00.0: Mapped ffffea00049e9a00 to 00000000ffe1c000
-[   26.765952] iwlwifi 0000:02:00.0: Mapped ffffea00049e9a80 to 00000000ffe1a000
-[   26.765955] iwlwifi 0000:02:00.0: Mapped ffffea00049ed100 to 00000000ffe18000
-[   26.765957] iwlwifi 0000:02:00.0: Mapped ffffea00049ed180 to 00000000ffe16000
-[   26.765959] iwlwifi 0000:02:00.0: Mapped ffffea00049e5800 to 00000000ffe14000
-[   26.765961] iwlwifi 0000:02:00.0: Mapped ffffea00049e5880 to 00000000ffe12000
-[   26.765964] iwlwifi 0000:02:00.0: Mapped ffffea0004a10a00 to 00000000ffe10000
-[   26.765966] iwlwifi 0000:02:00.0: Mapped ffffea0004a10a80 to 00000000ffe0e000
-[   26.765968] iwlwifi 0000:02:00.0: Mapped ffffea00049e7d00 to 00000000ffe0c000
-[   26.765970] iwlwifi 0000:02:00.0: Mapped ffffea00049e7d80 to 00000000ffe0a000
-[   26.765973] iwlwifi 0000:02:00.0: Mapped ffffea00049e8f00 to 00000000ffe08000
-[   26.765975] iwlwifi 0000:02:00.0: Mapped ffffea00049e8f80 to 00000000ffe06000
-[   26.765977] iwlwifi 0000:02:00.0: Mapped ffffea0004a10900 to 00000000ffe04000
-[   26.765980] iwlwifi 0000:02:00.0: Mapped ffffea0004a10980 to 00000000ffe02000
-[   26.765982] iwlwifi 0000:02:00.0: Mapped ffffea00049ed300 to 00000000ffe00000
-[   26.765984] iwlwifi 0000:02:00.0: Mapped ffffea00049ed380 to 00000000ffdfe000
-[   26.765986] iwlwifi 0000:02:00.0: Mapped ffffea0004a56500 to 00000000ffdfc000
-[   26.765989] iwlwifi 0000:02:00.0: Mapped ffffea0004a56580 to 00000000ffdfa000
-[   26.765991] iwlwifi 0000:02:00.0: Mapped ffffea0004993700 to 00000000ffdf8000
-[   26.765993] iwlwifi 0000:02:00.0: Mapped ffffea0004993780 to 00000000ffdf6000
-[   26.765996] iwlwifi 0000:02:00.0: Mapped ffffea0004990700 to 00000000ffdf4000
-[   26.765998] iwlwifi 0000:02:00.0: Mapped ffffea0004990780 to 00000000ffdf2000
-[   26.766000] iwlwifi 0000:02:00.0: Mapped ffffea0004993000 to 00000000ffdf0000
-[   26.766002] iwlwifi 0000:02:00.0: Mapped ffffea0004993080 to 00000000ffdee000
-[   26.766005] iwlwifi 0000:02:00.0: Mapped ffffea0004991600 to 00000000ffdec000
-[   26.766007] iwlwifi 0000:02:00.0: Mapped ffffea0004991680 to 00000000ffdea000
-[   26.766009] iwlwifi 0000:02:00.0: Mapped ffffea0004a1eb00 to 00000000ffde8000
-[   26.766011] iwlwifi 0000:02:00.0: Mapped ffffea0004a1eb80 to 00000000ffde6000
-[   26.766014] iwlwifi 0000:02:00.0: Mapped ffffea00049eaf00 to 00000000ffde4000
-[   26.766016] iwlwifi 0000:02:00.0: Mapped ffffea00049eaf80 to 00000000ffde2000
-[   26.766018] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d400 to 00000000ffde0000
-[   26.766020] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d480 to 00000000ffdde000
-[   26.766023] iwlwifi 0000:02:00.0: Mapped ffffea00049e9100 to 00000000ffddc000
-[   26.766025] iwlwifi 0000:02:00.0: Mapped ffffea00049e9180 to 00000000ffdda000
-[   26.766027] iwlwifi 0000:02:00.0: Mapped ffffea00049ea200 to 00000000ffdd8000
-[   26.766030] iwlwifi 0000:02:00.0: Mapped ffffea00049ea280 to 00000000ffdd6000
-[   26.766032] iwlwifi 0000:02:00.0: Mapped ffffea00049e9600 to 00000000ffdd4000
-[   26.766034] iwlwifi 0000:02:00.0: Mapped ffffea00049e9680 to 00000000ffdd2000
-[   26.766037] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e00 to 00000000ffdd0000
-[   26.766039] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e80 to 00000000ffdce000
-[   26.766041] iwlwifi 0000:02:00.0: Mapped ffffea0004991100 to 00000000ffdcc000
-[   26.766043] iwlwifi 0000:02:00.0: Mapped ffffea0004991180 to 00000000ffdca000
-[   26.766046] iwlwifi 0000:02:00.0: Mapped ffffea0004990c00 to 00000000ffdc8000
-[   26.766048] iwlwifi 0000:02:00.0: Mapped ffffea0004990c80 to 00000000ffdc6000
-[   26.766050] iwlwifi 0000:02:00.0: Mapped ffffea0004991a00 to 00000000ffdc4000
-[   26.766053] iwlwifi 0000:02:00.0: Mapped ffffea0004991a80 to 00000000ffdc2000
-[   26.766055] iwlwifi 0000:02:00.0: Mapped ffffea0004991e00 to 00000000ffdc0000
-[   26.766057] iwlwifi 0000:02:00.0: Mapped ffffea0004991e80 to 00000000ffdbe000
-[   26.766059] iwlwifi 0000:02:00.0: Mapped ffffea0004992100 to 00000000ffdbc000
-[   26.766062] iwlwifi 0000:02:00.0: Mapped ffffea0004992180 to 00000000ffdba000
-[   26.766064] iwlwifi 0000:02:00.0: Mapped ffffea0004991c00 to 00000000ffdb8000
-[   26.766066] iwlwifi 0000:02:00.0: Mapped ffffea0004991c80 to 00000000ffdb6000
-[   26.766069] iwlwifi 0000:02:00.0: Mapped ffffea0004992b00 to 00000000ffdb4000
-[   26.766071] iwlwifi 0000:02:00.0: Mapped ffffea0004992b80 to 00000000ffdb2000
-[   26.766073] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fb00 to 00000000ffdb0000
-[   26.766076] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fb80 to 00000000ffdae000
-[   26.766078] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fd00 to 00000000ffdac000
-[   26.766080] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fd80 to 00000000ffdaa000
-[   26.766083] iwlwifi 0000:02:00.0: Mapped ffffea0004990f00 to 00000000ffda8000
-[   26.766085] iwlwifi 0000:02:00.0: Mapped ffffea0004990f80 to 00000000ffda6000
-[   26.766087] iwlwifi 0000:02:00.0: Mapped ffffea00049ec800 to 00000000ffda4000
-[   26.766089] iwlwifi 0000:02:00.0: Mapped ffffea00049ec880 to 00000000ffda2000
-[   26.766092] iwlwifi 0000:02:00.0: Mapped ffffea0004995300 to 00000000ffda0000
-[   26.766094] iwlwifi 0000:02:00.0: Mapped ffffea0004995380 to 00000000ffd9e000
-[   26.766096] iwlwifi 0000:02:00.0: Mapped ffffea00049eb200 to 00000000ffd9c000
-[   26.766098] iwlwifi 0000:02:00.0: Mapped ffffea00049eb280 to 00000000ffd9a000
-[   26.766101] iwlwifi 0000:02:00.0: Mapped ffffea00049ec500 to 00000000ffd98000
-[   26.766103] iwlwifi 0000:02:00.0: Mapped ffffea00049ec580 to 00000000ffd96000
-[   26.766105] iwlwifi 0000:02:00.0: Mapped ffffea0004994e00 to 00000000ffd94000
-[   26.766108] iwlwifi 0000:02:00.0: Mapped ffffea0004994e80 to 00000000ffd92000
-[   26.766110] iwlwifi 0000:02:00.0: Mapped ffffea00049ead00 to 00000000ffd90000
-[   26.766112] iwlwifi 0000:02:00.0: Mapped ffffea00049ead80 to 00000000ffd8e000
-[   26.766114] iwlwifi 0000:02:00.0: Mapped ffffea00049e8700 to 00000000ffd8c000
-[   26.766117] iwlwifi 0000:02:00.0: Mapped ffffea00049e8780 to 00000000ffd8a000
-[   26.766119] iwlwifi 0000:02:00.0: Mapped ffffea0004991800 to 00000000ffd88000
-[   26.766121] iwlwifi 0000:02:00.0: Mapped ffffea0004991880 to 00000000ffd86000
-[   26.766124] iwlwifi 0000:02:00.0: Mapped ffffea0004991400 to 00000000ffd84000
-[   26.766126] iwlwifi 0000:02:00.0: Mapped ffffea0004991480 to 00000000ffd82000
-[   26.766128] iwlwifi 0000:02:00.0: Mapped ffffea0004991200 to 00000000ffd80000
-[   26.766131] iwlwifi 0000:02:00.0: Mapped ffffea0004991280 to 00000000ffd7e000
-[   26.766133] iwlwifi 0000:02:00.0: Mapped ffffea00049e3500 to 00000000ffd7c000
-[   26.766135] iwlwifi 0000:02:00.0: Mapped ffffea00049e3580 to 00000000ffd7a000
-[   26.766137] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa00 to 00000000ffd78000
-[   26.766140] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa80 to 00000000ffd76000
-[   26.766142] iwlwifi 0000:02:00.0: Mapped ffffea0004a55e00 to 00000000ffd74000
-[   26.766144] iwlwifi 0000:02:00.0: Mapped ffffea0004a55e80 to 00000000ffd72000
-[   26.766147] iwlwifi 0000:02:00.0: Mapped ffffea000495eb00 to 00000000ffd70000
-[   26.766149] iwlwifi 0000:02:00.0: Mapped ffffea000495eb80 to 00000000ffd6e000
-[   26.766151] iwlwifi 0000:02:00.0: Mapped ffffea000495fc00 to 00000000ffd6c000
-[   26.766154] iwlwifi 0000:02:00.0: Mapped ffffea000495fc80 to 00000000ffd6a000
-[   26.766156] iwlwifi 0000:02:00.0: Mapped ffffea0004930600 to 00000000ffd68000
-[   26.766158] iwlwifi 0000:02:00.0: Mapped ffffea0004930680 to 00000000ffd66000
-[   26.766160] iwlwifi 0000:02:00.0: Mapped ffffea00049eb400 to 00000000ffd64000
-[   26.766163] iwlwifi 0000:02:00.0: Mapped ffffea00049eb480 to 00000000ffd62000
-[   26.766165] iwlwifi 0000:02:00.0: Mapped ffffea0004995600 to 00000000ffd60000
-[   26.766167] iwlwifi 0000:02:00.0: Mapped ffffea0004995680 to 00000000ffd5e000
-[   26.766170] iwlwifi 0000:02:00.0: Mapped ffffea0004995700 to 00000000ffd5c000
-[   26.766172] iwlwifi 0000:02:00.0: Mapped ffffea0004995780 to 00000000ffd5a000
-[   26.766174] iwlwifi 0000:02:00.0: Mapped ffffea0004993e00 to 00000000ffd58000
-[   26.766176] iwlwifi 0000:02:00.0: Mapped ffffea0004993e80 to 00000000ffd56000
-[   26.766179] iwlwifi 0000:02:00.0: Mapped ffffea0004993f00 to 00000000ffd54000
-[   26.766181] iwlwifi 0000:02:00.0: Mapped ffffea0004993f80 to 00000000ffd52000
-[   26.766183] iwlwifi 0000:02:00.0: Mapped ffffea0004938200 to 00000000ffd50000
-[   26.766185] iwlwifi 0000:02:00.0: Mapped ffffea0004938280 to 00000000ffd4e000
-[   26.766188] iwlwifi 0000:02:00.0: Mapped ffffea0004938300 to 00000000ffd4c000
-[   26.766190] iwlwifi 0000:02:00.0: Mapped ffffea0004938380 to 00000000ffd4a000
-[   26.766192] iwlwifi 0000:02:00.0: Mapped ffffea0004933e00 to 00000000ffd48000
-[   26.766195] iwlwifi 0000:02:00.0: Mapped ffffea0004933e80 to 00000000ffd46000
-[   26.766197] iwlwifi 0000:02:00.0: Mapped ffffea0004933f00 to 00000000ffd44000
-[   26.766199] iwlwifi 0000:02:00.0: Mapped ffffea0004933f80 to 00000000ffd42000
-[   26.766201] iwlwifi 0000:02:00.0: Mapped ffffea00049e9c00 to 00000000ffd40000
-[   26.766204] iwlwifi 0000:02:00.0: Mapped ffffea00049e9c80 to 00000000ffd3e000
-[   26.766206] iwlwifi 0000:02:00.0: Mapped ffffea00049e9d00 to 00000000ffd3c000
-[   26.766208] iwlwifi 0000:02:00.0: Mapped ffffea00049e9d80 to 00000000ffd3a000
-[   26.766211] iwlwifi 0000:02:00.0: Mapped ffffea00049ebe00 to 00000000ffd38000
-[   26.766213] iwlwifi 0000:02:00.0: Mapped ffffea00049ebe80 to 00000000ffd36000
-[   26.766215] iwlwifi 0000:02:00.0: Mapped ffffea00049ebf00 to 00000000ffd34000
-[   26.766217] iwlwifi 0000:02:00.0: Mapped ffffea00049ebf80 to 00000000ffd32000
-[   26.766220] iwlwifi 0000:02:00.0: Mapped ffffea00049e9400 to 00000000ffd30000
-[   26.766222] iwlwifi 0000:02:00.0: Mapped ffffea00049e9480 to 00000000ffd2e000
-[   26.766224] iwlwifi 0000:02:00.0: Mapped ffffea00049e9500 to 00000000ffd2c000
-[   26.766226] iwlwifi 0000:02:00.0: Mapped ffffea00049e9580 to 00000000ffd2a000
-[   26.766229] iwlwifi 0000:02:00.0: Mapped ffffea0004934400 to 00000000ffd28000
-[   26.766231] iwlwifi 0000:02:00.0: Mapped ffffea0004934480 to 00000000ffd26000
-[   26.766233] iwlwifi 0000:02:00.0: Mapped ffffea0004934500 to 00000000ffd24000
-[   26.766235] iwlwifi 0000:02:00.0: Mapped ffffea0004934580 to 00000000ffd22000
-[   26.766237] iwlwifi 0000:02:00.0: Mapped ffffea00049eb600 to 00000000ffd20000
-[   26.766240] iwlwifi 0000:02:00.0: Mapped ffffea00049eb680 to 00000000ffd1e000
-[   26.766242] iwlwifi 0000:02:00.0: Mapped ffffea00049eb700 to 00000000ffd1c000
-[   26.766244] iwlwifi 0000:02:00.0: Mapped ffffea00049eb780 to 00000000ffd1a000
-[   26.766247] iwlwifi 0000:02:00.0: Mapped ffffea0004938400 to 00000000ffd18000
-[   26.766249] iwlwifi 0000:02:00.0: Mapped ffffea0004938480 to 00000000ffd16000
-[   26.766251] iwlwifi 0000:02:00.0: Mapped ffffea0004938500 to 00000000ffd14000
-[   26.766254] iwlwifi 0000:02:00.0: Mapped ffffea0004938580 to 00000000ffd12000
-[   26.766256] iwlwifi 0000:02:00.0: Mapped ffffea0004938600 to 00000000ffd10000
-[   26.766258] iwlwifi 0000:02:00.0: Mapped ffffea0004938680 to 00000000ffd0e000
-[   26.766260] iwlwifi 0000:02:00.0: Mapped ffffea0004938700 to 00000000ffd0c000
-[   26.766263] iwlwifi 0000:02:00.0: Mapped ffffea0004938780 to 00000000ffd0a000
-[   26.766265] iwlwifi 0000:02:00.0: Mapped ffffea0004934000 to 00000000ffd08000
-[   26.766267] iwlwifi 0000:02:00.0: Mapped ffffea0004934080 to 00000000ffd06000
-[   26.766269] iwlwifi 0000:02:00.0: Mapped ffffea0004934100 to 00000000ffd04000
-[   26.766272] iwlwifi 0000:02:00.0: Mapped ffffea0004934180 to 00000000ffd02000
-[   26.766274] iwlwifi 0000:02:00.0: Mapped ffffea0004934200 to 00000000ffd00000
-[   26.766276] iwlwifi 0000:02:00.0: Mapped ffffea0004934280 to 00000000ffcfe000
-[   26.766279] iwlwifi 0000:02:00.0: Mapped ffffea0004934300 to 00000000ffcfc000
-[   26.766281] iwlwifi 0000:02:00.0: Mapped ffffea0004934380 to 00000000ffcfa000
-[   26.766283] iwlwifi 0000:02:00.0: Mapped ffffea00049e6000 to 00000000ffcf8000
-[   26.766285] iwlwifi 0000:02:00.0: Mapped ffffea00049e6080 to 00000000ffcf6000
-[   26.766288] iwlwifi 0000:02:00.0: Mapped ffffea00049e6100 to 00000000ffcf4000
-[   26.766290] iwlwifi 0000:02:00.0: Mapped ffffea00049e6180 to 00000000ffcf2000
-[   26.766292] iwlwifi 0000:02:00.0: Mapped ffffea00049e6200 to 00000000ffcf0000
-[   26.766295] iwlwifi 0000:02:00.0: Mapped ffffea00049e6280 to 00000000ffcee000
-[   26.766297] iwlwifi 0000:02:00.0: Mapped ffffea00049e6300 to 00000000ffcec000
-[   26.766299] iwlwifi 0000:02:00.0: Mapped ffffea00049e6380 to 00000000ffcea000
-[   26.766302] iwlwifi 0000:02:00.0: Mapped ffffea0004938800 to 00000000ffce8000
-[   26.766304] iwlwifi 0000:02:00.0: Mapped ffffea0004938880 to 00000000ffce6000
-[   26.766306] iwlwifi 0000:02:00.0: Mapped ffffea0004938900 to 00000000ffce4000
-[   26.766308] iwlwifi 0000:02:00.0: Mapped ffffea0004938980 to 00000000ffce2000
-[   26.766311] iwlwifi 0000:02:00.0: Mapped ffffea0004938a00 to 00000000ffce0000
-[   26.766313] iwlwifi 0000:02:00.0: Mapped ffffea0004938a80 to 00000000ffcde000
-[   26.766315] iwlwifi 0000:02:00.0: Mapped ffffea0004938b00 to 00000000ffcdc000
-[   26.826834] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command COEX_PRIORITY_TABLE_CMD
-[   26.826837] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[   26.826964] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[   26.826979] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.826981] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.827614] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.827623] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.827625] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.827693] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.827698] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.827700] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.827785] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.827790] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.827792] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.827898] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.827909] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.827911] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.828048] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.828058] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[   26.828060] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.828185] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[   26.828195] iwlwifi 0000:02:00.0: U iwl_alive_start Runtime Alive received.
-[   26.828197] iwlwifi 0000:02:00.0: U iwl_send_bt_config BT coex active
-[   26.828199] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_BT_CONFIG
-[   26.828201] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_BT_CONFIG
-[   26.828282] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_BT_CONFIG
-[   26.828289] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command CALIBRATION_CFG_CMD
-[   26.828291] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command CALIBRATION_CFG_CMD
-[   26.828401] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command CALIBRATION_CFG_CMD
-[   26.828412] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command TX_ANT_CONFIGURATION_CMD
-[   26.828414] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-[   26.855488] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-[   26.855500] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.855506] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   26.855509] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   26.855509]   * without RXON_FILTER_ASSOC_MSK
-[   26.855510]   * channel = 1
-[   26.855511]   * bssid = 00:00:00:00:00:00
-[   26.855512] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   26.855514] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   26.856619] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   26.856638] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   26.856641] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations No active stations found to be cleared
-[   26.856645] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   26.856648] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   26.856651] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   26.856654] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   26.856656] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.873348] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   26.873350] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   26.873353] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   26.873355] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   26.873357] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   26.873360] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.873369] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   26.873371] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   26.873373] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.873487] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.873494] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   26.873496] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   26.873499] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_CT_KILL_CONFIG_CMD
-[   26.873501] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_CT_KILL_CONFIG_CMD
-[   26.873564] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_CT_KILL_CONFIG_CMD
-[   26.873569] iwlwifi 0000:02:00.0: U iwl_rf_kill_ct_config REPLY_CT_KILL_CONFIG_CMD succeeded, critical temperature enter is 114,exit is 95
-[   26.873571] iwlwifi 0000:02:00.0: U iwl_alive_start ALIVE processing complete.
-[   26.873574] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command POWER_TABLE_CMD
-[   26.873576] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command POWER_TABLE_CMD
-[   26.873640] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command POWER_TABLE_CMD
-[   26.873645] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.873647] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.873650] iwlwifi 0000:02:00.0: U iwlagn_mac_start Start UP work done.
-[   26.873657] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.873660] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   26.873664] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   26.873665]   * without RXON_FILTER_ASSOC_MSK
-[   26.873666]   * channel = 1
-[   26.873667]   * bssid = 00:00:00:00:00:00
-[   26.873669] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   26.873672] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   26.875036] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   26.875049] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   26.875052] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   26.875055] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   26.875057] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   26.875059] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   26.875061] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   26.875063] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.875164] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   26.875167] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   26.875169] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   26.875172] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   26.875174] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   26.875177] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.875186] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   26.875188] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   26.875190] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.876394] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.876405] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   26.876407] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   26.876414] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.876417] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   26.876421] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   26.876422]   * without RXON_FILTER_ASSOC_MSK
-[   26.876423]   * channel = 1
-[   26.876424]   * bssid = 00:00:00:00:00:00
-[   26.876426] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   26.876429] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   26.877989] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   26.878001] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   26.878004] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   26.878007] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   26.878009] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   26.878011] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   26.878013] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   26.878015] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.878131] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   26.878134] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   26.878136] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   26.878138] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   26.878140] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   26.878143] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   26.878152] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   26.878154] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   26.878156] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.879373] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   26.879383] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   26.879386] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   26.879392] iwlwifi 0000:02:00.0: U iwlagn_update_qos send QoS cmd with Qos active=0 FLAGS=0x0
-[   26.879395] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_QOS_PARAM
-[   26.879398] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_QOS_PARAM
-[   26.880602] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_QOS_PARAM
-[   26.880613] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.880619] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.880622] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   26.880937] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[   28.954338] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   28.955605] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   28.958550] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   29.322040] iwlwifi 0000:02:00.0: Mapped ffffea0004995b80 to 00000000fff1a000
-[   29.323313] iwlwifi 0000:02:00.0: Mapped ffffea0004a5b100 to 00000000fff18000
-[   29.324608] iwlwifi 0000:02:00.0: Mapped ffffea00049e8c00 to 00000000fff16000
-[   29.325886] iwlwifi 0000:02:00.0: Mapped ffffea0004995880 to 00000000fff14000
-[   29.325889] iwlwifi 0000:02:00.0: Mapped ffffea00049e5b00 to 00000000fff12000
-[   29.325891] iwlwifi 0000:02:00.0: Mapped ffffea0004933100 to 00000000fff10000
-[   29.325894] iwlwifi 0000:02:00.0: Mapped ffffea00049ec980 to 00000000fff0e000
-[   29.325896] iwlwifi 0000:02:00.0: Mapped ffffea0004994d00 to 00000000fff0c000
-[   29.325898] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d280 to 00000000fff0a000
-[   29.325901] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ed80 to 00000000fff08000
-[   29.325903] iwlwifi 0000:02:00.0: Mapped ffffea0004992080 to 00000000fff06000
-[   29.325906] iwlwifi 0000:02:00.0: Mapped ffffea0004992d80 to 00000000fff04000
-[   29.325908] iwlwifi 0000:02:00.0: Mapped ffffea0004992e00 to 00000000fff02000
-[   29.325910] iwlwifi 0000:02:00.0: Mapped ffffea0004991f80 to 00000000fff00000
-[   29.325913] iwlwifi 0000:02:00.0: Mapped ffffea0004a1f300 to 00000000ffefe000
-[   29.325916] iwlwifi 0000:02:00.0: Mapped ffffea00049e5100 to 00000000ffefc000
-[   29.325918] iwlwifi 0000:02:00.0: Mapped ffffea0004a1fe00 to 00000000ffefa000
-[   29.325921] iwlwifi 0000:02:00.0: Mapped ffffea00049e1b00 to 00000000ffef8000
-[   29.325923] iwlwifi 0000:02:00.0: Mapped ffffea00049e4980 to 00000000ffef6000
-[   29.325925] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c600 to 00000000ffef4000
-[   29.325927] iwlwifi 0000:02:00.0: Mapped ffffea0004990600 to 00000000ffef2000
-[   29.325930] iwlwifi 0000:02:00.0: Mapped ffffea00049e9f80 to 00000000ffef0000
-[   29.325932] iwlwifi 0000:02:00.0: Mapped ffffea0004991500 to 00000000ffeee000
-[   29.325935] iwlwifi 0000:02:00.0: Mapped ffffea00049ea000 to 00000000ffeec000
-[   29.325937] iwlwifi 0000:02:00.0: Mapped ffffea0004990480 to 00000000ffeea000
-[   29.325939] iwlwifi 0000:02:00.0: Mapped ffffea00049ef900 to 00000000ffee8000
-[   29.325942] iwlwifi 0000:02:00.0: Mapped ffffea00049e8680 to 00000000ffee6000
-[   29.325944] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c080 to 00000000ffee4000
-[   29.325946] iwlwifi 0000:02:00.0: Mapped ffffea0004993980 to 00000000ffee2000
-[   29.325949] iwlwifi 0000:02:00.0: Mapped ffffea0004994180 to 00000000ffee0000
-[   29.325951] iwlwifi 0000:02:00.0: Mapped ffffea0004994400 to 00000000ffede000
-[   29.325953] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c900 to 00000000ffedc000
-[   29.325955] iwlwifi 0000:02:00.0: Mapped ffffea00049e4f80 to 00000000ffeda000
-[   29.325958] iwlwifi 0000:02:00.0: Mapped ffffea0004a19c80 to 00000000ffed8000
-[   29.325960] iwlwifi 0000:02:00.0: Mapped ffffea00049ed580 to 00000000ffed6000
-[   29.325962] iwlwifi 0000:02:00.0: Mapped ffffea00049e7e80 to 00000000ffed4000
-[   29.325965] iwlwifi 0000:02:00.0: Mapped ffffea00049ec300 to 00000000ffed2000
-[   29.325967] iwlwifi 0000:02:00.0: Mapped ffffea00049e4b00 to 00000000ffed0000
-[   29.325969] iwlwifi 0000:02:00.0: Mapped ffffea0004993880 to 00000000ffece000
-[   29.325972] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d380 to 00000000ffecc000
-[   29.325974] iwlwifi 0000:02:00.0: Mapped ffffea00049e3f80 to 00000000ffeca000
-[   29.325976] iwlwifi 0000:02:00.0: Mapped ffffea00049e7f00 to 00000000ffec8000
-[   29.325979] iwlwifi 0000:02:00.0: Mapped ffffea0004993b00 to 00000000ffec6000
-[   29.325981] iwlwifi 0000:02:00.0: Mapped ffffea00049e7280 to 00000000ffec4000
-[   29.325983] iwlwifi 0000:02:00.0: Mapped ffffea0004991380 to 00000000ffec2000
-[   29.325986] iwlwifi 0000:02:00.0: Mapped ffffea00049e1f00 to 00000000ffec0000
-[   29.325988] iwlwifi 0000:02:00.0: Mapped ffffea0004995c00 to 00000000ffebe000
-[   29.325990] iwlwifi 0000:02:00.0: Mapped ffffea0004a1a700 to 00000000ffebc000
-[   29.325993] iwlwifi 0000:02:00.0: Mapped ffffea0004931b80 to 00000000ffeba000
-[   29.325995] iwlwifi 0000:02:00.0: Mapped ffffea000495f700 to 00000000ffeb8000
-[   29.325998] iwlwifi 0000:02:00.0: Mapped ffffea00049e5500 to 00000000ffeb6000
-[   29.326000] iwlwifi 0000:02:00.0: Mapped ffffea00049e2c80 to 00000000ffeb4000
-[   29.326002] iwlwifi 0000:02:00.0: Mapped ffffea00049e5480 to 00000000ffeb2000
-[   29.326005] iwlwifi 0000:02:00.0: Mapped ffffea00049e7700 to 00000000ffeb0000
-[   29.326007] iwlwifi 0000:02:00.0: Mapped ffffea00049e8900 to 00000000ffeae000
-[   29.326009] iwlwifi 0000:02:00.0: Mapped ffffea0004991d00 to 00000000ffeac000
-[   29.326012] iwlwifi 0000:02:00.0: Mapped ffffea0004939800 to 00000000ffeaa000
-[   29.326014] iwlwifi 0000:02:00.0: Mapped ffffea0004939880 to 00000000ffea8000
-[   29.326017] iwlwifi 0000:02:00.0: Mapped ffffea0004939900 to 00000000ffea6000
-[   29.588788] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   29.589542] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   29.589543]   * without RXON_FILTER_ASSOC_MSK
-[   29.589544]   * channel = 1
-[   29.589545]   * bssid = 00:00:00:00:00:00
-[   29.592506] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   29.592509] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   29.594618] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   29.595363] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   29.596079] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   29.596804] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   29.597541] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   29.597544] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   29.597546] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   29.597547] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   29.598980] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   29.598982] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   29.598985] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   29.598987] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   29.598989] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   29.598992] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   29.599003] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   29.599005] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   29.599007] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   29.600214] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   29.600226] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   29.600229] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   29.600248] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   29.600252] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   29.602747] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   32.044372] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   32.045762] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   32.049682] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   32.051278] wlan0: authenticate with 54:75:d0:3f:56:11
-[   32.051286] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   32.052389] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   32.053552] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   32.053553]   * without RXON_FILTER_ASSOC_MSK
-[   32.053554]   * channel = 1
-[   32.053555]   * bssid = 00:00:00:00:00:00
-[   32.058049] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   32.058051] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   32.060495] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   32.060533] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   32.060536] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   32.060540] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   32.060542] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   32.060545] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   32.060547] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   32.060549] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.061705] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   32.061707] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   32.061709] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   32.061712] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   32.061714] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   32.061716] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.061749] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   32.061752] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   32.061754] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   32.077855] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   32.077893] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   32.077896] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   32.077904] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   32.077906] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   32.077909] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   32.077910]   * without RXON_FILTER_ASSOC_MSK
-[   32.077910]   * channel = 1
-[   32.077911]   * bssid = 54:75:d0:3f:56:11
-[   32.077913] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   32.077914] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   32.082988] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   32.082999] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   32.083002] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   32.083005] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   32.083007] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   32.083009] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   32.083011] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   32.083013] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.097224] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   32.097226] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   32.097228] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   32.097230] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   32.097232] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   32.097235] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.097268] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   32.097271] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   32.097273] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   32.113810] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   32.113821] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   32.113824] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   32.113830] iwlwifi 0000:02:00.0: U iwlagn_mac_sta_add proceeding to add station 54:75:d0:3f:56:11
-[   32.113833] iwlwifi 0000:02:00.0: I iwl_prep_station Add STA to driver ID 0: 54:75:d0:3f:56:11
-[   32.113835] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 0 (54:75:d0:3f:56:11) synchronously
-[   32.113837] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   32.113839] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.118850] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 0
-[   32.118852] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   32.118854] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 0 addr 54:75:d0:3f:56:11 to uCode
-[   32.118856] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 0 addr 54:75:d0:3f:56:11
-[   32.118858] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer 54:75:d0:3f:56:11
-[   32.118860] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.118902] wlan0: send auth to 54:75:d0:3f:56:11 (try 1/3)
-[   32.143818] iwlwifi 0000:02:00.0: Mapped ffffea00049e9480 to 00000000ffdd0000
-[   32.145108] iwlwifi 0000:02:00.0: Mapped ffffea00049ebe80 to 00000000ffdc4000
-[   32.146361] iwlwifi 0000:02:00.0: Mapped ffffea00049e9c00 to 00000000ffdc2000
-[   32.147607] iwlwifi 0000:02:00.0: Mapped ffffea0004993300 to 00000000ffdc0000
-[   32.148848] iwlwifi 0000:02:00.0: Mapped ffffea00049e7d00 to 00000000ffdbe000
-[   32.150077] iwlwifi 0000:02:00.0: Mapped ffffea00049e9a80 to 00000000ffdbc000
-[   32.151297] iwlwifi 0000:02:00.0: Mapped ffffea00049ea900 to 00000000ffdba000
-[   32.152497] iwlwifi 0000:02:00.0: Mapped ffffea0004952b80 to 00000000ffdb8000
-[   32.153724] iwlwifi 0000:02:00.0: Mapped ffffea0004954680 to 00000000ffdb4000
-[   32.154905] iwlwifi 0000:02:00.0: Mapped ffffea0004992f00 to 00000000ffdb2000
-[   32.156104] iwlwifi 0000:02:00.0: Mapped ffffea0004938b80 to 00000000ffdb0000
-[   32.157258] iwlwifi 0000:02:00.0: Mapped ffffea0004930100 to 00000000ffdae000
-[   32.158399] iwlwifi 0000:02:00.0: Mapped ffffea0004995a80 to 00000000ffdac000
-[   32.159537] iwlwifi 0000:02:00.0: Mapped ffffea0004995980 to 00000000ffdaa000
-[   32.160653] iwlwifi 0000:02:00.0: Mapped ffffea0004939980 to 00000000ffda8000
-[   32.161752] iwlwifi 0000:02:00.0: Mapped ffffea00049eb900 to 00000000ffda6000
-[   32.162835] iwlwifi 0000:02:00.0: Mapped ffffea00049e5f00 to 00000000ffda4000
-[   32.163910] iwlwifi 0000:02:00.0: Mapped ffffea0004934400 to 00000000ffdc8000
-[   32.164966] iwlwifi 0000:02:00.0: Mapped ffffea0004934480 to 00000000ffdc6000
-[   32.166045] iwlwifi 0000:02:00.0: Mapped ffffea0004933f00 to 00000000ffda2000
-[   32.167081] iwlwifi 0000:02:00.0: Mapped ffffea0004933f80 to 00000000ffda0000
-[   32.168119] iwlwifi 0000:02:00.0: Mapped ffffea00049ec000 to 00000000ffd9e000
-[   32.169189] iwlwifi 0000:02:00.0: Mapped ffffea0004934580 to 00000000ffd9c000
-[   32.170208] iwlwifi 0000:02:00.0: Mapped ffffea00049ec080 to 00000000ffd9a000
-[   32.170211] iwlwifi 0000:02:00.0: Mapped ffffea00049e2a00 to 00000000ffd98000
-[   32.170214] iwlwifi 0000:02:00.0: Mapped ffffea00049e2a80 to 00000000ffd96000
-[   32.170216] iwlwifi 0000:02:00.0: Mapped ffffea0004990c00 to 00000000ffd94000
-[   32.170218] iwlwifi 0000:02:00.0: Mapped ffffea0004990c80 to 00000000ffd92000
-[   32.170221] iwlwifi 0000:02:00.0: Mapped ffffea0004991100 to 00000000ffd90000
-[   32.170224] iwlwifi 0000:02:00.0: Mapped ffffea0004991180 to 00000000ffd8e000
-[   32.170226] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e00 to 00000000ffd8c000
-[   32.170229] iwlwifi 0000:02:00.0: Mapped ffffea00049e5e80 to 00000000ffd8a000
-[   32.170232] iwlwifi 0000:02:00.0: Mapped ffffea00049e9600 to 00000000ffd88000
-[   32.170235] iwlwifi 0000:02:00.0: Mapped ffffea00049e9680 to 00000000ffd86000
-[   32.170239] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d400 to 00000000ffd84000
-[   32.170241] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d480 to 00000000ffd82000
-[   32.170245] iwlwifi 0000:02:00.0: Mapped ffffea00049eaf00 to 00000000ffd80000
-[   32.170248] iwlwifi 0000:02:00.0: Mapped ffffea00049eaf80 to 00000000ffd7e000
-[   32.170251] iwlwifi 0000:02:00.0: Mapped ffffea0004a1eb00 to 00000000ffd7c000
-[   32.170254] iwlwifi 0000:02:00.0: Mapped ffffea0004a1eb80 to 00000000ffd7a000
-[   32.170257] iwlwifi 0000:02:00.0: Mapped ffffea0004991600 to 00000000ffd78000
-[   32.170260] iwlwifi 0000:02:00.0: Mapped ffffea0004991680 to 00000000ffd76000
-[   32.170263] iwlwifi 0000:02:00.0: Mapped ffffea0004993000 to 00000000ffd74000
-[   32.170266] iwlwifi 0000:02:00.0: Mapped ffffea0004993080 to 00000000ffd72000
-[   32.170269] iwlwifi 0000:02:00.0: Mapped ffffea0004a10a00 to 00000000ffd70000
-[   32.170273] iwlwifi 0000:02:00.0: Mapped ffffea0004a10a80 to 00000000ffd6e000
-[   32.170276] iwlwifi 0000:02:00.0: Mapped ffffea00049e5800 to 00000000ffd6c000
-[   32.170279] iwlwifi 0000:02:00.0: Mapped ffffea00049e5880 to 00000000ffd6a000
-[   32.170282] iwlwifi 0000:02:00.0: Mapped ffffea00049ed100 to 00000000ffd68000
-[   32.170285] iwlwifi 0000:02:00.0: Mapped ffffea00049ed180 to 00000000ffd66000
-[   32.170288] iwlwifi 0000:02:00.0: Mapped ffffea00049e3b00 to 00000000ffd64000
-[   32.170291] iwlwifi 0000:02:00.0: Mapped ffffea00049e3b80 to 00000000ffd62000
-[   32.170294] iwlwifi 0000:02:00.0: Mapped ffffea00049e4e00 to 00000000ffd60000
-[   32.170297] iwlwifi 0000:02:00.0: Mapped ffffea00049e4e80 to 00000000ffd5e000
-[   32.170300] iwlwifi 0000:02:00.0: Mapped ffffea0004990500 to 00000000ffd5c000
-[   32.170303] iwlwifi 0000:02:00.0: Mapped ffffea0004990580 to 00000000ffd5a000
-[   32.170306] iwlwifi 0000:02:00.0: Mapped ffffea00049eb800 to 00000000ffd58000
-[   32.170310] iwlwifi 0000:02:00.0: Mapped ffffea00049eb880 to 00000000ffd56000
-[   32.170313] iwlwifi 0000:02:00.0: Mapped ffffea00049e5d00 to 00000000ffd54000
-[   32.318762] wlan0: send auth to 54:75:d0:3f:56:11 (try 2/3)
-[   32.519511] wlan0: send auth to 54:75:d0:3f:56:11 (try 3/3)
-[   32.720243] wlan0: authentication with 54:75:d0:3f:56:11 timed out
-[   32.720255] iwlwifi 0000:02:00.0: U iwlagn_mac_sta_remove proceeding to remove station 54:75:d0:3f:56:11
-[   32.720905] iwlwifi 0000:02:00.0: U iwl_deactivate_station Deactivating STA: 54:75:d0:3f:56:11 (0)
-[   32.721635] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   32.722318] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   32.722321] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   32.722322]   * without RXON_FILTER_ASSOC_MSK
-[   32.722323]   * channel = 1
-[   32.722323]   * bssid = 00:00:00:00:00:00
-[   32.722326] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   32.722328] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   32.726060] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   32.726075] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   32.726078] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 0
-[   32.726081] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   32.726085] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   32.726088] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   32.726091] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 0 (54:75:d0:3f:56:11) synchronously
-[   32.726094] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   32.726097] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.727635] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 0
-[   32.727638] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   32.727640] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr 54:75:d0:3f:56:11
-[   32.727642] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 0 addr 54:75:d0:3f:56:11 to uCode
-[   32.727644] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 0 addr 54:75:d0:3f:56:11
-[   32.727646] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer 54:75:d0:3f:56:11
-[   32.727649] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.727660] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   32.727662] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   32.727664] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.727828] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   32.727831] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   32.727833] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   32.727835] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   32.727837] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   32.727840] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   32.727850] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   32.727852] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   32.727854] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   32.728154] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   32.728166] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   32.728169] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   32.728182] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   37.722624] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   37.723806] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   37.726670] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   38.227217] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[   38.228487] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   38.232340] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[   38.389635] iwlwifi 0000:02:00.0: Mapped ffffea00049e9f80 to 00000000fff1e000
-[   38.390941] iwlwifi 0000:02:00.0: Mapped ffffea0004990480 to 00000000fff1c000
-[   38.392215] iwlwifi 0000:02:00.0: Mapped ffffea00049ef900 to 00000000fff1a000
-[   38.393453] iwlwifi 0000:02:00.0: Mapped ffffea00049ea000 to 00000000fff18000
-[   38.394693] iwlwifi 0000:02:00.0: Mapped ffffea0004991500 to 00000000fff16000
-[   38.395936] iwlwifi 0000:02:00.0: Mapped ffffea0004990600 to 00000000fff14000
-[   38.397186] iwlwifi 0000:02:00.0: Mapped ffffea0004992080 to 00000000fff10000
-[   38.398399] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ed80 to 00000000fff0e000
-[   38.399591] iwlwifi 0000:02:00.0: Mapped ffffea0004a1d280 to 00000000fff0c000
-[   38.400776] iwlwifi 0000:02:00.0: Mapped ffffea00049e5b00 to 00000000fff0a000
-[   38.401975] iwlwifi 0000:02:00.0: Mapped ffffea0004a1c080 to 00000000fff08000
-[   38.403136] iwlwifi 0000:02:00.0: Mapped ffffea0004995880 to 00000000fff06000
-[   38.403139] iwlwifi 0000:02:00.0: Mapped ffffea00049e8c00 to 00000000fff04000
-[   38.403141] iwlwifi 0000:02:00.0: Mapped ffffea0004a5b100 to 00000000fff02000
-[   38.403144] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ea00 to 00000000fff00000
-[   38.403146] iwlwifi 0000:02:00.0: Mapped ffffea00049e6e80 to 00000000ffefe000
-[   38.403148] iwlwifi 0000:02:00.0: Mapped ffffea00049ea180 to 00000000ffefc000
-[   38.403151] iwlwifi 0000:02:00.0: Mapped ffffea0004931d80 to 00000000ffefa000
-[   38.403153] iwlwifi 0000:02:00.0: Mapped ffffea00049e6180 to 00000000ffef8000
-[   38.403156] iwlwifi 0000:02:00.0: Mapped ffffea00049e2700 to 00000000ffef6000
-[   38.403158] iwlwifi 0000:02:00.0: Mapped ffffea0004a1da00 to 00000000ffef4000
-[   38.403161] iwlwifi 0000:02:00.0: Mapped ffffea0004992a80 to 00000000ffef2000
-[   38.403163] iwlwifi 0000:02:00.0: Mapped ffffea00049e8500 to 00000000ffef0000
-[   38.403165] iwlwifi 0000:02:00.0: Mapped ffffea0004a1e580 to 00000000ffeee000
-[   38.403169] iwlwifi 0000:02:00.0: Mapped ffffea0004990880 to 00000000ffeec000
-[   38.403172] iwlwifi 0000:02:00.0: Mapped ffffea00049ec280 to 00000000ffeea000
-[   38.403175] iwlwifi 0000:02:00.0: Mapped ffffea0004995280 to 00000000ffee8000
-[   38.403178] iwlwifi 0000:02:00.0: Mapped ffffea0004a10b00 to 00000000ffee6000
-[   38.403192] iwlwifi 0000:02:00.0: Mapped ffffea0004994000 to 00000000ffd1e000
-[   38.403195] iwlwifi 0000:02:00.0: Mapped ffffea0004993100 to 00000000ffd1c000
-[   38.403198] iwlwifi 0000:02:00.0: Mapped ffffea0004a1dd80 to 00000000ffd1a000
-[   38.403201] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b180 to 00000000ffd18000
-[   38.403204] iwlwifi 0000:02:00.0: Mapped ffffea0004a19d80 to 00000000ffd16000
-[   38.403207] iwlwifi 0000:02:00.0: Mapped ffffea0004a1b700 to 00000000ffd14000
-[   38.403210] iwlwifi 0000:02:00.0: Mapped ffffea00049eae80 to 00000000ffd12000
-[   38.403213] iwlwifi 0000:02:00.0: Mapped ffffea00049e1880 to 00000000ffd10000
-[   38.403216] iwlwifi 0000:02:00.0: Mapped ffffea000495f000 to 00000000ffd0e000
-[   38.403219] iwlwifi 0000:02:00.0: Mapped ffffea0004953200 to 00000000ffd0c000
-[   38.403221] iwlwifi 0000:02:00.0: Mapped ffffea000495fa80 to 00000000ffd0a000
-[   38.403224] iwlwifi 0000:02:00.0: Mapped ffffea0004997300 to 00000000ffd08000
-[   38.403227] iwlwifi 0000:02:00.0: Mapped ffffea000495f800 to 00000000ffd06000
-[   38.403231] iwlwifi 0000:02:00.0: Mapped ffffea0004933200 to 00000000ffd04000
-[   38.403234] iwlwifi 0000:02:00.0: Mapped ffffea0004931580 to 00000000ffd02000
-[   38.403236] iwlwifi 0000:02:00.0: Mapped ffffea0004a10800 to 00000000ffd00000
-[   38.403239] iwlwifi 0000:02:00.0: Mapped ffffea00049e6380 to 00000000ffcfe000
-[   38.403242] iwlwifi 0000:02:00.0: Mapped ffffea0004939d80 to 00000000ffcfc000
-[   38.403245] iwlwifi 0000:02:00.0: Mapped ffffea0004995500 to 00000000ffcfa000
-[   38.403248] iwlwifi 0000:02:00.0: Mapped ffffea0004992900 to 00000000ffcf8000
-[   38.403251] iwlwifi 0000:02:00.0: Mapped ffffea000493a080 to 00000000ffcf6000
-[   38.403253] iwlwifi 0000:02:00.0: Mapped ffffea0004938a00 to 00000000ffcf4000
-[   38.403256] iwlwifi 0000:02:00.0: Mapped ffffea0004938a80 to 00000000ffcf2000
-[   38.403259] iwlwifi 0000:02:00.0: Mapped ffffea0004938800 to 00000000ffcf0000
-[   38.403262] iwlwifi 0000:02:00.0: Mapped ffffea0004938880 to 00000000ffcee000
-[   38.403264] iwlwifi 0000:02:00.0: Mapped ffffea0004938900 to 00000000ffcec000
-[   38.403267] iwlwifi 0000:02:00.0: Mapped ffffea0004938980 to 00000000ffcea000
-[   38.403271] iwlwifi 0000:02:00.0: Mapped ffffea000493a200 to 00000000ffce8000
-[   38.403274] iwlwifi 0000:02:00.0: Mapped ffffea000493a280 to 00000000ffce6000
-[   38.403277] iwlwifi 0000:02:00.0: Mapped ffffea000493a300 to 00000000ffce4000
-[   38.403280] iwlwifi 0000:02:00.0: Mapped ffffea000493a380 to 00000000ffce2000
-[   38.403283] iwlwifi 0000:02:00.0: Mapped ffffea000493a400 to 00000000ffce0000
-[   38.403285] iwlwifi 0000:02:00.0: Mapped ffffea000493a480 to 00000000ffcde000
-[   38.403288] iwlwifi 0000:02:00.0: Mapped ffffea000493a500 to 00000000ffcdc000
-[   38.403290] iwlwifi 0000:02:00.0: Mapped ffffea000493a580 to 00000000ffcd4000
-[   40.700649] wlan0: authenticate with 54:75:d0:3f:56:11
-[   40.700657] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   40.701306] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command POWER_TABLE_CMD
-[   40.701974] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command POWER_TABLE_CMD
-[   40.703445] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command POWER_TABLE_CMD
-[   40.704147] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   40.704861] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   40.705540] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   40.706250] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   40.706255] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   40.706256]   * without RXON_FILTER_ASSOC_MSK
-[   40.706257]   * channel = 1
-[   40.706257]   * bssid = 54:75:d0:3f:56:11
-[   40.706260] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   40.706262] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   40.706465] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   40.706475] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   40.706478] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 0
-[   40.706480] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   40.706483] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   40.706485] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   40.706488] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   40.706490] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   40.706492] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   40.706598] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   40.706600] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   40.706602] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   40.706604] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   40.706606] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   40.706609] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   40.706614] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   40.706616] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   40.706618] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   40.706714] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   40.706719] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   40.706721] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   40.706726] iwlwifi 0000:02:00.0: U iwlagn_mac_sta_add proceeding to add station 54:75:d0:3f:56:11
-[   40.706730] iwlwifi 0000:02:00.0: I iwl_prep_station Add STA to driver ID 0: 54:75:d0:3f:56:11
-[   40.706732] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 0 (54:75:d0:3f:56:11) synchronously
-[   40.706734] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   40.706736] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   40.706839] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 0
-[   40.706841] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   40.706842] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 0 addr 54:75:d0:3f:56:11 to uCode
-[   40.706844] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 0 addr 54:75:d0:3f:56:11
-[   40.706846] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer 54:75:d0:3f:56:11
-[   40.706849] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   40.706859] wlan0: send auth to 54:75:d0:3f:56:11 (try 1/3)
-[   40.907645] wlan0: send auth to 54:75:d0:3f:56:11 (try 2/3)
-[   41.108385] wlan0: send auth to 54:75:d0:3f:56:11 (try 3/3)
-[   41.188087] iwlwifi 0000:02:00.0: Mapped ffffea00049ec080 to 00000000ffe18000
-[   41.189246] iwlwifi 0000:02:00.0: Mapped ffffea00049eb900 to 00000000ffe14000
-[   41.190396] iwlwifi 0000:02:00.0: Mapped ffffea0004939980 to 00000000ffe12000
-[   41.191553] iwlwifi 0000:02:00.0: Mapped ffffea0004992f00 to 00000000ffe10000
-[   41.192712] iwlwifi 0000:02:00.0: Mapped ffffea0004952b80 to 00000000ffe0e000
-[   41.193872] iwlwifi 0000:02:00.0: Mapped ffffea00049ea900 to 00000000ffe0c000
-[   41.195067] iwlwifi 0000:02:00.0: Mapped ffffea00049e2a00 to 00000000ffe0a000
-[   41.196237] iwlwifi 0000:02:00.0: Mapped ffffea00049e7d00 to 00000000ffe08000
-[   41.197396] iwlwifi 0000:02:00.0: Mapped ffffea00049ebe80 to 00000000ffe06000
-[   41.198548] iwlwifi 0000:02:00.0: Mapped ffffea00049e9400 to 00000000ffe04000
-[   41.199682] iwlwifi 0000:02:00.0: Mapped ffffea0004939f00 to 00000000ffe02000
-[   41.200793] iwlwifi 0000:02:00.0: Mapped ffffea000493a000 to 00000000ffe00000
-[   41.201900] iwlwifi 0000:02:00.0: Mapped ffffea0004938d80 to 00000000ffdfe000
-[   41.202992] iwlwifi 0000:02:00.0: Mapped ffffea0004930680 to 00000000ffdfc000
-[   41.204068] iwlwifi 0000:02:00.0: Mapped ffffea000495eb00 to 00000000ffdfa000
-[   41.205174] iwlwifi 0000:02:00.0: Mapped ffffea00049eaa80 to 00000000ffdf8000
-[   41.206255] iwlwifi 0000:02:00.0: Mapped ffffea0004933400 to 00000000ffdf6000
-[   41.207363] iwlwifi 0000:02:00.0: Mapped ffffea00049e2a80 to 00000000ffdf4000
-[   41.208432] iwlwifi 0000:02:00.0: Mapped ffffea00049e6d80 to 00000000ffdf2000
-[   41.209484] iwlwifi 0000:02:00.0: Mapped ffffea0004991d00 to 00000000ffdf0000
-[   41.210532] iwlwifi 0000:02:00.0: Mapped ffffea00049e8900 to 00000000ffdee000
-[   41.211579] iwlwifi 0000:02:00.0: Mapped ffffea00049e7e80 to 00000000ffdec000
-[   41.212611] iwlwifi 0000:02:00.0: Mapped ffffea00049ed580 to 00000000ffdea000
-[   41.213637] iwlwifi 0000:02:00.0: Mapped ffffea0004a19c80 to 00000000ffde8000
-[   41.214648] iwlwifi 0000:02:00.0: Mapped ffffea00049e4f80 to 00000000ffde6000
-[   41.215648] iwlwifi 0000:02:00.0: Mapped ffffea00049e9c00 to 00000000ffde4000
-[   41.216672] iwlwifi 0000:02:00.0: Mapped ffffea00049ebf00 to 00000000ffde0000
-[   41.217669] iwlwifi 0000:02:00.0: Mapped ffffea00049ebf80 to 00000000ffdde000
-[   41.218655] iwlwifi 0000:02:00.0: Mapped ffffea00049e9d00 to 00000000ffddc000
-[   41.218658] iwlwifi 0000:02:00.0: Mapped ffffea00049e9d80 to 00000000ffdda000
-[   41.218660] iwlwifi 0000:02:00.0: Mapped ffffea00049eb400 to 00000000ffdd8000
-[   41.218662] iwlwifi 0000:02:00.0: Mapped ffffea00049eb480 to 00000000ffdd6000
-[   41.218665] iwlwifi 0000:02:00.0: Mapped ffffea000495fc00 to 00000000ffdd4000
-[   41.218667] iwlwifi 0000:02:00.0: Mapped ffffea000495fc80 to 00000000ffdd2000
-[   41.218669] iwlwifi 0000:02:00.0: Mapped ffffea0004934000 to 00000000ffdd0000
-[   41.218672] iwlwifi 0000:02:00.0: Mapped ffffea0004934080 to 00000000ffdce000
-[   41.218674] iwlwifi 0000:02:00.0: Mapped ffffea0004934300 to 00000000ffdcc000
-[   41.218677] iwlwifi 0000:02:00.0: Mapped ffffea0004934380 to 00000000ffdca000
-[   41.218680] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ca00 to 00000000ffdc8000
-[   41.218683] iwlwifi 0000:02:00.0: Mapped ffffea0004a1ca80 to 00000000ffdc6000
-[   41.218686] iwlwifi 0000:02:00.0: Mapped ffffea0004933700 to 00000000ffdc4000
-[   41.218689] iwlwifi 0000:02:00.0: Mapped ffffea0004933780 to 00000000ffdc2000
-[   41.218692] iwlwifi 0000:02:00.0: Mapped ffffea0004934400 to 00000000ffdc0000
-[   41.218695] iwlwifi 0000:02:00.0: Mapped ffffea0004934480 to 00000000ffdbe000
-[   41.218698] iwlwifi 0000:02:00.0: Mapped ffffea0004934500 to 00000000ffdbc000
-[   41.218701] iwlwifi 0000:02:00.0: Mapped ffffea0004934580 to 00000000ffdba000
-[   41.218704] iwlwifi 0000:02:00.0: Mapped ffffea0004933e00 to 00000000ffdb8000
-[   41.218707] iwlwifi 0000:02:00.0: Mapped ffffea0004933e80 to 00000000ffdb6000
-[   41.218710] iwlwifi 0000:02:00.0: Mapped ffffea0004933f00 to 00000000ffdb4000
-[   41.218713] iwlwifi 0000:02:00.0: Mapped ffffea0004933f80 to 00000000ffdb2000
-[   41.218716] iwlwifi 0000:02:00.0: Mapped ffffea0004938200 to 00000000ffdb0000
-[   41.218720] iwlwifi 0000:02:00.0: Mapped ffffea0004938280 to 00000000ffdae000
-[   41.218723] iwlwifi 0000:02:00.0: Mapped ffffea0004938300 to 00000000ffdac000
-[   41.218725] iwlwifi 0000:02:00.0: Mapped ffffea0004938380 to 00000000ffdaa000
-[   41.218728] iwlwifi 0000:02:00.0: Mapped ffffea0004993e00 to 00000000ffda8000
-[   41.218731] iwlwifi 0000:02:00.0: Mapped ffffea0004993e80 to 00000000ffda6000
-[   41.218734] iwlwifi 0000:02:00.0: Mapped ffffea0004993f00 to 00000000ffda4000
-[   41.218737] iwlwifi 0000:02:00.0: Mapped ffffea0004993f80 to 00000000ffda2000
-[   41.218740] iwlwifi 0000:02:00.0: Mapped ffffea0004995600 to 00000000ffda0000
-[   41.218743] iwlwifi 0000:02:00.0: Mapped ffffea0004995680 to 00000000ffd9e000
-[   41.309126] wlan0: authentication with 54:75:d0:3f:56:11 timed out
-[   41.309138] iwlwifi 0000:02:00.0: U iwlagn_mac_sta_remove proceeding to remove station 54:75:d0:3f:56:11
-[   41.309790] iwlwifi 0000:02:00.0: U iwl_deactivate_station Deactivating STA: 54:75:d0:3f:56:11 (0)
-[   41.316627] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   41.317318] iwlwifi 0000:02:00.0: U iwl_full_rxon_required need full RXON - !iwl_is_associated_ctx(ctx)
-[   41.318000] iwlwifi 0000:02:00.0: U iwlagn_commit_rxon Going to commit RXON
-[   41.318001]   * without RXON_FILTER_ASSOC_MSK
-[   41.318002]   * channel = 1
-[   41.318002]   * bssid = 00:00:00:00:00:00
-[   41.320760] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[   41.321494] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[   41.323389] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[   41.324185] iwlwifi 0000:02:00.0: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[   41.324945] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 0
-[   41.325714] iwlwifi 0000:02:00.0: I iwl_clear_ucode_stations Clearing ucode active for station 15
-[   41.326489] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations ... start.
-[   41.327266] iwlwifi 0000:02:00.0: I iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[   41.328044] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 0 (54:75:d0:3f:56:11) synchronously
-[   41.328841] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   41.329645] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   41.331708] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 0
-[   41.332547] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   41.333374] iwlwifi 0000:02:00.0: ACTIVATE a non DRIVER active station id 0 addr 54:75:d0:3f:56:11
-[   41.334220] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 0 addr 54:75:d0:3f:56:11 to uCode
-[   41.335083] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 0 addr 54:75:d0:3f:56:11
-[   41.335956] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer 54:75:d0:3f:57:11
-[   41.336842] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   41.337747] iwlwifi 0000:02:00.0: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[   41.338671] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[   41.339597] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[   41.339702] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Processing response for adding station 15
-[   41.339704] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[   41.339706] iwlwifi 0000:02:00.0: I iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[   41.339708] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[   41.339710] iwlwifi 0000:02:00.0: I iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[   41.339712] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[   41.339718] iwlwifi 0000:02:00.0: U is_lq_table_valid Channel 1 is not an HT channel
-[   41.339720] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[   41.339722] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   41.339817] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[   41.339823] iwlwifi 0000:02:00.0: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[   41.339825] iwlwifi 0000:02:00.0: U iwl_restore_stations Restoring all known stations .... complete.
-[   41.339841] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   41.339847] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Attempting to send sync command POWER_TABLE_CMD
-[   41.339849] iwlwifi 0000:02:00.0: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command POWER_TABLE_CMD
-[   41.339924] iwlwifi 0000:02:00.0: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command POWER_TABLE_CMD
-[   41.339931] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[   41.339933] iwlwifi 0000:02:00.0: U iwlagn_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-
---R3G7APHDIzY6R/pk--
-
---JWEK1jqKZ6MHAcjA
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAEBAgAGBQJPo+WWAAoJEFMQTLzJFOZF6I0H/AnaPG/o3FG0UOaCVb3q9HmM
-DUdbYc4XjC6RT9rJWiexM6adSi402qQ5R9eSlZUbEmjYVGqH+aggUIwIFZrdmV8E
-ZcskDy7G+SfcXdlpE/2PCjp9u/iGF5qUKKa+hB2PkmFj6XWZNT14CHz1YFKJt64w
-1OoB5+E78gyzTaVimcTxPatwnRDw6tYCddGW4bqnWu0Ygne9EN758cdFhXu697kw
-8odzDdKAZEhIWzP18PFVWtizGDuOh7ZSRAzoZUTg1GWBX99MOIszDOESkagN4VV5
-wcOxH+xz/InhSZfk1IO02GcDTlz+JSjZfGyFkYOrgHFczSh5qstAbFOmkF7cbHY=
-=dJG7
------END PGP SIGNATURE-----
-
---JWEK1jqKZ6MHAcjA--
+--ReaqsoxgOBHFXBhH--
