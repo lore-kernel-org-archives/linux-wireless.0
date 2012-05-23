@@ -1,315 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62286 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752167Ab2EVHf0 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:53167 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756117Ab2EWINj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 03:35:26 -0400
-Message-ID: <4FBB41B3.1080502@qca.qualcomm.com> (sfid-20120522_093530_695252_0E25CBC8)
-Date: Tue, 22 May 2012 13:05:15 +0530
-From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
-MIME-Version: 1.0
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath6kl: Add support for setting tx rateset.
-References: <1337596898-6990-1-git-send-email-bkamatch@qca.qualcomm.com>
-In-Reply-To: <1337596898-6990-1-git-send-email-bkamatch@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Wed, 23 May 2012 04:13:39 -0400
+Received: by weyu7 with SMTP id u7so4400190wey.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 01:13:38 -0700 (PDT)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH] mac80211: allow setting default U-APSD queues/max_sp_len for STA
+Date: Wed, 23 May 2012 11:13:33 +0300
+Message-Id: <1337760813-27055-1-git-send-email-arik@wizery.com> (sfid-20120523_101346_548028_26D95699)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some indentation issues are seen.
-Will send a new patch.
+Allow the low level driver to set U-APSD parameters when operating in
+managed mode.
 
-Regards,
-Bala.
-On 05/21/2012 04:11 PM, Bala Shanmugam wrote:
-> Tx legacy and mcs rateset can configured using iw for
-> 2.4 and 5 bands.  Add support for the same in driver.
->
-> Signed-off-by: Bala Shanmugam<bkamatch@qca.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath6kl/cfg80211.c |   25 +++++++
->   drivers/net/wireless/ath/ath6kl/core.h     |    2 +
->   drivers/net/wireless/ath/ath6kl/init.c     |    5 ++
->   drivers/net/wireless/ath/ath6kl/wmi.c      |  109 ++++++++++++++++++++++++++++
->   drivers/net/wireless/ath/ath6kl/wmi.h      |   32 ++++++++
->   5 files changed, 173 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> index 7845d33..8c69880 100644
-> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> @@ -3320,6 +3320,19 @@ static int ath6kl_cfg80211_sscan_stop(struct wiphy *wiphy,
->   	return 0;
->   }
->
-> +static int ath6kl_cfg80211_set_bitrate_mask(
-> +				struct wiphy *wiphy,
-> +				struct net_device *dev,
-> +				const u8 *addr,
-> +				const struct cfg80211_bitrate_mask *mask)
-> +{
-> +	struct ath6kl *ar = ath6kl_priv(dev);
-> +	struct ath6kl_vif *vif = netdev_priv(dev);
-> +
-> +	return ath6kl_wmi_set_bitrate_mask(ar->wmi, vif->fw_vif_idx,
-> +				mask);
-> +}
-> +
->   static const struct ieee80211_txrx_stypes
->   ath6kl_mgmt_stypes[NUM_NL80211_IFTYPES] = {
->   	[NL80211_IFTYPE_STATION] = {
-> @@ -3386,6 +3399,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
->   	.mgmt_frame_register = ath6kl_mgmt_frame_register,
->   	.sched_scan_start = ath6kl_cfg80211_sscan_start,
->   	.sched_scan_stop = ath6kl_cfg80211_sscan_stop,
-> +	.set_bitrate_mask = ath6kl_cfg80211_set_bitrate_mask,
->   };
->
->   void ath6kl_cfg80211_stop(struct ath6kl_vif *vif)
-> @@ -3616,6 +3630,17 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
->   		ath6kl_band_5ghz.ht_cap.cap = 0;
->   		ath6kl_band_5ghz.ht_cap.ht_supported = false;
->   	}
-> +
-> +	if (ar->hw.flags&  ATH6KL_64BIT_BITRATES) {
-> +		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[0] = 0xff;
-> +		ath6kl_band_5ghz.ht_cap.mcs.rx_mask[0] = 0xff;
-> +		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[1] = 0xff;
-> +		ath6kl_band_5ghz.ht_cap.mcs.rx_mask[1] = 0xff;
-> +	} else {
-> +		ath6kl_band_2ghz.ht_cap.mcs.rx_mask[0] = 0xff;
-> +		ath6kl_band_5ghz.ht_cap.mcs.rx_mask[0] = 0xff;
-> +	}
-> +
->   	if (band_2gig)
->   		wiphy->bands[IEEE80211_BAND_2GHZ] =&ath6kl_band_2ghz;
->   	if (band_5gig)
-> diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-> index 991bd96..d944b98 100644
-> --- a/drivers/net/wireless/ath/ath6kl/core.h
-> +++ b/drivers/net/wireless/ath/ath6kl/core.h
-> @@ -701,6 +701,8 @@ struct ath6kl {
->   		u32 uarttx_pin;
->   		u32 testscript_addr;
->   		enum wmi_phy_cap cap;
-> +#define ATH6KL_64BIT_BITRATES 1
-> +		u32 flags;
->
->   		struct ath6kl_hw_fw {
->   			const char *dir;
-> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-> index 10de132..96205f3 100644
-> --- a/drivers/net/wireless/ath/ath6kl/init.c
-> +++ b/drivers/net/wireless/ath/ath6kl/init.c
-> @@ -42,6 +42,7 @@ static const struct ath6kl_hw hw_list[] = {
->   		.reserved_ram_size		= 6912,
->   		.refclk_hz			= 26000000,
->   		.uarttx_pin			= 8,
-> +		.flags				= 0,
->
->   		/* hw2.0 needs override address hardcoded */
->   		.app_start_override_addr	= 0x944C00,
-> @@ -67,6 +68,7 @@ static const struct ath6kl_hw hw_list[] = {
->   		.refclk_hz			= 26000000,
->   		.uarttx_pin			= 8,
->   		.testscript_addr		= 0x57ef74,
-> +		.flags				= 0,
->
->   		.fw = {
->   			.dir		= AR6003_HW_2_1_1_FW_DIR,
-> @@ -91,6 +93,7 @@ static const struct ath6kl_hw hw_list[] = {
->   		.board_addr			= 0x433900,
->   		.refclk_hz			= 26000000,
->   		.uarttx_pin			= 11,
-> +		.flags				= ATH6KL_64BIT_BITRATES,
->
->   		.fw = {
->   			.dir		= AR6004_HW_1_0_FW_DIR,
-> @@ -110,6 +113,7 @@ static const struct ath6kl_hw hw_list[] = {
->   		.board_addr			= 0x43d400,
->   		.refclk_hz			= 40000000,
->   		.uarttx_pin			= 11,
-> +		.flags				= ATH6KL_64BIT_BITRATES,
->
->   		.fw = {
->   			.dir		= AR6004_HW_1_1_FW_DIR,
-> @@ -129,6 +133,7 @@ static const struct ath6kl_hw hw_list[] = {
->   		.board_addr			= 0x435c00,
->   		.refclk_hz			= 40000000,
->   		.uarttx_pin			= 11,
-> +		.flags				= ATH6KL_64BIT_BITRATES,
->
->   		.fw = {
->   			.dir		= AR6004_HW_1_2_FW_DIR,
-> diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-> index 6ad762d..77b8367 100644
-> --- a/drivers/net/wireless/ath/ath6kl/wmi.c
-> +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-> @@ -2599,6 +2599,115 @@ static void ath6kl_wmi_relinquish_implicit_pstream_credits(struct wmi *wmi)
->   	spin_unlock_bh(&wmi->lock);
->   }
->
-> +static int ath6kl_set_bitrate_mask64(struct wmi *wmi, u8 if_idx,
-> +				     const struct cfg80211_bitrate_mask *mask)
-> +{
-> +	struct sk_buff *skb;
-> +	int ret, mode, band;
-> +	u64 mcsrate, ratemask[IEEE80211_NUM_BANDS];
-> +	struct wmi_set_tx_select_rates64_cmd *cmd;
-> +
-> +	memset(&ratemask, 0, sizeof(ratemask));
-> +	for (band = 0; band<  IEEE80211_NUM_BANDS; band++) {
-> +		/* copy legacy rate mask */
-> +		ratemask[band] = mask->control[band].legacy;
-> +		if (band == IEEE80211_BAND_5GHZ)
-> +			ratemask[band] =
-> +				mask->control[band].legacy<<  4;
-> +
-> +		/* copy mcs rate mask */
-> +		mcsrate = mask->control[band].mcs[1];
-> +		mcsrate<<= 8;
-> +		mcsrate |= mask->control[band].mcs[0];
-> +		ratemask[band] |= mcsrate<<  12;
-> +		ratemask[band] |= mcsrate<<  28;
-> +	}
-> +
-> +	ath6kl_dbg(ATH6KL_DBG_WMI,
-> +			"Ratemask 64 bit: 2.4:%llx 5:%llx\n",
-> +			ratemask[0], ratemask[1]);
-> +
-> +	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd) * WMI_RATES_MODE_MAX);
-> +	if (!skb)
-> +		return -ENOMEM;
-> +
-> +	cmd = (struct wmi_set_tx_select_rates64_cmd *) skb->data;
-> +	for (mode = 0; mode<  WMI_RATES_MODE_MAX; mode++) {
-> +		/* A mode operate in 5GHZ band */
-> +		if (mode == WMI_RATES_MODE_11A ||
-> +		    mode == WMI_RATES_MODE_11A_HT20 ||
-> +		    mode == WMI_RATES_MODE_11A_HT40)
-> +			band = IEEE80211_BAND_5GHZ;
-> +		else
-> +			band = IEEE80211_BAND_2GHZ;
-> +		cmd->ratemask[mode] = cpu_to_le64(ratemask[band]);
-> +	}
-> +
-> +	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb,
-> +				  WMI_SET_TX_SELECT_RATES_CMDID,
-> +				  NO_SYNC_WMIFLAG);
-> +	return ret;
-> +}
-> +
-> +static int ath6kl_set_bitrate_mask32(struct wmi *wmi, u8 if_idx,
-> +				     const struct cfg80211_bitrate_mask *mask)
-> +{
-> +	struct sk_buff *skb;
-> +	int ret, mode, band;
-> +	u32 mcsrate, ratemask[IEEE80211_NUM_BANDS];
-> +	struct wmi_set_tx_select_rates32_cmd *cmd;
-> +
-> +	memset(&ratemask, 0, sizeof(ratemask));
-> +	for (band = 0; band<  IEEE80211_NUM_BANDS; band++) {
-> +		/* copy legacy rate mask */
-> +		ratemask[band] = mask->control[band].legacy;
-> +		if (band == IEEE80211_BAND_5GHZ)
-> +			ratemask[band] =
-> +				mask->control[band].legacy<<  4;
-> +
-> +		/* copy mcs rate mask */
-> +		mcsrate = mask->control[band].mcs[0];
-> +		ratemask[band] |= mcsrate<<  12;
-> +		ratemask[band] |= mcsrate<<  20;
-> +	}
-> +
-> +	ath6kl_dbg(ATH6KL_DBG_WMI,
-> +			"Ratemask 32 bit: 2.4:%x 5:%x\n",
-> +			ratemask[0], ratemask[1]);
-> +
-> +	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd) * WMI_RATES_MODE_MAX);
-> +	if (!skb)
-> +		return -ENOMEM;
-> +
-> +	cmd = (struct wmi_set_tx_select_rates32_cmd *) skb->data;
-> +	for (mode = 0; mode<  WMI_RATES_MODE_MAX; mode++) {
-> +		/* A mode operate in 5GHZ band */
-> +		if (mode == WMI_RATES_MODE_11A ||
-> +		    mode == WMI_RATES_MODE_11A_HT20 ||
-> +		    mode == WMI_RATES_MODE_11A_HT40)
-> +			band = IEEE80211_BAND_5GHZ;
-> +		else
-> +			band = IEEE80211_BAND_2GHZ;
-> +		cmd->ratemask[mode] = cpu_to_le32(ratemask[band]);
-> +	}
-> +
-> +	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb,
-> +				  WMI_SET_TX_SELECT_RATES_CMDID,
-> +				  NO_SYNC_WMIFLAG);
-> +	return ret;
-> +}
-> +
-> +int ath6kl_wmi_set_bitrate_mask(struct wmi *wmi, u8 if_idx,
-> +				const struct cfg80211_bitrate_mask *mask)
-> +{
-> +	struct ath6kl *ar = wmi->parent_dev;
-> +
-> +	if (ar->hw.flags&  ATH6KL_64BIT_BITRATES)
-> +		return ath6kl_set_bitrate_mask64(wmi, if_idx, mask);
-> +	else
-> +		return ath6kl_set_bitrate_mask32(wmi, if_idx, mask);
-> +}
-> +
->   int ath6kl_wmi_set_host_sleep_mode_cmd(struct wmi *wmi, u8 if_idx,
->   				       enum ath6kl_host_mode host_mode)
->   {
-> diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-> index 4775679..7c94fe3 100644
-> --- a/drivers/net/wireless/ath/ath6kl/wmi.h
-> +++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-> @@ -1063,6 +1063,36 @@ struct wmi_power_params_cmd {
->   	__le16 ps_fail_event_policy;
->   } __packed;
->
-> +/*
-> + * Ratemask for below modes should be passed
-> + * to WMI_SET_TX_SELECT_RATES_CMDID.
-> + * AR6003 has 32 bit mask for each modes.
-> + * First 12 bits for legacy rates, 13 to 20
-> + * bits for HT 20 rates and 21 to 28 bits for
-> + * HT 40 rates
-> + */
-> +enum wmi_mode_phy {
-> +	WMI_RATES_MODE_11A = 0,
-> +	WMI_RATES_MODE_11G,
-> +	WMI_RATES_MODE_11B,
-> +	WMI_RATES_MODE_11GONLY,
-> +	WMI_RATES_MODE_11A_HT20,
-> +	WMI_RATES_MODE_11G_HT20,
-> +	WMI_RATES_MODE_11A_HT40,
-> +	WMI_RATES_MODE_11G_HT40,
-> +	WMI_RATES_MODE_MAX
-> +};
-> +
-> +/* WMI_SET_TX_SELECT_RATES_CMDID */
-> +struct wmi_set_tx_select_rates32_cmd {
-> +	__le32 ratemask[WMI_RATES_MODE_MAX];
-> +} __packed;
-> +
-> +/* WMI_SET_TX_SELECT_RATES_CMDID */
-> +struct wmi_set_tx_select_rates64_cmd {
-> +	__le64 ratemask[WMI_RATES_MODE_MAX];
-> +} __packed;
-> +
->   /* WMI_SET_DISC_TIMEOUT_CMDID */
->   struct wmi_disc_timeout_cmd {
->   	/* seconds */
-> @@ -2547,6 +2577,8 @@ int ath6kl_wmi_set_ip_cmd(struct wmi *wmi, u8 if_idx,
->   			  __be32 ips0, __be32 ips1);
->   int ath6kl_wmi_set_host_sleep_mode_cmd(struct wmi *wmi, u8 if_idx,
->   				       enum ath6kl_host_mode host_mode);
-> +int ath6kl_wmi_set_bitrate_mask(struct wmi *wmi, u8 if_idx,
-> +				const struct cfg80211_bitrate_mask *mask);
->   int ath6kl_wmi_set_wow_mode_cmd(struct wmi *wmi, u8 if_idx,
->   				enum ath6kl_wow_mode wow_mode,
->   				u32 filter, u16 host_req_delay);
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ include/net/mac80211.h |    9 +++++++++
+ net/mac80211/main.c    |    8 ++++++++
+ net/mac80211/mlme.c    |    4 ++--
+ 3 files changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4d6e6c6..36c3318 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1288,6 +1288,13 @@ enum ieee80211_hw_flags {
+  *
+  * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
+  *	(if %IEEE80211_HW_QUEUE_CONTROL is set)
++ *
++ * @sta_uapsd_queues: Bitmask of enabled U-APSD queues when operating in
++ *	managed mode (%IEEE80211_WMM_IE_STA_QOSINFO_AC_VO & co). Defaults
++ *	to all four ACs.
++ *
++ * @sta_uapsd_max_sp_len: Maximum number of buffered frames AP can deliver in
++ *	a service period. Defaults to %IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1309,6 +1316,8 @@ struct ieee80211_hw {
+ 	u8 max_rx_aggregation_subframes;
+ 	u8 max_tx_aggregation_subframes;
+ 	u8 offchannel_tx_hw_queue;
++	unsigned int sta_uapsd_queues;
++	unsigned int sta_uapsd_max_sp_len;
+ };
+ 
+ /**
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index b70f7f0..56e6c61 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -594,6 +594,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	local->hw.max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
+ 	local->hw.max_tx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
+ 	local->hw.offchannel_tx_hw_queue = IEEE80211_INVAL_HW_QUEUE;
++	local->hw.sta_uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
++	local->hw.sta_uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
+ 	local->hw.conf.long_frame_max_tx_count = wiphy->retry_long;
+ 	local->hw.conf.short_frame_max_tx_count = wiphy->retry_short;
+ 	local->user_power_level = -1;
+@@ -708,6 +710,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (hw->max_report_rates == 0)
+ 		hw->max_report_rates = hw->max_rates;
+ 
++	if (hw->sta_uapsd_queues & ~IEEE80211_WMM_IE_STA_QOSINFO_AC_MASK)
++		return -EINVAL;
++
++	if (hw->sta_uapsd_max_sp_len & ~IEEE80211_WMM_IE_STA_QOSINFO_SP_MASK)
++		return -EINVAL;
++
+ 	/*
+ 	 * generic code guarantees at least one band,
+ 	 * set this very early because much code assumes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2b5235e..da52587 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2974,8 +2974,8 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ifmgd->flags = 0;
+ 	ifmgd->powersave = sdata->wdev.ps;
+-	ifmgd->uapsd_queues = IEEE80211_DEFAULT_UAPSD_QUEUES;
+-	ifmgd->uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
++	ifmgd->uapsd_queues = sdata->local->hw.sta_uapsd_queues;
++	ifmgd->uapsd_max_sp_len = sdata->local->hw.sta_uapsd_max_sp_len;
+ 
+ 	mutex_init(&ifmgd->mtx);
+ 
+-- 
+1.7.9.5
 
