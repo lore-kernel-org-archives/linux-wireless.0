@@ -1,143 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb06.tieto.com ([131.207.168.38]:62995 "EHLO ebb06.tieto.com"
+Received: from purkki.adurom.net ([80.68.90.206]:60074 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753719Ab2E1LTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 07:19:42 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 11/14] cfg80211/mac80211: remove .get_channel
-Date: Mon, 28 May 2012 13:18:59 +0200
-Message-ID: <1338203942-5667-12-git-send-email-michal.kazior@tieto.com> (sfid-20120528_132011_650518_8DC1253E)
-In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+	id S1750759Ab2EWK7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 May 2012 06:59:06 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: allow setting default U-APSD queues/max_sp_len for STA
+References: <1337760813-27055-1-git-send-email-arik@wizery.com>
+	<87wr436utp.fsf@purkki.adurom.net>
+	<CA+XVXfeju02Ou=jZ=eyq+0e4Rm1-5=b6-m8bMyZ8kAWO6F-sXQ@mail.gmail.com>
+Date: Wed, 23 May 2012 13:59:04 +0300
+In-Reply-To: <CA+XVXfeju02Ou=jZ=eyq+0e4Rm1-5=b6-m8bMyZ8kAWO6F-sXQ@mail.gmail.com>
+	(Arik Nemtsov's message of "Wed, 23 May 2012 13:49:22 +0300")
+Message-ID: <87mx4z6u4n.fsf@purkki.adurom.net> (sfid-20120523_125925_916046_5102E01E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do not need it anymore since cfg80211 tracks
-monitor channel and monitor channel type.
+Arik Nemtsov <arik@wizery.com> writes:
 
-Change-Id: Ib0ea094217b510c364358a695e9a06b969e7b972
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- include/net/cfg80211.h     |    6 ------
- net/mac80211/cfg.c         |   11 -----------
- net/wireless/nl80211.c     |   16 +++++-----------
- net/wireless/wext-compat.c |    9 ++-------
- 4 files changed, 7 insertions(+), 35 deletions(-)
+> On Wed, May 23, 2012 at 1:44 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>> Arik Nemtsov <arik@wizery.com> writes:
+>>
+>>> Allow the low level driver to set U-APSD parameters when operating in
+>>> managed mode.
+>>
+>> Why? I assume there is a reason for this...
+>
+> Of course.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e2da8e4..550252c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1430,9 +1430,6 @@ struct cfg80211_gtk_rekey_data {
-  *	be stored for when a monitor interface becomes active.
-  * @set_monitor_enabled: Notify driver that there are only monitor
-  *	interfaces running.
-- * @get_channel: Get the current operating channel, should return %NULL if
-- *	there's no single defined operating channel if for example the
-- *	device implements channel hopping for multi-channel virtual interfaces.
-  *
-  * @scan: Request to do a scan. If returning zero, the scan request is given
-  *	the driver, and will be valid until passed to cfg80211_scan_done().
-@@ -1739,9 +1736,6 @@ struct cfg80211_ops {
- 				  struct net_device *dev,
- 				  u16 noack_map);
- 
--	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
--					       enum nl80211_channel_type *type);
--
- 	int	(*get_et_sset_count)(struct wiphy *wiphy,
- 				     struct net_device *dev, int sset);
- 	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device *dev,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 07218cd..8a71401 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2889,16 +2889,6 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
--static struct ieee80211_channel *
--ieee80211_wiphy_get_channel(struct wiphy *wiphy,
--			    enum nl80211_channel_type *type)
--{
--	struct ieee80211_local *local = wiphy_priv(wiphy);
--
--	*type = local->_oper_channel_type;
--	return local->oper_channel;
--}
--
- static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
-@@ -2982,7 +2972,6 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.tdls_oper = ieee80211_tdls_oper,
- 	.tdls_mgmt = ieee80211_tdls_mgmt,
- 	.probe_client = ieee80211_probe_client,
--	.get_channel = ieee80211_wiphy_get_channel,
- 	.set_noack_map = ieee80211_set_noack_map,
- 	.set_monitor_enabled = ieee80211_set_monitor_enabled,
- #ifdef CONFIG_PM
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7486653..e02ec2c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1588,17 +1588,11 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 			(cfg80211_rdev_list_generation << 2)))
- 		goto nla_put_failure;
- 
--	if (rdev->ops->get_channel) {
--		struct ieee80211_channel *chan;
--		enum nl80211_channel_type channel_type;
--
--		chan = rdev->ops->get_channel(&rdev->wiphy, &channel_type);
--		if (chan &&
--		    (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
--				    chan->center_freq) ||
--		     nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
--				    channel_type)))
--			goto nla_put_failure;
-+	if (rdev->monitor_channel) {
-+		nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
-+			    rdev->monitor_channel->center_freq);
-+		nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+			    rdev->monitor_channel_type);
- 	}
- 
- 	return genlmsg_end(msg, hdr);
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index bc87983..7df42f5 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -827,8 +827,6 @@ static int cfg80211_wext_giwfreq(struct net_device *dev,
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
--	struct ieee80211_channel *chan;
--	enum nl80211_channel_type channel_type;
- 
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
-@@ -836,13 +834,10 @@ static int cfg80211_wext_giwfreq(struct net_device *dev,
- 	case NL80211_IFTYPE_ADHOC:
- 		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
- 	case NL80211_IFTYPE_MONITOR:
--		if (!rdev->ops->get_channel)
-+		if (!rdev->monitor_channel)
- 			return -EINVAL;
- 
--		chan = rdev->ops->get_channel(wdev->wiphy, &channel_type);
--		if (!chan)
--			return -EINVAL;
--		freq->m = chan->center_freq;
-+		freq->m = rdev->monitor_channel->center_freq;
- 		freq->e = 6;
- 		return 0;
- 	default:
+Then you could write it down to the commit log instead of forcing others
+to ask.
+
+> We want to change this in wlcore. We've encountered compatibility
+> problems with some APs when we set ACs other than VO to U-APSD mode.
+
+Sounds like a hack to do this in the driver. Why can't mac80211 do it?
+
 -- 
-1.7.0.4
-
+Kalle Valo
