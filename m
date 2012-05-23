@@ -1,70 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:40997 "EHLO
-	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965954Ab2EQV7i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 17:59:38 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Thu, 17 May 2012 14:58:59 -0700
-Subject: RE: [PATCH 3/3] mwifiex: fix kernel warning in ibss start/join path
-Message-ID: <477F20668A386D41ADCC57781B1F7043083A64B4C2@SC-VEXCH1.marvell.com> (sfid-20120517_235942_833012_312A4206)
-References: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
-	 <1337228696-22312-3-git-send-email-bzhao@marvell.com>
-	 (sfid-20120517_063333_463261_998602DE)
- <1337238333.4524.1.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F7043083A64B448@SC-VEXCH1.marvell.com>
- <1337284374.4687.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1337284374.4687.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from plane.gmane.org ([80.91.229.3]:43292 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751850Ab2EWU6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 May 2012 16:58:12 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1SXIdG-0005xm-Br
+	for linux-wireless@vger.kernel.org; Wed, 23 May 2012 22:58:10 +0200
+Received: from 141.215.239.88 ([141.215.239.88])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 22:58:10 +0200
+Received: from ilhebe999 by 141.215.239.88 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 22:58:10 +0200
+To: linux-wireless@vger.kernel.org
+From: Ouyang <ilhebe999@gmail.com>
+Subject: fatal error:iwl-io.h:No such file or directory
+Date: Wed, 23 May 2012 20:57:56 +0000 (UTC)
+Message-ID: <loom.20120523T225321-807@post.gmane.org> (sfid-20120523_225815_774679_4D20620E)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gT24gVGh1LCAyMDEyLTA1LTE3IGF0IDExOjI4IC0wNzAwLCBCaW5n
-IFpoYW8gd3JvdGU6DQo+IA0KPiA+ID4gRG9uJ3QgdG91Y2ggaXQuIEkga25ldyBJIHNob3VsZCBo
-YXZlIGhpZGRlbiB0aGVzZSBmaWVsZHMgZnJvbSBkcml2ZXINCj4gPiA+IHZpZXcsIGJ1dCBpdCB3
-YXNuJ3QgZWFzaWx5IHBvc3NpYmxlLg0KPiA+ID4NCj4gPiA+IElmIHlvdSdyZSB1c2luZyB0aGUg
-QVBJIHdyb25nIHRoZW4geW91IHNob3VsZCBmaXggdGhhdCBpbnN0ZWFkLiBJbg0KPiA+ID4gcGFy
-dGljdWxhciwgeW91IHNob3VsZCBvbmx5IGNhbGwgY2ZnODAyMTFfaWJzc19qb2luZWQoKSB3aGVu
-IHlvdQ0KPiA+ID4gYWN0dWFsbHkga25vdyB0aGUgQlNTSUQgb2YgdGhlIElCU1MgeW91J3ZlIGpv
-aW5lZC4gWW91IGNhbid0IHBvc3NpYmx5DQo+ID4gPiBrbm93IHRoaXMgYXQgdGhpcyBwb2ludCBz
-aW5jZSB5b3UgY2FuJ3QgZXZlbiBoYXZlIHNjYW5uZWQgZm9yIHBlZXJzIHlldC4NCj4gPg0KPiA+
-IEluIC5qb2luX2lic3MgaGFuZGxlciwgbXdpZmlleCBkcml2ZXIgc2VuZHMgYSBjb21tYW5kIHRv
-IGZpcm13YXJlIHRvIHN0YXJ0L2pvaW4gYW4gSUJTUyBuZXR3b3JrLg0KPiA+IFRoaXMgY29tbWFu
-ZCBpcyBhIHN5bmNocm9ub3VzIGNhbGwuIFdoZW4gdGhlIGNvbW1hbmQgcmVzcG9uc2UgY29tZXMN
-Cj4gPiBiYWNrIHdlIGhhdmUgc3RhcnRlZC9qb2luZWQgaXQgc3VjY2Vzc2Z1bGx5LCBvdGhlcndp
-c2UgYW4gZXJyb3IgY29kZQ0KPiA+IHdpbGwgYmUgcmV0dXJuZWQuIEhvd2V2ZXIsIHdlIGFyZSBz
-dGlsbCBpbnNpZGUgLmpvaW5faWJzcyBoYW5kbGVyIGF0DQo+ID4gdGhpcyBtb21lbnQuIENhbGxp
-bmcgY2ZnODAyMTFfaWJzc19qb2luZWQoKSBnaXZlcyB1cyB0aGUgd2FybmluZw0KPiA+IGJlY2F1
-c2Ugc3NpZF9sZW4gaGFzbid0IGJlZW4gc2V0IGJ5IGNmZzgwMjExIHlldC4NCj4gDQo+IEhtbS4g
-SW50ZXJlc3RpbmcsIGJlY2F1c2UgSSB3b3VsZCB0aGluayB0aGF0IGNvdWxkIHBvdGVudGlhbGx5
-IHRha2UNCj4gcXVpdGUgYSB3aGlsZT8NCg0KSXQgZG9lcyB0YWtlIGEgd2hpbGUsIGF0IGxlYXN0
-IGZvciBhIHNjYW4uIFRoZSBpc3N1ZSBpcyB0aGF0LCBubyBtYXR0ZXIgaG93IGxvbmcgaXQgdGFr
-ZXMgdGhlIGRyaXZlciBzdGF5cyBpbiB0aGUgam9pbl9pYnNzIGhhbmRsZXIuIFRoZSBmdW5jdGlv
-biBjYWxsIGlzbid0IHJldHVybmVkIHVudGlsIHRoZSBBRF9IT0NfSk9JTiBjb21tYW5kIHJlc3Bv
-bnNlIGlzIHJlY2VpdmVkLg0KDQo+IA0KPiBJdCdzIGludGVyZXN0aW5nIHRob3VnaCBiZWNhdXNl
-IGl0IHBvaW50cyBvdXQgdGhhdCBldmVuIGlmIHlvdSBkbyBjYWxsDQo+IGl0IGFzeW5jaHJvbm91
-c2x5LCB0aGVyZSdzIG5vIGd1YXJhbnRlZSB0aGF0IGl0IGFjdHVhbGx5IGhhcHBlbnMgYmVmb3Jl
-DQo+IHRoZSBmdW5jdGlvbiBjYWxsIHJldHVybnMuDQoNCkJ5IGRvaW5nIGl0IGFzeW5jaHJvbm91
-c2x5IHdlIGNhbiBwcm9iYWJseSB1c2Ugam9pbl9pYnNzIGhhbmRsZXIgYXMgYSB0cmlnZ2VyIGZv
-ciBzc2lkIHNjYW4gYW5kIGlic3Mgc3RhcnQvam9pbi4gSGVyZSB0aGUgam9pbl9pYnNzIGZ1bmN0
-aW9uIGNhbGwgd2lsbCBiZSByZXR1bmVkIHJpZ2h0IGF3YXkuIExhdGVyIGFmdGVyIGRyaXZlciBm
-aW5pc2hlcyBzY2FuIGFuZCBnZXRzICJpYnNzIHN0YXJ0ZWQvam9pbmVkIiByZXNwb25zZSBmcm9t
-IGZpcm13YXJlLCBjZmc4MDIxMV9pYnNzX2pvaW5lZCgpIGlzIGNhbGxlZC4NCg0KSW4gdGhpcyBj
-YXNlLCByZXR1cm5pbmcgY2ZnODAyMTFfam9pbl9pYnNzKCkgY2FsbCBkb2Vzbid0IG1lYW4gdGhh
-dCB3ZSBoYXZlIGpvaW5lZCBzdWNjZXNzZnVsbHkuIEluc3RlYWQsIGNmZzgwMjExX2lic3Nfam9p
-bmVkKCkgY2FsbCBndWFyYW50ZWVzIHRoYXQuDQoNCj4gTWF5YmUgd2Ugc2hvdWxkIGp1c3QgbW92
-ZSB0aGUgYXNzaWdubWVudCBpbiBjZmc4MDIxMSBpbnN0ZWFkPw0KDQpNb3Zpbmcgd2Rldi0+c3Np
-ZCBhbmQgd2Rldi0+c3NpZF9sZW4gYXNzaWdubWVudHMgZnJvbSBfX2NmZzgwMjExX2pvaW5faWJz
-cygpIHRvIGNmZzgwMjExX2lic3Nfam9pbmVkKCkgbWFrZXMgbW9yZSBzZW5zZSB0byBtZS4gT2Yg
-Y291cnNlLCAiQ0ZHODAyMTFfREVWX1dBUk5fT04oIXdkZXYtPnNzaWRfbGVuKSIgY2hlY2sgd29u
-4oCZdCBiZSBuZWVkZWQgYW55IG1vcmUuDQoNClRoYW5rcywNCkJpbmcNCg0K
+compiled the kernel,"drivers/net/wireless/iwlegacy/common.c fatal error:iwl-
+io.h:No such file or directory." there is a file named <iwl-io.h> under 
+the fold drivers/net/wireless/iwlwifi. since there are some other files
+contains the "#include <iwl-io.h>" and they are not in the same directory.then 
+what cause the error?
+
