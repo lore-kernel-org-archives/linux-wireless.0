@@ -1,41 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:58609 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759599Ab2ERVoz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 17:44:55 -0400
-Received: by lahd3 with SMTP id d3so2404126lah.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 May 2012 14:44:54 -0700 (PDT)
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:43398 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760761Ab2EWSgi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 May 2012 14:36:38 -0400
+Received: by vbbff1 with SMTP id ff1so4857185vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 11:36:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <eupt2rh55ah4cvmaicnjna5a.1337353056935@email.android.com>
-References: <eupt2rh55ah4cvmaicnjna5a.1337353056935@email.android.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 19 May 2012 07:44:34 +1000
-Message-ID: <CAGRGNgWQWKHCMQQedeOANa6=4T8ZdLtYqFmHD9r9dBPy_7ChNw@mail.gmail.com> (sfid-20120518_234459_955538_7B111784)
-Subject: Re: Intel 2200BG/Linux
-To: D <dc@magitekindustries.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CA+7oygenvx9nMSbFimbkzmyBuc+mPV4ot-UmBuor3Zc2BLQLGg@mail.gmail.com>
+References: <CA+7oygccmq9DY+dR-=__4z_rZ4Sa9d8zmz+6=zX-xsTKdWkFWQ@mail.gmail.com>
+	<CAOpc7mEKLM1wjKmdde3YqTuB0edoOFBcH=dK5s5V1y5t7v=wMQ@mail.gmail.com>
+	<CA+7oygftxidR_r-t16K1g9CNPhL+EkMdPyKftkWoSk+Fzf+Rog@mail.gmail.com>
+	<CA+7oygddbQpoPmc=A05AGyPfq9YyhdeejwYfpS0sGXD=9CeZqA@mail.gmail.com>
+	<CA+7oygcX6_d4anpCKGRG1f7ugcr4Pm19O_+Vogbj13W55PuczA@mail.gmail.com>
+	<CA+7oygenvx9nMSbFimbkzmyBuc+mPV4ot-UmBuor3Zc2BLQLGg@mail.gmail.com>
+Date: Wed, 23 May 2012 14:36:38 -0400
+Message-ID: <CA+7oygeU+7LKp3q1_S1UUtjS8SFOthC_q54pQAGAhR1jBBzavw@mail.gmail.com> (sfid-20120523_203701_408983_CB87F86A)
+Subject: Re: AR9280 reported signal strengths are flat (comparison with
+ bcm4322 included)
+From: George Nychis <gnychis@gmail.com>
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Might anyone else have some insight here? I've tried digging through
+the code to see if AGC is not properly taken in to consideration
+during the RSSI calculation, but I think this is done in the firmware
+which is out of view of my eyes.
 
-You dropped the CCs again.
-
-On Sat, May 19, 2012 at 12:57 AM, D <dc@magitekindustries.com> wrote:
-> Copying the folder to lib and lib\firmware didn't work.  how do I Install that package?
-
-You should be copying the files not the folder.
-
-Use a package manager - say, synaptic, software center, aptitude,
-apt-get or something equivalent.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+On Wed, May 16, 2012 at 11:36 PM, George Nychis <gnychis@gmail.com> wrote:
+>
+> Well, I believe that I forced ANI to be disabled and I still see this
+> same behavior.
+>
+> To disable ANI on my AR9280, I added this to __ath9k_hw_init() in hw.c
+>  if (AR_SREV_9280(ah))
+>    ah->config.enable_ani = false;
+>
+> I believe this works because in ath9k_hw_post_init() I have checked
+> that ah->config.enable_ani is set to false.  Therefore,
+> ath9k_hw_ani_setup() and ath9k_hw_ani_init() are never called.
+>
+> Unfortunately, I still see this same flat line trend without strong
+> signal strengths near the device.
+>
+>
+> On Wed, May 16, 2012 at 2:35 PM, George Nychis <gnychis@gmail.com> wrote:
+> >
+> > BTW- is ANI _not_ applied on broadcast traffic?  I notice that
+> > monitoring the signal strength of beacons does not show this behavior.
+> >  Maybe not applied for localization reasons?
+> >
+> > - George
+> >
+> >
+> > On Wed, May 16, 2012 at 2:32 PM, George Nychis <gnychis@gmail.com>
+> > wrote:
+> > > Hi Holger,
+> > >
+> > > Thanks a bunch for your response!  I had read about ANI before on the
+> > > list, it would be interesting to know if this is the cause for this.
+> > > It definitely seems plausible. I will dig around the ath9k code and
+> > > see if I can narrow down this to the cause.
+> > >
+> > >
+> > > On Wed, May 16, 2012 at 2:31 PM, George Nychis <gnychis@gmail.com>
+> > > wrote:
+> > >>
+> > >> Hi Holger,
+> > >>
+> > >> Thanks a bunch for your response!  I had read about ANI before on the
+> > >> list, it would be interesting to know if this is the cause for this.
+> > >>  It
+> > >> definitely seems plausible. I will dig around the ath9k code and see
+> > >> if I
+> > >> can narrow down this to the cause.
+> > >>
+> > >> - George
+> > >>
+> > >>
+> > >> On Wed, May 16, 2012 at 2:08 AM, Holger Schurig
+> > >> <holgerschurig@googlemail.com> wrote:
+> > >>>
+> > >>> This is probably due to ANI (adapative noise immunity). I think
+> > >>> ath9k
+> > >>> does too much here, in other words: it doesn't just kick in if there
+> > >>> are too strong signals there. Instead it seems to always adjust the
+> > >>> input attenuator, needed or not.
+> > >>
+> > >>
