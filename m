@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:49192 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751030Ab2EJBsG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 21:48:06 -0400
-Message-ID: <1336614484.1905.19.camel@joe2Laptop> (sfid-20120510_034913_960412_23C461B6)
-Subject: Re: [PATCH 00/13] net: Add and use ether_addr_equal
-From: Joe Perches <joe@perches.com>
-To: David Miller <davem@davemloft.net>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Cc: netdev@vger.kernel.org, bridge@lists.linux-foundation.org,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Date: Wed, 09 May 2012 18:48:04 -0700
-In-Reply-To: <20120509.212110.437114897180819434.davem@davemloft.net>
-References: <cover.1336538937.git.joe@perches.com>
-	 <20120509.212110.437114897180819434.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from gretel.risen.be ([78.46.99.137]:37100 "EHLO gretel.risen.be"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751236Ab2EWXyd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 May 2012 19:54:33 -0400
+Message-ID: <4FBD7772.6070305@aquazul.com> (sfid-20120524_015438_043789_885A4814)
+Date: Thu, 24 May 2012 01:49:06 +0200
+From: Mourad De Clerck <bugs-wireless@aquazul.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: firmware loading fails for b43 using linux 3.4?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-09 at 21:21 -0400, David Miller wrote:
-> From: Joe Perches <joe@perches.com>
-> Date: Tue,  8 May 2012 21:56:44 -0700
-> 
-> > Add a boolean function to test 2 ethernet addresses for equality
-> > Convert compare_ether_addr uses to ether_addr_equal
-> 
-> This series looks great, I'll apply all of it.
+Hi,
 
-coccinelle is a nifty, better sed, tool.  Thanks Julia et al.
-
-> That case you didn't convert in mac80211 is probably the
-> bug Johannes was talking about which started this whole
-> discussion.
-
-Looks like it.
-
-Do you want a similar patch/patches for drivers/net?
-
-If I break it out by nominal driver/maintainer,
-it'll be a highish number of low density patches.
-
-$ git grep -w compare_ether_addr drivers/net | wc -l
-59
-$ git grep -w -l compare_ether_addr drivers/net | wc -l
-31
-
-Maybe just a single patch?
-
-Also the compare_ether_addr_64bits function is
-still used a couple dozen times.  Maybe another
-patch for those?  ether_addr_equal_64bits?
+I'm probably missing something obvious, but when going from 3.3 to 3.4 
+the b43 driver throws up an error, saying it can't find the firmware - 
+but it really _is_ there.
 
 
+Here's the error:
+
+b43-phy0 ERROR: Firmware file "b43/ucode16_mimo.fw" not found
+b43-phy0 ERROR: Firmware file "b43-open/ucode16_mimo.fw" not found
+b43-phy0 ERROR: You must go to 
+http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware and 
+download the correct firmware for this driver version. Please carefully 
+read all instructions on this website.
+
+
+Here's the firmware it claims doesn't exist:
+
+$ sha1sum /lib/firmware/b43/ucode16_mimo.fw
+825a4bc63e3a96bb20fd8551add947435d47ad46  /lib/firmware/b43/ucode16_mimo.fw
+
+This is from Debian's firmware-b43-installer package, version 1:015-14.
+
+
+The network card in question:
+
+02:00.0 Network controller [0280]: Broadcom Corporation BCM4322 
+802.11a/b/g/n Wireless LAN Controller [14e4:432b] (rev 01)
+
+
+The only obvious change is 6b6fa5868eec26bdc6a83543cebb8cf832a2645a by 
+Larry Finger. I don't know if it matters, but b43 is statically compiled 
+in the kernel.
+
+Am I missing something?
+
+Thanks,
+
+-- Mourad DC
