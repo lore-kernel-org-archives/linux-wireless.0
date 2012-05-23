@@ -1,72 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:32894 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754197Ab2EVCoT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 May 2012 22:44:19 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 21 May 2012 19:43:27 -0700
-Subject: RE: [PATCH 3/3] mwifiex: fix kernel warning in ibss start/join path
-Message-ID: <477F20668A386D41ADCC57781B1F7043083A64BA49@SC-VEXCH1.marvell.com> (sfid-20120522_044423_215218_E68B89C1)
-References: <1337228696-22312-1-git-send-email-bzhao@marvell.com>
-	 <1337228696-22312-3-git-send-email-bzhao@marvell.com>
-	 (sfid-20120517_063333_463261_998602DE)
- <1337238333.4524.1.camel@jlt3.sipsolutions.net>
-	 <477F20668A386D41ADCC57781B1F7043083A64B448@SC-VEXCH1.marvell.com>
- <1337284374.4687.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1337284374.4687.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.us.es ([193.147.175.20]:43395 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759597Ab2EWKqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 May 2012 06:46:40 -0400
+Date: Wed, 23 May 2012 12:45:47 +0200
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linville@tuxdriver.com,
+	netfilter-devel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [README] Two merges pending...
+Message-ID: <20120523104547.GA3312@1984> (sfid-20120523_124644_047471_A8F56720)
+References: <20120522.152840.815291543305899477.davem@davemloft.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120522.152840.815291543305899477.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gPiBJbiAuam9pbl9pYnNzIGhhbmRsZXIsIG13aWZpZXggZHJpdmVy
-IHNlbmRzIGEgY29tbWFuZCB0byBmaXJtd2FyZSB0byBzdGFydC9qb2luIGFuIElCU1MgbmV0d29y
-ay4NCj4gPiBUaGlzIGNvbW1hbmQgaXMgYSBzeW5jaHJvbm91cyBjYWxsLiBXaGVuIHRoZSBjb21t
-YW5kIHJlc3BvbnNlIGNvbWVzDQo+ID4gYmFjayB3ZSBoYXZlIHN0YXJ0ZWQvam9pbmVkIGl0IHN1
-Y2Nlc3NmdWxseSwgb3RoZXJ3aXNlIGFuIGVycm9yIGNvZGUNCj4gPiB3aWxsIGJlIHJldHVybmVk
-LiBIb3dldmVyLCB3ZSBhcmUgc3RpbGwgaW5zaWRlIC5qb2luX2lic3MgaGFuZGxlciBhdA0KPiA+
-IHRoaXMgbW9tZW50LiBDYWxsaW5nIGNmZzgwMjExX2lic3Nfam9pbmVkKCkgZ2l2ZXMgdXMgdGhl
-IHdhcm5pbmcNCj4gPiBiZWNhdXNlIHNzaWRfbGVuIGhhc24ndCBiZWVuIHNldCBieSBjZmc4MDIx
-MSB5ZXQuDQo+IA0KPiBIbW0uIEludGVyZXN0aW5nLCBiZWNhdXNlIEkgd291bGQgdGhpbmsgdGhh
-dCBjb3VsZCBwb3RlbnRpYWxseSB0YWtlDQo+IHF1aXRlIGEgd2hpbGU/DQo+IA0KPiBJdCdzIGlu
-dGVyZXN0aW5nIHRob3VnaCBiZWNhdXNlIGl0IHBvaW50cyBvdXQgdGhhdCBldmVuIGlmIHlvdSBk
-byBjYWxsDQo+IGl0IGFzeW5jaHJvbm91c2x5LCB0aGVyZSdzIG5vIGd1YXJhbnRlZSB0aGF0IGl0
-IGFjdHVhbGx5IGhhcHBlbnMgYmVmb3JlDQo+IHRoZSBmdW5jdGlvbiBjYWxsIHJldHVybnMuIE1h
-eWJlIHdlIHNob3VsZCBqdXN0IG1vdmUgdGhlIGFzc2lnbm1lbnQgaW4NCj4gY2ZnODAyMTEgaW5z
-dGVhZD8NCg0KQ2FuIHdlIHVzZSAic21lX3N0YXRlICE9IENGRzgwMjExX1NNRV9DT05ORUNUSU5H
-IiBjaGVjayBmb3IgaWJzcyBwYXRoIHRvbz8NCg0KLS0tDQpkaWZmIC0tZ2l0IGEvbmV0L3dpcmVs
-ZXNzL2lic3MuYyBiL25ldC93aXJlbGVzcy9pYnNzLmMNCmluZGV4IDMwZjIwZmUuLjNkMDkzMGQg
-MTAwNjQ0DQotLS0gYS9uZXQvd2lyZWxlc3MvaWJzcy5jDQorKysgYi9uZXQvd2lyZWxlc3MvaWJz
-cy5jDQpAQCAtNDIsNiArNDIsNyBAQCB2b2lkIF9fY2ZnODAyMTFfaWJzc19qb2luZWQoc3RydWN0
-IG5ldF9kZXZpY2UgKmRldiwgY29uc3QgdTggKmJzc2lkKQ0KIAljZmc4MDIxMV9ob2xkX2Jzcyhi
-c3NfZnJvbV9wdWIoYnNzKSk7DQogCXdkZXYtPmN1cnJlbnRfYnNzID0gYnNzX2Zyb21fcHViKGJz
-cyk7DQogDQorCXdkZXYtPnNtZV9zdGF0ZSA9IENGRzgwMjExX1NNRV9DT05ORUNURUQ7DQogCWNm
-ZzgwMjExX3VwbG9hZF9jb25uZWN0X2tleXMod2Rldik7DQogDQogCW5sODAyMTFfc2VuZF9pYnNz
-X2Jzc2lkKHdpcGh5X3RvX2Rldih3ZGV2LT53aXBoeSksIGRldiwgYnNzaWQsDQpAQCAtNjAsNyAr
-NjEsNyBAQCB2b2lkIGNmZzgwMjExX2lic3Nfam9pbmVkKHN0cnVjdCBuZXRfZGV2aWNlICpkZXYs
-IGNvbnN0IHU4ICpic3NpZCwgZ2ZwX3QgZ2ZwKQ0KIAlzdHJ1Y3QgY2ZnODAyMTFfZXZlbnQgKmV2
-Ow0KIAl1bnNpZ25lZCBsb25nIGZsYWdzOw0KIA0KLQlDRkc4MDIxMV9ERVZfV0FSTl9PTighd2Rl
-di0+c3NpZF9sZW4pOw0KKwlDRkc4MDIxMV9ERVZfV0FSTl9PTih3ZGV2LT5zbWVfc3RhdGUgIT0g
-Q0ZHODAyMTFfU01FX0NPTk5FQ1RJTkcpOw0KIA0KIAlldiA9IGt6YWxsb2Moc2l6ZW9mKCpldiks
-IGdmcCk7DQogCWlmICghZXYpDQpAQCAtMTE1LDkgKzExNiwxMSBAQCBpbnQgX19jZmc4MDIxMV9q
-b2luX2lic3Moc3RydWN0IGNmZzgwMjExX3JlZ2lzdGVyZWRfZGV2aWNlICpyZGV2LA0KICNpZmRl
-ZiBDT05GSUdfQ0ZHODAyMTFfV0VYVA0KIAl3ZGV2LT53ZXh0Lmlic3MuY2hhbm5lbCA9IHBhcmFt
-cy0+Y2hhbm5lbDsNCiAjZW5kaWYNCisJd2Rldi0+c21lX3N0YXRlID0gQ0ZHODAyMTFfU01FX0NP
-Tk5FQ1RJTkc7DQogCWVyciA9IHJkZXYtPm9wcy0+am9pbl9pYnNzKCZyZGV2LT53aXBoeSwgZGV2
-LCBwYXJhbXMpOw0KIAlpZiAoZXJyKSB7DQogCQl3ZGV2LT5jb25uZWN0X2tleXMgPSBOVUxMOw0K
-KwkJd2Rldi0+c21lX3N0YXRlID0gQ0ZHODAyMTFfU01FX0lETEU7DQogCQlyZXR1cm4gZXJyOw0K
-IAl9DQogDQpAQCAtMTY5LDYgKzE3Miw3IEBAIHN0YXRpYyB2b2lkIF9fY2ZnODAyMTFfY2xlYXJf
-aWJzcyhzdHJ1Y3QgbmV0X2RldmljZSAqZGV2LCBib29sIG5vd2V4dCkNCiAJfQ0KIA0KIAl3ZGV2
-LT5jdXJyZW50X2JzcyA9IE5VTEw7DQorCXdkZXYtPnNtZV9zdGF0ZSA9IENGRzgwMjExX1NNRV9J
-RExFOw0KIAl3ZGV2LT5zc2lkX2xlbiA9IDA7DQogI2lmZGVmIENPTkZJR19DRkc4MDIxMV9XRVhU
-DQogCWlmICghbm93ZXh0KQ0KLS0NCg0KVGhhbmtzLA0KQmluZw0KDQo=
+Hi David,
+
+On Tue, May 22, 2012 at 03:28:40PM -0400, David Miller wrote:
+[...]
+> Pablo also has a prearranged netfilter merge pending.
+
+I give up on that merge that I requested.
+
+I thought that some namespace changes for conntrack that have been
+lying on the table for one week could be merged. But they are not ready
+yet, they require another spin.
+
+That means they'll have to wait until window opens again, they need
+some extra time.
+
+I'll stick to one pull request for bugfixes then.
+
+Thanks!
