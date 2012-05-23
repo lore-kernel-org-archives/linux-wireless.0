@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s22.blu0.hotmail.com ([65.55.111.97]:18653 "EHLO
-	blu0-omc2-s22.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750739Ab2EEFDi (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:34424 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753206Ab2EWOfh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2012 01:03:38 -0400
-Message-ID: <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl> (sfid-20120505_070342_520876_F9737A4E)
-From: Nathan Hintz <nlhintz@hotmail.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
-	Nathan Hintz <nlhintz@hotmail.com>
-Subject: [PATCH v3 6/6] bcma: Add flush for BCMA_RESET_CTL write
-Date: Fri, 4 May 2012 21:56:36 -0700
-In-Reply-To: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
-References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
+	Wed, 23 May 2012 10:35:37 -0400
+Received: by bkcji2 with SMTP id ji2so6029805bkc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 07:35:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87ipfn6koz.fsf@purkki.adurom.net>
+References: <1337760813-27055-1-git-send-email-arik@wizery.com>
+ <87wr436utp.fsf@purkki.adurom.net> <CA+XVXfeju02Ou=jZ=eyq+0e4Rm1-5=b6-m8bMyZ8kAWO6F-sXQ@mail.gmail.com>
+ <87mx4z6u4n.fsf@purkki.adurom.net> <CA+XVXfc3R8CrMfercPpRfYGjvKDdDkwJax+oLiaMrQQPwLCc0Q@mail.gmail.com>
+ <87ipfn6koz.fsf@purkki.adurom.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 23 May 2012 17:35:20 +0300
+Message-ID: <CA+XVXfcZAE0Drbn_JTBt1p0GAaFrsxZfHNE1Syp=1G=PNsvkbQ@mail.gmail.com> (sfid-20120523_163541_572439_88E57E9C)
+Subject: Re: [PATCH] mac80211: allow setting default U-APSD queues/max_sp_len
+ for STA
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adds a missing read to flush the previous write (per the Broadcom SDK).
+On Wed, May 23, 2012 at 5:22 PM, Kalle Valo <kvalo@adurom.com> wrote:
+>> We just enable the driver to override a default value, which is used
+>> by mac80211.
+>
+> You are moving logic from mac80211 to the driver but it should be the
+> opposite, the driver should be dumb and mac80211 should control
+> everything. Didn't we have a similar discussion last year when talking
+> about controlling dynamic power save?
 
-Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
----
- drivers/bcma/core.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I disagree. Not all mac80211 drivers are like ath9k. The
+FW/lower-driver can be just as smart in certain areas (BA sessions for
+instance).
+Also, let's stay practical here. This is not a large and complex
+feature like dynamic power save.
 
-diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-index 893f6e0..c4e6deb 100644
---- a/drivers/bcma/core.c
-+++ b/drivers/bcma/core.c
-@@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
- 	udelay(10);
- 
- 	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
-+	bcma_aread32(core, BCMA_RESET_CTL);
- 	udelay(1);
- }
- EXPORT_SYMBOL_GPL(bcma_core_disable);
--- 
-1.7.7.6
+It's interesting to hear Johannes' take on this.
 
+Arik
