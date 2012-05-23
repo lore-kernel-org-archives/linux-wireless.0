@@ -1,59 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54037 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755911Ab2ECTUv (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:39580 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756045Ab2EWLfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 15:20:51 -0400
-Message-ID: <1336072848.5167.11.camel@jlt3.sipsolutions.net> (sfid-20120503_212054_254352_9FD2B7B3)
-Subject: Re: [RFC c-w 2/4] compat-wireless: also copy include/generated/
- from compat
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: mcgrof@gmail.com, lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org
-Date: Thu, 03 May 2012 21:20:48 +0200
-In-Reply-To: <4FA2D6FC.4030109@hauke-m.de>
-References: <1335463674-13003-1-git-send-email-hauke@hauke-m.de>
-	  <1335463674-13003-5-git-send-email-hauke@hauke-m.de>
-	  (sfid-20120426_200823_435891_885FB2C4) <1336071426.5167.6.camel@jlt3.sipsolutions.net>
-	 <4FA2D6FC.4030109@hauke-m.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 23 May 2012 07:35:44 -0400
+Received: by yhmm54 with SMTP id m54so6422707yhm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 04:35:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FBBF88F.5060508@gmail.com>
+References: <4FBBF88F.5060508@gmail.com>
+Date: Wed, 23 May 2012 13:35:44 +0200
+Message-ID: <CAGXE3d-GJDPN70AHnYRBXhNdfXg2quL1xCYwJ-VoSNjhHHZDhQ@mail.gmail.com> (sfid-20120523_133548_069651_E19ECF10)
+Subject: Re: [rt2x00-users] rt2x00: missing devices/chips
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-03 at 21:05 +0200, Hauke Mehrtens wrote:
-> On 05/03/2012 08:57 PM, Johannes Berg wrote:
-> > On Thu, 2012-04-26 at 20:07 +0200, Hauke Mehrtens wrote:
-> >> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> >> ---
-> >>  scripts/admin-update.sh |    2 ++
-> >>  1 file changed, 2 insertions(+)
-> >>
-> >> diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-> >> index fd1fa87..7147ff1 100755
-> >> --- a/scripts/admin-update.sh
-> >> +++ b/scripts/admin-update.sh
-> >> @@ -283,6 +283,7 @@ mkdir -p include/linux/ include/net/ include/linux/usb \
-> >>  	include/trace \
-> >>  	include/pcmcia \
-> >>  	include/crypto \
-> >> +	include/generated \
-> > 
-> > Are you sure we want this? It seems to me that most generated things
-> > like asm-offsets etc. need to be taken from the *target* kernel.
-> 
-> The directory include/generated/ in compat, just contains
-> include/generated/autoconf.h, which will include linux/compat_autoconf.h
-> and the original file from the kernel. This way the compat_autoconf.h
-> will always be included when autoconf.h gets included.
-> See "[RFC c 2/9] compat: include compat_autoconf.h"
-> 
-> I do not think there will be any other header in include/generated/ we
-> want to extend or overwrite in compat.
+Hi Xose,
 
-Oh, this is copying from compat, not the base kernel, I got that
-confused. Sorry!
+On Tue, May 22, 2012 at 10:35 PM, Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+> Those were my final patches, from now on MediaTek Inc. guys
+> should take over it.
 
-johannes
+That would indeed be nice, let's see what the future brings.
 
+However, thanks a lot for all your contributions!
+Helmut
