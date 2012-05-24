@@ -1,112 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:51568 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756346Ab2EOA7g convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40900 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137Ab2EXEEa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 20:59:36 -0400
-Received: by dady13 with SMTP id y13so6600680dad.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 17:59:35 -0700 (PDT)
+	Thu, 24 May 2012 00:04:30 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CALGY4ft-as1LT+-G2tukzgFCfVYOnE3vHugsHa0eyo_Y+cco0A@mail.gmail.com>
-References: <CALGY4fvUmHmFbYAH2044qCBOozOqmOCBcmB8acV-Qivd3PpFgQ@mail.gmail.com>
-	<CA+icZUXUNS4bW610vnyXzhHdEeON=03w_61c4tcX9Tm1ad=uxw@mail.gmail.com>
-	<CALGY4ft-as1LT+-G2tukzgFCfVYOnE3vHugsHa0eyo_Y+cco0A@mail.gmail.com>
-Date: Mon, 14 May 2012 20:59:35 -0400
-Message-ID: <CALGY4fs6d9SNuxVDrcYsooakw0BB4JHs9_0KFrEO=8smNj=seQ@mail.gmail.com> (sfid-20120515_030011_462835_44710BF7)
-Subject: Re: iwlwifi regression: disconnections
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45836.685065.855083@gargle.gargle.HOWL> (sfid-20120524_060434_051504_8DF66568)
+Date: Thu, 24 May 2012 09:33:24 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 15/22] ath9k_hw: program BT to control SPDT
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-  Looks like the problem I was seeing is indeed related to
-Network-Manager and newer kernel.
-  After I set ipv6 to 'ignore' in Network-Manager there are not more
-disconnections and I still have ipv6.
-  Thanks!
+program BT to control SPDT everytime while loading switch table
+from eeprom.
 
-2012/5/14 Nikolay Martynov <mar.kolya@gmail.com>:
-> Hi.
->
->  Thanks for pointing this out! I'll try to disable ipv6 on the
-> interface and see if I still experience the problem. I'll post my
-> results on the list.
->
-> 2012/5/14 Sedat Dilek <sedat.dilek@googlemail.com>:
->> This is a problem of Network-Manager, see Ubuntu LP-988183 [1].
->>
->> [1] https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/988183
->>
->> - Sedat -
->>
->> On Mon, May 14, 2012 at 4:00 PM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
->>> Hi.
->>>
->>>  I have Intel 5300 card. It works fine with 3.2.16. When I try 3.3.6
->>> or 3.4.0rc6 I get connection drops often - once 5-10 mins. With 3.2.16
->>> such disconnects happen once-twice a day. AP - ath9k based router and
->>> it doesn't change. I'm using kernels from ubuntu kernel ppa.
->>>
->>>  Here is what I see in logs during disconnect:
->>>
->>> [ 1024.296004] ICMPv6 RA: ndisc_router_discovery() failed to add default route.
->>> [ 1259.209166] wlan1: deauthenticating from XX:XX:XX:XX:XX:XX by local
->>> choice (reason=3)
->>> [ 1259.277831] cfg80211: All devices are disconnected, going to
->>> restore regulatory settings
->>> [ 1259.277842] cfg80211: Restoring regulatory settings
->>> [ 1259.277851] cfg80211: Calling CRDA to update world regulatory domain
->>> [ 1259.293624] cfg80211: Ignoring regulatory request Set by core since
->>> the driver uses its own custom regulatory domain
->>> [ 1259.293629] cfg80211: World regulatory domain updated:
->>> [ 1259.293632] cfg80211:   (start_freq - end_freq @ bandwidth),
->>> (max_antenna_gain, max_eirp)
->>> [ 1259.293636] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
->>> (300 mBi, 2000 mBm)
->>> [ 1259.293640] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
->>> (300 mBi, 2000 mBm)
->>> [ 1259.293644] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
->>> (300 mBi, 2000 mBm)
->>> [ 1259.293647] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
->>> (300 mBi, 2000 mBm)
->>> [ 1259.293651] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
->>> (300 mBi, 2000 mBm)
->>> [ 1265.296158] wlan1: authenticate with XX:XX:XX:XX:XX:XX
->>> [ 1265.297450] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 1/3)
->>> [ 1265.500053] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 2/3)
->>> [ 1265.502380] wlan1: authenticated
->>> [ 1265.504080] wlan1: associate with XX:XX:XX:XX:XX:XX (try 1/3)
->>> [ 1265.507624] wlan1: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x411
->>> status=0 aid=1)
->>> [ 1265.507632] wlan1: associated
->>>
->>>
->>> I'll be happy to help with any additional information of debugging.
->>> Thanks!
->>>
->>> --
->>> Truthfully yours,
->>> Martynov Nikolay.
->>> Email: mar.kolya@gmail.com
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> Truthfully yours,
-> Martynov Nikolay.
-> Email: mar.kolya@gmail.com
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index ac53d90..4791976 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3613,6 +3613,7 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		value = ar9003_switch_com_spdt_get(ah, is2ghz);
+ 		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
+ 				AR_SWITCH_TABLE_COM_SPDT_ALL, value);
++		REG_SET_BIT(ah, AR_PHY_GLB_CONTROL, AR_BTCOEX_CTRL_SPDT_ENABLE);
+ 	}
+ 
+ 	value = ar9003_hw_ant_ctrl_common_2_get(ah, is2ghz);
 -- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
+1.7.10.2
+
