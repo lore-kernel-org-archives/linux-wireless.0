@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:41455 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751594Ab2EPUhL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 16:37:11 -0400
-Message-ID: <4FB40FF0.4050809@hauke-m.de> (sfid-20120516_223716_008251_1D472FFC)
-Date: Wed, 16 May 2012 22:37:04 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18801 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730Ab2EXEDR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 00:03:17 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-CC: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozancag@gmail.com>,
-	mcgrof@kernel.org, linux-wireless@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org,
-	linux-bluetooth@vger.kernel.org
-Subject: Re: [Lf_driver_backport] [PATCH] compat: backport ether_addr_equal
-References: <1337162148-16499-1-git-send-email-ozancag@gmail.com> <CAB=NE6W2dz=Ld=w5+7jexKk9xfADhk644mc4C=TtbvBZ9_cKGg@mail.gmail.com>
-In-Reply-To: <CAB=NE6W2dz=Ld=w5+7jexKk9xfADhk644mc4C=TtbvBZ9_cKGg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45764.567137.804050@gargle.gargle.HOWL> (sfid-20120524_060334_529109_978161D8)
+Date: Thu, 24 May 2012 09:32:12 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 04/22] ath9k_hw: Fix AR_RTC_KEEP_AWAKE usage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/16/2012 10:17 PM, Luis R. Rodriguez wrote:
-> On Wed, May 16, 2012 at 2:55 AM, Ozan Çağlayan <ozancag@gmail.com> wrote:
->> This backports:
->>
->>    commit a599b0f54d233d0f63d6be9a2ff0049d24751669
->>    Author: Joe Perches <joe@perches.com>
->>    Date:   Tue May 8 18:56:45 2012 +0000
->>
->>        etherdevice.h: Add ether_addr_equal
->>
->>        Add a boolean function to check if 2 ethernet addresses
->>        are the same.
->>
->>        This is to avoid any confusion about compare_ether_addr
->>        returning an unsigned, and not being able to use the
->>        compare_ether_addr function for sorting ala memcmp.
->>
->>        Signed-off-by: Joe Perches <joe@perches.com>
->>        Signed-off-by: David S. Miller <davem@davemloft.net>
->>
->> [root@ozzyfedora compat]# bin/ckmake
->> Trying kernel                      3.3.4-5.fc17.x86_64  [OK]
->>
->> Signed-off-by: Ozan Çağlayan <ozancag@gmail.com>
-> 
-> Thanks!! BTW I see this though:
-> 
-> Content-Type: text/plain; charset="utf-8"
-> Content-Transfer-Encoding: base64
-> 
-> And then all I see is this when I save the e-mail to a txt file, given
-> that the encoding is base64. This is odd given that I see you sent
-> this with X-Mailer: git-send-email 1.7.10.1 -- so not sure how this
-> ended up going out like this.
+The default value that is being programmed to AR_RTC_KEEP_AWAKE
+is 0x2, there is no need to program it manually in various
+functions.
 
-That's strange, when I save this mail I got over the mailing list with
-Thunderbird it is not based64 encoded and when looking into the source
-code with my mail program it is normal text mail.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c         |   11 -----------
+ 2 files changed, 12 deletions(-)
 
-From:	=?UTF-8?q?Ozan=20=C3=87a=C4=9Flayan?= <ozancag@gmail.com>
-Subject: [PATCH] compat: backport ether_addr_equal
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index ffbb180..9331d73 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -330,7 +330,6 @@ void ar9003_mci_set_full_sleep(struct ath_hw *ah)
+ 	}
+ 
+ 	mci->ready = false;
+-	REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+ }
+ 
+ static void ar9003_mci_disable_interrupt(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 02ce524..8698589 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1432,9 +1432,6 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+ 		break;
+ 	}
+ 
+-	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+-		REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+-
+ 	return ret;
+ }
+ 
+@@ -2164,10 +2161,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 	switch (mode) {
+ 	case ATH9K_PM_AWAKE:
+ 		status = ath9k_hw_set_power_awake(ah, setChip);
+-
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+-			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+-
+ 		break;
+ 	case ATH9K_PM_FULL_SLEEP:
+ 		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+@@ -2177,10 +2170,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 		ah->chip_fullsleep = true;
+ 		break;
+ 	case ATH9K_PM_NETWORK_SLEEP:
+-
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+-			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+-
+ 		ath9k_set_power_network_sleep(ah, setChip);
+ 		break;
+ 	default:
+-- 
+1.7.10.2
 
-Hauke
