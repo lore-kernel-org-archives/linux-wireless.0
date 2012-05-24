@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:34252 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757683Ab2EGVXJ (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:34656 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751364Ab2EXPS7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 17:23:09 -0400
-Message-ID: <1336425731.5970.124.camel@aeonflux> (sfid-20120507_232316_153494_54203E9F)
-Subject: Re: [PATCH] Bluetooth: Fix coding style
-From: Marcel Holtmann <marcel@holtmann.org>
-To: David Miller <davem@davemloft.net>
-Cc: dh.herrmann@googlemail.com, gustavo@padovan.org,
-	linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Date: Mon, 07 May 2012 14:22:11 -0700
-In-Reply-To: <20120507.135547.704675228233645115.davem@davemloft.net>
-References: <CANq1E4TTfDxZPsOqqWUT7PqTKUr8nCTC-wo=iGe_pxoUmnecgQ@mail.gmail.com>
-	 <20120506.145304.1998242927519675381.davem@davemloft.net>
-	 <1336410360.5970.103.camel@aeonflux>
-	 <20120507.135547.704675228233645115.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 24 May 2012 11:18:59 -0400
+Received: by pbbrp8 with SMTP id rp8so388713pbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2012 08:18:58 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] Fix the Problem of Unreachable Mesh Station when joining from one MBSS to another MBSS
+Date: Thu, 24 May 2012 23:14:24 +0800
+Message-Id: <1337872464-10924-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120524_171902_630259_FDBAB451)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Mesh station that joins an MBSS is reachable using mesh portal with 6 address frame
+by mesh stations from another MBSS if these two different MBSSes are bridged. However,
+if the mesh station later moves into the same MBSS of those mesh stations, it is unreachable
+by mesh stations in the MBSS due to the mpp_paths table is not deleted. A quick fix is
+to perform mesh_path_lookup, if it is available for the target destination, mpp_path_lookup
+is not performed. When the mesh station moves back to its original MBSS, the mesh_paths will
+be deleted once expired. So, it will be reachable using mpp_path_lookup again.
 
-> > When it comes to function declaration and function calls, the style in
-> > mm/memory.c is mixed. We can start counting, but for both other
-> > multi-line cases it seems that tab-only indentation is predominant.
-> 
-> Fair enough.
-> 
-> But you know what the real issue is?
-> 
-> I have told the bluetooth folks this matters to me, repeatedly.
-> 
-> And then when I pushback when some unacceptable changes slip through,
-> they put a bullseye on my head and say I'm being unreasonable.
-> 
-> What's unreasonable about a maintainer telling you multiple times
-> to do things a certain way and then getting mad when you still
-> don't listen?
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/tx.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-I have no problem in getting these fixed and you actually imposing this
-coding style on all networking subsystem. That is your prerogative.
-
-However I do have a problem if this is not documented in CodingStyle or
-somewhere else as part of the kernel source. It should be documented and
-people pointing out the lack of this are full in their right to do so. I
-personally would expect the maintainer enforcing this rule to ensure
-that it is properly documented. Especially after such a confusion has
-arisen.
-
-That checkpatch.pl needs an extra command line called --subjective or
--strict to have this easily tested is really not intuitive. I would love
-to see the idea realized that checkpatch.pl does the enabling/disabling
-of coding style warnings automatically based on the path.
-
-Anyway, these are my view points on this.
-
-Regards
-
-Marcel
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d67d36f..f44cd9d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1740,7 +1740,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	__le16 fc;
+ 	struct ieee80211_hdr hdr;
+ 	struct ieee80211s_hdr mesh_hdr __maybe_unused;
+-	struct mesh_path __maybe_unused *mppath = NULL;
++	struct mesh_path __maybe_unused *mppath = NULL, *mpath = NULL;
+ 	const u8 *encaps_data;
+ 	int encaps_len, skip_header_bytes;
+ 	int nh_pos, h_pos;
+@@ -1806,8 +1806,11 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 			goto fail;
+ 		}
+ 		rcu_read_lock();
+-		if (!is_multicast_ether_addr(skb->data))
+-			mppath = mpp_path_lookup(skb->data, sdata);
++		if (!is_multicast_ether_addr(skb->data)) {
++			mpath = mesh_path_lookup(skb->data, sdata);
++			if (!mpath)
++				mppath = mpp_path_lookup(skb->data, sdata);
++		}
+ 
+ 		/*
+ 		 * Use address extension if it is a packet from
+-- 
+1.7.0.4
 
