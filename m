@@ -1,48 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:41982 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915Ab2ESQxY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2012 12:53:24 -0400
-Date: Sat, 19 May 2012 11:53:16 -0500
-From: Jonathan Nieder <jrnieder@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Greg KH <greg@kroah.com>, stable@vger.kernel.org,
-	Touko Korpela <touko.korpela@iki.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 3.2.y, 3.3.y] brcm80211: smac: fix endless retry of
- A-MPDU transmissions
-Message-ID: <20120519165316.GC26095@burratino> (sfid-20120519_185329_827217_0A0629EE)
-References: <1330018703-2472-1-git-send-email-arend@broadcom.com>
- <1330018703-2472-2-git-send-email-arend@broadcom.com>
- <20120516222824.GA11009@burratino>
- <20120518195812.GE4874@kroah.com>
- <20120518205118.GE2986@burratino>
- <4FB75E88.3010908@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FB75E88.3010908@broadcom.com>
+Received: from nbd.name ([46.4.11.11]:56002 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756530Ab2EXMcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 08:32:41 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	stable@vger.kernel.org
+Subject: [PATCH 3.5 2/4] ath9k: fix a use-after-free-bug when ath_tx_setup_buffer() fails
+Date: Thu, 24 May 2012 14:32:20 +0200
+Message-Id: <1337862742-10574-2-git-send-email-nbd@openwrt.org> (sfid-20120524_143245_337380_6AAF028E)
+In-Reply-To: <1337862742-10574-1-git-send-email-nbd@openwrt.org>
+References: <1337862742-10574-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel wrote:
-> On 05/18/2012 10:51 PM, Jonathan Nieder wrote:
+ath_tx_setup_buffer() can fail if there is no ath_buf left, or if mapping DMA
+failed. In this case it frees the skb passed to it.
+If ath_tx_setup_buffer is called from ath_tx_form_aggr, the skb is still
+linked into the tid buffer list and must be dequeued before being released.
 
->> My bad --- looks like it was already applied during the 3.3 cycle as
->> v3.3~19^2^2~7 (commit 85091fc0a756).  Sorry I missed that before.
-[...]
-> Yes. The patch was posted upstream with Cc to stable. As it did not
-> apply to earlier kernels it was marked for 3.3 stable only.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@vger.kernel.org
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
 
-Technically it wasn't cc-ed to stable; it went to wireless-next
-for 3.4 and then was fast-tracked through the plain wireless tree
-for 3.3[1].  But the effect is basically the same.
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 23eaa1b..d59dd01 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -64,7 +64,8 @@ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 					   struct ath_txq *txq,
+ 					   struct ath_atx_tid *tid,
+-					   struct sk_buff *skb);
++					   struct sk_buff *skb,
++					   bool dequeue);
+ 
+ enum {
+ 	MCS_HT20,
+@@ -811,7 +812,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 		fi = get_frame_info(skb);
+ 		bf = fi->bf;
+ 		if (!fi->bf)
+-			bf = ath_tx_setup_buffer(sc, txq, tid, skb);
++			bf = ath_tx_setup_buffer(sc, txq, tid, skb, true);
+ 
+ 		if (!bf)
+ 			continue;
+@@ -1726,7 +1727,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 		return;
+ 	}
+ 
+-	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
++	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb, false);
+ 	if (!bf)
+ 		return;
+ 
+@@ -1753,7 +1754,7 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	bf = fi->bf;
+ 	if (!bf)
+-		bf = ath_tx_setup_buffer(sc, txq, tid, skb);
++		bf = ath_tx_setup_buffer(sc, txq, tid, skb, false);
+ 
+ 	if (!bf)
+ 		return;
+@@ -1814,7 +1815,8 @@ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
+ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 					   struct ath_txq *txq,
+ 					   struct ath_atx_tid *tid,
+-					   struct sk_buff *skb)
++					   struct sk_buff *skb,
++					   bool dequeue)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+@@ -1863,6 +1865,8 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 	return bf;
+ 
+ error:
++	if (dequeue)
++		__skb_unlink(skb, &tid->buf_q);
+ 	dev_kfree_skb_any(skb);
+ 	return NULL;
+ }
+@@ -1893,7 +1897,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 		 */
+ 		ath_tx_send_ampdu(sc, tid, skb, txctl);
+ 	} else {
+-		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
++		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb, false);
+ 		if (!bf)
+ 			return;
+ 
+-- 
+1.7.3.2
 
-Thanks for writing it.
-
-Jonathan
-
-[1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/85902
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/85249
