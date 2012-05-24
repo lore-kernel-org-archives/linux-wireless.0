@@ -1,69 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38634 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399Ab2E3G7c (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:61741 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010Ab2EXNZQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 02:59:32 -0400
-Message-ID: <4FC5C547.8040503@qca.qualcomm.com> (sfid-20120530_085935_196937_7457DCCD)
-Date: Wed, 30 May 2012 12:29:19 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+	Thu, 24 May 2012 09:25:16 -0400
+Received: by qcro28 with SMTP id o28so5600404qcr.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2012 06:25:15 -0700 (PDT)
+Message-ID: <4FBE36B8.8020208@lwfinger.net> (sfid-20120524_152522_370856_9A480943)
+Date: Thu, 24 May 2012 08:25:12 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2 1/2] ath6kl: Fix race in aggregation reorder logic
-References: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com> <4FC4AF40.3060702@qca.qualcomm.com> <4FC4B132.60209@qca.qualcomm.com> <4FC4B37E.2080002@qca.qualcomm.com>
-In-Reply-To: <4FC4B37E.2080002@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Mourad De Clerck <bugs-wireless@aquazul.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: firmware loading fails for b43 using linux 3.4?
+References: <4FBD7772.6070305@aquazul.com> <4FBDA4FE.6040603@lwfinger.net> <4FBDBB48.8080004@aquazul.com>
+In-Reply-To: <4FBDBB48.8080004@aquazul.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Tuesday 29 May 2012 05:01 PM, Kalle Valo wrote:
-> On 05/29/2012 02:21 PM, Vasanthakumar Thiagarajan wrote:
->> On Tuesday 29 May 2012 04:43 PM, Kalle Valo wrote:
->>> On 05/25/2012 01:19 PM, Vasanthakumar Thiagarajan wrote:
->>>
->>>> @@ -1188,6 +1189,7 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
->>>>    		rxtid->progress = true;
->>>>    	else
->>>>    		for (idx = 0 ; idx<   rxtid->hold_q_sz; idx++) {
->>>> +			spin_lock_bh(&rxtid->lock);
->>>>    			if (rxtid->hold_q[idx].skb) {
->>>>    				/*
->>>>    				 * There is a frame in the queue and no
->>>> @@ -1201,8 +1203,10 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
->>>>    					   HZ * (AGGR_RX_TIMEOUT) / 1000));
->>>>    				rxtid->progress = false;
->>>>    				rxtid->timer_mon = true;
->>>> +				spin_unlock_bh(&rxtid->lock);
->>>>    				break;
->>>>    			}
->>>> +			spin_unlock_bh(&rxtid->lock);
->>>>    		}
->>>
->>> Here you take and release the lock multiple times inside the loop. Why
->>> not take the lock before the loop?
->>
->> Sounds better to acquire the lock before loop and releasing it after
->> the loop. I was kind of thinking about protecting the data only
->> in critical section, but in this case we can bring the loop
->> in the lock, it is not going to make much difference.
+On 05/23/2012 11:38 PM, Mourad De Clerck wrote:
 >
-> It's also the question of does the lock protect hold_q_sz.
-
-No, it does not.
-
+> Well, I just tried it. It kinda works, but it seems a bit brittle.
 >
-> Also, can you please fix the comment I added to core.h about the lock
-> and document properly what the lock is actually supposed to protect:
+> Just after recompiling and rebooting, by chance my system needed a fsck, which
+> seemed to delay it enough for it to go beyond the loop count, and it failed to
+> load the firmware.
 >
-> 	/*
-> 	 * FIXME: No clue what this should protect. Apparently it should
-> 	 * protect some of the fields above but they are also accessed
-> 	 * without taking the lock.
-> 	 */
+> (Even without the fsck, my laptop could hang around indefinitely in early
+> userspace waiting for me to type in my cryptoroot password)
+>
+> Anyway, the second time I rebooted, it was fast enough (without the fsck) to
+> load the firmware.
+>
+> dmesg reported "********** loop count at exit 5" in that case.
 
-Good point, thanks.
+I was afraid that it might be too fragile; however, after these tests, I have a 
+solution. Only the first firmware file (ucodeXX.fw) needs to be loaded 
+asynchronously. Once it is available, all the others can be loaded in a 
+synchronous manner. Realizing that greatly simplifies the logic.
 
-Vasanth
+It may be a while before I sort out all the details of this fix. Until then, you 
+can use either the temporary fix or compile b43 as a module. To increase the 
+robustness, change the end of the for loop from "i < 10" to "i < 5000". I could 
+never do that in final code as it would delay forever if the firmware were 
+really missing, but it will delay long enough to handle an fsck on root, your 
+entering of the password for the encrypted fs, or whatever slows the starting of 
+userland.
+
+I will send you a test patch when the next round is available.
+
+I always have the wireless drivers built as modules. When making changes, one 
+only needs to recompile, reinstall the new version, and unload/reload the 
+module. If built into the kernel, a reboot is needed for every change. None the 
+less, the code needs to handle all cases.
+
+Larry
