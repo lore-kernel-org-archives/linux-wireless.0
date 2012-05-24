@@ -1,81 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33546 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522Ab2EVHZU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 03:25:20 -0400
-Message-ID: <4FBB3F58.2080104@qca.qualcomm.com> (sfid-20120522_092524_517887_507CFF83)
-Date: Tue, 22 May 2012 12:55:12 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Received: from purkki.adurom.net ([80.68.90.206]:38637 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750948Ab2EXGgs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 02:36:48 -0400
+From: Kalle Valo <kvalo@adurom.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: allow setting default U-APSD queues/max_sp_len for STA
+References: <1337760813-27055-1-git-send-email-arik@wizery.com>
+	<87wr436utp.fsf@purkki.adurom.net>
+	<CA+XVXfeju02Ou=jZ=eyq+0e4Rm1-5=b6-m8bMyZ8kAWO6F-sXQ@mail.gmail.com>
+	<87mx4z6u4n.fsf@purkki.adurom.net>
+	<CA+XVXfc3R8CrMfercPpRfYGjvKDdDkwJax+oLiaMrQQPwLCc0Q@mail.gmail.com>
+	<87ipfn6koz.fsf@purkki.adurom.net>
+	<CA+XVXfcZAE0Drbn_JTBt1p0GAaFrsxZfHNE1Syp=1G=PNsvkbQ@mail.gmail.com>
+	<87ehqa6u2d.fsf@purkki.adurom.net>
+	<CA+XVXffb3tZ2_kWwx0wBWUac-y0BPTT_KBJ5yhxNjPVp4U7HGw@mail.gmail.com>
+Date: Thu, 24 May 2012 09:36:46 +0300
+In-Reply-To: <CA+XVXffb3tZ2_kWwx0wBWUac-y0BPTT_KBJ5yhxNjPVp4U7HGw@mail.gmail.com>
+	(Arik Nemtsov's message of "Thu, 24 May 2012 08:32:14 +0300")
+Message-ID: <87aa0y6q69.fsf@purkki.adurom.net> (sfid-20120524_083651_751109_85B355F2)
 MIME-Version: 1.0
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: Complete failed tx packet in ath6kl_htc_tx_from_queue()
-References: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com> <1337671370-32519-3-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1337671370-32519-3-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Arik Nemtsov <arik@wizery.com> writes:
 
-Oops, please forget this crap, mistakenly sent the older patches.
-I'm really sorry.
+> On Thu, May 24, 2012 at 8:12 AM, Kalle Valo <kvalo@adurom.com> wrote:
+>> But this was a workaround for an IOP problem with certain APs, right?
+>> How is firmware going to be smart in that case?
+>>
+>> It would help to see what you are exactly planning to do on wl12xx with
+>> this interface. Currently I'm just guessing what your plans really are.
+>
+> The plan is to enable only VO as U-APSD (as I wrote in a previous
+> email).
 
-Vasanth
+You mean you will hardcode it in wl12xx and with all APs only VO has
+U-APSD enabled?
 
-On Tuesday 22 May 2012 12:52 PM, Vasanthakumar Thiagarajan wrote:
-> Return status of ath6kl_htc_tx_issue() is ignored in
-> ath6kl_htc_tx_from_queue(), but failed tx packet is
-> is not cleaned up. To fix memory leak in this case, call
-> completion with error. Also, throw an error debug message
-> when tx fails in ath6kl_sdio_write_async() due to shortage
-> in bus request buffer.
->
-> Signed-off-by: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath6kl/htc_mbox.c |    8 +++++++-
->   drivers/net/wireless/ath/ath6kl/sdio.c     |    4 +++-
->   2 files changed, 10 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-> index 65310d5..8729803 100644
-> --- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-> +++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-> @@ -850,6 +850,7 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
->   	int bundle_sent;
->   	int n_pkts_bundle;
->   	u8 ac = WMM_NUM_AC;
-> +	int status;
->
->   	spin_lock_bh(&target->tx_lock);
->
-> @@ -911,7 +912,12 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
->
->   			ath6kl_htc_tx_prep_pkt(packet, packet->info.tx.flags,
->   					       0, packet->info.tx.seqno);
-> -			ath6kl_htc_tx_issue(target, packet);
-> +			status = ath6kl_htc_tx_issue(target, packet);
-> +
-> +			if (status) {
-> +				packet->status = status;
-> +				packet->completion(packet->context, packet);
-> +			}
->   		}
->
->   		spin_lock_bh(&target->tx_lock);
-> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-> index 0384a0f..efe083f 100644
-> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
-> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-> @@ -552,8 +552,10 @@ static int ath6kl_sdio_write_async(struct ath6kl *ar, u32 address, u8 *buffer,
->
->   	bus_req = ath6kl_sdio_alloc_busreq(ar_sdio);
->
-> -	if (!bus_req)
-> +	if (!bus_req) {
-> +		ath6kl_err("Ran out of bus request buffer for tx\n");
->   		return -ENOMEM;
-> +	}
->
->   	bus_req->address = address;
->   	bus_req->buffer = buffer;
+> We've had problems with some APs (can't remember the models) that
+> assume non-VO ACs always use legacy PS. This would lead to problems -
+> our driver would never wake up. In that sense the problem is general.
+
+Yeah, that looks like a general problem but of course it's difficult to
+make any conclusions with this little data.
+
+-- 
+Kalle Valo
