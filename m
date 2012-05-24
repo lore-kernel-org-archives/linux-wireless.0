@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:36686 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932679Ab2EVUfc (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62033 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752041Ab2EXDyD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 16:35:32 -0400
-Received: by eaak11 with SMTP id k11so1812477eaa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 May 2012 13:35:30 -0700 (PDT)
-Message-ID: <4FBBF88F.5060508@gmail.com> (sfid-20120522_224005_480524_F7DDF74D)
-Date: Tue, 22 May 2012 22:35:27 +0200
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+	Wed, 23 May 2012 23:54:03 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: rt2x00: missing devices/chips
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45211.780234.381628@gargle.gargle.HOWL> (sfid-20120524_055409_713340_A52AA116)
+Date: Thu, 24 May 2012 09:22:59 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 04/22] ath9k_hw: Fix AR_RTC_KEEP_AWAKE usage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller wrote:
+The default value that is being programmed to AR_RTC_KEEP_AWAKE
+is 0x2, there is no need to program it manually in various
+functions.
 
-> Xose Vazquez Perez (4):
-> wireless: rt2x00: rt2800pci add more RT539x ids
-> wireless: rt2x00: rt2800usb add more devices ids
-> wireless: rt2x00: rt2800usb more devices were identified
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c         |   11 -----------
+ 2 files changed, 12 deletions(-)
 
-Those were my final patches, from now on MediaTek Inc. guys
-should take over it.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index ffbb180..9331d73 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -330,7 +330,6 @@ void ar9003_mci_set_full_sleep(struct ath_hw *ah)
+ 	}
+ 
+ 	mci->ready = false;
+-	REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+ }
+ 
+ static void ar9003_mci_disable_interrupt(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 02ce524..8698589 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1432,9 +1432,6 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+ 		break;
+ 	}
+ 
+-	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+-		REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+-
+ 	return ret;
+ }
+ 
+@@ -2164,10 +2161,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 	switch (mode) {
+ 	case ATH9K_PM_AWAKE:
+ 		status = ath9k_hw_set_power_awake(ah, setChip);
+-
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+-			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+-
+ 		break;
+ 	case ATH9K_PM_FULL_SLEEP:
+ 		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+@@ -2177,10 +2170,6 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
+ 		ah->chip_fullsleep = true;
+ 		break;
+ 	case ATH9K_PM_NETWORK_SLEEP:
+-
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+-			REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+-
+ 		ath9k_set_power_network_sleep(ah, setChip);
+ 		break;
+ 	default:
+-- 
+1.7.10.2
 
-These are pending:
-
-- RT3573:
-0x1875,0x7733 RT3573 Air Live
-0x7392,0x7733 RT3573 Edimax
-0x0e66,0x0021 RT3573 Hawking
-0x2019,0xed19 RT3573 Planex
-0x148f,0x3573 RT3573 Ralink
-0x0df6,0x0067 RT3573 Sitecom
-
-- RT5572:
-0x148f,0x5572 RT5572 Ralink
-0x043e,0x7a32 RT5572 Arcadyan
-0x2001,0x3c1a RT5572 D-Link DWA-160-B2
-
-- Identify all UNKNOWN devices in rt2800usb.c
-
-- There is also a handful of them(rt2800{usb,pci}) inside
-the inf file of the Windows drivers missing.
