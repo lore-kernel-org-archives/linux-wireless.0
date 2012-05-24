@@ -1,59 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slush.shore.mbari.org ([134.89.12.31]:35705 "EHLO
-	slush.shore.mbari.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755581Ab2EHXWe (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18774 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696Ab2EXEC5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 19:22:34 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by slush.shore.mbari.org (Postfix) with ESMTP id 7307345E001
-	for <linux-wireless@vger.kernel.org>; Tue,  8 May 2012 16:15:15 -0700 (PDT)
-Received: from slush.shore.mbari.org ([127.0.0.1])
-	by localhost (slush.shore.mbari.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 7ENg-G30Aznd for <linux-wireless@vger.kernel.org>;
-	Tue,  8 May 2012 16:15:15 -0700 (PDT)
-Received: from [134.89.10.31] (pippin.shore.mbari.org [134.89.10.31])
-	by slush.shore.mbari.org (Postfix) with ESMTPSA id 2CDCA6A400A
-	for <linux-wireless@vger.kernel.org>; Tue,  8 May 2012 16:15:15 -0700 (PDT)
-Message-ID: <4FA9A8FE.5000102@mbari.org> (sfid-20120509_012237_823738_39A56B38)
-Date: Tue, 08 May 2012 16:15:10 -0700
-From: Brent Roman <brent@mbari.org>
+	Thu, 24 May 2012 00:02:57 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: After Kernel 3.3, brcmsmac won't work on mid-2010 Mac Mini
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45746.155091.438297@gargle.gargle.HOWL> (sfid-20120524_060331_713911_3E091D14)
+Date: Thu, 24 May 2012 09:31:54 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 01/22] ath9k: Prune ath9k_init_device
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Instead of cluttering ath9k_init_device() with 'ath_softc'
+specific initialization code, use ath9k_init_softc() to
+setup driver-specific work routines, timers etc.
 
-When I updated to Linux Kernel 3.3.5 on my mid-2010 Aluminum Unibody Mac 
-Mini,
-its built-in wireless was no longer recognized:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |   15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-03:00.0 Network controller [0280]: Broadcom Corporation BCM43224 
-802.11a/b/g/n [14e4:4353] (rev 01)
-     Subsystem: Apple Computer Inc. Device [106b:0093]
-     Flags: bus master, fast devsel, latency 0, IRQ 22
-     Memory at d3300000 (64-bit, non-prefetchable) [size=16K]
-     Capabilities: [40] Power Management version 3
-     Capabilities: [58] Vendor Specific Information: Len=78 <?>
-     Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
-     Capabilities: [d0] Express Endpoint, MSI 00
-     Capabilities: [100] Advanced Error Reporting
-     Capabilities: [13c] Virtual Channel
-     Capabilities: [160] Device Serial Number 54-70-4b-ff-ff-0c-60-33
-     Capabilities: [16c] Power Budgeting <?>
-     Kernel driver in use: brcmsmac
-
-I tried kernel 3.3.0 with the same negative result.
-When I reverted to 3.2.16, the chip was immediately recognized.
-The driver in 3.3+ is loading the bcma module.
-
-I've fine with running 3.2.16 for now.
-Is this a known problem?  A configuration error on my part?
-
-Just let me know if you'd like me to try anything to help debug this 
-(possible) regression.
-
-- brent
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index dee9e09..3e22839 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -489,6 +489,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 
+ 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
+ 
++	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	sc->config.txpowlimit = ATH_TXPOWER_MAX;
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
+@@ -560,6 +561,12 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
+ 		     (unsigned long)sc);
+ 
++	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
++	INIT_WORK(&sc->hw_check_work, ath_hw_check);
++	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
++	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
++	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
++
+ 	/*
+ 	 * Cache line size is used to size and align various
+ 	 * structures used to communicate with the hardware.
+@@ -782,11 +789,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 		ARRAY_SIZE(ath9k_tpt_blink));
+ #endif
+ 
+-	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
+-	INIT_WORK(&sc->hw_check_work, ath_hw_check);
+-	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
+-	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+-
+ 	/* Register with mac80211 */
+ 	error = ieee80211_register_hw(hw);
+ 	if (error)
+@@ -805,9 +807,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 			goto error_world;
+ 	}
+ 
+-	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
+-	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+-
+ 	ath_init_leds(sc);
+ 	ath_start_rfkill_poll(sc);
+ 
+-- 
+1.7.10.2
 
