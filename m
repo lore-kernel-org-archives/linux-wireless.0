@@ -1,67 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58833 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261Ab2E2JAb (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47156 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727Ab2EXEDK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 05:00:31 -0400
-Received: by dady13 with SMTP id y13so5150741dad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 02:00:30 -0700 (PDT)
-From: Eyal Shapira <eyal@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: fix ADDBA declined after suspend with wowlan
-Date: Tue, 29 May 2012 02:00:22 -0700
-Message-Id: <1338282022-28857-1-git-send-email-eyal@wizery.com> (sfid-20120529_110035_090990_B7ED3A59)
+	Thu, 24 May 2012 00:03:10 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45758.748897.392749@gargle.gargle.HOWL> (sfid-20120524_060338_903966_664C45A8)
+Date: Thu, 24 May 2012 09:32:06 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 03/22] ath9k: Setup MCI interrupts properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WLAN_STA_BLOCK_BA is set while suspending but doesn't get cleared
-when resuming in case of wowlan. This causes further ADDBA requests
-received to be rejected. Fix it by clearing it in the wowlan path
-as well.
+MCI interrupts have to be enabled only when BTCOEX is
+actually in use.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
-The diff is a bit confusing as it appears to 
-be messing with the keys but actually what happens 
-here is that we move the BLOCK_BA code block 
-below the wake_up label so it'll get called in 
-the wowlan path as well.
-Git was adamant about formatting the diff this way.
+ drivers/net/wireless/ath/ath9k/main.c |    3 +--
+ drivers/net/wireless/ath/ath9k/mci.c  |   11 +++++++++++
+ drivers/net/wireless/ath/ath9k/mci.h  |   11 ++++++++++-
+ 3 files changed, 22 insertions(+), 3 deletions(-)
 
- net/mac80211/util.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 22f2216..a44c680 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1371,6 +1371,12 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		}
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index dfa78e8..3f79923 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1044,8 +1044,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+ 		ah->imask |= ATH9K_INT_CST;
  
-+	/* add back keys */
-+	list_for_each_entry(sdata, &local->interfaces, list)
-+		if (ieee80211_sdata_running(sdata))
-+			ieee80211_enable_keys(sdata);
+-	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
+-		ah->imask |= ATH9K_INT_MCI;
++	ath_mci_enable(sc);
+ 
+ 	sc->sc_flags &= ~SC_OP_INVALID;
+ 	sc->sc_ah->is_monitoring = false;
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 29fe52d..7b553f6 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -538,3 +538,14 @@ void ath_mci_intr(struct ath_softc *sc)
+ 		mci_int &= ~(AR_MCI_INTERRUPT_RX_INVALID_HDR |
+ 			     AR_MCI_INTERRUPT_CONT_INFO_TIMEOUT);
+ }
 +
-+ wake_up:
- 	/*
- 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
- 	 * sessions can be established after a resume.
-@@ -1392,12 +1398,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		mutex_unlock(&local->sta_mtx);
- 	}
- 
--	/* add back keys */
--	list_for_each_entry(sdata, &local->interfaces, list)
--		if (ieee80211_sdata_running(sdata))
--			ieee80211_enable_keys(sdata);
--
-- wake_up:
- 	ieee80211_wake_queues_by_reason(hw,
- 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
- 
++void ath_mci_enable(struct ath_softc *sc)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++
++	if (!common->btcoex_enabled)
++		return;
++
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
++		sc->sc_ah->imask |= ATH9K_INT_MCI;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index c841444..fc14eea 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -130,4 +130,13 @@ void ath_mci_flush_profile(struct ath_mci_profile *mci);
+ int ath_mci_setup(struct ath_softc *sc);
+ void ath_mci_cleanup(struct ath_softc *sc);
+ void ath_mci_intr(struct ath_softc *sc);
+-#endif
++
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
++void ath_mci_enable(struct ath_softc *sc);
++#else
++static inline void ath_mci_enable(struct ath_softc *sc)
++{
++}
++#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
++
++#endif /* MCI_H*/
 -- 
-1.7.4.1
+1.7.10.2
 
