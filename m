@@ -1,68 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from haggis.pcug.org.au ([203.10.76.10]:39536 "EHLO
-	members.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327Ab2E2Hyz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 03:54:55 -0400
-Date: Tue, 29 May 2012 17:54:38 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Eyal Shapira <eyal@wizery.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-next@vger.kernel.org>, Luciano Coelho <coelho@ti.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] wlcore: fix undefined symbols when CONFIG_PM is not
- defined
-Message-Id: <20120529175438.0e68273020662870497d8201@canb.auug.org.au> (sfid-20120529_095519_280945_75BBBEE4)
-In-Reply-To: <1338275703-28103-1-git-send-email-eyal@wizery.com>
-References: <CAMuHMdVv+g=+A1HHNmWWcsFBQjRXNNA437V6-g80cYq7zRJ78g@mail.gmail.com>
-	<1338275703-28103-1-git-send-email-eyal@wizery.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Tue__29_May_2012_17_54_38_+1000__ogrz5_Pq2HX69wN"
+Received: from nbd.name ([46.4.11.11]:41610 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752481Ab2EXN3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 09:29:31 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@qca.qualcomm.com
+Subject: [PATCH] compat: rename compat-3.5.c to compat-3.4.c
+Date: Thu, 24 May 2012 15:29:28 +0200
+Message-Id: <1337866168-11749-1-git-send-email-nbd@openwrt.org> (sfid-20120524_152935_281510_44708CFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Tue__29_May_2012_17_54_38_+1000__ogrz5_Pq2HX69wN
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It only contains simple_open, which is already available on Linux 3.4.
+Fixes duplicate symbol issues on 3.4
 
-Hi Eyal,
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ compat/Makefile     |    2 +-
+ compat/compat-3.4.c |   20 ++++++++++++++++++++
+ compat/compat-3.5.c |   20 --------------------
+ 3 files changed, 21 insertions(+), 21 deletions(-)
+ create mode 100644 compat/compat-3.4.c
+ delete mode 100644 compat/compat-3.5.c
 
-On Tue, 29 May 2012 00:15:03 -0700 Eyal Shapira <eyal@wizery.com> wrote:
->
-> commit 5063c201d7b799d6cb36d3edfc2c2c3db3b400e5
-> "wl12xx: add RX filters ACX commands" breaks the build
-> when CONFIG_PM isn't defined:
+diff --git a/compat/Makefile b/compat/Makefile
+index bda677b..667e727 100644
+--- a/compat/Makefile
++++ b/compat/Makefile
+@@ -37,7 +37,7 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
+ compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
+ compat-$(CONFIG_COMPAT_KERNEL_3_2) += compat-3.2.o
+ compat-$(CONFIG_COMPAT_KERNEL_3_3) += compat-3.3.o
+-compat-$(CONFIG_COMPAT_KERNEL_3_5) += compat-3.5.o
++compat-$(CONFIG_COMPAT_KERNEL_3_4) += compat-3.4.o
+ 
+ compat-$(CONFIG_COMPAT_CORDIC) += cordic.o
+ compat-$(CONFIG_COMPAT_CRC8) += crc8.o
+diff --git a/compat/compat-3.4.c b/compat/compat-3.4.c
+new file mode 100644
+index 0000000..5d516f0
+--- /dev/null
++++ b/compat/compat-3.4.c
+@@ -0,0 +1,20 @@
++/*
++ * Copyright 2012  Luis R. Rodriguez <mcgrof@frijolero.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * Compatibility file for Linux wireless for kernels 3.5.
++ */
++
++#include <linux/fs.h>
++#include <linux/module.h>
++
++int simple_open(struct inode *inode, struct file *file)
++{
++	if (inode->i_private)
++		file->private_data = inode->i_private;
++	return 0;
++}
++EXPORT_SYMBOL_GPL(simple_open);
+diff --git a/compat/compat-3.5.c b/compat/compat-3.5.c
+deleted file mode 100644
+index 5d516f0..0000000
+--- a/compat/compat-3.5.c
++++ /dev/null
+@@ -1,20 +0,0 @@
+-/*
+- * Copyright 2012  Luis R. Rodriguez <mcgrof@frijolero.org>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- *
+- * Compatibility file for Linux wireless for kernels 3.5.
+- */
+-
+-#include <linux/fs.h>
+-#include <linux/module.h>
+-
+-int simple_open(struct inode *inode, struct file *file)
+-{
+-	if (inode->i_private)
+-		file->private_data = inode->i_private;
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(simple_open);
+-- 
+1.7.3.2
 
-Just wondering what this applies to as there is no such commit (SHA1) in
-linux-next.  Ah, actually this is commit c21eebb50379 in Linus' tree.
-
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
---Signature=_Tue__29_May_2012_17_54_38_+1000__ogrz5_Pq2HX69wN
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIcBAEBCAAGBQJPxIC+AAoJEECxmPOUX5FEW44P/jH7HvGI9b7bYRUy9Cxbrj6f
-F085HW9cGn08LOerb9M5I21l76UDUxuwLM3Ra6Fmf3BtZYsuJ3HT4o/rSc/7G7k0
-MdAhSl6Ko3iRM0/gn6+BhJy3HfDV0xRqOuhWN5EPKetN7vEhKn2xGyTn2sLGBiFR
-n99jRIiojT7jAmJVHKSJqLNYG/RqjkAjDkl/oPiu3PBPHU0IOsjHX5iLNAmzTyjp
-hVnD7AJmFvUuODSumbbLy9g3ngJ3D/UFX2YO18OEmRLog5x3bkz3vkJshoWMExhJ
-phsMio/A00PmeNP8u2vPaz/c6wBoX/up6TvzoeFF/vbTeHGdR/X3MMklF39VC7HM
-EJHVXx98OdX8m3RvDLLncBWCDoMsVCMc9ZO8iUmgQg+Ir/UtAJyyUJ36CqMoBBVS
-jga1vdJNixd5pFr5hZwZUZR6AN9qC8+wOYEGELMOfwKLr6zNNFSdYo6YVyr41jod
-jajX21RTrMyTX7Kzn6JtC1ZDs2fiytl4Aw9vcgSaKlNuUK68ZL/qj86r3l+IA+Lj
-3NfFbhkt/KfTs41n/4PP56S3sn8ti9248yljT7yIlY72aCq5LkV+eq/nO+LE25q+
-97mj2NrSIef6sJ3/ivlSSL79rsh0s3pCtxvf2ZtQtvM6ygF6pgQWBgl6g9EVNNda
-+/K2n13VCxTnOeMY/pNK
-=REIH
------END PGP SIGNATURE-----
-
---Signature=_Tue__29_May_2012_17_54_38_+1000__ogrz5_Pq2HX69wN--
