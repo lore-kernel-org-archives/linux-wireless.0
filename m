@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43917 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755842Ab2E2WkG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 18:40:06 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com
-Cc: lf_driver_backport@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/8] compat-wireless: add linux/compat.h header
-Date: Wed, 30 May 2012 00:39:38 +0200
-Message-Id: <1338331182-29589-5-git-send-email-hauke@hauke-m.de> (sfid-20120530_004016_232662_726FE33E)
-In-Reply-To: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
-References: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38308 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727Ab2EXEDx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 00:03:53 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45784.596597.651812@gargle.gargle.HOWL> (sfid-20120524_060356_406261_CD1C2678)
+Date: Thu, 24 May 2012 09:32:32 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 07/22] ath9k: Add MCI interrupt to debugfs statistics
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For some older kernel versions we have to include linux/compat.h in
-some bluetooth code, otherwise it will not find functions like
-compat_ptr().
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- patches/06-header-changes.patch |   30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ drivers/net/wireless/ath/ath9k/debug.c |    3 +++
+ drivers/net/wireless/ath/ath9k/debug.h |    1 +
+ 2 files changed, 4 insertions(+)
 
-diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
-index 92ed02d..db84468 100644
---- a/patches/06-header-changes.patch
-+++ b/patches/06-header-changes.patch
-@@ -75,3 +75,33 @@ cases.
-  
-  /**
-   * DOC: Key handling basics
-+--- a/net/bluetooth/bnep/sock.c
-++++ b/net/bluetooth/bnep/sock.c
-+@@ -26,6 +26,7 @@
-+ 
-+ #include <linux/export.h>
-+ #include <linux/file.h>
-++#include <linux/compat.h>
-+ 
-+ #include "bnep.h"
-+ 
-+--- a/net/bluetooth/hci_sock.c
-++++ b/net/bluetooth/hci_sock.c
-+@@ -25,6 +25,7 @@
-+ /* Bluetooth HCI sockets. */
-+ 
-+ #include <linux/export.h>
-++#include <linux/compat.h>
-+ #include <asm/unaligned.h>
-+ 
-+ #include <net/bluetooth/bluetooth.h>
-+--- a/net/bluetooth/hidp/sock.c
-++++ b/net/bluetooth/hidp/sock.c
-+@@ -22,6 +22,7 @@
-+ 
-+ #include <linux/export.h>
-+ #include <linux/file.h>
-++#include <linux/compat.h>
-+ 
-+ #include "hidp.h"
-+ 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index fde700c..c134dda 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -374,6 +374,8 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
+ 		sc->debug.stats.istats.dtim++;
+ 	if (status & ATH9K_INT_TSFOOR)
+ 		sc->debug.stats.istats.tsfoor++;
++	if (status & ATH9K_INT_MCI)
++		sc->debug.stats.istats.mci++;
+ }
+ 
+ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+@@ -418,6 +420,7 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+ 	PR_IS("DTIMSYNC", dtimsync);
+ 	PR_IS("DTIM", dtim);
+ 	PR_IS("TSFOOR", tsfoor);
++	PR_IS("MCI", mci);
+ 	PR_IS("TOTAL", total);
+ 
+ 	len += snprintf(buf + len, mxlen - len,
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index c34da09..d0f851c 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -86,6 +86,7 @@ struct ath_interrupt_stats {
+ 	u32 dtim;
+ 	u32 bb_watchdog;
+ 	u32 tsfoor;
++	u32 mci;
+ 
+ 	/* Sync-cause stats */
+ 	u32 sync_cause_all;
 -- 
-1.7.9.5
+1.7.10.2
 
