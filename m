@@ -1,196 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:37298 "HELO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755391Ab2ECHXw (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:52617 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754698Ab2EXSze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:23:52 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Avinash Patil <patila@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stone Piao <piaoyun@marvell.com>,
-	Frank Huang <frankh@marvell.com>,
-	Bing Zhao <bzhao@marvell.com>,
-	harvey yang <harvey.huawei.yang@gmail.com>
-Subject: [PATCH 13/18] mwifiex: add AP event handling framework
-Date: Thu,  3 May 2012 00:22:35 -0700
-Message-Id: <1336029760-22565-14-git-send-email-bzhao@marvell.com> (sfid-20120503_092405_448812_C7EBB50B)
-In-Reply-To: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
-References: <1336029760-22565-1-git-send-email-bzhao@marvell.com>
+	Thu, 24 May 2012 14:55:34 -0400
+Received: by yhjj63 with SMTP id j63so171250yhj.37
+        for <linux-wireless@vger.kernel.org>; Thu, 24 May 2012 11:55:33 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>
+Subject: [PATCH 2/2] mac80211: handle channel times in scan command
+Date: Thu, 24 May 2012 21:52:49 +0300
+Message-Id: <1337885569-32711-2-git-send-email-victorg@ti.com> (sfid-20120524_205538_771713_60F90059)
+In-Reply-To: <1337885569-32711-1-git-send-email-victorg@ti.com>
+References: <1337885569-32711-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+Use the user scan times if those were set, otherwise
+use the default values.
 
-Added logic to handle AP event that are generated
-by the firmware. As MLME/SME is implemented in the
-firmware, events such as station association and
-deauthentication, must be sent to userspace (hostapd)
-for creating and deleting station database.
+This patch handles both hw_scan and non-offload scan.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Yogesh Powar <yogeshp@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c  |    5 +++
- drivers/net/wireless/mwifiex/fw.h        |   18 ++++++++++-
- drivers/net/wireless/mwifiex/main.h      |    1 +
- drivers/net/wireless/mwifiex/sta_event.c |   51 +++++++++++++++++++++++++++++-
- 4 files changed, 73 insertions(+), 2 deletions(-)
+ net/mac80211/scan.c |   34 +++++++++++++++++++++++++---------
+ 1 files changed, 25 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 07e38e3..5a0f20c 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1237,6 +1237,11 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 		goto done;
- 	}
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 8282284..0757551 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -421,7 +421,7 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+ 	 * After sending probe requests, wait for probe responses
+ 	 * on the channel.
+ 	 */
+-	*next_delay = IEEE80211_CHANNEL_TIME;
++	*next_delay = local->scan_req->min_ch_time;
+ 	local->next_scan_state = SCAN_DECISION;
+ }
  
-+	if (priv->bss_mode == NL80211_IFTYPE_AP) {
-+		wiphy_err(wiphy, "skip association request for AP interface\n");
-+		goto done;
-+	}
+@@ -456,6 +456,13 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->hw_scan_req->ssids = req->ssids;
+ 		local->hw_scan_req->n_ssids = req->n_ssids;
++		local->hw_scan_req->max_ch_time = req->max_ch_time;
++		local->hw_scan_req->min_ch_time = req->min_ch_time;
++		local->hw_scan_req->max_passive_ch_time =
++			req->max_passive_ch_time;
++		local->hw_scan_req->min_passive_ch_time =
++			req->min_passive_ch_time;
 +
- 	wiphy_dbg(wiphy, "info: Trying to associate to %s and bssid %pM\n",
- 		  (char *) sme->ssid, sme->bssid);
+ 		ies = (u8 *)local->hw_scan_req +
+ 			sizeof(*local->hw_scan_req) +
+ 			req->n_channels * sizeof(req->channels[0]);
+@@ -475,6 +482,12 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 	local->scan_req = req;
+ 	local->scan_sdata = sdata;
  
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 07243c0..77f82fc 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -117,6 +117,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define TLV_TYPE_POWER_GROUP        (PROPRIETARY_TLV_BASE_ID + 84)
- #define TLV_TYPE_UAP_RETRY_LIMIT    (PROPRIETARY_TLV_BASE_ID + 93)
- #define TLV_TYPE_WAPI_IE            (PROPRIETARY_TLV_BASE_ID + 94)
-+#define TLV_TYPE_UAP_MGMT_FRAME     (PROPRIETARY_TLV_BASE_ID + 104)
- #define TLV_TYPE_MGMT_IE            (PROPRIETARY_TLV_BASE_ID + 105)
- #define TLV_TYPE_AUTO_DS_PARAM      (PROPRIETARY_TLV_BASE_ID + 113)
- #define TLV_TYPE_PS_PARAM           (PROPRIETARY_TLV_BASE_ID + 114)
-@@ -324,15 +325,20 @@ enum ENH_PS_MODES {
- #define EVENT_DATA_SNR_HIGH             0x00000027
- #define EVENT_LINK_QUALITY              0x00000028
- #define EVENT_PORT_RELEASE              0x0000002b
-+#define EVENT_UAP_STA_DEAUTH            0x0000002c
-+#define EVENT_UAP_STA_ASSOC             0x0000002d
-+#define EVENT_UAP_BSS_START             0x0000002e
- #define EVENT_PRE_BEACON_LOST           0x00000031
- #define EVENT_ADDBA                     0x00000033
- #define EVENT_DELBA                     0x00000034
- #define EVENT_BA_STREAM_TIEMOUT         0x00000037
- #define EVENT_AMSDU_AGGR_CTRL           0x00000042
-+#define EVENT_UAP_BSS_IDLE              0x00000043
-+#define EVENT_UAP_BSS_ACTIVE            0x00000044
- #define EVENT_WEP_ICV_ERR               0x00000046
- #define EVENT_HS_ACT_REQ                0x00000047
- #define EVENT_BW_CHANGE                 0x00000048
--
-+#define EVENT_UAP_MIC_COUNTERMEASURES   0x0000004c
- #define EVENT_HOSTWAKE_STAIE		0x0000004d
- 
- #define EVENT_ID_MASK                   0xffff
-@@ -1119,6 +1125,16 @@ struct host_cmd_tlv {
- 	__le16 len;
- } __packed;
- 
-+struct mwifiex_assoc_event {
-+	u8 sta_addr[ETH_ALEN];
-+	__le16 type;
-+	__le16 len;
-+	__le16 frame_control;
-+	__le16 cap_info;
-+	__le16 listen_interval;
-+	u8 data[0];
-+} __packed;
++	if (!local->scan_req->min_passive_ch_time)
++		local->scan_req->min_passive_ch_time =
++			IEEE80211_PASSIVE_CHANNEL_TIME;
++	if (!local->scan_req->min_ch_time)
++		local->scan_req->min_ch_time = IEEE80211_CHANNEL_TIME;
 +
- struct host_cmd_ds_sys_config {
- 	__le16 action;
- 	u8 tlv[0];
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index acea8d4..b0a8338 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -116,6 +116,7 @@ enum {
- #define MAX_FREQUENCY_BAND_BG   2484
+ 	if (local->ops->hw_scan) {
+ 		__set_bit(SCAN_HW_SCANNING, &local->scanning);
+ 	} else if ((req->n_channels == 1) &&
+@@ -502,10 +515,10 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 		if ((req->channels[0]->flags &
+ 		     IEEE80211_CHAN_PASSIVE_SCAN) ||
+ 		    !local->scan_req->n_ssids) {
+-			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
++			next_delay = local->scan_req->min_passive_ch_time;
+ 		} else {
+ 			ieee80211_scan_state_send_probe(local, &next_delay);
+-			next_delay = IEEE80211_CHANNEL_TIME;
++			next_delay = local->scan_req->min_ch_time;
+ 		}
  
- #define MWIFIEX_EVENT_HEADER_LEN           4
-+#define MWIFIEX_UAP_EVENT_EXTRA_HEADER	   2
+ 		/* Now, just wait a bit and we are all done! */
+@@ -540,15 +553,16 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ }
  
- #define MWIFIEX_TYPE_LEN			4
- #define MWIFIEX_USB_TYPE_CMD			0xF00DFACE
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index f6bbb93..4ace5a3 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -184,8 +184,10 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv)
- int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ static unsigned long
+-ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
++ieee80211_scan_get_channel_time(struct cfg80211_scan_request *scan_req,
++				struct ieee80211_channel *chan)
  {
- 	struct mwifiex_adapter *adapter = priv->adapter;
--	int ret = 0;
-+	int len, ret = 0;
- 	u32 eventcause = adapter->event_cause;
-+	struct station_info sinfo;
-+	struct mwifiex_assoc_event *event;
+ 	/*
+ 	 * TODO: channel switching also consumes quite some time,
+ 	 * add that delay as well to get a better estimation
+ 	 */
+ 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-		return IEEE80211_PASSIVE_CHANNEL_TIME;
+-	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
++		return scan_req->min_passive_ch_time;
++	return IEEE80211_PROBE_DELAY + scan_req->min_ch_time;
+ }
  
- 	switch (eventcause) {
- 	case EVENT_DUMMY_HOST_WAKEUP_SIGNAL:
-@@ -402,6 +404,53 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 	case EVENT_HOSTWAKE_STAIE:
- 		dev_dbg(adapter->dev, "event: HOSTWAKE_STAIE %d\n", eventcause);
- 		break;
-+
-+	case EVENT_UAP_STA_ASSOC:
-+		skb_pull(adapter->event_skb, MWIFIEX_UAP_EVENT_EXTRA_HEADER);
-+		memset(&sinfo, 0, sizeof(sinfo));
-+		event = (struct mwifiex_assoc_event *)adapter->event_skb->data;
-+		if (le16_to_cpu(event->type) == TLV_TYPE_UAP_MGMT_FRAME) {
-+			len = -1;
-+
-+			if (ieee80211_is_assoc_req(event->frame_control))
-+				len = 0;
-+			else if (ieee80211_is_reassoc_req(event->frame_control))
-+				/* There will be ETH_ALEN bytes of
-+				 * current_ap_addr before the re-assoc ies.
-+				 */
-+				len = ETH_ALEN;
-+
-+			if (len != -1) {
-+				sinfo.filled = STATION_INFO_ASSOC_REQ_IES;
-+				sinfo.assoc_req_ies = (u8 *)&event->data[len];
-+				len = (u8 *)sinfo.assoc_req_ies -
-+				      (u8 *)&event->frame_control;
-+				sinfo.assoc_req_ies_len =
-+					le16_to_cpu(event->len) - (u16)len;
-+			}
-+		}
-+		cfg80211_new_sta(priv->netdev, event->sta_addr, &sinfo,
-+				 GFP_KERNEL);
-+		break;
-+	case EVENT_UAP_STA_DEAUTH:
-+		skb_pull(adapter->event_skb, MWIFIEX_UAP_EVENT_EXTRA_HEADER);
-+		cfg80211_del_sta(priv->netdev, adapter->event_skb->data,
-+				 GFP_KERNEL);
-+		break;
-+	case EVENT_UAP_BSS_IDLE:
-+		priv->media_connected = false;
-+		break;
-+	case EVENT_UAP_BSS_ACTIVE:
-+		priv->media_connected = true;
-+		break;
-+	case EVENT_UAP_BSS_START:
-+		dev_dbg(adapter->dev, "AP EVENT: event id: %#x\n", eventcause);
-+		memcpy(priv->netdev->dev_addr, adapter->event_body+2, ETH_ALEN);
-+		break;
-+	case EVENT_UAP_MIC_COUNTERMEASURES:
-+		/* For future development */
-+		dev_dbg(adapter->dev, "AP EVENT: event id: %#x\n", eventcause);
-+		break;
- 	default:
- 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
- 			eventcause);
+ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+@@ -609,12 +623,14 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	 */
+ 
+ 	bad_latency = time_after(jiffies +
+-			ieee80211_scan_get_channel_time(next_chan),
++			ieee80211_scan_get_channel_time(local->scan_req,
++							next_chan),
+ 			local->leave_oper_channel_time +
+ 			usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
+ 
+ 	listen_int_exceeded = time_after(jiffies +
+-			ieee80211_scan_get_channel_time(next_chan),
++			ieee80211_scan_get_channel_time(local->scan_req,
++							next_chan),
+ 			local->leave_oper_channel_time +
+ 			usecs_to_jiffies(min_beacon_int * 1024) *
+ 			local->hw.conf.listen_interval);
+@@ -662,7 +678,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	 */
+ 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+ 	    !local->scan_req->n_ssids) {
+-		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
++		*next_delay = local->scan_req->min_passive_ch_time;
+ 		local->next_scan_state = SCAN_DECISION;
+ 		return;
+ 	}
 -- 
-1.7.0.2
+1.7.5.4
 
