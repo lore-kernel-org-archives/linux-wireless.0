@@ -1,39 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:50195 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752823Ab2EVTay (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62129 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab2EXDyl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 15:30:54 -0400
-Date: Tue, 22 May 2012 15:28:40 -0400 (EDT)
-Message-Id: <20120522.152840.815291543305899477.davem@davemloft.net> (sfid-20120522_213104_225878_5FC8343A)
-To: netdev@vger.kernel.org
-CC: pablo@netfilter.org, linville@tuxdriver.com,
-	netfilter-devel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [README] Two merges pending...
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 23 May 2012 23:54:41 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45249.499394.927712@gargle.gargle.HOWL> (sfid-20120524_055444_467345_2B446702)
+Date: Thu, 24 May 2012 09:23:37 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 10/22] ath9k: Remove SC_OP_OFFCHANNEL
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+mac80211's IEEE80211_CONF_OFFCHANNEL can be used directly
+to track offchannel state. Also pass the correct boolean
+value to ath9k_hw_startpcureceive().
 
-After some discussion with John Linville I'm going to let him do
-one more wireless merge to me.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |   15 +++++++--------
+ drivers/net/wireless/ath/ath9k/main.c  |   11 +++--------
+ drivers/net/wireless/ath/ath9k/recv.c  |    4 ++--
+ 3 files changed, 12 insertions(+), 18 deletions(-)
 
-I only decided to do this because the changes in his tree were in
-his tree before he went away for a week, and therefore have gotten
-lots of exposure in -next before the merge window even openned.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 70504b7..9400579 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -586,14 +586,13 @@ struct ath_ant_comb {
+ 
+ #define SC_OP_INVALID                BIT(0)
+ #define SC_OP_BEACONS                BIT(1)
+-#define SC_OP_OFFCHANNEL             BIT(2)
+-#define SC_OP_RXFLUSH                BIT(3)
+-#define SC_OP_TSF_RESET              BIT(4)
+-#define SC_OP_BT_PRIORITY_DETECTED   BIT(5)
+-#define SC_OP_BT_SCAN                BIT(6)
+-#define SC_OP_ANI_RUN                BIT(7)
+-#define SC_OP_PRIM_STA_VIF           BIT(8)
+-#define SC_OP_HW_RESET               BIT(9)
++#define SC_OP_RXFLUSH                BIT(2)
++#define SC_OP_TSF_RESET              BIT(3)
++#define SC_OP_BT_PRIORITY_DETECTED   BIT(4)
++#define SC_OP_BT_SCAN                BIT(5)
++#define SC_OP_ANI_RUN                BIT(6)
++#define SC_OP_PRIM_STA_VIF           BIT(7)
++#define SC_OP_HW_RESET               BIT(8)
+ 
+ /* Powersave flags */
+ #define PS_WAIT_FOR_BEACON        BIT(0)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 672aefe..02a8010 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -152,7 +152,7 @@ void ath_start_ani(struct ath_common *common)
+ 	if (!(sc->sc_flags & SC_OP_ANI_RUN))
+ 		return;
+ 
+-	if (sc->sc_flags & SC_OP_OFFCHANNEL)
++	if (sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+ 		return;
+ 
+ 	common->ani.longcal_timer = timestamp;
+@@ -282,7 +282,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 	ath9k_hw_set_interrupts(ah);
+ 	ath9k_hw_enable_interrupts(ah);
+ 
+-	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
++	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL) && start) {
+ 		if (sc->sc_flags & SC_OP_BEACONS)
+ 			ath_set_beacon(sc);
+ 
+@@ -332,7 +332,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan,
+ 
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+-	if (!(sc->sc_flags & SC_OP_OFFCHANNEL)) {
++	if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)) {
+ 		fastcc = false;
+ 		caldata = &sc->caldata;
+ 	}
+@@ -1639,11 +1639,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		if (ah->curchan)
+ 			old_pos = ah->curchan - &ah->channels[0];
+ 
+-		if (hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
+-			sc->sc_flags |= SC_OP_OFFCHANNEL;
+-		else
+-			sc->sc_flags &= ~SC_OP_OFFCHANNEL;
+-
+ 		ath_dbg(common, CONFIG, "Set channel: %d MHz type: %d\n",
+ 			curchan->center_freq, conf->channel_type);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 544e549..7fa1e01 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -303,7 +303,7 @@ static void ath_edma_start_recv(struct ath_softc *sc)
+ 
+ 	ath_opmode_init(sc);
+ 
+-	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
++	ath9k_hw_startpcureceive(sc->sc_ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
+ 
+ 	spin_unlock_bh(&sc->rx.rxbuflock);
+ }
+@@ -500,7 +500,7 @@ int ath_startrecv(struct ath_softc *sc)
+ 
+ start_recv:
+ 	ath_opmode_init(sc);
+-	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
++	ath9k_hw_startpcureceive(ah, !!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL));
+ 
+ 	spin_unlock_bh(&sc->rx.rxbuflock);
+ 
+-- 
+1.7.10.2
 
-Which is more than I can say for some of this shit landing in Linus's
-tree the past few days.
-
-Pablo also has a prearranged netfilter merge pending.
-
-DO NOT use this as some sort of sign that if you have some last minute
-thing you want merged I can be coaxed into allowing it too.  I very
-nearly told John no, and I'm going to tell you no too.
-
-The rest of you stick to bug fixes and maybe a few device ID
-additions.
-
-Thanks.
