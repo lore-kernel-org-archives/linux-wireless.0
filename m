@@ -1,103 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:62996 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754586Ab2ECTzN convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:42345 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932116Ab2EXDDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 15:55:13 -0400
-Received: by were53 with SMTP id e53so1338382wer.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 12:55:12 -0700 (PDT)
+	Wed, 23 May 2012 23:03:30 -0400
+Received: by yhmm54 with SMTP id m54so7337141yhm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 20:03:29 -0700 (PDT)
+Message-ID: <4FBDA4FE.6040603@lwfinger.net> (sfid-20120524_050333_872200_23E57C12)
+Date: Wed, 23 May 2012 22:03:26 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P03yeuU7gpXbdPVeUBnco4Cz8v78e00x+SgYbhD5K8B5w@mail.gmail.com>
-References: <20120430145803.GE2630@ritirata.org>
-	<20120430170337.GA2560@tuxdriver.com>
-	<4595B4D22AB93C4FABBA84AAD5AA37FD143115@ORSMSX103.amr.corp.intel.com>
-	<CANUX_P1Nx4jYbRwehi+qW-2RVy=ntb_cCzBzpYXkJysuPvrCPA@mail.gmail.com>
-	<20120501183415.GG4316@ritirata.org>
-	<20120501205616.GA2563@ritirata.org>
-	<4595B4D22AB93C4FABBA84AAD5AA37FD14438A@ORSMSX103.amr.corp.intel.com>
-	<CANUX_P0UYx_-PS8BUGO10Cwrm6LuhMu4Vyhad4RL-Jn6YqE-Pg@mail.gmail.com>
-	<20120502153914.GA9285@tuxdriver.com>
-	<20120502162100.GA2528@ritirata.org>
-	<20120503065351.GB2307@ritirata.org>
-	<CANUX_P03yeuU7gpXbdPVeUBnco4Cz8v78e00x+SgYbhD5K8B5w@mail.gmail.com>
-Date: Thu, 3 May 2012 22:55:12 +0300
-Message-ID: <CANUX_P0zRjSy9LOVzkWtboqAsvkD4O6EcEXLo11W1Sbb307OJQ@mail.gmail.com> (sfid-20120503_215540_760409_B02EA549)
-Subject: Re: iwlwifi warn_slowpath with 3.*
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Mourad De Clerck <bugs-wireless@aquazul.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: firmware loading fails for b43 using linux 3.4?
+References: <4FBD7772.6070305@aquazul.com>
+In-Reply-To: <4FBD7772.6070305@aquazul.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
-
-can you please apply the patch attached against wireless-testing ?
-
-You will have quite a lot of prints, so you will probably need to send
-/var/log/syslog or messages
-
-
-Thanks
-
-Emmanuel Grumbach
-egrumbach@gmail.com
-
-
-On Thu, May 3, 2012 at 10:04 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Please enable CONFIG_FRAME_POINTERS
-> Emmanuel Grumbach
-> egrumbach@gmail.com
+On 05/23/2012 06:49 PM, Mourad De Clerck wrote:
+> Hi,
+>
+> I'm probably missing something obvious, but when going from 3.3 to 3.4 the b43
+> driver throws up an error, saying it can't find the firmware - but it really
+> _is_ there.
 >
 >
-> On Thu, May 3, 2012 at 9:53 AM, Antonio Quartulli <ordex@autistici.org> wrote:
->> On Wed, May 02, 2012 at 06:21:02PM +0200, Antonio Quartulli wrote:
->>> On Wed, May 02, 2012 at 11:39:14AM -0400, John W. Linville wrote:
->>> > On Wed, May 02, 2012 at 10:08:46AM +0300, Emmanuel Grumbach wrote:
->>> > > On Wed, May 2, 2012 at 12:19 AM, Venkataraman, Meenakshi
->>> > > <meenakshi.venkataraman@intel.com> wrote:
->>> > > > Hi Antonio,
->>> > > >
->>> > > >>> it seems so. It happens at least once at boot time.
->>> > > >>> I will try wireless-testing and see what happens. Then I will apply your patch.
->>> > > >>
->>> > > >>The problem is there either with wireless-testing and with
->>> > > >>wireless-testing+your_patch.
->>> > > >>
->>> > > >>If it can somehow help, I also got several stack trace regarding intel_iova
->>> > > >>functions. But then the I got kernel panic and I was not able to copy the
->>> > > >>messages.
->>> > > >
->>> > > > [MV] Depending on how you set it up, perhaps the stack trace was saved in one of the syslog files in /var/log/...
->>> > > >
->>> > > > Thanks!
->>> > > > Meenakshi
->>> > > >
->>> > >
->>> > > Can you please re-run with debug=1 and send the whole log ?
->>> > > This will give a better indication on when the issue occurs.
->>> >
->>> > Does this help?
->>> >
->>> >     https://bugzilla.redhat.com/show_bug.cgi?id=815998#c18
->>>
->>> I applied patch in comment 17 on linux-3.3.4. IT didn't help but this time I got
->>> the WARNING even with debug=1. Log is attached.
->>>
->>
->>
->> Is there any particular kernel debugging option I could enable to make the log
->> more verbose?
->>
->>
->> Cheers,
->>
->>
->>
->> --
->> Antonio Quartulli
->>
->> ..each of us alone is worth nothing..
->> Ernesto "Che" Guevara
+> Here's the error:
+>
+> b43-phy0 ERROR: Firmware file "b43/ucode16_mimo.fw" not found
+> b43-phy0 ERROR: Firmware file "b43-open/ucode16_mimo.fw" not found
+> b43-phy0 ERROR: You must go to
+> http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware and download the
+> correct firmware for this driver version. Please carefully read all instructions
+> on this website.
+>
+>
+> Here's the firmware it claims doesn't exist:
+>
+> $ sha1sum /lib/firmware/b43/ucode16_mimo.fw
+> 825a4bc63e3a96bb20fd8551add947435d47ad46 /lib/firmware/b43/ucode16_mimo.fw
+>
+> This is from Debian's firmware-b43-installer package, version 1:015-14.
+>
+>
+> The network card in question:
+>
+> 02:00.0 Network controller [0280]: Broadcom Corporation BCM4322 802.11a/b/g/n
+> Wireless LAN Controller [14e4:432b] (rev 01)
+>
+>
+> The only obvious change is 6b6fa5868eec26bdc6a83543cebb8cf832a2645a by Larry
+> Finger. I don't know if it matters, but b43 is statically compiled in the kernel.
+
+I was able to reproduce your result when b43 is built into the kernel, and it 
+was not intentional. Recent modifications in udev make synchronous firmware 
+loads fail when the firmware loading is initiated from the probe routine. The 
+usual solution to switch to asynchronous firmware loading is a poor option for 
+b43 as it loads multiple firmware files, and the number depends on the model. 
+Accordingly, I selected a solution that initiates the firmware load from a work 
+queue. The problem is that user space is not yet started when b43 asks for the 
+firmware. Such a condition is not needed when b43 is a module as the user-space 
+routines are started as they are needed to get the module from the disk. I see 2 
+ways to resolve the problem.
+
+It would be possible to switch to a delayed work queue. I have rejected this 
+solution for the moment, as the delay would still be there even if the driver 
+were a module.
+
+The second solution is to make multiple tries of the read of the first firmware 
+file. If the driver is a module, the first read will succeed, thus there is no 
+penalty for that case. If the read fails, the code sleeps for 2000 ms, then 
+retries the read. On my system, the 3rd try works, thus the loop count is set to 10.
+
+Please try the patch below on your system. If it works, please report the number 
+in the line from the dmesg output that states "********** loop count at exit 2".
+
+Larry
+===================================================================
+Index: wireless-testing/drivers/net/wireless/b43/main.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/b43/main.c
++++ wireless-testing/drivers/net/wireless/b43/main.c
+@@ -2185,6 +2185,7 @@ static int b43_try_request_fw(struct b43
+   	const char *filename;
+   	u32 tmshigh;
+   	int err;
++	int i;
+
+   	/* Files for HT and LCN were found by trying one by one */
+
+@@ -2223,9 +2224,18 @@ static int b43_try_request_fw(struct b43
+   			goto err_no_ucode;
+   		}
+   	}
+-	err = b43_do_request_fw(ctx, filename, &fw->ucode);
++	/* If b43 is builtin rather than as a module, user space will not
++	 * be able to supply firmware yet. Retry with a delay
++	 */
++	for (i = 0; i < 10; i++) {
++		err = b43_do_request_fw(ctx, filename, &fw->ucode);
++		if (!err)
++			break;
++		msleep(2000);
++	}
+   	if (err)
+   		goto err_load;
++	pr_info("********** loop count at exit %d\n", i);
+
+   	/* Get PCM code */
+   	if ((rev >= 5) && (rev <= 10))
+
