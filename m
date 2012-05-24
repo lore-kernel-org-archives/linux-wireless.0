@@ -1,62 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42166 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901Ab2EQT3c (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56161 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137Ab2EXEEr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 15:29:32 -0400
-Message-ID: <4FB55197.8070308@candelatech.com> (sfid-20120517_212935_979383_C3FCD3F8)
-Date: Thu, 17 May 2012 12:29:27 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 24 May 2012 00:04:47 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Eliad Peller <eliad@wizery.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] cfg80211: fix memory leak/corruption of bss_list
-References: <1337270768-22719-1-git-send-email-eliad@wizery.com>
-In-Reply-To: <1337270768-22719-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45855.14687.427357@gargle.gargle.HOWL> (sfid-20120524_060451_498045_9EF2BE3F)
+Date: Thu, 24 May 2012 09:33:43 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 18/22] ath9k: BT coex performance tuning for AR9462
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/17/2012 09:06 AM, Eliad Peller wrote:
-> cfg80211_dev_free() calls cfg80211_put_bss() directly on all
-> the remaining bss entries, skipping the proper bss entry
-> cleanup that usually made by __cfg80211_unlink_bss(), and
-> leaving the bss_list and the rb_tree with dangling pointers.
->
-> Fix it by calling cfg80211_unlink_bss() instead.
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-This doesn't apply clean against 3.3..though not too hard
-to fix it up by hand.
+Use smaller aggregation limit and increasing aggregation threshold
+for osla that could improve wlan performance when there is HID profile.
 
-Do you know how far back this does need to be applied (3.0, for instance)?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    3 --
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 -
+ drivers/net/wireless/ath/ath9k/mci.c        |   54 +++++++++++++++++----------
+ 3 files changed, 35 insertions(+), 23 deletions(-)
 
-Thanks,
-Ben
-
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Eliad Peller<eliad@wizery.com>
-> ---
->   net/wireless/core.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/net/wireless/core.c b/net/wireless/core.c
-> index 4e86a86..232c385 100644
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -729,7 +729,7 @@ void cfg80211_dev_free(struct cfg80211_registered_device *rdev)
->   	mutex_destroy(&rdev->devlist_mtx);
->   	mutex_destroy(&rdev->sched_scan_mtx);
->   	list_for_each_entry_safe(scan, tmp,&rdev->bss_list, list)
-> -		cfg80211_put_bss(&scan->pub);
-> +		cfg80211_unlink_bss(&rdev->wiphy,&scan->pub);
->   	kfree(rdev);
->   }
->
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 8b09a82..b1ced2a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1381,9 +1381,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 	case MCI_STATE_NEED_FTP_STOMP:
+ 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
+ 		break;
+-	case MCI_STATE_NEED_TUNING:
+-		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_TUNING);
+-		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index f4a6a44..10282e2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -212,7 +212,6 @@ enum mci_state_type {
+ 	MCI_STATE_SET_CONCUR_TX_PRI,
+ 	MCI_STATE_RECOVER_RX,
+ 	MCI_STATE_NEED_FTP_STOMP,
+-	MCI_STATE_NEED_TUNING,
+ 	MCI_STATE_DEBUG,
+ 	MCI_STATE_MAX
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 7b553f6..49137f4 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -116,42 +116,58 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+ 	struct ath_mci_profile *mci = &btcoex->mci;
++	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
+ 	struct ath_mci_profile_info *info;
+ 	u32 num_profile = NUM_PROF(mci);
+ 
++	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
++		goto skip_tuning;
++
+ 	if (num_profile == 1) {
+ 		info = list_first_entry(&mci->info,
+ 					struct ath_mci_profile_info,
+ 					list);
+-		if (mci->num_sco && info->T == 12) {
+-			mci->aggr_limit = 8;
++		if (mci->num_sco) {
++			if (info->T == 12)
++				mci->aggr_limit = 8;
++			else if (info->T == 6) {
++				mci->aggr_limit = 6;
++				btcoex->duty_cycle = 30;
++			}
+ 			ath_dbg(common, MCI,
+-				"Single SCO, aggregation limit 2 ms\n");
+-		} else if ((info->type == MCI_GPM_COEX_PROFILE_BNEP) &&
+-			   !info->master) {
+-			btcoex->btcoex_period = 60;
++				"Single SCO, aggregation limit %d 1/4 ms\n",
++				mci->aggr_limit);
++		} else if (mci->num_pan || mci->num_other_acl) {
++			/*
++			 * For single PAN/FTP profile, allocate 35% for BT
++			 * to improve WLAN throughput.
++			 */
++			btcoex->duty_cycle = 35;
++			btcoex->btcoex_period = 53;
+ 			ath_dbg(common, MCI,
+-				"Single slave PAN/FTP, bt period 60 ms\n");
+-		} else if ((info->type == MCI_GPM_COEX_PROFILE_HID) &&
+-			 (info->T > 0 && info->T < 50) &&
+-			 (info->A > 1 || info->W > 1)) {
++				"Single PAN/FTP bt period %d ms dutycycle %d\n",
++				btcoex->duty_cycle, btcoex->btcoex_period);
++		} else if (mci->num_hid) {
+ 			btcoex->duty_cycle = 30;
+-			mci->aggr_limit = 8;
++			mci->aggr_limit = 6;
+ 			ath_dbg(common, MCI,
+ 				"Multiple attempt/timeout single HID "
+-				"aggregation limit 2 ms dutycycle 30%%\n");
++				"aggregation limit 1.5 ms dutycycle 30%%\n");
+ 		}
+-	} else if ((num_profile == 2) && (mci->num_hid == 2)) {
+-		btcoex->duty_cycle = 30;
+-		mci->aggr_limit = 8;
+-		ath_dbg(common, MCI,
+-			"Two HIDs aggregation limit 2 ms dutycycle 30%%\n");
+-	} else if (num_profile > 3) {
++	} else if (num_profile == 2) {
++		if (mci->num_hid == 2)
++			btcoex->duty_cycle = 30;
+ 		mci->aggr_limit = 6;
+ 		ath_dbg(common, MCI,
+-			"Three or more profiles aggregation limit 1.5 ms\n");
++			"Two BT profiles aggr limit 1.5 ms dutycycle %d%%\n",
++			btcoex->duty_cycle);
++	} else if (num_profile >= 3) {
++		mci->aggr_limit = 4;
++		ath_dbg(common, MCI,
++			"Three or more profiles aggregation limit 1 ms\n");
+ 	}
+ 
++skip_tuning:
+ 	if (IS_CHAN_2GHZ(sc->sc_ah->curchan)) {
+ 		if (IS_CHAN_HT(sc->sc_ah->curchan))
+ 			ath_mci_adjust_aggr_limit(btcoex);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.2
 
