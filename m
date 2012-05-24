@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:50821 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757885Ab2EGUHT (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:40409 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752860Ab2EXGFm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 16:07:19 -0400
-Date: Mon, 07 May 2012 16:06:09 -0400 (EDT)
-Message-Id: <20120507.160609.1784484093679983272.davem@davemloft.net> (sfid-20120507_220725_355020_6C5B747A)
-To: lucas.demarchi@profusion.mobi
-Cc: andrei.emeltchenko.news@gmail.com, dh.herrmann@googlemail.com,
-	gustavo@padovan.org, linville@tuxdriver.com,
-	linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Bluetooth: Fix coding style
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAMOw1v474CTigis2xNBF53YP-NMt2XmMR_zvqNAeN8kmEQjxGA@mail.gmail.com>
-References: <20120507081411.GA19002@aemeltch-MOBL1>
-	<20120507.115228.1171858914064928263.davem@davemloft.net>
-	<CAMOw1v474CTigis2xNBF53YP-NMt2XmMR_zvqNAeN8kmEQjxGA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 24 May 2012 02:05:42 -0400
+Received: by qcro28 with SMTP id o28so5423358qcr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 23:05:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+XVXffb3tZ2_kWwx0wBWUac-y0BPTT_KBJ5yhxNjPVp4U7HGw@mail.gmail.com>
+References: <1337760813-27055-1-git-send-email-arik@wizery.com>
+	<87wr436utp.fsf@purkki.adurom.net>
+	<CA+XVXfeju02Ou=jZ=eyq+0e4Rm1-5=b6-m8bMyZ8kAWO6F-sXQ@mail.gmail.com>
+	<87mx4z6u4n.fsf@purkki.adurom.net>
+	<CA+XVXfc3R8CrMfercPpRfYGjvKDdDkwJax+oLiaMrQQPwLCc0Q@mail.gmail.com>
+	<87ipfn6koz.fsf@purkki.adurom.net>
+	<CA+XVXfcZAE0Drbn_JTBt1p0GAaFrsxZfHNE1Syp=1G=PNsvkbQ@mail.gmail.com>
+	<87ehqa6u2d.fsf@purkki.adurom.net>
+	<CA+XVXffb3tZ2_kWwx0wBWUac-y0BPTT_KBJ5yhxNjPVp4U7HGw@mail.gmail.com>
+Date: Thu, 24 May 2012 08:05:41 +0200
+Message-ID: <CAFED-jmwuA2f3joC-V_cf7RACMraR3sLH2pF5e+8b8cka0ovZA@mail.gmail.com> (sfid-20120524_080546_445748_E5C50AA3)
+Subject: Re: [PATCH] mac80211: allow setting default U-APSD queues/max_sp_len
+ for STA
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lucas De Marchi <lucas.demarchi@profusion.mobi>
-Date: Mon, 7 May 2012 16:49:16 -0300
+2012/5/24 Arik Nemtsov <arik@wizery.com>:
+> On Thu, May 24, 2012 at 8:12 AM, Kalle Valo <kvalo@adurom.com> wrote:
+>> But this was a workaround for an IOP problem with certain APs, right?
+>> How is firmware going to be smart in that case?
+>>
+>> It would help to see what you are exactly planning to do on wl12xx with
+>> this interface. Currently I'm just guessing what your plans really are.
+>
+> The plan is to enable only VO as U-APSD (as I wrote in a previous
+> email). We've had problems with some APs (can't remember the models)
+> that assume non-VO ACs always use legacy PS. This would lead to
+> problems - our driver would never wake up. In that sense the problem
+> is general.
+>
+> But in wl12xx the FW handles network PS on its own (PS-poll etc.), so
+> it may just be a bug with our FW. So hard-coding this into mac80211
+> seems a bit of an overkill.
+>
+> Maybe you can offer a better solution?
+>
 
-> Doing so also means we don't create our own rules and impose them on
-> others, like happened some time ago
-> (https://lkml.org/lkml/2012/4/16/473).
+I am not sure this is better.
+We do this litte bit different.
+So disable all ACs by default in mac80211.
 
-You conveniently forgot to show that Linus said that it's OK for a
-subsystem maintainer to request that kind of coding style, it's just
-not OK to impose it tree-wide.
+Next we are using wpa_supplicant:
+p2p_set client_apsd - and pass required params via nl80211 to mac80211.
+So, we could decide which ACs set.
+Reassoc from supplicat is required after that.
 
-Any particular reason you guys make such a big deal about this whereas
-everyone else is quite fine with it and never gives me any problems?
 
-In the end, this hurts bluetooth, because if you anger me that means
-it's going to be harder and take longer for your changes to get into
-the tree.
-
-You can ignore this pracitcal aspect of this whole ordeal at your
-own peril.
+BR
+Janusz
