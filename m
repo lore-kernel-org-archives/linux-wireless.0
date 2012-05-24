@@ -1,39 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:63766 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752548Ab2EOKXC convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39956 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137Ab2EXEEW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 06:23:02 -0400
-Date: Tue, 15 May 2012 12:22:57 +0200
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Alex =?UTF-8?B?VmlsbGFjw63CrXM=?= Lasso
-	<a_villacis@palosanto.com>
-Subject: Re: [PATCH] rt2x00: Add support for RT5360 based PCI devices.
-Message-ID: <20120515122257.1e58ee43@north> (sfid-20120515_122307_506160_052A5772)
-In-Reply-To: <1336652854-16163-1-git-send-email-gwingerde@gmail.com>
-References: <1336652854-16163-1-git-send-email-gwingerde@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 24 May 2012 00:04:22 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45829.383332.452927@gargle.gargle.HOWL> (sfid-20120524_060426_453708_D064F25A)
+Date: Thu, 24 May 2012 09:33:17 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 14/22] ath9k_hw: fix IQ calibration chain index
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-On Thu, 10 May 2012 14:27:33 +0200 Gertjan van Wingerde <gwingerde@gmail.com> wrote:
-> From: Alex Villací­s Lasso <a villacis@palosanto.com>
-> 
-> This chip is used at least by the D-Link DWA-525 adapter.
+The chain index to perform IQ calibration is counted to number of valid
+tx chains and then used for indexing chain specific registers. If the
+chainmask is set to 0x2 (i.e chain 1 only), still it accesses chain 0
+registers for chain 1. So use real chain index instead sequential one.
 
-I have some concerns regarding this patch. 
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-First of all Gertjan, I think you removed define of RF5360 and it
-doesn't compile now ;-)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index f83a4a2..d7deb8c 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -653,7 +653,6 @@ static void ar9003_hw_detect_outlier(int *mp_coeff, int nmeasurement,
+ }
+ 
+ static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
+-						 u8 num_chains,
+ 						 struct coeff *coeff,
+ 						 bool is_reusable)
+ {
+@@ -677,7 +676,9 @@ static void ar9003_hw_tx_iqcal_load_avg_2_passes(struct ath_hw *ah,
+ 	}
+ 
+ 	/* Load the average of 2 passes */
+-	for (i = 0; i < num_chains; i++) {
++	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++		if (!(ah->txchainmask & (1 << i)))
++			continue;
+ 		nmeasurement = REG_READ_FIELD(ah,
+ 				AR_PHY_TX_IQCAL_STATUS_B0,
+ 				AR_PHY_CALIBRATED_GAINS_0);
+@@ -767,16 +768,13 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
+ 	};
+ 	struct coeff coeff;
+ 	s32 iq_res[6];
+-	u8 num_chains = 0;
+ 	int i, im, j;
+ 	int nmeasurement;
+ 
+ 	for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+-		if (ah->txchainmask & (1 << i))
+-			num_chains++;
+-	}
++		if (!(ah->txchainmask & (1 << i)))
++			continue;
+ 
+-	for (i = 0; i < num_chains; i++) {
+ 		nmeasurement = REG_READ_FIELD(ah,
+ 				AR_PHY_TX_IQCAL_STATUS_B0,
+ 				AR_PHY_CALIBRATED_GAINS_0);
+@@ -839,8 +837,7 @@ static void ar9003_hw_tx_iq_cal_post_proc(struct ath_hw *ah, bool is_reusable)
+ 				coeff.phs_coeff[i][im] -= 128;
+ 		}
+ 	}
+-	ar9003_hw_tx_iqcal_load_avg_2_passes(ah, num_chains,
+-					     &coeff, is_reusable);
++	ar9003_hw_tx_iqcal_load_avg_2_passes(ah, &coeff, is_reusable);
+ 
+ 	return;
+ 
+-- 
+1.7.10.2
 
-Secondly looking at legacy driver, 5360 is just another PCI ID of 5390
-family, do we really need to add all these cases? I think maybe adding
-PCI ID, as Zero Lin did recently with 539b will be sufficient? 
-
-  -- Kuba
