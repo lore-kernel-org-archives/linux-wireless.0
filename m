@@ -1,76 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:63030 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754494Ab2ECV5T convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7465 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab2EXDxx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 17:57:19 -0400
-Received: by qadb17 with SMTP id b17so631071qad.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 14:57:19 -0700 (PDT)
+	Wed, 23 May 2012 23:53:53 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CABF+-6UgQek50abaLnUsBh3LEccG2Pd1vFQDiLyxgcky-JN4Ag@mail.gmail.com>
-References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
-	<4FA15A70.2020108@stericsson.com>
-	<CABF+-6XbdG_QMa0iQJMpbOsr4bXCq4mDEB6unkM8jxNGWYwFyQ@mail.gmail.com>
-	<4FA23DA0.3030207@stericsson.com>
-	<CABF+-6WjnVxC55iGHwoaL2zJ+_6oLbkVjaqwwLLrQzZxKwwWxw@mail.gmail.com>
-	<4FA2BF0A.4040307@stericsson.com>
-	<CABF+-6UgQek50abaLnUsBh3LEccG2Pd1vFQDiLyxgcky-JN4Ag@mail.gmail.com>
-Date: Thu, 3 May 2012 23:57:18 +0200
-Message-ID: <CAFED-jkzELRHGy7pwqDznLqPzhandwZLQEoCEFvw5F6ogMxiYA@mail.gmail.com> (sfid-20120503_235723_103089_1C48564E)
-Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: Kevin Groeneveld <kgroeneveld@gmail.com>
-Cc: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45186.165189.999838@gargle.gargle.HOWL> (sfid-20120524_055357_052293_B2BDE6E4)
+Date: Thu, 24 May 2012 09:22:34 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/22] ath9k updates
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/5/3 Kevin Groeneveld <kgroeneveld@gmail.com>:
-> Hi Dmitry,
->
->> It looks like mac80211 tries to monitor beacons and they are filtered by
->> cw1200 device.
->>
->> IEEE80211_HW_CONNECTION_MONITOR and / or IEEE80211_HW_BEACON_FILTER flags
->> (I don't remember, but both of them should be set) should prevent mac80211
->> from
->> monitoring. Please check if they are set in
->> drivers/net/wireless/cw1200/main.c
->
-> main.c contains the following as in the patches that you posted:
->
-> hw->flags = IEEE80211_HW_SIGNAL_DBM |
->                    IEEE80211_HW_SUPPORTS_PS |
->                    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
->                    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
->                    IEEE80211_HW_SUPPORTS_UAPSD |
->                    IEEE80211_HW_CONNECTION_MONITOR |
->                    IEEE80211_HW_NEED_DTIM_PERIOD;
->
-> IEEE80211_HW_BEACON_FILTER does not seem to be defined anywhere in the
-> header files.  Do I need this?
->
->>>> Also I see unexpectedly high rate of IRQs, they should not come every now
->>>> and then..
->>>
->>> Any ideas what could cause this or how I should debug it?
->>
->> Are you running with SDIO or GPIO IRQ?
->
-> I am using SDIO IRQ.
->
->
+Hi John,
 
-Seems this flag is per vif in new compat now.
-IEEE80211_VIF_BEACON_FILTER
-IEEE80211_VIF_SUPPORTS_CQM_RSSI
+These are the pending patches for ath9k, rebased over
+current -wt.
 
-So, you should configure this in cw1200_add_interface() for new compat-wireless:
+Sujith
 
-	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
-			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+Rajkumar Manoharan (11):
+  ath9k_hw: update ar9462 initval table to fix rx nfcal
+  ath9k: cleanup MCI indentation
+  ath9k_hw: fix IQ calibration chain index
+  ath9k_hw: program BT to control SPDT
+  ath9k_hw: configure ar9462 switching regulator discontinuous mode
+  ath9k_hw: fix BT RF performance
+  ath9k: BT coex performance tuning for AR9462
+  ath: do not update cycle counters with sleep mode results
+  ath9k: always perform ani calibration at poll interval
+  ath9k_hw: fix power state for MCI
+  ath9k: improve BT FTP/PAN performance
 
+Sujith Manoharan (11):
+  ath9k: Prune ath9k_init_device
+  ath9k: Handle ASPM properly
+  ath9k: Setup MCI interrupts properly
+  ath9k_hw: Fix AR_RTC_KEEP_AWAKE usage
+  ath9k_hw: Fix MCI usage
+  ath9k_hw: Cleanup power mode API
+  ath9k: Add MCI interrupt to debugfs statistics
+  ath9k_hw: Fix variable usage
+  ath9k: Handle fatal interrupts properly
+  ath9k: Remove SC_OP_OFFCHANNEL
+  ath9k: Use separate operational flags for BTCOEX
 
-BR
-Janusz
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c      |   20 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c        |  457 ++++++++++----------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h        |   10 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c        |    4 +
+ .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |    4 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h             |   19 +-
+ drivers/net/wireless/ath/ath9k/btcoex.c            |   10 +-
+ drivers/net/wireless/ath/ath9k/btcoex.h            |    4 +
+ drivers/net/wireless/ath/ath9k/debug.c             |    3 +
+ drivers/net/wireless/ath/ath9k/debug.h             |    1 +
+ drivers/net/wireless/ath/ath9k/gpio.c              |   30 +-
+ drivers/net/wireless/ath/ath9k/hw.c                |  212 ++++-----
+ drivers/net/wireless/ath/ath9k/hw.h                |   10 +-
+ drivers/net/wireless/ath/ath9k/init.c              |   19 +-
+ drivers/net/wireless/ath/ath9k/main.c              |   34 +-
+ drivers/net/wireless/ath/ath9k/mci.c               |   65 ++-
+ drivers/net/wireless/ath/ath9k/mci.h               |   11 +-
+ drivers/net/wireless/ath/ath9k/pci.c               |    5 +
+ drivers/net/wireless/ath/ath9k/recv.c              |    5 +-
+ drivers/net/wireless/ath/ath9k/reg.h               |    2 +
+ 21 files changed, 493 insertions(+), 433 deletions(-)
+
+-- 
+1.7.10.2
+
