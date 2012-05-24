@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4671 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756026Ab2EHTJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 15:09:15 -0400
-Message-ID: <4FA96F4C.7010508@broadcom.com> (sfid-20120508_210921_526455_1A970624)
-Date: Tue, 8 May 2012 21:09:00 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:65405 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009Ab2EXED4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 00:03:56 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Franky Lin" <frankyl@broadcom.com>
-cc: "Il Han" <corone.il.han@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] brcm80211: Remove an unused variable.
-References: <1336458947-20698-1-git-send-email-corone.il.han@gmail.com>
- <4FA9606E.6000505@broadcom.com>
-In-Reply-To: <4FA9606E.6000505@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45790.400842.374410@gargle.gargle.HOWL> (sfid-20120524_060403_861626_7AE622B3)
+Date: Thu, 24 May 2012 09:32:38 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 08/22] ath9k_hw: Fix variable usage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2012 08:05 PM, Franky Lin wrote:
-> On 05/07/2012 11:35 PM, Il Han wrote:
->> The variable val is not used afterward.
->> Remove the declaration and the assignment line of it.
->>
->> Signed-off-by: Il Han<corone.il.han@gmail.com>
->> ---
-> 
-> Thanks Il. Add John as recipient as well.
-> 
-> Acked-by: Franky Lin <frankyl@broadcom.com>
-> 
-> Regards,
-> Franky
+Exposed by sparse:
+ar9003_mci.c:1134:31: warning: Using plain integer as NULL pointer
 
-My rule of thumb:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-use get_maintainer.pl script and address you patches to the given
-maintainer (9 out of 10 you get a sensible maintainer from it).
-
-So for this patch, send the patch to John Linville and CC linux-wireless
-list and others you consider specially interested.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 9331d73..b501bf1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1131,7 +1131,7 @@ void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable)
+ 	if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000)) {
+ 		ath_dbg(common, MCI, "MCI BT_CAL_GRANT received\n");
+ 	} else {
+-		is_reusable = false;
++		*is_reusable = false;
+ 		ath_dbg(common, MCI, "MCI BT_CAL_GRANT not received\n");
+ 	}
+ }
+-- 
+1.7.10.2
 
