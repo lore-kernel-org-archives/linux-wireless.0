@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50090 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757646Ab2EJQJL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7557 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab2EXDy2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:09:11 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>
-Subject: [PATCH 3/3] iwlwifi: Move IWL_MASK macro to transport.
-Date: Thu, 10 May 2012 18:09:08 +0200
-Message-Id: <1336666148-24471-4-git-send-email-johannes@sipsolutions.net> (sfid-20120510_180919_651588_D79D1806)
-In-Reply-To: <1336666148-24471-1-git-send-email-johannes@sipsolutions.net>
-References: <1336666148-24471-1-git-send-email-johannes@sipsolutions.net>
+	Wed, 23 May 2012 23:54:28 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45237.177820.236344@gargle.gargle.HOWL> (sfid-20120524_055432_598026_46E4F652)
+Date: Thu, 24 May 2012 09:23:25 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/22] ath9k_hw: Fix variable usage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+Exposed by sparse:
+ar9003_mci.c:1134:31: warning: Using plain integer as NULL pointer
 
-This macro is needed by other transports besides PCIe, thus
-moving to a common location.
-
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 --
- drivers/net/wireless/iwlwifi/iwl-trans.h      |    2 ++
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 2f8c84e..14aa504 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -78,8 +78,6 @@
- /* FIXME: need to abstract out TX command (once we know what it looks like) */
- #include "iwl-commands.h"
- 
--#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
--
- #define SCD_QUEUECHAIN_SEL_ALL(trans, trans_pcie)	\
- 	(((1<<trans->cfg->base_params->num_of_queues) - 1) &\
- 	(~(1<<(trans_pcie)->cmd_queue)))
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 79a1e7a..78b89f1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -280,6 +280,8 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
- 
- #define MAX_NO_RECLAIM_CMDS	6
- 
-+#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
-+
- /*
-  * Maximum number of HW queues the transport layer
-  * currently supports
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 9331d73..b501bf1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1131,7 +1131,7 @@ void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable)
+ 	if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000)) {
+ 		ath_dbg(common, MCI, "MCI BT_CAL_GRANT received\n");
+ 	} else {
+-		is_reusable = false;
++		*is_reusable = false;
+ 		ath_dbg(common, MCI, "MCI BT_CAL_GRANT not received\n");
+ 	}
+ }
 -- 
-1.7.10
+1.7.10.2
 
