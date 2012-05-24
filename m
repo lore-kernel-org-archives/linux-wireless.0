@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:38506 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675Ab2EMNrK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2012 09:47:10 -0400
-Received: by wibhj8 with SMTP id hj8so876895wib.1
-        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2012 06:47:09 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: use offchannel queue only when supported
-Date: Sun, 13 May 2012 16:47:05 +0300
-Message-Id: <1336916826-22462-1-git-send-email-eliad@wizery.com> (sfid-20120513_154713_893546_1FFBF481)
+Received: from gretel.risen.be ([78.46.99.137]:34984 "EHLO gretel.risen.be"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932979Ab2EXQmP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 12:42:15 -0400
+Message-ID: <4FBE64C0.8000804@aquazul.com> (sfid-20120524_184232_967848_FB4DDB45)
+Date: Thu, 24 May 2012 18:41:36 +0200
+From: Mourad De Clerck <bugs-wireless@aquazul.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: firmware loading fails for b43 using linux 3.4?
+References: <4FBD7772.6070305@aquazul.com> <4FBDA4FE.6040603@lwfinger.net> <4FBDBB48.8080004@aquazul.com> <4FBE36B8.8020208@lwfinger.net>
+In-Reply-To: <4FBE36B8.8020208@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 3a25a8c ("mac80211: add improved HW queue control")
-added support for offchannel queue mapping. However, this
-mapping is only valid when the driver supports
-IEEE80211_HW_QUEUE_CONTROL.
+On 24/05/12 15:25, Larry Finger wrote:
+> It may be a while before I sort out all the details of this fix. Until
+> then, you can use either the temporary fix or compile b43 as a module.
 
-Check whether the driver supports IEEE80211_HW_QUEUE_CONTROL
-before setting the hw_queue to the mapped offchannel queue.
+Yes, no worries – I'm perfectly happy with the workaround of using b43 
+as a module. I just wanted to follow through with it.
 
-(This patch doesn't have any actual effect, because
-hw_queue is overridden in ieee80211_tx() anyway,
-so this is merely some cleanup)
+> I always have the wireless drivers built as modules. When making
+> changes, one only needs to recompile, reinstall the new version, and
+> unload/reload the module. If built into the kernel, a reboot is needed
+> for every change. None the less, the code needs to handle all cases.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/cfg.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+Yes, I figured as much… but that's why there's testers after all :)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 6a82ae3..6b60593 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2303,7 +2303,8 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 
- 	IEEE80211_SKB_CB(skb)->flags = flags;
- 
--	if (flags & IEEE80211_TX_CTL_TX_OFFCHAN)
-+	if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL &&
-+	    flags & IEEE80211_TX_CTL_TX_OFFCHAN)
- 		IEEE80211_SKB_CB(skb)->hw_queue =
- 			local->hw.offchannel_tx_hw_queue;
- 
-@@ -2348,8 +2349,9 @@ static int ieee80211_mgmt_tx(struct wiphy *wiphy, struct net_device *dev,
- 		/* modify cookie to prevent API mismatches */
- 		*cookie ^= 2;
- 		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_TX_OFFCHAN;
--		IEEE80211_SKB_CB(skb)->hw_queue =
--			local->hw.offchannel_tx_hw_queue;
-+		if (local->hw.flags & IEEE80211_HW_QUEUE_CONTROL)
-+			IEEE80211_SKB_CB(skb)->hw_queue =
-+				local->hw.offchannel_tx_hw_queue;
- 		local->hw_roc_skb = skb;
- 		local->hw_roc_skb_for_status = skb;
- 		mutex_unlock(&local->mtx);
--- 
-1.7.6.401.g6a319
+In any case, thank you for your work on this…
 
+Kind regards,
+
+-- Mourad
