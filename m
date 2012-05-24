@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:48057 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758389Ab2EJJun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:50:43 -0400
-From: Kalle Valo <kvalo@adurom.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: <linux-wireless@vger.kernel.org>, Luciano Coelho <coelho@ti.com>
-Subject: Re: [PATCH 00/78] 18xx chip support
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
-Date: Thu, 10 May 2012 12:50:42 +0300
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com> (Arik
-	Nemtsov's message of "Thu, 10 May 2012 12:13:05 +0300")
-Message-ID: <87ipg48ivh.fsf@purkki.adurom.net> (sfid-20120510_115050_190690_6FB35E2A)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61333 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787Ab2EXHZw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 03:25:52 -0400
+Message-ID: <4FBDE27A.2050900@qca.qualcomm.com> (sfid-20120524_092556_661251_B59C0413)
+Date: Thu, 24 May 2012 10:25:46 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath6kl: Add support for setting tx rateset.
+References: <1337673192-3469-1-git-send-email-bkamatch@qca.qualcomm.com>
+In-Reply-To: <1337673192-3469-1-git-send-email-bkamatch@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arik Nemtsov <arik@wizery.com> writes:
+On 05/22/2012 10:53 AM, Bala Shanmugam wrote:
+> Tx legacy and mcs rateset can configured using iw for
+> 2.4 and 5 bands.  Add support for the same in driver.
+> 
+> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 
-> This series adds initial support for the 18xx chip family. The new
-> module uses wlcore for functionality common with the 12xx family.
+Thanks, this looks very good now. I did two minor changes still:
 
-You do know that sending 78 patches in one patchset is very much
-frowned upon? No sane person (outside of wl12xx) is going to review
-all of these.
+    kvalo: add an enum for the hw flags and rename the flag accordingly,
+    rename ath6kl_cfg80211_set_bitrate_mask() to a shorter version to make
+    it easier to indent
 
--- 
-Kalle Valo
+The enum looks like this:
+
+enum ath6kl_hw_flags {
+	ATH6KL_HW_FLAG_64BIT_RATES	= BIT(0),
+};
+
+And I did that just to make it more obvious to group the flags in the
+future.
+
+Kalle
