@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:48273 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758501Ab2EOJAv (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:65331 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137Ab2EXEFB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 05:00:51 -0400
-Date: Tue, 15 May 2012 12:00:27 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] brcm80211: brcmu_pkt_buf_free_skb() should handle NULL
-Message-ID: <20120515090027.GG30265@elgon.mountain> (sfid-20120515_110056_180179_168FF4BC)
+	Thu, 24 May 2012 00:05:01 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45867.862989.977871@gargle.gargle.HOWL> (sfid-20120524_060506_506155_2F530EA6)
+Date: Thu, 24 May 2012 09:33:55 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 20/22] ath9k: always perform ani calibration at poll
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is potentially called with NULL pointers, for example, look at
-brcmf_c_prec_enq().  Since it's a free() function, probably people
-expect it to handle NULL pointers.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-index b45ab34..3e6405e 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-@@ -43,6 +43,8 @@ EXPORT_SYMBOL(brcmu_pkt_buf_get_skb);
- /* Free the driver packet. Free the tag if present */
- void brcmu_pkt_buf_free_skb(struct sk_buff *skb)
- {
-+	if (!skb)
-+		return;
- 	WARN_ON(skb->next);
- 	if (skb->destructor)
- 		/* cannot kfree_skb() on hard IRQ (net/core/skbuff.c) if
+Skiping the ani based on power state is delaying the ani cycles
+further on an idle state. And also as the power state is updated
+in different contexts, let us not skip the ani calibration.
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3e8bef8..b9c9f4c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -554,10 +554,6 @@ void ath_ani_calibrate(unsigned long data)
+ 	short_cal_interval = (ah->opmode == NL80211_IFTYPE_AP) ?
+ 		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
+ 
+-	/* Only calibrate if awake */
+-	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
+-		goto set_timer;
+-
+ 	ath9k_ps_wakeup(sc);
+ 
+ 	/* Long calibration runs independently of short calibration. */
+@@ -613,7 +609,6 @@ void ath_ani_calibrate(unsigned long data)
+ 
+ 	ath9k_ps_restore(sc);
+ 
+-set_timer:
+ 	/*
+ 	* Set timer interval based on previous results.
+ 	* The interval must be the shortest necessary to satisfy ANI,
+-- 
+1.7.10.2
+
