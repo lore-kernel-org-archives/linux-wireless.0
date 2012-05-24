@@ -1,36 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2521 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754503Ab2EaM1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 08:27:32 -0400
-Message-ID: <4FC76389.70600@broadcom.com> (sfid-20120531_142807_732500_62B1356A)
-Date: Thu, 31 May 2012 14:26:49 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57351 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787Ab2EXHNI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 03:13:08 -0400
+Message-ID: <4FBDDF7E.3050104@qca.qualcomm.com> (sfid-20120524_091339_270163_8C9C89FA)
+Date: Thu, 24 May 2012 10:13:02 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Erwin Van de Velde" <erwin.vandevelde@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Florian Fainelli" <florian@openwrt.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Dan Williams" <dcbw@redhat.com>
-Subject: Re: Master mode support in iwlagn?
-References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be>
- <5625918.SuzapvkoUg@sylvesterjr.cmi.ua.ac.be>
- <4FC75DA4.2090909@broadcom.com>
- <1999855.FUDAX7EfOH@sylvesterjr.cmi.ua.ac.be>
-In-Reply-To: <1999855.FUDAX7EfOH@sylvesterjr.cmi.ua.ac.be>
-Content-Type: text/plain;
- charset=iso-8859-1
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Fix missing gpio pin 9 configuration
+References: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1337671370-32519-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/31/2012 02:16 PM, Erwin Van de Velde wrote:
-> I have one ethernet connection and want to share that connection over 
-> wireless, preferably in AP mode although I guess ad hoc mode is possible too. 
-> Just not sure if NetworkManager supports that.
+On 05/22/2012 10:22 AM, Vasanthakumar Thiagarajan wrote:
+> GPIO pin 9 also needs to be configured along with other gpio
+> pins to avoid sdio crc errors. I've not experienced any issue
+> with missing this particular gpio pin configuration, found dunring
+> code review. This can potentially improve rx performance.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-NetworkManager does support ad-hoc, but your hardware need to support
-beacon transmission for that as well. You could consider buying an AP.
-They are not that expensive ;-)
+Thanks, applied.
 
-Gr. AvS
-
+Kalle
