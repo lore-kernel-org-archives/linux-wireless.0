@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:48353 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754403Ab2EIE70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 00:59:26 -0400
-From: Joe Perches <joe@perches.com>
-To: "David S. Miller" <davem@davemloft.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 12/13] wireless: Convert compare_ether_addr to ether_addr_equal by hand
-Date: Tue,  8 May 2012 21:56:56 -0700
-Message-Id: <173dcbff1655387845a430508dcf686cc35af1bb.1336538938.git.joe@perches.com> (sfid-20120509_070000_710730_EFBC81F6)
-In-Reply-To: <cover.1336538937.git.joe@perches.com>
-References: <cover.1336538937.git.joe@perches.com>
+Received: from na3sys009aog127.obsmtp.com ([74.125.149.107]:47653 "HELO
+	na3sys009aog127.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756679Ab2EXBnR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 May 2012 21:43:17 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-bluetooth@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Emeltchenko <andrei.emeltchenko@intel.com>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <padovan@profusion.mobi>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] Bluetooth: btmrvl: add SD8787 Bluetooth AMP device ID
+Date: Wed, 23 May 2012 18:33:20 -0700
+Message-Id: <1337823200-1964-1-git-send-email-bzhao@marvell.com> (sfid-20120524_034323_389482_4579C6E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-spatch/coccinelle isn't perfect.  It doesn't understand
-__aligned(x) and doesn't convert functions it can't parse.
+SD8787 SDIO function 3 (device ID 0x911B) is for Bluetooth AMP.
 
-Convert the remaining compare_ether_addr uses.
-
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/wireless/util.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/bluetooth/btmrvl_sdio.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 3ba366f..1cd2558 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -370,7 +370,7 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 		     iftype != NL80211_IFTYPE_P2P_CLIENT &&
- 		     iftype != NL80211_IFTYPE_MESH_POINT) ||
- 		    (is_multicast_ether_addr(dst) &&
--		     !compare_ether_addr(src, addr)))
-+		     ether_addr_equal(src, addr)))
- 			return -1;
- 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
- 			struct ieee80211s_hdr *meshdr =
-@@ -398,9 +398,9 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
- 	payload = skb->data + hdrlen;
- 	ethertype = (payload[6] << 8) | payload[7];
- 
--	if (likely((compare_ether_addr(payload, rfc1042_header) == 0 &&
-+	if (likely((ether_addr_equal(payload, rfc1042_header) &&
- 		    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
--		   compare_ether_addr(payload, bridge_tunnel_header) == 0)) {
-+		   ether_addr_equal(payload, bridge_tunnel_header))) {
- 		/* remove RFC1042 or Bridge-Tunnel encapsulation and
- 		 * replace EtherType */
- 		skb_pull(skb, hdrlen + 6);
+diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
+index a853244..2867499 100644
+--- a/drivers/bluetooth/btmrvl_sdio.c
++++ b/drivers/bluetooth/btmrvl_sdio.c
+@@ -110,6 +110,9 @@ static const struct sdio_device_id btmrvl_sdio_ids[] = {
+ 	/* Marvell SD8787 Bluetooth device */
+ 	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x911A),
+ 			.driver_data = (unsigned long) &btmrvl_sdio_sd8787 },
++	/* Marvell SD8787 Bluetooth AMP device */
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x911B),
++			.driver_data = (unsigned long) &btmrvl_sdio_sd8787 },
+ 	/* Marvell SD8797 Bluetooth device */
+ 	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x912A),
+ 			.driver_data = (unsigned long) &btmrvl_sdio_sd8797 },
 -- 
-1.7.8.111.gad25c.dirty
+1.7.0.4
 
