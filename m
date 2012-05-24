@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:54901 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754753Ab2EBPWl convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62112 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab2EXDyX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 11:22:41 -0400
-Received: by vcqp1 with SMTP id p1so513183vcq.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 May 2012 08:22:41 -0700 (PDT)
+	Wed, 23 May 2012 23:54:23 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Date: Wed, 2 May 2012 11:22:40 -0400
-Message-ID: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com> (sfid-20120502_172245_353775_52F2EBD2)
-Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
-From: Kevin Groeneveld <kgroeneveld@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: dmitry.tarnyagin@stericsson.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45230.604093.657350@gargle.gargle.HOWL> (sfid-20120524_055426_810022_F7CC8C4E)
+Date: Thu, 24 May 2012 09:23:18 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/22] ath9k: Add MCI interrupt to debugfs statistics
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->Please find below in the patchset implementation of a new driver for
->the ST-Ericsson cw1200 wlan device.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |    3 +++
+ drivers/net/wireless/ath/ath9k/debug.h |    1 +
+ 2 files changed, 4 insertions(+)
 
-Hello Dmitry,
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index fde700c..c134dda 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -374,6 +374,8 @@ void ath_debug_stat_interrupt(struct ath_softc *sc, enum ath9k_int status)
+ 		sc->debug.stats.istats.dtim++;
+ 	if (status & ATH9K_INT_TSFOOR)
+ 		sc->debug.stats.istats.tsfoor++;
++	if (status & ATH9K_INT_MCI)
++		sc->debug.stats.istats.mci++;
+ }
+ 
+ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+@@ -418,6 +420,7 @@ static ssize_t read_file_interrupt(struct file *file, char __user *user_buf,
+ 	PR_IS("DTIMSYNC", dtimsync);
+ 	PR_IS("DTIM", dtim);
+ 	PR_IS("TSFOOR", tsfoor);
++	PR_IS("MCI", mci);
+ 	PR_IS("TOTAL", total);
+ 
+ 	len += snprintf(buf + len, mxlen - len,
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index c34da09..d0f851c 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -86,6 +86,7 @@ struct ath_interrupt_stats {
+ 	u32 dtim;
+ 	u32 bb_watchdog;
+ 	u32 tsfoor;
++	u32 mci;
+ 
+ 	/* Sync-cause stats */
+ 	u32 sync_cause_all;
+-- 
+1.7.10.2
 
-What firmware version is this driver tested with?  Where can I get the
-firmware files?
-
-I have build 328 and 380 but I cannot get the driver to work with
-either of these.  Everything looks like it is working okay but when I
-run "iw wlan0 scan" it does not find anything.  The debugfs counters
-show I am not receiving any valid packets:
-
-PlcpErrors:             6
-FcsErrors:              0
-TxPackets:              22
-RxPackets:              0
-RxPacketErrors:         6
-RxDecryptionFailures:   0
-RxMicFailures:          0
-RxNoKeyFailures:        0
-TxMulticastFrames:      44
-TxFramesSuccess:        0
-TxFrameFailures:        0
-TxFramesRetried:        0
-TxFramesMultiRetried:   0
-RxFrameDuplicates:      0
-RtsSuccess:             0
-RtsFailures:            0
-AckFailures:            0
-RxMulticastFrames:      0
-RxFramesSuccess:        0
-RxCMACICVErrors:        0
-RxCMACReplays:          0
-RxMgmtCCMPReplays:      0
-
-
-Thanks,
-
-Kevin
