@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52472 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965749Ab2ERR1f (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7591 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753044Ab2EXDyx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 13:27:35 -0400
-Message-ID: <1337362052.4802.12.camel@jlt3.sipsolutions.net> (sfid-20120518_192751_098834_6D8E2DBD)
-Subject: Re: [RFC 1/6] mac80211: introduce channel contexts skeleton code
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 18 May 2012 19:27:32 +0200
-In-Reply-To: <1337342589-10617-2-git-send-email-michal.kazior@tieto.com>
-References: <1337342589-10617-1-git-send-email-michal.kazior@tieto.com>
-	 <1337342589-10617-2-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 23 May 2012 23:54:53 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45261.861923.420204@gargle.gargle.HOWL> (sfid-20120524_055457_089763_7AB6A42D)
+Date: Thu, 24 May 2012 09:23:49 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/22] ath9k_hw: update ar9462 initval table to fix rx nfcal
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-05-18 at 14:03 +0200, Michal Kazior wrote:
+The wrong ADC sample phase that happen between awake and
+network/full sleep will lead to improper rx noisefloor
+calibration.
 
->  /**
-> + * struct ieee80211_channel_context - channel context that vifs may be tuned to
-> + *
-> + * @channel: the channel to tune to
-> + * @channel_type: the channel (HT) type
-> + * @vif_list: vifs bound to channel context
-> + */
-> +struct ieee80211_channel_context {
-> +	struct ieee80211_channel *channel;
-> +	enum nl80211_channel_type channel_type;
-> +
-> +	struct list_head vif_list;
-> +};
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-A few trivial comments on this particular struct: I think we should have
-an internal and an external struct, so that the list for example isn't
-accessible by drivers. OTOH, maybe it should be accessible?
-
-The other request I have would be for private space in here for the
-driver, like inside vif or hw structs.
-
-Anyway, I'll look over this in more detail, but might not get to it
-before the week after next.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+index 1d6658e..a10ece0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+@@ -958,7 +958,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
+ 	{0x0001604c, 0x2699e04f},
+ 	{0x00016050, 0x6db6db6c},
+ 	{0x00016058, 0x6c200000},
+-	{0x00016080, 0x00040000},
++	{0x00016080, 0x000c0000},
+ 	{0x00016084, 0x9a68048c},
+ 	{0x00016088, 0x54214514},
+ 	{0x0001608c, 0x1203040b},
+@@ -981,7 +981,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
+ 	{0x00016144, 0x02084080},
+ 	{0x00016148, 0x000080c0},
+ 	{0x00016280, 0x050a0001},
+-	{0x00016284, 0x3d841400},
++	{0x00016284, 0x3d841418},
+ 	{0x00016288, 0x00000000},
+ 	{0x0001628c, 0xe3000000},
+ 	{0x00016290, 0xa1005080},
+-- 
+1.7.10.2
 
