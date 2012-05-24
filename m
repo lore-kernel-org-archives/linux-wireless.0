@@ -1,105 +1,328 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:50831 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758238Ab2EJJQN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:13 -0400
-Received: by mail-wi0-f178.google.com with SMTP id hn19so247958wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:13 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 47/78] wl18xx: add number of antennas and dc2dc type as module params
-Date: Thu, 10 May 2012 12:13:52 +0300
-Message-Id: <1336641263-5761-48-git-send-email-arik@wizery.com> (sfid-20120510_112038_488016_C37B808D)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+Received: from nbd.name ([46.4.11.11]:55995 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756327Ab2EXMcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 08:32:39 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.5 3/4] ath9k_hw: update AR933x initvals to fix issues with high power devices
+Date: Thu, 24 May 2012 14:32:21 +0200
+Message-Id: <1337862742-10574-3-git-send-email-nbd@openwrt.org> (sfid-20120524_143249_261321_71055899)
+In-Reply-To: <1337862742-10574-2-git-send-email-nbd@openwrt.org>
+References: <1337862742-10574-1-git-send-email-nbd@openwrt.org>
+ <1337862742-10574-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
-
-We need to specify the number of 2.4GHz and 5GHz antennas and whether
-the board has an internal or external DC2DC.  Add some module
-parameters that allow changing that.
-
-In the future this will come from the "NVS" file.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ti/wl18xx/conf.h |    3 ---
- drivers/net/wireless/ti/wl18xx/main.c |   21 +++++++++++++++------
- 2 files changed, 15 insertions(+), 9 deletions(-)
+ .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   |  178 ++++++++++----------
+ 1 files changed, 90 insertions(+), 88 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/conf.h b/drivers/net/wireless/ti/wl18xx/conf.h
-index d2b097e..a6058fb 100644
---- a/drivers/net/wireless/ti/wl18xx/conf.h
-+++ b/drivers/net/wireless/ti/wl18xx/conf.h
-@@ -33,9 +33,6 @@ struct wl18xx_conf_phy {
- 	u8 low_band_component_type;
- 	u8 high_band_component;
- 	u8 high_band_component_type;
--	u8 number_of_assembled_ant2_4;
--	u8 number_of_assembled_ant5;
--	u8 external_pa_dc2dc;
- 	u8 tcxo_ldo_voltage;
- 	u8 xtal_itrim_val;
- 	u8 srf_state;
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index f14141b..2f0cbf8 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -44,6 +44,9 @@
+diff --git a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+index f11d9b2..1bd3a3d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9330_1p1_initvals.h
+@@ -1,5 +1,6 @@
+ /*
+- * Copyright (c) 2011 Atheros Communications Inc.
++ * Copyright (c) 2010-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2012 Qualcomm Atheros Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -18,7 +19,7 @@
+ #define INITVALS_9330_1P1_H
  
- static char *ht_mode_param;
- static char *board_type_param;
-+static bool dc2dc_param = false;
-+static int n_antennas_2_param = 1;
-+static int n_antennas_5_param = 1;
+ static const u32 ar9331_1p1_baseband_postamble[][5] = {
+-	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a8005},
+ 	{0x00009820, 0x206a002e, 0x206a002e, 0x206a002e, 0x206a002e},
+ 	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
+@@ -27,10 +28,10 @@ static const u32 ar9331_1p1_baseband_postamble[][5] = {
+ 	{0x00009830, 0x0000059c, 0x0000059c, 0x0000059c, 0x0000059c},
+ 	{0x00009c00, 0x00000044, 0x00000044, 0x00000044, 0x00000044},
+ 	{0x00009e00, 0x0372161e, 0x0372161e, 0x037216a4, 0x037216a4},
+-	{0x00009e04, 0x00182020, 0x00182020, 0x00182020, 0x00182020},
++	{0x00009e04, 0x00202020, 0x00202020, 0x00202020, 0x00202020},
+ 	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000e2},
+ 	{0x00009e10, 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e},
+-	{0x00009e14, 0x31395d5e, 0x3139605e, 0x3139605e, 0x31395d5e},
++	{0x00009e14, 0x31365d5e, 0x3136605e, 0x3136605e, 0x31365d5e},
+ 	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+@@ -55,7 +56,7 @@ static const u32 ar9331_1p1_baseband_postamble[][5] = {
+ 	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
+-	{0x0000a2d0, 0x00071981, 0x00071981, 0x00071981, 0x00071981},
++	{0x0000a2d0, 0x00071982, 0x00071982, 0x00071982, 0x00071982},
+ 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000ae04, 0x00802020, 0x00802020, 0x00802020, 0x00802020},
+@@ -63,7 +64,7 @@ static const u32 ar9331_1p1_baseband_postamble[][5] = {
+ };
  
- static const u8 wl18xx_rate_to_idx_2ghz[] = {
- 	/* MCS rates are used only with 11n */
-@@ -487,9 +490,6 @@ static struct wl18xx_priv_conf wl18xx_default_priv_conf = {
- 		.low_band_component_type	= 0x05,
- 		.high_band_component		= COMPONENT_2_WAY_SWITCH,
- 		.high_band_component_type	= 0x09,
--		.number_of_assembled_ant2_4	= 0x01,
--		.number_of_assembled_ant5	= 0x01,
--		.external_pa_dc2dc		= 0x00,
- 		.tcxo_ldo_voltage		= 0x00,
- 		.xtal_itrim_val			= 0x04,
- 		.srf_state			= 0x00,
-@@ -704,10 +704,10 @@ static void wl18xx_set_mac_and_phy(struct wl1271 *wl)
- 	params.high_band_component_type =
- 		phy->high_band_component_type;
- 	params.number_of_assembled_ant2_4 =
--		phy->number_of_assembled_ant2_4;
-+		n_antennas_2_param;
- 	params.number_of_assembled_ant5 =
--		phy->number_of_assembled_ant5;
--	params.external_pa_dc2dc = phy->external_pa_dc2dc;
-+		n_antennas_5_param;
-+	params.external_pa_dc2dc = dc2dc_param;
- 	params.tcxo_ldo_voltage = phy->tcxo_ldo_voltage;
- 	params.xtal_itrim_val = phy->xtal_itrim_val;
- 	params.srf_state = phy->srf_state;
-@@ -1105,6 +1105,15 @@ module_param_named(board_type, board_type_param, charp, S_IRUSR);
- MODULE_PARM_DESC(board_type, "Board type: fpga, hdk, evb, com8 or "
- 		 "dvp (default)");
+ static const u32 ar9331_modes_lowest_ob_db_tx_gain_1p1[][5] = {
+-	/*   Addr     5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
+ 	{0x0000a2dc, 0xffff2a52, 0xffff2a52, 0xffff2a52, 0xffff2a52},
+ 	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
+@@ -155,7 +156,7 @@ static const u32 ar9331_modes_lowest_ob_db_tx_gain_1p1[][5] = {
+ };
  
-+module_param_named(dc2dc, dc2dc_param, bool, S_IRUSR);
-+MODULE_PARM_DESC(dc2dc, "External DC2DC: boolean (defaults to false)");
-+
-+module_param_named(n_antennas_2, n_antennas_2_param, uint, S_IRUSR);
-+MODULE_PARM_DESC(n_antennas_2, "Number of installed 2.4GHz antennas: 1 (default) or 2");
-+
-+module_param_named(n_antennas_5, n_antennas_5_param, uint, S_IRUSR);
-+MODULE_PARM_DESC(n_antennas_5, "Number of installed 5GHz antennas: 1 (default) or 2");
-+
- MODULE_LICENSE("GPL v2");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_FIRMWARE(WL18XX_FW_NAME);
+ static const u32 ar9331_modes_high_ob_db_tx_gain_1p1[][5] = {
+-	/*   Addr     5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
+ 	{0x0000a2dc, 0xffaa9a52, 0xffaa9a52, 0xffaa9a52, 0xffaa9a52},
+ 	{0x0000a2e0, 0xffb31c84, 0xffb31c84, 0xffb31c84, 0xffb31c84},
+@@ -245,7 +246,7 @@ static const u32 ar9331_modes_high_ob_db_tx_gain_1p1[][5] = {
+ };
+ 
+ static const u32 ar9331_modes_low_ob_db_tx_gain_1p1[][5] = {
+-	/*   Addr     5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
+ 	{0x0000a2dc, 0xffff2a52, 0xffff2a52, 0xffff2a52, 0xffff2a52},
+ 	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
+@@ -377,14 +378,14 @@ static const u32 ar9331_1p1_radio_core[][2] = {
+ 	{0x000160b4, 0x92480040},
+ 	{0x000160c0, 0x006db6db},
+ 	{0x000160c4, 0x0186db60},
+-	{0x000160c8, 0x6db6db6c},
++	{0x000160c8, 0x6db4db6c},
+ 	{0x000160cc, 0x6de6c300},
+ 	{0x000160d0, 0x14500820},
+ 	{0x00016100, 0x04cb0001},
+ 	{0x00016104, 0xfff80015},
+ 	{0x00016108, 0x00080010},
+ 	{0x0001610c, 0x00170000},
+-	{0x00016140, 0x10804000},
++	{0x00016140, 0x10800000},
+ 	{0x00016144, 0x01884080},
+ 	{0x00016148, 0x000080c0},
+ 	{0x00016280, 0x01000015},
+@@ -417,7 +418,7 @@ static const u32 ar9331_1p1_radio_core[][2] = {
+ };
+ 
+ static const u32 ar9331_1p1_soc_postamble[][5] = {
+-	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00007010, 0x00000022, 0x00000022, 0x00000022, 0x00000022},
+ };
+ 
+@@ -691,7 +692,7 @@ static const u32 ar9331_1p1_baseband_core[][2] = {
+ };
+ 
+ static const u32 ar9331_modes_high_power_tx_gain_1p1[][5] = {
+-	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
+ 	{0x0000a2dc, 0xffff2a52, 0xffff2a52, 0xffff2a52, 0xffff2a52},
+ 	{0x0000a2e0, 0xffffcc84, 0xffffcc84, 0xffffcc84, 0xffffcc84},
+@@ -783,7 +784,7 @@ static const u32 ar9331_modes_high_power_tx_gain_1p1[][5] = {
+ };
+ 
+ static const u32 ar9331_1p1_mac_postamble[][5] = {
+-	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
+ 	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
+ 	{0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c},
+ 	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
+@@ -973,26 +974,27 @@ static const u32 ar9331_1p1_mac_core[][2] = {
+ 
+ static const u32 ar9331_common_rx_gain_1p1[][2] = {
+ 	/* Addr      allmodes  */
+-	{0x0000a000, 0x00010000},
+-	{0x0000a004, 0x00030002},
+-	{0x0000a008, 0x00050004},
+-	{0x0000a00c, 0x00810080},
+-	{0x0000a010, 0x00830082},
+-	{0x0000a014, 0x01810180},
+-	{0x0000a018, 0x01830182},
+-	{0x0000a01c, 0x01850184},
+-	{0x0000a020, 0x01890188},
+-	{0x0000a024, 0x018b018a},
+-	{0x0000a028, 0x018d018c},
+-	{0x0000a02c, 0x01910190},
+-	{0x0000a030, 0x01930192},
+-	{0x0000a034, 0x01950194},
+-	{0x0000a038, 0x038a0196},
+-	{0x0000a03c, 0x038c038b},
+-	{0x0000a040, 0x0390038d},
+-	{0x0000a044, 0x03920391},
+-	{0x0000a048, 0x03940393},
+-	{0x0000a04c, 0x03960395},
++	{0x00009e18, 0x05000000},
++	{0x0000a000, 0x00060005},
++	{0x0000a004, 0x00810080},
++	{0x0000a008, 0x00830082},
++	{0x0000a00c, 0x00850084},
++	{0x0000a010, 0x01820181},
++	{0x0000a014, 0x01840183},
++	{0x0000a018, 0x01880185},
++	{0x0000a01c, 0x018a0189},
++	{0x0000a020, 0x02850284},
++	{0x0000a024, 0x02890288},
++	{0x0000a028, 0x028b028a},
++	{0x0000a02c, 0x03850384},
++	{0x0000a030, 0x03890388},
++	{0x0000a034, 0x038b038a},
++	{0x0000a038, 0x038d038c},
++	{0x0000a03c, 0x03910390},
++	{0x0000a040, 0x03930392},
++	{0x0000a044, 0x03950394},
++	{0x0000a048, 0x00000396},
++	{0x0000a04c, 0x00000000},
+ 	{0x0000a050, 0x00000000},
+ 	{0x0000a054, 0x00000000},
+ 	{0x0000a058, 0x00000000},
+@@ -1005,15 +1007,15 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
+ 	{0x0000a074, 0x00000000},
+ 	{0x0000a078, 0x00000000},
+ 	{0x0000a07c, 0x00000000},
+-	{0x0000a080, 0x22222229},
+-	{0x0000a084, 0x1d1d1d1d},
+-	{0x0000a088, 0x1d1d1d1d},
+-	{0x0000a08c, 0x1d1d1d1d},
+-	{0x0000a090, 0x171d1d1d},
+-	{0x0000a094, 0x11111717},
+-	{0x0000a098, 0x00030311},
+-	{0x0000a09c, 0x00000000},
+-	{0x0000a0a0, 0x00000000},
++	{0x0000a080, 0x28282828},
++	{0x0000a084, 0x28282828},
++	{0x0000a088, 0x28282828},
++	{0x0000a08c, 0x28282828},
++	{0x0000a090, 0x28282828},
++	{0x0000a094, 0x24242428},
++	{0x0000a098, 0x171e1e1e},
++	{0x0000a09c, 0x02020b0b},
++	{0x0000a0a0, 0x02020202},
+ 	{0x0000a0a4, 0x00000000},
+ 	{0x0000a0a8, 0x00000000},
+ 	{0x0000a0ac, 0x00000000},
+@@ -1021,27 +1023,27 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
+ 	{0x0000a0b4, 0x00000000},
+ 	{0x0000a0b8, 0x00000000},
+ 	{0x0000a0bc, 0x00000000},
+-	{0x0000a0c0, 0x001f0000},
+-	{0x0000a0c4, 0x01000101},
+-	{0x0000a0c8, 0x011e011f},
+-	{0x0000a0cc, 0x011c011d},
+-	{0x0000a0d0, 0x02030204},
+-	{0x0000a0d4, 0x02010202},
+-	{0x0000a0d8, 0x021f0200},
+-	{0x0000a0dc, 0x0302021e},
+-	{0x0000a0e0, 0x03000301},
+-	{0x0000a0e4, 0x031e031f},
+-	{0x0000a0e8, 0x0402031d},
+-	{0x0000a0ec, 0x04000401},
+-	{0x0000a0f0, 0x041e041f},
+-	{0x0000a0f4, 0x0502041d},
+-	{0x0000a0f8, 0x05000501},
+-	{0x0000a0fc, 0x051e051f},
+-	{0x0000a100, 0x06010602},
+-	{0x0000a104, 0x061f0600},
+-	{0x0000a108, 0x061d061e},
+-	{0x0000a10c, 0x07020703},
+-	{0x0000a110, 0x07000701},
++	{0x0000a0c0, 0x22072208},
++	{0x0000a0c4, 0x22052206},
++	{0x0000a0c8, 0x22032204},
++	{0x0000a0cc, 0x22012202},
++	{0x0000a0d0, 0x221f2200},
++	{0x0000a0d4, 0x221d221e},
++	{0x0000a0d8, 0x33023303},
++	{0x0000a0dc, 0x33003301},
++	{0x0000a0e0, 0x331e331f},
++	{0x0000a0e4, 0x4402331d},
++	{0x0000a0e8, 0x44004401},
++	{0x0000a0ec, 0x441e441f},
++	{0x0000a0f0, 0x55025503},
++	{0x0000a0f4, 0x55005501},
++	{0x0000a0f8, 0x551e551f},
++	{0x0000a0fc, 0x6602551d},
++	{0x0000a100, 0x66006601},
++	{0x0000a104, 0x661e661f},
++	{0x0000a108, 0x7703661d},
++	{0x0000a10c, 0x77017702},
++	{0x0000a110, 0x00007700},
+ 	{0x0000a114, 0x00000000},
+ 	{0x0000a118, 0x00000000},
+ 	{0x0000a11c, 0x00000000},
+@@ -1054,26 +1056,26 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
+ 	{0x0000a138, 0x00000000},
+ 	{0x0000a13c, 0x00000000},
+ 	{0x0000a140, 0x001f0000},
+-	{0x0000a144, 0x01000101},
+-	{0x0000a148, 0x011e011f},
+-	{0x0000a14c, 0x011c011d},
+-	{0x0000a150, 0x02030204},
+-	{0x0000a154, 0x02010202},
+-	{0x0000a158, 0x021f0200},
+-	{0x0000a15c, 0x0302021e},
+-	{0x0000a160, 0x03000301},
+-	{0x0000a164, 0x031e031f},
+-	{0x0000a168, 0x0402031d},
+-	{0x0000a16c, 0x04000401},
+-	{0x0000a170, 0x041e041f},
+-	{0x0000a174, 0x0502041d},
+-	{0x0000a178, 0x05000501},
+-	{0x0000a17c, 0x051e051f},
+-	{0x0000a180, 0x06010602},
+-	{0x0000a184, 0x061f0600},
+-	{0x0000a188, 0x061d061e},
+-	{0x0000a18c, 0x07020703},
+-	{0x0000a190, 0x07000701},
++	{0x0000a144, 0x111f1100},
++	{0x0000a148, 0x111d111e},
++	{0x0000a14c, 0x111b111c},
++	{0x0000a150, 0x22032204},
++	{0x0000a154, 0x22012202},
++	{0x0000a158, 0x221f2200},
++	{0x0000a15c, 0x221d221e},
++	{0x0000a160, 0x33013302},
++	{0x0000a164, 0x331f3300},
++	{0x0000a168, 0x4402331e},
++	{0x0000a16c, 0x44004401},
++	{0x0000a170, 0x441e441f},
++	{0x0000a174, 0x55015502},
++	{0x0000a178, 0x551f5500},
++	{0x0000a17c, 0x6602551e},
++	{0x0000a180, 0x66006601},
++	{0x0000a184, 0x661e661f},
++	{0x0000a188, 0x7703661d},
++	{0x0000a18c, 0x77017702},
++	{0x0000a190, 0x00007700},
+ 	{0x0000a194, 0x00000000},
+ 	{0x0000a198, 0x00000000},
+ 	{0x0000a19c, 0x00000000},
+@@ -1100,14 +1102,14 @@ static const u32 ar9331_common_rx_gain_1p1[][2] = {
+ 	{0x0000a1f0, 0x00000396},
+ 	{0x0000a1f4, 0x00000396},
+ 	{0x0000a1f8, 0x00000396},
+-	{0x0000a1fc, 0x00000196},
++	{0x0000a1fc, 0x00000296},
+ };
+ 
+ static const u32 ar9331_common_tx_gain_offset1_1[][1] = {
+-	{0},
+-	{3},
+-	{0},
+-	{0},
++	{0x00000000},
++	{0x00000003},
++	{0x00000000},
++	{0x00000000},
+ };
+ 
+ static const u32 ar9331_1p1_chansel_xtal_25M[] = {
 -- 
-1.7.9.5
+1.7.3.2
 
