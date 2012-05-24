@@ -1,122 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:55463 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751881Ab2EACB0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 22:01:26 -0400
-Received: by lbbgm6 with SMTP id gm6so636269lbb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Apr 2012 19:01:25 -0700 (PDT)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59367 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965272Ab2EXVet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 May 2012 17:34:49 -0400
+Message-ID: <4FBEA96D.8030207@hauke-m.de> (sfid-20120524_233454_305064_3C056CE9)
+Date: Thu, 24 May 2012 23:34:37 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <20120430120037.GG9863@alittletooquiet.net>
-References: <CAKVccoW8GCE=QSC9db6EnoEOsnBkKNoEvqzRrn8orbkf=U66Dg@mail.gmail.com>
- <4F9BFA14.3070008@lwfinger.net> <CAKVccoWRdcB87DB22=hy9wvEuR7exB7LV8zEGwq1+ug6YK2Zig@mail.gmail.com>
- <CAKVccoX-rjdapPE9N4vK6GYGrLVBQmD5yzz79ko4Uv=Uj=K6gA@mail.gmail.com>
- <4F9DD22F.8010305@lwfinger.net> <CAKVccoWbiKMPSH-jHHS+L+B-C1+ZZntxdP45ZxuxaN3h3C1iGA@mail.gmail.com>
- <4F9DE46E.6030103@lwfinger.net> <CAKVccoVU6uMNF0ShZO2jpsJzcf2MhaYzhELimS051TX2hVvyXQ@mail.gmail.com>
- <CAKVccoXJxLVm=3v2QnvKq1b3N76eXoNR45GfJ0TzRYx-BuM-fA@mail.gmail.com>
- <4F9DFF0A.7080604@lwfinger.net> <20120430120037.GG9863@alittletooquiet.net>
-From: simple w8 <simplew8@gmail.com>
-Date: Tue, 1 May 2012 03:01:04 +0100
-Message-ID: <CAKVccoU_eWtStR=XJEBuUSQJOTMfXuHuHNxs+xbEwd+mdFiG0Q@mail.gmail.com> (sfid-20120501_040131_502595_8AE26AED)
-Subject: Re: rtl8192ce makes keyboard repeat and mouse freeze
-To: Forest Bond <forest@alittletooquiet.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: BCM4331 tx failures after S3
+References: <20120522165251.GA31347@thinkpad-t410> <4FBCAE3E.6050206@broadcom.com> <20120523135506.GB30165@thinkpad-t410> <4FBE0110.5020209@broadcom.com> <20120524212115.GD26760@thinkpad-t410>
+In-Reply-To: <20120524212115.GD26760@thinkpad-t410>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/4/30 Forest Bond <forest@alittletooquiet.net>:
-> Hi,
->
-> On Sun, Apr 29, 2012 at 09:55:06PM -0500, Larry Finger wrote:
->> On 04/29/2012 08:11 PM, simple w8 wrote:
->> >2012/4/30 simple w8<simplew8@gmail.com>:
->> >>2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
->> >>>On 04/29/2012 07:51 PM, simple w8 wrote:
->> >>>>
->> >>>>2012/4/30 Larry Finger<Larry.Finger@lwfinger.net>:
->> >>>
->> >>>
->> >>>>>Get
->> >>>>>
->> >>>>>http://linuxwireless.org/download/compat-wireless-2.6/compat-wireless-2012-04-26.tar.bz2.
->> >>>>>That is the "bleeding-edge" version. As I said in the previous message,
->> >>>>>it
->> >>>>>will build on your kernel!
->> >>>>
->> >>>>
->> >>>>I didnt remove any mail address i simply forgot to hit the reply all
->> >>>>button.
->> >>>
->> >>>
->> >>>That IS removing mail addresses.
->> >>>
->> >>>
->> >>>>Previously i tried to build the subdirectory rtlwifi but that wasnt
->> >>>>possible, so build the entry tree compat-wireless and installed it,
->> >>>>but the problem about having repeated chars when typing and the mouse
->> >>>>freeze continues happening.
->> >>>>
->> >>>>Now a different problem, i noticed that after kernel-3.3.1 it started
->> >>>>appearing less wifi networks, where i used to detect about 10 wifi
->> >>>>networks, with kernel>    3.3.1 it only detected about 2 or 3 wifi
->> >>>>networks, i reported that to the distro and they said was a problem
->> >>>>from upstream since they didnt had changed nothing regarding wifi, and
->> >>>>after i installed compat-wireless that was solved. Im running
->> >>>>kernel-3.3.4 with compat-wireless and it detects again about 10 wifi
->> >>>>networks.
->> >>>>
->> >>>>Should i report this upstream so it can be fixed still in the
->> >>>>kkkkkernel 3.3.4 serie or you ccccccan do it?
->> >>>
->> >>>
->> >>>Whatever patch that fixed that problem will be backported to 3.3.X if it can
->> >>>be. Not everything qualifies.
->> >>>
->> >>>
->> >>>>By the way see how the characters "k" and "c" got repeated when i was
->> >>>>typing last paragraph.
->> >>>
->> >>>
->> >>>I see them, but they do not happen on my machine, thus I have no idea of the
->> >>>cause. So far, you can only say that they don't happen when rtl8192ce is not
->> >>>loaded; however, you have no network then either. The problem could be
->> >>>anywhere in the network stack.
->> >>>
->> >>>You said earlier that you tried the Ubuntu Live system. Would it be possible
->> >>>to download and try the openSUSE 12.1 Live CD as well? As you have used
->> >>>Ubunbtu, you should try the Gnome version.
->> >>>
->> >>>Larry
->> >>
->> >>These are the distros that i tried so far and all presented the same
->> >>problem i have described:
->> >>- Mandriva
->> >>- Mageia
->> >>- Ubuntu
->> >>- Kubuntu
->> >>- Caixa Magica
->> >
->> >What wifi you have?
->> >What distro you run?
->> >Do you run NetworManager?
+On 05/24/2012 11:21 PM, Seth Forshee wrote:
+> On Thu, May 24, 2012 at 11:36:16AM +0200, Arend van Spriel wrote:
+>> On 05/23/2012 03:55 PM, Seth Forshee wrote:
+>>> On Wed, May 23, 2012 at 11:30:38AM +0200, Arend van Spriel wrote:
+>>>> On 05/22/2012 06:52 PM, Seth Forshee wrote:
+>>>>> Hi Arend,
+>>>>>
+>>>>> I've inquired about this issue on the list once before, but I thought
+>>>>> I'd try once again to see if Broadcom can offer any suggestions.
+>>>>>
+>>>>> Recent MacBook Pros with BCM4331 wireless have a strange problem. Tx
+>>>>> doesn't work after S3, but only if no external power is applied during
+>>>>> the resume. mac80211 reports mostly timeouts for responses to probe
+>>>>> requests, but analysis with wireshark shows no frames from the BCM4331
+>>>>> on the air. The only way I've found to recover is to reload both b43 and
+>>>>> bcma; reloading b43 alone is not enough.
+>>>>
+>>>> Yikes. I recently did suspend/resume and hibernate testing with BCM43224
+>>>> (so brcmsmac and bcma), but my system was on AC. I will execute them
+>>>> again on battery. I want to make sure it is not a BCM4331 specific issue.
+>>>
+>>> I'm also testing a Macbook Air with BCM43224 using brcmsmac, and it does
+>>> not suffer from the same issue.
 >>
->> You forgot the "Reply All" again!
+>> Good to know. I will check whether there are any known issues with
+>> BCM4331 that could explain this.
 >>
->> I run openSUSE 12.1 KDE, and I use NetworkManager.
+>>>>> I've checked the values of MACCTL and the DMA TXCTL registers, since
+>>>>> these are the ones used by brcmsmac to mute tx, but those look okay. Any
+>>>>> suggestions of other things to check? My next step would be to start
+>>>>> looking at the state of the phy and radio, but since we don't have much
+>>>>> information about what the registers there actually do some suggestions
+>>>>> would be helpful.
+>>>>
+>>>> When going to S3 the driver is told by mac80211 .stop callback to abort
+>>>> driver operation so I do not expect b43 has a problem. Instead we
+>>>> probably have to look at the host PCI code in bcma, but before going
+>>>> there let me execute my tests.
+>>>>
+>>>> Can you tell me on what kernel version you see this issue. I would also
+>>>> like to have a look at your kernel log.
+>>>
+>>> I'm still seeing it in both 3.4 and wireless-testing. Attached is dmesg
+>>> from wireless-testing.
 >>
->> I have many wifi devices, including both RTL8188CE and RTL8192CE. At
->> the moment, I am running an RTL8188CE, which has been up for nearly
->> 100 hours without dropping the connection, and with no problems with
->> the keyboard. My kernel is from wireless-testing, which means that
->> my wireless stuff is exactly what you got with compat-wireless.
->
-> FWIW, I do recall seeing issues with my USB keyboard when testing with
-> rtl8192de.  I believe the problems went away when I disabled power management:
->
->  options rtl8192de ips=0 swlps=0 fwlps=0
+>> Nothing really looks wrong in there, but then again there are not much
+>> b43/bcma related messages.
+> 
+> I don't know if this helps, but I can do a successful passive scan when
+> tx isn't working. So it seems rx still works, only tx is broken. I also
+> forgot to state explicitly that it only matters that AC power isn't
+> present during the resume; i.e. I can suspend with AC connected, remove
+> AC, then resume, and I will still get tx failures.
+> 
+> I've been going through the suspend/resume paths for bcma and pci, and I
+> can't find anything that would account for differing behavior depending
+> on whether or not AC power is present. Even the ACPI _PS* methods for
+> the device appear to be (effectively) no-ops.
+> 
+> The only other thing that comes to mind that might be disabling tx is
+> firmware, either system firmware or the BCM4331's firmware. Perhaps
+> there's something that bcma or b43 is not initializing that's usually in
+> the needed state? That's mostly just a guess, but I'm at a loss for
+> other explanations at this point.
+> 
+> Cheers,
+> Seth
+> 
+Hi Seth,
 
-in where can these settings be saved?
+rmmod and insmod of b43 does not help but doing this with b43 and bcma
+works is that correct?
+Have you tried to add this code from bcma_host_pci_probe() to resume:
 
-By the way, diddddd you were using any keyboard, mouse from microsoft?
+	/* Disable the RETRY_TIMEOUT register (0x41) to keep
+	 * PCI Tx retries from interfering with C3 CPU state */
+	pci_read_config_dword(dev, 0x40, &val);
+	if ((val & 0x0000ff00) != 0)
+		pci_write_config_dword(dev, 0x40, val & 0xffff00ff);
+
+Could you also try to run bcma_sprom_get() after resume.
+And if that did not help run bcma_bus_scan() and remove the parts which
+are chaining anything to struct bcma_bus.
+
+If that all does not help or you already tried that, hopefully Arend has
+a solution.
+
+Hauke
