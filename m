@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:35981 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756076Ab2EGPYW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62033 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962Ab2EXDx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 11:24:22 -0400
-Date: Mon, 7 May 2012 12:24:05 -0300
-From: Gustavo Padovan <gustavo@padovan.org>
-To: David Miller <davem@davemloft.net>
-Cc: linville@tuxdriver.com, linux-bluetooth@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Bluetooth: Fix coding style
-Message-ID: <20120507152113.GA5192@joana> (sfid-20120507_172426_881294_1858F14D)
-References: <1336157988-4602-1-git-send-email-gustavo@padovan.org>
- <20120506.123656.1335354317428258137.davem@davemloft.net>
+	Wed, 23 May 2012 23:53:58 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120506.123656.1335354317428258137.davem@davemloft.net>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45191.757047.170415@gargle.gargle.HOWL> (sfid-20120524_055403_465276_3C9AB217)
+Date: Thu, 24 May 2012 09:22:39 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 01/22] ath9k: Prune ath9k_init_device
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* David Miller <davem@davemloft.net> [2012-05-06 12:36:56 -0400]:
+Instead of cluttering ath9k_init_device() with 'ath_softc'
+specific initialization code, use ath9k_init_softc() to
+setup driver-specific work routines, timers etc.
 
-> From: Gustavo Padovan <gustavo@padovan.org>
-> Date: Fri,  4 May 2012 15:59:48 -0300
-> 
-> > Fix offending styles all over the tree. This is in conformance David
-> > Miller's style rules.
-> 
-> They aren't just my style rules.
-> 
-> And, if your plan is to patch things up afterwards so you don't
-> have to change existing commits in your tree, think again.
-> 
-> I absolutely will not pull a tree from John that has commits in
-> it that add the bad indentation.
-> 
-> You have to respin your tree with fixed commits.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |   15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
-John, can you please unpull the bluetooth tree from wireless-next? I'll be
-fixing he affected commits and the send you a new pull request. Thanks.
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index dee9e09..3e22839 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -489,6 +489,7 @@ static void ath9k_init_misc(struct ath_softc *sc)
+ 
+ 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
+ 
++	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+ 	sc->config.txpowlimit = ATH_TXPOWER_MAX;
+ 	memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
+ 	sc->beacon.slottime = ATH9K_SLOT_TIME_9;
+@@ -560,6 +561,12 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	tasklet_init(&sc->bcon_tasklet, ath_beacon_tasklet,
+ 		     (unsigned long)sc);
+ 
++	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
++	INIT_WORK(&sc->hw_check_work, ath_hw_check);
++	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
++	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
++	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
++
+ 	/*
+ 	 * Cache line size is used to size and align various
+ 	 * structures used to communicate with the hardware.
+@@ -782,11 +789,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 		ARRAY_SIZE(ath9k_tpt_blink));
+ #endif
+ 
+-	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
+-	INIT_WORK(&sc->hw_check_work, ath_hw_check);
+-	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
+-	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
+-
+ 	/* Register with mac80211 */
+ 	error = ieee80211_register_hw(hw);
+ 	if (error)
+@@ -805,9 +807,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 			goto error_world;
+ 	}
+ 
+-	setup_timer(&sc->rx_poll_timer, ath_rx_poll, (unsigned long)sc);
+-	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
+-
+ 	ath_init_leds(sc);
+ 	ath_start_rfkill_poll(sc);
+ 
+-- 
+1.7.10.2
 
-	Gustavo
