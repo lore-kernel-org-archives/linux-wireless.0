@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28994 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947Ab2ENGQg (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11073 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753645Ab2EXDzq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 02:16:36 -0400
-Message-ID: <4FB0A33B.4050409@qca.qualcomm.com> (sfid-20120514_081639_479253_791607D8)
-Date: Mon, 14 May 2012 09:16:27 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 23 May 2012 23:55:46 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: John Linville <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] cfg80211: provide channel to start_ap function
-References: <20120511083413.778117363@sipsolutions.net> <20120511083720.868662963@sipsolutions.net>
-In-Reply-To: <20120511083720.868662963@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45314.307413.948542@gargle.gargle.HOWL> (sfid-20120524_055549_225937_D035F2E4)
+Date: Thu, 24 May 2012 09:24:42 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 20/22] ath9k: always perform ani calibration at poll interval
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2012 11:34 AM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Instead of setting the channel first and then
-> starting the AP, let cfg80211 store the channel
-> and provide it as one of the AP settings.
-> 
-> This means that now you have to set the channel
-> before you can start an AP interface, but since
-> hostapd/wpa_supplicant always do that we're OK
-> with this change.
-> 
-> Alternatively, it's now possible to give the
-> channel as an attribute to the start-ap nl80211
-> command, overriding any preset channel.
-> 
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Skiping the ani based on power state is delaying the ani cycles
+further on an idle state. And also as the power state is updated
+in different contexts, let us not skip the ani calibration.
 
-For the ath6kl part:
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    5 -----
+ 1 file changed, 5 deletions(-)
 
-Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 3e8bef8..b9c9f4c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -554,10 +554,6 @@ void ath_ani_calibrate(unsigned long data)
+ 	short_cal_interval = (ah->opmode == NL80211_IFTYPE_AP) ?
+ 		ATH_AP_SHORT_CALINTERVAL : ATH_STA_SHORT_CALINTERVAL;
+ 
+-	/* Only calibrate if awake */
+-	if (sc->sc_ah->power_mode != ATH9K_PM_AWAKE)
+-		goto set_timer;
+-
+ 	ath9k_ps_wakeup(sc);
+ 
+ 	/* Long calibration runs independently of short calibration. */
+@@ -613,7 +609,6 @@ void ath_ani_calibrate(unsigned long data)
+ 
+ 	ath9k_ps_restore(sc);
+ 
+-set_timer:
+ 	/*
+ 	* Set timer interval based on previous results.
+ 	* The interval must be the shortest necessary to satisfy ANI,
+-- 
+1.7.10.2
 
-Kalle
