@@ -1,69 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:40505 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758434Ab2EJJQ3 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40877 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751129Ab2EXEEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:16:29 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1111470wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:16:29 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 54/78] wl18xx: changed default board_type to HDK
-Date: Thu, 10 May 2012 12:13:59 +0300
-Message-Id: <1336641263-5761-55-git-send-email-arik@wizery.com> (sfid-20120510_111943_905380_3AB421D9)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Thu, 24 May 2012 00:04:08 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20413.45815.951093.199200@gargle.gargle.HOWL> (sfid-20120524_060412_244956_501CD8FE)
+Date: Thu, 24 May 2012 09:33:03 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 12/22] ath9k_hw: update ar9462 initval table to fix rx
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
 
-Since the most common board we're using now is an HDK board, change
-the default board_type to hdk.
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+The wrong ADC sample phase that happen between awake and
+network/full sleep will lead to improper rx noisefloor
+calibration.
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c |   11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index f5ec6f6..aa227a1 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -43,7 +43,7 @@
- #define WL18XX_RX_CHECKSUM_MASK      0x40
- 
- static char *ht_mode_param;
--static char *board_type_param;
-+static char *board_type_param = "hdk";
- static bool dc2dc_param = false;
- static int n_antennas_2_param = 1;
- static int n_antennas_5_param = 1;
-@@ -1074,10 +1074,7 @@ int __devinit wl18xx_probe(struct platform_device *pdev)
- 
- 	wl18xx_conf_init(wl);
- 
--	if (!board_type_param) {
--		board_type_param = kstrdup("dvp", GFP_KERNEL);
--		priv->board_type = BOARD_TYPE_DVP_18XX;
--	} else if (!strcmp(board_type_param, "fpga")) {
-+	if (!strcmp(board_type_param, "fpga")) {
- 		priv->board_type = BOARD_TYPE_FPGA_18XX;
- 	} else if (!strcmp(board_type_param, "hdk")) {
- 		priv->board_type = BOARD_TYPE_HDK_18XX;
-@@ -1137,8 +1134,8 @@ module_param_named(ht_mode, ht_mode_param, charp, S_IRUSR);
- MODULE_PARM_DESC(ht_mode, "Force HT mode: wide or mimo");
- 
- module_param_named(board_type, board_type_param, charp, S_IRUSR);
--MODULE_PARM_DESC(board_type, "Board type: fpga, hdk, evb, com8 or "
--		 "dvp (default)");
-+MODULE_PARM_DESC(board_type, "Board type: fpga, hdk (default), evb, com8 or "
-+		 "dvp");
- 
- module_param_named(dc2dc, dc2dc_param, bool, S_IRUSR);
- MODULE_PARM_DESC(dc2dc, "External DC2DC: boolean (defaults to false)");
+diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+index 1d6658e..a10ece0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
+@@ -958,7 +958,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
+ 	{0x0001604c, 0x2699e04f},
+ 	{0x00016050, 0x6db6db6c},
+ 	{0x00016058, 0x6c200000},
+-	{0x00016080, 0x00040000},
++	{0x00016080, 0x000c0000},
+ 	{0x00016084, 0x9a68048c},
+ 	{0x00016088, 0x54214514},
+ 	{0x0001608c, 0x1203040b},
+@@ -981,7 +981,7 @@ static const u32 ar9462_2p0_radio_core[][2] = {
+ 	{0x00016144, 0x02084080},
+ 	{0x00016148, 0x000080c0},
+ 	{0x00016280, 0x050a0001},
+-	{0x00016284, 0x3d841400},
++	{0x00016284, 0x3d841418},
+ 	{0x00016288, 0x00000000},
+ 	{0x0001628c, 0xe3000000},
+ 	{0x00016290, 0xa1005080},
 -- 
-1.7.9.5
+1.7.10.2
 
