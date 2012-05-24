@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:45401 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751638Ab2EPFH1 (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:51325 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752856Ab2EXBNs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 01:07:27 -0400
-Date: Wed, 16 May 2012 01:06:20 -0400 (EDT)
-Message-Id: <20120516.010620.1217035745038191380.davem@davemloft.net> (sfid-20120516_070744_564871_353DCAD1)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-05-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120515205157.GF24572@tuxdriver.com>
-References: <20120515205157.GF24572@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 23 May 2012 21:13:48 -0400
+Received: by yhmm54 with SMTP id m54so7271023yhm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 18:13:48 -0700 (PDT)
+Message-ID: <4FBD8B42.5020708@lwfinger.net> (sfid-20120524_031353_545055_62B55BF7)
+Date: Wed, 23 May 2012 20:13:38 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Mourad De Clerck <bugs-wireless@aquazul.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: firmware loading fails for b43 using linux 3.4?
+References: <4FBD7772.6070305@aquazul.com>
+In-Reply-To: <4FBD7772.6070305@aquazul.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 15 May 2012 16:51:58 -0400
+On 05/23/2012 06:49 PM, Mourad De Clerck wrote:
+> Hi,
+>
+> I'm probably missing something obvious, but when going from 3.3 to 3.4 the b43
+> driver throws up an error, saying it can't find the firmware - but it really
+> _is_ there.
+>
+>
+> Here's the error:
+>
+> b43-phy0 ERROR: Firmware file "b43/ucode16_mimo.fw" not found
+> b43-phy0 ERROR: Firmware file "b43-open/ucode16_mimo.fw" not found
+> b43-phy0 ERROR: You must go to
+> http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware and download the
+> correct firmware for this driver version. Please carefully read all instructions
+> on this website.
+>
+>
+> Here's the firmware it claims doesn't exist:
+>
+> $ sha1sum /lib/firmware/b43/ucode16_mimo.fw
+> 825a4bc63e3a96bb20fd8551add947435d47ad46 /lib/firmware/b43/ucode16_mimo.fw
+>
+> This is from Debian's firmware-b43-installer package, version 1:015-14.
+>
+>
+> The network card in question:
+>
+> 02:00.0 Network controller [0280]: Broadcom Corporation BCM4322 802.11a/b/g/n
+> Wireless LAN Controller [14e4:432b] (rev 01)
+>
+>
+> The only obvious change is 6b6fa5868eec26bdc6a83543cebb8cf832a2645a by Larry
+> Finger. I don't know if it matters, but b43 is statically compiled in the kernel.
+>
+> Am I missing something?
 
-> Here are three more fixes that some of my developers are desperate to
-> see included in 3.4...
-> 
-> Johan Hedberg went to some length justifyng the inclusion of these two
-> Bluetooth fixes:
-> 
-> "The device_connected fix should be quite self-explanatory, but it's
-> actually a wider issue than just for keyboards. All profiles that do
-> incoming connection authorization (e.g. headsets) will break without it
-> with specific hardware. The reason it wasn't caught earlier is that it
-> only occurs with specific Bluetooth adapters.
-> 
-> As for the security level patch, this fixes L2CAP socket based security
-> level elevation during a connection. The HID profile needs this (for
-> keyboards) and it is the only way to achieve the security level
-> elevation when using the management interface to talk to the kernel
-> (hence the management enabling patch being the one that exposes this"
-> 
-> The rtlwifi fix addresses a regression related to firmware loading,
-> as described in kernel.org bug 43187.  It basically just moves a hunk
-> of code to a more appropriate place.
+I do not know. I am building a system with b43 built in. Have you tried using 
+b43 as a module?
 
-Pulled, and the above text gave me something to put into the merge
-commit log message, thanks :-)
+Larry
+
