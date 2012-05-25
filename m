@@ -1,101 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37542 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757179Ab2EGQJE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 12:09:04 -0400
-Message-ID: <1336406944.2385.24.camel@dcbw.foobar.com> (sfid-20120507_180928_098288_C783D224)
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-From: Dan Williams <dcbw@redhat.com>
-To: Lennert Buytenhek <buytenh@wantstofly.org>
-Cc: sedat.dilek@gmail.com, "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
-	Jim Cromie <jim.cromie@gmail.com>
-Date: Mon, 07 May 2012 11:09:04 -0500
-In-Reply-To: <20120501125102.GN3157@wantstofly.org>
-References: <20120427094637.GV3157@wantstofly.org>
-	 <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com>
-	 <20120427095842.GW3157@wantstofly.org>
-	 <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com>
-	 <20120427101732.GX3157@wantstofly.org>
-	 <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com>
-	 <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com>
-	 <20120427185809.GZ3157@wantstofly.org>
-	 <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com>
-	 <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com>
-	 <20120501125102.GN3157@wantstofly.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:42061 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756055Ab2EYUpF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 May 2012 16:45:05 -0400
+Date: Fri, 25 May 2012 15:44:59 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Subject: Re: BCM4331 tx failures after S3
+Message-ID: <20120525204459.GE2895@thinkpad-t410> (sfid-20120525_224510_809432_F4D657DA)
+References: <20120522165251.GA31347@thinkpad-t410>
+ <4FBCAE3E.6050206@broadcom.com>
+ <20120523135506.GB30165@thinkpad-t410>
+ <4FBE0110.5020209@broadcom.com>
+ <20120524212115.GD26760@thinkpad-t410>
+ <4FBEA96D.8030207@hauke-m.de>
+ <20120525141339.GB2895@thinkpad-t410>
+ <4FBFB79F.4060609@broadcom.com>
+ <20120525183451.GD2895@thinkpad-t410>
+ <4FBFE95F.2080306@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4FBFE95F.2080306@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-01 at 14:51 +0200, Lennert Buytenhek wrote:
-> On Sun, Apr 29, 2012 at 12:25:21AM +0200, Sedat Dilek wrote:
-> 
-> > > On 1st sight, logs look fine:
-> > >
-> > > [21:52:52] <lautriv> [    6.050967] ieee80211 phy0: 88w8361p v4,
-> > > 00173f3bdde3, STA firmware 2.1.4.25
-> > >
-> > > But WLAN connection is not that fast and stable as lautriv reports
-> > > (several abnormalities were observed).
-> > >
-> > > I requested a tarball which includes:
-> > > * dmesg (Linux-3.3.3)
-> > > * e_n_a (/etc/network/interfaces)
-> > > * ifconfig output
-> > > * iwconfig output
-> > > * iw_phy output
-> > > * ps_axu (WPA) output
-> > >
-> > > lautriv will be so kind to be around on #linux-wireless/Freenode the
-> > > next days (UTC+2: German/Swiss local-time).
-> > > Just ping him.
-> > >
-> > > Hope you have fun, together!
-> > >
-> > > - Sedat -
+On Fri, May 25, 2012 at 10:19:43PM +0200, Arend van Spriel wrote:
+> >> Well let me explain some behaviour. Upon suspend mac80211 takes down the
+> >> driver with the last callback being .stop(). Upon resume mac80211 calls
+> >> the driver with .start() callback.
+> >>
+> >> The brcmsmac driver has two bool states that are in play here: driver_up
+> >> and hw_up. Upon .stop() callback the driver_up is set to false, but
+> >> hw_up remains true. A subsequent .start() will perform some
+> >> reconfiguration and driver_up will be made true.
+> >>
+> >> The suspend/resume scenario is different for brcmsmac. bcma will call
+> >> brcmsmac .suspend() callback in which we set hw_up to false. This
+> >> changes the behaviour of the .start() callback after resume. Basically,
+> >> it reinitializes the hardware.
 > > 
-> > A new tarball from lautriv with same outputs as before, but now tested
-> > with Linux-3.4-rc4.
+> > I'm having a bit of a hard time understanding the relevance of your
+> > description, since we're talking about b43. Are you suggesting that b43
+> > should do something similar? But even then I don't see any of the
+> > reinitialization done by brcmsmac setting BCMA_CC_CHIPCTL with the
+> > needed value. Am I missing something?
+> > 
+> > Seth
+> > 
 > 
-> The output looks good enough for me to ACK adding the PCI ID.
+> Yes, that is my suggestion. I dived into the b43 driver, but I do not
+> see a .resume callback for bcma:
 > 
-> Can the firmware being used here be submitted to the linux-firmware
-> git tree?
+> static struct bcma_driver b43_bcma_driver = {
+> 	.name		= KBUILD_MODNAME,
+> 	.id_table	= b43_bcma_tbl,
+> 	.probe		= b43_bcma_probe,
+> 	.remove		= b43_bcma_remove,
+> };
+> 
+> So upon suspend/resume b43 seems to take no extra steps, but I may be
+> missing it as I am not a b43 specialist (let me CC the b43 developer
+> list :-) ).
 
-So Marvell sent John a driver for TopDog a long time ago, which he put
-up on kernel.org.  That driver was reworked by Louis and put up in a git
-tree, but both were lost to the kernel.org hack.  I have git backups of
-both git trees.  I put Louis' cleanup here:
+I don't think your missing it. There doesn't seem to be a resume handler
+in b43.
 
-http://people.redhat.com/dcbw/mrvl_cb82.tar.bz2
+> In brcmsmac the brcms_b_hw_up() is called in brcms_c_up() when the flag
+> hw_up is false:
+> 
+> int brcms_c_up(struct brcms_c_info *wlc)
+> {
+> 	if (!wlc->pub->hw_up) {
+> 		brcms_b_hw_up(wlc->hw);
+> 		wlc->pub->hw_up = true;
+> 	}
+> 
+> /* Initialize just the hardware when coming out of POR or S3/S5 system
+> states */
+> static void brcms_b_hw_up(struct brcms_hardware *wlc_hw)
+> 
+> You are right that this particular code does not fiddle with
+> BCMA_CC_CHIPCTL. Where in the code did you print the value of this
+> register? Before or after the mac80211 .start() callback has been called?
 
-That driver (mrvl_cb82) has the following PCI IDs:
+Before. I printed the value from bcma_host_pci_resume().
 
-static const struct pci_device_id mwl_id_tbl[] __devinitdata = {
-        { PCI_VDEVICE(MARVELL, 0x2a02), 0 },
-        { PCI_VDEVICE(MARVELL, 0x2a03), 1 },
-        { PCI_VDEVICE(MARVELL, 0x2a06), 2 },
-        { PCI_VDEVICE(MARVELL, 0x2a07), 3 },
-        { PCI_VDEVICE(MARVELL, 0x2a04), 4 },
-        { PCI_VDEVICE(MARVELL, 0x2a08), 5 },
-        { PCI_VDEVICE(MARVELL, 0x2a0a), 6 },
-        { PCI_VDEVICE(MARVELL, 0x2a0b), 7 },
-        { PCI_VDEVICE(MARVELL, 0x2a0c), 8 },
-        { 0 }
-};
+I can easily make a patch that fixes the chipctl register up as needed
+during resume to fix my problem. But based on the fact that other fields
+in the register are also changing value, I'm wondering if more thorough
+handling is needed for the register. And I'm also a little fuzzy on
+exactly who should be responsible for what in the relationship between
+b43 and the wireless drivers.
 
-and supposedly works for CB82 + CB85.  The firmware helper for CB82
-looks pretty close to the mwl8k one.
-
-The firmware API exposed by mrvl_cb82 looks very close to mwl8k
-actually.  I only checked the HostCmd bits, not the structures, so I
-would expect a few differences.  There are some commands that mwl8k
-exposes that mrvl_cb82 does not and vice versa, but I'm not sure if the
-drivers actually use those commands.
-
-Hope this helps.
-
-Dan
+Thanks,
+Seth
 
