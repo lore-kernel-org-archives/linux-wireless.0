@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:52849 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751456Ab2EWIv4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 04:51:56 -0400
-Received: by lagz14 with SMTP id z14so7189876lag.21
-        for <linux-wireless@vger.kernel.org>; Wed, 23 May 2012 01:51:53 -0700 (PDT)
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:37924 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758363Ab2EYUJH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 May 2012 16:09:07 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAK80WHZW8OLs8N9vPhLx8+yVUhOnFU8EGyHQX=Es12gzZ32rNg@mail.gmail.com>
-References: <1337669130-4229-1-git-send-email-victorg@ti.com>
-	<1337712022.4470.0.camel@jlt3.sipsolutions.net>
-	<CAK80WHZW8OLs8N9vPhLx8+yVUhOnFU8EGyHQX=Es12gzZ32rNg@mail.gmail.com>
-Date: Wed, 23 May 2012 11:51:53 +0300
-Message-ID: <CAK80WHbLfOYgvNqoyZroGC6zvWs8UYNwRP_TzLmzDjVSqJK8XA@mail.gmail.com> (sfid-20120523_105202_044009_F1BFBEFE)
-Subject: Re: [PATCH] mac80211: add command to get current rssi
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Date: Fri, 25 May 2012 13:08:46 -0700
+Message-ID: <CAB=NE6Urc0LPLP87rH6sDRsaKxb8Mh9u+suWQff6X3T2mYWx1A@mail.gmail.com> (sfid-20120525_220929_806559_93302552)
+Subject: [ANN] QCA swiss army knife
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	qca-linux-team <qca-linux-team@qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 23, 2012 at 9:58 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
-> On Tue, May 22, 2012 at 9:40 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Tue, 2012-05-22 at 09:45 +0300, Victor Goldenshtein wrote:
->>
->>> @@ -388,7 +389,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
->>>       if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
->>>           (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
->>>               sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
->>> -             sinfo->signal = (s8)sta->last_signal;
->>> +             if (local->ops->get_rssi)
->>> +                     drv_get_rssi(local, sdata, &sinfo->signal);
->>> +             else
->>> +                     sinfo->signal = (s8)sta->last_signal;
->>>               sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
->>>       }
->>
->> So .. you're filling a per-station value with a generic per-interface
->> callback? What were you thinking? ;-)
->>
->
-> This is this is for managed only.
-> I can rename the drv_get_rssi() to drv_get_sta_rssi() and to call it
-> only for NL80211_IFTYPE_STATION, I think it would clarify things?
->
+To help with simplifying placement of userspace tool development for
+QCA for our different drivers we have merged together a few public
+development repositories into one, a qca-swiss-army-knife:
 
-Alternatively we could leave it as general callback "drv_get_rssi()",
-add the peer address and let the driver decide if it supports
-retrieval of the rssi for the given peer.  Thus, allowing us to do
-something like:
+Code: git://github.com/mcgrof/qca-swiss-army-knife.git
+Wiki: https://github.com/mcgrof/qca-swiss-army-knife/wiki
 
-if (!local->ops->get_rssi) || (drv_get_rssi(local, sdata,
-sta->sta.addr, &sinfo->signal))
-        sinfo->signal = (s8)sta->last_signal;
+Of most importance so far is the initval-tools [0], if you used to
+send patches for this utility please update your git tree to point to
+this new URL, a simple change in the name should let you git pull all
+the new changes, you will not have to reset your tree. The other tools
+that merged into this tree were  ath-utils and hal-reg-dump, so I've
+nuked the old trees from github.
 
--- 
-Victor.
+If you have any question please let us know.
+
+[0] http://wireless.kernel.org/en/users/Drivers/ath9k_hw/initvals-tool
+
+  Luis
