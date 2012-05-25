@@ -1,36 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4463 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754620Ab2EaMBw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 08:01:52 -0400
-Message-ID: <4FC75DA4.2090909@broadcom.com> (sfid-20120531_140156_077197_BF99DC70)
-Date: Thu, 31 May 2012 14:01:40 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Erwin Van de Velde" <erwin.vandevelde@gmail.com>
-cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Florian Fainelli" <florian@openwrt.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Dan Williams" <dcbw@redhat.com>
-Subject: Re: Master mode support in iwlagn?
-References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be>
- <1338455399.7328.0.camel@jlt3.sipsolutions.net>
- <4932187.SWLxM4x7cN@flexo>
- <5625918.SuzapvkoUg@sylvesterjr.cmi.ua.ac.be>
-In-Reply-To: <5625918.SuzapvkoUg@sylvesterjr.cmi.ua.ac.be>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from ip-relay-001.utdallas.edu ([129.110.20.111]:63131 "EHLO
+	ip-relay-001.utdallas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850Ab2EYE5e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 May 2012 00:57:34 -0400
+From: Qasim Javed <qasimj@gmail.com>
+To: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ravip@utdallas.edu, Qasim Javed <qasimj@gmail.com>
+Subject: [RFC] mac80211: Use correct originator sequence number in a Path Reply
+Date: Fri, 25 May 2012 03:21:11 -0500
+Message-Id: <1337934071-29342-1-git-send-email-qasimj@gmail.com> (sfid-20120525_065842_543822_4C409978)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/31/2012 11:57 AM, Erwin Van de Velde wrote:
-> The interface may be targeted for the laptop market, but as I said, Internet 
-> sharing is quite handy sometimes and that is why I was looking for the AP 
-> mode.
+Sorry for the duplicate email. As suggested by Julian I have marked this as RFC (was PATCH previously), so that people can comment on it.
 
-Looking at your request from a higher level, I think you do not
-necessarily need AP mode, right. Or I am just confused by your use of
-the term "Internet sharing". What exactly is your usage scenario?
+I have been doing some experiments using the 802.11s functionality in the mac80211 stack. Today I stumbled across something which I believe is a critical bug in the usage of originator sequence number for a Path Reply message upon the reception of a Path Request message.
 
-Gr. AvS
+Consider the following topology:
+
+                    +---+
+                    | S |
+                    +---+
+                  /      \
+                 /        \
+            +---+          +---+
+            | A |          | B |
+            +---+          +---+
+                 \         /
+                  \       /
+                    +---+
+                    | D |
+                    +---+
+
+Node S is the source node and D the destination. Clearly there are two possible paths from S to D namely S->A->D and S->B->D. When S wants to communicate with D, it will broadcast a Path Request (PREQ) where the originator will be S and target will be D. On receiving the PREQ, both A and B will broadcast it further to D. Let us assume that aggregate value of the metric for path D->B->S denoted by cost(DBS) is greater than cost(DAS). Notice that according to HWMP operation, when the PREQ is propagating from S to D, the cost on the "reverse" path is aggregated, that is why I used cost(DB) + cost(BS) for cost(DBS) and did not consider cost(SBD). Suppose also that smaller the metric the better it is which is the case for the default airtime link metric used by the 802.11s stack.
+
+Let us suppose that the PREQ which passes through B arrives first at D and as mentioned earlier has a larger (worse) value than the soon to be received PREQ through the intermediate hop A. When D receives a PREQ from B, since it has not received any other PREQ, it generates a Path Reply (PREP). More specifically, the function hwmp_preq_frame_process generates the PREP. The PREQ contains originator and target sequence numbers which are used to avoid loops and ascertain the freshness of route information. On receiving a PREQ at D, the above mentioned function checks whether dot11MeshHWMPnetDiameterTraversalTime has elapsed since the last sequence number update (stored in ifmsh->last_sn_update). So suppose this is true when the first PREQ via B is received at D. So, in this case the originator sequence number in PREP is incremented (that is becomes one more than the target sequence number in the PREQ).
+
+Let us look at an example at this point. Suppose, the the originator sequence number in the PREQ is 1 and the target sequence number is 2. When this PREQ is received at D via B, and considering that dot11MeshHWMPnetDiameterTraversalTime have passed since the last sequence number update, we will increment the target sequence number which now becomes 3. Now for the PREP, the originator sequence number of PREQ, 1 in this case, becomes the target sequence number of PREP and the target sequence number of the PREQ (which has been updated and its value is 3) becomes the originator sequence number of the PREP.
+
+As this PREQ which was received at D via B has a larger metric, we know that when the PREQ from S is received via A, it will have a lower (better) metric, hence we will also generate a PREP for that PREQ. Suppose the second PREQ via A is received at D within dot11MeshHWMPnetDiameterTraversalTime (currently 50ms). This is a reasonable assumption since the PREQ is broadcast by S and further broadcast by A and B in some order. There is very less likelihood that the time difference between the PREQ from A and B would be greater than 50ms since this is a lot of time in 802.11 speak where the nodes are contending for the channel on the order of hundreds of microseconds (typically). In short, it is very likely (confirmed through experiments) that this difference is less than 50ms.
+
+So, when the PREQ from S arrives a D via A, since most likely this event happens within 50ms if the PREQ via B, the target sequence number will not be updated. Therefore, the originator sequence number stays at 1 and the target sequence number remains 2. It is very important to note that the code in hwmp_preq_frame_process just "swaps" the originator and target sequence numbers for use in the PREP. More specifically as mentioned earlier, the second PREP will have an originator sequence number of 2 and a target sequence number of 1.
+
+At this point, we have two PREPs in flight, one via B and one via A.
+
+PREP via B: originator sequence number = 3, target sequence number = 1
+PREP via A: originator sequence number = 2, target sequence number = 1
+
+The net effect is that when these PREPs reach S, irrespective of the order in which they arrive, the PREP via A will be ignored! This is very wrong since the reason we sent the PREP via A in the first place was that it had a better metric (albeit on the reverse path).
+
+I have not tested the patch yet. This is more of a heads up email to let everyone know.
+
+Signed-off-by: Qasim Javed <qasimj@gmail.com>
+---
+ net/mac80211/mesh_hwmp.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 70ac7d1..a13b593 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -543,6 +543,8 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		    time_before(jiffies, ifmsh->last_sn_update)) {
+ 			target_sn = ++ifmsh->sn;
+ 			ifmsh->last_sn_update = jiffies;
++		} else {
++			target_sn = ifmsh->sn;
+ 		}
+ 	} else {
+ 		rcu_read_lock();
+-- 
+1.7.1
 
