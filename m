@@ -1,125 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56814 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753729Ab2E3QES (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 12:04:18 -0400
-Message-ID: <4FC644F8.8020606@candelatech.com> (sfid-20120530_180422_148301_113C3AC5)
-Date: Wed, 30 May 2012 09:04:08 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1510 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754957Ab2EYKRI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 May 2012 06:17:08 -0400
+Message-ID: <4FBF5C15.5000402@broadcom.com> (sfid-20120525_121714_308078_1E157BEB)
+Date: Fri, 25 May 2012 12:16:53 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Limit number of pending skbs.
-References: <1338332576-26427-1-git-send-email-greearb@candelatech.com>  <4FC55A83.6030602@openwrt.org> <4FC55BE7.7010807@candelatech.com>  (sfid-20120530_012950_634296_DA1EEA8E) <1338361388.4511.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1338361388.4511.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "Seth Forshee" <seth.forshee@canonical.com>,
+	linux-wireless@vger.kernel.org,
+	"Stefano Brivio" <stefano.brivio@polimi.it>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: BCM4331 tx failures after S3
+References: <20120522165251.GA31347@thinkpad-t410>
+ <4FBCAE3E.6050206@broadcom.com> <20120523135506.GB30165@thinkpad-t410>
+ <4FBE0110.5020209@broadcom.com> <20120524212115.GD26760@thinkpad-t410>
+ <4FBEA96D.8030207@hauke-m.de>
+In-Reply-To: <4FBEA96D.8030207@hauke-m.de>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2012 12:03 AM, Johannes Berg wrote:
-> On Tue, 2012-05-29 at 16:29 -0700, Ben Greear wrote:
->> On 05/29/2012 04:23 PM, Felix Fietkau wrote:
->>> On 2012-05-30 1:02 AM, greearb@candelatech.com wrote:
->>>> From: Ben Greear<greearb@candelatech.com>
+On 05/24/2012 11:34 PM, Hauke Mehrtens wrote:
+> On 05/24/2012 11:21 PM, Seth Forshee wrote:
+>> On Thu, May 24, 2012 at 11:36:16AM +0200, Arend van Spriel wrote:
+>>> On 05/23/2012 03:55 PM, Seth Forshee wrote:
+>>>> On Wed, May 23, 2012 at 11:30:38AM +0200, Arend van Spriel wrote:
+>>>>> On 05/22/2012 06:52 PM, Seth Forshee wrote:
+>>>>>> Hi Arend,
+>>>>>>
+>>>>>> I've inquired about this issue on the list once before, but I thought
+>>>>>> I'd try once again to see if Broadcom can offer any suggestions.
+>>>>>>
+>>>>>> Recent MacBook Pros with BCM4331 wireless have a strange problem. Tx
+>>>>>> doesn't work after S3, but only if no external power is applied during
+>>>>>> the resume. mac80211 reports mostly timeouts for responses to probe
+>>>>>> requests, but analysis with wireshark shows no frames from the BCM4331
+>>>>>> on the air. The only way I've found to recover is to reload both b43 and
+>>>>>> bcma; reloading b43 alone is not enough.
+>>>>>
+>>>>> Yikes. I recently did suspend/resume and hibernate testing with BCM43224
+>>>>> (so brcmsmac and bcma), but my system was on AC. I will execute them
+>>>>> again on battery. I want to make sure it is not a BCM4331 specific issue.
 >>>>
->>>> Current code will allow any number of pending skbs, and
->>>> this can OOM the system when used with something like
->>>> the pktgen tool (which may not back off properly if
->>>> queue is stopped).
->>>>
->>>> Possibly this is just a bug in our version of pktgen,
->>>> but either way, it seems reasonable to add a limit
->>>> so that it is not possible to go OOM in this manner.
->>>>
->>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
->>> Adding a module parameter in a workaround for a possibly broken module
->>> seems a bit excessive to me.
+>>>> I'm also testing a Macbook Air with BCM43224 using brcmsmac, and it does
+>>>> not suffer from the same issue.
 >>>
->>> Also, I'm not sure adding such a silent packet drop is a good idea. At
->>> the very least, it should complain loudly to encourage people to fix the
->>> actual bug instead of just papering over it.
+>>> Good to know. I will check whether there are any known issues with
+>>> BCM4331 that could explain this.
 >>>
->>> When the driver cannot accept more packets, the queue stop should
->>> prevent the network stack from spamming mac80211 with more packets. Your
->>> pktgen seems to be ignoring this, so please fix it instead of adding
->>> workarounds to mac80211.
+>>>>>> I've checked the values of MACCTL and the DMA TXCTL registers, since
+>>>>>> these are the ones used by brcmsmac to mute tx, but those look okay. Any
+>>>>>> suggestions of other things to check? My next step would be to start
+>>>>>> looking at the state of the phy and radio, but since we don't have much
+>>>>>> information about what the registers there actually do some suggestions
+>>>>>> would be helpful.
+>>>>>
+>>>>> When going to S3 the driver is told by mac80211 .stop callback to abort
+>>>>> driver operation so I do not expect b43 has a problem. Instead we
+>>>>> probably have to look at the host PCI code in bcma, but before going
+>>>>> there let me execute my tests.
+>>>>>
+>>>>> Can you tell me on what kernel version you see this issue. I would also
+>>>>> like to have a look at your kernel log.
+>>>>
+>>>> I'm still seeing it in both 3.4 and wireless-testing. Attached is dmesg
+>>>> from wireless-testing.
+>>>
+>>> Nothing really looks wrong in there, but then again there are not much
+>>> b43/bcma related messages.
 >>
->> Ok, I'll work on pktgen next time I get a chance.
+>> I don't know if this helps, but I can do a successful passive scan when
+>> tx isn't working. So it seems rx still works, only tx is broken. I also
+>> forgot to state explicitly that it only matters that AC power isn't
+>> present during the resume; i.e. I can suspend with AC connected, remove
+>> AC, then resume, and I will still get tx failures.
 >>
->> I recall I had to add a hack (that was not wanted upstream)
->> to get pktgen to even work with mac80211 interfaces w/out crashing
->> the kernel, so probably no one else is using it anyway.
->
-> There used to be bugs in this area in mac80211 and/or pktgen, and I
-> remember crashing my machine very trivially. I don't think that this is
-> still a problem though, but I haven't tried in a long time. FWIW, the
-> time-frame of this must've been ~2-3 years ago.
+>> I've been going through the suspend/resume paths for bcma and pci, and I
+>> can't find anything that would account for differing behavior depending
+>> on whether or not AC power is present. Even the ACPI _PS* methods for
+>> the device appear to be (effectively) no-ops.
+>>
+>> The only other thing that comes to mind that might be disabling tx is
+>> firmware, either system firmware or the BCM4331's firmware. Perhaps
+>> there's something that bcma or b43 is not initializing that's usually in
+>> the needed state? That's mostly just a guess, but I'm at a loss for
+>> other explanations at this point.
+>>
+>> Cheers,
+>> Seth
+>>
+> Hi Seth,
+> 
+> rmmod and insmod of b43 does not help but doing this with b43 and bcma
+> works is that correct?
+> Have you tried to add this code from bcma_host_pci_probe() to resume:
+> 
+> 	/* Disable the RETRY_TIMEOUT register (0x41) to keep
+> 	 * PCI Tx retries from interfering with C3 CPU state */
+> 	pci_read_config_dword(dev, 0x40, &val);
+> 	if ((val & 0x0000ff00) != 0)
+> 		pci_write_config_dword(dev, 0x40, val & 0xffff00ff);
+> 
+> Could you also try to run bcma_sprom_get() after resume.
+> And if that did not help run bcma_bus_scan() and remove the parts which
+> are chaining anything to struct bcma_bus.
+> 
+> If that all does not help or you already tried that, hopefully Arend has
+> a solution.
+> 
+> Hauke
+> 
 
-I think it's still broken..I've been carrying this patch for a year or two:
+No solution yet, but maybe another thing to try is b43/bcma with
+bcm43224 and see if that works.
 
- From 5ad8e96ace28d798214ba6e203d143e6380e0605 Mon Sep 17 00:00:00 2001
-From: Ben Greear <greearb@candelatech.com>
-Date: Tue, 14 Jun 2011 11:01:50 -0700
-Subject: [PATCH 016/102] mac80211: Set up tx-queue-mapping in subif_start_xmit.
-
-Otherwise, ath9k gets confused about which queue to use
-and spews a warning like this when driving traffic with
-pktgen.
-
-WARNING: at /home/greearb/git/linux.wireless-testing-ct/drivers/net/wireless/ath/ath9k/xmit.c:1748 ath_tx_start+0x4a2/0x662 [ath9k]()
-Hardware name: To Be Filled By O.E.M.
-Modules linked in: ath5k arc4 ath9k mac80211 ath9k_common ath9k_hw ath cfg80211 nfs lockd bluetooth cryptd aes_i586 aes_generic veth 8021q garp stp l]
-Pid: 1729, comm: kpktgend_0 Tainted: G        W   2.6.38-rc4-wl+ #21
-Call Trace:
-  [<c043091b>] ? warn_slowpath_common+0x65/0x7a
-  [<fabe784e>] ? ath_tx_start+0x4a2/0x662 [ath9k]
-  [<c043093f>] ? warn_slowpath_null+0xf/0x13
-  [<fabe784e>] ? ath_tx_start+0x4a2/0x662 [ath9k]
-  [<fabe14d0>] ? ath9k_tx+0x14f/0x183 [ath9k]
-  [<fab9026d>] ? __ieee80211_tx+0x10c/0x18c [mac80211]
-  [<fab90397>] ? ieee80211_tx+0xaa/0x188 [mac80211]
-  [<fab905f3>] ? ieee80211_xmit+0x17e/0x186 [mac80211]
-  [<fab8ecc0>] ? ieee80211_skb_resize+0x8e/0xd2 [mac80211]
-  [<fab9148b>] ? ieee80211_subif_start_xmit+0x643/0x65c [mac80211]
-  [<c0440000>] ? rescuer_thread+0x25/0x1c8
-  [<f92cd354>] ? pktgen_thread_worker+0x114c/0x1b44 [pktgen]
-  [<fab90e48>] ? ieee80211_subif_start_xmit+0x0/0x65c [mac80211]
-  [<c042d612>] ? default_wake_function+0xb/0xd
-  [<c04254c7>] ? __wake_up_common+0x34/0x5c
-  [<c0443a29>] ? autoremove_wake_function+0x0/0x2f
-  [<f92cc208>] ? pktgen_thread_worker+0x0/0x1b44 [pktgen]
-  [<c044371a>] ? kthread+0x62/0x67
-  [<c04436b8>] ? kthread+0x0/0x67
-  [<c04035f6>] ? kernel_thread_helper+0x6/0x10
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 e05667c... 1f026b5... M	net/mac80211/tx.c
-  net/mac80211/tx.c |    2 ++
-  1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e05667c..1f026b5 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2072,6 +2072,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
-  	} else
-  		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
-
-+	skb_set_queue_mapping(skb, ieee80211_select_queue(sdata, skb));
-+
-  	nh_pos += hdrlen;
-  	h_pos += hdrlen;
-
--- 
-1.7.3.4
-
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Gr. AvS
 
