@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:35662 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760212Ab2EQQGC (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:41910 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756038Ab2EYPah (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 12:06:02 -0400
-Received: by wibhm6 with SMTP id hm6so106142wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 09:05:59 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: fix memory leak/corruption of bss_list
-Date: Thu, 17 May 2012 19:06:08 +0300
-Message-Id: <1337270768-22719-1-git-send-email-eliad@wizery.com> (sfid-20120517_180607_739105_AD6C5A0A)
+	Fri, 25 May 2012 11:30:37 -0400
+MIME-Version: 1.0
+In-Reply-To: <1337934071-29342-1-git-send-email-qasimj@gmail.com>
+References: <1337934071-29342-1-git-send-email-qasimj@gmail.com>
+Date: Fri, 25 May 2012 23:30:36 +0800
+Message-ID: <CAEFj985HxSrOwOoevDjG1jxPxobLda-X_LZUtj6LgwXZwozBog@mail.gmail.com> (sfid-20120525_173056_558327_6012FA11)
+Subject: Re: [RFC] mac80211: Use correct originator sequence number in a Path Reply
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: devel@lists.open80211s.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ravip@utdallas.edu
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_dev_free() calls cfg80211_put_bss() directly on all
-the remaining bss entries, skipping the proper bss entry
-cleanup that usually made by __cfg80211_unlink_bss(), and
-leaving the bss_list and the rb_tree with dangling pointers.
+Hi, Qasim Javed
 
-Fix it by calling cfg80211_unlink_bss() instead.
+I think that you are referring to the target HWMP sequence number in
+PREP element.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/wireless/core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Based on the 802.11s standard, it has specified that
+dot11MeshHWMPnetDiameterTraversalTime is only applied to original HWMP
+sequence number for PREQ as mentioned in the "Contents of a PREQ
+element" in section 11C.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 4e86a86..232c385 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -729,7 +729,7 @@ void cfg80211_dev_free(struct cfg80211_registered_device *rdev)
- 	mutex_destroy(&rdev->devlist_mtx);
- 	mutex_destroy(&rdev->sched_scan_mtx);
- 	list_for_each_entry_safe(scan, tmp, &rdev->bss_list, list)
--		cfg80211_put_bss(&scan->pub);
-+		cfg80211_unlink_bss(&rdev->wiphy, &scan->pub);
- 	kfree(rdev);
- }
- 
--- 
-1.7.6.401.g6a319
+For PREP element, it should be based on the description in section 11C.9.8.3:
+"If it is a target mesh STA, it shall update its own HWMP sequence
+number to maximum (current HWMP sequence number, target HWMP sequence
+number in the PREQ) + 1 immediately before it generates a PREP in
+response to a PREQ. The target HWMP sequence number of the PREQ is
+relevant when a link was broken along the path and the stored sequence
+number was increased at an intermediate mesh STA."
 
+So the target HWMP sequence number should be modified as follow:
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 70ac7d1..5988e82 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -538,12 +538,10 @@ static void hwmp_preq_frame_process(struct
+ieee80211_sub_if_data *sdata,
+                forward = false;
+                reply = true;
+                metric = 0;
+-               if (time_after(jiffies, ifmsh->last_sn_update +
+-                                       net_traversal_jiffies(sdata)) ||
+-                   time_before(jiffies, ifmsh->last_sn_update)) {
+-                       target_sn = ++ifmsh->sn;
+-                       ifmsh->last_sn_update = jiffies;
+-               }
++               if (SN_LT(ifmsh->sn, target_sn))
++                       ifmsh->sn = target_sn;
++               target_sn = ++ifmsh->sn;
++               ifmsh->last_sn_update = jiffies;
+
+Comments.
+
+Regards,
+Chun-Yeow
