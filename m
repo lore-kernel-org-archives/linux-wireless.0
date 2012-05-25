@@ -1,100 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59032 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932285Ab2E3DrU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44197 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753494Ab2EYJz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 23:47:20 -0400
-Message-ID: <4FC5983D.3080806@candelatech.com> (sfid-20120530_054753_974724_41343DB9)
-Date: Tue, 29 May 2012 20:47:09 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 25 May 2012 05:55:59 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 2/2] ath6kl: Fix unstable downlink throughput
+Date: Fri, 25 May 2012 15:25:53 +0530
+Message-ID: <1337939753-14491-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120525_115601_993533_D801D1F6)
+In-Reply-To: <1337939753-14491-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1337939753-14491-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Dave Taht <dave.taht@gmail.com>
-CC: cerowrt-devel@lists.bufferbloat.net,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
-References: <4FC04B5A.1070900@candelatech.com> <4FC2437C.9090106@candelatech.com> <4FC51418.5000104@candelatech.com> <201205292107.42337.chunkeey@googlemail.com> <4FC5647F.4060601@candelatech.com> <CAA93jw6jTDCLh+_=hv6HcvfAuNah33uag7hHnZTMW8=92nvcqA@mail.gmail.com>
-In-Reply-To: <CAA93jw6jTDCLh+_=hv6HcvfAuNah33uag7hHnZTMW8=92nvcqA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/29/2012 08:22 PM, Dave Taht wrote:
-> On Wed, May 30, 2012 at 1:06 AM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 05/29/2012 12:07 PM, Christian Lamparter wrote:
->>>
->>> On Tuesday, May 29, 2012 08:23:20 PM Ben Greear wrote:
->>>>
->>>> On 05/27/2012 08:08 AM, Ben Greear wrote:
->>>>>
->>>>> On 05/26/2012 09:39 AM, Sujith Manoharan wrote:
->>>>
->>>> We started testing with two AR9380 NICs today (one AP, the other STA).
->>>> I applied Felix's skb optimization patch, and the ath9k memleak fix patch
->>>> on top of 3.3.7+.
->>>>
->>>> The system has 2GB RAM, but it is 32-bit kernel, so not all
->>>> is available to the networking code...  That said, the OOM
->>>> killer kills VNC and such.
->>>>
->>>> Anyway, I'll try some memleak debugging to see if
->>>> I can find any leaks.  It seems to me that we should
->>>> not actually OOM just by trying to transmit too fast
->>>> on a station interface :P
->>>
->>> well, there's that:
->>> http://comments.gmane.org/gmane.linux.drivers.ath9k.devel/8233
->>>
->>> It might not fix the bug, but it can save you time to confirm
->>> that is not related to this particular skb leak.
->>
->>
->> I ported this to 3.3.7+ and applied it to my kernel
->> trees.  It has tested out fine so far, though it did not
->> actually fix the problem I was having.  That was not
->> a real leak, just always-growing pending queue length,
->> probably due to some issue with our version of pktgen.
->>
->> It is mostly a port-by-hand type of thing since
->> there are lots of conflicts.  Let me know if you'd
->> like me to post my version (and plz confirm your
->> signed-off-by).
->
-> please! (and cc cerowrt-devel at lists.bufferbloat.net)
->
-> I'm hoping this string of patches will have some bearing on my own
-> bug: http://www.bufferbloat.net/issues/379
->
-> (while I'm trying to not write a line of code for a while, others on my
->   list are struggling with this)
+There is frequent downlink throughput drop to 0 when operating
+at the signal level between -42dBm to -53dBm. This has been root
+caused to the delay in releasing pending a-mpdu subframes in
+reorder buffer. Right now the timeout value is 400ms, there
+is also a race condition where timeout handler can be delayed
+to run at an extra timeout interval. This patch reduces the
+timout interval to reasonable 100ms and makes sure releasing
+pending frames are not skipped in the timeout handler by removing
+the flag (rxtid->progress) which can delay the timeout logic.
 
-For your bug, do you get any warnings on a serial console?
+Reported-by: Yu Yanzhi <yanzhiy@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h |    3 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c |   44 ++++++++++++++-----------------
+ 2 files changed, 21 insertions(+), 26 deletions(-)
 
-What does 'top' show?  Ie, why is the load so high?  Just
-flogging the kernel with pkts shouldn't explode the load.
-
-Maybe processes are blocked trying to take a lock..maybe
-a networking lock?
-
-Tried enabling lockdep in this scenario, and maybe the
-hard/soft deadlock detection logic?
-
-If you back off the traffic, does the system recover?  If so,
-maybe your CPU just can't handle the load....
-
-If you think the mac80211 pending queues are backing up, cat out
-/debug/ieee*/phy*/queues
-
-That was the symptom I saw today with pktgen, but I think that is probably
-more the fault of pktgen and may not be an issue with more normal traffic
-flow.
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index b1bc6bc..a827bd7 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -215,7 +215,7 @@ enum ath6kl_hw_flags {
+ 
+ #define AGGR_NUM_OF_FREE_NETBUFS    16
+ 
+-#define AGGR_RX_TIMEOUT     400	/* in ms */
++#define AGGR_RX_TIMEOUT     100	/* in ms */
+ 
+ #define WMI_TIMEOUT (2 * HZ)
+ 
+@@ -264,7 +264,6 @@ struct skb_hold_q {
+ 
+ struct rxtid {
+ 	bool aggr;
+-	bool progress;
+ 	bool timer_mon;
+ 	u16 win_sz;
+ 	u16 seq_next;
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 60723be..6fe730d 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1186,28 +1186,27 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+ 	aggr_deque_frms(agg_conn, tid, 0, 1);
+ 
+ 	if (agg_conn->timer_scheduled)
+-		rxtid->progress = true;
+-	else
+-		for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
+-			spin_lock_bh(&rxtid->lock);
+-			if (rxtid->hold_q[idx].skb) {
+-				/*
+-				 * There is a frame in the queue and no
+-				 * timer so start a timer to ensure that
+-				 * the frame doesn't remain stuck
+-				 * forever.
+-				 */
+-				agg_conn->timer_scheduled = true;
+-				mod_timer(&agg_conn->timer,
+-					  (jiffies +
+-					   HZ * (AGGR_RX_TIMEOUT) / 1000));
+-				rxtid->progress = false;
+-				rxtid->timer_mon = true;
+-				spin_unlock_bh(&rxtid->lock);
+-				break;
+-			}
++		return is_queued;
++
++	for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
++		spin_lock_bh(&rxtid->lock);
++		if (rxtid->hold_q[idx].skb) {
++			/*
++			 * There is a frame in the queue and no
++			 * timer so start a timer to ensure that
++			 * the frame doesn't remain stuck
++			 * forever.
++			 */
++			agg_conn->timer_scheduled = true;
++			mod_timer(&agg_conn->timer,
++					(jiffies +
++					 HZ * (AGGR_RX_TIMEOUT) / 1000));
++			rxtid->timer_mon = true;
+ 			spin_unlock_bh(&rxtid->lock);
++			break;
+ 		}
++		spin_unlock_bh(&rxtid->lock);
++	}
+ 
+ 	return is_queued;
+ }
+@@ -1612,7 +1611,7 @@ static void aggr_timeout(unsigned long arg)
+ 		rxtid = &aggr_conn->rx_tid[i];
+ 		stats = &aggr_conn->stat[i];
+ 
+-		if (!rxtid->aggr || !rxtid->timer_mon || rxtid->progress)
++		if (!rxtid->aggr || !rxtid->timer_mon)
+ 			continue;
+ 
+ 		stats->num_timeouts++;
+@@ -1635,7 +1634,6 @@ static void aggr_timeout(unsigned long arg)
+ 				if (rxtid->hold_q[j].skb) {
+ 					aggr_conn->timer_scheduled = true;
+ 					rxtid->timer_mon = true;
+-					rxtid->progress = false;
+ 					spin_unlock_bh(&rxtid->lock);
+ 					break;
+ 				}
+@@ -1667,7 +1665,6 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
+ 		aggr_deque_frms(aggr_conn, tid, 0, 0);
+ 
+ 	rxtid->aggr = false;
+-	rxtid->progress = false;
+ 	rxtid->timer_mon = false;
+ 	rxtid->win_sz = 0;
+ 	rxtid->seq_next = 0;
+@@ -1746,7 +1743,6 @@ void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
+ 	for (i = 0; i < NUM_OF_TIDS; i++) {
+ 		rxtid = &aggr_conn->rx_tid[i];
+ 		rxtid->aggr = false;
+-		rxtid->progress = false;
+ 		rxtid->timer_mon = false;
+ 		skb_queue_head_init(&rxtid->q);
+ 		spin_lock_init(&rxtid->lock);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
+
