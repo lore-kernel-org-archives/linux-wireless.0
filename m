@@ -1,63 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:59009 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754857Ab2EHTxt (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51231 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751928Ab2EYKTY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 15:53:49 -0400
-Received: by werb10 with SMTP id b10so2233621wer.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 12:53:48 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 1/2] mac80211: fix network header location when adding encryption headers
-Date: Tue,  8 May 2012 22:53:40 +0300
-Message-Id: <1336506821-23709-1-git-send-email-arik@wizery.com> (sfid-20120508_215353_437601_AE1B27DF)
+	Fri, 25 May 2012 06:19:24 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V2 2/2] ath6kl: Fix unstable downlink throughput
+Date: Fri, 25 May 2012 15:49:18 +0530
+Message-ID: <1337941158-14895-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120525_121926_639722_D639838E)
+In-Reply-To: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the location of the network header when adding encryption
-specific headers to a skb. This allows low-level drivers to use the
-(now correct) location of the network header.
+There is frequent downlink throughput drop to 0 when operating
+at the signal level between -42dBm to -53dBm. This has been root
+caused to the delay in releasing pending a-mpdu subframes in
+reorder buffer. Right now the timeout value is 400ms, there
+is also a race condition where timeout handler can be delayed
+to run at an extra timeout interval. This patch reduces the
+timout interval to reasonable 100ms and makes sure releasing
+pending frames are not skipped in the timeout handler by removing
+the flag (rxtid->progress) which can delay the timeout logic.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Reported-by: Yu Yanzhi <yanzhiy@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- net/mac80211/wep.c |    1 +
- net/mac80211/wpa.c |    2 ++
- 2 files changed, 3 insertions(+)
+V2 - Fix code alignment
 
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index 7aa31bb..7cb8d83 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -104,6 +104,7 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	newhdr = skb_push(skb, WEP_IV_LEN);
- 	memmove(newhdr, newhdr + WEP_IV_LEN, hdrlen);
-+	skb_set_network_header(skb, skb_network_offset(skb) + WEP_IV_LEN);
- 	ieee80211_wep_get_iv(local, keylen, keyidx, newhdr + hdrlen);
- 	return newhdr + hdrlen;
+ drivers/net/wireless/ath/ath6kl/core.h |    3 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c |   43 ++++++++++++++-----------------
+ 2 files changed, 20 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index b1bc6bc..a827bd7 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -215,7 +215,7 @@ enum ath6kl_hw_flags {
+ 
+ #define AGGR_NUM_OF_FREE_NETBUFS    16
+ 
+-#define AGGR_RX_TIMEOUT     400	/* in ms */
++#define AGGR_RX_TIMEOUT     100	/* in ms */
+ 
+ #define WMI_TIMEOUT (2 * HZ)
+ 
+@@ -264,7 +264,6 @@ struct skb_hold_q {
+ 
+ struct rxtid {
+ 	bool aggr;
+-	bool progress;
+ 	bool timer_mon;
+ 	u16 win_sz;
+ 	u16 seq_next;
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 60723be..a6ff890 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1186,28 +1186,26 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+ 	aggr_deque_frms(agg_conn, tid, 0, 1);
+ 
+ 	if (agg_conn->timer_scheduled)
+-		rxtid->progress = true;
+-	else
+-		for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
+-			spin_lock_bh(&rxtid->lock);
+-			if (rxtid->hold_q[idx].skb) {
+-				/*
+-				 * There is a frame in the queue and no
+-				 * timer so start a timer to ensure that
+-				 * the frame doesn't remain stuck
+-				 * forever.
+-				 */
+-				agg_conn->timer_scheduled = true;
+-				mod_timer(&agg_conn->timer,
+-					  (jiffies +
+-					   HZ * (AGGR_RX_TIMEOUT) / 1000));
+-				rxtid->progress = false;
+-				rxtid->timer_mon = true;
+-				spin_unlock_bh(&rxtid->lock);
+-				break;
+-			}
++		return is_queued;
++
++	for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
++		spin_lock_bh(&rxtid->lock);
++		if (rxtid->hold_q[idx].skb) {
++			/*
++			 * There is a frame in the queue and no
++			 * timer so start a timer to ensure that
++			 * the frame doesn't remain stuck
++			 * forever.
++			 */
++			agg_conn->timer_scheduled = true;
++			mod_timer(&agg_conn->timer,
++				  (jiffies + HZ * (AGGR_RX_TIMEOUT) / 1000));
++			rxtid->timer_mon = true;
+ 			spin_unlock_bh(&rxtid->lock);
++			break;
+ 		}
++		spin_unlock_bh(&rxtid->lock);
++	}
+ 
+ 	return is_queued;
  }
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 0ae23c6..9aef9f8 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -202,6 +202,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+@@ -1612,7 +1610,7 @@ static void aggr_timeout(unsigned long arg)
+ 		rxtid = &aggr_conn->rx_tid[i];
+ 		stats = &aggr_conn->stat[i];
  
- 	pos = skb_push(skb, TKIP_IV_LEN);
- 	memmove(pos, pos + TKIP_IV_LEN, hdrlen);
-+	skb_set_network_header(skb, skb_network_offset(skb) + TKIP_IV_LEN);
- 	pos += hdrlen;
+-		if (!rxtid->aggr || !rxtid->timer_mon || rxtid->progress)
++		if (!rxtid->aggr || !rxtid->timer_mon)
+ 			continue;
  
- 	/* Increase IV for the frame */
-@@ -422,6 +423,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		stats->num_timeouts++;
+@@ -1635,7 +1633,6 @@ static void aggr_timeout(unsigned long arg)
+ 				if (rxtid->hold_q[j].skb) {
+ 					aggr_conn->timer_scheduled = true;
+ 					rxtid->timer_mon = true;
+-					rxtid->progress = false;
+ 					spin_unlock_bh(&rxtid->lock);
+ 					break;
+ 				}
+@@ -1667,7 +1664,6 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
+ 		aggr_deque_frms(aggr_conn, tid, 0, 0);
  
- 	pos = skb_push(skb, CCMP_HDR_LEN);
- 	memmove(pos, pos + CCMP_HDR_LEN, hdrlen);
-+	skb_set_network_header(skb, skb_network_offset(skb) + CCMP_HDR_LEN);
- 
- 	/* the HW only needs room for the IV, but not the actual IV */
- 	if (info->control.hw_key &&
+ 	rxtid->aggr = false;
+-	rxtid->progress = false;
+ 	rxtid->timer_mon = false;
+ 	rxtid->win_sz = 0;
+ 	rxtid->seq_next = 0;
+@@ -1746,7 +1742,6 @@ void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
+ 	for (i = 0; i < NUM_OF_TIDS; i++) {
+ 		rxtid = &aggr_conn->rx_tid[i];
+ 		rxtid->aggr = false;
+-		rxtid->progress = false;
+ 		rxtid->timer_mon = false;
+ 		skb_queue_head_init(&rxtid->q);
+ 		spin_lock_init(&rxtid->lock);
 -- 
-1.7.9.5
+1.7.0.4
 
