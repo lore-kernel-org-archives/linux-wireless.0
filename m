@@ -1,37 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38467 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759267Ab2EPRza (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20496 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751156Ab2EYKTN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 13:55:30 -0400
-Message-ID: <1337190928.18519.11.camel@jlt3.sipsolutions.net> (sfid-20120516_195537_606939_30EE470C)
-Subject: Re: [PATCH] iwlwifi: add __printf argument checking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 16 May 2012 19:55:28 +0200
-In-Reply-To: <20120516174121.GF3508@tuxdriver.com>
-References: <1337086877.4546.4.camel@jlt3.sipsolutions.net>
-	 <20120516174121.GF3508@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 25 May 2012 06:19:13 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V2 1/2] ath6kl: Fix race in aggregation reorder logic
+Date: Fri, 25 May 2012 15:49:17 +0530
+Message-ID: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120525_121916_255410_ED6199EF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-05-16 at 13:41 -0400, John W. Linville wrote:
-> This one causes a few warnings here -- can we fix those at the same time as we add this?
-> 
->   CC      drivers/net/wireless/iwlwifi/iwl-agn-sta.o
-> drivers/net/wireless/iwlwifi/iwl-agn-sta.c: In function ‘iwl_sta_calc_ht_flags’:
-> drivers/net/wireless/iwlwifi/iwl-agn-sta.c:238:2: warning: too few arguments for format
-> 
->   CC      drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.o
-> drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c: In function ‘iwl_rx_handle’:
-> drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c:516:3: warning: format ‘%d’ expects type ‘int’, but argument 6 has type ‘struct iwl_rx_mem_buffer *’
-> drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c:516:3: warning: too few arguments for format
+There are many places where tid data are accessed without
+the lock (rxtid->lock), this can lead to a race condition
+when the timeout handler for aggregatin reorder and the
+receive function are getting executed at the same time.
+Fix this race, but still there are races which can not
+be fixed without rewriting the whole aggregation reorder
+logic, for now fix the obvious ones.
 
-I think they were gone by the time I did this, but you said you had to
-skip a few patches (some of which fixed such bugs) as they didn't apply.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/txrx.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 67206ae..60723be 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1036,6 +1036,7 @@ static void aggr_deque_frms(struct aggr_info_conn *agg_conn, u8 tid,
+ 	rxtid = &agg_conn->rx_tid[tid];
+ 	stats = &agg_conn->stat[tid];
+ 
++	spin_lock_bh(&rxtid->lock);
+ 	idx = AGGR_WIN_IDX(rxtid->seq_next, rxtid->hold_q_sz);
+ 
+ 	/*
+@@ -1054,8 +1055,6 @@ static void aggr_deque_frms(struct aggr_info_conn *agg_conn, u8 tid,
+ 	seq_end = seq_no ? seq_no : rxtid->seq_next;
+ 	idx_end = AGGR_WIN_IDX(seq_end, rxtid->hold_q_sz);
+ 
+-	spin_lock_bh(&rxtid->lock);
+-
+ 	do {
+ 		node = &rxtid->hold_q[idx];
+ 		if ((order == 1) && (!node->skb))
+@@ -1127,11 +1126,13 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+ 		    ((end > extended_end) && (cur > extended_end) &&
+ 		     (cur < end))) {
+ 			aggr_deque_frms(agg_conn, tid, 0, 0);
++			spin_lock_bh(&rxtid->lock);
+ 			if (cur >= rxtid->hold_q_sz - 1)
+ 				rxtid->seq_next = cur - (rxtid->hold_q_sz - 1);
+ 			else
+ 				rxtid->seq_next = ATH6KL_MAX_SEQ_NO -
+ 						  (rxtid->hold_q_sz - 2 - cur);
++			spin_unlock_bh(&rxtid->lock);
+ 		} else {
+ 			/*
+ 			 * Dequeue only those frames that are outside the
+@@ -1188,6 +1189,7 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+ 		rxtid->progress = true;
+ 	else
+ 		for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
++			spin_lock_bh(&rxtid->lock);
+ 			if (rxtid->hold_q[idx].skb) {
+ 				/*
+ 				 * There is a frame in the queue and no
+@@ -1201,8 +1203,10 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+ 					   HZ * (AGGR_RX_TIMEOUT) / 1000));
+ 				rxtid->progress = false;
+ 				rxtid->timer_mon = true;
++				spin_unlock_bh(&rxtid->lock);
+ 				break;
+ 			}
++			spin_unlock_bh(&rxtid->lock);
+ 		}
+ 
+ 	return is_queued;
+@@ -1627,12 +1631,15 @@ static void aggr_timeout(unsigned long arg)
+ 
+ 		if (rxtid->aggr && rxtid->hold_q) {
+ 			for (j = 0; j < rxtid->hold_q_sz; j++) {
++				spin_lock_bh(&rxtid->lock);
+ 				if (rxtid->hold_q[j].skb) {
+ 					aggr_conn->timer_scheduled = true;
+ 					rxtid->timer_mon = true;
+ 					rxtid->progress = false;
++					spin_unlock_bh(&rxtid->lock);
+ 					break;
+ 				}
++				spin_unlock_bh(&rxtid->lock);
+ 			}
+ 
+ 			if (j >= rxtid->hold_q_sz)
+-- 
+1.7.0.4
 
