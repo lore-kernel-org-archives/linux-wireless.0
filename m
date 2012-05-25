@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:44376 "HELO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757388Ab2EBCyI (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:42256 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752729Ab2EYRRg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 22:54:08 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: fix coding style issue in mwifiex_deauthenticate
-Date: Tue,  1 May 2012 19:53:51 -0700
-Message-Id: <1335927231-19465-1-git-send-email-bzhao@marvell.com> (sfid-20120502_045434_561037_6A1E06EA)
+	Fri, 25 May 2012 13:17:36 -0400
+MIME-Version: 1.0
+In-Reply-To: <CAEFj987dNMyMcS9rySzVpfY0Fo5t0LtL9FZg770ohKi+bDO9ZA@mail.gmail.com>
+References: <1337934071-29342-1-git-send-email-qasimj@gmail.com>
+	<CAEFj985HxSrOwOoevDjG1jxPxobLda-X_LZUtj6LgwXZwozBog@mail.gmail.com>
+	<CAJivULpmLp9JK+PQZ9RkrvvYHNk=uA33=A-ffftroigivy1_NQ@mail.gmail.com>
+	<CAEFj984efuO12nSPsZ2A0Q0nwPLesYJ8gDHwgh=0e1VO3_UtGw@mail.gmail.com>
+	<CAEFj987dNMyMcS9rySzVpfY0Fo5t0LtL9FZg770ohKi+bDO9ZA@mail.gmail.com>
+Date: Fri, 25 May 2012 12:17:34 -0500
+Message-ID: <CAJivULpT=XTG2tKm=hQk9mHwJ2K5eo_siHRAWfL0y3vPfrRLiA@mail.gmail.com> (sfid-20120525_191757_221588_156E0273)
+Subject: Re: [RFC] mac80211: Use correct originator sequence number in a Path Reply
+From: Qasim Javed <qasimj@gmail.com>
+To: Javier Cardona <javier@cozybit.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ravip@utdallas.edu,
+	devel@lists.open80211s.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Documentation/CodingStyle says
-"Do not unnecessarily use braces where a single statement will do."
+Forgot to add Javier. Could you please comment on this?
 
-Use "switch/case", instead of "if/else_if/else", so that more cases
-can be added later.
+Thanks,
+-Qasim
 
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/join.c |   22 ++++++++++++----------
- 1 files changed, 12 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
-index 8a39098..aeb0b3f 100644
---- a/drivers/net/wireless/mwifiex/join.c
-+++ b/drivers/net/wireless/mwifiex/join.c
-@@ -1377,19 +1377,21 @@ static int mwifiex_deauthenticate_infra(struct mwifiex_private *priv, u8 *mac)
-  */
- int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac)
- {
--	int ret = 0;
-+	if (!priv->media_connected)
-+		return 0;
- 
--	if (priv->media_connected) {
--		if (priv->bss_mode == NL80211_IFTYPE_STATION) {
--			ret = mwifiex_deauthenticate_infra(priv, mac);
--		} else if (priv->bss_mode == NL80211_IFTYPE_ADHOC) {
--			ret = mwifiex_send_cmd_sync(priv,
--						HostCmd_CMD_802_11_AD_HOC_STOP,
--						HostCmd_ACT_GEN_SET, 0, NULL);
--		}
-+	switch (priv->bss_mode) {
-+	case NL80211_IFTYPE_STATION:
-+		return mwifiex_deauthenticate_infra(priv, mac);
-+	case NL80211_IFTYPE_ADHOC:
-+		return mwifiex_send_cmd_sync(priv,
-+					     HostCmd_CMD_802_11_AD_HOC_STOP,
-+					     HostCmd_ACT_GEN_SET, 0, NULL);
-+	default:
-+		break;
- 	}
- 
--	return ret;
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(mwifiex_deauthenticate);
- 
--- 
-1.7.0.2
-
+On Fri, May 25, 2012 at 11:31 AM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+>> I think that the PREQ element has originator sequence number at the
+>> end but the PREQ element has the target sequence number at the end.
+>> This is what mesh_path_sel_frame_tx is doing.
+>
+> PREP element has originator sequence number at the end but the PREQ
+> element has the target sequence number at the end.
+>
+> Regards,
+> Chun-Yeow
+> _______________________________________________
+> Devel mailing list
+> Devel@lists.open80211s.org
+> http://lists.open80211s.org/cgi-bin/mailman/listinfo/devel
