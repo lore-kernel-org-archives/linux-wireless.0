@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog131.obsmtp.com ([74.125.149.247]:51058 "EHLO
-	na3sys009aog131.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751161Ab2ECH0f (ORCPT
+Received: from ip-relay-001.utdallas.edu ([129.110.20.111]:45230 "EHLO
+	ip-relay-001.utdallas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752856Ab2EYBtY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 03:26:35 -0400
-Received: by lbjn8 with SMTP id n8so1100160lbj.28
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 00:26:32 -0700 (PDT)
-Message-ID: <1336029991.12189.19.camel@cumari.coelho.fi> (sfid-20120503_092639_633510_EBD7A1C4)
-Subject: Re: linux-3.4-rc2 bug report
-From: Luciano Coelho <coelho@ti.com>
-To: David Binderman <dcb314@hotmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 03 May 2012 10:26:31 +0300
-In-Reply-To: <BLU154-W620B58EC903387AA3C07D69C390@phx.gbl>
-References: <BLU154-W620B58EC903387AA3C07D69C390@phx.gbl>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 24 May 2012 21:49:24 -0400
+From: Qasim Javed <qasimj@gmail.com>
+To: linux-wireless@vger.kernel.org, devel@lists.open80211s.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ravip@utdallas.edu, Qasim Javed <qasimj@gmail.com>
+Subject: [PATCH] mac80211: Use correct originator sequence number in a Path Reply
+Date: Fri, 25 May 2012 00:02:15 -0500
+Message-Id: <1337922135-27846-1-git-send-email-qasimj@gmail.com> (sfid-20120525_034949_647594_B831E1CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+Hi,
 
-On Sun, 2012-04-15 at 12:27 +0000, David Binderman wrote:
-> Hello there,
-> 
-> I recently tried out the static analysis tool cppcheck-1.54
-> on the linux-3.4-rc2 source code.
-> 
-> It said
-> 
-> 1.
-> 
-> [drivers/net/wireless/wl12xx/cmd.c:1252]: (warning) Using size of
-> pointer tmpl instead of size of its data.
-> 
-> The source code is
-> 
->     memset(tmpl, 0, sizeof(tmpl));
-> 
-> It might be the case that
-> 
->     memset(tmpl, 0, sizeof(*tmpl));
-> 
-> is better code.
-> 
-> 2.
-> 
-> [drivers/net/wireless/wl12xx/cmd.c:1301]: (warning) Using size of
-> pointer hdr instead of size of its data.
-> 
-> Duplicate.
+I have been doing some experiments using the 802.11s functionality in the mac80211 stack. Today I stumbled across something which I believe is a critical bug in the usage of originator sequence number for a Path Reply message upon the reception of a Path Request message.
 
-Thank you very much for the report.  This was indeed wrong.  I have
-fixed it and queued it for integration.
+Consider the following topology:
 
+                    +---+
+                    | S |
+                    +---+
+                  /      \
+                 /        \
+            +---+          +---+
+            | A |          | B |
+            +---+          +---+
+                 \         /
+                  \       /
+                    +---+
+                    | D |
+                    +---+
+
+Node S is the source node and D the destination. Clearly there are two possible paths from S to D namely S->A->D and S->B->D. When S wants to communicate with D, it will broadcast a Path Request (PREQ) where the originator will be S and target will be D. On receiving the PREQ, both A and B will broadcast it further to D. Let us assume that aggregate value of the metric for path D->B->S denoted by cost(DBS) is greater than cost(DAS). Notice that according to HWMP operation, when the PREQ is propagating from S to D, the cost on the "reverse" path is aggregated, that is why I used cost(DB) + cost(BS) for cost(DBS) and did not consider cost(SBD). Suppose also that smaller the metric the better it is which is the case for the default airtime link metric used by the 802.11s stack.
+
+Let us suppose that the PREQ which passes through B arrives first at D and as mentioned earlier has a larger (worse) value than the soon to be received PREQ through the intermediate hop A. When D receives a PREQ from B, since it has not received any other PREQ, it generates a Path Reply (PREP). More specifically, the function hwmp_preq_frame_process generates the PREP. The PREQ contains originator and target sequence numbers which are used to avoid loops and ascertain the freshness of route information. On receiving a PREQ at D, the above mentioned function checks whether dot11MeshHWMPnetDiameterTraversalTime have elapsed since the last sequence number update (stored in ifmsh->last_sn_update). So suppose this is true when the first PREQ via B is received at D. So, in this case the originator sequence number in PREP is incremented (that is becomes one more than the target sequence number in the PREQ).
+
+Let us look at an example at this point. Suppose, the the originator sequence number in the PREQ is 1 and the target sequence number is 2. When this PREQ is received at D via B, and considering that dot11MeshHWMPnetDiameterTraversalTime have passed since the last sequence number update, we will increment the target sequence number which now becomes 3. Now for the PREP, the originator sequence number of PREQ, 1 in this case, becomes the target sequence number of PREP and the target sequence number of the PREQ (which has been updated and its value is 3) becomes the originator sequence number of the PREP.
+
+As this PREQ which was received at D via B has a larger metric, we know that when the PREQ from S is received via A, it will have a lower (better) metric, hence we will also generate a PREP for that PREQ. Suppose the second PREQ via A is received at D within dot11MeshHWMPnetDiameterTraversalTime (currently 50ms). This is a reasonable assumption since the PREQ is broadcast by S and further broadcast by A and B in some order. There is very less likelihood that the time difference between the PREQ from A and B would be greater than 50ms since this is a lot of time in 802.11 speak where the nodes are contending for the channel on the order of hundreds of microseconds (typically). In short, it is very likely (confirmed through experiments) that this difference is less than 50ms.
+
+So, when the PREQ from S arrives a D via A, since most likely this event happens within 50ms if the PREQ via B, the target sequence number will not be updated. Therefore, the originator sequence number stays at 1 and the target sequence number remains 2. It is very important to note that the code in hwmp_preq_frame_process just "swaps" the originator and target sequence numbers for use in the PREP. More specifically as mentioned earlier, the second PREP will have an originator sequence number of 2 and a target sequence number of 1.
+
+At this point, we have two PREPs in flight, one via B and one via A.
+
+PREP via B: originator sequence number = 3, target sequence number = 1
+PREP via A: originator sequence number = 2, target sequence number = 1
+
+The net effect is that when these PREPs reach S, irrespective of the order in which they arrive, the PREP via A will be ignored! This is very wrong since the reason we sent the PREP via A in the first place was that it had a better metric (albeit on the reverse path).
+
+I have not tested the patch yet. This is more of a heads up email to let everyone.
+
+Signed-off-by: Qasim Javed <qasimj@gmail.com>
+---
+ net/mac80211/mesh_hwmp.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 70ac7d1..a13b593 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -543,6 +543,8 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		    time_before(jiffies, ifmsh->last_sn_update)) {
+ 			target_sn = ++ifmsh->sn;
+ 			ifmsh->last_sn_update = jiffies;
++		} else {
++			target_sn = ifmsh->sn;
+ 		}
+ 	} else {
+ 		rcu_read_lock();
 -- 
-Cheers,
-Luca.
+1.7.1
 
