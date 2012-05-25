@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55986 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:4310 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753237Ab2E3ADx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 20:03:53 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@qca.qualcomm.com
-Subject: [PATCH] compat: fix build on kernels that already have backported codel support
-Date: Wed, 30 May 2012 02:03:50 +0200
-Message-Id: <1338336230-94883-1-git-send-email-nbd@openwrt.org> (sfid-20120530_020408_982542_5790FF97)
+	id S1751136Ab2EYWey (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 May 2012 18:34:54 -0400
+Message-ID: <4FC008FA.6070103@broadcom.com> (sfid-20120526_003457_492101_B3BDA961)
+Date: Sat, 26 May 2012 00:34:34 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [RFC PATCH 8/8] brcm80211: smac: use current regulatory
+ domain when checking whether OFDM is allowed
+References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
+ <1334607462-5387-9-git-send-email-seth.forshee@canonical.com>
+In-Reply-To: <1334607462-5387-9-git-send-email-seth.forshee@canonical.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/linux/compat-3.5.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+On 04/16/2012 10:17 PM, Seth Forshee wrote:
+> The brcmsmac internal regulatory data is being used to determine whether
+> OFDM should be allowed, and this is only done once during
+> initialization. To be effective this needs to be checked against
+> mac80211's regulatory rules for the current channel.
 
-diff --git a/include/linux/compat-3.5.h b/include/linux/compat-3.5.h
-index c9ba6af..35fd14b 100644
---- a/include/linux/compat-3.5.h
-+++ b/include/linux/compat-3.5.h
-@@ -10,6 +10,8 @@
- 
- #include <linux/pkt_sched.h>
- 
-+#ifndef TCA_CODEL_MAX
-+
- /*
-  * This backports:
-  *
-@@ -107,6 +109,7 @@ struct tc_fq_codel_xstats {
- 	};
- };
- 
-+#endif /* TCA_CODEL_MAX */
- 
- /* Backports tty_lock: Localise the lock */
- #define tty_lock(__tty) tty_lock()
--- 
-1.7.3.2
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+> ---
+
+No comments here.
+
+Gr. AvS
+
 
