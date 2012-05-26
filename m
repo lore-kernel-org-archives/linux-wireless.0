@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp02.msg.oleane.net ([62.161.4.2]:34487 "EHLO
-	smtp02.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132Ab2EaQjy convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:56567 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753191Ab2EZRup (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 12:39:54 -0400
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp02.msg.oleane.net (MTA) with ESMTP id q4VGdqA4030534
-	for <linux-wireless@vger.kernel.org>; Thu, 31 May 2012 18:39:52 +0200
+	Sat, 26 May 2012 13:50:45 -0400
+Received: by dady13 with SMTP id y13so2511102dad.19
+        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2012 10:50:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Subject: mac80211/scan.c: scanning ceases after a double rescheduling
-Date: Thu, 31 May 2012 18:39:51 +0200
-Message-ID: <773DB8A82AB6A046AE0195C68612A319012CA1B7@sbs2003.acksys.local> (sfid-20120531_184004_280948_42581D0B)
-From: "Jean-Pierre TOSONI" <jp.tosoni@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+In-Reply-To: <9532BE30-26F1-42CF-9300-C25585B29300@gmail.com>
+References: <4FC04B5A.1070900@candelatech.com>
+	<20416.19680.571601.549629@gargle.gargle.HOWL>
+	<7759D07D-C2C8-48D8-8F44-687C7E85D188@gmail.com>
+	<20416.35246.76971.129331@gargle.gargle.HOWL>
+	<CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com>
+	<4FC0CE2B.9060005@openwrt.org>
+	<9532BE30-26F1-42CF-9300-C25585B29300@gmail.com>
+Date: Sat, 26 May 2012 10:50:44 -0700
+Message-ID: <CAJ-VmomdZ+ww=iXF8R+st5HenGjchaV4De2pzzuY6Bu=6_n1YA@mail.gmail.com> (sfid-20120526_195101_971631_C3094B48)
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Joe Semler <josef.semler@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+Hi,
 
-I am using compat-wireless-2012-04-17 in a OpenWrt box, client mode,
-kernel 2.6.33.
-I arrange to run an active background scan every second under some load
-(iperf UDP 40 Mbps).
+If the device EEPROM states that it's a 2x2/3x3 device, it'll TX on
+two/three streams.
 
-I observed that the probes can be delayed due to two events flagged as
-IEEE80211_STA_BEACON_POLL and IEEE80211_STA_CONNECTION_POLL. They make
-__ieee80211_start_scan() return early in mac80211/scan.c when it is
-called by ieee80211_request_scan().
+If it's something like an AR9281 where it's physically a 1T2R stream
+device, that's what it'll transmit/receive on by default.
 
-When one of these events occurs, the function returns and
-__ieee80211_start_scan() is reentered later, called this time by
-ieee80211_scan_work(). Now if it finds the other event flagged, it
-returns early but will never be called again. As a result later scan
-requests result in a "EBUSY" error.
+If it's something like an AR9285 where it's physically a 1T1R stream
+device with antenna diversity, that's also what you get.
 
-I made a workaround by always returning an error, but I am pretty sure
-this is a wrong solution. I wonder if scan_work should not be
-rescheduled in this case.
+If the device EEPROM lies though, well, that's a problem. :-)
 
-Here is my try:
-==================
---- a/mac80211/scan.c   2012-05-31 18:37:41.000000000 +0200
-+++ b/mac80211/scan.c   2012-05-31 18:37:48.000000000 +0200
-@@ -413,10 +413,7 @@
-                return -EBUSY;
 
-        if (!ieee80211_can_scan(local, sdata)) {
--               /* wait for the work to finish/time out */
--               local->scan_req = req;
--               local->scan_sdata = sdata;
--               return 0;
-+               return -EAGAIN;
-        }
-
-        if (local->ops->hw_scan) {
-==================
-
-Any thoughts / suggestions ?
-
-Thanks,
-
-Jean-Pierre Tosoni
-
+Adrian
