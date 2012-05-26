@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43306 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923Ab2EGGeP (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:40657 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752983Ab2EZQZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 02:34:15 -0400
-Message-ID: <1336372450.4325.0.camel@jlt3.sipsolutions.net> (sfid-20120507_083423_227198_95AC482E)
-Subject: Re: WARNING: at net/mac80211/iface.c:162
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 07 May 2012 08:34:10 +0200
-In-Reply-To: <4FA709B3.4030404@lwfinger.net> (sfid-20120507_013135_141792_546F01AB)
-References: <4FA709B3.4030404@lwfinger.net>
-	 (sfid-20120507_013135_141792_546F01AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 26 May 2012 12:25:41 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20417.972.888113.821079@gargle.gargle.HOWL> (sfid-20120526_182606_860632_157A35E2)
+Date: Sat, 26 May 2012 21:54:44 +0530
+To: Ben Greear <greearb@candelatech.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: Anyone doing WiFi throughput tests?
+In-Reply-To: <4FC0F8CE.1030303@candelatech.com>
+References: <4FC04B5A.1070900@candelatech.com>
+	<20416.19680.571601.549629@gargle.gargle.HOWL>
+	<4FC0F8CE.1030303@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-05-06 at 18:30 -0500, Larry Finger wrote:
-> Hi,
+Ben Greear wrote:
+> We're using WPEA-127N.  We have a dual-core Atom for one system, and
+> a quad-core i7 CPU (and two wifi NICs) in another system..  So far, the Atom with
+> single NIC is benchmarking better in some tests.  We were only using one of
+> the NICs in the i7 for testing, but maybe there is still some interference
+> or maybe we just had bad antenna placement or something.
+
+Fiddling with antenna position/placement does help.
+
+> What chipset or brand/model is this?  I see that XB112 mentioned in the WPEA-127N
+> description, but maybe that is just a form-factor description?
+
+XB112 is the board and I am using an engineering sample. The WLAN chipset
+is AR9380.
+
+> Can you offer any additional details on how you tested this?  You are using the same
+> NIC for both AP and station?
 > 
-> I am getting the following warning from the latest wireless-testing system:
+> Open-air connection?
 > 
->   ------------[ cut here ]------------
->   WARNING: at net/mac80211/iface.c:162 ieee80211_check_queues+0x119/0x130 
-> [mac80211]()
-
-
->       if (WARN_ON_ONCE(sdata->vif.hw_queue[i] >= n_queues))
+> How far away is AP?
 > 
-> The warning is triggered for i, n_queues, and sdata->vif.hw_queue[i] all equal to 1.
+> I would like to try to reproduce this result, as it is significantly better
+> than what I'm seeing.
+> 
+> Are you doing any special AP tuning, like using short-guard-intervals
+> or similar?  Care to post the wpa_supplicant and hostapd config files?
 
-Is this a driver with just a single queue by any chance? I never tested
-that and probably forgot to set those up correctly.
+I am using a DB120 as AP which has dual radio - AR9340/AR9300. The setup is
+standard:
 
-johannes
+STA -------------->  AP -------------------> CONSOLE
+       wlan/OTA             gig-ethernet
+
+
+The AP runs an internal BSP/SDK build and is positioned about 4-5 feet from
+the Station. As for the HT parameters, HT40 and short-GI is enabled in both
+bands.
+
+Sujith
 
