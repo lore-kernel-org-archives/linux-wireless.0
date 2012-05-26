@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:43163 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760310Ab2ERHg7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 03:36:59 -0400
-Date: Fri, 18 May 2012 10:36:47 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] NFC: potential integer overflow problem in check_crc()
-Message-ID: <20120518073647.GB4136@elgon.mountain> (sfid-20120518_093709_375396_327596A4)
+Received: from nbd.name ([46.4.11.11]:46781 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751996Ab2EZMgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 May 2012 08:36:00 -0400
+Message-ID: <4FC0CE2B.9060005@openwrt.org> (sfid-20120526_143606_778233_558C6BA2)
+Date: Sat, 26 May 2012 14:35:55 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Josef Semler <josef.semler@gmail.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+References: <4FC04B5A.1070900@candelatech.com> <20416.19680.571601.549629@gargle.gargle.HOWL> <7759D07D-C2C8-48D8-8F44-687C7E85D188@gmail.com> <20416.35246.76971.129331@gargle.gargle.HOWL> <CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com>
+In-Reply-To: <CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If "buf[0]" is 255 then "len" gets set to 0.  The call to
-"crc_ccitt(0xffff, buf, len - 2);" casts the "len - 2" to a high
-positive number which is ugly.
+On 2012-05-26 9:55 AM, Josef Semler wrote:
+> 
+> 
+> 2012/5/26 Sujith Manoharan <c_manoha@qca.qualcomm.com
+> <mailto:c_manoha@qca.qualcomm.com>>
+> 
+>     Joe Semler wrote:
+>     > > With a XB112 card (3x3) in HT40 mode, 5Ghz, TX throughput (TCP)
+>     can reach 290 Mbps.
+>     > > Sample iperf run:
+>     > >
+>     > > [  3] 28.0-29.0 sec  34.1 MBytes   286 Mbits/sec
+>     > > [  3] 29.0-30.0 sec  34.6 MBytes   290 Mbits/sec
+>     > > [  3] 30.0-31.0 sec  34.8 MBytes   292 Mbits/sec
+>     > > [  3] 31.0-32.0 sec  34.8 MBytes   292 Mbits/sec
+>     > > [  3] 32.0-33.0 sec  34.9 MBytes   293 Mbits/sec
+>     >
+>     > Do you use ath9k for that purpouse? I was thinking our driver is
+>     not able to operate MIMO.
+>     > Some changes that i missed?
+> 
+>     Yes, those numbers are with ath9k, with latest wireless-testing.
+> 
+> OK, tnx Sujith, but that brings me to my next question acc. 2x2 or 3x3
+> on OpenWRT-based devices like NanoStation M or AirBridge M.
+> Up to now only 1x2 or 1x3 was possible on this devices. Do we have
+> changings there too?
+Why do you think that only 1x2 or 1x3 was possible on these devices? 2x2
+and 3x3 has been working just fine for a long time now, and it's enabled
+by default where supported by the hardware.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/nfc/pn544_hci.c b/drivers/nfc/pn544_hci.c
-index 46f4a9f..281f18c 100644
---- a/drivers/nfc/pn544_hci.c
-+++ b/drivers/nfc/pn544_hci.c
-@@ -232,7 +232,7 @@ static int pn544_hci_i2c_write(struct i2c_client *client, u8 *buf, int len)
- 
- static int check_crc(u8 *buf, int buflen)
- {
--	u8 len;
-+	int len;
- 	u16 crc;
- 
- 	len = buf[0] + 1;
+- Felix
