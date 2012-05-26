@@ -1,64 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52887 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759620Ab2EPUyh (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:44667 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752659Ab2EZDRx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 16:54:37 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/9] iwlwifi: move IWL_CMD_FAILED_MSK
-Date: Wed, 16 May 2012 22:54:26 +0200
-Message-Id: <1337201670-21604-6-git-send-email-johannes@sipsolutions.net> (sfid-20120516_225500_947966_AD819D34)
-In-Reply-To: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
-References: <1337201670-21604-1-git-send-email-johannes@sipsolutions.net>
+	Fri, 25 May 2012 23:17:53 -0400
+Message-ID: <4FC04B5A.1070900@candelatech.com> (sfid-20120526_051756_853251_08925390)
+Date: Fri, 25 May 2012 20:17:46 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Anyone doing WiFi throughput tests?
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+We've been doing some tests using Atheros stations and various APs.  The max throughput
+we've seen so far is about 237Mbps (received UDP payload on the stations).
+(Open-Air, AP about 5 feet away, 3x3 MIMO, HT40, 5Ghz, etc).
 
-This is common, not uCode API specific, so move
-it to the transport together with the command
-header struct definition.
+We are still running lots of different permutations, but I am interested if
+anyone else has any numbers to share (official or otherwise).
 
-Reviewed-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Reviewed-by: Guy Cohen <guy.cohen@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    3 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h    |    3 +++
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 9af6a23..b9f7361 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -197,9 +197,6 @@ enum {
-  *
-  *****************************************************************************/
- 
--/* iwl_cmd_header flags value */
--#define IWL_CMD_FAILED_MSK 0x40
--
- /**
-  * iwlagn rate_n_flags bit fields
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 78b89f1..0aeeb7c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -154,6 +154,9 @@ struct iwl_cmd_header {
- 	__le16 sequence;
- } __packed;
- 
-+/* iwl_cmd_header flags value */
-+#define IWL_CMD_FAILED_MSK 0x40
-+
- 
- #define FH_RSCSR_FRAME_SIZE_MSK		0x00003FFF	/* bits 0-13 */
- #define FH_RSCSR_FRAME_INVALID		0x55550000
 -- 
-1.7.10
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
