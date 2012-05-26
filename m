@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:41262 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932419Ab2EOSx3 (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:36288 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750906Ab2EZRQF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 14:53:29 -0400
-Date: Tue, 15 May 2012 14:51:07 -0400 (EDT)
-Message-Id: <20120515.145107.834395619191754306.davem@davemloft.net> (sfid-20120515_205359_157903_51C2553A)
-To: johannes@sipsolutions.net
-Cc: joe@perches.com, netdev@vger.kernel.org,
-	linux-decnet-user@lists.sourceforge.net,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
-	dev@openvswitch.org, linux-sctp@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1337107245.15553.14.camel@jlt3.sipsolutions.net>
-References: <1337106430.15553.6.camel@jlt3.sipsolutions.net>
-	<20120515.142922.1434224550630736456.davem@davemloft.net>
-	<1337107245.15553.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 26 May 2012 13:16:05 -0400
+Received: by wgbdr13 with SMTP id dr13so1765251wgb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 26 May 2012 10:16:04 -0700 (PDT)
+References: <4FC04B5A.1070900@candelatech.com> <20416.19680.571601.549629@gargle.gargle.HOWL> <7759D07D-C2C8-48D8-8F44-687C7E85D188@gmail.com> <20416.35246.76971.129331@gargle.gargle.HOWL> <CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com> <4FC0CE2B.9060005@openwrt.org>
+In-Reply-To: <4FC0CE2B.9060005@openwrt.org>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <9532BE30-26F1-42CF-9300-C25585B29300@gmail.com> (sfid-20120526_191643_644223_795D1658)
+Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Joe Semler <josef.semler@gmail.com>
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+Date: Sat, 26 May 2012 19:15:37 +0200
+To: Felix Fietkau <nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 15 May 2012 20:40:45 +0200
+Hi Felix,
 
-> In the mac80211 case, messages are warnings/hints to the user, we just
-> don't want them to flood the logs too much. I'd rather have that kind of
-> change (limit cookie per callsite) in the rate limiting semantics than
-> the change in the when it gets printed at all.
 
-Then they aren't KERN_DEBUG, they are KERN_INFO or KERN_WARN.
+Am 26.05.2012 um 14:35 schrieb Felix Fietkau <nbd@openwrt.org>:
+
+>> 
+>> 
+>> OK, tnx Sujith, but that brings me to my next question acc. 2x2 or 3x3
+>> on OpenWRT-based devices like NanoStation M or AirBridge M.
+>> Up to now only 1x2 or 1x3 was possible on this devices. Do we have
+>> changings there too?
+> Why do you think that only 1x2 or 1x3 was possible on these devices? 2x2
+> and 3x3 has been working just fine for a long time now, and it's enabled
+> by default where supported by the hardware
+Pickend this Info from The List that devices with openwrt are just transmitting at 1 stream but rec. at both. How can I change the settings? Also with uci or only with the iw-commands?
+Tnx 4 support.
+
+Joe
+> 
+> - Felix
