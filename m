@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:1394 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696Ab2E2LPr (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62133 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314Ab2E0CYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 07:15:47 -0400
-Message-ID: <4FC4AFDC.7030907@qca.qualcomm.com> (sfid-20120529_131550_019119_D71309AC)
-Date: Tue, 29 May 2012 14:15:40 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sat, 26 May 2012 22:24:07 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2 2/2] ath6kl: Fix unstable downlink throughput
-References: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com> <1337941158-14895-2-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1337941158-14895-2-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20417.36878.491297.428459@gargle.gargle.HOWL> (sfid-20120527_042441_674763_9FDB45B7)
+Date: Sun, 27 May 2012 07:53:10 +0530
+To: Ben Greear <greearb@candelatech.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	Adrian Chadd <adrian@freebsd.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+In-Reply-To: <4FC18E6E.4020707@candelatech.com>
+References: <4FC04B5A.1070900@candelatech.com>
+	<CAJ-VmomRv-GdRooL=1G5avxAqJ4h3eoAfNkzYit3ok-fXmd25A@mail.gmail.com>
+	<20417.35821.91808.2702@gargle.gargle.HOWL>
+	<20417.36056.95300.690329@gargle.gargle.HOWL>
+	<4FC18E6E.4020707@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/25/2012 01:19 PM, Vasanthakumar Thiagarajan wrote:
-> There is frequent downlink throughput drop to 0 when operating
-> at the signal level between -42dBm to -53dBm. This has been root
-> caused to the delay in releasing pending a-mpdu subframes in
-> reorder buffer. Right now the timeout value is 400ms, there
-> is also a race condition where timeout handler can be delayed
-> to run at an extra timeout interval. This patch reduces the
-> timout interval to reasonable 100ms and makes sure releasing
-> pending frames are not skipped in the timeout handler by removing
-> the flag (rxtid->progress) which can delay the timeout logic.
+Ben Greear wrote:
+> On 05/26/2012 07:09 PM, Sujith Manoharan wrote:
+> > Sujith Manoharan wrote:
+> >> Odd. I get low numbers with a DB120 running OpenWRT (git HEAD).
+> >>
+> >> TCP TX - ~260 Mbps.
+> >> TCP RX - ~160 Mbps.
+> >>
+> >> UDP RX - ~240 Mbps.
+> >> UDP TX - iperf borks and doesn't display anything.
 > 
-> Reported-by: Yu Yanzhi <yanzhiy@qca.qualcomm.com>
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> Maybe NAT won't let it through, if this is coming downstream?
 
-[..]
+Ah yes, OpenWRT has default iptables rules - I'll check.
 
-> +	for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
-> +		spin_lock_bh(&rxtid->lock);
-> +		if (rxtid->hold_q[idx].skb) {
-> +			/*
-> +			 * There is a frame in the queue and no
-> +			 * timer so start a timer to ensure that
-> +			 * the frame doesn't remain stuck
-> +			 * forever.
-> +			 */
-> +			agg_conn->timer_scheduled = true;
-> +			mod_timer(&agg_conn->timer,
-> +				  (jiffies + HZ * (AGGR_RX_TIMEOUT) / 1000));
-> +			rxtid->timer_mon = true;
->  			spin_unlock_bh(&rxtid->lock);
-> +			break;
->  		}
-> +		spin_unlock_bh(&rxtid->lock);
-> +	}
+> For that matter, from what perspective is the TX or RX?
 
-Same question about the loop here as well.
+I was using the ath9k station as the test unit, so:
 
-Kalle
+STA->AP is TX.
+AP->STA is RX.
+
+Sujith
