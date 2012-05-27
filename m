@@ -1,156 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout6.freenet.de ([195.4.92.96]:37956 "EHLO mout6.freenet.de"
+Received: from nbd.name ([46.4.11.11]:44231 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750808Ab2EXHjp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 03:39:45 -0400
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout6.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1SXScB-00061f-9y
-	for linux-wireless@vger.kernel.org; Thu, 24 May 2012 09:37:43 +0200
-Received: from localhost ([::1]:40395 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SXScB-0006sc-66
-	for linux-wireless@vger.kernel.org; Thu, 24 May 2012 09:37:43 +0200
-Received: from [195.4.92.28] (port=60655 helo=18.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1SXSa8-0005ZH-W4
-	for linux-wireless@vger.kernel.org; Thu, 24 May 2012 09:35:36 +0200
-Received: from [2002:4fde:1635:2:5054:ff:feb8:40bd] (port=34340 helo=mail.maya.org)
-	by 18.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1SXSa7-0004N6-UB
-	for linux-wireless@vger.kernel.org; Thu, 24 May 2012 09:35:36 +0200
-Message-ID: <4FBDE4BD.5070701@01019freenet.de> (sfid-20120524_093953_484772_0B156F6A)
-Date: Thu, 24 May 2012 09:35:25 +0200
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S1751002Ab2E0LaN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2012 07:30:13 -0400
+Message-ID: <4FC2103B.3040104@openwrt.org> (sfid-20120527_133052_040477_45CE34E5)
+Date: Sun, 27 May 2012 13:30:03 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
- respectively
-References: <20120517230400.GB22418@yumi.tdiedrich.de> <CAGXE3d_Yz=-UWO+PiJkRQ7ZSBgh_fdcwsPz6FCig2VjOOoMQOg@mail.gmail.com> <20120518162158.GE22418@yumi.tdiedrich.de> <CAGXE3d8e+hYo_MT30XUW+r4-Dq6AgqLTJxD_oGnRuR94zjZ7_Q@mail.gmail.com> <4FB769DF.5060400@01019freenet.de> <4FBB5083.4000606@01019freenet.de> <CAGXE3d-2ndXX1D-JQLo6m=Osg6RRe4Z2gb_=BPrz0wASzFciNA@mail.gmail.com> <4FBB77D4.9050801@01019freenet.de> <CAGXE3d8m_0E2HGjCY9uMtj-Kahg9QCJjpsCCGjm+go6n_+V1Pg@mail.gmail.com> <4FBB8ACA.3080408@01019freenet.de>
-In-Reply-To: <4FBB8ACA.3080408@01019freenet.de>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: Adrian Chadd <adrian@freebsd.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+References: <4FC04B5A.1070900@candelatech.com> <CAJ-VmomRv-GdRooL=1G5avxAqJ4h3eoAfNkzYit3ok-fXmd25A@mail.gmail.com> <20417.35821.91808.2702@gargle.gargle.HOWL> <20417.36056.95300.690329@gargle.gargle.HOWL>
+In-Reply-To: <20417.36056.95300.690329@gargle.gargle.HOWL>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andreas Hartmann wrote:
-> Helmut Schaa wrote:
->> On Tue, May 22, 2012 at 1:26 PM, Andreas Hartmann
->> <andihartmann@01019freenet.de> wrote:
->>> Hello Helmut,
->>>
->>> Helmut Schaa wrote:
->>>> Hi Andreas,
->>>>
->>>> Sorry, missed your previous mail.
->>>
->>> Thanks for your response!! This made things more clear to me!
->>>
->>>> On Tue, May 22, 2012 at 10:38 AM, Andreas Hartmann
->>>> <andihartmann@01019freenet.de> wrote:
->>>>> Andreas Hartmann wrote:
->>>>>> Helmut Schaa wrote:
->>>>>>> On Fri, May 18, 2012 at 6:21 PM, Tobias Diedrich <ranma@tdiedrich.de> wrote:
->>>>>>>>> So, maybe we should do it the safe way and just register a safe default
->>>>>>>>> of 20dBm for all channels?
->>>>>>>>
->>>>>>>> AFAIU that would cap you to 20dBm even if you are in a country that
->>>>>>>> has higher limits (e.g. 27dBm in the US?).
->>>>>>>
->>>>>>> Not necessarily because the driver won't allow tx power adjustments at all
->>>>>>> if EEPROM_EIRP_MAX_TX_POWER is unused.
->>>>>>
->>>>>> This means:
->>>>>> Tx settings in cfg80211 as given by "iw reg get" e.g. are ignored
->>>>>> completely as long as EEPROM_EIRP_MAX_TX_POWER is unused.
->>>>>> Thus it is more or less chance that the device actually uses the allowed
->>>>>> / correct Tx power at all. Maybe it's too high or too low. Both would be
->>>>>> bad.
->>>
->>> [Most ralink devices have fixed max Tx power depended on the region, the
->>> device was sold]
->>>
->>>> Either we have to tune cfg80211 to allow setting the tx power by percentage
->>>> or disallow tx power control on these device or we trick cfg80211 by registering
->>>> a reasonable default value (like 20dBm) to cfg80211 but do adjustments
->>>> by percentage.
->>>>
->>>> So, if a device is actually calibrated to 17dBm but we register 20dBm
->>>> to cfg80211
->>>> and a user sets the new tx power to 17dBm we can apply the actual delta to
->>>> the device tx power configuration. Hence, the device will then
->>>> transmit with 14dBm
->>>> while cfg80211 shows 17dBm. This would be a compromise to still allow tx power
->>>> settings without having to add all the overhead to cfg80211.
->>>
->>> What about this idea: The driver gets an option to set the calibrated
->>> region (devcalreg), say US. This is a static value in respect of the device.
->>> If the user operates the device in DE, he just would have to change the
->>> value of cfg80211 from US to DE.
->>>
->>> Device sold in US
->>> =================
->>>
->>> Device operated in US
->>> devcalreg=US                                    23dBm
->>> cfg80211=US             100% max Tx power       23dBm
->>>
->>> Device operated in DE
->>> devcalreg=US                                    23dBm
->>> cfg80211=DE             87%  max Tx power       20dBm
-
-Well, I just saw, that the legacy driver
-2010_0915_RT3572_Linux_STA_v2.4.0.2 defines in include/rtmp.h
-
-UCHAR TxPower; // in unit of mW
-
-Therefore my calculation above would have been wrong, if I got it right.
-
-23dBm equate 199mW
-20dBm equate 100mW
-
-To get the ralink device work with the reduced legal Tx power (20dBm
-instead of 23dBm), I would have to use 50% and not 87%.
-
->>>
->>> If cfg80211 is set to a region which allows higher values, the
->>> percentage would be >100%, but this could be probably easily prohibited.
->>>
->>> If the user doesn't provide devcalreg your default value gets applied.
->>>
->>> The difference to your idea is, that the "default" could be dynamically
->>> derived from cfg80211 on the basis of the devcalreg. This would prohibit
->>> the problem you showed above.
->>
->> Understood, but that would require the user to know the domain the
->> device is calibrated for.
+On 2012-05-27 4:09 AM, Sujith Manoharan wrote:
+> Sujith Manoharan wrote:
+>> Odd. I get low numbers with a DB120 running OpenWRT (git HEAD).
+>> 
+>> TCP TX - ~260 Mbps.
+>> TCP RX - ~160 Mbps.
+>> 
+>> UDP RX - ~240 Mbps.
+>> UDP TX - iperf borks and doesn't display anything.
+>> 
+>> The load seems to be a bit high (average: 1.92, 1.06, 0.61 ) and the
+>> console becomes laggy.
+>> 
+>> Maybe 
 > 
-> Why should he not know this? If it is really not known, your default is
-> applied hence nothing is lost.
+> Huh.
 > 
->> I think we should just always run the device at 100% but add an option in
->> the future to allow rx power reduction by percentage.
+> Now that I have added "(setq vm-confirm-mail-send t)" to my .emacs, I'll
+> finish the email. :)
 > 
-> Hmmm, but this requires the user to know even more:
-> - For which domain is the device originally calibrated?
-> - What's the allowed max value of this domain?
-> - What's the allowed max value of the new domain the device should
-> operate now?
-> - Calculate the percentage < 100% to get the correct Tx-power.
+> Maybe support for DB120 is not complete yet - but am not sure.
+I will look into it.
 
-- The user has to know, that the base of the percentage is mW and he has
-to take care of the different units and he has to know how to handle them.
-
-
-I do not think, that it is a good idea to leave the user alone with
-finding the correct new percentage.
-
-Please, think again about this point - or did I get something wrong?
-
-I know it is much more time and effort to implement it, but it would be
-much more user friendly :-).
-
-
-Thanks,
-kind regards,
-Andreas
+- Felix
