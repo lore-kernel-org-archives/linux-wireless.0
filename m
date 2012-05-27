@@ -1,167 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51317 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760081Ab2EPSRu (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:50522 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785Ab2E0Rk4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 14:17:50 -0400
-Date: Wed, 16 May 2012 14:09:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Gustavo Padovan <gustavo@padovan.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2012-05-16
-Message-ID: <20120516180924.GA28167@tuxdriver.com> (sfid-20120516_201840_502661_3BAEF777)
-References: <20120516155340.GC1414@joana>
+	Sun, 27 May 2012 13:40:56 -0400
+Received: by dady13 with SMTP id y13so3233707dad.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 May 2012 10:40:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120516155340.GC1414@joana>
+In-Reply-To: <4FC2437C.9090106@candelatech.com>
+References: <4FC04B5A.1070900@candelatech.com>
+	<20416.19680.571601.549629@gargle.gargle.HOWL>
+	<4FC0F8CE.1030303@candelatech.com>
+	<20417.972.888113.821079@gargle.gargle.HOWL>
+	<20417.1857.115550.807746@gargle.gargle.HOWL>
+	<4FC2437C.9090106@candelatech.com>
+Date: Sun, 27 May 2012 10:40:55 -0700
+Message-ID: <CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com> (sfid-20120527_194100_398159_A671F260)
+Subject: Re: Anyone doing WiFi throughput tests?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 16, 2012 at 12:53:40PM -0300, Gustavo Padovan wrote:
-> Hi John,
-> 
-> A big pull request for inclusion in 3.5. In this set there is some changes
-> regarding periodic scan and LE, endian fixes, L2CAP ERTM improvements. There
-> is also fixes, clean ups and small improvements all over the tree.
-> I also included the patches rejected in the bluetooth pull request.
-> 
-> I checked the whole diff of this pull request for offending coding style
-> changes and couldn't spot anything wrong.
-> 
-> I merged wireless/master into this.
-> 
-> Please pull, or let me know of any problems!
-> 
-> 	Gustavo
-> 
-> ---
-> 
-> The following changes since commit 341352d13dae752610342923c53ebe461624ee2c:
-> 
->   iwlwifi: fix-up some merge damage from commit 0d6c4a2 (2012-05-08 22:18:09 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next for-upstream
-> 
-> for you to fetch changes up to cde5b476786450fb058a23502372d63c3e8629d0:
-> 
->   Bluetooth: Report proper error number in disconnection (2012-05-16 18:44:35 +0300)
-> 
-> ----------------------------------------------------------------
-> Amitkumar Karwar (2):
->       Bluetooth: btmrvl: configure default host sleep parameters
->       Bluetooth: btmrvl: add support for SDIO suspend/resume callbacks
-> 
-> Andre Guedes (21):
->       Bluetooth: Check FINDING state in interleaved discovery
->       Bluetooth: Add hci_cancel_le_scan() to hci_core
->       Bluetooth: LE support for MGMT stop discovery
->       Bluetooth: Replace EPERM by EALREADY in hci_cancel_inquiry
->       Bluetooth: Refactor stop_discovery
->       Bluetooth: Add Periodic Inquiry command complete handler
->       Bluetooth: Add HCI_PERIODIC_INQ to dev_flags
->       Bluetooth: Check HCI_PERIODIC_INQ in start_discovery
->       Bluetooth: Ignore inquiry results from periodic inquiry
->       Bluetooth: Add Periodic Inquiry command complete handler
->       Bluetooth: Add HCI_PERIODIC_INQ to dev_flags
->       Bluetooth: Remove MGMT_ADDR_INVALID macro
->       Bluetooth: Remove useless code in hci_connect
->       Bluetooth: Move address type macros to bluetooth.h
->       Bluetooth: Rename link_to_mgmt to link_to_bdaddr
->       Bluetooth: Add address type to struct sockaddr_l2
->       Bluetooth: Rename mgmt_to_le to bdaddr_to_le
->       Bluetooth: Move bdaddr_to_le to hci_core
->       Bluetooth: Add dst_type parameter to hci_connect
->       Bluetooth: Use address type info from user-space
->       Bluetooth: Remove advertising cache
-> 
-> Andrei Emeltchenko (24):
->       Bluetooth: trivial: Correct endian conversion
->       Bluetooth: Correct type for hdev lmp_subver
->       Bluetooth: Correct type for ediv to __le16
->       Bluetooth: Fix extra conversion to __le32
->       Bluetooth: Correct chan->psm endian conversions
->       Bluetooth: Correct ediv in SMP
->       Bluetooth: Correct length calc in L2CAP conf rsp
->       Bluetooth: Correct CID endian notation
->       Bluetooth: Convert error codes to le16
->       Bluetooth: trivial: Fix endian conversion mode
->       Bluetooth: trivial: Correct types
->       Bluetooth: Fix type in cpu_to_le conversion
->       Bluetooth: Fix opcode access in hci_complete
->       Bluetooth: trivial: Remove sparse warnings
->       Bluetooth: Silence sparse warning
->       Bluetooth: Comments and style fixes
->       Bluetooth: Remove unneeded timer clear
->       Bluetooth: Make L2CAP chan_add functions static
->       Bluetooth: Remove unneeded zero initialization
->       Bluetooth: Add Read Local AMP Info to init
->       Bluetooth: Adds set_default function in L2CAP setup
->       Bluetooth: Fix debug printing unallocated name
->       Bluetooth: trivial: Remove empty line
->       Bluetooth: Remove unneeded calculation and magic number
-> 
-> Cristian Chilipirea (1):
->       Bluetooth: Fixed checkpatch warnings
-> 
-> David Herrmann (5):
->       Bluetooth: Remove redundant hdev->parent field
->       Bluetooth: vhci: Ignore return code of nonseekable_open()
->       Bluetooth: Move hci_alloc/free_dev close to hci_register/unregister_dev
->       Bluetooth: Move device initialization to hci_alloc_dev()
->       Bluetooth: Remove unneeded initialization in hci_alloc_dev()
-> 
-> Eldad Zack (1):
->       Bluetooth: bnep: use constant for ethertype
-> 
-> Gustavo Padovan (13):
->       Bluetooth: Remove sk parameter from l2cap_chan_create()
->       Bluetooth: Remove err parameter from alloc_skb()
->       Bluetooth: remove unneeded declaration of sco_conn_del()
->       Bluetooth: Remove unneeded elements from size calculation
->       Bluetooth: Remove hlen variable
->       Bluetooth: notify userspace of security level change
->       Bluetooth: Fix wrong set of skb fragments
->       Bluetooth: Fix packet size provided to the controller
->       Bluetooth: Fix skb length calculation
->       Bluetooth: improve readability of l2cap_seq_list code
->       Bluetooth: report the right security level in getsockopt
->       Bluetooth: Create flags for bt_sk()
->       Bluetooth: Report proper error number in disconnection
-> 
-> Hemant Gupta (5):
->       Bluetooth: Send correct address type for LTK
->       Bluetooth: Fix clearing discovery type when stopping discovery
->       Bluetooth: mgmt: Fix missing connect failed event for LE
->       Bluetooth: mgmt: Fix address type while loading Long Term Key
->       Bluetooth: Don't distribute keys in case of Encryption Failure
-> 
-> Ido Yariv (1):
->       Bluetooth: Search global l2cap channels by src/dst addresses
-> 
-> Jesper Juhl (1):
->       Bluetooth: btmrvl_sdio: remove pointless conditional before release_firmware()
-> 
-> Johan Hedberg (2):
->       Bluetooth: mgmt: Fix device_connected sending order
->       Bluetooth: Fix Inquiry with RSSI event mask
-> 
-> Larry Finger (1):
->       rtlwifi: fix for race condition when firmware is cached
+On 27 May 2012 08:08, Ben Greear <greearb@candelatech.com> wrote:
 
-????
+> Do you have a link to anyone selling this AP, or is it just an
+> engineering sample as well?
 
-What did you do here?  I thought that maybe you had pulled from the
-wireless tree, but the commit ID is different.
+The board is an engineering sample but (a) customers and developers
+can ask for them under NDA, (b) yes, openwrt developers have done this
+and have the hardware, and (c) the chip is shipping as far as I'm
+aware.
 
-I know that you want this to get merged in time for the window --
-but it has to be done right.  Occasionally there might be a reason
-for the same patch to end-up in two places, but in this case you have
-an rtlwifi patch being replicated in the Bluetooth tree...
+It's "just" a MIPS74k + AR9340 (3x3) + on-board AR9580 I think. I'll
+have to double check. The wireless NIC side of things is pretty
+standard though, so any Osprey NIC will be fine.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> I can't even find marketing type pages for AR9340, search results come up
+> empty at www.atheros.com :P
+>> [  3] 33.0-34.0 sec  39.0 MBytes   327 Mbits/sec   0.253 ms   13/ 5002
+>> (0.26%)
+
+> Those are nice results!  I'll try WPEA-127N as AP and STA and see what I
+> get.
+
+That's what you should be getting. I'd be really surprised if you didn't. :-)
+
+nbd has said he'll look into it, so between Sujith and Felix I think
+we're well covered for now.
+
+Thanks for bringing this to everyone's attention Ben!
+
+
+Adrian
