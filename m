@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yumi.tdiedrich.de ([85.10.210.183]:52326 "EHLO mx.tdiedrich.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756711Ab2EIK5X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 06:57:23 -0400
-Date: Wed, 9 May 2012 12:57:19 +0200
-From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-To: Johannes Berg <johannes.berg@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	linux-wireless@vger.kernel.org
-Subject: rt28xx AP-mode problem with commit
- 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
- carrier state"
-Message-ID: <20120509105719.GA24457@yumi.tdiedrich.de> (sfid-20120509_125732_300096_BB4CA746)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:43667 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751701Ab2E0McJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 May 2012 08:32:09 -0400
+Received: by pbbrp8 with SMTP id rp8so3566457pbb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 May 2012 05:32:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20417.36056.95300.690329@gargle.gargle.HOWL>
+References: <4FC04B5A.1070900@candelatech.com>
+	<CAJ-VmomRv-GdRooL=1G5avxAqJ4h3eoAfNkzYit3ok-fXmd25A@mail.gmail.com>
+	<20417.35821.91808.2702@gargle.gargle.HOWL>
+	<20417.36056.95300.690329@gargle.gargle.HOWL>
+Date: Sun, 27 May 2012 05:32:08 -0700
+Message-ID: <CAJ-Vmo=_OpyEu4YAOnYoRGKds0JV-33WyjZ7ExUngLO=Zy5AsA@mail.gmail.com> (sfid-20120527_143220_646575_69C65D81)
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+DB120 (wasp+osprey) should be supported. :-)
 
-I've bisected a problem with running rt3052-based APs on recent
-OpenWRT down to this commit: 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63
-"mac80211: manage AP netdev carrier state"
 
-If I revert this commit (and also fix the max_power issue), AP-mode
-works fine, but if I leave it in, association to the AP times out.
-
-(The AP-side hostapd claims WPA authentication was successful, but
-the client never connects)
-
-(Note: I haven't gotten around to testing a non-rt28xx based AP yet,
-so I'm only assuming this affects only rt28xx, maybe it does affect
-other chipsets as well)
-
-See also "rt28xx: Revert eccc068e8e84c8fe997115629925e0422a98e4de
-which causes txpower to be stuck at 0" on the openwrt list:
-http://www.spinics.net/lists/linux-wireless/msg89732.html
-
-Cheers,
-
--- 
-Tobias						PGP: http://8ef7ddba.uguu.de
+Adrian
