@@ -1,89 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:61669 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757881Ab2EJJOn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:14:43 -0400
-Received: by mail-wg0-f44.google.com with SMTP id dr13so1110716wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:14:43 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 06/78] wl18xx: add identify chip operation
-Date: Thu, 10 May 2012 12:13:11 +0300
-Message-Id: <1336641263-5761-7-git-send-email-arik@wizery.com> (sfid-20120510_111448_260656_259BF804)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+Received: from ebb05.tieto.com ([131.207.168.36]:64704 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753716Ab2E1LTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 07:19:42 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 10/14] cfg80211: track monitor channel
+Date: Mon, 28 May 2012 13:18:58 +0200
+Message-ID: <1338203942-5667-11-git-send-email-michal.kazior@tieto.com> (sfid-20120528_132004_239706_01F0AB5D)
+In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
+Make it even more obvious we support single
+monitor channel. This will allow us to remove
+.get_channel.
 
-Add identify_chip operation to detect the chip ID for wl185x and set
-the correct firmware name.
-
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Change-Id: I607e12c99c38a51f5b0348510ff26b0ac0a30a69
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c |   34 ++++++++++++++++++++++++++++++---
- 1 file changed, 31 insertions(+), 3 deletions(-)
+ net/wireless/chan.c |    9 ++++++++-
+ net/wireless/core.c |    8 +++++++-
+ net/wireless/core.h |    3 +++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 88fd934..e517afd 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -27,9 +27,6 @@
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 4d71b38..3c83917 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -82,6 +82,7 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 				 int freq, enum nl80211_channel_type chantype)
+ {
+ 	struct ieee80211_channel *chan;
++	int err;
  
- #include "reg.h"
+ 	if (!rdev->ops->set_monitor_channel)
+ 		return -EOPNOTSUPP;
+@@ -92,7 +93,13 @@ int cfg80211_set_monitor_channel(struct cfg80211_registered_device *rdev,
+ 	if (!chan)
+ 		return -EINVAL;
  
--static struct wlcore_ops wl18xx_ops = {
--};
--
- static const struct wlcore_partition_set wl18xx_ptable[PART_TABLE_LEN] = {
- 	[PART_TOP_PRCM_ELP_SOC] = {
- 		.mem  = { .start = 0x00A02000, .size  = 0x00010000 },
-@@ -84,6 +81,36 @@ static const int wl18xx_rtable[REG_TABLE_LEN] = {
- 	[REG_RAW_FW_STATUS_ADDR]	= WL18XX_FW_STATUS_ADDR,
- };
- 
-+/* TODO: maybe move to a new header file? */
-+#define WL18XX_FW_NAME "ti-connectivity/wl18xx-fw.bin"
-+
-+static int wl18xx_identify_chip(struct wl1271 *wl)
-+{
-+	int ret = 0;
-+
-+	switch (wl->chip.id) {
-+	case CHIP_ID_185x_PG10:
-+		wl1271_debug(DEBUG_BOOT, "chip id 0x%x (185x PG10)",
-+			     wl->chip.id);
-+		wl->sr_fw_name = WL18XX_FW_NAME;
-+		wl->quirks |= WLCORE_QUIRK_NO_ELP;
-+
-+		/* TODO: need to blocksize alignment for RX/TX separately? */
-+		break;
-+	default:
-+		wl1271_warning("unsupported chip id: 0x%x", wl->chip.id);
-+		ret = -ENODEV;
-+		goto out;
+-	return rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
++	err = rdev->ops->set_monitor_channel(&rdev->wiphy, chan, chantype);
++	if (!err) {
++		rdev->monitor_channel = chan;
++		rdev->monitor_channel_type = chantype;
 +	}
 +
-+out:
-+	return ret;
-+}
-+
-+static struct wlcore_ops wl18xx_ops = {
-+	.identify_chip = wl18xx_identify_chip,
-+};
-+
- int __devinit wl18xx_probe(struct platform_device *pdev)
- {
- 	struct wl1271 *wl;
-@@ -133,3 +160,4 @@ module_exit(wl18xx_exit);
++	return err;
+ }
  
- MODULE_LICENSE("GPL v2");
- MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
-+MODULE_FIRMWARE(WL18XX_FW_NAME);
+ struct ieee80211_channel *
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 5b37047..1596d18 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -787,9 +787,15 @@ static void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
+ 		rdev->num_running_monitor_ifaces += num;
+ 
+ 	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
+-	if (has_monitors_only_new != has_monitors_only_old)
++	if (has_monitors_only_new != has_monitors_only_old) {
+ 		rdev->ops->set_monitor_enabled(&rdev->wiphy,
+ 					       has_monitors_only_new);
++
++		if (!has_monitors_only_new) {
++			rdev->monitor_channel = NULL;
++			rdev->monitor_channel_type = NL80211_CHAN_NO_HT;
++		}
++	}
+ }
+ 
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 79e27b1..2dd7508 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -59,6 +59,9 @@ struct cfg80211_registered_device {
+ 	int num_running_ifaces;
+ 	int num_running_monitor_ifaces;
+ 
++	struct ieee80211_channel *monitor_channel;
++	enum nl80211_channel_type monitor_channel_type;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
 -- 
-1.7.9.5
+1.7.0.4
 
