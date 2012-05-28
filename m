@@ -1,69 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:59346 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751200Ab2EFFtz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 May 2012 01:49:55 -0400
-Received: by werb10 with SMTP id b10so653684wer.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 May 2012 22:49:54 -0700 (PDT)
+Received: from ebb06.tieto.com ([131.207.168.38]:62995 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753719Ab2E1LTm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 07:19:42 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 11/14] cfg80211/mac80211: remove .get_channel
+Date: Mon, 28 May 2012 13:18:59 +0200
+Message-ID: <1338203942-5667-12-git-send-email-michal.kazior@tieto.com> (sfid-20120528_132011_650518_8DC1253E)
+In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com>
-References: <20120502162100.GA2528@ritirata.org>
-	<20120503065351.GB2307@ritirata.org>
-	<CANUX_P03yeuU7gpXbdPVeUBnco4Cz8v78e00x+SgYbhD5K8B5w@mail.gmail.com>
-	<CANUX_P0zRjSy9LOVzkWtboqAsvkD4O6EcEXLo11W1Sbb307OJQ@mail.gmail.com>
-	<20120503200948.GC11326@ritirata.org>
-	<CANUX_P0DL+_V8RO-CNXQx=oHF0T-opO=uw-ukYOjjVgo_OyfUw@mail.gmail.com>
-	<20120504002136.GA4201@ritirata.org>
-	<CANUX_P1Ji6H0zaA_kMHx2F1AD+czB=XtrDhjEvR8t1aCDpZhUQ@mail.gmail.com>
-	<20120504063644.GA2912@ritirata.org>
-	<CANUX_P0XhRQNVMQKtrw4j1UT9S=CMcjApCyNsdHHtLVME3jeEQ@mail.gmail.com>
-	<20120504142006.GA2040@ritirata.org>
-	<CANUX_P28EcqDVXQkSrGk2fetf=Evf2Yd_Fg9Czwb1jEPpdgTWg@mail.gmail.com>
-Date: Sun, 6 May 2012 08:49:52 +0300
-Message-ID: <CANUX_P0ygFyDjOo1Thygw_dEiHKPPiH4=GDKN4ncX3vwy0ujrw@mail.gmail.com> (sfid-20120506_075037_223231_FACE8C48)
-Subject: Re: iwlwifi warn_slowpath with 3.*
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wait - I just noticed that this one introduced another issue...
+We do not need it anymore since cfg80211 tracks
+monitor channel and monitor channel type.
 
-Emmanuel Grumbach
-egrumbach@gmail.com
+Change-Id: Ib0ea094217b510c364358a695e9a06b969e7b972
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ include/net/cfg80211.h     |    6 ------
+ net/mac80211/cfg.c         |   11 -----------
+ net/wireless/nl80211.c     |   16 +++++-----------
+ net/wireless/wext-compat.c |    9 ++-------
+ 4 files changed, 7 insertions(+), 35 deletions(-)
 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e2da8e4..550252c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1430,9 +1430,6 @@ struct cfg80211_gtk_rekey_data {
+  *	be stored for when a monitor interface becomes active.
+  * @set_monitor_enabled: Notify driver that there are only monitor
+  *	interfaces running.
+- * @get_channel: Get the current operating channel, should return %NULL if
+- *	there's no single defined operating channel if for example the
+- *	device implements channel hopping for multi-channel virtual interfaces.
+  *
+  * @scan: Request to do a scan. If returning zero, the scan request is given
+  *	the driver, and will be valid until passed to cfg80211_scan_done().
+@@ -1739,9 +1736,6 @@ struct cfg80211_ops {
+ 				  struct net_device *dev,
+ 				  u16 noack_map);
+ 
+-	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy,
+-					       enum nl80211_channel_type *type);
+-
+ 	int	(*get_et_sset_count)(struct wiphy *wiphy,
+ 				     struct net_device *dev, int sset);
+ 	void	(*get_et_stats)(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 07218cd..8a71401 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2889,16 +2889,6 @@ static int ieee80211_probe_client(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
+ }
+ 
+-static struct ieee80211_channel *
+-ieee80211_wiphy_get_channel(struct wiphy *wiphy,
+-			    enum nl80211_channel_type *type)
+-{
+-	struct ieee80211_local *local = wiphy_priv(wiphy);
+-
+-	*type = local->_oper_channel_type;
+-	return local->oper_channel;
+-}
+-
+ static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+@@ -2982,7 +2972,6 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.tdls_oper = ieee80211_tdls_oper,
+ 	.tdls_mgmt = ieee80211_tdls_mgmt,
+ 	.probe_client = ieee80211_probe_client,
+-	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
+ 	.set_monitor_enabled = ieee80211_set_monitor_enabled,
+ #ifdef CONFIG_PM
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7486653..e02ec2c 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1588,17 +1588,11 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 			(cfg80211_rdev_list_generation << 2)))
+ 		goto nla_put_failure;
+ 
+-	if (rdev->ops->get_channel) {
+-		struct ieee80211_channel *chan;
+-		enum nl80211_channel_type channel_type;
+-
+-		chan = rdev->ops->get_channel(&rdev->wiphy, &channel_type);
+-		if (chan &&
+-		    (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
+-				    chan->center_freq) ||
+-		     nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
+-				    channel_type)))
+-			goto nla_put_failure;
++	if (rdev->monitor_channel) {
++		nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
++			    rdev->monitor_channel->center_freq);
++		nla_put_u32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++			    rdev->monitor_channel_type);
+ 	}
+ 
+ 	return genlmsg_end(msg, hdr);
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index bc87983..7df42f5 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -827,8 +827,6 @@ static int cfg80211_wext_giwfreq(struct net_device *dev,
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+-	struct ieee80211_channel *chan;
+-	enum nl80211_channel_type channel_type;
+ 
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -836,13 +834,10 @@ static int cfg80211_wext_giwfreq(struct net_device *dev,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return cfg80211_ibss_wext_giwfreq(dev, info, freq, extra);
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (!rdev->ops->get_channel)
++		if (!rdev->monitor_channel)
+ 			return -EINVAL;
+ 
+-		chan = rdev->ops->get_channel(wdev->wiphy, &channel_type);
+-		if (!chan)
+-			return -EINVAL;
+-		freq->m = chan->center_freq;
++		freq->m = rdev->monitor_channel->center_freq;
+ 		freq->e = 6;
+ 		return 0;
+ 	default:
+-- 
+1.7.0.4
 
-On Sat, May 5, 2012 at 9:49 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Well,
->
-> this is not the same warning as before.
-> Can you try the patch attached ?
-> I have submitted it internally.
->
-> thanks
->
-> Emmanuel Grumbach
-> egrumbach@gmail.com
->
->
-> On Fri, May 4, 2012 at 5:20 PM, Antonio Quartulli <ordex@autistici.org> wrote:
->> On Fri, May 04, 2012 at 09:58:30 +0300, Emmanuel Grumbach wrote:
->>> This can't be with my patch, is it ?
->>
->> here is the log. Some pieces are missing at the beginning, didn't check why.
->> However the WARNING comes up later, so it should be ok. Tell me if I can do
->> something else!
->>
->> Cheers,
->>
->>
->> --
->> Antonio Quartulli
->>
->> ..each of us alone is worth nothing..
->> Ernesto "Che" Guevara
