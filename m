@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:40956 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932936Ab2EOS0X (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29701 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602Ab2E1GvS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 14:26:23 -0400
-Date: Tue, 15 May 2012 14:24:05 -0400 (EDT)
-Message-Id: <20120515.142405.633851408201128056.davem@davemloft.net> (sfid-20120515_202646_421332_1DAD8579)
-To: johannes@sipsolutions.net
-Cc: joe@perches.com, netdev@vger.kernel.org,
-	linux-decnet-user@lists.sourceforge.net,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org,
-	dev@openvswitch.org, linux-sctp@vger.kernel.org,
-	linux-nfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC net-next 0/2] net: Use net_<level>_ratelimit
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1337106094.15553.5.camel@jlt3.sipsolutions.net>
-References: <1337105028.15553.3.camel@jlt3.sipsolutions.net>
-	<20120515.141348.892964316296815698.davem@davemloft.net>
-	<1337106094.15553.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 28 May 2012 02:51:18 -0400
+Message-ID: <4FC3205E.6020608@qca.qualcomm.com> (sfid-20120528_085120_750690_5A086F39)
+Date: Mon, 28 May 2012 12:21:10 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: net_ratelimit few aggregation related messages
+References: <1337960224-7428-1-git-send-email-mohammed@qca.qualcomm.com>	 <1337976166.30100.6.camel@joe2Laptop> <4FC3180F.1060902@qca.qualcomm.com>	 <1338186413.2202.16.camel@joe2Laptop> <4FC31BDC.1050401@qca.qualcomm.com> <1338187439.2202.20.camel@joe2Laptop>
+In-Reply-To: <1338187439.2202.20.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 15 May 2012 20:21:34 +0200
+On Monday 28 May 2012 12:13 PM, Joe Perches wrote:
+> On Mon, 2012-05-28 at 12:01 +0530, Mohammed Shafi Shajakhan wrote:
+>> On Monday 28 May 2012 11:56 AM, Joe Perches wrote:
+>>> On Mon, 2012-05-28 at 11:45 +0530, Mohammed Shafi Shajakhan wrote:
+>>>> just today saw this link where you had introduced net_dbg_ratelimited
+>>>> http://www.digipedia.pl/usenet/thread/18978/31017/
+>>>> so should i send the v2 patch using net_dbg_ratelimited to net-next
+>>>> rather than wireless-testing tree ?
+>>>
+>>> Yes, but you should wait until net-next opens
+>>> for patches (after Linus' -rc1 is released)
+>> Joe, once Linus release rc1, will your changes will be updated in
+>> wireless-testing ,
+>
+> I presume so, the patch is in Linus' tree for 3.4.
+>
+>> so that i can send a patch directly to John/linux
+>> wireless ? thank you.
+>
+> I guess you'll have to wait for John to merge Linus' tree.
+>
 
-> On Tue, 2012-05-15 at 14:13 -0400, David Miller wrote:
->> From: Johannes Berg <johannes@sipsolutions.net>
->> Date: Tue, 15 May 2012 20:03:48 +0200
->> 
->> > Oops. Yes, please do that, mac80211 doesn't have DEBUG yet
->> 
->> If you want debugging messages you would turn on dynamic_debug
->> via sysctl or whatever, not define DEBUG in your sources.
->> 
->> I don't think we should add yet another interface just to get
->> KERN_DEBUG in there.
-> 
-> But don't you have to do something in the sources to actually get
-> dynamic_debug enabled? I'm concerned this will make mac80211 debugging
-> inconsistent - the normal bits are just printk() still, and the
-> rate-limited bits need some special enabling? That seems odd.
+sure, thanks!
 
-You can turn them all off or on with a simple flip of a boolean switch
-at run-time.  Or, alternatively, you can turn them on or off in a
-finer grained manner with other run-time facilities.
-
-There should be a transition away from explicit KERN_DEBUG.
+-- 
+thanks,
+shafi
