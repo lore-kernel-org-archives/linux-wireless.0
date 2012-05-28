@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41658 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758544Ab2EPVzC (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:9101 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752621Ab2E1GcR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 17:55:02 -0400
-Message-Id: <20120516215014.379333357@sipsolutions.net> (sfid-20120516_235510_681492_B200683C)
-Date: Wed, 16 May 2012 23:50:14 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/7] cfg80211/mac80211 channel redesign
-Mime-Version: 1.0
+	Mon, 28 May 2012 02:32:17 -0400
+Message-ID: <4FC31BDC.1050401@qca.qualcomm.com> (sfid-20120528_083247_792442_159A6803)
+Date: Mon, 28 May 2012 12:01:56 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: net_ratelimit few aggregation related messages
+References: <1337960224-7428-1-git-send-email-mohammed@qca.qualcomm.com>	 <1337976166.30100.6.camel@joe2Laptop> <4FC3180F.1060902@qca.qualcomm.com> <1338186413.2202.16.camel@joe2Laptop>
+In-Reply-To: <1338186413.2202.16.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Monday 28 May 2012 11:56 AM, Joe Perches wrote:
+> On Mon, 2012-05-28 at 11:45 +0530, Mohammed Shafi Shajakhan wrote:
+>> just today saw this link where you had introduced net_dbg_ratelimited
+>> http://www.digipedia.pl/usenet/thread/18978/31017/
+>> so should i send the v2 patch using net_dbg_ratelimited to net-next
+>> rather than wireless-testing tree ?
+>
+> Yes, but you should wait until net-next opens
+> for patches (after Linus' -rc1 is released)
+>
+>
 
-Sorry about the previous set of patches, they didn't
-include the first in this set and thus couldn't apply.
+Joe, once Linus release rc1, will your changes will be updated in 
+wireless-testing , so that i can send a patch directly to John/linux 
+wireless ? thank you.
 
-These patches prepare cfg80211/mac80211 more for the
-new multi-channel feature everybody has been waiting
-for. The trick there is that we need to explicitly
-know when to use a certain channel, so I move all the
-channel information into the actual start functions,
-e.g. join-mesh, start-AP etc.
-
-johannes
-
+-- 
+thanks,
+shafi
