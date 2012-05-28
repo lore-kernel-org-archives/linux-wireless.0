@@ -1,63 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:47963 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078Ab2ENSOR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 14:14:17 -0400
-References: <4FB12E00.4050104@solcon.nl>
-In-Reply-To: <4FB12E00.4050104@solcon.nl>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <92132DC1-8B29-4059-B768-3AF17216F472@gmail.com> (sfid-20120514_201434_029913_9BB1E2BB)
-Cc: "IvDoorn@gmail.com" <IvDoorn@gmail.com>,
-	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2800usb: 2001:3c17 is an RT3370 device
-Date: Mon, 14 May 2012 20:14:13 +0200
-To: Albert Pool <albertpool@solcon.nl>,
-	John Linville <linville@tuxdriver.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:43011 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753409Ab2E1G0z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 02:26:55 -0400
+Message-ID: <1338186413.2202.16.camel@joe2Laptop> (sfid-20120528_082658_553419_87C96277)
+Subject: Re: [RFC] mac80211: net_ratelimit few aggregation related messages
+From: Joe Perches <joe@perches.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Date: Sun, 27 May 2012 23:26:53 -0700
+In-Reply-To: <4FC3180F.1060902@qca.qualcomm.com>
+References: <1337960224-7428-1-git-send-email-mohammed@qca.qualcomm.com>
+	 <1337976166.30100.6.camel@joe2Laptop> <4FC3180F.1060902@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 mei 2012, at 18:08, Albert Pool <albertpool@solcon.nl> wrote:
+On Mon, 2012-05-28 at 11:45 +0530, Mohammed Shafi Shajakhan wrote:
+> just today saw this link where you had introduced net_dbg_ratelimited
+> http://www.digipedia.pl/usenet/thread/18978/31017/
+> so should i send the v2 patch using net_dbg_ratelimited to net-next 
+> rather than wireless-testing tree ?
 
-> D-Link DWA-123 rev A1
-> 
-> Signed-off-by: Albert Pool<albertpool@solcon.nl>
+Yes, but you should wait until net-next opens
+for patches (after Linus' -rc1 is released)
 
-Cc: <stable@vger.kernel.org>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-> ---
-> drivers/net/wireless/rt2x00/rt2800usb.c |    3 ++-
-> 1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 262ee9e..6ee4051 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -1070,6 +1070,8 @@ static struct usb_device_id rt2800usb_device_table[] = {
-> #ifdef CONFIG_RT2800USB_RT33XX
->    /* Belkin */
->    { USB_DEVICE(0x050d, 0x945b) },
-> +    /* D-Link */
-> +    { USB_DEVICE(0x2001, 0x3c17) },
->    /* Ralink */
->    { USB_DEVICE(0x148f, 0x3370) },
->    { USB_DEVICE(0x148f, 0x8070) },
-> @@ -1145,7 +1147,6 @@ static struct usb_device_id rt2800usb_device_table[] = {
->    /* D-Link */
->    { USB_DEVICE(0x07d1, 0x3c0b) },
->    { USB_DEVICE(0x07d1, 0x3c17) },
-> -    { USB_DEVICE(0x2001, 0x3c17) },
->    /* Edimax */
->    { USB_DEVICE(0x7392, 0x4085) },
->    /* Encore */
-> -- 
-> 1.7.9
-> 
-> 
