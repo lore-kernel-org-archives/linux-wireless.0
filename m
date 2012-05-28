@@ -1,79 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:56115 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751835Ab2ECFLt (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45704 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752996Ab2E1GVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 01:11:49 -0400
-Message-ID: <4FA21392.5060401@gtri.gatech.edu> (sfid-20120503_071151_736143_C99D03B8)
-Date: Thu, 3 May 2012 01:11:46 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+	Mon, 28 May 2012 02:21:20 -0400
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath6kl: Remove unneeded memset in roam related config func
+Date: Mon, 28 May 2012 11:51:12 +0530
+Message-ID: <1338186073-4986-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120528_082124_522414_F70CF3B7)
 MIME-Version: 1.0
-To: <linux-wireless@vger.kernel.org>
-CC: <Larry.Finger@lwfinger.net>
-Subject: [PATCH 4/9] rtlwifi: fix the selection of the bulk in endpoint
-References: <4FA212D9.5020602@gtri.gatech.edu>
-In-Reply-To: <4FA212D9.5020602@gtri.gatech.edu>
-Content-Type: multipart/mixed;
-	boundary="------------090909030207070901060809"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---------------090909030207070901060809
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Raja Mani <rmani@qca.qualcomm.com>
 
+No need to clear requested memory after allocating new SKB
+with help of ath6kl_wmi_get_new_buf(). This clear part is
+already taken care in ath6kl_wmi_get_new_buf().
 
+Found this on code review.
 
---------------090909030207070901060809
-Content-Type: text/x-patch;
-	name="0004-rtlwifi-fix-the-selection-of-the-bulk-in-endpoint.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="0004-rtlwifi-fix-the-selection-of-the-bulk-in-endpoint.patch"
-
->From 750c8403c86edc794999de6330ee7390f923cf6a Mon Sep 17 00:00:00 2001
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Date: Thu, 3 May 2012 00:12:48 -0400
-Subject: [PATCH 4/9] rtlwifi: fix the selection of the bulk in endpoint
-
-The endpoint number is not always the same as the number of bulk in
-endpoints.  I don't actually have a CU card, but I can only assume
-that the bulk in endpoint number is 1.
-
-Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2 ++
- drivers/net/wireless/rtlwifi/usb.c           |    1 -
- 2 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index 9e01f96..32dc884 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -203,7 +203,9 @@ err_out:
- int  rtl8192cu_endpoint_mapping(struct ieee80211_hw *hw)
- {
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-+	struct rtl_usb *rtlusb = rtl_usbdev(usb_priv);
- 	int error = 0;
-+	rtlusb->in_ep = 0x01;
- 	if (likely(IS_NORMAL_CHIP(rtlhal->version)))
- 		error = _ConfigVerNOutEP(hw);
- 	else
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 91969ee..88dbef0 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -302,7 +302,6 @@ static int _rtl_usb_init_rx(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 63dc4fd..43bce9c 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -743,7 +743,6 @@ int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid)
+ 		return -ENOMEM;
  
- 	rtlusb->rx_max_size = rtlpriv->cfg->usb_interface_cfg->rx_max_size;
- 	rtlusb->rx_urb_num = rtlpriv->cfg->usb_interface_cfg->rx_urb_num;
--	rtlusb->in_ep = rtlpriv->cfg->usb_interface_cfg->in_ep_num;
- 	rtlusb->usb_rx_hdl = rtlpriv->cfg->usb_interface_cfg->usb_rx_hdl;
- 	rtlusb->usb_rx_segregate_hdl =
- 		rtlpriv->cfg->usb_interface_cfg->usb_rx_segregate_hdl;
+ 	cmd = (struct roam_ctrl_cmd *) skb->data;
+-	memset(cmd, 0, sizeof(*cmd));
+ 
+ 	memcpy(cmd->info.bssid, bssid, ETH_ALEN);
+ 	cmd->roam_ctrl = WMI_FORCE_ROAM;
+@@ -763,7 +762,6 @@ int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode)
+ 		return -ENOMEM;
+ 
+ 	cmd = (struct roam_ctrl_cmd *) skb->data;
+-	memset(cmd, 0, sizeof(*cmd));
+ 
+ 	cmd->info.roam_mode = mode;
+ 	cmd->roam_ctrl = WMI_SET_ROAM_MODE;
 -- 
-1.7.7.6
+1.7.1
 
-
---------------090909030207070901060809--
