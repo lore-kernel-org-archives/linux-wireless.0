@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59717 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752020Ab2EVSnV (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34453 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752996Ab2E1GVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 14:43:21 -0400
-Message-ID: <1337712171.4470.2.camel@jlt3.sipsolutions.net> (sfid-20120522_204326_145855_A1C41682)
-Subject: Re: [PATCH v1] mac80211: Handle race condition in replay handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Amit Shakya <amit.shakya@stericsson.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 22 May 2012 20:42:51 +0200
-In-Reply-To: <1337672239-27902-1-git-send-email-amit.shakya@stericsson.com>
-References: <1337672239-27902-1-git-send-email-amit.shakya@stericsson.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 28 May 2012 02:21:30 -0400
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath6kl: Fix typo in htc mbox debug print msg
+Date: Mon, 28 May 2012 11:51:13 +0530
+Message-ID: <1338186073-4986-2-git-send-email-rmani@qca.qualcomm.com> (sfid-20120528_082132_501774_33FCC508)
+In-Reply-To: <1338186073-4986-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1338186073-4986-1-git-send-email-rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-05-22 at 13:07 +0530, Amit Shakya wrote:
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-> As a result, when this change in sequence number happens, the
-> replay detection handling in MAC gets triggered, causing the
-> traffic to stops for some while till PN re-match, with the
-> one last updated at MAC.
-> 
-> The fix takes care of selectively updating the Rx PN during
-> this transition phase.
+Add missing ZERO (x%x to 0x%x) in the format specifier
+while printing hex value in htc module.
 
-This is still all wrong. If anything, the proper fix should be to leave
-the old key around and have the driver somehow indicate which key was
-used so the PN comparison can be done against the old key. That would
-also solve the problem generically, not just for CCMP in a very hacky
-way.
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+index 2798624..cd0e1ba 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
++++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
+@@ -1309,7 +1309,7 @@ static int ath6kl_htc_rx_packet(struct htc_target *target,
+ 	}
+ 
+ 	ath6kl_dbg(ATH6KL_DBG_HTC,
+-		   "htc rx 0x%p hdr x%x len %d mbox 0x%x\n",
++		   "htc rx 0x%p hdr 0x%x len %d mbox 0x%x\n",
+ 		   packet, packet->info.rx.exp_hdr,
+ 		   padded_len, dev->ar->mbox_info.htc_addr);
+ 
+-- 
+1.7.1
 
