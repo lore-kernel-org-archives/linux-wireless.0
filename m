@@ -1,46 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:58989 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761223Ab2EIU7X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 May 2012 16:59:23 -0400
-Received: by vbbff1 with SMTP id ff1so736345vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 May 2012 13:59:22 -0700 (PDT)
+Received: from ebb05.tieto.com ([131.207.168.36]:64704 "EHLO ebb05.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751859Ab2E1LTk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 07:19:40 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 08/14] mac80211: refactor virtual monitor code
+Date: Mon, 28 May 2012 13:18:56 +0200
+Message-ID: <1338203942-5667-9-git-send-email-michal.kazior@tieto.com> (sfid-20120528_131946_756536_C444F8CB)
+In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
-In-Reply-To: <20120509203730.GE17416@shaftnet.org>
-References: <CABF+-6XxBKMx2wKuJr+idc9igeB-NHRCh0rL7eCyWifgH1YoKg@mail.gmail.com>
-	<4FA15A70.2020108@stericsson.com>
-	<CABF+-6VjWxN6mP4E+7WoR=RZxmSU70GPbua77Vmw+z=JnnKcUg@mail.gmail.com>
-	<CAMG6FYgcep04reRKFe6vjpW+THbCT=+FnJ_-eLrcgE7+3UJEfA@mail.gmail.com>
-	<CABF+-6XSA8OOjwuQqM-iDKHVTriJ04BzfA-VN0MqVAiN_ZrsEA@mail.gmail.com>
-	<20120509203730.GE17416@shaftnet.org>
-Date: Wed, 9 May 2012 16:59:21 -0400
-Message-ID: <CABF+-6VUMoueQTA5_JUEOjiya5eQY=bAzt=cnr23HJ=ssedQSw@mail.gmail.com> (sfid-20120509_225933_140371_16352EE2)
-Subject: Re: [PATCHv2 00/21] cw1200: ST-Ericsson cw1200 wlan device driver
-From: Kevin Groeneveld <kgroeneveld@gmail.com>
-To: Solomon Peachy <pizza@shaftnet.org>
-Cc: Dmitry Tarnyagin <abi.dmitryt@gmail.com>,
-	Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> For any given design with the cw1200, you're likely to need an SDD file
-> specific to that design.  That's because the SDD file includes GPIO
-> ...
+Use cfg80211 the new .set_monitor_enabled instead
+of tracking it inside mac80211.
 
-Thanks for the further info on the SDD files Solomon.
+Change-Id: I2e881ab09294711aeec24d567b7fcf1bd19bee20
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ net/mac80211/cfg.c         |   11 +++++++++++
+ net/mac80211/ieee80211_i.h |    4 ++++
+ net/mac80211/iface.c       |   16 ++--------------
+ 3 files changed, 17 insertions(+), 14 deletions(-)
 
-As I mentioned in a previous post I am using the SG901-1091 module
-from Sagrad.  The only SDD file I have tried that works is also from
-Sagrad.  It makes perfect sense now that SDD files from other sources
-do not work.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 20a5910..07218cd 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2899,6 +2899,16 @@ ieee80211_wiphy_get_channel(struct wiphy *wiphy,
+ 	return local->oper_channel;
+ }
+ 
++static void ieee80211_set_monitor_enabled(struct wiphy *wiphy, bool enabled)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	if (enabled)
++		WARN_ON(!ieee80211_add_virtual_monitor(local));
++	else
++		ieee80211_del_virtual_monitor(local);
++}
++
+ #ifdef CONFIG_PM
+ static void ieee80211_set_wakeup(struct wiphy *wiphy, bool enabled)
+ {
+@@ -2974,6 +2984,7 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
++	.set_monitor_enabled = ieee80211_set_monitor_enabled,
+ #ifdef CONFIG_PM
+ 	.set_wakeup = ieee80211_set_wakeup,
+ #endif
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index d8a266e..826b98f 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1504,6 +1504,10 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       enum nl80211_channel_type channel_type,
+ 			       u16 prot_mode);
+ 
++/* virtual monitor */
++int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
++void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
++
+ /* internal work items */
+ void ieee80211_work_init(struct ieee80211_local *local);
+ void ieee80211_add_work(struct ieee80211_work *wk);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c550945..25037ec 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -214,7 +214,7 @@ static void ieee80211_set_default_queues(struct ieee80211_sub_if_data *sdata)
+ 	sdata->vif.cab_queue = IEEE80211_INVAL_HW_QUEUE;
+ }
+ 
+-static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
++int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int ret;
+@@ -255,7 +255,7 @@ static int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 	return 0;
+ }
+ 
+-static void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
++void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
+ 
+@@ -371,12 +371,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 			break;
+ 		}
+ 
+-		if (local->monitors == 0 && local->open_count == 0) {
+-			res = ieee80211_add_virtual_monitor(local);
+-			if (res)
+-				goto err_stop;
+-		}
+-
+ 		/* must be before the call to ieee80211_configure_filter */
+ 		local->monitors++;
+ 		if (local->monitors == 1) {
+@@ -391,8 +385,6 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 		break;
+ 	default:
+ 		if (coming_up) {
+-			ieee80211_del_virtual_monitor(local);
+-
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
+@@ -630,7 +622,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		if (local->monitors == 0) {
+ 			local->hw.conf.flags &= ~IEEE80211_CONF_MONITOR;
+ 			hw_reconf_flags |= IEEE80211_CONF_CHANGE_MONITOR;
+-			ieee80211_del_virtual_monitor(local);
+ 		}
+ 
+ 		ieee80211_adjust_monitor_flags(sdata, -1);
+@@ -704,9 +695,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+-
+-	if (local->monitors == local->open_count && local->monitors > 0)
+-		ieee80211_add_virtual_monitor(local);
+ }
+ 
+ static int ieee80211_stop(struct net_device *dev)
+-- 
+1.7.0.4
 
-I still wonder why there is a PTA record in the SDD file if the
-SG901-1091 module does not have Bluetooth.  Could this negatively
-effect performance if it is trying to play nice with Bluetooth when
-Bluetooth is not being used?
-
-
-Kevin
