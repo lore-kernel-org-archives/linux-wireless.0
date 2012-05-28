@@ -1,83 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1333 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754830Ab2EEB1p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 21:27:45 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 03/11] brcmfmac: decouple set_sbaddr_window from
- register write interface
-Date: Fri, 4 May 2012 18:27:30 -0700
-Message-ID: <1336181258-7305-4-git-send-email-frankyl@broadcom.com> (sfid-20120505_032824_192799_857A83E5)
-In-Reply-To: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
-References: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:43107 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753531Ab2E1SV5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 14:21:57 -0400
+Received: by lbbgm6 with SMTP id gm6so2041378lbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2012 11:21:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20120528140448.GA22783@redhat.com>
+References: <CANHD2=rF6dBkLLkWAj8uS3nq0B1wCt7Uvu=HzO84UNz2kuiaFg@mail.gmail.com>
+ <20120313081235.GC15333@redhat.com> <CAErSpo6t-cVBdJfyARi3ifEuBUvopbG5GQSP5YywrvumDK8HFA@mail.gmail.com>
+ <CANHD2=qSWRv76mjwhTNMgO=u5yYCh2QZzxbNLNaPWm1d52FtOg@mail.gmail.com> <20120528140448.GA22783@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 28 May 2012 12:21:34 -0600
+Message-ID: <CAErSpo6XVgzeQiWjXJs6vxdQ5_O7LFG-j4p=4S7rQSyBdq7-SA@mail.gmail.com> (sfid-20120528_202214_719053_91FAC374)
+Subject: Re: Initializing iwl3945 error
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Kamil Grzebien <ciptok@gmail.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmf_sdcard_set_sbaddr_window configures 3 registers on SDIO
-function misc bank to change current silicon backplane programming
-window. This patch makes it call brcmf_sdioh_request_byte directly
-in order to prepare for the write register interface unification.
+Sorry this got dropped on the floor for so long.  I don't see anything
+wrong with the PCI memory routing information in either the failing or
+the working logs.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   37 ++++++++++++++--------
- 1 file changed, 24 insertions(+), 13 deletions(-)
+Kamil, you mentioned: "Driver can't initialize card as all
+ioread32/iowrite32 seems to not do their job. All reads finalize with
+0xffffffff."
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 7c9bc2b..f971fa8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -205,19 +205,30 @@ brcmf_sdcard_cfg_write(struct brcmf_sdio_dev *sdiodev, uint fnc_num, u32 addr,
- int
- brcmf_sdcard_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
- {
--	int err = 0;
--	brcmf_sdcard_cfg_write(sdiodev, SDIO_FUNC_1, SBSDIO_FUNC1_SBADDRLOW,
--			 (address >> 8) & SBSDIO_SBADDRLOW_MASK, &err);
--	if (!err)
--		brcmf_sdcard_cfg_write(sdiodev, SDIO_FUNC_1,
--				       SBSDIO_FUNC1_SBADDRMID,
--				       (address >> 16) & SBSDIO_SBADDRMID_MASK,
--				       &err);
--	if (!err)
--		brcmf_sdcard_cfg_write(sdiodev, SDIO_FUNC_1,
--				       SBSDIO_FUNC1_SBADDRHIGH,
--				       (address >> 24) & SBSDIO_SBADDRHIGH_MASK,
--				       &err);
-+	int err = 0, i;
-+	u8 addr[3];
-+	s32 retry;
-+
-+	addr[0] = (address >> 8) & SBSDIO_SBADDRLOW_MASK;
-+	addr[1] = (address >> 16) & SBSDIO_SBADDRMID_MASK;
-+	addr[2] = (address >> 24) & SBSDIO_SBADDRHIGH_MASK;
-+
-+	for (i = 0; i < 3; i++) {
-+		retry = 0;
-+		do {
-+			if (retry)
-+				usleep_range(1000, 2000);
-+			err = brcmf_sdioh_request_byte(sdiodev, SDIOH_WRITE,
-+					SDIO_FUNC_1, SBSDIO_FUNC1_SBADDRLOW + i,
-+					&addr[i]);
-+		} while (err != 0 && retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
-+
-+		if (err) {
-+			brcmf_dbg(ERROR, "failed at addr:0x%0x\n",
-+				  SBSDIO_FUNC1_SBADDRLOW + i);
-+			break;
-+		}
-+	}
- 
- 	return err;
- }
--- 
-1.7.9.5
+Normally this means we got no response, either because the transaction
+didn't reach the device, or the device didn't respond.  Here's the
+routing information I see, which looks fine:
 
+  ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+  pci_root PNP0A03:00: host bridge window [mem 0xe0000000-0xf7ffffff]
+  pci 0000:00:1c.1: PCI bridge to [bus 0b-0b]
+  pci 0000:00:1c.1:   bridge window [mem 0xf1e00000-0xf1efffff]
+  pci 0000:0b:00.0: [8086:4222] type 0 class 0x000280
+  pci 0000:0b:00.0: reg 10: [mem 0xf1eff000-0xf1efffff]
 
+And we enabled memory space decoding for the device:
+
+  iwl3945 0000:0b:00.0: enabling device (0000 -> 0002)
+
+so it *should* respond.  It's interesting that we didn't have to
+enable the device in the working ("noapic") case -- there's no
+"enabling device" line in that dmesg log, which means memory decoding
+was already enabled when we found it.
+
+You also said "If I access the memory directly, not by mapping, I can
+write and read pci memory but driver load fails anyway."  What exactly
+does that mean?  I assume you mean that even in the failing case, you
+can somehow access that region ([mem 0xf1eff000-0xf1efffff]).  What
+mechanism are you using?  ioremap() in the driver?  User-space mmap of
+a /sys file?
+
+You said "This issue is reproducible in 100% on my system when I turn
+on the machine. It doesn't occur after some work on it."  I wonder if
+there's some timing issue with that device coming out of reset or
+something.  Does the same problem happen if the driver is statically
+linked in vs. loaded as a module after boot?  What if you add a long
+delay in the driver probe routine?
