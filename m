@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1738 "EHLO MMS3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58721 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758421Ab2EOIxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 04:53:39 -0400
-Message-ID: <4FB21985.9090306@broadcom.com> (sfid-20120515_105351_243511_1FD1B251)
-Date: Tue, 15 May 2012 10:53:25 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "F. LECAILLE" <flc@netgem.com>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: broadcom 43236B USB module
-References: <4FB2033B.4070701@netgem.com>
-In-Reply-To: <4FB2033B.4070701@netgem.com>
-Content-Type: text/plain;
- charset=utf-8
+	id S1752966Ab2E1JyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 05:54:24 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH] iwl4965: claim RSN IBSS support
+Date: Mon, 28 May 2012 11:54:11 +0200
+Message-Id: <1338198851-21676-1-git-send-email-sgruszka@redhat.com> (sfid-20120528_115430_303437_CE1D5E1E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/15/2012 09:18 AM, F. LECAILLE wrote:
-> Hello,
-> 
-> I have some Wifi USB modules with 43236B Broadcom chipset. I have read on the
-> linuxwireless dot org website that this chipset is supported by the brcmfmac
-> *(USB)* driver.
-> 
-> As I am also trying to backport this driver for an embedded device which runs a
-> 2.6.27 kernel, I had a look to the 3.2 kernel sources and especially to the
-> drivers/net/wireless/brcm80211/brcmfmac directory. But I do not find any
-> reference to USB stack kernel functions.
-> 
-> How may this work?
+Similar like other drivers including iwl3945, do not configure group
+keys to the hardware (on Ad-Hoc mode) to make IBSS RSN work.
 
-It works by being patient. USB support was merged upstream in the
-previous merge window so it is present in the current 3.4-rcX releases.
-If you want to backport I suggest to use compat-wireless (see [1]) as it
-does a lot of work for you.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/4965-mac.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-Gr. AvS
-
-[1] http://linuxwireless.org/en/users/Download
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index f2baf94..123471b 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -5724,7 +5724,8 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
+ 	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	hw->wiphy->flags |=
+-	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS;
++	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS |
++	    WIPHY_FLAG_IBSS_RSN;
+ 
+ 	/*
+ 	 * For now, disable PS by default because it affects
+@@ -5873,6 +5874,16 @@ il4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
++	/*
++	 * To support IBSS RSN, don't program group keys in IBSS, the
++	 * hardware will then not attempt to decrypt the frames.
++	 */
++	if (vif->type == NL80211_IFTYPE_ADHOC &&
++	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
++		D_MAC80211("leave - ad-hoc group key\n");
++		return -EOPNOTSUPP;
++	}
++
+ 	sta_id = il_sta_id_or_broadcast(il, sta);
+ 	if (sta_id == IL_INVALID_STATION)
+ 		return -EINVAL;
+-- 
+1.7.1
 
