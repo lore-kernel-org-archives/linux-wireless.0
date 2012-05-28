@@ -1,145 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44197 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753494Ab2EYJz7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 05:55:59 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 2/2] ath6kl: Fix unstable downlink throughput
-Date: Fri, 25 May 2012 15:25:53 +0530
-Message-ID: <1337939753-14491-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120525_115601_993533_D801D1F6)
-In-Reply-To: <1337939753-14491-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1337939753-14491-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from ebb06.tieto.com ([131.207.168.38]:62995 "EHLO ebb06.tieto.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753703Ab2E1LTj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 07:19:39 -0400
+From: Michal Kazior <michal.kazior@tieto.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 07/14] cfg80211: track monitor interfaces count
+Date: Mon, 28 May 2012 13:18:55 +0200
+Message-ID: <1338203942-5667-8-git-send-email-michal.kazior@tieto.com> (sfid-20120528_132046_407011_ABB7DCFF)
+In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is frequent downlink throughput drop to 0 when operating
-at the signal level between -42dBm to -53dBm. This has been root
-caused to the delay in releasing pending a-mpdu subframes in
-reorder buffer. Right now the timeout value is 400ms, there
-is also a race condition where timeout handler can be delayed
-to run at an extra timeout interval. This patch reduces the
-timout interval to reasonable 100ms and makes sure releasing
-pending frames are not skipped in the timeout handler by removing
-the flag (rxtid->progress) which can delay the timeout logic.
+Implements .set_monitor_enabled(wiphy, enabled).
 
-Reported-by: Yu Yanzhi <yanzhiy@qca.qualcomm.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Notifies driver upon change of interface layout.
+
+If only monitor interfaces become present it is
+called with 2nd argument being true. If
+non-monitor interface appears then 2nd argument
+is false. Driver is notified only upon change.
+
+This makes it more obvious about the fact that
+cfg80211 supports single monitor channel. Once we
+implement multi-channel we don't want to allow
+setting monitor channel while other interface
+types are running. Otherwise it would be ambiguous
+once we start considering num_different_channels.
+
+Change-Id: Ibd82a70c256c2de584eb541ea2c36663a59f09d4
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    3 +-
- drivers/net/wireless/ath/ath6kl/txrx.c |   44 ++++++++++++++-----------------
- 2 files changed, 21 insertions(+), 26 deletions(-)
+ include/net/cfg80211.h |    4 ++++
+ net/wireless/core.c    |   18 ++++++++++++++++++
+ net/wireless/core.h    |    9 +++++++++
+ 3 files changed, 31 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index b1bc6bc..a827bd7 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -215,7 +215,7 @@ enum ath6kl_hw_flags {
- 
- #define AGGR_NUM_OF_FREE_NETBUFS    16
- 
--#define AGGR_RX_TIMEOUT     400	/* in ms */
-+#define AGGR_RX_TIMEOUT     100	/* in ms */
- 
- #define WMI_TIMEOUT (2 * HZ)
- 
-@@ -264,7 +264,6 @@ struct skb_hold_q {
- 
- struct rxtid {
- 	bool aggr;
--	bool progress;
- 	bool timer_mon;
- 	u16 win_sz;
- 	u16 seq_next;
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 60723be..6fe730d 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1186,28 +1186,27 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
- 	aggr_deque_frms(agg_conn, tid, 0, 1);
- 
- 	if (agg_conn->timer_scheduled)
--		rxtid->progress = true;
--	else
--		for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
--			spin_lock_bh(&rxtid->lock);
--			if (rxtid->hold_q[idx].skb) {
--				/*
--				 * There is a frame in the queue and no
--				 * timer so start a timer to ensure that
--				 * the frame doesn't remain stuck
--				 * forever.
--				 */
--				agg_conn->timer_scheduled = true;
--				mod_timer(&agg_conn->timer,
--					  (jiffies +
--					   HZ * (AGGR_RX_TIMEOUT) / 1000));
--				rxtid->progress = false;
--				rxtid->timer_mon = true;
--				spin_unlock_bh(&rxtid->lock);
--				break;
--			}
-+		return is_queued;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0f9d7b4..e2da8e4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1428,6 +1428,8 @@ struct cfg80211_gtk_rekey_data {
+  *	interfaces are active this callback should reject the configuration.
+  *	If no interfaces are active or the device is down, the channel should
+  *	be stored for when a monitor interface becomes active.
++ * @set_monitor_enabled: Notify driver that there are only monitor
++ *	interfaces running.
+  * @get_channel: Get the current operating channel, should return %NULL if
+  *	there's no single defined operating channel if for example the
+  *	device implements channel hopping for multi-channel virtual interfaces.
+@@ -1746,6 +1748,8 @@ struct cfg80211_ops {
+ 				struct ethtool_stats *stats, u64 *data);
+ 	void	(*get_et_strings)(struct wiphy *wiphy, struct net_device *dev,
+ 				  u32 sset, u8 *data);
 +
-+	for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
-+		spin_lock_bh(&rxtid->lock);
-+		if (rxtid->hold_q[idx].skb) {
-+			/*
-+			 * There is a frame in the queue and no
-+			 * timer so start a timer to ensure that
-+			 * the frame doesn't remain stuck
-+			 * forever.
-+			 */
-+			agg_conn->timer_scheduled = true;
-+			mod_timer(&agg_conn->timer,
-+					(jiffies +
-+					 HZ * (AGGR_RX_TIMEOUT) / 1000));
-+			rxtid->timer_mon = true;
- 			spin_unlock_bh(&rxtid->lock);
-+			break;
- 		}
-+		spin_unlock_bh(&rxtid->lock);
-+	}
++	void (*set_monitor_enabled)(struct wiphy *wiphy, bool enabled);
+ };
  
- 	return is_queued;
+ /*
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 46a33ea..5b37047 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -776,6 +776,22 @@ static struct device_type wiphy_type = {
+ 	.name	= "wlan",
+ };
+ 
++static void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
++				      struct wireless_dev *wdev, int num)
++{
++	bool has_monitors_only_old = cfg80211_has_monitors_only(rdev);
++	bool has_monitors_only_new;
++
++	rdev->num_running_ifaces += num;
++	if (wdev->iftype == NL80211_IFTYPE_MONITOR)
++		rdev->num_running_monitor_ifaces += num;
++
++	has_monitors_only_new = cfg80211_has_monitors_only(rdev);
++	if (has_monitors_only_new != has_monitors_only_old)
++		rdev->ops->set_monitor_enabled(&rdev->wiphy,
++					       has_monitors_only_new);
++}
++
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state,
+ 					 void *ndev)
+@@ -879,6 +895,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		break;
+ 	case NETDEV_DOWN:
+ 		dev_hold(dev);
++		cfg80211_update_iface_num(rdev, wdev, -1);
+ 		queue_work(cfg80211_wq, &wdev->cleanup_work);
+ 		break;
+ 	case NETDEV_UP:
+@@ -986,6 +1003,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
+ 		if (ret)
+ 			return notifier_from_errno(ret);
++		cfg80211_update_iface_num(rdev, wdev, 1);
+ 		break;
+ 	}
+ 
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 54c24de..79e27b1 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -56,6 +56,9 @@ struct cfg80211_registered_device {
+ 
+ 	u32 ap_beacons_nlpid;
+ 
++	int num_running_ifaces;
++	int num_running_monitor_ifaces;
++
+ 	/* BSSes/scanning */
+ 	spinlock_t bss_lock;
+ 	struct list_head bss_list;
+@@ -220,6 +223,12 @@ static inline void wdev_unlock(struct wireless_dev *wdev)
+ 	mutex_unlock(&wdev->mtx);
  }
-@@ -1612,7 +1611,7 @@ static void aggr_timeout(unsigned long arg)
- 		rxtid = &aggr_conn->rx_tid[i];
- 		stats = &aggr_conn->stat[i];
  
--		if (!rxtid->aggr || !rxtid->timer_mon || rxtid->progress)
-+		if (!rxtid->aggr || !rxtid->timer_mon)
- 			continue;
++static inline bool cfg80211_has_monitors_only(struct cfg80211_registered_device *rdev)
++{
++	return rdev->num_running_ifaces == rdev->num_running_monitor_ifaces &&
++	       rdev->num_running_ifaces > 0;
++}
++
+ #define ASSERT_RDEV_LOCK(rdev) lockdep_assert_held(&(rdev)->mtx)
+ #define ASSERT_WDEV_LOCK(wdev) lockdep_assert_held(&(wdev)->mtx)
  
- 		stats->num_timeouts++;
-@@ -1635,7 +1634,6 @@ static void aggr_timeout(unsigned long arg)
- 				if (rxtid->hold_q[j].skb) {
- 					aggr_conn->timer_scheduled = true;
- 					rxtid->timer_mon = true;
--					rxtid->progress = false;
- 					spin_unlock_bh(&rxtid->lock);
- 					break;
- 				}
-@@ -1667,7 +1665,6 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
- 		aggr_deque_frms(aggr_conn, tid, 0, 0);
- 
- 	rxtid->aggr = false;
--	rxtid->progress = false;
- 	rxtid->timer_mon = false;
- 	rxtid->win_sz = 0;
- 	rxtid->seq_next = 0;
-@@ -1746,7 +1743,6 @@ void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
- 	for (i = 0; i < NUM_OF_TIDS; i++) {
- 		rxtid = &aggr_conn->rx_tid[i];
- 		rxtid->aggr = false;
--		rxtid->progress = false;
- 		rxtid->timer_mon = false;
- 		skb_queue_head_init(&rxtid->q);
- 		spin_lock_init(&rxtid->lock);
 -- 
 1.7.0.4
 
