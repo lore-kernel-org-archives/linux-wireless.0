@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27737 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750715Ab2E2Mfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 08:35:31 -0400
-Date: Tue, 29 May 2012 14:35:03 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Zero Lin <zero.lin.0203@gmail.com>,
-	Woody Hung <Woody.Hung@mediatek.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	"Zero.Lin" <Zero.Lin@mediatek.com>
-Subject: Re: [PATCH] rt2x00:Add RT5392 chipset support
-Message-ID: <20120529123502.GD2441@redhat.com> (sfid-20120529_143535_400043_A0A15648)
-References: <1338279069-5630-1-git-send-email-zero.lin.0203@gmail.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53587 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752996Ab2E1GPu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 02:15:50 -0400
+Message-ID: <4FC3180F.1060902@qca.qualcomm.com> (sfid-20120528_081554_570451_8102663F)
+Date: Mon, 28 May 2012 11:45:43 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1338279069-5630-1-git-send-email-zero.lin.0203@gmail.com>
+To: Joe Perches <joe@perches.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: net_ratelimit few aggregation related messages
+References: <1337960224-7428-1-git-send-email-mohammed@qca.qualcomm.com> <1337976166.30100.6.camel@joe2Laptop>
+In-Reply-To: <1337976166.30100.6.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 29, 2012 at 04:11:09PM +0800, Zero Lin wrote:
-> From: "Zero.Lin" <Zero.Lin@mediatek.com>
-Patch looks good for me.
+Hi Joe,
 
-> Signed-off-by: Zero.Lin <Zero.Lin@mediatek.com>
-Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On Saturday 26 May 2012 01:32 AM, Joe Perches wrote:
+> On Fri, 2012-05-25 at 21:07 +0530, Mohammed Shafi Shajakhan wrote:
+>> net_ratelimit few aggregation related messages,
+> []
+>> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+> []
+>> @@ -464,8 +464,9 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+>>   		return -EINVAL;
+>>
+>>   #ifdef CONFIG_MAC80211_HT_DEBUG
+>> -	printk(KERN_DEBUG "Open BA session requested for %pM tid %u\n",
+>> -	       pubsta->addr, tid);
+>> +	if (net_ratelimit())
+>> +		printk(KERN_DEBUG "Open BA session requested for %pM tid %u\n",
+>> +		       pubsta->addr, tid);
+>
+> perhaps
+> 	net_dbg_ratelimited(...)
+>
+> etc...
+>
 
-> +	if (rt2x00_rt(rt2x00dev, RT5392)) {
-> +		rt2800_rfcsr_read(rt2x00dev, 50, &rfcsr);
-> +		if (info->default_power1 > RT5390_POWER_BOUND)
-> +			rt2x00_set_field8(&rfcsr, RFCSR50_TX,
-> +					  RT5390_POWER_BOUND);
-Woody, your current RT3290 patch will conflict with that one, since you
-changed RT5390_POWER_BOUND to POWER_BOUND. Please rebase your patch on
-top of it, as this one will most likely be applied earlier.
+thanks for your inputs!
+just today saw this link where you had introduced net_dbg_ratelimited
+http://www.digipedia.pl/usenet/thread/18978/31017/
+so should i send the v2 patch using net_dbg_ratelimited to net-next 
+rather than wireless-testing tree ?
 
-Thanks
-Stanislaw
+-- 
+thanks,
+shafi
