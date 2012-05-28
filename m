@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kvm.w1.fi ([128.177.28.162]:44351 "EHLO
-	jmaline2.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756571Ab2EGN73 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 09:59:29 -0400
-Date: Mon, 7 May 2012 16:59:17 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: hostap@lists.shmoo.com,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [rt2x00-users] [rt2800pci (AP) - ath9k] 802.11w: broken
- aggregation handling?
-Message-ID: <20120507135917.GB19222@w1.fi> (sfid-20120507_155932_768233_6A1EFD9F)
-References: <4FA75983.9040003@01019freenet.de>
- <201205070702.q4772uem002960@mail.maya.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201205070702.q4772uem002960@mail.maya.org>
+Received: from smtp.uniroma2.it ([160.80.6.23]:33869 "EHLO smtp.uniroma2.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753023Ab2E1MZw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 08:25:52 -0400
+From: Claudio Pisa <claudio.pisa@uniroma2.it>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: [PATCH] mac80211: fix flag check for QoS NOACK frames
+Date: Mon, 28 May 2012 13:06:25 +0100
+Message-Id: <1338206785-3222-1-git-send-email-claudio.pisa@uniroma2.it> (sfid-20120528_142556_354416_E63A45FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 07, 2012 at 09:02:58AM +0200, Andreas Hartmann wrote:
-> - Why is the authentication started here at all, regardless of an error?
 
-I don't think that hostapd would verify driver capabilities for 802.11w
-at the moment, so it does not know that it should have rejected the
-configuration here.. Same for wpa_supplicant and station mode, I'd
-guess.
+Signed-off-by: Claudio Pisa <claudio.pisa@uniroma2.it>
+---
+ net/mac80211/tx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> - Why does TLS succeed? (802.11g is "working"). 
-
-If you are using SHA-1 -based AKM, the initial association, 4-way
-handshake, and data TX/RX are almost identical..
-
-> - Why does set_key fail?
-
-The driver did not support configuration of IGTK for BIP (i.e., key to
-protect group-addressed robust management frames).
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d67d36f..cb17497 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -153,7 +153,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 
+ 	/* Don't calculate ACKs for QoS Frames with NoAck Policy set */
+ 	if (ieee80211_is_data_qos(hdr->frame_control) &&
+-	    *(ieee80211_get_qos_ctl(hdr)) | IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
++	    *(ieee80211_get_qos_ctl(hdr)) & IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
+ 		dur = 0;
+ 	else
+ 		/* Time needed to transmit ACK
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.10.1
+
