@@ -1,145 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2099 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932264Ab2E3I47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 04:56:59 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] mac80211: configure 11b/g channel access rules for legacy APs
-Date: Wed, 30 May 2012 10:56:46 +0200
-Message-Id: <1338368206-30411-1-git-send-email-sgruszka@redhat.com> (sfid-20120530_105702_995433_9D29EDFC)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7624 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076Ab2E1HP4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 May 2012 03:15:56 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20419.9719.160216.124618@gargle.gargle.HOWL> (sfid-20120528_091559_199110_00CCE286)
+Date: Mon, 28 May 2012 12:45:03 +0530
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Ben Greear <greearb@candelatech.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Subject: Re: Anyone doing WiFi throughput tests?
+In-Reply-To: <CAJ-VmonMtRUZpidJERT7hRUDJNgyoMdVovXoG5WdStH6zk7yFQ@mail.gmail.com>
+References: <4FC04B5A.1070900@candelatech.com>
+	<20416.19680.571601.549629@gargle.gargle.HOWL>
+	<4FC0F8CE.1030303@candelatech.com>
+	<20417.972.888113.821079@gargle.gargle.HOWL>
+	<20417.1857.115550.807746@gargle.gargle.HOWL>
+	<4FC2437C.9090106@candelatech.com>
+	<CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com>
+	<4FC2F73F.4070701@candelatech.com>
+	<CAJ-VmonMtRUZpidJERT7hRUDJNgyoMdVovXoG5WdStH6zk7yFQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For each EDCA TX queue change default settings (in STA mode) to conform
-old 802.11b/g channel access rules. This is needed for drivers that do
-not have QoS enable/disable "switch" (like rt2x00) to make them work
-properly with legacy APs.
+Adrian Chadd wrote:
+> Ah, Osprey is AR93xx series stuff. Well, not strictly speaking, but
+> that "family."
+> 
+> I'd have to go and check what the current state of all the latest 11n
+> chips are. Luis, Sujith and Felix would know better than I; I'm still
+> stuck in the land of AR92xx in FreeBSD (at least for the next few
+> weeks.)
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/util.c |   80 +++++++++++++++++++++++++++++---------------------
- 1 files changed, 46 insertions(+), 34 deletions(-)
+ath9k has good support for the AR9003 family - AR9380 based devices, that is.
+And the numbers that I posted were with a XB112, which uses AR9380. 
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index a44c680..bf1c49a 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -804,7 +804,7 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_queue_params qparam;
- 	int ac;
--	bool use_11b;
-+	bool use_11b, enable_qos;
- 	int aCWmin, aCWmax;
- 
- 	if (!local->ops->conf_tx)
-@@ -818,6 +818,13 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 	use_11b = (local->hw.conf.channel->band == IEEE80211_BAND_2GHZ) &&
- 		 !(sdata->flags & IEEE80211_SDATA_OPERATING_GMODE);
- 
-+	/*
-+	 * By default disable QoS in STA mode for old access points, which do
-+	 * not support 802.11e. New APs will provide proper queue parameters,
-+	 * that we will configure later.
-+	 */
-+	enable_qos = (sdata->vif.type != NL80211_IFTYPE_STATION);
-+
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		/* Set defaults according to 802.11-2007 Table 7-37 */
- 		aCWmax = 1023;
-@@ -826,38 +833,47 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 		else
- 			aCWmin = 15;
- 
--		switch (ac) {
--		case IEEE80211_AC_BK:
--			qparam.cw_max = aCWmax;
--			qparam.cw_min = aCWmin;
--			qparam.txop = 0;
--			qparam.aifs = 7;
--			break;
--		default: /* never happens but let's not leave undefined */
--		case IEEE80211_AC_BE:
-+		if (enable_qos) {
-+			switch (ac) {
-+			case IEEE80211_AC_BK:
-+				qparam.cw_max = aCWmax;
-+				qparam.cw_min = aCWmin;
-+				qparam.txop = 0;
-+				qparam.aifs = 7;
-+				break;
-+			/* never happens but let's not leave undefined */
-+			default:
-+			case IEEE80211_AC_BE:
-+				qparam.cw_max = aCWmax;
-+				qparam.cw_min = aCWmin;
-+				qparam.txop = 0;
-+				qparam.aifs = 3;
-+				break;
-+			case IEEE80211_AC_VI:
-+				qparam.cw_max = aCWmin;
-+				qparam.cw_min = (aCWmin + 1) / 2 - 1;
-+				if (use_11b)
-+					qparam.txop = 6016/32;
-+				else
-+					qparam.txop = 3008/32;
-+				qparam.aifs = 2;
-+				break;
-+			case IEEE80211_AC_VO:
-+				qparam.cw_max = (aCWmin + 1) / 2 - 1;
-+				qparam.cw_min = (aCWmin + 1) / 4 - 1;
-+				if (use_11b)
-+					qparam.txop = 3264/32;
-+				else
-+					qparam.txop = 1504/32;
-+				qparam.aifs = 2;
-+				break;
-+			}
-+		} else {
-+			/* Confiure old 802.11b/g medium access rules. */
- 			qparam.cw_max = aCWmax;
- 			qparam.cw_min = aCWmin;
- 			qparam.txop = 0;
--			qparam.aifs = 3;
--			break;
--		case IEEE80211_AC_VI:
--			qparam.cw_max = aCWmin;
--			qparam.cw_min = (aCWmin + 1) / 2 - 1;
--			if (use_11b)
--				qparam.txop = 6016/32;
--			else
--				qparam.txop = 3008/32;
--			qparam.aifs = 2;
--			break;
--		case IEEE80211_AC_VO:
--			qparam.cw_max = (aCWmin + 1) / 2 - 1;
--			qparam.cw_min = (aCWmin + 1) / 4 - 1;
--			if (use_11b)
--				qparam.txop = 3264/32;
--			else
--				qparam.txop = 1504/32;
- 			qparam.aifs = 2;
--			break;
- 		}
- 
- 		qparam.uapsd = false;
-@@ -866,12 +882,8 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
- 		drv_conf_tx(local, sdata, ac, &qparam);
- 	}
- 
--	/* after reinitialize QoS TX queues setting to default,
--	 * disable QoS at all */
--
- 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
--		sdata->vif.bss_conf.qos =
--			sdata->vif.type != NL80211_IFTYPE_STATION;
-+		sdata->vif.bss_conf.qos = enable_qos;
- 		if (bss_notify)
- 			ieee80211_bss_info_change_notify(sdata,
- 							 BSS_CHANGED_QOS);
--- 
-1.7.1
+> Also, FreeBSD on 2x2 (AR9160) hostap:
+> 
+> 
+> TCP sta -> hostap:
+> 
+> [SUM]  0.0-10.0 sec    178 MBytes    149 Mbits/sec
+> 
+> UDP sta -> hostap:
+> 
+> 
+> [ ID] Interval       Transfer     Bandwidth       Jitter   Lost/Total Datagrams
+> [  3]  0.0-10.1 sec    274 MBytes    228 Mbits/sec  0.135 ms 17045/212291 (8%)
+> 
+> TCP is around the expected spot, but I've seen it around 160MBit in
+> the past. I think I messed up something with BAR/TX scheduling. The
+> UDP RX is likely another scheduling issue; I seem to be occasionally
+> overflowing the RX descriptor list.
 
+Well, 228 Mbps is much more reasonable. :)
+
+Sujith
