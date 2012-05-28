@@ -1,86 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:64819 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967057Ab2EPKlu (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63852 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751754Ab2E1GuI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 06:41:50 -0400
-Received: by bkcji2 with SMTP id ji2so451516bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 03:41:49 -0700 (PDT)
-Date: Wed, 16 May 2012 12:41:33 +0200
-From: Anisse Astier <anisse@astier.eu>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce : freeze after connecting to network with FW Power
- Save on
-Message-ID: <20120516124133.69f57311@destiny.ordissimo> (sfid-20120516_124154_175870_41CE75F7)
-In-Reply-To: <4FB28834.4000803@lwfinger.net>
-References: <20120515152951.7cc4f84b@destiny.ordissimo>
-	<4FB26D6B.2030005@lwfinger.net>
-	<20120515170405.7f6510f2@destiny.ordissimo>
-	<4FB28834.4000803@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 28 May 2012 02:50:08 -0400
+Received: by dady13 with SMTP id y13so3769589dad.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 May 2012 23:50:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4FC2F73F.4070701@candelatech.com>
+References: <4FC04B5A.1070900@candelatech.com>
+	<20416.19680.571601.549629@gargle.gargle.HOWL>
+	<4FC0F8CE.1030303@candelatech.com>
+	<20417.972.888113.821079@gargle.gargle.HOWL>
+	<20417.1857.115550.807746@gargle.gargle.HOWL>
+	<4FC2437C.9090106@candelatech.com>
+	<CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com>
+	<4FC2F73F.4070701@candelatech.com>
+Date: Sun, 27 May 2012 23:50:08 -0700
+Message-ID: <CAJ-VmonMtRUZpidJERT7hRUDJNgyoMdVovXoG5WdStH6zk7yFQ@mail.gmail.com> (sfid-20120528_085013_597449_B3FBD9E3)
+Subject: Re: Anyone doing WiFi throughput tests?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 15 May 2012 11:45:40 -0500, Larry Finger <Larry.Finger@lwfinger.net> wrote :
+Ah, Osprey is AR93xx series stuff. Well, not strictly speaking, but
+that "family."
 
-> On 05/15/2012 10:04 AM, Anisse Astier wrote:
-> > On Tue, 15 May 2012 09:51:23 -0500, Larry Finger<Larry.Finger@lwfinger.net>  wrote :
-> >
-> > I'll try wireless-testing then. Are all rtlwifi patches in
-> > wireless-testing ?
-> 
-> I think that all are in wireless-testing.
+I'd have to go and check what the current state of all the latest 11n
+chips are. Luis, Sujith and Felix would know better than I; I'm still
+stuck in the land of AR92xx in FreeBSD (at least for the next few
+weeks.)
 
-Ok, problem is reproduced with wireless-testing, too. I also have hangs
-when unloading the driver sometimes (loaded with fwlps=0), but I wasn't
-able to get a trace either.
+Also, FreeBSD on 2x2 (AR9160) hostap:
 
-> 
-> > (This problem was also reproduced with 3.2.X)
-> >
-> >
-> >> to say that I cannot duplicate your results, and that we need to explore the
-> >> rest of your system to see what is different.
-> >>
-> >> Is your system 32- or 64-bit? How many cores in your CPU? Have you tried
-> > 32 bits, SoC is an AMD E1-1200, with 2 cores.
-> 
-> My search shows that the clock rate for this processor is 1.4 GHz. The only 
-> system that I have that can run the RTL8188CE is 2 GHz.
-> 
-> >> connecting to more than one AP? What is the make and model of the AP that needs
-> > I've tried two different APs, with and without keys (open and WPA2)
-> >
-> >> to have power save turned off? What is the mode of operation?
-> > One is a Linksys WRT54GL with dd-wrt(WPA2), the other(Open) is a
-> > carrier's set top box/router (Freebox).
-> 
-> I thought the locking in the Power Save routines was OK, but perhaps there is 
-> some raciness that is exposed by the difference in speeds. The lack of 
-> diagnostics on the netconsole is a problem.
-> 
-> Do you have kernel debugging turned on for the lock diagnostics, and the Detect 
-> Hung Task configuration variable? Perhaps we can get some logging that way.
-I enabled the following options:
-CONFIG_LOCKDEP_SUPPORT=y
-CONFIG_LOCKDEP=y
-CONFIG_DEBUG_LOCKDEP=y
-CONFIG_DEBUG_SPINLOCK=y
-CONFIG_DEBUG_MUTEXES=y
-But it didn't detect any lockup yet, and machine still hangs. I'll try
-CONFIG_PROVE_LOCKING.
 
-Enabling CONFIG_DEBUG_INFO seems to make the problem go away...
+TCP sta -> hostap:
+
+[SUM]  0.0-10.0 sec    178 MBytes    149 Mbits/sec
+
+UDP sta -> hostap:
+
+
+[ ID] Interval       Transfer     Bandwidth       Jitter   Lost/Total Datagrams
+[  3]  0.0-10.1 sec    274 MBytes    228 Mbits/sec  0.135 ms 17045/212291 (8%)
+
+TCP is around the expected spot, but I've seen it around 160MBit in
+the past. I think I messed up something with BAR/TX scheduling. The
+UDP RX is likely another scheduling issue; I seem to be occasionally
+overflowing the RX descriptor list.
+
+In any case, I'll fix it up and report back, just as a comparison point.
 
 
 
-> 
-> Have you tried the vendor's driver from www.realtek.com? I don't think it will 
-> make a difference, but it could be worth a try.
-Nope, not yet.
-
-
-> 
-> Larry
+Adrian
