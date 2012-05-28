@@ -1,103 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35748 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752125Ab2EYKEf (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:52458 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755028Ab2E1UHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 06:04:35 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [V2 1/2] ath6kl: Fix race in aggregation reorder logic
-Date: Fri, 25 May 2012 15:34:39 +0530
-Message-ID: <1337940280-14690-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120525_120438_933544_2B43F02A)
+	Mon, 28 May 2012 16:07:41 -0400
+Received: by pbbrp8 with SMTP id rp8so5001069pbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 May 2012 13:07:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20419.9719.160216.124618@gargle.gargle.HOWL>
+References: <4FC04B5A.1070900@candelatech.com>
+	<20416.19680.571601.549629@gargle.gargle.HOWL>
+	<4FC0F8CE.1030303@candelatech.com>
+	<20417.972.888113.821079@gargle.gargle.HOWL>
+	<20417.1857.115550.807746@gargle.gargle.HOWL>
+	<4FC2437C.9090106@candelatech.com>
+	<CAJ-Vmon13Q5icGU0oeQWaOaHF+jfhEZHyK2Y1xp5BwCgM_74pg@mail.gmail.com>
+	<4FC2F73F.4070701@candelatech.com>
+	<CAJ-VmonMtRUZpidJERT7hRUDJNgyoMdVovXoG5WdStH6zk7yFQ@mail.gmail.com>
+	<20419.9719.160216.124618@gargle.gargle.HOWL>
+Date: Mon, 28 May 2012 13:07:40 -0700
+Message-ID: <CAJ-Vmokf+EfpQ9m_8W6q3q-nsKgMMTn0w7=BgnW26AWh5vZB2g@mail.gmail.com> (sfid-20120528_220812_996022_69FEA6C3)
+Subject: Re: Anyone doing WiFi throughput tests?
+From: Adrian Chadd <adrian@freebsd.org>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are many places where tid data are accessed without
-the lock (rxtid->lock), this can lead to a race condition
-when the timeout handler for aggregatin reorder and the
-receive function are getting executed at the same time.
-Fix this race, but still there are races which can not
-be fixed without rewriting the whole aggregation reorder
-logic, for now fix the obvious ones.
+Heh. 228MBit is more reasonable, but I'm getting it up around
+235/240MBit at the present moment. I'm hitting queue overruns though,
+so I think I've messed something up in the driver, or someone broke
+the scheduler in weird/wonderful ways.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+I'll let you know when it's at 250MBit again. :)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 67206ae..60723be 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1036,6 +1036,7 @@ static void aggr_deque_frms(struct aggr_info_conn *agg_conn, u8 tid,
- 	rxtid = &agg_conn->rx_tid[tid];
- 	stats = &agg_conn->stat[tid];
- 
-+	spin_lock_bh(&rxtid->lock);
- 	idx = AGGR_WIN_IDX(rxtid->seq_next, rxtid->hold_q_sz);
- 
- 	/*
-@@ -1054,8 +1055,6 @@ static void aggr_deque_frms(struct aggr_info_conn *agg_conn, u8 tid,
- 	seq_end = seq_no ? seq_no : rxtid->seq_next;
- 	idx_end = AGGR_WIN_IDX(seq_end, rxtid->hold_q_sz);
- 
--	spin_lock_bh(&rxtid->lock);
--
- 	do {
- 		node = &rxtid->hold_q[idx];
- 		if ((order == 1) && (!node->skb))
-@@ -1127,11 +1126,13 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
- 		    ((end > extended_end) && (cur > extended_end) &&
- 		     (cur < end))) {
- 			aggr_deque_frms(agg_conn, tid, 0, 0);
-+			spin_lock_bh(&rxtid->lock);
- 			if (cur >= rxtid->hold_q_sz - 1)
- 				rxtid->seq_next = cur - (rxtid->hold_q_sz - 1);
- 			else
- 				rxtid->seq_next = ATH6KL_MAX_SEQ_NO -
- 						  (rxtid->hold_q_sz - 2 - cur);
-+			spin_unlock_bh(&rxtid->lock);
- 		} else {
- 			/*
- 			 * Dequeue only those frames that are outside the
-@@ -1188,6 +1189,7 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
- 		rxtid->progress = true;
- 	else
- 		for (idx = 0 ; idx < rxtid->hold_q_sz; idx++) {
-+			spin_lock_bh(&rxtid->lock);
- 			if (rxtid->hold_q[idx].skb) {
- 				/*
- 				 * There is a frame in the queue and no
-@@ -1201,8 +1203,10 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
- 					   HZ * (AGGR_RX_TIMEOUT) / 1000));
- 				rxtid->progress = false;
- 				rxtid->timer_mon = true;
-+				spin_unlock_bh(&rxtid->lock);
- 				break;
- 			}
-+			spin_unlock_bh(&rxtid->lock);
- 		}
- 
- 	return is_queued;
-@@ -1627,12 +1631,15 @@ static void aggr_timeout(unsigned long arg)
- 
- 		if (rxtid->aggr && rxtid->hold_q) {
- 			for (j = 0; j < rxtid->hold_q_sz; j++) {
-+				spin_lock_bh(&rxtid->lock);
- 				if (rxtid->hold_q[j].skb) {
- 					aggr_conn->timer_scheduled = true;
- 					rxtid->timer_mon = true;
- 					rxtid->progress = false;
-+					spin_unlock_bh(&rxtid->lock);
- 					break;
- 				}
-+				spin_unlock_bh(&rxtid->lock);
- 			}
- 
- 			if (j >= rxtid->hold_q_sz)
--- 
-1.7.0.4
 
+
+Adrian
