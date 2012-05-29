@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:49939 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755584Ab2ECQyg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 12:54:36 -0400
-Received: by yenm10 with SMTP id m10so1442256yen.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 May 2012 09:54:35 -0700 (PDT)
-Message-ID: <4FA2B845.2000502@lwfinger.net> (sfid-20120503_185440_089021_486262D2)
-Date: Thu, 03 May 2012 11:54:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:7764 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750696Ab2E2LYo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 07:24:44 -0400
+Date: Tue, 29 May 2012 13:24:09 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: run scan after finish connection monitoring
+Message-ID: <20120529112407.GB2441@redhat.com> (sfid-20120529_132447_880801_E50A5ED5)
+References: <1337174840-2658-1-git-send-email-sgruszka@redhat.com>
 MIME-Version: 1.0
-To: Catalin Marinas <catalin.marinas@arm.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: Suspicious RCU usage in mac80211
-References: <1334201497.3788.1.camel@jlt3.sipsolutions.net> <4F865155.2000202@lwfinger.net> <1334202842.3788.10.camel@jlt3.sipsolutions.net> <4F86FA05.5080404@lwfinger.net> <1334246145.4062.0.camel@jlt3.sipsolutions.net> <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com> <4FA0371E.9040704@lwfinger.net> <20120502100012.GA8492@arm.com> <1335978471.4295.3.camel@jlt3.sipsolutions.net> <4FA1F534.8040601@lwfinger.net> <20120503084701.GA27872@arm.com>
-In-Reply-To: <20120503084701.GA27872@arm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1337174840-2658-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/03/2012 03:47 AM, Catalin Marinas wrote:
->
-> IIUC, Paul suggested that you should use rcu_dereference_check() here
-> instead as the protected one is not safe in this context.
+On Wed, May 16, 2012 at 03:27:20PM +0200, Stanislaw Gruszka wrote:
+> commit 133d40f9a22bdfd2617a446f1e3209537c5415ec
+> Author: Stanislaw Gruszka <sgruszka@redhat.com>
+> Date:   Wed Mar 28 16:01:19 2012 +0200
+> 
+>     mac80211: do not scan and monitor connection in parallel
+> 
+> add bug, which make possible to start a scan and never finish it, so
+> make every new scanning request finish with -EBUSY error. This can
+> happen on code paths where we finish connection monitoring and clear
+> IEEE80211_STA_*_POLL flags, but do not check if scan was deferred.
+> This patch fixes those code paths.
 
-This patch also fails to fix the problem. Did I do what Paul suggested?
+This patch fix commit, which went to Linus (3.5-rc) kernel, so should be
+applied there as well. 
 
-
-Index: wireless-testing-new/net/mac80211/sta_info.h
-===================================================================
---- wireless-testing-new.orig/net/mac80211/sta_info.h
-+++ wireless-testing-new/net/mac80211/sta_info.h
-@@ -452,7 +452,7 @@ void ieee80211_assign_tid_tx(struct sta_
-  static inline struct tid_ampdu_tx *
-  rcu_dereference_protected_tid_tx(struct sta_info *sta, int tid)
-  {
--       return rcu_dereference_protected(sta->ampdu_mlme.tid_tx[tid],
-+       return rcu_dereference_check(sta->ampdu_mlme.tid_tx[tid],
-                                          lockdep_is_held(&sta->lock) ||
-                                          lockdep_is_held(&sta->ampdu_mlme.mtx));
-  }
+Stanislaw
