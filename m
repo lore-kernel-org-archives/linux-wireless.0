@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55999 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754520Ab2EXMcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 08:32:39 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.5 4/4] ath9k_hw: apply internal regulator settings on AR933x
-Date: Thu, 24 May 2012 14:32:22 +0200
-Message-Id: <1337862742-10574-4-git-send-email-nbd@openwrt.org> (sfid-20120524_143244_311027_603A4AA3)
-In-Reply-To: <1337862742-10574-3-git-send-email-nbd@openwrt.org>
-References: <1337862742-10574-1-git-send-email-nbd@openwrt.org>
- <1337862742-10574-2-git-send-email-nbd@openwrt.org>
- <1337862742-10574-3-git-send-email-nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:48457 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752818Ab2E2HLD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 03:11:03 -0400
+Message-ID: <1338275466.4342.21.camel@jlt3.sipsolutions.net> (sfid-20120529_091106_870224_18AB39BC)
+Subject: Re: [PATCH] mac80211: add command to get current rssi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 29 May 2012 09:11:06 +0200
+In-Reply-To: <CAK80WHbLfOYgvNqoyZroGC6zvWs8UYNwRP_TzLmzDjVSqJK8XA@mail.gmail.com>
+References: <1337669130-4229-1-git-send-email-victorg@ti.com>
+	 <1337712022.4470.0.camel@jlt3.sipsolutions.net>
+	 <CAK80WHZW8OLs8N9vPhLx8+yVUhOnFU8EGyHQX=Es12gzZ32rNg@mail.gmail.com>
+	 <CAK80WHbLfOYgvNqoyZroGC6zvWs8UYNwRP_TzLmzDjVSqJK8XA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On AR933x, the internal regulator settings need to be applied before the
-PLL init to avoid stability issues.
+On Wed, 2012-05-23 at 11:51 +0300, Goldenshtein, Victor wrote:
+> On Wed, May 23, 2012 at 9:58 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
+> > On Tue, May 22, 2012 at 9:40 PM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> >> On Tue, 2012-05-22 at 09:45 +0300, Victor Goldenshtein wrote:
+> >>
+> >>> @@ -388,7 +389,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+> >>>       if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+> >>>           (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
+> >>>               sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
+> >>> -             sinfo->signal = (s8)sta->last_signal;
+> >>> +             if (local->ops->get_rssi)
+> >>> +                     drv_get_rssi(local, sdata, &sinfo->signal);
+> >>> +             else
+> >>> +                     sinfo->signal = (s8)sta->last_signal;
+> >>>               sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+> >>>       }
+> >>
+> >> So .. you're filling a per-station value with a generic per-interface
+> >> callback? What were you thinking? ;-)
+> >>
+> >
+> > This is this is for managed only.
+> > I can rename the drv_get_rssi() to drv_get_sta_rssi() and to call it
+> > only for NL80211_IFTYPE_STATION, I think it would clarify things?
+> >
+> 
+> Alternatively we could leave it as general callback "drv_get_rssi()",
+> add the peer address and let the driver decide if it supports
+> retrieval of the rssi for the given peer.  Thus, allowing us to do
+> something like:
+> 
+> if (!local->ops->get_rssi) || (drv_get_rssi(local, sdata,
+> sta->sta.addr, &sinfo->signal))
+>         sinfo->signal = (s8)sta->last_signal;
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |    3 +++
- drivers/net/wireless/ath/ath9k/hw.c            |    3 +++
- 3 files changed, 7 insertions(+), 1 deletions(-)
+That's probably better.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ac53d90..dfb0441 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3809,7 +3809,7 @@ static bool is_pmu_set(struct ath_hw *ah, u32 pmu_reg, int pmu_set)
- 	return true;
- }
- 
--static void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
-+void ar9003_hw_internal_regulator_apply(struct ath_hw *ah)
- {
- 	int internal_regulator =
- 		ath9k_hw_ar9300_get_eeprom(ah, EEP_INTERNAL_REGULATOR);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 2505ac4..8396d15 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -334,4 +334,7 @@ u8 *ar9003_get_spur_chan_ptr(struct ath_hw *ah, bool is_2ghz);
- 
- unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
- 					   struct ath9k_channel *chan);
-+
-+void ar9003_hw_internal_regulator_apply(struct ath_hw *ah);
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index abe05ec..7db1890 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1468,6 +1468,9 @@ static bool ath9k_hw_chip_reset(struct ath_hw *ah,
- 		return false;
- 
- 	ah->chip_fullsleep = false;
-+
-+	if (AR_SREV_9330(ah))
-+		ar9003_hw_internal_regulator_apply(ah);
- 	ath9k_hw_init_pll(ah, chan);
- 	ath9k_hw_set_rfmode(ah, chan);
- 
--- 
-1.7.3.2
+johannes
 
