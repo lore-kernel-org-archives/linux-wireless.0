@@ -1,68 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4304 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756420Ab2ERHPX (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:36741 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755890Ab2E2XQ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 May 2012 03:15:23 -0400
-Message-ID: <4FB5F2F5.7090702@gmail.com> (sfid-20120518_091528_039834_1C20D3A1)
-Date: Fri, 18 May 2012 08:57:57 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Tue, 29 May 2012 19:16:56 -0400
+Received: by yenm10 with SMTP id m10so2582876yen.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 16:16:56 -0700 (PDT)
 MIME-Version: 1.0
-To: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Hong Wu <Hong.Wu@dspg.com>, helmut.schaa@googlemail.com,
-	openwrt-devel@lists.openwrt.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
- respectively
-References: <20120517230400.GB22418@yumi.tdiedrich.de>
-In-Reply-To: <20120517230400.GB22418@yumi.tdiedrich.de>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1338331182-29589-2-git-send-email-hauke@hauke-m.de>
+References: <1338331182-29589-1-git-send-email-hauke@hauke-m.de> <1338331182-29589-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 29 May 2012 16:16:35 -0700
+Message-ID: <CAB=NE6XuJKkZTAABX614eih7Okn68hj_RD_MSLv1Xg18Jy1d4g@mail.gmail.com> (sfid-20120530_011701_001357_9594C0CD)
+Subject: Re: [PATCH 1/8] compat-wireless: make patches apply again
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/18/12 01:04, Tobias Diedrich wrote:
-> rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
-> respectively, similar to how it is already done in rt2[45]00pci.c
-> 
-> rt2800lib.c doesn't initialize max_power and thus after
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
-> was applied txpower is limited to 0 for these devices.
-> 
-> This should be the proper fix compared to the net/wireless/reg.c
-> hack in http://patchwork.openwrt.org/patch/2165/
-> 
-> (Patch against the OpenWRT compat-wireless version, but applies
-> equally well against wireless-next with a 19-line offset)
-> 
-> Signed-off-by: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
+On Tue, May 29, 2012 at 3:39 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Oops, I had just pushed out some changes to make patches apply but --
+I hadn't started to address compilation yet, I think just patch 1
+addresses application of patches, the rest seem to address compilation
+so I'll try to apply the rest of the series. If you can rebase that'd
+be great, I'll stop doing stuff right away.
 
-> 
-> 
-> Index: compat-wireless-2012-04-17/drivers/net/wireless/rt2x00/rt2800lib.c
-> ===================================================================
-> --- compat-wireless-2012-04-17.orig/drivers/net/wireless/rt2x00/rt2800lib.c	2012-05-18 00:25:22.515271380 +0200
-> +++ compat-wireless-2012-04-17/drivers/net/wireless/rt2x00/rt2800lib.c	2012-05-18 00:28:48.809658951 +0200
-> @@ -4622,6 +4622,7 @@
->  	default_power2 = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_BG2);
->  
->  	for (i = 0; i < 14; i++) {
-> +		info[i].max_power = MAX_G_TXPOWER;
->  		info[i].default_power1 = default_power1[i];
->  		info[i].default_power2 = default_power2[i];
->  	}
-> @@ -4631,6 +4632,7 @@
->  		default_power2 = rt2x00_eeprom_addr(rt2x00dev, EEPROM_TXPOWER_A2);
->  
->  		for (i = 14; i < spec->num_channels; i++) {
-> +			info[i].max_power = MAX_A_TXPOWER;
->  			info[i].default_power1 = default_power1[i];
->  			info[i].default_power2 = default_power2[i];
->  		}
-> 
-
-
--- 
----
-Gertjan
+  Luis
