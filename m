@@ -1,67 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26353 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886Ab2EADlb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53752 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108Ab2E2HQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Apr 2012 23:41:31 -0400
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Madhan Jaganathan <madhanj@qca.qualcomm.com>,
-	Kai Shi <kaishi@qca.qualcomm.com>
-Subject: [PATCH v2 3.4] Revert "ath9k_hw: Fix incorrect spur_freq_sd for AR9003"
-Date: Tue, 1 May 2012 09:12:24 +0530
-Message-ID: <1335843744-12806-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120501_054133_976461_6D64CF0F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 29 May 2012 03:16:17 -0400
+Message-ID: <1338275778.4342.26.camel@jlt3.sipsolutions.net> (sfid-20120529_091623_300773_2E6C482F)
+Subject: Re: brcmsmac still woes, possible regression?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Jonathan Nieder <jrnieder@gmail.com>,
+	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"sgruszka@redhat.com" <sgruszka@redhat.com>
+Date: Tue, 29 May 2012 09:16:18 +0200
+In-Reply-To: <20120516201521.GA22946@thinkpad-t410>
+References: <20120402215005.GA13969@burratino>
+	 <4F7B179F.7070502@broadcom.com> <20120509094111.GA2333@burratino>
+	 <4FAA45AF.8050201@broadcom.com> <20120509174106.GA7189@ubuntu-mba>
+	 <4FAAB0FE.601@broadcom.com> <1336587054.1121.2.camel@jlt3.sipsolutions.net>
+	 <20120510163525.GB32040@ubuntu-mba>
+	 <1336728772.4310.6.camel@jlt3.sipsolutions.net>
+	 <20120511173149.GA20232@ubuntu-mba> <20120516201521.GA22946@thinkpad-t410>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit a844adfd7bee4edc66d337de6c33b348e83552a8.
-The commit a844adfd is degrading rx sensitivity of lower rate in
-HT40 mode and it is confirmed that reverting the change is
-improving rx sensitivity.
+On Wed, 2012-05-16 at 15:15 -0500, Seth Forshee wrote:
 
-spur_freq_sd (for self-corr in AGC) is defined with respect to the
-center of each 20MHz channel while spur_phase_delta (for self-corr
-in Rx and spur data filter) is defined with respect to the center
-of current RF channel.
+> > > This isn't implemented in mac80211, and since some HW (e.g. ours)
+> > > implements it in lower levels, I don't think you can just generally say
+> > > it has to be in mac80211 now.
+> > 
+> > I guess I need to familiarize myself with the situation for other
+> > hardware then, which I will do next week when I'm not at a conference.
+> > It just seems to me that if we want to enforce consistent regulatory
+> > behavior for all HW then mac80211 is the logical place to implement it.
+> 
+> I had a look at iwlwifi, and I see how passive channels are being
+> handled. I don't understand though how having this functionality in
+> mac80211 would hurt iwlwifi, but perhaps we can find an acceptible
+> solution.
 
-So in short, we need to subtract spur_freq_sd (for self-corr in AGC)
-by the offset between the center of primary20 and the center of RF
-channel in SW. This offset could be +/10 MHz for dynamic 40.
+I'm just thinking that having both would make it have a bigger delay or
+so. Since mac80211 can't really know our device's internal state (even
+the driver can't really keep track easily) we couldn't remove the
+iwlwifi pieces.
 
-Cc: Madhan Jaganathan <madhanj@qca.qualcomm.com>
-Signed-off-by: Kai Shi <kaishi@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
-v2: updated commit log
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> Actually the support already present for regulatory beacon hints would
+> probably suit this purpose fairly well, and in fact it already does seem
+> to work for some channels. But for reasons I don't understand the beacon
+> hints are only processed for channels with IEEE80211_CHAN_RADAR cleared,
+> making it ineffective for most of the 5 GHz band. If this was changed to
+> at least give the driver some indication that a beacon has been seen on
+> the channel (even just setting chan->beacon_found) then drivers should
+> be able to use it to know when tx can be enabled on passive channels.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 5358553..11abb97 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -373,7 +373,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
- 			else
- 				spur_subchannel_sd = 0;
- 
--			spur_freq_sd = (freq_offset << 9) / 11;
-+			spur_freq_sd = ((freq_offset + 10) << 9) / 11;
- 
- 		} else {
- 			if (REG_READ_FIELD(ah, AR_PHY_GEN_CTRL,
-@@ -382,7 +382,7 @@ static void ar9003_hw_spur_ofdm_work(struct ath_hw *ah,
- 			else
- 				spur_subchannel_sd = 1;
- 
--			spur_freq_sd = (freq_offset << 9) / 11;
-+			spur_freq_sd = ((freq_offset - 10) << 9) / 11;
- 
- 		}
- 
--- 
-1.7.10
+RADAR channels have specific time requirements, the beacon hints are
+used for something like "geography detection".
+
+johannes
 
