@@ -1,28 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54807 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756778Ab2EHCSz (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:50068 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754822Ab2E2TTK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 22:18:55 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-To: <linux-wireless@vger.kernel.org>
-CC: <Larry.Finger@lwfinger.net>
-Subject: [WIP v2] rtlwifi: rtl8192su subdriver
-Date: Mon, 7 May 2012 22:18:32 -0400
-Message-ID: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041859_445441_7ECF79A6)
-In-Reply-To: <4FA212D9.5020602@gtri.gatech.edu>
-References: <4FA212D9.5020602@gtri.gatech.edu>
+	Tue, 29 May 2012 15:19:10 -0400
+Message-ID: <4FC5212A.8000505@candelatech.com> (sfid-20120529_211924_385014_CE0BD66B)
+Date: Tue, 29 May 2012 12:19:06 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+References: <4FC04B5A.1070900@candelatech.com> <4FC2437C.9090106@candelatech.com> <4FC51418.5000104@candelatech.com> <201205292107.42337.chunkeey@googlemail.com>
+In-Reply-To: <201205292107.42337.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 05/29/2012 12:07 PM, Christian Lamparter wrote:
+> On Tuesday, May 29, 2012 08:23:20 PM Ben Greear wrote:
+>> On 05/27/2012 08:08 AM, Ben Greear wrote:
+>>> On 05/26/2012 09:39 AM, Sujith Manoharan wrote:
+>> We started testing with two AR9380 NICs today (one AP, the other STA).
+>> I applied Felix's skb optimization patch, and the ath9k memleak fix patch
+>> on top of 3.3.7+.
+>>
+>> The system has 2GB RAM, but it is 32-bit kernel, so not all
+>> is available to the networking code...  That said, the OOM
+>> killer kills VNC and such.
+>>
+>> Anyway, I'll try some memleak debugging to see if
+>> I can find any leaks.  It seems to me that we should
+>> not actually OOM just by trying to transmit too fast
+>> on a station interface :P
+> well, there's that:
+> http://comments.gmane.org/gmane.linux.drivers.ath9k.devel/8233
+>
+> It might not fix the bug, but it can save you time to confirm
+> that is not related to this particular skb leak.
 
-A few things have changed between this and the previous version.  Larry Finger's patch for handling the race condition with mac80211 and the firmware callback is used instead (rtlwifi: fix for race condition when firmware is cached), and a new patch for disabling the LEDs in the usb core is added (mirroring rtl_pci_stop).  All patches were rebased on wireless-testing from the 3rd.  The subdriver handles shutdown much better, although there is still room for improvement.  Some differences from rtl8192se were eliminated, although all PHY/BB/RF reg commands are still commented out.  When any of those regs were accessed directly, the device would die.  When accessed through the IOCMD regs, the firmware on the device would seem to disable automatic control of some important functions causing a large drop in receive sensitivity and general performance.
-I discovered the RXFILTERMAP registers were set by the firmware after download causing the firmware to handle many management frames; allowing everything but beacons through still does not allow an association/authentication against a WPA2-PSK AP to succeed.  The AP sees a probe request and sends a probe response, but the driver never sees the response.  There are firmware commands available for offloading the joining of a BSS and the authentication bits which are likely the easiest solution.  Also needing fixing are a few WARNs, for example if you happen to unload the module during a scan.  Finally, the site survey results are now properly handed off to cfg80211.
+Ok, I will try this.
+
+The leak this might fix is some ack logic up in mac80211?
+
+Seems like we could also use some atomic counters to keep
+track of number of outstanding mac80211-alocated skbs with this
+and be worried if this number grows and grows?
 
 Thanks,
+Ben
 
-Josh
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
