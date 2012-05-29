@@ -1,110 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:65405 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957Ab2EXED4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 00:03:56 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:36373 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750797Ab2E2MoA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 08:44:00 -0400
+Message-ID: <4FC4C47A.50006@openwrt.org> (sfid-20120529_144403_865324_FB9691FE)
+Date: Tue, 29 May 2012 14:43:38 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45797.72462.431840@gargle.gargle.HOWL> (sfid-20120524_060359_840656_E5BDBCEC)
-Date: Thu, 24 May 2012 09:32:45 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 09/22] ath9k: Handle fatal interrupts properly
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 09/22] ath9k: Handle fatal interrupts properly
+References: <20413.45797.72462.431840@gargle.gargle.HOWL>  <4FC4C12A.1050804@openwrt.org> (sfid-20120529_142944_112351_CE560AC4) <1338294968.4342.32.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1338294968.4342.32.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a fatal interrupt is received or it is detected that the baseband
-has hung, the chip has to be reset immediately.  Otherwise, we end up
-processing spurious interrupts. Ensure that we bail out properly in
-the ISR when the reset work hasn't completed yet.
+On 2012-05-29 2:36 PM, Johannes Berg wrote:
+> On Tue, 2012-05-29 at 14:29 +0200, Felix Fietkau wrote:
+>> On 2012-05-24 6:02 AM, Sujith Manoharan wrote:
+>> > When a fatal interrupt is received or it is detected that the baseband
+>> > has hung, the chip has to be reset immediately.  Otherwise, we end up
+>> > processing spurious interrupts. Ensure that we bail out properly in
+>> > the ISR when the reset work hasn't completed yet.
+>> > 
+>> > Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>> Wouldn't it be much easier to just use a bool variable instead of the
+>> combination of lock+flag? A simple variable assignment is atomic...
+> 
+> Is that guaranteed for bool variables?
+Hm, good point. Maybe use u32 then. Either way, the lock in this patch
+does almost nothing to protect against race conditions, since it doesn't
+apply to other places in the code that change sc->sc_flags.
+Maybe we should change that entire thing to just use set_bit/test_bit
+instead.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    2 ++
- drivers/net/wireless/ath/ath9k/init.c  |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |   14 ++++++++++++++
- 3 files changed, 17 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a277cf6..70504b7 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -593,6 +593,7 @@ struct ath_ant_comb {
- #define SC_OP_BT_SCAN                BIT(6)
- #define SC_OP_ANI_RUN                BIT(7)
- #define SC_OP_PRIM_STA_VIF           BIT(8)
-+#define SC_OP_HW_RESET               BIT(9)
- 
- /* Powersave flags */
- #define PS_WAIT_FOR_BEACON        BIT(0)
-@@ -631,6 +632,7 @@ struct ath_softc {
- 	spinlock_t sc_serial_rw;
- 	spinlock_t sc_pm_lock;
- 	spinlock_t sc_pcu_lock;
-+	spinlock_t sc_bb_lock;
- 	struct mutex mutex;
- 	struct work_struct paprd_work;
- 	struct work_struct hw_check_work;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 9dfce1a..d1d016c 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -549,6 +549,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 
- 	spin_lock_init(&sc->sc_serial_rw);
- 	spin_lock_init(&sc->sc_pm_lock);
-+	spin_lock_init(&sc->sc_bb_lock);
- 	mutex_init(&sc->mutex);
- #ifdef CONFIG_ATH9K_DEBUGFS
- 	spin_lock_init(&sc->nodes_lock);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3f79923..672aefe 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -270,6 +270,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	unsigned long flags;
- 
- 	if (ath_startrecv(sc) != 0) {
- 		ath_err(common, "Unable to restart recv logic\n");
-@@ -310,6 +311,10 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
- 
- 	ieee80211_wake_queues(sc->hw);
- 
-+	spin_lock_irqsave(&sc->sc_bb_lock, flags);
-+	sc->sc_flags &= ~SC_OP_HW_RESET;
-+	spin_unlock_irqrestore(&sc->sc_bb_lock, flags);
-+
- 	return true;
- }
- 
-@@ -692,6 +697,9 @@ void ath9k_tasklet(unsigned long data)
- 
- 		RESET_STAT_INC(sc, type);
- #endif
-+		spin_lock(&sc->sc_bb_lock);
-+		sc->sc_flags |= SC_OP_HW_RESET;
-+		spin_unlock(&sc->sc_bb_lock);
- 		ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
- 		goto out;
- 	}
-@@ -768,6 +776,12 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	if (sc->sc_flags & SC_OP_INVALID)
- 		return IRQ_NONE;
- 
-+	spin_lock(&sc->sc_bb_lock);
-+	if (sc->sc_flags & SC_OP_HW_RESET) {
-+		spin_unlock(&sc->sc_bb_lock);
-+		return IRQ_NONE;
-+	}
-+	spin_unlock(&sc->sc_bb_lock);
- 
- 	/* shared irq, not for us */
- 
--- 
-1.7.10.2
-
+- Felix
