@@ -1,86 +1,318 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:64704 "EHLO ebb05.tieto.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753753Ab2E1LTn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 May 2012 07:19:43 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 12/14] cfg80211: move devlist locking out of can_change_interface
-Date: Mon, 28 May 2012 13:19:00 +0200
-Message-ID: <1338203942-5667-13-git-send-email-michal.kazior@tieto.com> (sfid-20120528_131949_694054_BA558092)
-In-Reply-To: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43914 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753800Ab2E2WkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 18:40:04 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/8] compat-wireless: add usb driver lpm
+Date: Wed, 30 May 2012 00:39:36 +0200
+Message-Id: <1338331182-29589-3-git-send-email-hauke@hauke-m.de> (sfid-20120530_004033_718930_887EEB00)
+In-Reply-To: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
+References: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Soon this function will be called for .start_ap,
-.join_ibss, .join_mesh and .auth which may be run
-under devlist_mtx lock already.
+This adds a patch to backport:
+commit e1f12eb6ba6f1e74007eb01ed26fad7c5239d62b
+Author: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Date:   Mon Apr 23 10:08:51 2012 -0700
 
-Change-Id: Ia7502d22f15df1bbda8a1a7dee63553ee5adb22c
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+    USB: Disable hub-initiated LPM for comms devices.
+
+This patch should be replaced with something in compat, but I do not
+have the time now.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/wireless/core.c |    2 ++
- net/wireless/util.c |    5 +++--
- 2 files changed, 5 insertions(+), 2 deletions(-)
+ patches/62-usb_driver_lpm.patch |  276 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 276 insertions(+)
+ create mode 100644 patches/62-usb_driver_lpm.patch
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 1596d18..d0caca8 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1006,7 +1006,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 			return notifier_from_errno(-EOPNOTSUPP);
- 		if (rfkill_blocked(rdev->rfkill))
- 			return notifier_from_errno(-ERFKILL);
-+		mutex_lock(&rdev->devlist_mtx);
- 		ret = cfg80211_can_add_interface(rdev, wdev->iftype);
-+		mutex_unlock(&rdev->devlist_mtx);
- 		if (ret)
- 			return notifier_from_errno(ret);
- 		cfg80211_update_iface_num(rdev, wdev, 1);
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 252ba8d..9449a60 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -806,8 +806,10 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 		return -EBUSY;
- 
- 	if (ntype != otype && netif_running(dev)) {
-+		mutex_lock(&rdev->devlist_mtx);
- 		err = cfg80211_can_change_interface(rdev, dev->ieee80211_ptr,
- 						    ntype);
-+		mutex_unlock(&rdev->devlist_mtx);
- 		if (err)
- 			return err;
- 
-@@ -944,6 +946,7 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 	int i, j;
- 
- 	ASSERT_RTNL();
-+	lockdep_assert_held(&rdev->devlist_mtx);
- 
- 	/* Always allow software iftypes */
- 	if (rdev->wiphy.software_iftypes & BIT(iftype))
-@@ -953,7 +956,6 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 
- 	num[iftype] = 1;
- 
--	mutex_lock(&rdev->devlist_mtx);
- 	list_for_each_entry(wdev_iter, &rdev->netdev_list, list) {
- 		if (wdev_iter == wdev)
- 			continue;
-@@ -966,7 +968,6 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
- 		num[wdev_iter->iftype]++;
- 		total++;
- 	}
--	mutex_unlock(&rdev->devlist_mtx);
- 
- 	if (total == 1 && rdev->wiphy.n_iface_combinations == 0)
- 		return 0;
+diff --git a/patches/62-usb_driver_lpm.patch b/patches/62-usb_driver_lpm.patch
+new file mode 100644
+index 0000000..3679add
+--- /dev/null
++++ b/patches/62-usb_driver_lpm.patch
+@@ -0,0 +1,276 @@
++--- a/drivers/bluetooth/ath3k.c
+++++ b/drivers/bluetooth/ath3k.c
++@@ -445,7 +445,9 @@ static struct usb_driver ath3k_driver =
++ 	.probe		= ath3k_probe,
++ 	.disconnect	= ath3k_disconnect,
++ 	.id_table	= ath3k_table,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(ath3k_driver);
++--- a/drivers/bluetooth/bcm203x.c
+++++ b/drivers/bluetooth/bcm203x.c
++@@ -279,7 +279,9 @@ static struct usb_driver bcm203x_driver
++ 	.probe		= bcm203x_probe,
++ 	.disconnect	= bcm203x_disconnect,
++ 	.id_table	= bcm203x_table,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(bcm203x_driver);
++--- a/drivers/bluetooth/bfusb.c
+++++ b/drivers/bluetooth/bfusb.c
++@@ -749,7 +749,9 @@ static struct usb_driver bfusb_driver =
++ 	.probe		= bfusb_probe,
++ 	.disconnect	= bfusb_disconnect,
++ 	.id_table	= bfusb_table,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(bfusb_driver);
++--- a/drivers/bluetooth/bpa10x.c
+++++ b/drivers/bluetooth/bpa10x.c
++@@ -508,7 +508,9 @@ static struct usb_driver bpa10x_driver =
++ 	.probe		= bpa10x_probe,
++ 	.disconnect	= bpa10x_disconnect,
++ 	.id_table	= bpa10x_table,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(bpa10x_driver);
++--- a/drivers/bluetooth/btusb.c
+++++ b/drivers/bluetooth/btusb.c
++@@ -1222,7 +1222,9 @@ static struct usb_driver btusb_driver =
++ #endif
++ 	.id_table	= btusb_table,
++ 	.supports_autosuspend = 1,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(btusb_driver);
++--- a/drivers/net/usb/cdc_ether.c
+++++ b/drivers/net/usb/cdc_ether.c
++@@ -705,7 +705,9 @@ static struct usb_driver cdc_driver = {
++ 	.resume =	usbnet_resume,
++ 	.reset_resume =	usbnet_resume,
++ 	.supports_autosuspend = 1,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(cdc_driver);
++--- a/drivers/net/usb/rndis_host.c
+++++ b/drivers/net/usb/rndis_host.c
++@@ -643,7 +643,9 @@ static struct usb_driver rndis_driver =
++ 	.disconnect =	usbnet_disconnect,
++ 	.suspend =	usbnet_suspend,
++ 	.resume =	usbnet_resume,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(rndis_driver);
++--- a/drivers/net/wireless/at76c50x-usb.c
+++++ b/drivers/net/wireless/at76c50x-usb.c
++@@ -2486,7 +2486,9 @@ static struct usb_driver at76_driver = {
++ 	.probe = at76_probe,
++ 	.disconnect = at76_disconnect,
++ 	.id_table = dev_table,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ static int __init at76_mod_init(void)
++--- a/drivers/net/wireless/ath/ath6kl/usb.c
+++++ b/drivers/net/wireless/ath/ath6kl/usb.c
++@@ -1191,7 +1191,9 @@ static struct usb_driver ath6kl_usb_driv
++ 	.disconnect = ath6kl_usb_remove,
++ 	.id_table = ath6kl_usb_ids,
++ 	.supports_autosuspend = true,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ static int ath6kl_usb_init(void)
++--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
++@@ -1360,7 +1360,9 @@ static struct usb_driver ath9k_hif_usb_d
++ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
++ 	.soft_unbind = 1,
++ #endif
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ int ath9k_hif_usb_init(void)
++--- a/drivers/net/wireless/ath/carl9170/usb.c
+++++ b/drivers/net/wireless/ath/carl9170/usb.c
++@@ -1159,7 +1159,9 @@ static struct usb_driver carl9170_driver
++ 	.resume = carl9170_usb_resume,
++ 	.reset_resume = carl9170_usb_resume,
++ #endif /* CONFIG_PM */
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(carl9170_driver);
++--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++@@ -1598,7 +1598,9 @@ static struct usb_driver brcmf_usbdrvr =
++ 	.suspend = brcmf_usb_suspend,
++ 	.resume = brcmf_usb_resume,
++ 	.supports_autosuspend = 1,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ void brcmf_usb_exit(void)
++--- a/drivers/net/wireless/libertas/if_usb.c
+++++ b/drivers/net/wireless/libertas/if_usb.c
++@@ -1015,7 +1015,9 @@ static struct usb_driver if_usb_driver =
++ 	.suspend = if_usb_suspend,
++ 	.resume = if_usb_resume,
++ 	.reset_resume = if_usb_resume,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(if_usb_driver);
++--- a/drivers/net/wireless/libertas_tf/if_usb.c
+++++ b/drivers/net/wireless/libertas_tf/if_usb.c
++@@ -922,7 +922,9 @@ static struct usb_driver if_usb_driver =
++ 	.id_table = if_usb_table,
++ 	.suspend = if_usb_suspend,
++ 	.resume = if_usb_resume,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(if_usb_driver);
++--- a/drivers/net/wireless/orinoco/orinoco_usb.c
+++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
++@@ -1752,7 +1752,9 @@ static struct usb_driver orinoco_driver
++ 	.probe = ezusb_probe,
++ 	.disconnect = ezusb_disconnect,
++ 	.id_table = ezusb_table,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(orinoco_driver);
++--- a/drivers/net/wireless/p54/p54usb.c
+++++ b/drivers/net/wireless/p54/p54usb.c
++@@ -1142,7 +1142,9 @@ static struct usb_driver p54u_driver = {
++ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
++ 	.soft_unbind = 1,
++ #endif
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(p54u_driver);
++--- a/drivers/net/wireless/rndis_wlan.c
+++++ b/drivers/net/wireless/rndis_wlan.c
++@@ -3755,7 +3755,9 @@ static struct usb_driver rndis_wlan_driv
++ 	.disconnect =	usbnet_disconnect,
++ 	.suspend =	usbnet_suspend,
++ 	.resume =	usbnet_resume,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(rndis_wlan_driver);
++--- a/drivers/net/wireless/rt2x00/rt2500usb.c
+++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
++@@ -1980,7 +1980,9 @@ static struct usb_driver rt2500usb_drive
++ 	.disconnect	= rt2x00usb_disconnect,
++ 	.suspend	= rt2x00usb_suspend,
++ 	.resume		= rt2x00usb_resume,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(rt2500usb_driver);
++--- a/drivers/net/wireless/rt2x00/rt2800usb.c
+++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
++@@ -1302,7 +1302,9 @@ static struct usb_driver rt2800usb_drive
++ 	.disconnect	= rt2x00usb_disconnect,
++ 	.suspend	= rt2x00usb_suspend,
++ 	.resume		= rt2x00usb_resume,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(rt2800usb_driver);
++--- a/drivers/net/wireless/rt2x00/rt73usb.c
+++++ b/drivers/net/wireless/rt2x00/rt73usb.c
++@@ -2527,7 +2527,9 @@ static struct usb_driver rt73usb_driver
++ 	.disconnect	= rt2x00usb_disconnect,
++ 	.suspend	= rt2x00usb_suspend,
++ 	.resume		= rt2x00usb_resume,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(rt73usb_driver);
++--- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
+++++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
++@@ -1671,7 +1671,9 @@ static struct usb_driver rtl8187_driver
++ 	.id_table	= rtl8187_table,
++ 	.probe		= rtl8187_probe,
++ 	.disconnect	= __devexit_p(rtl8187_disconnect),
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(rtl8187_driver);
++--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++@@ -373,7 +373,9 @@ static struct usb_driver rtl8192cu_drive
++ #ifdef CONFIG_AUTOSUSPEND
++ 	.supports_autosuspend = 1,
++ #endif
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ module_usb_driver(rtl8192cu_driver);
++--- a/drivers/net/wireless/zd1211rw/zd_usb.c
+++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
++@@ -1542,7 +1542,9 @@ static struct usb_driver driver = {
++ 	.disconnect	= disconnect,
++ 	.pre_reset	= pre_reset,
++ 	.post_reset	= post_reset,
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
++ 	.disable_hub_initiated_lpm = 1,
+++#endif
++ };
++ 
++ struct workqueue_struct *zd_workqueue;
 -- 
-1.7.0.4
+1.7.9.5
 
