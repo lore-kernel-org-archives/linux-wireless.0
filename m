@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:38470 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932253Ab2EKQue convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46754 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952Ab2E2GsV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 May 2012 12:50:34 -0400
-Received: by qadb17 with SMTP id b17so1454706qad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 May 2012 09:50:33 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1336740600.12801.2.camel@jlt3.sipsolutions.net>
-References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
-	<1336665952-24363-3-git-send-email-johannes@sipsolutions.net>
-	<1336740600.12801.2.camel@jlt3.sipsolutions.net>
-Date: Fri, 11 May 2012 18:50:33 +0200
-Message-ID: <CA+icZUV-7fzmiZBxNoZEFOif8F0A2Swq170JxDj6tgoEZFSmaA@mail.gmail.com> (sfid-20120511_185037_841971_6861578E)
-Subject: Re: [PATCH 2/4 v2] iwlwifi: fix the Transmit Frame Descriptor rings
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 29 May 2012 02:48:21 -0400
+Message-ID: <1338274104.4342.5.camel@jlt3.sipsolutions.net> (sfid-20120529_084825_256740_BA3A9F56)
+Subject: Re: Kernel splats in 3.3.7+, mlme.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 29 May 2012 08:48:24 +0200
+In-Reply-To: <4FBD0DB0.5000406@candelatech.com> (sfid-20120523_181757_752991_9056DD24)
+References: <4FBD0DB0.5000406@candelatech.com>
+	 (sfid-20120523_181757_752991_9056DD24)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 11, 2012 at 2:50 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->
-> The logic that allows to have a short TFD queue was completely wrong.
-> We do maintain 256 Transmit Frame Descriptors, but they point to
-> recycled buffers. We used to attach and de-attach different TFDs for
-> the same buffer and it worked since they pointed to the same buffer.
->
-> Also zero the number of BDs after unmapping a TFD. This seems not
-> necessary since we don't reclaim the same TFD twice, but I like
-> housekeeping.
->
-> This patch solves this warning:
->
-> [ 6427.079855] WARNING: at lib/dma-debug.c:866 check_unmap+0x727/0x7a0()
-> [ 6427.079859] Hardware name: Latitude E6410
-> [ 6427.079865] iwlwifi 0000:02:00.0: DMA-API: device driver tries to free DMA memory it has not allocated [device address=0x00000000296d393c] [size=8 bytes]
-> [ 6427.079870] Modules linked in: ...
-> [ 6427.079950] Pid: 6613, comm: ifconfig Tainted: G           O 3.3.3 #5
-> [ 6427.079954] Call Trace:
-> [ 6427.079963]  [<c10337a2>] warn_slowpath_common+0x72/0xa0
-> [ 6427.079982]  [<c1033873>] warn_slowpath_fmt+0x33/0x40
-> [ 6427.079988]  [<c12dcb77>] check_unmap+0x727/0x7a0
-> [ 6427.079995]  [<c12dcdaa>] debug_dma_unmap_page+0x5a/0x80
-> [ 6427.080024]  [<fe2312ac>] iwlagn_unmap_tfd+0x12c/0x180 [iwlwifi]
-> [ 6427.080048]  [<fe231349>] iwlagn_txq_free_tfd+0x49/0xb0 [iwlwifi]
-> [ 6427.080071]  [<fe228e37>] iwl_tx_queue_unmap+0x67/0x90 [iwlwifi]
-> [ 6427.080095]  [<fe22d221>] iwl_trans_pcie_stop_device+0x341/0x7b0 [iwlwifi]
-> [ 6427.080113]  [<fe204b0e>] iwl_down+0x17e/0x260 [iwlwifi]
-> [ 6427.080132]  [<fe20efec>] iwlagn_mac_stop+0x6c/0xf0 [iwlwifi]
-> [ 6427.080168]  [<fd8480ce>] ieee80211_stop_device+0x5e/0x190 [mac80211]
-> [ 6427.080198]  [<fd833208>] ieee80211_do_stop+0x288/0x620 [mac80211]
-> [ 6427.080243]  [<fd8335b7>] ieee80211_stop+0x17/0x20 [mac80211]
-> [ 6427.080250]  [<c148dac1>] __dev_close_many+0x81/0xd0
-> [ 6427.080270]  [<c148db3d>] __dev_close+0x2d/0x50
-> [ 6427.080276]  [<c148d152>] __dev_change_flags+0x82/0x150
-> [ 6427.080282]  [<c148e3e3>] dev_change_flags+0x23/0x60
-> [ 6427.080289]  [<c14f6320>] devinet_ioctl+0x6a0/0x770
-> [ 6427.080296]  [<c14f8705>] inet_ioctl+0x95/0xb0
-> [ 6427.080304]  [<c147a0f0>] sock_ioctl+0x70/0x270
->
-> Cc: stable@vger.kernel.org
-> Reported-by: Antonio Quartulli <ordex@autistici.org>
-> Tested-by: Antonio Quartulli <ordex@autistici.org>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Reviewed-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> v2: rebased onto wireless.git rather than wireless-testing.git, sorry!
->
+On Wed, 2012-05-23 at 09:17 -0700, Ben Greear wrote:
+> We ran a torture test where we try to associate 130 stations against an AP
+> that can only do 128.  The end result is constant resetting of many of the
+> virtual station interfaces.
+> 
+> It ran overnight w/out crashing, but spewed quite a few warnings.
+> 
+> I will be happy to test patches or attempt fixes if anyone has suggestions
+> for what the cause might be....
+> 
+> 
+> ------------[ cut here ]------------
+> ADDRCONF(NETDEV_UP): sta128: link is not ready
+> WARNING: at /home/greearb/git/linux-3.3.dev.y/net/wireless/mlme.c:310 __cfg80211_auth_remove+0x9b/0xaa [cfg80211]()
 
-Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+This was kinda a known race condition but nobody could ever figure out
+what exactly is going on ... the code is gone in 3.4 though :)
+
+johannes
+
