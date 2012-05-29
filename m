@@ -1,51 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yumi.tdiedrich.de ([85.10.210.183]:57834 "EHLO mx.tdiedrich.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751835Ab2EVU6f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 May 2012 16:58:35 -0400
-Date: Tue, 22 May 2012 22:58:29 +0200
-From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
+Received: from haggis.pcug.org.au ([203.10.76.10]:39536 "EHLO
+	members.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327Ab2E2Hyz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 03:54:55 -0400
+Date: Tue, 29 May 2012 17:54:38 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Eyal Shapira <eyal@wizery.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Hong Wu <Hong.Wu@dspg.com>, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and
- MAX_A_TXPOWER respectively
-Message-ID: <20120522205829.GE28713@yumi.tdiedrich.de> (sfid-20120522_225838_814054_4DEE713B)
-References: <20120517230400.GB22418@yumi.tdiedrich.de>
- <CAGXE3d-MTZu16cU1wybd6zehGOudKPadknuHm9MG6JDVRKmDag@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGXE3d-MTZu16cU1wybd6zehGOudKPadknuHm9MG6JDVRKmDag@mail.gmail.com>
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-next@vger.kernel.org>, Luciano Coelho <coelho@ti.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] wlcore: fix undefined symbols when CONFIG_PM is not
+ defined
+Message-Id: <20120529175438.0e68273020662870497d8201@canb.auug.org.au> (sfid-20120529_095519_280945_75BBBEE4)
+In-Reply-To: <1338275703-28103-1-git-send-email-eyal@wizery.com>
+References: <CAMuHMdVv+g=+A1HHNmWWcsFBQjRXNNA437V6-g80cYq7zRJ78g@mail.gmail.com>
+	<1338275703-28103-1-git-send-email-eyal@wizery.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Tue__29_May_2012_17_54_38_+1000__ogrz5_Pq2HX69wN"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa wrote:
-> On Fri, May 18, 2012 at 1:04 AM, Tobias Diedrich
-> <ranma+openwrt@tdiedrich.de> wrote:
-> > rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
-> > respectively, similar to how it is already done in rt2[45]00pci.c
-> >
-> > rt2800lib.c doesn't initialize max_power and thus after
-> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
-> > was applied txpower is limited to 0 for these devices.
-> >
-> > This should be the proper fix compared to the net/wireless/reg.c
-> > hack in http://patchwork.openwrt.org/patch/2165/
-> 
-> Btw. Tobias, did this affect the real tx power of the device at all or
-> is this just
-> a cosmetic issue?
+--Signature=_Tue__29_May_2012_17_54_38_+1000__ogrz5_Pq2HX69wN
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hmm, apparently setting txpower has no effect?
-Is it not implemented in the driver?
+Hi Eyal,
 
-i.e. regardless of "iw (dev wlan0|phy phy0) set txpower fixed (100|2000)"
-I don't see any significant chane in Wifi Analyzer on my Android
-phone.
+On Tue, 29 May 2012 00:15:03 -0700 Eyal Shapira <eyal@wizery.com> wrote:
+>
+> commit 5063c201d7b799d6cb36d3edfc2c2c3db3b400e5
+> "wl12xx: add RX filters ACX commands" breaks the build
+> when CONFIG_PM isn't defined:
 
-(The real reason I couldn't connect to the AP at all was a different recent
-change)
+Just wondering what this applies to as there is no such commit (SHA1) in
+linux-next.  Ah, actually this is commit c21eebb50379 in Linus' tree.
 
--- 
-Tobias						PGP: http://8ef7ddba.uguu.de
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+
+--Signature=_Tue__29_May_2012_17_54_38_+1000__ogrz5_Pq2HX69wN
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBCAAGBQJPxIC+AAoJEECxmPOUX5FEW44P/jH7HvGI9b7bYRUy9Cxbrj6f
+F085HW9cGn08LOerb9M5I21l76UDUxuwLM3Ra6Fmf3BtZYsuJ3HT4o/rSc/7G7k0
+MdAhSl6Ko3iRM0/gn6+BhJy3HfDV0xRqOuhWN5EPKetN7vEhKn2xGyTn2sLGBiFR
+n99jRIiojT7jAmJVHKSJqLNYG/RqjkAjDkl/oPiu3PBPHU0IOsjHX5iLNAmzTyjp
+hVnD7AJmFvUuODSumbbLy9g3ngJ3D/UFX2YO18OEmRLog5x3bkz3vkJshoWMExhJ
+phsMio/A00PmeNP8u2vPaz/c6wBoX/up6TvzoeFF/vbTeHGdR/X3MMklF39VC7HM
+EJHVXx98OdX8m3RvDLLncBWCDoMsVCMc9ZO8iUmgQg+Ir/UtAJyyUJ36CqMoBBVS
+jga1vdJNixd5pFr5hZwZUZR6AN9qC8+wOYEGELMOfwKLr6zNNFSdYo6YVyr41jod
+jajX21RTrMyTX7Kzn6JtC1ZDs2fiytl4Aw9vcgSaKlNuUK68ZL/qj86r3l+IA+Lj
+3NfFbhkt/KfTs41n/4PP56S3sn8ti9248yljT7yIlY72aCq5LkV+eq/nO+LE25q+
+97mj2NrSIef6sJ3/ivlSSL79rsh0s3pCtxvf2ZtQtvM6ygF6pgQWBgl6g9EVNNda
++/K2n13VCxTnOeMY/pNK
+=REIH
+-----END PGP SIGNATURE-----
+
+--Signature=_Tue__29_May_2012_17_54_38_+1000__ogrz5_Pq2HX69wN--
