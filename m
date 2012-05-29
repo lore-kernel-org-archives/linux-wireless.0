@@ -1,53 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:37863 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754131Ab2EPScR convert rfc822-to-8bit (ORCPT
+Received: from claranet-outbound-smtp06.uk.clara.net ([195.8.89.39]:58908 "EHLO
+	claranet-outbound-smtp06.uk.clara.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750888Ab2E2MWC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 14:32:17 -0400
-Received: by dady13 with SMTP id y13so1333219dad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 11:32:16 -0700 (PDT)
+	Tue, 29 May 2012 08:22:02 -0400
+From: Tvrtko Ursulin <tvrtko.ursulin@onelan.co.uk>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Subject: Re: ath9k stops working (DMA trouble?) shortly after going online
+Date: Tue, 29 May 2012 13:21:45 +0100
+Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
+	ath9k-devel@lists.ath9k.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+References: <201205281316.15008.tvrtko.ursulin@onelan.co.uk> <201205291212.46377.tvrtko.ursulin@onelan.co.uk> <20420.48433.260465.183715@gargle.gargle.HOWL>
+In-Reply-To: <20420.48433.260465.183715@gargle.gargle.HOWL>
 MIME-Version: 1.0
-In-Reply-To: <CA+7oygftxidR_r-t16K1g9CNPhL+EkMdPyKftkWoSk+Fzf+Rog@mail.gmail.com>
-References: <CA+7oygccmq9DY+dR-=__4z_rZ4Sa9d8zmz+6=zX-xsTKdWkFWQ@mail.gmail.com>
-	<CAOpc7mEKLM1wjKmdde3YqTuB0edoOFBcH=dK5s5V1y5t7v=wMQ@mail.gmail.com>
-	<CA+7oygftxidR_r-t16K1g9CNPhL+EkMdPyKftkWoSk+Fzf+Rog@mail.gmail.com>
-Date: Wed, 16 May 2012 14:32:16 -0400
-Message-ID: <CA+7oygddbQpoPmc=A05AGyPfq9YyhdeejwYfpS0sGXD=9CeZqA@mail.gmail.com> (sfid-20120516_203225_051101_FF1A3619)
-Subject: Re: AR9280 reported signal strengths are flat (comparison with
- bcm4322 included)
-From: George Nychis <gnychis@gmail.com>
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201205291321.45920.tvrtko.ursulin@onelan.co.uk> (sfid-20120529_142207_242809_7DA2E2C3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Holger,
+On Tuesday 29 May 2012 13:12:33 Sujith Manoharan wrote:
+> Tvrtko Ursulin wrote:
+> > I've collected several interesting events but the compressed log is quite
+> > large. Not sure if it will make it to the mailing list, but you should at
+> > least get it privately.
+> 
+> Thanks.
+> 
+> > There are events ranging from short to long connection dropouts (in the
+> > light of that it is possible that the path Mohammed suggested did indeed
+> > help, at least partially to unwedge some situation which would hang it
+> > completely without the patch). There is always mention of the 'DMA'
+> > keyword when it happens, so if you grep for that in my log you will see
+> > events happening at, in printk time:
+> > 
+> > 118.779362 - 118.795238 (WARN_ON WARNING: at
+> > drivers/net/wireless/ath/ath9k/recv.c:531 ath_stoprecv+0x118/0x130
+> > [ath9k]())
+> > 
+> > 524.162432 - 524.753750
+> > 1544.610658 - 1550.218324
+> > 1685.668241 - 1686.991166
+> > 1773.268867 - 1804.465933
+> > 
+> > Hope this helps?
+> 
+> Yes !
+> 
+> Here are a couple of patches to help narrow down the issue.
+> 
+> http://sujith.github.com/patches/wl/0001-ath9k-Add-some-debug-messages.patc
+> h
+> http://sujith.github.com/patches/wl/0002-ath9k-Resync-beacons-after-a-rese
+> t.patch
+> 
+> The first one adds some messages, the second sets up beacons properly in
+> case a HW reset happens. Can you try these and post the log ?
 
-Thanks a bunch for your response!  I had read about ANI before on the
-list, it would be interesting to know if this is the cause for this.
-It definitely seems plausible. I will dig around the ath9k code and
-see if I can narrow down this to the cause.
+Will do.
 
+The second one did not apply though. You have a line:
 
-On Wed, May 16, 2012 at 2:31 PM, George Nychis <gnychis@gmail.com> wrote:
->
-> Hi Holger,
->
-> Thanks a bunch for your response!  I had read about ANI before on the
-> list, it would be interesting to know if this is the cause for this.  It
-> definitely seems plausible. I will dig around the ath9k code and see if I
-> can narrow down this to the cause.
->
-> - George
->
->
-> On Wed, May 16, 2012 at 2:08 AM, Holger Schurig
-> <holgerschurig@googlemail.com> wrote:
->>
->> This is probably due to ANI (adapative noise immunity). I think ath9k
->> does too much here, in other words: it doesn't just kick in if there
->> are too strong signals there. Instead it seems to always adjust the
->> input attenuator, needed or not.
->
->
+        if (!(sc->hw->conf.flags & IEEE80211_CONF_OFFCHANNEL) && start) {
+
+While my kernel has:
+
+        if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)) && start) {
+ 
+I've manually added your code below it and will test with that unless you 
+shout no quickly.
+
+> If you are willing to move to a more recent kernel, then current
+> wireless-testing would be a good choice since it has various driver fixes.
+> There are a few pending ath9k patches which have not been merged yet, you
+> can find it here:
+> 
+> http://sujith.github.com/patches/wl/wl-ath9k-May-29-2012.patch
+
+I can do that, but ideally I need to find a set of fixes which will make a 
+released kernel work. compat-wireless also works for us.
+
+I'll test the above patches first and then we'll see.
+
+Tvrtko
