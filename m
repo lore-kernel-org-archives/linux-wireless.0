@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:52776 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434Ab2EPOoe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 10:44:34 -0400
-Received: by gglu4 with SMTP id u4so748665ggl.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 May 2012 07:44:33 -0700 (PDT)
-Message-ID: <4FB3BD4A.5020509@lwfinger.net> (sfid-20120516_164438_745597_FDB4CFBB)
-Date: Wed, 16 May 2012 09:44:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from nbd.name ([46.4.11.11]:50169 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753872Ab2E2K6n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 06:58:43 -0400
+Message-ID: <4FC4ABDF.7060105@openwrt.org> (sfid-20120529_125847_008682_53CD80FF)
+Date: Tue, 29 May 2012 12:58:39 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: Re: [PATCH] rtl8187: ->brightness_set can not sleep
-References: <1337159181-4466-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1337159181-4466-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Josef Semler <josef.semler@gmail.com>
+CC: Adrian Chadd <adrian@freebsd.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+References: <4FC04B5A.1070900@candelatech.com> <20416.19680.571601.549629@gargle.gargle.HOWL> <7759D07D-C2C8-48D8-8F44-687C7E85D188@gmail.com> <20416.35246.76971.129331@gargle.gargle.HOWL> <CAPsaeQPxh0Yd+GT3HbReAAtoPhKF2c3kOzgOPL6xK7NC=8J4qA@mail.gmail.com> <4FC0CE2B.9060005@openwrt.org> <9532BE30-26F1-42CF-9300-C25585B29300@gmail.com> <CAJ-VmomdZ+ww=iXF8R+st5HenGjchaV4De2pzzuY6Bu=6_n1YA@mail.gmail.com> <CAPsaeQNwWmAyzgGa3KjVv=nzwL3QHCDN-kHtaQWxKHOS4P+paA@mail.gmail.com>
+In-Reply-To: <CAPsaeQNwWmAyzgGa3KjVv=nzwL3QHCDN-kHtaQWxKHOS4P+paA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/16/2012 04:06 AM, Stanislaw Gruszka wrote:
-> Fix:
->
-> BUG: sleeping function called from invalid context at kernel/workqueue.c:2547
-> in_atomic(): 1, irqs_disabled(): 0, pid: 629, name: wpa_supplicant
-> 2 locks held by wpa_supplicant/629:
->   #0:  (rtnl_mutex){+.+.+.}, at: [<c08b2b84>] rtnl_lock+0x14/0x20
->   #1:  (&trigger->leddev_list_lock){.+.?..}, at: [<c0867f41>] led_trigger_event+0x21/0x80
-> Pid: 629, comm: wpa_supplicant Not tainted 3.3.0-0.rc3.git5.1.fc17.i686
-> Call Trace:
->   [<c046a9f6>] __might_sleep+0x126/0x1d0
->   [<c0457d6c>] wait_on_work+0x2c/0x1d0
->   [<c045a09a>] __cancel_work_timer+0x6a/0x120
->   [<c045a160>] cancel_delayed_work_sync+0x10/0x20
->   [<f7dd3c22>] rtl8187_led_brightness_set+0x82/0xf0 [rtl8187]
->   [<c0867f7c>] led_trigger_event+0x5c/0x80
->   [<f7ff5e6d>] ieee80211_led_radio+0x1d/0x40 [mac80211]
->   [<f7ff3583>] ieee80211_stop_device+0x13/0x230 [mac80211]
->
-> Removing _sync is ok, because if led_on work is currently running
-> it will be finished before led_off work start to perform, since
-> they are always queued on the same mac80211 local->workqueue.
->
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=795176
->
-> Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
-> ---
+On 2012-05-29 12:24 PM, Josef Semler wrote:
+> 
+> 
+> 2012/5/26 Adrian Chadd <adrian@freebsd.org <mailto:adrian@freebsd.org>>
+> 
+>     Hi,
+> 
+>     If the device EEPROM states that it's a 2x2/3x3 device, it'll TX on
+>     two/three streams.
+> 
+>     If it's something like an AR9281 where it's physically a 1T2R stream
+>     device, that's what it'll transmit/receive on by default.
+> 
+>     If it's something like an AR9285 where it's physically a 1T1R stream
+>     device with antenna diversity, that's also what you get.
+> 
+>     If the device EEPROM lies though, well, that's a problem. :-)
+> 
+> Installed OpenWRT für ubnt-nano on a Nanobridge. Well, NanoBridge should
+> be 2x2 MIMO, but the device shows me AR7240 rev.2
+> Is this a a EEPROM-lie and how can I correct it?
+AR7240 is the CPU, not the wifi chip.
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Thanks,
-
-Larry
-
->   drivers/net/wireless/rtl818x/rtl8187/leds.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187/leds.c b/drivers/net/wireless/rtl818x/rtl8187/leds.c
-> index 2e0de2f..c2d5b49 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187/leds.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187/leds.c
-> @@ -117,7 +117,7 @@ static void rtl8187_led_brightness_set(struct led_classdev *led_dev,
->   			radio_on = true;
->   		} else if (radio_on) {
->   			radio_on = false;
-> -			cancel_delayed_work_sync(&priv->led_on);
-> +			cancel_delayed_work(&priv->led_on);
->   			ieee80211_queue_delayed_work(hw,&priv->led_off, 0);
->   		}
->   	} else if (radio_on) {
-
+- Felix
