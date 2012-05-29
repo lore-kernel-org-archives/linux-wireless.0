@@ -1,75 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42226 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551Ab2ESTcB (ORCPT
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:41111 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753859Ab2E2Ow6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 May 2012 15:32:01 -0400
-Received: by yhmm54 with SMTP id m54so3703688yhm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 19 May 2012 12:32:00 -0700 (PDT)
-Message-ID: <4FB7F52D.7020904@opensuse.org> (sfid-20120519_213238_318198_3A8454AE)
-Date: Sat, 19 May 2012 15:31:57 -0400
-From: =?ISO-8859-1?Q?Cristian_Rodr=EDguez?= <crrodriguez@opensuse.org>
+	Tue, 29 May 2012 10:52:58 -0400
+Received: by qcro28 with SMTP id o28so1970621qcr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 07:52:58 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: iwlwifi: Driver unmaps unmatched page at PFN ffe70000
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1338203942-5667-15-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+	<1338203942-5667-15-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 29 May 2012 17:52:57 +0300
+Message-ID: <CAB3XZEf9Q1ncA-PSU3Ejcn0Tm-3=2XmwCanD5w4dEvafuWh_Gw@mail.gmail.com> (sfid-20120529_165302_435363_4A79A850)
+Subject: Re: [RFC 14/14] cfg80211: respect iface combinations when starting operation
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On resume, I get the following warning
+hi Michal,
 
-[43265.744510] ------------[ cut here ]------------
-[43265.744516] WARNING: at 
-/usr/src/linux-3.4.0-rc7-2/drivers/iommu/intel-iommu.c:2922 
-intel_unmap_page+0x15d/0x1c0()
-[43265.744518] Hardware name: Dell System XPS 15Z
-[43265.744519] Driver unmaps unmatched page at PFN ffe70000
-[43265.744520] Modules linked in: fuse rfcomm af_packet bnep arc4 
-iwlwifi btusb bluetooth mac80211 snd_hda_codec_hdmi 
-snd_hda_codec_realtek dell_laptop dcdbas kvm_intel snd_hda_intel 
-snd_hda_codec kvm cfg80211 snd_hwdep uvcvideo snd_pcm snd_timer 
-videobuf2_core snd videodev sr_mod mei(C) edd sg cdrom soundcore 
-videobuf2_vmalloc coretemp rfkill dell_wmi iTCO_wdt i2c_i801 
-videobuf2_memops microcode snd_page_alloc sparse_keymap battery pcspkr 
-ac iTCO_vendor_support autofs4 sha256_generic dm_crypt dm_mod linear 
-btrfs zlib_deflate libcrc32c nouveau ttm mxm_wmi ghash_clmulni_intel 
-crc32c_intel i915 wmi drm_kms_helper drm i2c_algo_bit xhci_hcd button 
-video aesni_intel cryptd aes_x86_64 fan thermal processor thermal_sys
-[43265.744560] Pid: 2378, comm: NetworkManager Tainted: G         C 
-3.4.0-rc7-2-desktop-test #1
-[43265.744562] Call Trace:
-[43265.744571]  [<ffffffff81004648>] dump_trace+0x88/0x300
-[43265.744575]  [<ffffffff8158043b>] dump_stack+0x69/0x6f
-[43265.744579]  [<ffffffff8103fdc9>] warn_slowpath_common+0x79/0xc0
-[43265.744582]  [<ffffffff8103fec5>] warn_slowpath_fmt+0x45/0x50
-[43265.744585]  [<ffffffff8147921d>] intel_unmap_page+0x15d/0x1c0
-[43265.744596]  [<ffffffffa06bd2f4>] 
-iwl_trans_rxq_free_rx_bufs+0x44/0xf0 [iwlwifi]
-[43265.744629]  [<ffffffffa06bf258>] 
-iwl_trans_pcie_start_fw+0x158/0x1020 [iwlwifi]
-[43265.744652]  [<ffffffffa06a5813>] 
-iwl_load_ucode_wait_alive+0x83/0x360 [iwlwifi]
-[43265.744662]  [<ffffffffa06a3dca>] iwlagn_mac_start+0x13a/0x240 [iwlwifi]
-[43265.744676]  [<ffffffffa05b6dbd>] ieee80211_do_open+0x24d/0xc40 
-[mac80211]
-[43265.744690]  [<ffffffff81497226>] __dev_open+0x96/0xf0
-[43265.744694]  [<ffffffff814974ba>] __dev_change_flags+0x9a/0x180
-[43265.744697]  [<ffffffff81497650>] dev_change_flags+0x20/0x70
-[43265.744700]  [<ffffffff814a2c79>] do_setlink+0x319/0x990
-[43265.744704]  [<ffffffff814a3386>] rtnl_setlink+0x96/0xf0
-[43265.744706]  [<ffffffff814a456c>] rtnetlink_rcv_msg+0x10c/0x310
-[43265.744709]  [<ffffffff814bdd19>] netlink_rcv_skb+0xa9/0xc0
-[43265.744712]  [<ffffffff814a2218>] rtnetlink_rcv+0x18/0x20
-[43265.744715]  [<ffffffff814bd6a0>] netlink_unicast+0x1a0/0x1f0
-[43265.744719]  [<ffffffff814bd9cf>] netlink_sendmsg+0x2df/0x360
-[43265.744723]  [<ffffffff8147ded6>] sock_sendmsg+0x106/0x150
-[43265.744726]  [<ffffffff8147f70e>] __sys_sendmsg+0x37e/0x390
-[43265.744729]  [<ffffffff814815a4>] sys_sendmsg+0x44/0x80
-[43265.744732]  [<ffffffff8159313d>] system_call_fastpath+0x1a/0x1f
-[43265.744737]  [<00007f8bb51e97cd>] 0x7f8bb51e97cc
-[43265.744739] ---[ end trace a3c6e6a98003726c ]---
+On Mon, May 28, 2012 at 2:19 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> Use cfg80211_can_change_interface before starting
+> up any operation modes such as .start_ap or .auth
+> to verify whether we comply with
+> num_different_channels within at least one
+> interface combination.
+>
+> Change-Id: I270c18855e28e3b7d63013f66fae5146bfd0826e
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+[...]
 
-Will be cool if someone can take a look at this ;)
+> @@ -168,7 +173,9 @@ int cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+>        int err;
+>
+>        wdev_lock(wdev);
+> +       mutex_lock(&rdev->devlist_mtx);
+>        err = __cfg80211_join_mesh(rdev, dev, setup, conf);
 
-(plz cc me your replies)
+the locking order should be the other way around.
 
+> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+> index 83155ee..9e5cab6 100644
+> --- a/net/wireless/mlme.c
+> +++ b/net/wireless/mlme.c
+> @@ -302,8 +302,14 @@ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+>        if (!req.bss)
+>                return -ENOENT;
+>
+> +       err = cfg80211_can_change_interface(rdev, wdev, wdev->iftype,
+> +                                           req.bss->channel);
+
+i'm not sure whether it's intended, but cfg80211_mlme_auth() doesn't
+take devlist_mtx, so it's missing.
+
+Eliad.
