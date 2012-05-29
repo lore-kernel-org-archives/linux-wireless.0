@@ -1,49 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58173 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760725Ab2EJRkQ (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58833 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261Ab2E2JAb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 13:40:16 -0400
-Message-ID: <1336671612.4334.25.camel@jlt3.sipsolutions.net> (sfid-20120510_194033_942177_9B203746)
-Subject: Re: [PATCH 1/4] iwlwifi: Add __printf argument checking to __iwl_dbg
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 10 May 2012 19:40:12 +0200
-In-Reply-To: <1336671240.22495.20.camel@joe2Laptop>
-References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
-	 <1336665952-24363-2-git-send-email-johannes@sipsolutions.net>
-	 <1336667905.22495.18.camel@joe2Laptop>
-	 <1336668634.4334.23.camel@jlt3.sipsolutions.net>
-	 <1336671240.22495.20.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 29 May 2012 05:00:31 -0400
+Received: by dady13 with SMTP id y13so5150741dad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 02:00:30 -0700 (PDT)
+From: Eyal Shapira <eyal@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: fix ADDBA declined after suspend with wowlan
+Date: Tue, 29 May 2012 02:00:22 -0700
+Message-Id: <1338282022-28857-1-git-send-email-eyal@wizery.com> (sfid-20120529_110035_090990_B7ED3A59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 10:34 -0700, Joe Perches wrote:
-> On Thu, 2012-05-10 at 18:50 +0200, Johannes Berg wrote:
-> > On Thu, 2012-05-10 at 09:38 -0700, Joe Perches wrote:
-> > > Add gcc format and argument printf checking
-> > > to reduce future defect introduction.
-> []
-> > >  #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
-> > > +__printf(5, 6)
-> > >  void __iwl_dbg(struct device *dev,
-> > >  	       u32 level, bool limit, const char *function,
-> > >  	       const char *fmt, ...);
-> > 
-> > But that looks a bit odd to me? It would seem more natural to me to put
-> > the attribute after the parameter list?
-> 
-> It's an attribute of the function and
-> this style is used almost everywhere
-> in the kernel.
+WLAN_STA_BLOCK_BA is set while suspending but doesn't get cleared
+when resuming in case of wowlan. This causes further ADDBA requests
+received to be rejected. Fix it by clearing it in the wowlan path
+as well.
 
-I also found that for the inline, it *has* to be there. Checkpatch
-doesn't like it though if I put it in the same line as "static inline
-void" ;-)
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
+The diff is a bit confusing as it appears to 
+be messing with the keys but actually what happens 
+here is that we move the BLOCK_BA code block 
+below the wake_up label so it'll get called in 
+the wowlan path as well.
+Git was adamant about formatting the diff this way.
 
-johannes
+ net/mac80211/util.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 22f2216..a44c680 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1371,6 +1371,12 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		}
+ 	}
+ 
++	/* add back keys */
++	list_for_each_entry(sdata, &local->interfaces, list)
++		if (ieee80211_sdata_running(sdata))
++			ieee80211_enable_keys(sdata);
++
++ wake_up:
+ 	/*
+ 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
+ 	 * sessions can be established after a resume.
+@@ -1392,12 +1398,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		mutex_unlock(&local->sta_mtx);
+ 	}
+ 
+-	/* add back keys */
+-	list_for_each_entry(sdata, &local->interfaces, list)
+-		if (ieee80211_sdata_running(sdata))
+-			ieee80211_enable_keys(sdata);
+-
+- wake_up:
+ 	ieee80211_wake_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 
+-- 
+1.7.4.1
 
