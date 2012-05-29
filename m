@@ -1,51 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54656 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752572Ab2EJQuj (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:47281 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149Ab2E2I25 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:50:39 -0400
-Message-ID: <1336668634.4334.23.camel@jlt3.sipsolutions.net> (sfid-20120510_185043_029152_81B6AB28)
-Subject: Re: [PATCH 1/4] iwlwifi: Add __printf argument checking to __iwl_dbg
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 10 May 2012 18:50:34 +0200
-In-Reply-To: <1336667905.22495.18.camel@joe2Laptop>
-References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
-	 <1336665952-24363-2-git-send-email-johannes@sipsolutions.net>
-	 <1336667905.22495.18.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 29 May 2012 04:28:57 -0400
+Received: by pbbrp8 with SMTP id rp8so5631521pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 01:28:56 -0700 (PDT)
+From: Eyal Shapira <eyal@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-next@vger.kernel.org>, Luciano Coelho <coelho@ti.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH v2] wlcore: fix undefined symbols when CONFIG_PM is not defined
+Date: Tue, 29 May 2012 01:28:42 -0700
+Message-Id: <1338280122-28648-1-git-send-email-eyal@wizery.com> (sfid-20120529_102918_165818_F0CDCD63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 09:38 -0700, Joe Perches wrote:
-> Add gcc format and argument printf checking
-> to reduce future defect introduction.
+commit c21eebb50379a96e1335e933583dcd5b455c6b64
+"wl12xx: add RX filters ACX commands" breaks the build
+when CONFIG_PM isn't defined:
 
-Good point, I'll pick this up.
+ERROR: "wl1271_rx_filter_get_fields_size"
+[drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
+ERROR: "wl1271_rx_filter_flatten_fields"
+[drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-debug.h |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-> index 8376b84..d0c7c9e 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-> @@ -50,10 +50,12 @@ void __iwl_crit(struct device *dev, const char *fmt, ...);
->  #define IWL_CRIT(m, f, a...) __iwl_crit((m)->dev, f, ## a)
->  
->  #if defined(CONFIG_IWLWIFI_DEBUG) || defined(CONFIG_IWLWIFI_DEVICE_TRACING)
-> +__printf(5, 6)
->  void __iwl_dbg(struct device *dev,
->  	       u32 level, bool limit, const char *function,
->  	       const char *fmt, ...);
+code in drivers/net/wireless/ti/wlcore/acx.c is using these
+functions unconditionally while they are #ifdefed CONFIG_PM.
+Fix it by ifdefing all relevant RX filters code with CONFIG_PM.
 
-But that looks a bit odd to me? It would seem more natural to me to put
-the attribute after the parameter list?
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
+v2: reference the correct commit in linux-next (Thanks Stephen!)
 
-johannes
+ drivers/net/wireless/ti/wlcore/acx.c |    2 ++
+ drivers/net/wireless/ti/wlcore/acx.h |    4 +++-
+ drivers/net/wireless/ti/wlcore/rx.c  |    2 ++
+ 3 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+index 0fd78a0..755b225 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.c
++++ b/drivers/net/wireless/ti/wlcore/acx.c
+@@ -1715,6 +1715,7 @@ out:
+ 
+ }
+ 
++#ifdef CONFIG_PM
+ /* Set the global behaviour of RX filters - On/Off + default action */
+ int wl1271_acx_default_rx_filter_enable(struct wl1271 *wl, bool enable,
+ 					enum rx_filter_action action)
+@@ -1793,3 +1794,4 @@ out:
+ 	kfree(acx);
+ 	return ret;
+ }
++#endif /* CONFIG_PM */
+diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
+index 8106b2e..e6a7486 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.h
++++ b/drivers/net/wireless/ti/wlcore/acx.h
+@@ -1330,9 +1330,11 @@ int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
+ int wl1271_acx_fm_coex(struct wl1271 *wl);
+ int wl12xx_acx_set_rate_mgmt_params(struct wl1271 *wl);
+ int wl12xx_acx_config_hangover(struct wl1271 *wl);
++
++#ifdef CONFIG_PM
+ int wl1271_acx_default_rx_filter_enable(struct wl1271 *wl, bool enable,
+ 					enum rx_filter_action action);
+ int wl1271_acx_set_rx_filter(struct wl1271 *wl, u8 index, bool enable,
+ 			     struct wl12xx_rx_filter *filter);
+-
++#endif /* CONFIG_PM */
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 1f1d948..d6a3c6b 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -279,6 +279,7 @@ void wl12xx_rx(struct wl1271 *wl, struct wl_fw_status *status)
+ 	wl12xx_rearm_rx_streaming(wl, active_hlids);
+ }
+ 
++#ifdef CONFIG_PM
+ int wl1271_rx_filter_enable(struct wl1271 *wl,
+ 			    int index, bool enable,
+ 			    struct wl12xx_rx_filter *filter)
+@@ -314,3 +315,4 @@ void wl1271_rx_filter_clear_all(struct wl1271 *wl)
+ 		wl1271_rx_filter_enable(wl, i, 0, NULL);
+ 	}
+ }
++#endif /* CONFIG_PM */
+-- 
+1.7.4.1
 
