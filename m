@@ -1,126 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:33484 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754419Ab2EOIJK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 May 2012 04:09:10 -0400
-Received: by qadb17 with SMTP id b17so3395472qad.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 May 2012 01:09:09 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CALGY4fs6d9SNuxVDrcYsooakw0BB4JHs9_0KFrEO=8smNj=seQ@mail.gmail.com>
-References: <CALGY4fvUmHmFbYAH2044qCBOozOqmOCBcmB8acV-Qivd3PpFgQ@mail.gmail.com>
-	<CA+icZUXUNS4bW610vnyXzhHdEeON=03w_61c4tcX9Tm1ad=uxw@mail.gmail.com>
-	<CALGY4ft-as1LT+-G2tukzgFCfVYOnE3vHugsHa0eyo_Y+cco0A@mail.gmail.com>
-	<CALGY4fs6d9SNuxVDrcYsooakw0BB4JHs9_0KFrEO=8smNj=seQ@mail.gmail.com>
-Date: Tue, 15 May 2012 10:09:09 +0200
-Message-ID: <CA+icZUVAVdy_0EBMJ=KuT0Yjh3hiiAyd3oMQCD_xroTctcSLAQ@mail.gmail.com> (sfid-20120515_100921_321959_AEDA8040)
-Subject: Re: iwlwifi regression: disconnections
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43908 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755841Ab2E2WkC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 18:40:02 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/8] compat-wireless: deactivate wl1251 for kernel < 2.6.37
+Date: Wed, 30 May 2012 00:39:37 +0200
+Message-Id: <1338331182-29589-4-git-send-email-hauke@hauke-m.de> (sfid-20120530_004012_148931_A8C63AF7)
+In-Reply-To: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
+References: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 15, 2012 at 2:59 AM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
-> Hi
->
->  Looks like the problem I was seeing is indeed related to
-> Network-Manager and newer kernel.
->  After I set ipv6 to 'ignore' in Network-Manager there are not more
-> disconnections and I still have ipv6.
->  Thanks!
->
+wl1251_sdio and wl1251_spi are depending on irq_set_status_flags() since
 
-Can you please add your experiences to LP #988183 as the issue seems
-to affect also older Ubuntu releases/kernels with NM + IPv6 - not only
-affected to Ubuntu/precise (with its kernel and shipped NM).
-So, NM needs to be fixed in older Ubuntu releases, too.
-Thanks.
+commit f380f2c4a12e913356bd49f8790ec1063c4fe9f8
+Author: Grazvydas Ignotas <notasas@gmail.com>
+Date:   Fri May 18 03:04:08 2012 +0300
 
-- Sedat -
+    wl1251: fix oops on early interrupt
 
-[1] https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/988183
+irq_set_status_flags() was added to the kernel in version 2.6.37 and
+backporting it is hard, so do not build wl1251_sdio and wl1251_spi for
+older kernel versions.
 
-> 2012/5/14 Nikolay Martynov <mar.kolya@gmail.com>:
->> Hi.
->>
->>  Thanks for pointing this out! I'll try to disable ipv6 on the
->> interface and see if I still experience the problem. I'll post my
->> results on the list.
->>
->> 2012/5/14 Sedat Dilek <sedat.dilek@googlemail.com>:
->>> This is a problem of Network-Manager, see Ubuntu LP-988183 [1].
->>>
->>> [1] https://bugs.launchpad.net/ubuntu/+source/network-manager/+bug/988183
->>>
->>> - Sedat -
->>>
->>> On Mon, May 14, 2012 at 4:00 PM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
->>>> Hi.
->>>>
->>>>  I have Intel 5300 card. It works fine with 3.2.16. When I try 3.3.6
->>>> or 3.4.0rc6 I get connection drops often - once 5-10 mins. With 3.2.16
->>>> such disconnects happen once-twice a day. AP - ath9k based router and
->>>> it doesn't change. I'm using kernels from ubuntu kernel ppa.
->>>>
->>>>  Here is what I see in logs during disconnect:
->>>>
->>>> [ 1024.296004] ICMPv6 RA: ndisc_router_discovery() failed to add default route.
->>>> [ 1259.209166] wlan1: deauthenticating from XX:XX:XX:XX:XX:XX by local
->>>> choice (reason=3)
->>>> [ 1259.277831] cfg80211: All devices are disconnected, going to
->>>> restore regulatory settings
->>>> [ 1259.277842] cfg80211: Restoring regulatory settings
->>>> [ 1259.277851] cfg80211: Calling CRDA to update world regulatory domain
->>>> [ 1259.293624] cfg80211: Ignoring regulatory request Set by core since
->>>> the driver uses its own custom regulatory domain
->>>> [ 1259.293629] cfg80211: World regulatory domain updated:
->>>> [ 1259.293632] cfg80211:   (start_freq - end_freq @ bandwidth),
->>>> (max_antenna_gain, max_eirp)
->>>> [ 1259.293636] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
->>>> (300 mBi, 2000 mBm)
->>>> [ 1259.293640] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz),
->>>> (300 mBi, 2000 mBm)
->>>> [ 1259.293644] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz),
->>>> (300 mBi, 2000 mBm)
->>>> [ 1259.293647] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
->>>> (300 mBi, 2000 mBm)
->>>> [ 1259.293651] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
->>>> (300 mBi, 2000 mBm)
->>>> [ 1265.296158] wlan1: authenticate with XX:XX:XX:XX:XX:XX
->>>> [ 1265.297450] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 1/3)
->>>> [ 1265.500053] wlan1: send auth to XX:XX:XX:XX:XX:XX (try 2/3)
->>>> [ 1265.502380] wlan1: authenticated
->>>> [ 1265.504080] wlan1: associate with XX:XX:XX:XX:XX:XX (try 1/3)
->>>> [ 1265.507624] wlan1: RX AssocResp from XX:XX:XX:XX:XX:XX (capab=0x411
->>>> status=0 aid=1)
->>>> [ 1265.507632] wlan1: associated
->>>>
->>>>
->>>> I'll be happy to help with any additional information of debugging.
->>>> Thanks!
->>>>
->>>> --
->>>> Truthfully yours,
->>>> Martynov Nikolay.
->>>> Email: mar.kolya@gmail.com
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->> --
->> Truthfully yours,
->> Martynov Nikolay.
->> Email: mar.kolya@gmail.com
->
->
->
-> --
-> Truthfully yours,
-> Martynov Nikolay.
-> Email: mar.kolya@gmail.com
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk                              |    6 +++++-
+ patches/08-rename-config-options.patch |    8 +++++---
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/config.mk b/config.mk
+index 3caebc4..bc0296f 100644
+--- a/config.mk
++++ b/config.mk
+@@ -556,7 +556,9 @@ ifdef CONFIG_SPI_MASTER
+ ifndef CONFIG_COMPAT_KERNEL_2_6_25
+ 
+ ifdef CONFIG_CRC7
+-export CONFIG_WL1251_SPI=m
++ifndef CONFIG_COMPAT_KERNEL_2_6_37
++export CONFIG_COMPAT_WL1251_SPI=m
++endif #CONFIG_COMPAT_KERNEL_2_6_37
+ export CONFIG_WLCORE_SPI=m
+ endif #CONFIG_CRC7
+ export CONFIG_P54_SPI=m
+@@ -579,7 +581,9 @@ export CONFIG_B43_SDIO=y
+ 
+ ifdef CONFIG_CRC7
+ ifdef CONFIG_WL12XX_PLATFORM_DATA
++ifndef CONFIG_COMPAT_KERNEL_2_6_37
+ export CONFIG_COMPAT_WL1251_SDIO=m
++endif #CONFIG_COMPAT_KERNEL_2_6_37
+ export CONFIG_WLCORE_SDIO=m
+ endif #CONFIG_WL12XX_PLATFORM_DATA
+ endif #CONFIG_CRC7
+diff --git a/patches/08-rename-config-options.patch b/patches/08-rename-config-options.patch
+index 44c362d..f8d459a 100644
+--- a/patches/08-rename-config-options.patch
++++ b/patches/08-rename-config-options.patch
+@@ -92,11 +92,13 @@ CONFIG_BT_HIDP does not build with older kernel versions.
+  hidp-objs := core.o sock.o
+ --- a/drivers/net/wireless/ti/wl1251/Makefile
+ +++ b/drivers/net/wireless/ti/wl1251/Makefile
+-@@ -5,6 +5,6 @@ wl1251_sdio-objs	+= sdio.o
++@@ -4,7 +4,7 @@ wl1251_spi-objs		+= spi.o
++ wl1251_sdio-objs	+= sdio.o
+  
+  obj-$(CONFIG_WL1251)		+= wl1251.o
+- obj-$(CONFIG_WL1251_SPI)	+= wl1251_spi.o
++-obj-$(CONFIG_WL1251_SPI)	+= wl1251_spi.o
+ -obj-$(CONFIG_WL1251_SDIO)	+= wl1251_sdio.o
+++obj-$(CONFIG_COMPAT_WL1251_SPI)+= wl1251_spi.o
+ +obj-$(CONFIG_COMPAT_WL1251_SDIO)+= wl1251_sdio.o
+  
+  ccflags-y += -D__CHECK_ENDIAN__
+@@ -154,7 +156,7 @@ CONFIG_BT_HIDP does not build with older kernel versions.
+  #else
+ --- a/net/bluetooth/rfcomm/sock.c
+ +++ b/net/bluetooth/rfcomm/sock.c
+-@@ -879,7 +879,7 @@ static int rfcomm_sock_ioctl(struct sock
++@@ -860,7 +860,7 @@ static int rfcomm_sock_ioctl(struct sock
+  	err = bt_sock_ioctl(sock, cmd, arg);
+  
+  	if (err == -ENOIOCTLCMD) {
+-- 
+1.7.9.5
+
