@@ -1,61 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43298 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab2E3AG2 (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:45978 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753505Ab2E2OaE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 May 2012 20:06:28 -0400
-Message-ID: <4FC5647F.4060601@candelatech.com> (sfid-20120530_020631_941943_F5ED24BF)
-Date: Tue, 29 May 2012 17:06:23 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 29 May 2012 10:30:04 -0400
+Received: by obbwd20 with SMTP id wd20so8143134obb.4
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 07:30:03 -0700 (PDT)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
-References: <4FC04B5A.1070900@candelatech.com> <4FC2437C.9090106@candelatech.com> <4FC51418.5000104@candelatech.com> <201205292107.42337.chunkeey@googlemail.com>
-In-Reply-To: <201205292107.42337.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1338275441.4342.20.camel@jlt3.sipsolutions.net>
+References: <1337885569-32711-1-git-send-email-victorg@ti.com>
+	<1338275441.4342.20.camel@jlt3.sipsolutions.net>
+Date: Tue, 29 May 2012 17:30:03 +0300
+Message-ID: <CAK80WHZxg4HgukVxuVLs6g0eJzq6t8_5YVa+cCM1KtnBY1gikQ@mail.gmail.com> (sfid-20120529_163009_220324_85C9B708)
+Subject: Re: [PATCH 1/2] nl80211/cfg80211: add scan channel times to scan command
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/29/2012 12:07 PM, Christian Lamparter wrote:
-> On Tuesday, May 29, 2012 08:23:20 PM Ben Greear wrote:
->> On 05/27/2012 08:08 AM, Ben Greear wrote:
->>> On 05/26/2012 09:39 AM, Sujith Manoharan wrote:
->> We started testing with two AR9380 NICs today (one AP, the other STA).
->> I applied Felix's skb optimization patch, and the ath9k memleak fix patch
->> on top of 3.3.7+.
->>
->> The system has 2GB RAM, but it is 32-bit kernel, so not all
->> is available to the networking code...  That said, the OOM
->> killer kills VNC and such.
->>
->> Anyway, I'll try some memleak debugging to see if
->> I can find any leaks.  It seems to me that we should
->> not actually OOM just by trying to transmit too fast
->> on a station interface :P
-> well, there's that:
-> http://comments.gmane.org/gmane.linux.drivers.ath9k.devel/8233
->
-> It might not fix the bug, but it can save you time to confirm
-> that is not related to this particular skb leak.
+On Tue, May 29, 2012 at 10:10 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> I think there may have to be some feature flag for this since otherwise
+> you can't know whether you're going to be implementing 11k properly or
+> not.
 
-I ported this to 3.3.7+ and applied it to my kernel
-trees.  It has tested out fine so far, though it did not
-actually fix the problem I was having.  That was not
-a real leak, just always-growing pending queue length,
-probably due to some issue with our version of pktgen.
-
-It is mostly a port-by-hand type of thing since
-there are lots of conflicts.  Let me know if you'd
-like me to post my version (and plz confirm your
-signed-off-by).
-
-Thanks,
-Ben
+Will add it in v2.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Thanks,
+Victor.
