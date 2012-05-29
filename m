@@ -1,116 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:53689 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018Ab2EJMfP convert rfc822-to-8bit (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:60073 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045Ab2E2HPJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 08:35:15 -0400
-Received: by gglu4 with SMTP id u4so877331ggl.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 05:35:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1336652854-16163-1-git-send-email-gwingerde@gmail.com>
-References: <1336652854-16163-1-git-send-email-gwingerde@gmail.com>
-Date: Thu, 10 May 2012 14:35:14 +0200
-Message-ID: <CAOZOX0VZtMZRWJQOkqPQEmoV1E2bX71bs=UzKE2g7TxwUpwufg@mail.gmail.com> (sfid-20120510_143521_134050_D0BAF322)
-Subject: Re: [PATCH] rt2x00: Add support for RT5360 based PCI devices.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	=?ISO-8859-1?Q?Alex_Villac=ED=ADs_Lasso?=
-	<a_villacis@palosanto.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 29 May 2012 03:15:09 -0400
+Received: by pbbrp8 with SMTP id rp8so5554212pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 00:15:08 -0700 (PDT)
+From: Eyal Shapira <eyal@wizery.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-next@vger.kernel.org>, Luciano Coelho <coelho@ti.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] wlcore: fix undefined symbols when CONFIG_PM is not defined
+Date: Tue, 29 May 2012 00:15:03 -0700
+Message-Id: <1338275703-28103-1-git-send-email-eyal@wizery.com> (sfid-20120529_091537_144776_E51148F9)
+In-Reply-To: <CAMuHMdVv+g=+A1HHNmWWcsFBQjRXNNA437V6-g80cYq7zRJ78g@mail.gmail.com>
+References: <CAMuHMdVv+g=+A1HHNmWWcsFBQjRXNNA437V6-g80cYq7zRJ78g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 10, 2012 at 2:27 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> From: Alex Villací­s Lasso <a villacis@palosanto.com>
->
-> This chip is used at least by the D-Link DWA-525 adapter.
->
-> Signed-off-by: Alex Villac<ED>s Lasso <a_villacis@palosanto.com>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+commit 5063c201d7b799d6cb36d3edfc2c2c3db3b400e5
+"wl12xx: add RX filters ACX commands" breaks the build
+when CONFIG_PM isn't defined:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+ERROR: "wl1271_rx_filter_get_fields_size"
+[drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
+ERROR: "wl1271_rx_filter_flatten_fields"
+[drivers/net/wireless/ti/wlcore/wlcore.ko] undefined!
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800.h    |    1 +
->  drivers/net/wireless/rt2x00/rt2800lib.c |    5 +++++
->  drivers/net/wireless/rt2x00/rt2800pci.c |    1 +
->  3 files changed, 7 insertions(+)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index 9348521..02f8773 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -51,6 +51,7 @@
->  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
->  * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
->  * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
-> + * RF5360 2.4G 1T1R
->  * RF5370 2.4G 1T1R
->  * RF5390 2.4G 1T1R
->  */
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index dfc90d3..11488e7 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2060,6 +2060,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->        case RF3052:
->                rt2800_config_channel_rf3052(rt2x00dev, conf, rf, info);
->                break;
-> +       case RF5360:
->        case RF5370:
->        case RF5372:
->        case RF5390:
-> @@ -2549,6 +2550,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
->                rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
->                rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
->                break;
-> +       case RF5360:
->        case RF5370:
->        case RF5372:
->        case RF5390:
-> @@ -4263,6 +4265,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
->        case RF3022:
->        case RF3052:
->        case RF3320:
-> +       case RF5360:
->        case RF5370:
->        case RF5372:
->        case RF5390:
-> @@ -4577,6 +4580,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->                   rt2x00_rf(rt2x00dev, RF3021) ||
->                   rt2x00_rf(rt2x00dev, RF3022) ||
->                   rt2x00_rf(rt2x00dev, RF3320) ||
-> +                  rt2x00_rf(rt2x00dev, RF5360) ||
->                   rt2x00_rf(rt2x00dev, RF5370) ||
->                   rt2x00_rf(rt2x00dev, RF5372) ||
->                   rt2x00_rf(rt2x00dev, RF5390)) {
-> @@ -4662,6 +4666,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->        case RF3022:
->        case RF3320:
->        case RF3052:
-> +       case RF5360:
->        case RF5370:
->        case RF5372:
->        case RF5390:
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 931331d..4da36c8 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -1188,6 +1188,7 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
->        { PCI_DEVICE(0x1814, 0x3593) },
->  #endif
->  #ifdef CONFIG_RT2800PCI_RT53XX
-> +       { PCI_DEVICE(0x1814, 0x5360) },
->        { PCI_DEVICE(0x1814, 0x5362) },
->        { PCI_DEVICE(0x1814, 0x5390) },
->        { PCI_DEVICE(0x1814, 0x5392) },
-> --
-> 1.7.10
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+code in drivers/net/wireless/ti/wlcore/acx.c is using these
+functions unconditionally while they are #ifdefed CONFIG_PM.
+Fix it by ifdefing all relevant RX filters code with CONFIG_PM.
+
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
+Geert - Thanks!
+
+ drivers/net/wireless/ti/wlcore/acx.c |    2 ++
+ drivers/net/wireless/ti/wlcore/acx.h |    4 +++-
+ drivers/net/wireless/ti/wlcore/rx.c  |    2 ++
+ 3 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+index 0fd78a0..755b225 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.c
++++ b/drivers/net/wireless/ti/wlcore/acx.c
+@@ -1715,6 +1715,7 @@ out:
+ 
+ }
+ 
++#ifdef CONFIG_PM
+ /* Set the global behaviour of RX filters - On/Off + default action */
+ int wl1271_acx_default_rx_filter_enable(struct wl1271 *wl, bool enable,
+ 					enum rx_filter_action action)
+@@ -1793,3 +1794,4 @@ out:
+ 	kfree(acx);
+ 	return ret;
+ }
++#endif /* CONFIG_PM */
+diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
+index 8106b2e..e6a7486 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.h
++++ b/drivers/net/wireless/ti/wlcore/acx.h
+@@ -1330,9 +1330,11 @@ int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
+ int wl1271_acx_fm_coex(struct wl1271 *wl);
+ int wl12xx_acx_set_rate_mgmt_params(struct wl1271 *wl);
+ int wl12xx_acx_config_hangover(struct wl1271 *wl);
++
++#ifdef CONFIG_PM
+ int wl1271_acx_default_rx_filter_enable(struct wl1271 *wl, bool enable,
+ 					enum rx_filter_action action);
+ int wl1271_acx_set_rx_filter(struct wl1271 *wl, u8 index, bool enable,
+ 			     struct wl12xx_rx_filter *filter);
+-
++#endif /* CONFIG_PM */
+ #endif /* __WL1271_ACX_H__ */
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 1f1d948..d6a3c6b 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -279,6 +279,7 @@ void wl12xx_rx(struct wl1271 *wl, struct wl_fw_status *status)
+ 	wl12xx_rearm_rx_streaming(wl, active_hlids);
+ }
+ 
++#ifdef CONFIG_PM
+ int wl1271_rx_filter_enable(struct wl1271 *wl,
+ 			    int index, bool enable,
+ 			    struct wl12xx_rx_filter *filter)
+@@ -314,3 +315,4 @@ void wl1271_rx_filter_clear_all(struct wl1271 *wl)
+ 		wl1271_rx_filter_enable(wl, i, 0, NULL);
+ 	}
+ }
++#endif /* CONFIG_PM */
+-- 
+1.7.4.1
+
