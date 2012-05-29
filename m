@@ -1,70 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:42783 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756532Ab2ENNKD (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:51741 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752576Ab2E2OVm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 09:10:03 -0400
-Received: by obcni5 with SMTP id ni5so9839462obc.13
-        for <linux-wireless@vger.kernel.org>; Mon, 14 May 2012 06:10:01 -0700 (PDT)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <coelho@ti.com>, <arik@wizery.com>
-Subject: [PATCH] wlcore: wait for roc complete only for the first roc command
-Date: Mon, 14 May 2012 16:07:38 +0300
-Message-Id: <1337000858-13620-1-git-send-email-victorg@ti.com> (sfid-20120514_151013_728846_7907DF4B)
+	Tue, 29 May 2012 10:21:42 -0400
+Received: by obbtb18 with SMTP id tb18so6926869obb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 07:21:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1338203942-5667-14-git-send-email-michal.kazior@tieto.com>
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com>
+	<1338203942-5667-14-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 29 May 2012 17:21:42 +0300
+Message-ID: <CAB3XZEdxDqyOOdi90zLz6h-98NvjZL1O04oD0uaJ5-jHmv34eA@mail.gmail.com> (sfid-20120529_162146_338715_5F39A105)
+Subject: Re: [RFC 13/14] cfg80211: extend combination checking to consider channels
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some multi role scenarios the driver might send multi
-roc requests without sending a croc first, the fw queues
-those requests and starts service the next roc request as
-soon as the driver sends a croc for the previous one. So,
-if the fw rocs on channel X and driver asks to roc also
-on channel Y, the fw will not start service Y (and will
-not send roc complete event for this request) until the
-driver releases the fw with croc X.
+hi Michal,
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
-Signed-off-by: Igal Chernobelsky <igalc@ti.com>
----
- drivers/net/wireless/ti/wlcore/cmd.c |   16 +++++++++++-----
- 1 files changed, 11 insertions(+), 5 deletions(-)
+On Mon, May 28, 2012 at 2:19 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> cfg80211_can_change_interface will soon be used
+> before .start_ap, .join_mesh, .join_ibss and .auth to
+> verify whether a given interface combination is
+> allowed.
+>
+> .connect cannot be handled since the driver scans
+> and connects on its own. It is up to the driver
+> then to refuse a connection (with -EBUSY for
+> example).
+>
+> Change-Id: I334c78aa9189f24fcf8829b98b7703ddde120eec
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+[...]
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 5b128a9..a742554 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -1573,19 +1573,25 @@ out:
- int wl12xx_roc(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 role_id)
- {
- 	int ret = 0;
-+	bool is_first_roc;
- 
- 	if (WARN_ON(test_bit(role_id, wl->roc_map)))
- 		return 0;
- 
-+	is_first_roc = (find_first_bit(wl->roc_map, WL12XX_MAX_ROLES) >=
-+			WL12XX_MAX_ROLES);
-+
- 	ret = wl12xx_cmd_roc(wl, wlvif, role_id);
- 	if (ret < 0)
- 		goto out;
- 
--	ret = wl1271_cmd_wait_for_event(wl,
--					REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID);
--	if (ret < 0) {
--		wl1271_error("cmd roc event completion error");
--		goto out;
-+	if (is_first_roc) {
-+		ret = wl1271_cmd_wait_for_event(wl,
-+					   REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID);
-+		if (ret < 0) {
-+			wl1271_error("cmd roc event completion error");
-+			goto out;
-+		}
- 	}
- 
- 	__set_bit(role_id, wl->roc_map);
--- 
-1.7.5.4
+> @@ -1007,7 +1007,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+>                if (rfkill_blocked(rdev->rfkill))
+>                        return notifier_from_errno(-ERFKILL);
+>                mutex_lock(&rdev->devlist_mtx);
+> -               ret = cfg80211_can_add_interface(rdev, wdev->iftype);
+> +               ret = cfg80211_can_add_interface(rdev, wdev->iftype, NULL);
 
+you pass NULL here...
+
+> @@ -965,9 +983,26 @@ int cfg80211_can_change_interface(struct cfg80211_registered_device *rdev,
+>                if (rdev->wiphy.software_iftypes & BIT(wdev_iter->iftype))
+>                        continue;
+>
+> +               for (i = 0; i < num_max_channels; i++) {
+> +                       if (!used_channels[i]) {
+> +                               used_channels[i] = chan;
+> +                               num_different_channels++;
+> +                               break;
+> +                       }
+> +                       else if (used_channels[i] == chan) {
+> +                               break;
+> +                       }
+> +               }
+> +
+> +               if (i == num_max_channels) {
+> +                       kfree(used_channels);
+> +                       return -ENOMEM;
+> +               }
+> +
+
+but this code will count it as a new channel.
+
+Eliad.
