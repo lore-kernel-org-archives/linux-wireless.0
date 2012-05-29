@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:57092 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551Ab2EJKMP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 06:12:15 -0400
-Received: by bkcji2 with SMTP id ji2so1102711bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 03:12:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87ipg48ivh.fsf@purkki.adurom.net>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com> <87ipg48ivh.fsf@purkki.adurom.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 10 May 2012 13:11:58 +0300
-Message-ID: <CA+XVXfcFx3ZDiPrwmDHbVbHs=_V0wsJasNvXAE9XrPodr_xVTg@mail.gmail.com> (sfid-20120510_121220_439408_D36BBD52)
-Subject: Re: [PATCH 00/78] 18xx chip support
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43935 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753416Ab2E2WkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 18:40:16 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com
+Cc: lf_driver_backport@lists.linux-foundation.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 5/8] compat-wireless: add asm/unaligned.h include to ath6kl
+Date: Wed, 30 May 2012 00:39:39 +0200
+Message-Id: <1338331182-29589-6-git-send-email-hauke@hauke-m.de> (sfid-20120530_004027_640562_407DC450)
+In-Reply-To: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
+References: <1338331182-29589-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 10, 2012 at 12:50 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> Arik Nemtsov <arik@wizery.com> writes:
->
->> This series adds initial support for the 18xx chip family. The new
->> module uses wlcore for functionality common with the 12xx family.
->
-> You do know that sending 78 patches in one patchset is very much
-> frowned upon? No sane person (outside of wl12xx) is going to review
-> all of these.
+Some old kernel versions are missing this include and we get a compile
+error because of missing get_unaligned_le16() prototype.
 
-Yea I don't like it as well, but it took this amount of patches to get
-the card up and running. Posting some skeleton code seems kind of
-useless.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/06-header-changes.patch |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Arik
+diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
+index db84468..d77e5fb 100644
+--- a/patches/06-header-changes.patch
++++ b/patches/06-header-changes.patch
+@@ -105,3 +105,13 @@ cases.
+  
+  #include "hidp.h"
+  
++--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
++@@ -20,6 +20,7 @@
++ #include <linux/moduleparam.h>
++ #include <linux/inetdevice.h>
++ #include <linux/export.h>
+++#include <asm/unaligned.h>
++ 
++ #include "core.h"
++ #include "cfg80211.h"
+-- 
+1.7.9.5
+
