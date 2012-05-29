@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:64003 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758770Ab2ECV2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 17:28:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 6/6] iwlwifi: don't disable AGG queues that are not enabled
-Date: Thu,  3 May 2012 14:22:06 -0700
-Message-Id: <1336080126-22606-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120503_232852_131435_C72AE2EA)
-In-Reply-To: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1336080126-22606-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:50258 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752662Ab2E2HEz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 03:04:55 -0400
+Message-ID: <1338275092.4342.14.camel@jlt3.sipsolutions.net> (sfid-20120529_090459_178216_19E366B4)
+Subject: Re: [PATCH] mac80211: fix flag check for QoS NOACK frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Claudio Pisa <claudio.pisa@uniroma2.it>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Tue, 29 May 2012 09:04:52 +0200
+In-Reply-To: <1338206785-3222-1-git-send-email-claudio.pisa@uniroma2.it>
+References: <1338206785-3222-1-git-send-email-claudio.pisa@uniroma2.it>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, 2012-05-28 at 13:06 +0100, Claudio Pisa wrote:
+> Signed-off-by: Claudio Pisa <claudio.pisa@uniroma2.it>
+> ---
+>  net/mac80211/tx.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index d67d36f..cb17497 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -153,7 +153,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+>  
+>  	/* Don't calculate ACKs for QoS Frames with NoAck Policy set */
+>  	if (ieee80211_is_data_qos(hdr->frame_control) &&
+> -	    *(ieee80211_get_qos_ctl(hdr)) | IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
+> +	    *(ieee80211_get_qos_ctl(hdr)) & IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
 
-If the BA session is torn down before we had a chance to start it
-we shouldn't disable the AGG tx queues that weren't enabled.
-This can happen in two cases:
+Looks right to me, I guess nobody cares about duration calculations
+after all. How did you find this?!
 
-1) We get a delBA before we drained our Tx queues in agg start flow
-2) We didn't get the (successfull) addBA response on time
-
-Reported-by: Daniel Chyan <dchyan@princeton.edu>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index d8b6fa2..3366e2e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -590,11 +590,17 @@ turn_off:
- 	spin_unlock_bh(&priv->sta_lock);
- 
- 	if (test_bit(txq_id, priv->agg_q_alloc)) {
--		/* If the transport didn't know that we wanted to start
--		 * agreggation, don't tell it that we want to stop them
-+		/*
-+		 * If the transport didn't know that we wanted to start
-+		 * agreggation, don't tell it that we want to stop them.
-+		 * This can happen when we don't get the addBA response on
-+		 * time, or we hadn't time to drain the AC queues.
- 		 */
--		if (agg_state != IWL_AGG_STARTING)
-+		if (agg_state == IWL_AGG_ON)
- 			iwl_trans_tx_agg_disable(priv->trans, txq_id);
-+		else
-+			IWL_DEBUG_TX_QUEUES(priv, "Don't disable tx agg: %d\n",
-+					    agg_state);
- 		iwlagn_dealloc_agg_txq(priv, txq_id);
- 	}
- 
--- 
-1.7.0.4
+johannes
 
