@@ -1,75 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yumi.tdiedrich.de ([85.10.210.183]:46644 "EHLO mx.tdiedrich.de"
+Received: from ebb06.tieto.com ([131.207.168.38]:62137 "EHLO ebb06.tieto.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758942Ab2EWUvz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 May 2012 16:51:55 -0400
-Date: Wed, 23 May 2012 22:51:51 +0200
-From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Hong Wu <Hong.Wu@dspg.com>, openwrt-devel@lists.openwrt.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2800: Initialize max_txpower to MAX_G_TXPOWER and
- MAX_A_TXPOWER respectively
-Message-ID: <20120523205150.GG28713@yumi.tdiedrich.de> (sfid-20120523_225213_244771_713434F4)
-References: <20120517230400.GB22418@yumi.tdiedrich.de>
- <CAGXE3d-MTZu16cU1wybd6zehGOudKPadknuHm9MG6JDVRKmDag@mail.gmail.com>
- <20120522205829.GE28713@yumi.tdiedrich.de>
- <CAGXE3d-MLFJQ-O8=0ToC3fxx0=eLCi+Kbc-DDf_QaNQ2t42=pQ@mail.gmail.com>
- <20120523135514.GF28713@yumi.tdiedrich.de>
- <CAGXE3d8oAFhw8SO_i6M8TXhFeqQGc5LJ76-t12xdpCYcQDhSUQ@mail.gmail.com>
+	id S1752706Ab2E2HJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 03:09:07 -0400
+Message-ID: <4FC47611.9050908@tieto.com> (sfid-20120529_090911_037292_5AE6B8FD)
+Date: Tue, 29 May 2012 09:09:05 +0200
+From: Michal Kazior <michal.kazior@tieto.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGXE3d8oAFhw8SO_i6M8TXhFeqQGc5LJ76-t12xdpCYcQDhSUQ@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] multi-channel work
+References: <1338203942-5667-1-git-send-email-michal.kazior@tieto.com> <1338275065.4342.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1338275065.4342.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa wrote:
-> Hi,
-> 
-> On Wed, May 23, 2012 at 3:55 PM, Tobias Diedrich
-> <ranma+openwrt@tdiedrich.de> wrote:
-> > Helmut Schaa wrote:
-> >> On Tue, May 22, 2012 at 10:58 PM, Tobias Diedrich
-> >> <ranma+openwrt@tdiedrich.de> wrote:
-> >> > Helmut Schaa wrote:
-> >> >> On Fri, May 18, 2012 at 1:04 AM, Tobias Diedrich
-> >> >> <ranma+openwrt@tdiedrich.de> wrote:
-> >> >> > rt2800: Initialize max_txpower to MAX_G_TXPOWER and MAX_A_TXPOWER
-> >> >> > respectively, similar to how it is already done in rt2[45]00pci.c
-> >> >> >
-> >> >> > rt2800lib.c doesn't initialize max_power and thus after
-> >> >> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next.git;a=commitdiff;h=eccc068e8e84c8fe997115629925e0422a98e4de
-> >> >> > was applied txpower is limited to 0 for these devices.
-> >> >> >
-> >> >> > This should be the proper fix compared to the net/wireless/reg.c
-> >> >> > hack in http://patchwork.openwrt.org/patch/2165/
-> >> >>
-> >> >> Btw. Tobias, did this affect the real tx power of the device at all or
-> >> >> is this just
-> >> >> a cosmetic issue?
-> >> >
-> >> > Hmm, apparently setting txpower has no effect?
-> >> > Is it not implemented in the driver?
-> >>
-> >> It is, but only for devices with correct tx power limit in the eeprom.
-> >
-> > Why?
-> 
-> Please read [1] for a detailed explanation.
+Johannes Berg wrote:
+> On Mon, 2012-05-28 at 13:18 +0200, Michal Kazior wrote:
+>> Hi Johannes,
+>>
+>> I've done another patchset aimed at multi-channel operation. This one
+>> is mostly cfg80211 related.
+>
+> Does this replace or amend your previous patchset?
 
-It still seems somewhat handwavy, I suppose what it means is:
-You get a default value for the txpower controlling registers
-from the eeprom (which is your 'calibration value'), but don't
-actually know how much this is in dBm, so you don't want to
-expose a 'fake' dBm value just so it's adjustable by the user (until
-percentage setting is implemented).
+It doesn't replace it.
 
-And I suppose it's more about the antenna gain and attenuation of
-the path between RT3050 and antenna than about what comes out of the
-SoC directly (which was more what I was thinking about initially).
-
-Thanks for the patience. :)
 
 -- 
-Tobias						PGP: http://8ef7ddba.uguu.de
+Pozdrawiam / Best regards, Michal Kazior.
