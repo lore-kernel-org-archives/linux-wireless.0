@@ -1,87 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41732 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756085Ab2EYSe5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 May 2012 14:34:57 -0400
-Date: Fri, 25 May 2012 13:34:51 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: BCM4331 tx failures after S3
-Message-ID: <20120525183451.GD2895@thinkpad-t410> (sfid-20120525_203501_427077_E95D8F1E)
-References: <20120522165251.GA31347@thinkpad-t410>
- <4FBCAE3E.6050206@broadcom.com>
- <20120523135506.GB30165@thinkpad-t410>
- <4FBE0110.5020209@broadcom.com>
- <20120524212115.GD26760@thinkpad-t410>
- <4FBEA96D.8030207@hauke-m.de>
- <20120525141339.GB2895@thinkpad-t410>
- <4FBFB79F.4060609@broadcom.com>
+Received: from nbd.name ([46.4.11.11]:36494 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753189Ab2E2XXt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 19:23:49 -0400
+Message-ID: <4FC55A83.6030602@openwrt.org> (sfid-20120530_012353_545702_9D29D737)
+Date: Wed, 30 May 2012 01:23:47 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FBFB79F.4060609@broadcom.com>
+To: greearb@candelatech.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Limit number of pending skbs.
+References: <1338332576-26427-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1338332576-26427-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 25, 2012 at 06:47:27PM +0200, Arend van Spriel wrote:
-> On 05/25/2012 04:13 PM, Seth Forshee wrote:
-> > On Thu, May 24, 2012 at 11:34:37PM +0200, Hauke Mehrtens wrote:
-> >> Hi Seth,
-> >>
-> >> rmmod and insmod of b43 does not help but doing this with b43 and bcma
-> >> works is that correct?
-> >> Have you tried to add this code from bcma_host_pci_probe() to resume:
-> >>
-> >> 	/* Disable the RETRY_TIMEOUT register (0x41) to keep
-> >> 	 * PCI Tx retries from interfering with C3 CPU state */
-> >> 	pci_read_config_dword(dev, 0x40, &val);
-> >> 	if ((val & 0x0000ff00) != 0)
-> >> 		pci_write_config_dword(dev, 0x40, val & 0xffff00ff);
-> >>
-> >> Could you also try to run bcma_sprom_get() after resume.
-> > 
-> > Okay, this one fixes it. The part that's needed seems to be:
-> > 
-> >         if (bus->chipinfo.id == 0x4331)
-> >                 bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, true);
-> > 
-> > I could have sworn I tried adding this to resume before, but apparently
-> > I didn't.
-> > 
-> > Hmm. It turns out that BCMA_CC_CHIPCTL is completely reset to 0 when on
-> > S3 without AC power, meaning all other fields in the register get
-> > cleared as well. On this MBP that's affecting
-> > BCMA_CHIPCTL_4331_BT_COEXIST. So we could save the value at suspend and
-> > restore it during resume, but maybe the initialization of this register
-> > also needs to be improved. Thoughts?
-> > 
-> > Thanks,
-> > Seth
-> > 
-> > 
+On 2012-05-30 1:02 AM, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> Well let me explain some behaviour. Upon suspend mac80211 takes down the
-> driver with the last callback being .stop(). Upon resume mac80211 calls
-> the driver with .start() callback.
+> Current code will allow any number of pending skbs, and
+> this can OOM the system when used with something like
+> the pktgen tool (which may not back off properly if
+> queue is stopped).
 > 
-> The brcmsmac driver has two bool states that are in play here: driver_up
-> and hw_up. Upon .stop() callback the driver_up is set to false, but
-> hw_up remains true. A subsequent .start() will perform some
-> reconfiguration and driver_up will be made true.
+> Possibly this is just a bug in our version of pktgen,
+> but either way, it seems reasonable to add a limit
+> so that it is not possible to go OOM in this manner.
 > 
-> The suspend/resume scenario is different for brcmsmac. bcma will call
-> brcmsmac .suspend() callback in which we set hw_up to false. This
-> changes the behaviour of the .start() callback after resume. Basically,
-> it reinitializes the hardware.
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+Adding a module parameter in a workaround for a possibly broken module
+seems a bit excessive to me.
 
-I'm having a bit of a hard time understanding the relevance of your
-description, since we're talking about b43. Are you suggesting that b43
-should do something similar? But even then I don't see any of the
-reinitialization done by brcmsmac setting BCMA_CC_CHIPCTL with the
-needed value. Am I missing something?
+Also, I'm not sure adding such a silent packet drop is a good idea. At
+the very least, it should complain loudly to encourage people to fix the
+actual bug instead of just papering over it.
 
-Seth
+When the driver cannot accept more packets, the queue stop should
+prevent the network stack from spamming mac80211 with more packets. Your
+pktgen seems to be ignoring this, so please fix it instead of adding
+workarounds to mac80211.
 
+- Felix
