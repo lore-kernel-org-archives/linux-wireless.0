@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43239 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755823Ab2EHPHM (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:50930 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824Ab2E2VhG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 11:07:12 -0400
-Message-ID: <4FA93693.40105@candelatech.com> (sfid-20120508_170716_748794_993604A8)
-Date: Tue, 08 May 2012 08:06:59 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 29 May 2012 17:37:06 -0400
+Received: by wgbds11 with SMTP id ds11so2680464wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 14:37:04 -0700 (PDT)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH] ath9k: Support ethtool getstats api.
-References: <1336411437-16653-1-git-send-email-greearb@candelatech.com> <1336412033.20924.6.camel@joe2Laptop> <4FA80D02.404@candelatech.com> <87zk9j85ue.fsf@purkki.adurom.net>
-In-Reply-To: <87zk9j85ue.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4FC53C3A.1080001@candelatech.com>
+References: <4FC53C3A.1080001@candelatech.com>
+Date: Tue, 29 May 2012 14:37:04 -0700
+Message-ID: <CAA93jw7TiJLtL8tHNN28bpM4b_btqh4MkuqR6gL2=t2bracb+A@mail.gmail.com> (sfid-20120529_233711_186618_0B662E39)
+Subject: Re: Is there no upper limit on mac80211 pending xmit queue size?
+From: Dave Taht <dave.taht@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/08/2012 12:55 AM, Kalle Valo wrote:
-> Ben Greear<greearb@candelatech.com>  writes:
+On Tue, May 29, 2012 at 2:14 PM, Ben Greear <greearb@candelatech.com> wrote:
+> The tx pending queues doesn't seem to be limitted, allowing
+> run-away memory usage when something like pktgen is
+> sending packets faster than the system can actually
+> send them.
 >
->> No, there is a check later that does a BUG_ON if our
->> we have screwed up the indexing of the stats.
+> [root@ct520-2011 ~]# cat /debug/ieee80211/wiphy0/queues
+> 00: 0x00000000/0
+> 01: 0x00000000/0
+> 02: 0x00000001/40076
+> 03: 0x00000000/0
+> [root@ct520-2011 ~]# cat /debug/ieee80211/wiphy0/queues
+> 00: 0x00000000/0
+> 01: 0x00000000/0
+> 02: 0x00000001/52649
+> 03: 0x00000000/0
+> [root@ct520-2011 ~]# cat /debug/ieee80211/wiphy0/queues
+> 00: 0x00000000/0
+> 01: 0x00000000/0
+> 02: 0x00000001/107939
+> 03: 0x00000000/0
 >
-> Please, no BUG_ON() calls in wifi drivers. They just make users life
-> miserable. WARN_ON() with a safe bailout is enough.
+> I think this is what is causing my OOM issues when sending
+> with (my hacked version of) pktgen.
+>
+> Shouldn't there be an upper limit on the number of pending frames
+> that mac80211 will queue?
 
-Ok, I can change that.
+something bql-like would help a lot.
 
-The reason I left it at BUG_ON before is because a mistake
-here could easily be a buffer overflow, so I wanted to make
-sure it was caught in development.
+>
+> Thanks,
+> Ben
+>
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-But, a warn-on should be sufficient.
 
-Thanks,
-Ben
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Dave Täht
+SKYPE: davetaht
+US Tel: 1-239-829-5608
+http://www.bufferbloat.net
