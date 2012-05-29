@@ -1,71 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:51495 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752153Ab2EaStP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 14:49:15 -0400
-Message-ID: <1338490153.5861.5.camel@joe2Laptop> (sfid-20120531_204919_028458_96E2B6CF)
-Subject: Re: [PATCH 1/3] drivers/net: Convert compare_ether_addr to
- ether_addr_equal
-From: Joe Perches <joe@perches.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Date: Thu, 31 May 2012 11:49:13 -0700
-In-Reply-To: <20120531150124.119853l3a0cbvj40@www.81.fi>
-References: <7c9881a67c52c2f218480b6742155b6d6928122d.1336618708.git.joe@perches.com>
-	 <20120510173201.16131du3cg90nybo@www.81.fi>
-	 <1336666288.22495.14.camel@joe2Laptop>
-	 <20120510.123353.1458740731067514606.davem@davemloft.net>
-	 <20120531150124.119853l3a0cbvj40@www.81.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:27737 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750715Ab2E2Mfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 08:35:31 -0400
+Date: Tue, 29 May 2012 14:35:03 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Zero Lin <zero.lin.0203@gmail.com>,
+	Woody Hung <Woody.Hung@mediatek.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	"Zero.Lin" <Zero.Lin@mediatek.com>
+Subject: Re: [PATCH] rt2x00:Add RT5392 chipset support
+Message-ID: <20120529123502.GD2441@redhat.com> (sfid-20120529_143535_400043_A0A15648)
+References: <1338279069-5630-1-git-send-email-zero.lin.0203@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1338279069-5630-1-git-send-email-zero.lin.0203@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-31 at 15:01 +0300, Jussi Kivilinna wrote:
-> Quoting David Miller <davem@davemloft.net>:
-> > From: Joe Perches <joe@perches.com>
-> > Date: Thu, 10 May 2012 09:11:28 -0700
-> >> On Thu, 2012-05-10 at 17:32 +0300, Jussi Kivilinna wrote:
-> >>> Quoting Joe Perches <joe@perches.com>:
-> >>> > Use the new bool function ether_addr_equal to add
-> >>> > some clarity and reduce the likelihood for misuse
-> >>> > of compare_ether_addr for sorting.
-> >> []
-> >>> > diff --git a/drivers/net/wireless/rndis_wlan.c
-> >> []
-> >>> > @@ -2139,7 +2139,7 @@ resize_buf:
-> >>> >  	while (check_bssid_list_item(bssid, bssid_len, buf, len)) {
-> >>> >  		if (rndis_bss_info_update(usbdev, bssid) && match_bssid &&
-> >>> >  		    matched) {
-> >>> > -			if (compare_ether_addr(bssid->mac, match_bssid))
-> >>> > +			if (!ether_addr_equal(bssid->mac, match_bssid))
-> >>>
-> >>> While reviewing this, noticed that above original code is wrong. It
-> >>> should be !compare_ether_addr. So do I push patch fixing this through
-> >>> wireless-testing althought it will later cause conflict with this patch?
-[]
-> That line/compare was added as response to hardware bug, where bssid-list does
-> not contain BSSID and other information of currently connected AP  
-> (spec insists
-> that device must provide this information in the list when connected). Lack
-> bssid-data on current connection then causes WARN_ON somewhere in cfg80211.
-> Workaround was to check if bssid-list returns current bssid and if it  
-> does not,
-> manually construct bssid information in other ways. And this  
-> workaround worked,
-> with inverse check. Which must mean that when hardware is experiencing the
-> problem, it's actually returning empty bssid-list.
-> 
-> Inverse check causes workaround be activated when bssid-list returns only
-> entry, currently connected BSSID. That does not cause problems in itself, just
-> slightly more inaccurate information in scan-list.
+On Tue, May 29, 2012 at 04:11:09PM +0800, Zero Lin wrote:
+> From: "Zero.Lin" <Zero.Lin@mediatek.com>
+Patch looks good for me.
 
-Thanks.
+> Signed-off-by: Zero.Lin <Zero.Lin@mediatek.com>
+Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-That information would be useful in the
-eventual commit message.
+> +	if (rt2x00_rt(rt2x00dev, RT5392)) {
+> +		rt2800_rfcsr_read(rt2x00dev, 50, &rfcsr);
+> +		if (info->default_power1 > RT5390_POWER_BOUND)
+> +			rt2x00_set_field8(&rfcsr, RFCSR50_TX,
+> +					  RT5390_POWER_BOUND);
+Woody, your current RT3290 patch will conflict with that one, since you
+changed RT5390_POWER_BOUND to POWER_BOUND. Please rebase your patch on
+top of it, as this one will most likely be applied earlier.
 
-cheers, Joe
-
+Thanks
+Stanislaw
