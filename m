@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:35109 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753698Ab2EQIZz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 04:25:55 -0400
-Received: by obcni5 with SMTP id ni5so2758544obc.41
-        for <linux-wireless@vger.kernel.org>; Thu, 17 May 2012 01:25:53 -0700 (PDT)
+Received: from mms3.broadcom.com ([216.31.210.19]:4247 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751603Ab2E2NDy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 09:03:54 -0400
+Message-ID: <4FC4C92A.6010109@broadcom.com> (sfid-20120529_150359_697903_AFC06A64)
+Date: Tue, 29 May 2012 15:03:38 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CANJm+iDif1+KREB=CJ_wYbo+Hzxo=nJL6fUxbBTQ5_C8Tz0E9Q@mail.gmail.com>
-References: <1336479518-23006-1-git-send-email-yoni.divinsky@ti.com>
-	<1336485961.4320.1.camel@jlt3.sipsolutions.net>
-	<CANJm+iAoVkPOO61ufrM3mxzsURFZzuNcMm9N6Y=3xUbSCaC1+w@mail.gmail.com>
-	<1337072920.4546.0.camel@jlt3.sipsolutions.net>
-	<CANJm+iDif1+KREB=CJ_wYbo+Hzxo=nJL6fUxbBTQ5_C8Tz0E9Q@mail.gmail.com>
-Date: Thu, 17 May 2012 11:25:53 +0300
-Message-ID: <CANJm+iDU1ahy3B9u6nn=0E4d0Pge+OubaNE9bPaE1EXYGahOUA@mail.gmail.com> (sfid-20120517_102602_388724_D25C1F1E)
-Subject: Fwd: [PATCH] mac80211: add op to configure default key id to driver
-From: "Divinsky, Yonatan" <yoni.divinsky@ti.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Seth Forshee" <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+Subject: Re: [RFC PATCH 3/8] brcm80211: smac: clean up channel.c
+References: <1334607462-5387-1-git-send-email-seth.forshee@canonical.com>
+ <1334607462-5387-4-git-send-email-seth.forshee@canonical.com>
+ <4FC008A1.9060005@broadcom.com> <20120526171749.GB11759@ubuntu-mba>
+ <4FC215B9.3060605@broadcom.com> <20120529124648.GA28007@thinkpad-t410>
+In-Reply-To: <20120529124648.GA28007@thinkpad-t410>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----------- Forwarded message ----------
-From: Divinsky, Yonatan <yoni.divinsky@ti.com>
-Date: Tue, May 15, 2012 at 1:59 PM
-Subject: Re: [PATCH] mac80211: add op to configure default key id to driver
-To: Johannes Berg <johannes@sipsolutions.net>
-
-
-On Tue, May 15, 2012 at 12:08 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2012-05-15 at 11:46 +0300, Divinsky, Yonatan wrote:
->> On Tue, May 8, 2012 at 5:06 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Tue, 2012-05-08 at 15:18 +0300, Yoni Divinsky wrote:
->> >> When hw_accel is enabled and encryption type is set to WEP,
->> >> the driver should get the default key index from mac80211.
->> >
->> > Well, why?
->> >
->> If the WEP encryption is done by the HW, then then low level driver
->> needs to know the defualt key index in
->> case there is more than one WEP key configured.
+On 05/29/2012 02:46 PM, Seth Forshee wrote:
+> On Sun, May 27, 2012 at 01:53:29PM +0200, Arend van Spriel wrote:
+>> On 05/26/2012 07:17 PM, Seth Forshee wrote:
+>>> On Sat, May 26, 2012 at 12:33:05AM +0200, Arend van Spriel wrote:
+>>>> We are not supporting 40MHz right now, but it is on our roadmap. I would
+>>>> prefer to keep it, but git can recover it for me when that roadmap item
+>>>> is due.
+>>>
+>>> The argument against keeping it is that it will be utterly broken by all
+>>> of the other changes. I could try to rework it along with the rest of
+>>> the code I guess, but I'd obviously be unable to test it.
+>>>
+>>> I'll keep it in if you prefer, but I should probably add a comment
+>>> warning that the code needs some attention before it can be used.
+>>>
+>>>
+>>
+>> Could you get rid of 40MHz stuff with a separate commit for my
+>> convenience when 40MHz is added.
+> 
+> Yes, I'll do that.
 >
-> I don't see why, for every packet mac80211 tells you what key to use.
+> 
 
-If the HW supports auto ARP responses, then it will need to have the correct
-key id in order to encrypt the ARP response.
+Appreciated.
 
->
-> johannes
->
+Gr. AvS
+
