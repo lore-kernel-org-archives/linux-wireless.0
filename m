@@ -1,39 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:49152 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755484Ab2EGIXw (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49979 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751226Ab2E2W5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 04:23:52 -0400
-Message-ID: <1336379032.18428.0.camel@sortiz-mobl> (sfid-20120507_102359_082592_2CCE9471)
-Subject: Re: [PATCH 2/2] NFC: Select CRC_CCITT for SHDLC link layer of HCI
- based drivers
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 07 May 2012 10:23:52 +0200
-In-Reply-To: <1336021968-19478-1-git-send-email-marcel@holtmann.org>
-References: <1336021968-19478-1-git-send-email-marcel@holtmann.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 29 May 2012 18:57:14 -0400
+Message-ID: <4FC55443.4020003@candelatech.com> (sfid-20120530_005717_622117_3E439248)
+Date: Tue, 29 May 2012 15:57:07 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Ath9k performance testing results (AR9380)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
+Ok, so thanks for all the suggestions and numbers that
+folks have posted in the 'wifi throughput tests' thread.
 
-On Thu, 2012-05-03 at 07:12 +0200, Marcel Holtmann wrote:
-> The SHDLC link layer of HCI based drivers uses CRC-CCITT and thus
-> needs to select that kernel option.
-> 
-> Otherwise it ends up with this linking error:
-> 
-> net/built-in.o: In function `nfc_shdlc_add_len_crc':
-> net/nfc/hci/shdlc.c:113: undefined reference to `crc_ccitt'
-> 
-> Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+Short answer:  352Mbps download, 270Mbps upload (not concurrent).
 
-Cheers,
-Samuel.
 
+We set up two systems, both with WPEA-127N NICs  (AR9380).
+
+The Station machine is dual-core Atom, 3.3.7+ 32-bit kernel, with
+Felix's recent optimizations and a bunch of other patches.
+
+The AP is a core-2 DUO system running the same software.  The
+AP is set up to route.
+
+Open air connection.  Channel 149, HT-40.  I can post hostapd
+and supplicant config files if anyone wants to see them.  AP
+and STA machine are about 5 feet apart, turned so that antenna
+face each other.  With antennas on positioned so that they are
+away from each other, performance was much worse.
+
+The STAtion is sending to/from a wired port to/from the
+station interface, so it is sending to itself.
+
+Using ~64k UDP frames, these systems can sustain about 352Mbps
+of traffic received on station interface and sent from the wired port (through
+the AP).  Our traffic generator cannot push 350Mbps to self when using
+small-sized UDP frames on this hardware.
+
+The traffic generator is our proprietary tool, since iperf can't easily
+send to self, but I see no reason why iperf would be any slower if set up
+properly with a third machine to act as the upstream iperf server.
+
+When sending from STA to Wired, it maxes out at about 270Mbps.
+
+I am not sure why there is such a big difference, but possibly
+sending wifi is harder than receiving it, and the Atom processor
+just can't keep up.
+
+TCP is a lot slower than UDP..around 235Mbps download.  I haven't
+tried tuning things yet..maybe window sizes need some stretching.
+
+We'll do some more tests with our i7 machines when we get
+a chance...
+
+Thanks!
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
