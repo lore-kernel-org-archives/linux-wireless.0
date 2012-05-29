@@ -1,74 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:44214 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364Ab2ECRMf (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:58630 "HELO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with SMTP id S1752728Ab2E2Wj3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 13:12:35 -0400
-Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-	Thu, 3 May 2012 11:12:34 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 7C2B41FF0023
-	for <linux-wireless@vger.kernel.org>; Thu,  3 May 2012 11:12:23 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id q43HCBGZ065564
-	for <linux-wireless@vger.kernel.org>; Thu, 3 May 2012 11:12:17 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id q43HCAtj008302
-	for <linux-wireless@vger.kernel.org>; Thu, 3 May 2012 11:12:10 -0600
-Date: Thu, 3 May 2012 10:12:09 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Suspicious RCU usage in mac80211
-Message-ID: <20120503171209.GH2592@linux.vnet.ibm.com> (sfid-20120503_191238_969887_A2D7FE20)
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <1334202842.3788.10.camel@jlt3.sipsolutions.net>
- <4F86FA05.5080404@lwfinger.net>
- <1334246145.4062.0.camel@jlt3.sipsolutions.net>
- <CAD2nsn1773KvbPCFKBWr5JOkLkj_cz4wk4fkTDA9cAdBUagQcw@mail.gmail.com>
- <4FA0371E.9040704@lwfinger.net>
- <20120502100012.GA8492@arm.com>
- <1335978471.4295.3.camel@jlt3.sipsolutions.net>
- <4FA1F534.8040601@lwfinger.net>
- <20120503084701.GA27872@arm.com>
- <4FA2B845.2000502@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FA2B845.2000502@lwfinger.net>
+	Tue, 29 May 2012 18:39:29 -0400
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Avinash Patil <patila@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stone Piao <piaoyun@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] cfg80211: use sme_state in ibss start/join path
+Date: Tue, 29 May 2012 15:39:06 -0700
+Message-Id: <1338331146-13540-3-git-send-email-bzhao@marvell.com> (sfid-20120530_003943_184809_FFE847E8)
+In-Reply-To: <1338331146-13540-1-git-send-email-bzhao@marvell.com>
+References: <1338331146-13540-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 03, 2012 at 11:54:29AM -0500, Larry Finger wrote:
-> On 05/03/2012 03:47 AM, Catalin Marinas wrote:
-> >
-> >IIUC, Paul suggested that you should use rcu_dereference_check() here
-> >instead as the protected one is not safe in this context.
-> 
-> This patch also fails to fix the problem. Did I do what Paul suggested?
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-That is indeed what I suggested!
+CFG80211_DEV_WARN_ON() at "net/wireless/ibss.c line 63"
+is unnecessarily triggered even after successful connection,
+when cfg80211_ibss_joined() is called by driver inside
+.join_ibss handler.
 
-What locks does lockdep say are held?
+This patch fixes the problem by changing 'sme_state' in ibss path
+and having WARN_ON() check for 'sme_state' similar to infra
+association.
 
-							Thanx, Paul
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ net/wireless/ibss.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-> Index: wireless-testing-new/net/mac80211/sta_info.h
-> ===================================================================
-> --- wireless-testing-new.orig/net/mac80211/sta_info.h
-> +++ wireless-testing-new/net/mac80211/sta_info.h
-> @@ -452,7 +452,7 @@ void ieee80211_assign_tid_tx(struct sta_
->  static inline struct tid_ampdu_tx *
->  rcu_dereference_protected_tid_tx(struct sta_info *sta, int tid)
->  {
-> -       return rcu_dereference_protected(sta->ampdu_mlme.tid_tx[tid],
-> +       return rcu_dereference_check(sta->ampdu_mlme.tid_tx[tid],
->                                          lockdep_is_held(&sta->lock) ||
->                                          lockdep_is_held(&sta->ampdu_mlme.mtx));
->  }
-> 
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 30f20fe..3d0930d 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -42,6 +42,7 @@ void __cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid)
+ 	cfg80211_hold_bss(bss_from_pub(bss));
+ 	wdev->current_bss = bss_from_pub(bss);
+ 
++	wdev->sme_state = CFG80211_SME_CONNECTED;
+ 	cfg80211_upload_connect_keys(wdev);
+ 
+ 	nl80211_send_ibss_bssid(wiphy_to_dev(wdev->wiphy), dev, bssid,
+@@ -60,7 +61,7 @@ void cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid, gfp_t gfp)
+ 	struct cfg80211_event *ev;
+ 	unsigned long flags;
+ 
+-	CFG80211_DEV_WARN_ON(!wdev->ssid_len);
++	CFG80211_DEV_WARN_ON(wdev->sme_state != CFG80211_SME_CONNECTING);
+ 
+ 	ev = kzalloc(sizeof(*ev), gfp);
+ 	if (!ev)
+@@ -115,9 +116,11 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
+ #ifdef CONFIG_CFG80211_WEXT
+ 	wdev->wext.ibss.channel = params->channel;
+ #endif
++	wdev->sme_state = CFG80211_SME_CONNECTING;
+ 	err = rdev->ops->join_ibss(&rdev->wiphy, dev, params);
+ 	if (err) {
+ 		wdev->connect_keys = NULL;
++		wdev->sme_state = CFG80211_SME_IDLE;
+ 		return err;
+ 	}
+ 
+@@ -169,6 +172,7 @@ static void __cfg80211_clear_ibss(struct net_device *dev, bool nowext)
+ 	}
+ 
+ 	wdev->current_bss = NULL;
++	wdev->sme_state = CFG80211_SME_IDLE;
+ 	wdev->ssid_len = 0;
+ #ifdef CONFIG_CFG80211_WEXT
+ 	if (!nowext)
+-- 
+1.7.0.2
 
