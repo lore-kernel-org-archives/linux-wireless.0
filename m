@@ -1,81 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm25-vm7.bullet.mail.ird.yahoo.com ([212.82.109.208]:43481 "HELO
-	nm25-vm7.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1761722Ab2EQLtb convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 07:49:31 -0400
-Message-ID: <1337254979.3782.YahooMailClassic@web29405.mail.ird.yahoo.com> (sfid-20120517_134935_469690_4C3DFB5C)
-Date: Thu, 17 May 2012 12:42:59 +0100 (BST)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: ->brightness_set can not sleep
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@canonical.com>
-In-Reply-To: <4FB3BD4A.5020509@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:48461 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752897Ab2E2HLV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 03:11:21 -0400
+Message-ID: <1338275484.4342.22.camel@jlt3.sipsolutions.net> (sfid-20120529_091124_241940_70D38939)
+Subject: Re: [PATCH] mac80211: add command to get current rssi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 29 May 2012 09:11:24 +0200
+In-Reply-To: <CAK80WHbLfOYgvNqoyZroGC6zvWs8UYNwRP_TzLmzDjVSqJK8XA@mail.gmail.com>
+References: <1337669130-4229-1-git-send-email-victorg@ti.com>
+	 <1337712022.4470.0.camel@jlt3.sipsolutions.net>
+	 <CAK80WHZW8OLs8N9vPhLx8+yVUhOnFU8EGyHQX=Es12gzZ32rNg@mail.gmail.com>
+	 <CAK80WHbLfOYgvNqoyZroGC6zvWs8UYNwRP_TzLmzDjVSqJK8XA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
---- On Wed, 16/5/12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> On 05/16/2012 04:06 AM, Stanislaw
-> Gruszka wrote:
-> > Fix:
+On Wed, 2012-05-23 at 11:51 +0300, Goldenshtein, Victor wrote:
+> On Wed, May 23, 2012 at 9:58 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
+> > On Tue, May 22, 2012 at 9:40 PM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> >> On Tue, 2012-05-22 at 09:45 +0300, Victor Goldenshtein wrote:
+> >>
+> >>> @@ -388,7 +389,10 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+> >>>       if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+> >>>           (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
+> >>>               sinfo->filled |= STATION_INFO_SIGNAL | STATION_INFO_SIGNAL_AVG;
+> >>> -             sinfo->signal = (s8)sta->last_signal;
+> >>> +             if (local->ops->get_rssi)
+> >>> +                     drv_get_rssi(local, sdata, &sinfo->signal);
+> >>> +             else
+> >>> +                     sinfo->signal = (s8)sta->last_signal;
+> >>>               sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+> >>>       }
+> >>
+> >> So .. you're filling a per-station value with a generic per-interface
+> >> callback? What were you thinking? ;-)
+> >>
 > >
-> > BUG: sleeping function called from invalid context at
-> kernel/workqueue.c:2547
-> > in_atomic(): 1, irqs_disabled(): 0, pid: 629, name:
-> wpa_supplicant
-> > 2 locks held by wpa_supplicant/629:
-> >   #0:  (rtnl_mutex){+.+.+.}, at:
-> [<c08b2b84>] rtnl_lock+0x14/0x20
-> >   #1: 
-> (&trigger->leddev_list_lock){.+.?..}, at:
-> [<c0867f41>] led_trigger_event+0x21/0x80
-> > Pid: 629, comm: wpa_supplicant Not tainted
-> 3.3.0-0.rc3.git5.1.fc17.i686
-> > Call Trace:
-> >   [<c046a9f6>]
-> __might_sleep+0x126/0x1d0
-> >   [<c0457d6c>]
-> wait_on_work+0x2c/0x1d0
-> >   [<c045a09a>]
-> __cancel_work_timer+0x6a/0x120
-> >   [<c045a160>]
-> cancel_delayed_work_sync+0x10/0x20
-> >   [<f7dd3c22>]
-> rtl8187_led_brightness_set+0x82/0xf0 [rtl8187]
-> >   [<c0867f7c>]
-> led_trigger_event+0x5c/0x80
-> >   [<f7ff5e6d>]
-> ieee80211_led_radio+0x1d/0x40 [mac80211]
-> >   [<f7ff3583>]
-> ieee80211_stop_device+0x13/0x230 [mac80211]
+> > This is this is for managed only.
+> > I can rename the drv_get_rssi() to drv_get_sta_rssi() and to call it
+> > only for NL80211_IFTYPE_STATION, I think it would clarify things?
 > >
-> > Removing _sync is ok, because if led_on work is
-> currently running
-> > it will be finished before led_off work start to
-> perform, since
-> > they are always queued on the same mac80211
-> local->workqueue.
-> >
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=795176
-> >
-> > Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
-> > ---
 > 
-> ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Alternatively we could leave it as general callback "drv_get_rssi()",
+> add the peer address and let the driver decide if it supports
+> retrieval of the rssi for the given peer.  Thus, allowing us to do
+> something like:
+> 
+> if (!local->ops->get_rssi) || (drv_get_rssi(local, sdata,
+> sta->sta.addr, &sinfo->signal))
+>         sinfo->signal = (s8)sta->last_signal;
 
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+However, I think you should pass &sta->sta, not sta->sta.addr.
 
-I haven't had any problem with suspend though, mostly because I don't have an Led'ed device.
-
-Hin-Tak
-
+johannes
 
