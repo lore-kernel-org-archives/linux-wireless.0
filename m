@@ -1,44 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:43660 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402Ab2ENFYO (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14480 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab2E2LbQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 01:24:14 -0400
-Received: by dady13 with SMTP id y13so5440428dad.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 May 2012 22:24:13 -0700 (PDT)
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: Thomas Pedersen <thomas@cozybit.com>, johannes@sipsolutions.net,
-	linville@tuxdriver.com
-Subject: [PATCH] mac80211: allow channel change while mesh is down
-Date: Sun, 13 May 2012 22:24:08 -0700
-Message-Id: <1336973048-11173-1-git-send-email-thomas@cozybit.com> (sfid-20120514_072418_000796_11ECDD52)
+	Tue, 29 May 2012 07:31:16 -0400
+Message-ID: <4FC4B37E.2080002@qca.qualcomm.com> (sfid-20120529_133119_692528_2FE62050)
+Date: Tue, 29 May 2012 14:31:10 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH V2 1/2] ath6kl: Fix race in aggregation reorder logic
+References: <1337941158-14895-1-git-send-email-vthiagar@qca.qualcomm.com> <4FC4AF40.3060702@qca.qualcomm.com> <4FC4B132.60209@qca.qualcomm.com>
+In-Reply-To: <4FC4B132.60209@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow channel change on a mesh interface if the interface is up and no
-mesh is started.
+On 05/29/2012 02:21 PM, Vasanthakumar Thiagarajan wrote:
+> On Tuesday 29 May 2012 04:43 PM, Kalle Valo wrote:
+>> On 05/25/2012 01:19 PM, Vasanthakumar Thiagarajan wrote:
+>>
+>>> @@ -1188,6 +1189,7 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+>>>   		rxtid->progress = true;
+>>>   	else
+>>>   		for (idx = 0 ; idx<  rxtid->hold_q_sz; idx++) {
+>>> +			spin_lock_bh(&rxtid->lock);
+>>>   			if (rxtid->hold_q[idx].skb) {
+>>>   				/*
+>>>   				 * There is a frame in the queue and no
+>>> @@ -1201,8 +1203,10 @@ static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+>>>   					   HZ * (AGGR_RX_TIMEOUT) / 1000));
+>>>   				rxtid->progress = false;
+>>>   				rxtid->timer_mon = true;
+>>> +				spin_unlock_bh(&rxtid->lock);
+>>>   				break;
+>>>   			}
+>>> +			spin_unlock_bh(&rxtid->lock);
+>>>   		}
+>>
+>> Here you take and release the lock multiple times inside the loop. Why
+>> not take the lock before the loop?
+> 
+> Sounds better to acquire the lock before loop and releasing it after
+> the loop. I was kind of thinking about protecting the data only
+> in critical section, but in this case we can bring the loop
+> in the lock, it is not going to make much difference. 
 
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/chan.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+It's also the question of does the lock protect hold_q_sz.
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index c76cf72..f0f87e5 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -41,6 +41,10 @@ __ieee80211_get_channel_mode(struct ieee80211_local *local,
- 			if (!sdata->u.ap.beacon)
- 				continue;
- 			break;
-+		case NL80211_IFTYPE_MESH_POINT:
-+			if (!sdata->wdev.mesh_id_len)
-+				continue;
-+			break;
- 		default:
- 			break;
- 		}
--- 
-1.7.5.4
+Also, can you please fix the comment I added to core.h about the lock
+and document properly what the lock is actually supposed to protect:
 
+	/*
+	 * FIXME: No clue what this should protect. Apparently it should
+	 * protect some of the fields above but they are also accessed
+	 * without taking the lock.
+	 */
+
+> I'll change this.
+
+Thanks.
+
+Kalle
