@@ -1,62 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3875 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755500Ab2EBSxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 May 2012 14:53:40 -0400
-Message-ID: <4FA182A8.8080604@broadcom.com> (sfid-20120502_205344_455781_14276639)
-Date: Wed, 2 May 2012 20:53:28 +0200
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Kalle Valo" <kvalo@adurom.com>,
-	"Nathan Hintz" <nlhintz@hotmail.com>,
-	linux-wireless@vger.kernel.org, hauke@hauke-m.de
-Subject: Re: [PATCH v2 0/6] BCMA Cumulative patches from OpenWRT
-References: <BLU0-SMTP45859B1CA3415BE44C9024CAC240@phx.gbl>
- <4F990DC1.4070305@broadcom.com> <87r4vaaezl.fsf@purkki.adurom.net>
- <20120502181157.GC9285@tuxdriver.com>
-In-Reply-To: <20120502181157.GC9285@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog136.obsmtp.com ([74.125.149.85]:51957 "EHLO
+	na3sys009aog136.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932264Ab2E3IlO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 04:41:14 -0400
+Received: by obbuo13 with SMTP id uo13so18441550obb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 01:40:59 -0700 (PDT)
+From: Yoni Divinsky <yoni.divinsky@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v3] mac80211: add op to configure default key id
+Date: Wed, 30 May 2012 11:36:39 +0300
+Message-Id: <1338366999-5268-1-git-send-email-yoni.divinsky@ti.com> (sfid-20120530_104118_257567_BDCC3548)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2012 08:11 PM, John W. Linville wrote:
-> On Thu, Apr 26, 2012 at 02:50:54PM +0300, Kalle Valo wrote:
->> "Arend van Spriel" <arend@broadcom.com> writes:
->>
->>> On 04/26/2012 06:23 AM, Nathan Hintz wrote:
->>>> Nathan Hintz (6):
->>>>    bcma: Find names of non BCM cores
->>>>    bcma: Move initialization of SPROM to prevent overwrite
->>>>    bcma: Account for variable PCI memory base/size
->>>>    bcma: reads/writes are always 4 bytes, so always map 4 bytes
->>>>    bcma: Add __devexit to bcma_host_pci_remove
->>>>    bcma: Add flush for BCMA_RESET_CTL write
->>>>
->>>>   arch/mips/bcm47xx/setup.c      |    4 +++
->>>>   arch/mips/bcm47xx/sprom.c      |    2 -
->>>>   drivers/bcma/core.c            |    1 +
->>>>   drivers/bcma/driver_pci_host.c |   10 +++---
->>>>   drivers/bcma/host_pci.c        |    4 +-
->>>>   drivers/bcma/scan.c            |   54 +++++++++++++++++++++++++++++----------
->>>>   6 files changed, 52 insertions(+), 23 deletions(-)
->>>>
->>>
->>> None of these patches have any description. Some motivation for the
->>> changes would be appreciated like 'reported problem', 'new target
->>> support', etc.
->>
->> I would say that it's required. Anyone can see the diff and see what was
->> changed, but nobody will figure out why the change was made unless it's
->> described in the commit log. So it's important to answer the question
->> "Why?".
-> 
-> Will we be seeing this patchset reposted with better changelogs?
-> 
-> John
+There are hardwares which support offload of data packets
+for example when auto ARP is enabled the hw will send
+the ARP response. In such cases if WEP encryption is
+configured the hw must know the default WEP key in order
+to encrypt the packets correctly.
 
-Although not strongly stated by me I was certainly expecting a re-post.
+When hw_accel is enabled and encryption type is set to WEP,
+the driver should get the default key index from mac80211.
 
-Gr. AvS
+Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
+---
+
+v2 to v3:
+	removed the return value of set_default_key_idx op
+        since it should not fail at this point.
+
+ include/net/mac80211.h      |    7 ++++++-
+ net/mac80211/driver-ops.h   |   14 ++++++++++++++
+ net/mac80211/driver-trace.h |   24 ++++++++++++++++++++++++
+ net/mac80211/key.c          |    2 ++
+ 4 files changed, 46 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4d6e6c6..aecdca7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1427,6 +1427,10 @@ void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb);
+  * rekeying), it will not include a valid phase 1 key. The valid phase 1 key is
+  * provided by update_tkip_key only. The trigger that makes mac80211 call this
+  * handler is software decryption with wrap around of iv16.
++ *
++ * The set_default_key_idx() call updates the default WEP key index configured
++ * to the hardware for WEP encryption type. This is required for hw which
++ * supports offload of data packets (i.e. auto ARP respones).
+  */
+ 
+ /**
+@@ -2361,7 +2365,6 @@ struct ieee80211_ops {
+ 					u16 tids, int num_frames,
+ 					enum ieee80211_frame_release_type reason,
+ 					bool more_data);
+-
+ 	int	(*get_et_sset_count)(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif, int sset);
+ 	void	(*get_et_stats)(struct ieee80211_hw *hw,
+@@ -2370,6 +2373,8 @@ struct ieee80211_ops {
+ 	void	(*get_et_strings)(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  u32 sset, u8 *data);
++	void (*set_default_key_idx)(struct ieee80211_hw *hw,
++				    struct ieee80211_vif *vif, int idx);
+ };
+ 
+ /**
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 6d33a0c..b627f56 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -845,4 +845,18 @@ drv_allow_buffered_frames(struct ieee80211_local *local,
+ 						  more_data);
+ 	trace_drv_return_void(local);
+ }
++
++static inline void
++drv_set_default_unicast_key(struct ieee80211_local *local,
++		    struct ieee80211_sub_if_data *sdata,
++		    int key_idx)
++{
++	check_sdata_in_driver(sdata);
++
++	trace_drv_set_default_unicast_key(local, sdata, key_idx);
++	if (local->ops->set_default_key_idx)
++		local->ops->set_default_key_idx(&local->hw, &sdata->vif,
++						key_idx);
++	trace_drv_return_void(local);
++}
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6de00b2..bd4cc06 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -1606,6 +1606,30 @@ TRACE_EVENT(stop_queue,
+ 		LOCAL_PR_ARG, __entry->queue, __entry->reason
+ 	)
+ );
++
++TRACE_EVENT(drv_set_default_unicast_key,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 int key_idx),
++
++	TP_ARGS(local, sdata, key_idx),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(int, key_idx)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->key_idx = key_idx;
++	),
++
++	TP_printk(LOCAL_PR_FMT VIF_PR_FMT " key_idx:%d",
++		  LOCAL_PR_ARG, VIF_PR_ARG, __entry->key_idx)
++);
++
+ #endif /* !__MAC80211_DRIVER_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 5bb600d..32ff162 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -237,6 +237,8 @@ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
+ {
+ 	mutex_lock(&sdata->local->key_mtx);
+ 	__ieee80211_set_default_key(sdata, idx, uni, multi);
++	if (uni)
++		drv_set_default_unicast_key(sdata->local, sdata, idx);
+ 	mutex_unlock(&sdata->local->key_mtx);
+ }
+ 
+-- 
+1.7.0.4
 
