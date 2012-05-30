@@ -1,131 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from yumi.tdiedrich.de ([85.10.210.183]:59184 "EHLO mx.tdiedrich.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761070Ab2ERBSe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 May 2012 21:18:34 -0400
-Date: Fri, 18 May 2012 03:18:29 +0200
-From: Tobias Diedrich <ranma+openwrt@tdiedrich.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt28xx AP-mode problem with commit
- 3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 "mac80211: manage AP netdev
- carrier state"
-Message-ID: <20120518011829.GD22418@yumi.tdiedrich.de> (sfid-20120518_031842_360577_3AA67981)
-References: <20120509105719.GA24457@yumi.tdiedrich.de>
- <1336564773.4323.19.camel@jlt3.sipsolutions.net>
- <20120509121827.GD5472@yumi.tdiedrich.de>
- <20120509210448.GE5472@yumi.tdiedrich.de>
- <1336637726.4334.13.camel@jlt3.sipsolutions.net>
- <1336638453.4334.15.camel@jlt3.sipsolutions.net>
+Received: from youngberry.canonical.com ([91.189.89.112]:60174 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754532Ab2E3VFm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 17:05:42 -0400
+Date: Wed, 30 May 2012 16:05:38 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>
+Subject: Re: brcmsmac connection stalls (was Re: )
+Message-ID: <20120530210538.GG30697@thinkpad-t410> (sfid-20120530_230546_565371_97C7F335)
+References: <20120530202547.GE30697@thinkpad-t410>
+ <4FC687C1.6090800@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1336638453.4334.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <4FC687C1.6090800@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> On Thu, 2012-05-10 at 10:15 +0200, Johannes Berg wrote:
-> > On Wed, 2012-05-09 at 23:04 +0200, Tobias Diedrich wrote:
-> > 
-> > > > PKG_REV:=1f0cc27eb98f7d1af9c64d0752238184cbdb9a24
-> > 
-> > Ok.
-> > 
-> > > When associating to the AP works (3edaf3e61fda3aa9ff8d38445bf92f2bec23bf63 reverted):
-> > > root@OpenWrt:/# ip monitor
-> > > dev eth0.1 lladdr 00:50:5b:04:05:7e REACHABLE
-> > > dev wlan0 lladdr a0:0b:ba:c6:9f:88 REACHABLE
-> > 
-> > Ah, well, I wanted "ip monitor" (and maybe restrict to "ip monitor
-> > link") while you start/stop hostapd. Sorry for not being clear on that.
-> > Also could be useful to look at it with the tcpdump thing, which is very
-> > very strange.
-> > 
-> > I wonder if things like broadcast addresses are only added upon
-> > netif_carrier_on() and that would reprogram filters and cause issues for
-> > rt2x00... For that we'd need to do some more debugging inside mac80211
-> > though.
-> 
-> I don't see anything like that happening upon netif_carrier_on(), the
-> only thing that really seems to happen is attaching and starting qdiscs,
-> which shouldn't make a difference across drivers...
-> 
-> Is this using compat-wireless? But then, so do I right now, against 3.1
-> base kernel.
+On Wed, May 30, 2012 at 10:49:05PM +0200, Arend van Spriel wrote:
+> If you can provide me as much detail as possible on the AP settings I
+> can dive into it over here.
 
-One more clue:
-I think this has to do with the order in which the OpenWRT wifi
-script does things:
+The AP is a Linksys E3000 running dd-wrt. Here's what iw says about it.
+Let me know if there's any more information you'd like to have or
+anything else I can do to help.
 
-hostapd -P /var/run/wifi-phy0.pid -B /var/run/hostapd-phy0.conf
-hostapd_ctrl=/var/run/hostapd-phy0/wlan0
-ifconfig wlan0
-ifconfig wlan0 down
-ifconfig wlan0 hw ether 1c:af:f7:49:50:56 up
-ifconfig wlan0 0.0.0.0
-ifconfig wlan0
-ifconfig br-lan
-ifconfig wlan0 0.0.0.0
-ifconfig wlan0 hw ether 1c:af:f7:49:50:56 up
-iw dev wlan0 set txpower fixed 2000
+        TSF: 80992461200 usec (0d, 22:29:52)
+        freq: 2412
+        beacon interval: 100
+        capability: ESS Privacy ShortSlotTime (0x0411)
+        signal: -35.00 dBm
+        last seen: 10192 ms ago
+        Information elements from Probe Response frame:
+        SSID: Kailia
+        Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0 36.0 54.0 
+        DS Parameter set: channel 1
+        ERP: <no flags>
+        RSN:     * Version: 1
+                 * Group cipher: CCMP
+                 * Pairwise ciphers: CCMP
+                 * Authentication suites: PSK
+                 * Capabilities: 16-PTKSA-RC (0x000c)
+        Extended supported rates: 6.0 9.0 12.0 48.0 
+        HT capabilities:
+                Capabilities: 0x187e
+                        HT20/HT40
+                        SM Power Save disabled
+                        RX Greenfield
+                        RX HT20 SGI
+                        RX HT40 SGI
+                        No RX STBC
+                        Max AMSDU length: 7935 bytes
+                        DSSS/CCK HT40
+                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+                Minimum RX AMPDU time spacing: 8 usec (0x06)
+                HT RX MCS rate indexes supported: 0-15, 32
+                HT TX MCS rate indexes are undefined
+        HT operation:
+                 * primary channel: 1
+                 * secondary channel offset: above
+                 * STA channel width: any
+                 * RIFS: 1
+                 * HT protection: nonmember
+                 * non-GF present: 0
+                 * OBSS non-GF present: 1
+                 * dual beacon: 0
+                 * dual CTS protection: 0
+                 * STBC beacon: 0
+                 * L-SIG TXOP Prot: 0
+                 * PCO active: 0
+                 * PCO phase: 0
+        WMM:     * Parameter version 1
+                 * u-APSD
+                 * BE: CW 15-1023, AIFSN 3
+                 * BK: CW 15-1023, AIFSN 7
+                 * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
+                 * VO: acm CW 3-7, AIFSN 2, TXOP 1504 usec
 
-
-i.e. if I restart hostapd by hand the interface comes up:
-
-|[  791.570000] br-lan: port 2(wlan0) entered disabled state
-|14: wlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc mq master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56 brd ff:ff:ff:ff:ff:ff
-|14: wlan0: <BROADCAST,MULTICAST> mtu 1500 master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <BROADCAST,MULTICAST> mtu 1500 master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <BROADCAST,MULTICAST> mtu 1500 qdisc mq master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56 brd ff:ff:ff:ff:ff:ff
-|14: wlan0: <BROADCAST,MULTICAST> mtu 1500 master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56 brd ff:ff:ff:ff:ff:ff
-|14: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56
-|[  792.130000] br-lan: port 2(wlan0) entered forwarding state
-|[  792.140000] br-lan: port 2(wlan0) entered forwarding state
-|14: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br-lan state DORMANT 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br-lan state DORMANT 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br-lan state DORMANT 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq master br-lan state DORMANT 
-|    link/ether 1c:af:f7:49:50:56 brd ff:ff:ff:ff:ff:ff
-|14: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br-lan state UP 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq master br-lan state UP 
-|    link/ether 1c:af:f7:49:50:56 brd ff:ff:ff:ff:ff:ff
-
-Then I do ifconfig wlan0 down
-|4: wlan0: <BROA[  829.620000] br-lan: port 2(wlan0) entered disabled state
-|DCAST,MULTICAST> mtu 1500 qdisc mq master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56 brd ff:ff:ff:ff:ff:ff
-|14: wlan0: <BROADCAST,MULTICAST> mtu 1500 master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <BROADCAST,MULTICAST> mtu 1500 master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56
-
-Followed by ifconfig wlan0 up
-|14: wlan0: <BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq master br-lan state UP 
-|    link/ether 1c:af:f7:49:50:56 brd ff:ff:ff:ff:ff:ff
-|14: wlan0: <BROADCAST,MULTICAST,UP> mtu 1500 master br-lan state UP 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56
-|14: wlan0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq master br-lan state DOWN 
-|    link/ether 1c:af:f7:49:50:56 brd ff:ff:ff:ff:ff:ff
-
-And it stays down with NO-CARRIER.
-
-HTH,
-
--- 
-Tobias						PGP: http://8ef7ddba.uguu.de
