@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:57541 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933245Ab2EaUAd (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:49410 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752298Ab2E3PCG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 May 2012 16:00:33 -0400
-Message-ID: <1338494428.1817.56.camel@aeonflux> (sfid-20120531_220050_037810_8FAA6129)
+	Wed, 30 May 2012 11:02:06 -0400
+Received: by eeit10 with SMTP id t10so1563634eei.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 08:02:04 -0700 (PDT)
+From: Erwin Van de Velde <erwin.vandevelde@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
 Subject: Re: Master mode support in iwlagn?
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Erwin Van de Velde <erwin.vandevelde@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Florian Fainelli <florian@openwrt.org>
-Date: Thu, 31 May 2012 22:00:28 +0200
-In-Reply-To: <1338483631.9102.9.camel@jlt3.sipsolutions.net>
-References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be>
-	 <5625918.SuzapvkoUg@sylvesterjr.cmi.ua.ac.be>
-	 <4FC75DA4.2090909@broadcom.com>
-	 <1999855.FUDAX7EfOH@sylvesterjr.cmi.ua.ac.be> <4FC76389.70600@broadcom.com>
-	 <1338474236.2242.1.camel@dcbw.foobar.com>
-	 <1338483124.1817.53.camel@aeonflux>
-	 <1338483631.9102.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Date: Wed, 30 May 2012 17:02:01 +0200
+Message-ID: <1404293.PjD9i8cAKX@sylvesterjr.cmi.ua.ac.be> (sfid-20120530_170211_729519_E31A0E32)
+In-Reply-To: <1338381071.4511.13.camel@jlt3.sipsolutions.net>
+References: <5252852.vpKViOerhF@sylvesterjr.cmi.ua.ac.be> <1338381071.4511.13.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+In my opinion it is a rather big issue. It is available on other platforms and 
+can come in handy, it is not just a minor feature that is missing. One wonders 
+why Intel does not provide it...
 
-> > > The problem with Ad-Hoc as "hotspot" is that many devices like Android
-> > > phones simply ignore adhoc networks due to security issues (as stupid as
-> > > that may be, since anyone can set up an AP-mode network too).  Which is
-> > > why real AP mode is nice, but clearly not all wifi hardware is going to
-> > > support it.
+Erwin
+
+
+On Wednesday 30 May 2012 14:31:11 Johannes Berg wrote:
+> On Wed, 2012-05-30 at 14:09 +0200, Erwin Van de Velde wrote:
+> > Dear all,
 > > 
-> > the security issue is the missing proper encryption for IBSS networks.
-> > Even while in theory you can have RSN, but who is really supporting this
-> > on the other end.
+> > Are there any plans to add Master mode support to iwlagn?
 > 
-> We are actually supporting this now, and supposedly it interoperates
-> with Windows too :-)
-
-I still don't see the benefit of it. Android and iOS do proper Tethering
-via AP mode. And so does Tizen since it uses ConnMan.
-
-IBSS and also WEP support can be remove for all I care ;)
-
-Regards
-
-Marcel
-
-
+> Depending on the device, it is (partially) supported as part of P2P/GO
+> mode, but other than that there are no plans.
+> 
+> johannes
