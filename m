@@ -1,32 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21487 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838Ab2E3HpB (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:41456 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753964Ab2E3UUi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 03:45:01 -0400
-Message-ID: <4FC5CFF6.2090101@qca.qualcomm.com> (sfid-20120530_094507_885765_3E3F8846)
-Date: Wed, 30 May 2012 10:44:54 +0300
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Etay Luz <eluz@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: support changing dtim period on AP mode
-References: <1338363787-12314-1-git-send-email-kvalo@qca.qualcomm.com>
-In-Reply-To: <1338363787-12314-1-git-send-email-kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 30 May 2012 16:20:38 -0400
+Date: Wed, 30 May 2012 16:19:28 -0400 (EDT)
+Message-Id: <20120530.161928.326808762133272210.davem@davemloft.net> (sfid-20120530_222059_779696_E9D9AC6B)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-05-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120530171300.GA2674@tuxdriver.com>
+References: <20120530171300.GA2674@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/30/2012 10:43 AM, Kalle Valo wrote:
-> From: Etay Luz <eluz@qca.qualcomm.com>
-> 
-> This patch adds support for dtim_period configuration in beacon.
-> 
-> kvalo: add a comment about ignoring the error
-> 
-> Signed-off-by: Etay Luz <eluz@qca.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 30 May 2012 13:13:00 -0400
 
-Applied, thanks.
+> Here is a batch of fixes intended for 3.5.  They have spent a little
+> time in linux-next, and for the most part they are reasonably small
+> and obvious.
 
-Kalle
+Pulled, thanks John.
