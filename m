@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:37464 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834Ab2EHJAP (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26587 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753002Ab2E3Ruk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 May 2012 05:00:15 -0400
-Received: by obbtb18 with SMTP id tb18so9513620obb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 08 May 2012 02:00:15 -0700 (PDT)
+	Wed, 30 May 2012 13:50:40 -0400
+Message-ID: <4FC65DEA.9040609@qca.qualcomm.com> (sfid-20120530_195044_216345_B5B2B4ED)
+Date: Wed, 30 May 2012 20:50:34 +0300
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEfJ7vPzHnc5ACHMTnJBFGgDVFpkZ6hJ8QfXtL8L+94gOw@mail.gmail.com>
-References: <4FA0405C.8050101@lwfinger.net>
-	<CAB3XZEerHsNUr4p5rTu0msucKUnxXwFxwZVtONrkZ_czmgS+ig@mail.gmail.com>
-	<4FA19674.90804@lwfinger.net>
-	<1336390235.4325.16.camel@jlt3.sipsolutions.net>
-	<CAB3XZEfJ7vPzHnc5ACHMTnJBFGgDVFpkZ6hJ8QfXtL8L+94gOw@mail.gmail.com>
-Date: Tue, 8 May 2012 12:00:15 +0300
-Message-ID: <CAB3XZEd7H683Gc_2Ytw7-LByOOGy5o_hRsuE3cjLhrONFc=6tg@mail.gmail.com> (sfid-20120508_110021_571634_304C9FAA)
-Subject: Re: Wireless problem in 3.4-rc5
-From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	John Linville <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: [RFC] cfg80211: don't allow WoWLAN support without CONFIG_PM
+References: <1338385542.4511.19.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1338385542.4511.19.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 8, 2012 at 11:32 AM, Eliad Peller <eliad@wizery.com> wrote:
-> On Mon, May 7, 2012 at 2:30 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->>> > i'm not sure this is related to the problem you're facing, but the
->>> > commit above seems to have some bug in which a packet might get
->>> > enqueued on invalid queue (0xff) - please try this patch (compile
->>> > tested only):
->>
->> Eliad, can you submit that patch with more details?
->>
-> sure, i'll send it soon.
->
-i've just figured it that it doesn't seem to have any effect, as the
-hw_queue will get overridden anyway in ieee80211_tx (because
-IEEE80211_HW_QUEUE_CONTROL is not set), so i'm not sure it's really
-needed. do you want me to send it anyway?
+On 05/30/2012 04:45 PM, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> When CONFIG_PM is enabled, no device can possibly
+> support WoWLAN since it can't go to sleep to start
+> with. Due to this, mac80211 had even rejected the
+> hardware registration. By making all the code and
+> data for WoWLAN depend on CONFIG_PM we can promote
+> this runtime error to a compile-time error.
+> 
+> Add #ifdef around all WoWLAN code to remove it in
+> systems that don't need it as they never suspend.
+> 
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: Luciano Coelho <coelho@ti.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Eliad.
+For the ath6kl part:
+
+Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -3517,6 +3517,7 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+>  	wiphy->cipher_suites = cipher_suites;
+>  	wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+>  
+> +#ifdef CONFIG_PM
+>  	wiphy->wowlan.flags = WIPHY_WOWLAN_MAGIC_PKT |
+>  			      WIPHY_WOWLAN_DISCONNECT |
+>  			      WIPHY_WOWLAN_GTK_REKEY_FAILURE  |
+> @@ -3526,6 +3527,7 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
+>  	wiphy->wowlan.n_patterns = WOW_MAX_FILTERS_PER_LIST;
+>  	wiphy->wowlan.pattern_min_len = 1;
+>  	wiphy->wowlan.pattern_max_len = WOW_PATTERN_SIZE;
+> +#endif
+
+To be honest I'm not really fond of ifdefs in the code, but that's just
+me :)
+
+Kalle
