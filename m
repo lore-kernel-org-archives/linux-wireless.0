@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:34743 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755544Ab2EGKTv convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34321 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754500Ab2E3NxN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 06:19:51 -0400
-Received: by yenm10 with SMTP id m10so3490239yen.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 May 2012 03:19:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1336382462.4325.4.camel@jlt3.sipsolutions.net>
-References: <1336106215-7431-1-git-send-email-yeohchunyeow@gmail.com>
-	<1336376603.4325.3.camel@jlt3.sipsolutions.net>
-	<CAEFj9857DWGCcnF20nKYEDb0_p1K_iYLR1F=oLNAx6NjwPQE9w@mail.gmail.com>
-	<1336382462.4325.4.camel@jlt3.sipsolutions.net>
-Date: Mon, 7 May 2012 18:19:50 +0800
-Message-ID: <CAEFj9855PG1Qv5RBWPJJc5tyKRz5LZZaY8qRU7oAwryH5G8L7A@mail.gmail.com> (sfid-20120507_121954_522098_D24AF554)
-Subject: Re: [PATCH] fix the increment of unicast/multicast counters for
- forwarded PREQ
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 30 May 2012 09:53:13 -0400
+Message-ID: <1338385907.4511.22.camel@jlt3.sipsolutions.net> (sfid-20120530_163648_434952_E9150AC1)
+Subject: Re: [PATCH] mac80211: print info when disabling HT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 30 May 2012 15:51:47 +0200
+In-Reply-To: <1338385736.32113.8.camel@joe2Laptop>
+References: <1338379000.4511.12.camel@jlt3.sipsolutions.net>
+	 <1338385736.32113.8.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, Johannes
+On Wed, 2012-05-30 at 06:48 -0700, Joe Perches wrote:
+> On Wed, 2012-05-30 at 13:56 +0200, Johannes Berg wrote:
+> > Make mac80211 print a message when it disables
+> > HT due to the connection using WEP/TKIP or due
+> > to the AP not supporting WMM/QoS.
+> 
+> trivia: please use:
+> 	netdev_<level>(
+> not
+> 	netdev_printk(KERN_<LEVEL>, 
+> []
+> > +			netdev_printk(KERN_INFO, sdata->dev,
+> > +				      "disabling HT due to WEP/TKIP use\n");
+> 
+> 			netdev_info(sdata->dev, etc...)
+> 
+> etc...
 
->> >> +             if (da != broadcast_addr)
->
-> will never be false.
+*sigh*
+Ok. I'm curious as to what the reason is for both, and using
+netdev_printk() everywhere?
 
-Hmm, but I have a check on this and it works. The previous line will
-set the da either as broadcast addr or unicast addr.
+johannes
 
-da = (mpath && mpath->is_root) ?
-			mpath->rann_snd_addr : broadcast_addr;
-
-Chun-Yeow
