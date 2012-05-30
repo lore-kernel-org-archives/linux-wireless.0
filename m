@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48216 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757449Ab2ENSCt (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41706 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754628Ab2E3N4P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 May 2012 14:02:49 -0400
-Date: Mon, 14 May 2012 13:56:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix single queue drivers
-Message-ID: <20120514175603.GB2428@tuxdriver.com> (sfid-20120514_200253_829659_A1F0FAF8)
-References: <1336405529.4325.31.camel@jlt3.sipsolutions.net>
- <4FAF3AB8.90900@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4FAF3AB8.90900@lwfinger.net>
+	Wed, 30 May 2012 09:56:15 -0400
+Message-ID: <1338385800.4511.21.camel@jlt3.sipsolutions.net> (sfid-20120530_163648_961390_798FF887)
+Subject: Re: [PATCH 3.5] mac80211: flush off-channel work when interface
+ goes down
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nirav Shah <nirav.j2.shah@intel.com>
+Date: Wed, 30 May 2012 15:50:00 +0200
+In-Reply-To: <CAB3XZEdmWRn-2O65AnfnF-jya_FNXK8gc21EBBoDisNoZGDeRQ@mail.gmail.com> (sfid-20120530_154439_644267_D275C758)
+References: <1338383762.4511.16.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEdmWRn-2O65AnfnF-jya_FNXK8gc21EBBoDisNoZGDeRQ@mail.gmail.com>
+	 (sfid-20120530_154439_644267_D275C758)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 12, 2012 at 11:38:16PM -0500, Larry Finger wrote:
-> On 05/07/2012 10:45 AM, Johannes Berg wrote:
-> >From: Johannes Berg<johannes.berg@intel.com>
+On Wed, 2012-05-30 at 16:44 +0300, Eliad Peller wrote:
+> On Wed, May 30, 2012 at 4:16 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > When any interface goes down, it could be the one that
+> > we were doing off-channel with. Thus, we need to flush
+> > the offchannel start/stop work so they can't run when
+> > the interface has already been removed from the driver
+> > or even been destroyed. It's OK to flush them even if
+> > they were for another interface, that just means that
+> > we potentially delay the interface down a little bit.
 > >
-> >My queue management rework broke drivers that don't
-> >have multiple AC queues and register a single queue
-> >only, causing a warning:
-> >
-> >WARNING: at net/mac80211/iface.c:162 ieee80211_check_queues
-> >
-> >This was due to filling the queues wrongly and then
-> >noticing the error when checking later.
-> >
-> >Reported-and-Tested-by: Larry Finger<Larry.Finger@lwfinger.net>
-> >Signed-off-by: Johannes Berg<johannes.berg@intel.com>
-> 
-> John,
-> 
-> I know you have been busy and that Linus is restricting the patches
-> to be added after 3.4-rc7; however, this one really needs to get
-> into 3.4. If it does not make it, every wireless device with only
-> one hardware queue will break.
-> 
-> Larry
+> can't we check hw_roc_dev?
 
-Actually, it doesn't seem to apply in 3.4.  The original commit that
-causes the problem (3a25a8c8) seems to only exist in wireless-next.
+We could, but it didn't seem worthwhile. Think I should do that instead?
 
-Is there some other version of this patch to apply for 3.4?
+johannes
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
