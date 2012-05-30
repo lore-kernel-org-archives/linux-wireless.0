@@ -1,140 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:56161 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751137Ab2EXEEr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 00:04:47 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45855.14687.427357@gargle.gargle.HOWL> (sfid-20120524_060451_498045_9EF2BE3F)
-Date: Thu, 24 May 2012 09:33:43 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 18/22] ath9k: BT coex performance tuning for AR9462
+Received: from perches-mx.perches.com ([206.117.179.246]:55176 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932264Ab2E3I6k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 04:58:40 -0400
+Message-ID: <1338368319.28696.3.camel@joe2Laptop> (sfid-20120530_105842_973061_355A5E06)
+Subject: [PATCH] ath6kl: Add missing newline terminations
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	Etay Luz <eluz@qca.qualcomm.com>
+Date: Wed, 30 May 2012 01:58:39 -0700
+In-Reply-To: <4FC5D73A.9040807@qca.qualcomm.com>
+References: <1338363787-12314-1-git-send-email-kvalo@qca.qualcomm.com>
+	 <1338365645.28696.0.camel@joe2Laptop> <4FC5D73A.9040807@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Messages without newlines can be interleaved.
+Avoid this by adding terminations.
 
-Use smaller aggregation limit and increasing aggregation threshold
-for osla that could improve wlan performance when there is HID profile.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |    3 --
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |    1 -
- drivers/net/wireless/ath/ath9k/mci.c        |   54 +++++++++++++++++----------
- 3 files changed, 35 insertions(+), 23 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 8b09a82..b1ced2a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1381,9 +1381,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 	case MCI_STATE_NEED_FTP_STOMP:
- 		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_FTP_STOMP);
- 		break;
--	case MCI_STATE_NEED_TUNING:
--		value = !(mci->config & ATH_MCI_CONFIG_DISABLE_TUNING);
--		break;
- 	default:
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index f4a6a44..10282e2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -212,7 +212,6 @@ enum mci_state_type {
- 	MCI_STATE_SET_CONCUR_TX_PRI,
- 	MCI_STATE_RECOVER_RX,
- 	MCI_STATE_NEED_FTP_STOMP,
--	MCI_STATE_NEED_TUNING,
- 	MCI_STATE_DEBUG,
- 	MCI_STATE_MAX
- };
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 7b553f6..49137f4 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -116,42 +116,58 @@ static void ath_mci_update_scheme(struct ath_softc *sc)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath_mci_profile *mci = &btcoex->mci;
-+	struct ath9k_hw_mci *mci_hw = &sc->sc_ah->btcoex_hw.mci;
- 	struct ath_mci_profile_info *info;
- 	u32 num_profile = NUM_PROF(mci);
- 
-+	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_TUNING)
-+		goto skip_tuning;
-+
- 	if (num_profile == 1) {
- 		info = list_first_entry(&mci->info,
- 					struct ath_mci_profile_info,
- 					list);
--		if (mci->num_sco && info->T == 12) {
--			mci->aggr_limit = 8;
-+		if (mci->num_sco) {
-+			if (info->T == 12)
-+				mci->aggr_limit = 8;
-+			else if (info->T == 6) {
-+				mci->aggr_limit = 6;
-+				btcoex->duty_cycle = 30;
-+			}
- 			ath_dbg(common, MCI,
--				"Single SCO, aggregation limit 2 ms\n");
--		} else if ((info->type == MCI_GPM_COEX_PROFILE_BNEP) &&
--			   !info->master) {
--			btcoex->btcoex_period = 60;
-+				"Single SCO, aggregation limit %d 1/4 ms\n",
-+				mci->aggr_limit);
-+		} else if (mci->num_pan || mci->num_other_acl) {
-+			/*
-+			 * For single PAN/FTP profile, allocate 35% for BT
-+			 * to improve WLAN throughput.
-+			 */
-+			btcoex->duty_cycle = 35;
-+			btcoex->btcoex_period = 53;
- 			ath_dbg(common, MCI,
--				"Single slave PAN/FTP, bt period 60 ms\n");
--		} else if ((info->type == MCI_GPM_COEX_PROFILE_HID) &&
--			 (info->T > 0 && info->T < 50) &&
--			 (info->A > 1 || info->W > 1)) {
-+				"Single PAN/FTP bt period %d ms dutycycle %d\n",
-+				btcoex->duty_cycle, btcoex->btcoex_period);
-+		} else if (mci->num_hid) {
- 			btcoex->duty_cycle = 30;
--			mci->aggr_limit = 8;
-+			mci->aggr_limit = 6;
- 			ath_dbg(common, MCI,
- 				"Multiple attempt/timeout single HID "
--				"aggregation limit 2 ms dutycycle 30%%\n");
-+				"aggregation limit 1.5 ms dutycycle 30%%\n");
- 		}
--	} else if ((num_profile == 2) && (mci->num_hid == 2)) {
--		btcoex->duty_cycle = 30;
--		mci->aggr_limit = 8;
--		ath_dbg(common, MCI,
--			"Two HIDs aggregation limit 2 ms dutycycle 30%%\n");
--	} else if (num_profile > 3) {
-+	} else if (num_profile == 2) {
-+		if (mci->num_hid == 2)
-+			btcoex->duty_cycle = 30;
- 		mci->aggr_limit = 6;
- 		ath_dbg(common, MCI,
--			"Three or more profiles aggregation limit 1.5 ms\n");
-+			"Two BT profiles aggr limit 1.5 ms dutycycle %d%%\n",
-+			btcoex->duty_cycle);
-+	} else if (num_profile >= 3) {
-+		mci->aggr_limit = 4;
-+		ath_dbg(common, MCI,
-+			"Three or more profiles aggregation limit 1 ms\n");
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b869a35..d1a5436 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -943,7 +943,7 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 				       WMI_FRAME_PROBE_REQ,
+ 				       request->ie, request->ie_len);
+ 	if (ret) {
+-		ath6kl_err("failed to set Probe Request appie for scan");
++		ath6kl_err("failed to set Probe Request appie for scan\n");
+ 		return ret;
  	}
  
-+skip_tuning:
- 	if (IS_CHAN_2GHZ(sc->sc_ah->curchan)) {
- 		if (IS_CHAN_HT(sc->sc_ah->curchan))
- 			ath_mci_adjust_aggr_limit(btcoex);
--- 
-1.7.10.2
+@@ -3185,7 +3185,7 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ 				       WMI_FRAME_PROBE_REQ,
+ 				       request->ie, request->ie_len);
+ 	if (ret) {
+-		ath6kl_warn("Failed to set probe request IE for scheduled scan: %d",
++		ath6kl_warn("Failed to set probe request IE for scheduled scan: %d\n",
+ 			    ret);
+ 		return ret;
+ 	}
+
 
