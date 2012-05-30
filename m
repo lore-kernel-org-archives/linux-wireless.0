@@ -1,62 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57721 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754998Ab2EJTwL (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:59032 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932285Ab2E3DrU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 15:52:11 -0400
-Message-ID: <1336679529.4334.35.camel@jlt3.sipsolutions.net> (sfid-20120510_215214_391012_85BB35D1)
-Subject: Re: [RFC] nl80211: don't require netdev UP for wdev
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-Date: Thu, 10 May 2012 21:52:09 +0200
-In-Reply-To: <CAG6hwVNTRYpr_H4za0Jf8gVU2=W5f6ZmzCiZsK4Ad2cGa26jDQ@mail.gmail.com> (sfid-20120510_214803_866961_870A1B62)
-References: <1335479316-2933-1-git-send-email-thomas@cozybit.com>
-	 <1336554945.4323.12.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVPrbJ1ZQP=UqFd+oqFL8zm+qcRpbAUhrG+6gRe01rejSA@mail.gmail.com>
-	 <1336673569.4334.29.camel@jlt3.sipsolutions.net>
-	 <CAG6hwVNTRYpr_H4za0Jf8gVU2=W5f6ZmzCiZsK4Ad2cGa26jDQ@mail.gmail.com>
-	 (sfid-20120510_214803_866961_870A1B62)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 29 May 2012 23:47:20 -0400
+Message-ID: <4FC5983D.3080806@candelatech.com> (sfid-20120530_054753_974724_41343DB9)
+Date: Tue, 29 May 2012 20:47:09 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Dave Taht <dave.taht@gmail.com>
+CC: cerowrt-devel@lists.bufferbloat.net,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] Anyone doing WiFi throughput tests?
+References: <4FC04B5A.1070900@candelatech.com> <4FC2437C.9090106@candelatech.com> <4FC51418.5000104@candelatech.com> <201205292107.42337.chunkeey@googlemail.com> <4FC5647F.4060601@candelatech.com> <CAA93jw6jTDCLh+_=hv6HcvfAuNah33uag7hHnZTMW8=92nvcqA@mail.gmail.com>
+In-Reply-To: <CAA93jw6jTDCLh+_=hv6HcvfAuNah33uag7hHnZTMW8=92nvcqA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 12:47 -0700, Thomas Pedersen wrote:
+On 05/29/2012 08:22 PM, Dave Taht wrote:
+> On Wed, May 30, 2012 at 1:06 AM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 05/29/2012 12:07 PM, Christian Lamparter wrote:
+>>>
+>>> On Tuesday, May 29, 2012 08:23:20 PM Ben Greear wrote:
+>>>>
+>>>> On 05/27/2012 08:08 AM, Ben Greear wrote:
+>>>>>
+>>>>> On 05/26/2012 09:39 AM, Sujith Manoharan wrote:
+>>>>
+>>>> We started testing with two AR9380 NICs today (one AP, the other STA).
+>>>> I applied Felix's skb optimization patch, and the ath9k memleak fix patch
+>>>> on top of 3.3.7+.
+>>>>
+>>>> The system has 2GB RAM, but it is 32-bit kernel, so not all
+>>>> is available to the networking code...  That said, the OOM
+>>>> killer kills VNC and such.
+>>>>
+>>>> Anyway, I'll try some memleak debugging to see if
+>>>> I can find any leaks.  It seems to me that we should
+>>>> not actually OOM just by trying to transmit too fast
+>>>> on a station interface :P
+>>>
+>>> well, there's that:
+>>> http://comments.gmane.org/gmane.linux.drivers.ath9k.devel/8233
+>>>
+>>> It might not fix the bug, but it can save you time to confirm
+>>> that is not related to this particular skb leak.
+>>
+>>
+>> I ported this to 3.3.7+ and applied it to my kernel
+>> trees.  It has tested out fine so far, though it did not
+>> actually fix the problem I was having.  That was not
+>> a real leak, just always-growing pending queue length,
+>> probably due to some issue with our version of pktgen.
+>>
+>> It is mostly a port-by-hand type of thing since
+>> there are lots of conflicts.  Let me know if you'd
+>> like me to post my version (and plz confirm your
+>> signed-off-by).
+>
+> please! (and cc cerowrt-devel at lists.bufferbloat.net)
+>
+> I'm hoping this string of patches will have some bearing on my own
+> bug: http://www.bufferbloat.net/issues/379
+>
+> (while I'm trying to not write a line of code for a while, others on my
+>   list are struggling with this)
 
-> > We could, but that'd mean that it can be NULL if the user doesn't set
-> > it, which seems a bit odd to me too and then the driver again would have
-> > to sort it out. I'd prefer if we could sort it out in cfg80211 so the
-> > driver (mac80211) is simpler.
-> 
-> For this, we can store a default channel and type in the default mesh config.
+For your bug, do you get any warnings on a serial console?
 
-That would still break older userspace though, it would get the default
-channel instead of the channel it set before, right?
+What does 'top' show?  Ie, why is the load so high?  Just
+flogging the kernel with pkts shouldn't explode the load.
 
-> >> Also, with IBSS the desired channel is pushed to the driver along with
-> >> the setup parameters. What do you think about calling
-> >> __nl80211_set_channel() directly instead of relying on the cfg80211
-> >> driver to handle this?
-> >
-> > No, that's certainly not possible. In IBSS the channel is just the
-> > default channel if we don't find an IBSS. And in any case I'd rather
-> > call set_channel less than more.
-> 
-> So cfg80211_set_freq() from cfg80211_join_mesh() is out, too?
+Maybe processes are blocked trying to take a lock..maybe
+a networking lock?
 
-I think we should just pass the channel to the join_mesh callback.
+Tried enabling lockdep in this scenario, and maybe the
+hard/soft deadlock detection logic?
 
-I just did this a bit for AP mode. Now, in AP mode we have one
-advantage: we can rely on userspace setting the channel because
-hostapd/wpa_s always does that. For mesh, we may not have that luxury?
+If you back off the traffic, does the system recover?  If so,
+maybe your CPU just can't handle the load....
 
-For AP, it looks roughly like this:
-http://p.sipsolutions.net/35913f571ea5bd43.txt
+If you think the mac80211 pending queues are backing up, cat out
+/debug/ieee*/phy*/queues
 
-Maybe we can do something similar for mesh and mostly get rid of setting
-the channel directly.
+That was the symptom I saw today with pktgen, but I think that is probably
+more the fault of pktgen and may not be an issue with more normal traffic
+flow.
 
-johannes
+Thanks,
+Ben
 
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
