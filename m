@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:51881 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756145Ab2EJQcd (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44183 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753221Ab2E3SsV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:32:33 -0400
-Date: Thu, 10 May 2012 12:30:24 -0400 (EDT)
-Message-Id: <20120510.123024.2157290550457495698.davem@davemloft.net> (sfid-20120510_183255_303365_38DA86A7)
-To: jussi.kivilinna@mbnet.fi
-Cc: joe@perches.com, fubar@us.ibm.com, andy@greyhouse.net,
-	benve@cisco.com, roprabhu@cisco.com, neepatel@cisco.com,
-	nistrive@cisco.com, grundler@parisc-linux.org,
-	anirban.chakraborty@qlogic.com, sony.chacko@qlogic.com,
-	linux-driver@qlogic.com, linux-net-drivers@solarflare.com,
-	bhutchings@solarflare.com, cmetcalf@tilera.com,
-	linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
-	chunkeey@googlemail.com, stas.yakovlev@gmail.com,
-	sgruszka@redhat.com, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	buytenh@wantstofly.org, Larry.Finger@lwfinger.net,
-	chaoming_li@realsil.com.cn, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath5k-devel@venema.h4ckr.net, ath9k-devel@venema.h4ckr.net
-Subject: Re: [PATCH 1/3] drivers/net: Convert compare_ether_addr to
- ether_addr_equal
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120510173201.16131du3cg90nybo@www.81.fi>
-References: <cover.1336618707.git.joe@perches.com>
-	<7c9881a67c52c2f218480b6742155b6d6928122d.1336618708.git.joe@perches.com>
-	<20120510173201.16131du3cg90nybo@www.81.fi>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 30 May 2012 14:48:21 -0400
+MIME-Version: 1.0
+In-Reply-To: <1338394222-10274-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1338394222-10274-1-git-send-email-mohammed@qca.qualcomm.com>
+Date: Wed, 30 May 2012 11:48:21 -0700
+Message-ID: <CAJ-VmomiQjGKKPtErYuhChpvqHCof4wXwt4BH2n1Rei_RnvyGA@mail.gmail.com> (sfid-20120530_204826_318266_4EEF3727)
+Subject: Re: [RFC] ath9k: Fix softlockup in AR9485
+From: Adrian Chadd <adrian@freebsd.org>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+(Yes, this is a public response.)
 
-Never, EVER, quote an entire large patch just to make a comment
-on one small hunk.
+Hi,
 
-I very nearly missed what you had to say because when scrolling
-through it it appeared as if you made no comments at all.
+That has me a bit concerned. Waiting for the STA to be associated is
+really just some kind of "settling" delay. You're still TX/RXing at
+that point.
 
-Again, NEVER, EVER, do this.  It's extremely anti-social.  Edit out
-the irrelevant quoted content when replying to people, always.
+I think we need to speak to the baseband/clock teams and figure out
+why this is actually occuring.
+
+Can we please leave this out of the tree (but in the bug report) until
+this gets root caused internally?
+
+Thanks,
+
+
+
+adrian
