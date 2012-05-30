@@ -1,43 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:36628 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751783Ab2EJGyV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 02:54:21 -0400
-Message-ID: <1336632860.22495.6.camel@joe2Laptop> (sfid-20120510_085441_236331_94537C40)
-Subject: Re: [PATCH 00/13] net: Add and use ether_addr_equal
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	bridge@lists.linux-foundation.org, netfilter-devel@vger.kernel.org,
-	netfilter@vger.kernel.org, coreteam@netfilter.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Date: Wed, 09 May 2012 23:54:20 -0700
-In-Reply-To: <1336632528.4334.1.camel@jlt3.sipsolutions.net>
-References: <cover.1336538937.git.joe@perches.com>
-	 <20120509.212110.437114897180819434.davem@davemloft.net>
-	 (sfid-20120510_032248_153593_581BC374) <1336632528.4334.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:58232 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754841Ab2E3OuJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 10:50:09 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes.berg@intel.com
+Subject: [PATCH 3.5] mac80211: add missing rcu_read_lock/unlock in agg-rx session timer
+Date: Wed, 30 May 2012 15:32:24 +0200
+Message-Id: <1338384744-74509-1-git-send-email-nbd@openwrt.org> (sfid-20120530_165017_372694_FAC2E5D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 08:48 +0200, Johannes Berg wrote:
-> On Wed, 2012-05-09 at 21:21 -0400, David Miller wrote:
-> 
-> > That case you didn't convert in mac80211 is probably the
-> > bug Johannes was talking about which started this whole
-> > discussion.
-> 
-> The bug case that started it all is in net/wireless/scan.c and Emmanuel
-> has since changed it back to memcmp(). Not sure if that's the one you
-> were referring to or not :-)
+Fixes a lockdep warning:
 
-That's the one that I left alone.
+===================================================
+[ INFO: suspicious rcu_dereference_check() usage. ]
+---------------------------------------------------
+net/mac80211/agg-rx.c:148 invoked rcu_dereference_check() without protection!
 
-Post patch:
-$ git grep -n -w compare_ether_addr net
-net/batman-adv/main.h:198: * note: can't use compare_ether_addr() as it requires aligned memory
-net/wireless/scan.c:381:        return compare_ether_addr(a->bssid, b->bssid);
+other info that might help us debug this:
 
+rcu_scheduler_active = 1, debug_locks = 1
+1 lock held by arecord/11226:
+ #0:  (&tid_agg_rx->session_timer){+.-...}, at: [<ffffffff81066bb0>] call_timer_fn+0x0/0x360
+
+stack backtrace:
+Pid: 11226, comm: arecord Not tainted 3.1.0-kml #16
+Call Trace:
+ <IRQ>  [<ffffffff81093454>] lockdep_rcu_dereference+0xa4/0xc0
+ [<ffffffffa02778c9>] sta_rx_agg_session_timer_expired+0xc9/0x110 [mac80211]
+ [<ffffffffa0277800>] ? ieee80211_process_addba_resp+0x220/0x220 [mac80211]
+ [<ffffffff81066c3a>] call_timer_fn+0x8a/0x360
+ [<ffffffff81066bb0>] ? init_timer_deferrable_key+0x30/0x30
+ [<ffffffff81477bb0>] ? _raw_spin_unlock_irq+0x30/0x70
+ [<ffffffff81067049>] run_timer_softirq+0x139/0x310
+ [<ffffffff81091d5e>] ? put_lock_stats.isra.25+0xe/0x40
+ [<ffffffff810922ac>] ? lock_release_holdtime.part.26+0xdc/0x160
+ [<ffffffffa0277800>] ? ieee80211_process_addba_resp+0x220/0x220 [mac80211]
+ [<ffffffff8105cb78>] __do_softirq+0xc8/0x3c0
+ [<ffffffff8108f088>] ? tick_dev_program_event+0x48/0x110
+ [<ffffffff8108f16f>] ? tick_program_event+0x1f/0x30
+ [<ffffffff81153b15>] ? putname+0x35/0x50
+ [<ffffffff8147a43c>] call_softirq+0x1c/0x30
+ [<ffffffff81004c55>] do_softirq+0xa5/0xe0
+ [<ffffffff8105d1ee>] irq_exit+0xae/0xe0
+ [<ffffffff8147ac6b>] smp_apic_timer_interrupt+0x6b/0x98
+ [<ffffffff81479ab3>] apic_timer_interrupt+0x73/0x80
+ <EOI>  [<ffffffff8146aac6>] ? free_debug_processing+0x1a1/0x1d5
+ [<ffffffff81153b15>] ? putname+0x35/0x50
+ [<ffffffff8146ab2b>] __slab_free+0x31/0x2ca
+ [<ffffffff81477c3a>] ? _raw_spin_unlock_irqrestore+0x4a/0x90
+ [<ffffffff81253b8f>] ? __debug_check_no_obj_freed+0x15f/0x210
+ [<ffffffff81097054>] ? lock_release_nested+0x84/0xc0
+ [<ffffffff8113ec55>] ? kmem_cache_free+0x105/0x250
+ [<ffffffff81153b15>] ? putname+0x35/0x50
+ [<ffffffff81153b15>] ? putname+0x35/0x50
+ [<ffffffff8113ed8f>] kmem_cache_free+0x23f/0x250
+ [<ffffffff81153b15>] putname+0x35/0x50
+ [<ffffffff81146d8d>] do_sys_open+0x16d/0x1d0
+ [<ffffffff81146e10>] sys_open+0x20/0x30
+ [<ffffffff81478f42>] system_call_fastpath+0x16/0x1b
+
+Reported-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ net/mac80211/agg-rx.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index a070d4f..4b6d2ff 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -145,15 +145,20 @@ static void sta_rx_agg_session_timer_expired(unsigned long data)
+ 	struct tid_ampdu_rx *tid_rx;
+ 	unsigned long timeout;
+ 
++	rcu_read_lock();
+ 	tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[*ptid]);
+-	if (!tid_rx)
++	if (!tid_rx) {
++		rcu_read_unlock();
+ 		return;
++	}
+ 
+ 	timeout = tid_rx->last_rx + TU_TO_JIFFIES(tid_rx->timeout);
+ 	if (time_is_after_jiffies(timeout)) {
+ 		mod_timer(&tid_rx->session_timer, timeout);
++		rcu_read_unlock();
+ 		return;
+ 	}
++	rcu_read_unlock();
+ 
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
+-- 
+1.7.3.2
 
