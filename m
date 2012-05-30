@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:65405 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009Ab2EXED4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44781 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754691Ab2E3N6R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 May 2012 00:03:56 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20413.45790.400842.374410@gargle.gargle.HOWL> (sfid-20120524_060403_861626_7AE622B3)
-Date: Thu, 24 May 2012 09:32:38 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 08/22] ath9k_hw: Fix variable usage
+	Wed, 30 May 2012 09:58:17 -0400
+Message-ID: <1338386220.4511.23.camel@jlt3.sipsolutions.net> (sfid-20120530_163649_494529_D9680C94)
+Subject: [PATCH v2] mac80211: print info when disabling HT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 30 May 2012 15:57:00 +0200
+In-Reply-To: <1338379000.4511.12.camel@jlt3.sipsolutions.net> (sfid-20120530_135647_769633_35D284ED)
+References: <1338379000.4511.12.camel@jlt3.sipsolutions.net>
+	 (sfid-20120530_135647_769633_35D284ED)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Exposed by sparse:
-ar9003_mci.c:1134:31: warning: Using plain integer as NULL pointer
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Make mac80211 print a message when it disables
+HT due to the connection using WEP/TKIP or due
+to the AP not supporting WMM/QoS.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2: use netdev_info
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 9331d73..b501bf1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1131,7 +1131,7 @@ void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable)
- 	if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000)) {
- 		ath_dbg(common, MCI, "MCI BT_CAL_GRANT received\n");
- 	} else {
--		is_reusable = false;
-+		*is_reusable = false;
- 		ath_dbg(common, MCI, "MCI BT_CAL_GRANT not received\n");
- 	}
- }
--- 
-1.7.10.2
+ net/mac80211/mlme.c |   13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+--- a/net/mac80211/mlme.c	2012-05-30 15:52:37.000000000 +0200
++++ b/net/mac80211/mlme.c	2012-05-30 15:52:59.000000000 +0200
+@@ -3317,11 +3317,15 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 	 * We can set this to true for non-11n hardware, that'll be checked
+ 	 * separately along with the peer capabilities.
+ 	 */
+-	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
++	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++) {
+ 		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
+ 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
+-		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104)
++		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104) {
+ 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++			netdev_info(sdata->dev,
++				    "disabling HT due to WEP/TKIP use\n");
++		}
++	}
+ 
+ 	if (req->flags & ASSOC_REQ_DISABLE_HT)
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
+@@ -3329,8 +3333,11 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
+ 	sband = local->hw.wiphy->bands[req->bss->channel->band];
+ 	if (!sband->ht_cap.ht_supported ||
+-	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used)
++	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used) {
+ 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
++		netdev_info(sdata->dev,
++			    "disabling HT as WMM/QoS is not supported\n");
++	}
+ 
+ 	memcpy(&ifmgd->ht_capa, &req->ht_capa, sizeof(ifmgd->ht_capa));
+ 	memcpy(&ifmgd->ht_capa_mask, &req->ht_capa_mask,
+
 
