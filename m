@@ -1,133 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:51169 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758764Ab2EJJRO (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:60243 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982Ab2E3Tlj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 05:17:14 -0400
-Received: by mail-wi0-f172.google.com with SMTP id hr2so244170wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 May 2012 02:17:14 -0700 (PDT)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 74/78] wlcore/wl12xx/wl18xx: move lower driver debugfs to a subdir
-Date: Thu, 10 May 2012 12:14:19 +0300
-Message-Id: <1336641263-5761-75-git-send-email-arik@wizery.com> (sfid-20120510_111722_999386_3279FF72)
-In-Reply-To: <1336641263-5761-1-git-send-email-arik@wizery.com>
-References: <1336641263-5761-1-git-send-email-arik@wizery.com>
+	Wed, 30 May 2012 15:41:39 -0400
+Date: Wed, 30 May 2012 21:41:26 +0200
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: Claudio Pisa <claudio.pisa@uniroma2.it>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH] mac80211: fix flag check for QoS NOACK frames
+Message-ID: <20120530194126.GA11340@pandem0nium> (sfid-20120530_214144_428655_21551F38)
+References: <1338206785-3222-1-git-send-email-claudio.pisa@uniroma2.it>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ew6BAiZeqk4r7MaW"
+In-Reply-To: <1338206785-3222-1-git-send-email-claudio.pisa@uniroma2.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <coelho@ti.com>
 
-Instead of adding more files from the lower drivers into the same
-directory in debugfs as wlcore, we now add a subdirectory for the
-lower driver.  This makes things a bit easier, because we can quickly
-see where the debugfs entry is implemented and what is specific to the
-lower driver.
+--ew6BAiZeqk4r7MaW
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/ti/wl12xx/debugfs.c |   10 ++++++++--
- drivers/net/wireless/ti/wl12xx/main.c    |    7 +------
- drivers/net/wireless/ti/wl18xx/debugfs.c |   10 ++++++++--
- drivers/net/wireless/ti/wl18xx/main.c    |    7 +------
- 4 files changed, 18 insertions(+), 16 deletions(-)
+Hey Claudio,
 
-diff --git a/drivers/net/wireless/ti/wl12xx/debugfs.c b/drivers/net/wireless/ti/wl12xx/debugfs.c
-index 311703d..0521cbf 100644
---- a/drivers/net/wireless/ti/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/ti/wl12xx/debugfs.c
-@@ -126,9 +126,15 @@ int wl12xx_debugfs_add_files(struct wl1271 *wl,
- 			     struct dentry *rootdir)
- {
- 	int ret = 0;
--	struct dentry *entry, *stats;
-+	struct dentry *entry, *stats, *moddir;
- 
--	stats = debugfs_create_dir("wl12xx_fw_stats", rootdir);
-+	moddir = debugfs_create_dir(KBUILD_MODNAME, rootdir);
-+	if (!moddir || IS_ERR(moddir)) {
-+		entry = moddir;
-+		goto err;
-+	}
-+
-+	stats = debugfs_create_dir("fw_stats", moddir);
- 	if (!stats || IS_ERR(stats)) {
- 		entry = stats;
- 		goto err;
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index 2ac8407..ba5afa4 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -1360,11 +1360,6 @@ out:
- 	return ret;
- }
- 
--static int wl12xx_debugfs_init(struct wl1271 *wl, struct dentry *rootdir)
--{
--	return wl12xx_debugfs_add_files(wl, rootdir);
--}
--
- static struct wlcore_ops wl12xx_ops = {
- 	.identify_chip		= wl12xx_identify_chip,
- 	.identify_fw		= wl12xx_identify_fw,
-@@ -1387,7 +1382,7 @@ static struct wlcore_ops wl12xx_ops = {
- 	.set_tx_desc_csum	= wl12xx_set_tx_desc_csum,
- 	.set_rx_csum		= NULL,
- 	.ap_get_mimo_wide_rate_mask = NULL,
--	.debugfs_init		= wl12xx_debugfs_init,
-+	.debugfs_init		= wl12xx_debugfs_add_files,
- };
- 
- static struct ieee80211_sta_ht_cap wl12xx_ht_cap = {
-diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
-index 8354dfc..f4127bf 100644
---- a/drivers/net/wireless/ti/wl18xx/debugfs.c
-+++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
-@@ -181,9 +181,15 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 			     struct dentry *rootdir)
- {
- 	int ret = 0;
--	struct dentry *entry, *stats;
-+	struct dentry *entry, *stats, *moddir;
- 
--	stats = debugfs_create_dir("wl18xx_fw_stats", rootdir);
-+	moddir = debugfs_create_dir(KBUILD_MODNAME, rootdir);
-+	if (!moddir || IS_ERR(moddir)) {
-+		entry = moddir;
-+		goto err;
-+	}
-+
-+	stats = debugfs_create_dir("fw_stats", moddir);
- 	if (!stats || IS_ERR(stats)) {
- 		entry = stats;
- 		goto err;
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 524f44c..27cd9b8 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1022,11 +1022,6 @@ static void wl18xx_get_mac(struct wl1271 *wl)
- 	wlcore_set_partition(wl, &wl->ptable[PART_DOWN]);
- }
- 
--static int wl18xx_debugfs_init(struct wl1271 *wl, struct dentry *rootdir)
--{
--	return wl18xx_debugfs_add_files(wl, rootdir);
--}
--
- static int wl18xx_handle_static_data(struct wl1271 *wl,
- 				     struct wl1271_static_data *static_data)
- {
-@@ -1058,7 +1053,7 @@ static struct wlcore_ops wl18xx_ops = {
- 	.sta_get_ap_rate_mask = wl18xx_sta_get_ap_rate_mask,
- 	.ap_get_mimo_wide_rate_mask = wl18xx_ap_get_mimo_wide_rate_mask,
- 	.get_mac	= wl18xx_get_mac,
--	.debugfs_init	= wl18xx_debugfs_init,
-+	.debugfs_init	= wl18xx_debugfs_add_files,
- 	.handle_static_data	= wl18xx_handle_static_data,
- };
- 
--- 
-1.7.9.5
+thanks for fixing my bugs, that was definitly wrong! :)
 
+Acked-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+
+Cheers,
+	Simon
+
+On Mon, May 28, 2012 at 01:06:25PM +0100, Claudio Pisa wrote:
+>=20
+> Signed-off-by: Claudio Pisa <claudio.pisa@uniroma2.it>
+> ---
+>  net/mac80211/tx.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index d67d36f..cb17497 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -153,7 +153,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_=
+data *tx,
+> =20
+>  	/* Don't calculate ACKs for QoS Frames with NoAck Policy set */
+>  	if (ieee80211_is_data_qos(hdr->frame_control) &&
+> -	    *(ieee80211_get_qos_ctl(hdr)) | IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
+> +	    *(ieee80211_get_qos_ctl(hdr)) & IEEE80211_QOS_CTL_ACK_POLICY_NOACK)
+>  		dur =3D 0;
+>  	else
+>  		/* Time needed to transmit ACK
+> --=20
+> 1.7.10.1
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+--ew6BAiZeqk4r7MaW
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk/Gd+YACgkQrzg/fFk7axZTXACg5cpk+vQHGPbing/Ge2N7i2gU
+wrMAoLkTQlFUzlA1fz3Om+ve2QesXmD+
+=kodF
+-----END PGP SIGNATURE-----
+
+--ew6BAiZeqk4r7MaW--
