@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s17.blu0.hotmail.com ([65.55.111.92]:45307 "EHLO
-	blu0-omc2-s17.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750789Ab2EEE51 (ORCPT
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44295 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932222Ab2E3DXQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2012 00:57:27 -0400
-Message-ID: <BLU0-SMTP19859353614C6D8E5AA91CCAC2D0@phx.gbl> (sfid-20120505_065731_179056_C0AD62DB)
-From: Nathan Hintz <nlhintz@hotmail.com>
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, hauke@hauke-m.de,
-	Nathan Hintz <nlhintz@hotmail.com>
-Subject: [PATCH v3 5/6] bcma: Add __devexit to bcma_host_pci_remove
-Date: Fri, 4 May 2012 21:56:35 -0700
-In-Reply-To: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
-References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
+	Tue, 29 May 2012 23:23:16 -0400
+Received: by pbbrp8 with SMTP id rp8so6837180pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 20:23:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Tue, 29 May 2012 23:23:15 -0400
+Message-ID: <CA+7oygf50aro8VrHekWFJvSb3hhOsZUP9ybUeUE1WaYzx2MNHA@mail.gmail.com> (sfid-20120530_052319_601816_5516D5CF)
+Subject: convinced bug in RSSI reporting for AR9280/ath9k_htc/htc_7010.fw
+From: George Nychis <gnychis@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	Sujith Manoharan <m.sujith@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add missing __devexit attribute to bcma_host_pci_remove.
+Long story short:  I am convinced that the AR9280, ath9k_htc, or
+htc_7010.hw firmware always reports the RSSI value of the access point
+in all packets, and not the actual transmitter of the packet (yes,
+weird).
 
-Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
----
- drivers/bcma/host_pci.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+I posted on the list a while ago about how the RSSI reporting by the
+AR9280 seemed to be incorrect.
+http://www.spinics.net/lists/linux-wireless/index.html#90423
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index e3928d6..915ab2f 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -222,7 +222,7 @@ err_kfree_bus:
- 	return err;
- }
- 
--static void bcma_host_pci_remove(struct pci_dev *dev)
-+static void __devexit bcma_host_pci_remove(struct pci_dev *dev)
- {
- 	struct bcma_bus *bus = pci_get_drvdata(dev);
- 
-@@ -277,7 +277,7 @@ static struct pci_driver bcma_pci_bridge_driver = {
- 	.name = "bcma-pci-bridge",
- 	.id_table = bcma_pci_bridge_tbl,
- 	.probe = bcma_host_pci_probe,
--	.remove = bcma_host_pci_remove,
-+	.remove = __devexit_p(bcma_host_pci_remove),
- 	.driver.pm = BCMA_PM_OPS,
- };
- 
--- 
-1.7.7.6
+Well, I did another test and I'm convinced there is a bug in the RSSI
+reporting for the AR9280.
 
+Setup:  I place my iPhone on top of my laptop.  The iPhone is the
+transmitter and I monitoring RSSI values of packets  _from the iPhone
+only_  at an AR9280 (USB) and BCM4322 (internal to MacBook Air).  I
+keep the distance of the iPhone (transmitter) to these monitors the
+same.  The iPhone always sit on top of the laptop with the same
+distance to both:
+
+http://www.flickr.com/photos/gnychis/7299338578/in/photostream/lightbox/
+
+Now, what I do is hold the laptop and walk towards my access point.
+The signal strength from the iPhone should *stay the same.*  The
+distance of the iPhone to the monitors doesn't change, it's
+independent of how close I am to my access point.
+
+However, the results show that the AR9280 signal strength grows as I
+walk closer to the AP whereas the BCM4322 acts as expected and stays
+stable (again, distance to transmitter doesn't change):
+
+http://www.flickr.com/photos/gnychis/7299342404/lightbox/
+
+I am 100% certain I am only taking the RSSI values reported for
+packets from my iPhone (wlan.sa==my:iphone:mac:addr).  I literally use
+the exact same tshark command line for the BCM4322 and AR9280.  I have
+quadruple checked this.
+
+This would explain why in my other thread that the RSSI values for
+beacons for my AP acted as expected and all other RSSI values did not
+follow as expected.
+
+I would greatly appreciate it if someone could chime in here.  Sujith?
+
+Thanks!
+George
