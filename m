@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2215 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757611Ab2EGULP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 16:11:15 -0400
-Message-ID: <4FA82C53.5040005@broadcom.com> (sfid-20120507_221119_041911_7A2927B1)
-Date: Mon, 7 May 2012 13:10:59 -0700
-From: "Franky Lin" <frankyl@broadcom.com>
-MIME-Version: 1.0
-To: "Il Han" <corone.il.han@gmail.com>
-cc: "Brett Rudley" <brudley@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] brcm80211: Initialize a variable before used.
-References: <1336418632-16758-1-git-send-email-corone.il.han@gmail.com>
-In-Reply-To: <1336418632-16758-1-git-send-email-corone.il.han@gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+Received: from perches-mx.perches.com ([206.117.179.246]:55146 "EHLO
+	labridge.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754604Ab2E3OJW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 10:09:22 -0400
+Message-ID: <1338386931.32113.22.camel@joe2Laptop> (sfid-20120530_163650_600330_28C8D211)
+Subject: Re: [PATCH] mac80211: print info when disabling HT
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 30 May 2012 07:08:51 -0700
+In-Reply-To: <1338385907.4511.22.camel@jlt3.sipsolutions.net>
+References: <1338379000.4511.12.camel@jlt3.sipsolutions.net>
+	 <1338385736.32113.8.camel@joe2Laptop>
+	 <1338385907.4511.22.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Il. Removing the declaration and assignment line of val seems to 
-be better since it's not used afterward. Do you want to send out a V2? 
-Or I can do it.
+On Wed, 2012-05-30 at 15:51 +0200, Johannes Berg wrote:
+> On Wed, 2012-05-30 at 06:48 -0700, Joe Perches wrote:
+> > On Wed, 2012-05-30 at 13:56 +0200, Johannes Berg wrote:
+> > > Make mac80211 print a message when it disables
+> > > HT due to the connection using WEP/TKIP or due
+> > > to the AP not supporting WMM/QoS.
+> > 
+> > trivia: please use:
+> > 	netdev_<level>(
+> > not
+> > 	netdev_printk(KERN_<LEVEL>, 
+> > []
+> > > +			netdev_printk(KERN_INFO, sdata->dev,
+> > > +				      "disabling HT due to WEP/TKIP use\n");
+> > 
+> > 			netdev_info(sdata->dev, etc...)
+> > 
+> > etc...
+> 
+> *sigh*
+> Ok. I'm curious as to what the reason is for both, and using
+> netdev_printk() everywhere?
 
-Thanks,
-Franky
+netdev_printk isn't used generally.  Other than the
+netdev_<level> macros themselves, it's used only with
+KERN_DEBUG to force output.
 
-On 05/07/2012 12:23 PM, Il Han wrote:
-> The variable val is used uninitialized.
-> It should be initialized before used.
-> Initialize it.
->
-> Signed-off-by: Il Han<corone.il.han@gmail.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-> index c93ea35..d67c5c4 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-> @@ -1141,7 +1141,7 @@ u32 ai_gpiocontrol(struct si_pub *sih, u32 mask, u32 val, u8 priority)
->   void ai_chipcontrl_epa4331(struct si_pub *sih, bool on)
->   {
->   	struct bcma_device *cc;
-> -	u32 val;
-> +	u32 val = 0;
->
->   	cc = ai_findcore(sih, CC_CORE_ID, 0);
->
+And to me, all of those netdev_level(KERN_DEBUG uses
+would be better as netdev_dbg.
+
+There are no other uses of netdev_printk except in
+macros.
 
 
