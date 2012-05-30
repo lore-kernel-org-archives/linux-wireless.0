@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50265 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:51573 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752959Ab2E3L4o (ORCPT
+	with ESMTP id S1752051Ab2E3Qb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 May 2012 07:56:44 -0400
-Message-ID: <1338379000.4511.12.camel@jlt3.sipsolutions.net> (sfid-20120530_135647_769633_35D284ED)
-Subject: [PATCH] mac80211: print info when disabling HT
+	Wed, 30 May 2012 12:31:59 -0400
+Message-ID: <1338395517.4511.29.camel@jlt3.sipsolutions.net> (sfid-20120530_183202_868420_605958F8)
+Subject: Re: [PATCH v2 1/2] nl80211/cfg80211: add scan channel times to scan
+ command
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 30 May 2012 13:56:40 +0200
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 30 May 2012 18:31:57 +0200
+In-Reply-To: <1338393559-1792-1-git-send-email-victorg@ti.com>
+References: <1338393559-1792-1-git-send-email-victorg@ti.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2012-05-30 at 18:59 +0300, Victor Goldenshtein wrote:
 
-Make mac80211 print a message when it disables
-HT due to the connection using WEP/TKIP or due
-to the AP not supporting WMM/QoS.
+> +	if (info->attrs[NL80211_ATTR_SCAN_MIN_CH_TIME]) {
+> +		request->min_ch_time =
+> +			nla_get_u32(info->attrs[NL80211_ATTR_SCAN_MIN_CH_TIME]);
+> +	}
+> +	if (info->attrs[NL80211_ATTR_SCAN_MAX_CH_TIME]) {
+> +		request->max_ch_time =
+> +			nla_get_u32(info->attrs[NL80211_ATTR_SCAN_MAX_CH_TIME]);
+> +		if (request->min_ch_time > request->max_ch_time)
+> +			return -EINVAL;
+> +	}
+> +	if (info->attrs[NL80211_ATTR_SCAN_PSV_MIN_CH_TIME]) {
+> +		request->min_passive_ch_time =
+> +		    nla_get_u32(info->attrs[NL80211_ATTR_SCAN_PSV_MIN_CH_TIME]);
+> +	}
+> +	if (info->attrs[NL80211_ATTR_SCAN_PSV_MAX_CH_TIME]) {
+> +		request->max_passive_ch_time =
+> +		    nla_get_u32(info->attrs[NL80211_ATTR_SCAN_PSV_MAX_CH_TIME]);
+> +		if (request->min_passive_ch_time > request->max_passive_ch_time)
+> +			return -EINVAL;
+> +	}
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/mlme.c |   13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+All of this should probably reject 0 values since they're not valid and
+will be overridden -- but to get defaults you can just as well leave it
+out completely.
 
---- a/net/mac80211/mlme.c	2012-05-30 10:39:53.000000000 +0200
-+++ b/net/mac80211/mlme.c	2012-05-30 13:54:29.000000000 +0200
-@@ -3326,11 +3326,15 @@ int ieee80211_mgd_assoc(struct ieee80211
- 	 * We can set this to true for non-11n hardware, that'll be checked
- 	 * separately along with the peer capabilities.
- 	 */
--	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++)
-+	for (i = 0; i < req->crypto.n_ciphers_pairwise; i++) {
- 		if (req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP40 ||
- 		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_TKIP ||
--		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104)
-+		    req->crypto.ciphers_pairwise[i] == WLAN_CIPHER_SUITE_WEP104) {
- 			ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
-+			netdev_printk(KERN_INFO, sdata->dev,
-+				      "disabling HT due to WEP/TKIP use\n");
-+		}
-+	}
- 
- 	if (req->flags & ASSOC_REQ_DISABLE_HT)
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
-@@ -3338,8 +3342,11 @@ int ieee80211_mgd_assoc(struct ieee80211
- 	/* Also disable HT if we don't support it or the AP doesn't use WMM */
- 	sband = local->hw.wiphy->bands[req->bss->channel->band];
- 	if (!sband->ht_cap.ht_supported ||
--	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used)
-+	    local->hw.queues < IEEE80211_NUM_ACS || !bss->wmm_used) {
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_11N;
-+		netdev_printk(KERN_INFO, sdata->dev,
-+			      "disabling HT as WMM/QoS is not supported\n");
-+	}
- 
- 	memcpy(&ifmgd->ht_capa, &req->ht_capa, sizeof(ifmgd->ht_capa));
- 	memcpy(&ifmgd->ht_capa_mask, &req->ht_capa_mask,
+Also, I think you should be forced to specify both min and max if you're
+going to specify any at all, because otherwise you can specify a max
+that is smaller than the default min and get things completely confused.
 
+johannes
 
