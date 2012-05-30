@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43104 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755339Ab2EJQ4k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 May 2012 12:56:40 -0400
-Message-ID: <1336668998.4334.24.camel@jlt3.sipsolutions.net> (sfid-20120510_185644_587851_0134064A)
-Subject: Re: [PATCH 1/4] iwlwifi: Add __printf argument checking to __iwl_dbg
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Thu, 10 May 2012 18:56:38 +0200
-In-Reply-To: <1336668634.4334.23.camel@jlt3.sipsolutions.net> (sfid-20120510_185043_029152_81B6AB28)
-References: <1336665952-24363-1-git-send-email-johannes@sipsolutions.net>
-	 <1336665952-24363-2-git-send-email-johannes@sipsolutions.net>
-	 <1336667905.22495.18.camel@joe2Laptop>
-	 <1336668634.4334.23.camel@jlt3.sipsolutions.net>
-	 (sfid-20120510_185043_029152_81B6AB28)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from perches-mx.perches.com ([206.117.179.246]:58868 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754266Ab2E3U0M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 16:26:12 -0400
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] mac80211: Fix likely misuse of | for &
+Date: Wed, 30 May 2012 13:25:54 -0700
+Message-Id: <aa9c55edda55d38111660c0b250d12d79f6e1755.1338408931.git.joe@perches.com> (sfid-20120530_222740_449137_003954ED)
+In-Reply-To: <cover.1338408931.git.joe@perches.com>
+References: <cover.1338408931.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-05-10 at 18:50 +0200, Johannes Berg wrote:
-> On Thu, 2012-05-10 at 09:38 -0700, Joe Perches wrote:
-> > Add gcc format and argument printf checking
-> > to reduce future defect introduction.
-> 
-> Good point, I'll pick this up.
+Using | with a constant is always true.
+Likely this should have be &.
 
-I'll also add it to the other functions __iwl_crit etc.
+cc: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ net/mac80211/cfg.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks for the suggestion!
-
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 495831e..e9cecca 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -533,16 +533,16 @@ static void ieee80211_get_et_stats(struct wiphy *wiphy,
+ 		sinfo.filled = 0;
+ 		sta_set_sinfo(sta, &sinfo);
+ 
+-		if (sinfo.filled | STATION_INFO_TX_BITRATE)
++		if (sinfo.filled & STATION_INFO_TX_BITRATE)
+ 			data[i] = 100000 *
+ 				cfg80211_calculate_bitrate(&sinfo.txrate);
+ 		i++;
+-		if (sinfo.filled | STATION_INFO_RX_BITRATE)
++		if (sinfo.filled & STATION_INFO_RX_BITRATE)
+ 			data[i] = 100000 *
+ 				cfg80211_calculate_bitrate(&sinfo.rxrate);
+ 		i++;
+ 
+-		if (sinfo.filled | STATION_INFO_SIGNAL_AVG)
++		if (sinfo.filled & STATION_INFO_SIGNAL_AVG)
+ 			data[i] = (u8)sinfo.signal_avg;
+ 		i++;
+ 	} else {
+-- 
+1.7.8.111.gad25c.dirty
 
