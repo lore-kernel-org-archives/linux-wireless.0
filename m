@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:44449 "EHLO
-	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752501Ab2ECJ7X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 May 2012 05:59:23 -0400
-Message-ID: <4FA256F2.3020200@stericsson.com> (sfid-20120503_115927_373420_D72785A4)
-Date: Thu, 3 May 2012 11:59:14 +0200
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:4171 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750903Ab2E3Uu7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 16:50:59 -0400
+Message-ID: <4FC68821.4010507@broadcom.com> (sfid-20120530_225128_823399_ADD2B468)
+Date: Wed, 30 May 2012 22:50:41 +0200
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHv2 12/21] cw1200: sta.*, mac80211 STA callbacks.
-References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit> <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com> <1330720003-15866-13-git-send-email-dmitry.tarnyagin@stericsson.com> <20120429034951.GA32368@localhost>
-In-Reply-To: <20120429034951.GA32368@localhost>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: "Joe Perches" <joe@perches.com>
+cc: linux-kernel@vger.kernel.org,
+	"Brett Rudley" <brudley@broadcom.com>,
+	"Roland Vossen" <rvossen@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Kan Yan" <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3/4] brcmfmac: Fix likely misuse of | for &
+References: <cover.1338408931.git.joe@perches.com>
+ <af79247f427979584f3e07753ec3ad4766844ec9.1338408931.git.joe@perches.com>
+In-Reply-To: <af79247f427979584f3e07753ec3ad4766844ec9.1338408931.git.joe@perches.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bob,
+On 05/30/2012 10:25 PM, Joe Perches wrote:
+> Using | with a constant is always true.
+> Likely this should have be &.
 
-On Sun, Apr 29, 2012, Bob Copeland wrote:
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
 
->
-> +	while (!list_empty(list)) {
-[...]
 
-> I think perhaps you can use list_for_each_entry_safe() here...
-It's the same. Yes, list_for_each_entry_safe() can be used here as well.
 
->> +	LIST_HEAD(list);
-> [...]
->> +	spin_lock(&priv->event_queue_lock);
->> +	list_splice_init(&priv->event_queue,&list);
->> +	spin_unlock(&priv->event_queue_lock);
->> +	__cw1200_free_event_queue(&list);
-> ...and then you won't need to do the above?
-I'm not sure I understand the question :(.
-
->> +	if (priv->listening ^ listening) {
-> That's a unusual (to me anyway) way to spell "a != b".  On my
-> version of gcc, generated code is exactly the same.
-Yes, true. It looked quite natural for me at 00:16. Pach is welcome.
-
-With best regards,
-Dmitry
