@@ -1,63 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu0-omc2-s25.blu0.hotmail.com ([65.55.111.100]:5825 "EHLO
-	blu0-omc2-s25.blu0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753351Ab2EEHux (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51576 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955Ab2E3QdP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 May 2012 03:50:53 -0400
-Message-ID: <BLU0-SMTP3963C1457D4A5496FC3C3A3AC2D0@phx.gbl> (sfid-20120505_095129_339589_259E54B7)
-Subject: Re: [PATCH v3 6/6] bcma: Add flush for BCMA_RESET_CTL write
-From: Nathan Hintz <nlhintz@hotmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	hauke@hauke-m.de
-Date: Sat, 5 May 2012 00:50:49 -0700
-In-Reply-To: <4FA4C2CA.8000401@broadcom.com>
-References: <1336193796-32599-1-git-send-email-nlhintz@hotmail.com>
-	 <BLU0-SMTP198AA334D9A1CD0C329E1A5AC2D0@phx.gbl>
-	 <4FA4C2CA.8000401@broadcom.com>
+	Wed, 30 May 2012 12:33:15 -0400
+Message-ID: <1338395594.4511.31.camel@jlt3.sipsolutions.net> (sfid-20120530_183318_800574_73BD940D)
+Subject: Re: [PATCH v2 1/2] nl80211/cfg80211: add scan channel times to scan
+ command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 30 May 2012 18:33:14 +0200
+In-Reply-To: <1338393559-1792-1-git-send-email-victorg@ti.com>
+References: <1338393559-1792-1-git-send-email-victorg@ti.com>
 Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-05-05 at 08:03 +0200, Arend van Spriel wrote:
-> On 05/05/2012 06:56 AM, Nathan Hintz wrote:
-> > Adds a missing read to flush the previous write (per the Broadcom SDK).
-> > 
-> > Signed-off-by: Nathan Hintz <nlhintz@hotmail.com>
-> > ---
-> >  drivers/bcma/core.c |    1 +
-> >  1 files changed, 1 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/bcma/core.c b/drivers/bcma/core.c
-> > index 893f6e0..c4e6deb 100644
-> > --- a/drivers/bcma/core.c
-> > +++ b/drivers/bcma/core.c
-> > @@ -30,6 +30,7 @@ void bcma_core_disable(struct bcma_device *core, u32 flags)
-> >  	udelay(10);
-> >  
-> >  	bcma_awrite32(core, BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
-> > +	bcma_aread32(core, BCMA_RESET_CTL);
-> >  	udelay(1);
-> >  }
-> >  EXPORT_SYMBOL_GPL(bcma_core_disable);
-> 
-> Hi Nathan,
-> 
-> The read after write is only needed on (certain) SoCs. As bcma is not
-> being used just for these SoCs I suggest to make the flush conditional.
-> In brcmsmac we introduced "flushed write" function, which does the read
-> only for those SoCs.
-> 
-> Gr. AvS
-> 
-> 
-There are several other occurrences in core.c that are the same
-implementation as what was added in this patch.  Is there a reason
-why the existing code isn't the way you have suggested already?
-Would it be better to submit your suggestion as a separate patch, or
-just roll it all into this one?
+On Wed, 2012-05-30 at 18:59 +0300, Victor Goldenshtein wrote:
 
-Nathan
+>  #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
+> +#define	IEEE80211_CHANNEL_TIME		(HZ / 33)
+> +#define	IEEE80211_PASSIVE_CHANNEL_TIME	(HZ / 8)
 
+And as you just heard on IRC, this is bogus since the units are supposed
+to be TU, not jiffies (which isn't a valid unit to use in a userspace
+API anyway since it's not even a "constant" unit)
+
+johannes
 
