@@ -1,119 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49449 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760718Ab2EPWpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 May 2012 18:45:42 -0400
-Date: Wed, 16 May 2012 15:45:26 -0700
-From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-	linux-bluetooth@vger.kernel.org,
-	gigaset307x-common@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	libertas-dev@lists.infradead.org, users@rt2x00.serialmonkey.com
-Subject: [RFC 05/13] USB: Allow drivers to disable hub-initiated LPM.
-Message-ID: <20120516224526.GA25856@xanatos> (sfid-20120517_004559_964280_66F17314)
-References: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1337203535.git.sarah.a.sharp@linux.intel.com>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:59501 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753742Ab2E3QCZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 12:02:25 -0400
+Received: by ghbz12 with SMTP id z12so3364820ghb.11
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 09:02:24 -0700 (PDT)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>
+Subject: [PATCH v2 2/2] mac80211: handle channel times in scan command
+Date: Wed, 30 May 2012 18:59:19 +0300
+Message-Id: <1338393559-1792-2-git-send-email-victorg@ti.com> (sfid-20120530_180229_507319_1799E7D7)
+In-Reply-To: <1338393559-1792-1-git-send-email-victorg@ti.com>
+References: <1338393559-1792-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[[Resending with a smaller Cc list]
+Use the user scan times if those were set, otherwise
+use the default values.
 
-USB 3.0 Link Power Management (LPM) is designed to allow individual
-links in the bus to go into lower power states.  There are two ways a
-link can enter a lower power state:
+This patch handles both hw_scan and non-offload scan.
 
-1. Device-initiated LPM.  When a USB device decides it can go into a
-lower power link state, it sends a message to the parent hub, telling it
-to go into either U1 or U2.  Device-initiated LPM is good for devices
-that send data to the host, like communications devices.
-
-2. Hub-initiated LPM.  After the link has been idle for a specific
-amount of time, the parent hub will request that the child go into a
-lower power state.  The child can refuse that request.  For example, a
-USB modem may want to refuse the LPM request if it is in the middle of
-receiving a text message.  Hub-initiated LPM is good for devices where
-only the host initiates the data transfer, like USB printers or USB mass
-storage devices.
-
-Links will be automatically placed into higher power states by the USB
-hubs and roothubs whenever the host starts a USB transmission.
-
-Introduce a new usb_driver flag, disable_hub_initiated_lpm, that allows
-drivers to disable hub-initiated LPM.
-
-Signed-off-by: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>
-Cc: Gustavo Padovan <gustavo@padovan.org>
-Cc: Johan Hedberg <johan.hedberg@gmail.com>
-Cc: Hansjoerg Lipp <hjlipp@web.de>
-Cc: Tilman Schmidt <tilman@imap.cc>
-Cc: Karsten Keil <isdn@linux-pingi.de>
-Cc: Oliver Neukum <oliver@neukum.name>
-Cc: Peter Korsgaard <jacmet@sunsite.dk>
-Cc: Jan Dumon <j.dumon@option.com>
-Cc: Petko Manolov <petkan@users.sourceforge.net>
-Cc: Steve Glendinning <steve.glendinning@smsc.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Roland Vossen <rvossen@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Cc: Kan Yan <kanyan@broadcom.com>
-Cc: Dan Williams <dcbw@redhat.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Herton Ronaldo Krzesinski <herton@canonical.com>
-Cc: Hin-Tak Leung <htl10@users.sourceforge.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Daniel Drake <dsd@gentoo.org>
-Cc: Ulrich Kunitz <kune@deine-taler.de>
-Cc: linux-bluetooth@vger.kernel.org
-Cc: gigaset307x-common@lists.sourceforge.net
-Cc: netdev@vger.kernel.org
-Cc: linux-usb@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Cc: libertas-dev@lists.infradead.org
-Cc: users@rt2x00.serialmonkey.com
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- include/linux/usb.h |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ net/mac80211/scan.c |   30 +++++++++++++++++++-----------
+ 1 files changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/usb.h b/include/linux/usb.h
-index eb46077..998c276 100644
---- a/include/linux/usb.h
-+++ b/include/linux/usb.h
-@@ -875,6 +875,9 @@ struct usbdrv_wrap {
-  *	for interfaces bound to this driver.
-  * @soft_unbind: if set to 1, the USB core will not kill URBs and disable
-  *	endpoints before calling the driver's disconnect method.
-+ * @disable_hub_initiated_lpm: if set to 0, the USB core will not allow hubs
-+ *	to initiate lower power link state transitions when an idle timeout
-+ *	occurs.  Device-initiated USB 3.0 link PM will still be allowed.
-  *
-  * USB interface drivers must provide a name, probe() and disconnect()
-  * methods, and an id_table.  Other driver fields are optional.
-@@ -915,6 +918,7 @@ struct usb_driver {
- 	struct usbdrv_wrap drvwrap;
- 	unsigned int no_dynamic_id:1;
- 	unsigned int supports_autosuspend:1;
-+	unsigned int disable_hub_initiated_lpm:1;
- 	unsigned int soft_unbind:1;
- };
- #define	to_usb_driver(d) container_of(d, struct usb_driver, drvwrap.driver)
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 8282284..50d3695 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -26,8 +26,6 @@
+ #include "mesh.h"
+ 
+ #define IEEE80211_PROBE_DELAY (HZ / 33)
+-#define IEEE80211_CHANNEL_TIME (HZ / 33)
+-#define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 8)
+ 
+ static void ieee80211_rx_bss_free(struct cfg80211_bss *cbss)
+ {
+@@ -421,7 +419,7 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
+ 	 * After sending probe requests, wait for probe responses
+ 	 * on the channel.
+ 	 */
+-	*next_delay = IEEE80211_CHANNEL_TIME;
++	*next_delay = local->scan_req->min_ch_time;
+ 	local->next_scan_state = SCAN_DECISION;
+ }
+ 
+@@ -456,6 +454,13 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->hw_scan_req->ssids = req->ssids;
+ 		local->hw_scan_req->n_ssids = req->n_ssids;
++		local->hw_scan_req->max_ch_time = req->max_ch_time;
++		local->hw_scan_req->min_ch_time = req->min_ch_time;
++		local->hw_scan_req->max_passive_ch_time =
++			req->max_passive_ch_time;
++		local->hw_scan_req->min_passive_ch_time =
++			req->min_passive_ch_time;
++
+ 		ies = (u8 *)local->hw_scan_req +
+ 			sizeof(*local->hw_scan_req) +
+ 			req->n_channels * sizeof(req->channels[0]);
+@@ -502,10 +507,10 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 		if ((req->channels[0]->flags &
+ 		     IEEE80211_CHAN_PASSIVE_SCAN) ||
+ 		    !local->scan_req->n_ssids) {
+-			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
++			next_delay = local->scan_req->min_passive_ch_time;
+ 		} else {
+ 			ieee80211_scan_state_send_probe(local, &next_delay);
+-			next_delay = IEEE80211_CHANNEL_TIME;
++			next_delay = local->scan_req->min_ch_time;
+ 		}
+ 
+ 		/* Now, just wait a bit and we are all done! */
+@@ -540,15 +545,16 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ static unsigned long
+-ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
++ieee80211_scan_get_channel_time(struct cfg80211_scan_request *scan_req,
++				struct ieee80211_channel *chan)
+ {
+ 	/*
+ 	 * TODO: channel switching also consumes quite some time,
+ 	 * add that delay as well to get a better estimation
+ 	 */
+ 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
+-		return IEEE80211_PASSIVE_CHANNEL_TIME;
+-	return IEEE80211_PROBE_DELAY + IEEE80211_CHANNEL_TIME;
++		return scan_req->min_passive_ch_time;
++	return IEEE80211_PROBE_DELAY + scan_req->min_ch_time;
+ }
+ 
+ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+@@ -609,12 +615,14 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
+ 	 */
+ 
+ 	bad_latency = time_after(jiffies +
+-			ieee80211_scan_get_channel_time(next_chan),
++			ieee80211_scan_get_channel_time(local->scan_req,
++							next_chan),
+ 			local->leave_oper_channel_time +
+ 			usecs_to_jiffies(pm_qos_request(PM_QOS_NETWORK_LATENCY)));
+ 
+ 	listen_int_exceeded = time_after(jiffies +
+-			ieee80211_scan_get_channel_time(next_chan),
++			ieee80211_scan_get_channel_time(local->scan_req,
++							next_chan),
+ 			local->leave_oper_channel_time +
+ 			usecs_to_jiffies(min_beacon_int * 1024) *
+ 			local->hw.conf.listen_interval);
+@@ -662,7 +670,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	 */
+ 	if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN ||
+ 	    !local->scan_req->n_ssids) {
+-		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
++		*next_delay = local->scan_req->min_passive_ch_time;
+ 		local->next_scan_state = SCAN_DECISION;
+ 		return;
+ 	}
 -- 
-1.7.9
+1.7.5.4
 
