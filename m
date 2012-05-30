@@ -1,94 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2.gtri.gatech.edu ([130.207.199.168]:54862 "EHLO
-	relay2.gtri.gatech.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758123Ab2EHCTC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33373 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932321Ab2E3IgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 22:19:02 -0400
-From: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-To: <linux-wireless@vger.kernel.org>
-CC: <Larry.Finger@lwfinger.net>
-Subject: [PATCH 8/9] rtlwifi: ugly hack to enable feature disparity between subdrivers
-Date: Mon, 7 May 2012 22:18:40 -0400
-Message-ID: <1336443521-15299-9-git-send-email-Joshua.Roys@gtri.gatech.edu> (sfid-20120508_041912_921286_B7DB6E9F)
-In-Reply-To: <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
-References: <4FA212D9.5020602@gtri.gatech.edu>
- <1336443521-15299-1-git-send-email-Joshua.Roys@gtri.gatech.edu>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 30 May 2012 04:36:16 -0400
+Message-ID: <1338366972.4511.9.camel@jlt3.sipsolutions.net> (sfid-20120530_103641_304149_CED6F984)
+Subject: [PATCH 3.5] iwlwifi: fix TX power antenna access
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 30 May 2012 10:36:12 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
----
- drivers/net/wireless/rtlwifi/core.c |    2 +-
- drivers/net/wireless/rtlwifi/core.h |    2 +-
- drivers/net/wireless/rtlwifi/usb.c  |    7 ++++++-
- drivers/net/wireless/rtlwifi/wifi.h |    1 +
- 4 files changed, 9 insertions(+), 3 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index 278e9f9..3b1108c 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -1171,7 +1171,7 @@ static void rtl_op_flush(struct ieee80211_hw *hw, bool drop)
- 		rtlpriv->intf_ops->flush(hw, drop);
- }
+Since my commit
+  iwlwifi: use valid TX/RX antenna from hw_params
+the config values are pure overrides, not the
+real values for all hardware. Therefore, the
+EEPROM TX power reading code checks the wrong
+values, it should check the hw_params values.
+
+Cc: stable@kernel.org [3.4]
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index 50c5891..b8e2b22 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -568,28 +568,28 @@ static int iwl_find_otp_image(struct iwl_trans *trans,
+  * iwl_get_max_txpower_avg - get the highest tx power from all chains.
+  *     find the highest tx power from all chains for the channel
+  */
+-static s8 iwl_get_max_txpower_avg(const struct iwl_cfg *cfg,
++static s8 iwl_get_max_txpower_avg(struct iwl_priv *priv,
+ 		struct iwl_eeprom_enhanced_txpwr *enhanced_txpower,
+ 		int element, s8 *max_txpower_in_half_dbm)
+ {
+ 	s8 max_txpower_avg = 0; /* (dBm) */
  
--const struct ieee80211_ops rtl_ops = {
-+struct ieee80211_ops rtl_ops = {
- 	.start = rtl_op_start,
- 	.stop = rtl_op_stop,
- 	.tx = rtl_op_tx,
-diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
-index 2fe46a1..a1d8227 100644
---- a/drivers/net/wireless/rtlwifi/core.h
-+++ b/drivers/net/wireless/rtlwifi/core.h
-@@ -39,7 +39,7 @@
+ 	/* Take the highest tx power from any valid chains */
+-	if ((cfg->valid_tx_ant & ANT_A) &&
++	if ((priv->hw_params.valid_tx_ant & ANT_A) &&
+ 	    (enhanced_txpower[element].chain_a_max > max_txpower_avg))
+ 		max_txpower_avg = enhanced_txpower[element].chain_a_max;
+-	if ((cfg->valid_tx_ant & ANT_B) &&
++	if ((priv->hw_params.valid_tx_ant & ANT_B) &&
+ 	    (enhanced_txpower[element].chain_b_max > max_txpower_avg))
+ 		max_txpower_avg = enhanced_txpower[element].chain_b_max;
+-	if ((cfg->valid_tx_ant & ANT_C) &&
++	if ((priv->hw_params.valid_tx_ant & ANT_C) &&
+ 	    (enhanced_txpower[element].chain_c_max > max_txpower_avg))
+ 		max_txpower_avg = enhanced_txpower[element].chain_c_max;
+-	if (((cfg->valid_tx_ant == ANT_AB) |
+-	    (cfg->valid_tx_ant == ANT_BC) |
+-	    (cfg->valid_tx_ant == ANT_AC)) &&
++	if (((priv->hw_params.valid_tx_ant == ANT_AB) |
++	    (priv->hw_params.valid_tx_ant == ANT_BC) |
++	    (priv->hw_params.valid_tx_ant == ANT_AC)) &&
+ 	    (enhanced_txpower[element].mimo2_max > max_txpower_avg))
+ 		max_txpower_avg =  enhanced_txpower[element].mimo2_max;
+-	if ((cfg->valid_tx_ant == ANT_ABC) &&
++	if ((priv->hw_params.valid_tx_ant == ANT_ABC) &&
+ 	    (enhanced_txpower[element].mimo3_max > max_txpower_avg))
+ 		max_txpower_avg = enhanced_txpower[element].mimo3_max;
  
- #define RTL_SUPPORTED_CTRL_FILTER	0xFF
+@@ -691,7 +691,7 @@ static void iwl_eeprom_enhanced_txpower(struct iwl_priv *priv)
+ 				 ((txp->delta_20_in_40 & 0xf0) >> 4),
+ 				 (txp->delta_20_in_40 & 0x0f));
  
--extern const struct ieee80211_ops rtl_ops;
-+extern struct ieee80211_ops rtl_ops;
- void rtl_fw_cb(const struct firmware *firmware, void *context);
+-		max_txp_avg = iwl_get_max_txpower_avg(priv->cfg, txp_array, idx,
++		max_txp_avg = iwl_get_max_txpower_avg(priv, txp_array, idx,
+ 						      &max_txp_avg_halfdbm);
  
- #endif
-diff --git a/drivers/net/wireless/rtlwifi/usb.c b/drivers/net/wireless/rtlwifi/usb.c
-index 64f7464..15ffb97d 100644
---- a/drivers/net/wireless/rtlwifi/usb.c
-+++ b/drivers/net/wireless/rtlwifi/usb.c
-@@ -953,6 +953,11 @@ int __devinit rtl_usb_probe(struct usb_interface *intf,
- 	struct rtl_priv *rtlpriv = NULL;
- 	struct usb_device	*udev;
- 	struct rtl_usb_priv *usb_priv;
-+	struct rtl_hal_cfg *hal_cfg;
-+
-+	hal_cfg = (struct rtl_hal_cfg *)(id->driver_info);
-+	if (hal_cfg->ops->modify_ieee80211_ops)
-+		hal_cfg->ops->modify_ieee80211_ops(&rtl_ops);
- 
- 	hw = ieee80211_alloc_hw(sizeof(struct rtl_priv) +
- 				sizeof(struct rtl_usb_priv), &rtl_ops);
-@@ -977,7 +982,7 @@ int __devinit rtl_usb_probe(struct usb_interface *intf,
- 	usb_set_intfdata(intf, hw);
- 	/* init cfg & intf_ops */
- 	rtlpriv->rtlhal.interface = INTF_USB;
--	rtlpriv->cfg = (struct rtl_hal_cfg *)(id->driver_info);
-+	rtlpriv->cfg = hal_cfg;
- 	rtlpriv->intf_ops = &rtl_usb_ops;
- 	rtl_dbgp_flag_init(hw);
- 	/* Init IO handler */
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index bd816ae..618f09c 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1386,6 +1386,7 @@ struct rtl_tcb_desc {
- };
- 
- struct rtl_hal_ops {
-+	void (*modify_ieee80211_ops) (struct ieee80211_ops *ops);
- 	int (*init_sw_vars) (struct ieee80211_hw *hw);
- 	void (*deinit_sw_vars) (struct ieee80211_hw *hw);
- 	void (*read_chip_version)(struct ieee80211_hw *hw);
+ 		/*
 -- 
-1.7.4.1
+1.7.10
+
+
 
