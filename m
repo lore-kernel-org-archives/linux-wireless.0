@@ -1,185 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20090 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753730Ab2ENByS (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59472 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217Ab2E3IX3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 May 2012 21:54:18 -0400
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 30 May 2012 04:23:29 -0400
+Received: by yhmm54 with SMTP id m54so3020078yhm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 May 2012 01:23:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20400.26011.445156.41253@gargle.gargle.HOWL> (sfid-20120514_035421_281316_07537ADA)
-Date: Mon, 14 May 2012 07:23:31 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/7] ath9k_hw: Fix MCI usage
+In-Reply-To: <1336554519.4323.7.camel@jlt3.sipsolutions.net>
+References: <1336554519.4323.7.camel@jlt3.sipsolutions.net>
+Date: Wed, 30 May 2012 10:23:28 +0200
+Message-ID: <CAGXE3d_iBznfsKBQr5ES3m5cYmrGQ+kZW+cb7-cvd8pCh48-3Q@mail.gmail.com> (sfid-20120530_102336_802142_F8561F2D)
+Subject: Re: [RFC] mac80211: add time synchronisation with BSS for assoc
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MCI has to be handled only when BTCOEX is actually enabled.
-Check for this condition before calling MCI related functions
-from various reset/calibration call-sites.
+Hi,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c |    5 ++---
- drivers/net/wireless/ath/ath9k/ar9003_mci.h   |    8 --------
- drivers/net/wireless/ath/ath9k/hw.c           |   15 +++++++--------
- drivers/net/wireless/ath/ath9k/hw.h           |    9 +++++++++
- 4 files changed, 18 insertions(+), 19 deletions(-)
+On Wed, May 9, 2012 at 11:08 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Some drivers (iwlegacy, iwlwifi and rt2x00) today use the
+> bss_conf.last_tsf value. By itself though that value is
+> completely worthless since it may be ancient. What really
+> is needed is synchronisation between some device time and
+> the TSF.
+>
+> To clarify this, rename bss_conf.last_tsf to sync_tsf and
+> add sync_device_ts which is obtained from rx_status which
+> gets a new field device_timestamp for this purpose. This
+> is intentionally not using the mactime field since that
+> is used for other things and in IBSS is expected to sync
+> with the IBSS's TSF which isn't necessarily true for the
+> device timestamp.
+>
+> Also, since we have the information and it's useful even
+> before the connection has been established, give all the
+> timing details to the driver before authenticating.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> I note that rt2x00 is completely broken since it mixes last_tsf (now
+> sync_tsf) with jiffies ... what??
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 9fdd70f..f83a4a2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -901,7 +901,6 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	bool is_reusable = true, status = true;
- 	bool run_rtt_cal = false, run_agc_cal;
- 	bool rtt = !!(ah->caps.hw_caps & ATH9K_HW_CAP_RTT);
--	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
- 	u32 agc_ctrl = 0, agc_supp_cals = AR_PHY_AGC_CONTROL_OFFSET_CAL |
- 					  AR_PHY_AGC_CONTROL_FLTR_CAL   |
- 					  AR_PHY_AGC_CONTROL_PKDET_CAL;
-@@ -970,7 +969,7 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
- 	} else if (caldata && !caldata->done_txiqcal_once)
- 		run_agc_cal = true;
- 
--	if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
-+	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
- 		ar9003_mci_init_cal_req(ah, &is_reusable);
- 
- 	if (!(IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))) {
-@@ -993,7 +992,7 @@ skip_tx_iqcal:
- 				       0, AH_WAIT_TIMEOUT);
- 	}
- 
--	if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
-+	if (ath9k_hw_mci_is_enabled(ah) && IS_CHAN_2GHZ(chan) && run_agc_cal)
- 		ar9003_mci_init_cal_done(ah);
- 
- 	if (rtt && !run_rtt_cal) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 4842f6c..652ab8c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -273,10 +273,6 @@ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- 
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 
--static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
--{
--	return ah->btcoex_hw.mci.ready;
--}
- void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep);
- void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
- void ar9003_mci_init_cal_done(struct ath_hw *ah);
-@@ -292,10 +288,6 @@ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
- 
- #else
- 
--static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
--{
--	return false;
--}
- static inline void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
- {
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8698589..175b340 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1704,7 +1704,7 @@ static int ath9k_hw_do_fastcc(struct ath_hw *ah, struct ath9k_channel *chan)
- 	ath9k_hw_loadnf(ah, ah->curchan);
- 	ath9k_hw_start_nfcal(ah, true);
- 
--	if ((ah->caps.hw_caps & ATH9K_HW_CAP_MCI) && ar9003_mci_is_ready(ah))
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_2g5g_switch(ah, true);
- 
- 	if (AR_SREV_9271(ah))
-@@ -1725,10 +1725,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	u64 tsf = 0;
- 	int i, r;
- 	bool start_mci_reset = false;
--	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
- 	bool save_fullsleep = ah->chip_fullsleep;
- 
--	if (mci) {
-+	if (ath9k_hw_mci_is_enabled(ah)) {
- 		start_mci_reset = ar9003_mci_start_reset(ah, chan);
- 		if (start_mci_reset)
- 			return 0;
-@@ -1757,7 +1756,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 			return r;
- 	}
- 
--	if (mci)
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_stop_bt(ah, save_fullsleep);
- 
- 	saveDefAntenna = REG_READ(ah, AR_DEF_ANTENNA);
-@@ -1815,7 +1814,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (r)
- 		return r;
- 
--	if (mci)
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_reset(ah, false, IS_CHAN_2GHZ(chan), save_fullsleep);
- 
- 	/*
-@@ -1934,7 +1933,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ath9k_hw_loadnf(ah, chan);
- 	ath9k_hw_start_nfcal(ah, true);
- 
--	if (mci && ar9003_mci_end_reset(ah, chan, caldata))
-+	if (ath9k_hw_mci_is_enabled(ah) && ar9003_mci_end_reset(ah, chan, caldata))
- 		return -EIO;
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
-@@ -1979,7 +1978,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (ath9k_hw_btcoex_is_enabled(ah))
- 		ath9k_hw_btcoex_enable(ah);
- 
--	if (mci)
-+	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_check_bt(ah);
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
-@@ -2163,7 +2162,7 @@ bool ath9k_hw_setpower(struct ath_hw *ah, enum ath9k_power_mode mode)
- 		status = ath9k_hw_set_power_awake(ah, setChip);
- 		break;
- 	case ATH9K_PM_FULL_SLEEP:
--		if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+		if (ath9k_hw_mci_is_enabled(ah))
- 			ar9003_mci_set_full_sleep(ah);
- 
- 		ath9k_set_power_sleep(ah, setChip);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index b620c55..3740aab 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1037,6 +1037,11 @@ static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
- {
- 	return ah->btcoex_hw.enabled;
- }
-+static inline bool ath9k_hw_mci_is_enabled(struct ath_hw *ah)
-+{
-+	return ah->btcoex_hw.enabled && (ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
-+
-+}
- void ath9k_hw_btcoex_enable(struct ath_hw *ah);
- static inline enum ath_btcoex_scheme
- ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
-@@ -1048,6 +1053,10 @@ static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
- {
- 	return false;
- }
-+static inline bool ath9k_hw_mci_is_enabled(struct ath_hw *ah)
-+{
-+	return false;
-+}
- static inline void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- {
- }
--- 
-1.7.10.2
+Thanks for coming up with this Johannes,  that looks indeed strange.
 
+Ivo, that was introduced with your "rt2x00: Add autowake support for
+USB hardware" patch as far as I can tell.
+
+Since the last_beacon value is updated within rt2x00 already we should
+be able to just remove the assignment in rt2x00lib_config_erp. Ivo, could
+you please recheck?
+
+This would also remove rt2x00's dependency on the last_tsf
+field as provided by mac80211.
+
+Thanks,
+Helmut
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c
+b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 96db933..b2d2ad3 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -102,7 +102,6 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+
+        /* Update the AID, this is needed for dynamic PS support */
+        rt2x00dev->aid = bss_conf->assoc ? bss_conf->aid : 0;
+-       rt2x00dev->last_beacon = bss_conf->last_tsf;
+
+        /* Update global beacon interval time, this is needed for PS support */
+        rt2x00dev->beacon_int = bss_conf->beacon_int;
