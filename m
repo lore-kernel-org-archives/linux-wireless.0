@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li235-22.members.linode.com ([173.255.225.22]:51643 "EHLO
-	erley.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756556Ab2EBBMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 May 2012 21:12:51 -0400
-Message-ID: <4FA089F9.1020602@erley.org> (sfid-20120502_031255_633946_8E1F7D42)
-Date: Tue, 01 May 2012 21:12:25 -0400
-From: Pat Erley <pat-lkml@erley.org>
-MIME-Version: 1.0
-To: sedat.dilek@gmail.com
-CC: Sedat Dilek <sedat.dilek@googlemail.com>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lautriv <admin@coldplug.net>,
-	Jim Cromie <jim.cromie@gmail.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH] mwl8k: Add 0x2a02 PCI device-id (Marvell 88W8361)
-References: <20120427094637.GV3157@wantstofly.org> <CA+icZUXNZ=exTnR=OgD_9bpt_0s-KnR+v-K6u+XzQr4HBoTQHQ@mail.gmail.com> <20120427095842.GW3157@wantstofly.org> <CA+icZUWuynSaPE4pdxzoP783pw7r=5x27ewXN_pkR5VS=0kKUg@mail.gmail.com> <20120427101732.GX3157@wantstofly.org> <CA+icZUUnJPeDmL9xXfvj62an40bXwwaOnrJmxmLN_cBt9PyCZA@mail.gmail.com> <CA+icZUV76wSBj88EpzmWbO=u2dP23yi5P98nN2KZehBUni9mEg@mail.gmail.com> <20120427185809.GZ3157@wantstofly.org> <CA+icZUWQmCRdjucb4+Nf24_zbJ4fzzp7zjqhKjXE6U01rppDfA@mail.gmail.com> <CA+icZUXSaEMA=KbQP9UQcU6ZMBh8QD2sv-O=6r_Ly8is==gvSA@mail.gmail.com> <20120501125102.GN3157@wantstofly.org> <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
-In-Reply-To: <CA+icZUV=qtXwVxb+uvQJcsza0y+6k2LHJFFPnECY0M=QWBexaQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:43471 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756086Ab2E3BbO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 May 2012 21:31:14 -0400
+Received: by dady13 with SMTP id y13so6205580dad.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 May 2012 18:31:14 -0700 (PDT)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] mac80211: Fix the Problem of Unreachable Mesh Station when joining from one MBSS to another MBSS
+Date: Wed, 30 May 2012 09:30:41 +0800
+Message-Id: <1338341441-26969-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120530_033118_438671_A13D26F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/01/2012 09:54 AM, Sedat Dilek wrote:
-> --- a/drivers/net/wireless/mwl8k.c
-> +++ b/drivers/net/wireless/mwl8k.c
-> @@ -5225,6 +5225,7 @@ static void mwl8k_finalize_join_worker(struct work_struct *work)
->   }
->
->   enum {
-> +	MWL8361P = 0,
->   	MWL8363 = 0,
->   	MWL8687,
->   	MWL8366,
+Mesh station that joins an MBSS is reachable using mesh portal with 6 address frame
+by mesh stations from another MBSS if these two different MBSSes are bridged. However,
+if the mesh station later moves into the same MBSS of those mesh stations, it is unreachable
+by mesh stations in the MBSS due to the mpp_paths table is not deleted. A quick fix is
+to perform mesh_path_lookup, if it is available for the target destination, mpp_path_lookup
+is not performed. When the mesh station moves back to its original MBSS, the mesh_paths will
+be deleted once expired. So, it will be reachable using mpp_path_lookup again.
 
-I'm not an expert, but isn't this giving both 8361P and 8363 the same values in the enum?
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ net/mac80211/tx.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-Is that intended?
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d67d36f..f44cd9d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1740,7 +1740,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	__le16 fc;
+ 	struct ieee80211_hdr hdr;
+ 	struct ieee80211s_hdr mesh_hdr __maybe_unused;
+-	struct mesh_path __maybe_unused *mppath = NULL;
++	struct mesh_path __maybe_unused *mppath = NULL, *mpath = NULL;
+ 	const u8 *encaps_data;
+ 	int encaps_len, skip_header_bytes;
+ 	int nh_pos, h_pos;
+@@ -1806,8 +1806,11 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 			goto fail;
+ 		}
+ 		rcu_read_lock();
+-		if (!is_multicast_ether_addr(skb->data))
+-			mppath = mpp_path_lookup(skb->data, sdata);
++		if (!is_multicast_ether_addr(skb->data)) {
++			mpath = mesh_path_lookup(skb->data, sdata);
++			if (!mpath)
++				mppath = mpp_path_lookup(skb->data, sdata);
++		}
+ 
+ 		/*
+ 		 * Use address extension if it is a packet from
+-- 
+1.7.0.4
 
-Pat Erley
