@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25800 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756116Ab2EGKdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 May 2012 06:33:00 -0400
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	H Hartley Sweeten <hartleys@visionengravers.com>,
-	H Hartley Sweeten <hsweeten@visionengravers.com>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: [PATCH 17/20] NFC: The NFC genl family structure should not be exposed globally
-Date: Mon,  7 May 2012 12:31:28 +0200
-Message-Id: <1336386691-24840-18-git-send-email-sameo@linux.intel.com> (sfid-20120507_123304_832319_D4F3508B)
-In-Reply-To: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
-References: <1336386691-24840-1-git-send-email-sameo@linux.intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46954 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751372Ab2E3XAg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 19:00:36 -0400
+Message-ID: <4FC6A68D.1010002@hauke-m.de> (sfid-20120531_010039_783579_FDB14AD9)
+Date: Thu, 31 May 2012 01:00:29 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Jean-Pierre TOSONI <jp.tosoni@acksys.fr>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Is there a changelog for compat wireless ?
+References: <773DB8A82AB6A046AE0195C68612A319012CA16F@sbs2003.acksys.local>
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A319012CA16F@sbs2003.acksys.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: H Hartley Sweeten <hartleys@visionengravers.com>
+On 05/30/2012 07:54 PM, Jean-Pierre TOSONI wrote:
+> Hello all,
+> 
+> I am looking for indications as what is changing from one version of
+> compat-wireless to the next.
+> 
+> The link for the changelog given at
+>  http://linuxwireless.org/en/users/Download#compat-wireless_ChangeLog 
+> is broken.
+> 
+> Is there some other place where I can find it ? ww.orbit-labs.org has
+> many, is it that the changes to the wireless software is not backported
+> in the same way to all (supported) versions of the kernel ?
+> 
+> Thanks,
+> 
+> Jean-Pierre Tosoni
+Hi
 
-The variable 'nfc_genl_family' is only referenced in this file and
-should be marked static to prevent it from being exposed globally.
+The changelog for compat-wireless is here:
+https://github.com/mcgrof/compat-wireless/commits/master
+for compat here:
+https://github.com/mcgrof/compat/commits/master
+and for wireless-testing here:
+https://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=shortlog
 
-Quites the sparse warning:
-
-warning: symbol 'nfc_genl_family' was not declared. Should it be static?
-
-Signed-off-by: H Hartley Sweeten <hsweeten@visionengravers.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/netlink.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index 747c6b3..23b75c1 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -33,7 +33,7 @@ static struct genl_multicast_group nfc_genl_event_mcgrp = {
- 	.name = NFC_GENL_MCAST_EVENT_NAME,
- };
- 
--struct genl_family nfc_genl_family = {
-+static struct genl_family nfc_genl_family = {
- 	.id = GENL_ID_GENERATE,
- 	.hdrsize = 0,
- 	.name = NFC_GENL_NAME,
--- 
-1.7.9.1
-
+Hauke
