@@ -1,212 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1403 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758440Ab2EEB1u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 May 2012 21:27:50 -0400
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 10/11] brcmfmac: remove function brcmf_sdcard_regfail
-Date: Fri, 4 May 2012 18:27:37 -0700
-Message-ID: <1336181258-7305-11-git-send-email-frankyl@broadcom.com> (sfid-20120505_032830_636723_2098A1FB)
-In-Reply-To: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
-References: <1336181258-7305-1-git-send-email-frankyl@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47289 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757704Ab2EaCpo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 May 2012 22:45:44 -0400
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20422.56106.127697.13731@gargle.gargle.HOWL> (sfid-20120531_044548_945927_4EA0510F)
+Date: Thu, 31 May 2012 08:14:58 +0530
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <Mohammed@venema.h4ckr.net>,
+	<stable@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: [ath9k-devel] [RFC] ath9k: Fix softlockup in AR9485
+In-Reply-To: <1338394222-10274-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1338394222-10274-1-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new interface brcmf_sdio_regr/w provides result of access
-attempts. It is no longer necessary to use dedicated variable
-and function to provide enquiry for failure.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    8 +---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   46 ++++++++++----------
- .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    4 --
- 3 files changed, 24 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index cd5f7d7..aec1bd6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -237,8 +237,7 @@ brcmf_sdio_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 						       func_num, addr, data, 4);
- 	} while (ret != 0 && retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
- 
--	sdiodev->regfail = (ret != 0);
--	if (sdiodev->regfail)
-+	if (ret != 0)
- 		brcmf_dbg(ERROR, "failed with %d\n", ret);
- 
- 	return ret;
-@@ -298,11 +297,6 @@ void brcmf_sdio_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 		*ret = retval;
- }
- 
--bool brcmf_sdcard_regfail(struct brcmf_sdio_dev *sdiodev)
--{
--	return sdiodev->regfail;
--}
--
- static int brcmf_sdcard_recv_prepare(struct brcmf_sdio_dev *sdiodev, uint fn,
- 				     uint flags, uint width, u32 *addr)
- {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 5338f57..1dbf2be 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1026,9 +1026,9 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- 	/* Wait until the packet has been flushed (device/FIFO stable) */
- 	for (lastrbc = retries = 0xffff; retries > 0; retries--) {
- 		hi = brcmf_sdio_regrb(bus->sdiodev,
--				      SBSDIO_FUNC1_RFRAMEBCHI, NULL);
-+				      SBSDIO_FUNC1_RFRAMEBCHI, &err);
- 		lo = brcmf_sdio_regrb(bus->sdiodev,
--				      SBSDIO_FUNC1_RFRAMEBCLO, NULL);
-+				      SBSDIO_FUNC1_RFRAMEBCLO, &err);
- 		bus->f1regdata += 2;
- 
- 		if ((hi == 0) && (lo == 0))
-@@ -1060,7 +1060,7 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- 	bus->nextlen = 0;
- 
- 	/* If we can't reach the device, signal failure */
--	if (err || brcmf_sdcard_regfail(bus->sdiodev))
-+	if (err)
- 		bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- }
- 
-@@ -2221,10 +2221,11 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 		/* In poll mode, need to check for other events */
- 		if (!bus->intr && cnt) {
- 			/* Check device status, signal pending interrupt */
--			r_sdreg32(bus, &intstatus,
--				  offsetof(struct sdpcmd_regs, intstatus));
-+			ret = r_sdreg32(bus, &intstatus,
-+					offsetof(struct sdpcmd_regs,
-+						 intstatus));
- 			bus->f2txdata++;
--			if (brcmf_sdcard_regfail(bus->sdiodev))
-+			if (ret != 0)
- 				break;
- 			if (intstatus & bus->hostintmask)
- 				bus->ipend = true;
-@@ -2347,6 +2348,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 	uint framecnt = 0;	/* Temporary counter of tx/rx frames */
- 	bool rxdone = true;	/* Flag for no more read data */
- 	bool resched = false;	/* Flag indicating resched wanted */
-+	int err;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
-@@ -2357,7 +2359,6 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 
- 	/* If waiting for HTAVAIL, check status */
- 	if (bus->clkstate == CLK_PENDING) {
--		int err;
- 		u8 clkctl, devctl = 0;
- 
- #ifdef DEBUG
-@@ -2414,16 +2415,17 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 	/* Pending interrupt indicates new device status */
- 	if (bus->ipend) {
- 		bus->ipend = false;
--		r_sdreg32(bus, &newstatus,
--			  offsetof(struct sdpcmd_regs, intstatus));
-+		err = r_sdreg32(bus, &newstatus,
-+				offsetof(struct sdpcmd_regs, intstatus));
- 		bus->f1regdata++;
--		if (brcmf_sdcard_regfail(bus->sdiodev))
-+		if (err != 0)
- 			newstatus = 0;
- 		newstatus &= bus->hostintmask;
- 		bus->fcstate = !!(newstatus & I_HMB_FC_STATE);
- 		if (newstatus) {
--			w_sdreg32(bus, newstatus,
--				  offsetof(struct sdpcmd_regs, intstatus));
-+			err = w_sdreg32(bus, newstatus,
-+					offsetof(struct sdpcmd_regs,
-+						 intstatus));
- 			bus->f1regdata++;
- 		}
- 	}
-@@ -2438,11 +2440,11 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 	 */
- 	if (intstatus & I_HMB_FC_CHANGE) {
- 		intstatus &= ~I_HMB_FC_CHANGE;
--		w_sdreg32(bus, I_HMB_FC_CHANGE,
--			  offsetof(struct sdpcmd_regs, intstatus));
-+		err = w_sdreg32(bus, I_HMB_FC_CHANGE,
-+				offsetof(struct sdpcmd_regs, intstatus));
- 
--		r_sdreg32(bus, &newstatus,
--			  offsetof(struct sdpcmd_regs, intstatus));
-+		err = r_sdreg32(bus, &newstatus,
-+				offsetof(struct sdpcmd_regs, intstatus));
- 		bus->f1regdata += 2;
- 		bus->fcstate =
- 		    !!(newstatus & (I_HMB_FC_STATE | I_HMB_FC_CHANGE));
-@@ -2513,17 +2515,17 @@ clkwait:
- 			brcmf_sdcard_abort(bus->sdiodev, SDIO_FUNC_2);
- 
- 			brcmf_sdio_regwb(bus->sdiodev, SBSDIO_FUNC1_FRAMECTRL,
--					 SFC_WF_TERM, NULL);
-+					 SFC_WF_TERM, &err);
- 			bus->f1regdata++;
- 
- 			for (i = 0; i < 3; i++) {
- 				u8 hi, lo;
- 				hi = brcmf_sdio_regrb(bus->sdiodev,
- 						      SBSDIO_FUNC1_WFRAMEBCHI,
--						      NULL);
-+						      &err);
- 				lo = brcmf_sdio_regrb(bus->sdiodev,
- 						      SBSDIO_FUNC1_WFRAMEBCLO,
--						      NULL);
-+						      &err);
- 				bus->f1regdata += 2;
- 				if ((hi == 0) && (lo == 0))
- 					break;
-@@ -2550,10 +2552,8 @@ clkwait:
- 		 else await next interrupt */
- 	/* On failed register access, all bets are off:
- 		 no resched or interrupts */
--	if ((bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) ||
--	    brcmf_sdcard_regfail(bus->sdiodev)) {
--		brcmf_dbg(ERROR, "failed backplane access over SDIO, halting operation %d\n",
--			  brcmf_sdcard_regfail(bus->sdiodev));
-+	if ((bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) || (err != 0)) {
-+		brcmf_dbg(ERROR, "failed backplane access over SDIO, halting operation\n");
- 		bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 		bus->intstatus = 0;
- 	} else if (bus->clkstate == CLK_PENDING) {
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-index a147535..6d2e665 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
-@@ -146,7 +146,6 @@ struct brcmf_sdio_dev {
- 	u8 num_funcs;			/* Supported funcs on client */
- 	u32 func_cis_ptr[SDIOD_MAX_IOFUNCS];
- 	u32 sbwad;			/* Save backplane window address */
--	bool regfail;			/* status of last reg_r/w call */
- 	void *bus;
- 	atomic_t suspend;		/* suspend flag */
- 	wait_queue_head_t request_byte_wait;
-@@ -176,9 +175,6 @@ extern void brcmf_sdio_regwb(struct brcmf_sdio_dev *sdiodev, u32 addr,
- extern void brcmf_sdio_regwl(struct brcmf_sdio_dev *sdiodev, u32 addr,
- 			     u32 data, int *ret);
- 
--/* Indicate if last reg read/write failed */
--extern bool brcmf_sdcard_regfail(struct brcmf_sdio_dev *sdiodev);
--
- /* Buffer transfer to/from device (client) core via cmd53.
-  *   fn:       function number
-  *   addr:     backplane address (i.e. >= regsva from attach)
--- 
-1.7.9.5
+Mohammed Shafi Shajakhan wrote:
+> before the STA is associated PLL4(0x1618c) always seem to dump
+> zero, which causes a softlockup as we keep on polling infinitely
+> PLL4's 8th bit. Once PLL4'S 8th bit is set indicates we can take
+> PLL3(0x16188) readings which tells us whether PLL is locked or not.
+> if the PLL is not locked we have a rx hang.
+> It does not looks safe to poll PLL4 before the STA is associated.
+> so it is safe to check this  rx hang after association, where we might
+> have a possibility of rx hang under stress testing. digging into the
+> PLL stuff did not yield anything much better.
+> 
+> previously the register dumped 0xdeadbeef and the hw_pll_work
+> itself is cancelled by ath_radio_disable(obselete)
+> 
+> fixes https://bugzilla.redhat.com/show_bug.cgi?id=811142
+> 
+> Reported-by: Rolf Offermanns <rolf.offermanns@gmx.net>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/main.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index dfa78e8..a03ad3e 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -970,6 +970,9 @@ void ath_hw_pll_work(struct work_struct *work)
+>  					    hw_pll_work.work);
+>  	u32 pll_sqsum;
+>  
+> +	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF))
+> +		return;
+> +
+>  	if (AR_SREV_9485(sc->sc_ah)) {
+>  
+>  		ath9k_ps_wakeup(sc);
 
 
+All this is really racy, I think. In the various callsites where we issue a HW
+reset by queuing a work, there is no guarantee that the caller would not be
+invoked once again before the reset work has had a chance to kick in. And there is
+nothing that prevents the various poll routines from checking the HW while a
+reset in progress.
+
+And why are we using HZ for the pll_work ?
+
+Sujith
